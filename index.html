@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram Web App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      width: 90%;
+      max-width: 400px;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+    }
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .menu button {
+      padding: 15px;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #2196F3;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    .menu button:hover {
+      background-color: #1976D2;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>App Telegram</h1>
+  <div class="menu">
+    <button onclick="showSaldo()">Saldo</button>
+    <button onclick="showProfile()">MyProfile</button>
+    <button onclick="playGame()">Play</button>
+  </div>
+</div>
+
+<script>
+  // Funzione per gestire il pulsante Saldo
+  function showSaldo() {
+    alert("Il tuo saldo è: €100");
+  }
+
+  // Funzione per gestire il pulsante MyProfile
+  function showProfile() {
+    alert("Profilo Utente:\nNome: Mario Rossi\nID: 12345");
+  }
+
+  // Funzione per gestire il pulsante Play
+  function playGame() {
+    alert("Inizio gioco...");
+  }
+</script>
+
+</body>
+</html>

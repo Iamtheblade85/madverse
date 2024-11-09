@@ -57,9 +57,21 @@
 </div>
 
 <script>
-  // Funzione per gestire il pulsante Saldo
-  function showSaldo() {
-    alert("Il tuo saldo è: €100");
+  async function showSaldo() {
+    try {
+      // Esegui la richiesta all'endpoint API per ottenere il saldo
+      const response = await fetch("https://iamemanuele.pythonanywhere.com/saldo");
+      const data = await response.json();
+
+      // Controlla se la risposta contiene il saldo
+      if (response.ok && data.amount !== undefined) {
+        alert(`Il tuo saldo è: ${data.amount} CHIPS`);
+      } else {
+        alert("Errore: impossibile recuperare il saldo.");
+      }
+    } catch (error) {
+      alert("Errore di connessione: " + error.message);
+    }
   }
 
   // Funzione per gestire il pulsante MyProfile

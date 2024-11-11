@@ -250,10 +250,6 @@
     const response = await fetch(url);
     const data = await response.json();
 
-    // Visualizza il contenuto specifico per "Wallet"
-    const response = await fetch(url);
-    const data = await response.json();
-
     if (page === 'balance' && response.ok) {
       contentFrame.innerHTML = `
         <div class="action-container">

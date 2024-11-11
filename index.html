@@ -104,6 +104,31 @@
       overflow-y: auto;
       color: #ccc;
     }
+    .balance-grid, .nft-grid, .staking-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .balance-item, .nft-item, .staking-item {
+      background-color: #1f2430;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      color: #eee;
+      border: 1px solid #3a3f51;
+    }
+    .balance-item h3, .staking-item h3 {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0;
+      color: #0fdc8e;
+    }
+    .balance-item p, .staking-item p {
+      font-size: 16px;
+      margin: 5px 0 0;
+      color: #ddd;
+    }
 
     /* Footer */
     .footer {
@@ -200,10 +225,83 @@
     const response = await fetch(url);
     const data = await response.json();
 
-    // Visualizza il contenuto corrispondente in base alla pagina
-    contentFrame.innerHTML = response.ok
-      ? `<p>Content for ${page} loaded successfully.</p>`
-      : `<p>Error loading ${page}: ${data.error}</p>`;
+    // Visualizza il contenuto specifico per ogni sezione
+    if (page === 'balance' && response.ok) {
+      if (data.balances && data.balances.length > 0) {
+        contentFrame.innerHTML = `
+          <h2>Your Token Balances</h2>
+          <div class="balance-grid">
+            ${data.balances.map(balance => `
+              <div class="balance-item">
+                <h3>💰 ${balance.token_symbol}</h3>
+                <p>Amount: <strong>${balance.amount}</strong></p>
+              </div>
+            `).join("")}
+          </div>`;
+      } else {
+        contentFrame.innerHTML = "<p>No token balances found.</p>";
+      }
+    } else if (page === 'staking_farms' && response.ok) {
+      if (data.farms && data.farms.length > 0) {
+        contentFrame.innerHTML = `
+          <h2>Token Staking Farms</h2>
+          <div class="staking-grid">
+            ${data.farms.map(farm => `
+              <div class="staking-item">
+                <h3>🌱 ${farm.token}</h3>
+                <p>Staked Amount: ${farm.staked_amount}</p>
+                <p>Rewards: ${farm.rewards}</p>
+              </div>
+            `).join("")}
+          </div>`;
+      } else {
+        contentFrame.innerHTML = "<p>No staking farms found.</p>";
+      }
+    } else if (page === 'mynfts' && response.ok) {
+      if (data.nfts && data.nfts.length > 0) {
+        contentFrame.innerHTML = `
+          <h2>Your NFTs Inventory</h2>
+          <div class="nft-grid">
+            ${data.nfts.map(nft => `
+              <div class="nft-item">
+                <img src="${nft.image_url}" alt="NFT Image" style="max-width: 100%; height: auto;">
+                <div class="nft-details">
+                  <p><strong>ID:</strong> ${nft.nft_id}</p>
+                  <p><strong>Asset ID:</strong> ${nft.asset_id}</p>
+                  <p><strong>Status:</strong> ${nft.is_staked}</p>
+                  <p><strong>For Sale:</strong> ${nft.for_sale}</p>
+                </div>
+              </div>
+            `).join("")}
+          </div>`;
+      } else {
+        contentFrame.innerHTML = "<p>No NFTs found.</p>";
+      }
+    } else if (page === 'waxdao_pools' && response.ok) {
+      if (data.pools && data.pools.length > 0) {
+        contentFrame.innerHTML = `
+          <h2>NFTs Farming Pools</h2>
+          <div class="staking-grid">
+            ${data.pools.map(pool => `
+              <div class="staking-item">
+                <h3>🏦 ${pool.nft_type}</h3>
+                <p>Reward Rate: ${pool.reward_rate}</p>
+                <p>Staked NFTs: ${pool.staked_nfts}</p>
+              </div>
+            `).join("")}
+          </div>`;
+      } else {
+        contentFrame.innerHTML = "<p>No farming pools found.</p>";
+      }
+    } else if (page === 'profile' && response.ok) {
+      contentFrame.innerHTML = `
+        <h2>User Profile</h2>
+        <p><strong>Username:</strong> ${data.username}</p>
+        <p><strong>Level:</strong> ${data.sqj_level}</p>
+        <p><strong>Account:</strong> ${data.wax_account}</p>`;
+    } else {
+      contentFrame.innerHTML = `<p>Error loading ${page}: ${data.error}</p>`;
+    }
   }
 
   fetchWaxAccount();

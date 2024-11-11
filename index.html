@@ -22,90 +22,69 @@
       background-color: #fff;
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    h1 {
-      text-align: center;
-      font-size: 24px;
-    }
-    .menu {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-bottom: 20px;
+    }
+    /* Logo */
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      padding: 10px 0;
+      color: #2196F3;
+    }
+    /* Layout principale */
+    .main-layout {
+      display: flex;
+      flex-grow: 1;
+      margin-top: 20px;
+    }
+    /* Colonna sinistra - Menu */
+    .sidebar {
+      width: 20%;
+      background-color: #f4f4f4;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .welcome-message {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #555;
     }
     .menu button {
-      padding: 15px;
-      font-size: 18px;
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
       cursor: pointer;
       border: none;
       border-radius: 5px;
       background-color: #2196F3;
       color: white;
       transition: background-color 0.3s;
+      text-align: left;
     }
     .menu button:hover {
       background-color: #1976D2;
     }
-    .output {
-      font-size: 16px;
-      margin-bottom: 20px;
-    }
-    .nft-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin-top: 20px;
-    }
-    .nft-item {
-      border: 1px solid #ddd;
-      padding: 10px;
+    /* Colonna destra - Contenuti dinamici */
+    .content-frame {
+      width: 80%;
+      padding: 20px;
+      background-color: #fff;
       border-radius: 8px;
-      text-align: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      overflow-y: auto;
     }
-    .nft-item img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 8px;
-    }
-    .nft-details {
-      margin-top: 10px;
-    }
-
-    /* Media queries per la reattività */
-    /* Layout per schermi grandi */
-    @media (min-width: 1024px) {
-      .nft-grid {
-        grid-template-columns: repeat(3, 1fr);
+    /* Responsive */
+    @media (max-width: 768px) {
+      .main-layout {
+        flex-direction: column;
       }
-    }
-
-    /* Layout per tablet */
-    @media (min-width: 768px) and (max-width: 1023px) {
-      .nft-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    /* Layout per smartphone */
-    @media (max-width: 767px) {
-      .container {
-        width: 95%;
-      }
-      h1 {
-        font-size: 20px;
-      }
-      .menu button {
-        padding: 12px;
-        font-size: 16px;
-      }
-      .nft-grid {
-        grid-template-columns: 1fr;
-      }
-      .nft-item {
-        padding: 8px;
-      }
-      .nft-details p {
-        font-size: 14px;
+      .sidebar, .content-frame {
+        width: 100%;
       }
     }
   </style>
@@ -113,14 +92,27 @@
 <body>
 
 <div class="container">
-  <h1>Telegram Web App</h1>
-  <div class="menu">
-    <button onclick="showBalance()">Balance</button>
-    <button onclick="showProfile()">My Profile</button>
-    <button onclick="showNFTs()">My NFTs</button>
+  <!-- Logo -->
+  <div class="logo">ChipsWallet</div>
+  
+  <!-- Layout principale con colonna di menu e frame contenuti -->
+  <div class="main-layout">
+    <!-- Colonna sinistra: Sidebar Menu -->
+    <div class="sidebar">
+      <div class="welcome-message" id="welcome-message">Welcome, {wax_account}</div>
+      <div class="menu">
+        <button onclick="loadContent('balance')">Balance</button>
+        <button onclick="loadContent('profile')">My Profile</button>
+        <button onclick="loadContent('nfts')">My NFTs</button>
+      </div>
+    </div>
+
+    <!-- Colonna destra: Frame dinamico per contenuti -->
+    <div class="content-frame" id="content-frame">
+      <!-- Contenuti caricati dinamicamente appariranno qui -->
+      <p>Select an option from the menu.</p>
+    </div>
   </div>
-  <div id="output" class="output"></div>
-  <div id="nft-grid" class="nft-grid"></div>
 </div>
 
 <script>
@@ -131,41 +123,43 @@
 
   const userId = getQueryParam("user_id");
 
-  async function showBalance() {
-    const response = await fetch(`https://iamemanuele.pythonanywhere.com/saldo?user_id=${userId}`);
-    const data = await response.json();
-    const output = document.getElementById("output");
-
-    output.innerHTML = response.ok ? `<p>Your SQJ balance is: ${data.amount}</p>` : `<p>Error: ${data.error}</p>`;
-  }
-
-  async function showProfile() {
-    const response = await fetch(`https://iamemanuele.pythonanywhere.com/profile?user_id=${userId}`);
-    const data = await response.json();
-    const output = document.getElementById("output");
-
-    output.innerHTML = response.ok ? `<p>User Profile:<br>Username: ${data.username}<br>Level: ${data.sqj_level}<br>Account: ${data.wax_account}</p>` : `<p>Error: ${data.error}</p>`;
-  }
-
-  async function showNFTs() {
-    const response = await fetch(`https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}`);
-    const data = await response.json();
-    const nftGrid = document.getElementById("nft-grid");
-
-    if (response.ok && data.nfts && data.nfts.length > 0) {
-      nftGrid.innerHTML = data.nfts.map(nft => `
-        <div class="nft-item">
-          <img src="${nft.image_url}" alt="NFT Image">
-          <div class="nft-details">
-            <p><strong>ID:</strong> ${nft.nft_id}</p>
-            <p><strong>Asset ID:</strong> ${nft.asset_id}</p>
-            <p><strong>Status:</strong> ${nft.is_staked}</p>
-            <p><strong>For Sale:</strong> ${nft.for_sale}</p>
-          </div>
-        </div>
-      `).join("");
-    } else {
-      nftGrid.innerHTML = "<p>No NFTs found.</p>";
+  async function loadContent(page) {
+    const contentFrame = document.getElementById("content-frame");
+    if (page === 'balance') {
+      const response = await fetch(`https://iamemanuele.pythonanywhere.com/saldo?user_id=${userId}`);
+      const data = await response.json();
+      contentFrame.innerHTML = response.ok 
+        ? `<p>Your SQJ balance is: ${data.amount}</p>` 
+        : `<p>Error: ${data.error}</p>`;
+    } else if (page === 'profile') {
+      const response = await fetch(`https://iamemanuele.pythonanywhere.com/profile?user_id=${userId}`);
+      const data = await response.json();
+      contentFrame.innerHTML = response.ok 
+        ? `<p>User Profile:<br>Username: ${data.username}<br>Level: ${data.sqj_level}<br>Account: ${data.wax_account}</p>` 
+        : `<p>Error: ${data.error}</p>`;
+      // Set welcome message with wax_account
+      document.getElementById("welcome-message").textContent = `Welcome, ${data.wax_account}`;
+    } else if (page === 'nfts') {
+      const response = await fetch(`https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}`);
+      const data = await response.json();
+      if (response.ok && data.nfts && data.nfts.length > 0) {
+        contentFrame.innerHTML = `
+          <div class="nft-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+            ${data.nfts.map(nft => `
+              <div class="nft-item" style="border: 1px solid #ddd; padding: 10px; border-radius: 8px; text-align: center;">
+                <img src="${nft.image_url}" alt="NFT Image" style="max-width: 100%; height: auto; border-radius: 8px;">
+                <div class="nft-details" style="margin-top: 10px;">
+                  <p><strong>ID:</strong> ${nft.nft_id}</p>
+                  <p><strong>Asset ID:</strong> ${nft.asset_id}</p>
+                  <p><strong>Status:</strong> ${nft.is_staked}</p>
+                  <p><strong>For Sale:</strong> ${nft.for_sale}</p>
+                </div>
+              </div>
+            `).join("")}
+          </div>`;
+      } else {
+        contentFrame.innerHTML = "<p>No NFTs found.</p>";
+      }
     }
   }
 </script>

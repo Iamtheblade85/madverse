@@ -251,6 +251,9 @@
     const data = await response.json();
 
     // Visualizza il contenuto specifico per "Wallet"
+    const response = await fetch(url);
+    const data = await response.json();
+
     if (page === 'balance' && response.ok) {
       contentFrame.innerHTML = `
         <div class="action-container">
@@ -262,7 +265,7 @@
             <input type="number" id="transfer-amount" step="0.000000000000000001" placeholder="e.g., 10.5">
             <label for="transfer-token">Token:</label>
             <input type="text" id="transfer-token" placeholder="e.g., SQJ">
-            <button onclick="transfer()">Transfer</button>
+            <button onclick="submitTransfer()">Transfer</button>
           </div>
           <div class="action-box">
             <h3>WITHDRAW</h3>
@@ -270,7 +273,7 @@
             <input type="number" id="withdraw-amount" step="0.000000000000000001" placeholder="e.g., 5.25">
             <label for="withdraw-token">Token:</label>
             <input type="text" id="withdraw-token" placeholder="e.g., SQJ">
-            <button onclick="withdraw()">Withdraw</button>
+            <button onclick="submitWithdraw()">Withdraw</button>
           </div>
         </div>
         <h2>Your Token Balances</h2>
@@ -287,19 +290,40 @@
     }
   }
 
-  function transfer() {
+  async function submitTransfer() {
     const account = document.getElementById("transfer-account").value;
-    const amount = document.getElementById("transfer-amount").value;
+    const amount = parseFloat(document.getElementById("transfer-amount").value);
     const token = document.getElementById("transfer-token").value;
-    console.log(`Transferring ${amount} ${token} to ${account}`);
-    alert("Transfer initiated!");
+
+    const response = await fetch("https://iamemanuele.pythonanywhere.com/transfer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from_wax_account: "{user_wax_account}", // Da configurare dinamicamente
+        to_wax_account: account,
+        amount: amount,
+        token_symbol: token
+      })
+    });
+    const result = await response.json();
+    alert(result.message || result.error);
   }
 
-  function withdraw() {
-    const amount = document.getElementById("withdraw-amount").value;
+  async function submitWithdraw() {
+    const amount = parseFloat(document.getElementById("withdraw-amount").value);
     const token = document.getElementById("withdraw-token").value;
-    console.log(`Withdrawing ${amount} ${token}`);
-    alert("Withdraw initiated!");
+
+    const response = await fetch("https://iamemanuele.pythonanywhere.com/withdraw", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        wax_account: "{user_wax_account}", // Da configurare dinamicamente
+        amount: amount,
+        token_symbol: token
+      })
+    });
+    const result = await response.json();
+    alert(result.message || result.error);
   }
 
   fetchWaxAccount();

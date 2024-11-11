@@ -86,26 +86,29 @@
       overflow-y: auto;
       color: #ccc;
     }
-    .nft-grid {
+    .balance-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 20px;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 20px;
     }
-    .nft-item {
-      border: 1px solid #3a3f51;
-      padding: 15px;
-      border-radius: 8px;
+    .balance-item {
       background-color: #1f2430;
-      text-align: center;
-    }
-    .nft-item img {
-      max-width: 100%;
-      height: auto;
       border-radius: 8px;
-      margin-bottom: 10px;
+      padding: 15px;
+      text-align: center;
+      color: #eee;
+      border: 1px solid #3a3f51;
     }
-    .nft-details p {
-      font-size: 14px;
+    .balance-item h3 {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0;
+      color: #0fdc8e;
+    }
+    .balance-item p {
+      font-size: 16px;
+      margin: 5px 0 0;
       color: #ddd;
     }
 
@@ -126,6 +129,9 @@
       }
       .sidebar, .content-frame {
         width: 100%;
+      }
+      .balance-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -166,7 +172,7 @@
     return urlParams.get(param);
   }
   const userId = getQueryParam("user_id");
-  // Funzione per recuperare wax_account e aggiornare il messaggio di benvenuto
+
   async function fetchWaxAccount() {
     const response = await fetch(`https://iamemanuele.pythonanywhere.com/profile?user_id=${userId}`);
     const data = await response.json();
@@ -176,21 +182,34 @@
       document.getElementById("welcome-message").textContent = `Welcome, User`;
     }
   }
+
   async function loadContent(page) {
     const contentFrame = document.getElementById("content-frame");
+
     if (page === 'balance') {
       const response = await fetch(`https://iamemanuele.pythonanywhere.com/saldo?user_id=${userId}`);
       const data = await response.json();
-      contentFrame.innerHTML = response.ok 
-        ? `<p>Your SQJ balance is: ${data.amount}</p>` 
-        : `<p>Error: ${data.error}</p>`;
+
+      if (response.ok && data.balances) {
+        contentFrame.innerHTML = `
+          <h2>Your Token Balances</h2>
+          <div class="balance-grid">
+            ${data.balances.map(balance => `
+              <div class="balance-item">
+                <h3>💰 ${balance.token_symbol}</h3>
+                <p>Amount: <strong>${balance.amount}</strong></p>
+              </div>
+            `).join("")}
+          </div>`;
+      } else {
+        contentFrame.innerHTML = "<p>No token balances found.</p>";
+      }
     } else if (page === 'profile') {
       const response = await fetch(`https://iamemanuele.pythonanywhere.com/profile?user_id=${userId}`);
       const data = await response.json();
       contentFrame.innerHTML = response.ok 
         ? `<p>User Profile:<br>Username: ${data.username}<br>Level: ${data.sqj_level}<br>Account: ${data.wax_account}</p>` 
         : `<p>Error: ${data.error}</p>`;
-      document.getElementById("welcome-message").textContent = `Welcome, ${data.wax_account}`;
     } else if (page === 'nfts') {
       const response = await fetch(`https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}`);
       const data = await response.json();
@@ -214,8 +233,8 @@
       }
     }
   }
+
   fetchWaxAccount();
 </script>
-
 </body>
 </html>

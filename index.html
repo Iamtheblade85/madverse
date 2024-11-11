@@ -104,28 +104,31 @@
       output.innerHTML = `<p>Errore di connessione: ${error.message}</p>`;
     }
   }
-  async function showNFTs() {
-    try {
-      const response = await fetch(`https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}`);
-      const data = await response.json();
-      const output = document.getElementById("output");
+async function showNFTs() {
+  try {
+    const response = await fetch(`https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}`);
+    const data = await response.json();
+    const output = document.getElementById("output");
 
-      console.log("API response:", data);  // Debugging
+    console.log("API response:", data);  // Debugging
 
-      if (response.ok) {
-        if (data.nfts && Array.isArray(data.nfts) && data.nfts.length > 0) {
-          const nftList = data.nfts.map(id => `<li>NFT ID: ${id}</li>`).join("");
-          output.innerHTML = `<p>Your NFT list:</p><ul>${nftList}</ul>`;
-        } else {
-          output.innerHTML = `<p>No NFTs found.</p>`;
-        }
+    if (response.ok) {
+      // Verifica se 'nfts' esiste e contiene elementi
+      if (data.nfts && Array.isArray(data.nfts) && data.nfts.length > 0) {
+        const nftList = data.nfts.map(id => `<li>NFT ID: ${id}</li>`).join("");
+        output.innerHTML = `<p>Your NFT list:</p><ul>${nftList}</ul>`;
       } else {
-        output.innerHTML = `<p>Error: ${data.error}</p>`;
+        output.innerHTML = `<p>No NFTs found.</p>`;
       }
-    } catch (error) {
-      output.innerHTML = `<p>Connection error: ${error.message}</p>`;
+    } else {
+      // Verifica se `data.error` è definito, altrimenti usa un messaggio di default
+      const errorMessage = data.error || "An unknown error occurred.";
+      output.innerHTML = `<p>Error: ${errorMessage}</p>`;
     }
+  } catch (error) {
+    output.innerHTML = `<p>Connection error: ${error.message}</p>`;
   }
+}
 </script>
 
 </body>

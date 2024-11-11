@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,7 +16,7 @@
     }
     .container {
       width: 90%;
-      max-width: 400px;
+      max-width: 800px;
       padding: 20px;
       background-color: #fff;
       border-radius: 8px;
@@ -29,6 +29,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      margin-bottom: 20px;
     }
     .menu button {
       padding: 15px;
@@ -44,23 +45,41 @@
       background-color: #1976D2;
     }
     .output {
-      margin-top: 20px;
       font-size: 16px;
+    }
+    .nft-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .nft-item {
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .nft-item img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+    .nft-details {
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>App Telegram</h1>
+  <h1>Telegram Web App</h1>
   <div class="menu">
-    <button onclick="showSaldo()">Saldo</button>
-    <button onclick="showProfile()">MyProfile</button>
-    <button onclick="showNFTs()">MyNFTs</button>
+    <button onclick="showBalance()">Balance</button>
+    <button onclick="showProfile()">My Profile</button>
+    <button onclick="showNFTs()">My NFTs</button>
   </div>
-
-  <!-- Contenitori per i dati -->
   <div id="output" class="output"></div>
+  <div id="nft-grid" class="nft-grid"></div>
 </div>
 
 <script>
@@ -104,29 +123,27 @@
       output.innerHTML = `<p>Errore di connessione: ${error.message}</p>`;
     }
   }
-async function showNFTs() {
-  try {
+  async function showNFTs() {
     const response = await fetch(`https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}`);
     const data = await response.json();
-    const output = document.getElementById("output");
+    const nftGrid = document.getElementById("nft-grid");
 
-    console.log("API response:", data);  // Debugging
-
-    if (response.ok) {
-      if (data.nfts && Array.isArray(data.nfts) && data.nfts.length > 0) {
-        const nftList = data.nfts.map(id => `<li>NFT ID: ${id}</li>`).join("");
-        output.innerHTML = `<p>Your NFT list:</p><ul>${nftList}</ul>`;
-      } else {
-        output.innerHTML = `<p>No NFTs found.</p>`;
-      }
+    if (response.ok && data.nfts && data.nfts.length > 0) {
+      nftGrid.innerHTML = data.nfts.map(nft => `
+        <div class="nft-item">
+          <img src="${nft.image_url}" alt="NFT Image">
+          <div class="nft-details">
+            <p><strong>ID:</strong> ${nft.nft_id}</p>
+            <p><strong>Asset ID:</strong> ${nft.asset_id}</p>
+            <p><strong>Status:</strong> ${nft.is_staked}</p>
+            <p><strong>For Sale:</strong> ${nft.for_sale}</p>
+          </div>
+        </div>
+      `).join("");
     } else {
-      const errorMessage = data.error || "An unknown error occurred.";
-      output.innerHTML = `<p>Error: ${errorMessage}</p>`;
+      nftGrid.innerHTML = "<p>No NFTs found.</p>";
     }
-  } catch (error) {
-    output.innerHTML = `<p>Connection error: ${error.message}</p>`;
   }
-}
 </script>
 
 </body>

@@ -113,7 +113,6 @@ async function showNFTs() {
     console.log("API response:", data);  // Debugging
 
     if (response.ok) {
-      // Verifica se 'nfts' esiste e contiene elementi
       if (data.nfts && Array.isArray(data.nfts) && data.nfts.length > 0) {
         const nftList = data.nfts.map(id => `<li>NFT ID: ${id}</li>`).join("");
         output.innerHTML = `<p>Your NFT list:</p><ul>${nftList}</ul>`;
@@ -121,7 +120,6 @@ async function showNFTs() {
         output.innerHTML = `<p>No NFTs found.</p>`;
       }
     } else {
-      // Verifica se `data.error` è definito, altrimenti usa un messaggio di default
       const errorMessage = data.error || "An unknown error occurred.";
       output.innerHTML = `<p>Error: ${errorMessage}</p>`;
     }

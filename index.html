@@ -148,7 +148,7 @@
     /* Token Balances */
     .balance-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 15px;
       margin-top: 20px;
     }
@@ -247,96 +247,58 @@
 
     if (page === 'balance' && response.ok) {
       contentFrame.innerHTML = `
-        <div class="action-container">
-          <div class="action-box">
-            <h3>TRANSFER</h3>
-            <label for="transfer-account">Transfer to:</label>
-            <input type="text" id="transfer-account" placeholder="e.g., wax_account123">
-            <label for="transfer-amount">Quantity:</label>
-            <input type="number" id="transfer-amount" step="0.000000000000000001" placeholder="e.g., 10.5">
-            <label for="transfer-token">Token:</label>
-            <input type="text" id="transfer-token" placeholder="e.g., SQJ">
-            <button onclick="submitTransfer()">Transfer</button>
-          </div>
-          <div class="action-box">
-            <h3>WITHDRAW</h3>
-            <label for="withdraw-amount">Quantity:</label>
-            <input type="number" id="withdraw-amount" step="0.000000000000000001" placeholder="e.g., 5.25">
-            <label for="withdraw-token">Token:</label>
-            <input type="text" id="withdraw-token" placeholder="e.g., SQJ">
-            <button onclick="submitWithdraw()">Withdraw</button>
-          </div>
-        </div>
         <h2>Your Token Balances</h2>
         <div class="balance-grid">
           ${data.balances.map(balance => `
             <div class="balance-item">
               <h3>💰 ${balance.token_symbol}</h3>
               <p>Amount: <strong>${balance.amount}</strong></p>
-            </div>
-          `).join("")}
-        </div>`;
-    } else if (page === 'staking_farms' && response.ok) {
-      contentFrame.innerHTML = `
-        <h2>Token Staking Farms</h2>
-        <div class="staking-grid">
-          ${data.farms.map(farm => `
-            <div class="staking-item">
-              <h3>🌱 ${farm.token}</h3>
-              <p>Staked Amount: ${farm.staked_amount}</p>
-              <p>Rewards: ${farm.rewards}</p>
-            </div>
-          `).join("")}
-        </div>`;
-    } else if (page === 'mynfts' && response.ok) {
-      contentFrame.innerHTML = `
-        <h2>Your NFTs Inventory</h2>
-        <div class="nft-grid">
-          ${data.nfts.map(nft => `
-            <div class="nft-item">
-              <img src="${nft.image_url}" alt="NFT Image" style="max-width: 100%; height: auto;">
-              <div class="nft-details">
-                <p><strong>ID:</strong> ${nft.nft_id}</p>
-                <p><strong>Asset ID:</strong> ${nft.asset_id}</p>
-                <p><strong>Status:</strong> ${nft.is_staked}</p>
-                <p><strong>For Sale:</strong> ${nft.for_sale}</p>
+              <div class="action-buttons">
+                <button onclick="showTransferForm('${balance.token_symbol}', ${balance.amount})">Transfer</button>
+                <button onclick="showWithdrawForm('${balance.token_symbol}', ${balance.amount})">Withdraw</button>
               </div>
+              <div id="form-${balance.token_symbol}" class="form-container" style="display: none;"></div>
             </div>
           `).join("")}
         </div>`;
-    } else if (page === 'waxdao_pools' && response.ok) {
-      contentFrame.innerHTML = `
-        <h2>NFTs Farming Pools</h2>
-        <div class="staking-grid">
-          ${data.pools.map(pool => `
-            <div class="staking-item">
-              <h3>🏦 ${pool.nft_type}</h3>
-              <p>Reward Rate: ${pool.reward_rate}</p>
-              <p>Staked NFTs: ${pool.staked_nfts}</p>
-            </div>
-          `).join("")}
-        </div>`;
-    } else if (page === 'profile' && response.ok) {
-      contentFrame.innerHTML = `
-        <h2>User Profile</h2>
-        <p><strong>Username:</strong> ${data.username}</p>
-        <p><strong>Level:</strong> ${data.sqj_level}</p>
-        <p><strong>Account:</strong> ${data.wax_account}</p>`;
     } else {
       contentFrame.innerHTML = `<p>Error loading ${page}: ${data.error}</p>`;
     }
   }
 
-  async function submitTransfer() {
-    const account = document.getElementById("transfer-account").value;
-    const amount = parseFloat(document.getElementById("transfer-amount").value);
-    const token = document.getElementById("transfer-token").value;
+  function showTransferForm(token, maxAmount) {
+    const formContainer = document.getElementById(`form-${token}`);
+    formContainer.innerHTML = `
+      <h4>Transfer ${token}</h4>
+      <label for="transfer-account-${token}">Transfer to:</label>
+      <input type="text" id="transfer-account-${token}" placeholder="e.g., wax_account123">
+      <label for="transfer-amount-${token}">Quantity (Max: ${maxAmount}):</label>
+      <input type="number" id="transfer-amount-${token}" max="${maxAmount}" step="0.000000000000000001" placeholder="e.g., 10.5">
+      <button onclick="submitTransfer('${token}')">Confirm Transfer</button>
+    `;
+    formContainer.style.display = "block";
+  }
+
+  function showWithdrawForm(token, maxAmount) {
+    const formContainer = document.getElementById(`form-${token}`);
+    formContainer.innerHTML = `
+      <h4>Withdraw ${token}</h4>
+      <label for="withdraw-amount-${token}">Quantity (Max: ${maxAmount}):</label>
+      <input type="number" id="withdraw-amount-${token}" max="${maxAmount}" step="0.000000000000000001" placeholder="e.g., 5.25">
+      <button onclick="submitWithdraw('${token}')">Confirm Withdraw</button>
+    `;
+    formContainer.style.display = "block";
+  }
+
+  async function submitTransfer(token) {
+    const account = document.getElementById(`transfer-account-${token}`).value;
+    const amount = parseFloat(document.getElementById(`transfer-amount-${token}`).value);
 
     const response = await fetch("https://iamemanuele.pythonanywhere.com/transfer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        from_wax_account: "{user_wax_account}",
+        from_wax_account: "{user_wax_account}", 
         to_wax_account: account,
         amount: amount,
         token_symbol: token
@@ -346,15 +308,14 @@
     alert(result.message || result.error);
   }
 
-  async function submitWithdraw() {
-    const amount = parseFloat(document.getElementById("withdraw-amount").value);
-    const token = document.getElementById("withdraw-token").value;
+  async function submitWithdraw(token) {
+    const amount = parseFloat(document.getElementById(`withdraw-amount-${token}`).value);
 
     const response = await fetch("https://iamemanuele.pythonanywhere.com/withdraw", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        wax_account: "{user_wax_account}",
+        wax_account: "{user_wax_account}", 
         amount: amount,
         token_symbol: token
       })

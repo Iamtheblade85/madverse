@@ -177,169 +177,152 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="logo">ChipsWallet</div>
-    
-    <div class="main-layout">
-      <div class="sidebar">
-        <div class="welcome-message" id="welcome-message">Welcome, loading...</div>
-        <div class="menu">
-          <button onclick="loadContent('balance')"><i>💼</i> Wallet</button>
-          <button onclick="loadContent('staking_farms')"><i>🌱</i> Token Staking</button>
-          <button onclick="loadContent('mynfts')"><i>🎨</i> NFTs Inventory</button>
-          <button onclick="loadContent('waxdao_pools')"><i>🏦</i> NFTs Pools</button>
-          <button onclick="loadContent('profile')"><i>👤</i> Account</button>
-        </div>
-      </div>
 
-      <div class="content-frame" id="content-frame">
-        <p>Select an option from the menu.</p>
+<div class="container">
+  <div class="logo">ChipsWallet</div>
+  
+  <div class="main-layout">
+    <div class="sidebar">
+      <div class="welcome-message" id="welcome-message">Welcome, {wax_account}</div>
+      <div class="menu">
+        <button onclick="loadContent('balance')"><i>💼</i> Wallet</button>
+        <button onclick="loadContent('staking_farms')"><i>🌱</i> Token Staking</button>
+        <button onclick="loadContent('mynfts')"><i>🎨</i> NFTs Inventory</button>
+        <button onclick="loadContent('waxdao_pools')"><i>🏦</i> NFTs Pools</button>
+        <button onclick="loadContent('profile')"><i>👤</i> Account</button>
       </div>
     </div>
 
-    <div class="footer">
-      ChipsWallet @2024 - A Wax Chain Project
+    <div class="content-frame" id="content-frame">
+      <p>Select an option from the menu.</p>
     </div>
   </div>
 
-  <script>
-    function getQueryParam(param) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param);
+  <div class="footer">
+    ChipsWallet @2024 - A Wax Chain Project
+  </div>
+</div>
+
+<script>
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+  const userId = getQueryParam("user_id");
+
+  async function fetchWaxAccount() {
+    const response = await fetch(`https://iamemanuele.pythonanywhere.com/profile?user_id=${userId}`);
+    const data = await response.json();
+    if (response.ok && data.wax_account) {
+      document.getElementById("welcome-message").textContent = `Welcome, ${data.wax_account}`;
+    } else {
+      document.getElementById("welcome-message").textContent = `Welcome, User`;
     }
+  }
 
-    const userId = getQueryParam("user_id");
+  async function loadContent(page) {
+    const contentFrame = document.getElementById("content-frame");
+    let url;
 
-    async function fetchWaxAccount() {
-      if (!userId) {
-        document.getElementById("welcome-message").textContent = "Welcome, User";
-        return;
-      }
-
-      try {
-        const response = await fetch(`https://iamemanuele.pythonanywhere.com/profile?user_id=${userId}`);
-        const data = await response.json();
-        
-        if (response.ok && data.wax_account) {
-          document.getElementById("welcome-message").textContent = `Welcome, ${data.wax_account}`;
-        } else {
-          document.getElementById("welcome-message").textContent = `Welcome, User`;
-        }
-      } catch (error) {
-        console.error("Error fetching wax_account:", error);
-        document.getElementById("welcome-message").textContent = "Welcome, User";
-      }
+    switch(page) {
+      case 'balance':
+        url = `https://iamemanuele.pythonanywhere.com/saldo?user_id=${userId}`;
+        break;
+      case 'staking_farms':
+        url = `https://iamemanuele.pythonanywhere.com/staking_farms?user_id=${userId}`;
+        break;
+      case 'mynfts':
+        url = `https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}`;
+        break;
+      case 'waxdao_pools':
+        url = `https://iamemanuele.pythonanywhere.com/waxdao_pools?user_id=${userId}`;
+        break;
+      case 'profile':
+        url = `https://iamemanuele.pythonanywhere.com/profile?user_id=${userId}`;
+        break;
     }
+    
+    const response = await fetch(url);
+    const data = await response.json();
 
-    async function loadContent(page) {
-      const contentFrame = document.getElementById("content-frame");
-      let url;
-
-      switch (page) {
-        case 'balance':
-          url = `https://iamemanuele.pythonanywhere.com/saldo?user_id=${userId}`;
-          break;
-        case 'staking_farms':
-          url = `https://iamemanuele.pythonanywhere.com/staking_farms?user_id=${userId}`;
-          break;
-        case 'mynfts':
-          url = `https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}`;
-          break;
-        case 'waxdao_pools':
-          url = `https://iamemanuele.pythonanywhere.com/waxdao_pools?user_id=${userId}`;
-          break;
-        case 'profile':
-          url = `https://iamemanuele.pythonanywhere.com/profile?user_id=${userId}`;
-          break;
-      }
-
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (page === 'balance' && response.ok) {
-          contentFrame.innerHTML = `
-            <h2>Your Token Balances</h2>
-            <div class="balance-grid">
-              ${data.balances.map(balance => `
-                <div class="balance-item">
-                  <h3>💰 ${balance.token_symbol}</h3>
-                  <p>Amount: <strong>${balance.amount}</strong></p>
-                  <button onclick="toggleForm('${balance.token_symbol}', 'transfer')">Transfer</button>
-                  <button onclick="toggleForm('${balance.token_symbol}', 'withdraw')">Withdraw</button>
-                  <div id="form-${balance.token_symbol}" style="display:none">
-                    <div class="form-container" id="transfer-form-${balance.token_symbol}" style="display:none">
-                      <input type="text" id="transfer-account-${balance.token_symbol}" placeholder="e.g., wax_account123">
-                      <input type="number" id="transfer-amount-${balance.token_symbol}" placeholder="Amount">
-                      <button onclick="submitTransfer('${balance.token_symbol}')">Confirm Transfer</button>
-                    </div>
-                    <div class="form-container" id="withdraw-form-${balance.token_symbol}" style="display:none">
-                      <input type="number" id="withdraw-amount-${balance.token_symbol}" placeholder="Amount">
-                      <button onclick="submitWithdraw('${balance.token_symbol}')">Confirm Withdraw</button>
-                    </div>
-                  </div>
-                </div>
-              `).join("")}
-            </div>`;
-        } else {
-          contentFrame.innerHTML = `<p>Error loading ${page}: ${data.error}</p>`;
-        }
-      } catch (error) {
-        contentFrame.innerHTML = `<p>Error loading content for ${page}.</p>`;
-      }
+    if (page === 'balance' && response.ok) {
+      contentFrame.innerHTML = `
+        <h2>Your Token Balances</h2>
+        <div class="balance-grid">
+          ${data.balances.map(balance => `
+            <div class="balance-item">
+              <h3>💰 ${balance.token_symbol}</h3>
+              <p>Amount: <strong>${balance.amount}</strong></p>
+              <div class="action-buttons">
+                <button onclick="showTransferForm('${balance.token_symbol}', ${balance.amount})">Transfer</button>
+                <button onclick="showWithdrawForm('${balance.token_symbol}', ${balance.amount})">Withdraw</button>
+              </div>
+              <div id="form-${balance.token_symbol}" class="form-container" style="display: none;"></div>
+            </div>
+          `).join("")}
+        </div>`;
+    } else {
+      contentFrame.innerHTML = `<p>Error loading ${page}: ${data.error}</p>`;
     }
-// Mostra o nasconde il form di trasferimento o prelievo
-function toggleForm(token, action) {
+  }
+
+  function showTransferForm(token, maxAmount) {
     const formContainer = document.getElementById(`form-${token}`);
-    const transferForm = document.getElementById(`transfer-form-${token}`);
-    const withdrawForm = document.getElementById(`withdraw-form-${token}`);
-
+    formContainer.innerHTML = `
+      <h4>Transfer ${token}</h4>
+      <label for="transfer-account-${token}">Transfer to:</label>
+      <input type="text" id="transfer-account-${token}" placeholder="e.g., wax_account123">
+      <label for="transfer-amount-${token}">Quantity (Max: ${maxAmount}):</label>
+      <input type="number" id="transfer-amount-${token}" max="${maxAmount}" step="0.000000000000000001" placeholder="e.g., 10.5">
+      <button onclick="submitTransfer('${token}')">Confirm Transfer</button>
+    `;
     formContainer.style.display = "block";
-    transferForm.style.display = action === "transfer" ? "block" : "none";
-    withdrawForm.style.display = action === "withdraw" ? "block" : "none";
-}
+  }
 
-async function submitTransfer(token) {
+  function showWithdrawForm(token, maxAmount) {
+    const formContainer = document.getElementById(`form-${token}`);
+    formContainer.innerHTML = `
+      <h4>Withdraw ${token}</h4>
+      <label for="withdraw-amount-${token}">Quantity (Max: ${maxAmount}):</label>
+      <input type="number" id="withdraw-amount-${token}" max="${maxAmount}" step="0.000000000000000001" placeholder="e.g., 5.25">
+      <button onclick="submitWithdraw('${token}')">Confirm Withdraw</button>
+    `;
+    formContainer.style.display = "block";
+  }
+
+  async function submitTransfer(token) {
     const account = document.getElementById(`transfer-account-${token}`).value;
     const amount = parseFloat(document.getElementById(`transfer-amount-${token}`).value);
-    if (isNaN(amount) || amount <= 0) {
-        alert("Inserisci un importo valido per il trasferimento.");
-        return;
-    }
 
     const response = await fetch("https://iamemanuele.pythonanywhere.com/transfer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            from_wax_account: "{user_wax_account}",
-            to_wax_account: account,
-            amount: amount,
-            token_symbol: token
-        })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from_wax_account: "{user_wax_account}", 
+        to_wax_account: account,
+        amount: amount,
+        token_symbol: token
+      })
     });
     const result = await response.json();
     alert(result.message || result.error);
-}
+  }
 
-async function submitWithdraw(token) {
+  async function submitWithdraw(token) {
     const amount = parseFloat(document.getElementById(`withdraw-amount-${token}`).value);
-    if (isNaN(amount) || amount <= 0) {
-        alert("Inserisci un importo valido per il prelievo.");
-        return;
-    }
 
     const response = await fetch("https://iamemanuele.pythonanywhere.com/withdraw", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            wax_account: "{user_wax_account}",
-            amount: amount,
-            token_symbol: token
-        })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        wax_account: "{user_wax_account}", 
+        amount: amount,
+        token_symbol: token
+      })
     });
     const result = await response.json();
     alert(result.message || result.error);
-}
+  }
 
   fetchWaxAccount();
 </script>

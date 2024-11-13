@@ -479,38 +479,78 @@
         alert("Failed to complete the withdrawal request.");
     }
   }
-    function displayStakingPools(pools) {
-        const contentFrame = document.getElementById("content-frame");
-        if (pools.length === 0) {
-            contentFrame.innerHTML = "<p>No active staking pools are available at the moment.</p>";
-            return;
-        }
-
-        contentFrame.innerHTML = `
-          <h2 style="color: #0fdc8e; font-size: 26px; text-align: center;">Available Staking Pools</h2>
-          <div class="staking-grid">
-            ${pools.map(pool => `
-              <div class="staking-item">
-                <h3>🌟 Pool ${pool.token_symbol} (ID: ${pool.pool_id})</h3>
-                <p><span class="label">Total Staked:</span> <span class="value">${pool.total_staked}</span></p>
-                <p><span class="label">Your Staked Tokens:</span> <span class="value">${pool.user_staked}</span></p>
-                <div class="rewards-info">
-                  <h4 style="color: #0fdc8e; font-size: 18px;">Rewards</h4>
-                  ${pool.rewards_info.map(reward => `
-                    <div class="reward-detail">
-                      <p><span class="label">Reward Token:</span> <span class="value">${reward.reward_token}</span></p>
-                      <p><span class="label">Remaining Pool Reward :</span> <span class="value">${reward.total_reward_deposit} ${reward.reward_token}</span></p>
-                      <p><span class="label">Daily Reward Distribution:</span> <span class="value">${reward.daily_reward} ${reward.reward_token}</span></p>
-                      <p><span class="label">APR (%):</span> <span class="value">${reward.apr} %</span></p>
-                      <p><span class="label">Days Remaining:</span> <span class="value">${reward.days_remaining}</span></p>
-                      <p><span class="label">Your Daily Reward:</span> <span class="value">${reward.user_daily_reward} ${reward.reward_token}</span></p>
-                    </div>
-                  `).join("")}
-                </div>
-              </div>
-            `).join("")}
-          </div>`;
+function displayStakingPools(pools) {
+    const contentFrame = document.getElementById("content-frame");
+    if (pools.length === 0) {
+        contentFrame.innerHTML = "<p>No active staking pools are available at the moment.</p>";
+        return;
     }
+
+    contentFrame.innerHTML = `
+      <h2 style="color: #0fdc8e; font-size: 26px; text-align: center;">Available Staking Pools</h2>
+      <div class="staking-grid">
+        ${pools.map(pool => `
+          <div class="staking-item">
+            <h3 style="color: #0fdc8e;">🌟 Pool ${pool.token_symbol} (ID: ${pool.pool_id})</h3>
+            <div class="pool-info">
+              <p><span class="label">Total Staked:</span> <span class="value">${pool.total_staked}</span></p>
+              <p><span class="label">Your Staked Tokens:</span> <span class="value">${pool.user_staked}</span></p>
+            </div>
+            <div class="rewards-info">
+              <h4 style="color: #0fdc8e; font-size: 18px;">Rewards</h4>
+              ${pool.rewards_info.map(reward => `
+                <div class="reward-detail">
+                  <p><span class="label">Reward Token:</span> <span class="value">${reward.reward_token}</span></p>
+                  <p><span class="label">Remaining Pool Reward:</span> <span class="value">${reward.total_reward_deposit} ${reward.reward_token}</span></p>
+                  <p><span class="label">Daily Reward Distribution:</span> <span class="value">${reward.daily_reward} ${reward.reward_token}</span></p>
+                  <p><span class="label">APR (%):</span> <span class="value">${reward.apr} %</span></p>
+                  <p><span class="label">Days Remaining:</span> <span class="value">${reward.days_remaining}</span></p>
+                  <p><span class="label">Your Daily Reward:</span> <span class="value">${reward.user_daily_reward} ${reward.reward_token}</span></p>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `).join("")}
+      </div>`;
+
+    // Add CSS for styling
+    const style = document.createElement("style");
+    style.innerHTML = `
+      .staking-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+      }
+      .staking-item {
+        background-color: #333;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        color: white;
+      }
+      .pool-info, .rewards-info {
+        margin-top: 15px;
+        padding: 10px;
+        background-color: #444;
+        border-radius: 6px;
+      }
+      .reward-detail {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #555;
+        border-radius: 6px;
+      }
+      .label {
+        font-weight: bold;
+        color: black;
+      }
+      .value {
+        font-weight: bold;
+        color: white;
+      }
+    `;
+    document.head.appendChild(style);
+}
   async function submitTransfer(token) {
     const account = document.getElementById(`transfer-account-${token}`).value;
     const amount = parseFloat(document.getElementById(`transfer-amount-${token}`).value);

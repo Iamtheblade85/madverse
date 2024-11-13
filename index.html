@@ -261,6 +261,52 @@
             </div>
           `).join("")}
         </div>`;
+    } else if (page === 'staking_farms' && response.ok) {
+      contentFrame.innerHTML = `
+        <h2>Token Staking Farms</h2>
+        <div class="staking-grid">
+          ${data.farms.map(farm => `
+            <div class="staking-item">
+              <h3>🌱 ${farm.token}</h3>
+              <p>Staked Amount: ${farm.staked_amount}</p>
+              <p>Rewards: ${farm.rewards}</p>
+            </div>
+          `).join("")}
+        </div>`;
+    } else if (page === 'mynfts' && response.ok) {
+      contentFrame.innerHTML = `
+        <h2>Your NFTs Inventory</h2>
+        <div class="nft-grid">
+          ${data.nfts.map(nft => `
+            <div class="nft-item">
+              <img src="${nft.image_url}" alt="NFT Image" style="max-width: 100%; height: auto;">
+              <div class="nft-details">
+                <p><strong>ID:</strong> ${nft.nft_id}</p>
+                <p><strong>Asset ID:</strong> ${nft.asset_id}</p>
+                <p><strong>Status:</strong> ${nft.is_staked}</p>
+                <p><strong>For Sale:</strong> ${nft.for_sale}</p>
+              </div>
+            </div>
+          `).join("")}
+        </div>`;
+    } else if (page === 'waxdao_pools' && response.ok) {
+      contentFrame.innerHTML = `
+        <h2>NFTs Farming Pools</h2>
+        <div class="staking-grid">
+          ${data.pools.map(pool => `
+            <div class="staking-item">
+              <h3>🏦 ${pool.nft_type}</h3>
+              <p>Reward Rate: ${pool.reward_rate}</p>
+              <p>Staked NFTs: ${pool.staked_nfts}</p>
+            </div>
+          `).join("")}
+        </div>`;
+    } else if (page === 'profile' && response.ok) {
+      contentFrame.innerHTML = `
+        <h2>User Profile</h2>
+        <p><strong>Username:</strong> ${data.username}</p>
+        <p><strong>Level:</strong> ${data.sqj_level}</p>
+        <p><strong>Account:</strong> ${data.wax_account}</p>`;
     } else {
       contentFrame.innerHTML = `<p>Error loading ${page}: ${data.error}</p>`;
     }

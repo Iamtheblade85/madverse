@@ -259,10 +259,12 @@
                   <div class="balance-item">
                     <h3>💰 ${balance.token_symbol}</h3>
                     <p>Amount: <strong>${balance.amount}</strong></p>
+                    <!--
                     <div class="action-buttons">
                       <button onclick="showTransferForm('${balance.token_symbol}', ${balance.amount})">Transfer</button>
                       <button onclick="showWithdrawForm('${balance.token_symbol}', ${balance.amount})">Withdraw</button>
                     </div>
+                    -->
                     <div id="form-${balance.token_symbol}" class="form-container" style="display: none;"></div>
                   </div>
                 `;
@@ -293,11 +295,11 @@
             <p><strong>Status:</strong> ${nft.is_staked}</p>
             <p><strong>For Sale:</strong> ${nft.for_sale}</p>
           </div>
-          <!-- Nuovi pulsanti per Buy, Sell, Withdraw -->
+          <!-- Nuovi pulsanti per Buy, Sell, Withdraw 
           <div class="nft-actions">
             <button onclick="sellNFT('${nft.nft_id}')">Sell</button>
             <button onclick="withdrawNFT('${nft.nft_id}')">Withdraw</button>
-          </div>
+          </div> -->
         </div>
       `).join("")}
     </div>`;

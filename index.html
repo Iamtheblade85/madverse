@@ -174,15 +174,15 @@
       border-top: 1px solid #3a3f51;
       margin-top: 20px;
     }
-    .staking-grid {
+        .staking-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 20px;
         margin-top: 20px;
     }
 
+    /* Stili delle card con gradienti unici */
     .staking-item {
-        background: linear-gradient(135deg, #202940, #29364D);
         padding: 20px;
         border-radius: 12px;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
@@ -193,38 +193,48 @@
         cursor: pointer;
     }
 
-    /* Effetti hover per un impatto visivo */
+    .staking-item:nth-child(3n+1) {
+        background: linear-gradient(135deg, #5C258D, #4389A2); /* Viola e blu */
+    }
+    .staking-item:nth-child(3n+2) {
+        background: linear-gradient(135deg, #136a8a, #267871); /* Blu mare e verde acqua */
+    }
+    .staking-item:nth-child(3n) {
+        background: linear-gradient(135deg, #FF512F, #DD2476); /* Rosso e rosa */
+    }
+
+    /* Effetti hover */
     .staking-item:hover {
         transform: translateY(-5px);
         box-shadow: 0 15px 25px rgba(0, 0, 0, 0.6);
     }
 
-    /* Titoli con font accentuati */
+    /* Titoli */
     .staking-item h3 {
         font-size: 22px;
         font-weight: bold;
-        color: #0fdc8e;
+        color: #fff;
         margin-bottom: 15px;
     }
 
-    /* Testo per evidenziare il totale staked */
+    /* Evidenziazione del testo */
     .staking-item p {
         font-size: 16px;
         line-height: 1.6;
         margin: 8px 0;
     }
 
-    /* Sezione premi con glow */
+    /* Glow intorno alla sezione dei premi */
     .rewards-info {
-        background: rgba(15, 220, 142, 0.1);
+        background: rgba(255, 255, 255, 0.15);
         padding: 15px;
         border-radius: 8px;
         margin-top: 15px;
-        color: #0fdc8e;
-        box-shadow: 0 0 20px rgba(15, 220, 142, 0.3);
+        color: #fff;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
     }
 
-    /* Stili per le singole ricompense */
+    /* Dettagli dei premi */
     .reward-detail {
         margin-bottom: 15px;
     }
@@ -234,7 +244,7 @@
         margin: 5px 0;
     }
 
-    /* Effetto 3D sugli elementi principali */
+    /* Effetto luce */
     .staking-item::before {
         content: '';
         position: absolute;
@@ -483,8 +493,8 @@
             ${pools.map(pool => `
               <div class="staking-item">
                 <h3>🌟 Pool ${pool.token_symbol} (ID: ${pool.pool_id})</h3>
-                <p><strong>Total Staked:</strong> <span style="color: #ffa726; font-weight: bold;">${pool.total_staked}</span></p>
-                <p><strong>Your Staked Tokens:</strong> <span style="color: #29b6f6; font-weight: bold;">${pool.user_staked}</span></p>
+                <p><strong>Total Staked:</strong> <span style="color: #ffe57f; font-weight: bold;">${pool.total_staked}</span></p>
+                <p><strong>Your Staked Tokens:</strong> <span style="color: #b2ff59; font-weight: bold;">${pool.user_staked}</span></p>
                 <div class="rewards-info">
                   <h4 style="color: #fff; font-size: 18px;">Rewards</h4>
                   ${pool.rewards_info.map(reward => `
@@ -494,7 +504,7 @@
                       <p><strong>Daily Distribution:</strong> ${reward.daily_reward}</p>
                       <p><strong>APR:</strong> ${reward.apr}</p>
                       <p><strong>Days Remaining:</strong> ${reward.days_remaining}</p>
-                      <p><strong>Your Daily Reward:</strong> <span style="color: #ffee58; font-weight: bold;">${reward.user_daily_reward}</span></p>
+                      <p><strong>Your Daily Reward:</strong> <span style="color: #ff8a65; font-weight: bold;">${reward.user_daily_reward}</span></p>
                     </div>
                   `).join("")}
                 </div>

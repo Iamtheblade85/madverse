@@ -499,11 +499,11 @@
                   ${pool.rewards_info.map(reward => `
                     <div class="reward-detail">
                       <p><span class="label">Reward Token:</span> <span class="value">${reward.reward_token}</span></p>
-                      <p><span class="label">Total Reward Deposit:</span> <span class="value">${reward.total_reward_deposit}</span></p>
-                      <p><span class="label">Daily Distribution:</span> <span class="value">${reward.daily_reward}</span></p>
-                      <p><span class="label">APR:</span> <span class="value">${reward.apr}</span></p>
+                      <p><span class="label">Remaining Pool Reward :</span> <span class="value">${reward.total_reward_deposit} ${reward.reward_token}</span></p>
+                      <p><span class="label">Daily Reward Distribution:</span> <span class="value">${reward.daily_reward} ${reward.reward_token}</span></p>
+                      <p><span class="label">APR (%):</span> <span class="value">${reward.apr} %</span></p>
                       <p><span class="label">Days Remaining:</span> <span class="value">${reward.days_remaining}</span></p>
-                      <p><span class="label">Your Daily Reward:</span> <span class="value">${reward.user_daily_reward}</span></p>
+                      <p><span class="label">Your Daily Reward:</span> <span class="value">${reward.user_daily_reward} ${reward.reward_token}</span></p>
                     </div>
                   `).join("")}
                 </div>

@@ -398,6 +398,38 @@
         alert("Failed to complete the withdrawal request.");
     }
   }
+    // Funzione per visualizzare i pool di staking
+  function displayStakingPools(pools) {
+      const contentFrame = document.getElementById("content-frame");
+      if (pools.length === 0) {
+          contentFrame.innerHTML = "<p>No active staking pools are available at the moment.</p>";
+          return;
+      }
+      
+      contentFrame.innerHTML = `
+        <h2>Available Staking Pools</h2>
+        <div class="staking-grid">
+          ${pools.map(pool => `
+            <div class="staking-item">
+              <h3>🌟 Pool ${pool.token_symbol} (ID: ${pool.pool_id})</h3>
+              <p>Total Staked: ${pool.total_staked}</p>
+              <p>Your Staked Tokens: ${pool.user_staked}</p>
+              <div class="rewards-info">
+                ${pool.rewards_info.map(reward => `
+                  <div class="reward-detail">
+                    <p>Reward Token: ${reward.reward_token}</p>
+                    <p>Total Reward Deposit: ${reward.total_reward_deposit}</p>
+                    <p>Daily Distribution: ${reward.daily_reward}</p>
+                    <p>APR: ${reward.apr}</p>
+                    <p>Days Remaining: ${reward.days_remaining}</p>
+                    <p>Your Daily Reward: ${reward.user_daily_reward}</p>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          `).join("")}
+        </div>`;
+  }
   async function submitTransfer(token) {
     const account = document.getElementById(`transfer-account-${token}`).value;
     const amount = parseFloat(document.getElementById(`transfer-amount-${token}`).value);

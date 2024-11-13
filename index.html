@@ -373,31 +373,38 @@
   
   // Funzione per gestire il prelievo di un NFT
   async function withdrawNFT(nftId) {
-      try {
-          const response = await fetch("https://iamemanuele.pythonanywhere.com/withdraw_nft", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                  wax_account: user_wax_account,  // Assicura che sia impostato correttamente
-                  nft_id: nftId
-              })
-          });
-  
-          // Controllo dello stato HTTP prima di tentare di analizzare JSON
-          if (!response.ok) {
-              console.error(`Server Error: ${response.statusText}`);
-              alert(`Server error occurred: ${response.statusText}`);
-              return;
-          }
-  
-          // Tentativo di analizzare la risposta come JSON
-          const result = await response.json();
-          alert(`Success: ${result.message}`);
-          
-      } catch (error) {
-          console.error("Error in withdrawNFT:", error);
-          alert("Failed to complete the withdrawal request.");
-      }
+    console.info("Initiating NFT withdrawal...");
+    console.info("NFT ID:", nftId);
+    console.info("User Wax Account:", user_wax_account);
+
+    try {
+        const response = await fetch("https://iamemanuele.pythonanywhere.com/withdraw_nft", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                wax_account: user_wax_account,  // Assicura che sia impostato correttamente
+                nft_id: nftId
+            })
+        });
+
+        console.info("Fetch request sent to backend for NFT withdrawal.");
+        console.info("Response status:", response.status);
+
+        const result = await response.json();
+
+        console.info("Response JSON received:", result);
+
+        if (response.ok) {
+            console.info("Withdrawal successful:", result.message);
+            alert(`Success: ${result.message}`);
+        } else {
+            console.info("Backend error:", result.error);
+            alert(`Error: ${result.error}`);
+        }
+    } catch (error) {
+        console.error("Error in withdrawNFT:", error);
+        alert("Failed to complete the withdrawal request.");
+    }
   }
   async function submitTransfer(token) {
     const account = document.getElementById(`transfer-account-${token}`).value;

@@ -176,84 +176,86 @@
     }
     .staking-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 20px;
         margin-top: 20px;
     }
 
-    /* Stile delle card 3D con gradienti e effetti ombra */
+    /* Stile delle card con gradienti vivaci e effetti 3D */
     .staking-item {
         padding: 20px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #1b1f27, #0d8f66); /* Sfondo gradiente personalizzato */
-        color: #fff;
+        border-radius: 15px;
+        background: linear-gradient(135deg, #1b1f27, #00b474);
+        color: #ffffff;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.4);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
         cursor: pointer;
+        font-size: calc(14px + 0.3vw); /* Testo responsivo */
+        background-clip: padding-box;
     }
 
+    /* Diversi gradienti per le card */
     .staking-item:nth-child(3n+1) {
-        background: linear-gradient(135deg, #0fdc8e, #2c313e); /* Gradiente verde chiaro */
+        background: linear-gradient(135deg, #00e6b3, #1b1f27);
     }
     .staking-item:nth-child(3n+2) {
-        background: linear-gradient(135deg, #00b474, #1f2430); /* Gradiente verde scuro */
+        background: linear-gradient(135deg, #00b474, #262b37);
     }
     .staking-item:nth-child(3n) {
-        background: linear-gradient(135deg, #008a5e, #262b37); /* Gradiente verde acqua */
+        background: linear-gradient(135deg, #006a4f, #2c313e);
     }
 
-    /* Effetti hover per animazioni */
+    /* Animazioni di hover per maggiore profondità */
     .staking-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.6);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     }
 
-    /* Titoli */
+    /* Titolo con effetti e colori in stile neon */
     .staking-item h3 {
-        font-size: 22px;
-        font-weight: bold;
-        color: #000000; 
-        margin-bottom: 15px;
+        font-size: calc(18px + 0.5vw);
+        color: #00e6b3; /* Verde neon per i titoli */
+        margin-bottom: 12px;
+        text-shadow: 0 0 8px rgba(15, 220, 142, 0.7);
     }
 
-    /* Stili per le etichette (labels) */
+    /* Etichette in verde brillante */
     .staking-item .label {
-        font-size: 14px;
         font-weight: bold;
-        color: #000000; /* Verde brillante per le etichette */
-        text-transform: uppercase;
+        color: #00e6b3; /* Verde brillante per etichette */
+        display: inline-block;
     }
 
-    /* Stili per i valori (values) */
+    /* Valori in bianco con un'ombra sottile */
     .staking-item .value {
-        font-size: 18px;
         font-weight: bold;
-        color: #ffffff; /* Bianco per i valori */
+        color: #ffffff;
+        display: inline-block;
+        text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
     }
 
-    /* Sezione premi con glow e effetto ombra */
+    /* Sezione premi con bordi e ombre */
     .rewards-info {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 15px;
-        border-radius: 8px;
+        background: rgba(15, 220, 142, 0.1);
+        padding: 12px;
+        border-radius: 10px;
         margin-top: 15px;
-        color: #fff;
-        box-shadow: 0 0 15px rgba(15, 220, 142, 0.2);
+        box-shadow: 0 5px 10px rgba(0, 255, 200, 0.2);
     }
 
-    /* Glow effetto luce */
+    /* Glow radiale per un effetto futuristico */
     .staking-item::before {
         content: '';
         position: absolute;
         top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle at 20% 35%, rgba(15, 220, 142, 0.15), rgba(0, 0, 0, 0));
-        transform: rotate(25deg);
+        left: -50%;
+        width: 300%;
+        height: 300%;
+        background: radial-gradient(circle, rgba(15, 220, 142, 0.15), rgba(0, 0, 0, 0));
         opacity: 0.2;
+        transform: rotate(30deg);
     }
   </style>
 </head>
@@ -479,78 +481,38 @@
         alert("Failed to complete the withdrawal request.");
     }
   }
-function displayStakingPools(pools) {
-    const contentFrame = document.getElementById("content-frame");
-    if (pools.length === 0) {
-        contentFrame.innerHTML = "<p>No active staking pools are available at the moment.</p>";
-        return;
-    }
+    function displayStakingPools(pools) {
+        const contentFrame = document.getElementById("content-frame");
+        if (pools.length === 0) {
+            contentFrame.innerHTML = "<p>No active staking pools are available at the moment.</p>";
+            return;
+        }
 
-    contentFrame.innerHTML = `
-      <h2 style="color: #0fdc8e; font-size: 26px; text-align: center;">Available Staking Pools</h2>
-      <div class="staking-grid">
-        ${pools.map(pool => `
-          <div class="staking-item">
-            <h3 style="color: #0fdc8e;">🌟 Pool ${pool.token_symbol} (ID: ${pool.pool_id})</h3>
-            <div class="pool-info">
-              <p><span class="label">Total Staked:</span> <span class="value">${pool.total_staked}</span></p>
-              <p><span class="label">Your Staked Tokens:</span> <span class="value">${pool.user_staked}</span></p>
-            </div>
-            <div class="rewards-info">
-              <h4 style="color: #0fdc8e; font-size: 18px;">Rewards</h4>
-              ${pool.rewards_info.map(reward => `
-                <div class="reward-detail">
-                  <p><span class="label">Reward Token:</span> <span class="value">${reward.reward_token}</span></p>
-                  <p><span class="label">Remaining Pool Reward:</span> <span class="value">${reward.total_reward_deposit} ${reward.reward_token}</span></p>
-                  <p><span class="label">Daily Reward Distribution:</span> <span class="value">${reward.daily_reward} ${reward.reward_token}</span></p>
-                  <p><span class="label">APR (%):</span> <span class="value">${reward.apr} %</span></p>
-                  <p><span class="label">Days Remaining:</span> <span class="value">${reward.days_remaining}</span></p>
-                  <p><span class="label">Your Daily Reward:</span> <span class="value">${reward.user_daily_reward} ${reward.reward_token}</span></p>
+        contentFrame.innerHTML = `
+          <h2 style="color: #0fdc8e; font-size: 26px; text-align: center;">Available Staking Pools</h2>
+          <div class="staking-grid">
+            ${pools.map(pool => `
+              <div class="staking-item">
+                <h3>🌟 Pool ${pool.token_symbol} (ID: ${pool.pool_id})</h3>
+                <p><span class="label">Total Staked:</span> <span class="value">${pool.total_staked}</span></p>
+                <p><span class="label">Your Staked Tokens:</span> <span class="value">${pool.user_staked}</span></p>
+                <div class="rewards-info">
+                  <h4 style="color: #0fdc8e; font-size: 18px;">Rewards</h4>
+                  ${pool.rewards_info.map(reward => `
+                    <div class="reward-detail">
+                      <p><span class="label">Reward Token:</span> <span class="value">${reward.reward_token}</span></p>
+                      <p><span class="label">Total Reward Deposit:</span> <span class="value">${reward.total_reward_deposit}</span></p>
+                      <p><span class="label">Daily Distribution:</span> <span class="value">${reward.daily_reward}</span></p>
+                      <p><span class="label">APR:</span> <span class="value">${reward.apr}</span></p>
+                      <p><span class="label">Days Remaining:</span> <span class="value">${reward.days_remaining}</span></p>
+                      <p><span class="label">Your Daily Reward:</span> <span class="value">${reward.user_daily_reward}</span></p>
+                    </div>
+                  `).join("")}
                 </div>
-              `).join("")}
-            </div>
-          </div>
-        `).join("")}
-      </div>`;
-
-    // Add CSS for styling
-    const style = document.createElement("style");
-    style.innerHTML = `
-      .staking-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
-      }
-      .staking-item {
-        background-color: #333;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        color: white;
-      }
-      .pool-info, .rewards-info {
-        margin-top: 15px;
-        padding: 10px;
-        background-color: #444;
-        border-radius: 6px;
-      }
-      .reward-detail {
-        margin-top: 10px;
-        padding: 10px;
-        background-color: #555;
-        border-radius: 6px;
-      }
-      .label {
-        font-weight: bold;
-        color: black;
-      }
-      .value {
-        font-weight: bold;
-        color: white;
-      }
-    `;
-    document.head.appendChild(style);
-}
+              </div>
+            `).join("")}
+          </div>`;
+    }
   async function submitTransfer(token) {
     const account = document.getElementById(`transfer-account-${token}`).value;
     const amount = parseFloat(document.getElementById(`transfer-amount-${token}`).value);

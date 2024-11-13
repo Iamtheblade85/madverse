@@ -383,12 +383,17 @@
               })
           });
   
-          const result = await response.json();
-          if (response.ok) {
-              alert(`Success: ${result.message}`);
-          } else {
-              alert(`Error: ${result.error}`);
+          // Controllo dello stato HTTP prima di tentare di analizzare JSON
+          if (!response.ok) {
+              console.error(`Server Error: ${response.statusText}`);
+              alert(`Server error occurred: ${response.statusText}`);
+              return;
           }
+  
+          // Tentativo di analizzare la risposta come JSON
+          const result = await response.json();
+          alert(`Success: ${result.message}`);
+          
       } catch (error) {
           console.error("Error in withdrawNFT:", error);
           alert("Failed to complete the withdrawal request.");

@@ -230,7 +230,7 @@
         url = `https://iamemanuele.pythonanywhere.com/saldo?user_id=${userId}`;
         break;
       case 'staking_farms':
-        url = `https://iamemanuele.pythonanywhere.com/staking_farms?user_id=${userId}`;
+        url = `https://iamemanuele.pythonanywhere.com/open_pools?user_id=${userId}`; 
         break;
       case 'mynfts':
         url = `https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}`;
@@ -271,38 +271,28 @@
               }).join("")}
             </div>`;
     } else if (page === 'staking_farms' && response.ok) {
-      contentFrame.innerHTML = `
-        <h2>Token Staking Farms</h2>
-        <div class="staking-grid">
-          ${data.farms.map(farm => `
-            <div class="staking-item">
-              <h3>🌱 ${farm.token}</h3>
-              <p>Staked Amount: ${farm.staked_amount}</p>
-              <p>Rewards: ${farm.rewards}</p>
-            </div>
-          `).join("")}
-        </div>`;
+        displayStakingPools(data.pools);
     } else if (page === 'mynfts' && response.ok) {
-  contentFrame.innerHTML = `
-    <h2>Your NFTs Inventory</h2>
-    <div class="nft-grid">
-      ${data.nfts.map(nft => `
-        <div class="nft-item">
-          <img src="${nft.image_url}" alt="NFT Image" style="max-width: 100%; height: auto;">
-          <div class="nft-details">
-            <p><strong>ID:</strong> ${nft.nft_id}</p>
-            <p><strong>Asset ID:</strong> ${nft.asset_id}</p>
-            <p><strong>Status:</strong> ${nft.is_staked}</p>
-            <p><strong>For Sale:</strong> ${nft.for_sale}</p>
+      contentFrame.innerHTML = `
+      <h2>Your NFTs Inventory</h2>
+      <div class="nft-grid">
+        ${data.nfts.map(nft => `
+          <div class="nft-item">
+            <img src="${nft.image_url}" alt="NFT Image" style="max-width: 100%; height: auto;">
+            <div class="nft-details">
+              <p><strong>ID:</strong> ${nft.nft_id}</p>
+              <p><strong>Asset ID:</strong> ${nft.asset_id}</p>
+              <p><strong>Status:</strong> ${nft.is_staked}</p>
+              <p><strong>For Sale:</strong> ${nft.for_sale}</p>
+            </div>
+            <!-- Nuovi pulsanti per Buy, Sell, Withdraw 
+            <div class="nft-actions">
+              <button onclick="sellNFT('${nft.nft_id}')">Sell</button>
+              <button onclick="withdrawNFT('${nft.nft_id}')">Withdraw</button>
+            </div> -->
           </div>
-          <!-- Nuovi pulsanti per Buy, Sell, Withdraw 
-          <div class="nft-actions">
-            <button onclick="sellNFT('${nft.nft_id}')">Sell</button>
-            <button onclick="withdrawNFT('${nft.nft_id}')">Withdraw</button>
-          </div> -->
-        </div>
-      `).join("")}
-    </div>`;
+        `).join("")}
+      </div>`;
   } else if (page === 'waxdao_pools' && response.ok) {
       contentFrame.innerHTML = `
         <h2>NFTs Farming Pools</h2>

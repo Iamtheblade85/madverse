@@ -400,6 +400,27 @@
         transform: rotate(25deg);
         opacity: 0.2;
     }
+        .switch-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    .switch-container button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        border-radius: 20px;
+        margin: 0 5px;
+        background: #0fdc8e;
+        color: #262b37;
+        font-weight: bold;
+        transition: transform 0.2s;
+    }
+    .switch-container button.active {
+        background: #0d8f66;
+        transform: scale(1.1);
+    }
   </style>
 </head>
 <body>
@@ -462,7 +483,7 @@
         url = `https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}`;
         break;
       case 'waxdao_pools':
-        url = `https://iamemanuele.pythonanywhere.com/waxdao_pools?user_id=${userId}`;
+        loadNFTFarms(); // Carica le pools di default
         break;
       case 'profile':
         url = `https://iamemanuele.pythonanywhere.com/profile?user_id=${userId}`;
@@ -509,19 +530,7 @@ if (page === 'balance' && response.ok) {
           </div>
         `).join("")}
       </div>`;
-} else if (page === 'waxdao_pools' && response.ok) {
-      contentFrame.innerHTML = `
-        <h2>NFTs Farming Pools</h2>
-        <div class="staking-grid">
-          ${data.pools.map(pool => `
-            <div class="staking-item">
-              <h3>🏦 ${pool.nft_type}</h3>
-              <p>Reward Rate: ${pool.reward_rate}</p>
-              <p>Staked NFTs: ${pool.staked_nfts}</p>
-            </div>
-          `).join("")}
-        </div>`;
-    } else if (page === 'profile' && response.ok) {
+}  else if (page === 'profile' && response.ok) {
       contentFrame.innerHTML = `
         <h2>User Profile</h2>
         <p><strong>Username:</strong> ${data.username}</p>
@@ -531,6 +540,43 @@ if (page === 'balance' && response.ok) {
       contentFrame.innerHTML = `<p>Error loading ${page}: ${data.error}</p>`;
     }
   }
+async function loadNFTFarms(viewType = 'all') {
+    const contentFrame = document.getElementById("content-frame");
+    const userId = getQueryParam("user_id");
+    let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (response.ok && data.farms) {
+        contentFrame.innerHTML = `
+          <div class="switch-container">
+            <button onclick="loadNFTFarms('all')" ${viewType === 'all' ? 'class="active"' : ''}>All Pools</button>
+            <button onclick="loadNFTFarms('user_staking')" ${viewType === 'user_staking' ? 'class="active"' : ''}>My Staked Pools</button>
+          </div>
+          <h2 style="color: #0fdc8e; font-size: 3vw; text-align: center;">Open NFT Farms</h2>
+          <div class="staking-grid">
+            ${data.farms.map(farm => `
+              <div class="staking-item">
+                <h3>🌾 ${farm.farm_name} (${farm.token_symbol})</h3>
+                <p><span class="label">Farm ID:</span> <span class="value">${farm.farm_id}</span></p>
+                <h4 class="farm-section-title">Accepted NFTs</h4>
+                ${farm.templates.length > 0
+                    ? farm.templates.map(template => `
+                        <div class="template">
+                          <p><span class="label">Template ID:</span> <span class="value">${template.template_id}</span></p>
+                          <p><span class="label">Reward per NFT:</span> <span class="value">${template.daily_reward} ${farm.token_symbol}</span></p>
+                        </div>
+                      `).join("")
+                    : `<p>No templates accepted in this farm.</p>`}
+              </div>
+            `).join("")}
+          </div>
+        `;
+    } else {
+        contentFrame.innerHTML = `<p>Error loading pools: ${data.error}</p>`;
+    }
+}
 
   function showTransferForm(token, maxAmount) {
     const formContainer = document.getElementById(`form-${token}`);

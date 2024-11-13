@@ -174,6 +174,78 @@
       border-top: 1px solid #3a3f51;
       margin-top: 20px;
     }
+    .staking-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .staking-item {
+        background: linear-gradient(135deg, #202940, #29364D);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+    }
+
+    /* Effetti hover per un impatto visivo */
+    .staking-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Titoli con font accentuati */
+    .staking-item h3 {
+        font-size: 22px;
+        font-weight: bold;
+        color: #0fdc8e;
+        margin-bottom: 15px;
+    }
+
+    /* Testo per evidenziare il totale staked */
+    .staking-item p {
+        font-size: 16px;
+        line-height: 1.6;
+        margin: 8px 0;
+    }
+
+    /* Sezione premi con glow */
+    .rewards-info {
+        background: rgba(15, 220, 142, 0.1);
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        color: #0fdc8e;
+        box-shadow: 0 0 20px rgba(15, 220, 142, 0.3);
+    }
+
+    /* Stili per le singole ricompense */
+    .reward-detail {
+        margin-bottom: 15px;
+    }
+
+    .reward-detail p {
+        font-size: 15px;
+        margin: 5px 0;
+    }
+
+    /* Effetto 3D sugli elementi principali */
+    .staking-item::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at 20% 35%, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0));
+        transform: rotate(25deg);
+        opacity: 0.2;
+    }
   </style>
 </head>
 <body>
@@ -398,38 +470,38 @@
         alert("Failed to complete the withdrawal request.");
     }
   }
-    // Funzione per visualizzare i pool di staking
-  function displayStakingPools(pools) {
-      const contentFrame = document.getElementById("content-frame");
-      if (pools.length === 0) {
-          contentFrame.innerHTML = "<p>No active staking pools are available at the moment.</p>";
-          return;
-      }
-      
-      contentFrame.innerHTML = `
-        <h2>Available Staking Pools</h2>
-        <div class="staking-grid">
-          ${pools.map(pool => `
-            <div class="staking-item">
-              <h3>🌟 Pool ${pool.token_symbol} (ID: ${pool.pool_id})</h3>
-              <p>Total Staked: ${pool.total_staked}</p>
-              <p>Your Staked Tokens: ${pool.user_staked}</p>
-              <div class="rewards-info">
-                ${pool.rewards_info.map(reward => `
-                  <div class="reward-detail">
-                    <p>Reward Token: ${reward.reward_token}</p>
-                    <p>Total Reward Deposit: ${reward.total_reward_deposit}</p>
-                    <p>Daily Distribution: ${reward.daily_reward}</p>
-                    <p>APR: ${reward.apr}</p>
-                    <p>Days Remaining: ${reward.days_remaining}</p>
-                    <p>Your Daily Reward: ${reward.user_daily_reward}</p>
-                  </div>
-                `).join("")}
+    function displayStakingPools(pools) {
+        const contentFrame = document.getElementById("content-frame");
+        if (pools.length === 0) {
+            contentFrame.innerHTML = "<p>No active staking pools are available at the moment.</p>";
+            return;
+        }
+
+        contentFrame.innerHTML = `
+          <h2 style="color: #0fdc8e; font-size: 26px; text-align: center;">Available Staking Pools</h2>
+          <div class="staking-grid">
+            ${pools.map(pool => `
+              <div class="staking-item">
+                <h3>🌟 Pool ${pool.token_symbol} (ID: ${pool.pool_id})</h3>
+                <p><strong>Total Staked:</strong> <span style="color: #ffa726; font-weight: bold;">${pool.total_staked}</span></p>
+                <p><strong>Your Staked Tokens:</strong> <span style="color: #29b6f6; font-weight: bold;">${pool.user_staked}</span></p>
+                <div class="rewards-info">
+                  <h4 style="color: #fff; font-size: 18px;">Rewards</h4>
+                  ${pool.rewards_info.map(reward => `
+                    <div class="reward-detail">
+                      <p><strong>Reward Token:</strong> ${reward.reward_token}</p>
+                      <p><strong>Total Reward Deposit:</strong> ${reward.total_reward_deposit}</p>
+                      <p><strong>Daily Distribution:</strong> ${reward.daily_reward}</p>
+                      <p><strong>APR:</strong> ${reward.apr}</p>
+                      <p><strong>Days Remaining:</strong> ${reward.days_remaining}</p>
+                      <p><strong>Your Daily Reward:</strong> <span style="color: #ffee58; font-weight: bold;">${reward.user_daily_reward}</span></p>
+                    </div>
+                  `).join("")}
+                </div>
               </div>
-            </div>
-          `).join("")}
-        </div>`;
-  }
+            `).join("")}
+          </div>`;
+    }
   async function submitTransfer(token) {
     const account = document.getElementById(`transfer-account-${token}`).value;
     const amount = parseFloat(document.getElementById(`transfer-amount-${token}`).value);

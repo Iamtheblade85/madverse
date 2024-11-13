@@ -383,19 +383,38 @@
 } async function submitWithdraw(token) {
     const amount = parseFloat(document.getElementById(`withdraw-amount-${token}`).value);
 
-    const response = await fetch("https://iamemanuele.pythonanywhere.com/withdraw", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        wax_account: "{user_wax_account}", 
-        amount: amount,
-        token_symbol: token
-      })
-    });
-    const result = await response.json();
-    alert(result.message || result.error);
-  }
+    console.log("Withdraw amount:", amount);
+    console.log("Token symbol:", token);
+    console.log("From Wax account:", user_wax_account);  // Debug per verificare l'account Wax
 
+    try {
+        const response = await fetch("https://iamemanuele.pythonanywhere.com/withdraw", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                wax_account: user_wax_account,  // Usa la variabile reale
+                amount: amount,
+                token_symbol: token
+            })
+        });
+
+        console.log("Response status:", response.status);
+
+        if (!response.ok) {
+            console.error("Error in fetch:", response.statusText);
+            alert("Failed to send withdrawal request.");
+            return;
+        }
+
+        const result = await response.json();
+        console.log("Result from backend:", result);
+
+        alert(result.message || result.error);
+    } catch (error) {
+        console.error("Fetch error:", error);
+        alert("Network error or issue with the withdrawal request.");
+    }
+}
   fetchWaxAccount();
 </script>
 </body>

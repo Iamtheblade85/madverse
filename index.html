@@ -484,7 +484,7 @@
         break;
       case 'waxdao_pools':
         loadNFTFarms(); // Carica le pools di default
-        break;
+        return;
       case 'profile':
         url = `https://iamemanuele.pythonanywhere.com/profile?user_id=${userId}`;
         break;
@@ -545,6 +545,11 @@ async function loadNFTFarms(viewType = 'all') {
     const userId = getQueryParam("user_id");
     let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}`;
 
+    // Aggiungere il parametro del tipo di vista (all o user_staking)
+    if (viewType === 'user_staking') {
+        url += "&view=user_staking";
+    }
+
     const response = await fetch(url);
     const data = await response.json();
 
@@ -577,6 +582,7 @@ async function loadNFTFarms(viewType = 'all') {
         contentFrame.innerHTML = `<p>Error loading pools: ${data.error}</p>`;
     }
 }
+
 
   function showTransferForm(token, maxAmount) {
     const formContainer = document.getElementById(`form-${token}`);

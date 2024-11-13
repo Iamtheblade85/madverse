@@ -246,21 +246,27 @@
     const data = await response.json();
 
     if (page === 'balance' && response.ok) {
-      contentFrame.innerHTML = `
-        <h2>Your Token Balances</h2>
-        <div class="balance-grid">
-          ${data.balances.map(balance => `
-            <div class="balance-item">
-              <h3>💰 ${balance.token_symbol}</h3>
-              <p>Amount: <strong>${balance.amount}</strong></p>
-              <div class="action-buttons">
-                <button onclick="showTransferForm('${balance.token_symbol}', ${balance.amount})">Transfer</button>
-                <button onclick="showWithdrawForm('${balance.token_symbol}', ${balance.amount})">Withdraw</button>
-              </div>
-              <div id="form-${balance.token_symbol}" class="form-container" style="display: none;"></div>
-            </div>
-          `).join("")}
-        </div>`;
+        contentFrame.innerHTML = `
+            <h2>Your Token Balances</h2>
+            <div class="balance-grid">
+              ${data.balances.map(balance => {
+                // Debug: stampa il valore di amount e token_symbol nella console
+                console.log("Token Symbol:", balance.token_symbol);
+                console.log("Amount:", balance.amount);
+    
+                return `
+                  <div class="balance-item">
+                    <h3>💰 ${balance.token_symbol}</h3>
+                    <p>Amount: <strong>${balance.amount}</strong></p>
+                    <div class="action-buttons">
+                      <button onclick="showTransferForm('${balance.token_symbol}', ${balance.amount})">Transfer</button>
+                      <button onclick="showWithdrawForm('${balance.token_symbol}', ${balance.amount})">Withdraw</button>
+                    </div>
+                    <div id="form-${balance.token_symbol}" class="form-container" style="display: none;"></div>
+                  </div>
+                `;
+              }).join("")}
+            </div>`;
     } else if (page === 'staking_farms' && response.ok) {
       contentFrame.innerHTML = `
         <h2>Token Staking Farms</h2>
@@ -319,7 +325,7 @@
       <label for="transfer-account-${token}">Transfer to:</label>
       <input type="text" id="transfer-account-${token}" placeholder="e.g., wax_account123">
       <label for="transfer-amount-${token}">Quantity (Max: ${maxAmount}):</label>
-      <input type="number" id="transfer-amount-${token}" max="${maxAmount}" step="0.000000000000000001" placeholder="e.g., 10.5">
+      <input type="number" id="transfer-amount-${token}" max="${maxAmount}" step="0.00000001" placeholder="e.g., 10.123456">
       <button onclick="submitTransfer('${token}')">Confirm Transfer</button>
     `;
     formContainer.style.display = "block";

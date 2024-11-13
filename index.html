@@ -339,21 +339,46 @@
   async function submitTransfer(token) {
     const account = document.getElementById(`transfer-account-${token}`).value;
     const amount = parseFloat(document.getElementById(`transfer-amount-${token}`).value);
+    
+    // Debug: stampa i valori di account e amount per verificare che siano corretti
+    console.log("Transfer account:", account);
+    console.log("Transfer amount:", amount);
+    console.log("Token symbol:", token);
 
-    const response = await fetch("https://iamemanuele.pythonanywhere.com/transfer", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from_wax_account: "{user_wax_account}", 
-        to_wax_account: account,
-        amount: amount,
-        token_symbol: token
-      })
-    });
-    const result = await response.json();
-    alert(result.message || result.error);
+    try {
+        const response = await fetch("https://iamemanuele.pythonanywhere.com/transfer", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                from_wax_account: "{user_wax_account}", 
+                to_wax_account: account,
+                amount: amount,
+                token_symbol: token
+            })
+        });
+        
+        // Debug: verifica se la risposta è stata ricevuta
+        console.log("Response status:", response.status);
+
+        // Controlla se la risposta è andata a buon fine
+        if (!response.ok) {
+            console.error("Error in fetch:", response.statusText);
+            alert("Failed to send transfer request.");
+            return;
+        }
+
+        const result = await response.json();
+        // Debug: stampa il risultato della risposta
+        console.log("Result from backend:", result);
+
+        alert(result.message || result.error);
+    } catch (error) {
+        // Debug: cattura e stampa eventuali errori di rete
+        console.error("Fetch error:", error);
+        alert("Network error or issue with the transfer request.");
+    }
   }
-
+  
   async function submitWithdraw(token) {
     const amount = parseFloat(document.getElementById(`withdraw-amount-${token}`).value);
 

@@ -3,39 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
   <title>ChipsWallet - Wax Chain Project</title>
+  <link rel="stylesheet" href="styles.css"> <!-- Collega il file CSS -->
 </head>
 <body>
 
-<!-- Sezione 1: Logo e animazione -->
-<div class="logo-section">
-  <div class="logo">ChipsWallet</div>
-  <div class="golden-circle"></div>
-</div>
+<!-- Contenitore principale -->
+<div class="container">
 
-<!-- Sezione 2: Menu animato sotto il logo -->
-<div class="menu-section">
-  <div class="title-container">
-    <div class="title-circle">C</div>
-    <h1 class="section-title">Wax Chain Project</h1>
+  <!-- Sezione 1: Logo e animazione -->
+  <div class="logo-section">
+    <div class="logo">ChipsWallet</div>
+    <div class="golden-circle"></div>
   </div>
-  <div class="menu">
-    <button onclick="loadContent('balance')"><i>💼</i> Wallet</button>
-    <button onclick="loadContent('staking_farms')"><i>🌱</i> Staking</button>
-    <button onclick="loadContent('mynfts')"><i>🎨</i> NFTs Inventory</button>
-    <button onclick="loadContent('waxdao_pools')"><i>🏦</i> Pools</button>
-    <button onclick="loadContent('profile')"><i>👤</i> Account</button>
+
+  <!-- Sezione 2: Menu animato sotto il logo -->
+  <div class="menu-section">
+    <div class="title-container">
+      <div class="title-circle">C</div>
+      <h1 class="section-title">Wax Chain Project</h1>
+    </div>
+    <div class="menu">
+      <button onclick="loadContent('balance')">💼 Wallet</button>
+      <button onclick="loadContent('staking_farms')">🌱 Staking</button>
+      <button onclick="loadContent('mynfts')">🎨 NFTs Inventory</button>
+      <button onclick="loadContent('waxdao_pools')">🏦 Pools</button>
+      <button onclick="loadContent('profile')">👤 Account</button>
+    </div>
   </div>
-</div>
 
-<!-- Sezione 3: Contenuto delle pagine -->
-<div class="content-frame" id="content-frame">
-  <p>Select an option from the menu.</p>
-</div>
+  <!-- Sezione 3: Contenuto delle pagine -->
+  <div class="content-frame" id="content-frame">
+    <p>Select an option from the menu.</p>
+  </div>
 
-<div class="footer">
-  ChipsWallet @2024 - A Wax Chain Project
+  <!-- Footer -->
+  <div class="footer">
+    ChipsWallet @2024 - A Wax Chain Project
+  </div>
+
 </div>
 
 <script>
@@ -90,7 +96,6 @@ async function loadContent(page) {
         const response = await fetch(url);
         console.log("Response status:", response.status);
         
-        // Se lo stato non è "OK" (200), logga un messaggio di errore
         if (!response.ok) {
             throw new Error(`Server responded with status: ${response.status}`);
         }
@@ -102,9 +107,9 @@ async function loadContent(page) {
                 <h2 class="pool-title">Your Token Balances</h2>
                 <div class="balance-grid">
                   ${data.balances.map(balance => `
-                      <div class="balance-item">
+                      <div class="card">
                         <h4>${balance.symbol}</h4> 
-                        <p style="text-align: left;"><span class="value">${balance.amount}</span></p>
+                        <p><span class="value">${balance.amount}</span></p>
                       </div>
                   `).join("")}
                 </div>`;
@@ -112,9 +117,9 @@ async function loadContent(page) {
         else if (page === 'staking_farms') {
             contentFrame.innerHTML = `
                 <h2 class="pool-title">Staking Farms</h2>
-                <div class="staking-grid">
+                <div class="balance-grid">
                   ${data.pools.map(farm => `
-                      <div class="staking-item">
+                      <div class="card">
                         <h4>🌱 ${farm.farm_name}</h4>
                         <p><span class="label">APR:</span> <span class="value">${farm.apr}%</span></p>
                       </div>
@@ -123,10 +128,10 @@ async function loadContent(page) {
         } else if (page === 'mynfts') {
             contentFrame.innerHTML = `
               <h2 class="section-title">Your NFTs Inventory</h2>
-              <div class="nft-grid">
+              <div class="balance-grid">
                 ${data.nfts.map(nft => `
-                  <div class="nft-item">
-                    <img src="${nft.image_url}" alt="NFT Image" class="nft-image">
+                  <div class="card">
+                    <img src="${nft.image_url}" alt="NFT Image" style="width: 100%; height: 100%; object-fit: cover;">
                     <div class="nft-details">
                       <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
                       <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
@@ -168,14 +173,14 @@ async function loadContent(page) {
 
     if (response.ok && data.farms) {
         contentFrame.innerHTML = `
-          <div class="switch-container">
+          <div class="menu">
             <button onclick="loadNFTFarms('all')" ${viewType === 'all' ? 'class="active"' : ''}>All Pools</button>
             <button onclick="loadNFTFarms('user_staking')" ${viewType === 'user_staking' ? 'class="active"' : ''}>My Staked Pools</button>
           </div>
           <h2 class="pool-title">Active NFTs Farms</h2>
-          <div class="pool-grid">
+          <div class="balance-grid">
             ${data.farms.map(farm => `
-              <div class="pool-item">
+              <div class="card">
                 <h4>🏦 ${farm.farm_name}</h4>
                 <p><span class="label">Reward:</span> <span class="value">${farm.reward_token}</span></p>
               </div>
@@ -188,7 +193,6 @@ async function loadContent(page) {
     }
   }
   
-  // Carica i dati dell'account all'avvio
   fetchWaxAccount();
 </script>
 </body>

@@ -323,7 +323,7 @@ body {
 
 /* Dimensione del testo e stile per i valori con ridimensionamento automatico */
 .balance-item .value {
-  font-size: 1.05vw;
+  font-size: 0.65vw;
   font-weight: bold;
   color: #e60073;
   text-shadow: 1px 1px 2px #000;

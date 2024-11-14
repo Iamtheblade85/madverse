@@ -9,14 +9,14 @@ body {
   align-items: center;
   min-height: 100vh;
   margin: 0;
-  background-color: #000;
-  color: #fff;
+  background-color: #0d0d0d;
+  color: #ffffff;
 }
 .container {
   width: 90%;
   max-width: 1200px;
   padding: 20px;
-  background-color: #222;
+  background-color: #1a1a1a;
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
   display: flex;
@@ -24,7 +24,7 @@ body {
   transition: all 0.3s ease;
 }
 
-/* Logo */
+/* Logo con animazione speciale */
 .logo {
   font-size: 36px;
   font-weight: bold;
@@ -33,6 +33,16 @@ body {
   color: #ffcc00;
   text-shadow: 3px 3px 5px #000, 0px 0px 20px #ffcc00;
   letter-spacing: 2px;
+  overflow: hidden;
+  display: inline-block;
+  animation: logoAnimation 10s infinite;
+}
+
+@keyframes logoAnimation {
+  0% { transform: translateY(-100px); opacity: 0; }
+  10% { transform: translateY(0); opacity: 1; }
+  40%, 70% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(-5px) rotate(3deg); }
 }
 
 /* Layout principale */
@@ -46,7 +56,7 @@ body {
 /* Colonna sinistra - Menu */
 .sidebar {
   width: 25%;
-  background-color: #1b1b1b;
+  background-color: #292929;
   padding: 20px;
   border-radius: 15px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
@@ -77,8 +87,8 @@ body {
   cursor: pointer;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, #ff0000, #ffcc00);
-  color: #fff;
+  background: linear-gradient(135deg, #ff4500, #ffcc00);
+  color: #ffffff;
   font-weight: bold;
   text-align: left;
   display: flex;
@@ -97,15 +107,15 @@ body {
 .content-frame {
   width: 75%;
   padding: 20px;
-  background-color: #333;
+  background-color: #404040;
   border-radius: 15px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
   overflow-y: auto;
-  color: #fff;
+  color: #ffffff;
   transition: all 0.3s ease;
 }
 
-/* Titoli delle sezioni */
+/* Titoli delle sezioni con effetti speciali */
 .section-title, .pool-title {
   font-size: 2.5vw;
   font-weight: bold;
@@ -114,7 +124,7 @@ body {
   text-align: center;
   padding: 15px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #ffcc00, #ff0000);
+  background: linear-gradient(135deg, #ffcc00, #ff4500);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
   margin-bottom: 20px;
 }
@@ -131,8 +141,8 @@ body {
 .nft-item {
   padding: 20px;
   border-radius: 15px;
-  background: linear-gradient(135deg, #1b1b1b, #ffcc00);
-  color: #fff;
+  background: linear-gradient(135deg, #2a2a2a, #ffcc00);
+  color: #ffffff;
   position: relative;
   overflow: hidden;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7);
@@ -141,15 +151,15 @@ body {
 }
 
 .nft-item:nth-child(3n+1) {
-  background: linear-gradient(135deg, #ffcc00, #ff0000);
+  background: linear-gradient(135deg, #ffcc00, #ff4500);
 }
 
 .nft-item:nth-child(3n+2) {
-  background: linear-gradient(135deg, #ff0000, #1b1b1b);
+  background: linear-gradient(135deg, #ff4500, #2a2a2a);
 }
 
 .nft-item:nth-child(3n) {
-  background: linear-gradient(135deg, #ff0000, #333);
+  background: linear-gradient(135deg, #ff4500, #404040);
 }
 
 .nft-item:hover {
@@ -183,7 +193,7 @@ body {
 .nft-details .value {
   font-size: 1.5vw;
   font-weight: bold;
-  color: #fff;
+  color: #ffffff;
   text-shadow: 1px 1px 2px #000;
 }
 
@@ -212,26 +222,25 @@ body {
 .balance-item {
   padding: 15px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #222, #ffcc00);
-  color: #fff;
+  background: linear-gradient(135deg, #292929, #ffcc00);
+  color: #ffffff;
   position: relative;
   overflow: hidden;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
-  word-wrap: break-word;
 }
 
 .balance-item:nth-child(3n+1) {
-  background: linear-gradient(135deg, #ffcc00, #ff0000);
+  background: linear-gradient(135deg, #ffcc00, #ff4500);
 }
 
 .balance-item:nth-child(3n+2) {
-  background: linear-gradient(135deg, #ff0000, #1b1b1b);
+  background: linear-gradient(135deg, #ff4500, #292929);
 }
 
 .balance-item:nth-child(3n) {
-  background: linear-gradient(135deg, #ff0000, #333);
+  background: linear-gradient(135deg, #ff4500, #404040);
 }
 
 .balance-item:hover {
@@ -252,17 +261,31 @@ body {
 .balance-item .label {
   font-size: 1.2vw;
   font-weight: bold;
-  color: #fff;
+  color: #ffffff;
   text-shadow: 1px 1px 2px #000;
 }
 
-/* Dimensione del testo e stile per i valori */
+/* Dimensione del testo e stile per i valori con ridimensionamento automatico */
 .balance-item .value {
   font-size: 1.5vw;
   font-weight: bold;
   color: #ffcc00;
   text-shadow: 1px 1px 2px #000;
-  word-break: break-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.balance-item .value-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .balance-item .value {
+    font-size: calc(1.5vw - 0.5em);
+  }
 }
 
 /* Footer */
@@ -296,7 +319,7 @@ body {
 }
 
 .switch-container button.active {
-  background: #ff0000;
+  background: #ff4500;
   transform: scale(1.1);
 }
 

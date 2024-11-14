@@ -8,44 +8,37 @@
 </head>
 <body>
 
-<div class="container">
-  <!-- Logo con cerchio dorato rimbalzante -->
+<!-- Sezione 1: Logo e animazione -->
+<div class="logo-section">
   <div class="logo">ChipsWallet</div>
   <div class="golden-circle"></div>
-  
-  <!-- Titolo con cerchio rotante -->
+</div>
+
+<!-- Sezione 2: Menu animato sotto il logo -->
+<div class="menu-section">
   <div class="title-container">
     <div class="title-circle">C</div>
     <h1 class="section-title">Wax Chain Project</h1>
   </div>
-
-  <!-- Layout principale con sidebar e content frame -->
-  <div class="main-layout">
-    <div class="sidebar">
-      <div class="welcome-message" id="welcome-message">Welcome, {wax_account}</div>
-      <div class="menu">
-        <button onclick="loadContent('balance')"><i>💼</i>Wallet</button>
-        <button onclick="loadContent('staking_farms')"><i>🌱</i>Staking</button>
-        <button onclick="loadContent('mynfts')"><i>🎨</i>NFTs Inventory</button>
-        <button onclick="loadContent('waxdao_pools')"><i>🏦</i>Pools</button>
-        <button onclick="loadContent('profile')"><i>👤</i>Account</button>
-      </div>
-    </div>
-
-    <!-- Frame per il contenuto dinamico -->
-    <div class="content-frame" id="content-frame">
-      <p>Select an option from the menu.</p>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <div class="footer">
-    ChipsWallet @2024 - A Wax Chain Project
+  <div class="menu">
+    <button onclick="loadContent('balance')"><i>💼</i> Wallet</button>
+    <button onclick="loadContent('staking_farms')"><i>🌱</i> Staking</button>
+    <button onclick="loadContent('mynfts')"><i>🎨</i> NFTs Inventory</button>
+    <button onclick="loadContent('waxdao_pools')"><i>🏦</i> Pools</button>
+    <button onclick="loadContent('profile')"><i>👤</i> Account</button>
   </div>
 </div>
 
+<!-- Sezione 3: Contenuto delle pagine -->
+<div class="content-frame" id="content-frame">
+  <p>Select an option from the menu.</p>
+</div>
+
+<div class="footer">
+  ChipsWallet @2024 - A Wax Chain Project
+</div>
+
 <script>
-  // Funzione per ottenere i parametri URL
   function getQueryParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(param);
@@ -54,7 +47,6 @@
   const userId = getQueryParam("user_id");
   let user_wax_account = null;
 
-  // Funzione per ottenere l'account Wax dell'utente
   async function fetchWaxAccount() {
     const response = await fetch(`https://iamemanuele.pythonanywhere.com/profile?user_id=${userId}`);
     const data = await response.json();
@@ -66,7 +58,6 @@
     }
   }
 
-  // Funzione per caricare contenuti dinamici
   async function loadContent(page) {
     const contentFrame = document.getElementById("content-frame");
     let url;
@@ -142,7 +133,6 @@
     }
   }
 
-  // Funzione per caricare le farms NFT
   async function loadNFTFarms(viewType = 'all') {
     const contentFrame = document.getElementById("content-frame");
     const userId = getQueryParam("user_id");

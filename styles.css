@@ -32,7 +32,7 @@ body {
   font-weight: bold;
   text-align: center;
   padding: 20px 0;
-  color: #faff00;
+  color: #faff00; /* Giallo medio neon */
   text-shadow: 5px 5px 15px #000, 0px 0px 40px #faff00;
   letter-spacing: 3px;
   overflow: hidden;
@@ -56,7 +56,7 @@ body {
 .title-circle {
   width: 50px;
   height: 50px;
-  background-color: #00ffff;
+  background-color: #00ffff; /* Verde acqua neon */
   border-radius: 50%;
   animation: spin 3s linear infinite;
 }
@@ -156,50 +156,51 @@ body {
   box-shadow: 0 20px 40px rgba(255, 77, 77, 0.9);
 }
 
-/* Card universale per Balance, Staking Pools, e NFTsFarm */
-.card {
-  padding: 20px;
+/* Colonna destra - Contenuti dinamici */
+.content-frame {
+  flex-grow: 1;
+  padding: 25px;
+  background: linear-gradient(135deg, #3e3e3e, #252525);
   border-radius: 20px;
-  background: linear-gradient(135deg, #141414, #ff6600);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+  overflow-y: auto;
   color: #ffffff;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
-  cursor: pointer;
-  animation: cardGlow 5.5s infinite alternate;
+  animation: contentPulse 6.5s infinite alternate;
 }
 
-@keyframes cardGlow {
-  0% { box-shadow: 0 0 25px #ff6600; }
-  100% { box-shadow: 0 0 50px #ff3300, 0 0 70px #ff3300; }
+@keyframes contentPulse {
+  0% { box-shadow: 0 0 20px #00cc99; }
+  100% { box-shadow: 0 0 35px #ff0066; }
 }
 
-.card:hover {
-  transform: translateY(-12px) scale(1.1);
-  box-shadow: 0 25px 50px rgba(255, 51, 0, 1);
-}
-
-/* Contenuto della card universale */
-.card h4 {
-  font-size: 1.2em;
+/* Stili per le sezioni */
+.section-title, .pool-title {
+  font-size: 1.8em;
   font-weight: bold;
-  color: #ffcc00;
-  text-shadow: 1px 1px 6px #000;
-  margin-bottom: 10px;
+  color: #faff00;
+  text-shadow: 0px 0px 30px #faff00;
+  text-align: center;
+  padding: 15px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffcc00, #ff6600);
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.9);
+  margin-bottom: 25px;
+  animation: titleBounce 6s ease-in-out infinite;
 }
 
-.card p {
-  font-size: 1em;
-  margin: 5px 0;
+@keyframes titleBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
 }
 
-/* Grid per le card con dimensioni dinamiche e massimo adattamento */
-.balance-grid, .staking-grid, .nft-farm-grid, .nft-grid {
+/* Grid per le card NFT */
+.nft-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 250px));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+  gap: 25px;
 }
+
+/* Card NFT con effetti di glow e 3D */
 .nft-item {
   padding: 20px;
   border-radius: 20px;
@@ -229,13 +230,19 @@ body {
   border-radius: 18px;
   margin-bottom: 20px;
 }
+/* Titolo e dettagli con effetti di bordo */
+.nft-details p {
+  margin: 2px 0; /* Riduzione del margine */
+  font-size: 0.9em; /* Riduzione generale per il contenuto */
+  animation: textWave 6.5s ease-in-out infinite;
+}
 
 .nft-details .label {
-  font-size: 1.2em;
+  font-size: 1.2em; /* Riduzione rispetto a 1.6em */
 }
 
 .nft-details .value {
-  font-size: 1em;
+  font-size: 1em; /* Riduzione rispetto a 1.3em */
 }
 
 /* Footer */

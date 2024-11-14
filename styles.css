@@ -1,0 +1,333 @@
+/* Importa un font adatto per il design crypto */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
+/* Stili generali */
+body {
+  font-family: 'Roboto Mono', monospace;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  background-color: #000;
+  color: #fff;
+}
+.container {
+  width: 90%;
+  max-width: 1200px;
+  padding: 20px;
+  background-color: #222;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+/* Logo */
+.logo {
+  font-size: 36px;
+  font-weight: bold;
+  text-align: center;
+  padding: 20px 0;
+  color: #ffcc00;
+  text-shadow: 3px 3px 5px #000, 0px 0px 20px #ffcc00;
+  letter-spacing: 2px;
+}
+
+/* Layout principale */
+.main-layout {
+  display: flex;
+  flex-grow: 1;
+  margin-top: 20px;
+  gap: 20px;
+}
+
+/* Colonna sinistra - Menu */
+.sidebar {
+  width: 25%;
+  background-color: #1b1b1b;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  transition: all 0.3s ease;
+}
+
+.welcome-message {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #ffcc00;
+  text-align: center;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu button {
+  width: 100%;
+  padding: 15px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ff0000, #ffcc00);
+  color: #fff;
+  font-weight: bold;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.2s, box-shadow 0.3s;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.5);
+}
+
+.menu button:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(255, 204, 0, 0.8);
+}
+
+/* Colonna destra - Contenuti dinamici */
+.content-frame {
+  width: 75%;
+  padding: 20px;
+  background-color: #333;
+  border-radius: 15px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  overflow-y: auto;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+/* Titoli delle sezioni */
+.section-title, .pool-title {
+  font-size: 2.5vw;
+  font-weight: bold;
+  color: #ffcc00;
+  text-shadow: 2px 2px 5px #000, 0px 0px 15px #ffcc00;
+  text-align: center;
+  padding: 15px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ffcc00, #ff0000);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+  margin-bottom: 20px;
+}
+
+/* Grid per le card NFT */
+.nft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Card NFT con effetto 3D e sfondo gradiente */
+.nft-item {
+  padding: 20px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #1b1b1b, #ffcc00);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.nft-item:nth-child(3n+1) {
+  background: linear-gradient(135deg, #ffcc00, #ff0000);
+}
+
+.nft-item:nth-child(3n+2) {
+  background: linear-gradient(135deg, #ff0000, #1b1b1b);
+}
+
+.nft-item:nth-child(3n) {
+  background: linear-gradient(135deg, #ff0000, #333);
+}
+
+.nft-item:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 25px rgba(255, 0, 0, 0.8);
+}
+
+/* Immagine NFT ridotta e stile */
+.nft-image {
+  width: 60%;
+  height: auto;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Titolo e dettagli con effetti di bordo */
+.nft-details p {
+  margin: 10px 0;
+}
+
+/* Label nera con bordo bianco */
+.nft-details .label {
+  font-size: 1.5vw;
+  font-weight: bold;
+  color: #000;
+  text-shadow: 1px 1px 2px #fff;
+}
+
+/* Valore bianco con bordo nero */
+.nft-details .value {
+  font-size: 1.5vw;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 1px 1px 2px #000;
+}
+
+/* Glow per effetto 3D */
+.nft-item::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 20% 35%, rgba(255, 204, 0, 0.15), rgba(0, 0, 0, 0));
+  transform: rotate(25deg);
+  opacity: 0.3;
+}
+
+/* Grid di bilancio */
+.balance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Card 3D con effetti ombra e sfondo gradiente per il bilancio */
+.balance-item {
+  padding: 15px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #222, #ffcc00);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.balance-item:nth-child(3n+1) {
+  background: linear-gradient(135deg, #ffcc00, #ff0000);
+}
+
+.balance-item:nth-child(3n+2) {
+  background: linear-gradient(135deg, #ff0000, #1b1b1b);
+}
+
+.balance-item:nth-child(3n) {
+  background: linear-gradient(135deg, #ff0000, #333);
+}
+
+.balance-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 25px rgba(255, 204, 0, 0.8);
+}
+
+/* Titolo dei token con bordo bianco */
+.balance-item h4 {
+  font-size: 2vw;
+  font-weight: bold;
+  color: #ffcc00;
+  text-shadow: 1px 1px 2px #000;
+  margin-bottom: 10px;
+}
+
+/* Dimensione del testo e stile per i label (es. nome del token) */
+.balance-item .label {
+  font-size: 1.2vw;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 1px 1px 2px #000;
+}
+
+/* Dimensione del testo e stile per i valori */
+.balance-item .value {
+  font-size: 1.5vw;
+  font-weight: bold;
+  color: #ffcc00;
+  text-shadow: 1px 1px 2px #000;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  font-size: 14px;
+  padding: 15px;
+  color: #888;
+  border-top: 1px solid #444;
+  margin-top: 20px;
+}
+
+/* Pulsanti Switch */
+.switch-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.switch-container button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 20px;
+  margin: 0 5px;
+  background: #ffcc00;
+  color: #222;
+  font-weight: bold;
+  transition: transform 0.2s;
+}
+
+.switch-container button.active {
+  background: #ff0000;
+  transform: scale(1.1);
+}
+
+/* Resposiveness */
+@media (max-width: 768px) {
+  .main-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .content-frame {
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .balance-item, .nft-item, .staking-item {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    font-size: 24px;
+  }
+
+  .menu button {
+    font-size: 14px;
+  }
+
+  .balance-item h4, .nft-details .label, .nft-details .value {
+    font-size: 1.2em;
+  }
+}

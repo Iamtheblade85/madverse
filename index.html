@@ -599,7 +599,7 @@
 
 if (page === 'balance' && response.ok) {
     contentFrame.innerHTML = `
-        <h2 style="color: #0fdc8e; font-size: 2vw; text-align: center;">Your Token Balances</h2>
+        <h2  class="pool-title">Your Token Balances</h2>
         <div class="balance-grid">
           ${data.balances.map(balance => `
               <div class="balance-item">
@@ -636,7 +636,7 @@ else if (page === 'staking_farms' && response.ok) {
       </div>`;
 }  else if (page === 'profile' && response.ok) {
       contentFrame.innerHTML = `
-        <h2>User Profile</h2>
+        <h2 class="pool-title">Your Profile</h2>
         <p><strong>Username:</strong> ${data.username}</p>
         <p><strong>Level:</strong> ${data.sqj_level}</p>
         <p><strong>Account:</strong> ${data.wax_account}</p>`;
@@ -663,7 +663,7 @@ async function loadNFTFarms(viewType = 'all') {
             <button onclick="loadNFTFarms('all')" ${viewType === 'all' ? 'class="active"' : ''}>All Pools</button>
             <button onclick="loadNFTFarms('user_staking')" ${viewType === 'user_staking' ? 'class="active"' : ''}>My Staked Pools</button>
           </div>
-          <h2 style="color: #0fdc8e; font-size: 3vw; text-align: center;">Active NFTs Farms</h2>
+          <h2 class="pool-title">Active NFTs Farms</h2>
           <div class="staking-grid">
             ${data.farms.map(farm => `
               <div class="staking-item">

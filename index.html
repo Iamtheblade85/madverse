@@ -56,8 +56,7 @@
         document.getElementById("welcome-message").textContent = `Welcome, User`;
     }
 }
-
-  async function loadContent(page) {
+async function loadContent(page) {
     const contentFrame = document.getElementById("content-frame");
     let url;
 
@@ -82,50 +81,49 @@
     const response = await fetch(url);
     const data = await response.json();
 
-if (page === 'balance' && response.ok) {
-    contentFrame.innerHTML = `
-        <h2 class="pool-title">Your Token Balances</h2>
-        <div class="balance-grid">
-          ${data.balances.map(balance => `
-              <div class="balance-item">
-                <h4>💰 ${balance.token_symbol}</h4>
-                <p><span class="label">Amount:</span> <span class="value">${balance.amount}</span></p>
-                <div id="form-${balance.token_symbol}" class="form-container" style="display: none;"></div>
+    if (page === 'balance' && response.ok) {
+        contentFrame.innerHTML = `
+            <h2 class="pool-title">Your Token Balances</h2>
+            <div class="balance-grid">
+              ${data.balances.map(balance => `
+                  <div class="balance-item">
+                    <h4>💰 ${balance.token_symbol}</h4>
+                    <p><span class="label">Amount:</span> <span class="value">${balance.amount}</span></p>
+                    <div id="form-${balance.token_symbol}" class="form-container" style="display: none;"></div>
+                  </div>
+              `).join("")}
+            </div>`;
+    }
+    else if (page === 'staking_farms' && response.ok) {
+        displayStakingPools(data.pools);
+    } else if (page === 'mynfts' && response.ok) {
+        contentFrame.innerHTML = `
+          <h2 class="section-title">Your NFTs Inventory</h2>
+          <div class="nft-grid">
+            ${data.nfts.map(nft => `
+              <div class="nft-item">
+                <img src="${nft.image_url}" alt="NFT Image" class="nft-image">
+                <div class="nft-details">
+                  <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
+                  <p><span class="label">Asset ID:</span> <span class="value">${nft.asset_id}</span></p>
+                  <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
+                  <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
+                </div>
               </div>
-          `).join("")}
-        </div>`;
-}
-else if (page === 'staking_farms' && response.ok) {
-    displayStakingPools(data.pools);
-} else if (page === 'mynfts' && response.ok) {
-    contentFrame.innerHTML = `
-      <h2 class="section-title">Your NFTs Inventory</h2>
-      <div class="nft-grid">
-        ${data.nfts.map(nft => `
-          <div class="nft-item">
-            <img src="${nft.image_url}" alt="NFT Image" class="nft-image">
-            <div class="nft-details">
-              <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
-              <p><span class="label">Asset ID:</span> <span class="value">${nft.asset_id}</span></p>
-              <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
-              <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
-            </div>
-          </div>
-        `).join("")}
-      </div>`;
-}  else if (page === 'profile' && response.ok) {
-      contentFrame.innerHTML = `
-        <h2 class="pool-title">Your Profile</h2>
-        <p><strong>Username:</strong> ${data.username}</p>
-        <p><strong>Level:</strong> ${data.sqj_level}</p>
-        <p><strong>Account:</strong> ${data.wax_account}</p>`;
+            `).join("")}
+          </div>`;
+    }  else if (page === 'profile' && response.ok) {
+          contentFrame.innerHTML = `
+            <h2 class="pool-title">Your Profile</h2>
+            <p><strong>Username:</strong> ${data.username}</p>
+            <p><strong>Level:</strong> ${data.sqj_level}</p>
+            <p><strong>Account:</strong> ${data.wax_account}</p>`;
     } else {
       contentFrame.innerHTML = `<p>Error loading ${page}: ${data.error}</p>`;
     }
-  }
+}
 async function loadNFTFarms(viewType = 'all') {
     const contentFrame = document.getElementById("content-frame");
-    const userId = getQueryParam("user_id");
     let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}`;
 
     if (viewType === 'user_staking') {

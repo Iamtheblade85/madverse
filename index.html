@@ -767,36 +767,36 @@ async function loadNFTFarms(viewType = 'all') {
         alert("Failed to complete the withdrawal request.");
     }
   }
-  function displayStakingPools(pools) {
-    const contentFrame = document.getElementById("content-frame");
-    if (pools.length === 0) {
-        contentFrame.innerHTML = "<p>No active staking pools are available at the moment.</p>";
-        return;
-    }
-    contentFrame.innerHTML = `
-        <h3 style="color: #0fdc8e; font-size: 2vw; text-align: center;">Active Staking Pools</h3>
-        <div class="staking-grid">
-            ${pools.map(pool => `
-                <div class="staking-item">
-                    <h3 class="pool-title">🌟 Pool ${pool.token_symbol}</h3>
-                    <p><span class="label">Total Staked:</span> <span class="value">${pool.total_staked} ${pool.token_symbol}</span></p>
-                    <p><span class="label">You Staked:</span> <span class="value">${pool.user_staked} ${pool.token_symbol}</span></p>
-                    <div class="rewards-info">
-                        <h4 class="reward-title">Reward Details</h4>
-                        ${pool.rewards_info.map(reward => `
-                            <div class="reward-detail">
-                                <p><span class="label">Token:</span> <span class="value">${reward.reward_token}</span></p>
-                                <p><span class="label">Reward remaining:</span> <span class="value">${reward.total_reward_deposit}</span></p>
-                                <p><span class="label">Daily:</span> <span class="value">${reward.daily_reward} ${reward.reward_token}</span></p>
-                                <p><span class="label">APR:</span> <span class="value">${reward.apr} %</span></p>
-                                <p><span class="label">Days remaining:</span> <span class="value">${reward.days_remaining}</span></p>
-                                <p><span class="label">Your daily income:</span> <span class="value">${reward.user_daily_reward} ${reward.reward_token}</span></p>
-                            </div>
-                        `).join("")}
-                    </div>
-                </div>
-            `).join("")}
-        </div>`;
+    function displayStakingPools(pools) {
+      const contentFrame = document.getElementById("content-frame");
+      if (pools.length === 0) {
+          contentFrame.innerHTML = "<p>No active staking pools are available at the moment.</p>";
+          return;
+      }
+      contentFrame.innerHTML = `
+          <h3 class="section-title">Active Staking Pools</h3>
+          <div class="staking-grid">
+              ${pools.map(pool => `
+                  <div class="staking-item">
+                      <h3 class="pool-title">🌟 Pool ${pool.token_symbol}</h3>
+                      <p><span class="label">Total Staked:</span> <span class="value">${pool.total_staked} ${pool.token_symbol}</span></p>
+                      <p><span class="label">You Staked:</span> <span class="value">${pool.user_staked} ${pool.token_symbol}</span></p>
+                      <div class="rewards-info">
+                          <h4 class="reward-title">Reward Details</h4>
+                          ${pool.rewards_info.map(reward => `
+                              <div class="reward-detail">
+                                  <p><span class="label">Token:</span> <span class="value">${reward.reward_token}</span></p>
+                                  <p><span class="label">Reward remaining:</span> <span class="value">${reward.total_reward_deposit}</span></p>
+                                  <p><span class="label">Daily:</span> <span class="value">${reward.daily_reward}</span></p>
+                                  <p><span class="label">APR:</span> <span class="value">${reward.apr} %</span></p>
+                                  <p><span class="label">Days remaining:</span> <span class="value">${reward.days_remaining}</span></p>
+                                  <p><span class="label">Your daily income:</span> <span class="value">${reward.user_daily_reward}</span></p>
+                              </div>
+                          `).join("")}
+                      </div>
+                  </div>
+              `).join("")}
+          </div>`;
   }
   async function submitTransfer(token) {
     const account = document.getElementById(`transfer-account-${token}`).value;

@@ -197,15 +197,15 @@ body {
 /* Grid per le card */
 .balance-grid, .staking-grid, .nft-farm-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 25px;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 250px));
+  gap: 10px;
 }
 
 /* Stili specifici per NFT Inventory */
 .nft-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 25px;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 250px));
+  gap: 10px;
 }
 
 .nft-item {

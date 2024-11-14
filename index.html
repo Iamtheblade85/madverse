@@ -311,173 +311,171 @@
       border-top: 1px solid #3a3f51;
       margin-top: 20px;
     }
-    .staking-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-        margin-top: 20px;
-    }
+.staking-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
 
-    /* Card 3D con effetti ombra e sfondo gradiente */
-    .staking-item {
-        padding: 20px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #1b1f27, #0d8f66); /* Sfondo gradiente */
-        color: #fff;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 15px 20px rgba(0, 0, 0, 0.5);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        cursor: pointer;
-    }
-   .reward-detail {
-      padding: 10px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 8px rgba(15, 220, 142, 0.2);
-    }
-    
-    .reward-detail:nth-child(odd) {
-      background: linear-gradient(135deg, #1f2430, #2c313e);
-      color: #0fdc8e;
-    }
-    .reward-detail:nth-child(even) {
-      background: linear-gradient(135deg, #2c313e, #1b1f27);
-      color: #00b474;
-    }
-    
-    .reward-detail p {
-      font-size: 1.2vw;
-      margin: 5px 0;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
-    }
-    
-    /* Label in verde scuro con bordo bianco */
-    .reward-detail .label {
-      font-weight: bold;
-      color: #006400; /* Verde scuro */
-      text-shadow: 1px 1px 2px #fff; /* Bordo bianco */
-    }
-    
-    /* Valore in colore contrastante */
-    .reward-detail .value {
-      color: #ffdf5d;
-      font-weight: bold;
-      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
-    }
+/* Card 3D con effetti ombra e sfondo gradiente */
+.staking-item {
+    padding: 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1b1f27, #0d8f66); /* Sfondo gradiente */
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 15px 20px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
 
-    .reward-title {
-      color: #000;
-      font-size: 2vw;
-      text-align: center;
-      text-shadow: 1px 1px 2px #fff;
-      background: rgba(255, 255, 255, 0.15);
-      padding: 5px 10px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      display: inline-block;
-    }
-    .staking-item:nth-child(3n+1) {
-        background: linear-gradient(135deg, #0fdc8e, #2c313e);
-    }
-    .staking-item:nth-child(3n+2) {
-        background: linear-gradient(135deg, #00b474, #1f2430);
-    }
-    .staking-item:nth-child(3n) {
-        background: linear-gradient(135deg, #008a5e, #262b37);
-    }
+/* Stili per reward tokens */
+.reward-detail {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(15, 220, 142, 0.2);
+}
 
-    .staking-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 18px 25px rgba(0, 0, 0, 0.6);
-    }
+.reward-detail:nth-child(odd) {
+    background: linear-gradient(135deg, #1f2430, #2c313e);
+    color: #0fdc8e;
+}
 
-    /* Titolo in nero con bordo bianco */
-    .staking-item h3 h4 {
-        font-size: 2.5vw;
-        font-weight: bold;
-        color: #000;
-        text-shadow: 1px 1px 2px #fff;
-        border-radius: 4px;
-        margin-bottom: 15px;
-        padding: 5px 10px;
-        display: inline-block;
-        background: rgba(255, 255, 255, 0.15);
-    }
+.reward-detail:nth-child(even) {
+    background: linear-gradient(135deg, #2c313e, #1b1f27);
+    color: #00b474;
+}
 
-    /* Label (nome) in nero con bordo bianco */
-    .staking-item .label {
-        font-size: 1.5vw;
-        font-weight: bold;
-        color: #000;
-        text-shadow: 1px 1px 1px #fff;
-        display: inline-block;
-        margin-top: 8px;
-    }
+.reward-detail p {
+    font-size: 1.2vw;
+    margin: 5px 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+}
 
-    /* Label (valore) in bianco con bordo nero */
-    .staking-item .value {
-        font-size: 1.5vw;
-        font-weight: bold;
-        color: #fff;
-        text-shadow: 1px 1px 1px #000;
-        display: inline-block;
-        margin-bottom: 10px;
-    }
+/* Label in verde scuro con bordo bianco */
+.reward-detail .label {
+    font-weight: bold;
+    color: #006400; /* Verde scuro */
+    text-shadow: 1px 1px 2px #fff; /* Bordo bianco */
+}
 
-    /* Sezione premi con stile particolare */
-    .rewards-info {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 15px;
-        border-radius: 8px;
-        margin-top: 15px;
-        color: #fff;
-        box-shadow: 0 0 15px rgba(15, 220, 142, 0.2);
-    }
+/* Valore in colore contrastante */
+.reward-detail .value {
+    color: #ffdf5d;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
+}
 
-    /* Effetto Glow */
-    .staking-item::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle at 20% 35%, rgba(15, 220, 142, 0.15), rgba(0, 0, 0, 0));
-        transform: rotate(25deg);
-        opacity: 0.2;
-    }
-        .switch-container {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 20px;
-    }
-    .switch-container button {
-        padding: 10px 20px;
-        font-size: 16px;
-        cursor: pointer;
-        border: none;
-        border-radius: 20px;
-        margin: 0 5px;
-        background: #0fdc8e;
-        color: #262b37;
-        font-weight: bold;
-        transition: transform 0.2s;
-    }
-    .switch-container button.active {
-        background: #0d8f66;
-        transform: scale(1.1);
-    }
-    .reward-title {
-  color: #000;
-  font-size: 2vw;
-  text-align: center;
-  text-shadow: 1px 1px 2px #fff;
-  background: rgba(255, 255, 255, 0.15);
-  padding: 5px 10px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  display: inline-block;
+.reward-title {
+    color: #000;
+    font-size: 2vw;
+    text-align: center;
+    text-shadow: 1px 1px 2px #fff;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 5px 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    display: inline-block;
+}
+
+.staking-item:nth-child(3n+1) {
+    background: linear-gradient(135deg, #0fdc8e, #2c313e);
+}
+
+.staking-item:nth-child(3n+2) {
+    background: linear-gradient(135deg, #00b474, #1f2430);
+}
+
+.staking-item:nth-child(3n) {
+    background: linear-gradient(135deg, #008a5e, #262b37);
+}
+
+.staking-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 18px 25px rgba(0, 0, 0, 0.6);
+}
+
+/* Titolo in nero con bordo bianco */
+.staking-item h3 h4 {
+    font-size: 2.5vw;
+    font-weight: bold;
+    color: #000;
+    text-shadow: 1px 1px 2px #fff;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    padding: 5px 10px;
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Label (nome) in nero con bordo bianco */
+.staking-item .label {
+    font-size: 1.5vw;
+    font-weight: bold;
+    color: #000;
+    text-shadow: 1px 1px 1px #fff;
+    display: inline-block;
+    margin-top: 8px;
+}
+
+/* Label (valore) in bianco con bordo nero */
+.staking-item .value {
+    font-size: 1.5vw;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 1px #000;
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+/* Sezione premi con stile particolare */
+.rewards-info {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(15, 220, 142, 0.2);
+}
+
+/* Effetto Glow */
+.staking-item::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 20% 35%, rgba(15, 220, 142, 0.15), rgba(0, 0, 0, 0));
+    transform: rotate(25deg);
+    opacity: 0.2;
+}
+
+.switch-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.switch-container button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 20px;
+    margin: 0 5px;
+    background: #0fdc8e;
+    color: #262b37;
+    font-weight: bold;
+    transition: transform 0.2s;
+}
+
+.switch-container button.active {
+    background: #0d8f66;
+    transform: scale(1.1);
 }
   </style>
 </head>
@@ -721,38 +719,39 @@ async function loadNFTFarms(viewType = 'all') {
         alert("Failed to complete the withdrawal request.");
     }
   }
-    function displayStakingPools(pools) {
-        const contentFrame = document.getElementById("content-frame");
-        if (pools.length === 0) {
-            contentFrame.innerHTML = "<p>No active staking pools are available at the moment.</p>";
-            return;
-        }
-
-        contentFrame.innerHTML = `
-          <h3 style="color: #0fdc8e; font-size: 2vw; text-align: center;">Active Staking Pools</h3>
-          <div class="staking-grid">
-            ${pools.map(pool => `
-              <div class="staking-item">
-                <h3>🌟 Pool ${pool.token_symbol}</h3>
-                <p><span class="label">Total Staked:</span> <span class="value">${pool.total_staked} ${pool.token_symbol}</span></p>
-                <p><span class="label">You Staked:</span> <span class="value">${pool.user_staked} ${pool.token_symbol}</span></p>
-                <div class="rewards-info">
-                  <h4 class="reward-title">Details</h4>
-                  ${pool.rewards_info.map(reward => `
-                  <div class="reward-detail">
-                    <p><span class="label">Token:</span> <span class="value">${reward.reward_token}</span></p>
-                    <p><span class="label">Reward remaining:</span> <span class="value">${reward.total_reward_deposit}</span></p>
-                    <p><span class="label">Daily:</span> <span class="value">${reward.daily_reward}</span></p>
-                    <p><span class="label">APR:</span> <span class="value">${reward.apr} %</span></p>
-                    <p><span class="label">Days remaining:</span> <span class="value">${reward.days_remaining}</span></p>
-                    <p><span class="label">Your daily income:</span> <span class="value">${reward.user_daily_reward}</span></p>
-                  </div>
-                `).join("")}
-                </div>
-              </div>
-            `).join("")}
-          </div>`;
+function displayStakingPools(pools) {
+    const contentFrame = document.getElementById("content-frame");
+    if (pools.length === 0) {
+        contentFrame.innerHTML = "<p>No active staking pools are available at the moment.</p>";
+        return;
     }
+
+    contentFrame.innerHTML = `
+        <h3 style="color: #0fdc8e; font-size: 2vw; text-align: center;">Active Staking Pools</h3>
+        <div class="staking-grid">
+            ${pools.map(pool => `
+                <div class="staking-item">
+                    <h3>🌟 Pool ${pool.token_symbol}</h3>
+                    <p><span class="label">Total Staked:</span> <span class="value">${pool.total_staked} ${pool.token_symbol}</span></p>
+                    <p><span class="label">You Staked:</span> <span class="value">${pool.user_staked} ${pool.token_symbol}</span></p>
+                    <div class="rewards-info">
+                        <h4 class="reward-title">Reward Details</h4>
+                        ${pool.rewards_info.map(reward => `
+                            <div class="reward-detail">
+                                <p><span class="label">Token:</span> <span class="value">${reward.reward_token}</span></p>
+                                <p><span class="label">Reward remaining:</span> <span class="value">${reward.total_reward_deposit}</span></p>
+                                <p><span class="label">Daily:</span> <span class="value">${reward.daily_reward}</span></p>
+                                <p><span class="label">APR:</span> <span class="value">${reward.apr} %</span></p>
+                                <p><span class="label">Days remaining:</span> <span class="value">${reward.days_remaining}</span></p>
+                                <p><span class="label">Your daily income:</span> <span class="value">${reward.user_daily_reward}</span></p>
+                            </div>
+                        `).join("")}
+                    </div>
+                </div>
+            `).join("")}
+        </div>`;
+}
+
   async function submitTransfer(token) {
     const account = document.getElementById(`transfer-account-${token}`).value;
     const amount = parseFloat(document.getElementById(`transfer-amount-${token}`).value);

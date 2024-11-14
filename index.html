@@ -414,7 +414,7 @@
         color: #000;
         font-size: 2vw;
         text-align: center;
-        text-shadow: 1px 1px 2px #fff;
+        text-shadow: 2px 2px 3px #fff;
         background: rgba(255, 255, 255, 0.15);
         padding: 5px 10px;
         border-radius: 8px;
@@ -450,15 +450,28 @@
     .staking-item .rewards-info .reward-detail .label {
         font-weight: bold;
         color: #39FF14; /* Verde neon */
-        text-shadow: 1px 1px 2px #fff; /* Bordo bianco */
+        text-shadow: 2px 2px 3px #fff; /* Bordo bianco */
     }
     
-    /* Specifico per i valori all'interno di .reward-detail */
+    /* Stile avanzato per i valori all'interno di .reward-detail */
     .staking-item .rewards-info .reward-detail .value {
-        color: #ffdf5d; /* Giallo chiaro */
+        color: #000; /* Colore principale del testo nero */
         font-weight: bold;
-        text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
+        font-size: 1.2vw;
+        text-shadow: 
+            -1px -1px 0 #ffffff,   /* Bordo bianco in alto a sinistra */
+            1px -1px 0 #ffffff,    /* Bordo bianco in alto a destra */
+            -1px 1px 0 #ffffff,    /* Bordo bianco in basso a sinistra */
+            1px 1px 0 #ffffff,     /* Bordo bianco in basso a destra */
+            2px 2px 6px rgba(0, 0, 0, 0.6); /* Effetto ombra 3D */
+    
+        /* Effetti aggiuntivi per far risaltare di più il testo */
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1)); /* Sfondo leggero */
+        padding: 5px 10px; /* Spaziatura interna */
+        border-radius: 4px; /* Bordo arrotondato */
+        display: inline-block;
     }
+
     
     /* Effetto Glow */
     .staking-item::before {

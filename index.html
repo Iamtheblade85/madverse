@@ -9,14 +9,17 @@
 <body>
 
 <div class="container">
-  <div class="logo">ChipsWallet</div>  
+  <!-- Logo con cerchio dorato rimbalzante -->
+  <div class="logo">ChipsWallet</div>
+  <div class="golden-circle"></div>
   
-  <!-- Aggiungi qui il titolo con il cerchio rotante -->
+  <!-- Titolo con cerchio rotante -->
   <div class="title-container">
     <div class="title-circle">C</div>
     <h1 class="section-title">Wax Chain Project</h1>
   </div>
 
+  <!-- Layout principale con sidebar e content frame -->
   <div class="main-layout">
     <div class="sidebar">
       <div class="welcome-message" id="welcome-message">Welcome, {wax_account}</div>
@@ -29,23 +32,29 @@
       </div>
     </div>
 
+    <!-- Frame per il contenuto dinamico -->
     <div class="content-frame" id="content-frame">
       <p>Select an option from the menu.</p>
     </div>
   </div>
 
+  <!-- Footer -->
   <div class="footer">
     ChipsWallet @2024 - A Wax Chain Project
   </div>
 </div>
 
 <script>
+  // Funzione per ottenere i parametri URL
   function getQueryParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(param);
   }
+
   const userId = getQueryParam("user_id");
   let user_wax_account = null;
+
+  // Funzione per ottenere l'account Wax dell'utente
   async function fetchWaxAccount() {
     const response = await fetch(`https://iamemanuele.pythonanywhere.com/profile?user_id=${userId}`);
     const data = await response.json();
@@ -55,8 +64,10 @@
     } else {
         document.getElementById("welcome-message").textContent = `Welcome, User`;
     }
-}
-async function loadContent(page) {
+  }
+
+  // Funzione per caricare contenuti dinamici
+  async function loadContent(page) {
     const contentFrame = document.getElementById("content-frame");
     let url;
 
@@ -129,9 +140,10 @@ async function loadContent(page) {
     } else {
       contentFrame.innerHTML = `<p>Error loading ${page}: ${data.error}</p>`;
     }
-}
+  }
 
-async function loadNFTFarms(viewType = 'all') {
+  // Funzione per caricare le farms NFT
+  async function loadNFTFarms(viewType = 'all') {
     const contentFrame = document.getElementById("content-frame");
     const userId = getQueryParam("user_id");
     let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}`;
@@ -162,7 +174,10 @@ async function loadNFTFarms(viewType = 'all') {
     } else {
         contentFrame.innerHTML = `<p>Error loading pools: ${data.error}</p>`;
     }
-} fetchWaxAccount();
+  }
+  
+  // Carica i dati dell'account all'avvio
+  fetchWaxAccount();
 </script>
 </body>
 </html>

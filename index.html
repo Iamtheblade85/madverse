@@ -330,26 +330,51 @@
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         cursor: pointer;
     }
-    reward-detail {
+   .reward-detail {
       padding: 10px;
       margin-bottom: 15px;
       border-radius: 8px;
-      box-shadow: 0 0 8px rgba(15, 220, 142, 0.1);
+      box-shadow: 0 0 8px rgba(15, 220, 142, 0.2);
     }
     
-    /* Differenti colori di sfondo e testo per varie reward */
+    /* Sfondo e colore del testo per le righe alternate */
     .reward-detail:nth-child(odd) {
       background: linear-gradient(135deg, #1f2430, #2c313e);
-      color: #0fdc8e;
+      color: #0fdc8e; /* Testo su sfondo scuro */
     }
     .reward-detail:nth-child(even) {
       background: linear-gradient(135deg, #2c313e, #1b1f27);
-      color: #00b474;
+      color: #00b474; /* Testo su sfondo chiaro */
     }
     
+    /* Specifico per testo all'interno di reward-detail */
     .reward-detail p {
       font-size: 1.2vw;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+      margin: 5px 0;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4); /* Aumentato per maggiore contrasto */
+    }
+    
+    /* Colori e stile per etichette e valori */
+    .reward-detail .label {
+      font-weight: bold;
+      color: #ffffff;
+      text-shadow: 1px 1px 2px #000;
+    }   
+    .reward-detail .value {
+      color: #ffdf5d;
+      font-weight: bold;
+      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
+    }
+    .reward-title {
+      color: #000;
+      font-size: 2vw;
+      text-align: center;
+      text-shadow: 1px 1px 2px #fff;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 5px 10px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      display: inline-block;
     }
     .staking-item:nth-child(3n+1) {
         background: linear-gradient(135deg, #0fdc8e, #2c313e);
@@ -711,7 +736,7 @@ async function loadNFTFarms(viewType = 'all') {
                 <p><span class="label">Total Staked:</span> <span class="value">${pool.total_staked} ${pool.token_symbol}</span></p>
                 <p><span class="label">You Staked:</span> <span class="value">${pool.user_staked} ${pool.token_symbol}</span></p>
                 <div class="rewards-info">
-                  <h4 class="reward-title">Reward Details</h4>
+                  <h4 class="reward-title">Details</h4>
                   ${pool.rewards_info.map(reward => `
                   <div class="reward-detail">
                     <p><span class="label">Token:</span> <span class="value">${reward.reward_token}</span></p>

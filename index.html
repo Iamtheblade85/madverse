@@ -145,7 +145,24 @@
     .action-box button:hover {
       background-color: #00b474;
     }
-        /* Grid per le card NFT */
+    /* Grid per le card NFT */
+    .section-title {
+        font-size: 3vw;
+        font-weight: bold;
+        color: #ffffff; /* Bianco neon */
+        text-shadow: 
+            2px 2px 4px #000,  /* Bordo nero per effetto 3D */
+            -2px -2px 4px #000, 
+            2px -2px 4px #000, 
+            -2px 2px 4px #000;
+        text-align: center; /* Centrato */
+        padding: 10px;
+        border: 2px solid #000; /* Bordo nero */
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6), 0px -4px 8px rgba(255, 255, 255, 0.2); /* Effetto 3D */
+        background: linear-gradient(135deg, #0fdc8e, #00b474); /* Sfondo con sfumatura */
+        margin-bottom: 20px;
+    }
     .nft-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -599,11 +616,11 @@ if (page === 'balance' && response.ok) {
           `).join("")}
         </div>`;
 }
- else if (page === 'staking_farms' && response.ok) {
-        displayStakingPools(data.pools);
-    } else if (page === 'mynfts' && response.ok) {
+else if (page === 'staking_farms' && response.ok) {
+    displayStakingPools(data.pools);
+} else if (page === 'mynfts' && response.ok) {
     contentFrame.innerHTML = `
-      <h2 style="color: #0fdc8e; font-size: 3vw; text-align: center;">Your NFTs Inventory</h2>
+      <h2 class="section-title">Your NFTs Inventory</h2>
       <div class="nft-grid">
         ${data.nfts.map(nft => `
           <div class="nft-item">

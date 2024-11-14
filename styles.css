@@ -230,6 +230,20 @@ body {
   border-radius: 18px;
   margin-bottom: 20px;
 }
+/* Titolo e dettagli con effetti di bordo */
+.nft-details p {
+  margin: 2px 0; /* Riduzione del margine */
+  font-size: 0.9em; /* Riduzione generale per il contenuto */
+  animation: textWave 6.5s ease-in-out infinite;
+}
+
+.nft-details .label {
+  font-size: 1.2em; /* Riduzione rispetto a 1.6em */
+}
+
+.nft-details .value {
+  font-size: 1em; /* Riduzione rispetto a 1.3em */
+}
 
 /* Footer */
 .footer {

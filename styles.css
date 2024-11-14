@@ -21,6 +21,23 @@ body, html {
   color: var(--text-light);
   font-size: 16px;
   overflow-x: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px; /* Margine di 10px sui lati */
+  min-height: 100vh; /* Altezza minima per centralizzare verticalmente */
+}
+
+.container {
+  max-width: 1200px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.05); /* Sfondo contenitore traslucido */
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(255, 165, 0, 0.2);
 }
 
 /* Sezione logo e cerchio dorato */
@@ -28,7 +45,7 @@ body, html {
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 20px;
+  margin-bottom: 20px;
 }
 
 .logo {
@@ -50,16 +67,12 @@ body, html {
 
 /* Cerchio dorato rimbalzante */
 .golden-circle {
-  position: fixed;
   width: 30px;
   height: 30px;
-  top: 15px;
-  right: 20px;
   border-radius: 50%;
   background: radial-gradient(circle, #ffd700, #ffdf00, #ffb900);
   box-shadow: 0 0 15px rgba(255, 215, 0, 0.6), 0 0 30px rgba(255, 223, 0, 0.4);
   animation: bounce 3s infinite cubic-bezier(0.6, 0.04, 0.98, 0.335);
-  z-index: 99;
 }
 
 @keyframes bounce {
@@ -89,8 +102,10 @@ body, html {
 
 /* Sezione Menu */
 .menu-section {
+  width: 100%;
   padding: 20px;
-  background-color: rgba(255, 165, 0, 0.1); /* Sfondo arancione chiaro traslucido */
+  background-color: rgba(255, 165, 0, 0.1);
+  text-align: center;
 }
 
 .menu {
@@ -138,8 +153,8 @@ body, html {
 
 /* Sezione contenuto */
 .content-frame {
+  width: 100%;
   padding: 20px;
-  margin: 20px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 15px;
   min-height: 500px;

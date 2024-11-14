@@ -89,13 +89,21 @@ async function loadContent(page) {
                   <div class="balance-item">
                     <h4>💰 ${balance.token_symbol}</h4>
                     <p><span class="label">Amount:</span> <span class="value">${balance.amount}</span></p>
-                    <div id="form-${balance.token_symbol}" class="form-container" style="display: none;"></div>
                   </div>
               `).join("")}
             </div>`;
     }
     else if (page === 'staking_farms' && response.ok) {
-        displayStakingPools(data.pools);
+        contentFrame.innerHTML = `
+            <h2 class="pool-title">Staking Farms</h2>
+            <div class="staking-grid">
+              ${data.pools.map(farm => `
+                  <div class="staking-item">
+                    <h4>🌱 ${farm.farm_name}</h4>
+                    <p><span class="label">APR:</span> <span class="value">${farm.apr}%</span></p>
+                  </div>
+              `).join("")}
+            </div>`;
     } else if (page === 'mynfts' && response.ok) {
         contentFrame.innerHTML = `
           <h2 class="section-title">Your NFTs Inventory</h2>
@@ -122,8 +130,10 @@ async function loadContent(page) {
       contentFrame.innerHTML = `<p>Error loading ${page}: ${data.error}</p>`;
     }
 }
+
 async function loadNFTFarms(viewType = 'all') {
     const contentFrame = document.getElementById("content-frame");
+    const userId = getQueryParam("user_id");
     let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}`;
 
     if (viewType === 'user_staking') {
@@ -140,19 +150,11 @@ async function loadNFTFarms(viewType = 'all') {
             <button onclick="loadNFTFarms('user_staking')" ${viewType === 'user_staking' ? 'class="active"' : ''}>My Staked Pools</button>
           </div>
           <h2 class="pool-title">Active NFTs Farms</h2>
-          <div class="staking-grid">
+          <div class="pool-grid">
             ${data.farms.map(farm => `
-              <div class="staking-item">
-                <h4>🌾 ${farm.farm_name}</h4>
-                <h5 class="farm-section-title">Accepted NFTs</h5>
-                ${farm.templates.length > 0
-                    ? farm.templates.map(template => `
-                        <div class="template">
-                          <p><span class="label">Template ID:</span> <span class="value">${template.template_id}</span></p>
-                          <p><span class="label">Reward per NFT:</span> <span class="value">${template.daily_reward} ${farm.token_symbol}</span></p>
-                        </div>
-                      `).join("")
-                    : `<p>No templates accepted in this farm.</p>`}
+              <div class="pool-item">
+                <h4>🏦 ${farm.farm_name}</h4>
+                <p><span class="label">Reward:</span> <span class="value">${farm.reward_token}</span></p>
               </div>
             `).join("")}
           </div>
@@ -160,8 +162,7 @@ async function loadNFTFarms(viewType = 'all') {
     } else {
         contentFrame.innerHTML = `<p>Error loading pools: ${data.error}</p>`;
     }
-}
-  fetchWaxAccount();
+} fetchWaxAccount();
 </script>
 </body>
 </html>

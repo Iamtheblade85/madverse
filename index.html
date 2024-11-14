@@ -48,8 +48,12 @@
   let user_wax_account = null;
 
   async function fetchWaxAccount() {
+    console.log("Fetching Wax Account...");
     const response = await fetch(`https://iamemanuele.pythonanywhere.com/profile?user_id=${userId}`);
+    console.log("Response status:", response.status);
     const data = await response.json();
+    console.log("Account data received:", data);
+    
     if (response.ok && data.wax_account) {
         user_wax_account = data.wax_account;
         document.getElementById("welcome-message").textContent = `Welcome, ${user_wax_account}`;
@@ -59,6 +63,7 @@
   }
 
   async function loadContent(page) {
+    console.log("Loading content for page:", page);
     const contentFrame = document.getElementById("content-frame");
     let url;
 
@@ -80,8 +85,13 @@
         break;
     }
     
+    console.log("API URL:", url);
+    
     const response = await fetch(url);
+    console.log("Response status:", response.status);
+
     const data = await response.json();
+    console.log("Data received for page:", page, data);
 
     if (page === 'balance' && response.ok) {
         contentFrame.innerHTML = `
@@ -130,10 +140,12 @@
             <p><strong>Account:</strong> ${data.wax_account}</p>`;
     } else {
       contentFrame.innerHTML = `<p>Error loading ${page}: ${data.error}</p>`;
+      console.error("Error loading content for page:", page, data.error);
     }
   }
 
   async function loadNFTFarms(viewType = 'all') {
+    console.log("Loading NFT Farms with view type:", viewType);
     const contentFrame = document.getElementById("content-frame");
     const userId = getQueryParam("user_id");
     let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}`;
@@ -142,8 +154,13 @@
         url += "&view=user_staking";
     }
 
+    console.log("NFT Farms API URL:", url);
+
     const response = await fetch(url);
+    console.log("Response status for NFT farms:", response.status);
+
     const data = await response.json();
+    console.log("NFT farms data received:", data);
 
     if (response.ok && data.farms) {
         contentFrame.innerHTML = `
@@ -163,6 +180,7 @@
         `;
     } else {
         contentFrame.innerHTML = `<p>Error loading pools: ${data.error}</p>`;
+        console.error("Error loading NFT farms:", data.error);
     }
   }
   

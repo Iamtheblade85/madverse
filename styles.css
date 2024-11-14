@@ -32,7 +32,7 @@ body {
   font-weight: bold;
   text-align: center;
   padding: 20px 0;
-  color: #faff00; /* Giallo medio neon */
+  color: #faff00;
   text-shadow: 5px 5px 15px #000, 0px 0px 40px #faff00;
   letter-spacing: 3px;
   overflow: hidden;
@@ -56,7 +56,7 @@ body {
 .title-circle {
   width: 50px;
   height: 50px;
-  background-color: #00ffff; /* Verde acqua neon */
+  background-color: #00ffff;
   border-radius: 50%;
   animation: spin 3s linear infinite;
 }
@@ -156,24 +156,7 @@ body {
   box-shadow: 0 20px 40px rgba(255, 77, 77, 0.9);
 }
 
-/* Colonna destra - Contenuti dinamici */
-.content-frame {
-  flex-grow: 1;
-  padding: 25px;
-  background: linear-gradient(135deg, #3e3e3e, #252525);
-  border-radius: 20px;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
-  overflow-y: auto;
-  color: #ffffff;
-  animation: contentPulse 6.5s infinite alternate;
-}
-
-@keyframes contentPulse {
-  0% { box-shadow: 0 0 20px #00cc99; }
-  100% { box-shadow: 0 0 35px #ff0066; }
-}
-
-/* Stili comuni per tutte le card */
+/* Card universale per Balance, Staking Pools, e NFTsFarm */
 .card {
   padding: 20px;
   border-radius: 20px;
@@ -197,27 +180,70 @@ body {
   box-shadow: 0 25px 50px rgba(255, 51, 0, 1);
 }
 
-.card .label {
-  font-size: 1.1em;
+/* Contenuto della card universale */
+.card h4 {
+  font-size: 1.2em;
   font-weight: bold;
   color: #ffcc00;
+  text-shadow: 1px 1px 6px #000;
+  margin-bottom: 10px;
 }
 
-.card .value {
+.card p {
   font-size: 1em;
-  color: #ffffff;
+  margin: 5px 0;
 }
 
-.card-grid {
+/* Grid per le card */
+.balance-grid, .staking-grid, .nft-farm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 25px;
+}
+
+/* Stili specifici per NFT Inventory */
+.nft-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 25px;
-  margin-top: 25px;
 }
 
-/* Specific styles for Balance, Staking, and NFTs */
-.balance-item, .staking-item, .nft-item {
-  background: linear-gradient(135deg, #2e2e2e, #d40073);
+.nft-item {
+  padding: 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #141414, #ff6600);
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  cursor: pointer;
+  animation: nftGlow 5.5s infinite alternate;
+}
+
+@keyframes nftGlow {
+  0% { box-shadow: 0 0 25px #ff6600; }
+  100% { box-shadow: 0 0 50px #ff3300, 0 0 70px #ff3300; }
+}
+
+.nft-item:hover {
+  transform: translateY(-12px) scale(1.1);
+  box-shadow: 0 25px 50px rgba(255, 51, 0, 1);
+}
+
+.nft-image {
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  margin-bottom: 20px;
+}
+
+.nft-details .label {
+  font-size: 1.2em;
+}
+
+.nft-details .value {
+  font-size: 1em;
 }
 
 /* Footer */

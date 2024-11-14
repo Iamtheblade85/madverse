@@ -62,7 +62,7 @@
     }
   }
 
-  async function loadContent(page) {
+async function loadContent(page) {
     console.log("Loading content for page:", page);
     const contentFrame = document.getElementById("content-frame");
     let url;
@@ -86,64 +86,69 @@
     }
     
     console.log("API URL:", url);
-    
-    const response = await fetch(url);
-    console.log("Response status:", response.status);
+    try {
+        const response = await fetch(url);
+        console.log("Response status:", response.status);
+        
+        // Se lo stato non è "OK" (200), logga un messaggio di errore
+        if (!response.ok) {
+            throw new Error(`Server responded with status: ${response.status}`);
+        }
 
-    const data = await response.json();
-    console.log("Data received for page:", page, data);
+        const data = await response.json();
+        console.log("Data received for page:", page, data);
 
-    if (page === 'balance' && response.ok) {
-        contentFrame.innerHTML = `
-            <h2 class="pool-title">Your Token Balances</h2>
-            <div class="balance-grid">
-              ${data.balances.map(balance => `
-                  <div class="balance-item">
-                    <h4>${balance.token_symbol}</h4>
-                    <p style="text-align: left;"><span class="value">${balance.amount}</span></p>
+        if (page === 'balance') {
+            contentFrame.innerHTML = `
+                <h2 class="pool-title">Your Token Balances</h2>
+                <div class="balance-grid">
+                  ${data.balances.map(balance => `
+                      <div class="balance-item">
+                        <h4>${balance.token_symbol}</h4>
+                        <p style="text-align: left;"><span class="value">${balance.amount}</span></p>
+                      </div>
+                  `).join("")}
+                </div>`;
+        }
+        else if (page === 'staking_farms') {
+            contentFrame.innerHTML = `
+                <h2 class="pool-title">Staking Farms</h2>
+                <div class="staking-grid">
+                  ${data.pools.map(farm => `
+                      <div class="staking-item">
+                        <h4>🌱 ${farm.farm_name}</h4>
+                        <p><span class="label">APR:</span> <span class="value">${farm.apr}%</span></p>
+                      </div>
+                  `).join("")}
+                </div>`;
+        } else if (page === 'mynfts') {
+            contentFrame.innerHTML = `
+              <h2 class="section-title">Your NFTs Inventory</h2>
+              <div class="nft-grid">
+                ${data.nfts.map(nft => `
+                  <div class="nft-item">
+                    <img src="${nft.image_url}" alt="NFT Image" class="nft-image">
+                    <div class="nft-details">
+                      <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
+                      <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
+                      <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
+                      <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
+                    </div>
                   </div>
-              `).join("")}
-            </div>`;
+                `).join("")}
+              </div>`;
+        } else if (page === 'profile') {
+            contentFrame.innerHTML = `
+              <h2 class="pool-title">Your Profile</h2>
+              <p><strong>Username:</strong> ${data.username}</p>
+              <p><strong>Level:</strong> ${data.sqj_level}</p>
+              <p><strong>Account:</strong> ${data.wax_account}</p>`;
+        }
+    } catch (error) {
+        console.error("Error loading content for page:", page, error);
+        contentFrame.innerHTML = `<p>Error loading ${page}: ${error.message}</p>`;
     }
-    else if (page === 'staking_farms' && response.ok) {
-        contentFrame.innerHTML = `
-            <h2 class="pool-title">Staking Farms</h2>
-            <div class="staking-grid">
-              ${data.pools.map(farm => `
-                  <div class="staking-item">
-                    <h4>🌱 ${farm.farm_name}</h4>
-                    <p><span class="label">APR:</span> <span class="value">${farm.apr}%</span></p>
-                  </div>
-              `).join("")}
-            </div>`;
-    } else if (page === 'mynfts' && response.ok) {
-        contentFrame.innerHTML = `
-          <h2 class="section-title">Your NFTs Inventory</h2>
-          <div class="nft-grid">
-            ${data.nfts.map(nft => `
-              <div class="nft-item">
-                <img src="${nft.image_url}" alt="NFT Image" class="nft-image">
-                <div class="nft-details">
-                  <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
-                  <p><span class="label">Asset ID:</span> <span class="value">${nft.asset_id}</span></p>
-                  <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
-                  <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
-                </div>
-              </div>
-            `).join("")}
-          </div>`;
-    }  else if (page === 'profile' && response.ok) {
-          contentFrame.innerHTML = `
-            <h2 class="pool-title">Your Profile</h2>
-            <p><strong>Username:</strong> ${data.username}</p>
-            <p><strong>Level:</strong> ${data.sqj_level}</p>
-            <p><strong>Account:</strong> ${data.wax_account}</p>`;
-    } else {
-      contentFrame.innerHTML = `<p>Error loading ${page}: ${data.error}</p>`;
-      console.error("Error loading content for page:", page, data.error);
-    }
-  }
-
+}
   async function loadNFTFarms(viewType = 'all') {
     console.log("Loading NFT Farms with view type:", viewType);
     const contentFrame = document.getElementById("content-frame");

@@ -13,6 +13,7 @@ body {
   color: #ffffff;
   overflow: hidden;
 }
+
 .container {
   width: 90%;
   max-width: 1200px;
@@ -142,7 +143,37 @@ body {
   100% { box-shadow: 0 0 35px #ff0066; }
 }
 
-/* Titoli delle sezioni con effetti speciali */
+/* Effetto cerchio rotante con lettera C per il titolo */
+@keyframes rotateCircle {
+  0% {
+    transform: translateX(100%) rotate(0deg);
+  }
+  100% {
+    transform: translateX(calc(-100% + 10px)) rotate(360deg);
+  }
+}
+
+.title-container {
+  position: relative;
+  display: inline-block;
+}
+
+.title-circle {
+  position: absolute;
+  top: 0;
+  right: 100%;
+  width: 1em;
+  height: 1em;
+  background-color: #ffffff;
+  color: #000000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  animation: rotateCircle 3s ease-in-out infinite;
+}
+
 .section-title, .pool-title {
   font-size: 2.8vw;
   font-weight: bold;

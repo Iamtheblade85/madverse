@@ -111,7 +111,7 @@
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
-    .action-box h3 {
+    .action-box h3 h4 {
       color: #0fdc8e;
       font-size: 18px;
       margin-bottom: 10px;
@@ -183,7 +183,7 @@
 
     /* Immagine NFT ridotta del 50% e stile */
     .nft-image {
-        width: 50%; /* Riduzione del 50% */
+        width: 60%; /* Riduzione del x% */
         height: auto;
         border-radius: 10px;
         margin-bottom: 15px;
@@ -260,7 +260,7 @@
     }
 
     /* Titolo dei token con bordo bianco */
-    .balance-item h3 {
+    .balance-item h3 h4 {
         font-size: 2.5vw;
         font-weight: bold;
         color: #000;
@@ -346,7 +346,7 @@
     }
 
     /* Titolo in nero con bordo bianco */
-    .staking-item h3 {
+    .staking-item h3 h4 {
         font-size: 2.5vw;
         font-weight: bold;
         color: #000;
@@ -495,11 +495,11 @@
 
 if (page === 'balance' && response.ok) {
     contentFrame.innerHTML = `
-        <h2 style="color: #0fdc8e; font-size: 3vw; text-align: center;">Your Token Balances</h2>
+        <h2 style="color: #0fdc8e; font-size: 2vw; text-align: center;">Your Token Balances</h2>
         <div class="balance-grid">
           ${data.balances.map(balance => `
               <div class="balance-item">
-                <h3>💰 ${balance.token_symbol}</h3>
+                <h4>💰 ${balance.token_symbol}</h4>
                 <p><span class="label">Amount:</span> <span class="value">${balance.amount}</span></p>
                 <!--
                 <div class="action-buttons">
@@ -525,7 +525,7 @@ if (page === 'balance' && response.ok) {
               <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
               <p><span class="label">Asset ID:</span> <span class="value">${nft.asset_id}</span></p>
               <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
-              <p><span class="label">For Sale:</span> <span class="value">${nft.for_sale}</span></p>
+              <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
             </div>
           </div>
         `).join("")}
@@ -559,13 +559,12 @@ async function loadNFTFarms(viewType = 'all') {
             <button onclick="loadNFTFarms('all')" ${viewType === 'all' ? 'class="active"' : ''}>All Pools</button>
             <button onclick="loadNFTFarms('user_staking')" ${viewType === 'user_staking' ? 'class="active"' : ''}>My Staked Pools</button>
           </div>
-          <h2 style="color: #0fdc8e; font-size: 3vw; text-align: center;">Open NFT Farms</h2>
+          <h2 style="color: #0fdc8e; font-size: 3vw; text-align: center;">Active NFTs Farms</h2>
           <div class="staking-grid">
             ${data.farms.map(farm => `
               <div class="staking-item">
-                <h3>🌾 ${farm.farm_name} (${farm.token_symbol})</h3>
-                <p><span class="label">Farm ID:</span> <span class="value">${farm.farm_id}</span></p>
-                <h4 class="farm-section-title">Accepted NFTs</h4>
+                <h4>🌾 ${farm.farm_name}</h4>
+                <h5 class="farm-section-title">Accepted NFTs</h5>
                 ${farm.templates.length > 0
                     ? farm.templates.map(template => `
                         <div class="template">
@@ -582,8 +581,6 @@ async function loadNFTFarms(viewType = 'all') {
         contentFrame.innerHTML = `<p>Error loading pools: ${data.error}</p>`;
     }
 }
-
-
   function showTransferForm(token, maxAmount) {
     const formContainer = document.getElementById(`form-${token}`);
     formContainer.innerHTML = `
@@ -674,23 +671,23 @@ async function loadNFTFarms(viewType = 'all') {
         }
 
         contentFrame.innerHTML = `
-          <h2 style="color: #0fdc8e; font-size: 3vw; text-align: center;">Available Staking Pools</h2>
+          <h3 style="color: #0fdc8e; font-size: 2vw; text-align: center;">Active Staking Pools</h3>
           <div class="staking-grid">
             ${pools.map(pool => `
               <div class="staking-item">
-                <h3>🌟 Pool ${pool.token_symbol} (ID: ${pool.pool_id})</h3>
-                <p><span class="label">Total Staked:</span> <span class="value">${pool.total_staked}</span></p>
-                <p><span class="label">Your Staked Tokens:</span> <span class="value">${pool.user_staked}</span></p>
+                <h3>🌟 Pool ${pool.token_symbol}</h3>
+                <p><span class="label">Total Staked:</span> <span class="value">${pool.total_staked} ${pool.token_symbol}</span></p>
+                <p><span class="label">You Staked:</span> <span class="value">${pool.user_staked} ${pool.token_symbol}</span></p>
                 <div class="rewards-info">
-                  <h4 style="color: #0fdc8e; font-size: 2vw;">Rewards</h4>
+                  <h4 style="color: #0fdc8e; font-size: 2vw;">Reward Details</h4>
                   ${pool.rewards_info.map(reward => `
                     <div class="reward-detail">
-                      <p><span class="label">Reward Token:</span> <span class="value">${reward.reward_token}</span></p>
-                      <p><span class="label">Total Reward Deposit:</span> <span class="value">${reward.total_reward_deposit}</span></p>
-                      <p><span class="label">Daily Distribution:</span> <span class="value">${reward.daily_reward}</span></p>
-                      <p><span class="label">APR:</span> <span class="value">${reward.apr}</span></p>
-                      <p><span class="label">Days Remaining:</span> <span class="value">${reward.days_remaining}</span></p>
-                      <p><span class="label">Your Daily Reward:</span> <span class="value">${reward.user_daily_reward}</span></p>
+                      <p><span class="label">Token:</span> <span class="value">${reward.reward_token}</span></p>
+                      <p><span class="label">Reward remaining:</span> <span class="value">${reward.total_reward_deposit}</span></p>
+                      <p><span class="label">Daily:</span> <span class="value">${reward.daily_reward}</span></p>
+                      <p><span class="label">APR:</span> <span class="value">${reward.apr} %</span></p>
+                      <p><span class="label">Days remaining:</span> <span class="value">${reward.days_remaining}</span></p>
+                      <p><span class="label">Your daily income:</span> <span class="value">${reward.user_daily_reward}</span></p>
                     </div>
                   `).join("")}
                 </div>

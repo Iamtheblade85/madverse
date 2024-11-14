@@ -194,20 +194,12 @@ body {
   margin: 5px 0;
 }
 
-/* Grid per le card */
-.balance-grid, .staking-grid, .nft-farm-grid {
+/* Grid per le card con dimensioni dinamiche e massimo adattamento */
+.balance-grid, .staking-grid, .nft-farm-grid, .nft-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 250px));
+  grid-template-columns: repeat(auto-fill, minmax(100px, 250px));
   gap: 10px;
 }
-
-/* Stili specifici per NFT Inventory */
-.nft-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 250px));
-  gap: 10px;
-}
-
 .nft-item {
   padding: 20px;
   border-radius: 20px;

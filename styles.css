@@ -1,13 +1,13 @@
 /* Colors */
 :root {
   --bg-color: #000000;
-  --primary-color: #ffea00;
-  --secondary-color: #00e5ff;
-  --text-color: #ffffff;
-  --border-glow-color: rgba(255, 234, 0, 0.6);
+  --primary-color: #ffea00; /* Neon Yellow */
+  --secondary-color: #00e5ff; /* Neon Blue */
+  --text-color: #ffffff; /* White */
+  --border-glow-color: rgba(255, 234, 0, 0.6); /* Soft glow around borders */
 }
 
-/* Reset and base styles */
+/* Base and Reset Styles */
 * {
   margin: 0;
   padding: 0;
@@ -22,24 +22,42 @@ body, html {
   overflow-x: hidden;
 }
 
+/* Layout Container */
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
 
+/* Logo */
 .logo {
   font-size: 2rem;
   font-weight: bold;
   color: var(--primary-color);
-  text-shadow: 0 0 10px var(--primary-color);
-  margin-bottom: 10px;
+  text-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color);
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 100;
+  animation: neon-flicker 2s infinite alternate;
 }
 
+/* Neon Flicker Animation for Logo */
+@keyframes neon-flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow: 0 0 5px var(--primary-color), 0 0 15px var(--primary-color), 0 0 30px var(--primary-color), 0 0 40px var(--primary-color);
+  }
+  20%, 24%, 55% {
+    text-shadow: none;
+  }
+}
+
+/* Title with Rotating Circle */
 .title-container {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 20px 0;
 }
 
 .title-circle {
@@ -53,8 +71,10 @@ body, html {
   100% { transform: rotate(360deg); }
 }
 
+/* Main Layout */
 .main-layout {
   display: flex;
+  margin-top: 60px;
 }
 
 .sidebar {
@@ -72,41 +92,49 @@ body, html {
   position: relative;
   transition: color 0.3s;
   margin: 5px 0;
+  font-weight: bold;
+  text-align: left;
 }
 
-.menu button:hover {
-  color: var(--primary-color);
+/* Animated Menu with Neon Borders */
+.menu button {
+  position: relative;
+  overflow: hidden;
 }
 
-/* Animated Menu */
 .menu button::before {
   content: '';
   position: absolute;
   top: 0;
-  left: 0;
+  left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-  clip-path: polygon(0 0, 100% 0, 100% 3px, 3px 3px, 3px 100%, 0 100%);
-  animation: menu-animation 5s linear infinite;
+  background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+  animation: slide-neon 5s linear infinite;
 }
 
-@keyframes menu-animation {
-  0% { clip-path: polygon(0 0, 0% 0, 0 100%, 0 100%); }
-  50% { clip-path: polygon(0 0, 100% 0, 100% 3px, 3px 3px, 3px 100%, 0 100%); }
-  100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+@keyframes slide-neon {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: -100%; }
 }
 
+.menu button:hover {
+  color: var(--primary-color);
+  text-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color);
+}
+
+/* Content Frame */
 .content-frame {
   flex: 1;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  backdrop-filter: blur(5px);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
   min-height: 500px;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
 
-/* Grid styles */
+/* Grid Layouts */
 .balance-grid, .staking-grid, .nft-grid, .pool-grid {
   display: grid;
   gap: 15px;
@@ -120,6 +148,7 @@ body, html {
   grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
 }
 
+/* Cards */
 .balance-item, .staking-item, .nft-item, .pool-item, .profile-card {
   background-color: rgba(0, 0, 0, 0.8);
   padding: 15px;
@@ -127,34 +156,68 @@ body, html {
   position: relative;
   overflow: hidden;
   color: var(--text-color);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform-style: preserve-3d;
 }
 
 .balance-item:hover, .staking-item:hover, .nft-item:hover, .pool-item:hover, .profile-card:hover {
-  transform: translateY(-10px);
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 0 15px var(--border-glow-color);
 }
 
-/* 3D card effect */
+/* 3D Effect for Cards */
 .balance-item, .staking-item, .nft-item, .pool-item, .profile-card {
-  box-shadow: 0 0 10px var(--border-glow-color);
+  box-shadow: 0 0 15px var(--border-glow-color);
+  perspective: 1000px;
 }
 
+.balance-item::after, .staking-item::after, .nft-item::after, .pool-item::after, .profile-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  box-shadow: 0 0 10px var(--border-glow-color);
+  animation: glow-border 3s linear infinite;
+}
+
+@keyframes glow-border {
+  0% { box-shadow: 0 0 10px var(--border-glow-color); }
+  50% { box-shadow: 0 0 20px var(--primary-color), 0 0 30px var(--secondary-color); }
+  100% { box-shadow: 0 0 10px var(--border-glow-color); }
+}
+
+/* NFT Image */
 .nft-image {
   width: 125px;
   height: 125px;
   object-fit: cover;
   margin-bottom: 10px;
   border-radius: 10px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
+/* Section Titles */
 .pool-title, .section-title {
   font-size: 1.5rem;
   color: var(--primary-color);
+  text-shadow: 0 0 10px var(--primary-color);
   margin-bottom: 15px;
 }
 
+/* Labels */
 .label {
   color: var(--secondary-color);
+  font-weight: bold;
+}
+
+/* Profile Card */
+.profile-card {
+  text-align: center;
+  padding: 20px;
 }
 
 /* Border glow effect for cards */
@@ -176,7 +239,7 @@ body, html {
   opacity: 1;
 }
 
-/* Responsive */
+/* Responsiveness */
 @media (max-width: 768px) {
   .main-layout {
     flex-direction: column;
@@ -201,4 +264,5 @@ body, html {
   color: var(--text-color);
   padding: 10px;
   font-size: 0.9rem;
+  margin-top: 20px;
 }

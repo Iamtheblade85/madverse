@@ -87,8 +87,8 @@ async function loadContent(page) {
             <div class="balance-grid">
               ${data.balances.map(balance => `
                   <div class="balance-item">
-                    <h4>💰 ${balance.token_symbol}</h4>
-                    <p><span class="label">Amount:</span> <span class="value">${balance.amount}</span></p>
+                    <h4>${balance.token_symbol}</h4>
+                    <p style="text-align: left;"><span class="value">${balance.amount}</span></p>
                   </div>
               `).join("")}
             </div>`;

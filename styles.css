@@ -241,7 +241,7 @@ body {
 
 /* Valore bianco con bordo nero */
 .nft-details .value {
-  font-size: 1.5vw;
+  font-size: 1.2vw;
   font-weight: bold;
   color: #ffffff;
   text-shadow: 1px 1px 2px #000;
@@ -340,7 +340,7 @@ body {
 
 @media (max-width: 768px) {
   .balance-item .value {
-    font-size: calc(1.05vw - 0.5em); /* Riduzione del 30% rispetto alla versione adattiva */
+    font-size: calc(0.65vw - 0.5em); /* Riduzione del 30% rispetto alla versione adattiva */
   }
 }
 

@@ -5,6 +5,7 @@
   --secondary-color: #00e5ff; /* Neon Blue */
   --text-color: #ffffff; /* White */
   --border-glow-color: rgba(255, 234, 0, 0.6); /* Soft glow around borders */
+  --golden-circle-color: radial-gradient(circle, #ffd700, #ffdf00, #ffb900); /* Realistic gold */
 }
 
 /* Base and Reset Styles */
@@ -29,17 +30,34 @@ body, html {
   padding: 20px;
 }
 
-/* Logo */
+/* Logo with Bouncing Golden Circle */
 .logo {
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: bold;
   color: var(--primary-color);
   text-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color);
   position: fixed;
   top: 10px;
-  left: 10px;
+  left: 20px;
   z-index: 100;
   animation: neon-flicker 2s infinite alternate;
+}
+
+/* Golden Circle */
+.golden-circle {
+  position: fixed;
+  width: 30px;
+  height: 30px;
+  background: var(--golden-circle-color);
+  border-radius: 50%;
+  top: 15px;
+  animation: bounce 3s infinite cubic-bezier(0.6, 0.04, 0.98, 0.335);
+}
+
+@keyframes bounce {
+  0% { transform: translateX(100vw); }
+  50% { transform: translateX(calc(100vw - 60px)); }
+  100% { transform: translateX(20px); }
 }
 
 /* Neon Flicker Animation for Logo */
@@ -266,3 +284,4 @@ body, html {
   font-size: 0.9rem;
   margin-top: 20px;
 }
+

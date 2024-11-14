@@ -163,9 +163,16 @@ body, html {
   50% { transform: translateY(-10px); }
 }
 
+/* Contenitore della griglia */
+.balance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
 /* Card 3D per ogni elemento */
 .card {
-  width: 125px;
   height: 125px;
   display: flex;
   flex-direction: column;
@@ -184,6 +191,7 @@ body, html {
   transform: perspective(600px) rotateX(0deg) translateY(-5px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
 }
+
 
 /* Sezione per il contenuto */
 .content-frame {

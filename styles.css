@@ -28,14 +28,31 @@ body, html {
   flex-direction: column;
 }
 
-/* Contenitore principale */
+/* Contenitore principale con effetto 3D */
 .container {
-  max-width: 1200px;
-  width: 100%;
+  max-width: 1000px;
+  min-width: 300px;
+  width: 80%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px; /* Spaziatura tra le sezioni */
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.1); /* Sfondo semi-trasparente */
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); /* Ombra per effetto 3D */
+  transform: perspective(1000px) rotateX(5deg); /* Trasformazione 3D */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Animazione */
+}
+
+.container:hover {
+  transform: perspective(1000px) rotateX(0deg) translateY(-10px); /* Effetto sollevato */
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5); /* Ombra più profonda al passaggio del mouse */
+}
+
+/* Spaziatura e centratura dei contenuti */
+.container > * {
+  margin-bottom: 15px;
 }
 
 /* Sezione logo */

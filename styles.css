@@ -259,3 +259,88 @@ body {
   0% { text-shadow: 0 0 15px #d40073; }
   100% { text-shadow: 0 0 25px #ff4dff; }
 }
+/* Grid per le card Balance, Staking, Pools */
+.balance-grid, .staking-grid, .pool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+  margin-top: 25px;
+}
+
+/* Stile generale per le card Balance, Staking, Pools */
+.balance-item, .staking-item, .pool-item {
+  padding: 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #2e2e2e, #d40073);
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 35px rgba(0, 0, 0, 0.6);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  cursor: pointer;
+  animation: cardGlow 5s infinite alternate;
+}
+
+@keyframes cardGlow {
+  0% { box-shadow: 0 0 25px #e60073; }
+  100% { box-shadow: 0 0 50px #ff4dff, 0 0 70px #ff1aff; }
+}
+
+/* Varianti per tipo di card */
+.balance-item {
+  background: linear-gradient(135deg, #2e2e2e, #00cc99);
+}
+
+.staking-item {
+  background: linear-gradient(135deg, #252525, #ff9933);
+}
+
+.pool-item {
+  background: linear-gradient(135deg, #2e2e2e, #0066ff);
+}
+
+/* Hover per le card */
+.balance-item:hover, .staking-item:hover, .pool-item:hover {
+  transform: translateY(-8px) scale(1.08);
+  box-shadow: 0 25px 40px rgba(255, 77, 255, 1);
+}
+
+/* Titolo dei token e sezioni delle card */
+.balance-item h4, .staking-item h4, .pool-item h4 {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #faff00;
+  text-shadow: 1px 1px 6px #000;
+  margin-bottom: 12px;
+}
+
+/* Label e valori con bordi per Balance, Staking, e Pools */
+.balance-item .label, .staking-item .label, .pool-item .label {
+  font-size: 1em;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 1px 1px 3px #000;
+}
+
+.balance-item .value, .staking-item .value, .pool-item .value {
+  font-size: 0.85em;
+  font-weight: bold;
+  color: #e60073;
+  text-shadow: 1px 1px 3px #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Glow per un effetto 3D */
+.balance-item::before, .staking-item::before, .pool-item::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 20% 35%, rgba(255, 102, 0, 0.2), rgba(0, 0, 0, 0));
+  transform: rotate(30deg);
+  opacity: 0.4;
+}

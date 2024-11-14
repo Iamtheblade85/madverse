@@ -9,19 +9,21 @@ body {
   align-items: center;
   min-height: 100vh;
   margin: 0;
-  background-color: #0d0d0d;
+  background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
   color: #ffffff;
+  overflow: hidden;
 }
 .container {
   width: 90%;
   max-width: 1200px;
   padding: 20px;
-  background-color: #1a1a1a;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  background: linear-gradient(145deg, #202020, #121212);
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
+  overflow: hidden;
 }
 
 /* Logo con animazione speciale */
@@ -31,7 +33,7 @@ body {
   text-align: center;
   padding: 20px 0;
   color: #ffcc00;
-  text-shadow: 3px 3px 5px #000, 0px 0px 20px #ffcc00;
+  text-shadow: 3px 3px 10px #000, 0px 0px 30px #ffcc00;
   letter-spacing: 2px;
   overflow: hidden;
   display: inline-block;
@@ -39,10 +41,10 @@ body {
 }
 
 @keyframes logoAnimation {
-  0% { transform: translateY(-100px); opacity: 0; }
-  10% { transform: translateY(0); opacity: 1; }
+  0%, 100% { transform: translateY(-100px); opacity: 0; }
+  10%, 30% { transform: translateY(0); opacity: 1; }
   40%, 70% { transform: translateY(0) rotate(0deg); }
-  100% { transform: translateY(-5px) rotate(3deg); }
+  80%, 100% { transform: translateY(-5px) rotate(3deg); }
 }
 
 /* Layout principale */
@@ -53,25 +55,38 @@ body {
   gap: 20px;
 }
 
-/* Colonna sinistra - Menu */
+/* Colonna sinistra - Menu con effetto Glow */
 .sidebar {
   width: 25%;
-  background-color: #292929;
+  background: radial-gradient(circle, #2a2a2a, #1a1a1a);
   padding: 20px;
   border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.8);
   display: flex;
   flex-direction: column;
   gap: 15px;
-  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  animation: sidebarGlow 4s ease-in-out infinite alternate;
+}
+
+@keyframes sidebarGlow {
+  0% { box-shadow: 0 0 20px #00ffcc, 0 0 40px #00ffcc; }
+  100% { box-shadow: 0 0 30px #0066cc, 0 0 60px #0066cc; }
 }
 
 .welcome-message {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: bold;
   margin-bottom: 20px;
-  color: #ffcc00;
+  color: #00ffcc;
   text-align: center;
+  animation: welcomePulse 3s ease-in-out infinite;
+}
+
+@keyframes welcomePulse {
+  0%, 100% { color: #00ffcc; text-shadow: 0 0 10px #00ffcc; }
+  50% { color: #00cc99; text-shadow: 0 0 20px #00cc99; }
 }
 
 .menu {
@@ -87,7 +102,7 @@ body {
   cursor: pointer;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, #ff4500, #ffcc00);
+  background: linear-gradient(135deg, #e60073, #ff4d4d);
   color: #ffffff;
   font-weight: bold;
   text-align: left;
@@ -95,24 +110,36 @@ body {
   align-items: center;
   gap: 10px;
   transition: transform 0.2s, box-shadow 0.3s;
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+  animation: buttonGlow 4s infinite alternate;
+}
+
+@keyframes buttonGlow {
+  0% { box-shadow: 0 0 10px #ff4d4d; }
+  100% { box-shadow: 0 0 20px #ff4d4d, 0 0 40px #ff0044; }
 }
 
 .menu button:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 15px rgba(255, 204, 0, 0.8);
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 15px 30px rgba(255, 77, 77, 0.8);
 }
 
 /* Colonna destra - Contenuti dinamici */
 .content-frame {
   width: 75%;
   padding: 20px;
-  background-color: #404040;
+  background: linear-gradient(135deg, #3b3b3b, #202020);
   border-radius: 15px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
   overflow-y: auto;
   color: #ffffff;
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
+  animation: contentPulse 6s infinite alternate;
+}
+
+@keyframes contentPulse {
+  0% { box-shadow: 0 0 15px #00cc99; }
+  100% { box-shadow: 0 0 25px #ff0066; }
 }
 
 /* Titoli delle sezioni con effetti speciali */
@@ -120,13 +147,19 @@ body {
   font-size: 2.5vw;
   font-weight: bold;
   color: #ffcc00;
-  text-shadow: 2px 2px 5px #000, 0px 0px 15px #ffcc00;
+  text-shadow: 3px 3px 15px #000, 0px 0px 20px #ffcc00;
   text-align: center;
   padding: 15px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #ffcc00, #ff4500);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+  background: linear-gradient(135deg, #ffcc00, #ff6600);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.8);
   margin-bottom: 20px;
+  animation: titleBounce 5s ease-in-out infinite;
+}
+
+@keyframes titleBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 /* Grid per le card NFT */
@@ -137,48 +170,65 @@ body {
   margin-top: 20px;
 }
 
-/* Card NFT con effetto 3D e sfondo gradiente */
+/* Card NFT con effetto 3D, glow e sfondo gradiente */
 .nft-item {
   padding: 20px;
-  border-radius: 15px;
-  background: linear-gradient(135deg, #2a2a2a, #ffcc00);
+  border-radius: 20px;
+  background: linear-gradient(135deg, #121212, #ff6600);
   color: #ffffff;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.8);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
+  animation: nftGlow 5s infinite alternate;
+}
+
+@keyframes nftGlow {
+  0% { box-shadow: 0 0 20px #ff6600; }
+  100% { box-shadow: 0 0 40px #ff3300, 0 0 60px #ff3300; }
 }
 
 .nft-item:nth-child(3n+1) {
-  background: linear-gradient(135deg, #ffcc00, #ff4500);
+  background: linear-gradient(135deg, #ff6600, #ff3300);
 }
 
 .nft-item:nth-child(3n+2) {
-  background: linear-gradient(135deg, #ff4500, #2a2a2a);
+  background: linear-gradient(135deg, #ff3300, #202020);
 }
 
 .nft-item:nth-child(3n) {
-  background: linear-gradient(135deg, #ff4500, #404040);
+  background: linear-gradient(135deg, #ff3300, #404040);
 }
 
 .nft-item:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 15px 25px rgba(255, 0, 0, 0.8);
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 20px 35px rgba(255, 51, 0, 0.9);
 }
 
 /* Immagine NFT ridotta e stile */
 .nft-image {
   width: 60%;
   height: auto;
-  border-radius: 10px;
+  border-radius: 15px;
   margin-bottom: 15px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease;
+}
+
+.nft-image:hover {
+  transform: scale(1.1);
 }
 
 /* Titolo e dettagli con effetti di bordo */
 .nft-details p {
   margin: 10px 0;
+  animation: textWave 6s ease-in-out infinite;
+}
+
+@keyframes textWave {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(5px); }
 }
 
 /* Label nera con bordo bianco */
@@ -205,12 +255,12 @@ body {
   right: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle at 20% 35%, rgba(255, 204, 0, 0.15), rgba(0, 0, 0, 0));
+  background: radial-gradient(circle at 20% 35%, rgba(255, 102, 0, 0.15), rgba(0, 0, 0, 0));
   transform: rotate(25deg);
   opacity: 0.3;
 }
 
-/* Grid di bilancio */
+/* Grid di bilancio con Glow e sfondo speciale */
 .balance-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -221,31 +271,37 @@ body {
 /* Card 3D con effetti ombra e sfondo gradiente per il bilancio */
 .balance-item {
   padding: 15px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #292929, #ffcc00);
+  border-radius: 15px;
+  background: linear-gradient(135deg, #292929, #e60073);
   color: #ffffff;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
+  animation: balanceGlow 4s infinite alternate;
+}
+
+@keyframes balanceGlow {
+  0% { box-shadow: 0 0 20px #e60073; }
+  100% { box-shadow: 0 0 40px #ff4dff, 0 0 60px #ff1aff; }
 }
 
 .balance-item:nth-child(3n+1) {
-  background: linear-gradient(135deg, #ffcc00, #ff4500);
+  background: linear-gradient(135deg, #e60073, #ff4dff);
 }
 
 .balance-item:nth-child(3n+2) {
-  background: linear-gradient(135deg, #ff4500, #292929);
+  background: linear-gradient(135deg, #ff4dff, #292929);
 }
 
 .balance-item:nth-child(3n) {
-  background: linear-gradient(135deg, #ff4500, #404040);
+  background: linear-gradient(135deg, #ff4dff, #404040);
 }
 
 .balance-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 25px rgba(255, 204, 0, 0.8);
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 20px 30px rgba(255, 77, 255, 0.8);
 }
 
 /* Titolo dei token con bordo bianco */
@@ -253,7 +309,7 @@ body {
   font-size: 2vw;
   font-weight: bold;
   color: #ffcc00;
-  text-shadow: 1px 1px 2px #000;
+  text-shadow: 1px 1px 5px #000;
   margin-bottom: 10px;
 }
 
@@ -267,9 +323,9 @@ body {
 
 /* Dimensione del testo e stile per i valori con ridimensionamento automatico */
 .balance-item .value {
-  font-size: 1.05vw; /* Riduzione del 30% rispetto al valore precedente */
+  font-size: 1.05vw;
   font-weight: bold;
-  color: #ffcc00;
+  color: #e60073;
   text-shadow: 1px 1px 2px #000;
   white-space: nowrap;
   overflow: hidden;
@@ -288,7 +344,7 @@ body {
   }
 }
 
-/* Footer */
+/* Footer con Glow */
 .footer {
   text-align: center;
   font-size: 14px;
@@ -296,63 +352,12 @@ body {
   color: #888;
   border-top: 1px solid #444;
   margin-top: 20px;
+  animation: footerGlow 4s infinite alternate;
 }
 
-/* Pulsanti Switch */
-.switch-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
+@keyframes footerGlow {
+  0% { text-shadow: 0 0 10px #e60073; }
+  100% { text-shadow: 0 0 20px #ff4dff; }
 }
 
-.switch-container button {
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  border: none;
-  border-radius: 20px;
-  margin: 0 5px;
-  background: #ffcc00;
-  color: #222;
-  font-weight: bold;
-  transition: transform 0.2s;
-}
-
-.switch-container button.active {
-  background: #ff4500;
-  transform: scale(1.1);
-}
-
-/* Resposiveness */
-@media (max-width: 768px) {
-  .main-layout {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-  }
-
-  .content-frame {
-    width: 100%;
-    margin-top: 20px;
-  }
-
-  .balance-item, .nft-item, .staking-item {
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 480px) {
-  .logo {
-    font-size: 24px;
-  }
-
-  .menu button {
-    font-size: 14px;
-  }
-
-  .balance-item h4, .nft-details .label, .nft-details .value {
-    font-size: 1.2em;
-  }
-}
+/* Pulsanti Switch con effetto di Glow */

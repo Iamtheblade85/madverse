@@ -5,106 +5,149 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChipsWallet - Wax Chain Project</title>
   <style>
-    /* CSS per il layout e lo stile */
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background-color: #f5f5f5;
-    }
+/* Base Styles */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f5f5f5;
+}
 
-    .container {
-      width: 100%;
-      max-width: 1200px;
-      padding: 20px;
-    }
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  padding: 20px;
+}
 
-    .logo-section {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+/* Logo Section */
+.logo-section {
+  text-align: center;
+  margin-bottom: 20px;
+}
 
-    .logo {
-      font-size: 36px;
-      font-weight: bold;
-      color: gold;
-      text-shadow: 0px 0px 10px rgba(255, 215, 0, 0.5);
-      animation: colorShift 3s infinite;
-    }
+.logo {
+  font-size: 36px;
+  font-weight: bold;
+  color: gold;
+  text-shadow: 0px 0px 10px rgba(255, 215, 0, 0.5);
+  animation: colorShift 3s infinite;
+}
 
-    @keyframes colorShift {
-      0% { color: gold; }
-      50% { color: yellow; }
-      100% { color: gold; }
-    }
+@keyframes colorShift {
+  0% { color: gold; }
+  50% { color: yellow; }
+  100% { color: gold; }
+}
 
-    .menu-section {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
+/* Menu Section */
+.menu-section {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
 
-    .menu button {
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      background-color: #007BFF;
-      color: white;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
+.menu button {
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  background-color: #007BFF;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
 
-    .menu button:hover {
-      background-color: #0056b3;
-    }
+.menu button:hover {
+  background-color: #0056b3;
+}
 
-    .content-frame {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      width: 100%;
-      max-width: 1000px;
-      min-height: 400px;
-    }
+/* Content Frame */
+.content-frame {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: 100%;
+  max-width: 1000px;
+  min-height: 400px;
+}
 
-    .balance-grid, .nft-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
-      gap: 15px;
-      margin-top: 20px;
-    }
+/* Grid Layouts */
+.balance-grid, .nft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
 
-    .card {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-      padding: 15px;
-      text-align: center;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
+/* Card */
+.card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
 
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
-    }
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+}
 
-    img {
-      border-radius: 5px;
-      max-width: 100%;
-      height: auto;
-    }
+/* NFT Image */
+.nft-image {
+  width: 125px;
+  height: 125px;
+  object-fit: cover;
+  border-radius: 5px;
+  display: block;
+  margin: 0 auto;
+}
 
-    .footer {
-      margin-top: 20px;
-      text-align: center;
-      font-size: 14px;
-      color: #777;
-    }
+/* NFT Details */
+.nft-details {
+  margin-top: 10px;
+  font-size: 14px;
+  text-align: left;
+}
+
+/* Labels and Values */
+.label {
+  font-weight: bold;
+}
+
+.value {
+  color: #555;
+}
+
+/* Pool Titles */
+.pool-title {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+/* Section Titles */
+.section-title {
+  font-size: 24px;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #222;
+}
+
+/* Footer */
+.footer {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #777;
+}
+
   </style>
 </head>
 <body>
@@ -236,7 +279,7 @@
                 <div class="nft-grid">
                   ${data.nfts.map(nft => `
                     <div class="card">
-                      <img src="${nft.image_url}" alt="NFT Image" style="width: 100%; height: auto;">
+                      <img src="${nft.image_url}" alt="NFT Image" class="nft-image">
                       <div class="nft-details">
                         <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
                         <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>

@@ -313,7 +313,9 @@
       text-align: center;
       color: white; /* Testo bianco per contrasto */
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Font più moderno */
-      position: relative;
+      position: relative !important;  /* Garantisce che gli elementi siano in posizione normale */
+      visibility: visible !important; /* Assicura che gli elementi siano visibili */
+      opacity: 1 !important;          /* Assicura che gli elementi non siano trasparenti */
       overflow: hidden; /* Assicura che gli effetti di animazione non escano dalla card */
       transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease; /* Transizione migliorata */
     }

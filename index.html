@@ -460,22 +460,94 @@
                   </button>
                 </div>
                 <div class="profile-grid">
+                  <!-- User Profile -->
                   <div class="profile-card">
                     <h4>Username</h4>
-                    <p>${data.username}</p>
+                    <p>${data.user_profile.username}</p>
                   </div>
                   <div class="profile-card">
-                    <h4>Level</h4>
-                    <p>${data.sqj_level}</p>
+                    <h4>Wax Account</h4>
+                    <p>${data.user_profile.wax_account}</p>
                   </div>
                   <div class="profile-card">
-                    <h4>Account</h4>
-                    <p>${data.wax_account}</p>
+                    <h4>User ID</h4>
+                    <p>${data.user_profile.user_id}</p>
+                  </div>
+          
+                  <!-- CHIPS Stats -->
+                  <div class="profile-card">
+                    <h4>CHIPS Level</h4>
+                    <p>${data.chips_stats.CHIPS_level}</p>
+                  </div>
+                  <div class="profile-card">
+                    <h4>CHIPS XP</h4>
+                    <p>${data.chips_stats.xp}</p>
+                  </div>
+                  <div class="profile-card">
+                    <h4>XP for Next Level</h4>
+                    <p>${data.chips_stats.xp_for_next_level}</p>
+                  </div>
+                  <div class="profile-card">
+                    <h4>Short Message Earnings</h4>
+                    <p>${data.chips_stats.short_message_earnings}</p>
+                  </div>
+                  <div class="profile-card">
+                    <h4>Long Message Earnings</h4>
+                    <p>${data.chips_stats.long_message_earnings}</p>
+                  </div>
+          
+                  <!-- Booster Stats -->
+                  <div class="profile-card">
+                    <h4>Boosters Owned</h4>
+                    <p>
+                      Common: ${data.chips_stats.boosters_owned.common}<br>
+                      Rare: ${data.chips_stats.boosters_owned.rare}<br>
+                      Epic: ${data.chips_stats.boosters_owned.epic}<br>
+                      Legendary: ${data.chips_stats.boosters_owned.legendary}
+                    </p>
+                  </div>
+          
+                  <!-- Rewards Stats -->
+                  <div class="profile-card">
+                    <h4>Total Rewards</h4>
+                    <p>
+                      Short: ${data.chips_stats.total_rewards.short}<br>
+                      Long: ${data.chips_stats.total_rewards.long}
+                    </p>
+                  </div>
+          
+                  <!-- Membership Status -->
+                  <div class="profile-card">
+                    <h4>VIP Membership</h4>
+                    <p>${data.membership_status.vip_membership ? "Yes" : "No"}</p>
+                  </div>
+                  <div class="profile-card">
+                    <h4>SQJ Pass</h4>
+                    <p>${data.membership_status.sqj_pass ? "Yes" : "No"}</p>
                   </div>
                 </div>
+          
+                <!-- SQJ Stats Section -->
                 <div id="sqj-data" style="display: none; margin-top: 20px;">
                   <h3 class="section-title">SQJ Specific Data</h3>
-                  <!-- Inserisci qui i dati SQJ se necessario -->
+                  <div class="profile-grid">
+                    <div class="profile-card">
+                      <h4>SQJ Level</h4>
+                      <p>${data.sqj_stats.sqj_level}</p>
+                    </div>
+                    <div class="profile-card">
+                      <h4>SQJ XP</h4>
+                      <p>${data.sqj_stats.sqj_xp}</p>
+                    </div>
+                    <div class="profile-card">
+                      <h4>XP for Next Level</h4>
+                      <p>${data.sqj_stats.xp_for_next_level}</p>
+                    </div>
+                    <div class="profile-card">
+                      <h4>XP Remaining</h4>
+                      <p>${data.sqj_stats.xp_remaining}</p>
+                    </div>
+                  </div>
                 </div>
               `;
           
@@ -492,6 +564,7 @@
                   }
               });
           }
+
 
       } catch (error) {
           console.error("Error loading content for page:", page, error);

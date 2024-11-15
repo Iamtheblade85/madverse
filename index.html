@@ -206,66 +206,91 @@
       color: #000; /* Testo nero */
       text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
     }
-    /* NFT Reward Cards */
-    .nft-reward-card {
-      background: linear-gradient(135deg, #fff9c4, #ffe082); /* Gradiente giallo chiaro */
-      border: 2px solid transparent;
-      border-radius: 10px;
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-      padding: 15px;
-      text-align: center;
-      transition: transform 0.2s, box-shadow 0.2s;
-      color: #000; /* Testo nero */
-      position: relative; /* Necessario per retroilluminazione */
-      animation: glow-loop 3s infinite; /* Animazione retroilluminazione */
-    }
-    
-    /* Animazione retroilluminazione */
-    @keyframes glow-loop {
-      0% {
-        box-shadow: 0 0 10px 3px rgba(255, 193, 7, 0.3);
-      }
-      50% {
-        box-shadow: 0 0 20px 5px rgba(255, 193, 7, 0.6);
-      }
-      100% {
-        box-shadow: 0 0 10px 3px rgba(255, 193, 7, 0.3);
-      }
-    }
-    
-    /* Hover Effect */
-    .nft-reward-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0px 6px 15px rgba(255, 193, 7, 0.8); /* Illuminazione più intensa */
-    }
-    
-    /* Testo delle NFT Reward Card */
-    .nft-reward-card h4 {
-      font-size: 16px;
-      margin-bottom: 10px;
-      color: #000; /* Testo nero */
-      text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
-    }
-    
-    .nft-reward-card p {
-      font-size: 14px;
-      margin: 5px 0;
-      color: #000; /* Testo nero */
-      text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
-    }
-    
-    .nft-reward-card strong {
-      color: #000; /* Testo nero */
-      text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
-    }
-    
-    /* Responsive Styling */
-    @media (max-width: 768px) {
-      .nft-reward-card {
-        padding: 10px;
-      }
-    }
-    
+/* NFT Reward Cards */
+.nft-reward-card {
+  background: linear-gradient(135deg, #fff9c4, #ffe082); /* Gradiente giallo chiaro */
+  border: 2px solid transparent;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  color: #000; /* Testo nero */
+  position: relative; /* Necessario per retroilluminazione */
+  animation: glow-loop 3s infinite; /* Animazione retroilluminazione */
+}
+
+/* Animazione retroilluminazione */
+@keyframes glow-loop {
+  0% {
+    box-shadow: 0 0 10px 3px rgba(255, 193, 7, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px rgba(255, 193, 7, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 10px 3px rgba(255, 193, 7, 0.3);
+  }
+}
+
+/* Hover Effect */
+.nft-reward-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 6px 15px rgba(255, 193, 7, 0.8); /* Illuminazione più intensa */
+}
+
+/* Testo delle NFT Reward Card */
+.nft-reward-card h4 {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #000; /* Testo nero */
+  text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
+}
+
+.nft-reward-card p {
+  font-size: 14px;
+  margin: 5px 0;
+  color: #000; /* Testo nero */
+  text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
+}
+
+.nft-reward-card strong {
+  color: #000; /* Testo nero */
+  text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
+}
+
+/* Layout per Template ID e Daily Reward */
+.nft-reward-card .template-row {
+  display: flex;
+  justify-content: space-between; /* Posiziona Template ID e Daily Reward agli estremi */
+  align-items: center; /* Allinea verticalmente */
+  padding: 5px 0; /* Margine interno */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Linea divisoria */
+}
+
+/* Stile per il Template ID */
+.nft-reward-card .template-id {
+  font-weight: bold;
+  color: #000;
+  text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
+  flex: 1; /* Occupa uno spazio proporzionale */
+}
+
+/* Stile per il Daily Reward */
+.nft-reward-card .daily-reward {
+  color: #007BFF; /* Colore blu per risaltare */
+  font-weight: bold;
+  text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
+  flex: 1; /* Occupa uno spazio proporzionale */
+  text-align: right; /* Allineamento a destra */
+}
+
+/* Responsive Styling */
+@media (max-width: 768px) {
+  .nft-reward-card {
+    padding: 10px;
+  }
+}   
     /* Footer */
     .footer {
       margin-top: 20px;
@@ -449,28 +474,29 @@
               console.log("NFT farms data received:", data);
       
               if (data.farms && data.farms.length > 0) {
-                  contentFrame.innerHTML = `
-                      <h2 class="pool-title">NFT Farms</h2>
-                      <div class="balance-grid">
-                          ${data.farms.map(farm => `
-                              <div class="card">
-                                  <h4>🏦 ${farm.farm_name}</h4>
-                                  <p><strong>Token Symbol:</strong> ${farm.token_symbol}</p>
-                                  <h5>Templates and Rewards:</h5>
-                                  <div class="nft-reward-grid">
-                                      ${farm.templates.map(template => `
-                                          <div class="nft-reward-card">
-                                              <h4>Template ID: ${template.template_id}</h4>
-                                              <p><strong>Daily Reward:</strong> ${template.daily_reward} ${farm.token_symbol}</p>
-                                          </div>
-                                      `).join('')}
-                                  </div>
-                              </div>
-                          `).join('')}
-                      </div>`;
-              } else {
-                  contentFrame.innerHTML = `<p>No NFT farms available at the moment.</p>`;
-              }
+                contentFrame.innerHTML = `
+                    <h2 class="pool-title">NFT Farms</h2>
+                    <div class="balance-grid">
+                        ${data.farms.map(farm => `
+                            <div class="nft-reward-card">
+                                <h4>🏦 ${farm.farm_name}</h4>
+                                <p><strong>Token Symbol:</strong> ${farm.token_symbol}</p>
+                                <h5>Templates and Rewards:</h5>
+                                <ul>
+                                    ${farm.templates.map(template => `
+                                        <li class="template-row">
+                                            <span class="template-id">ID: ${template.template_id}</span>
+                                            <span class="daily-reward">Reward: ${template.daily_reward} ${farm.token_symbol}</span>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        `).join('')}
+                    </div>`;
+            } else {
+                contentFrame.innerHTML = `<p>No NFT farms available at the moment.</p>`;
+            }
+
           } catch (error) {
               console.error("Error loading NFT farms:", error);
               contentFrame.innerHTML = `<p>Error loading NFT farms: ${error.message}</p>`;

@@ -207,39 +207,63 @@
       text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
     }
     /* NFT Reward Cards */
-    .nft-reward-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
-    }
-    
     .nft-reward-card {
-      background: linear-gradient(135deg, #ede7f6, #b39ddb);
-      border: 2px solid #fff;
+      background: linear-gradient(135deg, #fff9c4, #ffe082); /* Gradiente giallo chiaro */
+      border: 2px solid transparent;
       border-radius: 10px;
       box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
       padding: 15px;
       text-align: center;
       transition: transform 0.2s, box-shadow 0.2s;
-      color: #311b92;
+      color: #000; /* Testo nero */
+      position: relative; /* Necessario per retroilluminazione */
+      animation: glow-loop 3s infinite; /* Animazione retroilluminazione */
     }
     
+    /* Animazione retroilluminazione */
+    @keyframes glow-loop {
+      0% {
+        box-shadow: 0 0 10px 3px rgba(255, 193, 7, 0.3);
+      }
+      50% {
+        box-shadow: 0 0 20px 5px rgba(255, 193, 7, 0.6);
+      }
+      100% {
+        box-shadow: 0 0 10px 3px rgba(255, 193, 7, 0.3);
+      }
+    }
+    
+    /* Hover Effect */
     .nft-reward-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0px 6px 15px rgba(255, 193, 7, 0.8); /* Illuminazione più intensa */
     }
     
+    /* Testo delle NFT Reward Card */
     .nft-reward-card h4 {
       font-size: 16px;
       margin-bottom: 10px;
-      color: #5e35b1;
+      color: #000; /* Testo nero */
+      text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
     }
     
     .nft-reward-card p {
       font-size: 14px;
       margin: 5px 0;
-      color: #512da8;
+      color: #000; /* Testo nero */
+      text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
+    }
+    
+    .nft-reward-card strong {
+      color: #000; /* Testo nero */
+      text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
+    }
+    
+    /* Responsive Styling */
+    @media (max-width: 768px) {
+      .nft-reward-card {
+        padding: 10px;
+      }
     }
     
     /* Footer */

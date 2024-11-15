@@ -440,11 +440,59 @@
                 </div>`;
           } else if (page === 'profile') {
               contentFrame.innerHTML = `
-                <h2 class="pool-title">Your Profile</h2>
-                <p><strong>Username:</strong> ${data.username}</p>
-                <p><strong>Level:</strong> ${data.sqj_level}</p>
-                <p><strong>Account:</strong> ${data.wax_account}</p>`;
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <h2 class="pool-title">Your Profile</h2>
+                  <button 
+                    id="toggle-sqj" 
+                    style="
+                      background-color: #39ff14; 
+                      color: black; 
+                      border: none; 
+                      border-radius: 5px; 
+                      padding: 10px 15px; 
+                      font-size: 1rem; 
+                      cursor: pointer;
+                      transition: transform 0.3s ease;
+                    "
+                    onmouseover="this.style.transform='scale(1.1)';" 
+                    onmouseout="this.style.transform='scale(1)';">
+                    Show SQJ Data
+                  </button>
+                </div>
+                <div class="profile-grid">
+                  <div class="profile-card">
+                    <h4>Username</h4>
+                    <p>${data.username}</p>
+                  </div>
+                  <div class="profile-card">
+                    <h4>Level</h4>
+                    <p>${data.sqj_level}</p>
+                  </div>
+                  <div class="profile-card">
+                    <h4>Account</h4>
+                    <p>${data.wax_account}</p>
+                  </div>
+                </div>
+                <div id="sqj-data" style="display: none; margin-top: 20px;">
+                  <h3 class="section-title">SQJ Specific Data</h3>
+                  <!-- Inserisci qui i dati SQJ se necessario -->
+                </div>
+              `;
+          
+              // Aggiungi l'evento per il pulsante switch
+              const toggleButton = document.getElementById("toggle-sqj");
+              toggleButton.addEventListener("click", () => {
+                  const sqjData = document.getElementById("sqj-data");
+                  if (sqjData.style.display === "none") {
+                      sqjData.style.display = "block";
+                      toggleButton.textContent = "Hide SQJ Data";
+                  } else {
+                      sqjData.style.display = "none";
+                      toggleButton.textContent = "Show SQJ Data";
+                  }
+              });
           }
+
       } catch (error) {
           console.error("Error loading content for page:", page, error);
           contentFrame.innerHTML = `<p>Error loading ${page}: ${error.message}</p>`;
@@ -502,9 +550,6 @@
               contentFrame.innerHTML = `<p>Error loading NFT farms: ${error.message}</p>`;
           }
       }
-
-
-
       fetchWaxAccount();
   </script>
 </body>

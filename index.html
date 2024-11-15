@@ -299,64 +299,57 @@
       color: #777;
     }
     .profile-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
-    }
-    
-    .profile-card {
-      background: linear-gradient(145deg, #00c6ff, #0072ff); /* Gradiente celeste simile a staking */
-      border-radius: 20px; /* Angoli più arrotondati */
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1), 0 10px 25px rgba(0, 0, 0, 0.1); /* Ombra più profonda */
-      padding: 20px;
-      text-align: center;
-      color: white; /* Testo bianco per contrasto */
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Font più moderno */
-      position: relative !important;  /* Garantisce che gli elementi siano in posizione normale */
-      visibility: visible !important; /* Assicura che gli elementi siano visibili */
-      opacity: 1 !important;          /* Assicura che gli elementi non siano trasparenti */
-      overflow: hidden; /* Assicura che gli effetti di animazione non escano dalla card */
-      transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease; /* Transizione migliorata */
-    }
-    
-    /* Effetto hover */
-    .profile-card:hover {
-      transform: translateY(-10px) scale(1.05); /* Rende la card più "scalabile" */
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2); /* Ombra più intensa */
-      filter: brightness(1.2); /* Aumenta la luminosità della card */
-    }
-    
-    /* Aggiunta di un effetto al bordo per enfatizzare il cambiamento */
-    .profile-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border: 2px solid rgba(255, 255, 255, 0.7); /* Bordo luminoso */
-      border-radius: 20px;
-      z-index: -1; /* Mette il bordo dietro il contenuto */
-      transition: all 0.3s ease-in-out;
-    }
-    
-    /* Quando si passa il mouse sopra la card, l'effetto bordo si attiva */
-    .profile-card:hover::before {
-      border-color: #39ff14; /* Colore verde brillante per il bordo al passaggio del mouse */
-    }
-    
-    /* Animazione al passaggio del mouse */
-    .profile-card:hover {
-      animation: bounce 0.4s ease-in-out;
-    }
-    
-    /* Keyframe per l'animazione "bounce" */
-    @keyframes bounce {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-      100% { transform: translateY(0); }
-    }
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+      }
+      
+      .profile-card {
+        background: linear-gradient(145deg, #a0c4ff, #4e6bf3); /* Gradiente celeste simile a staking e balance */
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        padding: 20px;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease; /* Animazione sullo sfondo e ombra */
+        border: 2px solid transparent;
+        background-origin: border-box; /* Crea l'effetto di luminosità sui bordi */
+      }
+      
+      .profile-card:hover {
+        transform: translateY(-10px); /* Maggiore sollevamento al passaggio del mouse */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Maggiore profondità */
+        background: linear-gradient(145deg, #79aefc, #3a56c7); /* Cambia il gradiente al passaggio del mouse */
+        border-color: #ffffff; /* Luminosità dei bordi */
+      }
+      
+      .profile-card h3 {
+        color: #ffffff; /* Colore chiaro per il testo */
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+      }
+      
+      .profile-card p {
+        color: #f4f4f4; /* Colore del testo per i paragrafi */
+        font-size: 1rem;
+        line-height: 1.5;
+      }
+      
+      .profile-card .btn {
+        background-color: #4e6bf3;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      
+      .profile-card .btn:hover {
+        background-color: #395ecb;
+      }
+
 
     
     .pool-title {

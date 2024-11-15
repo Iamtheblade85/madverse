@@ -139,7 +139,103 @@ body {
   text-align: center;
   color: #222;
 }
+/* Staking settings */
+/* Griglia per le rewards */
+.reward-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
 
+/* Stile per le reward card */
+.reward-card {
+  background: linear-gradient(135deg, #ffffff, #f9f9f9);
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.reward-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.reward-card h4 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.reward-card p {
+  font-size: 14px;
+  margin: 5px 0;
+  color: #555;
+}
+
+.reward-card strong {
+  color: #007BFF;
+}
+
+/* Responsive Cards (minmax already handles this) */
+@media (max-width: 768px) {
+  .reward-card {
+    padding: 10px;
+  }
+}
+
+/* POOLS SETTING */
+/* Griglia per i rewards nei NFT Farms */
+.nft-reward-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+/* Stile per le card dei rewards nei NFT Farms */
+.nft-reward-card {
+  background: linear-gradient(135deg, #ffffff, #f9f9f9);
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.nft-reward-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nft-reward-card h4 {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.nft-reward-card p {
+  font-size: 14px;
+  margin: 5px 0;
+  color: #555;
+}
+
+.nft-reward-card strong {
+  color: #007BFF;
+}
+
+/* Responsive Cards (handled by minmax) */
+@media (max-width: 768px) {
+  .nft-reward-card {
+    padding: 10px;
+  }
+}
+
+    
 /* Footer */
 .footer {
   margin-top: 20px;
@@ -248,7 +344,6 @@ body {
                   </div>`;
           }
           else if (page === 'staking_farms') {
-              // Sezione Staking Farms
               contentFrame.innerHTML = `
                   <h2 class="pool-title">Staking Farms</h2>
                   <div class="balance-grid">
@@ -258,17 +353,17 @@ body {
                           <p><strong>Total Staked:</strong> ${pool.total_staked.toLocaleString()} ${pool.token_symbol}</p>
                           <p><strong>Your Stake:</strong> ${pool.user_staked.toLocaleString()} ${pool.token_symbol}</p>
                           <h5>Rewards:</h5>
-                          <ul>
+                          <div class="reward-grid">
                             ${pool.rewards_info.map(reward => `
-                                <li>
-                                  <p><strong>Token:</strong> ${reward.reward_token}</p>
-                                  <p><strong>APR:</strong> ${reward.apr.toFixed(3)}%</p>
-                                  <p><strong>Daily Reward:</strong> ${reward.daily_reward.toLocaleString()} ${reward.reward_token}</p>
-                                  <p><strong>Your Daily Reward:</strong> ${reward.user_daily_reward.toLocaleString()} ${reward.reward_token}</p>
-                                  <p><strong>Days Remaining:</strong> ${reward.days_remaining}</p>
-                                </li>
+                              <div class="reward-card">
+                                <h4>${reward.reward_token}</h4>
+                                <p><strong>APR:</strong> ${reward.apr.toFixed(2)}%</p>
+                                <p><strong>Daily Reward:</strong> ${reward.daily_reward.toLocaleString()} ${reward.reward_token}</p>
+                                <p><strong>Your Daily Reward:</strong> ${reward.user_daily_reward.toLocaleString()} ${reward.reward_token}</p>
+                                <p><strong>Days Remaining:</strong> ${reward.days_remaining}</p>
+                              </div>
                             `).join('')}
-                          </ul>
+                          </div>
                         </div>
                     `).join('')}
                   </div>`;
@@ -302,56 +397,57 @@ body {
       }
     }
       async function loadNFTFarms(viewType = 'all') {
-        console.log("Loading NFT Farms with view type:", viewType);
-        const contentFrame = document.getElementById("content-frame");
-        const userId = getQueryParam("user_id");
-        let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}`;
-    
-        if (viewType === 'user_staking') {
-            url += "&view=user_staking";
-        }
-    
-        console.log("NFT Farms API URL:", url);
-    
-        try {
-            const response = await fetch(url);
-            console.log("Response status for NFT farms:", response.status);
-    
-            if (!response.ok) {
-                throw new Error(`Error loading NFT farms: ${response.status}`);
-            }
-    
-            const data = await response.json();
-            console.log("NFT farms data received:", data);
-    
-            if (data.farms && data.farms.length > 0) {
-                contentFrame.innerHTML = `
-                    <h2 class="pool-title">NFT Farms</h2>
-                    <div class="balance-grid">
-                        ${data.farms.map(farm => `
-                            <div class="card">
-                                <h4>🏦 ${farm.farm_name}</h4>
-                                <p><strong>Token Symbol:</strong> ${farm.token_symbol}</p>
-                                <h5>Templates and Rewards:</h5>
-                                <ul>
-                                    ${farm.templates.map(template => `
-                                        <li>
-                                            <p><strong>Template ID:</strong> ${template.template_id}</p>
-                                            <p><strong>Daily Reward:</strong> ${template.daily_reward} ${farm.token_symbol}</p>
-                                        </li>
-                                    `).join('')}
-                                </ul>
-                            </div>
-                        `).join('')}
-                    </div>`;
-            } else {
-                contentFrame.innerHTML = `<p>No NFT farms available at the moment.</p>`;
-            }
-        } catch (error) {
-            console.error("Error loading NFT farms:", error);
-            contentFrame.innerHTML = `<p>Error loading NFT farms: ${error.message}</p>`;
-        }
-    }
+          console.log("Loading NFT Farms with view type:", viewType);
+          const contentFrame = document.getElementById("content-frame");
+          const userId = getQueryParam("user_id");
+          let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}`;
+      
+          if (viewType === 'user_staking') {
+              url += "&view=user_staking";
+          }
+      
+          console.log("NFT Farms API URL:", url);
+      
+          try {
+              const response = await fetch(url);
+              console.log("Response status for NFT farms:", response.status);
+      
+              if (!response.ok) {
+                  throw new Error(`Error loading NFT farms: ${response.status}`);
+              }
+      
+              const data = await response.json();
+              console.log("NFT farms data received:", data);
+      
+              if (data.farms && data.farms.length > 0) {
+                  contentFrame.innerHTML = `
+                      <h2 class="pool-title">NFT Farms</h2>
+                      <div class="balance-grid">
+                          ${data.farms.map(farm => `
+                              <div class="card">
+                                  <h4>🏦 ${farm.farm_name}</h4>
+                                  <p><strong>Token Symbol:</strong> ${farm.token_symbol}</p>
+                                  <h5>Templates and Rewards:</h5>
+                                  <div class="nft-reward-grid">
+                                      ${farm.templates.map(template => `
+                                          <div class="nft-reward-card">
+                                              <h4>Template ID: ${template.template_id}</h4>
+                                              <p><strong>Daily Reward:</strong> ${template.daily_reward} ${farm.token_symbol}</p>
+                                          </div>
+                                      `).join('')}
+                                  </div>
+                              </div>
+                          `).join('')}
+                      </div>`;
+              } else {
+                  contentFrame.innerHTML = `<p>No NFT farms available at the moment.</p>`;
+              }
+          } catch (error) {
+              console.error("Error loading NFT farms:", error);
+              contentFrame.innerHTML = `<p>Error loading NFT farms: ${error.message}</p>`;
+          }
+      }
+
 
 
       fetchWaxAccount();

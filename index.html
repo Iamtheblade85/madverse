@@ -252,34 +252,85 @@
       min-height: 400px;
       position: relative;
     }
-    #scroll-buttons {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 10;
-    }
-    
-    .scroll-button {
-      background-color: #39ff14;
-      color: black;
-      border: none;
-      border-radius: 5px;
-      padding: 10px 15px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: transform 0.3s ease;
-    }
-    
-    .scroll-button:hover {
-      transform: scale(1.1);
-    }
-    
-    .scroll-button:focus {
-      outline: none;
-    }
+#scroll-buttons {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10;
+}
+
+#scroll-buttons button {
+  padding: 12px 24px;
+  font-size: calc((1rem + 1vw) * 0.8); /* La dimensione del font si adatta alla larghezza della finestra */
+  border: none;
+  border-radius: 12px; /* Più arrotondamento per un effetto più elegante */
+  background: linear-gradient(135deg, #ffbc42, #ffdd6e); /* Gradiente dorato con tonalità più calde */
+  color: #333;
+  font-family: 'Cinzel', serif; /* Font stilizzato per un look elegante */
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15); /* Ombra morbida */
+  transition: all 0.3s ease-in-out;
+  letter-spacing: 1.5px;
+  text-align: center;
+  background-size: 200% 200%;
+}
+
+#scroll-buttons button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300%;
+  height: 300%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.4s;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+#scroll-buttons button:hover {
+  background: linear-gradient(135deg, #ffbb42, #ffdc70); /* Gradiente con transizione più sottile al passaggio del mouse */
+  color: #333;
+  box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.2); /* Ombra più marcata durante l'hover */
+}
+
+#scroll-buttons button:hover::before {
+  width: 0;
+  height: 0;
+}
+
+#scroll-buttons button:active {
+  transform: scale(0.98); /* Effetto di riduzione al clic */
+  box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+#scroll-buttons button span {
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes textGlow {
+  0% {
+    text-shadow: 0px 0px 5px #ffbb00, 0 0 10px #ffbb00, 0 0 15px #ffbb00, 0 0 20px #ffbb00;
+  }
+  50% {
+    text-shadow: 0px 0px 10px #ffbb00, 0 0 15px #ffbb00, 0 0 20px #ffbb00, 0 0 25px #ffbb00;
+  }
+  100% {
+    text-shadow: 0px 0px 5px #ffbb00, 0 0 10px #ffbb00, 0 0 15px #ffbb00, 0 0 20px #ffbb00;
+  }
+}
+
+#scroll-buttons button:hover span {
+  animation: textGlow 1.5s ease-in-out infinite; /* Effetto di luce sul testo */
+}
   /* Grid-Layouts */
   .balance-grid, .nft-grid {
       display: grid;

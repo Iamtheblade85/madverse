@@ -24,27 +24,143 @@
       max-width: calc(1900px * var(--scale-factor));
       padding: 20px;
     }
-    
     /* Logo Section */
     .logo-section {
       text-align: center;
       margin-bottom: 20px;
+      position: relative; /* Necessario per posizionare i cerchi sopra il logo */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
     }
     
+    .logo-container {
+      position: relative;
+      z-index: 10; /* Assicura che il testo sia sopra i cerchi */
+    }
+    
+    /* Logo Text */
     .logo {
-      font-size: 36px;
+      font-size: 48px;
       font-weight: bold;
       color: gold;
       text-shadow: 0px 0px 10px rgba(255, 215, 0, 0.5);
-      animation: colorShift 3s infinite;
+      animation: colorShift 3s infinite, textGlow 1.5s ease-in-out infinite;
     }
     
+    /* Effetto di cambio colore del testo */
     @keyframes colorShift {
       0% { color: gold; }
       50% { color: yellow; }
       100% { color: gold; }
     }
     
+    /* Effetto di glow sul testo */
+    @keyframes textGlow {
+      0% { 
+        text-shadow: 0px 0px 5px #ffb300, 0 0 10px #ffb300, 0 0 15px #ffb300, 0 0 20px #ffb300; 
+      }
+      50% { 
+        text-shadow: 0px 0px 10px #ffb300, 0 0 15px #ffb300, 0 0 20px #ffb300, 0 0 25px #ffb300; 
+      }
+      100% { 
+        text-shadow: 0px 0px 5px #ffb300, 0 0 10px #ffb300, 0 0 15px #ffb300, 0 0 20px #ffb300; 
+      }
+    }
+    
+    /* Cerchi animati */
+    .circles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+    }
+    
+    .circle {
+      position: absolute;
+      border-radius: 50%;
+      background-color: rgba(255, 215, 0, 0.6); /* Colore dei cerchi */
+      animation: bounce 4s ease-in-out infinite;
+    }
+    
+    /* Animazione di rimbalzo dei cerchi */
+    @keyframes bounce {
+      0% {
+        transform: translate(0, 0);
+        opacity: 0.8;
+      }
+      25% {
+        transform: translate(-50px, -100px);
+        opacity: 1;
+      }
+      50% {
+        transform: translate(100px, 50px);
+        opacity: 0.8;
+      }
+      75% {
+        transform: translate(-150px, 0);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(0, 0);
+        opacity: 0.8;
+      }
+    }
+    
+    /* Cerchi in numero e dimensione variabile */
+    .circles .circle:nth-child(1) {
+      width: 50px;
+      height: 50px;
+      animation-duration: 3s;
+      animation-delay: 0s;
+    }
+    
+    .circles .circle:nth-child(2) {
+      width: 70px;
+      height: 70px;
+      animation-duration: 5s;
+      animation-delay: 1s;
+    }
+    
+    .circles .circle:nth-child(3) {
+      width: 60px;
+      height: 60px;
+      animation-duration: 4s;
+      animation-delay: 2s;
+    }
+    
+    .circles .circle:nth-child(4) {
+      width: 80px;
+      height: 80px;
+      animation-duration: 6s;
+      animation-delay: 3s;
+    }
+    
+    /* Gradiente dinamico dello sfondo */
+    body {
+      background: linear-gradient(45deg, #ff7e5f, #feb47b);
+      background-size: 400% 400%;
+      animation: gradientShift 10s ease infinite;
+    }
+    
+    /* Animazione del gradiente di sfondo */
+    @keyframes gradientShift {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    } 
     .menu-section {
       display: flex;
       justify-content: center;
@@ -481,9 +597,11 @@
   <div class="container">
     <!-- Logo Section -->
     <div class="logo-section">
-      <div class="logo">ChipsWallet</div>
+      <div class="logo-container">
+        <div class="logo">ChipsWallet</div>
+        <div class="circles"></div>
+      </div>
     </div>
-
     <!-- Menu Section -->
     <div class="menu-section">
       <button onclick="loadContent('balance')">💼 Wallet</button>

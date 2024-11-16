@@ -297,14 +297,17 @@
     --small-screen-scale-factor: 0.85; /* Scala aggiuntiva al 85% */
   }
 
+body {
+    transform: scale(0.9); /* Riduce tutto al 90% */
+    transform-origin: top; /* Punto di origine della scala */
+  }
+
   .container {
-    width: calc(100% * var(--small-screen-scale-factor));
-    max-width: calc(1140px * var(--small-screen-scale-factor));
+    width: 90%; /* Riduzione della larghezza al 90% */
   }
 
   .content-frame {
-    width: calc(100% * var(--small-screen-scale-factor));
-    max-width: calc(950px * var(--small-screen-scale-factor));
+    width: 90%; /* Applica la riduzione anche ai contenuti */
   }
 
   .menu-section {

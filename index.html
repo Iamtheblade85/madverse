@@ -298,7 +298,7 @@
   }
 
 body {
-    transform: scale(0.9); /* Riduce tutto al 90% */
+    transform: scale(0.92); /* Riduce tutto al 90% */
     transform-origin: top; /* Punto di origine della scala */
   }
 
@@ -320,6 +320,21 @@ body {
 
   .profile-grid {
     grid-template-columns: repeat(auto-fit, minmax(calc(200px * var(--small-screen-scale-factor)), 1fr));
+  }
+    /* Staking, Pool, e Profile Cards */
+  .card, 
+  .reward-card, 
+  .profile-card, 
+  .nft-reward-card {
+    width: 90%; /* Riduce larghezza rispetto ai contenitori */
+    margin: 0 auto; /* Centra le cards */
+  }
+
+  /* Layouts */
+  .balance-grid, 
+  .reward-grid, 
+  .profile-grid {
+    gap: 10px; /* Riduce lo spazio tra le cards */
   }
 }   
     /* Footer */

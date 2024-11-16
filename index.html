@@ -168,15 +168,15 @@
   display: flex;
   justify-content: center;
   gap: calc(10px * var(--scale-factor));
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 @media (max-width: 600px) {
     .menu-section button {
-        font-size: calc((1rem + 1vw)* 0.5);
+        font-size: calc((1rem + 1vw)* 0.75);
     }
 }
 .menu-section button {
-  padding: 12px 24px;
+  padding: 4px 8px;
   font-size: calc((1rem + 1vw) * 0.8); /* La dimensione del font si adatta alla larghezza della finestra */
   border: none;
   border-radius: 12px; /* Più arrotondamento per un effetto più elegante */
@@ -250,7 +250,7 @@
       background: white;
       border-radius: 10px;
       box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-      padding: 20px;
+      padding: 10px;
       width: calc(100% * var(--scale-factor));
       max-width: calc(1400px * var(--scale-factor));
       min-height: 400px;
@@ -258,8 +258,8 @@
     }
 #scroll-buttons {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: -7px;
+  right: 3px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -267,7 +267,9 @@
 }
 
 #scroll-buttons button {
-  padding: 12px 24px;
+  padding: 2px 4px;
+  margin-top: -7px;
+  right: 3px;
   font-size: calc((1rem + 1vw) * 0.8); /* La dimensione del font si adatta alla larghezza della finestra */
   border: none;
   border-radius: 12px; /* Più arrotondamento per un effetto più elegante */
@@ -687,7 +689,7 @@
   }
 
 .card-3d {
-    width: 300px;
+    width: 250px;
     min-height: 200px; /* Altezza minima per mantenere un layout consistente */
     background: linear-gradient(145deg, #6e7f9f, #2a2f3f); /* Gradiente per la card */
     border-radius: 15px;
@@ -696,7 +698,7 @@
     flex-direction: column; /* Disposizione verticale per il contenuto */
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 3px;
     transform-style: preserve-3d;
     transform: rotateX(10deg);
     transition: transform 0.5s ease, box-shadow 0.5s ease;
@@ -748,7 +750,7 @@
     .card-3d {
         width: 80%; /* Riduce la larghezza della card */
         height: 150px; /* Riduce l'altezza della card */
-        padding: 15px; /* Riduce il padding per adattarsi meglio */
+        padding: 5px; /* Riduce il padding per adattarsi meglio */
     }
 
     #personalized-message {
@@ -761,7 +763,7 @@
         .card-3d {
             width: 90%; /* Ancora più piccola per schermi stretti */
             height: 120px;
-            padding: 10px;
+            padding: 3px;
         }
 
         #personalized-message {
@@ -807,12 +809,12 @@
   
       /* Stile per il messaggio di benvenuto */
       #welcome-message {
-          font-size: 0.6rem; /* Dimezza la dimensione del font */
+          font-size: 1.1rem; /* Dimezza la dimensione del font */
       }
   
       /* Stile per il contenitore della card 3D */
       .card-3d-container {
-          font-size: 0.6rem; /* Dimezza la dimensione del font */
+          font-size: 0.75rem; /* Dimezza la dimensione del font */
       }
   }
 
@@ -847,11 +849,6 @@
     <!-- Dynamic Content Section -->
     <div class="content-frame" id="content-frame">
       <p id="welcome-message">Select an option from the menu.</p>
-      <!-- Scroll Buttons inside content-frame -->
-      <div id="scroll-buttons">
-        <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
-        <button id="scroll-to-end" class="scroll-button">↓ To End</button>
-      </div>
       <!-- Card 3D per il messaggio personalizzato -->
       <div class="card-3d-container">
         <div class="card-3d">
@@ -960,6 +957,11 @@
           if (page === 'balance') {
               contentFrame.innerHTML = `
                   <h2 class="pool-title">Your Token Balances</h2>
+                  <!-- Scroll Buttons inside content-frame -->
+                  <div id="scroll-buttons">
+                    <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
+                    <button id="scroll-to-end" class="scroll-button">↓ To End</button>
+                  </div>
                   <div class="balance-grid">
                     ${data.balances.map(balance => `
                         <div class="card">
@@ -972,6 +974,10 @@
           else if (page === 'staking_farms') {
               contentFrame.innerHTML = `
                   <h2 class="pool-title">Staking Farms</h2>
+                  <div id="scroll-buttons">
+                    <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
+                    <button id="scroll-to-end" class="scroll-button">↓ To End</button>
+                  </div>                  
                   <div class="balance-grid">
                     ${data.pools.map(pool => `
                         <div class="card">
@@ -997,6 +1003,10 @@
            else if (page === 'mynfts') {
               contentFrame.innerHTML = `
                 <h2 class="section-title">Your NFTs Inventory</h2>
+                  <div id="scroll-buttons">
+                    <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
+                    <button id="scroll-to-end" class="scroll-button">↓ To End</button>
+                  </div>                
                 <div class="nft-grid">
                   ${data.nfts.map(nft => `
                     <div class="card">
@@ -1014,6 +1024,10 @@
               contentFrame.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <h2 class="pool-title">Your Profile</h2>
+                  <div id="scroll-buttons">
+                    <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
+                    <button id="scroll-to-end" class="scroll-button">↓ To End</button>
+                  </div>                  
                   <!--      commento             -->
                     <button 
                       id="toggle-sqj" 
@@ -1031,8 +1045,6 @@
                       onmouseout="this.style.transform='scale(1)';">
                       Show SQJ Data
                     </button>
-
-
                 </div>
                 <div class="profile-grid">
                   <!-- User Profile -->
@@ -1172,6 +1184,10 @@
               if (data.farms && data.farms.length > 0) {
                 contentFrame.innerHTML = `
                     <h2 class="pool-title">NFT Farms</h2>
+                  <div id="scroll-buttons">
+                    <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
+                    <button id="scroll-to-end" class="scroll-button">↓ To End</button>
+                  </div>                    
                     <div class="balance-grid">
                         ${data.farms.map(farm => `
                             <div class="nft-reward-card">

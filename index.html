@@ -290,15 +290,12 @@
 
 /* Responsive Styling */
 @media (max-width: 700px) {
-  .nft-reward-card {
-    padding: 10px;
-  }
-    :root {
+  :root {
     --small-screen-scale-factor: 0.85; /* Scala aggiuntiva al 85% */
   }
 
-body {
-    transform: scale(0.92); /* Riduce tutto al 90% */
+  body {
+    transform: scale(0.92); /* Riduce tutto al 92% */
     transform-origin: top; /* Punto di origine della scala */
   }
 
@@ -311,32 +308,37 @@ body {
   }
 
   .menu-section {
-    gap: calc(10px * var(--small-screen-scale-factor));
+    gap: calc(10px * var(--small-screen-scale-factor)); /* Riduce spaziatura del menu */
   }
 
-  .balance-grid, .nft-grid, .reward-grid {
-    gap: calc(14px * var(--small-screen-scale-factor));
+  .balance-grid, 
+  .nft-grid, 
+  .reward-grid {
+    gap: calc(14px * var(--small-screen-scale-factor)); /* Scala la spaziatura delle griglie */
   }
 
   .profile-grid {
     grid-template-columns: repeat(auto-fit, minmax(calc(200px * var(--small-screen-scale-factor)), 1fr));
   }
-    /* Staking, Pool, e Profile Cards */
+
+  /* Staking, Pool, e Profile Cards */
   .card, 
   .reward-card, 
   .profile-card, 
   .nft-reward-card {
-    width: 90%; /* Riduce larghezza rispetto ai contenitori */
+    width: calc(80% * var(--small-screen-scale-factor)); /* Riduce larghezza al 80% */
+    max-width: 280px; /* Limite massimo per evitare elementi troppo grandi */
     margin: 0 auto; /* Centra le cards */
+    padding: 10px; /* Riduce lo spazio interno */
   }
 
-  /* Layouts */
+  /* Griglie */
   .balance-grid, 
   .reward-grid, 
   .profile-grid {
-    gap: 10px; /* Riduce lo spazio tra le cards */
+    gap: calc(10px * var(--small-screen-scale-factor)); /* Riduce il gap tra elementi */
   }
-}   
+} 
     /* Footer */
     .footer {
       margin-top: 20px;

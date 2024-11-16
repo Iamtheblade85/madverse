@@ -341,6 +341,18 @@
   .profile-grid {
     gap: calc(10px * var(--small-screen-scale-factor)); /* Riduce il gap tra elementi */
   }
+    /* Stile per le reward cards */
+  .reward-card,
+  .nft-reward-card {
+    width: calc(85% * var(--small-screen-scale-factor)); /* Aumenta la reattività per schermi piccoli */
+    max-width: 280px; /* Limite massimo per evitare dimensioni troppo grandi */
+    padding: 8px; /* Riduzione ulteriore del padding per adattarsi meglio */
+  }
+  
+  /* Riduci il gap tra gli elementi */
+  .reward-grid {
+    gap: calc(12px * var(--small-screen-scale-factor)); /* Adatta la spaziatura per schermi piccoli */
+  }
 }
 /* Media Query per Schermi Piccoli */
 @media (max-width: 400px) {
@@ -465,6 +477,12 @@
       font-size: 1.5rem;
       font-weight: bold;
     }
+.reward-card, 
+.nft-reward-card {
+  width: calc(90% * var(--scale-factor)); /* Impostazioni per una larghezza reattiva */
+  max-width: 320px; /* Limite di larghezza */
+  padding: 12px; /* Riduzione padding */
+}
 
   </style>
 </head>

@@ -263,10 +263,12 @@
 }
 
 /* Layout per Template ID e Daily Reward */
+/* Layout per Template ID e Daily Reward */
 .nft-reward-card .template-row {
   display: flex;
-  justify-content: space-between; /* Posiziona Template ID e Daily Reward agli estremi */
+  justify-content: flex-start; /* Allinea tutti gli elementi a sinistra */
   align-items: center; /* Allinea verticalmente */
+  gap: 5px; /* Spaziatura uniforme tra ID e Reward */
   padding: 5px 0; /* Margine interno */
   border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Linea divisoria */
 }
@@ -275,17 +277,18 @@
 .nft-reward-card .template-id {
   font-weight: bold;
   color: #000;
-  text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
-  flex: 1; /* Occupa uno spazio proporzionale */
+  text-shadow: 2px 2px 3px #fff; /* Bordo visibile bianco */
+  flex: none; /* Non forzare la divisione dello spazio */
 }
 
 /* Stile per il Daily Reward */
 .nft-reward-card .daily-reward {
   color: #007BFF; /* Colore blu per risaltare */
   font-weight: bold;
-  text-shadow: 0px 1px 3px #fff; /* Bordo visibile bianco */
-  flex: 1; /* Occupa uno spazio proporzionale */
-  text-align: right; /* Allineamento a destra */
+  text-shadow: 2px 2px 3px #fff; /* Bordo visibile bianco */
+  flex: none; /* Non forzare la divisione dello spazio */
+  margin-left: auto; /* Spinge il Reward verso il lato destro */
+  text-align: right; /* Allineamento del testo */
 }
 
 /* Responsive Styling */

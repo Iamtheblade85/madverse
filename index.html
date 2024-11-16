@@ -742,66 +742,7 @@
   .card-3d p {
       animation: rotateCard 5s infinite;
   }
-/* Content Frame Styling */
-.content-frame {
-  display: flex;
-  flex-direction: column; /* Disporre gli elementi in colonna */
-  align-items: center; /* Centrare orizzontalmente */
-  gap: 20px; /* Spazio uniforme tra gli elementi */
-  padding: 20px;
-}
 
-/* Welcome Message */
-#welcome-message {
-  text-align: center;
-  font-size: 1rem;
-  margin: 0; /* Evitare margini inutili */
-}
-
-/* Scroll Buttons Styling */
-#scroll-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 10px; /* Spazio tra i pulsanti */
-}
-
-.scroll-button {
-  padding: 10px 20px;
-  font-size: 0.9rem;
-  border: none;
-  border-radius: 5px;
-  background: linear-gradient(135deg, #ffbc42, #ffdd6e);
-  color: #333;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.scroll-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.scroll-button:active {
-  transform: scale(0.95);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Card 3D Styling */
-.card-3d-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  width: 100%;
-  perspective: 1000px;
-}
-
-.card-3d {
-  padding: 20px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
   /* Media query per schermi con larghezza inferiore a 1000px */
   @media (max-width: 1000px) {
     .card-3d {

@@ -173,7 +173,7 @@
 
 .menu-section button {
   padding: 12px 24px;
-  font-size: calc(1rem + 1vw); /* La dimensione del font si adatta alla larghezza della finestra */
+  font-size: calc((1rem + 1vw) * 0.8); /* La dimensione del font si adatta alla larghezza della finestra */
   border: none;
   border-radius: 12px; /* Più arrotondamento per un effetto più elegante */
   background: linear-gradient(135deg, #ffbc42, #ffdd6e); /* Gradiente dorato con tonalità più calde */
@@ -594,7 +594,12 @@
   max-width: 320px; /* Limite di larghezza */
   padding: 12px; /* Riduzione padding */
 }
-
+/* Dimensione del font per schermi con larghezza massima di 1000px */
+@media (max-width: 1000px) {
+  .menu-section button {
+    font-size: calc((1rem + 1vw) * 0.45); /* Riduce il font del 55% (1 - 0.55 = 0.45) */
+  }
+}
   </style>
 </head>
 <body>

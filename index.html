@@ -1215,22 +1215,27 @@
           }
       }
       fetchWaxAccount();
-    // Funzione per scorrere verso l'alto
-    document.getElementById("scroll-to-top").addEventListener("click", function() {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
+      document.addEventListener('DOMContentLoaded', function () {
+          // Seleziona i pulsanti
+          const scrollToTopButton = document.getElementById('scroll-to-top');
+          const scrollToEndButton = document.getElementById('scroll-to-end');
+      
+          // Aggiungi un evento per il pulsante "To Top"
+          scrollToTopButton.addEventListener('click', function () {
+              window.scrollTo({
+                  top: 0, // Scorri fino all'inizio della pagina
+                  behavior: 'smooth', // Movimento fluido
+              });
+          });
+      
+          // Aggiungi un evento per il pulsante "To End"
+          scrollToEndButton.addEventListener('click', function () {
+              window.scrollTo({
+                  top: document.body.scrollHeight, // Scorri fino alla fine della pagina
+                  behavior: 'smooth', // Movimento fluido
+              });
+          });
       });
-    });
-    
-    // Funzione per scorrere verso il basso
-    document.getElementById("scroll-to-end").addEventListener("click", function() {
-      const contentFrame = document.getElementById("content-frame");
-      window.scrollTo({
-        top: contentFrame.scrollHeight,
-        behavior: 'smooth'
-      });
-    });
   </script>
 </body>
 </html>

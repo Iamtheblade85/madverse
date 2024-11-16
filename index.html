@@ -794,6 +794,23 @@
       transform: translateX(0); /* Sposta la lettera nella posizione finale */
     }
   }
+  /* Stile generale per piccoli display */
+  @media (max-width: 600px) {
+      /* Stile per i bottoni del menu */
+      .menu-section button {
+          font-size: calc((1rem + 1vw) * 0.8);
+      }
+  
+      /* Stile per il messaggio di benvenuto */
+      #welcome-message {
+          font-size: 0.5rem; /* Dimezza la dimensione del font */
+      }
+  
+      /* Stile per il contenitore della card 3D */
+      .card-3d-container {
+          font-size: 0.5rem; /* Dimezza la dimensione del font */
+      }
+  }
 
   </style>
 </head>
@@ -826,16 +843,16 @@
     <!-- Dynamic Content Section -->
     <div class="content-frame" id="content-frame">
       <p id="welcome-message">Select an option from the menu.</p>
+      <!-- Scroll Buttons inside content-frame -->
+      <div id="scroll-buttons">
+        <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
+        <button id="scroll-to-end" class="scroll-button">↓ To End</button>
+      </div>
       <!-- Card 3D per il messaggio personalizzato -->
       <div class="card-3d-container">
           <div class="card-3d">
               <p id="personalized-message"></p>
           </div>
-      </div>
-      <!-- Scroll Buttons inside content-frame -->
-      <div id="scroll-buttons">
-        <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
-        <button id="scroll-to-end" class="scroll-button">↓ To End</button>
       </div>
     </div>
 

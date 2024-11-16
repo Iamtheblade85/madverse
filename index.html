@@ -291,69 +291,7 @@
   text-align: right; /* Allineamento del testo */
 }
 
-/* Responsive Styling */
-@media (max-width: 700px) {
-  :root {
-    --small-screen-scale-factor: 0.85; /* Scala aggiuntiva al 85% */
-  }
 
-  body {
-    transform: scale(0.92); /* Riduce tutto al 92% */
-    transform-origin: top; /* Punto di origine della scala */
-  }
-
-  .container {
-    width: 90%; /* Riduzione della larghezza al 90% */
-  }
-
-  .content-frame {
-    width: 90%; /* Applica la riduzione anche ai contenuti */
-  }
-
-  .menu-section {
-    gap: calc(10px * var(--small-screen-scale-factor)); /* Riduce spaziatura del menu */
-  }
-
-  .balance-grid, 
-  .nft-grid, 
-  .reward-grid {
-    gap: calc(14px * var(--small-screen-scale-factor)); /* Scala la spaziatura delle griglie */
-  }
-
-  .profile-grid {
-    grid-template-columns: repeat(auto-fit, minmax(calc(200px * var(--small-screen-scale-factor)), 1fr));
-  }
-
-  /* Staking, Pool, e Profile Cards */
-  .card, 
-  .reward-card, 
-  .profile-card, 
-  .nft-reward-card {
-    width: calc(80% * var(--small-screen-scale-factor)); /* Riduce larghezza al 80% */
-    max-width: 280px; /* Limite massimo per evitare elementi troppo grandi */
-    margin: 0 auto; /* Centra le cards */
-    padding: 10px; /* Riduce lo spazio interno */
-  }
-
-  /* Griglie */
-  .balance-grid, 
-  .reward-grid, 
-  .profile-grid {
-    gap: calc(10px * var(--small-screen-scale-factor)); /* Riduce il gap tra elementi */
-  }
-    /* Stile per le reward cards */
-  .reward-card,
-  .nft-reward-card {
-    width: calc(85% * var(--small-screen-scale-factor)); /* Aumenta la reattività per schermi piccoli */
-    max-width: 280px; /* Limite massimo per evitare dimensioni troppo grandi */
-    padding: 8px; /* Riduzione ulteriore del padding per adattarsi meglio */
-  }
-  
-  /* Riduci il gap tra gli elementi */
-  .reward-grid {
-    gap: calc(12px * var(--small-screen-scale-factor)); /* Adatta la spaziatura per schermi piccoli */
-  }
-}
 /* Media Query per Schermi Piccoli */
 @media (max-width: 400px) {
 

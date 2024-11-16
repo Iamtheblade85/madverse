@@ -289,9 +289,34 @@
 }
 
 /* Responsive Styling */
-@media (max-width: 768px) {
+@media (max-width: 700px) {
   .nft-reward-card {
     padding: 10px;
+  }
+    :root {
+    --small-screen-scale-factor: 0.85; /* Scala aggiuntiva al 85% */
+  }
+
+  .container {
+    width: calc(100% * var(--small-screen-scale-factor));
+    max-width: calc(1140px * var(--small-screen-scale-factor));
+  }
+
+  .content-frame {
+    width: calc(100% * var(--small-screen-scale-factor));
+    max-width: calc(950px * var(--small-screen-scale-factor));
+  }
+
+  .menu-section {
+    gap: calc(10px * var(--small-screen-scale-factor));
+  }
+
+  .balance-grid, .nft-grid, .reward-grid {
+    gap: calc(14px * var(--small-screen-scale-factor));
+  }
+
+  .profile-grid {
+    grid-template-columns: repeat(auto-fit, minmax(calc(200px * var(--small-screen-scale-factor)), 1fr));
   }
 }   
     /* Footer */

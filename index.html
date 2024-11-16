@@ -250,18 +250,46 @@
       width: calc(100% * var(--scale-factor));
       max-width: calc(1400px * var(--scale-factor));
       min-height: 400px;
+      position: relative;
+    }
+    #scroll-buttons {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10;
     }
     
-    /* Grid-Layouts */
-    .balance-grid, .nft-grid {
+    .scroll-button {
+      background-color: #39ff14;
+      color: black;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 15px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    
+    .scroll-button:hover {
+      transform: scale(1.1);
+    }
+    
+    .scroll-button:focus {
+      outline: none;
+    }
+  /* Grid-Layouts */
+  .balance-grid, .nft-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
       gap: calc(15px * var(--scale-factor));
       margin-top: 20px;
-    }
+  }
     
-    /* Card */
-    .card {
+  /* Card */
+  .card {
       background: linear-gradient(135deg, #e0f7fa, #80deea);
       border-radius: 10px;
       box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
@@ -723,6 +751,11 @@
               <p id="personalized-message"></p>
           </div>
       </div>
+      <!-- Scroll Buttons inside content-frame -->
+      <div id="scroll-buttons">
+        <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
+        <button id="scroll-to-end" class="scroll-button">↓ To End</button>
+      </div>
     </div>
 
     <!-- Footer -->
@@ -747,17 +780,17 @@
       const data = await response.json();
       console.log("Account data received:", data);
       
-      if (response.ok && data.wax_account) {
-          user_wax_account = data.wax_account;
+      if (response.ok && data.user_profile.wax_account) {
+          user_wax_account = data.user_profile.wax_account;
           document.getElementById("welcome-message").textContent = `Welcome, ${user_wax_account}`;
           
           // Messaggio personalizzato per l'utente
-          document.getElementById("personalized-message").textContent = `Welcome to our platform, where innovation meets opportunity! As a valued member, you are part of a revolutionary ecosystem fueled by our exclusive token, which drives the entire economy. Get ready to engage in a world of endless possibilities and growth!`;
+          document.getElementById("personalized-message").textContent = `Welcome to our platform, where innovation meets opportunity! As a valued member, you are part of a revolutionary ecosystem fueled by our exclusive token CHIPS, which drives the entire economy. Get ready to engage in a world of endless possibilities and growth!`;
       } else {
           document.getElementById("welcome-message").textContent = `Welcome, User`;
           
           // Messaggio generico per utenti non autenticati
-          document.getElementById("personalized-message").textContent = `Welcome to our platform! Explore the power of our unique token, designed to empower and sustain an ever-growing digital economy. Join us today to unlock endless potential and experience the future of decentralized finance!`;
+          document.getElementById("personalized-message").textContent = `Welcome to our platform! Explore the power of our unique token CHIPS, designed to empower and sustain an ever-growing digital economy. Join us today to unlock endless potential and experience the future of decentralized finance!`;
       }
     }
 
@@ -1037,6 +1070,22 @@
           }
       }
       fetchWaxAccount();
+    // Funzione per scorrere verso l'alto
+    document.getElementById("scroll-to-top").addEventListener("click", function() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+    
+    // Funzione per scorrere verso il basso
+    document.getElementById("scroll-to-end").addEventListener("click", function() {
+      const contentFrame = document.getElementById("content-frame");
+      window.scrollTo({
+        top: contentFrame.scrollHeight,
+        behavior: 'smooth'
+      });
+    });
   </script>
 </body>
 </html>

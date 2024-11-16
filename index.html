@@ -345,43 +345,62 @@
 /* Media Query per Schermi Piccoli */
 @media (max-width: 400px) {
 
-  /* Ridurre la larghezza e il padding delle card */
+  /* Impostazioni per le nft-reward-card (già gestita) */
   .nft-reward-card {
     width: 100%; /* Forza la card ad adattarsi alla larghezza del contenitore */
     padding: 8px; /* Riduce il padding per adattarsi meglio */
   }
 
+  /* Impostazioni per le reward cards delle farms */
+  .reward-card {
+    width: 100%; /* Forza la card delle farms a occupare tutta la larghezza disponibile */
+    padding: 8px; /* Riduce il padding per adattarsi meglio */
+  }
+
   /* Modifica il layout delle righe template (ID e Reward) */
-  .nft-reward-card .template-row {
-    display: block; /* Passa dal flex al blocco, in modo che ID e Reward siano uno sotto l'altro */
+  .nft-reward-card .template-row,
+  .reward-card .template-row {
+    display: block; /* Passa dal flex al blocco per ogni elemento */
     align-items: flex-start; /* Allinea gli elementi in alto */
     margin: 5px 0; /* Distanziamento tra gli elementi */
   }
 
-  /* Riduci la dimensione dei font per ID e Reward */
+  /* Riduci la dimensione dei font per ID e Reward nelle card delle farms */
   .nft-reward-card .template-id,
-  .nft-reward-card .daily-reward {
+  .nft-reward-card .daily-reward,
+  .reward-card .template-id,
+  .reward-card .daily-reward {
     font-size: 14px; /* Riduci la dimensione del testo */
     text-align: left; /* Allinea il testo a sinistra */
     word-wrap: break-word; /* Permette al testo di andare a capo se troppo lungo */
   }
 
   /* Se vuoi che l'ID e Reward siano più piccoli ma allineati */
-  .nft-reward-card .template-id {
+  .nft-reward-card .template-id,
+  .reward-card .template-id {
     font-weight: normal;
     margin-right: 5px; /* Distanza tra ID e Reward */
   }
 
   /* Colore per migliorare la visibilità su schermi piccoli */
-  .nft-reward-card .daily-reward {
+  .nft-reward-card .daily-reward,
+  .reward-card .daily-reward {
     color: #007BFF;
     font-weight: bold;
   }
 
   /* Ridurre ulteriormente gli spazi tra gli elementi nel layout */
-  .nft-reward-card ul {
+  .nft-reward-card ul,
+  .reward-card ul {
     padding-left: 15px; /* Aggiungi un po' di spazio a sinistra per gli elenchi */
   }
+
+  /* Aggiungere una regola per evitare overflow */
+  .nft-reward-card,
+  .reward-card {
+    box-sizing: border-box; /* Assicura che padding e border non influenzino la larghezza finale */
+  }
+
 }
 
     /* Footer */

@@ -86,6 +86,7 @@
       position: absolute;
       border-radius: 50%;
       background-color: rgba(255, 215, 0, 0.6); /* Colore dei cerchi */
+      opacity: 0.8;
       animation: bounce 4s ease-in-out infinite;
     }
     
@@ -144,7 +145,7 @@
     
     /* Gradiente dinamico dello sfondo */
     body {
-      background: linear-gradient(45deg, #ff7e5f, #feb47b);
+      background: linear-gradient(45deg, #ffffff, #d3d3d3, #ffffff);
       background-size: 400% 400%;
       animation: gradientShift 10s ease infinite;
     }
@@ -160,7 +161,8 @@
       100% {
         background-position: 0% 50%;
       }
-    } 
+    }
+
     .menu-section {
       display: flex;
       justify-content: center;
@@ -598,8 +600,16 @@
     <!-- Logo Section -->
     <div class="logo-section">
       <div class="logo-container">
+        <!-- Logo Text -->
         <div class="logo">ChipsWallet</div>
-        <div class="circles"></div>
+        
+        <!-- Cerchi Animati -->
+        <div class="circles">
+          <div class="circle"></div>
+          <div class="circle"></div>
+          <div class="circle"></div>
+          <div class="circle"></div>
+        </div>
       </div>
     </div>
     <!-- Menu Section -->

@@ -163,81 +163,83 @@
       }
     }
 
-    .menu-section {
-      display: flex;
-      justify-content: center;
-      gap: calc(10px * var(--scale-factor));
-      margin-bottom: 20px;
-    }
-    
-    .menu button {
-      padding: 12px 24px;
-      font-size: calc(1rem + 1vw); /* La dimensione del font si adatta alla larghezza della finestra */
-      border: none;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #f4c542, #f8e474); /* Gradiente dorato */
-      color: #333;
-      font-family: 'Cinzel', serif; /* Font stilizzato per un look elegante */
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      text-transform: uppercase;
-      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease-in-out;
-      letter-spacing: 1.5px;
-    }
-    
-    .menu-section button::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 300%;
-      height: 300%;
-      background: rgba(255, 255, 255, 0);
-      transition: all 0.4s;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-    }
-    
-    .menu-section button:hover {
-        background: linear-gradient(135deg, #f4c542, #f8e474); /* Gradiente più delicato */
-        color: #333;
-        box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.1); /* Riduci l'intensità dell'ombra */
-    }
-    
-    .menu-section button:hover::before {
-      width: 0;
-      height: 0;
-    }
-    
-    .menu-section button:active {
-      transform: scale(0.98); /* Effetto di riduzione al clic */
-      box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.3);
-    }
-    
-    .menu-section button span {
-      position: relative;
-      z-index: 2;
-    }
-    
-    @keyframes textGlow {
-      0% {
-        text-shadow: 0px 0px 5px #ffb300, 0 0 10px #ffb300, 0 0 15px #ffb300, 0 0 20px #ffb300;
-      }
-      50% {
-        text-shadow: 0px 0px 10px #ffb300, 0 0 15px #ffb300, 0 0 20px #ffb300, 0 0 25px #ffb300;
-      }
-      100% {
-        text-shadow: 0px 0px 5px #ffb300, 0 0 10px #ffb300, 0 0 15px #ffb300, 0 0 20px #ffb300;
-      }
-    }
-    
-    .menu-section button:hover span {
-      animation: textGlow 1.5s ease-in-out infinite; /* Effetto di luce sul testo */
-    }
+/* Menu Section Styling */
+.menu-section {
+  display: flex;
+  justify-content: center;
+  gap: calc(10px * var(--scale-factor));
+  margin-bottom: 20px;
+}
 
+.menu-section button {
+  padding: 12px 24px;
+  font-size: calc(1rem + 1vw); /* La dimensione del font si adatta alla larghezza della finestra */
+  border: none;
+  border-radius: 12px; /* Più arrotondamento per un effetto più elegante */
+  background: linear-gradient(135deg, #ffbc42, #ffdd6e); /* Gradiente dorato con tonalità più calde */
+  color: #333;
+  font-family: 'Cinzel', serif; /* Font stilizzato per un look elegante */
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15); /* Ombra morbida */
+  transition: all 0.3s ease-in-out;
+  letter-spacing: 1.5px;
+  text-align: center;
+  background-size: 200% 200%;
+}
+
+.menu-section button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300%;
+  height: 300%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.4s;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.menu-section button:hover {
+  background: linear-gradient(135deg, #ffbb42, #ffdc70); /* Gradiente con transizione più sottile al passaggio del mouse */
+  color: #333;
+  box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.2); /* Ombra più marcata durante l'hover */
+}
+
+.menu-section button:hover::before {
+  width: 0;
+  height: 0;
+}
+
+.menu-section button:active {
+  transform: scale(0.98); /* Effetto di riduzione al clic */
+  box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.menu-section button span {
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes textGlow {
+  0% {
+    text-shadow: 0px 0px 5px #ffbb00, 0 0 10px #ffbb00, 0 0 15px #ffbb00, 0 0 20px #ffbb00;
+  }
+  50% {
+    text-shadow: 0px 0px 10px #ffbb00, 0 0 15px #ffbb00, 0 0 20px #ffbb00, 0 0 25px #ffbb00;
+  }
+  100% {
+    text-shadow: 0px 0px 5px #ffbb00, 0 0 10px #ffbb00, 0 0 15px #ffbb00, 0 0 20px #ffbb00;
+  }
+}
+
+.menu-section button:hover span {
+  animation: textGlow 1.5s ease-in-out infinite; /* Effetto di luce sul testo */
+}
     
     /* Content Frame */
     .content-frame {

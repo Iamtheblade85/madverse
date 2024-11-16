@@ -594,12 +594,98 @@
   max-width: 320px; /* Limite di larghezza */
   padding: 12px; /* Riduzione padding */
 }
-/* Dimensione del font per schermi con larghezza massima di 1000px */
-@media (max-width: 1000px) {
-  .menu-section button {
-    font-size: calc((1rem + 1vw) * 0.45); /* Riduce il font del 55% (1 - 0.55 = 0.45) */
+  /* Stile per la card 3D */
+  .card-3d-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+      perspective: 1000px; /* Effetto di profondità */
   }
-}
+
+  .card-3d {
+      width: 300px;
+      height: 200px;
+      background: linear-gradient(145deg, #6e7f9f, #2a2f3f); /* Gradiente per la card */
+      border-radius: 15px;
+      box-shadow: 0px 15px 40px rgba(0, 0, 0, 0.2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      transform-style: preserve-3d;
+      transform: rotateX(10deg);
+      transition: transform 0.5s ease, box-shadow 0.5s ease;
+  }
+
+  .card-3d:hover {
+      transform: rotateY(20deg) rotateX(20deg); /* Rotazione della card quando passiamo sopra con il mouse */
+      box-shadow: 0px 30px 60px rgba(0, 0, 0, 0.3);
+  }
+
+  #personalized-message {
+      font-family: 'Arial', sans-serif;
+      color: #fff;
+      text-align: center;
+      font-size: 18px;
+      line-height: 1.5;
+      animation: fadeIn 1s ease-out;
+  }
+
+  /* Animazione di ingresso per il messaggio */
+  @keyframes fadeIn {
+      from {
+          opacity: 0;
+      }
+      to {
+          opacity: 1;
+      }
+  }
+
+  /* Effetto di rotazione 3D per la card */
+  @keyframes rotateCard {
+      0% {
+          transform: rotateY(0deg);
+      }
+      50% {
+          transform: rotateY(10deg);
+      }
+      100% {
+          transform: rotateY(0deg);
+      }
+  }
+
+  /* Aggiungere animazione al messaggio */
+  .card-3d p {
+      animation: rotateCard 5s infinite;
+  }
+
+  /* Media query per schermi con larghezza inferiore a 1000px */
+  @media (max-width: 1000px) {
+    .card-3d {
+        width: 80%; /* Riduce la larghezza della card */
+        height: 150px; /* Riduce l'altezza della card */
+        padding: 15px; /* Riduce il padding per adattarsi meglio */
+    }
+
+    #personalized-message {
+        font-size: calc(14px + 1vw); /* Riduce il font in base alla larghezza */
+        line-height: 1.4;
+    }
+
+    /* Ridurre le dimensioni della card ulteriormente per schermi molto piccoli */
+    @media (max-width: 600px) {
+        .card-3d {
+            width: 90%; /* Ancora più piccola per schermi stretti */
+            height: 120px;
+            padding: 10px;
+        }
+
+        #personalized-message {
+            font-size: calc(12px + 2vw); /* Ancora più piccolo */
+        }
+    }
+  }
   </style>
 </head>
 <body>
@@ -630,7 +716,13 @@
 
     <!-- Dynamic Content Section -->
     <div class="content-frame" id="content-frame">
-      <p>Select an option from the menu.</p>
+      <p id="welcome-message">Select an option from the menu.</p>
+      <!-- Card 3D per il messaggio personalizzato -->
+      <div class="card-3d-container">
+          <div class="card-3d">
+              <p id="personalized-message"></p>
+          </div>
+      </div>
     </div>
 
     <!-- Footer -->
@@ -658,8 +750,14 @@
       if (response.ok && data.wax_account) {
           user_wax_account = data.wax_account;
           document.getElementById("welcome-message").textContent = `Welcome, ${user_wax_account}`;
+          
+          // Messaggio personalizzato per l'utente
+          document.getElementById("personalized-message").textContent = `Welcome to our platform, where innovation meets opportunity! As a valued member, you are part of a revolutionary ecosystem fueled by our exclusive token, which drives the entire economy. Get ready to engage in a world of endless possibilities and growth!`;
       } else {
           document.getElementById("welcome-message").textContent = `Welcome, User`;
+          
+          // Messaggio generico per utenti non autenticati
+          document.getElementById("personalized-message").textContent = `Welcome to our platform! Explore the power of our unique token, designed to empower and sustain an ever-growing digital economy. Join us today to unlock endless potential and experience the future of decentralized finance!`;
       }
     }
 

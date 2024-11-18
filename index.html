@@ -79,6 +79,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%; /* Assicurati che occupi tutto lo spazio disponibile */
   pointer-events: none; /* Non interferiscono con l'interazione dell'utente */
   overflow: hidden; /* Evita che i cerchi escano dall'area visibile */
 }
@@ -124,12 +125,13 @@
   }
 }
 
-/* Cerchi in numero e dimensione variabile */
 .circles .circle:nth-child(1) {
   width: 50px;
   height: 50px;
   animation-duration: 3s;
   animation-delay: 0s;
+  top: 10%;
+  left: 20%;
 }
 
 .circles .circle:nth-child(2) {
@@ -137,6 +139,8 @@
   height: 70px;
   animation-duration: 5s;
   animation-delay: 1s;
+  top: 30%;
+  left: 50%;
 }
 
 .circles .circle:nth-child(3) {
@@ -144,6 +148,8 @@
   height: 60px;
   animation-duration: 4s;
   animation-delay: 2s;
+  top: 60%;
+  left: 40%;
 }
 
 .circles .circle:nth-child(4) {
@@ -151,6 +157,8 @@
   height: 80px;
   animation-duration: 6s;
   animation-delay: 3s;
+  top: 80%;
+  left: 10%;
 }
 
 /* Aggiunge un effetto leggero di zoom */

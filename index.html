@@ -79,54 +79,61 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100vw;  /* Usa tutta la larghezza della finestra */
-  height: 100vh; /* Usa tutta l'altezza della finestra */
-  pointer-events: none; /* Non interferiscono con l'interazione dell'utente */
-  overflow: hidden; /* Evita che i cerchi escano dall'area visibile */
+  pointer-events: none;
 }
 
 .circle {
   position: absolute;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e0f7fa, #80deea); /* Gradiente iniziale */
-  box-shadow: 0 0 15px rgba(128, 222, 234, 0.6), 0 0 30px rgba(224, 247, 250, 0.4);
-  opacity: 0.9;
-  animation: bounce 5s ease-in-out infinite, colorChange 4s ease-in-out infinite;
+  background: linear-gradient(135deg, #e0f7fa, #80deea); /* Colore dei cerchi uguale al gradiente delle cards */
+  opacity: 0.8;
+  animation: bounce 4s ease-in-out infinite, fadeColor 4s ease-in-out infinite; /* Aggiunto effetto di cambiamento del colore */
 }
 
-/* Animazione di rimbalzo (movimento lungo tutta la pagina) */
+/* Animazione di rimbalzo dei cerchi */
 @keyframes bounce {
-  0%, 100% {
+  0% {
     transform: translate(0, 0);
-    opacity: 0.9;
+    opacity: 0.8;
   }
   25% {
-    transform: translate(50vw, 50vh);
+    transform: translate(-50px, -100px);
     opacity: 1;
   }
   50% {
-    transform: translate(-50vw, -50vh);
+    transform: translate(100px, 50px);
     opacity: 0.8;
   }
   75% {
-    transform: translate(50vw, -50vh);
+    transform: translate(-150px, 0);
     opacity: 1;
   }
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.8;
+  }
 }
 
-/* Cambiamento di colore durante l'animazione */
-@keyframes colorChange {
-  0%, 100% {
+/* Aggiunta animazione di colore al gradiente che diventa più scuro mentre i cerchi rimbalzano */
+@keyframes fadeColor {
+  0% {
     background: linear-gradient(135deg, #e0f7fa, #80deea);
-    box-shadow: 0 0 15px rgba(128, 222, 234, 0.6), 0 0 30px rgba(224, 247, 250, 0.4);
+  }
+  25% {
+    background: linear-gradient(135deg, #b2ebf2, #4dd0e1); /* Colore più scuro */
   }
   50% {
-    background: linear-gradient(135deg, #80deea, #0097a7);
-    box-shadow: 0 0 20px rgba(0, 151, 167, 0.8), 0 0 40px rgba(0, 121, 142, 0.5);
+    background: linear-gradient(135deg, #80deea, #26c6da); /* Colore più scuro */
+  }
+  75% {
+    background: linear-gradient(135deg, #b2ebf2, #4dd0e1); /* Colore più scuro */
+  }
+  100% {
+    background: linear-gradient(135deg, #e0f7fa, #80deea);
   }
 }
 
-/* Variabili di posizione per ciascun cerchio */
+/* Cerchi in numero e dimensione variabile */
 .circles .circle:nth-child(1) {
   width: 50px;
   height: 50px;
@@ -155,19 +162,12 @@
   animation-delay: 3s;
 }
 
-/* Effetto zoom per aggiungere dinamismo */
-@keyframes zoomEffect {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
+/* Eventuali modifiche generali per i cerchi */
+.circles .circle {
+  animation-timing-function: ease-in-out; /* Animazione fluida */
+  opacity: 0.8; /* Mantenimento dell'opacità per un effetto traslucido */
 }
 
-.circles .circle {
-  animation: bounce 5s ease-in-out infinite, colorChange 4s ease-in-out infinite, zoomEffect 4s infinite;
-}
 
     /* Gradiente dinamico dello sfondo */
     body {

@@ -860,35 +860,96 @@
       perspective: 1000px; /* Effetto di profondità */
   }
 
+/* Card 3D */
 .card-3d {
     width: 250px;
     min-height: 200px; /* Altezza minima per mantenere un layout consistente */
-    background: linear-gradient(145deg, #6e7f9f, #2a2f3f); /* Gradiente per la card */
+    background: linear-gradient(145deg, #f7b301, #ff8c00, #e52e71); /* Gradiente dorato e arancio per un look lussuoso */
     border-radius: 15px;
-    box-shadow: 0px 15px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: 0px 15px 40px rgba(0, 0, 0, 0.2); /* Ombra morbida per profondità */
     display: flex;
-    flex-direction: column; /* Disposizione verticale per il contenuto */
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 3px;
+    padding: 20px;
     transform-style: preserve-3d;
     transform: rotateX(10deg);
-    transition: transform 0.5s ease, box-shadow 0.5s ease;
+    transition: transform 0.5s ease, box-shadow 0.5s ease, background 0.5s ease;
+    position: relative;
+    overflow: hidden; /* Nasconde gli eventuali effetti di illuminazione oltre i bordi */
 }
+
+/* Hover effect for card */
 .card-3d:hover {
-    transform: rotateY(20deg) rotateX(20deg); /* Rotazione della card quando passiamo sopra con il mouse */
-    box-shadow: 0px 30px 60px rgba(0, 0, 0, 0.3);
+    transform: rotateY(20deg) rotateX(20deg); /* Effetto di rotazione 3D */
+    box-shadow: 0px 30px 60px rgba(0, 0, 0, 0.3); /* Ombra più intensa per il passaggio sopra */
+    background: linear-gradient(145deg, #ffb84d, #ff6a00, #f44e5a); /* Gradiente dorato più luminoso al passaggio */
 }
 
-  #personalized-message {
-      font-family: 'Arial', sans-serif;
-      color: #fff;
-      text-align: center;
-      font-size: 18px;
-      line-height: 1.15;
-      animation: fadeIn 1s ease-out;
-  }
+/* Effetti dorati per il messaggio personalizzato */
+#personalized-message {
+    font-family: 'Arial', sans-serif;
+    color: #fff;
+    text-align: center;
+    font-size: 18px;
+    line-height: 1.15;
+    font-weight: bold;
+    animation: fadeIn 1s ease-out, textGlow 2s infinite alternate; /* Animazione di fade e glow */
+    position: relative;
+    padding: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px; /* Distanza tra le lettere per maggiore impatto */
+}
 
+/* Animazione di fade in */
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Animazione glow (bagliore dorato) */
+@keyframes textGlow {
+    0% {
+        text-shadow: 0 0 5px #fff, 0 0 10px #f7b301, 0 0 15px #ff7700, 0 0 25px #ff7700;
+    }
+    50% {
+        text-shadow: 0 0 10px #fff, 0 0 20px #f7b301, 0 0 30px #ff7700, 0 0 45px #ff7700;
+    }
+    100% {
+        text-shadow: 0 0 15px #fff, 0 0 25px #f7b301, 0 0 40px #ff7700, 0 0 60px #ff7700;
+    }
+}
+
+/* Bordo dorato e retroilluminazione sulla card */
+.card-3d::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    border: 2px solid #ffdd00; /* Bordi dorati */
+    border-radius: 15px;
+    z-index: -1;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6), 0 0 30px rgba(255, 215, 0, 0.4); /* Retroilluminazione dorata */
+    transform: scale(1.1); /* Leggermente ingrandito per effetto di profondità */
+}
+
+/* Ombre morbide per la card */
+.card-3d:hover::before {
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.8), 0 0 50px rgba(255, 215, 0, 0.7); /* Ombra più intensa durante l'hover */
+}
+
+/* Aggiungi ombre al testo per renderlo ancora più dorato */
+#personalized-message {
+    text-shadow: 0 0 5px #fff, 0 0 10px #f7b301, 0 0 15px #ff7700, 0 0 25px #ff7700; /* Retroilluminazione dorata */
+}
   /* Animazione di ingresso per il messaggio */
   @keyframes fadeIn {
       from {

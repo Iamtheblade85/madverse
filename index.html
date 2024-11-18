@@ -1005,35 +1005,83 @@
         }
     }
   }
-  /* Centra il messaggio orizzontalmente */
-  #welcome-message {
-    position: relative;
-    display: inline-block; /* Così da trattarlo come un blocco inline */
-    font-size: 2rem; /* Puoi regolare la dimensione del font come preferisci */
-    color: #333; /* Colore del testo */
-    font-family: 'Cinzel', serif; /* Font stilizzato per il messaggio */
-    text-align: center;
-    white-space: nowrap; /* Evita che il testo venga spezzato su più righe */
-    margin: 0 auto; /* Margine automatico per centrarlo */
-    overflow: hidden; /* Nasconde il contenuto in eccesso durante l'animazione */
+/* Centra il messaggio orizzontalmente */
+#welcome-message {
+  position: relative;
+  display: inline-block;
+  font-size: 3rem; /* Aumenta la dimensione del font per un impatto visivo maggiore */
+  color: #fff; /* Colore del testo bianco per contrastare lo sfondo scuro */
+  font-family: 'Cinzel', serif; /* Font stilizzato per un look elegante */
+  text-align: center;
+  white-space: nowrap;
+  margin: 0 auto;
+  overflow: hidden; /* Nasconde il contenuto in eccesso durante l'animazione */
+  letter-spacing: 2px; /* Aumenta la distanza tra le lettere per maggiore impatto */
+  text-transform: uppercase; /* Trasforma il testo in maiuscolo */
+  animation: fadeIn 1s ease-out, glowText 2s infinite alternate; /* Aggiunge animazione di ingresso e glow */
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6), 0 0 25px rgba(255, 215, 0, 0.5); /* Ombra dorata per profondità */
+}
+
+/* Animazione di fade in */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px); /* Inizialmente si sposterà sopra */
   }
-  
-  /* Animazione delle lettere */
-  #welcome-message span {
-    display: inline-block;
-    opacity: 0; /* Le lettere iniziano invisibili */
-    transform: translateX(100%); /* Iniziano fuori dal contenitore, a destra */
-    animation: slideIn 0.5s forwards; /* Applica l'animazione */
-    animation-delay: calc(0.1s * var(--letter-index)); /* Ritarda ogni lettera in base al suo indice */
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
-  
-  /* Definisci l'animazione di scorrimento da destra a sinistra */
-  @keyframes slideIn {
-    to {
-      opacity: 1; /* Rendi la lettera visibile */
-      transform: translateX(0); /* Sposta la lettera nella posizione finale */
-    }
+}
+
+/* Animazione di glow (bagliore dorato) per il testo */
+@keyframes glowText {
+  0% {
+    text-shadow: 0 0 5px #fff, 0 0 10px #f7b301, 0 0 15px #ff7700, 0 0 25px #ff7700;
   }
+  50% {
+    text-shadow: 0 0 20px #fff, 0 0 30px #f7b301, 0 0 40px #ff7700, 0 0 60px #ff7700;
+  }
+  100% {
+    text-shadow: 0 0 15px #fff, 0 0 25px #f7b301, 0 0 35px #ff7700, 0 0 50px #ff7700;
+  }
+}
+
+/* Animazione di rimbalzo delle lettere per un effetto dinamico */
+@keyframes bounceText {
+  0% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-10px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  70% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Animazione delle lettere (effetto di scorrimento e rimbalzo) */
+#welcome-message span {
+  display: inline-block;
+  opacity: 0;
+  transform: translateX(100%);
+  animation: slideIn 0.5s forwards, bounceText 1s ease-in-out; /* Applica l'animazione di scorrimento e rimbalzo */
+  animation-delay: calc(0.1s * var(--letter-index)); /* Ritarda ogni lettera in base al suo indice */
+}
+
+/* Definisci l'animazione di scorrimento da destra a sinistra */
+@keyframes slideIn {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
   /* Stile generale per piccoli display */
   @media (max-width: 600px) {
       /* Stile per i bottoni del menu */

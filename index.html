@@ -35,6 +35,7 @@
   height: 200px;
 }
 
+/* Contenitore del logo */
 .logo-container {
   position: relative;
   z-index: 10; /* Assicura che il testo sia sopra i cerchi */
@@ -42,14 +43,33 @@
 
 /* Logo Text */
 .logo {
-  font-size: 48px;
+  font-family: 'Orbitron', sans-serif; /* Font futuristico adatto al logo */
+  font-size: 57px; /* Aumentato del 20% rispetto a 48px */
   font-weight: bold;
   color: gold;
-  text-shadow: 0px 0px 10px rgba(255, 215, 0, 0.5);
-  animation: colorShift 3s infinite, textGlow 1.5s ease-in-out infinite;
+  text-shadow: 0px 0px 10px rgba(255, 215, 0, 0.5), 0 0 15px rgba(255, 215, 0, 0.8); /* Aggiunto un effetto glow più marcato */
+  animation: colorShift 3s infinite, textGlow 1.5s ease-in-out infinite, letterFall 2s ease-out forwards;
+  position: relative;
+  display: inline-block;
 }
 
-/* Effetto di cambio colore del testo */
+/* Animazione per la caduta delle lettere */
+@keyframes letterFall {
+  0% {
+    transform: translateY(-100px); /* Inizia fuori dallo schermo in alto */
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(20px); /* Inizia a posizionarsi */
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(0); /* Posizione finale */
+    opacity: 1;
+  }
+}
+
+/* Animazione di cambio colore del testo */
 @keyframes colorShift {
   0% { color: gold; }
   50% { color: yellow; }
@@ -67,6 +87,25 @@
   100% { 
     text-shadow: 0px 0px 5px #ffb300, 0 0 10px #ffb300, 0 0 15px #ffb300, 0 0 20px #ffb300; 
   }
+}
+
+/* Effetto 3D per il logo */
+.logo::before {
+  content: 'ChipsWallet'; /* Copia del testo per effetto 3D */
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  color: rgba(0, 0, 0, 0.3); /* Colore ombra scuro */
+  text-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.5);
+  transform: translate(10px, 10px); /* Spostamento per dare profondità */
+}
+
+/* Aggiunta del bordo esterno sottile e nero */
+.logo {
+  border: 1px solid black; /* Bordo sottile nero */
+  padding: 5px;
+  box-sizing: border-box; /* Considera il bordo nel calcolo delle dimensioni */
 }
 
 /* Container dei cerchi */

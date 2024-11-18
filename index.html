@@ -24,51 +24,51 @@
       max-width: calc(1900px * var(--scale-factor));
       padding: 20px;
     }
-    /* Logo Section */
-    .logo-section {
-      text-align: center;
-      margin-bottom: 20px;
-      position: relative; /* Necessario per posizionare i cerchi sopra il logo */
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 200px;
-    }
-    
-    .logo-container {
-      position: relative;
-      z-index: 10; /* Assicura che il testo sia sopra i cerchi */
-    }
-    
-    /* Logo Text */
-    .logo {
-      font-size: 48px;
-      font-weight: bold;
-      color: gold;
-      text-shadow: 0px 0px 10px rgba(255, 215, 0, 0.5);
-      animation: colorShift 3s infinite, textGlow 1.5s ease-in-out infinite;
-    }
-    
-    /* Effetto di cambio colore del testo */
-    @keyframes colorShift {
-      0% { color: gold; }
-      50% { color: yellow; }
-      100% { color: gold; }
-    }
-    
-    /* Effetto di glow sul testo */
-    @keyframes textGlow {
-      0% { 
-        text-shadow: 0px 0px 5px #ffb300, 0 0 10px #ffb300, 0 0 15px #ffb300, 0 0 20px #ffb300; 
-      }
-      50% { 
-        text-shadow: 0px 0px 10px #ffb300, 0 0 15px #ffb300, 0 0 20px #ffb300, 0 0 25px #ffb300; 
-      }
-      100% { 
-        text-shadow: 0px 0px 5px #ffb300, 0 0 10px #ffb300, 0 0 15px #ffb300, 0 0 20px #ffb300; 
-      }
-    }
-    
+/* Logo Section */
+.logo-section {
+  text-align: center;
+  margin-bottom: 20px;
+  position: relative; /* Necessario per posizionare i cerchi sopra il logo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.logo-container {
+  position: relative;
+  z-index: 10; /* Assicura che il testo sia sopra i cerchi */
+}
+
+/* Logo Text */
+.logo {
+  font-size: 48px;
+  font-weight: bold;
+  color: gold;
+  text-shadow: 0px 0px 10px rgba(255, 215, 0, 0.5);
+  animation: colorShift 3s infinite, textGlow 1.5s ease-in-out infinite;
+}
+
+/* Effetto di cambio colore del testo */
+@keyframes colorShift {
+  0% { color: gold; }
+  50% { color: yellow; }
+  100% { color: gold; }
+}
+
+/* Effetto di glow sul testo */
+@keyframes textGlow {
+  0% { 
+    text-shadow: 0px 0px 5px #ffb300, 0 0 10px #ffb300, 0 0 15px #ffb300, 0 0 20px #ffb300; 
+  }
+  50% { 
+    text-shadow: 0px 0px 10px #ffb300, 0 0 15px #ffb300, 0 0 20px #ffb300, 0 0 25px #ffb300; 
+  }
+  100% { 
+    text-shadow: 0px 0px 5px #ffb300, 0 0 10px #ffb300, 0 0 15px #ffb300, 0 0 20px #ffb300; 
+  }
+}
+
 /* Cerchi animati */
 .circles {
   position: absolute;
@@ -79,7 +79,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%; /* Assicurati che occupi tutto lo spazio disponibile */
+  width: 100vw;  /* Usa tutta la larghezza della finestra */
+  height: 100vh; /* Usa tutta l'altezza della finestra */
   pointer-events: none; /* Non interferiscono con l'interazione dell'utente */
   overflow: hidden; /* Evita che i cerchi escano dall'area visibile */
 }
@@ -90,25 +91,25 @@
   background: linear-gradient(135deg, #e0f7fa, #80deea); /* Gradiente iniziale */
   box-shadow: 0 0 15px rgba(128, 222, 234, 0.6), 0 0 30px rgba(224, 247, 250, 0.4);
   opacity: 0.9;
-  animation: bounce 4s ease-in-out infinite, colorChange 4s ease-in-out infinite;
+  animation: bounce 5s ease-in-out infinite, colorChange 4s ease-in-out infinite;
 }
 
-/* Animazione di rimbalzo */
+/* Animazione di rimbalzo (movimento lungo tutta la pagina) */
 @keyframes bounce {
   0%, 100% {
     transform: translate(0, 0);
     opacity: 0.9;
   }
   25% {
-    transform: translate(-50px, -100px);
+    transform: translate(50vw, 50vh);
     opacity: 1;
   }
   50% {
-    transform: translate(100px, 50px);
+    transform: translate(-50vw, -50vh);
     opacity: 0.8;
   }
   75% {
-    transform: translate(-150px, 0);
+    transform: translate(50vw, -50vh);
     opacity: 1;
   }
 }
@@ -125,13 +126,12 @@
   }
 }
 
+/* Variabili di posizione per ciascun cerchio */
 .circles .circle:nth-child(1) {
   width: 50px;
   height: 50px;
   animation-duration: 3s;
   animation-delay: 0s;
-  top: 10%;
-  left: 20%;
 }
 
 .circles .circle:nth-child(2) {
@@ -139,8 +139,6 @@
   height: 70px;
   animation-duration: 5s;
   animation-delay: 1s;
-  top: 30%;
-  left: 50%;
 }
 
 .circles .circle:nth-child(3) {
@@ -148,8 +146,6 @@
   height: 60px;
   animation-duration: 4s;
   animation-delay: 2s;
-  top: 60%;
-  left: 40%;
 }
 
 .circles .circle:nth-child(4) {
@@ -157,15 +153,9 @@
   height: 80px;
   animation-duration: 6s;
   animation-delay: 3s;
-  top: 80%;
-  left: 10%;
 }
 
-/* Aggiunge un effetto leggero di zoom */
-.circles .circle {
-  animation: bounce 4s ease-in-out infinite, colorChange 4s ease-in-out infinite, zoomEffect 4s infinite;
-}
-
+/* Effetto zoom per aggiungere dinamismo */
 @keyframes zoomEffect {
   0%, 100% {
     transform: scale(1);
@@ -173,7 +163,12 @@
   50% {
     transform: scale(1.1);
   }
-}   
+}
+
+.circles .circle {
+  animation: bounce 5s ease-in-out infinite, colorChange 4s ease-in-out infinite, zoomEffect 4s infinite;
+}
+
     /* Gradiente dinamico dello sfondo */
     body {
       background: linear-gradient(45deg, #ffffff, #d3d3d3, #ffffff);

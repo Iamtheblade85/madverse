@@ -69,7 +69,7 @@
   }
 }
 
-/* Cerchi animati */
+/* Container dei cerchi */
 .circles {
   position: absolute;
   top: 0;
@@ -82,15 +82,16 @@
   pointer-events: none;
 }
 
+/* Stile generale dei cerchi */
 .circle {
   position: absolute;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e0f7fa, #80deea); /* Colore dei cerchi uguale al gradiente delle cards */
+  border: 2px solid black; /* Bordo nero per ogni cerchio */
   opacity: 0.8;
-  animation: bounce 4s ease-in-out infinite, fadeColor 4s ease-in-out infinite; /* Aggiunto effetto di cambiamento del colore */
+  animation: bounce 4s ease-in-out infinite, fadeColor 4s ease-in-out infinite; /* Rimbalzo e cambiamento di colore */
 }
 
-/* Animazione di rimbalzo dei cerchi */
+/* Animazione di rimbalzo per ogni cerchio */
 @keyframes bounce {
   0% {
     transform: translate(0, 0);
@@ -114,31 +115,32 @@
   }
 }
 
-/* Aggiunta animazione di colore al gradiente che diventa più scuro mentre i cerchi rimbalzano */
+/* Animazione di cambio colore */
 @keyframes fadeColor {
   0% {
     background: linear-gradient(135deg, #e0f7fa, #80deea);
   }
   25% {
-    background: linear-gradient(135deg, #b2ebf2, #4dd0e1); /* Colore più scuro */
+    background: linear-gradient(135deg, #b2ebf2, #4dd0e1);
   }
   50% {
-    background: linear-gradient(135deg, #80deea, #26c6da); /* Colore più scuro */
+    background: linear-gradient(135deg, #80deea, #26c6da);
   }
   75% {
-    background: linear-gradient(135deg, #b2ebf2, #4dd0e1); /* Colore più scuro */
+    background: linear-gradient(135deg, #b2ebf2, #4dd0e1);
   }
   100% {
     background: linear-gradient(135deg, #e0f7fa, #80deea);
   }
 }
 
-/* Cerchi in numero e dimensione variabile */
+/* Dimensioni e tempistiche di animazione per ciascun cerchio */
 .circles .circle:nth-child(1) {
   width: 50px;
   height: 50px;
   animation-duration: 3s;
   animation-delay: 0s;
+  background: linear-gradient(135deg, #ffcc80, #ff5722); /* Colore diverso per ogni cerchio */
 }
 
 .circles .circle:nth-child(2) {
@@ -146,6 +148,7 @@
   height: 70px;
   animation-duration: 5s;
   animation-delay: 1s;
+  background: linear-gradient(135deg, #81c784, #388e3c); /* Colore diverso per ogni cerchio */
 }
 
 .circles .circle:nth-child(3) {
@@ -153,6 +156,7 @@
   height: 60px;
   animation-duration: 4s;
   animation-delay: 2s;
+  background: linear-gradient(135deg, #ab47bc, #8e24aa); /* Colore diverso per ogni cerchio */
 }
 
 .circles .circle:nth-child(4) {
@@ -160,12 +164,13 @@
   height: 80px;
   animation-duration: 6s;
   animation-delay: 3s;
+  background: linear-gradient(135deg, #ffb74d, #f57c00); /* Colore diverso per ogni cerchio */
 }
 
-/* Eventuali modifiche generali per i cerchi */
+/* Modifiche generali per i cerchi */
 .circles .circle {
   animation-timing-function: ease-in-out; /* Animazione fluida */
-  opacity: 0.8; /* Mantenimento dell'opacità per un effetto traslucido */
+  opacity: 0.8; /* Mantenimento dell'opacità per effetto traslucido */
 }
 
 

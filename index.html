@@ -650,10 +650,18 @@
       }
       
       .profile-card p {
-        color: #f4f4f4; /* Colore del testo per i paragrafi */
-        font-size: 1rem;
-        line-height: 1.5;
+          color: #004d40; /* Colore più scuro */
+          font-size: 1rem;
+          line-height: 1.5;
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2); /* Leggera ombra al testo */
+          transition: color 0.3s ease, transform 0.3s ease; /* Animazioni per colore e trasformazione */
       }
+
+      .profile-card:hover p {
+          color: #006064; /* Colore più adatto al gradiente al passaggio del mouse */
+          transform: scale(1.05); /* Leggera ingrandimento */
+      }
+
       
       .profile-card .btn {
         background-color: #4e6bf3;

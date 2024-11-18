@@ -32,7 +32,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 200px;
+  height: 100px;
 }
 
 /* Contenitore del logo */
@@ -681,13 +681,107 @@
 
 }
 
-    /* Footer */
-    .footer {
-      margin-top: 20px;
-      text-align: center;
-      font-size: 14px;
-      color: #777;
-    }
+/* Footer */
+.footer {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 18px;
+  font-family: 'Arial', sans-serif;
+  color: #fff;
+  background: linear-gradient(135deg, #f7b301, #d67a0f, #b96a02); /* Colori dorati con sfumature */
+  background-size: 400% 400%;
+  animation: gradientAnimation 6s ease infinite; /* Animazione del gradiente */
+  padding: 20px 0;
+  border-radius: 15px;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); /* Ombra per profondità */
+  transform: scale(1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
+  text-shadow: 0 0 5px #fff, 0 0 10px #f7b301, 0 0 15px #ff7700, 0 0 25px #ff7700; /* Retroilluminazione dorata */
+}
+
+.footer:hover {
+  transform: scale(1.2); /* Effetto zoom morbido */
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3); /* Ombra più forte al passaggio */
+  color: #fff;
+}
+
+/* Effetto luce e ombra per il testo */
+.footer span {
+  font-weight: bold;
+  position: relative;
+  animation: textGlow 2s infinite alternate;
+  text-transform: uppercase;
+  letter-spacing: 2px; /* Distanza tra lettere per maggiore impatto */
+}
+
+/* Animazione del gradiente dinamico */
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Animazione glow dorato del testo */
+@keyframes textGlow {
+  0% {
+    text-shadow: 0 0 5px #fff, 0 0 10px #f7b301, 0 0 15px #ff7700, 0 0 25px #ff7700;
+  }
+  50% {
+    text-shadow: 0 0 10px #fff, 0 0 20px #f7b301, 0 0 30px #ff7700, 0 0 45px #ff7700;
+  }
+  100% {
+    text-shadow: 0 0 15px #fff, 0 0 25px #f7b301, 0 0 40px #ff7700, 0 0 60px #ff7700;
+  }
+}
+
+/* Bordi del testo (effetto 3D) */
+.footer span::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, #ffdd00, #f7b301);
+  z-index: -1;
+  filter: blur(4px);
+  transform: scale(1.1);
+}
+
+.footer span {
+  position: relative;
+  display: inline-block;
+  padding: 10px;
+  background: transparent;
+  color: #ffdd00; /* Colore dorato del testo */
+  border: 2px solid #ffdd00; /* Bordi dorati */
+  border-radius: 5px;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.7), 0 0 15px rgba(255, 215, 0, 0.7); /* Ombre dorate per profondità */
+}
+
+/* Piccolo effetto di movimento e fluidità */
+.footer:hover {
+  animation: textBounce 1.5s ease-in-out infinite;
+}
+
+/* Effetto di rimbalzo del testo */
+@keyframes textBounce {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
     .profile-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

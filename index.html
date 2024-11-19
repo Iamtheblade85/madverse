@@ -1212,8 +1212,7 @@
                         </div>
                     `).join('')}
                   </div>`;
-          }
-           else if (page === 'mynfts') {
+          } else if (page === 'mynfts') {
               contentFrame.innerHTML = `
                 <h2 class="section-title">Your NFTs Inventory</h2>
                 
@@ -1242,6 +1241,17 @@
                         <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
                         <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
                         <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
+            
+                        <!-- Template Information -->
+                        <div class="template-info">
+                          <p><span class="label">Collection:</span> <span class="value">${nft.template_info.collection_name || 'N/A'}</span></p>
+                          <p><span class="label">Schema:</span> <span class="value">${nft.template_info.schema_name || 'N/A'}</span></p>
+                          <p><span class="label">Template Name:</span> <span class="value">${nft.template_info.template_name || 'N/A'}</span></p>
+                          <p><span class="label">Template Mint:</span> <span class="value">${nft.template_info.template_mint || 'N/A'}</span></p>
+                          <p><span class="label">Max Supply:</span> <span class="value">${nft.template_info.max_supply || 'N/A'}</span></p>
+                          <p><span class="label">Transferable:</span> <span class="value">${nft.template_info.is_transferable ? 'Yes' : 'No'}</span></p>
+                          <p><span class="label">Template Image:</span> <img src="${nft.template_info.img_hash}" alt="Template Image" class="template-image"></p>
+                        </div>
                       </div>
                     </div>
                   `).join("")}
@@ -1256,16 +1266,16 @@
             
               // Funzione che filtra gli NFT
               function filterNfts(filter, nfts) {
-                  switch (filter) {
-                    case 'staked':
-                      return nfts.filter(nft => nft.is_staked === "Staked"); // NFT che sono staked (tutti quelli che non sono "Not Staked")
-                    case 'unstaked':
-                      return nfts.filter(nft => nft.is_staked === "Not Staked"); // NFT che sono "Not Staked"
-                    case 'sale':
-                      return nfts.filter(nft => nft.for_sale === "Yes"); // NFT in vendita (presumiamo che la risposta possa essere "Yes")
-                    default:
-                      return nfts;  // Se "All", ritorna tutti gli NFT
-                  }
+                switch (filter) {
+                  case 'staked':
+                    return nfts.filter(nft => nft.is_staked === "Staked"); // NFT che sono staked (tutti quelli che non sono "Not Staked")
+                  case 'unstaked':
+                    return nfts.filter(nft => nft.is_staked === "Not Staked"); // NFT che sono "Not Staked"
+                  case 'sale':
+                    return nfts.filter(nft => nft.for_sale === "Yes"); // NFT in vendita (presumiamo che la risposta possa essere "Yes")
+                  default:
+                    return nfts;  // Se "All", ritorna tutti gli NFT
+                }
               }
             
               // Funzione per aggiornare la griglia degli NFT
@@ -1279,6 +1289,17 @@
                       <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
                       <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
                       <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
+            
+                      <!-- Template Information -->
+                      <div class="template-info">
+                        <p><span class="label">Collection:</span> <span class="value">${nft.template_info.collection_name || 'N/A'}</span></p>
+                        <p><span class="label">Schema:</span> <span class="value">${nft.template_info.schema_name || 'N/A'}</span></p>
+                        <p><span class="label">Template Name:</span> <span class="value">${nft.template_info.template_name || 'N/A'}</span></p>
+                        <p><span class="label">Template Mint:</span> <span class="value">${nft.template_info.template_mint || 'N/A'}</span></p>
+                        <p><span class="label">Max Supply:</span> <span class="value">${nft.template_info.max_supply || 'N/A'}</span></p>
+                        <p><span class="label">Transferable:</span> <span class="value">${nft.template_info.is_transferable ? 'Yes' : 'No'}</span></p>
+                        <p><span class="label">Template Image:</span> <img src="${nft.template_info.img_hash}" alt="Template Image" class="template-image"></p>
+                      </div>
                     </div>
                   </div>
                 `).join("");

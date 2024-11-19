@@ -1518,26 +1518,34 @@
     }
     fetchWaxAccount();
     document.addEventListener('DOMContentLoaded', function () {
-          // Seleziona i pulsanti
-          const scrollToTopButton = document.getElementById('scroll-to-top');
-          const scrollToEndButton = document.getElementById('scroll-to-end');
-      
-          // Aggiungi un evento per il pulsante "To Top"
-          scrollToTopButton.addEventListener('click', function () {
-              window.scrollTo({
-                  top: 0, // Scorri fino all'inizio della pagina
-                  behavior: 'smooth', // Movimento fluido
-              });
-          });
-      
-          // Aggiungi un evento per il pulsante "To End"
-          scrollToEndButton.addEventListener('click', function () {
-              window.scrollTo({
-                  top: document.body.scrollHeight, // Scorri fino alla fine della pagina
-                  behavior: 'smooth', // Movimento fluido
-              });
-          });
-      });
+        // Seleziona i pulsanti
+        const scrollToTopButton = document.getElementById('scroll-to-top');
+        const scrollToEndButton = document.getElementById('scroll-to-end');
+    
+        // Verifica se il pulsante "To Top" esiste
+        if (scrollToTopButton) {
+            scrollToTopButton.addEventListener('click', function () {
+                window.scrollTo({
+                    top: 0, // Scorri fino all'inizio della pagina
+                    behavior: 'smooth', // Movimento fluido
+                });
+            });
+        } else {
+            console.log('Pulsante "scroll-to-top" non trovato');
+        }
+    
+        // Verifica se il pulsante "To End" esiste
+        if (scrollToEndButton) {
+            scrollToEndButton.addEventListener('click', function () {
+                window.scrollTo({
+                    top: document.body.scrollHeight, // Scorri fino alla fine della pagina
+                    behavior: 'smooth', // Movimento fluido
+                });
+            });
+        } else {
+            console.log('Pulsante "scroll-to-end" non trovato');
+        }
+    });
   </script>
 </body>
 </html>

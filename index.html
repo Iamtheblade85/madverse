@@ -1241,16 +1241,16 @@
             
               // Funzione che filtra gli NFT
               function filterNfts(filter, nfts) {
-                switch (filter) {
-                  case 'staked':
-                    return nfts.filter(nft => nft.is_staked === true);
-                  case 'unstaked':
-                    return nfts.filter(nft => nft.is_staked === false);
-                  case 'sale':
-                    return nfts.filter(nft => nft.for_sale === true);
-                  default:
-                    return nfts;  // Se "All", ritorna tutti gli NFT
-                }
+                  switch (filter) {
+                    case 'staked':
+                      return nfts.filter(nft => nft.is_staked === "Staked"); // NFT che sono staked (tutti quelli che non sono "Not Staked")
+                    case 'unstaked':
+                      return nfts.filter(nft => nft.is_staked === "Not Staked"); // NFT che sono "Not Staked"
+                    case 'sale':
+                      return nfts.filter(nft => nft.for_sale === "Yes"); // NFT in vendita (presumiamo che la risposta possa essere "Yes")
+                    default:
+                      return nfts;  // Se "All", ritorna tutti gli NFT
+                  }
               }
             
               // Funzione per aggiornare la griglia degli NFT

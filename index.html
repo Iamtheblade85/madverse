@@ -1123,53 +1123,70 @@
           const data = await response.json();
           console.log("Data received for page:", page, data);
 
-          if (page === 'balance') {
-            contentFrame.innerHTML = `
-                <h2 class="pool-title">Your Token Balances</h2>
-                <!-- Scroll Buttons inside content-frame -->
-                <div id="scroll-buttons">
-                    <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
-                    <button id="scroll-to-end" class="scroll-button">↓ To End</button>
+if (page === 'balance') {
+    contentFrame.innerHTML = `
+        <h2 class="pool-title">Your Token Balances</h2>
+        <!-- Scroll Buttons inside content-frame -->
+        <div id="scroll-buttons">
+            <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
+            <button id="scroll-to-end" class="scroll-button">↓ To End</button>
+        </div>
+        <div class="balance-grid">
+            ${data.balances.map(balance => `
+                <div class="card">
+                    <h4>${balance.symbol}</h4> 
+                    <p><span class="value">${balance.amount}</span></p>
+                    <!-- Staking Pool Available -->
+                    ${balance.stakeable === "Yes" ? `
+                        <button 
+                            class="staking-button" 
+                            style="background-color: #4CAF50; color: white; border: none; padding: 10px; cursor: pointer;">
+                            Staking pool available!
+                        </button>
+                    ` : ""}
+                    <!-- Withdraw Button -->
+                    <button class="withdraw-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Withdraw</button>
+                    <!-- Transfer Button -->
+                    <button class="transfer-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Transfer</button>
                 </div>
-                <div class="balance-grid">
-                    ${data.balances.map(balance => `
-                        <div class="card">
-                            <h4>${balance.symbol}</h4> 
-                            <p><span class="value">${balance.amount}</span></p>
-                            <!-- Withdraw Button -->
-                            <button class="withdraw-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Withdraw</button>
-                            <!-- Transfer Button -->
-                            <button class="transfer-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Transfer</button>
-                        </div>
-                    `).join("")}
-                </div>
-            `;
-        
-            // Gestione dei pulsanti Withdraw
-            document.querySelectorAll('.withdraw-button').forEach(button => {
-                button.addEventListener('click', function () {
-                    const symbol = this.dataset.symbol;
-                    const amount = this.dataset.amount;
-                    const quantityInput = prompt(`Enter the quantity to withdraw for ${symbol}:`);
-                    if (quantityInput && !isNaN(quantityInput)) {
-                        withdrawToken(symbol, quantityInput);
-                    }
-                });
-            });
-        
-            // Gestione dei pulsanti Transfer
-            document.querySelectorAll('.transfer-button').forEach(button => {
-                button.addEventListener('click', function () {
-                    const symbol = this.dataset.symbol;
-                    const amount = this.dataset.amount;
-                    const quantityInput = prompt(`Enter the quantity to transfer for ${symbol}:`);
-                    const receiverInput = prompt(`Enter the receiver's Wax account for ${symbol}:`);
-                    if (quantityInput && receiverInput && !isNaN(quantityInput)) {
-                        transferToken(symbol, quantityInput, receiverInput);
-                    }
-                });
-            });
-        } else if (page === 'staking_farms') {
+            `).join("")}
+        </div>
+    `;
+
+    // Gestione dei pulsanti Withdraw
+    document.querySelectorAll('.withdraw-button').forEach(button => {
+        button.addEventListener('click', function () {
+            const symbol = this.dataset.symbol;
+            const amount = this.dataset.amount;
+            const quantityInput = prompt(`Enter the quantity to withdraw for ${symbol}:`);
+            if (quantityInput && !isNaN(quantityInput)) {
+                withdrawToken(symbol, quantityInput);
+            }
+        });
+    });
+
+    // Gestione dei pulsanti Transfer
+    document.querySelectorAll('.transfer-button').forEach(button => {
+        button.addEventListener('click', function () {
+            const symbol = this.dataset.symbol;
+            const amount = this.dataset.amount;
+            const quantityInput = prompt(`Enter the quantity to transfer for ${symbol}:`);
+            const receiverInput = prompt(`Enter the receiver's Wax account for ${symbol}:`);
+            if (quantityInput && receiverInput && !isNaN(quantityInput)) {
+                transferToken(symbol, quantityInput, receiverInput);
+            }
+        });
+    });
+
+    // Eventuale gestione del pulsante Staking (se necessario)
+    document.querySelectorAll('.staking-button').forEach(button => {
+        button.addEventListener('click', function () {
+            const symbol = this.closest('.card').querySelector('h4').textContent;
+            alert(`Staking pool available for ${symbol}!`);
+            // Puoi aggiungere qui eventuali azioni per il pulsante di staking
+        });
+    });
+} else if (page === 'staking_farms') {
               contentFrame.innerHTML = `
                   <h2 class="pool-title">Staking Farms</h2>
                   <div id="scroll-buttons">

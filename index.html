@@ -1124,66 +1124,52 @@
           console.log("Data received for page:", page, data);
 
           if (page === 'balance') {
-              contentFrame.innerHTML = `
-                  <h2 class="pool-title">Your Token Balances</h2>
-                  <!-- Scroll Buttons inside content-frame -->
-                  <div id="scroll-buttons">
-                      <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
-                      <button id="scroll-to-end" class="scroll-button">↓ To End</button>
-                  </div>
-                  <div class="balance-grid">
-                      ${data.balances.map(balance => `
-                          <div class="card">
-                              <h4>${balance.symbol}</h4> 
-                              <p><span class="value">${balance.amount}</span></p>
-                              <!-- Withdraw Button -->
-                              <button class="withdraw-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Withdraw</button>
-                              <!-- Transfer Button -->
-                              <button class="transfer-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Transfer</button>
-                              <!-- Swap Button -->
-                              <button class="swap-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Swap</button>
-                          </div>
-                      `).join("")}
-                  </div>`;
-          
-              // Gestione dei pulsanti Withdraw
-              document.querySelectorAll('.withdraw-button').forEach(button => {
-                  button.addEventListener('click', function() {
-                      const symbol = this.dataset.symbol;
-                      const amount = this.dataset.amount;
-                      const quantityInput = prompt(`Enter the quantity to withdraw for ${symbol}:`);
-                      if (quantityInput && !isNaN(quantityInput)) {
-                          withdrawToken(symbol, quantityInput);
-                      }
-                  });
-              });
-          
-              // Gestione dei pulsanti Transfer
-              document.querySelectorAll('.transfer-button').forEach(button => {
-                  button.addEventListener('click', function() {
-                      const symbol = this.dataset.symbol;
-                      const amount = this.dataset.amount;
-                      const quantityInput = prompt(`Enter the quantity to transfer for ${symbol}:`);
-                      const receiverInput = prompt(`Enter the receiver's Wax account for ${symbol}:`);
-                      if (quantityInput && receiverInput && !isNaN(quantityInput)) {
-                          transferToken(symbol, quantityInput, receiverInput);
-                      }
-                  });
-              });
-          
-              // Gestione dei pulsanti Swap
-              document.querySelectorAll('.swap-button').forEach(button => {
-                  button.addEventListener('click', function() {
-                      const fromSymbol = this.dataset.symbol; // Token di origine
-                      const quantityInput = prompt(`Enter the quantity of ${fromSymbol} to swap:`);
-                      const toSymbol = prompt(`Enter the target token to swap ${fromSymbol} for:`);
-              
-                      if (quantityInput && toSymbol && !isNaN(quantityInput)) {
-                          swapToken(fromSymbol, quantityInput, toSymbol); // Chiamata alla funzione
-                      }
-                  });
-              });
-          } else if (page === 'staking_farms') {
+            contentFrame.innerHTML = `
+                <h2 class="pool-title">Your Token Balances</h2>
+                <!-- Scroll Buttons inside content-frame -->
+                <div id="scroll-buttons">
+                    <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
+                    <button id="scroll-to-end" class="scroll-button">↓ To End</button>
+                </div>
+                <div class="balance-grid">
+                    ${data.balances.map(balance => `
+                        <div class="card">
+                            <h4>${balance.symbol}</h4> 
+                            <p><span class="value">${balance.amount}</span></p>
+                            <!-- Withdraw Button -->
+                            <button class="withdraw-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Withdraw</button>
+                            <!-- Transfer Button -->
+                            <button class="transfer-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Transfer</button>
+                        </div>
+                    `).join("")}
+                </div>
+            `;
+        
+            // Gestione dei pulsanti Withdraw
+            document.querySelectorAll('.withdraw-button').forEach(button => {
+                button.addEventListener('click', function () {
+                    const symbol = this.dataset.symbol;
+                    const amount = this.dataset.amount;
+                    const quantityInput = prompt(`Enter the quantity to withdraw for ${symbol}:`);
+                    if (quantityInput && !isNaN(quantityInput)) {
+                        withdrawToken(symbol, quantityInput);
+                    }
+                });
+            });
+        
+            // Gestione dei pulsanti Transfer
+            document.querySelectorAll('.transfer-button').forEach(button => {
+                button.addEventListener('click', function () {
+                    const symbol = this.dataset.symbol;
+                    const amount = this.dataset.amount;
+                    const quantityInput = prompt(`Enter the quantity to transfer for ${symbol}:`);
+                    const receiverInput = prompt(`Enter the receiver's Wax account for ${symbol}:`);
+                    if (quantityInput && receiverInput && !isNaN(quantityInput)) {
+                        transferToken(symbol, quantityInput, receiverInput);
+                    }
+                });
+            });
+        } else if (page === 'staking_farms') {
               contentFrame.innerHTML = `
                   <h2 class="pool-title">Staking Farms</h2>
                   <div id="scroll-buttons">
@@ -1474,78 +1460,28 @@
           alert(`Error: ${error}`);
       });
     }
-    function swapToken(fromSymbol, quantity, toSymbol) {
-        const url = 'https://iamemanuele.pythonanywhere.com/swap-tokens';  // Verifica che l'endpoint sia corretto
-        
-        const data = {
-            wax_account: user_wax_account, // L'account dell'utente che effettua lo swap
-            from_token: fromSymbol,       // Token di origine
-            to_token: toSymbol,           // Token di destinazione
-            amount: parseFloat(quantity)  // Quantità da scambiare
-        };
-        
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Data from server:', data); // Log della risposta per debug
-            if (data.status === "success") {
-                const details = data.details;
-    
-                // Formatta i dati dello swap
-                const message = `
-                    Swap Summary:
-                    ----------------------
-                    From Token: ${details.from_token}
-                    To Token: ${details.to_token}
-                    Amount: ${details.amount}
-                    Execution Price: ${details.execution_price}
-                    Received Amount: ${details.received_amount}
-                    Commission: ${details.commission}
-                `;
-                alert(message);  // Mostra il riepilogo dettagliato dello swap
-            } else {
-                alert(data.error || data.message); // Mostra errore se la risposta non è un successo
-            }
-        })
-        .catch(error => {
-            alert(`Error: ${error}`); // Gestione degli errori
-        });
-    }
     fetchWaxAccount();
     document.addEventListener('DOMContentLoaded', function () {
-        // Seleziona i pulsanti
-        const scrollToTopButton = document.getElementById('scroll-to-top');
-        const scrollToEndButton = document.getElementById('scroll-to-end');
+        // Seleziona il contenitore del frame, che è sempre presente nel DOM
+        const contentFrame = document.getElementById('content-frame'); // Supponiamo che il frame abbia id="content-frame"
     
-        // Verifica se il pulsante "To Top" esiste
-        if (scrollToTopButton) {
-            scrollToTopButton.addEventListener('click', function () {
+        // Aggiungi l'event listener al frame per delegare l'evento
+        contentFrame.addEventListener('click', function (event) {
+            // Verifica se il click è su uno dei pulsanti di scroll
+            if (event.target && event.target.id === 'scroll-to-top') {
                 window.scrollTo({
                     top: 0, // Scorri fino all'inizio della pagina
                     behavior: 'smooth', // Movimento fluido
                 });
-            });
-        } else {
-            console.log('Pulsante "scroll-to-top" non trovato');
-        }
+            }
     
-        // Verifica se il pulsante "To End" esiste
-        if (scrollToEndButton) {
-            scrollToEndButton.addEventListener('click', function () {
+            if (event.target && event.target.id === 'scroll-to-end') {
                 window.scrollTo({
-                    top: document.body.scrollHeight, // Scorri fino alla fine della pagina
+                    top: document.documentElement.scrollHeight, // Scorri fino alla fine della pagina
                     behavior: 'smooth', // Movimento fluido
                 });
-            });
-        } else {
-            console.log('Pulsante "scroll-to-end" non trovato');
-        }
+            }
+        });
     });
   </script>
 </body>

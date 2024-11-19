@@ -1201,11 +1201,24 @@
            else if (page === 'mynfts') {
               contentFrame.innerHTML = `
                 <h2 class="section-title">Your NFTs Inventory</h2>
-                  <div id="scroll-buttons">
-                    <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
-                    <button id="scroll-to-end" class="scroll-button">↓ To End</button>
-                  </div>                
-                <div class="nft-grid">
+                
+                <!-- Switch per il filtro -->
+                <div class="filter-switch">
+                  <label for="nft-filter">Filter NFTs: </label>
+                  <select id="nft-filter">
+                    <option value="all">All</option>
+                    <option value="staked">Only Staked</option>
+                    <option value="unstaked">Only Unstaked</option>
+                    <option value="sale">On Sale</option>
+                  </select>
+                </div>
+            
+                <div id="scroll-buttons">
+                  <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
+                  <button id="scroll-to-end" class="scroll-button">↓ To End</button>
+                </div>
+                
+                <div class="nft-grid" id="nft-grid">
                   ${data.nfts.map(nft => `
                     <div class="card">
                       <img src="${nft.image_url}" alt="NFT Image" class="nft-image">
@@ -1218,7 +1231,44 @@
                     </div>
                   `).join("")}
                 </div>`;
-          } else if (page === 'profile') {
+            
+              // Funzione per filtrare gli NFT in base alla selezione
+              document.getElementById('nft-filter').addEventListener('change', function(event) {
+                const filter = event.target.value;
+                const filteredNfts = filterNfts(filter, data.nfts);
+                updateNftGrid(filteredNfts);
+              });
+            
+              // Funzione che filtra gli NFT
+              function filterNfts(filter, nfts) {
+                switch (filter) {
+                  case 'staked':
+                    return nfts.filter(nft => nft.is_staked === true);
+                  case 'unstaked':
+                    return nfts.filter(nft => nft.is_staked === false);
+                  case 'sale':
+                    return nfts.filter(nft => nft.for_sale === true);
+                  default:
+                    return nfts;  // Se "All", ritorna tutti gli NFT
+                }
+              }
+            
+              // Funzione per aggiornare la griglia degli NFT
+              function updateNftGrid(filteredNfts) {
+                const nftGrid = document.getElementById('nft-grid');
+                nftGrid.innerHTML = filteredNfts.map(nft => `
+                  <div class="card">
+                    <img src="${nft.image_url}" alt="NFT Image" class="nft-image">
+                    <div class="nft-details">
+                      <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
+                      <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
+                      <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
+                      <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
+                    </div>
+                  </div>
+                `).join("");
+              }
+            } else if (page === 'profile') {
               contentFrame.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <h2 class="pool-title">Your Profile</h2>

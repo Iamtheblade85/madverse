@@ -1493,6 +1493,7 @@
         })
         .then(response => response.json())
         .then(data => {
+            console.log('Data from server:', data); // Log della risposta per debug
             if (data.status === "success") {
                 const details = data.details;
     

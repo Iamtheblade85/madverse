@@ -1235,7 +1235,16 @@
                 <div class="nft-grid" id="nft-grid">
                   ${data.nfts.map(nft => `
                     <div class="card">
-                      <img src="${nft.image_url}" alt="NFT Image" class="nft-image">
+                      <!-- Se il template contiene un video (video_hash), mostra il video, altrimenti mostra l'immagine -->
+                      ${nft.template_info.img_hash && !nft.template_info.img_hash.startsWith('Qm') ? `
+                        <img src="${nft.template_info.img_hash}" alt="NFT Image" class="nft-image">
+                      ` : nft.template_info.video ? `
+                        <video controls class="nft-video">
+                          <source src="${nft.template_info.video}" type="video/mp4">
+                          Your browser does not support the video tag.
+                        </video>
+                      ` : ''}
+                      
                       <div class="nft-details">
                         <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
                         <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
@@ -1250,12 +1259,15 @@
                           <p><span class="label">Template Mint:</span> <span class="value">${nft.template_info.template_mint || 'N/A'}</span></p>
                           <p><span class="label">Max Supply:</span> <span class="value">${nft.template_info.max_supply || 'N/A'}</span></p>
                           <p><span class="label">Transferable:</span> <span class="value">${nft.template_info.is_transferable ? 'Yes' : 'No'}</span></p>
-                          <p><span class="label">Template Image:</span> <img src="${nft.template_info.img_hash}" alt="Template Image" class="template-image"></p>
+                          <p><span class="label">Template Image:</span> 
+                            ${nft.template_info.img_hash ? `<img src="${nft.template_info.img_hash}" alt="Template Image" class="template-image">` : ''}
+                          </p>
                         </div>
                       </div>
                     </div>
                   `).join("")}
-                </div>`;
+                </div>
+              `;
             
               // Funzione per filtrare gli NFT in base alla selezione
               document.getElementById('nft-filter').addEventListener('change', function(event) {
@@ -1283,7 +1295,16 @@
                 const nftGrid = document.getElementById('nft-grid');
                 nftGrid.innerHTML = filteredNfts.map(nft => `
                   <div class="card">
-                    <img src="${nft.image_url}" alt="NFT Image" class="nft-image">
+                    <!-- Se il template contiene un video (video_hash), mostra il video, altrimenti mostra l'immagine -->
+                    ${nft.template_info.img_hash && !nft.template_info.img_hash.startsWith('Qm') ? `
+                      <img src="${nft.template_info.img_hash}" alt="NFT Image" class="nft-image">
+                    ` : nft.template_info.video ? `
+                      <video controls class="nft-video">
+                        <source src="${nft.template_info.video}" type="video/mp4">
+                        Your browser does not support the video tag.
+                      </video>
+                    ` : ''}
+                    
                     <div class="nft-details">
                       <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
                       <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
@@ -1298,7 +1319,9 @@
                         <p><span class="label">Template Mint:</span> <span class="value">${nft.template_info.template_mint || 'N/A'}</span></p>
                         <p><span class="label">Max Supply:</span> <span class="value">${nft.template_info.max_supply || 'N/A'}</span></p>
                         <p><span class="label">Transferable:</span> <span class="value">${nft.template_info.is_transferable ? 'Yes' : 'No'}</span></p>
-                        <p><span class="label">Template Image:</span> <img src="${nft.template_info.img_hash}" alt="Template Image" class="template-image"></p>
+                        <p><span class="label">Template Image:</span> 
+                          ${nft.template_info.img_hash ? `<img src="${nft.template_info.img_hash}" alt="Template Image" class="template-image">` : ''}
+                        </p>
                       </div>
                     </div>
                   </div>

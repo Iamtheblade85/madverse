@@ -1283,18 +1283,18 @@
                         <div class="nft-grid" id="nft-grid">
                             ${data.nfts.map(nft => `
                                 <div class="card">
-                                    ${nft.template_info.img_hash && !nft.template_info.img_hash.startsWith('Qm') ? `
+                                    ${nft.template_info && nft.template_info.img_hash && !nft.template_info.img_hash.startsWith('Qm') ? `
                                         <img src="${nft.template_info.img_hash}" alt="NFT Image" class="nft-image">
                                     ` : `
                                         <p class="no-media">Image Not Available</p>
                                     `}
-            
+                        
                                     <div class="nft-details">
                                         <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
                                         <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
                                         <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
                                         <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
-            
+                        
                                         <div class="template-info">
                                             <p><span class="label">Collection:</span> <span class="value">${nft.template_info.collection_name || 'N/A'}</span></p>
                                             <p><span class="label">Schema:</span> <span class="value">${nft.template_info.schema_name || 'N/A'}</span></p>
@@ -1305,7 +1305,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            `).join("")}
+                            `).join('')}
                         </div>
                     `;
             
@@ -1327,14 +1327,16 @@
                         if (collectionFilter !== 'all') {
                             filteredNfts = filteredNfts.filter(nft => nft.template_info.collection_name === collectionFilter);
                         }
-            
                         // Filtro per "Mint Number"
                         const mintFilter = document.getElementById('mint-filter').value;
                         if (mintFilter !== 'all') {
                             const isAscending = mintFilter === 'low';
-                            filteredNfts = filteredNfts.sort((a, b) => isAscending ? a.template_info.template_mint - b.template_info.template_mint : b.template_info.template_mint - a.template_info.template_mint);
+                            filteredNfts = filteredNfts.sort((a, b) => {
+                                const mintA = parseInt(a.template_info.template_mint, 10);
+                                const mintB = parseInt(b.template_info.template_mint, 10);
+                                return isAscending ? mintA - mintB : mintB - mintA;
+                            });
                         }
-            
                         // Ordinamento
                         const sortOrder = document.getElementById('sort-order').value;
                         filteredNfts = sortNfts(sortOrder, filteredNfts);

@@ -1215,8 +1215,8 @@
           } else if (page === 'mynfts') {
                 contentFrame.innerHTML = `
                   <h2 class="section-title">Your NFTs Inventory</h2>
-                  
-                  <!-- Switch per il filtro -->
+              
+                  <!-- Filtri aggiuntivi -->
                   <div class="filter-switch">
                     <label for="nft-filter">Filter NFTs: </label>
                     <select id="nft-filter">
@@ -1224,6 +1224,42 @@
                       <option value="staked">Only Staked</option>
                       <option value="unstaked">Only Unstaked</option>
                       <option value="sale">On Sale</option>
+                    </select>
+                  </div>
+              
+                  <!-- Filtro per Collection -->
+                  <div class="filter-switch">
+                    <label for="collection-filter">Filter by Collection: </label>
+                    <select id="collection-filter">
+                      <option value="all">All Collections</option>
+                      ${[...new Set(data.nfts.map(nft => nft.template_info.collection_name))].map(collection => `
+                        <option value="${collection}">${collection}</option>
+                      `).join('')}
+                    </select>
+                  </div>
+              
+                  <!-- Filtro per Mint Number -->
+                  <div class="filter-switch">
+                    <label for="mint-filter">Filter by Mint Number: </label>
+                    <select id="mint-filter">
+                      <option value="all">All Mint Numbers</option>
+                      <option value="low">Low to High</option>
+                      <option value="high">High to Low</option>
+                    </select>
+                  </div>
+              
+                  <!-- Ordinamento -->
+                  <div class="filter-switch">
+                    <label for="sort-order">Sort NFTs: </label>
+                    <select id="sort-order">
+                      <option value="newest-desc">Newest (Desc)</option>
+                      <option value="newest-asc">Newest (Asc)</option>
+                      <option value="oldest-desc">Oldest (Desc)</option>
+                      <option value="oldest-asc">Oldest (Asc)</option>
+                      <option value="a-z-asc">A-Z (Asc)</option>
+                      <option value="a-z-desc">A-Z (Desc)</option>
+                      <option value="mint-number-asc">Mint Number (Asc)</option>
+                      <option value="mint-number-desc">Mint Number (Desc)</option>
                     </select>
                   </div>
               
@@ -1235,25 +1271,18 @@
                   <div class="nft-grid" id="nft-grid">
                     ${data.nfts.map(nft => `
                       <div class="card">
-                        <!-- Se il template contiene un video (video_hash), mostra il video, altrimenti mostra l'immagine -->
                         ${nft.template_info.img_hash && !nft.template_info.img_hash.startsWith('Qm') ? `
                           <img src="${nft.template_info.img_hash}" alt="NFT Image" class="nft-image">
-                        ` : nft.template_info.video_hash ? `
-                          <video controls class="nft-video" style="width: 80px; height: 80px;">
-                            <source src="${nft.template_info.video_hash}" type="video/mp4">
-                            Your browser does not support the video tag.
-                          </video>
                         ` : `
                           <p class="no-media">Image Not Available</p>
                         `}
-                        
+                      
                         <div class="nft-details">
                           <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
                           <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
                           <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
                           <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
               
-                          <!-- Template Information -->
                           <div class="template-info">
                             <p><span class="label">Collection:</span> <span class="value">${nft.template_info.collection_name || 'N/A'}</span></p>
                             <p><span class="label">Schema:</span> <span class="value">${nft.template_info.schema_name || 'N/A'}</span></p>
@@ -1268,14 +1297,66 @@
                   </div>
                 `;
               
-                // Funzione per filtrare gli NFT in base alla selezione
-                document.getElementById('nft-filter').addEventListener('change', function(event) {
-                  const filter = event.target.value;
-                  const filteredNfts = filterNfts(filter, data.nfts);
-                  updateNftGrid(filteredNfts);
-                });
+                // Gestione dei filtri e ordinamenti
+                document.getElementById('nft-filter').addEventListener('change', updateNftGrid);
+                document.getElementById('collection-filter').addEventListener('change', updateNftGrid);
+                document.getElementById('mint-filter').addEventListener('change', updateNftGrid);
+                document.getElementById('sort-order').addEventListener('change', updateNftGrid);
               
-                // Funzione che filtra gli NFT
+                function updateNftGrid() {
+                  let filteredNfts = data.nfts;
+              
+                  // Filtro per "Staked", "Unstaked", "On Sale"
+                  const filter = document.getElementById('nft-filter').value;
+                  filteredNfts = filterNfts(filter, filteredNfts);
+              
+                  // Filtro per "Collection"
+                  const collectionFilter = document.getElementById('collection-filter').value;
+                  if (collectionFilter !== 'all') {
+                    filteredNfts = filteredNfts.filter(nft => nft.template_info.collection_name === collectionFilter);
+                  }
+              
+                  // Filtro per "Mint Number"
+                  const mintFilter = document.getElementById('mint-filter').value;
+                  if (mintFilter !== 'all') {
+                    const isAscending = mintFilter === 'low';
+                    filteredNfts = filteredNfts.sort((a, b) => isAscending ? a.template_info.template_mint - b.template_info.template_mint : b.template_info.template_mint - a.template_info.template_mint);
+                  }
+              
+                  // Ordinamento
+                  const sortOrder = document.getElementById('sort-order').value;
+                  filteredNfts = sortNfts(sortOrder, filteredNfts);
+              
+                  // Aggiorna la griglia
+                  const nftGrid = document.getElementById('nft-grid');
+                  nftGrid.innerHTML = filteredNfts.map(nft => `
+                    <div class="card">
+                      ${nft.template_info.img_hash && !nft.template_info.img_hash.startsWith('Qm') ? `
+                        <img src="${nft.template_info.img_hash}" alt="NFT Image" class="nft-image">
+                      ` : `
+                        <p class="no-media">Image Not Available</p>
+                      `}
+                      
+                      <div class="nft-details">
+                        <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
+                        <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
+                        <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
+                        <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
+                        
+                        <div class="template-info">
+                          <p><span class="label">Collection:</span> <span class="value">${nft.template_info.collection_name || 'N/A'}</span></p>
+                          <p><span class="label">Schema:</span> <span class="value">${nft.template_info.schema_name || 'N/A'}</span></p>
+                          <p><span class="label">Template Name:</span> <span class="value">${nft.template_info.template_name || 'N/A'}</span></p>
+                          <p><span class="label">Template Mint:</span> <span class="value">${nft.template_info.template_mint || 'N/A'}</span></p>
+                          <p><span class="label">Max Supply:</span> <span class="value">${nft.template_info.max_supply || 'N/A'}</span></p>
+                          <p><span class="label">Transferable:</span> <span class="value">${nft.template_info.is_transferable ? 'Yes' : 'No'}</span></p>
+                        </div>
+                      </div>
+                    </div>
+                  `).join("");
+                }
+              
+                // Funzione di filtraggio per gli NFT
                 function filterNfts(filter, nfts) {
                   switch (filter) {
                     case 'staked':
@@ -1289,41 +1370,28 @@
                   }
                 }
               
-                // Funzione per aggiornare la griglia degli NFT
-                function updateNftGrid(filteredNfts) {
-                  const nftGrid = document.getElementById('nft-grid');
-                  nftGrid.innerHTML = filteredNfts.map(nft => `
-                    <div class="card">
-                      <!-- Se il template contiene un video (video_hash), mostra il video, altrimenti mostra l'immagine -->
-                      ${nft.template_info.img_hash && !nft.template_info.img_hash.startsWith('Qm') ? `
-                        <img src="${nft.template_info.img_hash}" alt="NFT Image" class="nft-image">
-                      ` : nft.template_info.video_hash ? `
-                        <video controls class="nft-video" style="width: 80px; height: 80px;">
-                          <source src="${nft.template_info.video_hash}" type="video/mp4">
-                          Your browser does not support the video tag.
-                        </video>
-                      ` : `
-                        <p class="no-media">Image Not Available</p>
-                      `}
-              
-                      <div class="nft-details">
-                        <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
-                        <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
-                        <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
-                        <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
-              
-                        <!-- Template Information -->
-                        <div class="template-info">
-                          <p><span class="label">Collection:</span> <span class="value">${nft.template_info.collection_name || 'N/A'}</span></p>
-                          <p><span class="label">Schema:</span> <span class="value">${nft.template_info.schema_name || 'N/A'}</span></p>
-                          <p><span class="label">Template Name:</span> <span class="value">${nft.template_info.template_name || 'N/A'}</span></p>
-                          <p><span class="label">Template Mint:</span> <span class="value">${nft.template_info.template_mint || 'N/A'}</span></p>
-                          <p><span class="label">Max Supply:</span> <span class="value">${nft.template_info.max_supply || 'N/A'}</span></p>
-                          <p><span class="label">Transferable:</span> <span class="value">${nft.template_info.is_transferable ? 'Yes' : 'No'}</span></p>
-                        </div>
-                      </div>
-                    </div>
-                  `).join("");
+                // Funzione di ordinamento per gli NFT
+                function sortNfts(sortOrder, nfts) {
+                  switch (sortOrder) {
+                    case 'newest-desc':
+                      return nfts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                    case 'newest-asc':
+                      return nfts.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                    case 'oldest-desc':
+                      return nfts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                    case 'oldest-asc':
+                      return nfts.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                    case 'a-z-asc':
+                      return nfts.sort((a, b) => a.template_info.collection_name.localeCompare(b.template_info.collection_name));
+                    case 'a-z-desc':
+                      return nfts.sort((a, b) => b.template_info.collection_name.localeCompare(a.template_info.collection_name));
+                    case 'mint-number-asc':
+                      return nfts.sort((a, b) => a.template_info.template_mint - b.template_info.template_mint);
+                    case 'mint-number-desc':
+                      return nfts.sort((a, b) => b.template_info.template_mint - a.template_info.template_mint);
+                    default:
+                      return nfts;
+                  }
                 }
               } else if (page === 'profile') {
               contentFrame.innerHTML = `

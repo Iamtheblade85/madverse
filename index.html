@@ -1213,44 +1213,105 @@
                     `).join('')}
                   </div>`;
           } else if (page === 'mynfts') {
-              contentFrame.innerHTML = `
-                <h2 class="section-title">Your NFTs Inventory</h2>
-                
-                <!-- Switch per il filtro -->
-                <div class="filter-switch">
-                  <label for="nft-filter">Filter NFTs: </label>
-                  <select id="nft-filter">
-                    <option value="all">All</option>
-                    <option value="staked">Only Staked</option>
-                    <option value="unstaked">Only Unstaked</option>
-                    <option value="sale">On Sale</option>
-                  </select>
-                </div>
-            
-                <div id="scroll-buttons">
-                  <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
-                  <button id="scroll-to-end" class="scroll-button">↓ To End</button>
-                </div>
-                
-                <div class="nft-grid" id="nft-grid">
-                  ${data.nfts.map(nft => `
+                contentFrame.innerHTML = `
+                  <h2 class="section-title">Your NFTs Inventory</h2>
+                  
+                  <!-- Switch per il filtro -->
+                  <div class="filter-switch">
+                    <label for="nft-filter">Filter NFTs: </label>
+                    <select id="nft-filter">
+                      <option value="all">All</option>
+                      <option value="staked">Only Staked</option>
+                      <option value="unstaked">Only Unstaked</option>
+                      <option value="sale">On Sale</option>
+                    </select>
+                  </div>
+              
+                  <div id="scroll-buttons">
+                    <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
+                    <button id="scroll-to-end" class="scroll-button">↓ To End</button>
+                  </div>
+              
+                  <div class="nft-grid" id="nft-grid">
+                    ${data.nfts.map(nft => `
+                      <div class="card">
+                        <!-- Se il template contiene un video (video_hash), mostra il video, altrimenti mostra l'immagine -->
+                        ${nft.template_info.img_hash && !nft.template_info.img_hash.startsWith('Qm') ? `
+                          <img src="${nft.template_info.img_hash}" alt="NFT Image" class="nft-image">
+                        ` : nft.template_info.video_hash ? `
+                          <video controls class="nft-video" style="width: 80px; height: 80px;">
+                            <source src="${nft.template_info.video_hash}" type="video/mp4">
+                            Your browser does not support the video tag.
+                          </video>
+                        ` : `
+                          <p class="no-media">Image Not Available</p>
+                        `}
+                        
+                        <div class="nft-details">
+                          <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
+                          <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
+                          <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
+                          <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
+              
+                          <!-- Template Information -->
+                          <div class="template-info">
+                            <p><span class="label">Collection:</span> <span class="value">${nft.template_info.collection_name || 'N/A'}</span></p>
+                            <p><span class="label">Schema:</span> <span class="value">${nft.template_info.schema_name || 'N/A'}</span></p>
+                            <p><span class="label">Template Name:</span> <span class="value">${nft.template_info.template_name || 'N/A'}</span></p>
+                            <p><span class="label">Template Mint:</span> <span class="value">${nft.template_info.template_mint || 'N/A'}</span></p>
+                            <p><span class="label">Max Supply:</span> <span class="value">${nft.template_info.max_supply || 'N/A'}</span></p>
+                            <p><span class="label">Transferable:</span> <span class="value">${nft.template_info.is_transferable ? 'Yes' : 'No'}</span></p>
+                          </div>
+                        </div>
+                      </div>
+                    `).join("")}
+                  </div>
+                `;
+              
+                // Funzione per filtrare gli NFT in base alla selezione
+                document.getElementById('nft-filter').addEventListener('change', function(event) {
+                  const filter = event.target.value;
+                  const filteredNfts = filterNfts(filter, data.nfts);
+                  updateNftGrid(filteredNfts);
+                });
+              
+                // Funzione che filtra gli NFT
+                function filterNfts(filter, nfts) {
+                  switch (filter) {
+                    case 'staked':
+                      return nfts.filter(nft => nft.is_staked === "Staked");
+                    case 'unstaked':
+                      return nfts.filter(nft => nft.is_staked === "Not Staked");
+                    case 'sale':
+                      return nfts.filter(nft => nft.for_sale === "Yes");
+                    default:
+                      return nfts;  // Se "All", ritorna tutti gli NFT
+                  }
+                }
+              
+                // Funzione per aggiornare la griglia degli NFT
+                function updateNftGrid(filteredNfts) {
+                  const nftGrid = document.getElementById('nft-grid');
+                  nftGrid.innerHTML = filteredNfts.map(nft => `
                     <div class="card">
                       <!-- Se il template contiene un video (video_hash), mostra il video, altrimenti mostra l'immagine -->
                       ${nft.template_info.img_hash && !nft.template_info.img_hash.startsWith('Qm') ? `
                         <img src="${nft.template_info.img_hash}" alt="NFT Image" class="nft-image">
-                      ` : nft.template_info.video ? `
-                        <video controls class="nft-video">
-                          <source src="${nft.template_info.video}" type="video/mp4">
+                      ` : nft.template_info.video_hash ? `
+                        <video controls class="nft-video" style="width: 80px; height: 80px;">
+                          <source src="${nft.template_info.video_hash}" type="video/mp4">
                           Your browser does not support the video tag.
                         </video>
-                      ` : ''}
-                      
+                      ` : `
+                        <p class="no-media">Image Not Available</p>
+                      `}
+              
                       <div class="nft-details">
                         <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
                         <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
                         <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
                         <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
-            
+              
                         <!-- Template Information -->
                         <div class="template-info">
                           <p><span class="label">Collection:</span> <span class="value">${nft.template_info.collection_name || 'N/A'}</span></p>
@@ -1262,69 +1323,9 @@
                         </div>
                       </div>
                     </div>
-                  `).join("")}
-                </div>
-              `;
-            
-              // Funzione per filtrare gli NFT in base alla selezione
-              document.getElementById('nft-filter').addEventListener('change', function(event) {
-                const filter = event.target.value;
-                const filteredNfts = filterNfts(filter, data.nfts);
-                updateNftGrid(filteredNfts);
-              });
-            
-              // Funzione che filtra gli NFT
-              function filterNfts(filter, nfts) {
-                switch (filter) {
-                  case 'staked':
-                    return nfts.filter(nft => nft.is_staked === "Staked"); // NFT che sono staked (tutti quelli che non sono "Not Staked")
-                  case 'unstaked':
-                    return nfts.filter(nft => nft.is_staked === "Not Staked"); // NFT che sono "Not Staked"
-                  case 'sale':
-                    return nfts.filter(nft => nft.for_sale === "Yes"); // NFT in vendita (presumiamo che la risposta possa essere "Yes")
-                  default:
-                    return nfts;  // Se "All", ritorna tutti gli NFT
+                  `).join("");
                 }
-              }
-            
-              // Funzione per aggiornare la griglia degli NFT
-              function updateNftGrid(filteredNfts) {
-                const nftGrid = document.getElementById('nft-grid');
-                nftGrid.innerHTML = filteredNfts.map(nft => `
-                  <div class="card">
-                    <!-- Se il template contiene un video (video_hash), mostra il video, altrimenti mostra l'immagine -->
-                    ${nft.template_info.img_hash && !nft.template_info.img_hash.startsWith('Qm') ? `
-                      <img src="${nft.template_info.img_hash}" alt="NFT Image" class="nft-image">
-                    ` : nft.template_info.video ? `
-                      <video controls class="nft-video">
-                        <source src="${nft.template_info.video}" type="video/mp4">
-                        Your browser does not support the video tag.
-                      </video>
-                    ` : ''}
-                    
-                    <div class="nft-details">
-                      <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
-                      <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
-                      <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
-                      <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
-            
-                      <!-- Template Information -->
-                      <div class="template-info">
-                        <p><span class="label">Collection:</span> <span class="value">${nft.template_info.collection_name || 'N/A'}</span></p>
-                        <p><span class="label">Schema:</span> <span class="value">${nft.template_info.schema_name || 'N/A'}</span></p>
-                        <p><span class="label">Template Name:</span> <span class="value">${nft.template_info.template_name || 'N/A'}</span></p>
-                        <p><span class="label">Template Mint:</span> <span class="value">${nft.template_info.template_mint || 'N/A'}</span></p>
-                        <p><span class="label">Max Supply:</span> <span class="value">${nft.template_info.max_supply || 'N/A'}</span></p>
-                        <p><span class="label">Transferable:</span> <span class="value">${nft.template_info.is_transferable ? 'Yes' : 'No'}</span></p>
-                        <p><span class="label">Template Image:</span> 
-                          ${nft.template_info.img_hash ? `<img src="${nft.template_info.img_hash}" alt="Template Image" class="template-image">` : ''}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                `).join("");
-              }
-            } else if (page === 'profile') {
+              } else if (page === 'profile') {
               contentFrame.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <h2 class="pool-title">Your Profile</h2>

@@ -1127,7 +1127,8 @@
               contentFrame.innerHTML = `
                   <h2 class="pool-title">Your Token Balances</h2>
                   <!-- Scrollable Balance Grid -->
-                  <div class="balance-grid" style="max-height: 500px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #888 #f1f1f1;">
+                  <div class="balance-grid" style="height: 300px; overflow-y: auto;">
+
                       ${data.balances.map(balance => `
                           <div class="card">
                               <h4>${balance.symbol}</h4> 

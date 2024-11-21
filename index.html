@@ -1168,25 +1168,9 @@
                       loadContent('staking_farms'); // Chiamata alla funzione
                   });
               });
-            // Definizione delle funzioni
-            function scrollToTop() {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-            
-            function scrollToEnd() {
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-            }
-            
-            // Aggiunta degli event listener
-            document.getElementById('toTopButton').addEventListener('click', scrollToTop);
-            document.getElementById('toEndButton').addEventListener('click', scrollToEnd);
           } else if (page === 'staking_farms') {
               contentFrame.innerHTML = `
-                  <h2 class="pool-title">Staking Farms</h2>
-                  <div id="scroll-buttons">
-                    <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
-                    <button id="scroll-to-end" class="scroll-button">↓ To End</button>
-                  </div>                  
+                  <h2 class="pool-title">Staking Farms</h2>                
                   <div class="balance-grid">
                     ${data.pools.map(pool => `
                         <div class="card">
@@ -1209,55 +1193,67 @@
                     `).join('')}
                   </div>`;
           } else if (page === 'mynfts') {
-                if (!data || !Array.isArray(data.nfts)) {
-                    console.error("NFT data is missing or invalid.");
-                    contentFrame.innerHTML = `<p>Error: Unable to load NFT data.</p>`;
-                    return;
-                }
-            
-                if (!data.nfts.length) {
-                    contentFrame.innerHTML = `<p>No NFTs found in your inventory.</p>`;
-                    return;
-                }
-            
-                try {
-                    contentFrame.innerHTML = `
-                        <h2 class="section-title">Your NFTs Inventory</h2>
-            
-                        <!-- Filtri aggiuntivi -->
-                        <div class="filter-switch">
-                            <label for="nft-filter">Filter NFTs: </label>
-                            <select id="nft-filter">
-                                <option value="all">All</option>
-                                <option value="staked">Only Staked</option>
-                                <option value="unstaked">Only Unstaked</option>
-                                <option value="sale">On Sale</option>
-                            </select>
+            if (!data || !Array.isArray(data.nfts)) {
+                console.error("NFT data is missing or invalid.");
+                contentFrame.innerHTML = `<p>Error: Unable to load NFT data.</p>`;
+                return;
+            }
+        
+            if (!data.nfts.length) {
+                contentFrame.innerHTML = `<p>No NFTs found in your inventory.</p>`;
+                return;
+            }
+        
+            try {
+                contentFrame.innerHTML = `
+                    <div style="padding: 20px;">
+                        <!-- Titolo della sezione -->
+                        <h2 class="section-title" style="font-size: 2rem; font-weight: bold; text-align: center; color: #333; text-shadow: 1px 1px 5px rgba(0,0,0,0.2);">
+                            Your NFTs Inventory
+                        </h2>
+        
+                        <!-- Numero di NFTs -->
+                        <div style="text-align: center; margin: 20px 0; font-size: 1.5rem; color: #555;">
+                            <p>You own <span style="font-weight: bold; color: #4CAF50;">${data.nfts.length}</span> NFTs.</p>
                         </div>
             
-                        <!-- Filtro per Collection -->
-                        <div class="filter-switch">
-                            <label for="collection-filter">Filter by Collection: </label>
-                            <select id="collection-filter">
-                                <option value="all">All Collections</option>
-                                ${[...new Set(data.nfts.map(nft => nft.template_info.collection_name))].map(collection => `
-                                    <option value="${collection}">${collection}</option>
-                                `).join('')}
-                            </select>
+                        <div class="menu-section" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; padding: 10px 0;">
+                            <!-- Filtri aggiuntivi -->
+                            <div class="filter-switch" style="flex: 1; text-align: center;">
+                                <label for="nft-filter" style="display: block; margin-bottom: 5px;">Filter NFTs:</label>
+                                <select id="nft-filter" style="width: 90%; padding: 5px;">
+                                    <option value="all">All</option>
+                                    <option value="staked">Only Staked</option>
+                                    <option value="unstaked">Only Unstaked</option>
+                                    <option value="sale">On Sale</option>
+                                </select>
+                            </div>
+                        
+                            <!-- Filtro per Collection -->
+                            <div class="filter-switch" style="flex: 1; text-align: center;">
+                                <label for="collection-filter" style="display: block; margin-bottom: 5px;">Filter by Collection:</label>
+                                <select id="collection-filter" style="width: 90%; padding: 5px;">
+                                    <option value="all">All Collections</option>
+                                    ${[...new Set(data.nfts.map(nft => nft.template_info.collection_name))].map(collection => `
+                                        <option value="${collection}">${collection}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                        
+                            <!-- Ordinamento -->
+                            <div class="filter-switch" style="flex: 1; text-align: center;">
+                                <label for="sort-order" style="display: block; margin-bottom: 5px;">Sort NFTs:</label>
+                                <select id="sort-order" style="width: 90%; padding: 5px;">
+                                    <option value="newest-desc">Newest (Desc)</option>
+                                    <option value="newest-asc">Newest (Asc)</option>
+                                    <option value="oldest-desc">Oldest (Desc)</option>
+                                    <option value="oldest-asc">Oldest (Asc)</option>
+                                    <option value="a-z-asc">A-Z (Asc)</option>
+                                    <option value="a-z-desc">A-Z (Desc)</option>
+                                </select>
+                            </div>
                         </div>
-                       
-                        <!-- Ordinamento -->
-                        <div class="filter-switch">
-                            <label for="sort-order">Sort NFTs: </label>
-                            <select id="sort-order">
-                                <option value="newest-desc">Newest (Desc)</option>
-                                <option value="newest-asc">Newest (Asc)</option>
-                                <option value="oldest-desc">Oldest (Desc)</option>
-                                <option value="oldest-asc">Oldest (Asc)</option>
-                                <option value="a-z-asc">A-Z (Asc)</option>
-                                <option value="a-z-desc">A-Z (Desc)</option>
-                            </select>
-                        </div>
+
             
                         <div id="scroll-buttons">
                             <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
@@ -1621,28 +1617,6 @@
       });
     }
     fetchWaxAccount();
-    document.addEventListener('DOMContentLoaded', function () {
-        // Seleziona il contenitore del frame, che è sempre presente nel DOM
-        const contentFrame = document.getElementById('content-frame'); // Supponiamo che il frame abbia id="content-frame"
-    
-        // Aggiungi l'event listener al frame per delegare l'evento
-        contentFrame.addEventListener('click', function (event) {
-            // Verifica se il click è su uno dei pulsanti di scroll
-            if (event.target && event.target.id === 'scroll-to-top') {
-                window.scrollTo({
-                    top: 0, // Scorri fino all'inizio della pagina
-                    behavior: 'smooth', // Movimento fluido
-                });
-            }
-    
-            if (event.target && event.target.id === 'scroll-to-end') {
-                window.scrollTo({
-                    top: document.documentElement.scrollHeight, // Scorri fino alla fine della pagina
-                    behavior: 'smooth', // Movimento fluido
-                });
-            }
-        });
-    });
   </script>
 </body>
 </html>

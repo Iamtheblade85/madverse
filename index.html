@@ -1125,10 +1125,14 @@
 
           if (page === 'balance') {
               contentFrame.innerHTML = `
-                  <h2 class="pool-title">Your Token Balances</h2>
-                  <!-- Scrollable Balance Grid -->
-                  <div class="balance-grid" style="height: 300px; overflow-y: auto;">
-
+              <div class="pool-title" style="position: fixed; top: 0; left: 0; width: 100%; background-color: white; z-index: 1000; display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd;">
+                  <h2>Your Token Balances</h2>
+                  <div>
+                      <button id="toTopButton" style="margin-right: 5px;">To Top</button>
+                      <button id="toEndButton">To End</button>
+                  </div>
+              </div>
+              <div class="balance-grid">
                       ${data.balances.map(balance => `
                           <div class="card">
                               <h4>${balance.symbol}</h4> 
@@ -1181,6 +1185,18 @@
                       loadContent('staking_farms'); // Chiamata alla funzione
                   });
               });
+            // Definizione delle funzioni
+            function scrollToTop() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            
+            function scrollToEnd() {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }
+            
+            // Aggiunta degli event listener
+            document.getElementById('toTopButton').addEventListener('click', scrollToTop);
+            document.getElementById('toEndButton').addEventListener('click', scrollToEnd);
           } else if (page === 'staking_farms') {
               contentFrame.innerHTML = `
                   <h2 class="pool-title">Staking Farms</h2>

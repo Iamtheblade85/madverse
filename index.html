@@ -1046,9 +1046,7 @@
 
           if (page === 'balance') {
               contentFrame.innerHTML = `
-              <div class="pool-title">
-                  <h2>Your Token Balances</h2>
-              </div>
+              <h2 class="pool-title" style="text-align: center;">Your Token Balances</h2>
               <div class="balance-grid">
                       ${data.balances.map(balance => `
                           <div class="card">
@@ -1091,7 +1089,7 @@
               });
           } else if (page === 'staking_farms') {
               contentFrame.innerHTML = `
-                  <h2 class="pool-title">Staking Farms</h2>                
+                  <h2 class="pool-title" style="text-align: center;">Staking Farms</h2>                
                   <div class="balance-grid">
                     ${data.pools.map(pool => `
                         <div class="card">
@@ -1288,11 +1286,7 @@
             }else if (page === 'profile') {
               contentFrame.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <h2 class="pool-title">Your Profile</h2>
-                  <div id="scroll-buttons">
-                    <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
-                    <button id="scroll-to-end" class="scroll-button">↓ To End</button>
-                  </div>                  
+                  <h2 class="pool-title" style="text-align: center;">Your Profile</h2>                
                   <!--      commento             -->
                     <button 
                       id="toggle-sqj" 
@@ -1416,8 +1410,6 @@
                   }
               });
           }
-
-
       } catch (error) {
           console.error("Error loading content for page:", page, error);
           contentFrame.innerHTML = `<p>Error loading ${page}: ${error.message}</p>`;
@@ -1447,11 +1439,7 @@
       
               if (data.farms && data.farms.length > 0) {
                 contentFrame.innerHTML = `
-                    <h2 class="pool-title">NFT Farms</h2>
-                  <div id="scroll-buttons">
-                    <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
-                    <button id="scroll-to-end" class="scroll-button">↓ To End</button>
-                  </div>                    
+                    <h2 class="pool-title" style="text-align: center;">NFT Farms</h2>                  
                     <div class="balance-grid">
                         ${data.farms.map(farm => `
                             <div class="nft-reward-card">

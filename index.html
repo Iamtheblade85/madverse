@@ -1286,9 +1286,9 @@
                     document.querySelectorAll('.withdraw-button').forEach(button => {
                         button.addEventListener('click', async function () {
                             const nftId = this.getAttribute('data-nft-id');
-                            const waxAccount = this.getAttribute('data-wax-account');
+                            const waxAccount = user_wax_account;
                             const withdrawType = 'specific'; // O "all_inclusive" o "all_exclusive", in base alle esigenze
-                    
+                            const url = 'https://iamemanuele.pythonanywhere.com/withdraw_nft';
                             // Crea l'oggetto da inviare al backend
                             const data = {
                                 wax_account: waxAccount,
@@ -1298,7 +1298,7 @@
                     
                             try {
                                 // Invia la richiesta POST al backend
-                                const response = await fetch('/withdraw_nft', {
+                                const response = await fetch(url, {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json'
@@ -1553,42 +1553,7 @@
       .catch(error => {
           alert(`Error: ${error}`);
       });
-    }
-    document.querySelectorAll('.withdraw-button').forEach(button => {
-        button.addEventListener('click', async function () {
-            const nftId = this.getAttribute('data-nft-id');
-            const waxAccount = user_wax_account
-            const withdrawType = 'specific'; // O "all_inclusive" o "all_exclusive", in base alle esigenze
-            const url = 'https://iamemanuele.pythonanywhere.com';
-            // Crea l'oggetto da inviare al backend
-            const data = {
-                wax_account: waxAccount,
-                nft_id: nftId,
-                withdraw_type: withdrawType
-            };
-
-            try {
-                // Invia la richiesta POST al backend
-                const response = await fetch('/withdraw_nft', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-                if (response.ok) {
-                    alert(`Success: ${result.message}`);
-                } else {
-                    alert(`Error: ${result.error}`);
-                }
-            } catch (error) {
-                console.error('Error during withdrawal request:', error);
-                alert('An error occurred during the withdrawal request.');
-            }
-        });
-    });    
+    }   
     fetchWaxAccount();
   </script>
 </body>

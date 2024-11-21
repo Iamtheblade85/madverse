@@ -1132,7 +1132,7 @@
                       <button id="toEndButton">To End</button>
                   </div>
               </div>
-              <div class="balance-grid">
+              <div class="balance-grid" style="margin-top: 0;">
                       ${data.balances.map(balance => `
                           <div class="card">
                               <h4>${balance.symbol}</h4> 
@@ -1153,7 +1153,15 @@
                       `).join("")}
                   </div>
               `;
+          // Trova pool-title e balance-grid
+          const poolTitle = document.querySelector('.pool-title');
+          const balanceGrid = document.querySelector('.balance-grid');
           
+          // Calcola l'altezza della pool-title
+          const poolTitleHeight = poolTitle.offsetHeight;
+          
+          // Applica margine superiore dinamico alla balance-grid
+          balanceGrid.style.marginTop = `${poolTitleHeight}px`;
               // Gestione dei pulsanti Withdraw
               document.querySelectorAll('.withdraw-button').forEach(button => {
                   button.addEventListener('click', function () {

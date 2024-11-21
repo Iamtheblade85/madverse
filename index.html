@@ -1343,7 +1343,7 @@ document.querySelectorAll('.withdraw-button').forEach(button => {
             
                 // Aggiungi un timer di 2 secondi (2000 millisecondi) prima di ricaricare la pagina
                 setTimeout(() => {
-                    location.reload();  // Ricarica la pagina dopo il timer
+                    loadContent('mynfts')  // Ricarica la pagina dopo il timer
                 }, 2000);  // 2000 millisecondi = 2 secondi
             } else {
                 alert(`Error: ${result.error}`);

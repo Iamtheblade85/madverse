@@ -1195,6 +1195,8 @@
                                             <p><span class="label">Transferable:</span> <span class="value">${nft.template_info.is_transferable ? 'Yes' : 'No'}</span></p>
                                         </div>
                                     </div>
+                                    <!-- Pulsante Withdraw -->
+                                                  <button class="withdraw-button" data-nft-id="${nft.nft_id}" data-wax-account="${wax_account}" style="margin-top: 10px; padding: 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Withdraw</button>
                                 </div>
                             `).join('')}
                         </div>
@@ -1552,6 +1554,41 @@
           alert(`Error: ${error}`);
       });
     }
+    document.querySelectorAll('.withdraw-button').forEach(button => {
+        button.addEventListener('click', async function () {
+            const nftId = this.getAttribute('data-nft-id');
+            const waxAccount = user_wax_account
+            const withdrawType = 'specific'; // O "all_inclusive" o "all_exclusive", in base alle esigenze
+            
+            // Crea l'oggetto da inviare al backend
+            const data = {
+                wax_account: waxAccount,
+                nft_id: nftId,
+                withdraw_type: withdrawType
+            };
+
+            try {
+                // Invia la richiesta POST al backend
+                const response = await fetch('/withdraw_nft', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(`Success: ${result.message}`);
+                } else {
+                    alert(`Error: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Error during withdrawal request:', error);
+                alert('An error occurred during the withdrawal request.');
+            }
+        });
+    });    
     fetchWaxAccount();
   </script>
 </body>

@@ -215,99 +215,19 @@
       background: white;
       border-radius: 10px;
       box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-      padding: 10px;
+      padding: 1px;
       width: calc(100% * var(--scale-factor));
       max-width: calc(1400px * var(--scale-factor));
       min-height: 400px;
       position: relative;
     }
-#scroll-buttons {
-  position: absolute;
-  top: -7px;
-  right: 3px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 10;
-}
 
-#scroll-buttons button {
-  padding: 2px 4px;
-  margin-top: -7px;
-  right: 3px;
-  font-size: calc((1rem + 1vw) * 0.8); /* La dimensione del font si adatta alla larghezza della finestra */
-  border: none;
-  border-radius: 12px; /* Più arrotondamento per un effetto più elegante */
-  background: linear-gradient(135deg, #ffbc42, #ffdd6e); /* Gradiente dorato con tonalità più calde */
-  color: #333;
-  font-family: 'Cinzel', serif; /* Font stilizzato per un look elegante */
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  text-transform: uppercase;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15); /* Ombra morbida */
-  transition: all 0.3s ease-in-out;
-  letter-spacing: 1.5px;
-  text-align: center;
-  background-size: 200% 200%;
-}
-
-#scroll-buttons button::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 300%;
-  height: 300%;
-  background: rgba(255, 255, 255, 0.3);
-  transition: all 0.4s;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-
-#scroll-buttons button:hover {
-  background: linear-gradient(135deg, #ffbb42, #ffdc70); /* Gradiente con transizione più sottile al passaggio del mouse */
-  color: #333;
-  box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.2); /* Ombra più marcata durante l'hover */
-}
-
-#scroll-buttons button:hover::before {
-  width: 0;
-  height: 0;
-}
-
-#scroll-buttons button:active {
-  transform: scale(0.98); /* Effetto di riduzione al clic */
-  box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.3);
-}
-
-#scroll-buttons button span {
-  position: relative;
-  z-index: 2;
-}
-
-@keyframes textGlow {
-  0% {
-    text-shadow: 0px 0px 5px #ffbb00, 0 0 10px #ffbb00, 0 0 15px #ffbb00, 0 0 20px #ffbb00;
-  }
-  50% {
-    text-shadow: 0px 0px 10px #ffbb00, 0 0 15px #ffbb00, 0 0 20px #ffbb00, 0 0 25px #ffbb00;
-  }
-  100% {
-    text-shadow: 0px 0px 5px #ffbb00, 0 0 10px #ffbb00, 0 0 15px #ffbb00, 0 0 20px #ffbb00;
-  }
-}
-
-#scroll-buttons button:hover span {
-  animation: textGlow 1.5s ease-in-out infinite; /* Effetto di luce sul testo */
-}
   /* Grid-Layouts */
   .balance-grid, .nft-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
       gap: calc(15px * var(--scale-factor));
-      margin-top: 20px;
+      margin-top: 5px;
   }
     
   /* Card */
@@ -343,7 +263,7 @@
     
     /* NFT Details */
     .nft-details {
-      margin-top: 10px;
+      margin-top: 5px;
       font-size: 14px;
       text-align: left;
     }
@@ -360,14 +280,15 @@
     /* Pool Titles */
     .pool-title {
       font-size: 20px;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
       color: #333;
     }
     
     /* Section Titles */
     .section-title {
+      height: 35px
       font-size: 24px;
-      margin-bottom: 15px;
+      margin-bottom: 5px;
       text-align: center;
       color: #222;
     }
@@ -1213,7 +1134,7 @@
                         </h2>
         
                         <!-- Numero di NFTs -->
-                        <div style="text-align: center; margin: 20px 0; font-size: 1.5rem; color: #555;">
+                        <div style="text-align: center; margin: 5px 0; font-size: 1.5rem; color: #555;">
                             <p>You own <span style="font-weight: bold; color: #4CAF50;">${data.nfts.length}</span> NFTs.</p>
                         </div>
             
@@ -1252,14 +1173,7 @@
                                     <option value="a-z-desc">A-Z (Desc)</option>
                                 </select>
                             </div>
-                        </div>
-
-            
-                        <div id="scroll-buttons">
-                            <button id="scroll-to-top" class="scroll-button">↑ To Top</button>
-                            <button id="scroll-to-end" class="scroll-button">↓ To End</button>
-                        </div>
-            
+                        </div>           
                         <div class="nft-grid" id="nft-grid">
                             ${data.nfts.map(nft => `
                                 <div class="card">
@@ -1367,9 +1281,6 @@
                         }
                     }
             
-                    // Scroll ai pulsanti
-                    document.getElementById('scroll-to-top').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-                    document.getElementById('scroll-to-end').addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
                 } catch (error) {
                     console.error("Error rendering the NFTs:", error);
                     contentFrame.innerHTML = `<p>Error: Unable to render NFTs. Please try again later.</p>`;

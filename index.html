@@ -1282,42 +1282,75 @@
                                 return nfts;
                         }
                     }
-                    // Gestisci il click sul pulsante "Withdraw"
-                    document.querySelectorAll('.withdraw-button').forEach(button => {
-                        button.addEventListener('click', async function () {
-                            const nftId = this.getAttribute('data-nft-id');
-                            const waxAccount = user_wax_account;
-                            const withdrawType = 'specific'; // O "all_inclusive" o "all_exclusive", in base alle esigenze
-                            const url = 'https://iamemanuele.pythonanywhere.com/withdraw_nft';
-                            // Crea l'oggetto da inviare al backend
-                            const data = {
-                                wax_account: waxAccount,
-                                nft_id: nftId,
-                                withdraw_type: withdrawType
-                            };
-                    
-                            try {
-                                // Invia la richiesta POST al backend
-                                const response = await fetch(url, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify(data)
-                                });
-                    
-                                const result = await response.json();
-                                if (response.ok) {
-                                    alert(`Success: ${result.message}`);
-                                } else {
-                                    alert(`Error: ${result.error}`);
-                                }
-                            } catch (error) {
-                                console.error('Error during withdrawal request:', error);
-                                alert('An error occurred during the withdrawal request.');
-                            }
-                        });
-                    });            
+ // Gestisci il click sul pulsante "Withdraw"
+document.querySelectorAll('.withdraw-button').forEach(button => {
+    button.addEventListener('click', async function () {
+        const nftId = this.getAttribute('data-nft-id');
+        const waxAccount = user_wax_account;
+        const withdrawType = 'specific'; // O "all_inclusive" o "all_exclusive", in base alle esigenze
+        const url = 'https://iamemanuele.pythonanywhere.com/withdraw_nft';
+
+        // Log per vedere i valori prima di inviare la richiesta
+        console.log("Button clicked, preparing withdrawal with the following data:");
+        console.log("NFT ID:", nftId);
+        console.log("Wax Account:", waxAccount);
+        console.log("Withdraw Type:", withdrawType);
+        console.log("URL:", url);
+
+        // Crea l'oggetto da inviare al backend
+        const data = {
+            wax_account: waxAccount,
+            nft_id: nftId,
+            withdraw_type: withdrawType
+        };
+
+        // Log dei dati da inviare
+        console.log("Request payload (data) being sent to backend:", JSON.stringify(data));
+
+        try {
+            // Invia la richiesta POST al backend
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            // Log dello status della risposta
+            console.log("Response status code:", response.status);
+
+            // Log del corpo della risposta (testo prima di convertirlo in JSON)
+            const responseText = await response.text();
+            console.log("Response body as text:", responseText);
+
+            // Parsing della risposta JSON
+            let result;
+            try {
+                result = JSON.parse(responseText); // Cerca di convertire la risposta in JSON
+            } catch (parseError) {
+                console.error("Error parsing the response as JSON:", parseError);
+                alert("An error occurred while parsing the response. Please try again.");
+                return;  // Esci dalla funzione se il parsing fallisce
+            }
+
+            // Log del risultato JSON
+            console.log("Parsed response JSON:", result);
+
+            // Verifica lo stato della risposta (se OK o errore)
+            if (response.ok) {
+                alert(`Success: ${result.message}`);
+            } else {
+                alert(`Error: ${result.error}`);
+            }
+        } catch (error) {
+            // Log degli errori
+            console.error("Error during withdrawal request:", error);
+            alert('An error occurred during the withdrawal request.');
+        }
+    });
+});
+    
                 } catch (error) {
                     console.error("Error rendering the NFTs:", error);
                     contentFrame.innerHTML = `<p>Error: Unable to render NFTs. Please try again later.</p>`;

@@ -1044,50 +1044,95 @@
           const data = await response.json();
           console.log("Data received for page:", page, data);
 
-          if (page === 'balance') {
-              contentFrame.innerHTML = `
-              <h2 class="pool-title" style="text-align: center;">Your Token Balances</h2>
-              <div class="balance-grid">
-                      ${data.balances.map(balance => `
-                          <div class="card">
-                              <h4>${balance.symbol}</h4> 
-                              <p><span class="value">${balance.amount}</span></p>
-                              <!-- Staking Pool Available -->
-                              ${balance.stakeable === "Yes" ? `
-                                  <button 
-                                      class="staking-button" 
-                                      style="background-color: #4CAF50; color: white; border: none; padding: 10px; cursor: pointer;">
-                                      Staking pool available!
-                                  </button>
-                              ` : ""}
-                              <!-- Withdraw Button -->
-                              <button class="withdraw-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Withdraw</button>
-                              <!-- Transfer Button -->
-                              <button class="transfer-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Transfer</button>
-                          </div>
-                      `).join("")}
-                  </div>
-              `;         
-              // Gestione dei pulsanti Transfer
-              document.querySelectorAll('.transfer-button').forEach(button => {
-                  button.addEventListener('click', function () {
-                      const symbol = this.dataset.symbol;
-                      const amount = this.dataset.amount;
-                      const quantityInput = prompt(`Enter the quantity to transfer for ${symbol}:`);
-                      const receiverInput = prompt(`Enter the receiver's Wax account for ${symbol}:`);
-                      if (quantityInput && receiverInput && !isNaN(quantityInput)) {
-                          transferToken(symbol, quantityInput, receiverInput);
-                      }
-                  });
-              });
-          
-              // Modifica: Gestione del pulsante Staking
-              document.querySelectorAll('.staking-button').forEach(button => {
-                  button.addEventListener('click', function () {
-                      loadContent('staking_farms'); // Chiamata alla funzione
-                  });
-              });
-          } else if (page === 'staking_farms') {
+if (page === 'balance') {
+    contentFrame.innerHTML = `
+    <h2 class="pool-title" style="text-align: center;">Your Token Balances</h2>
+    <div class="balance-grid">
+        ${data.balances.map(balance => `
+            <div class="card">
+                <h4>${balance.symbol}</h4> 
+                <p><span class="value">${balance.amount}</span></p>
+                <!-- Staking Pool Available -->
+                ${balance.stakeable === "Yes" ? `
+                    <button 
+                        class="staking-button" 
+                        style="background-color: #4CAF50; color: white; border: none; padding: 10px; cursor: pointer;">
+                        Staking pool available!
+                    </button>
+                ` : ""}
+                <!-- Withdraw Button -->
+                <button class="withdraw-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Withdraw</button>
+                <div class="withdraw-inputs" style="display: none; margin-top: 10px;">
+                    <input type="number" class="withdraw-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
+                    <button class="confirm-withdraw" data-symbol="${balance.symbol}" style="background-color: #4CAF50; color: white; border: none; padding: 5px;">Confirm</button>
+                </div>
+                <!-- Transfer Button -->
+                <button class="transfer-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Transfer</button>
+                <div class="transfer-inputs" style="display: none; margin-top: 10px;">
+                    <input type="number" class="transfer-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
+                    <input type="text" class="transfer-receiver" placeholder="Receiver" style="margin-right: 5px;"/>
+                    <button class="confirm-transfer" data-symbol="${balance.symbol}" style="background-color: #4CAF50; color: white; border: none; padding: 5px;">Confirm</button>
+                </div>
+            </div>
+        `).join("")}
+    </div>
+    `;
+
+    // Gestione dei pulsanti Withdraw
+    document.querySelectorAll('.withdraw-button').forEach(button => {
+        button.addEventListener('click', function () {
+            const card = this.closest('.card');
+            const inputs = card.querySelector('.withdraw-inputs');
+            inputs.style.display = inputs.style.display === 'none' ? 'block' : 'none';
+        });
+    });
+
+    document.querySelectorAll('.confirm-withdraw').forEach(button => {
+        button.addEventListener('click', function () {
+            const card = this.closest('.card');
+            const quantityInput = card.querySelector('.withdraw-quantity').value;
+            const symbol = this.dataset.symbol;
+
+            if (quantityInput && !isNaN(quantityInput)) {
+                withdrawToken(symbol, quantityInput); // Funzione per gestire il withdraw
+            } else {
+                alert('Please enter a valid quantity.');
+            }
+        });
+    });
+
+    // Gestione dei pulsanti Transfer
+    document.querySelectorAll('.transfer-button').forEach(button => {
+        button.addEventListener('click', function () {
+            const card = this.closest('.card');
+            const inputs = card.querySelector('.transfer-inputs');
+            inputs.style.display = inputs.style.display === 'none' ? 'block' : 'none';
+        });
+    });
+
+    document.querySelectorAll('.confirm-transfer').forEach(button => {
+        button.addEventListener('click', function () {
+            const card = this.closest('.card');
+            const quantityInput = card.querySelector('.transfer-quantity').value;
+            const receiverInput = card.querySelector('.transfer-receiver').value;
+            const symbol = this.dataset.symbol;
+
+            if (quantityInput && receiverInput && !isNaN(quantityInput)) {
+                transferToken(symbol, quantityInput, receiverInput); // Funzione per gestire il transfer
+            } else {
+                alert('Please enter a valid quantity and receiver.');
+            }
+        });
+    });
+
+    // Modifica: Gestione del pulsante Staking
+    document.querySelectorAll('.staking-button').forEach(button => {
+        button.addEventListener('click', function () {
+            loadContent('staking_farms'); // Chiamata alla funzione
+        });
+    });
+}
+ else if (page === 'staking_farms') {
               contentFrame.innerHTML = `
                   <h2 class="pool-title" style="text-align: center;">Staking Farms</h2>                
                   <div class="balance-grid">

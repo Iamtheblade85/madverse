@@ -1347,6 +1347,7 @@ document.querySelectorAll('.withdraw-button').forEach(button => {
             // Gestione del feedback basato sulla risposta
             if (response.ok) {
                 card.querySelector('.feedback').innerText = `Success: ${result.message}`;
+                await reloadNFTs();
             } else {
                 card.querySelector('.feedback').innerText = `Error: ${result.error}`;
             }
@@ -1492,7 +1493,34 @@ document.querySelectorAll('.withdraw-button').forEach(button => {
           console.error("Error loading content for page:", page, error);
           contentFrame.innerHTML = `<p>Error loading ${page}: ${error.message}</p>`;
       }
-    } async function loadNFTFarms(viewType = 'all') {
+    } 
+// Funzione per ricaricare gli NFT e aggiornare il contenuto della pagina
+async function reloadNFTs() {
+    const url = `https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}`;
+    const contentFrame = document.getElementById("content-frame");
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch updated NFTs.');
+
+        const data = await response.json();
+        console.log("Updated NFTs data fetched:", data);
+
+        // Aggiorna la visualizzazione
+        if (data && Array.isArray(data.nfts)) {
+            // Usa il codice esistente per aggiornare la griglia degli NFT
+            contentFrame.innerHTML = ''; // Cancella il contenuto corrente
+            loadContent('mynfts'); // Ricarica il contenuto aggiornato
+        } else {
+            console.error("Invalid NFT data received.");
+        }
+    } catch (error) {
+        console.error("Error updating NFTs:", error);
+        contentFrame.innerHTML = '<p>Error updating NFTs. Please try again.</p>';
+    }
+}    
+    
+    async function loadNFTFarms(viewType = 'all') {
           console.log("Loading NFT Farms with view type:", viewType);
           const contentFrame = document.getElementById("content-frame");
           const userId = getQueryParam("user_id");

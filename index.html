@@ -542,8 +542,8 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                 }
     
                 const url = action === 'add'
-                    ? 'https://iamemanuele.pythonanywhere.com/stake/add'
-                    : 'https://iamemanuele.pythonanywhere.com/stake/remove';
+                    ? 'https://iamemanuele.pythonanywhere.com/stake_add'
+                    : 'https://iamemanuele.pythonanywhere.com/stake_remove';
                 const data = {
                     user_id: userId,         // ID dell'utente dal contesto
                     pool_id: poolId,         // ID del pool
@@ -551,7 +551,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                     token_symbol: symbol,    // Simbolo del token
                     amount: quantity         // Quantità
                 };
-    
+                console.log("Data for Add/Remove:", data)
                 const inProgressMessage = createMessageElement('Processing your request...', false);
                 card.appendChild(inProgressMessage);
     

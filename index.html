@@ -695,8 +695,25 @@ async function loadNFTFarms(viewType = 'all') {
 
   // Aggiunto: Funzione per ricaricare il contenuto della pagina "balance".
   async function reloadBalances() {
-    await loadContent('balance');
-  }
+    const url = `https://iamemanuele.pythonanywhere.com/saldo?user_id=${userId}`;
+    const contentFrame = document.getElementById("content-frame");
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch updated balances.');
+        const data = await response.json();
+        console.log("Updated balances data fetched:", data);
+        // Aggiorna la visualizzazione
+        if (data) {
+            contentFrame.innerHTML = ''; // Cancella il contenuto corrente
+			      loadContent('balance');
+        } else {
+            console.error("Invalid balances data received.");
+        }			
+    } catch (error) {
+        console.error("Error updating balances:", error);
+        contentFrame.innerHTML = '<p>Error updating balances. Please reload the page.</p>';
+    }
+ }
     function withdrawToken(symbol, quantity) {
       const url = 'https://iamemanuele.pythonanywhere.com/withdraw';
     

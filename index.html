@@ -697,6 +697,55 @@ async function loadNFTFarms(viewType = 'all') {
   async function reloadBalances() {
     await loadContent('balance');
   }
+    function withdrawToken(symbol, quantity) {
+      const url = 'https://iamemanuele.pythonanywhere.com/withdraw';
+    
+      const data = {
+        wax_account: user_wax_account,
+        amount: parseFloat(quantity),
+        token_symbol: symbol
+      };
+    
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(data => {
+          alert(data.message || data.error);
+      })
+      .catch(error => {
+          alert(`Error: ${error}`);
+      });
+    }
+
+    function transferToken(symbol, quantity, receiver) {
+      const url = 'https://iamemanuele.pythonanywhere.com/transfer';
+      const data = {
+        from_wax_account: user_wax_account,
+        to_wax_account: receiver,
+        amount: parseFloat(quantity),
+        token_symbol: symbol
+      };
+    
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(data => {
+          alert(data.message || data.error);
+      })
+      .catch(error => {
+          alert(`Error: ${error}`);
+      });
+    }       
   fetchWaxAccount();
   </script>
 </body>

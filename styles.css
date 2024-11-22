@@ -1,19 +1,22 @@
     :root {
       --scale-factor: 0.95; /* Scala globale al 95% */
     }
+/* Stile del container dello switch */
 .custom-switch {
     position: relative;
     display: inline-block;
-    width: 100px; /* Larghezza 10 volte maggiore */
+    width: 60px; /* 10x rispetto alla checkbox standard */
     height: 34px;
 }
 
+/* Nascondi l'input checkbox */
 .custom-switch input {
     opacity: 0;
     width: 0;
     height: 0;
 }
 
+/* La "leva" dello switch */
 .slider {
     position: absolute;
     cursor: pointer;
@@ -26,6 +29,7 @@
     border-radius: 34px;
 }
 
+/* Il "cerchio" interno della leva */
 .slider:before {
     position: absolute;
     content: "";
@@ -38,14 +42,15 @@
     border-radius: 50%;
 }
 
+/* Colore dello switch quando è attivo */
 input:checked + .slider {
-    background-color: #4CAF50; /* Colore per lo stato attivo */
+    background-color: #4CAF50;
 }
 
+/* Spostamento del cerchio quando lo switch è attivo */
 input:checked + .slider:before {
-    transform: translateX(66px); /* Adatta alla larghezza */
+    transform: translateX(26px);
 }
-
     /* Base Styles */
     body {
       margin: 0;

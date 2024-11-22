@@ -533,14 +533,14 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                 const quantityInput = this.closest('.card').querySelector('.action-quantity');
                 const quantity = parseFloat(quantityInput.value);
                 const card = this.closest('.card');
-        
+
                 // Validazione
                 if (!quantity || isNaN(quantity) || quantity <= 0) {
                     const messageDiv = createMessageElement('Please enter a valid quantity.', false);
                     card.appendChild(messageDiv);
                     return;
                 }
-        
+
                 const url = action === 'add'
                     ? 'https://iamemanuele.pythonanywhere.com/stake_add'
                     : 'https://iamemanuele.pythonanywhere.com/stake_remove';
@@ -551,12 +551,12 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                     token_symbol: symbol,    // Simbolo del token
                     amount: quantity         // Quantità
                 };
-                console.log("Data for Add/Remove:", data);
-        
-                // Creazione del messaggio di 'in progress'
+                console.log("Data for Add/Remove:", data)
+
+                // Crea il messaggio di in-progress
                 const inProgressMessage = createMessageElement('Processing your request...', false);
-                card.appendChild(inProgressMessage);
-        
+                card.insertBefore(inProgressMessage, card.querySelector('p strong'));  // Inserisce il messaggio prima di "Total Staked"
+
                 try {
                     const response = await fetch(url, {
                         method: 'POST',
@@ -565,32 +565,31 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                         },
                         body: JSON.stringify(data)
                     });
-        
+
                     const result = await response.json();
                     const messageDiv = createMessageElement(response.ok ?
                         `Success: ${result.message}` :
                         `Error: ${result.error}`, response.ok);
+
+                    // Sostituisce il messaggio di in-progress con quello finale
                     card.replaceChild(messageDiv, inProgressMessage);
-        
-                    // Log per confermare che il messaggio finale è stato mostrato
+
                     console.log('Final message: ', messageDiv.textContent);
-        
+
                     setTimeout(() => loadPools(), 3000); // Ricarica le pool dopo 3 secondi
                 } catch (error) {
                     console.error("Error during stake request:", error);
                     const errorMessageDiv = createMessageElement('An error occurred. Please try again.', false);
                     card.replaceChild(errorMessageDiv, inProgressMessage);
-        
-                    // Log per confermare che l'errore è stato mostrato
+
                     console.log('Error message: ', errorMessageDiv.textContent);
                     setTimeout(() => loadPools(), 3000);
                 }
             });
         });
-
     }
 
-  function loadPools() {
+    function loadPools() {
         const url = `https://iamemanuele.pythonanywhere.com/open_pools?user_id=${userId}`;
         fetch(url)
             .then(response => response.json())

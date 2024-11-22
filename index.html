@@ -198,6 +198,7 @@ if (page === 'balance') {
         // Gestione della conferma dello swap
         document.querySelectorAll('.confirm-swap').forEach(button => {
             button.addEventListener('click', async function() {
+                this.style.display = 'none'; // Nascondi il pulsante Confirm
                 const symbol = this.getAttribute('data-symbol');
                 const swapQuantity = this.closest('.card').querySelector('.swap-quantity').value;
                 const toToken = this.closest('.card').querySelector('.swap-to-token').value;
@@ -261,9 +262,7 @@ if (page === 'balance') {
                     setTimeout(async () => {
                         await reloadBalances();  // Ricarica i bilanci dopo lo swap
                     }, 2000);  // Ritardo di 2 secondi
-        } finally {
-            this.style.display = 'none'; // Nasconde il pulsante dopo l'azione
-        }
+        } 
     });
 });
 
@@ -292,6 +291,7 @@ if (page === 'balance') {
 // Gestione della conferma del prelievo
 document.querySelectorAll('.confirm-withdraw').forEach(button => {
     button.addEventListener('click', async function() {
+        this.style.display = 'none'; // Nascondi il pulsante Confirm
         const symbol = this.getAttribute('data-symbol');
         const withdrawQuantity = this.closest('.card').querySelector('.withdraw-quantity').value;
         const waxAccount = user_wax_account; // Imposta l'account utente
@@ -353,6 +353,7 @@ document.querySelectorAll('.confirm-withdraw').forEach(button => {
 // Gestione della conferma del trasferimento
 document.querySelectorAll('.confirm-transfer').forEach(button => {
     button.addEventListener('click', async function() {
+        this.style.display = 'none'; // Nascondi il pulsante Confirm
         const symbol = this.getAttribute('data-symbol');
         const transferQuantity = this.closest('.card').querySelector('.transfer-quantity').value;
         const transferReceiver = this.closest('.card').querySelector('.transfer-receiver').value;

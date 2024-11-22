@@ -437,30 +437,156 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         }
     }
       else if (page === 'staking_farms') {
-            contentFrame.innerHTML = `
-                  <h2 class="pool-title" style="text-align: center;">Staking Farms</h2>                
-                  <div class="balance-grid">
-                  ${data.pools.map(pool => `
-                        <div class="card">
-                          <h4>🌱 Pool: ${pool.token_symbol}</h4>
-                          <p><strong>Total Staked:</strong> ${pool.total_staked.toLocaleString()} ${pool.token_symbol}</p>
-                          <p><strong>Your Stake:</strong> ${pool.user_staked.toLocaleString()} ${pool.token_symbol}</p>
-                          <h5>Rewards:</h5>
-                          <div class="reward-grid">
-                            ${pool.rewards_info.map(reward => `
-                              <div class="reward-card">
-                                <h4>${reward.reward_token}</h4>
-                                <p><strong>APR:</strong> ${reward.apr.toFixed(2)}%</p>
-                                <p><strong>Daily Reward:</strong> ${reward.daily_reward.toLocaleString()} ${reward.reward_token}</p>
-                                <p><strong>Your Daily Reward:</strong> ${reward.user_daily_reward.toLocaleString()} ${reward.reward_token}</p>
-                                <p><strong>Days Remaining:</strong> ${reward.days_remaining}</p>
-                              </div>
-                            `).join('')}
-                          </div>
+    let showAllPools = true; // Stato per il pulsante switch
+
+    function renderPools(pools) {
+        contentFrame.innerHTML = `
+            <h2 class="pool-title" style="text-align: center;">Staking Farms</h2>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <label class="switch">
+                    <input type="checkbox" id="toggle-pools" ${showAllPools ? '' : 'checked'}>
+                    <span class="slider"></span>
+                </label>
+                <span style="margin-left: 10px;">${showAllPools ? 'Show My Pools' : 'Show All Pools'}</span>
+            </div>
+            <div class="balance-grid">
+                ${pools.map(pool => `
+                    <div class="card">
+                        <h4>🌱 Pool: ${pool.token_symbol}</h4>
+                        <div style="display: flex; gap: 10px; justify-content: flex-start; margin-bottom: 10px;">
+                            <button class="add-button" data-symbol="${pool.token_symbol}" style="padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Add</button>
+                            <button class="remove-button" data-symbol="${pool.token_symbol}" style="padding: 5px 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Remove</button>
                         </div>
-                    `).join('')}
-                  </div>`;
-  } else if (page === 'mynfts') {
+                        <p><strong>Total Staked:</strong> ${pool.total_staked.toLocaleString()} ${pool.token_symbol}</p>
+                        <p><strong>Your Stake:</strong> ${pool.user_staked.toLocaleString()} ${pool.token_symbol}</p>
+                        <h5>Rewards:</h5>
+                        <div class="reward-grid">
+                            ${pool.rewards_info.map(reward => `
+                                <div class="reward-card">
+                                    <h4>${reward.reward_token}</h4>
+                                    <p><strong>APR:</strong> ${reward.apr.toFixed(2)}%</p>
+                                    <p><strong>Daily Reward:</strong> ${reward.daily_reward.toLocaleString()} ${reward.reward_token}</p>
+                                    <p><strong>Your Daily Reward:</strong> ${reward.user_daily_reward.toLocaleString()} ${reward.reward_token}</p>
+                                    <p><strong>Days Remaining:</strong> ${reward.days_remaining}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="action-inputs" style="display: none; margin-top: 10px;">
+                            <input type="number" class="action-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
+                            <button class="confirm-action" data-symbol="${pool.token_symbol}">Confirm</button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        // Gestione degli eventi
+        attachEventHandlers();
+    }
+
+    function attachEventHandlers() {
+        // Pulsante switch
+        document.getElementById('toggle-pools').addEventListener('change', function () {
+            showAllPools = !this.checked;
+            loadPools(); // Ricarica le pool
+        });
+
+        // Gestione del pulsante "Add"
+        document.querySelectorAll('.add-button').forEach(button => {
+            button.addEventListener('click', function () {
+                const card = this.closest('.card');
+                const actionInputs = card.querySelector('.action-inputs');
+                actionInputs.style.display = 'block';
+                actionInputs.querySelector('.confirm-action').dataset.action = 'add';
+            });
+        });
+
+        // Gestione del pulsante "Remove"
+        document.querySelectorAll('.remove-button').forEach(button => {
+            button.addEventListener('click', function () {
+                const card = this.closest('.card');
+                const actionInputs = card.querySelector('.action-inputs');
+                actionInputs.style.display = 'block';
+                actionInputs.querySelector('.confirm-action').dataset.action = 'remove';
+            });
+        });
+
+        // Gestione del pulsante "Confirm"
+        document.querySelectorAll('.confirm-action').forEach(button => {
+            button.addEventListener('click', async function () {
+                const action = this.dataset.action; // "add" o "remove"
+                const symbol = this.dataset.symbol;
+                const quantityInput = this.closest('.card').querySelector('.action-quantity');
+                const quantity = quantityInput.value;
+                const card = this.closest('.card');
+                const waxAccount = user_wax_account; // Imposta l'account utente
+
+                // Validazione dell'input
+                if (!quantity || isNaN(quantity) || quantity <= 0) {
+                    const messageDiv = createMessageElement('Please enter a valid quantity.', false);
+                    card.appendChild(messageDiv); // Aggiungi il messaggio alla card
+                    return;
+                }
+
+                const url = action === 'add'
+                    ? 'https://iamemanuele.pythonanywhere.com/add_stake'
+                    : 'https://iamemanuele.pythonanywhere.com/remove_stake';
+                const data = {
+                    wax_account: waxAccount,
+                    token_symbol: symbol,
+                    amount: quantity
+                };
+
+                // Mostra un messaggio di "Request in Progress"
+                const inProgressMessage = createMessageElement('Processing your request...', false);
+                card.appendChild(inProgressMessage);
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const responseText = await response.text();
+                    const result = JSON.parse(responseText);
+
+                    const messageDiv = createMessageElement(response.ok ? 
+                        `Success: ${result.message}` : 
+                        `Error: ${result.error}`, response.ok);
+                    card.replaceChild(messageDiv, inProgressMessage);
+
+                    // Ricarica la pagina dopo 2 secondi
+                    setTimeout(() => loadPools(), 2000);
+                } catch (error) {
+                    console.error("Error during stake request:", error);
+                    const errorMessageDiv = createMessageElement('An error occurred. Please try again.', false);
+                    card.replaceChild(errorMessageDiv, inProgressMessage);
+
+                    // Ricarica la pagina dopo 2 secondi
+                    setTimeout(() => loadPools(), 2000);
+                }
+            });
+        });
+    }
+
+    function loadPools() {
+        const url = `https://iamemanuele.pythonanywhere.com/open_pools?user_id=${userId}`;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const filteredPools = showAllPools
+                    ? data.pools
+                    : data.pools.filter(pool => pool.user_staked > 0);
+                renderPools(filteredPools);
+            })
+            .catch(error => console.error("Error loading pools:", error));
+    }
+
+    loadPools(); // Carica le pool inizialmente
+} else if (page === 'mynfts') {
             if (!data || !Array.isArray(data.nfts)) {
                 console.error("NFT data is missing or invalid.");
                 contentFrame.innerHTML = `<p>Error: Unable to load NFT data.</p>`;

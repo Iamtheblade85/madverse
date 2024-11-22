@@ -261,9 +261,11 @@ if (page === 'balance') {
                     setTimeout(async () => {
                         await reloadBalances();  // Ricarica i bilanci dopo lo swap
                     }, 2000);  // Ritardo di 2 secondi
-                }
-            });
-        });
+        } finally {
+            this.style.display = 'none'; // Nasconde il pulsante dopo l'azione
+        }
+    });
+});
 
         // Gestione dei click sui pulsanti "Withdraw"
         document.querySelectorAll('.withdraw-button').forEach(button => {
@@ -342,6 +344,8 @@ document.querySelectorAll('.confirm-withdraw').forEach(button => {
             setTimeout(async () => {
                 await reloadBalances();  // Ricarica i bilanci dopo il prelievo
             }, 3000);  // Ritardo di 3 secondi
+        } finally {
+            this.style.display = 'none'; // Nasconde il pulsante dopo l'azione
         }
     });
 });
@@ -404,6 +408,8 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
             setTimeout(async () => {
                 await reloadBalances();  // Ricarica i bilanci dopo il trasferimento
             }, 3000);  // Ritardo di 3 secondi
+        } finally {
+            this.style.display = 'none'; // Nasconde il pulsante dopo l'azione
         }
     });
 });

@@ -194,8 +194,8 @@ document.querySelectorAll('.confirm-withdraw').forEach(button => {
         const url = 'https://iamemanuele.pythonanywhere.com/withdraw';
         const data = {
             wax_account: waxAccount,
-            symbol: symbol,
-            quantity: withdrawQuantity
+            token_symbol: symbol,
+            amount: withdrawQuantity
         };
 
         console.log("Initiating withdrawal request:", data); // Log dei dati inviati
@@ -261,8 +261,8 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         const url = 'https://iamemanuele.pythonanywhere.com/transfer';
         const data = {
             wax_account: waxAccount,
-            symbol: symbol,
-            quantity: transferQuantity,
+            token_symbol: symbol,
+            amount: transferQuantity,
             receiver: transferReceiver
         };
 

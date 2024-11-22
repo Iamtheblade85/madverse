@@ -437,13 +437,13 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         }
     }
       else if (page === 'staking_farms') {
-    let showAllPools = true; // Stato per il pulsante switch
+          let showAllPools = true; // Stato per il pulsante switch
 
-    function renderPools(pools) {
-        contentFrame.innerHTML = `
-            <h2 class="pool-title" style="text-align: center;">Staking Farms</h2>
-            <div style="text-align: center; margin-bottom: 20px;">
-                <label class="custom-switch">
+          function renderPools(pools) {
+              contentFrame.innerHTML = `
+                  <h2 class="pool-title" style="text-align: center;">Staking Farms</h2>
+                  <div style="text-align: center; margin-bottom: 20px;">
+                  <label class="custom-switch">
                     <input type="checkbox" id="toggle-pools" ${showAllPools ? '' : 'checked'}>
                     <span class="slider"></span>
                 </label>
@@ -537,7 +537,8 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                 // Validazione
                 if (!quantity || isNaN(quantity) || quantity <= 0) {
                     const messageDiv = createMessageElement('Please enter a valid quantity.', false);
-                    card.appendChild(messageDiv);
+                    // Sostituire il campo di input e bottone con il messaggio di errore
+                    card.querySelector('.action-inputs').replaceWith(messageDiv);
                     return;
                 }
 
@@ -555,7 +556,8 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
 
                 // Crea il messaggio di in-progress
                 const inProgressMessage = createMessageElement('Processing your request...', false);
-                card.insertBefore(inProgressMessage, card.querySelector('p strong'));  // Inserisce il messaggio prima di "Total Staked"
+                // Sostituire la sezione di azioni (input e bottone) con il messaggio in progress
+                card.querySelector('.action-inputs').replaceWith(inProgressMessage);
 
                 try {
                     const response = await fetch(url, {
@@ -571,7 +573,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                         `Success: ${result.message}` :
                         `Error: ${result.error}`, response.ok);
 
-                    // Sostituisce il messaggio di in-progress con quello finale
+                    // Sostituire il messaggio di in-progress con quello finale
                     card.replaceChild(messageDiv, inProgressMessage);
 
                     console.log('Final message: ', messageDiv.textContent);

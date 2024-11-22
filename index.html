@@ -694,26 +694,40 @@ async function loadNFTFarms(viewType = 'all') {
   }
 
   // Aggiunto: Funzione per ricaricare il contenuto della pagina "balance".
-  async function reloadBalances() {
+async function reloadBalances() {
     const url = `https://iamemanuele.pythonanywhere.com/saldo?user_id=${userId}`;
     const contentFrame = document.getElementById("content-frame");
+    console.log("Starting reloadBalances function.");
+    console.log("Fetching updated balances from URL:", url);
+
     try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed to fetch updated balances.');
+        console.log("Response received:", response);
+
+        if (!response.ok) {
+            console.error("Response not OK. Status:", response.status, "StatusText:", response.statusText);
+            throw new Error('Failed to fetch updated balances.');
+        }
+
         const data = await response.json();
         console.log("Updated balances data fetched:", data);
+
         // Aggiorna la visualizzazione
         if (data) {
+            console.log("Valid data received. Clearing contentFrame and reloading balances.");
             contentFrame.innerHTML = ''; // Cancella il contenuto corrente
-			      loadContent('balance');
+            await loadContent('balance');
         } else {
-            console.error("Invalid balances data received.");
-        }			
+            console.error("Invalid balances data received. Data is null or undefined.");
+        }
     } catch (error) {
         console.error("Error updating balances:", error);
         contentFrame.innerHTML = '<p>Error updating balances. Please reload the page.</p>';
     }
- }
+
+    console.log("reloadBalances function completed.");
+}
+
     function withdrawToken(symbol, quantity) {
       const url = 'https://iamemanuele.pythonanywhere.com/withdraw';
     

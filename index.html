@@ -88,14 +88,11 @@
               welcomeMessageElement.appendChild(span);
           });
       }
-
     }
-
     async function loadContent(page) {
       console.log("Loading content for page:", page);
       const contentFrame = document.getElementById("content-frame");
       let url;
-
       switch(page) {
         case 'balance':
           url = `https://iamemanuele.pythonanywhere.com/saldo?user_id=${userId}`;
@@ -126,109 +123,42 @@
           console.log("Data received for page:", page, data);
 
 if (page === 'balance') {
+    if (!data || !data.balances || data.balances.length === 0) {
+      contentFrame.innerHTML = "<p>No balances found.</p>";
+      return;
+    }
+
     contentFrame.innerHTML = `
-    <h2 class="pool-title" style="text-align: center;">Your Token Balances</h2>
-    <div class="balance-grid">
+      <h2 class="pool-title" style="text-align: center;">Your Token Balances</h2>
+      <div class="balance-grid">
         ${data.balances.map(balance => `
-            <div class="card">
-                <h4>${balance.symbol}</h4> 
-                <p><span class="value">${balance.amount}</span></p>
-                <!-- Staking Pool Available -->
-                ${balance.stakeable === "Yes" ? `
-                    <button 
-                        class="staking-button" 
-                        style="background-color: #4CAF50; color: white; border: none; padding: 10px; cursor: pointer;">
-                        Staking pool available!
-                    </button>
-                ` : ""}
-                <!-- Withdraw Button -->
-                <button class="withdraw-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Withdraw</button>
-                <div class="withdraw-inputs" style="display: none; margin-top: 10px;">
-                    <input type="number" class="withdraw-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
-                    <button class="confirm-withdraw" data-symbol="${balance.symbol}" style="background-color: #4CAF50; color: white; border: none; padding: 5px;">Confirm</button>
-                </div>
-                <!-- Transfer Button -->
-                <button class="transfer-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Transfer</button>
-                <div class="transfer-inputs" style="display: none; margin-top: 10px;">
-                    <input type="number" class="transfer-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
-                    <input type="text" class="transfer-receiver" placeholder="Receiver" style="margin-right: 5px;"/>
-                    <button class="confirm-transfer" data-symbol="${balance.symbol}" style="background-color: #4CAF50; color: white; border: none; padding: 5px;">Confirm</button>
-                </div>
+          <div class="card">
+            <h4>${balance.symbol}</h4>
+            <p><span class="value">${balance.amount}</span></p>
+            <button class="withdraw-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Withdraw</button>
+            <div class="withdraw-inputs" style="display: none; margin-top: 10px;">
+              <input type="number" class="withdraw-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
+              <button class="confirm-withdraw" data-symbol="${balance.symbol}">Confirm</button>
             </div>
+            <button class="transfer-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Transfer</button>
+            <div class="transfer-inputs" style="display: none; margin-top: 10px;">
+              <input type="number" class="transfer-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
+              <input type="text" class="transfer-receiver" placeholder="Receiver" style="margin-right: 5px;"/>
+              <button class="confirm-transfer" data-symbol="${balance.symbol}">Confirm</button>
+            </div>
+          </div>
         `).join("")}
-    </div>
+      </div>
     `;
 
-    // Gestione dei pulsanti Withdraw
-    document.querySelectorAll('.withdraw-button').forEach(button => {
-        button.addEventListener('click', function () {
-            const card = this.closest('.card');
-            const inputs = card.querySelector('.withdraw-inputs');
-            inputs.style.display = inputs.style.display === 'none' ? 'block' : 'none';
-        });
-    });
-
-    document.querySelectorAll('.confirm-withdraw').forEach(button => {
-        button.addEventListener('click', async function () {
-            const card = this.closest('.card');
-            const quantityInput = card.querySelector('.withdraw-quantity').value;
-            const symbol = this.dataset.symbol;
-
-            if (quantityInput && !isNaN(quantityInput)) {
-                try {
-                    await withdrawToken(symbol, quantityInput); // Funzione per gestire il withdraw
-                    await reloadBalances(); // Aggiorna i bilanci dopo il successo
-                } catch (error) {
-                    console.error('Error during withdrawal:', error);
-                    alert('Withdrawal failed. Please try again.');
-                }
-            } else {
-                alert('Please enter a valid quantity.');
-            }
-        });
-    });
-
-    // Gestione dei pulsanti Transfer
-    document.querySelectorAll('.transfer-button').forEach(button => {
-        button.addEventListener('click', function () {
-            const card = this.closest('.card');
-            const inputs = card.querySelector('.transfer-inputs');
-            inputs.style.display = inputs.style.display === 'none' ? 'block' : 'none';
-        });
-    });
-
-    document.querySelectorAll('.confirm-transfer').forEach(button => {
-        button.addEventListener('click', async function () {
-            const card = this.closest('.card');
-            const quantityInput = card.querySelector('.transfer-quantity').value;
-            const receiverInput = card.querySelector('.transfer-receiver').value;
-            const symbol = this.dataset.symbol;
-
-            if (quantityInput && receiverInput && !isNaN(quantityInput)) {
-                try {
-                    await transferToken(symbol, quantityInput, receiverInput); // Funzione per gestire il transfer
-                    await reloadBalances(); // Aggiorna i bilanci dopo il successo
-                } catch (error) {
-                    console.error('Error during transfer:', error);
-                    alert('Transfer failed. Please try again.');
-                }
-            } else {
-                alert('Please enter a valid quantity and receiver.');
-            }
-        });
-    });
-
-    // Modifica: Gestione del pulsante Staking
-    document.querySelectorAll('.staking-button').forEach(button => {
-        button.addEventListener('click', function () {
-            loadContent('staking_farms'); // Chiamata alla funzione
-        });
-    });
-} else if (page === 'staking_farms') {
-              contentFrame.innerHTML = `
+    // Configura gli event listener per i pulsanti Withdraw e Transfer.
+    setupBalanceEventHandlers();
+  } 
+  else if (page === 'staking_farms') {
+      contentFrame.innerHTML = `
                   <h2 class="pool-title" style="text-align: center;">Staking Farms</h2>                
                   <div class="balance-grid">
-                    ${data.pools.map(pool => `
+                  ${data.pools.map(pool => `
                         <div class="card">
                           <h4>🌱 Pool: ${pool.token_symbol}</h4>
                           <p><strong>Total Staked:</strong> ${pool.total_staked.toLocaleString()} ${pool.token_symbol}</p>
@@ -248,7 +178,7 @@ if (page === 'balance') {
                         </div>
                     `).join('')}
                   </div>`;
-          } else if (page === 'mynfts') {
+  } else if (page === 'mynfts') {
             if (!data || !Array.isArray(data.nfts)) {
                 console.error("NFT data is missing or invalid.");
                 contentFrame.innerHTML = `<p>Error: Unable to load NFT data.</p>`;
@@ -655,9 +585,8 @@ async function reloadNFTs() {
         console.error("Error updating NFTs:", error);
         contentFrame.innerHTML = '<p>Error updating NFTs. Please try again.</p>';
     }
-}    
-    
-    async function loadNFTFarms(viewType = 'all') {
+}       
+async function loadNFTFarms(viewType = 'all') {
           console.log("Loading NFT Farms with view type:", viewType);
           const contentFrame = document.getElementById("content-frame");
           const userId = getQueryParam("user_id");
@@ -709,57 +638,66 @@ async function reloadNFTs() {
               contentFrame.innerHTML = `<p>Error loading NFT farms: ${error.message}</p>`;
           }
       }
-    function withdrawToken(symbol, quantity) {
-      const url = 'https://iamemanuele.pythonanywhere.com/withdraw';
-    
-      const data = {
-        wax_account: user_wax_account,
-        amount: parseFloat(quantity),
-        token_symbol: symbol
-      };
-    
-      fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => response.json())
-      .then(data => {
-          alert(data.message || data.error);
-      })
-      .catch(error => {
-          alert(`Error: ${error}`);
+  function setupBalanceEventHandlers() {
+    // Event listener per il pulsante Withdraw.
+    document.querySelectorAll('.withdraw-button').forEach(button => {
+      button.addEventListener('click', function () {
+        const inputs = this.closest('.card').querySelector('.withdraw-inputs');
+        inputs.style.display = inputs.style.display === 'none' ? 'block' : 'none';
       });
-    }
+    });
 
-    function transferToken(symbol, quantity, receiver) {
-      const url = 'https://iamemanuele.pythonanywhere.com/transfer';
-      const data = {
-        from_wax_account: user_wax_account,
-        to_wax_account: receiver,
-        amount: parseFloat(quantity),
-        token_symbol: symbol
-      };
-    
-      fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => response.json())
-      .then(data => {
-          alert(data.message || data.error);
-      })
-      .catch(error => {
-          alert(`Error: ${error}`);
+    document.querySelectorAll('.confirm-withdraw').forEach(button => {
+      button.addEventListener('click', async function () {
+        const quantity = this.closest('.card').querySelector('.withdraw-quantity').value;
+        const symbol = this.dataset.symbol;
+
+        if (quantity && !isNaN(quantity)) {
+          try {
+            await withdrawToken(symbol, quantity);
+            await reloadBalances();
+          } catch (error) {
+            alert('Withdrawal failed. Please try again.');
+          }
+        } else {
+          alert('Please enter a valid quantity.');
+        }
       });
-    }
-    
-    fetchWaxAccount();
+    });
+
+    // Event listener per il pulsante Transfer.
+    document.querySelectorAll('.transfer-button').forEach(button => {
+      button.addEventListener('click', function () {
+        const inputs = this.closest('.card').querySelector('.transfer-inputs');
+        inputs.style.display = inputs.style.display === 'none' ? 'block' : 'none';
+      });
+    });
+
+    document.querySelectorAll('.confirm-transfer').forEach(button => {
+      button.addEventListener('click', async function () {
+        const quantity = this.closest('.card').querySelector('.transfer-quantity').value;
+        const receiver = this.closest('.card').querySelector('.transfer-receiver').value;
+        const symbol = this.dataset.symbol;
+
+        if (quantity && receiver && !isNaN(quantity)) {
+          try {
+            await transferToken(symbol, quantity, receiver);
+            await reloadBalances();
+          } catch (error) {
+            alert('Transfer failed. Please try again.');
+          }
+        } else {
+          alert('Please enter a valid quantity and receiver.');
+        }
+      });
+    });
+  }
+
+  // Aggiunto: Funzione per ricaricare il contenuto della pagina "balance".
+  async function reloadBalances() {
+    await loadContent('balance');
+  }
+  fetchWaxAccount();
   </script>
 </body>
 </html>

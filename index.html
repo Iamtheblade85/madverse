@@ -308,7 +308,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
 });
         // Funzione per ricaricare i bilanci
         async function reloadBalances() {
-            const url = `https://iamemanuele.pythonanywhere.com/balance?user_id=${userId}`;
+            const url = `https://iamemanuele.pythonanywhere.com/saldo?user_id=${userId}`;
             const contentFrame = document.getElementById("content-frame");
     
             try {

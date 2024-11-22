@@ -443,11 +443,11 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         contentFrame.innerHTML = `
             <h2 class="pool-title" style="text-align: center;">Staking Farms</h2>
             <div style="text-align: center; margin-bottom: 20px;">
-                <label class="switch">
+                <label class="custom-switch">
                     <input type="checkbox" id="toggle-pools" ${showAllPools ? '' : 'checked'}>
                     <span class="slider"></span>
                 </label>
-                <span style="margin-left: 10px;">${showAllPools ? 'Show My Pools' : 'Show All Pools'}</span>
+                <span style="margin-left: 15px; font-size: 1.2em; vertical-align: middle;">${showAllPools ? 'Show My Pools' : 'Show All Pools'}</span>
             </div>
             <div class="balance-grid">
                 ${pools.map(pool => `
@@ -457,6 +457,10 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                             <button class="add-button" data-symbol="${pool.token_symbol}" style="padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Add</button>
                             <button class="remove-button" data-symbol="${pool.token_symbol}" style="padding: 5px 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Remove</button>
                         </div>
+                        <div class="action-inputs" style="display: none; margin-top: 10px;">
+                            <input type="number" class="action-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
+                            <button class="confirm-action" data-symbol="${pool.token_symbol}">Confirm</button>
+                        </div>                        
                         <p><strong>Total Staked:</strong> ${pool.total_staked.toLocaleString()} ${pool.token_symbol}</p>
                         <p><strong>Your Stake:</strong> ${pool.user_staked.toLocaleString()} ${pool.token_symbol}</p>
                         <h5>Rewards:</h5>
@@ -470,10 +474,6 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                                     <p><strong>Days Remaining:</strong> ${reward.days_remaining}</p>
                                 </div>
                             `).join('')}
-                        </div>
-                        <div class="action-inputs" style="display: none; margin-top: 10px;">
-                            <input type="number" class="action-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
-                            <button class="confirm-action" data-symbol="${pool.token_symbol}">Confirm</button>
                         </div>
                     </div>
                 `).join('')}
@@ -496,7 +496,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
             button.addEventListener('click', function () {
                 const card = this.closest('.card');
                 const actionInputs = card.querySelector('.action-inputs');
-                actionInputs.style.display = 'block';
+                actionInputs.style.display = 'flex';
                 actionInputs.querySelector('.confirm-action').dataset.action = 'add';
             });
         });
@@ -506,7 +506,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
             button.addEventListener('click', function () {
                 const card = this.closest('.card');
                 const actionInputs = card.querySelector('.action-inputs');
-                actionInputs.style.display = 'block';
+                actionInputs.style.display = 'flex';
                 actionInputs.querySelector('.confirm-action').dataset.action = 'remove';
             });
         });
@@ -572,7 +572,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         });
     }
 
-    function loadPools() {
+  function loadPools() {
         const url = `https://iamemanuele.pythonanywhere.com/open_pools?user_id=${userId}`;
         fetch(url)
             .then(response => response.json())

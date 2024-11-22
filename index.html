@@ -127,33 +127,188 @@ if (page === 'balance') {
       contentFrame.innerHTML = "<p>No balances found.</p>";
       return;
     }
-
-    contentFrame.innerHTML = `
-      <h2 class="pool-title" style="text-align: center;">Your Token Balances</h2>
-      <div class="balance-grid">
-        ${data.balances.map(balance => `
-          <div class="card">
-            <h4>${balance.symbol}</h4>
-            <p><span class="value">${balance.amount}</span></p>
-            <button class="withdraw-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Withdraw</button>
-            <div class="withdraw-inputs" style="display: none; margin-top: 10px;">
-              <input type="number" class="withdraw-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
-              <button class="confirm-withdraw" data-symbol="${balance.symbol}">Confirm</button>
+        contentFrame.innerHTML = `
+            <h2 class="pool-title" style="text-align: center;">Your Token Balances</h2>
+            <div class="balance-grid">
+                ${data.balances.map(balance => `
+                    <div class="card">
+                        <h4>${balance.symbol}</h4>
+                        <p><span class="value">${balance.amount}</span></p>
+                        
+                        <!-- Pulsante di prelievo -->
+                        <button class="withdraw-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}" style="margin-top: 10px; padding: 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Withdraw</button>
+                        
+                        <!-- Sezione di prelievo -->
+                        <div class="withdraw-inputs" style="display: none; margin-top: 10px;">
+                            <input type="number" class="withdraw-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
+                            <button class="confirm-withdraw" data-symbol="${balance.symbol}">Confirm</button>
+                        </div>
+                        
+                        <!-- Pulsante di trasferimento -->
+                        <button class="transfer-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}" style="margin-top: 10px; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Transfer</button>
+                        
+                        <!-- Sezione di trasferimento -->
+                        <div class="transfer-inputs" style="display: none; margin-top: 10px;">
+                            <input type="number" class="transfer-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
+                            <input type="text" class="transfer-receiver" placeholder="Receiver" style="margin-right: 5px;"/>
+                            <button class="confirm-transfer" data-symbol="${balance.symbol}">Confirm</button>
+                        </div>
+                    </div>
+                `).join("")}
             </div>
-            <button class="transfer-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Transfer</button>
-            <div class="transfer-inputs" style="display: none; margin-top: 10px;">
-              <input type="number" class="transfer-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
-              <input type="text" class="transfer-receiver" placeholder="Receiver" style="margin-right: 5px;"/>
-              <button class="confirm-transfer" data-symbol="${balance.symbol}">Confirm</button>
-            </div>
-          </div>
-        `).join("")}
-      </div>
-    `;
+        `;
 
-    // Configura gli event listener per i pulsanti Withdraw e Transfer.
-    setupBalanceEventHandlers();
-  } 
+        // Gestione dei click sui pulsanti "Withdraw"
+        document.querySelectorAll('.withdraw-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const symbol = this.getAttribute('data-symbol');
+                const amount = this.getAttribute('data-amount');
+                const card = this.closest('.card');
+                const withdrawInputs = card.querySelector('.withdraw-inputs');
+                withdrawInputs.style.display = 'block';
+            });
+        });
+
+        // Gestione dei click sui pulsanti "Transfer"
+        document.querySelectorAll('.transfer-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const symbol = this.getAttribute('data-symbol');
+                const amount = this.getAttribute('data-amount');
+                const card = this.closest('.card');
+                const transferInputs = card.querySelector('.transfer-inputs');
+                transferInputs.style.display = 'block';
+            });
+        });
+
+        // Conferma del prelievo
+        document.querySelectorAll('.confirm-withdraw').forEach(button => {
+            button.addEventListener('click', async function() {
+                const symbol = this.getAttribute('data-symbol');
+                const withdrawQuantity = this.closest('.card').querySelector('.withdraw-quantity').value;
+                const waxAccount = user_wax_account; // Imposta l'account utente
+
+                if (!withdrawQuantity || isNaN(withdrawQuantity) || withdrawQuantity <= 0) {
+                    alert("Please enter a valid quantity for withdrawal.");
+                    return;
+                }
+
+                const url = 'https://iamemanuele.pythonanywhere.com/withdraw_balance';
+                const data = {
+                    wax_account: waxAccount,
+                    symbol: symbol,
+                    quantity: withdrawQuantity
+                };
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const responseText = await response.text();
+                    let result;
+                    try {
+                        result = JSON.parse(responseText);
+                    } catch (parseError) {
+                        console.error("Error parsing response:", parseError);
+                        return;
+                    }
+
+                    if (response.ok) {
+                        alert(`Success: ${result.message}`);
+                        await reloadBalances();  // Ricarica i bilanci dopo il prelievo
+                    } else {
+                        alert(`Error: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error("Error during withdrawal request:", error);
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        });
+
+        // Conferma del trasferimento
+        document.querySelectorAll('.confirm-transfer').forEach(button => {
+            button.addEventListener('click', async function() {
+                const symbol = this.getAttribute('data-symbol');
+                const transferQuantity = this.closest('.card').querySelector('.transfer-quantity').value;
+                const transferReceiver = this.closest('.card').querySelector('.transfer-receiver').value;
+                const waxAccount = user_wax_account; // Imposta l'account utente
+
+                if (!transferQuantity || isNaN(transferQuantity) || transferQuantity <= 0 || !transferReceiver) {
+                    alert("Please enter valid quantity and receiver details.");
+                    return;
+                }
+
+                const url = 'https://iamemanuele.pythonanywhere.com/transfer_balance';
+                const data = {
+                    wax_account: waxAccount,
+                    symbol: symbol,
+                    quantity: transferQuantity,
+                    receiver: transferReceiver
+                };
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const responseText = await response.text();
+                    let result;
+                    try {
+                        result = JSON.parse(responseText);
+                    } catch (parseError) {
+                        console.error("Error parsing response:", parseError);
+                        return;
+                    }
+
+                    if (response.ok) {
+                        alert(`Success: ${result.message}`);
+                        await reloadBalances();  // Ricarica i bilanci dopo il trasferimento
+                    } else {
+                        alert(`Error: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error("Error during transfer request:", error);
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        });
+
+    } catch (error) {
+        console.error("Error rendering balances:", error);
+        contentFrame.innerHTML = "<p>Error rendering balances. Please try again later.</p>";
+    }
+
+    // Funzione per ricaricare i bilanci
+    async function reloadBalances() {
+        const url = `https://iamemanuele.pythonanywhere.com/balance?user_id=${userId}`;
+        const contentFrame = document.getElementById("content-frame");
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Failed to fetch updated balances.');
+
+            const data = await response.json();
+            if (data && Array.isArray(data.balances)) {
+                contentFrame.innerHTML = ''; // Cancella il contenuto corrente
+                loadContent('balance'); // Ricarica i bilanci aggiornati
+            } else {
+                console.error("Invalid balance data received.");
+            }
+        } catch (error) {
+            console.error("Error updating balances:", error);
+            contentFrame.innerHTML = '<p>Error updating balances. Please try again.</p>';
+        }
+    }
+}
   else if (page === 'staking_farms') {
       contentFrame.innerHTML = `
                   <h2 class="pool-title" style="text-align: center;">Staking Farms</h2>                
@@ -396,12 +551,9 @@ if (page === 'balance') {
                                     },
                                     body: JSON.stringify(data)
                                 });
-                    
                                 console.log("Response status code:", response.status);
-                    
                                 const responseText = await response.text();
                                 console.log("Response body as text:", responseText);
-                    
                                 let result;
                                 try {
                                     result = JSON.parse(responseText); // Cerca di convertire la risposta in JSON
@@ -424,7 +576,6 @@ if (page === 'balance') {
                             }
                         });
                     });
-    
                 } catch (error) {
                     console.error("Error rendering the NFTs:", error);
                     contentFrame.innerHTML = `<p>Error: Unable to render NFTs. Please try again later.</p>`;
@@ -637,146 +788,7 @@ async function loadNFTFarms(viewType = 'all') {
               console.error("Error loading NFT farms:", error);
               contentFrame.innerHTML = `<p>Error loading NFT farms: ${error.message}</p>`;
           }
-      }
-  function setupBalanceEventHandlers() {
-    // Event listener per il pulsante Withdraw.
-    document.querySelectorAll('.withdraw-button').forEach(button => {
-      button.addEventListener('click', function () {
-        const inputs = this.closest('.card').querySelector('.withdraw-inputs');
-        inputs.style.display = inputs.style.display === 'none' ? 'block' : 'none';
-      });
-    });
-
-    document.querySelectorAll('.confirm-withdraw').forEach(button => {
-      button.addEventListener('click', async function () {
-        const quantity = this.closest('.card').querySelector('.withdraw-quantity').value;
-        const symbol = this.dataset.symbol;
-
-        if (quantity && !isNaN(quantity)) {
-          try {
-            await withdrawToken(symbol, quantity);
-            await reloadBalances();
-          } catch (error) {
-            alert('Withdrawal failed. Please try again.');
-          }
-        } else {
-          alert('Please enter a valid quantity.');
-        }
-      });
-    });
-
-    // Event listener per il pulsante Transfer.
-    document.querySelectorAll('.transfer-button').forEach(button => {
-      button.addEventListener('click', function () {
-        const inputs = this.closest('.card').querySelector('.transfer-inputs');
-        inputs.style.display = inputs.style.display === 'none' ? 'block' : 'none';
-      });
-    });
-
-    document.querySelectorAll('.confirm-transfer').forEach(button => {
-      button.addEventListener('click', async function () {
-        const quantity = this.closest('.card').querySelector('.transfer-quantity').value;
-        const receiver = this.closest('.card').querySelector('.transfer-receiver').value;
-        const symbol = this.dataset.symbol;
-
-        if (quantity && receiver && !isNaN(quantity)) {
-          try {
-            await transferToken(symbol, quantity, receiver);
-            await reloadBalances();
-          } catch (error) {
-            alert('Transfer failed. Please try again.');
-          }
-        } else {
-          alert('Please enter a valid quantity and receiver.');
-        }
-      });
-    });
-  }
-
-  // Aggiunto: Funzione per ricaricare il contenuto della pagina "balance".
-async function reloadBalances() {
-    const url = `https://iamemanuele.pythonanywhere.com/saldo?user_id=${userId}`;
-    const contentFrame = document.getElementById("content-frame");
-    console.log("Starting reloadBalances function.");
-    console.log("Fetching updated balances from URL:", url);
-
-    try {
-        const response = await fetch(url);
-        console.log("Response received:", response);
-
-        if (!response.ok) {
-            console.error("Response not OK. Status:", response.status, "StatusText:", response.statusText);
-            throw new Error('Failed to fetch updated balances.');
-        }
-
-        const data = await response.json();
-        console.log("Updated balances data fetched:", data);
-
-        // Aggiorna la visualizzazione
-        if (data) {
-            console.log("Valid data received. Clearing contentFrame and reloading balances.");
-            contentFrame.innerHTML = ''; // Cancella il contenuto corrente
-            await loadContent('balance');
-        } else {
-            console.error("Invalid balances data received. Data is null or undefined.");
-        }
-    } catch (error) {
-        console.error("Error updating balances:", error);
-        contentFrame.innerHTML = '<p>Error updating balances. Please reload the page.</p>';
-    }
-
-    console.log("reloadBalances function completed.");
-}
-
-    function withdrawToken(symbol, quantity) {
-      const url = 'https://iamemanuele.pythonanywhere.com/withdraw';
-    
-      const data = {
-        wax_account: user_wax_account,
-        amount: parseFloat(quantity),
-        token_symbol: symbol
-      };
-    
-      fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => response.json())
-      .then(data => {
-          alert(data.message || data.error);
-      })
-      .catch(error => {
-          alert(`Error: ${error}`);
-      });
-    }
-
-    function transferToken(symbol, quantity, receiver) {
-      const url = 'https://iamemanuele.pythonanywhere.com/transfer';
-      const data = {
-        from_wax_account: user_wax_account,
-        to_wax_account: receiver,
-        amount: parseFloat(quantity),
-        token_symbol: symbol
-      };
-    
-      fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => response.json())
-      .then(data => {
-          alert(data.message || data.error);
-      })
-      .catch(error => {
-          alert(`Error: ${error}`);
-      });
-    }       
+      }      
   fetchWaxAccount();
   </script>
 </body>

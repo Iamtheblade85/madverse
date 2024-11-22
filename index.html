@@ -281,32 +281,30 @@ if (page === 'balance') {
                 }
             });
         });
-    }
-
-    // Funzione per ricaricare i bilanci
-    async function reloadBalances() {
-        const url = `https://iamemanuele.pythonanywhere.com/balance?user_id=${userId}`;
-        const contentFrame = document.getElementById("content-frame");
-
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Failed to fetch updated balances.');
-
-            const data = await response.json();
-            if (data && Array.isArray(data.balances)) {
-                contentFrame.innerHTML = ''; // Cancella il contenuto corrente
-                loadContent('balance'); // Ricarica i bilanci aggiornati
-            } else {
-                console.error("Invalid balance data received.");
+        // Funzione per ricaricare i bilanci
+        async function reloadBalances() {
+            const url = `https://iamemanuele.pythonanywhere.com/balance?user_id=${userId}`;
+            const contentFrame = document.getElementById("content-frame");
+    
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch updated balances.');
+    
+                const data = await response.json();
+                if (data && Array.isArray(data.balances)) {
+                    contentFrame.innerHTML = ''; // Cancella il contenuto corrente
+                    loadContent('balance'); // Ricarica i bilanci aggiornati
+                } else {
+                    console.error("Invalid balance data received.");
+                }
+            } catch (error) {
+                console.error("Error updating balances:", error);
+                contentFrame.innerHTML = '<p>Error updating balances. Please try again.</p>';
             }
-        } catch (error) {
-            console.error("Error updating balances:", error);
-            contentFrame.innerHTML = '<p>Error updating balances. Please try again.</p>';
         }
     }
-}
-  else if (page === 'staking_farms') {
-      contentFrame.innerHTML = `
+      else if (page === 'staking_farms') {
+            contentFrame.innerHTML = `
                   <h2 class="pool-title" style="text-align: center;">Staking Farms</h2>                
                   <div class="balance-grid">
                   ${data.pools.map(pool => `

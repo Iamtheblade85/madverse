@@ -224,6 +224,7 @@ if (page === 'balance') {
                 card.appendChild(inProgressMessage);
         
                 try {
+                    console.log("Trying the fetch of backend response")
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: {
@@ -231,7 +232,7 @@ if (page === 'balance') {
                         },
                         body: JSON.stringify(data)
                     });
-        
+                    console.log("response:", response)        
                     const responseText = await response.text();
                     let result;
                     try {
@@ -240,7 +241,7 @@ if (page === 'balance') {
                         console.error("Error parsing response:", parseError);
                         return;
                     }
-        
+                    console.log("result:", result)    
                     const messageDiv = createMessageElement(response.ok ? 
                         `Success: ${result.details.received_amount} ${result.details.to_token} received` : 
                         `Error: ${result.error}`, response.ok);

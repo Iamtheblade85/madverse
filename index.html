@@ -180,107 +180,150 @@ if (page === 'balance') {
             });
         });
 
-        // Conferma del prelievo
-        document.querySelectorAll('.confirm-withdraw').forEach(button => {
-            button.addEventListener('click', async function() {
-                const symbol = this.getAttribute('data-symbol');
-                const withdrawQuantity = this.closest('.card').querySelector('.withdraw-quantity').value;
-                const waxAccount = user_wax_account; // Imposta l'account utente
+document.querySelectorAll('.withdraw-button').forEach(button => {
+    button.addEventListener('click', async function() {
+        const nftId = this.getAttribute('data-nft-id');
+        const waxAccount = user_wax_account;
+        const withdrawType = 'specific'; // O "all_inclusive" o "all_exclusive", in base alle esigenze
+        const url = 'https://iamemanuele.pythonanywhere.com/withdraw_nft';
 
-                if (!withdrawQuantity || isNaN(withdrawQuantity) || withdrawQuantity <= 0) {
-                    alert("Please enter a valid quantity for withdrawal.");
-                    return;
-                }
+        // Log per debug
+        console.log("Withdraw data:");
+        console.log("NFT ID:", nftId);
+        console.log("Wax Account:", waxAccount);
+        console.log("Withdraw Type:", withdrawType);
 
-                const url = 'https://iamemanuele.pythonanywhere.com/withdraw';
-                const data = {
-                    wax_account: waxAccount,
-                    symbol: symbol,
-                    quantity: withdrawQuantity
-                };
+        // Identifica l'elemento della card per aggiungere feedback
+        const card = this.closest('.card'); // Trova l'elemento genitore della card
+        const feedbackElement = card.querySelector('.feedback'); // Trova o crea un elemento per il feedback
 
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(data)
-                    });
+        // Se non esiste, crealo dinamicamente
+        if (!feedbackElement) {
+            const newFeedback = document.createElement('div');
+            newFeedback.className = 'feedback';
+            card.appendChild(newFeedback);
+        }
 
-                    const responseText = await response.text();
-                    let result;
-                    try {
-                        result = JSON.parse(responseText);
-                    } catch (parseError) {
-                        console.error("Error parsing response:", parseError);
-                        return;
-                    }
+        // Aggiungi un messaggio di caricamento
+        card.querySelector('.feedback').innerText = 'Processing withdrawal...';
 
-                    if (response.ok) {
-                        alert(`Success: ${result.message}`);
-                        await reloadBalances();  // Ricarica i bilanci dopo il prelievo
-                    } else {
-                        alert(`Error: ${result.error}`);
-                    }
-                } catch (error) {
-                    console.error("Error during withdrawal request:", error);
-                    alert('An error occurred. Please try again.');
-                }
+        // Crea l'oggetto da inviare al backend
+        const data = {
+            wax_account: waxAccount,
+            nft_id: nftId,
+            withdraw_type: withdrawType
+        };
+
+        console.log("Request payload (data) being sent to backend:", JSON.stringify(data));
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
             });
-        });
+
+            // Log per vedere lo stato della risposta
+            console.log("Response status:", response.status);
+            console.log("Response headers:", response.headers);
+
+            const responseText = await response.text();
+            console.log("Response body:", responseText);  // Log del corpo della risposta
+
+            let result;
+            try {
+                result = JSON.parse(responseText);  // Cerca di analizzare la risposta come JSON
+                console.log("Parsed response JSON:", result);
+            } catch (parseError) {
+                console.error("Error parsing response:", parseError);
+                card.querySelector('.feedback').innerText = "An error occurred. Please try again.";
+                return;
+            }
+
+            if (response.ok) {
+                card.querySelector('.feedback').innerText = `Success: ${result.message}`;
+                await reloadNFTs();  // Ricarica gli NFT dopo il prelievo
+            } else {
+                card.querySelector('.feedback').innerText = `Error: ${result.error}`;
+            }
+        } catch (error) {
+            console.error("Error during withdrawal request:", error);
+            card.querySelector('.feedback').innerText = 'An error occurred. Please try again.';
+        }
+    });
+});
 
         // Conferma del trasferimento
-        document.querySelectorAll('.confirm-transfer').forEach(button => {
-            button.addEventListener('click', async function() {
-                const symbol = this.getAttribute('data-symbol');
-                const transferQuantity = this.closest('.card').querySelector('.transfer-quantity').value;
-                const transferReceiver = this.closest('.card').querySelector('.transfer-receiver').value;
-                const waxAccount = user_wax_account; // Imposta l'account utente
+document.querySelectorAll('.confirm-transfer').forEach(button => {
+    button.addEventListener('click', async function() {
+        const symbol = this.getAttribute('data-symbol');
+        const transferQuantity = this.closest('.card').querySelector('.transfer-quantity').value;
+        const transferReceiver = this.closest('.card').querySelector('.transfer-receiver').value;
+        const waxAccount = user_wax_account; // Imposta l'account utente
 
-                if (!transferQuantity || isNaN(transferQuantity) || transferQuantity <= 0 || !transferReceiver) {
-                    alert("Please enter valid quantity and receiver details.");
-                    return;
-                }
+        // Aggiungi log per i dati di input
+        console.log("Transfer data:");
+        console.log("Symbol:", symbol);
+        console.log("Quantity:", transferQuantity);
+        console.log("Receiver:", transferReceiver);
+        console.log("Wax Account:", waxAccount);
 
-                const url = 'https://iamemanuele.pythonanywhere.com/transfer';
-                const data = {
-                    wax_account: waxAccount,
-                    symbol: symbol,
-                    quantity: transferQuantity,
-                    receiver: transferReceiver
-                };
+        // Validazione degli input
+        if (!transferQuantity || isNaN(transferQuantity) || transferQuantity <= 0 || !transferReceiver) {
+            alert("Please enter valid quantity and receiver details.");
+            return;
+        }
 
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(data)
-                    });
+        const url = 'https://iamemanuele.pythonanywhere.com/transfer';
+        const data = {
+            wax_account: waxAccount,
+            symbol: symbol,
+            quantity: transferQuantity,
+            receiver: transferReceiver
+        };
 
-                    const responseText = await response.text();
-                    let result;
-                    try {
-                        result = JSON.parse(responseText);
-                    } catch (parseError) {
-                        console.error("Error parsing response:", parseError);
-                        return;
-                    }
+        try {
+            // Log per vedere l'oggetto che inviamo al server
+            console.log("Sending request data:", JSON.stringify(data));
 
-                    if (response.ok) {
-                        alert(`Success: ${result.message}`);
-                        await reloadBalances();  // Ricarica i bilanci dopo il trasferimento
-                    } else {
-                        alert(`Error: ${result.error}`);
-                    }
-                } catch (error) {
-                    console.error("Error during transfer request:", error);
-                    alert('An error occurred. Please try again.');
-                }
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
             });
-        });
+
+            // Log per vedere lo stato della risposta
+            console.log("Response status:", response.status);
+            console.log("Response headers:", response.headers);
+
+            const responseText = await response.text();
+            console.log("Response body:", responseText);  // Log del corpo della risposta
+
+            let result;
+            try {
+                result = JSON.parse(responseText);  // Cerca di analizzare la risposta come JSON
+                console.log("Parsed response JSON:", result);
+            } catch (parseError) {
+                console.error("Error parsing response:", parseError);
+                return;
+            }
+
+            if (response.ok) {
+                alert(`Success: ${result.message}`);
+                await reloadBalances();  // Ricarica i bilanci dopo il trasferimento
+            } else {
+                alert(`Error: ${result.error}`);
+            }
+        } catch (error) {
+            console.error("Error during transfer request:", error);
+            alert('An error occurred. Please try again.');
+        }
+    });
+});
         // Funzione per ricaricare i bilanci
         async function reloadBalances() {
             const url = `https://iamemanuele.pythonanywhere.com/balance?user_id=${userId}`;

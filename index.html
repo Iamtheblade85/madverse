@@ -180,41 +180,25 @@ if (page === 'balance') {
             });
         });
 
-document.querySelectorAll('.withdraw-button').forEach(button => {
+document.querySelectorAll('.confirm-withdraw').forEach(button => {
     button.addEventListener('click', async function() {
-        const nftId = this.getAttribute('data-nft-id');
-        const waxAccount = user_wax_account;
-        const withdrawType = 'specific'; // O "all_inclusive" o "all_exclusive", in base alle esigenze
-        const url = 'https://iamemanuele.pythonanywhere.com/withdraw_nft';
+        const symbol = this.getAttribute('data-symbol');
+        const withdrawQuantity = this.closest('.card').querySelector('.withdraw-quantity').value;
+        const waxAccount = user_wax_account; // Imposta l'account utente
 
-        // Log per debug
-        console.log("Withdraw data:");
-        console.log("NFT ID:", nftId);
-        console.log("Wax Account:", waxAccount);
-        console.log("Withdraw Type:", withdrawType);
-
-        // Identifica l'elemento della card per aggiungere feedback
-        const card = this.closest('.card'); // Trova l'elemento genitore della card
-        const feedbackElement = card.querySelector('.feedback'); // Trova o crea un elemento per il feedback
-
-        // Se non esiste, crealo dinamicamente
-        if (!feedbackElement) {
-            const newFeedback = document.createElement('div');
-            newFeedback.className = 'feedback';
-            card.appendChild(newFeedback);
+        if (!withdrawQuantity || isNaN(withdrawQuantity) || withdrawQuantity <= 0) {
+            alert("Please enter a valid quantity for withdrawal.");
+            return;
         }
 
-        // Aggiungi un messaggio di caricamento
-        card.querySelector('.feedback').innerText = 'Processing withdrawal...';
-
-        // Crea l'oggetto da inviare al backend
+        const url = 'https://iamemanuele.pythonanywhere.com/withdraw';
         const data = {
             wax_account: waxAccount,
-            nft_id: nftId,
-            withdraw_type: withdrawType
+            symbol: symbol,
+            quantity: withdrawQuantity
         };
 
-        console.log("Request payload (data) being sent to backend:", JSON.stringify(data));
+        console.log("Initiating withdrawal request:", data); // Log dei dati inviati
 
         try {
             const response = await fetch(url, {
@@ -225,35 +209,33 @@ document.querySelectorAll('.withdraw-button').forEach(button => {
                 body: JSON.stringify(data)
             });
 
-            // Log per vedere lo stato della risposta
-            console.log("Response status:", response.status);
-            console.log("Response headers:", response.headers);
-
+            console.log("Withdrawal response status:", response.status); // Log dello status della risposta
             const responseText = await response.text();
-            console.log("Response body:", responseText);  // Log del corpo della risposta
+            console.log("Response text received:", responseText); // Log del corpo della risposta
 
             let result;
             try {
-                result = JSON.parse(responseText);  // Cerca di analizzare la risposta come JSON
-                console.log("Parsed response JSON:", result);
+                result = JSON.parse(responseText);
+                console.log("Parsed response:", result); // Log della risposta JSON
             } catch (parseError) {
                 console.error("Error parsing response:", parseError);
-                card.querySelector('.feedback').innerText = "An error occurred. Please try again.";
+                console.error("Raw response text:", responseText); // Log della risposta raw
                 return;
             }
 
             if (response.ok) {
-                card.querySelector('.feedback').innerText = `Success: ${result.message}`;
-                await reloadNFTs();  // Ricarica gli NFT dopo il prelievo
+                alert(`Success: ${result.message}`);
+                await reloadBalances();  // Ricarica i bilanci dopo il prelievo
             } else {
-                card.querySelector('.feedback').innerText = `Error: ${result.error}`;
+                alert(`Error: ${result.error}`);
             }
         } catch (error) {
             console.error("Error during withdrawal request:", error);
-            card.querySelector('.feedback').innerText = 'An error occurred. Please try again.';
+            alert('An error occurred. Please try again.');
         }
     });
 });
+
 
         // Conferma del trasferimento
 document.querySelectorAll('.confirm-transfer').forEach(button => {

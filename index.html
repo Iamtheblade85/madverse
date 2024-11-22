@@ -157,7 +157,25 @@ if (page === 'balance') {
                 `).join("")}
             </div>
         `;
-
+        // Funzione per creare un messaggio dinamico sotto i pulsanti
+        function createMessageElement(message, isSuccess) {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.marginTop = '10px';
+            messageDiv.style.padding = '10px';
+            messageDiv.style.borderRadius = '5px';
+            messageDiv.style.fontSize = '14px';
+        
+            if (isSuccess) {
+                messageDiv.style.backgroundColor = '#4CAF50';  // Successo
+                messageDiv.style.color = 'white';
+            } else {
+                messageDiv.style.backgroundColor = '#FF5722';  // Errore
+                messageDiv.style.color = 'white';
+            }
+        
+            messageDiv.textContent = message;
+            return messageDiv;
+        }
         // Gestione dei click sui pulsanti "Withdraw"
         document.querySelectorAll('.withdraw-button').forEach(button => {
             button.addEventListener('click', function() {
@@ -180,14 +198,17 @@ if (page === 'balance') {
             });
         });
 
+// Gestione della conferma del prelievo
 document.querySelectorAll('.confirm-withdraw').forEach(button => {
     button.addEventListener('click', async function() {
         const symbol = this.getAttribute('data-symbol');
         const withdrawQuantity = this.closest('.card').querySelector('.withdraw-quantity').value;
         const waxAccount = user_wax_account; // Imposta l'account utente
+        const card = this.closest('.card');  // Riferimento alla card
 
         if (!withdrawQuantity || isNaN(withdrawQuantity) || withdrawQuantity <= 0) {
-            alert("Please enter a valid quantity for withdrawal.");
+            const messageDiv = createMessageElement('Please enter a valid quantity for withdrawal.', false);
+            card.appendChild(messageDiv);  // Aggiungi il messaggio alla card
             return;
         }
 
@@ -198,8 +219,6 @@ document.querySelectorAll('.confirm-withdraw').forEach(button => {
             amount: withdrawQuantity
         };
 
-        console.log("Initiating withdrawal request:", data); // Log dei dati inviati
-
         try {
             const response = await fetch(url, {
                 method: 'POST',
@@ -209,52 +228,48 @@ document.querySelectorAll('.confirm-withdraw').forEach(button => {
                 body: JSON.stringify(data)
             });
 
-            console.log("Withdrawal response status:", response.status); // Log dello status della risposta
             const responseText = await response.text();
-            console.log("Response text received:", responseText); // Log del corpo della risposta
-
             let result;
             try {
                 result = JSON.parse(responseText);
-                console.log("Parsed response:", result); // Log della risposta JSON
             } catch (parseError) {
                 console.error("Error parsing response:", parseError);
-                console.error("Raw response text:", responseText); // Log della risposta raw
                 return;
             }
 
-            if (response.ok) {
-                alert(`Success: ${result.message}`);
+            const messageDiv = createMessageElement(response.ok ? `Success: ${result.message}` : `Error: ${result.error}`, response.ok);
+            card.appendChild(messageDiv);  // Aggiungi il messaggio alla card
+
+            // Mostra il messaggio per 3 secondi prima di ricaricare i bilanci
+            setTimeout(async () => {
                 await reloadBalances();  // Ricarica i bilanci dopo il prelievo
-            } else {
-                alert(`Error: ${result.error}`);
-            }
+            }, 3000);  // Ritardo di 3 secondi
         } catch (error) {
             console.error("Error during withdrawal request:", error);
-            alert('An error occurred. Please try again.');
+            const messageDiv = createMessageElement('An error occurred. Please try again.', false);
+            card.appendChild(messageDiv);  // Aggiungi il messaggio alla card
+
+            // Mostra il messaggio per 3 secondi prima di ricaricare i bilanci
+            setTimeout(async () => {
+                await reloadBalances();  // Ricarica i bilanci dopo il prelievo
+            }, 3000);  // Ritardo di 3 secondi
         }
     });
 });
 
-
-        // Conferma del trasferimento
+// Gestione della conferma del trasferimento
 document.querySelectorAll('.confirm-transfer').forEach(button => {
     button.addEventListener('click', async function() {
         const symbol = this.getAttribute('data-symbol');
         const transferQuantity = this.closest('.card').querySelector('.transfer-quantity').value;
         const transferReceiver = this.closest('.card').querySelector('.transfer-receiver').value;
         const waxAccount = user_wax_account; // Imposta l'account utente
-
-        // Aggiungi log per i dati di input
-        console.log("Transfer data:");
-        console.log("Symbol:", symbol);
-        console.log("Quantity:", transferQuantity);
-        console.log("Receiver:", transferReceiver);
-        console.log("Wax Account:", waxAccount);
+        const card = this.closest('.card');  // Riferimento alla card
 
         // Validazione degli input
         if (!transferQuantity || isNaN(transferQuantity) || transferQuantity <= 0 || !transferReceiver) {
-            alert("Please enter valid quantity and receiver details.");
+            const messageDiv = createMessageElement('Please enter valid quantity and receiver details.', false);
+            card.appendChild(messageDiv);  // Aggiungi il messaggio alla card
             return;
         }
 
@@ -267,9 +282,6 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         };
 
         try {
-            // Log per vedere l'oggetto che inviamo al server
-            console.log("Sending request data:", JSON.stringify(data));
-
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -278,31 +290,31 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                 body: JSON.stringify(data)
             });
 
-            // Log per vedere lo stato della risposta
-            console.log("Response status:", response.status);
-            console.log("Response headers:", response.headers);
-
             const responseText = await response.text();
-            console.log("Response body:", responseText);  // Log del corpo della risposta
-
             let result;
             try {
-                result = JSON.parse(responseText);  // Cerca di analizzare la risposta come JSON
-                console.log("Parsed response JSON:", result);
+                result = JSON.parse(responseText);
             } catch (parseError) {
                 console.error("Error parsing response:", parseError);
                 return;
             }
 
-            if (response.ok) {
-                alert(`Success: ${result.message}`);
+            const messageDiv = createMessageElement(response.ok ? `Success: ${result.message}` : `Error: ${result.error}`, response.ok);
+            card.appendChild(messageDiv);  // Aggiungi il messaggio alla card
+
+            // Mostra il messaggio per 3 secondi prima di ricaricare i bilanci
+            setTimeout(async () => {
                 await reloadBalances();  // Ricarica i bilanci dopo il trasferimento
-            } else {
-                alert(`Error: ${result.error}`);
-            }
+            }, 3000);  // Ritardo di 3 secondi
         } catch (error) {
             console.error("Error during transfer request:", error);
-            alert('An error occurred. Please try again.');
+            const messageDiv = createMessageElement('An error occurred. Please try again.', false);
+            card.appendChild(messageDiv);  // Aggiungi il messaggio alla card
+
+            // Mostra il messaggio per 3 secondi prima di ricaricare i bilanci
+            setTimeout(async () => {
+                await reloadBalances();  // Ricarica i bilanci dopo il trasferimento
+            }, 3000);  // Ritardo di 3 secondi
         }
     });
 });

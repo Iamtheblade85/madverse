@@ -35,60 +35,84 @@
   </div>
   
   <script>
-    function getQueryParam(param) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param);
-    }
+    // Variabili globali per user_id e token
+    const userId = "<user_id_from_telegram>"; // Questi valori saranno popolati dinamicamente
+    const token = "<token_from_telegram>";
 
-    const userId = getQueryParam("user_id");
     let user_wax_account = null;
 
     async function fetchWaxAccount() {
-      console.log("Fetching Wax Account...");
-      const response = await fetch(`https://iamemanuele.pythonanywhere.com/profile?user_id=${userId}`);
-      console.log("Response status:", response.status);
-      const data = await response.json();
-      console.log("Account data received:", data);
-      
-      if (response.ok && data.user_profile.wax_account) {
-          user_wax_account = data.user_profile.wax_account;
-          // Imposta il messaggio di benvenuto
-          const welcomeMessage = `Welcome, ${user_wax_account}`;
-          document.getElementById("welcome-message").textContent = welcomeMessage;
-      
-          // Applica l'animazione alle lettere
-          animateText(welcomeMessage); // Chiama la funzione per animare il testo
-      
-          // Messaggio personalizzato per l'utente
-          document.getElementById("personalized-message").textContent = `Welcome to our platform, where innovation meets opportunity! As a valued member, you are part of a revolutionary ecosystem fueled by our exclusive token CHIPS, which drives the entire economy. Get ready to engage in a world of endless possibilities and growth!`;
-      } else {
-          // Messaggio di benvenuto per utenti non autenticati
-          const welcomeMessage = `Welcome, User`;
-          document.getElementById("welcome-message").textContent = welcomeMessage;
-      
-          // Applica l'animazione alle lettere
-          animateText(welcomeMessage); // Chiama la funzione per animare il testo
-      
-          // Messaggio generico per utenti non autenticati
-          document.getElementById("personalized-message").textContent = `Welcome to our platform! Explore the power of our unique token CHIPS, designed to empower and sustain an ever-growing digital economy. Join us today to unlock endless potential and experience the future of decentralized finance!`;
-      }
+        console.log("Fetching Wax Account...");
 
-      // Funzione per animare il testo lettera per lettera
-      function animateText(text) {
-          const welcomeMessageElement = document.getElementById("welcome-message");
-          
-          // Pulisci il contenuto precedente
-          welcomeMessageElement.innerHTML = '';
-          
-          // Dividi il testo in lettere e avvolgile in span
-          text.split('').forEach((letter, index) => {
-              const span = document.createElement('span');
-              span.textContent = letter;
-              span.style.setProperty('--letter-index', index); // Imposta l'indice per il ritardo dell'animazione
-              welcomeMessageElement.appendChild(span);
-          });
-      }
+        try {
+            // Esegui la richiesta con gli header
+            const response = await fetch('https://iamemanuele.pythonanywhere.com/profile', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'X-User-ID': userId
+                }
+            });
+
+            console.log("Response status:", response.status);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Account data received:", data);
+
+            if (data.user_profile?.wax_account) {
+                user_wax_account = data.user_profile.wax_account;
+
+                // Imposta il messaggio di benvenuto
+                const welcomeMessage = `Welcome, ${user_wax_account}`;
+                document.getElementById("welcome-message").textContent = welcomeMessage;
+
+                // Applica l'animazione alle lettere
+                animateText(welcomeMessage);
+
+                // Messaggio personalizzato per l'utente
+                document.getElementById("personalized-message").textContent = `Welcome to our platform, where innovation meets opportunity! As a valued member, you are part of a revolutionary ecosystem fueled by our exclusive token CHIPS, which drives the entire economy. Get ready to engage in a world of endless possibilities and growth!`;
+            } else {
+                displayGenericWelcome();
+            }
+        } catch (error) {
+            console.error("Error fetching Wax Account:", error);
+            displayGenericWelcome();
+        }
     }
+
+    function displayGenericWelcome() {
+        const welcomeMessage = `Welcome, User`;
+        document.getElementById("welcome-message").textContent = welcomeMessage;
+
+        // Applica l'animazione alle lettere
+        animateText(welcomeMessage);
+
+        // Messaggio generico per utenti non autenticati
+        document.getElementById("personalized-message").textContent = `Welcome to our platform! Explore the power of our unique token CHIPS, designed to empower and sustain an ever-growing digital economy. Join us today to unlock endless potential and experience the future of decentralized finance!`;
+    }
+
+    // Funzione per animare il testo lettera per lettera
+    function animateText(text) {
+        const welcomeMessageElement = document.getElementById("welcome-message");
+
+        // Pulisci il contenuto precedente
+        welcomeMessageElement.innerHTML = '';
+
+        // Dividi il testo in lettere e avvolgile in span
+        text.split('').forEach((letter, index) => {
+            const span = document.createElement('span');
+            span.textContent = letter;
+            span.style.setProperty('--letter-index', index); // Imposta l'indice per il ritardo dell'animazione
+            welcomeMessageElement.appendChild(span);
+        });
+    }
+
+    // Esegui la richiesta al caricamento della pagina
+    fetchWaxAccount();
     async function loadContent(page) {
       console.log("Loading content for page:", page);
       const contentFrame = document.getElementById("content-frame");
@@ -1061,7 +1085,6 @@ async function loadNFTFarms(viewType = 'all') {
               contentFrame.innerHTML = `<p>Error loading NFT farms: ${error.message}</p>`;
           }
       }      
-  fetchWaxAccount();
   </script>
 </body>
 </html>

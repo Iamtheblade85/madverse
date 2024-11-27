@@ -334,7 +334,7 @@ document.querySelectorAll('.confirm-withdraw').forEach(button => {
             return;
         }
 
-        const url = 'https://iamemanuele.pythonanywhere.com/withdraw?user_id=${userId}&usx_token=${token}`;
+        const url = `https://iamemanuele.pythonanywhere.com/withdraw?user_id=${userId}&usx_token=${token}`;
         const data = {
             wax_account: waxAccount,
             token_symbol: symbol,
@@ -398,7 +398,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
             return;
         }
 
-        const url = 'https://iamemanuele.pythonanywhere.com/transfer?user_id=${userId}&usx_token=${token}`;
+        const url = `https://iamemanuele.pythonanywhere.com/transfer?user_id=${userId}&usx_token=${token}`;
         const data = {
             wax_account: waxAccount,
             token_symbol: symbol,
@@ -574,8 +574,8 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                 }
 
                 const url = action === 'add'
-                    ? 'https://iamemanuele.pythonanywhere.com/stake_add?user_id=${userId}&usx_token=${token}`
-                    : 'https://iamemanuele.pythonanywhere.com/stake_remove?user_id=${userId}&usx_token=${token}`;
+                    ? `https://iamemanuele.pythonanywhere.com/stake_add?user_id=${userId}&usx_token=${token}`
+                    : `https://iamemanuele.pythonanywhere.com/stake_remove?user_id=${userId}&usx_token=${token}`;
                 const data = {
                     user_id: userId,         
                     pool_id: poolId,         
@@ -812,7 +812,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                             const nftId = this.getAttribute('data-nft-id');
                             const waxAccount = user_wax_account;
                             const withdrawType = 'specific'; // O "all_inclusive" o "all_exclusive", in base alle esigenze
-                            const url = 'https://iamemanuele.pythonanywhere.com/withdraw_nft?user_id=${userId}&usx_token=${token}`;
+                            const url = `https://iamemanuele.pythonanywhere.com/withdraw_nft?user_id=${userId}&usx_token=${token}`;
                             const card = this.closest('.card'); // Trova l'elemento genitore della card
                             const feedbackElement = card.querySelector('.feedback'); // Trova o crea un elemento per il feedback
                             if (!feedbackElement) {

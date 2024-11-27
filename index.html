@@ -762,15 +762,27 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                                     <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
                                     <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
                                     <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
+                                    <div id="stakable-info">
+                                        <p>
+                                            ${nft.is_staked === "Not Staked" && nft.is_stakable === "Stakable" ? 
+                                                `<button class="btn-stake">Stake Now</button>` : 
+                                                ''}
+                                        </p>
+                                        <p>
+                                            ${nft.is_staked === "Not Staked" && nft.is_stakable === "Not Stakable" ? 
+                                                `NFT not Stakable` : 
+                                                ''}
+                                        </p>
+                                    </div>
                                     <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
-            
-                                    <div class="template-info">
+                                </div>                                     
+                                <div class="template-info">
                                         <p><span class="label">Collection:</span> <span class="value">${nft.template_info.collection_name || 'N/A'}</span></p>
                                         <p><span class="label">Schema:</span> <span class="value">${nft.template_info.schema_name || 'N/A'}</span></p>
                                         <p><span class="label">Template Name:</span> <span class="value">${nft.template_info.template_name || 'N/A'}</span></p>
                                         <p><span class="label">Max Supply:</span> <span class="value">${nft.template_info.max_supply || 'N/A'}</span></p>
                                         <p><span class="label">Transferable:</span> <span class="value">${nft.template_info.is_transferable ? 'Yes' : 'No'}</span></p>
-                                    </div>
+                                </div>
                                     <!-- Pulsante Withdraw -->
                                     <button class="withdraw-button" data-nft-id="${nft.nft_id}" data-wax-account="${wax_account}" style="margin-top: 10px; padding: 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Withdraw</button>
                                 </div>

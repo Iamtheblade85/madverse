@@ -36,7 +36,9 @@
 <script>  
 // Funzione per ottenere i parametri dalla query string dell'URL
 function getQueryParam(param) {
+    console.log("Fetching getQueryParam...");
     const urlParams = new URLSearchParams(window.location.search);
+    console.log("Fetching urlParams...", urlParams);
     return urlParams.get(param);
 }
 

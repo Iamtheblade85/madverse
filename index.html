@@ -55,7 +55,7 @@ async function fetchWaxAccount() {
         
         // Esegui la richiesta GET al backend per il profilo
         const response = await fetch(url, {
-            method: 'GET', // Richiesta GET senza headers aggiuntivi
+            method: 'GET', 
         });
 
         console.log("Response status:", response.status);
@@ -241,7 +241,7 @@ if (page === 'balance') {
                     return;
                 }
         
-                const url = 'https://iamemanuele.pythonanywhere.com/swap_tokens';
+                const url = 'https://iamemanuele.pythonanywhere.com/swap_tokens?user_id=${userId}&usx_token=${token}`;
                 const data = {
                     wax_account: waxAccount,
                     from_token: symbol,
@@ -332,7 +332,7 @@ document.querySelectorAll('.confirm-withdraw').forEach(button => {
             return;
         }
 
-        const url = 'https://iamemanuele.pythonanywhere.com/withdraw';
+        const url = 'https://iamemanuele.pythonanywhere.com/withdraw?user_id=${userId}&usx_token=${token}`;
         const data = {
             wax_account: waxAccount,
             token_symbol: symbol,
@@ -396,7 +396,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
             return;
         }
 
-        const url = 'https://iamemanuele.pythonanywhere.com/transfer';
+        const url = 'https://iamemanuele.pythonanywhere.com/transfer?user_id=${userId}&usx_token=${token}`;
         const data = {
             wax_account: waxAccount,
             token_symbol: symbol,
@@ -445,7 +445,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
 });
         // Funzione per ricaricare i bilanci
         async function reloadBalances() {
-            const url = `https://iamemanuele.pythonanywhere.com/saldo?user_id=${userId}`;
+            const url = `https://iamemanuele.pythonanywhere.com/saldo?user_id=${userId}&usx_token=${token}`;
             const contentFrame = document.getElementById("content-frame");
     
             try {
@@ -572,14 +572,14 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                 }
 
                 const url = action === 'add'
-                    ? 'https://iamemanuele.pythonanywhere.com/stake_add'
-                    : 'https://iamemanuele.pythonanywhere.com/stake_remove';
+                    ? 'https://iamemanuele.pythonanywhere.com/stake_add?user_id=${userId}&usx_token=${token}`
+                    : 'https://iamemanuele.pythonanywhere.com/stake_remove?user_id=${userId}&usx_token=${token}`;
                 const data = {
-                    user_id: userId,         // ID dell'utente dal contesto
-                    pool_id: poolId,         // ID del pool
-                    wax_account: user_wax_account, // Account WAX
-                    token_symbol: symbol,    // Simbolo del token
-                    amount: quantity         // Quantità
+                    user_id: userId,         
+                    pool_id: poolId,         
+                    wax_account: user_wax_account, 
+                    token_symbol: symbol,    
+                    amount: quantity
                 };
                 console.log("Data for Add/Remove:", data)
 
@@ -621,7 +621,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
     }
 
     function loadPools() {
-        const url = `https://iamemanuele.pythonanywhere.com/open_pools?user_id=${userId}`;
+        const url = `https://iamemanuele.pythonanywhere.com/open_pools?user_id=${userId}&usx_token=${token}`;
         fetch(url)
             .then(response => response.json())
             .then(data => {
@@ -805,46 +805,27 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                                 return nfts;
                         }
                     }
-                    // Gestisci il click sul pulsante "Withdraw per NFTs"
                     document.querySelectorAll('.withdraw-button').forEach(button => {
                         button.addEventListener('click', async function () {
                             const nftId = this.getAttribute('data-nft-id');
                             const waxAccount = user_wax_account;
                             const withdrawType = 'specific'; // O "all_inclusive" o "all_exclusive", in base alle esigenze
-                            const url = 'https://iamemanuele.pythonanywhere.com/withdraw_nft';
-                    
-                            // Log per debug
-                            console.log("Button clicked, preparing withdrawal with the following data:");
-                            console.log("NFT ID:", nftId);
-                            console.log("Wax Account:", waxAccount);
-                            console.log("Withdraw Type:", withdrawType);
-                            console.log("URL:", url);
-                    
-                            // Identifica l'elemento della card per aggiungere feedback
+                            const url = 'https://iamemanuele.pythonanywhere.com/withdraw_nft?user_id=${userId}&usx_token=${token}`;
                             const card = this.closest('.card'); // Trova l'elemento genitore della card
                             const feedbackElement = card.querySelector('.feedback'); // Trova o crea un elemento per il feedback
-                    
-                            // Se non esiste, crealo dinamicamente
                             if (!feedbackElement) {
                                 const newFeedback = document.createElement('div');
                                 newFeedback.className = 'feedback';
                                 card.appendChild(newFeedback);
                             }
                     
-                            // Aggiungi un messaggio di caricamento
                             card.querySelector('.feedback').innerText = 'Processing withdrawal...';
-                    
-                            // Crea l'oggetto da inviare al backend
                             const data = {
                                 wax_account: waxAccount,
                                 nft_id: nftId,
                                 withdraw_type: withdrawType
-                            };
-                    
-                            console.log("Request payload (data) being sent to backend:", JSON.stringify(data));
-                    
+                            };                  
                             try {
-                                // Invia la richiesta POST al backend
                                 const response = await fetch(url, {
                                     method: 'POST',
                                     headers: {
@@ -852,14 +833,11 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                                     },
                                     body: JSON.stringify(data)
                                 });
-                                console.log("Response status code:", response.status);
                                 const responseText = await response.text();
-                                console.log("Response body as text:", responseText);
                                 let result;
                                 try {
                                     result = JSON.parse(responseText); // Cerca di convertire la risposta in JSON
                                 } catch (parseError) {
-                                    console.error("Error parsing the response as JSON:", parseError);
                                     card.querySelector('.feedback').innerText = "An error occurred. Please try again.";
                                     return;
                                 }
@@ -1015,7 +993,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
     } 
 // Funzione per ricaricare gli NFT e aggiornare il contenuto della pagina
 async function reloadNFTs() {
-    const url = `https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}`;
+    const url = `https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}&usx_token=${token}`;
     const contentFrame = document.getElementById("content-frame");
 
     try {
@@ -1042,7 +1020,7 @@ async function loadNFTFarms(viewType = 'all') {
           console.log("Loading NFT Farms with view type:", viewType);
           const contentFrame = document.getElementById("content-frame");
           const userId = getQueryParam("user_id");
-          let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}`;
+          let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}&usx_token=${token}`;
       
           if (viewType === 'user_staking') {
               url += "&view=user_staking";

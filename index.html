@@ -784,7 +784,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                                         <p><span class="label">Transferable:</span> <span class="value">${nft.template_info.is_transferable ? 'Yes' : 'No'}</span></p>
                                 </div>
                                     <!-- Pulsante Withdraw -->
-                                    <button class="withdraw-button" data-nft-id="${nft.nft_id}" data-wax-account="${wax_account}" style="margin-top: 10px; padding: 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Withdraw</button>
+                                    <button class="withdraw-button" data-nft-id="${nft.nft_id}" data-wax-account="${user_wax_account}" style="margin-top: 10px; padding: 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Withdraw</button>
                                 </div>
                             </div>
                         `).join("");
@@ -869,6 +869,49 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                             }
                         });
                     });
+                    document.querySelectorAll('.btn-stake').forEach(button => {
+                        button.addEventListener('click', async function () {
+                            const nftId = this.closest('.card').querySelector('.nft-details .value').textContent;  // Recupera l'ID dell'NFT
+                            const waxAccount = user_wax_account;
+                            const card = this.closest('.card'); // Trova l'elemento genitore della card
+                            const feedbackElement = card.querySelector('.feedback'); // Trova o crea un elemento per il feedback
+                            if (!feedbackElement) {
+                                const newFeedback = document.createElement('div');
+                                newFeedback.className = 'feedback';
+                                card.appendChild(newFeedback);
+                            }
+                    
+                            card.querySelector('.feedback').innerText = 'Processing stake request...';  // Mostra il messaggio di caricamento
+                    
+                            const data = {
+                                wax_account: waxAccount,
+                                nft_id: nftId
+                            };
+                    
+                            try {
+                                const response = await fetch('/api/stake_nft', {  // Modifica l'URL in base all'endpoint del backend
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify(data)
+                                });
+                    
+                                const result = await response.json();
+                    
+                                if (response.ok) {
+                                    card.querySelector('.feedback').innerText = `Success: ${result.message}`;
+                                    await reloadNFTs();  // Ricarica la pagina
+                                } else {
+                                    card.querySelector('.feedback').innerText = `Error: ${result.error || 'Unknown error'}`;
+                                }
+                            } catch (error) {
+                                console.error("Error during stake request:", error);
+                                card.querySelector('.feedback').innerText = 'An error occurred. Please try again.';
+                            }
+                        });
+                    });
+              
                 } catch (error) {
                     console.error("Error rendering the NFTs:", error);
                     contentFrame.innerHTML = `<p>Error: Unable to render NFTs. Please try again later.</p>`;

@@ -964,13 +964,29 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         <div>
             <strong>Rewards Boosters:</strong>
             <ul>
+                <!-- Common booster percentage -->
                 <li>Common: ${data.mining_info.extra.booster_rewards[0].percentage}% each NFT</li>
+                
+                <!-- Rare booster percentage -->
                 <li>Rare: ${data.mining_info.extra.booster_rewards[1].percentage}% each NFT</li>
+                
+                <!-- Epic booster percentage -->
                 <li>Epic: ${data.mining_info.extra.booster_rewards[2].percentage}% each NFT</li>
+                
+                <!-- Legendary booster percentage -->
                 <li>Legendary: ${data.mining_info.extra.booster_rewards[3].percentage}% each NFT</li>
             </ul>
+        
+            <!-- Total booster rewards percentage -->
             <div><strong>Total Booster Rewards Percentage:</strong> ${data.mining_info.extra.total.booster_rewards_percentage}%</div>
+        
+            <!-- New section to display total percentages for each booster type -->
+            <div><strong>Total Common Booster Rewards:</strong> ${data.mining_info.extra.total.common_percentage}%</div>
+            <div><strong>Total Rare Booster Rewards:</strong> ${data.mining_info.extra.total.rare_percentage}%</div>
+            <div><strong>Total Epic Booster Rewards:</strong> ${data.mining_info.extra.total.epic_percentage}%</div>
+            <div><strong>Total Legendary Booster Rewards:</strong> ${data.mining_info.extra.total.legendary_percentage}%</div>
         </div>
+
 
         <div>
             <strong>XP Boosters:</strong>

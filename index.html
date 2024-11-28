@@ -964,17 +964,17 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         <div>
             <strong>Rewards Boosters:</strong>
             <ul>
-                <!-- Common booster percentage -->
-                <li>Common: ${data.mining_info.extra.booster_rewards[0].percentage}% each NFT</li>
+                <!-- Common booster percentage and quantity -->
+                <li>Common: ${data.mining_info.extra.booster_rewards.common?.percentage || 'N/A'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.common?.quantity || 0})</li>
                 
-                <!-- Rare booster percentage -->
-                <li>Rare: ${data.mining_info.extra.booster_rewards[1].percentage}% each NFT</li>
+                <!-- Rare booster percentage and quantity -->
+                <li>Rare: ${data.mining_info.extra.booster_rewards.rare?.percentage || 'N/A'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.rare?.quantity || 0})</li>
                 
-                <!-- Epic booster percentage -->
-                <li>Epic: ${data.mining_info.extra.booster_rewards[2].percentage}% each NFT</li>
+                <!-- Epic booster percentage and quantity -->
+                <li>Epic: ${data.mining_info.extra.booster_rewards.epic?.percentage || 'N/A'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.epic?.quantity || 0})</li>
                 
-                <!-- Legendary booster percentage -->
-                <li>Legendary: ${data.mining_info.extra.booster_rewards[3].percentage}% each NFT</li>
+                <!-- Legendary booster percentage and quantity -->
+                <li>Legendary: ${data.mining_info.extra.booster_rewards.legendary?.percentage || 'N/A'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.legendary?.quantity || 0})</li>
             </ul>
         
             <!-- Total booster rewards percentage -->

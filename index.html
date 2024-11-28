@@ -1064,18 +1064,39 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                                   <p><strong>Token Symbol:</strong> ${farm.token_symbol}</p>
                                   <h5>Templates and Rewards:</h5>
                                   <ul>
-                                      ${farm.templates.map(template => `
-                                          <li class="template-row">
-                                              <span class="template-id">ID: ${template.template_id}</span>
-                                              <span class="daily-reward">Reward: ${template.daily_reward} ${farm.token_symbol}</span>
-                                              <div class="action-buttons">
-                                                  <button class="add-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}">Add</button>
-                                                  ${viewType === 'user_staking' ? `
-                                                      <button class="remove-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}">Remove</button>
-                                                  ` : ''}
-                                              </div>
-                                          </li>
-                                      `).join('')}
+                                      ${farm.templates.map(template => {
+                                          // Trova gli NFT dell'utente per questo template
+                                          const userNfts = template.user_nfts;
+                                          const userNftsCount = userNfts.length;
+                                          const stakedNftsCount = userNfts.filter(nft => nft.is_staked).length;
+                                          const unstakedNftsCount = userNftsCount - stakedNftsCount;
+              
+                                          // Calcola il reward totale per gli NFT staccati
+                                          const totalReward = stakedNftsCount * template.daily_reward;
+              
+                                          return `
+                                              <li class="template-row">
+                                                  <span class="template-id">ID: ${template.template_id}</span>
+                                                  <span class="daily-reward">Reward: ${template.daily_reward} ${farm.token_symbol}</span>
+                                                  <p>Owned NFTs: ${userNftsCount} (Staked: ${stakedNftsCount}, Unstaked: ${unstakedNftsCount})</p>
+                                                  <div class="reward-info">
+                                                      <p>Total Reward for Staked NFTs: ${totalReward} ${farm.token_symbol}</p>
+                                                  </div>
+                                                  <div class="action-buttons">
+                                                      ${unstakedNftsCount > 0 ? `
+                                                          <button class="add-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}">
+                                                              Add NFT
+                                                          </button>
+                                                      ` : ''}
+                                                      ${stakedNftsCount > 0 ? `
+                                                          <button class="remove-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}">
+                                                              Remove NFT
+                                                          </button>
+                                                      ` : ''}
+                                                  </div>
+                                              </li>
+                                          `;
+                                      }).join('')}
                                   </ul>
                               </div>
                           `).join('')}
@@ -1083,6 +1104,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                   `;
                   attachEventHandlers();
               }
+
           
               function createMessageElement(message, isSuccess) {
                   const messageDiv = document.createElement('div');

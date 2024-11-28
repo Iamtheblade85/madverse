@@ -920,131 +920,73 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                 }
             } else if (page === 'profile') {
     contentFrame.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 class="pool-title" style="text-align: center;">Your Profile</h2>
-        <button 
-            id="toggle-sqj" 
-            style="
-                background-color: #39ff14; 
-                color: black; 
-                border: none; 
-                border-radius: 5px; 
-                padding: 10px 15px; 
-                font-size: 1rem; 
-                cursor: pointer;
-                transition: transform 0.3s ease;
-            "
-            onmouseover="this.style.transform='scale(1.1)';" 
-            onmouseout="this.style.transform='scale(1)';">
-            Show SQJ Data
-        </button>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2 class="pool-title" style="text-align: center;">Your Profile</h2>
+    <button 
+        id="toggle-sqj" 
+        style="
+            background-color: #39ff14; 
+            color: black; 
+            border: none; 
+            border-radius: 5px; 
+            padding: 10px 15px; 
+            font-size: 1rem; 
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        "
+        onmouseover="this.style.transform='scale(1.1)';" 
+        onmouseout="this.style.transform='scale(1)';">
+        Show SQJ Data
+    </button>
+</div>
+
+<div class="profile-grid">
+    <!-- General Data Section -->
+    <div class="profile-card">
+        <h3>General Data</h3>
+        <div><strong>Username:</strong> ${data.general_data.username}</div>
+        <div><strong>Wax Account:</strong> ${data.general_data.wax_account}</div>
+        <div><strong>Tier Level:</strong> ${data.general_data.tier_level}</div>
+        <div><strong>CHIPS Level:</strong> ${data.general_data.chips_level}</div>
+        <div><strong>CHIPS XP:</strong> ${data.general_data.chips_xp_actual}</div>
     </div>
 
-    <!-- Profile Grid Section -->
-    <div class="profile-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
-        <!-- User Profile Section -->
-        <div class="profile-card">
-            <h4>Username</h4>
-            <p>${data.general_data.username}</p>
-        </div>
-        <div class="profile-card">
-            <h4>Wax Account</h4>
-            <p>${data.general_data.wax_account}</p>
-        </div>
-        <div class="profile-card">
-            <h4>Tier Level</h4>
-            <p>${data.general_data.tier_level}</p>
-        </div>
+    <!-- Mining Info Section -->
+    <div class="profile-card">
+        <h3>Mining Info</h3>
+        <h4>Base Rewards</h4>
+        <div><strong>Short Message Tokens Reward:</strong> ${data.mining_info.base_rewards.short_messages.tokens_reward}</div>
+        <div><strong>Short Message XP Reward:</strong> ${data.mining_info.base_rewards.short_messages.xp_rewards}</div>
+        <div><strong>Long Message Tokens Reward:</strong> ${data.mining_info.base_rewards.long_messages.tokens_reward}</div>
+        <div><strong>Long Message XP Reward:</strong> ${data.mining_info.base_rewards.long_messages.xp_rewards}</div>
 
-        <!-- CHIPS Stats -->
-        <div class="profile-card">
-            <h4>CHIPS Level</h4>
-            <p>${data.general_data.chips_level}</p>
+        <h4>Extra Mining Info</h4>
+        <div><strong>Booster Rewards:</strong> 
+            <ul>
+                <li>Common: ${data.mining_info.extra.booster_rewards[0].percentage}%</li>
+                <li>Rare: ${data.mining_info.extra.booster_rewards[1].percentage}%</li>
+                <li>Epic: ${data.mining_info.extra.booster_rewards[2].percentage}%</li>
+                <li>Legendary: ${data.mining_info.extra.booster_rewards[3].percentage}%</li>
+            </ul>
         </div>
-        <div class="profile-card">
-            <h4>CHIPS XP</h4>
-            <p>${data.general_data.chips_xp_actual}</p>
-        </div>
-
-        <!-- Earnings Section -->
-        <div class="profile-card">
-            <h4 onclick="toggleCard('short-message')">Short Message Earnings</h4>
-            <div id="short-message" style="display: none;">
-                <p>${data.mining_info.base_rewards.short_messages.tokens_reward} WAX</p>
-                <p>XP: ${data.mining_info.base_rewards.short_messages.xp_rewards}</p>
-            </div>
-        </div>
-        <div class="profile-card">
-            <h4 onclick="toggleCard('long-message')">Long Message Earnings</h4>
-            <div id="long-message" style="display: none;">
-                <p>${data.mining_info.base_rewards.long_messages.tokens_reward} WAX</p>
-                <p>XP: ${data.mining_info.base_rewards.long_messages.xp_rewards}</p>
-            </div>
-        </div>
-
-        <!-- Booster Stats -->
-        <div class="profile-card">
-            <h4 onclick="toggleCard('boosters-owned')">Boosters Owned</h4>
-            <div id="boosters-owned" style="display: none;">
-                <p>Common: ${data.mining_info.extra.booster_rewards[0].percentage}%</p>
-                <p>Rare: ${data.mining_info.extra.booster_rewards[1].percentage}%</p>
-                <p>Epic: ${data.mining_info.extra.booster_rewards[2].percentage}%</p>
-                <p>Legendary: ${data.mining_info.extra.booster_rewards[3].percentage}%</p>
-            </div>
-        </div>
-
-        <div class="profile-card">
-            <h4>Total Booster Rewards</h4>
-            <p>${data.mining_info.extra.total.booster_rewards_percentage}%</p>
-        </div>
-
-        <!-- Rewards Section -->
-        <div class="profile-card">
-            <h4 onclick="toggleCard('total-rewards')">Total Rewards</h4>
-            <div id="total-rewards" style="display: none;">
-                <p>
-                    Short: ${(data.mining_info.base_rewards.short_messages.tokens_reward * (1 + data.mining_info.extra.total.booster_rewards_percentage / 100)).toFixed(2)} WAX
-                </p>
-                <p>
-                    Long: ${(data.mining_info.base_rewards.long_messages.tokens_reward * (1 + data.mining_info.extra.total.booster_rewards_percentage / 100)).toFixed(2)} WAX
-                </p>
-            </div>
-        </div>
+        <div><strong>Total Booster Rewards Percentage:</strong> ${data.mining_info.extra.total.booster_rewards_percentage}%</div>
     </div>
 
     <!-- SQJ Data Section -->
-    <div id="sqj-data" style="display: none; margin-top: 1em;">
-        <h3 class="section-title">SQJ Specific Data</h3>
-        <div class="profile-grid">
-            <div class="profile-card">
-                <h4 onclick="toggleCard('sqj-level')">SQJ Level</h4>
-                <div id="sqj-level" style="display: none;">
-                    <p>${data.sqj_data.level}</p>
-                </div>
-            </div>
-            <div class="profile-card">
-                <h4 onclick="toggleCard('sqj-xp')">SQJ XP</h4>
-                <div id="sqj-xp" style="display: none;">
-                    <p>${data.sqj_data.current_xp}</p>
-                </div>
-            </div>
-            <div class="profile-card">
-                <h4 onclick="toggleCard('sqj-xp-next')">XP for Next Level</h4>
-                <div id="sqj-xp-next" style="display: none;">
-                    <p>${data.sqj_data.xp_to_next_level}</p>
-                </div>
-            </div>
-            <div class="profile-card">
-                <h4 onclick="toggleCard('sqj-xp-remaining')">XP Remaining</h4>
-                <div id="sqj-xp-remaining" style="display: none;">
-                    <p>${data.sqj_data.xp_remaining}</p>
-                </div>
-            </div>
+    <div class="profile-card" id="sqj-data" style="display: none;">
+        <h3>SQJ Specific Data</h3>
+        <div><strong>SQJ Level:</strong> ${data.sqj_data.level}</div>
+        <div><strong>SQJ Current XP:</strong> ${data.sqj_data.current_xp}</div>
+        <div><strong>XP for Next Level:</strong> ${data.sqj_data.xp_to_next_level}</div>
+        <div><strong>Rewards:</strong>
+            <ul>
+                ${data.sqj_data.rewards.map(reward => `<li>${reward.token}: Short: ${reward.short} | Long: ${reward.long}</li>`).join('')}
+            </ul>
         </div>
     </div>
+</div>
     `;
 
-    // Event listener for toggle button
     const toggleButton = document.getElementById("toggle-sqj");
     toggleButton.addEventListener("click", () => {
         const sqjData = document.getElementById("sqj-data");

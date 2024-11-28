@@ -69,11 +69,12 @@ async function fetchWaxAccount() {
         const data = await response.json();
         console.log("Account data received:", data);
 
-        if (data.user_profile?.wax_account) {
-            user_wax_account = data.user_profile.wax_account;
+        // Accedi al wax_account nei dati ricevuti (modifica in base alla struttura)
+        const waxAccount = data.general_data?.wax_account;  // Cambia 'general_data' con la struttura corretta
 
+        if (waxAccount) {
             // Imposta il messaggio di benvenuto
-            const welcomeMessage = `Welcome, ${user_wax_account}`;
+            const welcomeMessage = `Welcome, ${waxAccount}`;
             document.getElementById("welcome-message").textContent = welcomeMessage;
 
             // Applica l'animazione alle lettere
@@ -82,6 +83,7 @@ async function fetchWaxAccount() {
             // Messaggio personalizzato per l'utente
             document.getElementById("personalized-message").textContent = `Welcome to our platform, where innovation meets opportunity! As a valued member, you are part of a revolutionary ecosystem fueled by our exclusive token CHIPS, which drives the entire economy. Get ready to engage in a world of endless possibilities and growth!`;
         } else {
+            // Se non trovi il wax_account, mostra un messaggio generico
             displayGenericWelcome();
         }
     } catch (error) {
@@ -917,132 +919,125 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                     contentFrame.innerHTML = `<p>Error: Unable to render NFTs. Please try again later.</p>`;
                 }
             } else if (page === 'profile') {
-              contentFrame.innerHTML = `
+                contentFrame.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <h2 class="pool-title" style="text-align: center;">Your Profile</h2>                
-                  <!--      commento             -->
+                    <h2 class="pool-title" style="text-align: center;">Your Profile</h2>
                     <button 
-                      id="toggle-sqj" 
-                      style="
-                        background-color: #39ff14; 
-                        color: black; 
-                        border: none; 
-                        border-radius: 5px; 
-                        padding: 10px 15px; 
-                        font-size: 1rem; 
-                        cursor: pointer;
-                        transition: transform 0.3s ease;
-                      "
-                      onmouseover="this.style.transform='scale(1.1)';" 
-                      onmouseout="this.style.transform='scale(1)';">
-                      Show SQJ Data
+                        id="toggle-sqj" 
+                        style="
+                            background-color: #39ff14; 
+                            color: black; 
+                            border: none; 
+                            border-radius: 5px; 
+                            padding: 10px 15px; 
+                            font-size: 1rem; 
+                            cursor: pointer;
+                            transition: transform 0.3s ease;
+                        "
+                        onmouseover="this.style.transform='scale(1.1)';" 
+                        onmouseout="this.style.transform='scale(1)';">
+                        Show SQJ Data
                     </button>
                 </div>
                 <div class="profile-grid">
-                  <!-- User Profile -->
-                  <div class="profile-card">
-                    <h4>Username</h4>
-                    <p>${data.user_profile.username}</p>
-                  </div>
-                  <div class="profile-card">
-                    <h4>Wax Account</h4>
-                    <p>${data.user_profile.wax_account}</p>
-                  </div>
-                  <div class="profile-card">
-                    <h4>User ID</h4>
-                    <p>${data.user_profile.user_id}</p>
-                  </div>
-          
-                  <!-- CHIPS Stats -->
-                  <div class="profile-card">
-                    <h4>CHIPS Level</h4>
-                    <p>${data.chips_stats.CHIPS_level}</p>
-                  </div>
-                  <div class="profile-card">
-                    <h4>CHIPS XP</h4>
-                    <p>${data.chips_stats.xp}</p>
-                  </div>
-                  <div class="profile-card">
-                    <h4>XP for Next Level</h4>
-                    <p>${data.chips_stats.xp_for_next_level}</p>
-                  </div>
-                  <div class="profile-card">
-                    <h4>Short Message Earnings</h4>
-                    <p>${data.chips_stats.short_message_earnings}</p>
-                  </div>
-                  <div class="profile-card">
-                    <h4>Long Message Earnings</h4>
-                    <p>${data.chips_stats.long_message_earnings}</p>
-                  </div>
-          
-                  <!-- Booster Stats -->
-                  <div class="profile-card">
-                    <h4>Boosters Owned</h4>
-                    <p>
-                      Common: ${data.chips_stats.boosters_owned.common}<br>
-                      Rare: ${data.chips_stats.boosters_owned.rare}<br>
-                      Epic: ${data.chips_stats.boosters_owned.epic}<br>
-                      Legendary: ${data.chips_stats.boosters_owned.legendary}
-                    </p>
-                  </div>
-        
-                  <!-- Rewards Stats -->
-                  <div class="profile-card">
-                    <h4>Total Rewards</h4>
-                    <p>
-                      Short: ${data.chips_stats.total_rewards.short}<br>
-                      Long: ${data.chips_stats.total_rewards.long}
-                    </p>
-                  </div>
-          
-                  <!-- Membership Status -->
-                  <div class="profile-card">
-                    <h4>VIP Membership</h4>
-                    <p>${data.membership_status.vip_membership ? "Yes" : "No"}</p>
-                  </div>
-                  <div class="profile-card">
-                    <h4>SQJ Pass</h4>
-                    <p>${data.membership_status.sqj_pass ? "Yes" : "No"}</p>
-                  </div>
+                    <!-- User Profile -->
+                    <div class="profile-card">
+                        <h4>Username</h4>
+                        <p>${data.general_data.username}</p>
+                    </div>
+                    <div class="profile-card">
+                        <h4>Wax Account</h4>
+                        <p>${data.general_data.wax_account}</p>
+                    </div>
+                    <div class="profile-card">
+                        <h4>Tier Level</h4>
+                        <p>${data.general_data.tier_level}</p>
+                    </div>
+            
+                    <!-- CHIPS Stats -->
+                    <div class="profile-card">
+                        <h4>CHIPS Level</h4>
+                        <p>${data.general_data.chips_level}</p>
+                    </div>
+                    <div class="profile-card">
+                        <h4>CHIPS XP</h4>
+                        <p>${data.general_data.chips_xp_actual}</p>
+                    </div>
+                    
+                    <div class="profile-card">
+                        <h4>Short Message Earnings</h4>
+                        <p>${data.mining_info.base_rewards.short_messages.tokens_reward}</p>
+                        <p>XP: ${data.mining_info.base_rewards.short_messages.xp_rewards}</p>
+                    </div>
+                    <div class="profile-card">
+                        <h4>Long Message Earnings</h4>
+                        <p>${data.mining_info.base_rewards.long_messages.tokens_reward}</p>
+                        <p>XP: ${data.mining_info.base_rewards.long_messages.xp_rewards}</p>
+                    </div>
+            
+                    <!-- Booster Stats -->
+                    <div class="profile-card">
+                        <h4>Boosters Owned</h4>
+                        <p>
+                            Common: ${data.mining_info.extra.booster_rewards[0].percentage}%<br>
+                            Rare: ${data.mining_info.extra.booster_rewards[1].percentage}%<br>
+                            Epic: ${data.mining_info.extra.booster_rewards[2].percentage}%<br>
+                            Legendary: ${data.mining_info.extra.booster_rewards[3].percentage}%
+                        </p>
+                    </div>
+            
+                    <div class="profile-card">
+                        <h4>Total Booster Rewards</h4>
+                        <p>${data.mining_info.extra.total.booster_rewards_percentage}%</p>
+                    </div>
+                    
+                    <!-- Rewards Stats -->
+                    <div class="profile-card">
+                        <h4>Total Rewards</h4>
+                        <p>
+                            Short: ${data.mining_info.base_rewards.short_messages.tokens_reward * (1 + data.mining_info.extra.total.booster_rewards_percentage / 100)}<br>
+                            Long: ${data.mining_info.base_rewards.long_messages.tokens_reward * (1 + data.mining_info.extra.total.booster_rewards_percentage / 100)}
+                        </p>
+                    </div>
                 </div>
-          
+            
                 <!-- SQJ Stats Section -->
                 <div id="sqj-data" style="display: none; margin-top: 1px;">
-                  <h3 class="section-title">SQJ Specific Data</h3>
-                  <div class="profile-grid">
-                    <div class="profile-card">
-                      <h4>SQJ Level</h4>
-                      <p>${data.sqj_stats.sqj_level}</p>
+                    <h3 class="section-title">SQJ Specific Data</h3>
+                    <div class="profile-grid">
+                        <div class="profile-card">
+                            <h4>SQJ Level</h4>
+                            <p>${data.sqj_data.level}</p>
+                        </div>
+                        <div class="profile-card">
+                            <h4>SQJ XP</h4>
+                            <p>${data.sqj_data.current_xp}</p>
+                        </div>
+                        <div class="profile-card">
+                            <h4>XP for Next Level</h4>
+                            <p>${data.sqj_data.xp_to_next_level}</p>
+                        </div>
+                        <div class="profile-card">
+                            <h4>XP Remaining</h4>
+                            <p>${data.sqj_data.xp_remaining}</p>
+                        </div>
                     </div>
-                    <div class="profile-card">
-                      <h4>SQJ XP</h4>
-                      <p>${data.sqj_stats.sqj_xp}</p>
-                    </div>
-                    <div class="profile-card">
-                      <h4>XP for Next Level</h4>
-                      <p>${data.sqj_stats.xp_for_next_level}</p>
-                    </div>
-                    <div class="profile-card">
-                      <h4>XP Remaining</h4>
-                      <p>${data.sqj_stats.xp_remaining}</p>
-                    </div>
-                  </div>
                 </div>
-              `;
-          
-              // Aggiungi l'evento per il pulsante switch
-              const toggleButton = document.getElementById("toggle-sqj");
-              toggleButton.addEventListener("click", () => {
-                  const sqjData = document.getElementById("sqj-data");
-                  if (sqjData.style.display === "none") {
-                      sqjData.style.display = "block";
-                      toggleButton.textContent = "Hide SQJ Data";
-                  } else {
-                      sqjData.style.display = "none";
-                      toggleButton.textContent = "Show SQJ Data";
-                  }
-              });
-          } else if (page === 'waxdao_pools') {
+                `;
+            
+                // Aggiungi l'evento per il pulsante switch
+                const toggleButton = document.getElementById("toggle-sqj");
+                toggleButton.addEventListener("click", () => {
+                    const sqjData = document.getElementById("sqj-data");
+                    if (sqjData.style.display === "none") {
+                        sqjData.style.display = "block";
+                        toggleButton.textContent = "Hide SQJ Data";
+                    } else {
+                        sqjData.style.display = "none";
+                        toggleButton.textContent = "Show SQJ Data";
+                    }
+                });
+            } else if (page === 'waxdao_pools') {
               let showAllFarms = true; // Stato per il pulsante switch
               function renderFarms(farms, viewType) {
                   const contentFrame = document.getElementById("content-frame");

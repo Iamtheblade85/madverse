@@ -1056,8 +1056,6 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
             toggleButton.textContent = "Show SQJ Data";
         }
     });
-}
-
 // Funzione per espandere/comprimere le cards
 function toggleCard(cardId) {
     const card = document.getElementById(cardId);
@@ -1067,6 +1065,7 @@ function toggleCard(cardId) {
         card.style.display = "none";
     }
 }
+      }        
  else if (page === 'waxdao_pools') {
               let showAllFarms = true; // Stato per il pulsante switch
               function renderFarms(farms, viewType) {

@@ -54,12 +54,12 @@ async function fetchWaxAccount() {
     try {
         // Costruisci l'URL con i parametri user_id e usx_token
         const url = `https://iamemanuele.pythonanywhere.com/profile?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(token)}`;
-        
+        console.log("URL", url);
         // Esegui la richiesta GET al backend per il profilo
         const response = await fetch(url, {
             method: 'GET', 
         });
-
+        console.log("Response status:", response);        
         console.log("Response status:", response.status);
 
         if (!response.ok) {

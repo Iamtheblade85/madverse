@@ -1167,7 +1167,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                       button.addEventListener('click', async function () {
                           const farmId = this.dataset.farmId;
                           const templateId = this.dataset.templateId;
-          
+                          const waxAccount = user_wax_account;
                           const messageDiv = createMessageElement('Processing your request...', false);
                           this.replaceWith(messageDiv);
           
@@ -1175,6 +1175,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                               user_id: userId,
                               farm_id: farmId,
                               template_id: templateId,
+                              wax_account: waxAccount,
                               action: 'remove'
                           };
           

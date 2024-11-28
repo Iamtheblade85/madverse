@@ -960,16 +960,25 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         <div><strong>Long Message Tokens Reward:</strong> ${data.mining_info.base_rewards.long_messages.tokens_reward}</div>
         <div><strong>Long Message XP Reward:</strong> ${data.mining_info.base_rewards.long_messages.xp_rewards}</div>
 
-        <h4>Extra Mining Info</h4>
-        <div><strong>Booster Rewards:</strong> 
+        <h4>Boosters</h4>
+        <div>
+            <strong>Rewards Boosters:</strong>
             <ul>
                 <li>Common: ${data.mining_info.extra.booster_rewards[0].percentage}%</li>
                 <li>Rare: ${data.mining_info.extra.booster_rewards[1].percentage}%</li>
                 <li>Epic: ${data.mining_info.extra.booster_rewards[2].percentage}%</li>
                 <li>Legendary: ${data.mining_info.extra.booster_rewards[3].percentage}%</li>
             </ul>
+            <div><strong>Total Booster Rewards Percentage:</strong> ${data.mining_info.extra.total.booster_rewards_percentage}%</div>
         </div>
-        <div><strong>Total Booster Rewards Percentage:</strong> ${data.mining_info.extra.total.booster_rewards_percentage}%</div>
+
+        <div>
+            <strong>XP Boosters:</strong>
+            <ul>
+                <li>CHIPS XP Boost: ${data.booster_report.boost_totals.CHIPSxp_boost}%</li>
+                <li>SQJ XP Boost: ${data.booster_report.boost_totals.SQJxp_boost}%</li>
+            </ul>
+        </div>
     </div>
 
     <!-- SQJ Data Section -->
@@ -980,12 +989,15 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         <div><strong>XP for Next Level:</strong> ${data.sqj_data.xp_to_next_level}</div>
         <div><strong>Rewards:</strong>
             <ul>
-                ${data.sqj_data.rewards.map(reward => `<li>${reward.token}: Short: ${reward.short} | Long: ${reward.long}</li>`).join('')}
+                ${data.sqj_data.rewards.map(reward => `
+                    <li>${reward.token}: 
+                        Short: ${reward.short} | Long: ${reward.long}
+                    </li>
+                `).join('')}
             </ul>
         </div>
     </div>
-</div>
-    `;
+</div>`;
 
     const toggleButton = document.getElementById("toggle-sqj");
     toggleButton.addEventListener("click", () => {

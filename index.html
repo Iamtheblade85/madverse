@@ -918,7 +918,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                     console.error("Error rendering the NFTs:", error);
                     contentFrame.innerHTML = `<p>Error: Unable to render NFTs. Please try again later.</p>`;
                 }
-            } else if (page === 'profile') {
+            } if (page === 'profile') {
     contentFrame.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2 class="pool-title" style="text-align: center;">Your Profile</h2>
@@ -968,25 +968,29 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
 
         <!-- Earnings Section -->
         <div class="profile-card">
-            <h4>Short Message Earnings</h4>
-            <p>${data.mining_info.base_rewards.short_messages.tokens_reward} WAX</p>
-            <p>XP: ${data.mining_info.base_rewards.short_messages.xp_rewards}</p>
+            <h4 onclick="toggleCard('short-message')">Short Message Earnings</h4>
+            <div id="short-message" style="display: none;">
+                <p>${data.mining_info.base_rewards.short_messages.tokens_reward} WAX</p>
+                <p>XP: ${data.mining_info.base_rewards.short_messages.xp_rewards}</p>
+            </div>
         </div>
         <div class="profile-card">
-            <h4>Long Message Earnings</h4>
-            <p>${data.mining_info.base_rewards.long_messages.tokens_reward} WAX</p>
-            <p>XP: ${data.mining_info.base_rewards.long_messages.xp_rewards}</p>
+            <h4 onclick="toggleCard('long-message')">Long Message Earnings</h4>
+            <div id="long-message" style="display: none;">
+                <p>${data.mining_info.base_rewards.long_messages.tokens_reward} WAX</p>
+                <p>XP: ${data.mining_info.base_rewards.long_messages.xp_rewards}</p>
+            </div>
         </div>
 
         <!-- Booster Stats -->
         <div class="profile-card">
-            <h4>Boosters Owned</h4>
-            <p>
-                Common: ${data.mining_info.extra.booster_rewards[0].percentage}%<br>
-                Rare: ${data.mining_info.extra.booster_rewards[1].percentage}%<br>
-                Epic: ${data.mining_info.extra.booster_rewards[2].percentage}%<br>
-                Legendary: ${data.mining_info.extra.booster_rewards[3].percentage}%
-            </p>
+            <h4 onclick="toggleCard('boosters-owned')">Boosters Owned</h4>
+            <div id="boosters-owned" style="display: none;">
+                <p>Common: ${data.mining_info.extra.booster_rewards[0].percentage}%</p>
+                <p>Rare: ${data.mining_info.extra.booster_rewards[1].percentage}%</p>
+                <p>Epic: ${data.mining_info.extra.booster_rewards[2].percentage}%</p>
+                <p>Legendary: ${data.mining_info.extra.booster_rewards[3].percentage}%</p>
+            </div>
         </div>
 
         <div class="profile-card">
@@ -996,11 +1000,15 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
 
         <!-- Rewards Section -->
         <div class="profile-card">
-            <h4>Total Rewards</h4>
-            <p>
-                Short: ${(data.mining_info.base_rewards.short_messages.tokens_reward * (1 + data.mining_info.extra.total.booster_rewards_percentage / 100)).toFixed(2)} WAX<br>
-                Long: ${(data.mining_info.base_rewards.long_messages.tokens_reward * (1 + data.mining_info.extra.total.booster_rewards_percentage / 100)).toFixed(2)} WAX
-            </p>
+            <h4 onclick="toggleCard('total-rewards')">Total Rewards</h4>
+            <div id="total-rewards" style="display: none;">
+                <p>
+                    Short: ${(data.mining_info.base_rewards.short_messages.tokens_reward * (1 + data.mining_info.extra.total.booster_rewards_percentage / 100)).toFixed(2)} WAX
+                </p>
+                <p>
+                    Long: ${(data.mining_info.base_rewards.long_messages.tokens_reward * (1 + data.mining_info.extra.total.booster_rewards_percentage / 100)).toFixed(2)} WAX
+                </p>
+            </div>
         </div>
     </div>
 
@@ -1009,20 +1017,28 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         <h3 class="section-title">SQJ Specific Data</h3>
         <div class="profile-grid">
             <div class="profile-card">
-                <h4>SQJ Level</h4>
-                <p>${data.sqj_data.level}</p>
+                <h4 onclick="toggleCard('sqj-level')">SQJ Level</h4>
+                <div id="sqj-level" style="display: none;">
+                    <p>${data.sqj_data.level}</p>
+                </div>
             </div>
             <div class="profile-card">
-                <h4>SQJ XP</h4>
-                <p>${data.sqj_data.current_xp}</p>
+                <h4 onclick="toggleCard('sqj-xp')">SQJ XP</h4>
+                <div id="sqj-xp" style="display: none;">
+                    <p>${data.sqj_data.current_xp}</p>
+                </div>
             </div>
             <div class="profile-card">
-                <h4>XP for Next Level</h4>
-                <p>${data.sqj_data.xp_to_next_level}</p>
+                <h4 onclick="toggleCard('sqj-xp-next')">XP for Next Level</h4>
+                <div id="sqj-xp-next" style="display: none;">
+                    <p>${data.sqj_data.xp_to_next_level}</p>
+                </div>
             </div>
             <div class="profile-card">
-                <h4>XP Remaining</h4>
-                <p>${data.sqj_data.xp_remaining}</p>
+                <h4 onclick="toggleCard('sqj-xp-remaining')">XP Remaining</h4>
+                <div id="sqj-xp-remaining" style="display: none;">
+                    <p>${data.sqj_data.xp_remaining}</p>
+                </div>
             </div>
         </div>
     </div>
@@ -1040,7 +1056,18 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
             toggleButton.textContent = "Show SQJ Data";
         }
     });
-} else if (page === 'waxdao_pools') {
+}
+
+// Funzione per espandere/comprimere le cards
+function toggleCard(cardId) {
+    const card = document.getElementById(cardId);
+    if (card.style.display === "none") {
+        card.style.display = "block";
+    } else {
+        card.style.display = "none";
+    }
+}
+ else if (page === 'waxdao_pools') {
               let showAllFarms = true; // Stato per il pulsante switch
               function renderFarms(farms, viewType) {
                   const contentFrame = document.getElementById("content-frame");

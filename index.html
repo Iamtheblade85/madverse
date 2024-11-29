@@ -65,11 +65,11 @@ async function fetchWaxAccount() {
         console.log("Account data received:", data);
 
         // Accedi al wax_account nei dati ricevuti (modifica in base alla struttura)
-        const user_wax_account = data.general_data?.wax_account;  
+        user_wax_account = data.general_data?.wax_account;  
         const waxAccount = user_wax_account
-        if (waxAccount) {
+        if (user_wax_account) {
             // Imposta il messaggio di benvenuto
-            const welcomeMessage = `Welcome, ${waxAccount}`;
+            const welcomeMessage = `Welcome, ${user_wax_account}`;
             document.getElementById("welcome-message").textContent = welcomeMessage;
 
             // Applica l'animazione alle lettere
@@ -119,6 +119,7 @@ fetchWaxAccount();
 
 async function loadContent(page) {
     console.log("Loading content for page:", page);
+    console.log(`Wax Account available: ${userWaxAccount}`);
     const contentFrame = document.getElementById("content-frame");
     let url;
     switch(page) {
@@ -230,7 +231,7 @@ if (page === 'balance') {
                 const symbol = this.getAttribute('data-symbol');
                 const swapQuantity = this.closest('.card').querySelector('.swap-quantity').value;
                 const toToken = this.closest('.card').querySelector('.swap-to-token').value;
-                const waxAccount = user_wax_account;  // Imposta l'account utente
+                const waxAccount = user_wax_account;  
                 const card = this.closest('.card');  // Riferimento alla card
         
                 // Validazione degli input

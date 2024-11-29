@@ -44,16 +44,11 @@ function getQueryParam(param) {
     console.log("Fetching urlParams...", urlParams);
     return urlParams.get(param);
 }
-
 // Variabili globali per user_id e token
 const userId = getQueryParam('user_id'); // Estrai user_id dall'URL
 const token = getQueryParam('usx_token'); // Estrai usx_token dall'URL
-
 let user_wax_account = null;
-
 async function fetchWaxAccount() {
-    console.log("Fetching Wax Account...");
-
     try {
         // Costruisci l'URL con i parametri user_id e usx_token
         const url = `https://iamemanuele.pythonanywhere.com/profile?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(token)}`;
@@ -61,20 +56,17 @@ async function fetchWaxAccount() {
         // Esegui la richiesta GET al backend per il profilo
         const response = await fetch(url, {
             method: 'GET', 
-        });
-        console.log("Response status:", response);        
+        });     
         console.log("Response status:", response.status);
-
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
-
         const data = await response.json();
         console.log("Account data received:", data);
 
         // Accedi al wax_account nei dati ricevuti (modifica in base alla struttura)
-        const waxAccount = data.general_data?.wax_account;  // Cambia 'general_data' con la struttura corretta
-
+        const user_wax_account = data.general_data?.wax_account;  
+        const waxAccount = user_wax_account
         if (waxAccount) {
             // Imposta il messaggio di benvenuto
             const welcomeMessage = `Welcome, ${waxAccount}`;
@@ -298,10 +290,9 @@ if (page === 'balance') {
                     setTimeout(async () => {
                         await reloadBalances();  // Ricarica i bilanci dopo lo swap
                     }, 2000);  // Ritardo di 2 secondi
-        } 
-    });
-});
-
+                  } 
+              });
+          });
         // Gestione dei click sui pulsanti "Withdraw"
         document.querySelectorAll('.withdraw-button').forEach(button => {
             button.addEventListener('click', function() {
@@ -312,7 +303,6 @@ if (page === 'balance') {
                 withdrawInputs.style.display = 'block';
             });
         });
-
         // Gestione dei click sui pulsanti "Transfer"
         document.querySelectorAll('.transfer-button').forEach(button => {
             button.addEventListener('click', function() {
@@ -330,8 +320,8 @@ document.querySelectorAll('.confirm-withdraw').forEach(button => {
         this.style.display = 'none'; // Nascondi il pulsante Confirm
         const symbol = this.getAttribute('data-symbol');
         const withdrawQuantity = this.closest('.card').querySelector('.withdraw-quantity').value;
-        const waxAccount = user_wax_account; // Imposta l'account utente
-        const card = this.closest('.card');  // Riferimento alla card
+        const waxAccount = user_wax_account;
+        const card = this.closest('.card');
 
         if (!withdrawQuantity || isNaN(withdrawQuantity) || withdrawQuantity <= 0) {
             const messageDiv = createMessageElement('Please enter a valid quantity for withdrawal.', false);

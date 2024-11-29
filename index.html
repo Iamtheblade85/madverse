@@ -953,7 +953,6 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         <div><strong>CHIPS Level:</strong> ${data.general_data.chips_level}</div>
         <div><strong>CHIPS XP:</strong> ${data.general_data.chips_xp_actual}</div>
     </div>
-
     <!-- Mining Info Section -->
     <div class="profile-card">
         <h3>Mining Info</h3>
@@ -962,42 +961,65 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         <div><strong>Short Message XP Reward:</strong> ${data.mining_info.base_rewards.short_messages.xp_rewards}</div>
         <div><strong>Long Message Tokens Reward:</strong> ${data.mining_info.base_rewards.long_messages.tokens_reward}</div>
         <div><strong>Long Message XP Reward:</strong> ${data.mining_info.base_rewards.long_messages.xp_rewards}</div>
-
         <h4>Boosters</h4>
         <div>
             <strong>Rewards Boosters:</strong>
             <ul>
                 <!-- Common booster percentage and quantity -->
-                <li>Common: ${data.mining_info.extra.booster_rewards.common?.percentage || 'N/A'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.common?.quantity || 0})</li>
-                
+                <li>Common: ${data.mining_info.extra.booster_rewards.common?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.common?.quantity > 0 ? data.mining_info.extra.booster_rewards.common?.quantity : '0 - you don’t own any'})</li>
                 <!-- Rare booster percentage and quantity -->
-                <li>Rare: ${data.mining_info.extra.booster_rewards.rare?.percentage || 'N/A'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.rare?.quantity || 0})</li>
-                
+                <li>Rare: ${data.mining_info.extra.booster_rewards.rare?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.rare?.quantity > 0 ? data.mining_info.extra.booster_rewards.rare?.quantity : '0 - you don’t own any'})</li>
                 <!-- Epic booster percentage and quantity -->
-                <li>Epic: ${data.mining_info.extra.booster_rewards.epic?.percentage || 'N/A'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.epic?.quantity || 0})</li>
-                
+                <li>Epic: ${data.mining_info.extra.booster_rewards.epic?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.epic?.quantity > 0 ? data.mining_info.extra.booster_rewards.epic?.quantity : '0 - you don’t own any'})</li>
                 <!-- Legendary booster percentage and quantity -->
-                <li>Legendary: ${data.mining_info.extra.booster_rewards.legendary?.percentage || 'N/A'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.legendary?.quantity || 0})</li>
+                <li>Legendary: ${data.mining_info.extra.booster_rewards.legendary?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.legendary?.quantity > 0 ? data.mining_info.extra.booster_rewards.legendary?.quantity : '0 - you don’t own any'})</li>
             </ul>
-        
             <!-- Total booster rewards percentage -->
-            <div><strong>Total Booster Rewards Percentage:</strong> ${data.mining_info.extra.total.booster_rewards_percentage}%</div>
-        
-            <!-- New section to display total percentages for each booster type -->
-            <div><strong>Total Common Booster Rewards:</strong> ${data.mining_info.extra.total.common_percentage}%</div>
-            <div><strong>Total Rare Booster Rewards:</strong> ${data.mining_info.extra.total.rare_percentage}%</div>
-            <div><strong>Total Epic Booster Rewards:</strong> ${data.mining_info.extra.total.epic_percentage}%</div>
-            <div><strong>Total Legendary Booster Rewards:</strong> ${data.mining_info.extra.total.legendary_percentage}%</div>
-        </div>
+            <div><strong>Total reward boost:</strong> ${data.mining_info.extra.total.booster_rewards_percentage > 0 ? data.mining_info.extra.total.booster_rewards_percentage + "%" : "0% - you don’t own any"}</div>
+                <!-- New section to display total percentages for each booster type -->
+                <div><strong>Commons reward boost:</strong> ${data.mining_info.extra.total.common_percentage > 0 ? data.mining_info.extra.total.common_percentage + "%" : "0% - you don’t own any"}</div>
+                <div><strong>Rares reward boost:</strong> ${data.mining_info.extra.total.rare_percentage > 0 ? data.mining_info.extra.total.rare_percentage + "%" : "0% - you don’t own any"}</div>
+                <div><strong>Epics reward boost:</strong> ${data.mining_info.extra.total.epic_percentage > 0 ? data.mining_info.extra.total.epic_percentage + "%" : "0% - you don’t own any"}</div>
+                <div><strong>Legendaries reward boost:</strong> ${data.mining_info.extra.total.legendary_percentage > 0 ? data.mining_info.extra.total.legendary_percentage + "%" : "0% - you don’t own any"}</div>
+            </div>
+            <div>
+                <strong>XP Boosters:</strong>
+                <ul>
+                    <li><strong>CHIPS XP Boost:</strong> ${data.booster_report.boost_totals.CHIPSxp_boost}%</li>
+                    <li><strong>SQJ XP Boost:</strong> ${data.booster_report.boost_totals.SQJxp_boost}%</li>
+                </ul>
+            </div>
+            
+            <!-- Sezione per i Booster Attivi -->
+            <div>
+                <strong>Active Boosters:</strong>
+                <ul>
+                    ${data.booster_report.user_boosters.applicable.map(booster => `
+                        <li>${booster.name} - ${booster.boost_percentage}% Boost (Quantity: ${booster.quantity})</li>
+                    `).join('')}
+                </ul>
+            </div>
+            
+            <!-- Sezione per i Booster Non Più Utilizzabili -->
+            <div>
+                <strong>Inactive Boosters:</strong>
+                <ul>
+                    ${data.booster_report.user_boosters.not_applicable.map(booster => `
+                        <li>${booster.name} - ${booster.boost_percentage}% Boost (Level Group: ${booster.level_group})</li>
+                    `).join('')}
+                </ul>
+            </div>
+            
+            <!-- Sezione per i Booster Non Posseduti ma Acquistabili -->
+            <div>
+                <strong>Available Boosters:</strong>
+                <ul>
+                    ${data.booster_report.user_boosters.unused.map(booster => `
+                        <li>${booster.name} - ${booster.boost_percentage}% Boost (Quantity: ${booster.quantity})</li>
+                    `).join('')}
+                </ul>
+            </div>
 
-
-        <div>
-            <strong>XP Boosters:</strong>
-            <ul>
-                <li>CHIPS XP Boost: ${data.booster_report.boost_totals.CHIPSxp_boost}%</li>
-                <li>SQJ XP Boost: ${data.booster_report.boost_totals.SQJxp_boost}%</li>
-            </ul>
-        </div>
     </div>
 
     <!-- SQJ Data Section -->

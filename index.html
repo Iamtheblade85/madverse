@@ -169,7 +169,7 @@ if (page === 'balance') {
                         
                         <!-- Sezione di prelievo -->
                         <div class="withdraw-inputs" style="display: none; margin-top: 10px;">
-                            <input type="number" class="withdraw-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
+                            <input type="number" class="withdraw-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
                             <button class="confirm-withdraw" data-symbol="${balance.symbol}">Confirm</button>
                         </div>
                         
@@ -178,16 +178,16 @@ if (page === 'balance') {
                         
                         <!-- Sezione di trasferimento -->
                         <div class="transfer-inputs" style="display: none; margin-top: 10px;">
-                            <input type="number" class="transfer-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
-                            <input type="text" class="transfer-receiver" placeholder="Receiver" style="margin-right: 5px;"/>
+                            <input type="number" class="transfer-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
+                            <input type="text" class="transfer-receiver" placeholder="Receiver" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
                             <button class="confirm-transfer" data-symbol="${balance.symbol}">Confirm</button>
                         </div>
                         <!-- Pulsante Swap to -->
                         <button class="swap-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}" style="margin-top: 10px; padding: 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Swap to</button>                            
                         <!-- Sezione di swap -->
                         <div class="swap-inputs" style="display: none; margin-top: 10px;">
-                            <input type="number" class="swap-quantity" placeholder="Quantity" style="margin-right: 5px;"/>
-                            <input type="text" class="swap-to-token" placeholder="To Token" style="margin-right: 5px;"/>
+                            <input type="number" class="swap-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
+                            <input type="text" class="swap-to-token" placeholder="To Token" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
                             <button class="confirm-swap" data-symbol="${balance.symbol}">Confirm Swap</button>
                         </div>                        
                     </div>
@@ -485,7 +485,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                             <button class="remove-button" data-pool-id="${pool.pool_id}" data-symbol="${pool.token_symbol}" style="padding: 4px 8px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Remove</button>
                         </div>
                         <div class="action-inputs" style="display: none; margin-top: 10px; font-size: 0.4rem; padding: 0.4rem;">
-                            <input type="number" class="action-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem;"/>
+                            <input type="number" class="action-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
                             <button class="confirm-action" data-pool-id="${pool.pool_id}" data-symbol="${pool.token_symbol}" style="padding: 4px 8px; font-size: 0.8rem;">Confirm</button>
                         </div>
 

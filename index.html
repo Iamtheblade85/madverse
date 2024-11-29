@@ -995,7 +995,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                 <strong>Active Boosters:</strong>
                 <ul>
                     ${data.booster_report.user_boosters.applicable.map(booster => `
-                        <li>${booster.name} - ${booster.boost_percentage}% Boost (Quantity: ${booster.quantity})</li>
+                        <li>${booster.name} - ${booster.boost_percentage}% XP-Boost (Quantity: ${booster.quantity})</li>
                     `).join('')}
                 </ul>
             </div>
@@ -1005,7 +1005,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                 <strong>No longer activable:</strong>
                 <ul>
                     ${data.booster_report.user_boosters.not_applicable.map(booster => `
-                        <li>${booster.name} - ${booster.boost_percentage}% Boost (for Level Group: ${booster.level_group})</li>
+                        <li>${booster.name} - ${booster.boost_percentage}% XP-Boost (for Levels: ${booster.level_group})</li>
                     `).join('')}
                 </ul>
             </div>
@@ -1016,10 +1016,10 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                 <ul>
                     ${data.booster_report.user_boosters.unused.length > 0 ? 
                         data.booster_report.user_boosters.unused.map(booster => `
-                            <li>${booster.name} - ${booster.boost_percentage}% Boost (Quantity: ${booster.quantity})</li>
+                            <li>${booster.name} - ${booster.boost_percentage}% XP-Boost</li>
                         `).join('') : 
                         data.booster_report.user_boosters.applicable.map(booster => `
-                            <li>${booster.name} - ${booster.boost_percentage}% Boost (Quantity: ${booster.quantity})</li>
+                            <li>${booster.name} - ${booster.boost_percentage}% XP-Boost</li>
                         `).join('')
                     }
                 </ul>

@@ -984,7 +984,7 @@ h3 {
     font-size: 1.4rem;
     font-weight: bold;
     margin-bottom: 15px;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    text-shadow: -1px -1px 1px black, 1px 1px 1px black;    
 }
 
 h4 {
@@ -1020,7 +1020,7 @@ button {
     cursor: pointer;
     box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.2), -4px -4px 8px rgba(255, 255, 255, 0.8);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    text-shadow: -3px -3px 3px black, 3px 3px 3px black;
+    text-shadow: -1px -1px 1px black, 1px 1px 1px black;
 }
 
 button:hover {
@@ -1031,7 +1031,7 @@ button:hover {
 /* Miglioramenti ai testi bianchi */
 .profile-card .white-text {
     color: white;
-    text-shadow: -2px -2px 2px black, 2px 2px 2px black, 0 0 2px black;
+    text-shadow: -1px -1px 1px black, 1px 1px 1px black, 0 0 2px black;
 }
 
 /* Aggiunta di un effetto 3D più evidente ai titoli */

@@ -934,9 +934,9 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
     </button>
 </div>
 
-<div class="profile-grid">
+<div class="profile-grid" style="background: linear-gradient(135deg, #e0f7fa, #80deea); padding: 20px; border-radius: 15px;">
     <!-- General Data Section -->
-    <div class="profile-card">
+    <div class="profile-card" style="background: linear-gradient(145deg, #f2f2f2, #d9d9d9); border: 2px solid black; padding: 15px; margin-bottom: 15px; border-radius: 10px;">
         <h3>General Data</h3>
         <div><strong>Username:</strong> ${data.general_data.username}</div>
         <div><strong>Wax Account:</strong> ${data.general_data.wax_account}</div>
@@ -944,81 +944,98 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         <div><strong>CHIPS Level:</strong> ${data.general_data.chips_level}</div>
         <div><strong>CHIPS XP:</strong> ${data.general_data.chips_xp_actual}</div>
     </div>
+    
+    <hr style="border: 1px solid #80deea; margin-bottom: 15px;">
+    
     <!-- Mining Info Section -->
-    <div class="profile-card">
+    <div class="profile-card" style="background: linear-gradient(145deg, #f2f2f2, #d9d9d9); border: 2px solid black; padding: 15px; margin-bottom: 15px; border-radius: 10px;">
         <h3>Mining Info</h3>
-        <h4>Base Rewards</h4>
-        <div><strong>Short Message Tokens Reward:</strong> ${data.mining_info.base_rewards.short_messages.tokens_reward}</div>
-        <div><strong>Short Message XP Reward:</strong> ${data.mining_info.base_rewards.short_messages.xp_rewards}</div>
-        <div><strong>Long Message Tokens Reward:</strong> ${data.mining_info.base_rewards.long_messages.tokens_reward}</div>
-        <div><strong>Long Message XP Reward:</strong> ${data.mining_info.base_rewards.long_messages.xp_rewards}</div>
-        <h4>Boosters</h4>
-        <div>
-            <strong>Rewards Boosters:</strong>
-            <ul>
-                <!-- Common booster percentage and quantity -->
-                <li>Common: ${data.mining_info.extra.booster_rewards.common?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.common?.quantity > 0 ? data.mining_info.extra.booster_rewards.common?.quantity : '0 - you don’t own any'})</li>
-                <!-- Rare booster percentage and quantity -->
-                <li>Rare: ${data.mining_info.extra.booster_rewards.rare?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.rare?.quantity > 0 ? data.mining_info.extra.booster_rewards.rare?.quantity : '0 - you don’t own any'})</li>
-                <!-- Epic booster percentage and quantity -->
-                <li>Epic: ${data.mining_info.extra.booster_rewards.epic?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.epic?.quantity > 0 ? data.mining_info.extra.booster_rewards.epic?.quantity : '0 - you don’t own any'})</li>
-                <!-- Legendary booster percentage and quantity -->
-                <li>Legendary: ${data.mining_info.extra.booster_rewards.legendary?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.legendary?.quantity > 0 ? data.mining_info.extra.booster_rewards.legendary?.quantity : '0 - you don’t own any'})</li>
-            </ul>
-            <!-- Total booster rewards percentage -->
+        <div style="margin-bottom: 10px;">
+            <h4>Base Rewards</h4>
+            <div><strong>Short Message Tokens Reward:</strong> ${data.mining_info.base_rewards.short_messages.tokens_reward}</div>
+            <div><strong>Short Message XP Reward:</strong> ${data.mining_info.base_rewards.short_messages.xp_rewards}</div>
+            <div><strong>Long Message Tokens Reward:</strong> ${data.mining_info.base_rewards.long_messages.tokens_reward}</div>
+            <div><strong>Long Message XP Reward:</strong> ${data.mining_info.base_rewards.long_messages.xp_rewards}</div>
+        </div>
+
+        <hr style="border: 1px solid #80deea; margin-bottom: 15px;">
+
+        <!-- Boosters Section -->
+        <div style="margin-bottom: 10px;">
+            <h4>Boosters</h4>
+            <div><strong>Rewards Boosters:</strong>
+                <ul>
+                    <li>Common: ${data.mining_info.extra.booster_rewards.common?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.common?.quantity > 0 ? data.mining_info.extra.booster_rewards.common?.quantity : '0 - you don’t own any'})</li>
+                    <li>Rare: ${data.mining_info.extra.booster_rewards.rare?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.rare?.quantity > 0 ? data.mining_info.extra.booster_rewards.rare?.quantity : '0 - you don’t own any'})</li>
+                    <li>Epic: ${data.mining_info.extra.booster_rewards.epic?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.epic?.quantity > 0 ? data.mining_info.extra.booster_rewards.epic?.quantity : '0 - you don’t own any'})</li>
+                    <li>Legendary: ${data.mining_info.extra.booster_rewards.legendary?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.legendary?.quantity > 0 ? data.mining_info.extra.booster_rewards.legendary?.quantity : '0 - you don’t own any'})</li>
+                </ul>
+            </div>
+
             <div><strong>Total reward boost:</strong> ${data.mining_info.extra.total.booster_rewards_percentage > 0 ? data.mining_info.extra.total.booster_rewards_percentage + "%" : "0% - you don’t own any"}</div>
-                <!-- New section to display total percentages for each booster type -->
-                <div><strong>Commons reward boost:</strong> ${data.mining_info.extra.total.common_percentage > 0 ? data.mining_info.extra.total.common_percentage + "%" : "0% - you don’t own any"}</div>
-                <div><strong>Rares reward boost:</strong> ${data.mining_info.extra.total.rare_percentage > 0 ? data.mining_info.extra.total.rare_percentage + "%" : "0% - you don’t own any"}</div>
-                <div><strong>Epics reward boost:</strong> ${data.mining_info.extra.total.epic_percentage > 0 ? data.mining_info.extra.total.epic_percentage + "%" : "0% - you don’t own any"}</div>
-                <div><strong>Legendaries reward boost:</strong> ${data.mining_info.extra.total.legendary_percentage > 0 ? data.mining_info.extra.total.legendary_percentage + "%" : "0% - you don’t own any"}</div>
-            </div>
-            <div>
-                <strong>XP Boosters:</strong>
-                <ul>
-                    <li><strong>CHIPS XP Boost:</strong> ${data.booster_report.boost_totals.CHIPSxp_boost}%</li>
-                    <li><strong>SQJ XP Boost:</strong> ${data.booster_report.boost_totals.SQJxp_boost}%</li>
-                </ul>
-            </div>
-            
-            <!-- Sezione per i Booster Attivi -->
-            <div>
-                <strong>Active Boosters:</strong>
-                <ul>
-                    ${data.booster_report.user_boosters.applicable.map(booster => `
-                        <li>${booster.name} - ${booster.boost_percentage}% XP-Boost (Quantity: ${booster.quantity})</li>
-                    `).join('')}
-                </ul>
-            </div>
-            
-            <!-- Sezione per i Booster Non Più Utilizzabili -->
-            <div>
-                <strong>No longer activable:</strong>
-                <ul>
-                    ${data.booster_report.user_boosters.not_applicable.map(booster => `
-                        <li>${booster.name} - ${booster.boost_percentage}% XP-Boost (for Levels: ${booster.level_group})</li>
-                    `).join('')}
-                </ul>
-            </div>
-            
-            <!-- Sezione per i Booster Non Posseduti ma Acquistabili -->
-            <div>
-                <strong>Available for you in the market:</strong>
-                <ul>
-                    ${data.booster_report.user_boosters.unused.length > 0 ? 
-                        data.booster_report.user_boosters.unused.map(booster => `
-                            <li>${booster.name} - ${booster.boost_percentage}% XP-Boost</li>
-                        `).join('') : 
-                        data.booster_report.user_boosters.applicable.map(booster => `
-                            <li>${booster.name} - ${booster.boost_percentage}% XP-Boost</li>
-                        `).join('')
-                    }
-                </ul>
-            </div>
+            <div><strong>Commons reward boost:</strong> ${data.mining_info.extra.total.common_percentage > 0 ? data.mining_info.extra.total.common_percentage + "%" : "0% - you don’t own any"}</div>
+            <div><strong>Rares reward boost:</strong> ${data.mining_info.extra.total.rare_percentage > 0 ? data.mining_info.extra.total.rare_percentage + "%" : "0% - you don’t own any"}</div>
+            <div><strong>Epics reward boost:</strong> ${data.mining_info.extra.total.epic_percentage > 0 ? data.mining_info.extra.total.epic_percentage + "%" : "0% - you don’t own any"}</div>
+            <div><strong>Legendaries reward boost:</strong> ${data.mining_info.extra.total.legendary_percentage > 0 ? data.mining_info.extra.total.legendary_percentage + "%" : "0% - you don’t own any"}</div>
+        </div>
+
+        <hr style="border: 1px solid #80deea; margin-bottom: 15px;">
+
+        <!-- XP Boosters Section -->
+        <div style="margin-bottom: 10px;">
+            <h4>XP Boosters</h4>
+            <ul>
+                <li><strong>CHIPS XP Boost:</strong> ${data.booster_report.boost_totals.CHIPSxp_boost}%</li>
+                <li><strong>SQJ XP Boost:</strong> ${data.booster_report.boost_totals.SQJxp_boost}%</li>
+            </ul>
+        </div>
+
+        <hr style="border: 1px solid #80deea; margin-bottom: 15px;">
+        
+        <!-- Active Boosters Section -->
+        <div style="margin-bottom: 10px;">
+            <strong>Active Boosters:</strong>
+            <ul>
+                ${data.booster_report.user_boosters.applicable.map(booster => `
+                    <li>${booster.name} - ${booster.boost_percentage}% XP-Boost (Quantity: ${booster.quantity})</li>
+                `).join('')}
+            </ul>
+        </div>
+
+        <hr style="border: 1px solid #80deea; margin-bottom: 15px;">
+        
+        <!-- No Longer Activable Boosters Section -->
+        <div style="margin-bottom: 10px;">
+            <strong>No longer activable:</strong>
+            <ul>
+                ${data.booster_report.user_boosters.not_applicable.map(booster => `
+                    <li>${booster.name} - ${booster.boost_percentage}% XP-Boost (for Levels: ${booster.level_group})</li>
+                `).join('')}
+            </ul>
+        </div>
+
+        <hr style="border: 1px solid #80deea; margin-bottom: 15px;">
+        
+        <!-- Available Boosters Section -->
+        <div style="margin-bottom: 10px;">
+            <strong>Available for you in the market:</strong>
+            <ul>
+                ${data.booster_report.user_boosters.unused.length > 0 ? 
+                    data.booster_report.user_boosters.unused.map(booster => `
+                        <li>${booster.name} - ${booster.boost_percentage}% XP-Boost</li>
+                    `).join('') : 
+                    data.booster_report.user_boosters.applicable.map(booster => `
+                        <li>${booster.name} - ${booster.boost_percentage}% XP-Boost</li>
+                    `).join('')
+                }
+            </ul>
+        </div>
     </div>
 
+    <hr style="border: 1px solid #80deea; margin-bottom: 15px;">
+    
     <!-- SQJ Data Section -->
-    <div class="profile-card" id="sqj-data" style="display: none;">
+    <div class="profile-card" id="sqj-data" style="display: none; background: linear-gradient(145deg, #f2f2f2, #d9d9d9); border: 2px solid black; padding: 15px; border-radius: 10px;">
         <h3>SQJ Specific Data</h3>
         <div><strong>SQJ Level:</strong> ${data.sqj_data.level}</div>
         <div><strong>SQJ Current XP:</strong> ${data.sqj_data.current_xp}</div>
@@ -1034,7 +1051,6 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         </div>
     </div>
 </div>`;
-
     const toggleButton = document.getElementById("toggle-sqj");
     toggleButton.addEventListener("click", () => {
         const sqjData = document.getElementById("sqj-data");

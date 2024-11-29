@@ -22,8 +22,8 @@
       <button onclick="loadContent('profile')">👤Account</button>
     </div>
     <div class="content-frame" id="content-frame">
-      <p id="welcome-message">
-          <span class="highlight" align="center">Calling the Boss,</span><br>
+      <p id="welcome-message" style="display: flex; justify-content: center; align-items: center; text-align: center; height: 100%; width: 100%; margin: 0;">
+          <span class="highlight">Calling the Boss,</span><br>
           asking for your data. <br>Please wait...
       </p>
       <div class="card-3d-container">
@@ -484,11 +484,10 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                             <button class="add-button" data-pool-id="${pool.pool_id}" data-symbol="${pool.token_symbol}" style="padding: 4px 8px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Add</button>
                             <button class="remove-button" data-pool-id="${pool.pool_id}" data-symbol="${pool.token_symbol}" style="padding: 4px 8px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Remove</button>
                         </div>
-                        <div class="action-inputs" style="display: none; margin-top: 10px; font-size: 0.4rem; padding: 0.4rem;">
-                            <input type="number" class="action-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
-                            <button class="confirm-action" data-pool-id="${pool.pool_id}" data-symbol="${pool.token_symbol}" style="padding: 4px 8px; font-size: 0.8rem;">Confirm</button>
+                        <div class="action-inputs" style="display: flex; align-items: center; margin-top: 10px; font-size: 0.4rem; padding: 0.4rem;">
+                            <input type="number" class="action-quantity" placeholder="Quantity" style="margin-right: 2px; padding: 4px; font-size: 0.8rem; width: 70%;"/>
+                            <button class="confirm-action" data-pool-id="${pool.pool_id}" data-symbol="${pool.token_symbol}" style="padding: 4px 8px; font-size: 0.8rem; width: auto;">Confirm</button>
                         </div>
-
                         <p><strong>Total Staked:</strong> ${pool.total_staked.toLocaleString()} ${pool.token_symbol}</p>
                         <p><strong>Your Stake:</strong> ${pool.user_staked.toLocaleString()} ${pool.token_symbol}</p>
                         <h5>Rewards:</h5>

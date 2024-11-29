@@ -338,7 +338,7 @@ document.querySelectorAll('.confirm-withdraw').forEach(button => {
             card.appendChild(messageDiv);  // Aggiungi il messaggio alla card
             return;
         }
-
+        console.log("Data for withdraw after confirmation: ",data)
         const url = `https://iamemanuele.pythonanywhere.com/withdraw?user_id=${userId}&usx_token=${token}`;
         const data = {
             wax_account: waxAccount,

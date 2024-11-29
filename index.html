@@ -1002,24 +1002,28 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
             
             <!-- Sezione per i Booster Non Più Utilizzabili -->
             <div>
-                <strong>Inactive Boosters:</strong>
+                <strong>No longer activable:</strong>
                 <ul>
                     ${data.booster_report.user_boosters.not_applicable.map(booster => `
-                        <li>${booster.name} - ${booster.boost_percentage}% Boost (Level Group: ${booster.level_group})</li>
+                        <li>${booster.name} - ${booster.boost_percentage}% Boost (for Level Group: ${booster.level_group})</li>
                     `).join('')}
                 </ul>
             </div>
             
             <!-- Sezione per i Booster Non Posseduti ma Acquistabili -->
             <div>
-                <strong>Available Boosters:</strong>
+                <strong>Available for you in the market:</strong>
                 <ul>
-                    ${data.booster_report.user_boosters.unused.map(booster => `
-                        <li>${booster.name} - ${booster.boost_percentage}% Boost (Quantity: ${booster.quantity})</li>
-                    `).join('')}
+                    ${data.booster_report.user_boosters.unused.length > 0 ? 
+                        data.booster_report.user_boosters.unused.map(booster => `
+                            <li>${booster.name} - ${booster.boost_percentage}% Boost (Quantity: ${booster.quantity})</li>
+                        `).join('') : 
+                        data.booster_report.user_boosters.applicable.map(booster => `
+                            <li>${booster.name} - ${booster.boost_percentage}% Boost (Quantity: ${booster.quantity})</li>
+                        `).join('')
+                    }
                 </ul>
             </div>
-
     </div>
 
     <!-- SQJ Data Section -->

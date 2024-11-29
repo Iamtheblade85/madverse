@@ -919,19 +919,21 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
     <button 
         id="toggle-sqj" 
         style="
-            background-color: #39ff14; 
-            color: black; 
-            border: none; 
+            background: linear-gradient(135deg, #e0f7fa, #80deea); /* Gradiente simile alle card */
+            color: black; /* Colore del testo */
+            border: 2px solid #39ff14; /* Bordo verde per coerenza */
             border-radius: 5px; 
             padding: 10px 15px; 
             font-size: 1rem; 
             cursor: pointer;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+            margin-left: 10%; /* Spostato del 10% a sinistra */
         "
-        onmouseover="this.style.transform='scale(1.1)';" 
-        onmouseout="this.style.transform='scale(1)';">
+        onmouseover="this.style.transform='scale(1.1)'; this.style.background='linear-gradient(135deg, #80deea, #e0f7fa)'; this.style.borderColor='#80deea';"
+        onmouseout="this.style.transform='scale(1)'; this.style.background='linear-gradient(135deg, #e0f7fa, #80deea)'; this.style.borderColor='#39ff14';">
         Show SQJ Data
     </button>
+
 </div>
 
 <div class="profile-grid" style="background: linear-gradient(135deg, #e0f7fa, #80deea); padding: 20px; border-radius: 15px;">
@@ -972,11 +974,11 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                 </ul>
             </div>
 
-            <div><strong>Total reward boost:</strong> ${data.mining_info.extra.total.booster_rewards_percentage > 0 ? data.mining_info.extra.total.booster_rewards_percentage + "%" : "0% - you don’t own any"}</div>
-            <div><strong>Commons reward boost:</strong> ${data.mining_info.extra.total.common_percentage > 0 ? data.mining_info.extra.total.common_percentage + "%" : "0% - you don’t own any"}</div>
-            <div><strong>Rares reward boost:</strong> ${data.mining_info.extra.total.rare_percentage > 0 ? data.mining_info.extra.total.rare_percentage + "%" : "0% - you don’t own any"}</div>
-            <div><strong>Epics reward boost:</strong> ${data.mining_info.extra.total.epic_percentage > 0 ? data.mining_info.extra.total.epic_percentage + "%" : "0% - you don’t own any"}</div>
-            <div><strong>Legendaries reward boost:</strong> ${data.mining_info.extra.total.legendary_percentage > 0 ? data.mining_info.extra.total.legendary_percentage + "%" : "0% - you don’t own any"}</div>
+            <div><strong>Total reward boost:</strong> ${data.mining_info.extra.total.booster_rewards_percentage > 0 ? data.mining_info.extra.total.booster_rewards_percentage + "%" : "0%"}</div>
+            <div><strong>Commons reward boost:</strong> ${data.mining_info.extra.total.common_percentage > 0 ? data.mining_info.extra.total.common_percentage + "%" : "0%"}</div>
+            <div><strong>Rares reward boost:</strong> ${data.mining_info.extra.total.rare_percentage > 0 ? data.mining_info.extra.total.rare_percentage + "%" : "0%"}</div>
+            <div><strong>Epics reward boost:</strong> ${data.mining_info.extra.total.epic_percentage > 0 ? data.mining_info.extra.total.epic_percentage + "%" : "0%"}</div>
+            <div><strong>Legendaries reward boost:</strong> ${data.mining_info.extra.total.legendary_percentage > 0 ? data.mining_info.extra.total.legendary_percentage + "%" : "0%"}</div>
         </div>
 
         <hr style="border: 1px solid #80deea; margin-bottom: 15px;">

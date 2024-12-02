@@ -1243,7 +1243,8 @@ function toggleCard(cardId) {
                           const waxAccount = user_wax_account;
                           const messageDiv = createMessageElement('Processing your request...', false);
                           this.replaceWith(messageDiv);
-          
+                          const userId = getQueryParam("user_id"); 
+                          const userToken = getQueryParam("token");
                           const data = {
                               user_id: userId,
                               farm_id: farmId,
@@ -1251,9 +1252,9 @@ function toggleCard(cardId) {
                               wax_account: waxAccount,
                               action: 'remove'
                           };
-          
+                          console.log("NFTsFarm remove action data:", data);
                           try {
-                              const response = await fetch('https://iamemanuele.pythonanywhere.com/nft_remove', {
+                              const response = await fetch(`https://iamemanuele.pythonanywhere.com/?user_id=${userId}&usx_token=${userToken}`, {
                                   method: 'POST',
                                   headers: { 'Content-Type': 'application/json' },
                                   body: JSON.stringify(data)
@@ -1279,6 +1280,7 @@ function toggleCard(cardId) {
               async function loadNFTFarms() {
                   const contentFrame = document.getElementById("content-frame");
                   const userId = getQueryParam("user_id");
+                const 
                   let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}&usx_token=${token}`;
           
                   if (showAllFarms) {
@@ -1307,7 +1309,7 @@ function toggleCard(cardId) {
           contentFrame.innerHTML = `<p>Error loading ${page}: ${error.message}</p>`;
       }
     } 
-    // Funzione per ricaricare gli NFT e aggiornare il contenuto della pagina
+    // Funzione per ricaricare gli NFT di INVENTORY e aggiornare il contenuto della pagina
     async function reloadNFTs() {
         const url = `https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}&usx_token=${token}`;
         const contentFrame = document.getElementById("content-frame");

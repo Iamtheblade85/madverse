@@ -1278,10 +1278,8 @@ function toggleCard(cardId) {
               }
 
               async function loadNFTFarms() {
-                  const contentFrame = document.getElementById("content-frame");
-                  const userId = getQueryParam("user_id");
-                  const userToken = getQueryParam("usx_token");                
-                  // const url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}&usx_token=${userToken}`;
+                  const contentFrame = document.getElementById("content-frame");              
+                  // const url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}&usx_token=${token}`;
           
                   if (showAllFarms) {
                       url += "&view=all";
@@ -1289,7 +1287,7 @@ function toggleCard(cardId) {
                       url += "&view=user_staking";
                   }
                   try {
-                      let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}&usx_token=${userToken}`;
+                      let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}&usx_token=${token}`;
                   
                       if (showAllFarms) {
                           url += "&view=all";

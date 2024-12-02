@@ -484,9 +484,19 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                             <button class="add-button" data-pool-id="${pool.pool_id}" data-symbol="${pool.token_symbol}" style="padding: 4px 8px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Add</button>
                             <button class="remove-button" data-pool-id="${pool.pool_id}" data-symbol="${pool.token_symbol}" style="padding: 4px 8px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Remove</button>
                         </div>
-                        <div class="action-inputs" style="display: flex; align-items: center; margin-top: 10px; font-size: 0.4rem; padding: 0.4rem;">
-                            <input type="number" class="action-quantity" placeholder="Quantity" style="margin-right: 2px; padding: 4px; font-size: 0.8rem; width: 70%;"/>
-                            <button class="confirm-action" data-pool-id="${pool.pool_id}" data-symbol="${pool.token_symbol}" style="padding: 4px 8px; font-size: 0.8rem; width: auto;">Confirm</button>
+                        <div class="action-inputs" style="display: none; margin-top: 10px; font-size: 0.4rem; padding: 0.4rem;">
+                            <input 
+                                type="number" 
+                                class="action-quantity" 
+                                placeholder="Quantity" 
+                                style="margin-right: 2px; padding: 4px; font-size: 0.8rem; width: 70%;"/>
+                            <button 
+                                class="confirm-action" 
+                                data-pool-id="${pool.pool_id}" 
+                                data-symbol="${pool.token_symbol}" 
+                                style="padding: 2px 4px; font-size: 0.8rem; width: auto;">
+                                Confirm
+                            </button>
                         </div>
                         <p><strong>Total Staked:</strong> ${pool.total_staked.toLocaleString()} ${pool.token_symbol}</p>
                         <p><strong>Your Stake:</strong> ${pool.user_staked.toLocaleString()} ${pool.token_symbol}</p>
@@ -534,23 +544,38 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
             loadPools(); // Ricarica le pool
         });
     
-        document.querySelectorAll('.add-button').forEach(button => {
-            button.addEventListener('click', function () {
-                const card = this.closest('.card');
-                const actionInputs = card.querySelector('.action-inputs');
-                actionInputs.style.display = 'flex';
-                actionInputs.querySelector('.confirm-action').dataset.action = 'add';
+        // Aggiungi un listener ai pulsanti Add e Remove
+        document.querySelectorAll('.add-button, .remove-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const actionInputs = this.parentElement.querySelector('.action-inputs');
+                
+                // Chiudi tutti gli altri campi prima di aprire quello attuale
+                document.querySelectorAll('.action-inputs').forEach(input => {
+                    if (input !== actionInputs) input.style.display = 'none';
+                });
+        
+                // Mostra o nasconde il campo collegato a questo pulsante
+                if (actionInputs.style.display === 'none' || actionInputs.style.display === '') {
+                    actionInputs.style.display = 'flex'; // Usa flex per mantenere il layout corretto
+                } else {
+                    actionInputs.style.display = 'none';
+                }
             });
         });
-    
-        document.querySelectorAll('.remove-button').forEach(button => {
-            button.addEventListener('click', function () {
-                const card = this.closest('.card');
-                const actionInputs = card.querySelector('.action-inputs');
-                actionInputs.style.display = 'flex';
-                actionInputs.querySelector('.confirm-action').dataset.action = 'remove';
-            });
+        
+        // Aggiungi un listener per chiudere i campi quando clicchi fuori
+        document.addEventListener('click', function(event) {
+            const isActionInputs = event.target.closest('.action-inputs'); // Verifica se il click è dentro il contenitore
+            const isActionButton = event.target.closest('.add-button, .remove-button'); // Verifica se il click è su un pulsante
+        
+            // Se non è né un input né un pulsante, chiudi tutti i campi
+            if (!isActionInputs && !isActionButton) {
+                document.querySelectorAll('.action-inputs').forEach(input => {
+                    input.style.display = 'none';
+                });
+            }
         });
+
     
         document.querySelectorAll('.confirm-action').forEach(button => {
             button.addEventListener('click', async function () {

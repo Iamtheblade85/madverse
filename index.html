@@ -1204,7 +1204,8 @@ function toggleCard(cardId) {
                           const waxAccount = user_wax_account
                           const messageDiv = createMessageElement('Processing your request...', false);
                           this.replaceWith(messageDiv);
-          
+                          const userId = getQueryParam("user_id"); 
+                          const userToken = getQueryParam("usx_token");        
                           const data = {
                               user_id: userId,
                               farm_id: farmId,

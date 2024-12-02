@@ -994,19 +994,17 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
     <div class="profile-card" style="background: linear-gradient(145deg, #f2f2f2, #d9d9d9); border: 2px solid black; padding: 15px; margin-bottom: 15px; border-radius: 10px;">
         <h3>Mining Info</h3>
         <div style="margin-bottom: 10px;">
-            <h4>Base Rewards</h4>
-            <div><strong>Short Message Tokens Reward:</strong> ${data.mining_info.base_rewards.short_messages.tokens_reward}</div>
-            <div><strong>Short Message XP Reward:</strong> ${data.mining_info.base_rewards.short_messages.xp_rewards}</div>
-            <div><strong>Long Message Tokens Reward:</strong> ${data.mining_info.base_rewards.long_messages.tokens_reward}</div>
-            <div><strong>Long Message XP Reward:</strong> ${data.mining_info.base_rewards.long_messages.xp_rewards}</div>
+            <h4>Basic Rewards</h4>
+            <div><strong>Short Message Tokens Reward:</strong> ${data.mining_info.base_rewards.short_messages.tokens_reward} CHIPS</div>
+            <div><strong>Short Message XP:</strong> ${data.mining_info.base_rewards.short_messages.xp_rewards} CHIPS</div>
+            <div><strong>Long Message Tokens Reward:</strong> ${data.mining_info.base_rewards.long_messages.tokens_reward} CHIPS</div>
+            <div><strong>Long Message XP:</strong> ${data.mining_info.base_rewards.long_messages.xp_rewards} CHIPS</div>
         </div>
-
         <hr style="border: 1px solid #80deea; margin-bottom: 15px;">
-
         <!-- Boosters Section -->
         <div style="margin-bottom: 10px;">
             <h4>Boosters</h4>
-            <div><strong>Rewards Boosters:</strong>
+            <div><strong>Reward Boosters:</strong>
                 <ul>
                     <li>Common: ${data.mining_info.extra.booster_rewards.common?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.common?.quantity > 0 ? data.mining_info.extra.booster_rewards.common?.quantity : '0 - you don’t own any'})</li>
                     <li>Rare: ${data.mining_info.extra.booster_rewards.rare?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.rare?.quantity > 0 ? data.mining_info.extra.booster_rewards.rare?.quantity : '0 - you don’t own any'})</li>
@@ -1014,22 +1012,21 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                     <li>Legendary: ${data.mining_info.extra.booster_rewards.legendary?.percentage || '0'}% each NFT (Quantity: ${data.mining_info.extra.booster_rewards.legendary?.quantity > 0 ? data.mining_info.extra.booster_rewards.legendary?.quantity : '0 - you don’t own any'})</li>
                 </ul>
             </div>
-
             <div><strong>Total reward boost:</strong> ${data.mining_info.extra.total.booster_rewards_percentage > 0 ? data.mining_info.extra.total.booster_rewards_percentage + "%" : "0%"}</div>
-            <div><strong>Commons reward boost:</strong> ${data.mining_info.extra.total.common_percentage > 0 ? data.mining_info.extra.total.common_percentage + "%" : "0%"}</div>
-            <div><strong>Rares reward boost:</strong> ${data.mining_info.extra.total.rare_percentage > 0 ? data.mining_info.extra.total.rare_percentage + "%" : "0%"}</div>
-            <div><strong>Epics reward boost:</strong> ${data.mining_info.extra.total.epic_percentage > 0 ? data.mining_info.extra.total.epic_percentage + "%" : "0%"}</div>
-            <div><strong>Legendaries reward boost:</strong> ${data.mining_info.extra.total.legendary_percentage > 0 ? data.mining_info.extra.total.legendary_percentage + "%" : "0%"}</div>
+            <div><strong>Commons:</strong> ${data.mining_info.extra.total.common_percentage > 0 ? data.mining_info.extra.total.common_percentage + "%" : "0%"}</div>
+            <div><strong>Rares:</strong> ${data.mining_info.extra.total.rare_percentage > 0 ? data.mining_info.extra.total.rare_percentage + "%" : "0%"}</div>
+            <div><strong>Epics:</strong> ${data.mining_info.extra.total.epic_percentage > 0 ? data.mining_info.extra.total.epic_percentage + "%" : "0%"}</div>
+            <div><strong>Legendaries:</strong> ${data.mining_info.extra.total.legendary_percentage > 0 ? data.mining_info.extra.total.legendary_percentage + "%" : "0%"}</div>
         </div>
 
         <hr style="border: 1px solid #80deea; margin-bottom: 15px;">
 
         <!-- XP Boosters Section -->
         <div style="margin-bottom: 10px;">
-            <h4>XP Boosters</h4>
+            <h4>XP-Boosters</h4>
             <ul>
-                <li><strong>CHIPS XP Boost:</strong> ${data.booster_report.boost_totals.CHIPSxp_boost}%</li>
-                <li><strong>SQJ XP Boost:</strong> ${data.booster_report.boost_totals.SQJxp_boost}%</li>
+                <li><strong>CHIPS XP-Boost:</strong> ${data.booster_report.boost_totals.CHIPSxp_boost}%</li>
+                <li><strong>SQJ-XP Boost:</strong> ${data.booster_report.boost_totals.SQJxp_boost}%</li>
             </ul>
         </div>
 
@@ -1037,7 +1034,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         
         <!-- Active Boosters Section -->
         <div style="margin-bottom: 10px;">
-            <strong>Active Boosters:</strong>
+            <strong>Activated:</strong>
             <ul>
                 ${data.booster_report.user_boosters.applicable.map(booster => `
                     <li>${booster.name} - ${booster.boost_percentage}% XP-Boost (Quantity: ${booster.quantity})</li>
@@ -1049,7 +1046,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         
         <!-- No Longer Activable Boosters Section -->
         <div style="margin-bottom: 10px;">
-            <strong>No longer activable:</strong>
+            <strong>Expired:</strong>
             <ul>
                 ${data.booster_report.user_boosters.not_applicable.map(booster => `
                     <li>${booster.name} - ${booster.boost_percentage}% XP-Boost (for Levels: ${booster.level_group})</li>
@@ -1061,7 +1058,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         
         <!-- Available Boosters Section -->
         <div style="margin-bottom: 10px;">
-            <strong>Available for you in the market:</strong>
+            <strong>Available in the market:</strong>
             <ul>
                 ${data.booster_report.user_boosters.unused.length > 0 ? 
                     data.booster_report.user_boosters.unused.map(booster => `
@@ -1127,14 +1124,14 @@ function toggleCard(cardId) {
                               <span class="slider"></span>
                           </label>
                           <span style="margin-left: 15px; font-size: 1.2em; vertical-align: middle;">
-                              ${showAllFarms ? 'Show My Farms' : 'Show All Farms'}
+                              ${showAllFarms ? 'All NFTs-Farms' : 'My NFTs-Farms'}
                           </span>
                       </div>
                       <div class="farm-grid">
                           ${farms.map(farm => `
                               <div class="nft-reward-card">
                                   <h4>🏦 ${farm.farm_name}</h4>
-                                  <p><strong>Token Symbol:</strong> ${farm.token_symbol}</p>
+                                  <p><strong>Token:</strong> ${farm.token_symbol}</p>
                                   <h5>Templates and Rewards:</h5>
                                   <ul>
                                       ${farm.templates.map(template => {
@@ -1151,7 +1148,7 @@ function toggleCard(cardId) {
                                               <li class="template-row">
                                                   <span class="template-id">ID: ${template.template_id}</span>
                                                   <span class="daily-reward">Reward: ${template.daily_reward} ${farm.token_symbol}</span>
-                                                  <p>Owned NFTs: ${userNftsCount} (Staked: ${stakedNftsCount}, Unstaked: ${unstakedNftsCount})</p>
+                                                  <p>Owned NFTs: ${userNftsCount} (Staked: ${stakedNftsCount})</p>
                                                   <div class="reward-info">
                                                       <p>Total Reward for Staked NFTs: ${totalReward} ${farm.token_symbol}</p>
                                                   </div>

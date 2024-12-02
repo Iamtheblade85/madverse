@@ -990,24 +990,24 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
             gap: 10px; 
             font-weight: bold; 
             font-size: 1em; 
-            color: ${data.general_data.chips_pass ? '#4CAF50' : '#FF5722'}; 
-            border: 2px solid ${data.general_data.chips_pass ? '#4CAF50' : '#FF5722'}; 
+            color: ${data.chips_pass ? '#4CAF50' : '#FF5722'}; 
+            border: 2px solid ${data.chips_pass ? '#4CAF50' : '#FF5722'}; 
             padding: 2px; 
             border-radius: 2px; 
-            background-color: ${data.general_data.chips_pass ? '#E8F5E9' : '#FFEBEE'};
+            background-color: ${data.chips_pass ? '#E8F5E9' : '#FFEBEE'};
         ">
-            ${data.general_data.chips_pass 
+            ${data.chips_pass 
                 ? '<span>✅ ACTIVE</span>' 
                 : '<span>❌ Not Active</span>'}
             <a href="https://neftyblocks.com/collection/cryptochaos1/drops/210578" 
                target="_blank" 
                style="
                    text-decoration: none; 
-                   color: ${data.general_data.chips_pass ? '#4CAF50' : '#FF5722'}; 
+                   color: ${data.chips_pass ? '#4CAF50' : '#FF5722'}; 
                    font-weight: bold;
                    margin-left: 10px;
                ">
-                Learn More
+                Get yours here
             </a>
         </div>
         <div><strong>Tier Level:</strong> ${data.general_data.tier_level}</div>

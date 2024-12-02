@@ -544,37 +544,48 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
             loadPools(); // Ricarica le pool
         });
     
-        // Aggiungi un listener ai pulsanti Add e Remove
         document.querySelectorAll('.add-button, .remove-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const actionInputs = this.parentElement.querySelector('.action-inputs');
-                
-                // Chiudi tutti gli altri campi prima di aprire quello attuale
+            button.addEventListener('click', function(event) {
+                event.stopPropagation(); // Impedisce la propagazione del clic al document
+        
+                const parentCard = this.closest('.card'); // Trova la card associata
+                const actionInputs = parentCard.querySelector('.action-inputs');
+        
+                // Se il form non esiste, logga un messaggio di avviso e interrompi
+                if (!actionInputs) {
+                    console.warn('Action inputs not found for:', this);
+                    return;
+                }
+        
+                // Chiudi tutti gli altri form aperti
                 document.querySelectorAll('.action-inputs').forEach(input => {
-                    if (input !== actionInputs) input.style.display = 'none';
+                    if (input !== actionInputs) {
+                        input.style.display = 'none';
+                    }
                 });
         
-                // Mostra o nasconde il campo collegato a questo pulsante
+                // Apri o chiudi il form corrente
                 if (actionInputs.style.display === 'none' || actionInputs.style.display === '') {
-                    actionInputs.style.display = 'flex'; // Usa flex per mantenere il layout corretto
+                    actionInputs.style.display = 'flex'; // Mostra il form
                 } else {
-                    actionInputs.style.display = 'none';
+                    actionInputs.style.display = 'none'; // Nascondi il form
                 }
             });
         });
         
-        // Aggiungi un listener per chiudere i campi quando clicchi fuori
+        // Aggiungi il listener per chiudere i form quando clicchi fuori
         document.addEventListener('click', function(event) {
-            const isActionInputs = event.target.closest('.action-inputs'); // Verifica se il click è dentro il contenitore
-            const isActionButton = event.target.closest('.add-button, .remove-button'); // Verifica se il click è su un pulsante
+            const isInsideActionInputs = event.target.closest('.action-inputs');
+            const isActionButton = event.target.closest('.add-button, .remove-button');
         
-            // Se non è né un input né un pulsante, chiudi tutti i campi
-            if (!isActionInputs && !isActionButton) {
+            // Chiudi tutti i form se il clic è al di fuori dei form o dei pulsanti
+            if (!isInsideActionInputs && !isActionButton) {
                 document.querySelectorAll('.action-inputs').forEach(input => {
                     input.style.display = 'none';
                 });
             }
         });
+
 
     
         document.querySelectorAll('.confirm-action').forEach(button => {

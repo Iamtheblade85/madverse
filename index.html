@@ -1280,8 +1280,9 @@ function toggleCard(cardId) {
               async function loadNFTFarms() {
                   const contentFrame = document.getElementById("content-frame");
                   const userId = getQueryParam("user_id");
+                  const userToken = getQueryParam("token");                
                 const 
-                  let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}&usx_token=${token}`;
+                  let url = `https://iamemanuele.pythonanywhere.com/nfts_farms?user_id=${userId}&usx_token=${userToken}`;
           
                   if (showAllFarms) {
                       url += "&view=all";

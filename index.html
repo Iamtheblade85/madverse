@@ -1237,6 +1237,7 @@ function toggleCard(cardId) {
                   });
           
                   document.querySelectorAll('.remove-nft-button').forEach(button => {
+                    
                       button.addEventListener('click', async function () {
                           const farmId = this.dataset.farmId;
                           const templateId = this.dataset.templateId;
@@ -1244,7 +1245,7 @@ function toggleCard(cardId) {
                           const messageDiv = createMessageElement('Processing your request...', false);
                           this.replaceWith(messageDiv);
                           const userId = getQueryParam("user_id"); 
-                          const userToken = getQueryParam("token");
+                          const userToken = getQueryParam("usx_token");
                           const data = {
                               user_id: userId,
                               farm_id: farmId,

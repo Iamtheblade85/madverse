@@ -151,49 +151,51 @@ async function loadContent(page) {
         const data = await response.json();
         console.log("Data received for page:", page, data);
 
-if (page === 'balance') {
-    if (!data || !data.balances || data.balances.length === 0) {
-      contentFrame.innerHTML = "<p>No balances found.</p>";
-      return;
-    }
-        contentFrame.innerHTML = `
-            <h2 class="pool-title" style="text-align: center;">Your Token Balances</h2>
-            <div class="balance-grid">
-                ${data.balances.map(balance => `
-                    <div class="card">
-                        <h4>${balance.symbol}</h4>
-                        <p><span class="value">${balance.amount}</span></p>
-                        
-                        <!-- Pulsante di prelievo -->
-                        <button class="withdraw-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}" style="margin-top: 10px; padding: 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Withdraw</button>
-                        
-                        <!-- Sezione di prelievo -->
-                        <div class="withdraw-inputs" style="display: none; margin-top: 10px;">
-                            <input type="number" class="withdraw-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
-                            <button class="confirm-withdraw" data-symbol="${balance.symbol}">Confirm</button>
+        if (page === 'balance') {
+            if (!data || !data.balances || data.balances.length === 0) {
+              contentFrame.innerHTML = "<p>No balances found.</p>";
+              return;
+            }
+            contentFrame.innerHTML = `
+                <h2 class="pool-title" style="text-align: center;">Your Token Balances</h2>
+                <div class="balance-grid">
+                    ${data.balances.map(balance => `
+                        <div class="card">
+                            <h4>${balance.symbol}</h4>
+                            <p><span class="value">${balance.amount}</span></p>
+        
+                            <!-- Pulsante di prelievo -->
+                            <button class="withdraw-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}" style="margin-top: 10px; padding: 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Withdraw</button>
+        
+                            <!-- Sezione di prelievo -->
+                            <div class="withdraw-inputs" style="display: none; margin-top: 10px;">
+                                <input type="number" class="withdraw-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
+                                <button class="confirm-withdraw" data-symbol="${balance.symbol}">Confirm</button>
+                            </div>
+        
+                            <!-- Pulsante di trasferimento -->
+                            <button class="transfer-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}" style="margin-top: 10px; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Transfer</button>
+        
+                            <!-- Sezione di trasferimento -->
+                            <div class="transfer-inputs" style="display: none; margin-top: 10px;">
+                                <input type="number" class="transfer-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
+                                <input type="text" class="transfer-receiver" placeholder="Receiver" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
+                                <button class="confirm-transfer" data-symbol="${balance.symbol}">Confirm</button>
+                            </div>
+        
+                            <!-- Pulsante Swap to -->
+                            <button class="swap-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}" style="margin-top: 10px; padding: 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Swap to</button>
+        
+                            <!-- Sezione di swap -->
+                            <div class="swap-inputs" style="display: none; margin-top: 10px;">
+                                <input type="number" class="swap-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
+                                <input type="text" class="swap-to-token" placeholder="To Token" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
+                                <button class="confirm-swap" data-symbol="${balance.symbol}">Confirm Swap</button>
+                            </div>                        
                         </div>
-                        
-                        <!-- Pulsante di trasferimento -->
-                        <button class="transfer-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}" style="margin-top: 10px; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Transfer</button>
-                        
-                        <!-- Sezione di trasferimento -->
-                        <div class="transfer-inputs" style="display: none; margin-top: 10px;">
-                            <input type="number" class="transfer-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
-                            <input type="text" class="transfer-receiver" placeholder="Receiver" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
-                            <button class="confirm-transfer" data-symbol="${balance.symbol}">Confirm</button>
-                        </div>
-                        <!-- Pulsante Swap to -->
-                        <button class="swap-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}" style="margin-top: 10px; padding: 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Swap to</button>                            
-                        <!-- Sezione di swap -->
-                        <div class="swap-inputs" style="display: none; margin-top: 10px;">
-                            <input type="number" class="swap-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
-                            <input type="text" class="swap-to-token" placeholder="To Token" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
-                            <button class="confirm-swap" data-symbol="${balance.symbol}">Confirm Swap</button>
-                        </div>                        
-                    </div>
-                `).join("")}
-            </div>
-        `;
+                    `).join("")}
+                </div>
+            `;
         // Funzione per creare un messaggio dinamico sotto i pulsanti
         function createMessageElement(message, isSuccess) {
             const messageDiv = document.createElement('div');
@@ -213,16 +215,40 @@ if (page === 'balance') {
             messageDiv.textContent = message;
             return messageDiv;
         }
-        // Gestione del clic sul pulsante "Swap to"
-        document.querySelectorAll('.swap-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const symbol = this.getAttribute('data-symbol');
-                const amount = this.getAttribute('data-amount');
-                const card = this.closest('.card');
-                const swapInputs = card.querySelector('.swap-inputs');
-                swapInputs.style.display = 'block';  // Mostra la sezione di swap
-            });
-        });
+        // Funzione per gestire l'apertura/chiusura delle sezioni
+          function toggleInputSection(button, sectionClass) {
+              const card = button.closest('.card');
+              const currentSection = card.querySelector(sectionClass);
+              
+              // Chiudi tutte le altre sezioni
+              card.querySelectorAll('.withdraw-inputs, .transfer-inputs, .swap-inputs').forEach(section => {
+                  if (section !== currentSection) {
+                      section.style.display = 'none';
+                  }
+              });
+      
+              // Toggle visibilità della sezione corrente
+              currentSection.style.display = currentSection.style.display === 'none' ? 'block' : 'none';
+          }
+      
+          // Gestione dei clic sui pulsanti
+          document.querySelectorAll('.withdraw-button').forEach(button => {
+              button.addEventListener('click', function() {
+                  toggleInputSection(this, '.withdraw-inputs');
+              });
+          });
+      
+          document.querySelectorAll('.transfer-button').forEach(button => {
+              button.addEventListener('click', function() {
+                  toggleInputSection(this, '.transfer-inputs');
+              });
+          });
+      
+          document.querySelectorAll('.swap-button').forEach(button => {
+              button.addEventListener('click', function() {
+                  toggleInputSection(this, '.swap-inputs');
+              });
+          });
         
         // Gestione della conferma dello swap
         document.querySelectorAll('.confirm-swap').forEach(button => {
@@ -294,27 +320,6 @@ if (page === 'balance') {
                   } 
               });
           });
-        // Gestione dei click sui pulsanti "Withdraw"
-        document.querySelectorAll('.withdraw-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const symbol = this.getAttribute('data-symbol');
-                const amount = this.getAttribute('data-amount');
-                const card = this.closest('.card');
-                const withdrawInputs = card.querySelector('.withdraw-inputs');
-                withdrawInputs.style.display = 'block';
-            });
-        });
-        // Gestione dei click sui pulsanti "Transfer"
-        document.querySelectorAll('.transfer-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const symbol = this.getAttribute('data-symbol');
-                const amount = this.getAttribute('data-amount');
-                const card = this.closest('.card');
-                const transferInputs = card.querySelector('.transfer-inputs');
-                transferInputs.style.display = 'block';
-            });
-        });
-
 // Gestione della conferma del prelievo
 document.querySelectorAll('.confirm-withdraw').forEach(button => {
     button.addEventListener('click', async function() {

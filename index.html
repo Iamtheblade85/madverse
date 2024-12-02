@@ -981,38 +981,110 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
 <div class="profile-grid" style="background: linear-gradient(135deg, #e0f7fa, #80deea); padding: 20px; border-radius: 15px;">
     <!-- General Data Section -->
     <div class="profile-card" style="background: linear-gradient(145deg, #f2f2f2, #d9d9d9); border: 2px solid black; padding: 15px; margin-bottom: 15px; border-radius: 10px;">
-        <h3>General Data</h3>
-        <div><strong>Username:</strong> ${data.general_data.username}</div>
-        <div><strong>Wax Account:</strong> ${data.general_data.wax_account}</div>
-        <div style="
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            font-weight: bold; 
-            font-size: 1em; 
-            color: ${data.chips_pass ? '#4CAF50' : '#FF5722'}; 
-            border: 2px solid ${data.chips_pass ? '#4CAF50' : '#FF5722'}; 
-            padding: 2px; 
-            border-radius: 2px; 
-            background-color: ${data.chips_pass ? '#E8F5E9' : '#FFEBEE'};
-        ">
-            ${data.chips_pass 
-                ? '<span>✅ ACTIVE</span>' 
-                : '<span>❌ Not Active</span>'}
-            <a href="https://neftyblocks.com/collection/cryptochaos1/drops/210578" 
-               target="_blank" 
-               style="
-                   text-decoration: none; 
-                   color: ${data.chips_pass ? '#4CAF50' : '#FF5722'}; 
-                   font-weight: bold;
-                   margin-left: 10px;
-               ">
-                Get yours here
-            </a>
-        </div>
-        <div><strong>Tier Level:</strong> ${data.general_data.tier_level}</div>
-        <div><strong>CHIPS Level:</strong> ${data.general_data.chips_level}</div>
-        <div><strong>CHIPS XP:</strong> ${data.general_data.chips_xp_actual}</div>
+    <h3 style="font-weight: bold; color: #2196F3; border-bottom: 2px solid #2196F3; padding-bottom: 10px;">General Data</h3>
+    
+    <!-- Username -->
+    <div style="
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        font-weight: bold; 
+        color: #1976D2; /* Blu per Username */
+        border: 2px solid #1976D2;
+        padding: 10px;
+        border-radius: 8px;
+        background-color: #E3F2FD;
+    ">
+        <strong>Username:</strong> ${data.general_data.username}
+    </div>
+    
+    <!-- Wax Account -->
+    <div style="
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        font-weight: bold; 
+        color: #FF9800; /* Arancione per Wax Account */
+        border: 2px solid #FF9800;
+        padding: 10px;
+        border-radius: 8px;
+        background-color: #FFF3E0;
+    ">
+        <strong>Wax Account:</strong> ${data.general_data.wax_account}
+    </div>
+    
+    <!-- CHIPS Pass -->
+    <div style="
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        font-weight: bold; 
+        font-size: 1em; 
+        color: ${data.chips_pass ? '#4CAF50' : '#FF5722'}; 
+        border: 2px solid ${data.chips_pass ? '#4CAF50' : '#FF5722'}; 
+        padding: 10px; 
+        border-radius: 8px; 
+        background-color: ${data.chips_pass ? '#E8F5E9' : '#FFEBEE'};
+    ">
+        ${data.chips_pass 
+            ? '<span>✅ ACTIVE</span>' 
+            : '<span>❌ Not Active</span>'}
+        <a href="https://neftyblocks.com/collection/cryptochaos1/drops/210578" 
+           target="_blank" 
+           style="
+               text-decoration: none; 
+               color: ${data.chips_pass ? '#4CAF50' : '#FF5722'}; 
+               font-weight: bold;
+               margin-left: 10px;
+           ">
+            Get yours here
+        </a>
+    </div>
+    
+    <!-- Tier Level -->
+    <div style="
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        font-weight: bold; 
+        color: #8E24AA; /* Viola per Tier Level */
+        border: 2px solid #8E24AA;
+        padding: 10px;
+        border-radius: 8px;
+        background-color: #F8BBD0;
+    ">
+        <strong>Tier Level:</strong> ${data.general_data.tier_level}
+    </div>
+    
+    <!-- CHIPS Level -->
+    <div style="
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        font-weight: bold; 
+        color: #388E3C; /* Verde per CHIPS Level */
+        border: 2px solid #388E3C;
+        padding: 10px;
+        border-radius: 8px;
+        background-color: #C8E6C9;
+    ">
+        <strong>CHIPS Level:</strong> ${data.general_data.chips_level}
+    </div>
+    
+    <!-- CHIPS XP -->
+    <div style="
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        font-weight: bold; 
+        color: #D32F2F; /* Rosso per CHIPS XP */
+        border: 2px solid #D32F2F;
+        padding: 10px;
+        border-radius: 8px;
+        background-color: #FFCDD2;
+    ">
+        <strong>CHIPS XP:</strong> ${data.general_data.chips_xp_actual}
+    </div>
     </div>
     
     <hr style="border: 1px solid #80deea; margin-bottom: 15px;">

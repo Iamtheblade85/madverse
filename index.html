@@ -140,16 +140,16 @@ async function loadContent(page) {
             break;
     }
     
-    console.log("API URL:", url);
+    //console.log("API URL:", url);
     try {
         const response = await fetch(url);
-        console.log("Response status:", response.status);
+        //console.log("Response status:", response.status);
         
         if (!response.ok) {
             throw new Error(`Server responded with status: ${response.status}`);
         }
         const data = await response.json();
-        console.log("Data received for page:", page, data);
+        //console.log("Data received for page:", page, data);
 
         if (page === 'balance') {
             if (!data || !data.balances || data.balances.length === 0) {
@@ -961,6 +961,7 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
         id="toggle-sqj" 
         style="
             background: linear-gradient(135deg, #e0f7fa, #80deea); /* Gradiente simile alle card */
+            display: none;
             color: black; /* Colore del testo */
             border: 2px solid #39ff14; /* Bordo verde per coerenza */
             border-radius: 5px; 

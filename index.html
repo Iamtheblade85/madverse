@@ -1212,8 +1212,27 @@ function toggleCard(cardId) {
         const stakedNftsCount = userNfts.filter(nft => nft.is_staked).length;
         const unstakedNftsCount = userNftsCount - stakedNftsCount;
 
-        // Calcola il reward totale per gli NFT staccati
-        const totalReward = stakedNftsCount * template.daily_reward;
+        // Genera le righe dei reward per ogni template
+        const rewardRows = template.rewards.map(reward => {
+            // Calcolo del reward totale per gli NFT staccati
+            const totalReward = stakedNftsCount * reward.daily_reward_amount;
+
+            return `
+                <div style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                    padding: 10px;
+                    border-radius: 8px;
+                    background-color: #FFF3E0;
+                    border: 2px solid #FF9800;
+                ">
+                    <span style="font-weight: bold; color: #FF9800;">Reward Token: ${reward.token_symbol}</span>
+                    <span style="color: #FF9800;">Daily Reward: ${reward.daily_reward_amount} ${reward.token_symbol}</span>
+                    <p style="color: #388E3C;">Total Reward for Staked NFTs: ${totalReward} ${reward.token_symbol}</p>
+                </div>
+            `;
+        }).join(''); // Unisce tutte le righe dei reward
 
         return `
             <li style="
@@ -1222,42 +1241,16 @@ function toggleCard(cardId) {
                 gap: 15px;
                 padding: 10px;
                 border-radius: 8px;
-                background-color: #E3F2FD; 
+                background-color: #E3F2FD;
                 border: 2px solid #2196F3;
                 color: #1976D2;
             ">
                 <span style="font-weight: bold;">Template ID: ${template.template_id}</span>
-                
-                ${template.daily_reward ? `
-                    <div style="
-                        display: flex;
-                        gap: 10px;
-                        font-weight: bold;
-                        color: #FF9800; 
-                        border: 2px solid #FF9800;
-                        padding: 10px;
-                        border-radius: 8px;
-                        background-color: #FFF3E0;
-                    ">
-                        <span>Reward: ${template.daily_reward} ${farm.token_symbol}</span>
-                    </div>
-                ` : ''}
-                
+
+                ${rewardRows} <!-- Aggiungi tutte le righe di reward -->
+
                 <p style="font-weight: bold; color: #388E3C;">Owned NFTs: ${userNftsCount} (Staked: ${stakedNftsCount}, Unstaked: ${unstakedNftsCount})</p>
-                
-                <div style="
-                    display: flex;
-                    flex-direction: column;
-                    gap: 5px;
-                    color: #D32F2F; 
-                    border: 2px solid #D32F2F;
-                    padding: 10px;
-                    border-radius: 8px;
-                    background-color: #FFCDD2;
-                ">
-                    <p style="font-weight: bold;">Total Reward for Staked NFTs: ${totalReward} ${farm.token_symbol}</p>
-                </div>
-                
+
                 <div class="action-buttons" style="display: flex; gap: 10px;">
                     ${unstakedNftsCount > 0 ? `
                         <button class="add-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}" style="
@@ -1276,10 +1269,6 @@ function toggleCard(cardId) {
         `;
     }).join('')}
 </ul>
-
-
-
-
                               </div>
                           `).join('')}
                       </div>

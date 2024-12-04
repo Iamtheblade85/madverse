@@ -1203,7 +1203,7 @@ function toggleCard(cardId) {
                               <div class="nft-reward-card">
                                   <h4>🏦 ${farm.farm_name}</h4>
 
-<h5>Templates and Rewards:</h5>
+<h5 style="font-weight: bold; color: #2196F3; border-bottom: 2px solid #2196F3; padding-bottom: 10px;">Templates and Rewards</h5>
 <ul>
     ${farm.templates.map(template => {
         // Trova gli NFT dell'utente per questo template
@@ -1215,29 +1215,57 @@ function toggleCard(cardId) {
         // Calcola il reward totale per gli NFT staccati
         const totalReward = stakedNftsCount * template.daily_reward;
 
-        // Assegna colori dinamici in base ai dati
-        const rewardColor = stakedNftsCount > 0 ? '#4CAF50' : '#FF5722';  // Verde se ci sono NFT staked, rosso altrimenti
-        const backgroundColor = stakedNftsCount > 0 ? '#E8F5E9' : '#FFEBEE';  // Verde chiaro per staked, rosso chiaro per non staked
-        const borderColor = stakedNftsCount > 0 ? '#388E3C' : '#D32F2F';  // Verde scuro per staked, rosso per non staked
-
         return `
-            <li class="template-row" style="border: 2px solid ${borderColor}; background-color: ${backgroundColor}; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
-                <span class="template-id" style="font-weight: bold; color: #2196F3;">ID: ${template.template_id}</span>
-                <span class="daily-reward" style="font-weight: bold; color: ${rewardColor};">Reward: ${template.daily_reward} ${farm.token_symbol}</span>
-                <p style="font-weight: bold; color: #1976D2;">Owned NFTs: ${userNftsCount} (Staked: ${stakedNftsCount}, Unstaked: ${unstakedNftsCount})</p>
-                <div class="reward-info" style="font-size: 1.1em; color: ${rewardColor};">
-                    <p>Total Reward for Staked NFTs: ${totalReward} ${farm.token_symbol}</p>
+            <li style="
+                display: flex; 
+                flex-direction: column; 
+                gap: 10px; 
+                padding: 10px;
+                border-radius: 8px;
+                background-color: #E3F2FD; /* Colore di sfondo per il template */
+                border: 2px solid #2196F3;
+                color: #1976D2; /* Blu per il template ID */
+            ">
+                <span style="font-weight: bold;">Template ID: ${template.template_id}</span>
+                
+                <div style="
+                    display: flex;
+                    gap: 10px;
+                    font-weight: bold;
+                    color: #FF9800; /* Arancione per Reward */
+                    border: 2px solid #FF9800;
+                    padding: 10px;
+                    border-radius: 8px;
+                    background-color: #FFF3E0;
+                ">
+                    <span>Reward: ${template.daily_reward} ${farm.token_symbol}</span>
                 </div>
-                <div class="action-buttons" style="margin-top: 10px;">
+                
+                <p style="font-weight: bold; color: #388E3C;">Owned NFTs: ${userNftsCount} (Staked: ${stakedNftsCount}, Unstaked: ${unstakedNftsCount})</p>
+                
+                <div style="
+                    display: flex; 
+                    flex-direction: column; 
+                    gap: 5px; 
+                    color: #D32F2F; /* Rosso per il reward totale */
+                    border: 2px solid #D32F2F;
+                    padding: 10px;
+                    border-radius: 8px;
+                    background-color: #FFCDD2;
+                ">
+                    <p style="font-weight: bold;">Total Reward for Staked NFTs: ${totalReward} ${farm.token_symbol}</p>
+                </div>
+                
+                <div class="action-buttons" style="display: flex; gap: 10px;">
                     ${unstakedNftsCount > 0 ? `
-                        <button class="add-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}" 
-                                style="background-color: ${rewardColor}; color: white; border: none; padding: 10px; border-radius: 8px;">
+                        <button class="add-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}" style="
+                            background-color: #4CAF50; color: white; font-weight: bold; padding: 10px; border-radius: 8px;">
                             Add NFT
                         </button>
                     ` : ''}
                     ${stakedNftsCount > 0 ? `
-                        <button class="remove-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}" 
-                                style="background-color: #FF5722; color: white; border: none; padding: 10px; border-radius: 8px;">
+                        <button class="remove-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}" style="
+                            background-color: #FF5722; color: white; font-weight: bold; padding: 10px; border-radius: 8px;">
                             Remove NFT
                         </button>
                     ` : ''}
@@ -1246,6 +1274,7 @@ function toggleCard(cardId) {
         `;
     }).join('')}
 </ul>
+
 
 
                               </div>

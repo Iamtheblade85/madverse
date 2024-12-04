@@ -1203,7 +1203,7 @@ function toggleCard(cardId) {
                               <div class="nft-reward-card">
                                   <h4>🏦 ${farm.farm_name}</h4>
 
-<h5 style="font-weight: bold; color: #2196F3; border-bottom: 2px solid #2196F3; padding-bottom: 10px;">Templates and Rewards</h5>
+<h5 style="font-weight: bold; color: #2196F3; border-bottom: 2px solid #2196F3; padding-bottom: 10px;">Templates and Rewards:</h5>
 <ul>
     ${farm.templates.map(template => {
         // Trova gli NFT dell'utente per questo template
@@ -1217,37 +1217,39 @@ function toggleCard(cardId) {
 
         return `
             <li style="
-                display: flex; 
-                flex-direction: column; 
-                gap: 10px; 
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
                 padding: 10px;
                 border-radius: 8px;
-                background-color: #E3F2FD; /* Colore di sfondo per il template */
+                background-color: #E3F2FD; 
                 border: 2px solid #2196F3;
-                color: #1976D2; /* Blu per il template ID */
+                color: #1976D2;
             ">
                 <span style="font-weight: bold;">Template ID: ${template.template_id}</span>
                 
-                <div style="
-                    display: flex;
-                    gap: 10px;
-                    font-weight: bold;
-                    color: #FF9800; /* Arancione per Reward */
-                    border: 2px solid #FF9800;
-                    padding: 10px;
-                    border-radius: 8px;
-                    background-color: #FFF3E0;
-                ">
-                    <span>Reward: ${template.daily_reward} ${farm.token_symbol}</span>
-                </div>
+                ${template.daily_reward ? `
+                    <div style="
+                        display: flex;
+                        gap: 10px;
+                        font-weight: bold;
+                        color: #FF9800; 
+                        border: 2px solid #FF9800;
+                        padding: 10px;
+                        border-radius: 8px;
+                        background-color: #FFF3E0;
+                    ">
+                        <span>Reward: ${template.daily_reward} ${farm.token_symbol}</span>
+                    </div>
+                ` : ''}
                 
                 <p style="font-weight: bold; color: #388E3C;">Owned NFTs: ${userNftsCount} (Staked: ${stakedNftsCount}, Unstaked: ${unstakedNftsCount})</p>
                 
                 <div style="
-                    display: flex; 
-                    flex-direction: column; 
-                    gap: 5px; 
-                    color: #D32F2F; /* Rosso per il reward totale */
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                    color: #D32F2F; 
                     border: 2px solid #D32F2F;
                     padding: 10px;
                     border-radius: 8px;
@@ -1274,6 +1276,7 @@ function toggleCard(cardId) {
         `;
     }).join('')}
 </ul>
+
 
 
 

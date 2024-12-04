@@ -1202,7 +1202,7 @@ function toggleCard(cardId) {
                           ${farms.map(farm => `
                               <div class="nft-reward-card">
                                   <h4>🏦 ${farm.farm_name}</h4>
-                                  <p><strong>Token:</strong> ${farm.token_symbol}</p>
+
 <h5>Templates and Rewards:</h5>
 <ul>
     ${farm.templates.map(template => {
@@ -1212,32 +1212,32 @@ function toggleCard(cardId) {
         const stakedNftsCount = userNfts.filter(nft => nft.is_staked).length;
         const unstakedNftsCount = userNftsCount - stakedNftsCount;
 
-        // Mappare i rewards del template
-        const rewardsList = template.rewards.map(reward => {
-            // Calcolare reward totale per il token specifico (potrebbe essere diverso per ogni reward)
-            const totalReward = stakedNftsCount * reward.daily_reward_amount;
+        // Calcola il reward totale per gli NFT staccati
+        const totalReward = stakedNftsCount * template.daily_reward;
 
-            return `
-                <div class="reward-info">
-                    <p>Reward: ${reward.daily_reward_amount} ${reward.token_symbol}</p>
-                    <p>Total Reward for Staked NFTs: ${totalReward} ${reward.token_symbol}</p>
-                </div>
-            `;
-        }).join('');
+        // Assegna colori dinamici in base ai dati
+        const rewardColor = stakedNftsCount > 0 ? '#4CAF50' : '#FF5722';  // Verde se ci sono NFT staked, rosso altrimenti
+        const backgroundColor = stakedNftsCount > 0 ? '#E8F5E9' : '#FFEBEE';  // Verde chiaro per staked, rosso chiaro per non staked
+        const borderColor = stakedNftsCount > 0 ? '#388E3C' : '#D32F2F';  // Verde scuro per staked, rosso per non staked
 
         return `
-            <li class="template-row">
-                <span class="template-id">ID: ${template.template_id}</span>
-                <p>Owned NFTs: ${userNftsCount} (Staked: ${stakedNftsCount}, Unstaked: ${unstakedNftsCount})</p>
-                ${rewardsList}
-                <div class="action-buttons">
+            <li class="template-row" style="border: 2px solid ${borderColor}; background-color: ${backgroundColor}; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                <span class="template-id" style="font-weight: bold; color: #2196F3;">ID: ${template.template_id}</span>
+                <span class="daily-reward" style="font-weight: bold; color: ${rewardColor};">Reward: ${template.daily_reward} ${farm.token_symbol}</span>
+                <p style="font-weight: bold; color: #1976D2;">Owned NFTs: ${userNftsCount} (Staked: ${stakedNftsCount}, Unstaked: ${unstakedNftsCount})</p>
+                <div class="reward-info" style="font-size: 1.1em; color: ${rewardColor};">
+                    <p>Total Reward for Staked NFTs: ${totalReward} ${farm.token_symbol}</p>
+                </div>
+                <div class="action-buttons" style="margin-top: 10px;">
                     ${unstakedNftsCount > 0 ? `
-                        <button class="add-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}">
+                        <button class="add-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}" 
+                                style="background-color: ${rewardColor}; color: white; border: none; padding: 10px; border-radius: 8px;">
                             Add NFT
                         </button>
                     ` : ''}
                     ${stakedNftsCount > 0 ? `
-                        <button class="remove-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}">
+                        <button class="remove-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}" 
+                                style="background-color: #FF5722; color: white; border: none; padding: 10px; border-radius: 8px;">
                             Remove NFT
                         </button>
                     ` : ''}
@@ -1246,6 +1246,7 @@ function toggleCard(cardId) {
         `;
     }).join('')}
 </ul>
+
 
                               </div>
                           `).join('')}

@@ -146,6 +146,7 @@ async function loadContent(page) {
               contentFrame.innerHTML = "<p>No balances found.</p>";
               return;
             }
+            console.log("Data for balances:", data);
             contentFrame.innerHTML = `
                 <h2 class="pool-title" style="text-align: center;">Your Token Balances</h2>
                 <div class="balance-grid">
@@ -328,6 +329,8 @@ document.querySelectorAll('.confirm-withdraw').forEach(button => {
             token_symbol: symbol,
             amount: withdrawQuantity
         };
+        console.log("WA for b-E:", waxAccount);
+        console.log("Data for b-E:", data);
         try {
             const response = await fetch(url, {
                 method: 'POST',
@@ -392,7 +395,8 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
             amount: transferQuantity,
             receiver: transferReceiver
         };
-
+        console.log("WA for b-E:", waxAccount);
+        console.log("Data for b-E:", data);
         try {
             const response = await fetch(url, {
                 method: 'POST',

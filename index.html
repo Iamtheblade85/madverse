@@ -62,7 +62,8 @@ async function fetchWaxAccount() {
         console.log("Data received:", data);
         user_wax_account = data.wax_account;
         console.log("Wax account:", user_wax_account);
-        const waxAccount = user_wax_account
+        const waxAccount = data.wax_account
+        console.log("Wax account in waxAccount constant:", waxAccount);
         if (waxAccount ) {
             // Imposta il messaggio di benvenuto
             const welcomeMessage = `Welcome, ${waxAccount }`;

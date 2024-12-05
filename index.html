@@ -50,7 +50,7 @@ let user_wax_account = null;
 async function fetchWaxAccount() {
     try {
         // Costruisci l'URL con i parametri user_id e usx_token
-        const url = `https://iamemanuele.pythonanywhere.com/profile?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(token)}`;
+        const url = `https://your-backend-domain.com/main_door?user_id=${userId}&usx_token=${token}`;
         // Esegui la richiesta GET al backend per il profilo
         const response = await fetch(url, {
             method: 'GET', 
@@ -60,7 +60,7 @@ async function fetchWaxAccount() {
         }
         const data = await response.json();
         // Accedi al wax_account nei dati ricevuti (modifica in base alla struttura)
-        user_wax_account = data.general_data?.wax_account;  
+        user_wax_account = data.wax_account; 
         const waxAccount = user_wax_account
         if (user_wax_account) {
             // Imposta il messaggio di benvenuto

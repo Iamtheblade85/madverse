@@ -50,7 +50,7 @@ let user_wax_account = null;
 async function fetchWaxAccount() {
     try {
         // Costruisci l'URL con i parametri user_id e usx_token
-        const url = `https://your-backend-domain.com/main_door?user_id=${userId}&usx_token=${token}`;
+        const url = `https://iamemanuele.pythonanywhere.com/main_door?user_id=${userId}&usx_token=${token}`;
         // Esegui la richiesta GET al backend per il profilo
         const response = await fetch(url, {
             method: 'GET', 
@@ -75,6 +75,11 @@ async function fetchWaxAccount() {
         } else {
             displayGenericWelcome();
         }
+        // Aggiorna lo stile per il layout orizzontale
+        welcomeMessageElement.style.display = 'flex';
+        welcomeMessageElement.style.flexDirection = 'row'; // Cambia a disposizione orizzontale
+        welcomeMessageElement.style.justifyContent = 'space-between'; // Per separare elementi
+        welcomeMessageElement.style.alignItems = 'center';
     } catch (error) {
         displayGenericWelcome();
     }

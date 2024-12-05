@@ -248,7 +248,7 @@ async function loadContent(page) {
           document.querySelectorAll('.staking-button').forEach(button => {
               button.addEventListener('click', function() {
                   const tokenSymbol = this.getAttribute('data-symbol');
-                  loadContent(`https://iamemanuele.pythonanywhere.com/open_pools?user_id=${userId}&usx_token=${token}`);  // Passa la pagina di staking, che tu fornirai
+                  loadContent('staking_farms');  // Passa la pagina di staking, che tu fornirai
               });
           });        
         // Gestione della conferma dello swap

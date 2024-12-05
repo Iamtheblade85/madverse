@@ -65,6 +65,11 @@ async function fetchWaxAccount() {
         const waxAccount = data.wax_account
         console.log("Wax account in waxAccount constant:", waxAccount);
         if (waxAccount ) {
+            // Aggiorna lo stile per il layout orizzontale
+            welcomeMessageElement.style.display = 'flex';
+            welcomeMessageElement.style.flexDirection = 'row'; // Cambia a disposizione orizzontale
+            welcomeMessageElement.style.justifyContent = 'space-between'; // Per separare elementi
+            welcomeMessageElement.style.alignItems = 'center';          
             // Imposta il messaggio di benvenuto
             const welcomeMessage = `Welcome, ${waxAccount }`;
             document.getElementById("welcome-message").textContent = welcomeMessage;
@@ -77,11 +82,6 @@ async function fetchWaxAccount() {
         } else {
             displayGenericWelcome();
         }
-        // Aggiorna lo stile per il layout orizzontale
-        welcomeMessageElement.style.display = 'flex';
-        welcomeMessageElement.style.flexDirection = 'row'; // Cambia a disposizione orizzontale
-        welcomeMessageElement.style.justifyContent = 'space-between'; // Per separare elementi
-        welcomeMessageElement.style.alignItems = 'center';
     } catch (error) {
         displayGenericWelcome();
     }

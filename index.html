@@ -182,7 +182,11 @@ async function loadContent(page) {
                                 <input type="number" class="swap-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
                                 <input type="text" class="swap-to-token" placeholder="To Token" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
                                 <button class="confirm-swap" data-symbol="${balance.symbol}">Confirm Swap</button>
-                            </div>                        
+                            </div>
+                            <!-- Pulsante Staking disponibile (se stakeable == "Yes") -->
+                            ${balance.stakeable === "Yes" ? `
+                                <button class="staking-button" data-symbol="${balance.symbol}" style="margin-top: 10px; padding: 10px; background-color: #673AB7; color: white; border: none; border-radius: 5px;">Staking Available</button>
+                `               : ""}
                         </div>
                     `).join("")}
                 </div>
@@ -240,7 +244,13 @@ async function loadContent(page) {
                   toggleInputSection(this, '.swap-inputs');
               });
           });
-        
+          // Aggiungi l'evento per il pulsante "Staking Available"
+          document.querySelectorAll('.staking-button').forEach(button => {
+              button.addEventListener('click', function() {
+                  const tokenSymbol = this.getAttribute('data-symbol');
+                  loadContent(`https://iamemanuele.pythonanywhere.com/open_pools?user_id=${userId}&usx_token=${token}`);  // Passa la pagina di staking, che tu fornirai
+              });
+          });        
         // Gestione della conferma dello swap
         document.querySelectorAll('.confirm-swap').forEach(button => {
             button.addEventListener('click', async function() {

@@ -63,9 +63,9 @@ async function fetchWaxAccount() {
         user_wax_account = data.wax_account;
         console.log("Wax account:", user_wax_account);
         const waxAccount = user_wax_account
-        if (user_wax_account) {
+        if (waxAccount ) {
             // Imposta il messaggio di benvenuto
-            const welcomeMessage = `Welcome, ${user_wax_account}`;
+            const welcomeMessage = `Welcome, ${waxAccount }`;
             document.getElementById("welcome-message").textContent = welcomeMessage;
 
             // Applica l'animazione alle lettere

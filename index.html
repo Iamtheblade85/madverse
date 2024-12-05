@@ -64,14 +64,18 @@ async function fetchWaxAccount() {
         console.log("Wax account:", user_wax_account);
         const waxAccount = data.wax_account
         console.log("Wax account in waxAccount constant:", waxAccount);
+        // Prima aggiorniamo lo stile
+        const welcomeMessageElement = document.getElementById("welcome-message");
+        welcomeMessageElement.style.display = 'flex';
+        welcomeMessageElement.style.flexDirection = 'row'; // Cambia a disposizione orizzontale
+        welcomeMessageElement.style.justifyContent = 'space-between'; // Per separare elementi
+        welcomeMessageElement.style.alignItems = 'center';      
         if (waxAccount ) {       
             // Imposta il messaggio di benvenuto
             const welcomeMessage = `Welcome, ${waxAccount }`;
             document.getElementById("welcome-message").textContent = welcomeMessage;
-
             // Applica l'animazione alle lettere
             animateText(welcomeMessage);
-
             // Messaggio personalizzato per l'utente
             document.getElementById("personalized-message").textContent = `Welcome to our platform, where innovation meets opportunity! As a valued member, you are part of a revolutionary ecosystem fueled by our exclusive token CHIPS, which drives the entire economy. Get ready to engage in a world of endless possibilities and growth!`;
         } else {
@@ -80,9 +84,7 @@ async function fetchWaxAccount() {
     } catch (error) {
         displayGenericWelcome();
     }
-}
-
-function displayGenericWelcome() {
+} function displayGenericWelcome() {
     console.log("Fallback: displayGenericWelcome called");
     const welcomeMessage = `Welcome, User`;
     document.getElementById("welcome-message").textContent = welcomeMessage;

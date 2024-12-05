@@ -59,7 +59,7 @@ async function fetchWaxAccount() {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        // Accedi al wax_account nei dati ricevuti (modifica in base alla struttura)
+        console.log("Data received:", data);
         user_wax_account = data.wax_account; 
         const waxAccount = user_wax_account
         if (user_wax_account) {

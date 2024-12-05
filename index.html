@@ -60,7 +60,8 @@ async function fetchWaxAccount() {
         }
         const data = await response.json();
         console.log("Data received:", data);
-        user_wax_account = data.wax_account; 
+        user_wax_account = data.wax_account;
+        console.log("Wax account:", user_wax_account);
         const waxAccount = user_wax_account
         if (user_wax_account) {
             // Imposta il messaggio di benvenuto
@@ -86,6 +87,7 @@ async function fetchWaxAccount() {
 }
 
 function displayGenericWelcome() {
+    console.log("Fallback: displayGenericWelcome called");
     const welcomeMessage = `Welcome, User`;
     document.getElementById("welcome-message").textContent = welcomeMessage;
 

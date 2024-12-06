@@ -15,12 +15,16 @@
       </div>
     </div>
     <div class="menu-section">
-      <button onclick="loadContent('balance')">💼Wallet</button>
-      <button onclick="loadContent('staking_farms')">🌱Staking</button>
-      <button onclick="loadContent('mynfts')">🎨NFTs Inventory</button>
-      <button onclick="loadContent('waxdao_pools')">🏦Pools</button>
-      <button onclick="loadContent('profile')">👤Account</button>
-      <button onclick="loadContent('manage_nfts_farms')">💬NFTsFarm Owners</button>      
+      <div class="menu-row">
+        <button onclick="loadContent('balance')">💼Wallet</button>
+        <button onclick="loadContent('staking_farms')">🌱Staking</button>
+        <button onclick="loadContent('mynfts')">🎨NFTs Inventory</button>
+        <button onclick="loadContent('waxdao_pools')">🏦Pools</button>
+        <button onclick="loadContent('profile')">👤Account</button>
+      </div>
+      <div class="menu-row">
+        <button onclick="loadContent('manage_nfts_farms')">💬NFTsFarm Owners</button>
+      </div>
     </div>
     <div class="content-frame" id="content-frame">
     <p id="welcome-message" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 100%; width: 100%; margin: 0;">
@@ -288,7 +292,7 @@ if (page === 'manage_nfts_farms') {
             contentFrame.innerHTML = '<p>Failed to load farms. Please try again later.</p>';
         });
 }  
-        elif (page === 'balance') {
+        else if (page === 'balance') {
             if (!data || !data.balances || data.balances.length === 0) {
               contentFrame.innerHTML = "<p>No balances found.</p>";
               return;

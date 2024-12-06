@@ -1392,97 +1392,95 @@ function toggleCard(cardId) {
 }
       }        
  else if (page === 'waxdao_pools') {
-              let showAllFarms = true; // Stato per il pulsante switch
-              function renderFarms(farms, viewType) {
-                  const contentFrame = document.getElementById("content-frame");
-                  contentFrame.innerHTML = `
-                      <h2 class="farm-title" style="text-align: center;">NFT Farms</h2>
-                      <div style="text-align: center; margin-bottom: 10px;">
-                          <label class="custom-switch">
-                              <input type="checkbox" id="toggle-farms" ${showAllFarms ? '' : 'checked'}>
-                              <span class="slider"></span>
-                          </label>
-                          <span style="margin-left: 15px; font-size: 1.2em; vertical-align: middle;">
-                              ${showAllFarms ? 'All NFTs-Farms' : 'My NFTs-Farms'}
-                          </span>
-                      </div>
-                      <div class="farm-grid">
-                          ${farms.map(farm => `
-                              <div class="nft-reward-card">
-                                  <h4>🏦 ${farm.farm_name}</h4>
+    let showAllFarms = true; // Stato per il pulsante switch
 
-<h5 style="font-weight: bold; color: #2196F3; border-bottom: 2px solid #2196F3; padding-bottom: 10px;">Templates and Rewards:</h5>
-<ul>
-    ${farm.templates.map(template => {
-        // Trova gli NFT dell'utente per questo template
-        const userNfts = template.user_nfts;
-        const userNftsCount = userNfts.length;
-        const stakedNftsCount = userNfts.filter(nft => nft.is_staked).length;
-        const unstakedNftsCount = userNftsCount - stakedNftsCount;
+    function renderFarms(farms, viewType) {
+        const contentFrame = document.getElementById("content-frame");
+        contentFrame.innerHTML = `
+            <h2 class="farm-title" style="text-align: center;">NFT Farms</h2>
+            <div style="text-align: center; margin-bottom: 10px;">
+                <label class="custom-switch">
+                    <input type="checkbox" id="toggle-farms" ${showAllFarms ? '' : 'checked'}>
+                    <span class="slider"></span>
+                </label>
+                <span style="margin-left: 15px; font-size: 1.2em; vertical-align: middle;">
+                    ${showAllFarms ? 'All NFTs-Farms' : 'My NFTs-Farms'}
+                </span>
+            </div>
+            <div class="farm-grid">
+                ${farms.map(farm => `
+                    <div class="nft-reward-card">
+                        <h4>🏦 ${farm.farm_name}</h4>
+                        <h5 style="font-weight: bold; color: #2196F3; border-bottom: 2px solid #2196F3; padding-bottom: 10px;">Templates and Rewards:</h5>
+                        <ul>
+                            ${farm.templates.map(template => {
+                                // Trova gli NFT dell'utente per questo template
+                                const userNfts = template.user_nfts;
+                                const userNftsCount = userNfts.length;
+                                const stakedNftsCount = userNfts.filter(nft => nft.is_staked).length;
+                                const unstakedNftsCount = userNftsCount - stakedNftsCount;
 
-        // Genera le righe dei reward per ogni template
-        const rewardRows = template.rewards.map(reward => {
-            // Calcolo del reward totale per gli NFT staccati
-            const totalReward = stakedNftsCount * reward.daily_reward_amount;
+                                // Genera le righe dei reward per ogni template
+                                const rewardRows = template.rewards.map(reward => {
+                                    // Calcolo del reward totale per gli NFT staccati
+                                    const totalReward = stakedNftsCount * reward.daily_reward_amount;
 
-            return `
-                <div style="
-                    display: flex;
-                    flex-direction: column;
-                    gap: 5px;
-                    padding: 10px;
-                    border-radius: 8px;
-                    background-color: #FFF3E0;
-                    border: 2px solid #FF9800;
-                ">
-                    <span style="font-weight: bold; color: #FF9800;">Reward Token: ${reward.token_symbol}</span>
-                    <span style="color: #FF9800;">Daily Reward: ${reward.daily_reward_amount} ${reward.token_symbol}</span>
-                    <p style="color: #388E3C;">Total Reward for Staked NFTs: ${totalReward} ${reward.token_symbol}</p>
-                </div>
-            `;
-        }).join(''); // Unisce tutte le righe dei reward
+                                    return `
+                                        <div style="
+                                            display: flex;
+                                            flex-direction: column;
+                                            gap: 5px;
+                                            padding: 10px;
+                                            border-radius: 8px;
+                                            background-color: #FFF3E0;
+                                            border: 2px solid #FF9800;
+                                        ">
+                                            <span style="font-weight: bold; color: #FF9800;">Reward Token: ${reward.token_symbol}</span>
+                                            <span style="color: #FF9800;">Daily Reward: ${reward.daily_reward_amount} ${reward.token_symbol}</span>
+                                            <p style="color: #388E3C;">Total Reward for Staked NFTs: ${totalReward} ${reward.token_symbol}</p>
+                                        </div>
+                                    `;
+                                }).join(''); // Unisce tutte le righe dei reward
 
-        return `
-            <li style="
-                display: flex;
-                flex-direction: column;
-                gap: 15px;
-                padding: 10px;
-                border-radius: 8px;
-                background-color: #E3F2FD;
-                border: 2px solid #2196F3;
-                color: #1976D2;
-            ">
-                <span style="font-weight: bold;">Template ID: ${template.template_id}</span>
-
-                ${rewardRows} <!-- Aggiungi tutte le righe di reward -->
-
-                <p style="font-weight: bold; color: #388E3C;">Owned NFTs: ${userNftsCount} (Staked: ${stakedNftsCount}, Unstaked: ${unstakedNftsCount})</p>
-
-                <div class="action-buttons" style="display: flex; gap: 10px;">
-                    ${unstakedNftsCount > 0 ? `
-                        <button class="add-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}" style="
-                            background-color: #4CAF50; color: white; font-weight: bold; padding: 10px; border-radius: 8px;">
-                            Add NFT
-                        </button>
-                    ` : ''}
-                    ${stakedNftsCount > 0 ? `
-                        <button class="remove-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}" style="
-                            background-color: #FF5722; color: white; font-weight: bold; padding: 10px; border-radius: 8px;">
-                            Remove NFT
-                        </button>
-                    ` : ''}
-                </div>
-            </li>
+                                return `
+                                    <li style="
+                                        display: flex;
+                                        flex-direction: column;
+                                        gap: 15px;
+                                        padding: 10px;
+                                        border-radius: 8px;
+                                        background-color: #E3F2FD;
+                                        border: 2px solid #2196F3;
+                                        color: #1976D2;
+                                    ">
+                                        <span style="font-weight: bold;">Template ID: ${template.template_id}</span>
+                                        ${rewardRows} <!-- Aggiungi tutte le righe di reward -->
+                                        <p style="font-weight: bold; color: #388E3C;">Owned NFTs: ${userNftsCount} (Staked: ${stakedNftsCount}, Unstaked: ${unstakedNftsCount})</p>
+                                        <div class="action-buttons" style="display: flex; gap: 10px;">
+                                            ${unstakedNftsCount > 0 ? `
+                                                <button class="add-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}" style="
+                                                    background-color: #4CAF50; color: white; font-weight: bold; padding: 10px; border-radius: 8px;">
+                                                    Add NFT
+                                                </button>
+                                            ` : ''}
+                                            ${stakedNftsCount > 0 ? `
+                                                <button class="remove-nft-button" data-farm-id="${farm.farm_id}" data-template-id="${template.template_id}" style="
+                                                    background-color: #FF5722; color: white; font-weight: bold; padding: 10px; border-radius: 8px;">
+                                                    Remove NFT
+                                                </button>
+                                            ` : ''}
+                                        </div>
+                                    </li>
+                                `;
+                            }).join('')}
+                        </ul>
+                    </div>
+                `).join('')}
+            </div>
         `;
-    }).join('')}
-</ul>
-                              </div>
-                          `).join('')}
-                      </div>
-                  `;
-                  attachEventHandlers();
-              }
+        attachEventHandlers();
+    }
+
 
           
               function createMessageElement(message, isSuccess) {

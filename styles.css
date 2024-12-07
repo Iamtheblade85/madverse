@@ -174,8 +174,10 @@ input:checked + .slider:before {
 /* Menu Section Styling */
 .menu-section {
   display: flex;
+  flex-direction: column;
+  align-items: center;    
   justify-content: center;
-  gap: calc(10px * var(--scale-factor));
+  gap: calc(20px * var(--scale-factor));
   margin-bottom: 1px;
 }
 @media (max-width: 600px) {

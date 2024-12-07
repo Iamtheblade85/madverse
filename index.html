@@ -195,16 +195,27 @@ if (page === 'manage_nfts_farms') {
                             </ul>
 
                             <!-- Templates -->
+                            <!-- Templates -->
                             <h5>Templates and Daily Rewards:</h5>
                             <ul>
                                 ${farm.templates.map(template => `
                                     <li>
                                         <strong>Template ID:</strong> ${template.template_id}
-                                        <ul>
-                                            ${template.daily_rewards.map(dr => `
-                                                <li>${dr.token_symbol}: ${dr.daily_reward_amount} per day</li>
-                                            `).join('')}
-                                        </ul>
+                                        <button class="change-template-button" data-template-id="${template.template_id}" style="margin-left: 10px; padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Change Template Settings</button>
+                                        <div class="template-form-container" style="display: none; margin-top: 10px;">
+                                            <form class="template-form" data-template-id="${template.template_id}">
+                                                <h5>Modify Daily Rewards for Template: ${template.template_id}</h5>
+                                                ${template.daily_rewards.map(dr => `
+                                                    <div style="margin-bottom: 10px;">
+                                                        <input type="checkbox" class="reward-checkbox" id="reward-${dr.token_symbol}" data-token-symbol="${dr.token_symbol}" />
+                                                        <label for="reward-${dr.token_symbol}">${dr.token_symbol}</label>
+                                                        <input type="number" class="new-daily-reward" placeholder="New Daily Reward for ${dr.token_symbol}" style="margin-left: 10px; padding: 5px; width: 150px;" />
+                                                    </div>
+                                                `).join('')}
+                                                <button type="submit" class="submit-template-settings" style="padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Submit Changes</button>
+                                            </form>
+                                            <div class="feedback" style="margin-top: 10px;"></div>
+                                        </div>
                                     </li>
                                 `).join('')}
                             </ul>
@@ -222,7 +233,13 @@ if (page === 'manage_nfts_farms') {
                     `).join('')}
                 </div>
             `;
-
+            // Logica per gestire il pulsante "Change Template Settings"
+            document.querySelectorAll('.change-template-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const templateFormContainer = this.nextElementSibling;
+                    templateFormContainer.style.display = templateFormContainer.style.display === 'none' ? 'block' : 'none';
+                });
+            });
             // Funzione per creare un messaggio dinamico
             function createMessageElement(message, isSuccess) {
                 const messageDiv = document.createElement('div');
@@ -235,6 +252,61 @@ if (page === 'manage_nfts_farms') {
                 messageDiv.textContent = message;
                 return messageDiv;
             }
+            // Logica per gestire il submit del form
+            document.querySelectorAll('.template-form').forEach(form => {
+                form.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+
+                    const templateId = this.getAttribute('data-template-id');
+                    const selectedRewards = Array.from(this.querySelectorAll('.reward-checkbox:checked'))
+                        .map(checkbox => {
+                            const tokenSymbol = checkbox.getAttribute('data-token-symbol');
+                            const newReward = parseFloat(this.querySelector(`.new-daily-reward[placeholder="New Daily Reward for ${tokenSymbol}"]`).value);
+                            return { token_symbol: tokenSymbol, daily_reward_amount: newReward };
+                        });
+
+                    if (selectedRewards.length === 0) {
+                        const errorMessage = createMessageElement('Please select at least one reward to modify.', false);
+                        this.querySelector('.feedback').innerHTML = '';
+                        this.querySelector('.feedback').appendChild(errorMessage);
+                        return;
+                    }
+
+                    const postUrl = `https://iamemanuele.pythonanywhere.com/update_template_rewards?user_id=${userId}&usx_token=${token}`;
+                    const data = { template_id: templateId, rewards: selectedRewards };
+
+                    const feedbackContainer = this.querySelector('.feedback');
+                    feedbackContainer.innerHTML = '<p>Processing request...</p>';
+
+                    try {
+                        const response = await fetch(postUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(data)
+                        });
+
+                        const result = await response.json();
+                        if (response.ok) {
+                            const successMessage = createMessageElement('Template settings updated successfully!', true);
+                            feedbackContainer.innerHTML = '';
+                            feedbackContainer.appendChild(successMessage);
+
+                            // Ricarica il contenuto dopo il successo
+                            setTimeout(() => loadContent('manage_nfts_farms'), 2000);
+                        } else {
+                            const errorMessage = createMessageElement(`Error: ${result.error}`, false);
+                            feedbackContainer.innerHTML = '';
+                            feedbackContainer.appendChild(errorMessage);
+                        }
+                    } catch (error) {
+                        const errorMessage = createMessageElement('An error occurred. Please try again.', false);
+                        feedbackContainer.innerHTML = '';
+                        feedbackContainer.appendChild(errorMessage);
+                    }
+                });
+            });
 
             // Aggiungi eventi ai pulsanti di aggiunta token
             document.querySelectorAll('.add-token-button').forEach(button => {

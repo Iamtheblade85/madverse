@@ -183,6 +183,10 @@ input:checked + .slider:before {
         font-size: calc((1rem + 1vw)* 0.75);
     }
 }
+.menu-row {
+  display: flex;
+  gap: 3px; /* Spaziatura tra i pulsanti nella stessa riga */
+}
 .menu-section button {
   padding: 4px 8px;
   font-size: calc((1rem + 1vw) * 0.8); /* La dimensione del font si adatta alla larghezza della finestra */
@@ -197,7 +201,7 @@ input:checked + .slider:before {
   text-transform: uppercase;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15); /* Ombra morbida */
   transition: all 0.3s ease-in-out;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.25px;
   text-align: center;
   background-size: 200% 200%;
 }

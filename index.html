@@ -194,31 +194,38 @@ if (page === 'manage_nfts_farms') {
                                 `).join('')}
                             </ul>
 
-                            <!-- Templates -->
-                            <!-- Templates -->
-                            <h5>Templates and Daily Rewards:</h5>
-                            <ul>
-                                ${farm.templates.map(template => `
-                                    <li>
-                                        <strong>Template ID:</strong> ${template.template_id}
-                                        <button class="change-template-button" data-template-id="${template.template_id}" style="margin-left: 10px; padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Change Template Settings</button>
-                                        <div class="template-form-container" style="display: none; margin-top: 10px;">
-                                            <form class="template-form" data-template-id="${template.template_id}">
-                                                <h5>Modify Daily Rewards for Template: ${template.template_id}</h5>
-                                                ${template.daily_rewards.map(dr => `
-                                                    <div style="margin-bottom: 10px;">
-                                                        <input type="checkbox" class="reward-checkbox" id="reward-${dr.token_symbol}" data-token-symbol="${dr.token_symbol}" />
-                                                        <label for="reward-${dr.token_symbol}">${dr.token_symbol}</label>
-                                                        <input type="number" class="new-daily-reward" placeholder="New Daily Reward for ${dr.token_symbol}" style="margin-left: 10px; padding: 5px; width: 150px;" />
-                                                    </div>
-                                                `).join('')}
-                                                <button type="submit" class="submit-template-settings" style="padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Submit Changes</button>
-                                            </form>
-                                            <div class="feedback" style="margin-top: 10px;"></div>
-                                        </div>
-                                    </li>
-                                `).join('')}
-                            </ul>
+<!-- Templates -->
+<h5>Templates and Daily Rewards:</h5>
+<ul>
+    ${farm.templates.map(template => `
+        <li>
+            <strong>Template ID:</strong> ${template.template_id}
+            <ul>
+                ${template.daily_rewards.map(dr => `
+                    <li>
+                        <strong>${dr.token_symbol}:</strong> Current Daily Reward: ${dr.daily_reward_amount}
+                    </li>
+                `).join('')}
+            </ul>
+            <button class="change-template-button" data-template-id="${template.template_id}" style="margin-left: 10px; padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Change Template Settings</button>
+            <div class="template-form-container" style="display: none; margin-top: 10px;">
+                <form class="template-form" data-template-id="${template.template_id}">
+                    <h5>Modify Daily Rewards for Template: ${template.template_id}</h5>
+                    ${template.daily_rewards.map(dr => `
+                        <div style="margin-bottom: 10px;">
+                            <input type="checkbox" class="reward-checkbox" id="reward-${dr.token_symbol}" data-token-symbol="${dr.token_symbol}" />
+                            <label for="reward-${dr.token_symbol}">${dr.token_symbol}</label>
+                            <input type="number" class="new-daily-reward" placeholder="New Daily Reward for ${dr.token_symbol}" style="margin-left: 10px; padding: 5px; width: 150px;" />
+                        </div>
+                    `).join('')}
+                    <button type="submit" class="submit-template-settings" style="padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Submit Changes</button>
+                </form>
+                <div class="feedback" style="margin-top: 10px;"></div>
+            </div>
+        </li>
+    `).join('')}
+</ul>
+
 
                             <!-- Token input e aggiunta -->
                             <div style="margin-top: 10px;">

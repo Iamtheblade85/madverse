@@ -215,7 +215,13 @@ if (page === 'manage_nfts_farms') {
                         <div style="margin-bottom: 10px;">
                             <input type="checkbox" class="reward-checkbox" id="reward-${dr.token_symbol}" data-token-symbol="${dr.token_symbol}" />
                             <label for="reward-${dr.token_symbol}">${dr.token_symbol}</label>
-                            <input type="number" class="new-daily-reward" placeholder="New Daily Reward for ${dr.token_symbol}" style="margin-left: 10px; padding: 5px; width: 150px;" />
+                            <input 
+                                type="number" 
+                                class="new-daily-reward" 
+                                placeholder="Max 4 decimals (e.g., 1.2345)" 
+                                step="0.0001" 
+                                style="margin-left: 10px; padding: 5px; width: 150px;" 
+                            />
                         </div>
                     `).join('')}
                     <button type="submit" class="submit-template-settings" style="padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Submit Changes</button>
@@ -281,7 +287,7 @@ if (page === 'manage_nfts_farms') {
 
                     const postUrl = `https://iamemanuele.pythonanywhere.com/update_template_rewards?user_id=${userId}&usx_token=${token}`;
                     const data = { template_id: templateId, rewards: selectedRewards };
-
+                    console.log("Data:",data);
                     const feedbackContainer = this.querySelector('.feedback');
                     feedbackContainer.innerHTML = '<p>Processing request...</p>';
 
@@ -301,7 +307,7 @@ if (page === 'manage_nfts_farms') {
                             feedbackContainer.appendChild(successMessage);
 
                             // Ricarica il contenuto dopo il successo
-                            setTimeout(() => loadContent('manage_nfts_farms'), 2000);
+                            setTimeout(() => loadContent('manage_nfts_farms'), 3000);
                         } else {
                             const errorMessage = createMessageElement(`Error: ${result.error}`, false);
                             feedbackContainer.innerHTML = '';

@@ -708,8 +708,8 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                     <div class="card">
                         <h4>🌱 Pool: ${pool.token_symbol}</h4>
                         <div style="display: flex; gap: 10px; justify-content: flex-start; margin-bottom: 10px;">
-                            <button class="add-button" data-pool-id="${pool.pool_id}" data-symbol="${pool.token_symbol}" style="padding: 4px 8px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Add</button>
-                            <button class="remove-button" data-pool-id="${pool.pool_id}" data-symbol="${pool.token_symbol}" style="padding: 4px 8px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Remove</button>
+                            <button class="add-button" data-pool-id="${pool.pool_id}" data-symbol="${pool.token_symbol}" data-action="add" style="padding: 4px 8px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Add</button>
+                            <button class="remove-button" data-pool-id="${pool.pool_id}" data-symbol="${pool.token_symbol}" data-action="remove" style="padding: 4px 8px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Remove</button>
                         </div>
                         <div class="action-inputs" style="display: none; margin-top: 10px; font-size: 0.4rem; padding: 0.4rem;">
                             <input 
@@ -811,9 +811,6 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                 });
             }
         });
-
-
-    
         document.querySelectorAll('.confirm-action').forEach(button => {
             button.addEventListener('click', async function () {
                 const action = this.dataset.action; // "add" o "remove"
@@ -822,29 +819,30 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                 const quantityInput = this.closest('.card').querySelector('.action-quantity');
                 const quantity = parseFloat(quantityInput.value);
                 const card = this.closest('.card');
-
+        
                 // Validazione
                 if (!quantity || isNaN(quantity) || quantity <= 0) {
                     const messageDiv = createMessageElement('Please enter a valid quantity.', false);
-                    // Sostituire il campo di input e bottone con il messaggio di errore
                     card.querySelector('.action-inputs').replaceWith(messageDiv);
                     return;
                 }
-
+        
+                // Determina l'URL in base all'azione
                 const url = action === 'add'
                     ? `https://iamemanuele.pythonanywhere.com/stake_add?user_id=${userId}&usx_token=${token}`
                     : `https://iamemanuele.pythonanywhere.com/stake_remove?user_id=${userId}&usx_token=${token}`;
+        
                 const data = {
-                    user_id: userId,         
-                    pool_id: poolId,         
-                    wax_account: user_wax_account, 
-                    token_symbol: symbol,    
+                    user_id: userId,
+                    pool_id: poolId,
+                    wax_account: user_wax_account,
+                    token_symbol: symbol,
                     amount: quantity
                 };
-                // Crea il messaggio di in-progress
+        
                 const inProgressMessage = createMessageElement('Processing your request...', false);
                 card.querySelector('.action-inputs').replaceWith(inProgressMessage);
-
+        
                 try {
                     const response = await fetch(url, {
                         method: 'POST',
@@ -853,25 +851,24 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
                         },
                         body: JSON.stringify(data)
                     });
-
+        
                     const result = await response.json();
                     const messageDiv = createMessageElement(response.ok ?
                         `Success: ${result.message}` :
                         `Error: ${result.error}`, response.ok);
-
-                    // Sostituire il messaggio di in-progress con quello finale
+        
                     card.replaceChild(messageDiv, inProgressMessage);
                     setTimeout(() => loadPools(), 3000); // Ricarica le pool dopo 3 secondi
                 } catch (error) {
                     console.error("Error during stake request:", error);
                     const errorMessageDiv = createMessageElement('An error occurred. Please try again.', false);
                     card.replaceChild(errorMessageDiv, inProgressMessage);
-
-                    console.log('Error message: ', errorMessageDiv.textContent);
+        
                     setTimeout(() => loadPools(), 3000);
                 }
             });
         });
+
     }
 
     function loadPools() {

@@ -318,17 +318,22 @@ document.querySelectorAll('.template-form').forEach(form => {
                 },
                 body: JSON.stringify(data)
             });
-
-            console.log("Response received:", response);
             const result = await response.json();
-            console.log("Parsed response JSON:", result);
 
             if (response.ok) {
                 console.log("Response indicates success.");
-                const successMessage = createMessageElement('Template settings updated successfully!', true);
+                
+                // Estrarre il messaggio dal risultato della risposta
+                const successMessageText = result.message;
+                console.log("Success message from backend:", successMessageText);
+            
+                // Creare un messaggio di successo dinamico
+                const successMessage = createMessageElement(successMessageText, true);
+                
+                // Aggiornare il contenitore del feedback
                 feedbackContainer.innerHTML = '';
                 feedbackContainer.appendChild(successMessage);
-
+            
                 console.log("Reloading content after success...");
                 setTimeout(() => loadContent('manage_nfts_farms'), 3000);
             } else {

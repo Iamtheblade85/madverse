@@ -109,8 +109,20 @@ async function fetchWaxAccount() {
     feedbackElement.className = "feedback-message"; // Resetta le classi precedenti
 
     try {
-        const url = `https://iamemanuele.pythonanywhere.com/claim_gift?user_id=${userId}&usx_token=${token}`;
-        const response = await fetch(url, { method: 'POST' });
+        const url = `https://iamemanuele.pythonanywhere.com/claim_gift`;
+
+        // Corpo della richiesta
+        const body = {
+            user_id: userId
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body) // Dati inviati come JSON
+        });
 
         if (!response.ok) {
             const errorData = await response.json();

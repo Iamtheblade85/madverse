@@ -215,6 +215,7 @@ if (page === 'manage_nfts_farms') {
         </div>
         <button type="button" id="add-daily-reward-button" style="padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">+</button>
         <button type="submit" style="margin-left: 10px; padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Submit</button>
+        <div class="feedback" style="margin-top: 10px;"></div>
     </form>
     <div class="feedback" style="margin-top: 10px;"></div>
 </div>
@@ -306,7 +307,7 @@ document.getElementById('add-template-form').addEventListener('submit', async fu
     }).filter(reward => reward !== null);
 
     if (!templateId || rewards.length === 0) {
-        const feedbackContainer = this.querySelector('.feedback');
+        const feedbackContainer = document.querySelector('#template-form-container .feedback');
         feedbackContainer.innerHTML = '';
         const errorMessage = document.createElement('div');
         errorMessage.textContent = 'Please fill in all required fields.';
@@ -317,7 +318,7 @@ document.getElementById('add-template-form').addEventListener('submit', async fu
 
     const data = { template_id: templateId, rewards };
     const postUrl = `https://iamemanuele.pythonanywhere.com/add_farm_template?user_id=${userId}&usx_token=${token}`;
-    const feedbackContainer = this.querySelector('.feedback');
+    const feedbackContainer = document.querySelector('#template-form-container .feedback');
     feedbackContainer.innerHTML = '<p>Processing request...</p>';
 
     try {

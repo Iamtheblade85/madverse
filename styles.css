@@ -738,7 +738,6 @@ input:checked + .slider:before {
     align-items: center;
     padding: 20px;
     transform-style: preserve-3d;
-    transform: rotateX(10deg);
     transition: transform 0.5s ease, box-shadow 0.5s ease, background 0.5s ease;
     position: relative;
     overflow: hidden; /* Nasconde gli eventuali effetti di illuminazione oltre i bordi */
@@ -746,7 +745,6 @@ input:checked + .slider:before {
 
 /* Hover effect for card */
 .card-3d:hover {
-    transform: rotateY(20deg) rotateX(20deg); /* Effetto di rotazione 3D */
     box-shadow: 0px 30px 60px rgba(0, 0, 0, 0.3); /* Ombra più intensa per il passaggio sopra */
     background: linear-gradient(145deg, #ffb84d, #ff6a00, #f44e5a); /* Gradiente dorato più luminoso al passaggio */
 }

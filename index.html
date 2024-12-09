@@ -194,8 +194,31 @@ if (page === 'manage_nfts_farms') {
                                 `).join('')}
                             </ul>
 
-<!-- Templates -->
 <h5>Templates and Daily Rewards:</h5>
+<div>
+    <button id="add-template-button" style="margin-right: 10px; padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Add Template</button>
+    <button id="remove-template-button" style="padding: 5px 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Remove Template</button>
+</div>
+<div id="template-form-container" style="display: none; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+    <form id="add-template-form">
+        <div style="margin-bottom: 10px;">
+            <label for="new-template-id">Template ID:</label>
+            <input type="text" id="new-template-id" name="template_id" placeholder="Enter Template ID" required style="margin-left: 10px; padding: 5px; width: 200px;" />
+        </div>
+        <div id="daily-reward-container">
+            <div class="daily-reward-entry" style="margin-bottom: 10px;">
+                <label>Token Symbol:</label>
+                <input type="text" name="token_symbol" placeholder="Token Symbol" style="margin-left: 10px; padding: 5px; width: 100px;" />
+                <label>Daily Reward:</label>
+                <input type="number" name="daily_reward" placeholder="Daily Reward" step="0.0001" style="margin-left: 10px; padding: 5px; width: 100px;" />
+            </div>
+        </div>
+        <button type="button" id="add-daily-reward-button" style="padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">+</button>
+        <button type="submit" style="margin-left: 10px; padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Submit</button>
+    </form>
+    <div class="feedback" style="margin-top: 10px;"></div>
+</div>
+
 <ul>
     ${farm.templates.map(template => `
         <li>
@@ -248,6 +271,74 @@ if (page === 'manage_nfts_farms') {
                     `).join('')}
                 </div>
             `;
+   document.getElementById('add-template-button').addEventListener('click', function() {
+    const templateFormContainer = document.getElementById('template-form-container');
+    templateFormContainer.style.display = templateFormContainer.style.display === 'none' ? 'block' : 'none';
+});
+
+document.getElementById('add-daily-reward-button').addEventListener('click', function() {
+    const rewardContainer = document.getElementById('daily-reward-container');
+    const rewardEntry = document.createElement('div');
+    rewardEntry.className = 'daily-reward-entry';
+    rewardEntry.style.marginBottom = '10px';
+    rewardEntry.innerHTML = `
+        <label>Token Symbol:</label>
+        <input type="text" name="token_symbol" placeholder="Token Symbol" style="margin-left: 10px; padding: 5px; width: 100px;" />
+        <label>Daily Reward:</label>
+        <input type="number" name="daily_reward" placeholder="Daily Reward" step="0.0001" style="margin-left: 10px; padding: 5px; width: 100px;" />
+    `;
+    rewardContainer.appendChild(rewardEntry);
+});
+
+document.getElementById('add-template-form').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    console.log("Submit intercepted");
+
+    const templateId = document.getElementById('new-template-id').value.trim();
+    const rewardEntries = Array.from(document.querySelectorAll('.daily-reward-entry'));
+    const rewards = rewardEntries.map(entry => {
+        const tokenSymbol = entry.querySelector('input[name="token_symbol"]').value.trim();
+        const dailyReward = parseFloat(entry.querySelector('input[name="daily_reward"]').value);
+        if (tokenSymbol && !isNaN(dailyReward) && dailyReward > 0) {
+            return { token_symbol: tokenSymbol, daily_reward_amount: dailyReward };
+        }
+        return null;
+    }).filter(reward => reward !== null);
+
+    if (!templateId || rewards.length === 0) {
+        const feedbackContainer = this.querySelector('.feedback');
+        feedbackContainer.innerHTML = '';
+        const errorMessage = document.createElement('div');
+        errorMessage.textContent = 'Please fill in all required fields.';
+        errorMessage.style.color = 'red';
+        feedbackContainer.appendChild(errorMessage);
+        return;
+    }
+
+    const data = { template_id: templateId, rewards };
+    const postUrl = `https://iamemanuele.pythonanywhere.com/add_farm_template?user_id=${userId}&usx_token=${token}`;
+    const feedbackContainer = this.querySelector('.feedback');
+    feedbackContainer.innerHTML = '<p>Processing request...</p>';
+
+    try {
+        const response = await fetch(postUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            feedbackContainer.innerHTML = `<p style="color: green;">${result.message}</p>`;
+            setTimeout(() => loadContent('manage_nfts_farms'), 3000);
+        } else {
+            feedbackContainer.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+        }
+    } catch (error) {
+        console.error("Error submitting template:", error);
+        feedbackContainer.innerHTML = `<p style="color: red;">An unexpected error occurred. Please try again later.</p>`;
+    }
+});     
             // Logica per gestire il pulsante "Change Template Settings"
             document.querySelectorAll('.change-template-button').forEach(button => {
                 button.addEventListener('click', function() {

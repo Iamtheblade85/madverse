@@ -243,6 +243,7 @@ if (page === 'manage_nfts_farms') {
                                                 ${template.daily_rewards.map(dr => `
                                                     <li>
                                                         <strong>${dr.token_symbol}:</strong> Current Daily Reward: ${dr.daily_reward_amount}
+                                                        <button class="remove-reward-button" data-template-id="${template.template_id}" data-token-symbol="${dr.token_symbol}" style="margin-left: 10px; padding: 5px 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Remove Reward❌</button>
                                                     </li>
                                                 `).join('')}
                                             </ul>
@@ -281,6 +282,41 @@ if (page === 'manage_nfts_farms') {
                     `).join('')}
                 </div>
             `;
+document.querySelectorAll('.remove-reward-button').forEach(button => {
+    button.addEventListener('click', async function() {
+        const templateId = this.getAttribute('data-template-id');
+        const tokenSymbol = this.getAttribute('data-token-symbol');
+        const confirmation = confirm(`Are you sure you want to remove the reward for ${tokenSymbol}?`);
+        if (!confirmation) return;
+
+        // Invio della richiesta al backend
+        const postUrl = `https://iamemanuele.pythonanywhere.com/remove_template_reward?user_id=${userId}&usx_token=${token}`;
+        const data = { template_id: templateId, token_symbol: tokenSymbol };
+        try {
+            const response = await fetch(postUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert(`Reward for ${tokenSymbol} removed successfully.`);
+                // Rimuovi il reward dal frontend
+                this.parentElement.remove();
+            } else {
+                alert(`Error removing reward: ${result.error}`);
+            }
+        } catch (error) {
+            console.error("Error removing reward:", error);
+            alert("An unexpected error occurred. Please try again later.");
+        }
+    });
+});
+
+          
 document.querySelectorAll('.add-reward-button').forEach(button => {
     button.addEventListener('click', function() {
         const templateId = this.getAttribute('data-template-id');

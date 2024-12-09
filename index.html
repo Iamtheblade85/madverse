@@ -35,6 +35,7 @@
       <div class="card-3d-container">
         <div class="card-3d">
           <p id="personalized-message"></p>
+          <div id="claim-feedback" class="feedback-message"></div>
         </div>
       </div>
     </div>
@@ -102,22 +103,32 @@ async function fetchWaxAccount() {
         console.error("Error fetching WAX account:", error);
         displayGenericWelcome();
     }
-}
+} async function claimGift() {
+    const feedbackElement = document.getElementById("claim-feedback");
+    feedbackElement.textContent = ""; // Resetta il feedback precedente
+    feedbackElement.className = "feedback-message"; // Resetta le classi precedenti
 
-async function claimGift() {
     try {
         const url = `https://iamemanuele.pythonanywhere.com/claim_gift?user_id=${userId}&usx_token=${token}`;
         const response = await fetch(url, { method: 'POST' });
 
         if (!response.ok) {
-            throw new Error(`Failed to claim gift. Status: ${response.status}`);
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to claim gift.");
         }
 
         const data = await response.json();
-        alert(`Gift claimed successfully! ${data.message}`);
+
+        // Mostra messaggio di successo
+        feedbackElement.textContent = `🎉 ${data.message}`;
+        feedbackElement.classList.add("success");
+
     } catch (error) {
         console.error("Error claiming gift:", error);
-        alert("An error occurred while claiming the gift. Please try again.");
+
+        // Mostra messaggio di errore
+        feedbackElement.textContent = `❌ ${error.message || "An error occurred. Please try again."}`;
+        feedbackElement.classList.add("error");
     }
 } function displayGenericWelcome() {
     console.log("Fallback: displayGenericWelcome called");

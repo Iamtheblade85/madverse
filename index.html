@@ -197,7 +197,6 @@ if (page === 'manage_nfts_farms') {
 <h5>Templates and Daily Rewards:</h5>
 <div>
     <button id="add-template-button" style="margin-right: 10px; padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Add Template</button>
-    <button id="remove-template-button" style="padding: 5px 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Remove Template</button>
 </div>
 <div id="template-form-container" style="display: none; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
     <form id="add-template-form-${farm.farm_id}" data-farm-id="${farm.farm_id}">
@@ -224,6 +223,7 @@ if (page === 'manage_nfts_farms') {
     ${farm.templates.map(template => `
         <li>
             <strong>Template ID:</strong> ${template.template_id}
+            <button class="remove-template-button" data-template-id="${template.template_id}" style="margin-left: 10px; padding: 5px 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">❌</button>
             <ul>
                 ${template.daily_rewards.map(dr => `
                     <li>
@@ -257,8 +257,6 @@ if (page === 'manage_nfts_farms') {
         </li>
     `).join('')}
 </ul>
-
-
                             <!-- Token input e aggiunta -->
                             <div style="margin-top: 10px;">
                                 <input type="text" class="token-symbol" placeholder="Token Symbol" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 40%;"/>
@@ -272,6 +270,40 @@ if (page === 'manage_nfts_farms') {
                     `).join('')}
                 </div>
             `;
+document.querySelectorAll('.remove-template-button').forEach(button => {
+    button.addEventListener('click', async function() {
+        const templateId = this.getAttribute('data-template-id');
+        const confirmation = confirm(`Are you sure you want to remove template ID: ${templateId}?`);
+        if (!confirmation) return;
+
+        // Invio della richiesta al backend per rimuovere il template
+        const postUrl = `https://iamemanuele.pythonanywhere.com/remove_template?user_id=${userId}&usx_token=${token}`;
+        const data = { template_id: templateId };
+        try {
+            const response = await fetch(postUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert(`Template ${templateId} removed successfully.`);
+                // Ricaricare la pagina per aggiornare la lista
+                loadContent('manage_nfts_farms');
+            } else {
+                alert(`Error removing template: ${result.error}`);
+            }
+        } catch (error) {
+            console.error("Error removing template:", error);
+            alert("An unexpected error occurred. Please try again later.");
+        }
+    });
+});
+
+          
    document.getElementById('add-template-button').addEventListener('click', function() {
     const templateFormContainer = document.getElementById('template-form-container');
     templateFormContainer.style.display = templateFormContainer.style.display === 'none' ? 'block' : 'none';

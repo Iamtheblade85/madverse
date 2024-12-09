@@ -54,40 +54,70 @@ const token = getQueryParam('usx_token'); // Estrai usx_token dall'URL
 let user_wax_account = null;
 async function fetchWaxAccount() {
     try {
-        // Costruisci l'URL con i parametri user_id e usx_token
         const url = `https://iamemanuele.pythonanywhere.com/main_door?user_id=${userId}&usx_token=${token}`;
-        // Esegui la richiesta GET al backend per il profilo
-        const response = await fetch(url, {
-            method: 'GET', 
-        });     
+        const response = await fetch(url, { method: 'GET' });
+
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
+
         const data = await response.json();
         console.log("Data received:", data);
+
         user_wax_account = data?.wax_account;
-        console.log("Wax account:", user_wax_account);
-        const waxAccount = data.wax_account
-        console.log("Wax account in waxAccount constant:", waxAccount);
-        // Prima aggiorniamo lo stile
+
         const welcomeMessageElement = document.getElementById("welcome-message");
         welcomeMessageElement.style.display = 'flex';
-        welcomeMessageElement.style.flexDirection = 'row'; // Cambia a disposizione orizzontale
-        welcomeMessageElement.style.justifyContent = 'space-between'; // Per separare elementi
-        welcomeMessageElement.style.alignItems = 'center';      
-        if (waxAccount ) {       
-            // Imposta il messaggio di benvenuto
-            const welcomeMessage = `Welcome, ${waxAccount }`;
+        welcomeMessageElement.style.flexDirection = 'row';
+        welcomeMessageElement.style.justifyContent = 'space-between';
+        welcomeMessageElement.style.alignItems = 'center';
+
+        if (user_wax_account) {
+            // Messaggio personalizzato per l'utente loggato
+            const welcomeMessage = `Welcome, ${user_wax_account}`;
             document.getElementById("welcome-message").textContent = welcomeMessage;
-            // Applica l'animazione alle lettere
-            animateText(welcomeMessage);
-            // Messaggio personalizzato per l'utente
-            document.getElementById("personalized-message").textContent = `Welcome to our platform, where innovation meets opportunity! As a valued member, you are part of a revolutionary ecosystem fueled by our exclusive token CHIPS, which drives the entire economy. Get ready to engage in a world of endless possibilities and growth!`;
+
+            // Aggiungi pulsante per il gift
+            const personalizedMessageElement = document.getElementById("personalized-message");
+
+            const claimButton = document.createElement("button");
+            claimButton.id = "claim-gift-button";
+            claimButton.textContent = "Claim free login WAX gift";
+            claimButton.classList.add("custom-claim-button"); // Classe CSS definita nel file CSS esterno
+            claimButton.onclick = async () => {
+                await claimGift();
+            };
+
+            personalizedMessageElement.appendChild(claimButton);
+
+            // Messaggio di benvenuto personalizzato
+            personalizedMessageElement.insertAdjacentHTML(
+                "afterbegin",
+                `Welcome to our platform, where innovation meets opportunity! As a valued member, you are part of a revolutionary ecosystem fueled by our exclusive token CHIPS.`
+            );
         } else {
             displayGenericWelcome();
         }
     } catch (error) {
+        console.error("Error fetching WAX account:", error);
         displayGenericWelcome();
+    }
+}
+
+async function claimGift() {
+    try {
+        const url = `https://iamemanuele.pythonanywhere.com/claim_gift?user_id=${userId}&usx_token=${token}`;
+        const response = await fetch(url, { method: 'POST' });
+
+        if (!response.ok) {
+            throw new Error(`Failed to claim gift. Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        alert(`Gift claimed successfully! ${data.message}`);
+    } catch (error) {
+        console.error("Error claiming gift:", error);
+        alert("An error occurred while claiming the gift. Please try again.");
     }
 } function displayGenericWelcome() {
     console.log("Fallback: displayGenericWelcome called");

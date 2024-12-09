@@ -218,6 +218,7 @@ if (page === 'manage_nfts_farms') {
                             <input 
                                 type="number" 
                                 class="new-daily-reward" 
+                                data-token-symbol="${dr.token_symbol}" 
                                 placeholder="Max 4 decimals (e.g., 1.2345)" 
                                 step="0.0001" 
                                 style="margin-left: 10px; padding: 5px; width: 150px;" 
@@ -279,7 +280,7 @@ document.querySelectorAll('.template-form').forEach(form => {
                 const tokenSymbol = checkbox.getAttribute('data-token-symbol');
                 console.log("Selected token symbol:", tokenSymbol);
 
-                const rewardInput = this.querySelector(`.new-daily-reward[placeholder="New Daily Reward for ${tokenSymbol}"]`);
+                const rewardInput = this.querySelector(`.new-daily-reward[data-token-symbol="${tokenSymbol}"]`);
                 console.log("Reward input field:", rewardInput);
 
                 const newReward = parseFloat(rewardInput.value);

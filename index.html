@@ -187,7 +187,7 @@ if (page === 'manage_nfts_farms') {
                             <p>Last Updated: ${farm.updated_on || "N/A"}</p>
 
                             <!-- Total Rewards -->
-                            <h5>Total Rewards:</h5>
+                            <h5>Remaining Rewards:</h5>
                             <ul>
                                 ${farm.total_rewards.map(reward => `
                                     <li>${reward.token_symbol}: ${reward.total_reward}</li>
@@ -197,7 +197,7 @@ if (page === 'manage_nfts_farms') {
                             <div style="margin-top: 10px;">
                                 <input type="text" class="token-symbol" placeholder="Token Symbol" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 40%;"/>
                                 <input type="number" class="token-amount" placeholder="Amount" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 30%;"/>
-                                <button class="add-token-button" data-farm-id="${farm.farm_id}" style="padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Add Token</button>
+                                <button class="add-token-button" data-farm-id="${farm.farm_id}" style="padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Deposit a Reward-Token</button>
                             </div>
 
                             <!-- Feedback dinamico -->
@@ -228,46 +228,55 @@ if (page === 'manage_nfts_farms') {
                                 </form>
                             </div>
                             <ul>
-                                ${farm.templates.map(template => `
+                                ${farm.templates.map((template, index) => `
                                     <li>
-                                        <strong>Template ID:</strong> ${template.template_id}
-                                        <button class="remove-template-button" data-template-id="${template.template_id}" style="margin-left: 10px; padding: 5px 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Remove Template❌</button>
-                                        <ul>
-                                            ${template.daily_rewards.map(dr => `
-                                                <li>
-                                                    <strong>${dr.token_symbol}:</strong> Current Daily Reward: ${dr.daily_reward_amount}
-                                                </li>
-                                            `).join('')}
-                                        </ul>
-                                        <button class="change-template-button" data-template-id="${template.template_id}" style="margin-left: 10px; padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Change Template Settings</button>
-                                        <div class="template-form-container" style="display: none; margin-top: 10px;">
-                                            <form class="template-form" data-template-id="${template.template_id}">
-                                                <h5>Modify Daily Rewards for Template: ${template.template_id}</h5>
+                                        <div style="
+                                            background: linear-gradient(135deg, ${index % 2 === 0 ? '#d6f0f5' : '#c4e8ef'}, ${index % 2 === 0 ? '#70c8d9' : '#63b7cf'});
+                                            border: 2px solid #004d4d;
+                                            border-radius: 8px;
+                                            padding: 15px;
+                                            margin-bottom: 15px;
+                                        ">
+                                            <strong>Template ID:</strong> ${template.template_id}
+                                            <button class="remove-template-button" data-template-id="${template.template_id}" style="margin-left: 10px; padding: 5px 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Remove Template❌</button>
+                                            <ul style="margin-top: 10px;">
                                                 ${template.daily_rewards.map(dr => `
-                                                    <div style="margin-bottom: 10px;">
-                                                        <input type="checkbox" class="reward-checkbox" id="reward-${dr.token_symbol}" data-token-symbol="${dr.token_symbol}" />
-                                                        <label for="reward-${dr.token_symbol}">${dr.token_symbol}</label>
-                                                        <input 
-                                                            type="number" 
-                                                            class="new-daily-reward" 
-                                                            data-token-symbol="${dr.token_symbol}" 
-                                                            placeholder="Max 4 decimals (e.g., 1.2345)" 
-                                                            step="0.0001" 
-                                                            style="margin-left: 10px; padding: 5px; width: 150px;" 
-                                                        />
-                                                    </div>
+                                                    <li>
+                                                        <strong>${dr.token_symbol}:</strong> Current Daily Reward: ${dr.daily_reward_amount}
+                                                    </li>
                                                 `).join('')}
-                                                <div id="new-reward-container-${template.template_id}">
-                                                    <!-- Nuove ricompense aggiunte dinamicamente -->
-                                                </div>
-                                                <button type="button" class="add-reward-button" data-template-id="${template.template_id}" style="margin-top: 10px; padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">+</button>
-                                                <button type="submit" class="submit-template-settings" style="padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Submit Changes</button>
-                                            </form>
-                                            <div class="feedback" style="margin-top: 10px;"></div>
+                                            </ul>
+                                            <button class="change-template-button" data-template-id="${template.template_id}" style="margin-left: 10px; padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Change Template Settings</button>
+                                            <div class="template-form-container" style="display: none; margin-top: 10px;">
+                                                <form class="template-form" data-template-id="${template.template_id}">
+                                                    <h5>Modify Daily Rewards for Template: ${template.template_id}</h5>
+                                                    ${template.daily_rewards.map(dr => `
+                                                        <div style="margin-bottom: 10px;">
+                                                            <input type="checkbox" class="reward-checkbox" id="reward-${dr.token_symbol}" data-token-symbol="${dr.token_symbol}" />
+                                                            <label for="reward-${dr.token_symbol}">${dr.token_symbol}</label>
+                                                            <input 
+                                                                type="number" 
+                                                                class="new-daily-reward" 
+                                                                data-token-symbol="${dr.token_symbol}" 
+                                                                placeholder="Max 4 decimals (e.g., 1.2345)" 
+                                                                step="0.0001" 
+                                                                style="margin-left: 10px; padding: 5px; width: 150px;" 
+                                                            />
+                                                        </div>
+                                                    `).join('')}
+                                                    <div id="new-reward-container-${template.template_id}">
+                                                        <!-- Nuove ricompense aggiunte dinamicamente -->
+                                                    </div>
+                                                    <button type="button" class="add-reward-button" data-template-id="${template.template_id}" style="margin-top: 10px; padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">+</button>
+                                                    <button type="submit" class="submit-template-settings" style="padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Submit Changes</button>
+                                                </form>
+                                                <div class="feedback" style="margin-top: 10px;"></div>
+                                            </div>
                                         </div>
                                     </li>
                                 `).join('')}
                             </ul>
+
                         </div>
                     `).join('')}
                 </div>

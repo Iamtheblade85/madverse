@@ -265,61 +265,85 @@ if (page === 'manage_nfts_farms') {
                 messageDiv.textContent = message;
                 return messageDiv;
             }
-            // Logica per gestire il submit del form
-            document.querySelectorAll('.template-form').forEach(form => {
-                form.addEventListener('submit', async function(event) {
-                    event.preventDefault();
+// Logica per gestire il submit del form
+document.querySelectorAll('.template-form').forEach(form => {
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        console.log("Form submission intercepted");
 
-                    const templateId = this.getAttribute('data-template-id');
-                    const selectedRewards = Array.from(this.querySelectorAll('.reward-checkbox:checked'))
-                        .map(checkbox => {
-                            const tokenSymbol = checkbox.getAttribute('data-token-symbol');
-                            const newReward = parseFloat(this.querySelector(`.new-daily-reward[placeholder="New Daily Reward for ${tokenSymbol}"]`).value);
-                            return { token_symbol: tokenSymbol, daily_reward_amount: newReward };
-                        });
+        const templateId = this.getAttribute('data-template-id');
+        console.log("Template ID:", templateId);
 
-                    if (selectedRewards.length === 0) {
-                        const errorMessage = createMessageElement('Please select at least one reward to modify.', false);
-                        this.querySelector('.feedback').innerHTML = '';
-                        this.querySelector('.feedback').appendChild(errorMessage);
-                        return;
-                    }
+        const selectedRewards = Array.from(this.querySelectorAll('.reward-checkbox:checked'))
+            .map(checkbox => {
+                const tokenSymbol = checkbox.getAttribute('data-token-symbol');
+                console.log("Selected token symbol:", tokenSymbol);
 
-                    const postUrl = `https://iamemanuele.pythonanywhere.com/update_template_rewards?user_id=${userId}&usx_token=${token}`;
-                    const data = { template_id: templateId, rewards: selectedRewards };
-                    console.log("Data:",data);
-                    const feedbackContainer = this.querySelector('.feedback');
-                    feedbackContainer.innerHTML = '<p>Processing request...</p>';
+                const rewardInput = this.querySelector(`.new-daily-reward[placeholder="New Daily Reward for ${tokenSymbol}"]`);
+                console.log("Reward input field:", rewardInput);
 
-                    try {
-                        const response = await fetch(postUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(data)
-                        });
+                const newReward = parseFloat(rewardInput.value);
+                console.log("Parsed new daily reward:", newReward);
 
-                        const result = await response.json();
-                        if (response.ok) {
-                            const successMessage = createMessageElement('Template settings updated successfully!', true);
-                            feedbackContainer.innerHTML = '';
-                            feedbackContainer.appendChild(successMessage);
-
-                            // Ricarica il contenuto dopo il successo
-                            setTimeout(() => loadContent('manage_nfts_farms'), 3000);
-                        } else {
-                            const errorMessage = createMessageElement(`Error: ${result.error}`, false);
-                            feedbackContainer.innerHTML = '';
-                            feedbackContainer.appendChild(errorMessage);
-                        }
-                    } catch (error) {
-                        const errorMessage = createMessageElement('An error occurred. Please try again.', false);
-                        feedbackContainer.innerHTML = '';
-                        feedbackContainer.appendChild(errorMessage);
-                    }
-                });
+                return { token_symbol: tokenSymbol, daily_reward_amount: newReward };
             });
+
+        console.log("Selected rewards array:", selectedRewards);
+
+        if (selectedRewards.length === 0) {
+            console.log("No rewards selected.");
+            const errorMessage = createMessageElement('Please select at least one reward to modify.', false);
+            this.querySelector('.feedback').innerHTML = '';
+            this.querySelector('.feedback').appendChild(errorMessage);
+            return;
+        }
+
+        const postUrl = `https://iamemanuele.pythonanywhere.com/update_template_rewards?user_id=${userId}&usx_token=${token}`;
+        const data = { template_id: templateId, rewards: selectedRewards };
+        console.log("Post URL:", postUrl);
+        console.log("Data to send:", data);
+
+        const feedbackContainer = this.querySelector('.feedback');
+        feedbackContainer.innerHTML = '<p>Processing request...</p>';
+        console.log("Feedback container updated with processing message");
+
+        try {
+            console.log("Sending POST request...");
+            const response = await fetch(postUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            console.log("Response received:", response);
+            const result = await response.json();
+            console.log("Parsed response JSON:", result);
+
+            if (response.ok) {
+                console.log("Response indicates success.");
+                const successMessage = createMessageElement('Template settings updated successfully!', true);
+                feedbackContainer.innerHTML = '';
+                feedbackContainer.appendChild(successMessage);
+
+                console.log("Reloading content after success...");
+                setTimeout(() => loadContent('manage_nfts_farms'), 3000);
+            } else {
+                console.log("Response indicates failure:", result.error);
+                const errorMessage = createMessageElement(`Error: ${result.error}`, false);
+                feedbackContainer.innerHTML = '';
+                feedbackContainer.appendChild(errorMessage);
+            }
+        } catch (error) {
+            console.error("An error occurred during the fetch operation:", error);
+            const errorMessage = createMessageElement('An error occurred. Please try again.', false);
+            feedbackContainer.innerHTML = '';
+            feedbackContainer.appendChild(errorMessage);
+        }
+    });
+});
+
 
             // Aggiungi eventi ai pulsanti di aggiunta token
             document.querySelectorAll('.add-token-button').forEach(button => {

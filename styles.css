@@ -847,7 +847,7 @@ input:checked + .slider:before {
   @media (max-width: 1000px) {
     .card-3d {
         width: 80%; /* Riduce la larghezza della card */
-        height: 150px; /* Riduce l'altezza della card */
+        height: 400px; /* Riduce l'altezza della card */
         padding: 5px; /* Riduce il padding per adattarsi meglio */
     }
 
@@ -860,7 +860,7 @@ input:checked + .slider:before {
     @media (max-width: 600px) {
         .card-3d {
             width: 90%; /* Ancora più piccola per schermi stretti */
-            height: 120px;
+            height: 400px;
             padding: 3px;
         }
 
@@ -1017,7 +1017,7 @@ ul li {
 
 button {
     background: linear-gradient(145deg, #39ff14, #2ecc71);
-    color: white;
+    color: black;
     border: none;
     border-radius: 8px;
     padding: 6px 9px;

@@ -1047,5 +1047,86 @@ button:hover {
     color: #FFFF00;
     text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
 }
+.custom-claim-button {
+    padding: 15px 30px;
+    background: linear-gradient(135deg, #ffcc00, #ffa500);
+    border: 2px solid transparent; /* Effetto miccia al bordo */
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative; /* Necessario per gli effetti */
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    perspective: 500px; /* Per effetto 3D */
+    overflow: hidden;
+}
+
+.custom-claim-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    border: 2px solid rgba(255, 165, 0, 0.5); /* Bordo base */
+    background: transparent;
+    box-shadow: 0 0 15px rgba(255, 165, 0, 0.7);
+    z-index: 1;
+    pointer-events: none;
+    animation: burn-effect 3s linear infinite; /* Animazione miccia */
+}
+
+.custom-claim-button::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ff8000, rgba(255, 255, 255, 0));
+    box-shadow: 0 0 10px rgba(255, 165, 0, 0.8), 0 0 20px rgba(255, 69, 0, 0.7);
+    animation: spark 1s linear infinite;
+    z-index: 2;
+    pointer-events: none;
+}
+
+@keyframes burn-effect {
+    0% {
+        clip-path: inset(0 0 100% 0); /* Effetto di bruciatura dall'alto verso il basso */
+    }
+    25% {
+        clip-path: inset(0 0 75% 0);
+    }
+    50% {
+        clip-path: inset(0 0 50% 0);
+    }
+    75% {
+        clip-path: inset(0 0 25% 0);
+    }
+    100% {
+        clip-path: inset(0 0 0 0);
+    }
+}
+
+@keyframes spark {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0.5;
+    }
+}
+
+.custom-claim-button:hover {
+    background: linear-gradient(135deg, #ffb400, #ff9100);
+    transform: translateY(-5px) scale(1.1) rotateX(5deg) rotateY(5deg);
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+}
 
 

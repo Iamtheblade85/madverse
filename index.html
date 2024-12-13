@@ -200,6 +200,7 @@ async function loadContent(page) {
             url = `https://iamemanuele.pythonanywhere.com/get_farms?user_id=${userId}&usx_token=${token}`;
             break; 
         case 'manage_token_staking_pools':
+            url = `https://iamemanuele.pythonanywhere.com/get_staking_pools?user_id=${userId}&usx_token=${token}`;
             break;        
     }
     try {
@@ -218,9 +219,6 @@ async function loadContent(page) {
 
     // Mostra un messaggio di caricamento iniziale
     contentFrame.innerHTML = '<p>Loading your staking pools...</p>';
-
-    const url = `https://iamemanuele.pythonanywhere.com/get_staking_pools?user_id=${userId}&usx_token=${token}`;
-
     fetch(url)
         .then(response => {
             if (!response.ok) {

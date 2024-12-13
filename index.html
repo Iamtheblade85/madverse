@@ -24,6 +24,7 @@
       </div>
       <div class="menu-row">
         <button onclick="loadContent('manage_nfts_farms')">💬NFTsFarm Owners</button>
+        <button onclick="loadContent('manage_nfts_farms')">💬NFTsFarm Owners</button>
       </div>
     </div>
     <div class="content-frame" id="content-frame">
@@ -172,6 +173,10 @@ function animateText(text) {
 
 // Esegui la richiesta al caricamento della pagina
 fetchWaxAccount();
+if (userId === 5235038223) {
+  document.getElementById("menu-row").style.display = "none";
+}
+
 async function loadContent(page) {
     const contentFrame = document.getElementById("content-frame");
     let url;
@@ -193,6 +198,8 @@ async function loadContent(page) {
             break;
         case 'manage_nfts_farms':
             url = `https://iamemanuele.pythonanywhere.com/get_farms?user_id=${userId}&usx_token=${token}`;
+            break; 
+        case 'manage_token_staking_pools':
             break;        
     }
     try {
@@ -206,8 +213,213 @@ async function loadContent(page) {
           nftsFarmButton.textContent = "💬NFTsFarm Owners";
           nftsFarmButton.onclick = () => loadContent('manage_nfts_farms');
           menuSection.appendChild(nftsFarmButton);
-        }      
-if (page === 'manage_nfts_farms') {
+        } if (page === 'manage_token_staking_pools') {
+    const contentFrame = document.getElementById("content-frame");
+
+    // Mostra un messaggio di caricamento iniziale
+    contentFrame.innerHTML = '<p>Loading your staking pools...</p>';
+
+    const url = `https://iamemanuele.pythonanywhere.com/get_staking_pools?user_id=${userId}&usx_token=${token}`;
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch staking pool data');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Aggiungi la sezione per creare una nuova pool
+            contentFrame.innerHTML = `
+                <h2 class="pool-title" style="text-align: center;">Manage Your Token Staking Pools</h2>
+
+                <div class="create-pool-form" style="margin-bottom: 20px; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
+                    <h3>Create a New Pool</h3>
+                    <input type="text" id="new-pool-name" placeholder="Pool Name (optional)" style="margin-bottom: 10px; padding: 5px; width: 100%; font-size: 1rem;" />
+                    <select id="new-pool-deposit-token" style="margin-bottom: 10px; padding: 5px; width: 100%; font-size: 1rem;">
+                        <option value="">Select Deposit Token</option>
+                        ${data.tokens.map(token => `<option value="${token.token_id}">${token.symbol}</option>`).join('')}
+                    </select>
+                    <button id="create-pool-button" style="padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 1rem;">Create Pool</button>
+                    <div id="create-pool-feedback" style="margin-top: 10px;"></div>
+                </div>
+
+                <div class="pool-grid">
+                    ${data.pools.map(pool => `
+                        <div class="card">
+                            <h4>Pool: ${pool.pool_name || `Pool #${pool.pool_id}`}</h4>
+                            <p>Status: <span class="value">${pool.status}</span></p>
+                            <p>Created On: ${pool.created_at}</p>
+                            <p>Last Updated: ${pool.updated_at || "N/A"}</p>
+
+                            <!-- Rewards Summary -->
+                            <h5>Rewards:</h5>
+                            <ul>
+                                ${pool.rewards.map(reward => `
+                                    <li>${reward.token_symbol}: Total ${reward.total_reward_deposit}, Daily ${reward.daily_reward}</li>
+                                `).join('')}
+                            </ul>
+
+                            <!-- Add Reward Tokens -->
+                            <div style="margin-top: 10px;">
+                                <input type="text" class="token-symbol" placeholder="Token Symbol" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 40%;"/>
+                                <input type="number" class="token-daily-reward" placeholder="Daily Reward" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 30%;"/>
+                                <button class="add-reward-button" data-pool-id="${pool.pool_id}" style="padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Add Reward</button>
+                            </div>
+
+                            <!-- Feedback dinamico -->
+                            <div class="feedback" style="margin-top: 10px;"></div>
+
+                            <!-- Change Pool Status -->
+                            <h5>Change Pool Status:</h5>
+                            <select class="pool-status-selector" data-pool-id="${pool.pool_id}" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 50%;">
+                                <option value="settings" ${pool.status === 'settings' ? 'selected' : ''}>Settings</option>
+                                <option value="active" ${pool.status === 'active' ? 'selected' : ''}>Active</option>
+                                <option value="closed" ${pool.status === 'closed' ? 'selected' : ''}>Closed</option>
+                            </select>
+                            <button class="update-status-button" data-pool-id="${pool.pool_id}" style="padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Update Status</button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            // Event handler per creare una nuova pool
+            document.getElementById('create-pool-button').addEventListener('click', async function() {
+                const poolName = document.getElementById('new-pool-name').value.trim();
+                const depositTokenId = document.getElementById('new-pool-deposit-token').value;
+
+                if (!depositTokenId) {
+                    const feedback = document.getElementById('create-pool-feedback');
+                    feedback.innerHTML = '<p style="color: red;">Please select a deposit token.</p>';
+                    return;
+                }
+
+                const postUrl = `https://iamemanuele.pythonanywhere.com/create_staking_pool?user_id=${userId}&usx_token=${token}`;
+                const data = { pool_name: poolName, deposit_token_id: depositTokenId };
+
+                const feedbackContainer = document.getElementById('create-pool-feedback');
+                feedbackContainer.innerHTML = '<p>Processing request...</p>';
+
+                try {
+                    const response = await fetch(postUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+                    if (response.ok) {
+                        feedbackContainer.innerHTML = `<p style="color: green;">Pool created successfully: ${result.pool_name || `Pool #${result.pool_id}`}.</p>`;
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        feedbackContainer.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+                    }
+                } catch (error) {
+                    feedbackContainer.innerHTML = '<p style="color: red;">An error occurred. Please try again later.</p>';
+                }
+            });
+
+            // Eventi per i pulsanti "Add Reward"
+            document.querySelectorAll('.add-reward-button').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const card = this.closest('.card');
+                    const tokenSymbol = card.querySelector('.token-symbol').value.trim();
+                    const dailyReward = parseFloat(card.querySelector('.token-daily-reward').value);
+                    const poolId = this.getAttribute('data-pool-id');
+
+                    if (!tokenSymbol || isNaN(dailyReward) || dailyReward <= 0) {
+                        const errorMessage = createMessageElement('Please enter a valid token symbol and daily reward.', false);
+                        card.querySelector('.feedback').innerHTML = '';
+                        card.querySelector('.feedback').appendChild(errorMessage);
+                        return;
+                    }
+
+                    const postUrl = `https://iamemanuele.pythonanywhere.com/add_pool_reward?user_id=${userId}&usx_token=${token}`;
+                    const data = { pool_id: poolId, token_symbol: tokenSymbol, daily_reward: dailyReward };
+
+                    const feedbackContainer = card.querySelector('.feedback');
+                    feedbackContainer.innerHTML = '<p>Processing request...</p>';
+
+                    try {
+                        const response = await fetch(postUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(data)
+                        });
+
+                        const result = await response.json();
+                        if (response.ok) {
+                            const successMessage = createMessageElement(
+                                `Successfully added reward: ${tokenSymbol} (${dailyReward}).`,
+                                true
+                            );
+                            feedbackContainer.innerHTML = '';
+                            feedbackContainer.appendChild(successMessage);
+                        } else {
+                            const errorMessage = createMessageElement(`Error: ${result.error}`, false);
+                            feedbackContainer.innerHTML = '';
+                            feedbackContainer.appendChild(errorMessage);
+                        }
+                    } catch (error) {
+                        const errorMessage = createMessageElement('An error occurred. Please try again.', false);
+                        feedbackContainer.innerHTML = '';
+                        feedbackContainer.appendChild(errorMessage);
+                    }
+                });
+            });
+
+            // Eventi per il cambio di stato
+            document.querySelectorAll('.update-status-button').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const poolId = this.getAttribute('data-pool-id');
+                    const card = this.closest('.card');
+                    const newStatus = card.querySelector('.pool-status-selector').value;
+
+                    const postUrl = `https://iamemanuele.pythonanywhere.com/update_pool_status?user_id=${userId}&usx_token=${token}`;
+                    const data = { pool_id: poolId, status: newStatus };
+
+                    const feedbackContainer = card.querySelector('.feedback');
+                    feedbackContainer.innerHTML = '<p>Processing request...</p>';
+
+                    try {
+                        const response = await fetch(postUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(data)
+                        });
+
+                        const result = await response.json();
+                        if (response.ok) {
+                            const successMessage = createMessageElement(
+                                `Successfully updated pool status to: ${newStatus}.`,
+                                true
+                            );
+                            feedbackContainer.innerHTML = '';
+                            feedbackContainer.appendChild(successMessage);
+                        } else {
+                            const errorMessage = createMessageElement(`Error: ${result.error}`, false);
+                            feedbackContainer.innerHTML = '';
+                            feedbackContainer.appendChild(errorMessage);
+                        }
+                    } catch (error) {
+                        const errorMessage = createMessageElement('An error occurred. Please try again.', false);
+                        feedbackContainer.innerHTML = '';
+                        feedbackContainer.appendChild(errorMessage);
+                    }
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching staking pool data:', error);
+            contentFrame.innerHTML = '<p>Failed to load staking pools. Please try again later.</p>';
+        });
+} else if (page === 'manage_nfts_farms') {
     const contentFrame = document.getElementById("content-frame");
 
     // Mostra un messaggio di caricamento iniziale

@@ -36,7 +36,6 @@
       <div class="card-3d-container">
         <div class="card-3d">
           <p id="personalized-message"></p>
-          <div id="claim-feedback" class="feedback-message"></div>
         </div>
       </div>
     </div>
@@ -81,17 +80,6 @@ async function fetchWaxAccount() {
 
             // Aggiungi pulsante per il gift
             const personalizedMessageElement = document.getElementById("personalized-message");
-
-            const claimButton = document.createElement("button");
-            claimButton.id = "claim-gift-button";
-            claimButton.textContent = "Claim free login WAX gift";
-            claimButton.classList.add("custom-claim-button"); // Classe CSS definita nel file CSS esterno
-            claimButton.onclick = async () => {
-                await claimGift();
-            };
-
-            personalizedMessageElement.appendChild(claimButton);
-
             // Messaggio di benvenuto personalizzato
             personalizedMessageElement.insertAdjacentHTML(
                 "afterbegin",
@@ -103,45 +91,6 @@ async function fetchWaxAccount() {
     } catch (error) {
         console.error("Error fetching WAX account:", error);
         displayGenericWelcome();
-    }
-} async function claimGift() {
-    const feedbackElement = document.getElementById("claim-feedback");
-    feedbackElement.textContent = ""; // Resetta il feedback precedente
-    feedbackElement.className = "feedback-message"; // Resetta le classi precedenti
-
-    try {
-        const url = `https://iamemanuele.pythonanywhere.com/claim_gift`;
-
-        // Corpo della richiesta
-        const body = {
-            user_id: userId
-        };
-
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body) // Dati inviati come JSON
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Failed to claim gift.");
-        }
-
-        const data = await response.json();
-
-        // Mostra messaggio di successo
-        feedbackElement.textContent = `🎉 ${data.message}`;
-        feedbackElement.classList.add("success");
-
-    } catch (error) {
-        console.error("Error claiming gift:", error);
-
-        // Mostra messaggio di errore
-        feedbackElement.textContent = `❌ ${error.message || "An error occurred. Please try again."}`;
-        feedbackElement.classList.add("error");
     }
 } function displayGenericWelcome() {
     console.log("Fallback: displayGenericWelcome called");

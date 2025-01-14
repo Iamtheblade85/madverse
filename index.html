@@ -63,7 +63,7 @@ async function fetchWaxAccount() {
         }
 
         const data = await response.json();
-        console.log("Data received:", data);
+        ////console.log("Data received:", data);
 
         user_wax_account = data?.wax_account;
 
@@ -93,7 +93,6 @@ async function fetchWaxAccount() {
         displayGenericWelcome();
     }
 } function displayGenericWelcome() {
-    console.log("Fallback: displayGenericWelcome called");
     const welcomeMessage = `Welcome, User`;
     document.getElementById("welcome-message").textContent = welcomeMessage;
 
@@ -386,7 +385,7 @@ async function loadContent(page) {
                 contentFrame.innerHTML = '<p>No farms found.</p>';
                 return;
             }
-            console.log("data manager nftsfarm:", data);
+            ////console.log("data manager nftsfarm:", data);
             // Costruisci la struttura della pagina
             contentFrame.innerHTML = `
                 <h2 class="pool-title" style="text-align: center;">Manage Your NFT Farms</h2>
@@ -605,7 +604,6 @@ document.querySelectorAll('[id^="add-daily-reward-button"]').forEach(button => {
 document.querySelectorAll('[id^="add-template-form"]').forEach(form => {
     form.addEventListener('submit', async function(event) {
         event.preventDefault();
-        console.log("Submit intercepted");
 
         const farmId = this.dataset.farmId; // Prende il farm_id dal dataset del form
         const templateId = this.querySelector('[name="template_id"]').value.trim();
@@ -630,7 +628,7 @@ document.querySelectorAll('[id^="add-template-form"]').forEach(form => {
         }
 
         const data = { farm_id: farmId, template_id: templateId, rewards };
-        console.log("Submit data:",data);
+        //console.log("Submit data:",data);
         const postUrl = `https://iamemanuele.pythonanywhere.com/add_farm_template?user_id=${userId}&usx_token=${token}`;
         const feedbackContainer = this.querySelector('.feedback');
         feedbackContainer.innerHTML = '<p>Processing request...</p>';
@@ -677,10 +675,10 @@ document.querySelectorAll('[id^="add-template-form"]').forEach(form => {
 document.querySelectorAll('.template-form').forEach(form => {
     form.addEventListener('submit', async function(event) {
         event.preventDefault();
-        console.log("Form submission intercepted");
+        //console.log("Form submission intercepted");
 
         const templateId = this.getAttribute('data-template-id');
-        console.log("Template ID:", templateId);
+        //console.log("Template ID:", templateId);
 
         const selectedRewards = Array.from(this.querySelectorAll('.reward-checkbox:checked'))
             .map(checkbox => {
@@ -700,7 +698,7 @@ document.querySelectorAll('.template-form').forEach(form => {
         }).filter(reward => reward !== null);
 
         const rewards = [...selectedRewards, ...newRewards];
-        console.log("Rewards to submit:", rewards);
+        //console.log("Rewards to submit:", rewards);
 
         let feedbackContainer = this.querySelector('.feedback');
         if (!feedbackContainer) {
@@ -796,7 +794,7 @@ document.querySelectorAll('.template-form').forEach(form => {
               contentFrame.innerHTML = "<p>No balances found.</p>";
               return;
             }
-            console.log("Data for balances:", data);
+            //console.log("Data for balances:", data);
             contentFrame.innerHTML = `
                 <h2 class="pool-title" style="text-align: center;">Your Token Balances</h2>
                 <div class="balance-grid">
@@ -989,8 +987,8 @@ document.querySelectorAll('.confirm-withdraw').forEach(button => {
             token_symbol: symbol,
             amount: withdrawQuantity
         };
-        console.log("WA for b-E:", waxAccount);
-        console.log("Data for b-E:", data);
+        //console.log("WA for b-E:", waxAccount);
+        //console.log("Data for b-E:", data);
         try {
             const response = await fetch(url, {
                 method: 'POST',
@@ -1055,8 +1053,8 @@ document.querySelectorAll('.confirm-transfer').forEach(button => {
             amount: transferQuantity,
             receiver: transferReceiver
         };
-        console.log("WA for b-E:", waxAccount);
-        console.log("Data for b-E:", data);
+        //console.log("WA for b-E:", waxAccount);
+        //console.log("Data for b-E:", data);
         try {
             const response = await fetch(url, {
                 method: 'POST',
@@ -1522,7 +1520,7 @@ function handleAction(button, action) {
                     }
 document.querySelectorAll('.withdraw-button').forEach(button => {
     button.addEventListener('click', async function () {
-        console.log('Button clicked:', this);
+        //console.log('Button clicked:', this);
 
         const nftId = this.getAttribute('data-nft-id');
         const waxAccount = user_wax_account;
@@ -1530,10 +1528,10 @@ document.querySelectorAll('.withdraw-button').forEach(button => {
         const url = `https://iamemanuele.pythonanywhere.com/withdraw_nft?user_id=${userId}&usx_token=${token}`;
         const card = this.closest('.card'); // Trova l'elemento genitore della card
 
-        console.log('NFT ID:', nftId);
-        console.log('Wax Account:', waxAccount);
-        console.log('URL:', url);
-        console.log('Card Element:', card);
+        //console.log('NFT ID:', nftId);
+        //console.log('Wax Account:', waxAccount);
+        //console.log('URL:', url);
+        //console.log('Card Element:', card);
 
         const feedbackElement = card.querySelector('.feedback'); // Trova o crea un elemento per il feedback
         if (!feedbackElement) {
@@ -1550,7 +1548,7 @@ document.querySelectorAll('.withdraw-button').forEach(button => {
             withdraw_type: withdrawType
         };
 
-        console.log('Request Data:', data);
+        //console.log('Request Data:', data);
 
         try {
             const response = await fetch(url, {
@@ -1561,16 +1559,16 @@ document.querySelectorAll('.withdraw-button').forEach(button => {
                 body: JSON.stringify(data)
             });
 
-            console.log('Response Status:', response.status);
-            console.log('Response Headers:', response.headers);
+            //console.log('Response Status:', response.status);
+            //console.log('Response Headers:', response.headers);
 
             const responseText = await response.text();
-            console.log('Raw Response Text:', responseText);
+            //console.log('Raw Response Text:', responseText);
 
             let result;
             try {
                 result = JSON.parse(responseText); // Cerca di convertire la risposta in JSON
-                console.log('Parsed Response:', result);
+                //console.log('Parsed Response:', result);
             } catch (parseError) {
                 console.error('Error parsing response JSON:', parseError);
                 card.querySelector('.feedback').innerText = "An error occurred. Please try again.";
@@ -1580,7 +1578,7 @@ document.querySelectorAll('.withdraw-button').forEach(button => {
             // Gestione del feedback basato sulla risposta
             if (response.ok) {
                 card.querySelector('.feedback').innerText = `Success: ${result.message}`;
-                console.log('Withdrawal successful:', result);
+                //console.log('Withdrawal successful:', result);
                 await reloadNFTs();
             } else {
                 card.querySelector('.feedback').innerText = `Error: ${result.error}`;

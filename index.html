@@ -1520,55 +1520,78 @@ function handleAction(button, action) {
                                 return nfts;
                         }
                     }
-                    document.querySelectorAll('.withdraw-button').forEach(button => {
-                        button.addEventListener('click', async function () {
-                            const nftId = this.getAttribute('data-nft-id');
-                            const waxAccount = user_wax_account;
-                            const withdrawType = 'specific'; // O "all_inclusive" o "all_exclusive", in base alle esigenze
-                            const url = `https://iamemanuele.pythonanywhere.com/withdraw_nft?user_id=${userId}&usx_token=${token}`;
-                            const card = this.closest('.card'); // Trova l'elemento genitore della card
-                            const feedbackElement = card.querySelector('.feedback'); // Trova o crea un elemento per il feedback
-                            if (!feedbackElement) {
-                                const newFeedback = document.createElement('div');
-                                newFeedback.className = 'feedback';
-                                card.appendChild(newFeedback);
-                            }
-                    
-                            card.querySelector('.feedback').innerText = 'Processing withdrawal...';
-                            const data = {
-                                wax_account: waxAccount,
-                                nft_id: nftId,
-                                withdraw_type: withdrawType
-                            };                  
-                            try {
-                                const response = await fetch(url, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify(data)
-                                });
-                                const responseText = await response.text();
-                                let result;
-                                try {
-                                    result = JSON.parse(responseText); // Cerca di convertire la risposta in JSON
-                                } catch (parseError) {
-                                    card.querySelector('.feedback').innerText = "An error occurred. Please try again.";
-                                    return;
-                                }
-                                // Gestione del feedback basato sulla risposta
-                                if (response.ok) {
-                                    card.querySelector('.feedback').innerText = `Success: ${result.message}`;
-                                    await reloadNFTs();
-                                } else {
-                                    card.querySelector('.feedback').innerText = `Error: ${result.error}`;
-                                }
-                            } catch (error) {
-                                console.error("Error during withdrawal request:", error);
-                                card.querySelector('.feedback').innerText = 'An error occurred. Please try again.';
-                            }
-                        });
-                    });
+                      document.querySelectorAll('.withdraw-button').forEach(button => {
+                          button.addEventListener('click', async function () {
+                              const nftId = this.getAttribute('data-nft-id');
+                              const waxAccount = user_wax_account;
+                              const withdrawType = 'specific'; // O "all_inclusive" o "all_exclusive", in base alle esigenze
+                              const url = `https://iamemanuele.pythonanywhere.com/withdraw_nft?user_id=${userId}&usx_token=${token}`;
+                              const card = this.closest('.card'); // Trova l'elemento genitore della card
+                              let feedbackElement = card.querySelector('.feedback'); // Trova o crea un elemento per il feedback
+                      
+                              console.log("Starting withdrawal process...");
+                              console.log("NFT ID:", nftId);
+                              console.log("Wax Account:", waxAccount);
+                              console.log("Withdraw Type:", withdrawType);
+                              console.log("URL:", url);
+                      
+                              if (!feedbackElement) {
+                                  const newFeedback = document.createElement('div');
+                                  newFeedback.className = 'feedback';
+                                  card.appendChild(newFeedback);
+                                  feedbackElement = newFeedback;
+                              }
+                      
+                              feedbackElement.innerText = 'Processing withdrawal...';
+                      
+                              const data = {
+                                  wax_account: waxAccount,
+                                  nft_id: nftId,
+                                  withdraw_type: withdrawType
+                              };
+                      
+                              console.log("Data to send:", data);
+                      
+                              try {
+                                  const response = await fetch(url, {
+                                      method: 'POST',
+                                      headers: {
+                                          'Content-Type': 'application/json'
+                                      },
+                                      body: JSON.stringify(data)
+                                  });
+                      
+                                  console.log("Response status:", response.status);
+                      
+                                  const responseText = await response.text();
+                      
+                                  console.log("Raw response text:", responseText);
+                      
+                                  let result;
+                                  try {
+                                      result = JSON.parse(responseText); // Cerca di convertire la risposta in JSON
+                                      console.log("Parsed response JSON:", result);
+                                  } catch (parseError) {
+                                      console.error("Error parsing response JSON:", parseError);
+                                      feedbackElement.innerText = "An error occurred. Please try again.";
+                                      return;
+                                  }
+                      
+                                  // Gestione del feedback basato sulla risposta
+                                  if (response.ok) {
+                                      feedbackElement.innerText = `Success: ${result.message}`;
+                                      console.log("Withdrawal successful:", result.message);
+                                      await reloadNFTs();
+                                  } else {
+                                      feedbackElement.innerText = `Error: ${result.error}`;
+                                      console.error("Withdrawal error:", result.error);
+                                  }
+                              } catch (error) {
+                                  console.error("Error during withdrawal request:", error);
+                                  feedbackElement.innerText = 'An error occurred. Please try again.';
+                              }
+                          });
+                      });
                     document.querySelectorAll('.btn-stake').forEach(button => {
                         button.addEventListener('click', async function () {
                             const nftId = this.closest('.card').querySelector('.nft-details .value').textContent;  // Recupera l'ID dell'NFT

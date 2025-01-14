@@ -682,7 +682,6 @@ document.querySelectorAll('.template-form').forEach(form => {
         const templateId = this.getAttribute('data-template-id');
         console.log("Template ID:", templateId);
 
-        // Ricompense esistenti selezionate
         const selectedRewards = Array.from(this.querySelectorAll('.reward-checkbox:checked'))
             .map(checkbox => {
                 const tokenSymbol = checkbox.getAttribute('data-token-symbol');
@@ -691,7 +690,6 @@ document.querySelectorAll('.template-form').forEach(form => {
                 return { token_symbol: tokenSymbol, daily_reward_amount: newReward };
             });
 
-        // Nuove ricompense aggiunte dinamicamente
         const newRewards = Array.from(this.querySelectorAll('.new-reward-entry')).map(entry => {
             const tokenSymbol = entry.querySelector('input[name="new_token_symbol"]').value.trim();
             const dailyReward = parseFloat(entry.querySelector('input[name="new_daily_reward"]').value);
@@ -704,20 +702,17 @@ document.querySelectorAll('.template-form').forEach(form => {
         const rewards = [...selectedRewards, ...newRewards];
         console.log("Rewards to submit:", rewards);
 
-        if (rewards.length === 0) {
-            const feedbackContainer = this.querySelector('.feedback');
-            feedbackContainer.innerHTML = '';
-            const errorMessage = document.createElement('div');
-            errorMessage.textContent = 'Please add or modify at least one reward.';
-            errorMessage.style.color = 'red';
-            feedbackContainer.appendChild(errorMessage);
-            return;
+        let feedbackContainer = this.querySelector('.feedback');
+        if (!feedbackContainer) {
+            console.warn(".feedback not found, creating it dynamically.");
+            feedbackContainer = document.createElement('div');
+            feedbackContainer.className = 'feedback';
+            this.insertBefore(feedbackContainer, this.querySelector('button[type="submit"]'));
         }
+        feedbackContainer.innerHTML = '<p>Processing request...</p>';
 
         const data = { template_id: templateId, rewards };
         const postUrl = `https://iamemanuele.pythonanywhere.com/update_template_rewards?user_id=${userId}&usx_token=${token}`;
-        const feedbackContainer = this.querySelector('.feedback');
-        feedbackContainer.innerHTML = '<p>Processing request...</p>';
 
         try {
             const response = await fetch(postUrl, {
@@ -739,6 +734,7 @@ document.querySelectorAll('.template-form').forEach(form => {
         }
     });
 });
+
             // Aggiungi eventi ai pulsanti di aggiunta token
             document.querySelectorAll('.add-token-button').forEach(button => {
                 button.addEventListener('click', async function() {

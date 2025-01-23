@@ -219,7 +219,7 @@ async function loadContent(page) {
               `;
               return; // Esce dalla funzione per evitare altre logiche
             }
-            else if (page === 'mynfts' && response.status === 404) {
+            else if (page === 'mynfts') {
                 contentFrame.innerHTML = `
                     <div style="text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; font-family: Arial, sans-serif;">
                         <h2 style="color: #333; margin-bottom: 10px;">No NFTs Found</h2>

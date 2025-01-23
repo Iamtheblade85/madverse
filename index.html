@@ -835,6 +835,7 @@ document.querySelectorAll('.template-form').forEach(form => {
         });
 }  
         else if (page === 'balance') {
+          console.log(data);
           if (!data || !data.balances || data.balances.length === 0) {
             contentFrame.innerHTML = `
               <p>No balances for you, deposit some tokens by doing a transfer from your wombat/anchor/waxcloud wallet to <strong>xcryptochips</strong> and memo: <strong>"deposit token"</strong> to start earning.</p>

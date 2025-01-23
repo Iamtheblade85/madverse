@@ -202,17 +202,29 @@ async function loadContent(page) {
 
         if (!response.ok) {
             // Aggiungi un controllo specifico per "balance" in caso di errore 404
-            if (page === 'balance' && response.status === 404) {
-                contentFrame.innerHTML = `
-                    <p>No balances for you, deposit some tokens by doing a transfer from your wombat/anchor/waxcloud wallet to <strong>xcryptochips</strong> and memo: <strong>"deposit token"</strong> to start earning.</p>
-                `;
-                return; // Esce dalla funzione per evitare altre logiche
+          if (page === 'balance' && response.status === 404) {
+              contentFrame.innerHTML = `
+                  <div style="text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; font-family: Arial, sans-serif;">
+                      <h2 style="color: #333; margin-bottom: 10px;">No Balances Found</h2>
+                      <p style="color: #555; font-size: 1rem; line-height: 1.5;">
+                          It seems like you don't have any balances yet. Start earning by depositing tokens!
+                      </p>
+                      <p style="color: #555; font-size: 1rem; line-height: 1.5;">
+                          Transfer tokens from your <strong>Wombat</strong>, <strong>Anchor</strong>, or <strong>WaxCloud</strong> wallet to: 
+                          <strong style="color: #000;">xcryptochips</strong>.
+                      </p>
+                      <p style="color: #555; font-size: 1rem; line-height: 1.5;">
+                          Use the memo: <strong style="color: #000;">"deposit token"</strong>.
+                      </p>
+                      <p style="margin-top: 20px; font-size: 0.9rem; color: #777;">
+                          Once you've deposited tokens, they will appear here, and you can start earning rewards!
+                      </p>
+                  </div>
+              `;
+              return; // Esce dalla funzione per evitare altre logiche
             }
-
             throw new Error(`Server responded with status: ${response.status}`);
-        }
-
-        const data = await response.json();
+        } const data = await response.json();
         if (userId === 5235038223) {
           const nftsFarmButton = document.createElement("button");
           nftsFarmButton.textContent = "💬NFTsFarm Owners";

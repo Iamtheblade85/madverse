@@ -835,10 +835,12 @@ document.querySelectorAll('.template-form').forEach(form => {
         });
 }  
         else if (page === 'balance') {
-            if (!data || !data.balances || data.balances.length === 0) {
-              contentFrame.innerHTML = "<p>No balances found.</p>";
-              return;
-            }
+          if (!data || !data.balances || data.balances.length === 0) {
+            contentFrame.innerHTML = `
+              <p>No balances for you, deposit some tokens by doing a transfer from your wombat/anchor/waxcloud wallet to <strong>xcryptochips</strong> and memo: <strong>"deposit token"</strong> to start earning.</p>
+            `;
+            return;
+          }
             //console.log("Data for balances:", data);
             contentFrame.innerHTML = `
                 <h2 class="pool-title" style="text-align: center;">Your Token Balances</h2>

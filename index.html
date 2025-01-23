@@ -94,15 +94,59 @@ async function fetchWaxAccount() {
     }
 } function displayGenericWelcome() {
     const welcomeMessage = `Welcome, User`;
-    document.getElementById("welcome-message").textContent = welcomeMessage;
-
-    // Applica l'animazione alle lettere
+    document.getElementById("welcome-message").innerHTML = `
+        ${welcomeMessage}<br>
+        <span style="font-size: 1em; color: gray;">You can create a new account by simply entering your WAX wallet account in the box below.</span>
+        <input type="text" id="wax-wallet-input" placeholder="Enter your WAX wallet account (required)" style="margin-top: 10px; padding: 8px; font-size: 1em; width: 80%;">
+        <input type="text" id="telegram-username-input" placeholder="Enter your Telegram username (optional)" style="margin-top: 10px; padding: 8px; font-size: 1em; width: 80%;">
+        <button onclick="registerWaxAccount()" style="margin-top: 10px; padding: 8px 12px; font-size: 1em;">Register</button>
+    `;
+    // Apply animation to letters
     animateText(welcomeMessage);
 
-    // Messaggio generico per utenti non autenticati
+    // Generic message for unauthenticated users
     document.getElementById("personalized-message").textContent = `Welcome to our platform! Explore the power of our unique token CHIPS, designed to empower and sustain an ever-growing digital economy. Join us today to unlock endless potential and experience the future of decentralized finance!`;
 }
+async function registerWaxAccount() {
+    const waxWalletInput = document.getElementById("wax-wallet-input").value.trim();
+    const telegramUsernameInput = document.getElementById("telegram-username-input").value.trim();
 
+    if (!waxWalletInput) {
+        alert("The WAX wallet address is required. Please enter a valid address.");
+        return;
+    }
+
+    try {
+        const url = `https://iamemanuele.pythonanywhere.com/register?user_id=${userId}`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                wax_account: waxWalletInput,
+                telegram_username: telegramUsernameInput || null, // Pass null if Telegram username is not provided
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert(`Your WAX wallet account "${waxWalletInput}" has been successfully registered!`);
+            // Reload the page
+            window.location.reload();
+        } else {
+            alert(`Failed to register your account: ${data.message || "Unknown error."}`);
+        }
+    } catch (error) {
+        console.error("Error during registration:", error);
+        alert("An error occurred while trying to register your account. Please try again.");
+    }
+}
 // Funzione per animare il testo lettera per lettera
 function animateText(text) {
     const welcomeMessageElement = document.getElementById("welcome-message");

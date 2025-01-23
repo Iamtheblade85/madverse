@@ -197,7 +197,8 @@ async function loadContent(page) {
             break;        
     }
     try {
-        const response = await fetch(url);       
+        const response = await fetch(url);  
+        console.log(response);
         if (!response.ok) {
             throw new Error(`Server responded with status: ${response.status}`);
         }
@@ -835,7 +836,6 @@ document.querySelectorAll('.template-form').forEach(form => {
         });
 }  
         else if (page === 'balance') {
-          console.log(data);
           if (!data || !data.balances || data.balances.length === 0) {
             contentFrame.innerHTML = `
               <p>No balances for you, deposit some tokens by doing a transfer from your wombat/anchor/waxcloud wallet to <strong>xcryptochips</strong> and memo: <strong>"deposit token"</strong> to start earning.</p>

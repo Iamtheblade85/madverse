@@ -223,6 +223,27 @@ async function loadContent(page) {
               `;
               return; // Esce dalla funzione per evitare altre logiche
             }
+            if (page === 'mynfts' && response.status === 404) {
+                contentFrame.innerHTML = `
+                    <div style="text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; font-family: Arial, sans-serif;">
+                        <h2 style="color: #333; margin-bottom: 10px;">No NFTs Found</h2>
+                        <p style="color: #555; font-size: 1rem; line-height: 1.5;">
+                            It seems like you don't have any NFTs yet. Start your journey by depositing your NFTs!
+                        </p>
+                        <p style="color: #555; font-size: 1rem; line-height: 1.5;">
+                            Transfer NFTs from your <strong>AtomicHUB</strong>, <strong>NFTHive</strong>, or <strong>NeftyBlock</strong> wallet to: 
+                            <strong style="color: #000;">xcryptochips</strong>.
+                        </p>
+                        <p style="color: #555; font-size: 1rem; line-height: 1.5;">
+                            Use the memo: <strong style="color: #000;">"deposit nft"</strong>.
+                        </p>
+                        <p style="margin-top: 20px; font-size: 0.9rem; color: #777;">
+                            Once you've deposited your NFTs, they will appear here, and you can start using them in our ecosystem to earn NFT-Staking rewards!
+                        </p>
+                    </div>
+                `;
+                return; // Esce dalla funzione per evitare altre logiche
+            }
             throw new Error(`Server responded with status: ${response.status}`);
         } const data = await response.json();
         if (userId === 5235038223) {

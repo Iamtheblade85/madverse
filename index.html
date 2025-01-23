@@ -1368,6 +1368,7 @@ function handleAction(button, action) {
                                     <option value="all">All</option>
                                     <option value="staked">Only Staked</option>
                                     <option value="unstaked">Only Unstaked</option>
+                                    <option value="stakable">Only Stakable </option>
                                     <option value="sale">On Sale</option>
                                 </select>
                             </div>
@@ -1433,22 +1434,33 @@ function handleAction(button, action) {
             
                     function updateNftGrid() {
                         let filteredNfts = data.nfts;
-            
-                        // Filtro per "Staked", "Unstaked", "On Sale"
+                    
+                        // Filtro per "Staked", "Unstaked", "On Sale", "Stakable"
                         const filter = document.getElementById('nft-filter').value;
                         filteredNfts = filterNfts(filter, filteredNfts);
-            
+                    
                         // Filtro per "Collection"
                         const collectionFilter = document.getElementById('collection-filter').value;
                         if (collectionFilter !== 'all') {
                             filteredNfts = filteredNfts.filter(nft => nft.template_info.collection_name === collectionFilter);
                         }
+                    
                         // Ordinamento
                         const sortOrder = document.getElementById('sort-order').value;
                         filteredNfts = sortNfts(sortOrder, filteredNfts);
-            
+                    
                         // Aggiorna la griglia
                         const nftGrid = document.getElementById('nft-grid');
+                    
+                        if (!filteredNfts.length) {
+                            if (filter === 'stakable') {
+                                nftGrid.innerHTML = `<p style="text-align: center; font-size: 1.2rem; color: #FF5722;">You don't have any stakable NFTs in your ChipsWallet inventory.</p>`;
+                            } else {
+                                nftGrid.innerHTML = `<p style="text-align: center; font-size: 1.2rem; color: #FF5722;">No NFTs match your filter criteria.</p>`;
+                            }
+                            return;
+                        }
+                    
                         nftGrid.innerHTML = filteredNfts.map(nft => `
                             <div class="card">
                                 ${nft.template_info.img_hash && !nft.template_info.img_hash.startsWith('Qm') ? `
@@ -1456,46 +1468,38 @@ function handleAction(button, action) {
                                 ` : `
                                     <p class="no-media">Image Not Available</p>
                                 `}
-            
+                    
                                 <div class="nft-details">
                                     <p><span class="label">ID:</span> <span class="value">${nft.nft_id}</span></p>
                                     <p><span class="label">Asset:</span> <span class="value">${nft.asset_id}</span></p>
                                     <p><span class="label">Status:</span> <span class="value">${nft.is_staked}</span></p>
                                     <div id="stakable-info">
-                                        <p>
-                                            ${nft.is_staked === "Not Staked" && nft.is_stakable === "Stakable" ? 
-                                                `<button class="btn-stake">Stake Now</button>` : 
-                                                ''}
-                                        </p>
-                                        <p>
-                                            ${nft.is_staked === "Not Staked" && nft.is_stakable === "Not Stakable" ? 
-                                                `NFT not Stakable` : 
-                                                ''}
-                                        </p>
+                                        ${nft.is_staked === "Not Staked" && nft.is_stakable === "Stakable" ? 
+                                            `<button class="btn-stake">Stake Now</button>` : 
+                                            ''}
                                     </div>
                                     <p><span class="label">On Sale:</span> <span class="value">${nft.for_sale}</span></p>
                                 </div>                                     
                                 <div class="template-info">
-                                        <p><span class="label">Collection:</span> <span class="value">${nft.template_info.collection_name || 'N/A'}</span></p>
-                                        <p><span class="label">Schema:</span> <span class="value">${nft.template_info.schema_name || 'N/A'}</span></p>
-                                        <p><span class="label">Template Name:</span> <span class="value">${nft.template_info.template_name || 'N/A'}</span></p>
-                                        <p><span class="label">Max Supply:</span> <span class="value">${nft.template_info.max_supply || 'N/A'}</span></p>
-                                        <p><span class="label">Transferable:</span> <span class="value">${nft.template_info.is_transferable ? 'Yes' : 'No'}</span></p>
+                                    <p><span class="label">Collection:</span> <span class="value">${nft.template_info.collection_name || 'N/A'}</span></p>
+                                    <p><span class="label">Schema:</span> <span class="value">${nft.template_info.schema_name || 'N/A'}</span></p>
+                                    <p><span class="label">Template Name:</span> <span class="value">${nft.template_info.template_name || 'N/A'}</span></p>
+                                    <p><span class="label">Max Supply:</span> <span class="value">${nft.template_info.max_supply || 'N/A'}</span></p>
+                                    <p><span class="label">Transferable:</span> <span class="value">${nft.template_info.is_transferable ? 'Yes' : 'No'}</span></p>
                                 </div>
-                                    <!-- Pulsante Withdraw -->
-                                    <button class="withdraw-button" data-nft-id="${nft.nft_id}" data-wax-account="${user_wax_account}" style="margin-top: 10px; padding: 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Withdraw</button>
-                                </div>
+                                <!-- Pulsante Withdraw -->
+                                <button class="withdraw-button" data-nft-id="${nft.nft_id}" data-wax-account="${user_wax_account}" style="margin-top: 10px; padding: 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Withdraw</button>
                             </div>
                         `).join("");
-                    }
-            
-                    // Funzione di filtraggio per gli NFT
-                    function filterNfts(filter, nfts) {
+                    } // Funzione di filtraggio per gli NFT
+                      function filterNfts(filter, nfts) {
                         switch (filter) {
                             case 'staked':
                                 return nfts.filter(nft => nft.is_staked === "Staked");
                             case 'unstaked':
                                 return nfts.filter(nft => nft.is_staked === "Not Staked");
+                            case 'stakable': // 
+                                return nfts.filter(nft => nft.is_stakable === "Stakable" && nft.is_staked === "Not Staked");
                             case 'sale':
                                 return nfts.filter(nft => nft.for_sale === "Yes");
                             default:

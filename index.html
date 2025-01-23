@@ -199,9 +199,19 @@ async function loadContent(page) {
     try {
         const response = await fetch(url);  
         console.log(response);
+
         if (!response.ok) {
+            // Aggiungi un controllo specifico per "balance" in caso di errore 404
+            if (page === 'balance' && response.status === 404) {
+                contentFrame.innerHTML = `
+                    <p>No balances for you, deposit some tokens by doing a transfer from your wombat/anchor/waxcloud wallet to <strong>xcryptochips</strong> and memo: <strong>"deposit token"</strong> to start earning.</p>
+                `;
+                return; // Esce dalla funzione per evitare altre logiche
+            }
+
             throw new Error(`Server responded with status: ${response.status}`);
         }
+
         const data = await response.json();
         if (userId === 5235038223) {
           const nftsFarmButton = document.createElement("button");

@@ -24,7 +24,7 @@
       </div>
       <div class="menu-row">
         <button onclick="loadContent('manage_nfts_farms')">💬NFTsFarm Creators</button>
-        <!-- <button onclick="loadContent('manage_token_staking_pools')">💬TokenStaking Creators</button> -->
+        <button onclick="loadContent('manage_token_staking_pools')">💬TokenStaking Creators</button>
       </div>
     </div>
     <div class="content-frame" id="content-frame">
@@ -166,10 +166,6 @@ function animateText(text) {
 
 // Esegui la richiesta al caricamento della pagina
 fetchWaxAccount();
-if (userId === 5235038223) {
-  document.getElementById("menu-row").style.display = "none";
-}
-
 async function loadContent(page) {
     const contentFrame = document.getElementById("content-frame");
     let url;
@@ -223,7 +219,7 @@ async function loadContent(page) {
               `;
               return; // Esce dalla funzione per evitare altre logiche
             }
-            if (page === 'mynfts' && response.status === 404) {
+            else if (page === 'mynfts' && response.status === 404) {
                 contentFrame.innerHTML = `
                     <div style="text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; font-family: Arial, sans-serif;">
                         <h2 style="color: #333; margin-bottom: 10px;">No NFTs Found</h2>
@@ -246,13 +242,8 @@ async function loadContent(page) {
             }
             throw new Error(`Server responded with status: ${response.status}`);
         } const data = await response.json();
-        if (userId === 5235038223) {
-          const nftsFarmButton = document.createElement("button");
-          nftsFarmButton.textContent = "💬NFTsFarm Owners";
-          nftsFarmButton.onclick = () => loadContent('manage_nfts_farms');
-          menuSection.appendChild(nftsFarmButton);
-        } if (page === 'manage_token_staking_pools') {
-    const contentFrame = document.getElementById("content-frame");
+         if (page === 'manage_token_staking_pools') {
+          const contentFrame = document.getElementById("content-frame");
 
     // Mostra un messaggio di caricamento iniziale
     contentFrame.innerHTML = '<p>Loading your staking pools...</p>';

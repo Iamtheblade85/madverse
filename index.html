@@ -102,7 +102,7 @@ async function fetchWaxAccount() {
         <button onclick="registerWaxAccount()" style="margin-top: 10px; padding: 8px 12px; font-size: 1em;">Register</button>
     `;
     // Apply animation to letters
-    animateText(welcomeMessage);
+    document.getElementById("welcome-message").style.whiteSpace = "nowrap";
 
     // Generic message for unauthenticated users
     document.getElementById("personalized-message").textContent = `Welcome to our platform! Explore the power of our unique token CHIPS, designed to empower and sustain an ever-growing digital economy. Join us today to unlock endless potential and experience the future of decentralized finance!`;

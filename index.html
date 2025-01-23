@@ -115,38 +115,42 @@ async function fetchWaxAccount() {
         return;
     }
 
+    const payload = {
+        user_id: userId, // Assicurati che userId sia definito globalmente
+        wax_account: waxWalletInput,
+        telegram_username: telegramUsernameInput || null // Campo facoltativo
+    };
+
+    console.log("Payload being sent:", payload);
+
     try {
-        const url = `https://iamemanuele.pythonanywhere.com/register?user_id=${userId}`;
+        const url = `https://iamemanuele.pythonanywhere.com/register`;
         const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                wax_account: waxWalletInput,
-                telegram_username: telegramUsernameInput || null, // Pass null if Telegram username is not provided
-            }),
+            body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
         }
 
         const data = await response.json();
 
         if (data.success) {
             alert(`Your WAX wallet account "${waxWalletInput}" has been successfully registered!`);
-            // Reload the page
             window.location.reload();
         } else {
             alert(`Failed to register your account: ${data.message || "Unknown error."}`);
         }
     } catch (error) {
         console.error("Error during registration:", error);
-        alert("An error occurred while trying to register your account. Please try again.");
+        alert(`An error occurred: ${error.message}`);
     }
-}
-// Funzione per animare il testo lettera per lettera
+} // Funzione per animare il testo lettera per lettera
 function animateText(text) {
     const welcomeMessageElement = document.getElementById("welcome-message");
 

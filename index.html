@@ -320,7 +320,7 @@ async function loadContent(page) {
                                       <!-- Feedback dinamico -->
                                       <div class="feedback" style="margin-top: 10px;"></div>    
                                   </div>
-                                  <!-- Change Pool Status deve essere  delimitato da 4 bordi-->-->
+                                  <!-- Change Pool Status deve essere  delimitato da 4 bordi-->
                                   <div style="border: 1px solid black; border-radius: 5px; padding: 10px; margin-top: 20px;">
                                       <h5>Change Pool Status:</h5>
                                       <select class="pool-status-selector" data-pool-id="${pool.pool_id}" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 50%;">
@@ -537,22 +537,23 @@ async function loadContent(page) {
             ////console.log("data manager nftsfarm:", data);
             // Costruisci la struttura della pagina
             contentFrame.innerHTML = `
-                <h2 class="pool-title" style="text-align: center;">Creators Tool - NFT Farms Manager</h2>
-                <div class="farm-grid">
+                <h2 class="pool-title" style="text-align: center; font-size: 2rem;">Creators Tool - NFT Farms Manager</h2>
+                <div class="farm-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
                     ${data.farms.map(farm => `
-                        <div class="card">
+                        <div class="card" style="border: 1px solid black; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
                             <h4>Farm: ${farm.farm_name}</h4>
                             <p>Status: <span class="value">${farm.status}</span></p>
                             <p>Creation Date: ${farm.creation_date}</p>
                             <p>Last Updated: ${farm.updated_on || "N/A"}</p>
 
                             <!-- Total Rewards -->
-                            <h5>Remaining Rewards:</h5>
-                            <ul>
+                            <div style="border: 1px solid black; border-radius: 5px; padding: 10px; margin-top: 10px;">
+                              <h5 style="font-size: 1.2rem; color: #333; font-weight: bold;">Remaining Rewards:</h5>
+                              <ul>
                                 ${farm.total_rewards.map(reward => `
                                     <li>${reward.token_symbol}: ${reward.total_reward}</li>
                                 `).join('')}
-                            </ul>
+                              </ul>
                             <!-- Token input e aggiunta -->
                             <div style="margin-top: 10px;">
                                 <input type="text" class="token-symbol" placeholder="Token Symbol" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 40%;"/>
@@ -562,12 +563,13 @@ async function loadContent(page) {
 
                             <!-- Feedback dinamico -->
                             <div class="feedback" style="margin-top: 10px;"></div>
-                            <h5>Templates and Daily Rewards:</h5>
-                            <div>
+                            <div style="border: 1px solid black; border-radius: 5px; padding: 10px; margin-top: 20px;">
+                              <h5>Templates and Daily Rewards:</h5>
+                              <div>
                                 <button id="add-template-button" style="margin-right: 10px; padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Add Template</button>
-                            </div>
+                              </div>
                             <div id="template-form-container" style="display: none; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-                                <form id="add-template-form-${farm.farm_id}" data-farm-id="${farm.farm_id}">
+                                <form id="add-template-form-${farm.farm_id}" data-farm-id="${farm.farm_id}" style="padding: 15px; border: 1px solid #ccc; border-radius: 10px; background-color: #f9f9f9;">
                                     <!-- Farm ID -->
                                     <input type="hidden" id="farm-id-${farm.farm_id}" name="farm_id" value="${farm.farm_id}" />
                                     <div style="margin-bottom: 10px;">
@@ -891,9 +893,9 @@ document.querySelectorAll('.template-form').forEach(form => {
                     const farmId = this.getAttribute('data-farm-id');
 
                     if (!tokenSymbol || isNaN(tokenAmount) || tokenAmount <= 0) {
-                        const errorMessage = createMessageElement('Please enter a valid token symbol and amount.', false);
                         card.querySelector('.feedback').innerHTML = '';
-                        card.querySelector('.feedback').appendChild(errorMessage);
+                        const messageElement = createMessageElement('Please enter a valid token symbol and amount.', false);
+                        card.querySelector('.feedback').appendChild(messageElement);
                         return;
                     }
 

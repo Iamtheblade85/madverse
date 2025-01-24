@@ -299,15 +299,15 @@ async function loadContent(page) {
                                     `).join('')}
                                   </ul>
                                   <!-- Add Reward Tokens -->
-                                  <h3 style="font-size: 1.5rem; color: #333; font-weight: bold; margin-bottom: 15px;">
+                                  <h4 style="font-size: 1.5rem; color: #333; font-weight: bold; margin-bottom: 3px;">
                                       Add or Deposit Rewards to Your Staking Pool
-                                  </h3>
-                                  <h4 style="font-size: 1.2rem; color: #555; font-weight: normal; margin-bottom: 10px;">
-                                      Add new tokens as rewards or refill an existing reward to keep your staking pool attractive for users.
                                   </h4>
+                                  <h5 style="font-size: 1.2rem; color: #555; font-weight: normal; margin-bottom: 3px;">
+                                      Add new tokens as rewards or refill an existing reward to keep your staking pool attractive for users.
+                                  </h5>
 
                                   <div style="margin-top: 10px;">
-                                      <select class="token-total-reward" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 40%;">
+                                      <select class="token-total-reward" style="margin-right: 3px; padding: 3px; font-size: 0.9rem; width: 40%;">
                                           <option value="">Select Reward Token</option>
                                           ${data.balance.map(balance => `<option value="${balance.token_symbol}">${balance.token_symbol} (available: ${balance.amount.toFixed(2)})</option>`).join('')}
                                       </select>
@@ -322,7 +322,6 @@ async function loadContent(page) {
                                   <!-- Change Pool Status -->
                                   <h5>Change Pool Status:</h5>
                                   <select class="pool-status-selector" data-pool-id="${pool.pool_id}" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 50%;">
-                                      <option value="settings" ${pool.status === 'settings' ? 'selected' : ''}>Settings</option>
                                       <option value="active" ${pool.status === 'active' ? 'selected' : ''}>Active</option>
                                       <option value="closed" ${pool.status === 'closed' ? 'selected' : ''}>Closed</option>
                                   </select>

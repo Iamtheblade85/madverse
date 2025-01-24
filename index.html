@@ -313,6 +313,25 @@ async function loadContent(page) {
                           `).join('')}
                       </div>
                   `;
+                    function createMessageElement(message, isSuccess) {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.style.marginTop = '10px';
+                        messageDiv.style.padding = '10px';
+                        messageDiv.style.borderRadius = '5px';
+                        messageDiv.style.fontSize = '14px';
+                    
+                        if (isSuccess) {
+                            messageDiv.style.backgroundColor = '#4CAF50'; // Verde per successo
+                            messageDiv.style.color = 'white';
+                        } else {
+                            messageDiv.style.backgroundColor = '#FF5722'; // Rosso per errore
+                            messageDiv.style.color = 'white';
+                        }
+                    
+                        messageDiv.textContent = message;
+                        return messageDiv;
+                    }
+
                   document.getElementById('create-pool-button').addEventListener('click', async function() {
                       const poolName = document.getElementById('new-pool-name').value.trim();
                       const depositTokenSymbol = document.getElementById('new-pool-deposit-token').value;

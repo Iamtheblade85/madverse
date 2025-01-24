@@ -261,12 +261,12 @@ async function loadContent(page) {
       
                       <div class="create-pool-form" style="margin-bottom: 20px; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
                           <h3>Create a New Pool</h3>
+                          <h4>First step is to choose which Token you want to let users stake. Once you create the Staking Pool, you´ll be able to define how much tokens you want to set as reward. </h4>
                           <input type="text" id="new-pool-name" placeholder="Pool Name (optional)" style="margin-bottom: 10px; padding: 5px; width: 100%; font-size: 1rem;" />
                           <select id="new-pool-deposit-token" style="margin-bottom: 10px; padding: 5px; width: 100%; font-size: 1rem;">
                               <option value="">Select Deposit Token</option>
                               ${data.balance.map(balance => `<option value="${balance.token_symbol}">${balance.token_symbol} (available: ${balance.amount.toFixed(0)})</option>`).join('')}
                           </select>
-                          <input type="number" id="new-pool-deposit-amount" placeholder="Amount to dedicate" style="margin-bottom: 10px; padding: 5px; width: 100%; font-size: 1rem;" />
                           <button id="create-pool-button" style="padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 1rem;">Create Pool</button>
                           <div id="create-pool-feedback" style="margin-top: 10px;"></div>
                       </div>
@@ -280,7 +280,7 @@ async function loadContent(page) {
                                   <p>Last Updated: ${pool.updated_at || "N/A"}</p>
       
                                   <!-- Rewards Summary -->
-                                  <h5>Rewards:</h5>
+                                  <h5>Your deposited Total-Rewards for this Staking Pool:</h5>
                                   <ul>
                                       ${pool.rewards.map(reward => `
                                           <li>${reward.token_symbol}: Total ${reward.total_reward_deposit}, Daily ${reward.daily_reward}</li>
@@ -288,6 +288,8 @@ async function loadContent(page) {
                                   </ul>
       
                                   <!-- Add Reward Tokens -->
+                                  <h3>Add or Deposit one or more reward to this Staking Pool</h3>
+                                  <h4>You can add other tokens as Pool-Rewards or refill a Token-Reward </h4>
                                   <div style="margin-top: 10px;">
                                       <select class="token-total-reward" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 40%;">
                                           <option value="">Select Reward Token</option>
@@ -335,11 +337,10 @@ async function loadContent(page) {
                   document.getElementById('create-pool-button').addEventListener('click', async function() {
                       const poolName = document.getElementById('new-pool-name').value.trim();
                       const depositTokenSymbol = document.getElementById('new-pool-deposit-token').value;
-                      const depositAmount = parseFloat(document.getElementById('new-pool-deposit-amount').value);
                   
-                      if (!depositTokenSymbol || isNaN(depositAmount) || depositAmount <= 0) {
+                      if (!depositTokenSymbol || isNaN(depositAmount)) {
                           const feedback = document.getElementById('create-pool-feedback');
-                          feedback.innerHTML = '<p style="color: red;">Please select a deposit token and enter a valid amount.</p>';
+                          feedback.innerHTML = '<p style="color: red;">Please select a whitelisted token to proceed.</p>';
                           return;
                       }
                   
@@ -347,8 +348,6 @@ async function loadContent(page) {
                       const data = { 
                           pool_id: poolId, 
                           token_symbol: tokenSymbol, 
-                          total_reward: rewardAmount, 
-                          daily_reward: dailyReward, 
                           wax_account: user_wax_account // Aggiungi wax_account al payload
                       };
                       console.log("Data for the BE-Post:", data);

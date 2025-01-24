@@ -259,7 +259,7 @@ async function loadContent(page) {
               .then(data => {
                   // Aggiungi la sezione per creare una nuova pool
                   contentFrame.innerHTML = `
-                      <h2 class="pool-title" style="text-align: center;">Manage Your Token Staking Pools</h2>
+                      <h2 class="pool-title" style="text-align: center;">Creators Tool - Token Staking Pool Manager</h2>
       
                       <div class="create-pool-form" style="margin-bottom: 20px; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
                           <h3 style="font-size: 1.5rem; color: #333; font-weight: bold; margin-bottom: 15px; text-align: center;">
@@ -532,7 +532,7 @@ async function loadContent(page) {
             ////console.log("data manager nftsfarm:", data);
             // Costruisci la struttura della pagina
             contentFrame.innerHTML = `
-                <h2 class="pool-title" style="text-align: center;">Manage Your NFT Farms</h2>
+                <h2 class="pool-title" style="text-align: center;">Creators Tool - NFT Farms Manager</h2>
                 <div class="farm-grid">
                     ${data.farms.map(farm => `
                         <div class="card">

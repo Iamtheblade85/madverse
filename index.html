@@ -344,7 +344,13 @@ async function loadContent(page) {
                       }
                   
                       const postUrl = `https://iamemanuele.pythonanywhere.com/create_staking_pool?user_id=${userId}&usx_token=${token}`;
-                      const data = { pool_name: poolName, deposit_token_symbol: depositTokenSymbol, deposit_amount: depositAmount };
+                      const data = { 
+                          pool_id: poolId, 
+                          token_symbol: tokenSymbol, 
+                          total_reward: rewardAmount, 
+                          daily_reward: dailyReward, 
+                          wax_account: user_wax_account // Aggiungi wax_account al payload
+                      };
                       console.log("Data for the BE-Post:", data);
                       const feedbackContainer = document.getElementById('create-pool-feedback');
                       feedbackContainer.innerHTML = '<p>Processing request...</p>';

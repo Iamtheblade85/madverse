@@ -266,6 +266,10 @@ async function loadContent(page) {
                               <option value="">Select Deposit Token</option>
                               ${data.tokens.map(token => `<option value="${token.token_id}">${token.symbol}</option>`).join('')}
                           </select>
+                          <select id="new-pool-total-reward-token" style="margin-bottom: 10px; padding: 5px; width: 100%; font-size: 1rem;">
+                              <option value="">Select Total Reward Token</option>
+                              ${data.balance.map(balance => `<option value="${balance.token_symbol}">${balance.token_symbol} (available: ${balance.amount.toFixed(2)})</option>`).join('')}
+                          </select>
                           <button id="create-pool-button" style="padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 1rem;">Create Pool</button>
                           <div id="create-pool-feedback" style="margin-top: 10px;"></div>
                       </div>
@@ -288,11 +292,15 @@ async function loadContent(page) {
       
                                   <!-- Add Reward Tokens -->
                                   <div style="margin-top: 10px;">
+                                      <select class="token-total-reward" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 40%;">
+                                          <option value="">Select Total Reward Token</option>
+                                          ${data.balance.map(balance => `<option value="${balance.token_symbol}">${balance.token_symbol} (available: ${balance.amount.toFixed(2)})</option>`).join('')}
+                                      </select>
                                       <input type="text" class="token-symbol" placeholder="Token Symbol" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 40%;"/>
                                       <input type="number" class="token-daily-reward" placeholder="Daily Reward" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 30%;"/>
                                       <button class="add-reward-button" data-pool-id="${pool.pool_id}" style="padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Add Reward</button>
                                   </div>
-      
+
                                   <!-- Feedback dinamico -->
                                   <div class="feedback" style="margin-top: 10px;"></div>
       
@@ -308,24 +316,24 @@ async function loadContent(page) {
                           `).join('')}
                       </div>
                   `;
-      
                   // Event handler per creare una nuova pool
                   document.getElementById('create-pool-button').addEventListener('click', async function() {
                       const poolName = document.getElementById('new-pool-name').value.trim();
                       const depositTokenId = document.getElementById('new-pool-deposit-token').value;
-      
-                      if (!depositTokenId) {
+                      const totalRewardToken = document.getElementById('new-pool-total-reward-token').value;
+                  
+                      if (!depositTokenId || !totalRewardToken) {
                           const feedback = document.getElementById('create-pool-feedback');
-                          feedback.innerHTML = '<p style="color: red;">Please select a deposit token.</p>';
+                          feedback.innerHTML = '<p style="color: red;">Please select a deposit token and a total reward token.</p>';
                           return;
                       }
-      
+                  
                       const postUrl = `https://iamemanuele.pythonanywhere.com/create_staking_pool?user_id=${userId}&usx_token=${token}`;
-                      const data = { pool_name: poolName, deposit_token_id: depositTokenId };
-      
+                      const data = { pool_name: poolName, deposit_token_id: depositTokenId, total_reward_token: totalRewardToken };
+                  
                       const feedbackContainer = document.getElementById('create-pool-feedback');
                       feedbackContainer.innerHTML = '<p>Processing request...</p>';
-      
+                  
                       try {
                           const response = await fetch(postUrl, {
                               method: 'POST',
@@ -334,7 +342,7 @@ async function loadContent(page) {
                               },
                               body: JSON.stringify(data)
                           });
-      
+                  
                           const result = await response.json();
                           if (response.ok) {
                               feedbackContainer.innerHTML = `<p style="color: green;">Pool created successfully: ${result.pool_name || `Pool #${result.pool_id}`}.</p>`;
@@ -345,13 +353,13 @@ async function loadContent(page) {
                       } catch (error) {
                           feedbackContainer.innerHTML = '<p style="color: red;">An error occurred. Please try again later.</p>';
                       }
-                  });
-      
+                  });     
                   // Eventi per i pulsanti "Add Reward"
                   document.querySelectorAll('.add-reward-button').forEach(button => {
                       button.addEventListener('click', async function() {
                           const card = this.closest('.card');
                           const tokenSymbol = card.querySelector('.token-symbol').value.trim();
+                          const totalRewardToken = card.querySelector('.token-total-reward').value;
                           const dailyReward = parseFloat(card.querySelector('.token-daily-reward').value);
                           const poolId = this.getAttribute('data-pool-id');
       
@@ -363,8 +371,7 @@ async function loadContent(page) {
                           }
       
                           const postUrl = `https://iamemanuele.pythonanywhere.com/add_pool_reward?user_id=${userId}&usx_token=${token}`;
-                          const data = { pool_id: poolId, token_symbol: tokenSymbol, daily_reward: dailyReward };
-      
+                          const data = { pool_id: poolId, token_symbol: tokenSymbol, daily_reward: dailyReward, total_reward_token: totalRewardToken };     
                           const feedbackContainer = card.querySelector('.feedback');
                           feedbackContainer.innerHTML = '<p>Processing request...</p>';
       

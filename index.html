@@ -28,9 +28,6 @@
       </div>
     </div>
     <div class="content-frame" id="content-frame" style="margin-top: calc(100px + 5px + 55px); position: relative; overflow: auto;">
-        <!-- Smart Scroll Buttons -->
-        <button id="scroll-down" style="display: none; position: absolute; bottom: 10px; right: 10px; z-index: 1000; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 1rem; cursor: pointer;">⬇️ Smart Scroll</button>
-        <button id="scroll-up" style="display: none; position: absolute; top: 10px; right: 10px; z-index: 1000; padding: 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px; font-size: 1rem; cursor: pointer;">⬆️ Smart Scroll</button>
         <p id="welcome-message" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 100%; width: 100%; margin: 0;">
             <span class="highlight" style="font-size: 1.2em;">📞 Calling the Boss</span><br>
             <span style="font-size: 1.2em;">💬 Asking for your data.</span><br>
@@ -47,41 +44,6 @@
     </div>
   </div>
   <script>
-    // Gestione visibilità pulsanti Smart Scroll
-    function updateScrollButtons() {
-        const contentFrame = document.getElementById('content-frame');
-        const scrollDown = document.getElementById('scroll-down');
-        const scrollUp = document.getElementById('scroll-up');
-    
-        // Controlla se il contenuto eccede l'altezza visibile
-        const isScrollable = contentFrame.scrollHeight > contentFrame.clientHeight;
-        // Mostra/nasconde i pulsanti in base alla posizione di scorrimento
-        if (isScrollable) {
-            const scrollTop = contentFrame.scrollTop;
-            const scrollHeight = contentFrame.scrollHeight;
-            const clientHeight = contentFrame.clientHeight;
-            scrollDown.style.display = 'block';
-            scrollUp.style.display = 'block';
-        } else {
-            scrollDown.style.display = 'none';
-            scrollUp.style.display = 'none';
-        }
-    }
-    
-    // Funzioni per scorrimento intelligente
-    document.getElementById('scroll-down').addEventListener('click', () => {
-        const contentFrame = document.getElementById('content-frame');
-        contentFrame.scrollBy({ top: 100, behavior: 'smooth' });
-    });
-    
-    document.getElementById('scroll-up').addEventListener('click', () => {
-        const contentFrame = document.getElementById('content-frame');
-        contentFrame.scrollBy({ top: -100, behavior: 'smooth' });
-    });
-    
-    // Aggiungi listener per aggiornare i pulsanti durante lo scorrimento
-    document.getElementById('content-frame').addEventListener('scroll', updateScrollButtons);
-      
     // Funzione per ottenere i parametri dalla query string dell'URL
     function getQueryParam(param) {
         const urlParams = new URLSearchParams(window.location.search);
@@ -205,27 +167,6 @@
     // Esegui la richiesta al caricamento della pagina
     fetchWaxAccount();
     async function loadContent(page) {
-        function activateSmartScroll() {
-            const scrollDown = document.getElementById('scroll-down');
-            const scrollUp = document.getElementById('scroll-up');
-            const contentFrame = document.getElementById('content-frame');
-            // Posiziona i pulsanti in modo fisso e visibile
-            scrollDown.style.position = 'fixed';
-            scrollDown.style.bottom = '10px';
-            scrollDown.style.right = '10px';
-            scrollDown.style.display = 'block'; // Mostra il pulsante
-            scrollUp.style.position = 'fixed';
-            scrollUp.style.top = '10px';
-            scrollUp.style.right = '10px';
-            scrollUp.style.display = 'block'; // Mostra il pulsante
-            // Aggiungi listener per scrollare
-            scrollDown.addEventListener('click', () => {
-                contentFrame.scrollBy({ top: 100, behavior: 'smooth' });
-            });
-            scrollUp.addEventListener('click', () => {
-                contentFrame.scrollBy({ top: -100, behavior: 'smooth' });
-            });
-        }
         const contentFrame = document.getElementById("content-frame");
         let url;
         switch(page) {
@@ -573,7 +514,6 @@
                       console.error('Error fetching staking pool data:', error);
                       contentFrame.innerHTML = '<p>Failed to load staking pools. Please try again later.</p>';
                   });
-                  activateSmartScroll();
           } else if (page === 'manage_nfts_farms') {
         const contentFrame = document.getElementById("content-frame");
     
@@ -999,7 +939,6 @@
                     console.error('Error fetching farm data:', error);
                     contentFrame.innerHTML = '<p>Failed to load farms. Please try again later.</p>';
                 });
-                activateSmartScroll();
             } else if (page === 'balance') {
               if (!data || !data.balances || data.balances.length === 0) {
                 contentFrame.innerHTML = `
@@ -1327,7 +1266,6 @@
                     contentFrame.innerHTML = '<p>Error updating balances. Please try again.</p>';
                 }
             }
-            activateSmartScroll();
         }
           else if (page === 'staking_farms') {
               let showAllPools = true; // Stato per il pulsante switch
@@ -1549,7 +1487,6 @@
         }
     
         loadPools(); // Carica le pool inizialmente
-        activateSmartScroll();
     } else if (page === 'mynfts') {
                 if (!data || !Array.isArray(data.nfts)) {
                     console.error("NFT data is missing or invalid.");
@@ -1857,7 +1794,6 @@
                         console.error("Error rendering the NFTs:", error);
                         contentFrame.innerHTML = `<p>Error: Unable to render NFTs. Please try again later.</p>`;
                     }
-                    activateSmartScroll();
                 } else if (page === 'profile') {
         contentFrame.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -2304,7 +2240,6 @@
                 card.style.display = "none";
             }
         }
-        activateSmartScroll();
           } else if (page === 'waxdao_pools') {
               let showAllFarms = true; // Stato per il pulsante switch
           
@@ -2523,7 +2458,6 @@
                             }
                         }
                         loadNFTFarms(); // Carica inizialmente
-                        activateSmartScroll();
                     }         
                 } catch (error) {
                     console.error("Error loading content for page:", page, error);

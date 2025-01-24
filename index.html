@@ -603,7 +603,7 @@ async function loadContent(page) {
                                             <button class="remove-template-button" data-template-id="${template.template_id}" style="margin-left: 10px; padding: 5px 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Remove Template❌</button>
                                             <ul style="margin-top: 10px;">
                                                 ${template.daily_rewards.map(dr => `
-                                                    <li>
+                                                    <li style="border: 1px solid black; border-radius: 5px; padding: 10px; margin-bottom: 5px;">
                                                         <strong>${dr.token_symbol}:</strong> Current Daily Reward: ${dr.daily_reward_amount}
                                                         <button class="remove-reward-button" data-template-id="${template.template_id}" data-token-symbol="${dr.token_symbol}" style="margin-left: 10px; padding: 5px 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Remove Reward❌</button>
                                                     </li>

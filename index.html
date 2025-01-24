@@ -200,7 +200,7 @@ async function loadContent(page) {
             // Aggiungi un controllo specifico per "balance" in caso di errore 404
           if (page === 'balance' && response.status === 404) {
               contentFrame.innerHTML = `
-                  <div style="text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; font-family: Arial, sans-serif;">
+                  <div style="text-align: center; padding: 20px; border: 1px solid #333; border-radius: 8px; background-color: #f9f9f9; font-family: Arial, sans-serif;">
                       <h2 style="color: #333; margin-bottom: 10px;">No Balances Found</h2>
                       <p style="color: #555; font-size: 1rem; line-height: 1.5;">
                           It seems like you don't have any balances yet. Start earning by depositing tokens!
@@ -261,7 +261,7 @@ async function loadContent(page) {
                   contentFrame.innerHTML = `
                       <h2 class="pool-title" style="text-align: center;">Creators Tool - Token Staking Pool Manager</h2>
       
-                      <div class="create-pool-form" style="margin-bottom: 20px; padding: 20px; border: 2px solid #007BFF; border-radius: 10px; box-shadow: 0px 4px 6px rgba(0, 123, 255, 0.1);">
+                      <div class="create-pool-form" style="margin-bottom: 20px; padding: 20px; border: 2px solid #333; border-radius: 10px; box-shadow: 0px 4px 6px rgba(0, 123, 255, 0.1);">
                           <h3 style="font-size: 1.5rem; color: #333; font-weight: bold; margin-bottom: 15px; text-align: center;">
                               Create a New Pool
                           </h3>
@@ -276,58 +276,59 @@ async function loadContent(page) {
                           <button id="create-pool-button" style="padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 1rem;">Create Pool</button>
                           <div id="create-pool-feedback" style="margin-top: 10px;"></div>
                       </div>
-      
+                      <!-- Main pools section deve essere delimitato da 4 bordi-->
                       <div class="pool-grid">
                           ${data.pools.map(pool => `
-                              <div class="card" style="border: 1px solid #ccc; border-radius: 10px; padding: 15px; margin-bottom: 20px; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
-
+                              <!-- Ogni pool deve essere delimitato da 4 bordi -->
+                              <div class="card" style="border: 1px solid black; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
                                   <h4>Pool: ${pool.pool_name || `Pool #${pool.pool_id}`}</h4>
                                   <p>Status: <span class="value">${pool.status}</span></p>
                                   <p>Created On: ${pool.created_at}</p>
                                   <p>Last Updated: ${pool.updated_at || "N/A"}</p>
-      
-                                  <!-- Rewards Summary -->
-                                  <h5 style="font-size: 1.2rem; color: #333; font-weight: bold; margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd;">
-
-                                      Your Total Rewards Deposited for This Staking Pool:
-                                  </h5>
-                                  <ul>
-                                    ${pool.rewards.map(reward => `
-                                      <li style="color: #003366; font-family: Arial, sans-serif; margin-bottom: 5px; padding: 5px; border: 1px solid #e0e0e0; border-radius: 5px;">
-                                        <span style="font-weight: bold;">Token:</span> ${reward.token_symbol} 
-                                        <span style="font-weight: bold;">Remaining Quantity:</span> ${reward.total_reward_deposit} 
-                                        <span style="font-weight: bold;">Daily Distributed:</span> ${reward.daily_reward}
-                                      </li>
-                                    `).join('')}
-                                  </ul>
-                                  <!-- Add Reward Tokens -->
-                                  <h4 style="font-size: 1.1rem; color: #333; font-weight: bold; margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd;">
-                                      Add or Deposit Rewards to Your Staking Pool
-                                  </h4>
-                                  <h5 style="font-size: 1rem; color: #555; font-weight: normal; margin-bottom: 3px;">
-                                      Add new tokens as rewards or refill an existing reward to keep your staking pool attractive for users.
-                                  </h5>
-
-                                  <div style="margin-top: 10px;">
-                                      <select class="token-total-reward" style="margin-right: 3px; padding: 3px; font-size: 0.9rem; width: 40%;">
-                                          <option value="">Select Reward Token</option>
-                                          ${data.balance.map(balance => `<option value="${balance.token_symbol}">${balance.token_symbol} (available: ${balance.amount.toFixed(2)})</option>`).join('')}
-                                      </select>
-                                      <input type="number" class="reward-amount" placeholder="Amount to dedicate" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 30%;" />
-                                      <input type="number" class="token-daily-reward" placeholder="Daily Reward" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 30%;"/>
-                                      <button class="add-reward-button" data-pool-id="${pool.pool_id}" style="padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Add Reward</button>
+                                  <div style="border: 1px solid black; border-radius: 5px; padding: 10px; margin-top: 20px;">
+                                      <h5 style="font-size: 1.2rem; color: #333; font-weight: bold;">
+                                          Your Total Rewards Deposited for This Staking Pool:
+                                      </h5>
+                                      <div style="border: 1px solid black; border-radius: 5px; padding: 10px; margin-top: 10px;">
+                                          <ul>
+                                              ${pool.rewards.map(reward => `
+                                                  <li style="color: #003366; font-family: Arial, sans-serif; margin-bottom: 5px; padding: 5px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                                                      <span style="font-weight: bold;">Token:</span> ${reward.token_symbol} 
+                                                      <span style="font-weight: bold;">Remaining Quantity:</span> ${reward.total_reward_deposit} 
+                                                      <span style="font-weight: bold;">Daily Distributed:</span> ${reward.daily_reward}
+                                                  </li>
+                                              `).join('')}
+                                          </ul>
+                                      </div>
                                   </div>
-
-                                  <!-- Feedback dinamico -->
-                                  <div class="feedback" style="margin-top: 10px;"></div>
-      
-                                  <!-- Change Pool Status -->
-                                  <h5>Change Pool Status:</h5>
-                                  <select class="pool-status-selector" data-pool-id="${pool.pool_id}" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 50%;">
-                                      <option value="active" ${pool.status === 'active' ? 'selected' : ''}>Active</option>
-                                      <option value="closed" ${pool.status === 'closed' ? 'selected' : ''}>Closed</option>
-                                  </select>
-                                  <button class="update-status-button" data-pool-id="${pool.pool_id}" style="padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Update Status</button>
+                                  <div style="border: 1px solid black; border-radius: 5px; padding: 10px; margin-top: 20px;">
+                                      <h4 style="font-size: 1.1rem; color: #333; font-weight: bold;">
+                                          Add or Deposit Rewards to Your Staking Pool
+                                      </h4>
+                                      <h5 style="font-size: 1rem; color: #555; font-weight: normal; margin-bottom: 3px;">
+                                          Add new tokens as rewards or refill an existing reward to keep your staking pool attractive for users.
+                                      </h5>
+                                      <div style="margin-top: 10px;">
+                                          <select class="token-total-reward" style="margin-right: 3px; padding: 3px; font-size: 0.9rem; width: 40%;">
+                                              <option value="">Select Reward Token</option>
+                                              ${data.balance.map(balance => `<option value="${balance.token_symbol}">${balance.token_symbol} (available: ${balance.amount.toFixed(2)})</option>`).join('')}
+                                          </select>
+                                          <input type="number" class="reward-amount" placeholder="Amount to dedicate" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 30%;" />
+                                          <input type="number" class="token-daily-reward" placeholder="Daily Reward" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 30%;" />
+                                          <button class="add-reward-button" data-pool-id="${pool.pool_id}" style="padding: 5px 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Add Reward</button>
+                                      </div>
+                                      <!-- Feedback dinamico -->
+                                      <div class="feedback" style="margin-top: 10px;"></div>    
+                                  </div>
+                                  <!-- Change Pool Status deve essere  delimitato da 4 bordi-->-->
+                                  <div style="border: 1px solid black; border-radius: 5px; padding: 10px; margin-top: 20px;">
+                                      <h5>Change Pool Status:</h5>
+                                      <select class="pool-status-selector" data-pool-id="${pool.pool_id}" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 50%;">
+                                          <option value="active" ${pool.status === 'active' ? 'selected' : ''}>Active</option>
+                                          <option value="closed" ${pool.status === 'closed' ? 'selected' : ''}>Closed</option>
+                                      </select>
+                                      <button class="update-status-button" data-pool-id="${pool.pool_id}" style="padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Update Status</button>
+                                  </div>
                               </div>
                           `).join('')}
                       </div>

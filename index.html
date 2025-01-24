@@ -236,7 +236,7 @@
     
             if (!response.ok) {
                 // Aggiungi un controllo specifico per "balance" in caso di errore 404
-              'balance' && response.status === 404) {
+              if (page === 'balance' && response.status === 404) {
                   contentFrame.innerHTML = `
                       <div style="text-align: center; padding: 20px; border: 1px solid #333; border-radius: 8px; background-color: #f9f9f9; font-family: Arial, sans-serif;">
                           <h2 style="color: #333; margin-bottom: 10px;">No Balances Found</h2>
@@ -257,7 +257,7 @@
                   `;
                   return; // Esce dalla funzione per evitare altre logiche
                 }
-                else 'mynfts') {
+                else if (page === 'mynfts') {
                     contentFrame.innerHTML = `
                         <div style="text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; font-family: Arial, sans-serif;">
                             <h2 style="color: #333; margin-bottom: 15px; font-size: 1.8rem; font-weight: bold; text-align: center;">

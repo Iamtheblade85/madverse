@@ -2503,37 +2503,36 @@
                         }
                         loadNFTFarms(); // Carica inizialmente
                         activateSmartScroll();
-                    }      
+                    }
+                        function activateSmartScroll() {
+                        const scrollDown = document.getElementById('scroll-down');
+                        const scrollUp = document.getElementById('scroll-up');
+                        const contentFrame = document.getElementById('content-frame');
+                    
+                        // Posiziona i pulsanti in modo fisso e visibile
+                        scrollDown.style.position = 'fixed';
+                        scrollDown.style.bottom = '10px';
+                        scrollDown.style.right = '10px';
+                        scrollDown.style.display = 'block'; // Mostra il pulsante
+                    
+                        scrollUp.style.position = 'fixed';
+                        scrollUp.style.top = '10px';
+                        scrollUp.style.right = '10px';
+                        scrollUp.style.display = 'block'; // Mostra il pulsante
+                    
+                        // Aggiungi listener per scrollare
+                        scrollDown.addEventListener('click', () => {
+                            contentFrame.scrollBy({ top: 100, behavior: 'smooth' });
+                        });
+                        scrollUp.addEventListener('click', () => {
+                            contentFrame.scrollBy({ top: -100, behavior: 'smooth' });
+                        });
+                    }          
                 } catch (error) {
                     console.error("Error loading content for page:", page, error);
                     contentFrame.innerHTML = `<p>Error loading ${page}: ${error.message}</p>`;
                 }
               }
-                  function activateSmartScroll() {
-                  const scrollDown = document.getElementById('scroll-down');
-                  const scrollUp = document.getElementById('scroll-up');
-                  const contentFrame = document.getElementById('content-frame');
-              
-                  // Posiziona i pulsanti in modo fisso e visibile
-                  scrollDown.style.position = 'fixed';
-                  scrollDown.style.bottom = '10px';
-                  scrollDown.style.right = '10px';
-                  scrollDown.style.display = 'block'; // Mostra il pulsante
-              
-                  scrollUp.style.position = 'fixed';
-                  scrollUp.style.top = '10px';
-                  scrollUp.style.right = '10px';
-                  scrollUp.style.display = 'block'; // Mostra il pulsante
-              
-                  // Aggiungi listener per scrollare
-                  scrollDown.addEventListener('click', () => {
-                      contentFrame.scrollBy({ top: 100, behavior: 'smooth' });
-                  });
-                  scrollUp.addEventListener('click', () => {
-                      contentFrame.scrollBy({ top: -100, behavior: 'smooth' });
-                  });
-              }
-
               // Funzione per ricaricare gli NFT di INVENTORY e aggiornare il contenuto della pagina
               async function reloadNFTs() {
                   const url = `https://iamemanuele.pythonanywhere.com/mynfts?user_id=${userId}&usx_token=${token}`;

@@ -9,12 +9,12 @@
 <body>
   <div class="container">
     <!-- Logo Section -->
-    <div class="logo-section">
+    <div class="logo-section" style="position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;">
       <div class="logo-container">
         <div class="logo">ChipsWallet</div>
       </div>
     </div>
-    <div class="menu-section">
+    <div class="menu-section" style="position: fixed; top: calc(100px + 5px); left: 0; width: 100%; z-index: 999;">
       <div class="menu-row">
         <button onclick="loadContent('balance')">💼Wallet</button>
         <button onclick="loadContent('staking_farms')">🌱Staking</button>
@@ -27,7 +27,7 @@
         <button onclick="loadContent('manage_token_staking_pools')">💬TokenStaking Creators</button>
       </div>
     </div>
-    <div class="content-frame" id="content-frame">
+    <div class="content-frame" id="content-frame" style="margin-top: calc(100px + 5px + 50px);">
     <p id="welcome-message" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 100%; width: 100%; margin: 0;">
         <span class="highlight" style="font-size: 1.2em;">📞 Calling the Boss</span><br>
         <span style="font-size: 1.2em;">💬 Asking for your data.</span><br>

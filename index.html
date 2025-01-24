@@ -315,18 +315,18 @@ async function loadContent(page) {
                   `;
                   document.getElementById('create-pool-button').addEventListener('click', async function() {
                       const poolName = document.getElementById('new-pool-name').value.trim();
-                      const depositTokenId = document.getElementById('new-pool-deposit-token').value;
+                      const depositTokenSymbol = document.getElementById('new-pool-deposit-token').value;
                       const depositAmount = parseFloat(document.getElementById('new-pool-deposit-amount').value);
                   
-                      if (!depositTokenId || isNaN(depositAmount) || depositAmount <= 0) {
+                      if (!depositTokenSymbol || isNaN(depositAmount) || depositAmount <= 0) {
                           const feedback = document.getElementById('create-pool-feedback');
                           feedback.innerHTML = '<p style="color: red;">Please select a deposit token and enter a valid amount.</p>';
                           return;
                       }
                   
                       const postUrl = `https://iamemanuele.pythonanywhere.com/create_staking_pool?user_id=${userId}&usx_token=${token}`;
-                      const data = { pool_name: poolName, deposit_token_id: depositTokenId, deposit_amount: depositAmount };
-                  
+                      const data = { pool_name: poolName, deposit_token_symbol: depositTokenSymbol, deposit_amount: depositAmount };
+                      console.log("Data for the BE-Post:", data);
                       const feedbackContainer = document.getElementById('create-pool-feedback');
                       feedbackContainer.innerHTML = '<p>Processing request...</p>';
                   

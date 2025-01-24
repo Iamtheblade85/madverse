@@ -290,11 +290,14 @@ async function loadContent(page) {
                                       Your Total Rewards Deposited for This Staking Pool:
                                   </h5>
                                   <ul>
-                                      ${pool.rewards.map(reward => `
-                                          <li>${reward.token_symbol}: Total ${reward.total_reward_deposit}, Daily ${reward.daily_reward}</li>
-                                      `).join('')}
+                                    ${pool.rewards.map(reward => `
+                                      <li style="color: #003366; font-family: Arial, sans-serif;">
+                                        <span style="font-weight: bold;">Token:</span> ${reward.token_symbol} 
+                                        <span style="font-weight: bold;">Remaining Quantity:</span> ${reward.total_reward_deposit} 
+                                        <span style="font-weight: bold;">Daily Distributed:</span> ${reward.daily_reward}
+                                      </li>
+                                    `).join('')}
                                   </ul>
-      
                                   <!-- Add Reward Tokens -->
                                   <h3 style="font-size: 1.5rem; color: #333; font-weight: bold; margin-bottom: 15px;">
                                       Add or Deposit Rewards to Your Staking Pool

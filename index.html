@@ -222,19 +222,21 @@ async function loadContent(page) {
             else if (page === 'mynfts') {
                 contentFrame.innerHTML = `
                     <div style="text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; font-family: Arial, sans-serif;">
-                        <h2 style="color: #333; margin-bottom: 10px;">No NFTs Found</h2>
-                        <p style="color: #555; font-size: 1rem; line-height: 1.5;">
-                            It seems like you don't have any NFTs yet. Start your journey by depositing your NFTs!
+                        <h2 style="color: #333; margin-bottom: 15px; font-size: 1.8rem; font-weight: bold; text-align: center;">
+                            No NFTs Found 😞
+                        </h2>
+                        <p style="color: #555; font-size: 1rem; line-height: 1.6; text-align: center;">
+                            Looks like you don’t have any NFTs in your wallet yet. Ready to join the NFT revolution? Start by depositing your favorite NFTs now!
                         </p>
-                        <p style="color: #555; font-size: 1rem; line-height: 1.5;">
-                            Transfer NFTs from your <strong>AtomicHUB</strong>, <strong>NFTHive</strong>, or <strong>NeftyBlock</strong> wallet to: 
+                        <p style="color: #555; font-size: 1rem; line-height: 1.6; text-align: center;">
+                            Send your NFTs from trusted wallets like <strong>AtomicHUB</strong>, <strong>NFTHive</strong>, or <strong>NeftyBlocks</strong> to: 
                             <strong style="color: #000;">xcryptochips</strong>.
                         </p>
-                        <p style="color: #555; font-size: 1rem; line-height: 1.5;">
-                            Use the memo: <strong style="color: #000;">"deposit nft"</strong>.
+                        <p style="color: #555; font-size: 1rem; line-height: 1.6; text-align: center;">
+                            Don't forget to include this memo: <strong style="color: #000;">"deposit nft"</strong>.
                         </p>
-                        <p style="margin-top: 20px; font-size: 0.9rem; color: #777;">
-                            Once you've deposited your NFTs, they will appear here, and you can start using them in our ecosystem to earn NFT-Staking rewards!
+                        <p style="margin-top: 20px; font-size: 0.9rem; color: #777; text-align: center;">
+                            Once your NFTs are deposited, they’ll appear here. Use them in our ecosystem to start earning rewards through NFT staking!
                         </p>
                     </div>
                 `;
@@ -260,8 +262,12 @@ async function loadContent(page) {
                       <h2 class="pool-title" style="text-align: center;">Manage Your Token Staking Pools</h2>
       
                       <div class="create-pool-form" style="margin-bottom: 20px; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
-                          <h3>Create a New Pool</h3>
-                          <h4>First step is to choose which Token you want to let users stake. Once you create the Staking Pool, you´ll be able to define how much tokens you want to set as reward. </h4>
+                          <h3 style="font-size: 1.5rem; color: #333; font-weight: bold; margin-bottom: 15px; text-align: center;">
+                              Create a New Pool
+                          </h3>
+                          <h4 style="font-size: 1.2rem; color: #555; font-weight: normal; margin-bottom: 10px; text-align: center;">
+                              Choose the token users will stake and define rewards for your pool. Start building your staking economy!
+                          </h4>
                           <input type="text" id="new-pool-name" placeholder="Pool Name (optional)" style="margin-bottom: 10px; padding: 5px; width: 100%; font-size: 1rem;" />
                           <select id="new-pool-deposit-token" style="margin-bottom: 10px; padding: 5px; width: 100%; font-size: 1rem;">
                               <option value="">Select Deposit Token</option>
@@ -280,7 +286,9 @@ async function loadContent(page) {
                                   <p>Last Updated: ${pool.updated_at || "N/A"}</p>
       
                                   <!-- Rewards Summary -->
-                                  <h5>Your deposited Total-Rewards for this Staking Pool:</h5>
+                                  <h5 style="font-size: 1.2rem; color: #333; font-weight: bold; margin-top: 20px;">
+                                      Your Total Rewards Deposited for This Staking Pool:
+                                  </h5>
                                   <ul>
                                       ${pool.rewards.map(reward => `
                                           <li>${reward.token_symbol}: Total ${reward.total_reward_deposit}, Daily ${reward.daily_reward}</li>
@@ -288,8 +296,13 @@ async function loadContent(page) {
                                   </ul>
       
                                   <!-- Add Reward Tokens -->
-                                  <h3>Add or Deposit one or more reward to this Staking Pool</h3>
-                                  <h4>You can add other tokens as Pool-Rewards or refill a Token-Reward </h4>
+                                  <h3 style="font-size: 1.5rem; color: #333; font-weight: bold; margin-bottom: 15px;">
+                                      Add or Deposit Rewards to Your Staking Pool
+                                  </h3>
+                                  <h4 style="font-size: 1.2rem; color: #555; font-weight: normal; margin-bottom: 10px;">
+                                      Add new tokens as rewards or refill an existing reward to keep your staking pool attractive for users.
+                                  </h4>
+
                                   <div style="margin-top: 10px;">
                                       <select class="token-total-reward" style="margin-right: 5px; padding: 5px; font-size: 0.9rem; width: 40%;">
                                           <option value="">Select Reward Token</option>
@@ -338,12 +351,21 @@ async function loadContent(page) {
                       const poolName = document.getElementById('new-pool-name').value.trim();
                       const depositTokenSymbol = document.getElementById('new-pool-deposit-token').value;
                   
-                      if (!depositTokenSymbol || isNaN(depositAmount)) {
+                      if (!depositTokenSymbol || isNaN(user_wax_account)) {
                           const feedback = document.getElementById('create-pool-feedback');
                           feedback.innerHTML = '<p style="color: red;">Please select a whitelisted token to proceed.</p>';
                           return;
+                      }if (!depositTokenSymbol) {
+                          const feedback = document.getElementById('create-pool-feedback');
+                          feedback.innerHTML = '<p style="color: red;">🚨 You need to select a whitelisted token to create a pool. Please choose one from the dropdown menu!</p>';
+                          return;
                       }
-                  
+                      
+                      if (!user_wax_account) {
+                          const feedback = document.getElementById('create-pool-feedback');
+                          feedback.innerHTML = '<p style="color: red;">🚨 WAX Account not found! Please make sure you are logged in correctly and try again.</p>';
+                          return;
+                      }                  
                       const postUrl = `https://iamemanuele.pythonanywhere.com/create_staking_pool?user_id=${userId}&usx_token=${token}`;
                       const data = { 
                           pool_id: poolId, 
@@ -365,14 +387,13 @@ async function loadContent(page) {
                   
                           const result = await response.json();
                           if (response.ok) {
-                              feedbackContainer.innerHTML = `<p style="color: green;">Pool created successfully: ${result.pool_name || `Pool #${result.pool_id}`}.</p>`;
-                              
-                              // Ricarica il contenuto della pagina per aggiornare i dati
-                              setTimeout(() => {
-                                  loadContent('manage_token_staking_pools');
-                              }, 3000); // Ritardo di 3 secondi per mostrare il messaggio di successo
+                              feedbackContainer.innerHTML = `
+                                <p style="color: green; font-size: 1.1rem;">
+                                    🎉 Pool created successfully: ${result.pool_name || `Pool #${result.pool_id}`}! Refreshing the page to show your new pool...
+                                </p>`;
+                              setTimeout(() => loadContent('manage_token_staking_pools'), 3000); // Aggiorna i contenuti della pagina
                           } else {
-                              feedbackContainer.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+                              feedbackContainer.innerHTML = `<p style="color: red; font-size: 1.1rem;">🚨 Oops! ${result.error}</p>`;
                           }
                       } catch (error) {
                           feedbackContainer.innerHTML = '<p style="color: red;">An error occurred. Please try again later.</p>';
@@ -413,7 +434,7 @@ async function loadContent(page) {
                               const result = await response.json();
                               if (response.ok) {
                                   const successMessage = createMessageElement(
-                                      `Successfully added reward: ${tokenSymbol} (Total: ${rewardAmount}, Daily: ${dailyReward}).`,
+                                      `🎉 Great! Reward added successfully: ${tokenSymbol} (Total: ${rewardAmount.toFixed(2)}, Daily: ${dailyReward.toFixed(2)}). Refreshing the page to show the updated rewards...`,
                                       true
                                   );
                                   feedbackContainer.innerHTML = '';
@@ -430,7 +451,10 @@ async function loadContent(page) {
                                   feedbackContainer.appendChild(errorMessage);
                                 }
                           } catch (error) {
-                              const errorMessage = createMessageElement('An error occurred. Please try again.', false);
+                              const errorMessage = createMessageElement(
+                                  '⚠️ Oops! Something went wrong. Please check your input or try again later.',
+                                  false
+                              );
                               feedbackContainer.innerHTML = '';
                               feedbackContainer.appendChild(errorMessage);
                           }

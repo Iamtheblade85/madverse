@@ -367,7 +367,11 @@ async function loadContent(page) {
                           const result = await response.json();
                           if (response.ok) {
                               feedbackContainer.innerHTML = `<p style="color: green;">Pool created successfully: ${result.pool_name || `Pool #${result.pool_id}`}.</p>`;
-                              setTimeout(() => location.reload(), 2000);
+                              
+                              // Ricarica il contenuto della pagina per aggiornare i dati
+                              setTimeout(() => {
+                                  loadContent('manage_token_staking_pools');
+                              }, 1500); // Ritardo di 1,5 secondi per mostrare il messaggio di successo
                           } else {
                               feedbackContainer.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
                           }
@@ -415,11 +419,17 @@ async function loadContent(page) {
                                   );
                                   feedbackContainer.innerHTML = '';
                                   feedbackContainer.appendChild(successMessage);
-                              } else {
+                              
+                                  // Ricarica il contenuto della pagina per aggiornare i dati
+                                  setTimeout(() => {
+                                      loadContent('manage_token_staking_pools');
+                                  }, 3000); // Ritardo di 3 secondi per mostrare il messaggio di successo
+                              }
+                               else {
                                   const errorMessage = createMessageElement(`Error: ${result.error}`, false);
                                   feedbackContainer.innerHTML = '';
                                   feedbackContainer.appendChild(errorMessage);
-                              }
+                                }
                           } catch (error) {
                               const errorMessage = createMessageElement('An error occurred. Please try again.', false);
                               feedbackContainer.innerHTML = '';

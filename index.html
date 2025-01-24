@@ -261,7 +261,7 @@ async function loadContent(page) {
                   contentFrame.innerHTML = `
                       <h2 class="pool-title" style="text-align: center;">Creators Tool - Token Staking Pool Manager</h2>
       
-                      <div class="create-pool-form" style="margin-bottom: 20px; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
+                      <div class="create-pool-form" style="margin-bottom: 20px; padding: 20px; border: 2px solid #007BFF; border-radius: 10px; box-shadow: 0px 4px 6px rgba(0, 123, 255, 0.1);">
                           <h3 style="font-size: 1.5rem; color: #333; font-weight: bold; margin-bottom: 15px; text-align: center;">
                               Create a New Pool
                           </h3>
@@ -279,19 +279,21 @@ async function loadContent(page) {
       
                       <div class="pool-grid">
                           ${data.pools.map(pool => `
-                              <div class="card">
+                              <div class="card" style="border: 1px solid #ccc; border-radius: 10px; padding: 15px; margin-bottom: 20px; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
+
                                   <h4>Pool: ${pool.pool_name || `Pool #${pool.pool_id}`}</h4>
                                   <p>Status: <span class="value">${pool.status}</span></p>
                                   <p>Created On: ${pool.created_at}</p>
                                   <p>Last Updated: ${pool.updated_at || "N/A"}</p>
       
                                   <!-- Rewards Summary -->
-                                  <h5 style="font-size: 1.2rem; color: #333; font-weight: bold; margin-top: 20px;">
+                                  <h5 style="font-size: 1.2rem; color: #333; font-weight: bold; margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd;">
+
                                       Your Total Rewards Deposited for This Staking Pool:
                                   </h5>
                                   <ul>
                                     ${pool.rewards.map(reward => `
-                                      <li style="color: #003366; font-family: Arial, sans-serif;">
+                                      <li style="color: #003366; font-family: Arial, sans-serif; margin-bottom: 5px; padding: 5px; border: 1px solid #e0e0e0; border-radius: 5px;">
                                         <span style="font-weight: bold;">Token:</span> ${reward.token_symbol} 
                                         <span style="font-weight: bold;">Remaining Quantity:</span> ${reward.total_reward_deposit} 
                                         <span style="font-weight: bold;">Daily Distributed:</span> ${reward.daily_reward}
@@ -299,7 +301,7 @@ async function loadContent(page) {
                                     `).join('')}
                                   </ul>
                                   <!-- Add Reward Tokens -->
-                                  <h4 style="font-size: 1.1rem; color: #333; font-weight: bold; margin-bottom: 3px;">
+                                  <h4 style="font-size: 1.1rem; color: #333; font-weight: bold; margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd;">
                                       Add or Deposit Rewards to Your Staking Pool
                                   </h4>
                                   <h5 style="font-size: 1rem; color: #555; font-weight: normal; margin-bottom: 3px;">

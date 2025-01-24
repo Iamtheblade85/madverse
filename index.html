@@ -1546,7 +1546,7 @@
             
                 try {
                     contentFrame.innerHTML = `
-                        <div style="padding: 3px;">
+                        <div style="padding-top: calc(100px + 5px + 55px);">
                             <!-- Titolo della sezione -->
                             <h2 class="section-title" style="font-size: 2rem; font-weight: bold; text-align: center; color: #333; text-shadow: 1px 1px 5px rgba(0,0,0,0.2);">
                                 Your NFTs Inventory
@@ -1557,7 +1557,7 @@
                                 <p>You own <span style="font-weight: bold; color: #4CAF50;">${data.nfts.length}</span> NFTs.</p>
                             </div>
                 
-                            <div class="menu-section" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; padding: 10px 0;">
+                            <div class="menu-section" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; padding: 10px 0; margin-top: calc(100px + 5px + 55px);">
                                 <!-- Filtri aggiuntivi -->
                                 <div class="filter-switch" style="flex: 1; text-align: center;">
                                     <label for="nft-filter" style="display: block; margin-bottom: 1px;">Filter NFTs:</label>
@@ -1594,7 +1594,7 @@
                                     </select>
                                 </div>
                             </div>           
-                            <div class="nft-grid" id="nft-grid">
+                            <div class="nft-grid" id="nft-grid" style="margin-top: calc(100px + 5px + 55px);">
                                 ${data.nfts.map(nft => `
                                     <div class="card">
                                         ${nft.template_info && nft.template_info.img_hash && !nft.template_info.img_hash.startsWith('Qm') ? `

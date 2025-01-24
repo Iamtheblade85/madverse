@@ -371,7 +371,7 @@ async function loadContent(page) {
                               // Ricarica il contenuto della pagina per aggiornare i dati
                               setTimeout(() => {
                                   loadContent('manage_token_staking_pools');
-                              }, 1500); // Ritardo di 1,5 secondi per mostrare il messaggio di successo
+                              }, 3000); // Ritardo di 3 secondi per mostrare il messaggio di successo
                           } else {
                               feedbackContainer.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
                           }
@@ -397,7 +397,7 @@ async function loadContent(page) {
                           }
                   
                           const postUrl = `https://iamemanuele.pythonanywhere.com/add_pool_reward?user_id=${userId}&usx_token=${token}`;
-                          const data = { pool_id: poolId, token_symbol: tokenSymbol, total_reward: rewardAmount, daily_reward: dailyReward };
+                          const data = { pool_id: poolId, token_symbol: tokenSymbol, total_reward: rewardAmount, daily_reward: dailyReward, wax_account: user_wax_account };
                   
                           const feedbackContainer = card.querySelector('.feedback');
                           feedbackContainer.innerHTML = '<p>Processing request...</p>';

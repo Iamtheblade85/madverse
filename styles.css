@@ -1101,6 +1101,16 @@ button:hover {
     transform: translateY(-5px) scale(1.1) rotateX(5deg) rotateY(5deg);
     box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
 }
+.scroll-controls {
+  position: fixed;
+  right: 10px; /* Rimane vicino al bordo destro */
+  top: 50%; /* Posizionato a metà dello schermo */
+  transform: translateY(-50%); /* Centra esattamente in verticale */
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Spazio tra i pulsanti */
+  z-index: 1001; /* Sopra il contenuto */
+}
 
 .scroll-button {
   padding: 5px 10px; /* Riduce il padding del 50% */
@@ -1108,10 +1118,15 @@ button:hover {
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 2.5px; /* Riduce il bordo arrotondato */
+  border-radius: 2.5px; /* Mantiene proporzioni arrotondate ridotte */
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
+
+.scroll-button:hover {
+  background-color: #0056b3;
+}
+
 
 .scroll-button:hover {
   background-color: #0056b3;

@@ -1,36 +1,8 @@
     :root {
       --scale-factor: 0.95; /* Scala globale al 95% */
     }
-/* Stile per il contenitore fisso */
-.scroll-controls {
-  position: fixed;
-  right: 10px; /* Distanza dal bordo destro */
-  top: 50%; /* Posizionamento verticale a metà */
-  transform: translateY(-50%); /* Centrare esattamente a metà */
-  display: flex;
-  flex-direction: column;
-  gap: 10px; /* Spazio tra i pulsanti */
-  z-index: 1001; /* Assicurati che stia sopra il contenuto */
-  margin: 1px;
-  pointer-events: auto; /* Permetti l'interazione solo con i pulsanti */
-}
 
-/* Stile per i pulsanti */
-.scroll-button {
-  padding: 10px 20px;
-  font-size: 14px;
-  background-color: #007BFF;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
 
-.scroll-button:hover {
-  background-color: #0056b3;
-}
     /* Base Styles */
     body {
       margin: 0;
@@ -1130,4 +1102,28 @@ button:hover {
     box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
 }
 
+.scroll-controls {
+  position: fixed;
+  right: 10px; /* Rimane vicino al bordo destro */
+  top: 50%; /* Posizionato a metà dello schermo */
+  transform: translateY(-50%); /* Centra esattamente in verticale */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1001; /* Sopra il contenuto */
+}
 
+.scroll-button {
+  padding: 10px 20px;
+  font-size: 14px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.scroll-button:hover {
+  background-color: #0056b3;
+}

@@ -27,7 +27,7 @@
         <button onclick="loadContent('manage_token_staking_pools')">💬TokenStaking Creators</button>
       </div>
     </div>
-    <div class="content-frame" id="content-frame" style="margin-top: calc(100px + 5px + 55px); position: relative; overflow: auto;">
+    <div class="content-frame" id="content-frame" style="margin-top: calc(160px + 5px + 55px); position: relative; overflow: auto;">
         <p id="welcome-message" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 100%; width: 100%; margin: 0;">
             <span class="highlight" style="font-size: 1.2em;">📞 Calling the Boss</span><br>
             <span style="font-size: 1.2em;">💬 Asking for your data.</span><br>
@@ -2493,20 +2493,13 @@
                       contentFrame.innerHTML = '<p>Error updating NFTs. Please try again.</p>';
                   }
               } 
-document.getElementById("scroll-to-top").addEventListener("click", () => {
-  const contentFrame = document.getElementById("content-frame");
-  if (contentFrame) {
-    contentFrame.scrollTo({ top: 0, behavior: "smooth" });
-  }
-});
-
-document.getElementById("scroll-to-end").addEventListener("click", () => {
-  const contentFrame = document.getElementById("content-frame");
-  if (contentFrame) {
-    contentFrame.scrollTo({ top: contentFrame.scrollHeight, behavior: "smooth" });
-  }
-});
-
+      document.getElementById("scroll-to-top").addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      
+      document.getElementById("scroll-to-end").addEventListener("click", () => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      });
   </script>
 </body>
 </html>

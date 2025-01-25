@@ -39,6 +39,10 @@
           </div>
         </div>
     </div>
+    <div class="scroll-controls">
+      <button class="scroll-button" id="scroll-to-top">⬆️ to Top</button>
+      <button class="scroll-button" id="scroll-to-end">⬇️ to End</button>
+    </div>
     <div class="footer">
       ChipsWallet @2024 - A Wax Chain Project
     </div>
@@ -2488,7 +2492,17 @@
                       console.error("Error updating NFTs:", error);
                       contentFrame.innerHTML = '<p>Error updating NFTs. Please try again.</p>';
                   }
-              }       
+              } 
+      // Gestione pulsanti scroll
+      document.getElementById('scroll-to-top').addEventListener('click', () => {
+        const contentFrame = document.getElementById('content-frame');
+        contentFrame.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      
+      document.getElementById('scroll-to-end').addEventListener('click', () => {
+        const contentFrame = document.getElementById('content-frame');
+        contentFrame.scrollTo({ top: contentFrame.scrollHeight, behavior: 'smooth' });
+      });
   </script>
 </body>
 </html>

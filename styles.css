@@ -1103,13 +1103,12 @@ button:hover {
 }
 
 .scroll-button {
-  padding: 5px 10px; /* Ridotto del 50% rispetto al precedente 10px 20px */
-  font-size: 0.7rem; /* Ridotto del 50% rispetto al precedente 14px */
+  padding: 5px 10px; /* Riduce il padding del 50% */
+  font-size: 7px; /* Riduce il font-size del 50% */
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 5px;
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1); /* Anche l'ombra ridotta */
+  border-radius: 2.5px; /* Riduce il bordo arrotondato */
   cursor: pointer;
   transition: background-color 0.3s ease;
 }

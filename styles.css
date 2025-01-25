@@ -1112,21 +1112,27 @@ button:hover {
   z-index: 1001; /* Sopra il contenuto */
 }
 
+.scroll-controls {
+  position: fixed;
+  right: 10px; /* Rimane vicino al bordo destro */
+  top: 50%; /* Posizionato a metà dello schermo */
+  transform: translateY(-50%); /* Centra esattamente in verticale */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1001; /* Sopra il contenuto */
+}
+
 .scroll-button {
-  padding: 5px 10px; /* Riduce il padding del 50% */
-  font-size: 7px; /* Riduce il font-size del 50% */
+  padding: 10px 20px;
+  font-size: 10px;
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 2.5px; /* Mantiene proporzioni arrotondate ridotte */
+  border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
-
-.scroll-button:hover {
-  background-color: #0056b3;
-}
-
 
 .scroll-button:hover {
   background-color: #0056b3;

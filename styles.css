@@ -1,55 +1,35 @@
     :root {
       --scale-factor: 0.95; /* Scala globale al 95% */
     }
-/* Stile del container dello switch */
-.custom-switch {
-    position: relative;
-    display: inline-block;
-    width: 60px; /* 10x rispetto alla checkbox standard */
-    height: 34px;
+/* Stile per il contenitore fisso */
+.scroll-controls {
+  position: fixed;
+  right: 10px; /* Distanza dal bordo destro */
+  top: 50%; /* Posizionamento verticale a metà */
+  transform: translateY(-50%); /* Centrare esattamente a metà */
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Spazio tra i pulsanti */
+  z-index: 1001; /* Assicurati che stia sopra il contenuto */
+  margin: 1px;
+  pointer-events: auto; /* Permetti l'interazione solo con i pulsanti */
 }
 
-/* Nascondi l'input checkbox */
-.custom-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
+/* Stile per i pulsanti */
+.scroll-button {
+  padding: 10px 20px;
+  font-size: 14px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-/* La "leva" dello switch */
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: 0.4s;
-    border-radius: 34px;
-}
-
-/* Il "cerchio" interno della leva */
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: 0.4s;
-    border-radius: 50%;
-}
-
-/* Colore dello switch quando è attivo */
-input:checked + .slider {
-    background-color: #4CAF50;
-}
-
-/* Spostamento del cerchio quando lo switch è attivo */
-input:checked + .slider:before {
-    transform: translateX(26px);
+.scroll-button:hover {
+  background-color: #0056b3;
 }
     /* Base Styles */
     body {

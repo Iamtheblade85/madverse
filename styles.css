@@ -1102,24 +1102,14 @@ button:hover {
     box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
 }
 
-.scroll-controls {
-  position: fixed;
-  right: 10px; /* Rimane vicino al bordo destro */
-  top: 50%; /* Posizionato a metà dello schermo */
-  transform: translateY(-50%); /* Centra esattamente in verticale */
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 1001; /* Sopra il contenuto */
-}
-
 .scroll-button {
-  padding: 10px 20px;
-  font-size: 14px;
+  padding: 5px 10px; /* Ridotto del 50% rispetto al precedente 10px 20px */
+  font-size: 0.7rem; /* Ridotto del 50% rispetto al precedente 14px */
   background-color: #007bff;
   color: white;
   border: none;
   border-radius: 5px;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1); /* Anche l'ombra ridotta */
   cursor: pointer;
   transition: background-color 0.3s ease;
 }

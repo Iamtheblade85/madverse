@@ -546,18 +546,20 @@
                         ${data.farms.map(farm => `
                             <div class="card" style="border: 1px solid black; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
                                 <h4>Farm: ${farm.farm_name}</h4>
-                                <p>Status: 
-                                    <span class="value">${farm.status}</span>
-                                </p>
-                                <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
-                                    <select class="status-select" data-farm-id="${farm.farm_id}" style="padding: 5px; font-size: 0.9rem;">
-                                        ${['open', 'closed', 'settings'].filter(status => status !== farm.status)
-                                        .map(option => `<option value="${option}">${option.charAt(0).toUpperCase() + option.slice(1)}</option>`)
-                                        .join('')}
-                                    </select>
-                                    <button class="change-status-button" data-farm-id="${farm.farm_id}" style="padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Change</button>
+                                <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 5px;">
+                                    <p>Status: <span class="value">${farm.status}</span></p>
+                                
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <select class="status-select" data-farm-id="${farm.farm_id}" style="padding: 5px; font-size: 0.9rem;">
+                                            ${['open', 'closed', 'settings'].filter(status => status !== farm.status)
+                                            .map(option => `<option value="${option}">${option.charAt(0).toUpperCase() + option.slice(1)}</option>`)
+                                            .join('')}
+                                        </select>
+                                        <button class="change-status-button" data-farm-id="${farm.farm_id}" style="padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Change</button>
+                                    </div>
+                                
+                                    <div class="status-feedback" style="margin-top: 5px;"></div>
                                 </div>
-                                <div class="status-feedback" style="margin-top: 10px;"></div>
                                 <p>Creation Date: ${farm.creation_date}</p>
                                 <p>Last Updated: ${farm.updated_on || "N/A"}</p>
     

@@ -546,7 +546,18 @@
                         ${data.farms.map(farm => `
                             <div class="card" style="border: 1px solid black; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
                                 <h4>Farm: ${farm.farm_name}</h4>
-                                <p>Status: <span class="value">${farm.status}</span></p>
+                                <p>Status: 
+                                    <span class="value">${farm.status}</span>
+                                </p>
+                                <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                                    <select class="status-select" data-farm-id="${farm.farm_id}" style="padding: 5px; font-size: 0.9rem;">
+                                        ${['open', 'closed', 'settings'].filter(status => status !== farm.status)
+                                        .map(option => `<option value="${option}">${option.charAt(0).toUpperCase() + option.slice(1)}</option>`)
+                                        .join('')}
+                                    </select>
+                                    <button class="change-status-button" data-farm-id="${farm.farm_id}" style="padding: 5px 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Change</button>
+                                </div>
+                                <div class="status-feedback" style="margin-top: 10px;"></div>
                                 <p>Creation Date: ${farm.creation_date}</p>
                                 <p>Last Updated: ${farm.updated_on || "N/A"}</p>
     
@@ -648,6 +659,42 @@
                         `).join('')}
                     </div>
                 `;
+document.querySelectorAll('.change-status-button').forEach(button => {
+    button.addEventListener('click', async function() {
+        const farmId = this.getAttribute('data-farm-id');
+        const selectElement = document.querySelector(`.status-select[data-farm-id="${farmId}"]`);
+        const newStatus = selectElement.value;
+
+        // Trova il div per il feedback
+        const feedbackContainer = this.closest('.card').querySelector('.status-feedback');
+        feedbackContainer.innerHTML = '<p style="color: blue;">Updating status...</p>';
+
+        const postUrl = `https://iamemanuele.pythonanywhere.com/update_farm_status?user_id=${userId}&usx_token=${token}`;
+        const data = { farm_id: farmId, status: newStatus };
+
+        try {
+            const response = await fetch(postUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                feedbackContainer.innerHTML = `<p style="color: green;">Status updated to "${newStatus}" successfully.</p>`;
+                setTimeout(() => {
+                    loadContent('manage_nfts_farms'); // Ricarica la pagina dopo 5 secondi
+                }, 5000);
+            } else {
+                feedbackContainer.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+            }
+        } catch (error) {
+            console.error("Error updating farm status:", error);
+            feedbackContainer.innerHTML = `<p style="color: red;">An unexpected error occurred. Please try again later.</p>`;
+        }
+    });
+});
+              
         document.querySelectorAll('.remove-reward-button').forEach(button => {
             button.addEventListener('click', async function() {
                 const templateId = this.getAttribute('data-template-id');

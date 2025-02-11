@@ -1013,7 +1013,10 @@ document.querySelectorAll('.change-status-button').forEach(button => {
             
                                 <!-- Sezione di prelievo -->
                                 <div class="withdraw-inputs" style="display: none; margin-top: 10px;">
-                                    <input type="number" class="withdraw-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
+                                    <div style="display: flex; align-items: center;">
+                                        <input type="number" class="withdraw-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
+                                        <button class="max-withdraw" data-symbol="${balance.symbol}" data-amount="${balance.amount}" style="padding: 4px 8px; font-size: 0.8rem; background-color: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer;">Max (${balance.amount})</button>
+                                    </div>
                                     <button class="confirm-withdraw" data-symbol="${balance.symbol}">Confirm</button>
                                 </div>
             
@@ -1233,7 +1236,15 @@ document.querySelectorAll('.change-status-button').forEach(button => {
             }
         });
     });
-    
+    // Gestione del clic sul pulsante "Max"
+    document.querySelectorAll('.max-withdraw').forEach(button => {
+        button.addEventListener('click', function() {
+            const card = this.closest('.card');
+            const withdrawInput = card.querySelector('.withdraw-quantity');
+            withdrawInput.value = this.getAttribute('data-amount'); // Imposta il valore massimo disponibile
+        });
+    });
+
     // Gestione della conferma del trasferimento
     document.querySelectorAll('.confirm-transfer').forEach(button => {
         button.addEventListener('click', async function() {

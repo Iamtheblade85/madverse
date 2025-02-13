@@ -1000,53 +1000,68 @@ document.querySelectorAll('.change-status-button').forEach(button => {
                 return;
               }
                 //console.log("Data for balances:", data);
-                contentFrame.innerHTML = `
-                    <h2 class="pool-title" style="text-align: center;">Your Token Balances</h2>
-                    <div class="balance-grid">
-                        ${data.balances.map(balance => `
-                            <div class="card">
-                                <h4>${balance.symbol}</h4>
-                                <p><span class="value">${balance.amount}</span></p>
-            
-                                <!-- Pulsante di prelievo -->
-                                <button class="withdraw-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}" style="margin-top: 10px; padding: 10px; background-color: #FF5722; color: white; border: none; border-radius: 5px;">Withdraw</button>
-            
-                                <!-- Sezione di prelievo -->
-                                <div class="withdraw-inputs" style="display: none; margin-top: 10px;">
-                                    <div style="display: flex; align-items: center;">
-                                        <input type="number" class="withdraw-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
-                                        <button class="max-withdraw" data-symbol="${balance.symbol}" data-amount="${balance.amount}" style="padding: 4px 8px; font-size: 0.8rem; background-color: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer;">Max (${balance.amount})</button>
-                                    </div>
-                                    <button class="confirm-withdraw" data-symbol="${balance.symbol}">Confirm</button>
-                                </div>
-            
-                                <!-- Pulsante di trasferimento -->
-                                <button class="transfer-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}" style="margin-top: 10px; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Transfer</button>
-            
-                                <!-- Sezione di trasferimento -->
-                                <div class="transfer-inputs" style="display: none; margin-top: 10px;">
-                                    <input type="number" class="transfer-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
-                                    <input type="text" class="transfer-receiver" placeholder="Receiver" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
-                                    <button class="confirm-transfer" data-symbol="${balance.symbol}">Confirm</button>
-                                </div>
-            
-                                <!-- Pulsante Swap to -->
-                                <button class="swap-button" data-symbol="${balance.symbol}" data-amount="${balance.amount}" style="margin-top: 10px; padding: 10px; background-color: #2196F3; color: white; border: none; border-radius: 5px;">Swap to</button>
-            
-                                <!-- Sezione di swap -->
-                                <div class="swap-inputs" style="display: none; margin-top: 10px;">
-                                    <input type="number" class="swap-quantity" placeholder="Quantity" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
-                                    <input type="text" class="swap-to-token" placeholder="To Token" style="margin-right: 3px; padding: 4px; font-size: 0.8rem; width: 30%;"/>
-                                    <button class="confirm-swap" data-symbol="${balance.symbol}">Confirm Swap</button>
-                                </div>
-                                <!-- Pulsante Staking disponibile (se stakeable == "Yes") -->
-                                ${balance.stakeable === "Yes" ? `
-                                    <button class="staking-button" data-symbol="${balance.symbol}" style="margin-top: 10px; padding: 10px; background-color: #673AB7; color: white; border: none; border-radius: 5px;">Staking Available</button>
-                    `               : ""}
-                            </div>
-                        `).join("")}
-                    </div>
-                `;
+contentFrame.innerHTML = `
+  <h2 class="pool-title" style="text-align: center;">Your Token Balances</h2>
+  <table class="balance-table" style="width:100%; border-collapse: collapse;">
+    <thead>
+      <tr style="background: #f2f2f2;">
+        <th style="padding: 8px; border: 1px solid #ddd;">Token</th>
+        <th style="padding: 8px; border: 1px solid #ddd;">Amount</th>
+        <th style="padding: 8px; border: 1px solid #ddd;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${data.balances.map(balance => `
+        <tr data-symbol="${balance.symbol}" data-amount="${balance.amount}">
+          <td style="padding: 8px; border: 1px solid #ddd;">${balance.symbol}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${balance.amount}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">
+            <button class="action-button" data-action="withdraw" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Withdraw</button>
+            <button class="action-button" data-action="transfer" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Transfer</button>
+            <button class="action-button" data-action="swap" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Swap</button>
+            ${balance.stakeable === "Yes" ? `<button class="action-button" data-action="staking" data-symbol="${balance.symbol}">Stake</button>` : ''}
+          </td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+`;
+<!-- Modal per Withdraw -->
+<div id="withdraw-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Withdraw Token</h2>
+    <p>Token: <span id="withdraw-token"></span></p>
+    <input type="number" id="withdraw-quantity" placeholder="Quantity" style="width: 100%; padding: 8px; margin: 10px 0;">
+    <button id="withdraw-confirm" style="padding: 10px 20px;">Confirm Withdraw</button>
+  </div>
+</div>
+
+<!-- Modal per Transfer -->
+<div id="transfer-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Transfer Token</h2>
+    <p>Token: <span id="transfer-token"></span></p>
+    <input type="number" id="transfer-quantity" placeholder="Quantity" style="width: 100%; padding: 8px; margin: 10px 0;">
+    <input type="text" id="transfer-receiver" placeholder="Receiver" style="width: 100%; padding: 8px; margin: 10px 0;">
+    <button id="transfer-confirm" style="padding: 10px 20px;">Confirm Transfer</button>
+  </div>
+</div>
+
+<!-- Modal per Swap -->
+<div id="swap-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Swap Token</h2>
+    <p>From Token: <span id="swap-token"></span></p>
+    <input type="number" id="swap-quantity" placeholder="Quantity" style="width: 100%; padding: 8px; margin: 10px 0;">
+    <input type="text" id="swap-to-token" placeholder="To Token" style="width: 100%; padding: 8px; margin: 10px 0;">
+    <button id="swap-confirm" style="padding: 10px 20px;">Confirm Swap</button>
+  </div>
+</div>
+
+
             // Funzione per creare un messaggio dinamico sotto i pulsanti
             function createMessageElement(message, isSuccess) {
                 const messageDiv = document.createElement('div');
@@ -1066,176 +1081,158 @@ document.querySelectorAll('.change-status-button').forEach(button => {
                 messageDiv.textContent = message;
                 return messageDiv;
             }
-            // Funzione per gestire l'apertura/chiusura delle sezioni
-              function toggleInputSection(button, sectionClass) {
-                  const card = button.closest('.card');
-                  const currentSection = card.querySelector(sectionClass);
-                  
-                  // Chiudi tutte le altre sezioni
-                  card.querySelectorAll('.withdraw-inputs, .transfer-inputs, .swap-inputs').forEach(section => {
-                      if (section !== currentSection) {
-                          section.style.display = 'none';
-                      }
-                  });
-          
-                  // Toggle visibilità della sezione corrente
-                  currentSection.style.display = currentSection.style.display === 'none' ? 'block' : 'none';
-              }
-          
-              // Gestione dei clic sui pulsanti
-              document.querySelectorAll('.withdraw-button').forEach(button => {
-                  button.addEventListener('click', function() {
-                      toggleInputSection(this, '.withdraw-inputs');
-                  });
-              });
-          
-              document.querySelectorAll('.transfer-button').forEach(button => {
-                  button.addEventListener('click', function() {
-                      toggleInputSection(this, '.transfer-inputs');
-                  });
-              });
-          
-              document.querySelectorAll('.swap-button').forEach(button => {
-                  button.addEventListener('click', function() {
-                      toggleInputSection(this, '.swap-inputs');
-                  });
-              });
-              // Aggiungi l'evento per il pulsante "Staking Available"
-              document.querySelectorAll('.staking-button').forEach(button => {
-                  button.addEventListener('click', function() {
-                      const tokenSymbol = this.getAttribute('data-symbol');
-                      loadContent('staking_farms');  // Passa la pagina di staking, che tu fornirai
-                  });
-              });        
-            // Gestione della conferma dello swap
-            document.querySelectorAll('.confirm-swap').forEach(button => {
-                button.addEventListener('click', async function() {
-                    this.style.display = 'none'; // Nascondi il pulsante Confirm
-                    const symbol = this.getAttribute('data-symbol');
-                    const swapQuantity = this.closest('.card').querySelector('.swap-quantity').value;
-                    const toToken = this.closest('.card').querySelector('.swap-to-token').value;
-                    const waxAccount = user_wax_account;  
-                    const card = this.closest('.card');  // Riferimento alla card
-            
-                    // Validazione degli input
-                    if (!swapQuantity || isNaN(swapQuantity) || swapQuantity <= 0 || !toToken) {
-                        const messageDiv = createMessageElement('Please enter valid quantity and token for swap.', false);
-                        card.appendChild(messageDiv);  // Aggiungi il messaggio alla card
-                        return;
-                    }
-            
-                    const url = `https://iamemanuele.pythonanywhere.com/swap_tokens?user_id=${userId}&usx_token=${token}`;
-                    const data = {
-                        wax_account: waxAccount,
-                        from_token: symbol,
-                        to_token: toToken,
-                        amount: swapQuantity
-                    };
-            
-                    // Mostra un messaggio di "Request in Progress"
-                    const inProgressMessage = createMessageElement('Processing your request...', false);
-                    card.appendChild(inProgressMessage);
-            
-                    try {
-                        const response = await fetch(url, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(data)
-                        });      
-                        const responseText = await response.text();
-                        let result;
-                        try {
-                            result = JSON.parse(responseText);
-                        } catch (parseError) {
-                            console.error("Error parsing response:", parseError);
-                            return;
-                        }
-                        const messageDiv = createMessageElement(response.ok ? 
-                            `Success: ${result.details.received_amount} ${result.details.to_token} received` : 
-                            `Error: ${result.error}`, response.ok);
-                        
-                        card.replaceChild(messageDiv, inProgressMessage);  // Sostituisci il messaggio di progress con il risultato
-            
-                        // Mostra il messaggio per 2-3 secondi prima di ricaricare i bilanci
-                        setTimeout(async () => {
-                            await reloadBalances();  // Ricarica i bilanci dopo lo swap
-                        }, 2000);  // Ritardo di 2 secondi
-                    } catch (error) {
-                        console.error("Error during swap request:", error);
-                        const errorMessageDiv = createMessageElement('An error occurred. Please try again.', false);
-                        card.replaceChild(errorMessageDiv, inProgressMessage);  // Sostituisci il messaggio di progress con l'errore
-            
-                        // Mostra il messaggio per 2-3 secondi prima di ricaricare i bilanci
-                        setTimeout(async () => {
-                            await reloadBalances();  // Ricarica i bilanci dopo lo swap
-                        }, 2000);  // Ritardo di 2 secondi
-                      } 
-                  });
-              });
-    // Gestione della conferma del prelievo
-    document.querySelectorAll('.confirm-withdraw').forEach(button => {
-        button.addEventListener('click', async function() {
-            this.style.display = 'none'; // Nascondi il pulsante Confirm
-            const symbol = this.getAttribute('data-symbol');
-            const withdrawQuantity = this.closest('.card').querySelector('.withdraw-quantity').value;
-            const waxAccount = user_wax_account;
-            const card = this.closest('.card');
-    
-            if (!withdrawQuantity || isNaN(withdrawQuantity) || withdrawQuantity <= 0) {
-                const messageDiv = createMessageElement('Please enter a valid quantity for withdrawal.', false);
-                card.appendChild(messageDiv);  // Aggiungi il messaggio alla card
-                return;
-            }
-    
-            const url = `https://iamemanuele.pythonanywhere.com/withdraw?user_id=${userId}&usx_token=${token}`;
-            const data = {
-                wax_account: waxAccount,
-                token_symbol: symbol,
-                amount: withdrawQuantity
-            };
-            //console.log("WA for b-E:", waxAccount);
-            //console.log("Data for b-E:", data);
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-    
-                const responseText = await response.text();
-                let result;
-                try {
-                    result = JSON.parse(responseText);
-                } catch (parseError) {
-                    console.error("Error parsing response:", parseError);
-                    return;
-                }
-    
-                const messageDiv = createMessageElement(response.ok ? `Success: ${result.message}` : `Error: ${result.error}`, response.ok);
-                card.appendChild(messageDiv);  // Aggiungi il messaggio alla card
-    
-                // Mostra il messaggio per 3 secondi prima di ricaricare i bilanci
-                setTimeout(async () => {
-                    await reloadBalances();  // Ricarica i bilanci dopo il prelievo
-                }, 3000);  // Ritardo di 3 secondi
-            } catch (error) {
-                console.error("Error during withdrawal request:", error);
-                const messageDiv = createMessageElement('An error occurred. Please try again.', false);
-                card.appendChild(messageDiv);  // Aggiungi il messaggio alla card
-    
-                // Mostra il messaggio per 3 secondi prima di ricaricare i bilanci
-                setTimeout(async () => {
-                    await reloadBalances();  // Ricarica i bilanci dopo il prelievo
-                }, 3000);  // Ritardo di 3 secondi
-            } finally {
-                this.style.display = 'none'; // Nasconde il pulsante dopo l'azione
-            }
-        });
+document.querySelectorAll('.action-button').forEach(button => {
+  button.addEventListener('click', function() {
+    const action = this.getAttribute('data-action');
+    const token = this.getAttribute('data-symbol');
+    const amount = this.getAttribute('data-amount');
+
+    if (action === 'withdraw') {
+      document.getElementById('withdraw-token').textContent = token;
+      // Salva eventuali dati utili nel dataset della modale
+      document.getElementById('withdraw-modal').dataset.token = token;
+      document.getElementById('withdraw-modal').dataset.amount = amount;
+      document.getElementById('withdraw-modal').style.display = 'block';
+    } else if (action === 'transfer') {
+      document.getElementById('transfer-token').textContent = token;
+      document.getElementById('transfer-modal').dataset.token = token;
+      document.getElementById('transfer-modal').dataset.amount = amount;
+      document.getElementById('transfer-modal').style.display = 'block';
+    } else if (action === 'swap') {
+      document.getElementById('swap-token').textContent = token;
+      document.getElementById('swap-modal').dataset.token = token;
+      document.getElementById('swap-modal').dataset.amount = amount;
+      document.getElementById('swap-modal').style.display = 'block';
+    } else if (action === 'staking') {
+      // Se desideri aprire una modale o passare alla pagina staking, gestiscilo qui
+      loadContent('staking_farms');
+    }
+  });
+});
+document.querySelectorAll('.modal .close').forEach(closeBtn => {
+  closeBtn.addEventListener('click', function() {
+    this.parentElement.parentElement.style.display = 'none';
+  });
+});
+
+document.getElementById('swap-confirm').addEventListener('click', async function() {
+  const modal = document.getElementById('swap-modal');
+  // Recupera il simbolo del token da cui si effettua lo swap dal dataset della modale
+  const fromToken = modal.dataset.token;
+  // Leggi i valori inseriti dall'utente
+  const quantity = document.getElementById('swap-quantity').value;
+  const toToken = document.getElementById('swap-to-token').value;
+
+  // Validazione degli input
+  if (!quantity || quantity <= 0 || !toToken) {
+    alert('Please enter a valid quantity and destination token.');
+    return;
+  }
+
+  // Costruisci l'URL e il payload per la richiesta POST
+  const url = `https://iamemanuele.pythonanywhere.com/swap_tokens?user_id=${userId}&usx_token=${token}`;
+  const payload = {
+    wax_account: user_wax_account,
+    from_token: fromToken,
+    to_token: toToken,
+    amount: quantity
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
+
+    // Gestisci la risposta come preferisci, ad esempio mostrando un messaggio all'utente
+    // const result = await response.json();
+    // alert(response.ok ? `Swap successful: ${result.details.received_amount} ${toToken} received` : `Error: ${result.error}`);
+  } catch (error) {
+    console.error('Error during swap:', error);
+  }
+
+  // Ripulisci gli input e chiudi il modal
+  document.getElementById('swap-quantity').value = '';
+  document.getElementById('swap-to-token').value = '';
+  modal.style.display = 'none';
+});
+
+document.getElementById('withdraw-confirm').addEventListener('click', async function() {
+  const modal = document.getElementById('withdraw-modal');
+  const token = modal.dataset.token;
+  const quantity = document.getElementById('withdraw-quantity').value;
+
+  if (!quantity || quantity <= 0) {
+    alert('Please enter a valid quantity.');
+    return;
+  }
+
+  const url = `https://iamemanuele.pythonanywhere.com/withdraw?user_id=${userId}&usx_token=${token}`;
+  const payload = {
+    wax_account: user_wax_account,
+    token_symbol: token,
+    amount: quantity
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    // Gestisci la risposta (es. mostra un messaggio di successo o errore)
+  } catch (error) {
+    console.error('Error during withdrawal:', error);
+  }
+
+  // Ripulisci e chiudi la modale
+  document.getElementById('withdraw-quantity').value = '';
+  modal.style.display = 'none';
+});
+document.getElementById('transfer-confirm').addEventListener('click', async function() {
+  const modal = document.getElementById('transfer-modal');
+  // Recupera il simbolo del token salvato nel dataset della modale
+  const tokenSymbol = modal.dataset.token;
+  // Leggi i valori inseriti dall'utente
+  const quantity = document.getElementById('transfer-quantity').value;
+  const receiver = document.getElementById('transfer-receiver').value;
+
+  // Validazione degli input
+  if (!quantity || quantity <= 0 || !receiver) {
+    alert('Please enter a valid quantity and receiver.');
+    return;
+  }
+
+  // Costruisci l'URL e il payload per la richiesta POST
+  const url = `https://iamemanuele.pythonanywhere.com/transfer?user_id=${userId}&usx_token=${token}`;
+  const payload = {
+    wax_account: user_wax_account,
+    token_symbol: tokenSymbol,
+    amount: quantity,
+    receiver: receiver
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    // Qui puoi gestire la risposta, ad esempio mostrando un messaggio di successo o errore
+    // const result = await response.json();
+    // alert(result.message || 'Transfer successful!');
+  } catch (error) {
+    console.error('Error during transfer:', error);
+  }
+
+  // Ripulisci gli input e chiudi il modal
+  document.getElementById('transfer-quantity').value = '';
+  document.getElementById('transfer-receiver').value = '';
+  modal.style.display = 'none';
+});
+
     // Gestione del clic sul pulsante "Max"
     document.querySelectorAll('.max-withdraw').forEach(button => {
         button.addEventListener('click', function() {

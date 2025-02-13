@@ -47,6 +47,40 @@
       ChipsWallet @2024 - A Wax Chain Project
     </div>
   </div>
+  <!-- Modal per Withdraw -->
+<div id="withdraw-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Withdraw Token</h2>
+    <p>Token: <span id="withdraw-token"></span></p>
+    <input type="number" id="withdraw-quantity" placeholder="Quantity" style="width: 100%; padding: 8px; margin: 10px 0;">
+    <button id="withdraw-confirm" style="padding: 10px 20px;">Confirm Withdraw</button>
+  </div>
+</div>
+
+<!-- Modal per Transfer -->
+<div id="transfer-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Transfer Token</h2>
+    <p>Token: <span id="transfer-token"></span></p>
+    <input type="number" id="transfer-quantity" placeholder="Quantity" style="width: 100%; padding: 8px; margin: 10px 0;">
+    <input type="text" id="transfer-receiver" placeholder="Receiver" style="width: 100%; padding: 8px; margin: 10px 0;">
+    <button id="transfer-confirm" style="padding: 10px 20px;">Confirm Transfer</button>
+  </div>
+</div>
+
+<!-- Modal per Swap -->
+<div id="swap-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Swap Token</h2>
+    <p>From Token: <span id="swap-token"></span></p>
+    <input type="number" id="swap-quantity" placeholder="Quantity" style="width: 100%; padding: 8px; margin: 10px 0;">
+    <input type="text" id="swap-to-token" placeholder="To Token" style="width: 100%; padding: 8px; margin: 10px 0;">
+    <button id="swap-confirm" style="padding: 10px 20px;">Confirm Swap</button>
+  </div>
+</div>
   <script>
     // Funzione per ottenere i parametri dalla query string dell'URL
     function getQueryParam(param) {
@@ -1026,40 +1060,7 @@ contentFrame.innerHTML = `
     </tbody>
   </table>
 `;
-<!-- Modal per Withdraw -->
-<div id="withdraw-modal" class="modal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <h2>Withdraw Token</h2>
-    <p>Token: <span id="withdraw-token"></span></p>
-    <input type="number" id="withdraw-quantity" placeholder="Quantity" style="width: 100%; padding: 8px; margin: 10px 0;">
-    <button id="withdraw-confirm" style="padding: 10px 20px;">Confirm Withdraw</button>
-  </div>
-</div>
 
-<!-- Modal per Transfer -->
-<div id="transfer-modal" class="modal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <h2>Transfer Token</h2>
-    <p>Token: <span id="transfer-token"></span></p>
-    <input type="number" id="transfer-quantity" placeholder="Quantity" style="width: 100%; padding: 8px; margin: 10px 0;">
-    <input type="text" id="transfer-receiver" placeholder="Receiver" style="width: 100%; padding: 8px; margin: 10px 0;">
-    <button id="transfer-confirm" style="padding: 10px 20px;">Confirm Transfer</button>
-  </div>
-</div>
-
-<!-- Modal per Swap -->
-<div id="swap-modal" class="modal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <h2>Swap Token</h2>
-    <p>From Token: <span id="swap-token"></span></p>
-    <input type="number" id="swap-quantity" placeholder="Quantity" style="width: 100%; padding: 8px; margin: 10px 0;">
-    <input type="text" id="swap-to-token" placeholder="To Token" style="width: 100%; padding: 8px; margin: 10px 0;">
-    <button id="swap-confirm" style="padding: 10px 20px;">Confirm Swap</button>
-  </div>
-</div>
 
 
             // Funzione per creare un messaggio dinamico sotto i pulsanti

@@ -52,7 +52,13 @@
   <div class="modal-content">
     <span class="close">&times;</span>
     <h2>Withdraw Token</h2>
-    <p>Token: <span id="withdraw-token"></span></p>
+<p>
+  Token: <span id="withdraw-token"></span>
+  <span id="withdraw-max" style="cursor:pointer; color:blue; text-decoration:underline;"></span>
+</p>
+<!-- Aggiungi anche un contenitore per il feedback -->
+<div id="withdraw-feedback" style="margin-top:10px;"></div>
+
     <input type="number" id="withdraw-quantity" placeholder="Quantity" style="width: 100%; padding: 8px; margin: 10px 0;">
     <button id="withdraw-confirm" style="padding: 10px 20px;">Confirm Withdraw</button>
   </div>
@@ -63,7 +69,12 @@
   <div class="modal-content">
     <span class="close">&times;</span>
     <h2>Transfer Token</h2>
-    <p>Token: <span id="transfer-token"></span></p>
+<p>
+  Token: <span id="transfer-token"></span>
+  <span id="transfer-max" style="cursor:pointer; color:blue; text-decoration:underline;"></span>
+</p>
+<div id="transfer-feedback" style="margin-top:10px;"></div>
+
     <input type="number" id="transfer-quantity" placeholder="Quantity" style="width: 100%; padding: 8px; margin: 10px 0;">
     <input type="text" id="transfer-receiver" placeholder="Receiver" style="width: 100%; padding: 8px; margin: 10px 0;">
     <button id="transfer-confirm" style="padding: 10px 20px;">Confirm Transfer</button>
@@ -75,7 +86,12 @@
   <div class="modal-content">
     <span class="close">&times;</span>
     <h2>Swap Token</h2>
-    <p>From Token: <span id="swap-token"></span></p>
+<p>
+  From Token: <span id="swap-token"></span>
+  <span id="swap-max" style="cursor:pointer; color:blue; text-decoration:underline;"></span>
+</p>
+<div id="swap-feedback" style="margin-top:10px;"></div>
+
     <input type="number" id="swap-quantity" placeholder="Quantity" style="width: 100%; padding: 8px; margin: 10px 0;">
     <input type="text" id="swap-to-token" placeholder="To Token" style="width: 100%; padding: 8px; margin: 10px 0;">
     <button id="swap-confirm" style="padding: 10px 20px;">Confirm Swap</button>
@@ -103,22 +119,48 @@
           console.log(`Hai cliccato ${action} per il token ${token} con amount ${amount}`);
     
           // Logica per aprire il modal in base all'azione
-          if (action === 'withdraw') {
-            document.getElementById('withdraw-token').textContent = token;
-            document.getElementById('withdraw-modal').dataset.token = token;
-            document.getElementById('withdraw-modal').dataset.amount = amount;
-            document.getElementById('withdraw-modal').style.display = 'block';
-          } else if (action === 'transfer') {
-            document.getElementById('transfer-token').textContent = token;
-            document.getElementById('transfer-modal').dataset.token = token;
-            document.getElementById('transfer-modal').dataset.amount = amount;
-            document.getElementById('transfer-modal').style.display = 'block';
-          } else if (action === 'swap') {
-            document.getElementById('swap-token').textContent = token;
-            document.getElementById('swap-modal').dataset.token = token;
-            document.getElementById('swap-modal').dataset.amount = amount;
-            document.getElementById('swap-modal').style.display = 'block';
-          } else if (action === 'staking') {
+if (action === 'withdraw') {
+  const withdrawModal = document.getElementById('withdraw-modal');
+  const tokenSpan = document.getElementById('withdraw-token');
+  const maxSpan = document.getElementById('withdraw-max');
+  tokenSpan.textContent = token;
+  // Salva sia il token sia l'importo massimo nel dataset del modale
+  withdrawModal.dataset.token = token;
+  withdrawModal.dataset.amount = amount; // qui "amount" è il max disponibile
+  maxSpan.textContent = `(max: ${amount})`;
+  // Quando l'utente clicca sul max, popola l'input con l'importo massimo
+  maxSpan.onclick = function () {
+    document.getElementById('withdraw-quantity').value = amount;
+  };
+  withdrawModal.style.display = 'block';
+}
+ else if (action === 'transfer') {
+  const transferModal = document.getElementById('transfer-modal');
+  const tokenSpan = document.getElementById('transfer-token');
+  const maxSpan = document.getElementById('transfer-max');
+  tokenSpan.textContent = token;
+  transferModal.dataset.token = token;
+  transferModal.dataset.amount = amount; // max disponibile per il transfer
+  maxSpan.textContent = `(max: ${amount})`;
+  maxSpan.onclick = function () {
+    document.getElementById('transfer-quantity').value = amount;
+  };
+  transferModal.style.display = 'block';
+}
+ else if (action === 'swap') {
+  const swapModal = document.getElementById('swap-modal');
+  const tokenSpan = document.getElementById('swap-token');
+  const maxSpan = document.getElementById('swap-max');
+  tokenSpan.textContent = token;
+  swapModal.dataset.token = token;
+  swapModal.dataset.amount = amount; // max disponibile per lo swap
+  maxSpan.textContent = `(max: ${amount})`;
+  maxSpan.onclick = function () {
+    document.getElementById('swap-quantity').value = amount;
+  };
+  swapModal.style.display = 'block';
+}
+ else if (action === 'staking') {
             loadContent('staking_farms');
           }
         });
@@ -1164,23 +1206,21 @@ document.querySelectorAll('.modal .close').forEach(closeBtn => {
 
 document.getElementById('swap-confirm').addEventListener('click', async function() {
   const modal = document.getElementById('swap-modal');
-  // Recupera il simbolo del token da cui si effettua lo swap dal dataset della modale
-  const fromToken = modal.dataset.token;
-  // Leggi i valori inseriti dall'utente
-  const quantity = document.getElementById('swap-quantity').value;
-  const toToken = document.getElementById('swap-to-token').value;
+  const tokenSymbol = modal.dataset.token;
+  const quantityInput = document.getElementById('swap-quantity');
+  const toTokenInput = document.getElementById('swap-to-token');
+  const quantity = quantityInput.value;
+  const toToken = toTokenInput.value;
 
-  // Validazione degli input
   if (!quantity || quantity <= 0 || !toToken) {
     alert('Please enter a valid quantity and destination token.');
     return;
   }
 
-  // Costruisci l'URL e il payload per la richiesta POST
   const url = `https://iamemanuele.pythonanywhere.com/swap_tokens?user_id=${userId}&usx_token=${token}`;
   const payload = {
     wax_account: user_wax_account,
-    from_token: fromToken,
+    from_token: tokenSymbol,
     to_token: toToken,
     amount: quantity
   };
@@ -1191,32 +1231,32 @@ document.getElementById('swap-confirm').addEventListener('click', async function
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
-    // Gestisci la risposta come preferisci, ad esempio mostrando un messaggio all'utente
-    // const result = await response.json();
-    // alert(response.ok ? `Swap successful: ${result.details.received_amount} ${toToken} received` : `Error: ${result.error}`);
+    const result = await response.json();
+    const feedbackDiv = document.getElementById('swap-feedback');
+    feedbackDiv.textContent = response.ok ? `Swap successful: ${result.details?.received_amount || ''} ${toToken} received` : `Error: ${result.error}`;
+    setTimeout(() => {
+      modal.style.display = 'none';
+      quantityInput.value = '';
+      toTokenInput.value = '';
+      feedbackDiv.textContent = '';
+    }, 5000);
   } catch (error) {
     console.error('Error during swap:', error);
   }
-
-  // Ripulisci gli input e chiudi il modal
-  document.getElementById('swap-quantity').value = '';
-  document.getElementById('swap-to-token').value = '';
-  modal.style.display = 'none';
 });
+
 
 document.getElementById('withdraw-confirm').addEventListener('click', async function() {
   const modal = document.getElementById('withdraw-modal');
-  // Qui il token salvato nel modal è in realtà il simbolo del token, non il usx_token globale.
   const tokenSymbol = modal.dataset.token;
-  const quantity = document.getElementById('withdraw-quantity').value;
+  const quantityInput = document.getElementById('withdraw-quantity');
+  const quantity = quantityInput.value;
 
   if (!quantity || quantity <= 0) {
     alert('Please enter a valid quantity.');
     return;
   }
 
-  // Usa il token globale (usx_token) per la chiamata all'endpoint
   const url = `https://iamemanuele.pythonanywhere.com/withdraw?user_id=${userId}&usx_token=${token}`;
   const payload = {
     wax_account: user_wax_account,
@@ -1230,31 +1270,32 @@ document.getElementById('withdraw-confirm').addEventListener('click', async func
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    // Gestisci la risposta (es. mostra un messaggio di successo o errore)
+    const result = await response.json();
+    const feedbackDiv = document.getElementById('withdraw-feedback');
+    feedbackDiv.textContent = response.ok ? result.message : result.error;
+    // Mostra il feedback per 5 secondi, poi chiude il modale e pulisce l'input
+    setTimeout(() => {
+      modal.style.display = 'none';
+      quantityInput.value = '';
+      feedbackDiv.textContent = '';
+    }, 5000);
   } catch (error) {
     console.error('Error during withdrawal:', error);
   }
-
-  // Ripulisci e chiudi il modal
-  document.getElementById('withdraw-quantity').value = '';
-  modal.style.display = 'none';
 });
-
 document.getElementById('transfer-confirm').addEventListener('click', async function() {
   const modal = document.getElementById('transfer-modal');
-  // Recupera il simbolo del token salvato nel dataset della modale
   const tokenSymbol = modal.dataset.token;
-  // Leggi i valori inseriti dall'utente
-  const quantity = document.getElementById('transfer-quantity').value;
-  const receiver = document.getElementById('transfer-receiver').value;
+  const quantityInput = document.getElementById('transfer-quantity');
+  const receiverInput = document.getElementById('transfer-receiver');
+  const quantity = quantityInput.value;
+  const receiver = receiverInput.value;
 
-  // Validazione degli input
   if (!quantity || quantity <= 0 || !receiver) {
     alert('Please enter a valid quantity and receiver.');
     return;
   }
 
-  // Costruisci l'URL e il payload per la richiesta POST
   const url = `https://iamemanuele.pythonanywhere.com/transfer?user_id=${userId}&usx_token=${token}`;
   const payload = {
     wax_account: user_wax_account,
@@ -1269,96 +1310,21 @@ document.getElementById('transfer-confirm').addEventListener('click', async func
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-		
-    // Qui puoi gestire la risposta, ad esempio mostrando un messaggio di successo o errore
-    // const result = await response.json();
-	console.log("transfer response", response);
-    // alert(result.message || 'Transfer successful!');
+    const result = await response.json();
+    const feedbackDiv = document.getElementById('transfer-feedback');
+    feedbackDiv.textContent = response.ok ? result.message : result.error;
+    setTimeout(() => {
+      modal.style.display = 'none';
+      quantityInput.value = '';
+      receiverInput.value = '';
+      feedbackDiv.textContent = '';
+    }, 5000);
   } catch (error) {
     console.error('Error during transfer:', error);
   }
-
-  // Ripulisci gli input e chiudi il modal
-  document.getElementById('transfer-quantity').value = '';
-  document.getElementById('transfer-receiver').value = '';
-  modal.style.display = 'none';
 });
 
-    // Gestione del clic sul pulsante "Max"
-    document.querySelectorAll('.max-withdraw').forEach(button => {
-        button.addEventListener('click', function() {
-            const card = this.closest('.card');
-            const withdrawInput = card.querySelector('.withdraw-quantity');
-            withdrawInput.value = this.getAttribute('data-amount'); // Imposta il valore massimo disponibile
-        });
-    });
 
-    // Gestione della conferma del trasferimento
-    document.querySelectorAll('.confirm-transfer').forEach(button => {
-        button.addEventListener('click', async function() {
-            this.style.display = 'none'; // Nascondi il pulsante Confirm
-            const symbol = this.getAttribute('data-symbol');
-            const transferQuantity = this.closest('.card').querySelector('.transfer-quantity').value;
-            const transferReceiver = this.closest('.card').querySelector('.transfer-receiver').value;
-            const waxAccount = user_wax_account; // Imposta l'account utente
-            const card = this.closest('.card');  // Riferimento alla card
-    
-            // Validazione degli input
-            if (!transferQuantity || isNaN(transferQuantity) || transferQuantity <= 0 || !transferReceiver) {
-                const messageDiv = createMessageElement('Please enter valid quantity and receiver details.', false);
-                card.appendChild(messageDiv);  // Aggiungi il messaggio alla card
-                return;
-            }
-    
-            const url = `https://iamemanuele.pythonanywhere.com/transfer?user_id=${userId}&usx_token=${token}`;
-            const data = {
-                wax_account: waxAccount,
-                token_symbol: symbol,
-                amount: transferQuantity,
-                receiver: transferReceiver
-            };
-            console.log("WA for b-E:", waxAccount);
-            console.log("Data for b-E:", data);
-			console.log("token:", token);
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-    
-                const responseText = await response.text();
-                let result;
-                try {
-                    result = JSON.parse(responseText);
-                } catch (parseError) {
-                    console.error("Error parsing response:", parseError);
-                    return;
-                }
-    
-                const messageDiv = createMessageElement(response.ok ? `Success: ${result.message}` : `Error: ${result.error}`, response.ok);
-                card.appendChild(messageDiv);  // Aggiungi il messaggio alla card
-    
-                // Mostra il messaggio per 3 secondi prima di ricaricare i bilanci
-                setTimeout(async () => {
-                    await reloadBalances();  // Ricarica i bilanci dopo il trasferimento
-                }, 3000);  // Ritardo di 3 secondi
-            } catch (error) {
-                console.error("Error during transfer request:", error);
-                const messageDiv = createMessageElement('An error occurred. Please try again.', false);
-                card.appendChild(messageDiv);  // Aggiungi il messaggio alla card
-    
-                // Mostra il messaggio per 3 secondi prima di ricaricare i bilanci
-                setTimeout(async () => {
-                    await reloadBalances();  // Ricarica i bilanci dopo il trasferimento
-                }, 3000);  // Ritardo di 3 secondi
-            } finally {
-                this.style.display = 'none'; // Nasconde il pulsante dopo l'azione
-            }
-        });
-    });
             // Funzione per ricaricare i bilanci
             async function reloadBalances() {
                 const url = `https://iamemanuele.pythonanywhere.com/saldo?user_id=${userId}&usx_token=${token}`;

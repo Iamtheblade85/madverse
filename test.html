@@ -123,43 +123,68 @@ if (action === 'withdraw') {
   const withdrawModal = document.getElementById('withdraw-modal');
   const tokenSpan = document.getElementById('withdraw-token');
   const maxSpan = document.getElementById('withdraw-max');
+  
   tokenSpan.textContent = token;
-  // Salva sia il token sia l'importo massimo nel dataset del modale
+  // Calcola il massimo disponibile sottraendo locked_chips
+  const amountVal = parseFloat(this.getAttribute('data-amount'));
+  const lockedVal = parseFloat(this.getAttribute('data-locked'));
+  const maxAvailable = (amountVal - lockedVal).toFixed(8);
+  
+  // Salva token e max nel dataset
   withdrawModal.dataset.token = token;
-  withdrawModal.dataset.amount = amount; // qui "amount" è il max disponibile
-  maxSpan.textContent = `(max: ${amount})`;
-  // Quando l'utente clicca sul max, popola l'input con l'importo massimo
+  withdrawModal.dataset.amount = maxAvailable;
+  
+  // Imposta il testo cliccabile
+  maxSpan.textContent = `(max: ${maxAvailable})`;
   maxSpan.onclick = function () {
-    document.getElementById('withdraw-quantity').value = amount;
+    document.getElementById('withdraw-quantity').value = maxAvailable;
   };
+  
   withdrawModal.style.display = 'block';
 }
+
  else if (action === 'transfer') {
   const transferModal = document.getElementById('transfer-modal');
   const tokenSpan = document.getElementById('transfer-token');
   const maxSpan = document.getElementById('transfer-max');
+  
   tokenSpan.textContent = token;
+  const amountVal = parseFloat(this.getAttribute('data-amount'));
+  const lockedVal = parseFloat(this.getAttribute('data-locked'));
+  const maxAvailable = (amountVal - lockedVal).toFixed(8);
+  
   transferModal.dataset.token = token;
-  transferModal.dataset.amount = amount; // max disponibile per il transfer
-  maxSpan.textContent = `(max: ${amount})`;
+  transferModal.dataset.amount = maxAvailable;
+  
+  maxSpan.textContent = `(max: ${maxAvailable})`;
   maxSpan.onclick = function () {
-    document.getElementById('transfer-quantity').value = amount;
+    document.getElementById('transfer-quantity').value = maxAvailable;
   };
+  
   transferModal.style.display = 'block';
 }
+
  else if (action === 'swap') {
   const swapModal = document.getElementById('swap-modal');
   const tokenSpan = document.getElementById('swap-token');
   const maxSpan = document.getElementById('swap-max');
+  
   tokenSpan.textContent = token;
+  const amountVal = parseFloat(this.getAttribute('data-amount'));
+  const lockedVal = parseFloat(this.getAttribute('data-locked'));
+  const maxAvailable = (amountVal - lockedVal).toFixed(8);
+  
   swapModal.dataset.token = token;
-  swapModal.dataset.amount = amount; // max disponibile per lo swap
-  maxSpan.textContent = `(max: ${amount})`;
+  swapModal.dataset.amount = maxAvailable;
+  
+  maxSpan.textContent = `(max: ${maxAvailable})`;
   maxSpan.onclick = function () {
-    document.getElementById('swap-quantity').value = amount;
+    document.getElementById('swap-quantity').value = maxAvailable;
   };
+  
   swapModal.style.display = 'block';
 }
+
  else if (action === 'staking') {
             loadContent('staking_farms');
           }
@@ -1128,13 +1153,13 @@ contentFrame.innerHTML = `
     </thead>
     <tbody>
       ${data.balances.map(balance => `
-        <tr data-symbol="${balance.symbol}" data-amount="${balance.amount}">
+        <tr data-symbol="${balance.symbol}" data-amount="${balance.amount}" data-locked="${balance.locked_chips}">
           <td style="padding: 8px; border: 1px solid #ddd;">${balance.symbol}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${balance.amount}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">
-            <button class="action-button" data-action="withdraw" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Withdraw</button>
-            <button class="action-button" data-action="transfer" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Transfer</button>
-            <button class="action-button" data-action="swap" data-symbol="${balance.symbol}" data-amount="${balance.amount}">Swap</button>
+            <button class="action-button" data-action="withdraw" data-symbol="${balance.symbol}" data-amount="${balance.amount}" data-locked="${balance.locked_chips}">Withdraw</button>
+            <button class="action-button" data-action="transfer" data-symbol="${balance.symbol}" data-amount="${balance.amount}" data-locked="${balance.locked_chips}">Transfer</button>
+            <button class="action-button" data-action="swap" data-symbol="${balance.symbol}" data-amount="${balance.amount}" data-locked="${balance.locked_chips}">Swap</button>
             ${balance.stakeable === "Yes" ? `<button class="action-button" data-action="staking" data-symbol="${balance.symbol}">Stake</button>` : ''}
           </td>
         </tr>
@@ -1152,29 +1177,87 @@ document.querySelectorAll('.action-button').forEach(button => {
     const token = this.getAttribute('data-symbol');
     const amount = this.getAttribute('data-amount');
     console.log(`Hai cliccato ${action} per il token ${token} con amount ${amount}`);
+    
+// Logica per aprire il modal in base all'azione
+if (action === 'withdraw') {
+  const withdrawModal = document.getElementById('withdraw-modal');
+  const tokenSpan = document.getElementById('withdraw-token');
+  const maxSpan = document.getElementById('withdraw-max');
+  
+  tokenSpan.textContent = token;
+  // Calcola il massimo disponibile sottraendo locked_chips
+  const amountVal = parseFloat(this.getAttribute('data-amount'));
+  const lockedVal = parseFloat(this.getAttribute('data-locked'));
+  const maxAvailable = (amountVal - lockedVal).toFixed(8);
+  
+  // Salva token e max nel dataset
+  withdrawModal.dataset.token = token;
+  withdrawModal.dataset.amount = maxAvailable;
+  
+  // Imposta il testo cliccabile
+  maxSpan.textContent = `(max: ${maxAvailable})`;
+  maxSpan.onclick = function () {
+    document.getElementById('withdraw-quantity').value = maxAvailable;
+  };
+  
+  withdrawModal.style.display = 'block';
+}
 
-    // Logica per aprire il modal in base all'azione
-    if (action === 'withdraw') {
-      document.getElementById('withdraw-token').textContent = token;
-      document.getElementById('withdraw-modal').dataset.token = token;
-      document.getElementById('withdraw-modal').dataset.amount = amount;
-      document.getElementById('withdraw-modal').style.display = 'block';
-    } else if (action === 'transfer') {
-      document.getElementById('transfer-token').textContent = token;
-      document.getElementById('transfer-modal').dataset.token = token;
-      document.getElementById('transfer-modal').dataset.amount = amount;
-      document.getElementById('transfer-modal').style.display = 'block';
-    } else if (action === 'swap') {
-      document.getElementById('swap-token').textContent = token;
-      document.getElementById('swap-modal').dataset.token = token;
-      document.getElementById('swap-modal').dataset.amount = amount;
-      document.getElementById('swap-modal').style.display = 'block';
-    } else if (action === 'staking') {
-      // Se hai una logica per lo staking, richiamala qui, ad es.:
-      loadContent('staking_farms');
-    }
-  });
-});
+ else if (action === 'transfer') {
+  const transferModal = document.getElementById('transfer-modal');
+  const tokenSpan = document.getElementById('transfer-token');
+  const maxSpan = document.getElementById('transfer-max');
+  
+  tokenSpan.textContent = token;
+  const amountVal = parseFloat(this.getAttribute('data-amount'));
+  const lockedVal = parseFloat(this.getAttribute('data-locked'));
+  const maxAvailable = (amountVal - lockedVal).toFixed(8);
+  
+  transferModal.dataset.token = token;
+  transferModal.dataset.amount = maxAvailable;
+  
+  maxSpan.textContent = `(max: ${maxAvailable})`;
+  maxSpan.onclick = function () {
+    document.getElementById('transfer-quantity').value = maxAvailable;
+  };
+  
+  transferModal.style.display = 'block';
+}
+
+ else if (action === 'swap') {
+  const swapModal = document.getElementById('swap-modal');
+  const tokenSpan = document.getElementById('swap-token');
+  const maxSpan = document.getElementById('swap-max');
+  
+  tokenSpan.textContent = token;
+  const amountVal = parseFloat(this.getAttribute('data-amount'));
+  const lockedVal = parseFloat(this.getAttribute('data-locked'));
+  const maxAvailable = (amountVal - lockedVal).toFixed(8);
+  
+  swapModal.dataset.token = token;
+  swapModal.dataset.amount = maxAvailable;
+  
+  maxSpan.textContent = `(max: ${maxAvailable})`;
+  maxSpan.onclick = function () {
+    document.getElementById('swap-quantity').value = maxAvailable;
+  };
+  
+  swapModal.style.display = 'block';
+}
+
+ else if (action === 'staking') {
+            loadContent('staking_farms');
+          }
+        });
+      });
+    
+      // Associa il listener per chiudere i modali
+      document.querySelectorAll('.modal .close').forEach(closeBtn => {
+        closeBtn.addEventListener('click', function() {
+          this.parentElement.parentElement.style.display = 'none';
+        });
+      });
+    }        	
   // Riassocia i listener per i pulsanti appena creati
   attachBalanceActionListeners();
 

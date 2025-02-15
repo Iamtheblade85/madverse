@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Login con Anchor e Wax Cloud Wallet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Librerie per Anchor Link -->
+  <script src="https://unpkg.com/anchor-link/dist/anchor-link.browser.min.js"></script>
+  <script src="https://unpkg.com/anchor-link-browser-transport/dist/anchor-link-browser-transport.min.js"></script>
+  <!-- Libreria per Wax Cloud Wallet -->
+  <script src="https://cdn.jsdelivr.net/npm/@waxio/waxjs/dist/waxjs.umd.js"></script>
+  <!-- eosjs per effettuare chiamate RPC -->
+  <script src="https://cdn.jsdelivr.net/npm/eosjs/dist/eosjs.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1, h2 { color: #333; }
+    button { margin: 10px; padding: 10px 20px; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+  </style>
+</head>
+<body>
+  <h1>Login con Anchor e Wax Cloud Wallet</h1>
+  <button id="btnAnchor">Login con Anchor</button>
+  <button id="btnWax">Login con Wax Cloud Wallet</button>
+  
+  <!-- Div per mostrare le informazioni dell'utente -->
+  <div id="userInfo"></div>
+  <!-- Div per mostrare i bilanci token -->
+  <div id="balanceInfo"></div>
+  
+  <script>
+    // Variabile globale per memorizzare l'account loggato
+    let accountName = '';
+
+    // Configurazione del nodo RPC (in questo esempio utilizziamo wax.greymass.com)
+    const rpcEndpoint = 'https://wax.greymass.com';
+    const rpc = new eosjs.JsonRpc(rpcEndpoint, { fetch });
+
+    // Funzione per mostrare l'account utente nella pagina
+    function showUserInfo(account) {
+      document.getElementById('userInfo').innerHTML = '<h2>Account: ' + account + '</h2>';
+    }
+
+    // Funzione per mostrare in una tabella i bilanci dei token
+    function displayBalances(balances) {
+      let html = '<h2>Bilanci Token</h2>';
+      html += '<table><thead><tr><th>Token</th><th>Bilancio</th></tr></thead><tbody>';
+      if (balances.length === 0) {
+        html += '<tr><td colspan="2">Nessun token trovato</td></tr>';
+      } else {
+        balances.forEach(item => {
+          html += '<tr><td>' + item.token + '</td><td>' + item.balance + '</td></tr>';
+        });
+      }
+      html += '</tbody></table>';
+      document.getElementById('balanceInfo').innerHTML = html;
+    }
+
+    // Funzione per recuperare i bilanci dei token tramite API (in questo esempio solo WAX)
+    async function getTokenBalances(account) {
+      try {
+        // Esempio: recupera il bilancio del token WAX dal contratto eosio.token
+        const waxBalanceArray = await rpc.get_currency_balance('eosio.token', account, 'WAX');
+        let balances = [];
+        if (waxBalanceArray && waxBalanceArray.length > 0) {
+          balances.push({ token: 'WAX', balance: waxBalanceArray[0] });
+        }
+        // Puoi aggiungere ulteriori chiamate per altri token se necessario
+        displayBalances(balances);
+      } catch (error) {
+        console.error('Errore nel recuperare i bilanci:', error);
+        document.getElementById('balanceInfo').innerHTML = '<p>Errore nel recuperare i bilanci.</p>';
+      }
+    }
+
+    // Funzione per il login tramite Anchor
+    async function loginWithAnchor() {
+      try {
+        const transport = new AnchorLinkBrowserTransport();
+        const link = new AnchorLink({
+          transport,
+          // Chain ID del mainnet WAX (assicurati che sia corretto)
+          chainId: '1064487b3cd1a897ce03ae5b6a865651747e2e152090f99c1d19d44e01aea5a4',
+          service: 'wax',
+          rpc: rpcEndpoint
+        });
+        // "mywaxapp" è il nome della tua applicazione; modificare se necessario
+        const result = await link.login('mywaxapp');
+        accountName = result.account;
+        showUserInfo(accountName);
+        getTokenBalances(accountName);
+      } catch (error) {
+        console.error('Errore durante il login con Anchor:', error);
+        alert('Errore durante il login con Anchor: ' + error.message);
+      }
+    }
+
+    // Funzione per il login tramite Wax Cloud Wallet
+    async function loginWithWax() {
+      try {
+        const wax = new waxjs.WaxJS({
+          rpcEndpoint: rpcEndpoint,
+          tryAutoLogin: false
+        });
+        accountName = await wax.login();
+        showUserInfo(accountName);
+        getTokenBalances(accountName);
+      } catch (error) {
+        console.error('Errore durante il login con Wax Cloud Wallet:', error);
+        alert('Errore durante il login con Wax Cloud Wallet: ' + error.message);
+      }
+    }
+
+    // Aggiunta degli event listener ai bottoni
+    document.getElementById('btnAnchor').addEventListener('click', loginWithAnchor);
+    document.getElementById('btnWax').addEventListener('click', loginWithWax);
+  </script>
+</body>
+</html>

@@ -36,8 +36,8 @@
 
     // Configurazione del nodo RPC (in questo esempio utilizziamo wax.greymass.com)
     const rpcEndpoint = 'https://wax.greymass.com';
-    // Estrai JsonRpc dalla variabile globale eosjs (grazie al bundle UMD)
-    const { JsonRpc } = eosjs;
+    // Estrai JsonRpc dalla variabile globale eosjs (usando window.eosjs)
+    const { JsonRpc } = window.eosjs;
     const rpc = new JsonRpc(rpcEndpoint, { fetch });
 
     // Funzione per mostrare l'account utente nella pagina
@@ -83,12 +83,12 @@
         const transport = new AnchorLinkBrowserTransport();
         const link = new AnchorLink({
           transport,
-          // Chain ID del mainnet WAX (assicurati che sia corretto)
+          // Chain ID aggiornato con quello fornito
           chainId: '1064487b3cd1a897ce03ae5b6a865651747e2e152090f99c1d19d44e01aea5a4',
           service: 'wax',
           rpc: rpcEndpoint
         });
-        // "mywaxapp" è il nome della tua applicazione; modificare se necessario
+        // "mywaxapp" è il nome della tua applicazione; modifica se necessario
         const result = await link.login('mywaxapp');
         accountName = result.account;
         showUserInfo(accountName);

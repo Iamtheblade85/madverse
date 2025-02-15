@@ -9,9 +9,8 @@
   <script src="https://unpkg.com/anchor-link-browser-transport/dist/anchor-link-browser-transport.min.js"></script>
   <!-- Libreria per Wax Cloud Wallet -->
   <script src="https://cdn.jsdelivr.net/npm/@waxio/waxjs/dist/waxjs.umd.js"></script>
-  <!-- eosjs per effettuare chiamate RPC -->
+  <!-- eosjs versione UMD -->
   <script src="https://cdn.jsdelivr.net/npm/eosjs@22.0.0/dist/eosjs.umd.min.js"></script>
-
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     h1, h2 { color: #333; }
@@ -37,7 +36,9 @@
 
     // Configurazione del nodo RPC (in questo esempio utilizziamo wax.greymass.com)
     const rpcEndpoint = 'https://wax.greymass.com';
-    const rpc = new eosjs.JsonRpc(rpcEndpoint, { fetch });
+    // Estrai JsonRpc dalla variabile globale eosjs (grazie al bundle UMD)
+    const { JsonRpc } = eosjs;
+    const rpc = new JsonRpc(rpcEndpoint, { fetch });
 
     // Funzione per mostrare l'account utente nella pagina
     function showUserInfo(account) {

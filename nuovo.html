@@ -17,10 +17,10 @@
   <button id="btnAnchor">Login con Anchor</button>
   <div id="resultDiv"></div>
 
-  <!-- Usiamo il type="module" per importare le librerie da CDN con versioni fissate -->
+  <!-- Usa type="module" per gli import ES -->
   <script type="module">
-    // Importa WaxJS
-    import { WaxJS } from "https://cdn.skypack.dev/@waxio/waxjs/dist";
+    // Importa WaxJS dal percorso corretto come default export
+    import WaxJS from "https://cdn.skypack.dev/@waxio/waxjs/dist/waxjs.esm.js";
     // Fissa le versioni compatibili di anchor-link e anchor-link-browser-transport
     import AnchorLink from "https://cdn.skypack.dev/anchor-link@3.5.0";
     import AnchorLinkBrowserTransport from "https://cdn.skypack.dev/anchor-link-browser-transport@3.5.0";
@@ -28,7 +28,7 @@
     class User {
       constructor() {
         this.appName = 'Chaos Marketplace';
-        // Imposta il nodo RPC: usa il mainnet o testnet in base alle tue esigenze
+        // Imposta il nodo RPC: per mainnet usa 'https://wax.pink.gg'
         this.rpcEndpoint = 'https://wax.pink.gg';
         this.wax = null;
         this.anchorSession = null;
@@ -50,6 +50,7 @@
         try {
           this.wax = new WaxJS({ rpcEndpoint: this.rpcEndpoint, tryAutoLogin: true });
           const userAccount = await this.wax.login();
+          console.log("Wax login account:", userAccount);
           return userAccount;
         } catch (e) {
           console.error("Errore in waxLogin:", e.message);
@@ -60,11 +61,13 @@
       // Login con Anchor
       async anchorConnect() {
         try {
-          // Inizializza anche WaxJS (necessario per le chiamate RPC)
+          // Inizializza anche WaxJS per poter effettuare chiamate RPC
           this.wax = new WaxJS({ rpcEndpoint: this.rpcEndpoint, tryAutoLogin: true });
           const identity = await this.anchorLink.login('mydapp');
           this.anchorSession = identity.session;
-          return identity.session.auth.actor.toString();
+          const account = identity.session.auth.actor.toString();
+          console.log("Anchor login account:", account);
+          return account;
         } catch (e) {
           console.error("Errore in anchorConnect:", e);
           return null;

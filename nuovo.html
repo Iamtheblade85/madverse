@@ -15,21 +15,21 @@
   <h1>Login con Wax e Anchor</h1>
   <button id="btnWax">Login con Wax</button>
   <button id="btnAnchor">Login con Anchor</button>
-  <div id="result"></div>
+  <div id="resultDiv"></div>
 
-  <!-- Usiamo il type="module" per importare le librerie da CDN -->
+  <!-- Usiamo il type="module" per importare le librerie da CDN con versioni fissate -->
   <script type="module">
-    // Importiamo le librerie da Skypack (assicurati di avere una versione che supporti gli ES Modules)
+    // Importa WaxJS
     import { WaxJS } from "https://cdn.skypack.dev/@waxio/waxjs/dist";
-    import AnchorLink from "https://cdn.skypack.dev/anchor-link";
-    import AnchorLinkBrowserTransport from "https://cdn.skypack.dev/anchor-link-browser-transport";
+    // Fissa le versioni compatibili di anchor-link e anchor-link-browser-transport
+    import AnchorLink from "https://cdn.skypack.dev/anchor-link@3.5.0";
+    import AnchorLinkBrowserTransport from "https://cdn.skypack.dev/anchor-link-browser-transport@3.5.0";
 
-    // Classe per gestire il login e il recupero del bilancio
     class User {
       constructor() {
         this.appName = 'Chaos Marketplace';
-        // Configurazione WAX: puoi usare il nodo di testnet o mainnet a seconda delle tue necessità
-        this.rpcEndpoint = 'https://wax.pink.gg'; // per mainnet (oppure usa https://wax-testnet.pink.gg per testnet)
+        // Imposta il nodo RPC: usa il mainnet o testnet in base alle tue esigenze
+        this.rpcEndpoint = 'https://wax.pink.gg';
         this.wax = null;
         this.anchorSession = null;
         // Configurazione per Anchor
@@ -39,7 +39,7 @@
           chains: [
             {
               chainId: '1064487b3cd1a897ce03ae5b6a865651747e2e152090f99c1d19d44e01aea5a4',
-              nodeUrl: 'https://wax.eosphere.io' // oppure, per testnet: 'https://wax-testnet.eosphere.io'
+              nodeUrl: 'https://wax.eosphere.io'
             }
           ]
         });
@@ -60,11 +60,10 @@
       // Login con Anchor
       async anchorConnect() {
         try {
-          // Inizializziamo anche WaxJS (necessario per effettuare le chiamate RPC)
+          // Inizializza anche WaxJS (necessario per le chiamate RPC)
           this.wax = new WaxJS({ rpcEndpoint: this.rpcEndpoint, tryAutoLogin: true });
           const identity = await this.anchorLink.login('mydapp');
           this.anchorSession = identity.session;
-          // L'account è disponibile in identity.session.auth.actor
           return identity.session.auth.actor.toString();
         } catch (e) {
           console.error("Errore in anchorConnect:", e);
@@ -85,17 +84,14 @@
       }
     }
 
-    // Istanza del nostro UserService
     const userService = new User();
     const resultDiv = document.getElementById("result");
 
-    // Funzione per visualizzare i dati dell'account e il bilancio
     function displayResult(account, balance) {
       resultDiv.innerHTML = `<p><strong>Account:</strong> ${account}</p>
                              <p><strong>Bilancio:</strong> ${balance}</p>`;
     }
 
-    // Gestione login con Wax
     document.getElementById("btnWax").addEventListener("click", async () => {
       resultDiv.innerHTML = "<p>Login con Wax in corso...</p>";
       const account = await userService.waxLogin();
@@ -107,7 +103,6 @@
       }
     });
 
-    // Gestione login con Anchor
     document.getElementById("btnAnchor").addEventListener("click", async () => {
       resultDiv.innerHTML = "<p>Login con Anchor in corso...</p>";
       const account = await userService.anchorConnect();

@@ -1499,12 +1499,12 @@ document.querySelectorAll('.change-status-button').forEach(button => {
                     `Error: ${result.error}`, response.ok);
     
                 card.replaceChild(messageDiv, inProgressMessage);
-                setTimeout(() => loadPools(), 3000); // Ricarica le pool dopo 3 secondi
+                setTimeout(() => loadPools(), 10000); // Ricarica le pool dopo 10 secondi
             } catch (error) {
                 console.error("Error during stake request:", error);
                 const errorMessageDiv = createMessageElement('An error occurred. Please try again.', false);
                 card.replaceChild(errorMessageDiv, inProgressMessage);
-                setTimeout(() => loadPools(), 3000);
+                setTimeout(() => loadPools(), 10000);
             }
         });
     });

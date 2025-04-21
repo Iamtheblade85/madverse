@@ -1725,19 +1725,62 @@ document.querySelectorAll('.change-status-button').forEach(button => {
                 
                         // Funzione di ordinamento per gli NFT
                         function sortNfts(sortOrder, nfts) {
-                            switch (sortOrder) {
-                                case 'newest-desc':
-                                    return nfts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                                case 'newest-asc':
-                                    return nfts.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-                                case 'a-z-asc':
-                                    return nfts.sort((a, b) => a.template_info.template_name.localeCompare(b.template_info.template_name));
-                                case 'a-z-desc':
-                                    return nfts.sort((a, b) => b.template_info.template_name.localeCompare(a.template_info.template_name));
-                                default:
-                                    return nfts;
-                            }
-                        }
+                          switch (sortOrder) {
+                              case 'newest-desc':
+                                  return nfts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // Newest first
+                              case 'newest-asc':
+                                  return nfts.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)); // Oldest first
+                              
+                              case 'nft-id-asc':
+                                  return nfts.sort((a, b) => a.nft_id - b.nft_id); // NFT-ID ascending
+                              case 'nft-id-desc':
+                                  return nfts.sort((a, b) => b.nft_id - a.nft_id); // NFT-ID descending
+                              
+                              case 'status-asc':
+                                  return nfts.sort((a, b) => a.is_staked.localeCompare(b.is_staked)); // Status ascending
+                              case 'status-desc':
+                                  return nfts.sort((a, b) => b.is_staked.localeCompare(a.is_staked)); // Status descending
+                              
+                              case 'collection-asc':
+                                  return nfts.sort((a, b) => a.template_info.collection_name.localeCompare(b.template_info.collection_name)); // Collection ascending
+                              case 'collection-desc':
+                                  return nfts.sort((a, b) => b.template_info.collection_name.localeCompare(a.template_info.collection_name)); // Collection descending
+                              
+                              case 'asset-id-asc':
+                                  return nfts.sort((a, b) => a.asset_id.localeCompare(b.asset_id)); // Asset ID ascending
+                              case 'asset-id-desc':
+                                  return nfts.sort((a, b) => b.asset_id.localeCompare(a.asset_id)); // Asset ID descending
+                      
+                              case 'sale-asc':
+                                  return nfts.sort((a, b) => a.for_sale.localeCompare(b.for_sale)); // Sale status ascending (Yes first)
+                              case 'sale-desc':
+                                  return nfts.sort((a, b) => b.for_sale.localeCompare(a.for_sale)); // Sale status descending (No first)
+                      
+                              case 'stakable-asc':
+                                  return nfts.sort((a, b) => a.is_stakable.localeCompare(b.is_stakable)); // Stakable status ascending
+                              case 'stakable-desc':
+                                  return nfts.sort((a, b) => b.is_stakable.localeCompare(a.is_stakable)); // Stakable status descending
+                      
+                              case 'transferable-asc':
+                                  return nfts.sort((a, b) => a.template_info.is_transferable.localeCompare(b.template_info.is_transferable)); // Transferable status ascending
+                              case 'transferable-desc':
+                                  return nfts.sort((a, b) => b.template_info.is_transferable.localeCompare(a.template_info.is_transferable)); // Transferable status descending
+                      
+                              case 'max-supply-asc':
+                                  return nfts.sort((a, b) => a.template_info.max_supply - b.template_info.max_supply); // Max supply ascending
+                              case 'max-supply-desc':
+                                  return nfts.sort((a, b) => b.template_info.max_supply - a.template_info.max_supply); // Max supply descending
+                      
+                              case 'schema-asc':
+                                  return nfts.sort((a, b) => a.template_info.schema_name.localeCompare(b.template_info.schema_name)); // Schema name ascending
+                              case 'schema-desc':
+                                  return nfts.sort((a, b) => b.template_info.schema_name.localeCompare(a.template_info.schema_name)); // Schema name descending
+                      
+                              default:
+                                  return nfts; // No sorting by default
+                          }
+                      }
+
     document.querySelectorAll('.withdraw-button').forEach(button => {
         button.addEventListener('click', async function () {
             //console.log('Button clicked:', this);

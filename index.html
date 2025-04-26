@@ -258,7 +258,7 @@
                         </tr>
                       </thead>
                       <tbody>
-                        ${stormsData.storms.sort((a,b) => new Date(a.scheduled_time) - new Date(b.scheduled_time))
+                        ${stormsData.sort((a,b) => new Date(a.scheduled_time) - new Date(b.scheduled_time))
                           .map(storm => `
                             <tr style="border-bottom:1px solid #ccc;">
                               <td>${storm.channel_name}</td>

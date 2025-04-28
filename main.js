@@ -159,39 +159,76 @@ function openModal(action, token) {
   const modal = document.getElementById('modal');
   const modalBody = document.getElementById('modal-body');
 
-  let actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
+  const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
+
+  // Prima di tutto recupera il saldo disponibile di quel token
+  const tokenRow = Array.from(document.querySelectorAll('tr')).find(row => row.innerText.includes(token));
+  const balanceCell = tokenRow ? tokenRow.querySelectorAll('td')[1] : null;
+  const balance = balanceCell ? parseFloat(balanceCell.innerText) : 0;
 
   modalBody.innerHTML = `
     <h3 class="text-xl font-semibold mb-4">${actionTitle} ${token}</h3>
+    
+    <div class="mb-2 text-gray-600">
+      Balance disponibile: <span class="font-semibold">${balance}</span> ${token}
+    </div>
+
+    <div class="mb-2 text-gray-600">
+      Wax Account destinatario: <span class="font-semibold">${window.userData.wax_account}</span>
+    </div>
+
     <form id="action-form" class="space-y-4">
+      <div>
+        <label class="block mb-1">Percentuale</label>
+        <input type="range" id="percent-range" class="w-full" min="0" max="100" value="0">
+      </div>
+
       <div>
         <label class="block mb-1">Amount</label>
         <input type="number" id="amount" class="w-full p-2 border rounded" required min="0.0001" step="0.0001">
       </div>
+
       <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-        Confirm ${actionTitle}
+        Conferma ${actionTitle}
       </button>
     </form>
   `;
 
-  // Mostra modale
+  // Mostra la modale
   modal.classList.remove('hidden');
 
-  // Gestione chiusura
+  // Chiudi modale
   document.getElementById('close-modal').onclick = () => {
     modal.classList.add('hidden');
   };
 
-  // Gestione submit form
+  // Sincronizza slider con input amount
+  const percentRange = document.getElementById('percent-range');
+  const amountInput = document.getElementById('amount');
+
+  percentRange.addEventListener('input', () => {
+    const percent = parseFloat(percentRange.value);
+    const calculatedAmount = ((balance * percent) / 100).toFixed(4);
+    amountInput.value = calculatedAmount;
+  });
+
+  amountInput.addEventListener('input', () => {
+    // Se l'utente cambia manualmente amount, aggiorna lo slider
+    const manualAmount = parseFloat(amountInput.value);
+    const newPercent = ((manualAmount / balance) * 100).toFixed(0);
+    percentRange.value = Math.min(newPercent, 100);
+  });
+
+  // Submit del form
   document.getElementById('action-form').onsubmit = async (e) => {
     e.preventDefault();
-    const amount = document.getElementById('amount').value;
+    const amount = amountInput.value;
 
     try {
       await executeAction(action, token, amount);
       showToast(`${actionTitle} completato con successo`, "success");
       modal.classList.add('hidden');
-      loadWallet(); // Ricarica saldo aggiornato
+      loadWallet(); // Ricarica saldo
     } catch (error) {
       console.error(error);
       showToast(`Errore durante ${actionTitle}`, "error");
@@ -215,14 +252,17 @@ async function executeAction(action, token, amount) {
     endpoint = `${BASE_URL}/stake`;
   }
 
-  const response = await fetch(endpoint, {
+  // Aggiungiamo user_id e usx_token all'URL
+  const fullUrl = `${endpoint}?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
+
+  console.info(`[📤] Eseguo azione ${action} chiamando: ${fullUrl}`);
+
+  const response = await fetch(fullUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      user_id: userId,
-      usx_token: usx_token,
       wax_account: wax_account,
       token_symbol: token,
       amount: amount

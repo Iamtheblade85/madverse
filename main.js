@@ -14,6 +14,17 @@ function getUrlParams() {
   };
 }
 
+async function loadAvailableTokens() {
+  try {
+    const response = await fetch('https://alcor.exchange/api/v2/tokens');
+    const tokens = await response.json();
+    availableTokens = tokens.map(t => `${t.symbol}-${t.contract}`);
+    console.info("[✅] Tokens disponibili caricati:", availableTokens);
+  } catch (error) {
+    console.error("[❌] Errore caricando tokens:", error);
+  }
+}
+
 // Funzione iniziale
 async function initApp() {
   try {
@@ -52,7 +63,7 @@ async function initApp() {
     window.userData.wax_account = data.wax_account;
 
     console.info("[✅] Login effettuato correttamente. Dati utente finali:", window.userData);
-
+    await loadAvailableTokens();
     console.info("[🧹] Caricamento prima sezione Wallet...");
     loadSection('wallet');
 

@@ -4,22 +4,41 @@ window.userData = {};
 // Base URL reale
 const BASE_URL = "https://iamemanuele.pythonanywhere.com";
 
+// Estrai parametri da URL
+function getUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    userId: params.get('user_id'),
+    usx_token: params.get('usx_token')
+  };
+}
+
 // Funzione iniziale
 async function initApp() {
   try {
-    console.log("[🚪] Contattando /main_door...");
+    console.log("[🔍] Estraendo parametri da URL...");
+    const params = getUrlParams();
 
-    const response = await fetch(`${BASE_URL}/main_door`);
+    if (!params.userId || !params.usx_token) {
+      throw new Error("Parametri user_id o usx_token mancanti nell'URL");
+    }
+
+    window.userData = {
+      userId: params.userId,
+      usx_token: params.usx_token,
+      wax_account: null // Da popolare dopo /main_door
+    };
+
+    console.log("[🚪] Verificando credenziali con /main_door...");
+
+    const response = await fetch(`${BASE_URL}/main_door?user_id=${params.userId}&usx_token=${params.usx_token}`);
     const data = await response.json();
 
     if (!data.success) throw new Error("Autenticazione fallita");
 
-    // Salva i dati utente globali
-    window.userData = {
-      userId: data.user_id,
-      usx_token: data.token,
-      wax_account: data.wax_account
-    };
+    // Aggiorna wax_account dopo verifica
+    window.userData.wax_account = data.wax_account;
+
     console.log("[✅] User logged in:", window.userData);
 
     // Carica la prima sezione
@@ -34,15 +53,15 @@ async function initApp() {
     });
 
   } catch (error) {
-    console.error("[❌] Errore login:", error);
+    console.error("[❌] Errore iniziale:", error);
     document.getElementById('app').innerHTML = `
       <div class="text-red-500 text-center mt-8">
-        Autenticazione fallita. Assicurati di aver fatto login.
+        Errore: ${error.message}<br>Verifica il link o rifai il login.
       </div>`;
   }
 }
 
-// Caricamento dinamico delle sezioni
+// Funzione per caricare dinamicamente sezioni
 function loadSection(section) {
   console.log(`[📦] Caricando sezione: ${section}`);
   const app = document.getElementById('app');
@@ -167,7 +186,7 @@ function openModal(action, token) {
   };
 }
 
-// Funzione che esegue azioni vere (da completare con i tuoi endpoints)
+// Funzione che esegue azioni reali
 async function executeAction(action, token, amount) {
   const { userId, usx_token, wax_account } = window.userData;
 

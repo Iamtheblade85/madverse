@@ -3,7 +3,6 @@
 // Gestisce navigazione e dark mode
 // ==============================
 
-
 // ==============================
 // Variabili Globali - Dati Utente dall'URL
 // ==============================
@@ -17,13 +16,18 @@ function getQueryParam(param) {
 // Recupera da URL
 const userId = getQueryParam('user_id');
 const token = getQueryParam('usx_token');
-let userWaxAccount = "";
+window.userWaxAccount = ""; // 👉 Variabile globale reale
+
+const BASE_URL = "https://iamemanuele.pythonanywhere.com";
 
 if (!userId || !token) {
   alert("Missing user_id or token in URL. Please access the app properly.");
   throw new Error("user_id or token missing");
 }
 
+// ==============================
+// Carica dati utente da /main_door
+// ==============================
 async function preloadUserData() {
   try {
     const response = await fetch(`${BASE_URL}/main_door?user_id=${userId}&usx_token=${token}`);
@@ -31,8 +35,8 @@ async function preloadUserData() {
     if (data.error) {
       throw new Error(data.error);
     }
-    userWaxAccount = data.wax_account;
-    console.log('User Wax Account loaded:', userWaxAccount);
+    window.userWaxAccount = data.wax_account; // 👈 Assegna a window.userWaxAccount
+    console.log('User Wax Account loaded:', window.userWaxAccount);
   } catch (error) {
     console.error('Failed to preload wax_account from main_door:', error);
     alert("Failed to preload user data. Please reload the page.");
@@ -45,7 +49,7 @@ async function preloadUserData() {
 document.addEventListener('DOMContentLoaded', initApp);
 
 async function initApp() {
-  await preloadUserData();  // ✅ ora funziona correttamente
+  await preloadUserData();
   setupNavigation();
   setupDarkMode();
   loadInitialPage();
@@ -68,7 +72,6 @@ function navigateTo(page) {
   const mainContent = document.getElementById('main-content');
   mainContent.innerHTML = '<div class="loader">Loading...</div>';
 
-  // Simula un caricamento rapido
   setTimeout(async () => {
     switch (page) {
       case 'wallet':
@@ -94,7 +97,7 @@ function navigateTo(page) {
       default:
         mainContent.innerHTML = '<p>Page not found.</p>';
     }
-  }, 300); // Leggero ritardo per vedere il loader
+  }, 300);
 }
 
 // ==============================

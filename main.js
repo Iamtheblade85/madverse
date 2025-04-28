@@ -229,7 +229,7 @@ async function openModal(action, token) {
     `;
 
     // Load tokens for dropdown and preview button click handler (as already implemented)
-    await loadTokens();
+    await loadAvailableTokens();
 
   } else {
     // Layout for Withdraw, Transfer, Stake (no changes here)
@@ -280,7 +280,7 @@ async function openModal(action, token) {
 
     // Load tokens only if not already loaded
     if (availableTokens.length === 0) {
-      await loadTokens();
+      await loadAvailableTokens();
     }
 
     function updateTokenDropdown(tokens) {

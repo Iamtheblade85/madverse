@@ -17,7 +17,7 @@ function getQueryParam(param) {
 // Recupera da URL
 const userId = getQueryParam('user_id');
 const token = getQueryParam('usx_token');
-const userWaxAccount = ""; // Se vuoi potresti anche ottenere wax_account da una chiamata API tipo /profile
+let userWaxAccount = "";
 
 if (!userId || !token) {
   alert("Missing user_id or token in URL. Please access the app properly.");

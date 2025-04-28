@@ -288,10 +288,9 @@ async function openModal(action, token) {
       let [symbolOut, contractOut] = outputSelection.split("-");
       symbolOut = symbolOut.toLowerCase();
       contractOut = contractOut.toLowerCase();
-      const contractIn = "xcryptochips"; // dinamico futuro
       const symbolIn = token.toLowerCase();
-
-      const apiUrl = `https://alcor.exchange/api/v2/swapRouter/getRoute?trade_type=EXACT_INPUT&input=${symbolIn}-${contractIn}&output=${symbolOut}-${contractOut}&amount=${amount}`;
+      const contractInLower = contractIn.toLowerCase(); // 👈 ora usi quello dinamico trovato sopra!
+      const apiUrl = `https://alcor.exchange/api/v2/swapRouter/getRoute?trade_type=EXACT_INPUT&input=${symbolIn}-${contractInLower}&output=${symbolOut}-${contractOut}&amount=${amount}`;
 
       swapPreview.classList.remove('hidden');
       loadingSpinner.classList.remove('hidden');

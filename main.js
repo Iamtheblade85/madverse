@@ -162,7 +162,14 @@ async function openModal(action, token) {
   const tokenRow = Array.from(document.querySelectorAll('tr')).find(row => row.innerText.includes(token));
   const balanceCell = tokenRow ? tokenRow.querySelectorAll('td')[1] : null;
   const balance = balanceCell ? parseFloat(balanceCell.innerText) : 0;
-
+  // 🔥 Find the correct contractIn based on the selected token
+  let contractIn = "";
+  const match = availableTokens.find(t => t.split("-")[0].toLowerCase() === token.toLowerCase());
+  if (match) {
+    contractIn = match.split("-")[1];
+  } else {
+    console.error("[❌] Contract for input token not found!");
+  }
   modalBody.innerHTML = "";
 
   if (action === "swap") {
@@ -278,7 +285,9 @@ async function openModal(action, token) {
         alert("Please enter a valid amount and select output token.");
         return;
       }
-      const [symbolOut, contractOut] = outputSelection.split("-");
+      let [symbolOut, contractOut] = outputSelection.split("-");
+      symbolOut = symbolOut.toLowerCase();
+      contractOut = contractOut.toLowerCase();
       const contractIn = "xcryptochips"; // dinamico futuro
       const symbolIn = token.toLowerCase();
 

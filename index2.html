@@ -14,14 +14,27 @@
     <div id="menu" class="space-x-4">
       <button class="menu-btn" data-section="wallet">Wallet</button>
       <button class="menu-btn" data-section="nfts">NFTs Wallet</button>
-      <!-- Aggiungeremo più pulsanti qui -->
+      <!-- Più sezioni future -->
     </div>
   </nav>
 
-  <!-- Contenuto dinamico -->
+  <!-- Contenuto dinamico principale -->
   <main id="app" class="p-4"></main>
 
-  <!-- Script -->
+  <!-- Modale dinamica -->
+  <div id="modal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div id="modal-content" class="bg-white p-6 rounded-lg shadow-lg w-96 relative">
+      <button id="close-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+      <div id="modal-body">
+        <!-- Contenuto dinamico della modale -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toast-container" class="fixed top-4 right-4 space-y-2 z-50"></div>
+
+  <!-- Script principale -->
   <script src="main.js"></script>
 </body>
 </html>

@@ -164,6 +164,16 @@ async function openModal(action, token) {
   const balanceCell = tokenRow ? tokenRow.querySelectorAll('td')[1] : null;
   const balance = balanceCell ? parseFloat(balanceCell.innerText) : 0;
 
+  let additionalFields = "";
+
+  if (action !== "swap") {
+    additionalFields = `
+      <div class="mb-2 text-gray-600">
+        Destination Wax Account: <span class="font-semibold">${window.userData.wax_account}</span>
+      </div>
+    `;
+  }
+
   modalBody.innerHTML = `
     <h3 class="text-xl font-semibold mb-4">${actionTitle} ${token}</h3>
 
@@ -171,9 +181,7 @@ async function openModal(action, token) {
       Available Balance: <span class="font-semibold">${balance}</span> ${token}
     </div>
 
-    <div class="mb-2 text-gray-600">
-      Destination Wax Account: <span class="font-semibold">${window.userData.wax_account}</span>
-    </div>
+    ${additionalFields}
 
     <form id="action-form" class="space-y-4">
       <div>
@@ -195,14 +203,13 @@ async function openModal(action, token) {
         </div>
       </div>
 
-      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+      <button id="submit-button" type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
         Confirm ${actionTitle}
       </button>
     </form>
   `;
 
   modal.classList.remove('hidden');
-
   document.getElementById('close-modal').onclick = () => {
     modal.classList.add('hidden');
   };
@@ -215,6 +222,7 @@ async function openModal(action, token) {
   const executionPriceSpan = document.getElementById('execution-price');
   const minReceivedSpan = document.getElementById('min-received');
   const priceImpactSpan = document.getElementById('price-impact');
+  const submitButton = document.getElementById('submit-button');
 
   async function fetchSwapPreview(amount) {
     if (action !== "swap" || !amount || amount <= 0) return;
@@ -224,7 +232,7 @@ async function openModal(action, token) {
     swapDataContainer.classList.add('hidden');
 
     try {
-      const contractIn = "xcryptochips"; // <- dinamico se vuoi in futuro
+      const contractIn = "xcryptochips"; // in futuro dinamico
       const symbolIn = token.toLowerCase();
       const apiUrl = `https://alcor.exchange/api/v2/swapRouter/getRoute?trade_type=EXACT_INPUT&input=${symbolIn}-${contractIn}&output=wax-eosio.token&amount=${amount}`;
 
@@ -241,9 +249,11 @@ async function openModal(action, token) {
 
       loadingSpinner.classList.add('hidden');
       swapDataContainer.classList.remove('hidden');
+      submitButton.disabled = false;
     } catch (error) {
       console.error("[❌] Error fetching swap preview:", error);
       loadingSpinner.innerHTML = `<div class="text-red-500">⚠️ Failed to load blockchain data.</div>`;
+      submitButton.disabled = true;
     }
   }
 

@@ -257,29 +257,42 @@ async function executeAction(action, token, amount) {
 
   console.info(`[📤] Eseguo azione ${action} chiamando: ${fullUrl}`);
 
-  const response = await fetch(fullUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      wax_account: wax_account,
-      token_symbol: token,
-      amount: amount
-    })
-  });
+  let response;
+  let data;
 
-  const data = await response.json();
-  console.info("[🔵] Risposta server:", data);
+  try {
+    response = await fetch(fullUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        wax_account: wax_account,
+        token_symbol: token,
+        amount: amount
+      })
+    });
+  } catch (networkError) {
+    console.error("[❌] Errore di rete:", networkError);
+    throw new Error("Network error or server unreachable.");
+  }
+
+  try {
+    data = await response.json();
+    console.info("[🔵] Risposta server:", data);
+  } catch (parseError) {
+    console.error("[❌] Errore parsing JSON:", parseError);
+    throw new Error("Server error: invalid response format.");
+  }
 
   if (!response.ok) {
-    console.error(`[❌] Errore HTTP: ${response.status}`, data.error || "Errore generico");
-    throw new Error(data.error || "Errore generico");
+    console.error(`[❌] Errore HTTP ${response.status}:`, data.error || "Unknown error");
+    throw new Error(data.error || `HTTP error ${response.status}`);
   }
 
   if (data.error) {
-    console.error(`[❌] Errore API:`, data.error);
-    throw new Error(data.error || "Errore generico");
+    console.error(`[❌] API error:`, data.error);
+    throw new Error(data.error);
   }
 
   console.info("[✅] Azione completata:", data.message || "Successo");

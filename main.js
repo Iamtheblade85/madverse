@@ -164,50 +164,72 @@ async function openModal(action, token) {
   const balanceCell = tokenRow ? tokenRow.querySelectorAll('td')[1] : null;
   const balance = balanceCell ? parseFloat(balanceCell.innerText) : 0;
 
-  let additionalFields = "";
+  modalBody.innerHTML = "";
 
-  if (action !== "swap") {
-    additionalFields = `
+  if (action === "swap") {
+    // Layout specifico per Swap
+    modalBody.innerHTML = `
+      <h3 class="text-xl font-semibold mb-4">Swap ${token}</h3>
+
+      <div class="mb-2 text-gray-600">
+        Available Balance: <span class="font-semibold">${balance}</span> ${token}
+      </div>
+
+      <form id="action-form" class="space-y-4">
+        <div>
+          <label class="block mb-1">Percentage</label>
+          <input type="range" id="percent-range" class="w-full" min="0" max="100" value="0">
+        </div>
+
+        <div>
+          <label class="block mb-1">Amount to Swap</label>
+          <input type="number" id="amount" class="w-full p-2 border rounded" required min="0.0001" step="0.0001">
+        </div>
+
+        <div id="swap-preview" class="my-4 text-gray-600 hidden">
+          <div id="loading-spinner" class="text-center my-2">🔄 Getting blockchain data...</div>
+          <div id="swap-data" class="hidden">
+            <div>Execution Price: <span id="execution-price" class="font-semibold"></span></div>
+            <div>Minimum Received: <span id="min-received" class="font-semibold"></span></div>
+            <div>Price Impact: <span id="price-impact" class="font-semibold"></span>%</div>
+          </div>
+        </div>
+
+        <button id="submit-button" type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+          Confirm Swap
+        </button>
+      </form>
+    `;
+  } else {
+    // Layout per Withdraw, Transfer e Stake
+    modalBody.innerHTML = `
+      <h3 class="text-xl font-semibold mb-4">${actionTitle} ${token}</h3>
+
+      <div class="mb-2 text-gray-600">
+        Available Balance: <span class="font-semibold">${balance}</span> ${token}
+      </div>
+
       <div class="mb-2 text-gray-600">
         Destination Wax Account: <span class="font-semibold">${window.userData.wax_account}</span>
       </div>
+
+      <form id="action-form" class="space-y-4">
+        <div>
+          <label class="block mb-1">Percentage</label>
+          <input type="range" id="percent-range" class="w-full" min="0" max="100" value="0">
+        </div>
+
+        <div>
+          <label class="block mb-1">Amount</label>
+          <input type="number" id="amount" class="w-full p-2 border rounded" required min="0.0001" step="0.0001">
+        </div>
+
+        <button id="submit-button" type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+          Confirm ${actionTitle}
+        </button>
+      </form>
     `;
   }
-
-  modalBody.innerHTML = `
-    <h3 class="text-xl font-semibold mb-4">${actionTitle} ${token}</h3>
-
-    <div class="mb-2 text-gray-600">
-      Available Balance: <span class="font-semibold">${balance}</span> ${token}
-    </div>
-
-    ${additionalFields}
-
-    <form id="action-form" class="space-y-4">
-      <div>
-        <label class="block mb-1">Percentage</label>
-        <input type="range" id="percent-range" class="w-full" min="0" max="100" value="0">
-      </div>
-
-      <div>
-        <label class="block mb-1">Amount</label>
-        <input type="number" id="amount" class="w-full p-2 border rounded" required min="0.0001" step="0.0001">
-      </div>
-
-      <div id="swap-preview" class="my-4 text-gray-600 hidden">
-        <div id="loading-spinner" class="text-center my-2">🔄 Getting blockchain data...</div>
-        <div id="swap-data" class="hidden">
-          <div>Execution Price: <span id="execution-price" class="font-semibold"></span></div>
-          <div>Minimum Received: <span id="min-received" class="font-semibold"></span></div>
-          <div>Price Impact: <span id="price-impact" class="font-semibold"></span>%</div>
-        </div>
-      </div>
-
-      <button id="submit-button" type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-        Confirm ${actionTitle}
-      </button>
-    </form>
-  `;
 
   modal.classList.remove('hidden');
   document.getElementById('close-modal').onclick = () => {
@@ -216,13 +238,18 @@ async function openModal(action, token) {
 
   const percentRange = document.getElementById('percent-range');
   const amountInput = document.getElementById('amount');
-  const swapPreview = document.getElementById('swap-preview');
-  const loadingSpinner = document.getElementById('loading-spinner');
-  const swapDataContainer = document.getElementById('swap-data');
-  const executionPriceSpan = document.getElementById('execution-price');
-  const minReceivedSpan = document.getElementById('min-received');
-  const priceImpactSpan = document.getElementById('price-impact');
   const submitButton = document.getElementById('submit-button');
+
+  let swapPreview, loadingSpinner, swapDataContainer, executionPriceSpan, minReceivedSpan, priceImpactSpan;
+
+  if (action === "swap") {
+    swapPreview = document.getElementById('swap-preview');
+    loadingSpinner = document.getElementById('loading-spinner');
+    swapDataContainer = document.getElementById('swap-data');
+    executionPriceSpan = document.getElementById('execution-price');
+    minReceivedSpan = document.getElementById('min-received');
+    priceImpactSpan = document.getElementById('price-impact');
+  }
 
   async function fetchSwapPreview(amount) {
     if (action !== "swap" || !amount || amount <= 0) return;
@@ -232,7 +259,7 @@ async function openModal(action, token) {
     swapDataContainer.classList.add('hidden');
 
     try {
-      const contractIn = "xcryptochips"; // in futuro dinamico
+      const contractIn = "xcryptochips"; // dinamico in futuro
       const symbolIn = token.toLowerCase();
       const apiUrl = `https://alcor.exchange/api/v2/swapRouter/getRoute?trade_type=EXACT_INPUT&input=${symbolIn}-${contractIn}&output=wax-eosio.token&amount=${amount}`;
 

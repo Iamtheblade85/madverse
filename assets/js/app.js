@@ -27,7 +27,7 @@ if (!userId || !token) {
 // Avvio dell'app al caricamento della pagina
 document.addEventListener('DOMContentLoaded', initApp);
 
-function initApp() {
+async function initApp() {
   // ==============================
   // Carica dati utente all'avvio
   // ==============================

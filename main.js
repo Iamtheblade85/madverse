@@ -149,10 +149,10 @@ async function loadWallet() {
           const action = btn.getAttribute('data-action');
           const token = btn.getAttribute('data-token');
           console.log(`[⚙️] Azione selezionata: ${action} su ${token}`);
-          (action, token);
+          openModal(action, token);  // ✅ CHIAMATA CORRETTA
         });
       });
-
+      
     } else {
       walletTable.innerHTML = `
         <div class="text-center text-gray-500">Nessun saldo disponibile.</div>

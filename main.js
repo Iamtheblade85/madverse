@@ -16,35 +16,46 @@ function getUrlParams() {
 // Funzione iniziale
 async function initApp() {
   try {
-    console.log("[🔍] Estraendo parametri da URL...");
+    console.info("[🔍] Inizio funzione initApp...");
+
+    console.info("[🛰️] Estrazione parametri da URL in corso...");
     const params = getUrlParams();
+    console.info("[🧩] Parametri ottenuti:", params);
 
     if (!params.userId || !params.usx_token) {
+      console.error("[⛔] Parametri user_id o usx_token mancanti nell'URL:", params);
       throw new Error("Parametri user_id o usx_token mancanti nell'URL");
     }
 
+    console.info("[💾] Salvando parametri in window.userData...");
     window.userData = {
       userId: params.userId,
       usx_token: params.usx_token,
       wax_account: null // Da popolare dopo /main_door
     };
+    console.info("[📦] window.userData attuale:", window.userData);
 
-    console.log("[🚪] Verificando credenziali con /main_door...");
+    console.info("[🚪] Verifica credenziali con /main_door in corso...");
+    console.info("[🌐] Chiamata a:", `${BASE_URL}/main_door?user_id=${encodeURIComponent(params.userId)}&usx_token=${encodeURIComponent(params.usx_token)}`);
 
-    const response = await fetch(`${BASE_URL}/main_door?user_id=${params.userId}&usx_token=${params.usx_token}`);
+    const response = await fetch(`${BASE_URL}/main_door?user_id=${encodeURIComponent(params.userId)}&usx_token=${encodeURIComponent(params.usx_token)}`);
     const data = await response.json();
+    console.info("[📨] Risposta ricevuta da /main_door:", data);
 
-    if (!data.success) throw new Error("Autenticazione fallita");
+    if (!data.user_id || !data.wax_account) {
+      console.error("[🛑] Dati incompleti nella risposta di /main_door:", data);
+      throw new Error("Autenticazione fallita");
+    }
 
-    // Aggiorna wax_account dopo verifica
+    console.info("[🖊️] Aggiornamento wax_account in window.userData...");
     window.userData.wax_account = data.wax_account;
 
-    console.log("[✅] User logged in:", window.userData);
+    console.info("[✅] Login effettuato correttamente. Dati utente finali:", window.userData);
 
-    // Carica la prima sezione
+    console.info("[🧹] Caricamento prima sezione Wallet...");
     loadSection('wallet');
 
-    // Eventi sui pulsanti menu
+    console.info("[🔗] Collegamento eventi pulsanti menu...");
     document.querySelectorAll('.menu-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const section = e.target.getAttribute('data-section');
@@ -52,8 +63,10 @@ async function initApp() {
       });
     });
 
+    console.info("[🏁] initApp completato senza errori.");
+
   } catch (error) {
-    console.error("[❌] Errore iniziale:", error);
+    console.error("[❌] Errore critico in initApp:", error);
     document.getElementById('app').innerHTML = `
       <div class="text-red-500 text-center mt-8">
         Errore: ${error.message}<br>Verifica il link o rifai il login.

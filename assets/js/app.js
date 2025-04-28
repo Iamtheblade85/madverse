@@ -99,6 +99,7 @@ function navigateTo(page) {
     }
   }, 300);
 }
+window.navigateTo = navigateTo;
 
 // ==============================
 // DARK MODE

@@ -155,31 +155,29 @@ async function loadWallet() {
 }
 
 // Apertura modale dinamica
-function openModal(action, token) {
+async function openModal(action, token) {
   const modal = document.getElementById('modal');
   const modalBody = document.getElementById('modal-body');
-
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
 
-  // Prima di tutto recupera il saldo disponibile di quel token
   const tokenRow = Array.from(document.querySelectorAll('tr')).find(row => row.innerText.includes(token));
   const balanceCell = tokenRow ? tokenRow.querySelectorAll('td')[1] : null;
   const balance = balanceCell ? parseFloat(balanceCell.innerText) : 0;
 
   modalBody.innerHTML = `
     <h3 class="text-xl font-semibold mb-4">${actionTitle} ${token}</h3>
-    
+
     <div class="mb-2 text-gray-600">
-      Balance disponibile: <span class="font-semibold">${balance}</span> ${token}
+      Available Balance: <span class="font-semibold">${balance}</span> ${token}
     </div>
 
     <div class="mb-2 text-gray-600">
-      Wax Account destinatario: <span class="font-semibold">${window.userData.wax_account}</span>
+      Destination Wax Account: <span class="font-semibold">${window.userData.wax_account}</span>
     </div>
 
     <form id="action-form" class="space-y-4">
       <div>
-        <label class="block mb-1">Percentuale</label>
+        <label class="block mb-1">Percentage</label>
         <input type="range" id="percent-range" class="w-full" min="0" max="100" value="0">
       </div>
 
@@ -188,50 +186,97 @@ function openModal(action, token) {
         <input type="number" id="amount" class="w-full p-2 border rounded" required min="0.0001" step="0.0001">
       </div>
 
+      <div id="swap-preview" class="my-4 text-gray-600 hidden">
+        <div id="loading-spinner" class="text-center my-2">🔄 Getting blockchain data...</div>
+        <div id="swap-data" class="hidden">
+          <div>Execution Price: <span id="execution-price" class="font-semibold"></span></div>
+          <div>Minimum Received: <span id="min-received" class="font-semibold"></span></div>
+          <div>Price Impact: <span id="price-impact" class="font-semibold"></span>%</div>
+        </div>
+      </div>
+
       <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-        Conferma ${actionTitle}
+        Confirm ${actionTitle}
       </button>
     </form>
   `;
 
-  // Mostra la modale
   modal.classList.remove('hidden');
 
-  // Chiudi modale
   document.getElementById('close-modal').onclick = () => {
     modal.classList.add('hidden');
   };
 
-  // Sincronizza slider con input amount
   const percentRange = document.getElementById('percent-range');
   const amountInput = document.getElementById('amount');
+  const swapPreview = document.getElementById('swap-preview');
+  const loadingSpinner = document.getElementById('loading-spinner');
+  const swapDataContainer = document.getElementById('swap-data');
+  const executionPriceSpan = document.getElementById('execution-price');
+  const minReceivedSpan = document.getElementById('min-received');
+  const priceImpactSpan = document.getElementById('price-impact');
+
+  async function fetchSwapPreview(amount) {
+    if (action !== "swap" || !amount || amount <= 0) return;
+
+    swapPreview.classList.remove('hidden');
+    loadingSpinner.classList.remove('hidden');
+    swapDataContainer.classList.add('hidden');
+
+    try {
+      const contractIn = "xcryptochips"; // <- dinamico se vuoi in futuro
+      const symbolIn = token.toLowerCase();
+      const apiUrl = `https://alcor.exchange/api/v2/swapRouter/getRoute?trade_type=EXACT_INPUT&input=${symbolIn}-${contractIn}&output=wax-eosio.token&amount=${amount}`;
+
+      console.info(`[🌐] Fetching swap preview from Alcor:`, apiUrl);
+
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+
+      executionPriceSpan.textContent = data.executionPrice || "-";
+      minReceivedSpan.textContent = data.minReceived || "-";
+      priceImpactSpan.textContent = data.priceImpact || "-";
+
+      console.info("[📈] Swap preview data received:", data);
+
+      loadingSpinner.classList.add('hidden');
+      swapDataContainer.classList.remove('hidden');
+    } catch (error) {
+      console.error("[❌] Error fetching swap preview:", error);
+      loadingSpinner.innerHTML = `<div class="text-red-500">⚠️ Failed to load blockchain data.</div>`;
+    }
+  }
 
   percentRange.addEventListener('input', () => {
     const percent = parseFloat(percentRange.value);
     const calculatedAmount = ((balance * percent) / 100).toFixed(4);
     amountInput.value = calculatedAmount;
+    if (action === "swap" && calculatedAmount > 0) {
+      fetchSwapPreview(calculatedAmount);
+    }
   });
 
   amountInput.addEventListener('input', () => {
-    // Se l'utente cambia manualmente amount, aggiorna lo slider
     const manualAmount = parseFloat(amountInput.value);
     const newPercent = ((manualAmount / balance) * 100).toFixed(0);
     percentRange.value = Math.min(newPercent, 100);
+    if (action === "swap" && manualAmount > 0) {
+      fetchSwapPreview(manualAmount);
+    }
   });
 
-  // Submit del form
   document.getElementById('action-form').onsubmit = async (e) => {
     e.preventDefault();
     const amount = amountInput.value;
 
     try {
       await executeAction(action, token, amount);
-      showToast(`${actionTitle} completato con successo`, "success");
+      showToast(`${actionTitle} completed successfully`, "success");
       modal.classList.add('hidden');
-      loadWallet(); // Ricarica saldo
+      loadWallet();
     } catch (error) {
       console.error(error);
-      showToast(`Errore durante ${actionTitle}`, "error");
+      showToast(`Error during ${actionTitle}`, "error");
     }
   };
 }

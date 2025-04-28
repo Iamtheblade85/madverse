@@ -14,8 +14,8 @@ function getQueryParam(param) {
 }
 
 // Recupera da URL
-const userId = getQueryParam('user_id');
-const token = getQueryParam('usx_token');
+let userId = getQueryParam('user_id');
+let token = getQueryParam('usx_token');
 window.userWaxAccount = ""; // 👉 Variabile globale reale
 
 const BASE_URL = "https://iamemanuele.pythonanywhere.com";

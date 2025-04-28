@@ -1,52 +1,27 @@
 <!DOCTYPE html>
-<script>
-  function getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
-  }
-
-  const userId = getQueryParam('user_id');
-  const token = getQueryParam('usx_token');
-  var userWaxAccount = ""; // Wax account verrà riempito dopo caricamento profilo
-</script>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChipsWallet (NEW)</title>
-  <link rel="stylesheet" href="assets/css/styles.css">
+  <title>CryptoChaos Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-
-  <!-- HEADER -->
-  <header class="header">
-    <div class="logo">ChipsWallet (NEW)</div>
-    <button id="dark-mode-toggle" class="dark-mode-toggle">🌙</button>
-  </header>
-
-  <!-- NAVIGATION -->
-  <nav class="nav">
-    <button data-page="wallet">💼 Wallet</button>
-    <button data-page="staking">🌱 Staking</button>
-    <button data-page="nfts">🎨 NFTs Inventory</button>
-    <button data-page="pools">🏦 Pools</button>
-    <button data-page="account">👤 Account</button>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <!-- Navbar -->
+  <nav class="bg-white shadow p-4 flex justify-between items-center">
+    <div class="text-xl font-bold">CryptoChaos</div>
+    <div id="menu" class="space-x-4">
+      <button class="menu-btn" data-section="wallet">Wallet</button>
+      <button class="menu-btn" data-section="nfts">NFTs Wallet</button>
+      <!-- Aggiungeremo più pulsanti qui -->
+    </div>
   </nav>
 
-  <!-- MAIN CONTENT -->
-  <main id="main-content">
-    <div class="loader" id="loader">Loading...</div>
-  </main>
+  <!-- Contenuto dinamico -->
+  <main id="app" class="p-4"></main>
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    ChipsWallet (NEW) © 2025 - Powered by Wax Chain
-  </footer>
-
-  <!-- JAVASCRIPT -->
-  <script src="assets/js/api.js"></script>
-  <script src="assets/js/ui.js"></script>
-  <script type="module" src="assets/js/app.js"></script>
-
+  <!-- Script -->
+  <script src="main.js"></script>
 </body>
 </html>

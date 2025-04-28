@@ -168,7 +168,6 @@ async function loadWallet() {
 
 async function openModal(action, token) {
   const modal = document.getElementById('modal');
-  console.log(modal);
   const modalBody = document.getElementById('modal-body');
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
 
@@ -177,15 +176,18 @@ async function openModal(action, token) {
   const balance = balanceCell ? parseFloat(balanceCell.innerText) : 0;
   modalBody.innerHTML = "";
 
+  let contractIn = ""; // Initialize contractIn here
+
   if (action === "swap") {
-    // 🔥 Find the correct contractIn based on the selected token solo per swap
-    let contractIn = "";
+    // 🔥 Find the correct contractIn based on the selected token
     const match = availableTokens.find(t => t.split("-")[0].toLowerCase() === token.toLowerCase());
     if (match) {
-      contractIn = match.split("-")[1];
+      contractIn = match.split("-")[1];  // Extract the contract part
     } else {
       console.error("[❌] Contract for input token not found!");
-    } 
+      return;  // Exit the function if the contract is not found
+    }
+    
     // Layout specifico per Swap
     modalBody.innerHTML = `
       <h3 class="text-xl font-semibold mb-4">Swap ${token}</h3>
@@ -222,8 +224,11 @@ async function openModal(action, token) {
         </button>
       </form>
     `;
+
+    // Load tokens for dropdown and preview button click handler (as already implemented)
+    await loadTokens();
   } else {
-    // Layout per Withdraw, Transfer e Stake
+    // Layout for Withdraw, Transfer, Stake (no changes here)
     modalBody.innerHTML = `
       <h3 class="text-xl font-semibold mb-4">${actionTitle} ${token}</h3>
       <div class="mb-2 text-gray-600">

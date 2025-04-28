@@ -28,6 +28,27 @@ if (!userId || !token) {
 document.addEventListener('DOMContentLoaded', initApp);
 
 function initApp() {
+  // ==============================
+  // Carica dati utente all'avvio
+  // ==============================
+// ==============================
+// Carica dati utente da /main_door all'avvio
+// ==============================
+  async function preloadUserData() {
+    try {
+      const response = await fetch(`${BASE_URL}/main_door?user_id=${userId}&usx_token=${token}`);
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      userWaxAccount = data.wax_account;
+      console.log('User Wax Account loaded:', userWaxAccount);
+    } catch (error) {
+      console.error('Failed to preload wax_account from main_door:', error);
+      alert("Failed to preload user data. Please reload the page.");
+    }
+  }
+  await preloadUserData();
   setupNavigation();
   setupDarkMode();
   loadInitialPage();

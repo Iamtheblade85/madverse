@@ -369,7 +369,7 @@ document.getElementById('action-form').onsubmit = async (e) => {
     showToast(`Error during ${actionTitle}`, "error");
   }
 };
-
+}
 // Funzione che esegue azioni reali
 async function executeAction(action, token, amount) {
   const { userId, usx_token, wax_account } = window.userData;

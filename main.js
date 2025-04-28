@@ -3,6 +3,7 @@ window.userData = {};
 
 // Base URL reale
 const BASE_URL = "https://iamemanuele.pythonanywhere.com";
+let availableTokens = [];
 
 // Estrai parametri da URL
 function getUrlParams() {
@@ -137,7 +138,7 @@ async function loadWallet() {
           const action = btn.getAttribute('data-action');
           const token = btn.getAttribute('data-token');
           console.log(`[⚙️] Azione selezionata: ${action} su ${token}`);
-          openModal(action, token);
+          (action, token);
         });
       });
 
@@ -257,7 +258,6 @@ async function openModal(action, token) {
     previewButton = document.getElementById('preview-button');
 
     // Carica tokens disponibili
-    let availableTokens = [];
     async function loadTokens() {
       try {
         const response = await fetch('https://alcor.exchange/api/v2/tokens');

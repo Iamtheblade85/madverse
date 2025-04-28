@@ -269,14 +269,19 @@ async function executeAction(action, token, amount) {
     })
   });
 
-  if (!response.ok) {
-    throw new Error(`Errore chiamando ${endpoint}`);
-  }
-
   const data = await response.json();
-  if (!data.success) {
+
+  if (!response.ok) {
+    console.error(`[❌] Errore risposta dal server:`, data);
     throw new Error(data.error || "Errore generico");
   }
+
+  if (data.error) {
+    console.error(`[❌] Errore ricevuto dal server:`, data);
+    throw new Error(data.error || "Errore generico");
+  }
+
+  console.info("[✅] Azione eseguita correttamente:", data.message || "Successo");
 }
 
 // Funzione toast dinamico

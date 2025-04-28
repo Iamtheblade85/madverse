@@ -168,6 +168,7 @@ async function loadWallet() {
 
 async function openModal(action, token) {
   const modal = document.getElementById('modal');
+  console.log(modal);
   const modalBody = document.getElementById('modal-body');
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
 

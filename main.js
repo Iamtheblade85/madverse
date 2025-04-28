@@ -174,17 +174,17 @@ async function openModal(action, token) {
   const tokenRow = Array.from(document.querySelectorAll('tr')).find(row => row.innerText.includes(token));
   const balanceCell = tokenRow ? tokenRow.querySelectorAll('td')[1] : null;
   const balance = balanceCell ? parseFloat(balanceCell.innerText) : 0;
-  // 🔥 Find the correct contractIn based on the selected token
-  let contractIn = "";
-  const match = availableTokens.find(t => t.split("-")[0].toLowerCase() === token.toLowerCase());
-  if (match) {
-    contractIn = match.split("-")[1];
-  } else {
-    console.error("[❌] Contract for input token not found!");
-  }
   modalBody.innerHTML = "";
 
   if (action === "swap") {
+    // 🔥 Find the correct contractIn based on the selected token solo per swap
+    let contractIn = "";
+    const match = availableTokens.find(t => t.split("-")[0].toLowerCase() === token.toLowerCase());
+    if (match) {
+      contractIn = match.split("-")[1];
+    } else {
+      console.error("[❌] Contract for input token not found!");
+    } 
     // Layout specifico per Swap
     modalBody.innerHTML = `
       <h3 class="text-xl font-semibold mb-4">Swap ${token}</h3>

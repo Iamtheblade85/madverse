@@ -1,4 +1,14 @@
 <!DOCTYPE html>
+<script>
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  const userId = getQueryParam('user_id');
+  const token = getQueryParam('usx_token');
+  var userWaxAccount = ""; // Wax account verrà riempito dopo caricamento profilo
+</script>
 <html lang="en">
 <head>
   <meta charset="UTF-8">

@@ -214,7 +214,6 @@ async function openModal(action, token) {
         <div id="swap-preview" class="my-4 text-gray-600 hidden">
           <div id="loading-spinner" class="text-center my-2">🔄 Getting blockchain data...</div>
           <div id="swap-data" class="hidden">
-            <div>Execution Price: <span id="execution-price" class="font-semibold"></span></div>
             <div>Minimum Received: <span id="min-received" class="font-semibold"></span></div>
             <div>Price Impact: <span id="price-impact" class="font-semibold"></span>%</div>
           </div>
@@ -323,11 +322,15 @@ async function openModal(action, token) {
       try {
         const response = await fetch(apiUrl);
         const data = await response.json();
-
-        executionPriceSpan.textContent = data.executionPrice || "-";
-        minReceivedSpan.textContent = data.minReceived || "-";
+      
+        // Sottrarre il 10% da Minimum Received
+        let minReceived = data.minReceived || 0;
+        minReceived = minReceived * 0.90;  // Sottrai il 10%
+      
+        // Aggiornare i valori nell'interfaccia utente
+        minReceivedSpan.textContent = minReceived.toFixed(4) || "-";  // Mostra il valore sottratto del 10%
         priceImpactSpan.textContent = data.priceImpact || "-";
-
+      
         loadingSpinner.classList.add('hidden');
         swapDataContainer.classList.remove('hidden');
         submitButton.disabled = false;

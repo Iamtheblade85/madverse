@@ -101,30 +101,50 @@ function loadSection(section) {
   else if (section === 'nfts') {
     app.innerHTML = `
       <h2 class="text-2xl font-semibold mb-4">My NFTs</h2>
-      <div class="mb-4 flex flex-wrap gap-4">
+  
+      <div class="mb-4 flex flex-wrap gap-4 items-center">
+        <input type="text" id="search-template" placeholder="Search by Template Name..." class="p-2 border rounded w-full md:w-1/3">
+  
         <select id="filter-status" class="p-2 border rounded">
-          <option value="">Filter by Status</option>
+          <option value="">Status</option>
           <option value="Staked">Staked</option>
           <option value="Not Staked">Not Staked</option>
+        </select>
+  
+        <select id="filter-stakable" class="p-2 border rounded">
+          <option value="">Stakeability</option>
           <option value="Stakable">Stakable</option>
           <option value="Not Stakable">Not Stakable</option>
         </select>
   
+        <select id="filter-for-sale" class="p-2 border rounded">
+          <option value="">Sale Status</option>
+          <option value="Yes">For Sale</option>
+          <option value="No">Not For Sale</option>
+        </select>
+  
         <select id="filter-collection" class="p-2 border rounded">
-          <option value="">Filter by Collection</option>
+          <option value="">Collection</option>
         </select>
   
         <select id="sort-by" class="p-2 border rounded">
-          <option value="created_at_desc">Sort: Newest</option>
-          <option value="created_at_asc">Sort: Oldest</option>
-          <option value="collection_asc">Sort: Collection (A-Z)</option>
-          <option value="collection_desc">Sort: Collection (Z-A)</option>
+          <option value="created_at_desc">Newest</option>
+          <option value="created_at_asc">Oldest</option>
+          <option value="template_name_asc">Template (A-Z)</option>
+          <option value="template_name_desc">Template (Z-A)</option>
         </select>
       </div>
   
       <div id="nfts-loading" class="text-center my-4">🔄 Loading NFTs...</div>
       <div id="nfts-count" class="text-gray-600 mb-2"></div>
-      <div id="nfts-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      <div id="nfts-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4"></div>
+  
+      <div id="modal-nft" class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded shadow max-w-md w-full relative">
+          <button id="close-modal" class="absolute top-2 right-2 text-gray-400 hover:text-black">&times;</button>
+          <div id="modal-content"></div>
+        </div>
+      </div>
     `;
     loadNFTs();
   }
@@ -198,7 +218,7 @@ async function loadNFTs() {
     window.nftsData = nftsData.nfts || [];
     console.info("[🔵] NFTs caricati:", window.nftsData.length);
 
-    populateCollectionFilter(window.nftsData);
+    populateDropdowns(window.nftsData);
     renderNFTs();
     setupFilterEvents();
   } catch (error) {
@@ -206,6 +226,13 @@ async function loadNFTs() {
     document.getElementById('nfts-loading').innerText = "❌ Error loading NFTs.";
   }
 }
+
+function populateDropdowns(nfts) {
+  const collections = [...new Set(nfts.map(nft => nft.template_info.collection_name))];
+  const collectionSelect = document.getElementById('filter-collection');
+  collectionSelect.innerHTML += collections.sort().map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
 
 function populateCollectionFilter(nfts) {
   const filterCollection = document.getElementById('filter-collection');
@@ -221,49 +248,72 @@ function renderNFTs() {
 
   let filtered = [...window.nftsData];
 
-  // Applica filtro status
+  // Filtri
+  const search = document.getElementById('search-template').value.toLowerCase();
+  if (search) {
+    filtered = filtered.filter(nft => nft.template_info.template_name.toLowerCase().includes(search));
+  }
+
   const status = document.getElementById('filter-status').value;
-  if (status) {
-    filtered = filtered.filter(nft => nft.is_staked === status || nft.is_stakable === status);
-  }
-
-  // Applica filtro collezione
+  const stakable = document.getElementById('filter-stakable').value;
+  const forSale = document.getElementById('filter-for-sale').value;
   const collection = document.getElementById('filter-collection').value;
-  if (collection) {
-    filtered = filtered.filter(nft => nft.template_info.collection_name === collection);
-  }
 
-  // Applica ordinamento
+  if (status) filtered = filtered.filter(nft => nft.is_staked === status);
+  if (stakable) filtered = filtered.filter(nft => nft.is_stakable === stakable);
+  if (forSale) filtered = filtered.filter(nft => nft.for_sale === forSale);
+  if (collection) filtered = filtered.filter(nft => nft.template_info.collection_name === collection);
+
+  // Ordinamento
   const sort = document.getElementById('sort-by').value;
   if (sort === "created_at_desc") {
     filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   } else if (sort === "created_at_asc") {
     filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-  } else if (sort === "collection_asc") {
-    filtered.sort((a, b) => a.template_info.collection_name.localeCompare(b.template_info.collection_name));
-  } else if (sort === "collection_desc") {
-    filtered.sort((a, b) => b.template_info.collection_name.localeCompare(a.template_info.collection_name));
+  } else if (sort === "template_name_asc") {
+    filtered.sort((a, b) => a.template_info.template_name.localeCompare(b.template_info.template_name));
+  } else if (sort === "template_name_desc") {
+    filtered.sort((a, b) => b.template_info.template_name.localeCompare(a.template_info.template_name));
   }
 
   count.innerText = `${filtered.length} NFTs found`;
 
   if (filtered.length > 0) {
     nftsList.innerHTML = filtered.map(nft => `
-      <div class="bg-white rounded-lg shadow p-4">
-        <img src="${nft.image_url}" alt="NFT Image" class="w-full h-48 object-cover rounded">
-        <h3 class="text-lg font-semibold mt-2">${nft.template_info.template_name}</h3>
-        <p class="text-gray-500 text-sm">Collection: ${nft.template_info.collection_name}</p>
-        <p class="text-gray-500 text-sm">Schema: ${nft.template_info.schema_name}</p>
-        <p class="text-gray-600 text-sm mt-1">Asset ID: ${nft.asset_id}</p>
-        <p class="text-gray-600 text-sm">Status: ${nft.is_staked}</p>
-        <p class="text-gray-600 text-sm">Stakeable: ${nft.is_stakable}</p>
-        <p class="text-gray-400 text-xs mt-2">Acquired: ${new Date(nft.created_at).toLocaleDateString()}</p>
+      <div class="bg-white rounded-lg shadow cursor-pointer p-2 hover:shadow-lg transition" onclick="openNFTModal(${nft.asset_id})">
+        <img src="${nft.image_url}" alt="NFT Image" class="w-full h-48 object-contain rounded">
+        <h3 class="text-md font-semibold mt-2 truncate">${nft.template_info.template_name}</h3>
+        <p class="text-gray-500 text-xs truncate">#${nft.asset_id}</p>
       </div>
     `).join('');
   } else {
     nftsList.innerHTML = `<div class="text-center text-gray-500">No NFTs match your filters.</div>`;
   }
 }
+function openNFTModal(assetId) {
+  const nft = window.nftsData.find(n => n.asset_id === assetId);
+  if (!nft) return;
+
+  const modal = document.getElementById('modal-nft');
+  const content = document.getElementById('modal-content');
+
+  content.innerHTML = `
+    <img src="${nft.image_url}" alt="NFT Image" class="w-full object-contain mb-4 rounded">
+    <h2 class="text-xl font-bold mb-2">${nft.template_info.template_name}</h2>
+    <p class="text-gray-600 mb-1"><strong>Asset ID:</strong> ${nft.asset_id}</p>
+    <p class="text-gray-600 mb-1"><strong>Collection:</strong> ${nft.template_info.collection_name}</p>
+    <p class="text-gray-600 mb-1"><strong>Schema:</strong> ${nft.template_info.schema_name}</p>
+    <p class="text-gray-600 mb-1"><strong>Stakeable:</strong> ${nft.is_stakable}</p>
+    <p class="text-gray-600 mb-1"><strong>Staked:</strong> ${nft.is_staked}</p>
+    <p class="text-gray-600 mb-1"><strong>For Sale:</strong> ${nft.for_sale}</p>
+    <p class="text-gray-600 mb-1"><strong>Transferable:</strong> ${nft.template_info.is_transferable ? "Yes" : "No"}</p>
+    <p class="text-gray-400 text-xs mt-2">Acquired: ${new Date(nft.created_at).toLocaleDateString()}</p>
+  `;
+
+  modal.classList.remove('hidden');
+  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+}
+
 function setupFilterEvents() {
   document.getElementById('filter-status').addEventListener('change', renderNFTs);
   document.getElementById('filter-collection').addEventListener('change', renderNFTs);

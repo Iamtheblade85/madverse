@@ -297,7 +297,7 @@ async function loadNFTs() {
     nftsList.innerHTML = pageNFTs.map(nft => `
       <div class="bg-white rounded-lg shadow relative p-2 hover:shadow-lg transition">
         <input type="checkbox" class="absolute top-2 left-2 w-5 h-5 z-10" onclick="toggleNFTSelection(event, ${nft.asset_id})" ${window.selectedNFTs.has(nft.asset_id) ? "checked" : ""}>
-        <div onclick="openNFTModal(${nft.asset_id})" class="nft-card-content cursor-pointer">
+        <div onclick="openNFTModal('${nft.asset_id}')" class="nft-card-content cursor-pointer">
           <img src="${nft.image_url}" alt="NFT Image" class="w-full h-48 object-contain rounded">
           <h3 class="text-md font-semibold mt-2 truncate">${nft.template_info.template_name}</h3>
           <p class="text-gray-500 text-xs truncate">#${nft.asset_id}</p>

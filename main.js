@@ -376,9 +376,7 @@ function updateBulkActions() {
 
   modal.classList.remove('hidden');
   document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
-}
-
-function setupFilterEvents() {
+} function setupFilterEvents() {
   document.getElementById('filter-status').addEventListener('change', renderNFTs);
   document.getElementById('filter-collection').addEventListener('change', renderNFTs);
   document.getElementById('sort-by').addEventListener('change', renderNFTs);
@@ -395,7 +393,7 @@ function setupFilterEvents() {
   const selectedIds = Array.from(window.selectedNFTs);
   console.log("[⚡] Withdraw Selected NFTs:", selectedIds);
 
-  const { userId, usx_token } = window.userData;
+  const { userId, usx_token, wax_account } = window.userData; // 🔥 wax_account aggiunto qui sopra!
 
   const endpoint = `${BASE_URL}/withdraw_nft_v2?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
 
@@ -405,7 +403,7 @@ function setupFilterEvents() {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ asset_ids: selectedIds })
+      body: JSON.stringify({ wax_account: wax_account, asset_ids: selectedIds }) // 🔥 body corretto qui
     });
 
     const data = await response.json();
@@ -418,7 +416,6 @@ function setupFilterEvents() {
 
     showToast(`✅ Successfully withdrawn ${selectedIds.length} NFTs`, "success");
 
-    // Dopo il successo, resetta selezioni e ricarica gli NFTs
     window.selectedNFTs.clear();
     await loadNFTs();
 

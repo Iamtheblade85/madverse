@@ -3,6 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <title>CryptoChaos Portal</title>
+    <style>
+    @keyframes underline-grow {
+      from {
+        width: 0%;
+      }
+      to {
+        width: 100%;
+      }
+    }
+    .underline-animate::after {
+      content: '';
+      display: block;
+      height: 3px;
+      background-color: #4f46e5; /* indigo-700 */
+      animation: underline-grow 1s ease forwards;
+    }
+  </style>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- TailwindCSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -10,11 +27,31 @@
 <body class="bg-gray-100 min-h-screen flex flex-col">
   <!-- Navbar -->
   <nav class="bg-white shadow p-4 flex justify-between items-center">
-    <div class="text-xl font-bold">CryptoChaos</div>
-    <div id="menu" class="space-x-4">
+    <div class="flex flex-col leading-tight">
+      <h1 class="text-3xl font-extrabold text-indigo-700 tracking-tight underline-animate">
+        ChipsWallet
+      </h1>
+      <p class="text-sm text-gray-500 italic">
+        cryptochaos, all in one, anytime, anywhere.
+      </p>
+    </div>
+    <div id="menu" class="space-x-4 relative flex items-center">
       <button class="menu-btn" data-section="wallet">Wallet</button>
       <button class="menu-btn" data-section="nfts">NFTs Wallet</button>
-      <!-- Più sezioni future -->
+    
+      <!-- Dropdown Earn -->
+      <div class="relative group">
+        <button class="menu-btn">Earn ▾</button>
+        <div class="absolute hidden group-hover:block bg-white border rounded shadow-lg mt-2 z-50 min-w-[200px]">
+          <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 menu-btn" data-section="token-staking">Token Staking</button>
+          <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 menu-btn" data-section="nft-staking">NFTs Staking</button>
+          <div class="border-t my-1"></div>
+          <div class="pl-4">
+            <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 menu-btn" data-section="c2e-telegram">C2E - Telegram</button>
+            <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 menu-btn" data-section="c2e-twitch">C2E - Twitch</button>
+          </div>
+        </div>
+      </div>
     </div>
   </nav>
 

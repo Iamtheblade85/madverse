@@ -237,9 +237,16 @@ async function openModal(action, token) {
       <div class="mb-2 text-gray-600">
         Available Balance: <span class="font-semibold">${balance}</span> ${token}
       </div>
-      <div class="mb-2 text-gray-600">
-        Destination Wax Account: <span class="font-semibold">${window.userData.wax_account}</span>
-      </div>
+      ${action === 'transfer' ? `
+        <div class="mb-2">
+          <label class="block mb-1 text-gray-600">Recipient Wax Account</label>
+          <input type="text" id="receiver" class="w-full p-2 border rounded" placeholder="Enter destination wax_account" required>
+        </div>
+      ` : `
+        <div class="mb-2 text-gray-600">
+          Destination Wax Account: <span class="font-semibold">${window.userData.wax_account}</span>
+        </div>
+      `}
       <form id="action-form" class="space-y-4">
         <div>
           <label class="block mb-1">Percentage</label>
@@ -254,6 +261,7 @@ async function openModal(action, token) {
         </button>
       </form>
     `;
+
   }
 
   modal.classList.remove('hidden');
@@ -399,19 +407,29 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
   let data;
 
   try {
-    const body = action === "swap"
-      ? JSON.stringify({
-          wax_account: wax_account,
-          from_token: token,
-          to_token: tokenOut,
-          amount: amount
-        })
-      : JSON.stringify({
-          wax_account: wax_account,
-          token_symbol: token,
-          amount: amount
-        });
-
+    let bodyData = {
+      wax_account: wax_account,
+      token_symbol: token,
+      amount: amount
+    };
+    
+    if (action === "swap") {
+      bodyData = {
+        wax_account: wax_account,
+        from_token: token,
+        to_token: tokenOut,
+        amount: amount
+      };
+    } else if (action === "transfer") {
+      const receiverInput = document.getElementById('receiver');
+      const receiver = receiverInput ? receiverInput.value.trim() : "";
+      if (!receiver) {
+        throw new Error("Recipient Wax Account is required for transfer.");
+      }
+      bodyData.receiver = receiver;
+    }
+    
+    const body = JSON.stringify(bodyData);
     response = await fetch(fullUrl, {
       method: "POST",
       headers: {
@@ -449,6 +467,8 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
       `Swap Success!\n${details.amount} ${details.from_token} ➡️ ${details.received_amount.toFixed(4)} ${details.to_token}\nPrice: ${details.execution_price}\nCommission: ${details.commission.toFixed(4)}`,
       "success"
     );
+  } else if (action === "transfer" && data.message) {
+    showToast(`${data.message}`, "success");
   } else {
     showToast(`${action.charAt(0).toUpperCase() + action.slice(1)} completed successfully`, "success");
   }

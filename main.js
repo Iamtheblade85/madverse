@@ -100,9 +100,33 @@ function loadSection(section) {
   }
   else if (section === 'nfts') {
     app.innerHTML = `
-      <h2 class="text-2xl font-semibold mb-4">NFTs</h2>
-      <p>Funzione in arrivo...</p>
+      <h2 class="text-2xl font-semibold mb-4">My NFTs</h2>
+      <div class="mb-4 flex flex-wrap gap-4">
+        <select id="filter-status" class="p-2 border rounded">
+          <option value="">Filter by Status</option>
+          <option value="Staked">Staked</option>
+          <option value="Not Staked">Not Staked</option>
+          <option value="Stakable">Stakable</option>
+          <option value="Not Stakable">Not Stakable</option>
+        </select>
+  
+        <select id="filter-collection" class="p-2 border rounded">
+          <option value="">Filter by Collection</option>
+        </select>
+  
+        <select id="sort-by" class="p-2 border rounded">
+          <option value="created_at_desc">Sort: Newest</option>
+          <option value="created_at_asc">Sort: Oldest</option>
+          <option value="collection_asc">Sort: Collection (A-Z)</option>
+          <option value="collection_desc">Sort: Collection (Z-A)</option>
+        </select>
+      </div>
+  
+      <div id="nfts-loading" class="text-center my-4">🔄 Loading NFTs...</div>
+      <div id="nfts-count" class="text-gray-600 mb-2"></div>
+      <div id="nfts-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     `;
+    loadNFTs();
   }
 }
 
@@ -164,6 +188,92 @@ async function loadWallet() {
       <div class="text-center text-red-500">Errore caricando il Wallet.</div>
     `;
   }
+}
+async function loadNFTs() {
+  try {
+    const { userId, usx_token } = window.userData;
+    const response = await fetch(`${BASE_URL}/mynfts?user_id=${userId}&usx_token=${usx_token}`);
+    const nftsData = await response.json();
+
+    window.nftsData = nftsData.nfts || [];
+    console.info("[🔵] NFTs caricati:", window.nftsData.length);
+
+    populateCollectionFilter(window.nftsData);
+    renderNFTs();
+    setupFilterEvents();
+  } catch (error) {
+    console.error("[❌] Errore caricando NFTs:", error);
+    document.getElementById('nfts-loading').innerText = "❌ Error loading NFTs.";
+  }
+}
+
+function populateCollectionFilter(nfts) {
+  const filterCollection = document.getElementById('filter-collection');
+  const collections = [...new Set(nfts.map(nft => nft.template_info.collection_name))];
+  filterCollection.innerHTML += collections.sort().map(col => `<option value="${col}">${col}</option>`).join('');
+}
+function renderNFTs() {
+  const nftsList = document.getElementById('nfts-list');
+  const loading = document.getElementById('nfts-loading');
+  const count = document.getElementById('nfts-count');
+
+  loading.classList.add('hidden');
+
+  let filtered = [...window.nftsData];
+
+  // Applica filtro status
+  const status = document.getElementById('filter-status').value;
+  if (status) {
+    filtered = filtered.filter(nft => nft.is_staked === status || nft.is_stakable === status);
+  }
+
+  // Applica filtro collezione
+  const collection = document.getElementById('filter-collection').value;
+  if (collection) {
+    filtered = filtered.filter(nft => nft.template_info.collection_name === collection);
+  }
+
+  // Applica ordinamento
+  const sort = document.getElementById('sort-by').value;
+  if (sort === "created_at_desc") {
+    filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  } else if (sort === "created_at_asc") {
+    filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  } else if (sort === "collection_asc") {
+    filtered.sort((a, b) => a.template_info.collection_name.localeCompare(b.template_info.collection_name));
+  } else if (sort === "collection_desc") {
+    filtered.sort((a, b) => b.template_info.collection_name.localeCompare(a.template_info.collection_name));
+  }
+
+  count.innerText = `${filtered.length} NFTs found`;
+
+  if (filtered.length > 0) {
+    nftsList.innerHTML = filtered.map(nft => `
+      <div class="bg-white rounded-lg shadow p-4">
+        <img src="${nft.image_url}" alt="NFT Image" class="w-full h-48 object-cover rounded">
+        <h3 class="text-lg font-semibold mt-2">${nft.template_info.template_name}</h3>
+        <p class="text-gray-500 text-sm">Collection: ${nft.template_info.collection_name}</p>
+        <p class="text-gray-500 text-sm">Schema: ${nft.template_info.schema_name}</p>
+        <p class="text-gray-600 text-sm mt-1">Asset ID: ${nft.asset_id}</p>
+        <p class="text-gray-600 text-sm">Status: ${nft.is_staked}</p>
+        <p class="text-gray-600 text-sm">Stakeable: ${nft.is_stakable}</p>
+        <p class="text-gray-400 text-xs mt-2">Acquired: ${new Date(nft.created_at).toLocaleDateString()}</p>
+      </div>
+    `).join('');
+  } else {
+    nftsList.innerHTML = `<div class="text-center text-gray-500">No NFTs match your filters.</div>`;
+  }
+}
+function setupFilterEvents() {
+  document.getElementById('filter-status').addEventListener('change', renderNFTs);
+  document.getElementById('filter-collection').addEventListener('change', renderNFTs);
+  document.getElementById('sort-by').addEventListener('change', renderNFTs);
+}
+
+function setupFilterEvents() {
+  document.getElementById('filter-status').addEventListener('change', renderNFTs);
+  document.getElementById('filter-collection').addEventListener('change', renderNFTs);
+  document.getElementById('sort-by').addEventListener('change', renderNFTs);
 }
 
 async function openModal(action, token) {

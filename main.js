@@ -387,16 +387,11 @@ function updateBulkActions() {
   document.getElementById('bulk-send').addEventListener('click', bulkSendSelected);  
 } async function bulkWithdrawSelected() {
   if (window.selectedNFTs.size === 0) return;
-
   if (!confirm(`Withdraw ${window.selectedNFTs.size} selected NFTs?`)) return;
-
   const selectedIds = Array.from(window.selectedNFTs);
   console.log("[⚡] Withdraw Selected NFTs:", selectedIds);
-
   const { userId, usx_token, wax_account } = window.userData; // 🔥 wax_account aggiunto qui sopra!
-
   const endpoint = `${BASE_URL}/withdraw_nft_v2?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
-
   try {
     const response = await fetch(endpoint, {
       method: "POST",
@@ -445,21 +440,20 @@ function updateBulkActions() {
 
   const { userId, usx_token } = window.userData;
   const endpoint = `${BASE_URL}/transfer_nfts?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
-
+  const bodyData = { wax_account: wax_account, asset_ids: selectedIds };
+  console.log("[📤] Body da inviare:", JSON.stringify(bodyData));
   try {
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
+        "Accept": "application/json",
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        asset_ids: selectedIds,
-        to_wax_account: receiver
-      })
+      body: JSON.stringify(bodyData)
     });
 
     const data = await response.json();
-
+    console.log("[📤] Dati ricevuti dal backend:", data);
     if (!response.ok || data.error) {
       console.error("[❌] Transfer error:", data.error || "Unknown error");
       showToast(`❌ Transfer failed: ${data.error || "Unknown error"}`, "error");
@@ -470,6 +464,7 @@ function updateBulkActions() {
 
     // Dopo successo
     window.selectedNFTs.clear();
+    updateBulkActions();
     await loadNFTs();
 
   } catch (error) {

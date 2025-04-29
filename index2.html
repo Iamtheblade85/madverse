@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>CryptoChaos Portal</title>
-    <style>
+  <style>
     @keyframes underline-grow {
       from {
         width: 0%;
@@ -12,12 +12,29 @@
         width: 100%;
       }
     }
-    .underline-animate::after {
+  
+    .title-animated {
+      position: relative;
+      display: inline-block;
+      color: #facc15; /* giallo (Tailwind yellow-400) */
+      font-weight: 900;
+      font-size: 2rem;
+      text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000;
+    }
+  
+    .title-animated::after {
       content: '';
-      display: block;
+      position: absolute;
+      left: 0;
+      bottom: -6px;
       height: 3px;
-      background-color: #4f46e5; /* indigo-700 */
-      animation: underline-grow 1s ease forwards;
+      background-color: black;
+      width: 0%;
+      animation: underline-grow 1.2s ease-out forwards;
     }
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -28,11 +45,9 @@
   <!-- Navbar -->
   <nav class="bg-white shadow p-4 flex justify-between items-center">
     <div class="flex flex-col leading-tight">
-      <h1 class="text-3xl font-extrabold text-indigo-700 tracking-tight underline-animate">
-        ChipsWallet
-      </h1>
+      <h1 class="title-animated">ChipsWallet</h1>
       <p class="text-sm text-gray-500 italic">
-        cryptochaos, all in one, anytime, anywhere.
+        Built for Users, Powered by Blockchain
       </p>
     </div>
     <div id="menu" class="space-x-4 relative flex items-center">

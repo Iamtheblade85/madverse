@@ -97,8 +97,7 @@ function loadSection(section) {
       <div id="wallet-table">Caricamento Wallet...</div>
     `;
     loadWallet();
-  }
-  else if (section === 'nfts') {
+  } else if (section === 'nfts') {
     app.innerHTML = `
       <h2 class="text-2xl font-semibold mb-4">My NFTs</h2>
   
@@ -135,9 +134,17 @@ function loadSection(section) {
         </select>
       </div>
   
+      <div id="bulk-actions" class="mb-4 hidden">
+        <button id="bulk-withdraw" class="bg-blue-500 text-white py-2 px-4 rounded mr-2 hover:bg-blue-600">Withdraw All Selected</button>
+        <button id="bulk-send" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">Send All Selected</button>
+      </div>
+  
       <div id="nfts-loading" class="text-center my-4">🔄 Loading NFTs...</div>
       <div id="nfts-count" class="text-gray-600 mb-2"></div>
+  
       <div id="nfts-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4"></div>
+  
+      <div id="pagination" class="flex justify-center items-center space-x-4 mt-6"></div>
   
       <div id="modal-nft" class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center">
         <div class="bg-white p-6 rounded shadow max-w-md w-full relative">
@@ -225,21 +232,15 @@ async function loadNFTs() {
     console.error("[❌] Errore caricando NFTs:", error);
     document.getElementById('nfts-loading').innerText = "❌ Error loading NFTs.";
   }
-}
-
-function populateDropdowns(nfts) {
+} function populateDropdowns(nfts) {
   const collections = [...new Set(nfts.map(nft => nft.template_info.collection_name))];
   const collectionSelect = document.getElementById('filter-collection');
   collectionSelect.innerHTML += collections.sort().map(c => `<option value="${c}">${c}</option>`).join('');
-}
-
-
-function populateCollectionFilter(nfts) {
+} function populateCollectionFilter(nfts) {
   const filterCollection = document.getElementById('filter-collection');
   const collections = [...new Set(nfts.map(nft => nft.template_info.collection_name))];
   filterCollection.innerHTML += collections.sort().map(col => `<option value="${col}">${col}</option>`).join('');
-}
-function renderNFTs() {
+} function renderNFTs() {
   const nftsList = document.getElementById('nfts-list');
   const loading = document.getElementById('nfts-loading');
   const count = document.getElementById('nfts-count');
@@ -248,7 +249,7 @@ function renderNFTs() {
 
   let filtered = [...window.nftsData];
 
-  // Filtri
+  // Ricerca
   const search = document.getElementById('search-template').value.toLowerCase();
   if (search) {
     filtered = filtered.filter(nft => nft.template_info.template_name.toLowerCase().includes(search));
@@ -260,7 +261,13 @@ function renderNFTs() {
   const collection = document.getElementById('filter-collection').value;
 
   if (status) filtered = filtered.filter(nft => nft.is_staked === status);
-  if (stakable) filtered = filtered.filter(nft => nft.is_stakable === stakable);
+  if (status === "Staked") {
+    document.getElementById('filter-stakable').parentElement.style.display = 'none';
+  } else {
+    document.getElementById('filter-stakable').parentElement.style.display = 'block';
+    if (stakable) filtered = filtered.filter(nft => nft.is_stakable === stakable);
+  }
+
   if (forSale) filtered = filtered.filter(nft => nft.for_sale === forSale);
   if (collection) filtered = filtered.filter(nft => nft.template_info.collection_name === collection);
 
@@ -278,18 +285,71 @@ function renderNFTs() {
 
   count.innerText = `${filtered.length} NFTs found`;
 
-  if (filtered.length > 0) {
-    nftsList.innerHTML = filtered.map(nft => `
-      <div class="bg-white rounded-lg shadow cursor-pointer p-2 hover:shadow-lg transition" onclick="openNFTModal(${nft.asset_id})">
-        <img src="${nft.image_url}" alt="NFT Image" class="w-full h-48 object-contain rounded">
-        <h3 class="text-md font-semibold mt-2 truncate">${nft.template_info.template_name}</h3>
-        <p class="text-gray-500 text-xs truncate">#${nft.asset_id}</p>
+  // PAGINAZIONE
+  const totalPages = Math.ceil(filtered.length / window.nftsPerPage);
+  if (window.currentPage > totalPages) window.currentPage = totalPages || 1;
+
+  const start = (window.currentPage - 1) * window.nftsPerPage;
+  const end = start + window.nftsPerPage;
+  const pageNFTs = filtered.slice(start, end);
+
+  if (pageNFTs.length > 0) {
+    nftsList.innerHTML = pageNFTs.map(nft => `
+      <div class="bg-white rounded-lg shadow relative p-2 hover:shadow-lg transition">
+        <input type="checkbox" class="absolute top-2 left-2 w-5 h-5 z-10" onclick="toggleNFTSelection(event, ${nft.asset_id})" ${window.selectedNFTs.has(nft.asset_id) ? "checked" : ""}>
+        <div onclick="openNFTModal(${nft.asset_id})" class="nft-card-content cursor-pointer">
+          <img src="${nft.image_url}" alt="NFT Image" class="w-full h-48 object-contain rounded">
+          <h3 class="text-md font-semibold mt-2 truncate">${nft.template_info.template_name}</h3>
+          <p class="text-gray-500 text-xs truncate">#${nft.asset_id}</p>
+        </div>
       </div>
     `).join('');
   } else {
     nftsList.innerHTML = `<div class="text-center text-gray-500">No NFTs match your filters.</div>`;
   }
+
+  renderPagination(totalPages);
+  updateBulkActions();
+} function toggleNFTSelection(event, assetId) {
+  event.stopPropagation(); // Evita che clicchi anche la card
+  if (event.target.checked) {
+    window.selectedNFTs.add(assetId);
+  } else {
+    window.selectedNFTs.delete(assetId);
+  }
+  updateBulkActions();
 }
+
+function updateBulkActions() {
+  const bulk = document.getElementById('bulk-actions');
+  if (window.selectedNFTs.size > 0) {
+    bulk.classList.remove('hidden');
+  } else {
+    bulk.classList.add('hidden');
+  }
+}
+
+function renderPagination(totalPages) {
+  const pagination = document.getElementById('pagination');
+  if (totalPages <= 1) {
+    pagination.innerHTML = '';
+    return;
+  }
+
+  let html = `
+    <button onclick="changePage(window.currentPage - 1)" class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400" ${window.currentPage === 1 ? "disabled" : ""}>Previous</button>
+    <span class="px-4">${window.currentPage} / ${totalPages}</span>
+    <button onclick="changePage(window.currentPage + 1)" class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400" ${window.currentPage === totalPages ? "disabled" : ""}>Next</button>
+  `;
+  pagination.innerHTML = html;
+}
+
+function changePage(newPage) {
+  window.currentPage = newPage;
+  renderNFTs();
+}
+
+
 function openNFTModal(assetId) {
   const nft = window.nftsData.find(n => n.asset_id === assetId);
   if (!nft) return;

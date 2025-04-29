@@ -36,6 +36,25 @@
       width: 0%;
       animation: underline-grow 1.2s ease-out forwards;
     }
+    .btn-action {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background-color: #facc15; /* giallo (giallo-400) */
+      color: #111827; /* grigio molto scuro per il testo */
+      font-weight: 600;
+      border-radius: 0.5rem;
+      border: 2px solid #111827; /* bordo nero */
+      transition: all 0.3s ease;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.875rem; /* testo un po' più piccolo */
+    }
+    .btn-action:hover {
+      background-color: #fde68a; /* giallo più chiaro on hover */
+      color: #000000; /* testo ancora più nero */
+      transform: translateY(-2px); /* piccolo sollevamento */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* leggero ombreggiamento */
+    }
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- TailwindCSS CDN -->
@@ -56,11 +75,11 @@
       <!-- Dropdown Earn -->
       <div class="relative group">
         <button class="menu-btn">Earn ▾</button>
-        <div class="absolute left-0 hidden group-hover:block bg-white border rounded shadow-lg mt-2 z-50 min-w-[200px]">
+        <div class="absolute left-0 hidden group-hover:flex flex-col bg-white border rounded shadow-lg mt-2 z-50 min-w-[220px]">
           <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 menu-btn" data-section="token-staking">Token Staking</button>
           <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 menu-btn" data-section="nft-staking">NFTs Staking</button>
           <div class="border-t my-1"></div>
-          <div class="pl-4">
+          <div class="flex flex-col pl-4">
             <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 menu-btn" data-section="c2e-telegram">C2E - Telegram</button>
             <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 menu-btn" data-section="c2e-twitch">C2E - Twitch</button>
           </div>

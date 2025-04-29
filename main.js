@@ -1,5 +1,8 @@
 // Globals
 window.userData = {};
+window.selectedNFTs = new Set();
+window.currentPage = 1;
+window.nftsPerPage = 12;
 
 // Base URL reale
 const BASE_URL = "https://iamemanuele.pythonanywhere.com";
@@ -296,7 +299,11 @@ async function loadNFTs() {
   if (pageNFTs.length > 0) {
     nftsList.innerHTML = pageNFTs.map(nft => `
       <div class="bg-white rounded-lg shadow relative p-2 hover:shadow-lg transition">
-        <input type="checkbox" class="absolute top-2 left-2 w-5 h-5 z-10" onclick="toggleNFTSelection(event, ${nft.asset_id})" ${window.selectedNFTs.has(nft.asset_id) ? "checked" : ""}>
+        <input type="checkbox" 
+          class="absolute top-2 left-2 w-5 h-5 z-10" 
+          onclick="toggleNFTSelection(event, '${nft.asset_id}')" 
+          ${window.selectedNFTs.has(nft.asset_id) ? "checked" : ""}>
+        
         <div onclick="openNFTModal('${nft.asset_id}')" class="nft-card-content cursor-pointer">
           <img src="${nft.image_url}" alt="NFT Image" class="w-full h-48 object-contain rounded">
           <h3 class="text-md font-semibold mt-2 truncate">${nft.template_info.template_name}</h3>
@@ -322,14 +329,13 @@ async function loadNFTs() {
 
 function updateBulkActions() {
   const bulk = document.getElementById('bulk-actions');
-  if (window.selectedNFTs.size > 0) {
+  
+  if (window.selectedNFTs && window.selectedNFTs.size > 0) {
     bulk.classList.remove('hidden');
   } else {
     bulk.classList.add('hidden');
   }
-}
-
-function renderPagination(totalPages) {
+} function renderPagination(totalPages) {
   const pagination = document.getElementById('pagination');
   if (totalPages <= 1) {
     pagination.innerHTML = '';
@@ -342,15 +348,13 @@ function renderPagination(totalPages) {
     <button onclick="changePage(window.currentPage + 1)" class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400" ${window.currentPage === totalPages ? "disabled" : ""}>Next</button>
   `;
   pagination.innerHTML = html;
-}
-
-function changePage(newPage) {
+} function changePage(newPage) {
+  if (newPage < 1) newPage = 1;
+  const totalPages = Math.ceil(window.nftsData.length / window.nftsPerPage);
+  if (newPage > totalPages) newPage = totalPages;
   window.currentPage = newPage;
   renderNFTs();
-}
-
-
-function openNFTModal(assetId) {
+} function openNFTModal(assetId) {
   const nft = window.nftsData.find(n => n.asset_id === assetId);
   if (!nft) return;
 
@@ -378,15 +382,45 @@ function setupFilterEvents() {
   document.getElementById('filter-status').addEventListener('change', renderNFTs);
   document.getElementById('filter-collection').addEventListener('change', renderNFTs);
   document.getElementById('sort-by').addEventListener('change', renderNFTs);
+  document.getElementById('filter-stakable').addEventListener('change', renderNFTs);
+  document.getElementById('filter-for-sale').addEventListener('change', renderNFTs);
+  document.getElementById('search-template').addEventListener('input', renderNFTs);
+  document.getElementById('bulk-withdraw').addEventListener('click', bulkWithdrawSelected);
+  document.getElementById('bulk-send').addEventListener('click', bulkSendSelected);  
+} async function bulkWithdrawSelected() {
+  if (window.selectedNFTs.size === 0) return;
+
+  if (!confirm(`Withdraw ${window.selectedNFTs.size} selected NFTs?`)) return;
+
+  const selectedIds = Array.from(window.selectedNFTs);
+  console.log("[⚡] Withdraw Selected NFTs:", selectedIds);
+
+  // 🔥 Qui puoi inviare i selectedIds al tuo endpoint backend di Withdraw multiplo
+  showToast(`Requested withdrawal of ${selectedIds.length} NFTs`, "success");
+
+  // Reset selezione
+  window.selectedNFTs.clear();
+  renderNFTs();
 }
 
-function setupFilterEvents() {
-  document.getElementById('filter-status').addEventListener('change', renderNFTs);
-  document.getElementById('filter-collection').addEventListener('change', renderNFTs);
-  document.getElementById('sort-by').addEventListener('change', renderNFTs);
-}
+async function bulkSendSelected() {
+  if (window.selectedNFTs.size === 0) return;
 
-async function openModal(action, token) {
+  const friend = prompt("Enter recipient WAX Account:");
+  if (!friend) return;
+
+  if (!confirm(`Send ${window.selectedNFTs.size} selected NFTs to ${friend}?`)) return;
+
+  const selectedIds = Array.from(window.selectedNFTs);
+  console.log("[⚡] Send Selected NFTs:", selectedIds, "to", friend);
+
+  // 🔥 Qui puoi inviare i dati al tuo endpoint backend di Transfer multiplo
+  showToast(`Requested sending ${selectedIds.length} NFTs to ${friend}`, "success");
+
+  // Reset selezione
+  window.selectedNFTs.clear();
+  renderNFTs();
+} async function openModal(action, token) {
   const modal = document.getElementById('modal');
   const modalBody = document.getElementById('modal-body');
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);

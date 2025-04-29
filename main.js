@@ -382,8 +382,8 @@ async function executeAction(action, token, amount) {
 
   if (action === "withdraw") {
     endpoint = `${BASE_URL}/withdraw`;
-  } else if (action === "swap") {
-    endpoint = `${BASE_URL}/swap`;
+  } else if (action === "swap_tokens") {
+    endpoint = `${BASE_URL}/swap_tokens`;
   } else if (action === "transfer") {
     endpoint = `${BASE_URL}/transfer`;
   } else if (action === "stake") {

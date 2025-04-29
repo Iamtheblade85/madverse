@@ -375,14 +375,14 @@ async function openModal(action, token) {
   };
 }
 // Funzione che esegue azioni reali
-async function executeAction(action, token, amount) {
+async function executeAction(action, token, amount, tokenOut = null, contractOut = null) {
   const { userId, usx_token, wax_account } = window.userData;
 
   let endpoint = "";
 
   if (action === "withdraw") {
     endpoint = `${BASE_URL}/withdraw`;
-  } else if (action === "swap_tokens") {
+  } else if (action === "swap") { // 🔥 NOTA: nel frontend lo chiamiamo "swap", non "swap_tokens"
     endpoint = `${BASE_URL}/swap_tokens`;
   } else if (action === "transfer") {
     endpoint = `${BASE_URL}/transfer`;
@@ -399,16 +399,25 @@ async function executeAction(action, token, amount) {
   let data;
 
   try {
+    const body = action === "swap"
+      ? JSON.stringify({
+          wax_account: wax_account,
+          from_token: token,
+          to_token: tokenOut,
+          amount: amount
+        })
+      : JSON.stringify({
+          wax_account: wax_account,
+          token_symbol: token,
+          amount: amount
+        });
+
     response = await fetch(fullUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        wax_account: wax_account,
-        token_symbol: token,
-        amount: amount
-      })
+      body: body
     });
   } catch (networkError) {
     console.error("[❌] Errore di rete:", networkError);
@@ -433,6 +442,17 @@ async function executeAction(action, token, amount) {
     throw new Error(data.error);
   }
 
+  // ✅ A questo punto siamo sicuri che la risposta è valida
+  if (action === "swap" && data.details) {
+    const details = data.details;
+    showToast(
+      `Swap Success!\n${details.amount} ${details.from_token} ➡️ ${details.received_amount.toFixed(4)} ${details.to_token}\nPrice: ${details.execution_price}\nCommission: ${details.commission.toFixed(4)}`,
+      "success"
+    );
+  } else {
+    showToast(`${action.charAt(0).toUpperCase() + action.slice(1)} completed successfully`, "success");
+  }
+
   console.info("[✅] Azione completata:", data.message || "Successo");
 }
 
@@ -442,7 +462,7 @@ function showToast(message, type = "success") {
   const toast = document.createElement('div');
 
   toast.className = `
-    p-4 rounded shadow
+    p-4 rounded shadow mb-2
     ${type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"}
   `;
   toast.innerText = message;
@@ -451,7 +471,7 @@ function showToast(message, type = "success") {
 
   setTimeout(() => {
     toast.remove();
-  }, 3000);
+  }, 4000); // 🔥 Lieve miglioramento: aumentato a 4s così si leggono bene i dettagli swap
 }
 
 // Avvio app

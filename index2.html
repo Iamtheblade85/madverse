@@ -62,16 +62,18 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
   <!-- Navbar -->
-  <nav class="bg-white shadow p-4 flex justify-between items-center">
-    <div class="flex flex-col leading-tight">
+  <nav class="bg-white shadow p-4 flex flex-col items-center text-center space-y-4">
+    <div>
       <h1 class="title-animated">ChipsWallet</h1>
       <p class="text-sm text-gray-500 italic">
         Built for Users, Powered by Blockchain
       </p>
     </div>
-    <div id="menu" class="space-x-4 relative flex items-center">
+  
+    <div id="menu" class="flex flex-wrap justify-start space-x-4 w-full max-w-screen-lg">
       <button class="menu-btn" data-section="wallet">Wallet</button>
       <button class="menu-btn" data-section="nfts">NFTs Wallet</button>
+  
       <!-- Dropdown Earn -->
       <div class="relative group">
         <button class="menu-btn">Earn ▾</button>
@@ -86,8 +88,7 @@
         </div>
       </div>
     </div>
-  </nav>
-  
+  </nav> 
   <!-- Contenuto dinamico principale -->
   <main id="app" class="p-4"></main>
 

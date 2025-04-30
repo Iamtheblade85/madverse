@@ -158,7 +158,6 @@ function loadSection(section) {
     `;
     loadNFTs();
   } else if (section === 'token-staking') {
-    const app = document.getElementById('app');
     app.innerHTML = `
       <h2 class="text-2xl font-semibold mb-4">Token Staking</h2>
   

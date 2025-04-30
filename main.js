@@ -1024,6 +1024,13 @@ async function loadWallet() {
           </table>
         </div>
       `;
+      document.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const action = btn.getAttribute('data-action');
+          const token = btn.getAttribute('data-token');
+          openModal(action, token);
+        });
+      });      
     } else {
       walletTable.innerHTML = `
         <div class="text-center text-gray-500">No balances available.</div>

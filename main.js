@@ -418,13 +418,16 @@ function openDepositForm(farmId) {
   document.getElementById('submit-deposit').onclick = async () => {
     const rows = document.querySelectorAll('.reward-row');
     const rewards = [];
-
     rows.forEach(row => {
-      const symbol = row.querySelector('.token-symbol').value.trim().toUpperCase();
+      const selectEl = row.querySelector('.token-symbol');
+      const symbol = selectEl?.value?.trim();
       const amount = parseFloat(row.querySelector('.amount').value);
-      if (symbol && !isNaN(amount) && amount > 0) {
-        rewards.push({ token_symbol: symbol, amount });
+
+      if (!symbol || symbol === "" || isNaN(amount) || amount <= 0) {
+        // Skippa riga non valida
+        return;
       }
+      rewards.push({ token_symbol: symbol.toUpperCase(), amount });
     });
 
     if (rewards.length === 0) {

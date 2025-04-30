@@ -246,37 +246,88 @@ function renderNewFarmForm() {
 // Azioni su Template
 // ✅ Add Template to Farm
 function openAddTemplateForm(farmId) {
-  const { userId, usx_token } = window.userData;
   const modal = document.getElementById('modal');
   const body = document.getElementById('modal-body');
+  const { userId, usx_token } = window.userData;
 
   body.innerHTML = `
-    <h3 class="text-xl font-bold mb-4">Add Template</h3>
-    <label class="block mb-1">Template ID</label>
-    <input id="template-id" type="number" class="w-full border p-2 rounded mb-3">
-    <label class="block mb-1">Rewards (JSON)</label>
-    <textarea id="template-rewards" rows="3" class="w-full border p-2 rounded mb-4">[{"token_symbol":"CHIPS","daily_reward_amount":1}]</textarea>
-    <button class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded" id="submit-add-template">Add</button>
+    <h3 class="text-xl font-bold mb-4">➕ Add Template to Farm</h3>
+    <label class="block mb-2 font-semibold">Template ID</label>
+    <input id="template-id" type="number" class="w-full border p-2 rounded mb-4" placeholder="e.g. 123456">
+
+    <div id="rewards-container">
+      <label class="block mb-2 font-semibold">Rewards</label>
+      <div class="reward-entry flex gap-2 mb-2">
+        <input type="text" class="token-symbol w-1/2 border p-2 rounded" placeholder="Token Symbol (e.g. CHIPS)">
+        <input type="number" class="reward-amount w-1/2 border p-2 rounded" placeholder="Amount per day">
+      </div>
+    </div>
+
+    <button id="add-reward-btn" class="mb-4 text-sm text-blue-600 underline">➕ Add another reward</button>
+
+    <button id="submit-add-template" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded shadow">
+      Add Template
+    </button>
   `;
+
   modal.classList.remove('hidden');
   document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
 
+  // ➕ Aggiungi nuova riga di reward
+  document.getElementById('add-reward-btn').onclick = () => {
+    const container = document.getElementById('rewards-container');
+    const div = document.createElement('div');
+    div.className = 'reward-entry flex gap-2 mb-2';
+    div.innerHTML = `
+      <input type="text" class="token-symbol w-1/2 border p-2 rounded" placeholder="Token Symbol (e.g. CHIPS)">
+      <input type="number" class="reward-amount w-1/2 border p-2 rounded" placeholder="Amount per day">
+    `;
+    container.appendChild(div);
+  };
+
+  // 📤 Submit del form
   document.getElementById('submit-add-template').onclick = async () => {
-    const template_id = parseInt(document.getElementById('template-id').value);
-    const rewards = JSON.parse(document.getElementById('template-rewards').value.trim());
+    const templateId = parseInt(document.getElementById('template-id').value.trim());
+    if (!templateId) {
+      showToast("Template ID is required", "error");
+      return;
+    }
+
+    const rewardElements = document.querySelectorAll('.reward-entry');
+    const rewards = [];
+
+    for (const el of rewardElements) {
+      const symbol = el.querySelector('.token-symbol').value.trim().toUpperCase();
+      const amount = parseFloat(el.querySelector('.reward-amount').value.trim());
+
+      if (!symbol || isNaN(amount) || amount <= 0) {
+        showToast("Each reward must have a valid symbol and positive amount", "error");
+        return;
+      }
+
+      rewards.push({ token_symbol: symbol, daily_reward_amount: amount });
+    }
+
+    if (rewards.length === 0) {
+      showToast("At least one reward is required", "error");
+      return;
+    }
 
     try {
       const res = await fetch(`${BASE_URL}/add_farm_template?user_id=${userId}&usx_token=${usx_token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ farm_id: farmId, template_id, rewards })
+        body: JSON.stringify({ farm_id: farmId, template_id: templateId, rewards })
       });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error adding template.');
-      showToast("✅ Template added", "success");
+      if (!res.ok) throw new Error(data.error || "Unknown error");
+
+      showToast(data.message || "Template added successfully", "success");
       modal.classList.add('hidden');
-      fetchAndRenderUserFarms();
+      await fetchAndRenderUserFarms();
     } catch (err) {
+      console.error("[❌] Error adding template:", err);
       showToast(err.message, "error");
     }
   };
@@ -381,23 +432,26 @@ function changeFarmStatus(farmId, newStatus = null) {
 }
 
 function removeTemplate(templateId) {
-  if (!confirm("Are you sure you want to remove this template?")) return;
-  const { userId, usx_token } = window.userData;
-  fetch(`${BASE_URL}/remove_template?user_id=${userId}&usx_token=${usx_token}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ template_id: templateId })
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) throw new Error(data.error);
-      showToast("Template removed successfully", "success");
+  showConfirmModal(`Are you sure you want to delete Template ${templateId} and all related rewards?`, async () => {
+    const { userId, usx_token } = window.userData;
+
+    try {
+      const res = await fetch(`${BASE_URL}/remove_template?user_id=${userId}&usx_token=${usx_token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ template_id: templateId })
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Unknown error');
+
+      showToast(data.message || "Template removed successfully", "success");
       fetchAndRenderUserFarms();
-    })
-    .catch(err => {
-      console.error(err);
+    } catch (err) {
+      console.error("[❌] Error removing template:", err);
       showToast("Error removing template: " + err.message, "error");
-    });
+    }
+  });
 }
 
 function changeFarmStatus(farmId) {
@@ -1363,7 +1417,23 @@ function updateBulkActions() {
       showToast(`Error during ${actionTitle}`, "error");
     }
   };
+} function showConfirmModal(message, onConfirm) {
+  const modal = document.getElementById('confirm-modal');
+  const msg = document.getElementById('confirm-message');
+  const cancelBtn = document.getElementById('confirm-cancel');
+  const yesBtn = document.getElementById('confirm-yes');
+
+  msg.textContent = message;
+  modal.classList.remove('hidden');
+
+  // Rimuovi eventuali vecchi listener
+  cancelBtn.onclick = () => modal.classList.add('hidden');
+  yesBtn.onclick = () => {
+    modal.classList.add('hidden');
+    onConfirm();
+  };
 }
+
 // Funzione che esegue azioni reali
 async function executeAction(action, token, amount, tokenOut = null, contractOut = null) {
   const { userId, usx_token, wax_account } = window.userData;

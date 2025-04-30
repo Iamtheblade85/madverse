@@ -172,13 +172,12 @@ function loadSection(section) {
     `;
     loadStakingPools();  // 🔥 chiamiamo la funzione che popola tutto
   }
-}
-async function loadStakingPools() {
-  
-  const { userId } = window.userData;
-  const res = await fetch(`${BASE_URL}/get_staking_pools?user_id=${userId}`);
+} async function loadStakingPools() {
+  const { userId, usx_token } = window.userData;
+  const res = await fetch(`${BASE_URL}/open_pools?user_id=${userId}&usx_token=${usx_token}`);
   const data = await res.json();
-  console.log("[📥] Risposta da /get_staking_pools:", data);
+  console.log("[📥] Risposta da /open_pools:", data);
+
   if (!data.pools || data.pools.length === 0) {
     document.getElementById('pool-buttons').innerHTML = `
       <div class="text-red-500">No staking pools found.</div>`;
@@ -189,54 +188,55 @@ async function loadStakingPools() {
   const poolButtonsContainer = document.getElementById('pool-buttons');
   const searchInput = document.getElementById('search-pools');
 
-  // Rende i pool disponibili in memoria globale per filtro/search
   window.stakingPools = pools;
 
   renderPoolButtons(pools);
-
   searchInput.addEventListener('input', () => {
     const search = searchInput.value.toLowerCase();
     const filtered = pools.filter(p =>
-      p.deposit_token.symbol.toLowerCase().includes(search)
+      p.token_symbol.toLowerCase().includes(search)
     );
     renderPoolButtons(filtered);
   });
 
-  // Mostra la pool con pool_id = 1 di default se esiste
   const defaultPool = pools.find(p => p.pool_id === 1) || pools[0];
   renderPoolDetails(defaultPool);
 } function renderPoolButtons(pools) {
-    const container = document.getElementById('pool-buttons');
-    container.innerHTML = ''; // pulisce
-  
-    pools.forEach(pool => {
-      const btn = document.createElement('button');
-      btn.className = 'btn-action';
-      btn.textContent = pool.deposit_token.symbol;
-      btn.onclick = () => renderPoolDetails(pool);
-      container.appendChild(btn);
-    });
-  } function renderPoolDetails(pool) {
-    const container = document.getElementById('selected-pool-details');
-    const rewardCards = pool.rewards.map(r => `
-      <div class="bg-gray-100 rounded p-3 shadow-sm border w-full sm:w-1/2 lg:w-1/3">
-        <h4 class="font-bold text-lg text-yellow-600">${r.token_symbol}</h4>
-        <p class="text-sm text-gray-600">Total Reward: <span class="font-semibold">${r.total_reward_deposit}</span></p>
-        <p class="text-sm text-gray-600">Daily Reward: <span class="font-semibold">${r.daily_reward}</span></p>
-      </div>
-    `).join('');
+  const container = document.getElementById('pool-buttons');
+  container.innerHTML = '';
+  pools.forEach(pool => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-action';
+    btn.textContent = pool.token_symbol;
+    btn.onclick = () => renderPoolDetails(pool);
+    container.appendChild(btn);
+  });
+} function renderPoolDetails(pool) {
+  const container = document.getElementById('selected-pool-details');
 
-    container.innerHTML = `
-      <div class="bg-white shadow rounded p-4">
-        <h3 class="text-xl font-bold mb-2">Pool: ${pool.deposit_token.symbol}</h3>
-        <p class="text-sm text-gray-500 mb-4">Created: ${new Date(pool.created_at).toLocaleDateString()}</p>
-        <h4 class="font-semibold mb-2">Rewards</h4>
-        <div class="flex flex-wrap gap-4">
-          ${rewardCards}
-        </div>
+  const rewardsHTML = pool.rewards_info.map(r => `
+    <div class="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 bg-gray-100 rounded p-3 shadow border">
+      <h4 class="font-bold text-yellow-700 mb-1">${r.reward_token}</h4>
+      <p class="text-sm"><strong>Total:</strong> ${r.total_reward_deposit}</p>
+      <p class="text-sm"><strong>Daily:</strong> ${r.daily_reward}</p>
+      <p class="text-sm"><strong>APR:</strong> ${r.apr}%</p>
+      <p class="text-sm"><strong>Days Left:</strong> ${r.days_remaining}</p>
+      <p class="text-green-700 text-sm font-semibold">Your Daily: ${r.user_daily_reward}</p>
+    </div>
+  `).join('');
+
+  container.innerHTML = `
+    <div class="bg-white shadow rounded p-4">
+      <h3 class="text-xl font-bold mb-2">Pool: ${pool.token_symbol}</h3>
+      <p class="text-sm text-gray-500 mb-4">Total Staked: <strong>${pool.total_staked}</strong></p>
+      <p class="text-sm text-gray-500 mb-4">You Staked: <strong>${pool.user_staked}</strong></p>
+      <h4 class="font-semibold mb-2">Rewards</h4>
+      <div class="flex flex-wrap gap-4">
+        ${rewardsHTML}
       </div>
-    `;
-  } // Caricamento Wallet reale
+    </div>
+  `;
+} // Caricamento Wallet reale
 async function loadWallet() {
   try {
     const { userId, usx_token } = window.userData;

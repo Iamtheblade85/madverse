@@ -241,14 +241,14 @@ function loadSection(section) {
           </button>
         </div>
       `).join('');
-      const rewardsHTML = template.rewards.map(r => {
-        const daily = parseFloat(r.daily_reward_amount);     
-        return `
-          <div class="text-xs text-gray-700">
-            ${r.token_symbol}: ${isNaN(daily) ? "N/A" : daily.toFixed(4)}/day 
-          </div>
-        `;
-      }).join('');
+        const rewardsHTML = template.rewards?.map(r => {
+          const daily = parseFloat(r.daily_reward_amount);
+          return `
+            <div class="text-xs text-gray-700">
+              ${r.token_symbol}: ${isNaN(daily) ? "N/A" : daily.toFixed(4)}/day
+            </div>
+          `;
+        }).join('') || '';
       return `
         <div class="border-t pt-4">
           <h4 class="font-bold mb-2">Template ID: ${template.template_id}</h4>
@@ -271,7 +271,7 @@ function loadSection(section) {
         <h3 class="text-xl font-bold mb-2 flex flex-wrap items-center gap-2">
           ${farm.farm_name}
           <span class="text-sm font-normal text-gray-500">
-            ${farm.farm_rewards.map(r =>
+            ${(farm.farm_rewards || []).map(r =>
               `<span class="ml-2">
                 💰 ${r.token_symbol}: <strong>${parseFloat(r.total_reward).toFixed(4)}</strong>
               </span>`).join('')}

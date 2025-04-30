@@ -511,81 +511,97 @@ function changeFarmStatus(farmId, newStatus = null) {
     .catch(err => {
       showToast("Error: " + err.message, "error");
     });
-} function openEditRewards(templateId) {
+} async function openEditRewards(templateId) {
+  const { userId, usx_token } = window.userData;
   const modal = document.getElementById('modal');
   const body = document.getElementById('modal-body');
-  const farm = window.nftFarmsData?.find(farm => 
-    farm.templates?.some(t => t.template_id == templateId)
-  );
-  const template = farm?.templates?.find(t => t.template_id == templateId);
 
-  if (!template) {
-    showToast("Template not found", "error");
-    return;
-  }
+  try {
+    // 🔄 Richiama i dati aggiornati
+    const res = await fetch(`${BASE_URL}/get_farms?user_id=${userId}&usx_token=${usx_token}`);
+    const data = await res.json();
 
-  body.innerHTML = `
-    <h3 class="text-xl font-bold mb-4">✏️ Edit Rewards for Template ID ${templateId}</h3>
-    <div id="rewards-edit-container">
-      ${(template.rewards || []).map((r, i) => `
-        <div class="reward-entry flex gap-2 mb-2">
-          <input type="text" class="token-symbol w-1/2 border p-2 rounded" value="${r.token_symbol}" placeholder="Token Symbol">
-          <input type="number" class="reward-amount w-1/2 border p-2 rounded" value="${parseFloat(r.daily_reward_amount)}" placeholder="Amount per day">
-        </div>
-      `).join('')}
-    </div>
-    <button id="add-reward-btn" class="mb-4 text-sm text-blue-600 underline">➕ Add another reward</button>
-    <button id="submit-edit-rewards" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded shadow">
-      Update Rewards
-    </button>
-  `;
+    if (!res.ok || !data.farms) {
+      showToast("Error loading farms data", "error");
+      return;
+    }
 
-  modal.classList.remove('hidden');
-  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+    // 🔍 Cerca il template
+    const farm = data.farms.find(f => f.templates?.some(t => t.template_id == templateId));
+    const template = farm?.templates?.find(t => t.template_id == templateId);
 
-  document.getElementById('add-reward-btn').onclick = () => {
-    const container = document.getElementById('rewards-edit-container');
-    const div = document.createElement('div');
-    div.className = 'reward-entry flex gap-2 mb-2';
-    div.innerHTML = `
-      <input type="text" class="token-symbol w-1/2 border p-2 rounded" placeholder="Token Symbol">
-      <input type="number" class="reward-amount w-1/2 border p-2 rounded" placeholder="Amount per day">
+    if (!template) {
+      showToast("Template not found", "error");
+      return;
+    }
+
+    // 🪟 Ora puoi mostrare il modal con i dati sicuri
+    modal.classList.remove('hidden');
+    document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+
+    body.innerHTML = `
+      <h3 class="text-xl font-bold mb-4">✏️ Edit Rewards for Template ID ${templateId}</h3>
+      <div id="rewards-edit-container">
+        ${(template.rewards || []).map(r => `
+          <div class="reward-entry flex gap-2 mb-2">
+            <input type="text" class="token-symbol w-1/2 border p-2 rounded" value="${r.token_symbol}" placeholder="Token Symbol">
+            <input type="number" class="reward-amount w-1/2 border p-2 rounded" value="${parseFloat(r.daily_reward_amount)}" placeholder="Amount per day">
+          </div>
+        `).join('')}
+      </div>
+      <button id="add-reward-btn" class="mb-4 text-sm text-blue-600 underline">➕ Add another reward</button>
+      <button id="submit-edit-rewards" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded shadow">
+        Update Rewards
+      </button>
     `;
-    container.appendChild(div);
-  };
 
-  document.getElementById('submit-edit-rewards').onclick = async () => {
-    const rewards = [];
-    const entries = document.querySelectorAll('.reward-entry');
-    for (const entry of entries) {
-      const symbol = entry.querySelector('.token-symbol').value.trim();
-      const amount = parseFloat(entry.querySelector('.reward-amount').value.trim());
-      if (!symbol || isNaN(amount) || amount <= 0) {
-        showToast("Each reward must be valid", "error");
-        return;
+    // Aggiunta nuova riga
+    document.getElementById('add-reward-btn').onclick = () => {
+      const container = document.getElementById('rewards-edit-container');
+      const div = document.createElement('div');
+      div.className = 'reward-entry flex gap-2 mb-2';
+      div.innerHTML = `
+        <input type="text" class="token-symbol w-1/2 border p-2 rounded" placeholder="Token Symbol">
+        <input type="number" class="reward-amount w-1/2 border p-2 rounded" placeholder="Amount per day">
+      `;
+      container.appendChild(div);
+    };
+
+    // Submit modifiche
+    document.getElementById('submit-edit-rewards').onclick = async () => {
+      const rewards = [];
+      const entries = document.querySelectorAll('.reward-entry');
+      for (const entry of entries) {
+        const symbol = entry.querySelector('.token-symbol').value.trim();
+        const amount = parseFloat(entry.querySelector('.reward-amount').value.trim());
+        if (!symbol || isNaN(amount) || amount <= 0) {
+          showToast("Each reward must be valid", "error");
+          return;
+        }
+        rewards.push({ token_symbol: symbol, daily_reward_amount: amount });
       }
-      rewards.push({ token_symbol: symbol, daily_reward_amount: amount });
-    }
 
-    try {
-      const { userId, usx_token } = window.userData;
-      const res = await fetch(`${BASE_URL}/update_template_rewards?user_id=${userId}&usx_token=${usx_token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ template_id: templateId, rewards })
-      });
+      try {
+        const res = await fetch(`${BASE_URL}/update_template_rewards?user_id=${userId}&usx_token=${usx_token}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ template_id: templateId, rewards })
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || "Failed to update rewards");
+        showToast(result.message || "Rewards updated", "success");
+        modal.classList.add('hidden');
+        await fetchAndRenderUserFarms(); // refresh UI
+      } catch (err) {
+        console.error(err);
+        showToast(err.message, "error");
+      }
+    };
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update rewards");
-
-      showToast(data.message || "Rewards updated", "success");
-      modal.classList.add('hidden');
-      fetchAndRenderUserFarms();
-    } catch (err) {
-      console.error("[❌] Error editing rewards:", err);
-      showToast(err.message, "error");
-    }
-  };
+  } catch (error) {
+    console.error("[❌] Failed to open edit modal:", error);
+    showToast("Failed to load data", "error");
+  }
 } window.openEditRewards = openEditRewards;
 
 function removeTemplate(templateId) {

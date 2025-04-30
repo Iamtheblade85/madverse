@@ -244,20 +244,140 @@ function renderNewFarmForm() {
 }
 
 // Azioni su Template
+// ✅ Add Template to Farm
 function openAddTemplateForm(farmId) {
-  alert("TODO: open template form for farm " + farmId);
+  const { userId, usx_token } = window.userData;
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+
+  body.innerHTML = `
+    <h3 class="text-xl font-bold mb-4">Add Template</h3>
+    <label class="block mb-1">Template ID</label>
+    <input id="template-id" type="number" class="w-full border p-2 rounded mb-3">
+    <label class="block mb-1">Rewards (JSON)</label>
+    <textarea id="template-rewards" rows="3" class="w-full border p-2 rounded mb-4">[{"token_symbol":"CHIPS","daily_reward_amount":1}]</textarea>
+    <button class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded" id="submit-add-template">Add</button>
+  `;
+  modal.classList.remove('hidden');
+  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+
+  document.getElementById('submit-add-template').onclick = async () => {
+    const template_id = parseInt(document.getElementById('template-id').value);
+    const rewards = JSON.parse(document.getElementById('template-rewards').value.trim());
+
+    try {
+      const res = await fetch(`${BASE_URL}/add_farm_template?user_id=${userId}&usx_token=${usx_token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ farm_id: farmId, template_id, rewards })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error adding template.');
+      showToast("✅ Template added", "success");
+      modal.classList.add('hidden');
+      fetchAndRenderUserFarms();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  };
 }
 
+// ✅ Deposit Rewards
 function openDepositForm(farmId) {
-  alert("TODO: open deposit form for farm " + farmId);
+  const { userId, usx_token, wax_account } = window.userData;
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+
+  body.innerHTML = `
+    <h3 class="text-xl font-bold mb-4">Deposit Rewards</h3>
+    <label>Token Symbol</label>
+    <input id="deposit-token" type="text" class="w-full border p-2 rounded mb-2">
+    <label>Amount</label>
+    <input id="deposit-amount" type="number" class="w-full border p-2 rounded mb-4">
+    <button id="submit-deposit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Deposit</button>
+  `;
+  modal.classList.remove('hidden');
+  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+
+  document.getElementById('submit-deposit').onclick = async () => {
+    const token_symbol = document.getElementById('deposit-token').value.toUpperCase().trim();
+    const amount = parseFloat(document.getElementById('deposit-amount').value);
+
+    try {
+      const res = await fetch(`${BASE_URL}/deposit_rewards?user_id=${userId}&usx_token=${usx_token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, farm_id: farmId, wax_account, token_symbol, amount })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error depositing rewards.');
+      showToast("✅ Rewards deposited", "success");
+      modal.classList.add('hidden');
+      fetchAndRenderUserFarms();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  };
 }
 
-function openEditRewards(templateId) {
-  alert("TODO: open edit rewards modal for template " + templateId);
+// ✅ Confirm Close
+function confirmFarmClosure(farmId) {
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+
+  body.innerHTML = `
+    <h3 class="text-xl font-bold text-red-600 mb-4">Close Farm</h3>
+    <p class="mb-4">Are you sure you want to <strong>close</strong> this farm? This will pause all rewards.</p>
+    <div class="flex justify-end gap-4">
+      <button class="bg-gray-300 px-4 py-2 rounded" onclick="document.getElementById('modal').classList.add('hidden')">Cancel</button>
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="changeFarmStatus(${farmId}, 'closed')">Confirm</button>
+    </div>
+  `;
+  modal.classList.remove('hidden');
+  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
 }
 
-function openAddReward(templateId) {
-  alert("TODO: open add reward modal for template " + templateId);
+// ✅ Change Status
+function changeFarmStatus(farmId, newStatus = null) {
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+  const { userId, usx_token } = window.userData;
+
+  if (!newStatus) {
+    body.innerHTML = `
+      <h3 class="text-xl font-bold mb-4">Change Farm Status</h3>
+      <select id="status-select" class="w-full border p-2 rounded mb-4">
+        <option value="open">Open</option>
+        <option value="closed">Closed</option>
+        <option value="setting">Setting</option>
+      </select>
+      <button class="bg-yellow-500 hover:bg-yellow-600 text-white w-full py-2 rounded" id="status-confirm">Update</button>
+    `;
+    modal.classList.remove('hidden');
+    document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+
+    document.getElementById('status-confirm').onclick = () => {
+      const selected = document.getElementById('status-select').value;
+      changeFarmStatus(farmId, selected);
+    };
+    return;
+  }
+
+  fetch(`${BASE_URL}/update_farm_status?user_id=${userId}&usx_token=${usx_token}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ farm_id: farmId, status: newStatus })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      showToast("✅ Farm status updated", "success");
+      modal.classList.add('hidden');
+      fetchAndRenderUserFarms();
+    })
+    .catch(err => {
+      showToast("Error: " + err.message, "error");
+    });
 }
 
 function removeTemplate(templateId) {

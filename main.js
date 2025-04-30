@@ -701,25 +701,26 @@ function loadSection(section) {
   });
 } function renderNFTFarms(farms) {
   const container = document.getElementById('nft-farm-details');
-  container.innerHTML = '';
+  let html = '';
+
+  // ✅ Messaggio introduttivo UNA SOLA VOLTA
+  html += `
+    <p class="italic text-gray-600 mb-2">
+      Don’t have a NFT farm in CHIPS Wallet for your collection yet? You can create one 
+      <button onclick="loadSection('create-nfts-farm')"
+        class="ml-2 px-4 py-1 bg-yellow-400 text-gray-900 font-bold rounded-lg border-2 border-black shadow-lg transform hover:-translate-y-1 hover:shadow-xl transition-all duration-200 hover:bg-yellow-300 hover:text-black">
+        Create NFTs Farm
+      </button>
+    </p>
+  `;
 
   farms.forEach(farm => {
-    // Messaggio introduttivo una volta sola
-    container.innerHTML += `
-      <p class="italic text-gray-600 mb-2">
-        Don’t have a NFT farm in CHIPS Wallet for your collection yet? You can create one 
-        <button onclick="loadSection('create-nfts-farm')"
-          class="ml-2 px-4 py-1 bg-yellow-400 text-gray-900 font-bold rounded-lg border-2 border-black shadow-lg transform hover:-translate-y-1 hover:shadow-xl transition-all duration-200 hover:bg-yellow-300 hover:text-black">
-          Create NFTs Farm
-        </button>
-      </p>
-    `;
     const templatesHTML = (farm.templates || []).map(template => {
       const nftsHTML = (template.user_nfts || []).map(nft => `
         <div class="bg-gray-100 p-2 rounded shadow-sm text-sm text-center">
           <img src="${nft.asset_img}" alt="NFT"
-           class="w-full h-24 object-contain mb-1 rounded"
-           onerror="this.onerror=null;this.src='https://via.placeholder.com/150?text=Image+Not+Found';">
+            class="w-full h-24 object-contain mb-1 rounded"
+            onerror="this.onerror=null;this.src='https://via.placeholder.com/150?text=Image+Not+Found';">
           <div class="font-semibold truncate">${nft.template_name}</div>
           <div class="text-xs text-gray-600">#${nft.asset_id}</div>
           <button class="mt-1 w-full text-white py-1 rounded ${nft.is_staked ? 'bg-red-500' : 'bg-green-500'}"
@@ -748,21 +749,28 @@ function loadSection(section) {
         </div>
       `;
     }).join('');
-    container.innerHTML += `
+
+    const farmRewards = (farm.farm_rewards || []).map(r => `
+      <span class="ml-2">
+        💰 ${r.token_symbol}: <strong>${parseFloat(r.total_reward).toFixed(4)}</strong>
+      </span>
+    `).join('');
+
+    html += `
       <div class="bg-white p-4 rounded shadow">
         <h3 class="text-xl font-bold mb-2 flex flex-wrap items-center gap-2">
           ${farm.farm_name}
           <span class="text-sm font-normal text-gray-500">
-            ${(farm.farm_rewards || []).map(r =>
-              `<span class="ml-2">
-                💰 ${r.token_symbol}: <strong>${parseFloat(r.total_reward).toFixed(4)}</strong>
-              </span>`).join('')}
+            ${farmRewards}
           </span>
         </h3>
         ${templatesHTML}
       </div>
     `;
   });
+
+  // ✅ Imposta tutto insieme
+  container.innerHTML = html;
 } async function handleNFTStake(farmId, templateId, assetId, isStaked) {
   const { userId, usx_token, wax_account } = window.userData;
   const action = isStaked ? 'remove' : 'add';

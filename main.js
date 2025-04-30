@@ -157,10 +157,92 @@ function loadSection(section) {
       </div>
     `;
     loadNFTs();
+  } else if (section === 'token-staking') {
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <h2 class="text-2xl font-semibold mb-4">Token Staking</h2>
+  
+      <input type="text" id="search-pools" placeholder="Search token pool name" class="mb-4 p-2 border rounded w-full md:w-1/2">
+  
+      <div id="pool-buttons" class="flex flex-wrap gap-2 mb-6"></div>
+  
+      <div id="selected-pool-details">
+        <div class="text-center text-gray-500">Loading pool data...</div>
+      </div>
+    `;
+    loadStakingPools();  // 🔥 chiamiamo la funzione che popola tutto
   }
 }
+async function loadStakingPools() {
+  const { userId } = window.userData;
+  const res = await fetch(`${BASE_URL}/get_staking_pools?user_id=${userId}`);
+  const data = await res.json();
 
-// Caricamento Wallet reale
+  if (!data.pools || data.pools.length === 0) {
+    document.getElementById('pool-buttons').innerHTML = `
+      <div class="text-red-500">No staking pools found.</div>`;
+    return;
+  }
+
+  const pools = data.pools;
+  const poolButtonsContainer = document.getElementById('pool-buttons');
+  const searchInput = document.getElementById('search-pools');
+
+  // Rende i pool disponibili in memoria globale per filtro/search
+  window.stakingPools = pools;
+
+  renderPoolButtons(pools);
+
+  searchInput.addEventListener('input', () => {
+    const search = searchInput.value.toLowerCase();
+    const filtered = pools.filter(p =>
+      p.deposit_token.symbol.toLowerCase().includes(search)
+    );
+    renderPoolButtons(filtered);
+  });
+
+  // Mostra la pool con pool_id = 1 di default se esiste
+  const defaultPool = pools.find(p => p.pool_id === 1) || pools[0];
+  renderPoolDetails(defaultPool);
+} function renderPoolButtons(pools) {
+    const container = document.getElementById('pool-buttons');
+    container.innerHTML = ''; // pulisce
+  
+    pools.forEach(pool => {
+      const btn = document.createElement('button');
+      btn.className = 'btn-action';
+      btn.textContent = pool.deposit_token.symbol;
+      btn.onclick = () => renderPoolDetails(pool);
+      container.appendChild(btn);
+    });
+  } function renderPoolDetails(pool) {
+    const container = document.getElementById('selected-pool-details');
+  
+    const rewardRows = pool.rewards.map(r => `
+      <tr>
+        <td class="py-2 px-4">${r.token_symbol}</td>
+        <td class="py-2 px-4">${r.total_reward_deposit}</td>
+        <td class="py-2 px-4">${r.daily_reward}</td>
+      </tr>`).join('');
+  
+    container.innerHTML = `
+      <div class="bg-white shadow rounded p-4">
+        <h3 class="text-xl font-bold mb-2">Pool: ${pool.deposit_token.symbol}</h3>
+        <p class="text-sm text-gray-500 mb-4">Created: ${new Date(pool.created_at).toLocaleDateString()}</p>
+        <h4 class="font-semibold mb-2">Rewards</h4>
+        <table class="min-w-full bg-white text-sm border">
+          <thead class="bg-gray-100 border-b">
+            <tr>
+              <th class="py-2 px-4 text-left">Token</th>
+              <th class="py-2 px-4 text-left">Total Reward</th>
+              <th class="py-2 px-4 text-left">Daily Reward</th>
+            </tr>
+          </thead>
+          <tbody>${rewardRows}</tbody>
+        </table>
+      </div>
+    `;
+  } // Caricamento Wallet reale
 async function loadWallet() {
   try {
     const { userId, usx_token } = window.userData;

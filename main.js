@@ -170,23 +170,23 @@ async function loadWallet() {
     const walletTable = document.getElementById('wallet-table');
     if (saldoData.balances) {
       walletTable.innerHTML = `
-          <div class="overflow-x-auto">
-            <table class="min-w-full bg-white rounded-lg shadow">
+        <div class="w-full">
+          <table class="w-full table-auto bg-white rounded-lg shadow text-xs">
             <thead class="bg-gray-200">
               <tr>
-                <th class="py-2 px-4">Token</th>
-                <th class="py-2 px-4">Amount</th>
-                <th class="py-2 px-4">Stakeable</th>
-                <th class="py-2 px-4">Actions</th>
+                <th class="px-2 py-1 w-1/4 text-left">Token</th>
+                <th class="px-2 py-1 w-1/4 text-left">Amount</th>
+                <th class="px-2 py-1 w-1/4 text-left">Stakeable</th>
+                <th class="px-2 py-1 w-1/4 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
               ${saldoData.balances.map(token => `
                 <tr class="border-t">
-                  <td class="py-2 px-4 font-bold">${token.symbol}</td>
-                  <td class="py-2 px-4">${token.amount}</td>
-                  <td class="py-2 px-4">${token.stakeable}</td>
-                  <td class="py-2 px-4 space-x-2">
+                  <td class="px-2 py-1 font-bold">${token.symbol}</td>
+                  <td class="px-2 py-1">${token.amount}</td>
+                  <td class="px-2 py-1">${token.stakeable}</td>
+                  <td class="px-2 py-1 flex flex-wrap gap-1">
                     <button class="btn-action" data-action="withdraw" data-token="${token.symbol}">Withdraw</button>
                     <button class="btn-action" data-action="swap" data-token="${token.symbol}">Swap</button>
                     <button class="btn-action" data-action="transfer" data-token="${token.symbol}">Transfer</button>
@@ -198,7 +198,6 @@ async function loadWallet() {
           </table>
         </div>
       `;
-
       // Attacco eventi sugli action buttons
       document.querySelectorAll('.btn-action').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -211,13 +210,13 @@ async function loadWallet() {
       
     } else {
       walletTable.innerHTML = `
-        <div class="text-center text-gray-500">Nessun saldo disponibile.</div>
+        <div class="text-center text-gray-500">No balances available.</div>
       `;
     }
   } catch (error) {
-    console.error("[❌] Errore caricando Wallet:", error);
+    console.error("[❌] Error loading Wallet:", error);
     document.getElementById('wallet-table').innerHTML = `
-      <div class="text-center text-red-500">Errore caricando il Wallet.</div>
+      <div class="text-center text-red-500">Error loading wallet data.</div>
     `;
   }
 }

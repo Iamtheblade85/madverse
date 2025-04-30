@@ -586,7 +586,8 @@ function changeFarmStatus(farmId, newStatus = null) {
       showToast(err.message, "error");
     }
   };
-} 
+} window.openEditRewards = openEditRewards;
+
 function removeTemplate(templateId) {
   showConfirmModal(`Are you sure you want to delete Template ${templateId} and all related rewards?`, async () => {
     const { userId, usx_token } = window.userData;
@@ -657,7 +658,8 @@ function removeTemplate(templateId) {
       showToast(err.message, "error");
     }
   };
-} function changeFarmStatus(farmId) {
+} window.openAddReward = openAddReward; 
+function changeFarmStatus(farmId) {
   const newStatus = prompt("Enter new status (open, closed, setting):");
   if (!newStatus) return;
   const { userId, usx_token } = window.userData;

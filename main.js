@@ -189,10 +189,42 @@ function loadSection(section) {
     return;
   }
 
-  window.nftFarmsData = data.farms; // contiene tutto: farm_name, templates, rewards, e user_nfts
-  renderNFTFarms(data.farms);
-} function renderNFTFarms(farms) {
+  window.nftFarmsData = data.farms;
+  renderNFTFarmButtons(data.farms);
+
+  const defaultFarm = data.farms.find(f => f.farm_name.toLowerCase().includes('chips')) || data.farms[0];
+  renderNFTFarms([defaultFarm]);
+} function renderNFTFarmButtons(farms) {
   const container = document.getElementById('nft-farms-container');
+  container.innerHTML = `
+    <input type="text" id="search-nft-farm" placeholder="Search farm name..." class="mb-4 p-2 border rounded w-full md:w-1/2">
+    <div id="nft-farm-buttons" class="flex flex-wrap gap-2 mb-4"></div>
+    <div id="nft-farm-details"></div>
+  `;
+
+  const buttonContainer = document.getElementById('nft-farm-buttons');
+  const searchInput = document.getElementById('search-nft-farm');
+
+  function renderButtons(list) {
+    buttonContainer.innerHTML = '';
+    list.forEach(farm => {
+      const btn = document.createElement('button');
+      btn.className = 'btn-action';
+      btn.textContent = farm.farm_name;
+      btn.onclick = () => renderNFTFarms([farm]);
+      buttonContainer.appendChild(btn);
+    });
+  }
+
+  renderButtons(farms);
+
+  searchInput.addEventListener('input', () => {
+    const search = searchInput.value.toLowerCase();
+    const filtered = farms.filter(f => f.farm_name.toLowerCase().includes(search));
+    renderButtons(filtered);
+  });
+} function renderNFTFarms(farms) {
+  const container = document.getElementById('nft-farm-details');
   container.innerHTML = '';
 
   farms.forEach(farm => {
@@ -254,7 +286,12 @@ function loadSection(section) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Unknown error');
     showToast(data.message || 'Success', 'success');
-    await loadNFTFarms(); // reload to reflect status
+    
+    // 🔁 Solo refresh della farm modificata
+    const updatedFarm = window.nftFarmsData.find(f => f.farm_id === farmId);
+    if (updatedFarm) {
+      renderNFTFarms([updatedFarm]);
+    }
   } catch (err) {
     console.error(err);
     showToast("Error: " + err.message, "error");

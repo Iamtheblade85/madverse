@@ -171,6 +171,93 @@ function loadSection(section) {
       </div>
     `;
     loadStakingPools();  // 🔥 chiamiamo la funzione che popola tutto
+  } else if (section === 'nfts-staking') {
+    app.innerHTML = `
+      <h2 class="text-2xl font-semibold mb-4">NFT Staking</h2>
+      <div id="nft-farms-container" class="space-y-4">Loading NFT farms...</div>
+    `;
+    loadNFTFarms();
+  }
+} async function loadNFTFarms() {
+  const { userId, usx_token } = window.userData;
+  const res = await fetch(`${BASE_URL}/nfts_farms?user_id=${userId}&usx_token=${usx_token}`);
+  const data = await res.json();
+
+  if (!data.farms || data.farms.length === 0) {
+    document.getElementById('nft-farms-container').innerHTML = `
+      <div class="text-red-500">No NFT farms found.</div>`;
+    return;
+  }
+
+  window.nftFarmsData = data.farms; // contiene tutto: farm_name, templates, rewards, e user_nfts
+  renderNFTFarms(data.farms);
+} function renderNFTFarms(farms) {
+  const container = document.getElementById('nft-farms-container');
+  container.innerHTML = '';
+
+  farms.forEach(farm => {
+    const templatesHTML = farm.templates.map(template => {
+      const nftsHTML = template.user_nfts.map(nft => `
+        <div class="bg-gray-100 p-2 rounded shadow-sm text-sm text-center">
+          <img src="${nft.asset_img}" alt="NFT" class="w-full h-24 object-contain mb-1 rounded">
+          <div class="font-semibold truncate">${nft.template_name}</div>
+          <div class="text-xs text-gray-600">#${nft.asset_id}</div>
+          <button class="mt-1 w-full text-white py-1 rounded ${nft.is_staked ? 'bg-red-500' : 'bg-green-500'}"
+            onclick="handleNFTStake(${farm.farm_id}, ${template.template_id}, '${nft.asset_id}', ${nft.is_staked})">
+            ${nft.is_staked ? 'Unstake' : 'Stake'}
+          </button>
+        </div>
+      `).join('');
+
+      const rewardsHTML = template.rewards.map(r => `
+        <div class="text-xs text-gray-700">
+          ${r.token_symbol}: ${r.daily_reward_amount}/day (Total: ${r.total_reward})
+        </div>
+      `).join('');
+
+      return `
+        <div class="border-t pt-4">
+          <h4 class="font-bold mb-2">Template ID: ${template.template_id}</h4>
+          ${rewardsHTML}
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mt-2">
+            ${nftsHTML || '<div class="text-gray-500 col-span-full">No NFTs</div>'}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML += `
+      <div class="bg-white p-4 rounded shadow">
+        <h3 class="text-xl font-bold mb-2">${farm.farm_name}</h3>
+        ${templatesHTML}
+      </div>
+    `;
+  });
+} async function handleNFTStake(farmId, templateId, assetId, isStaked) {
+  const { userId, usx_token, wax_account } = window.userData;
+  const action = isStaked ? 'remove' : 'add';
+  const endpoint = `${BASE_URL}/${isStaked ? 'nft_remove' : 'nft_add'}?user_id=${userId}&usx_token=${usx_token}`;
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: userId,
+        farm_id: farmId,
+        template_id: templateId,
+        wax_account,
+        action
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Unknown error');
+    showToast(data.message || 'Success', 'success');
+    await loadNFTFarms(); // reload to reflect status
+  } catch (err) {
+    console.error(err);
+    showToast("Error: " + err.message, "error");
   }
 } async function loadStakingPools() {
   const { userId, usx_token } = window.userData;

@@ -217,9 +217,13 @@ function loadSection(section) {
   const rewards = pool.rewards_info;
   const rewardsCount = rewards.length;
 
+  // Calcolo responsivo colonne
   let gridColumns = 'grid-cols-1';
-  if (rewardsCount === 2) gridColumns = 'grid-cols-2';
-  else if (rewardsCount > 2) gridColumns = 'sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2';
+  if (rewardsCount === 2) {
+    gridColumns = 'grid-cols-2';
+  } else if (rewardsCount > 2) {
+    gridColumns = 'sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2';
+  }
 
   const rewardsHTML = rewards.map(r => `
     <div class="p-2 border-b md:border md:rounded">

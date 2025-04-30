@@ -217,8 +217,158 @@ function renderTokenPoolDetails(pool) {
       <p class="text-gray-600 mb-2">APR: <strong>${pool.apr || 'N/A'}%</strong></p>
       <p class="text-gray-600 mb-4">Created: ${pool.creation_date}</p>
     </div>
+    <button class="btn-action bg-yellow-500 text-white mt-2" onclick="openEditDailyReward(${pool.pool_id}, '${pool.token_symbol}', ${pool.daily_reward})">
+      ✏️ Edit Daily Reward
+    </button>
+    <button class="btn-action bg-yellow-600 text-white" onclick="openPoolStatusModal(${pool.pool_id}, '${pool.status || 'open'}')">
+      🔄 Change Pool Status
+    </button>
   `;
 }
+function openEditDailyReward(poolId, tokenSymbol, currentReward) {
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+
+  body.innerHTML = `
+    <h3 class="text-xl font-bold mb-4">Edit Daily Reward for ${tokenSymbol}</h3>
+    <label class="block mb-2 font-semibold">New Daily Reward</label>
+    <input id="new-daily-reward" type="number" value="${currentReward}" class="w-full border p-2 rounded mb-4">
+    <button id="submit-daily-reward" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">
+      Update Reward
+    </button>
+    <button class="btn-action bg-blue-500 text-white mt-2" onclick="openDepositToPool(${pool.pool_id}, '${pool.token_symbol}')">
+      💰 Deposit More Tokens
+    </button>
+  `;
+
+  modal.classList.remove('hidden');
+  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+
+  document.getElementById('submit-daily-reward').onclick = async () => {
+    const newReward = parseFloat(document.getElementById('new-daily-reward').value);
+    if (isNaN(newReward) || newReward <= 0) {
+      showToast("Please enter a valid reward value", "error");
+      return;
+    }
+
+    try {
+      const { userId, usx_token } = window.userData;
+      const res = await fetch(`${BASE_URL}/update_pool_daily_reward?user_id=${userId}&usx_token=${usx_token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pool_id: poolId, new_daily_reward: newReward })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update reward");
+
+      showToast("Daily reward updated", "success");
+      modal.classList.add('hidden');
+      fetchAndRenderTokenPools();
+    } catch (err) {
+      console.error(err);
+      showToast(err.message, "error");
+    }
+  };
+}
+window.openEditDailyReward = openEditDailyReward;
+function openDepositToPool(poolId, tokenSymbol) {
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+
+  const balance = (window.walletBalances?.find(t => t.symbol === tokenSymbol) || {}).amount || 0;
+
+  body.innerHTML = `
+    <h3 class="text-xl font-bold mb-4">Deposit More ${tokenSymbol} into Pool</h3>
+    <p class="text-gray-600 mb-2">Available in Wallet: <strong>${balance}</strong></p>
+    <label class="block mb-1">Amount</label>
+    <input type="number" id="deposit-amount" class="w-full border p-2 rounded mb-4">
+    <button class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded" id="submit-deposit">
+      Deposit Tokens
+    </button>
+  `;
+
+  modal.classList.remove('hidden');
+  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+
+  document.getElementById('submit-deposit').onclick = async () => {
+    const amount = parseFloat(document.getElementById('deposit-amount').value);
+    if (!amount || amount <= 0 || amount > balance) {
+      showToast("Invalid amount", "error");
+      return;
+    }
+
+    try {
+      const { userId, usx_token, wax_account } = window.userData;
+      const res = await fetch(`${BASE_URL}/add_token_to_staking_pool?user_id=${userId}&usx_token=${usx_token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pool_id: poolId,
+          token_symbol: tokenSymbol,
+          amount,
+          wax_account
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Deposit failed");
+
+      showToast("Tokens deposited successfully", "success");
+      modal.classList.add('hidden');
+      loadWallet();
+      fetchAndRenderTokenPools();
+    } catch (err) {
+      console.error(err);
+      showToast(err.message, "error");
+    }
+  };
+}
+window.openDepositToPool = openDepositToPool;
+function openPoolStatusModal(poolId, currentStatus) {
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+
+  body.innerHTML = `
+    <h3 class="text-xl font-bold mb-4">Change Pool Status</h3>
+    <label class="block mb-2 font-semibold">Select new status</label>
+    <select id="pool-status-select" class="w-full border p-2 rounded mb-4">
+      <option value="open" ${currentStatus === 'open' ? 'selected' : ''}>Open</option>
+      <option value="closed" ${currentStatus === 'closed' ? 'selected' : ''}>Closed</option>
+      <option value="maintenance" ${currentStatus === 'maintenance' ? 'selected' : ''}>Maintenance</option>
+    </select>
+    <button id="submit-pool-status" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded">
+      Update Status
+    </button>
+  `;
+
+  modal.classList.remove('hidden');
+  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+
+  document.getElementById('submit-pool-status').onclick = async () => {
+    const newStatus = document.getElementById('pool-status-select').value;
+    const { userId, usx_token } = window.userData;
+
+    try {
+      const res = await fetch(`${BASE_URL}/update_token_pool_status?user_id=${userId}&usx_token=${usx_token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pool_id: poolId, new_status: newStatus })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update status");
+
+      showToast("Pool status updated", "success");
+      modal.classList.add('hidden');
+      fetchAndRenderTokenPools(); // 🔄 Refresh pools
+    } catch (err) {
+      console.error("[❌] Error updating pool status:", err);
+      showToast("Error: " + err.message, "error");
+    }
+  };
+}
+window.openPoolStatusModal = openPoolStatusModal;
 
 // === 📦 CREAZIONE & GESTIONE DELLE NFTS FARM DELL'UTENTE ===
 

@@ -231,7 +231,9 @@ function loadSection(section) {
     const templatesHTML = farm.templates.map(template => {
       const nftsHTML = template.user_nfts.map(nft => `
         <div class="bg-gray-100 p-2 rounded shadow-sm text-sm text-center">
-          <img src="${nft.asset_img}" alt="NFT" class="w-full h-24 object-contain mb-1 rounded">
+          <img src="${nft.asset_img}" alt="NFT"
+           class="w-full h-24 object-contain mb-1 rounded"
+           onerror="this.onerror=null;this.src='https://via.placeholder.com/150?text=Image+Not+Found';">
           <div class="font-semibold truncate">${nft.template_name}</div>
           <div class="text-xs text-gray-600">#${nft.asset_id}</div>
           <button class="mt-1 w-full text-white py-1 rounded ${nft.is_staked ? 'bg-red-500' : 'bg-green-500'}"

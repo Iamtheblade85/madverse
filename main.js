@@ -170,31 +170,33 @@ async function loadWallet() {
     const walletTable = document.getElementById('wallet-table');
     if (saldoData.balances) {
       walletTable.innerHTML = `
-        <table class="min-w-full bg-white rounded-lg shadow">
-          <thead class="bg-gray-200">
-            <tr>
-              <th class="py-2 px-4">Token</th>
-              <th class="py-2 px-4">Amount</th>
-              <th class="py-2 px-4">Stakeable</th>
-              <th class="py-2 px-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${saldoData.balances.map(token => `
-              <tr class="border-t">
-                <td class="py-2 px-4 font-bold">${token.symbol}</td>
-                <td class="py-2 px-4">${token.amount}</td>
-                <td class="py-2 px-4">${token.stakeable}</td>
-                <td class="py-2 px-4 space-x-2">
-                  <button class="btn-action" data-action="withdraw" data-token="${token.symbol}">Withdraw</button>
-                  <button class="btn-action" data-action="swap" data-token="${token.symbol}">Swap</button>
-                  <button class="btn-action" data-action="transfer" data-token="${token.symbol}">Transfer</button>
-                  <button class="btn-action" data-action="stake" data-token="${token.symbol}">Stake</button>
-                </td>
+          <div class="overflow-x-auto">
+            <table class="min-w-full bg-white rounded-lg shadow">
+            <thead class="bg-gray-200">
+              <tr>
+                <th class="py-2 px-4">Token</th>
+                <th class="py-2 px-4">Amount</th>
+                <th class="py-2 px-4">Stakeable</th>
+                <th class="py-2 px-4">Actions</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${saldoData.balances.map(token => `
+                <tr class="border-t">
+                  <td class="py-2 px-4 font-bold">${token.symbol}</td>
+                  <td class="py-2 px-4">${token.amount}</td>
+                  <td class="py-2 px-4">${token.stakeable}</td>
+                  <td class="py-2 px-4 space-x-2">
+                    <button class="btn-action" data-action="withdraw" data-token="${token.symbol}">Withdraw</button>
+                    <button class="btn-action" data-action="swap" data-token="${token.symbol}">Swap</button>
+                    <button class="btn-action" data-action="transfer" data-token="${token.symbol}">Transfer</button>
+                    <button class="btn-action" data-action="stake" data-token="${token.symbol}">Stake</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
       `;
 
       // Attacco eventi sugli action buttons

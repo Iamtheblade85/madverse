@@ -108,7 +108,6 @@ async function loadCreateNFTFarm() {
   await fetchAndRenderUserFarms();
 }
 window.loadCreateNFTFarm = loadCreateNFTFarm;
-
 async function fetchAndRenderUserFarms() {
   const { userId, usx_token } = window.userData;
   const container = document.getElementById('created-farm-details');
@@ -122,15 +121,16 @@ async function fetchAndRenderUserFarms() {
       return;
     }
 
+    // 🔥 SOLUZIONE: assegna i dati globalmente
+    window.nftFarmsData = data.farms;
+
     renderCreatedFarmButtons(data.farms);
     renderCreatedFarmDetails(data.farms[0]);
   } catch (err) {
     container.innerHTML = `<div class="text-red-500">Error loading your farms.</div>`;
     console.error("[❌] Error loading user farms:", err);
   }
-}
-
-function renderCreatedFarmButtons(farms) {
+} function renderCreatedFarmButtons(farms) {
   const container = document.getElementById('created-farm-buttons');
   const searchInput = document.getElementById('search-created-farm');
 

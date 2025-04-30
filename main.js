@@ -766,7 +766,6 @@ function loadSection(section) {
               </span>`).join('')}
           </span>
         </h3>
-        <div class="mb-2 flex flex-wrap gap-2">${farmRewardsHTML}</div>
         ${templatesHTML}
       </div>
     `;

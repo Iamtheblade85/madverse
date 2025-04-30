@@ -263,9 +263,16 @@ function loadSection(section) {
       `;
     }).join('');
 
+    const farmRewardsHTML = (farm.farm_rewards || []).map(r => `
+      <span class="text-sm text-gray-600 mr-4">
+        💰 ${r.token_symbol}: <strong>${parseFloat(r.total_reward).toFixed(4)}</strong>
+      </span>
+    `).join('');
+    
     container.innerHTML += `
       <div class="bg-white p-4 rounded shadow">
         <h3 class="text-xl font-bold mb-2">${farm.farm_name}</h3>
+        <div class="mb-2 flex flex-wrap gap-2">${farmRewardsHTML}</div>
         ${templatesHTML}
       </div>
     `;

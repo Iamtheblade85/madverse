@@ -88,6 +88,138 @@ async function initApp() {
       </div>`;
   }
 }
+async function loadCreateTokenStaking() {
+  const container = document.getElementById('create-token-staking-container');
+  container.innerHTML = `
+    <input type="text" id="search-token-pool" placeholder="Search your token..." class="mb-4 p-2 border rounded w-full md:w-1/2">
+    <button id="create-new-token-pool-btn" class="ml-2 px-4 py-2 rounded text-white font-bold shadow bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700">
+      ➕ Create New Token Pool
+    </button>
+    <div id="created-token-pools" class="flex flex-wrap gap-2 mb-4"></div>
+    <div id="token-pool-details"></div>
+  `;
+
+  document.getElementById('create-new-token-pool-btn').addEventListener('click', () => {
+    renderNewTokenPoolForm();
+  });
+
+  await fetchAndRenderTokenPools();
+}
+window.loadCreateTokenStaking = loadCreateTokenStaking;
+async function fetchAndRenderTokenPools() {
+  const { userId } = window.userData;
+  const container = document.getElementById('token-pool-details');
+
+  try {
+    const res = await fetch(`${BASE_URL}/get_staking_pools?user_id=${userId}`);
+    const data = await res.json();
+
+    if (!res.ok || !data.pools) {
+      container.innerHTML = `<div class="text-gray-600 italic">No token staking pools found.</div>`;
+      return;
+    }
+
+    window.tokenPoolsData = data.pools;
+    renderCreatedTokenPoolButtons(data.pools);
+    renderTokenPoolDetails(data.pools[0]);
+  } catch (err) {
+    container.innerHTML = `<div class="text-red-500">Error loading token pools.</div>`;
+    console.error("[❌] Error loading pools:", err);
+  }
+}
+function renderNewTokenPoolForm() {
+  const container = document.getElementById('token-pool-details');
+  container.innerHTML = `
+    <div class="bg-white p-6 rounded shadow max-w-xl mx-auto">
+      <h3 class="text-xl font-bold mb-4">Create a New Token Staking Pool</h3>
+      
+      <label class="block mb-2 font-semibold">Token Symbol</label>
+      <input id="new-token-symbol" type="text" class="w-full border p-2 rounded mb-4" placeholder="e.g. CHIPS">
+
+      <label class="block mb-2 font-semibold">Total Reward Amount</label>
+      <input id="total-reward-amount" type="number" class="w-full border p-2 rounded mb-4" placeholder="e.g. 1000">
+
+      <label class="block mb-2 font-semibold">Daily Reward</label>
+      <input id="daily-reward-amount" type="number" class="w-full border p-2 rounded mb-4" placeholder="e.g. 10">
+
+      <button id="submit-new-token-pool" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded shadow-md">
+        Create Pool
+      </button>
+    </div>
+  `;
+
+  document.getElementById('submit-new-token-pool').addEventListener('click', async () => {
+    const symbol = document.getElementById('new-token-symbol').value.trim().toUpperCase();
+    const totalReward = parseFloat(document.getElementById('total-reward-amount').value);
+    const dailyReward = parseFloat(document.getElementById('daily-reward-amount').value);
+
+    const { userId, usx_token } = window.userData;
+
+    if (!symbol || isNaN(totalReward) || isNaN(dailyReward)) {
+      showToast("Please fill all fields with valid values.", "error");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${BASE_URL}/create_staking_pool?user_id=${userId}&usx_token=${usx_token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token_symbol: symbol,
+          total_reward_deposit: totalReward,
+          daily_reward: dailyReward
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create pool");
+
+      showToast("Token pool created!", "success");
+      await fetchAndRenderTokenPools();
+    } catch (err) {
+      console.error("[❌] Error creating token pool:", err);
+      showToast(err.message, "error");
+    }
+  });
+}
+function renderCreatedTokenPoolButtons(pools) {
+  const container = document.getElementById('created-token-pools');
+  const searchInput = document.getElementById('search-token-pool');
+
+  function renderButtons(list) {
+    container.innerHTML = '';
+    list.forEach(pool => {
+      const btn = document.createElement('button');
+      btn.className = 'btn-action';
+      btn.textContent = pool.token_symbol;
+      btn.onclick = () => renderTokenPoolDetails(pool);
+      container.appendChild(btn);
+    });
+  }
+
+  renderButtons(pools);
+
+  searchInput.addEventListener('input', () => {
+    const search = searchInput.value.toLowerCase();
+    const filtered = pools.filter(p => p.token_symbol.toLowerCase().includes(search));
+    renderButtons(filtered);
+  });
+}
+
+function renderTokenPoolDetails(pool) {
+  const container = document.getElementById('token-pool-details');
+
+  container.innerHTML = `
+    <div class="bg-white p-4 rounded shadow">
+      <h3 class="text-xl font-bold mb-4">${pool.token_symbol} Pool</h3>
+      <p class="text-gray-600 mb-2">Total Deposited: <strong>${pool.total_reward_deposit}</strong></p>
+      <p class="text-gray-600 mb-2">Daily Reward: <strong>${pool.daily_reward}</strong></p>
+      <p class="text-gray-600 mb-2">APR: <strong>${pool.apr || 'N/A'}%</strong></p>
+      <p class="text-gray-600 mb-4">Created: ${pool.creation_date}</p>
+    </div>
+  `;
+}
+
 // === 📦 CREAZIONE & GESTIONE DELLE NFTS FARM DELL'UTENTE ===
 
 async function loadCreateNFTFarm() {
@@ -768,6 +900,9 @@ function loadSection(section) {
   } else if (section === 'create-nfts-farm') {
     app.innerHTML = `<h2 class="text-2xl font-semibold mb-4">Create NFTs Staking Farm</h2><div id="create-nfts-farm-container">Loading...</div>`;
     loadCreateNFTFarm(); // definita in create-nft-pool.js
+  } else if (section === 'create-token-staking') {
+    app.innerHTML = `<h2 class="text-2xl font-semibold mb-4">Create Token Staking Pool</h2><div id="create-token-staking-container">Loading...</div>`;
+    loadCreateTokenStaking();
   }
 } async function loadNFTFarms() {
   const { userId, usx_token } = window.userData;

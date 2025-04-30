@@ -242,13 +242,10 @@ function loadSection(section) {
         </div>
       `).join('');
       const rewardsHTML = template.rewards.map(r => {
-        const daily = parseFloat(r.daily_reward_amount);
-        const total = parseFloat(r.total_reward);
-      
+        const daily = parseFloat(r.daily_reward_amount);     
         return `
           <div class="text-xs text-gray-700">
             ${r.token_symbol}: ${isNaN(daily) ? "N/A" : daily.toFixed(4)}/day 
-            (Total: ${isNaN(total) ? "N/A" : total.toFixed(4)})
           </div>
         `;
       }).join('');

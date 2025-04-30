@@ -227,6 +227,14 @@ function loadSection(section) {
   const container = document.getElementById('nft-farm-details');
   container.innerHTML = '';
   farms.forEach(farm => {
+    container.innerHTML += `
+      <p class="italic text-gray-600 mb-2">
+        Don’t have a NFT farm in CHIPS Wallet for your collection yet? You can create one 
+        <button onclick="loadSection('create-nfts-farm')" class="ml-1 underline text-blue-600 hover:text-blue-800">
+          here
+        </button>.
+      </p>
+    `;
     const templatesHTML = farm.templates.map(template => {
       const nftsHTML = template.user_nfts.map(nft => `
         <div class="bg-gray-100 p-2 rounded shadow-sm text-sm text-center">
@@ -277,9 +285,6 @@ function loadSection(section) {
               </span>`).join('')}
           </span>
         </h3>
-        <div class="mb-2 flex flex-wrap gap-2">${farmRewardsHTML}</div>
-        ${templatesHTML}
-      </div>
     `;
   });
 } async function handleNFTStake(farmId, templateId, assetId, isStaked) {

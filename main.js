@@ -213,9 +213,8 @@ function loadSection(section) {
   });
 } function renderPoolDetails(pool) {
   const container = document.getElementById('selected-pool-details');
-
   const rewardsHTML = pool.rewards_info.map(r => `
-    <div class="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 bg-gray-100 rounded p-3 shadow border">
+    <div class="bg-gray-100 rounded p-3 shadow-sm border flex-1 min-w-[80px] max-w-xs">
       <h4 class="font-bold text-yellow-700 mb-1">${r.reward_token}</h4>
       <p class="text-sm"><strong>Total:</strong> ${r.total_reward_deposit}</p>
       <p class="text-sm"><strong>Daily:</strong> ${r.daily_reward}</p>

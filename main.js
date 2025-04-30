@@ -138,8 +138,8 @@ function loadSection(section) {
       </div>
   
       <div id="bulk-actions" class="mb-4 hidden">
-        <button id="bulk-withdraw" class="bg-blue-500 text-white py-2 px-4 rounded mr-2 hover:bg-blue-600">Withdraw All Selected</button>
-        <button id="bulk-send" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">Send All Selected</button>
+        <button id="bulk-withdraw" class="bg-blue-500 text-white py-2 px-4 rounded mr-2 hover:bg-blue-600">Withdraw Selected</button>
+        <button id="bulk-send" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">Send Selected</button>
       </div>
   
       <div id="nfts-loading" class="text-center my-4">🔄 Loading NFTs...</div>
@@ -241,12 +241,120 @@ function loadSection(section) {
       <h3 class="text-xl font-bold mb-2">Pool: ${pool.token_symbol}</h3>
       <p class="text-sm text-gray-500 mb-2">Total Staked: <strong>${pool.total_staked}</strong></p>
       <p class="text-sm text-gray-500 mb-4">You Staked: <strong>${pool.user_staked}</strong></p>
+      <div class="flex flex-wrap gap-4 mb-4">
+        <button class="btn-action" onclick="openStakeModal('add', ${pool.pool_id}, '${pool.token_symbol}')">Add Tokens</button>
+        <button class="btn-action" onclick="openStakeModal('remove', ${pool.pool_id}, '${pool.token_symbol}')">Remove Tokens</button>
+      </div>      
       <h4 class="font-semibold mb-2">Rewards</h4>
       <div class="grid gap-4 ${gridColumns}">
         ${rewardsHTML}
-      </div>
+      </div> 
     </div>
   `;
+} function openStakeModal(type, poolId, tokenSymbol) {
+  const modal = document.getElementById('modal');
+  const modalBody = document.getElementById('modal-body');
+  const wax_account = window.userData.wax_account;
+  const user_id = window.userData.userId;
+  const usx_token = window.userData.usx_token;
+
+  // Ottieni il bilancio dal wallet attuale
+  const balanceRow = document.querySelectorAll('#wallet-table tr');
+  let balance = 0;
+  balanceRow.forEach(row => {
+    if (row.innerText.includes(tokenSymbol)) {
+      const cells = row.querySelectorAll('td');
+      balance = parseFloat(cells[1]?.innerText || 0);
+    }
+  });
+
+  const title = type === 'add' ? 'Add Tokens to Farm' : 'Remove Tokens from Farm';
+  const actionUrl = type === 'add' ? 'stake_add' : 'stake_remove';
+
+  modalBody.innerHTML = `
+    <h3 class="text-xl font-bold mb-4">${title}</h3>
+    <p class="text-gray-600 mb-2">Available: <strong>${balance}</strong> ${tokenSymbol}</p>
+
+    <label class="block mb-1 text-sm">Select %</label>
+    <input id="stake-range" type="range" min="0" max="100" value="0" class="w-full mb-2">
+    
+    <label class="block mb-1 text-sm">Amount</label>
+    <input id="stake-amount" type="number" step="0.0001" class="w-full border p-2 rounded mb-4" value="0">
+
+    <div id="stake-summary" class="text-sm text-gray-500 mb-4"></div>
+
+    <button class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700" id="stake-submit">
+      Go!
+    </button>
+  `;
+
+  modal.classList.remove('hidden');
+  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+
+  const range = document.getElementById('stake-range');
+  const input = document.getElementById('stake-amount');
+  const summary = document.getElementById('stake-summary');
+  const submit = document.getElementById('stake-submit');
+
+  function updateSummary(val) {
+    let fee = 0;
+    let net = val;
+    if (type === 'remove') {
+      fee = val * 0.0315;
+      net = val - fee;
+    }
+    summary.innerHTML = type === 'add'
+      ? `You will add <strong>${val.toFixed(4)}</strong> ${tokenSymbol}`
+      : `Requested: <strong>${val.toFixed(4)}</strong> ${tokenSymbol}<br>Fee: ~<strong>${fee.toFixed(4)}</strong><br>Net Received: <strong>${net.toFixed(4)}</strong>`;
+  }
+
+  range.addEventListener('input', () => {
+    const percent = parseFloat(range.value);
+    const amount = (balance * percent / 100).toFixed(4);
+    input.value = amount;
+    updateSummary(parseFloat(amount));
+  });
+
+  input.addEventListener('input', () => {
+    const val = parseFloat(input.value) || 0;
+    range.value = Math.min(100, Math.round((val / balance) * 100));
+    updateSummary(val);
+  });
+
+  submit.onclick = async () => {
+    const amount = parseFloat(input.value);
+    if (!amount || amount <= 0 || amount > balance) {
+      alert("Invalid amount.");
+      return;
+    }
+
+    const body = {
+      user_id,
+      pool_id: poolId,
+      token_symbol: tokenSymbol,
+      wax_account,
+      amount
+    };
+
+    try {
+      const res = await fetch(`${BASE_URL}/${actionUrl}?user_id=${user_id}&usx_token=${usx_token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Unknown error");
+
+      showToast(json.message || "Success", "success");
+      modal.classList.add('hidden');
+      loadWallet();
+      loadStakingPools();  // refresh pools
+    } catch (err) {
+      console.error(err);
+      showToast("Operation failed: " + err.message, "error");
+    }
+  };
 } // Caricamento Wallet reale
 async function loadWallet() {
   try {

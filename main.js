@@ -213,24 +213,32 @@ function loadSection(section) {
   });
 } function renderPoolDetails(pool) {
   const container = document.getElementById('selected-pool-details');
-  const rewardsHTML = pool.rewards_info.map(r => `
-    <div class="bg-gray-100 rounded p-3 shadow-sm border flex-1 min-w-[80px] max-w-xs">
-      <h4 class="font-bold text-yellow-700 mb-1">${r.reward_token}</h4>
-      <p class="text-sm"><strong>Total:</strong> ${r.total_reward_deposit}</p>
-      <p class="text-sm"><strong>Daily:</strong> ${r.daily_reward}</p>
-      <p class="text-sm"><strong>APR:</strong> ${r.apr}%</p>
-      <p class="text-sm"><strong>Days Left:</strong> ${r.days_remaining}</p>
-      <p class="text-green-700 text-sm font-semibold">Your Daily: ${r.user_daily_reward}</p>
+
+  const rewards = pool.rewards_info;
+  const rewardsCount = rewards.length;
+
+  let gridColumns = 'grid-cols-1';
+  if (rewardsCount === 2) gridColumns = 'grid-cols-2';
+  else if (rewardsCount > 2) gridColumns = 'sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2';
+
+  const rewardsHTML = rewards.map(r => `
+    <div class="p-2 border-b md:border md:rounded">
+      <div class="font-bold text-yellow-700">${r.reward_token}</div>
+      <div><strong>Total:</strong> ${r.total_reward_deposit}</div>
+      <div><strong>Daily:</strong> ${r.daily_reward}</div>
+      <div><strong>APR:</strong> ${r.apr}%</div>
+      <div><strong>Days Left:</strong> ${r.days_remaining}</div>
+      <div class="text-green-700 font-semibold"><strong>Your Daily:</strong> ${r.user_daily_reward}</div>
     </div>
   `).join('');
 
   container.innerHTML = `
     <div class="bg-white shadow rounded p-4">
       <h3 class="text-xl font-bold mb-2">Pool: ${pool.token_symbol}</h3>
-      <p class="text-sm text-gray-500 mb-4">Total Staked: <strong>${pool.total_staked}</strong></p>
+      <p class="text-sm text-gray-500 mb-2">Total Staked: <strong>${pool.total_staked}</strong></p>
       <p class="text-sm text-gray-500 mb-4">You Staked: <strong>${pool.user_staked}</strong></p>
       <h4 class="font-semibold mb-2">Rewards</h4>
-      <div class="flex flex-wrap gap-4">
+      <div class="grid gap-4 ${gridColumns}">
         ${rewardsHTML}
       </div>
     </div>

@@ -511,8 +511,82 @@ function changeFarmStatus(farmId, newStatus = null) {
     .catch(err => {
       showToast("Error: " + err.message, "error");
     });
-}
+} function openEditRewards(templateId) {
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+  const farm = window.nftFarmsData?.find(farm => 
+    farm.templates?.some(t => t.template_id == templateId)
+  );
+  const template = farm?.templates?.find(t => t.template_id == templateId);
 
+  if (!template) {
+    showToast("Template not found", "error");
+    return;
+  }
+
+  body.innerHTML = `
+    <h3 class="text-xl font-bold mb-4">✏️ Edit Rewards for Template ID ${templateId}</h3>
+    <div id="rewards-edit-container">
+      ${(template.rewards || []).map((r, i) => `
+        <div class="reward-entry flex gap-2 mb-2">
+          <input type="text" class="token-symbol w-1/2 border p-2 rounded" value="${r.token_symbol}" placeholder="Token Symbol">
+          <input type="number" class="reward-amount w-1/2 border p-2 rounded" value="${parseFloat(r.daily_reward_amount)}" placeholder="Amount per day">
+        </div>
+      `).join('')}
+    </div>
+    <button id="add-reward-btn" class="mb-4 text-sm text-blue-600 underline">➕ Add another reward</button>
+    <button id="submit-edit-rewards" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded shadow">
+      Update Rewards
+    </button>
+  `;
+
+  modal.classList.remove('hidden');
+  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+
+  document.getElementById('add-reward-btn').onclick = () => {
+    const container = document.getElementById('rewards-edit-container');
+    const div = document.createElement('div');
+    div.className = 'reward-entry flex gap-2 mb-2';
+    div.innerHTML = `
+      <input type="text" class="token-symbol w-1/2 border p-2 rounded" placeholder="Token Symbol">
+      <input type="number" class="reward-amount w-1/2 border p-2 rounded" placeholder="Amount per day">
+    `;
+    container.appendChild(div);
+  };
+
+  document.getElementById('submit-edit-rewards').onclick = async () => {
+    const rewards = [];
+    const entries = document.querySelectorAll('.reward-entry');
+    for (const entry of entries) {
+      const symbol = entry.querySelector('.token-symbol').value.trim();
+      const amount = parseFloat(entry.querySelector('.reward-amount').value.trim());
+      if (!symbol || isNaN(amount) || amount <= 0) {
+        showToast("Each reward must be valid", "error");
+        return;
+      }
+      rewards.push({ token_symbol: symbol, daily_reward_amount: amount });
+    }
+
+    try {
+      const { userId, usx_token } = window.userData;
+      const res = await fetch(`${BASE_URL}/update_template_rewards?user_id=${userId}&usx_token=${usx_token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ template_id: templateId, rewards })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update rewards");
+
+      showToast(data.message || "Rewards updated", "success");
+      modal.classList.add('hidden');
+      fetchAndRenderUserFarms();
+    } catch (err) {
+      console.error("[❌] Error editing rewards:", err);
+      showToast(err.message, "error");
+    }
+  };
+} 
 function removeTemplate(templateId) {
   showConfirmModal(`Are you sure you want to delete Template ${templateId} and all related rewards?`, async () => {
     const { userId, usx_token } = window.userData;
@@ -534,9 +608,56 @@ function removeTemplate(templateId) {
       showToast("Error removing template: " + err.message, "error");
     }
   });
-}
+} function openAddReward(templateId) {
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
 
-function changeFarmStatus(farmId) {
+  body.innerHTML = `
+    <h3 class="text-xl font-bold mb-4">➕ Add Reward to Template ID ${templateId}</h3>
+    <div class="reward-entry flex gap-2 mb-4">
+      <input type="text" id="new-token-symbol" class="w-1/2 border p-2 rounded" placeholder="Token Symbol (e.g. CHIPS)">
+      <input type="number" id="new-reward-amount" class="w-1/2 border p-2 rounded" placeholder="Amount per day">
+    </div>
+    <button id="submit-new-reward" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded shadow">
+      Add Reward
+    </button>
+  `;
+
+  modal.classList.remove('hidden');
+  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+
+  document.getElementById('submit-new-reward').onclick = async () => {
+    const symbol = document.getElementById('new-token-symbol').value.trim().toUpperCase();
+    const amount = parseFloat(document.getElementById('new-reward-amount').value.trim());
+
+    if (!symbol || isNaN(amount) || amount <= 0) {
+      showToast("Valid token symbol and amount are required", "error");
+      return;
+    }
+
+    try {
+      const { userId, usx_token } = window.userData;
+      const res = await fetch(`${BASE_URL}/add_template_reward?user_id=${userId}&usx_token=${usx_token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          template_id: templateId,
+          reward: { token_symbol: symbol, daily_reward_amount: amount }
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to add reward");
+
+      showToast(data.message || "Reward added", "success");
+      modal.classList.add('hidden');
+      fetchAndRenderUserFarms();
+    } catch (err) {
+      console.error("[❌] Error adding reward:", err);
+      showToast(err.message, "error");
+    }
+  };
+} function changeFarmStatus(farmId) {
   const newStatus = prompt("Enter new status (open, closed, setting):");
   if (!newStatus) return;
   const { userId, usx_token } = window.userData;
@@ -562,6 +683,8 @@ function confirmFarmClosure(farmId) {
     changeFarmStatus(farmId, 'closed');
   }
 }
+window.openEditRewards = openEditRewards;
+window.openAddReward = openAddReward;
 // Funzione per caricare dinamicamente sezioni
 function loadSection(section) {
   console.log(`[📦] Caricando sezione: ${section}`);

@@ -340,7 +340,7 @@ function loadSection(section) {
 
       showToast(json.message || "Success", "success");
       modal.classList.add('hidden');
-      ();
+      loadWallet();
       loadStakingPools(); // Refresh
     } catch (err) {
       console.error(err);

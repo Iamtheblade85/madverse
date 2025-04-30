@@ -182,7 +182,7 @@ function loadSection(section) {
   const { userId, usx_token } = window.userData;
   const res = await fetch(`${BASE_URL}/nfts_farms?user_id=${userId}&usx_token=${usx_token}`);
   const data = await res.json();
-
+  console.log("[🐛] Risposta intera da /nfts_farms:", JSON.stringify(data, null, 2));
   if (!data.farms || data.farms.length === 0) {
     document.getElementById('nft-farms-container').innerHTML = `
       <div class="text-red-500">No NFT farms found.</div>`;
@@ -226,7 +226,6 @@ function loadSection(section) {
 } function renderNFTFarms(farms) {
   const container = document.getElementById('nft-farm-details');
   container.innerHTML = '';
-
   farms.forEach(farm => {
     const templatesHTML = farm.templates.map(template => {
       const nftsHTML = template.user_nfts.map(nft => `
@@ -242,13 +241,17 @@ function loadSection(section) {
           </button>
         </div>
       `).join('');
-
-      const rewardsHTML = template.rewards.map(r => `
-        <div class="text-xs text-gray-700">
-          ${r.token_symbol}: ${parseFloat(r.daily_reward_amount).toFixed(4)}/day (Total: ${parseFloat(r.total_reward).toFixed(4)})
-        </div>
-      `).join('');
-
+      const rewardsHTML = template.rewards.map(r => {
+        const daily = parseFloat(r.daily_reward_amount);
+        const total = parseFloat(r.total_reward);
+      
+        return `
+          <div class="text-xs text-gray-700">
+            ${r.token_symbol}: ${isNaN(daily) ? "N/A" : daily.toFixed(4)}/day 
+            (Total: ${isNaN(total) ? "N/A" : total.toFixed(4)})
+          </div>
+        `;
+      }).join('');
       return `
         <div class="border-t pt-4">
           <h4 class="font-bold mb-2">Template ID: ${template.template_id}</h4>
@@ -286,7 +289,6 @@ function loadSection(section) {
     });
 
     const data = await res.json();
-    console.log("[🐛] Risposta intera da /nfts_farms:", JSON.stringify(data, null, 2));
     if (!res.ok) throw new Error(data.error || 'Unknown error');
     showToast(data.message || 'Success', 'success');
     

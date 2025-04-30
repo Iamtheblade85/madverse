@@ -258,22 +258,30 @@ function loadSection(section) {
   const user_id = window.userData.userId;
   const usx_token = window.userData.usx_token;
 
-  // Ottieni il bilancio dal wallet attuale
-  const balanceRow = document.querySelectorAll('#wallet-table tr');
   let balance = 0;
-  balanceRow.forEach(row => {
-    if (row.innerText.includes(tokenSymbol)) {
-      const cells = row.querySelectorAll('td');
-      balance = parseFloat(cells[1]?.innerText || 0);
-    }
-  });
+
+  if (type === 'add') {
+    // Trova il bilancio nel wallet
+    const balanceRow = document.querySelectorAll('#wallet-table tr');
+    balanceRow.forEach(row => {
+      if (row.innerText.includes(tokenSymbol)) {
+        const cells = row.querySelectorAll('td');
+        balance = parseFloat(cells[1]?.innerText || "0");
+      }
+    });
+  } else if (type === 'remove') {
+    // Trova il bilancio staked nella pool selezionata
+    const pool = window.stakingPools.find(p => p.pool_id === poolId);
+    balance = pool ? parseFloat(pool.user_staked || "0") : 0;
+  }
 
   const title = type === 'add' ? 'Add Tokens to Farm' : 'Remove Tokens from Farm';
   const actionUrl = type === 'add' ? 'stake_add' : 'stake_remove';
+  const availableLabel = type === 'add' ? 'Available in Wallet' : 'Staked in Farm';
 
   modalBody.innerHTML = `
     <h3 class="text-xl font-bold mb-4">${title}</h3>
-    <p class="text-gray-600 mb-2">Available: <strong>${balance}</strong> ${tokenSymbol}</p>
+    <p class="text-gray-600 mb-2">${availableLabel}: <strong>${balance.toFixed(4)}</strong> ${tokenSymbol}</p>
 
     <label class="block mb-1 text-sm">Select %</label>
     <input id="stake-range" type="range" min="0" max="100" value="0" class="w-full mb-2">
@@ -310,9 +318,9 @@ function loadSection(section) {
 
   range.addEventListener('input', () => {
     const percent = parseFloat(range.value);
-    const amount = (balance * percent / 100).toFixed(4);
+    const amount = parseFloat((balance * percent / 100).toFixed(4));
     input.value = amount;
-    updateSummary(parseFloat(amount));
+    updateSummary(amount);
   });
 
   input.addEventListener('input', () => {
@@ -349,7 +357,7 @@ function loadSection(section) {
       showToast(json.message || "Success", "success");
       modal.classList.add('hidden');
       loadWallet();
-      loadStakingPools();  // refresh pools
+      loadStakingPools(); // Refresh
     } catch (err) {
       console.error(err);
       showToast("Operation failed: " + err.message, "error");

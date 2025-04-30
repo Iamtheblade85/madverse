@@ -658,35 +658,9 @@ function removeTemplate(templateId) {
       showToast(err.message, "error");
     }
   };
-} window.openAddReward = openAddReward; 
-function changeFarmStatus(farmId) {
-  const newStatus = prompt("Enter new status (open, closed, setting):");
-  if (!newStatus) return;
-  const { userId, usx_token } = window.userData;
-  fetch(`${BASE_URL}/update_farm_status?user_id=${userId}&usx_token=${usx_token}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ farm_id: farmId, status: newStatus })
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) throw new Error(data.error);
-      showToast("Farm status updated", "success");
-      fetchAndRenderUserFarms();
-    })
-    .catch(err => {
-      console.error(err);
-      showToast("Error updating farm status: " + err.message, "error");
-    });
-}
-
-function confirmFarmClosure(farmId) {
-  if (confirm("Are you sure you want to close this farm?")) {
-    changeFarmStatus(farmId, 'closed');
-  }
-}
+} 
+window.openAddReward = openAddReward; 
 window.openEditRewards = openEditRewards;
-window.openAddReward = openAddReward;
 // Funzione per caricare dinamicamente sezioni
 function loadSection(section) {
   console.log(`[📦] Caricando sezione: ${section}`);

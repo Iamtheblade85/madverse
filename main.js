@@ -1157,6 +1157,7 @@ async function loadCreateNFTFarm() {
 
   await fetchAndRenderUserFarms();
 }
+window.loadCreateNFTFarm = loadCreateNFTFarm;
 
 async function fetchAndRenderUserFarms() {
   const { userId, usx_token } = window.userData;

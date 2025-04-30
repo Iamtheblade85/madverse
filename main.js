@@ -226,17 +226,20 @@ function loadSection(section) {
 } function renderNFTFarms(farms) {
   const container = document.getElementById('nft-farm-details');
   container.innerHTML = '';
+
   farms.forEach(farm => {
+    // Messaggio introduttivo una volta sola
     container.innerHTML += `
       <p class="italic text-gray-600 mb-2">
         Don’t have a NFT farm in CHIPS Wallet for your collection yet? You can create one 
-        <button onclick="loadSection('create-nfts-farm')" class="ml-1 underline text-blue-600 hover:text-blue-800">
-          here
-        </button>.
+        <button onclick="loadSection('create-nfts-farm')"
+          class="ml-2 px-4 py-1 bg-yellow-400 text-gray-900 font-bold rounded-lg border-2 border-black shadow-lg transform hover:-translate-y-1 hover:shadow-xl transition-all duration-200 hover:bg-yellow-300 hover:text-black">
+          Create NFTs Farm
+        </button>
       </p>
     `;
-    const templatesHTML = farm.templates.map(template => {
-      const nftsHTML = template.user_nfts.map(nft => `
+    const templatesHTML = (farm.templates || []).map(template => {
+      const nftsHTML = (template.user_nfts || []).map(nft => `
         <div class="bg-gray-100 p-2 rounded shadow-sm text-sm text-center">
           <img src="${nft.asset_img}" alt="NFT"
            class="w-full h-24 object-contain mb-1 rounded"
@@ -249,20 +252,22 @@ function loadSection(section) {
           </button>
         </div>
       `).join('');
-        const rewardsHTML = template.rewards?.map(r => {
-          const daily = parseFloat(r.daily_reward_amount);
-          return `
-            <div class="text-xs text-gray-700">
-              ${r.token_symbol}: ${isNaN(daily) ? "N/A" : daily.toFixed(4)}/day
-            </div>
-          `;
-        }).join('') || '';
+
+      const rewardsHTML = (template.rewards || []).map(r => {
+        const daily = parseFloat(r.daily_reward_amount);
+        return `
+          <div class="text-xs text-gray-700">
+            ${r.token_symbol}: ${isNaN(daily) ? "N/A" : daily.toFixed(4)}/day
+          </div>
+        `;
+      }).join('') || '<div class="text-sm text-gray-500 italic">No rewards</div>';
+
       return `
         <div class="border-t pt-4">
           <h4 class="font-bold mb-2">Template ID: ${template.template_id}</h4>
           ${rewardsHTML}
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mt-2">
-            ${nftsHTML || '<div class="text-gray-500 col-span-full">No NFTs</div>'}
+            ${nftsHTML || '<div class="text-gray-400 text-sm col-span-full">You don’t own NFTs for this template</div>'}
           </div>
         </div>
       `;
@@ -273,7 +278,7 @@ function loadSection(section) {
         💰 ${r.token_symbol}: <strong>${parseFloat(r.total_reward).toFixed(4)}</strong>
       </span>
     `).join('');
-    
+
     container.innerHTML += `
       <div class="bg-white p-4 rounded shadow">
         <h3 class="text-xl font-bold mb-2 flex flex-wrap items-center gap-2">
@@ -285,6 +290,9 @@ function loadSection(section) {
               </span>`).join('')}
           </span>
         </h3>
+        <div class="mb-2 flex flex-wrap gap-2">${farmRewardsHTML}</div>
+        ${templatesHTML}
+      </div>
     `;
   });
 } async function handleNFTStake(farmId, templateId, assetId, isStaked) {

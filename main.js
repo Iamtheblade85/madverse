@@ -177,6 +177,9 @@ function loadSection(section) {
       <div id="nft-farms-container" class="space-y-4">Loading NFT farms...</div>
     `;
     loadNFTFarms();
+  } else if (section === 'create-nfts-farm') {
+    app.innerHTML = `<h2 class="text-2xl font-semibold mb-4">Create NFTs Staking Farm</h2><div id="create-nfts-farm-container">Loading...</div>`;
+    loadCreateNFTFarm(); // definita in create-nft-pool.js
   }
 } async function loadNFTFarms() {
   const { userId, usx_token } = window.userData;

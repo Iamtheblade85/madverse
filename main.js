@@ -158,6 +158,7 @@ function loadSection(section) {
     `;
     loadNFTs();
   } else if (section === 'token-staking') {
+    console.log("[🧪] Entrato in blocco token-staking");
     app.innerHTML = `
       <h2 class="text-2xl font-semibold mb-4">Token Staking</h2>
   
@@ -173,10 +174,11 @@ function loadSection(section) {
   }
 }
 async function loadStakingPools() {
+  
   const { userId } = window.userData;
   const res = await fetch(`${BASE_URL}/get_staking_pools?user_id=${userId}`);
   const data = await res.json();
-
+  console.log("[📥] Risposta da /get_staking_pools:", data);
   if (!data.pools || data.pools.length === 0) {
     document.getElementById('pool-buttons').innerHTML = `
       <div class="text-red-500">No staking pools found.</div>`;

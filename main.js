@@ -99,7 +99,7 @@ function loadSection(section) {
       <h2 class="text-2xl font-semibold mb-4">Wallet</h2>
       <div id="wallet-table">Caricamento Wallet...</div>
     `;
-    ();
+    loadWallet();
   } else if (section === 'nfts') {
     app.innerHTML = `
       <h2 class="text-2xl font-semibold mb-4">My NFTs</h2>

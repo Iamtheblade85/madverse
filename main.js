@@ -99,7 +99,7 @@ function loadSection(section) {
       <h2 class="text-2xl font-semibold mb-4">Wallet</h2>
       <div id="wallet-table">Caricamento Wallet...</div>
     `;
-    loadWallet();
+    ();
   } else if (section === 'nfts') {
     app.innerHTML = `
       <h2 class="text-2xl font-semibold mb-4">My NFTs</h2>
@@ -340,7 +340,7 @@ function loadSection(section) {
 
       showToast(json.message || "Success", "success");
       modal.classList.add('hidden');
-      loadWallet();
+      ();
       loadStakingPools(); // Refresh
     } catch (err) {
       console.error(err);
@@ -353,10 +353,18 @@ async function loadWallet() {
     const { userId, usx_token } = window.userData;
     const response = await fetch(`${BASE_URL}/saldo?user_id=${userId}&usx_token=${usx_token}`);
     const saldoData = await response.json();
+
+    // 🔥 Salva globalmente i dati del wallet
     window.walletBalances = saldoData.balances || [];
     console.info("[🧮] walletBalances salvati:", window.walletBalances);
+
     const walletTable = document.getElementById('wallet-table');
-    if (saldoData.balances) {
+    if (!walletTable) {
+      console.warn("[⚠️] wallet-table non trovato nel DOM. Skipping render.");
+      return; // Non continuare se la tabella non è nel DOM
+    }
+
+    if (window.walletBalances.length > 0) {
       walletTable.innerHTML = `
         <div class="w-full">
           <table class="w-full table-auto bg-white rounded-lg shadow text-xs">
@@ -369,7 +377,7 @@ async function loadWallet() {
               </tr>
             </thead>
             <tbody>
-              ${saldoData.balances.map(token => `
+              ${window.walletBalances.map(token => `
                 <tr class="border-t">
                   <td class="px-2 py-1 font-bold">${token.symbol}</td>
                   <td class="px-2 py-1">${token.amount}</td>
@@ -386,16 +394,6 @@ async function loadWallet() {
           </table>
         </div>
       `;
-      // Attacco eventi sugli action buttons
-      document.querySelectorAll('.btn-action').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const action = btn.getAttribute('data-action');
-          const token = btn.getAttribute('data-token');
-          console.log(`[⚙️] Azione selezionata: ${action} su ${token}`);
-          openModal(action, token);  // ✅ CHIAMATA CORRETTA
-        });
-      });
-      
     } else {
       walletTable.innerHTML = `
         <div class="text-center text-gray-500">No balances available.</div>
@@ -403,12 +401,8 @@ async function loadWallet() {
     }
   } catch (error) {
     console.error("[❌] Error loading Wallet:", error);
-    document.getElementById('wallet-table').innerHTML = `
-      <div class="text-center text-red-500">Error loading wallet data.</div>
-    `;
   }
-}
-async function loadNFTs() {
+} async function loadNFTs() {
   try {
     const { userId, usx_token } = window.userData;
     const response = await fetch(`${BASE_URL}/mynfts?user_id=${userId}&usx_token=${usx_token}`);

@@ -257,40 +257,27 @@ function loadSection(section) {
   const wax_account = window.userData.wax_account;
   const user_id = window.userData.userId;
   const usx_token = window.userData.usx_token;
-
   let balance = 0;
-
   if (type === 'add') {
-    // Trova il bilancio nel wallet
-    const balanceRow = document.querySelectorAll('#wallet-table tr');
-    balanceRow.forEach(row => {
-      if (row.innerText.includes(tokenSymbol)) {
-        const cells = row.querySelectorAll('td');
-        balance = parseFloat(cells[1]?.innerText || "0");
-      }
-    });
+    const tokenData = window.walletBalances?.find(t => t.symbol === tokenSymbol);
+    balance = tokenData ? parseFloat(tokenData.amount) : 0;
+    console.log(`[🔎] Bilancio wallet per ${tokenSymbol}:`, balance);
   } else if (type === 'remove') {
-    // Trova il bilancio staked nella pool selezionata
-    const pool = window.stakingPools.find(p => p.pool_id === poolId);
+    const pool = window.stakingPools?.find(p => p.pool_id === poolId);
     balance = pool ? parseFloat(pool.user_staked || "0") : 0;
+    console.log(`[🔎] Staked balance in pool ${poolId} per ${tokenSymbol}:`, balance);
   }
-
   const title = type === 'add' ? 'Add Tokens to Farm' : 'Remove Tokens from Farm';
   const actionUrl = type === 'add' ? 'stake_add' : 'stake_remove';
   const availableLabel = type === 'add' ? 'Available in Wallet' : 'Staked in Farm';
-
   modalBody.innerHTML = `
     <h3 class="text-xl font-bold mb-4">${title}</h3>
     <p class="text-gray-600 mb-2">${availableLabel}: <strong>${balance.toFixed(4)}</strong> ${tokenSymbol}</p>
-
     <label class="block mb-1 text-sm">Select %</label>
     <input id="stake-range" type="range" min="0" max="100" value="0" class="w-full mb-2">
-    
     <label class="block mb-1 text-sm">Amount</label>
     <input id="stake-amount" type="number" step="0.0001" class="w-full border p-2 rounded mb-4" value="0">
-
     <div id="stake-summary" class="text-sm text-gray-500 mb-4"></div>
-
     <button class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700" id="stake-submit">
       Go!
     </button>
@@ -298,12 +285,10 @@ function loadSection(section) {
 
   modal.classList.remove('hidden');
   document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
-
   const range = document.getElementById('stake-range');
   const input = document.getElementById('stake-amount');
   const summary = document.getElementById('stake-summary');
   const submit = document.getElementById('stake-submit');
-
   function updateSummary(val) {
     let fee = 0;
     let net = val;
@@ -315,7 +300,6 @@ function loadSection(section) {
       ? `You will add <strong>${val.toFixed(4)}</strong> ${tokenSymbol}`
       : `Requested: <strong>${val.toFixed(4)}</strong> ${tokenSymbol}<br>Fee: ~<strong>${fee.toFixed(4)}</strong><br>Net Received: <strong>${net.toFixed(4)}</strong>`;
   }
-
   range.addEventListener('input', () => {
     const percent = parseFloat(range.value);
     const amount = parseFloat((balance * percent / 100).toFixed(4));
@@ -369,7 +353,8 @@ async function loadWallet() {
     const { userId, usx_token } = window.userData;
     const response = await fetch(`${BASE_URL}/saldo?user_id=${userId}&usx_token=${usx_token}`);
     const saldoData = await response.json();
-
+    window.walletBalances = saldoData.balances || [];
+    console.info("[🧮] walletBalances salvati:", window.walletBalances);
     const walletTable = document.getElementById('wallet-table');
     if (saldoData.balances) {
       walletTable.innerHTML = `

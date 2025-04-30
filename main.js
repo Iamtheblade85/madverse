@@ -245,7 +245,7 @@ function loadSection(section) {
 
       const rewardsHTML = template.rewards.map(r => `
         <div class="text-xs text-gray-700">
-          ${r.token_symbol}: ${r.daily_reward_amount}/day (Total: ${r.total_reward})
+          ${r.token_symbol}: ${parseFloat(r.daily_reward_amount).toFixed(4)}/day (Total: ${parseFloat(r.total_reward).toFixed(4)})
         </div>
       `).join('');
 
@@ -286,6 +286,7 @@ function loadSection(section) {
     });
 
     const data = await res.json();
+    console.log("[🐛] Risposta intera da /nfts_farms:", JSON.stringify(data, null, 2));
     if (!res.ok) throw new Error(data.error || 'Unknown error');
     showToast(data.message || 'Success', 'success');
     

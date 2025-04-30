@@ -218,29 +218,22 @@ async function loadStakingPools() {
     });
   } function renderPoolDetails(pool) {
     const container = document.getElementById('selected-pool-details');
-  
-    const rewardRows = pool.rewards.map(r => `
-      <tr>
-        <td class="py-2 px-4">${r.token_symbol}</td>
-        <td class="py-2 px-4">${r.total_reward_deposit}</td>
-        <td class="py-2 px-4">${r.daily_reward}</td>
-      </tr>`).join('');
-  
+    const rewardCards = pool.rewards.map(r => `
+      <div class="bg-gray-100 rounded p-3 shadow-sm border w-full sm:w-1/2 lg:w-1/3">
+        <h4 class="font-bold text-lg text-yellow-600">${r.token_symbol}</h4>
+        <p class="text-sm text-gray-600">Total Reward: <span class="font-semibold">${r.total_reward_deposit}</span></p>
+        <p class="text-sm text-gray-600">Daily Reward: <span class="font-semibold">${r.daily_reward}</span></p>
+      </div>
+    `).join('');
+
     container.innerHTML = `
       <div class="bg-white shadow rounded p-4">
         <h3 class="text-xl font-bold mb-2">Pool: ${pool.deposit_token.symbol}</h3>
         <p class="text-sm text-gray-500 mb-4">Created: ${new Date(pool.created_at).toLocaleDateString()}</p>
         <h4 class="font-semibold mb-2">Rewards</h4>
-        <table class="min-w-full bg-white text-sm border">
-          <thead class="bg-gray-100 border-b">
-            <tr>
-              <th class="py-2 px-4 text-left">Token</th>
-              <th class="py-2 px-4 text-left">Total Reward</th>
-              <th class="py-2 px-4 text-left">Daily Reward</th>
-            </tr>
-          </thead>
-          <tbody>${rewardRows}</tbody>
-        </table>
+        <div class="flex flex-wrap gap-4">
+          ${rewardCards}
+        </div>
       </div>
     `;
   } // Caricamento Wallet reale

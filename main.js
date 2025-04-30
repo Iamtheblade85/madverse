@@ -340,32 +340,111 @@ function openDepositForm(farmId) {
   const body = document.getElementById('modal-body');
 
   body.innerHTML = `
-    <h3 class="text-xl font-bold mb-4">Deposit Rewards</h3>
-    <label>Token Symbol</label>
-    <input id="deposit-token" type="text" class="w-full border p-2 rounded mb-2">
-    <label>Amount</label>
-    <input id="deposit-amount" type="number" class="w-full border p-2 rounded mb-4">
-    <button id="submit-deposit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Deposit</button>
+    <h3 class="text-xl font-bold mb-4">Deposit Rewards to Farm</h3>
+    <div id="rewards-deposit-container"></div>
+    <button id="add-more-reward" class="text-sm text-blue-600 underline mb-4">➕ Add another token</button>
+    <button id="submit-deposit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Deposit All</button>
   `;
+
   modal.classList.remove('hidden');
   document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
 
+  const container = document.getElementById('rewards-deposit-container');
+  const addBtn = document.getElementById('add-more-reward');
+  const wallet = window.walletBalances || [];
+  
+  function renderRewardRow(token = '') {
+    const wallet = window.walletBalances || [];
+    const div = document.createElement('div');
+    div.className = 'reward-row mb-6 p-3 border rounded bg-gray-50';
+    div.innerHTML = `
+      <label class="block text-sm font-medium mb-1">Choose Token</label>
+      <select class="token-symbol w-full border p-2 rounded mb-2">
+        <option disabled selected value="">-- Select a token --</option>
+        ${wallet.map(t => `<option value="${t.symbol}">${t.symbol}</option>`).join('')}
+      </select>
+  
+      <div class="available-balance text-sm text-gray-600 mb-2 hidden"></div>
+  
+      <label class="block text-sm font-medium mb-1">Select %</label>
+      <input type="range" class="percent-range w-full mb-2" min="0" max="100" value="0" disabled>
+  
+      <label class="block text-sm font-medium mb-1">Amount</label>
+      <input type="number" class="amount w-full border p-2 rounded" placeholder="Amount" disabled>
+    `;
+  
+    const select = div.querySelector('.token-symbol');
+    const range = div.querySelector('.percent-range');
+    const input = div.querySelector('.amount');
+    const balanceText = div.querySelector('.available-balance');
+  
+    let currentBalance = 0;
+  
+    select.onchange = () => {
+      const selectedToken = select.value;
+      currentBalance = parseFloat(wallet.find(t => t.symbol === selectedToken)?.amount || 0);
+  
+      balanceText.innerHTML = `Available balance in your Wallet: <strong>${currentBalance.toFixed(4)} ${selectedToken}</strong>`;
+      balanceText.classList.remove('hidden');
+  
+      range.disabled = false;
+      input.disabled = false;
+      input.value = '';
+      range.value = 0;
+    };
+  
+    range.oninput = () => {
+      const percent = parseFloat(range.value);
+      input.value = (currentBalance * percent / 100).toFixed(4);
+    };
+  
+    input.oninput = () => {
+      const amount = parseFloat(input.value);
+      if (!isNaN(amount)) {
+        range.value = Math.min(100, Math.round((amount / currentBalance) * 100));
+      }
+    };
+  
+    document.getElementById('rewards-deposit-container').appendChild(div);
+  }
+
+  // Prima riga iniziale
+  renderRewardRow();
+
+  addBtn.onclick = () => {
+    renderRewardRow();
+  };
+
   document.getElementById('submit-deposit').onclick = async () => {
-    const token_symbol = document.getElementById('deposit-token').value.toUpperCase().trim();
-    const amount = parseFloat(document.getElementById('deposit-amount').value);
+    const rows = document.querySelectorAll('.reward-row');
+    const rewards = [];
+
+    rows.forEach(row => {
+      const symbol = row.querySelector('.token-symbol').value.trim().toUpperCase();
+      const amount = parseFloat(row.querySelector('.amount').value);
+      if (symbol && !isNaN(amount) && amount > 0) {
+        rewards.push({ token_symbol: symbol, amount });
+      }
+    });
+
+    if (rewards.length === 0) {
+      showToast("You must enter at least one valid reward", "error");
+      return;
+    }
 
     try {
-      const res = await fetch(`${BASE_URL}/deposit_rewards?user_id=${userId}&usx_token=${usx_token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, farm_id: farmId, wax_account, token_symbol, amount })
+      const res = await fetch(`${BASE_URL}/add_token_to_farm?user_id=${userId}&usx_token=${usx_token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ farm_id: farmId, rewards })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error depositing rewards.');
-      showToast("✅ Rewards deposited", "success");
+      if (!res.ok) throw new Error(data.error || "Unknown error");
+      showToast(data.message || "✅ Rewards deposited successfully", "success");
       modal.classList.add('hidden');
       fetchAndRenderUserFarms();
     } catch (err) {
+      console.error("[❌] Error depositing rewards:", err);
       showToast(err.message, "error");
     }
   };
@@ -378,7 +457,7 @@ function confirmFarmClosure(farmId) {
 
   body.innerHTML = `
     <h3 class="text-xl font-bold text-red-600 mb-4">Close Farm</h3>
-    <p class="mb-4">Are you sure you want to <strong>close</strong> this farm? This will pause all rewards.</p>
+    <p class="mb-4">Are you sure you want to <strong>close</strong> this farm? This will stop all rewards.</p>
     <div class="flex justify-end gap-4">
       <button class="bg-gray-300 px-4 py-2 rounded" onclick="document.getElementById('modal').classList.add('hidden')">Cancel</button>
       <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="changeFarmStatus(${farmId}, 'closed')">Confirm</button>

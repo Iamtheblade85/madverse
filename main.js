@@ -433,7 +433,7 @@ function openDepositForm(farmId) {
     }
 
     try {
-      const res = await fetch(`${BASE_URL}/add_token_to_farm?user_id=${userId}&usx_token=${usx_token}`, {
+      const res = await fetch(`${BASE_URL}/add_token_to_farm_v2?user_id=${userId}&usx_token=${usx_token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ farm_id: farmId, rewards })

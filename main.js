@@ -89,7 +89,7 @@ async function initApp() {
   }
 }
 async function loadCreateTokenStaking() {
-  const container = document.getElementById('create-token-pool-container');
+  const container = document.getElementById('create-token-staking-container');
   container.innerHTML = `
     <input type="text" id="search-token-pool" placeholder="Search your token..." class="mb-4 p-2 border rounded w-full md:w-1/2">
     <button id="create-new-token-pool-btn" class="ml-2 px-4 py-2 rounded text-white font-bold shadow bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700">

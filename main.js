@@ -89,7 +89,8 @@ async function initApp() {
   }
 }
 async function loadCreateTokenStaking() {
-  const container = document.getElementById('create-token-staking-container');
+  const container = document.getElementById('create-token-pool-container');
+  console.log("[📦] Contenitore trovato:", container);
   container.innerHTML = `
     <input type="text" id="search-token-pool" placeholder="Search your token..." class="mb-4 p-2 border rounded w-full md:w-1/2">
     <button id="create-new-token-pool-btn" class="ml-2 px-4 py-2 rounded text-white font-bold shadow bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700">
@@ -98,7 +99,7 @@ async function loadCreateTokenStaking() {
     <div id="created-token-pools" class="flex flex-wrap gap-2 mb-4"></div>
     <div id="token-pool-details"></div>
   `;
-
+  console.log("[🖊️] Aggiornamento contenuto del contenitore con HTML dinamico");
   document.getElementById('create-new-token-pool-btn').addEventListener('click', () => {
     renderNewTokenPoolForm();
   });
@@ -113,7 +114,7 @@ async function fetchAndRenderTokenPools() {
   try {
     const res = await fetch(`${BASE_URL}/get_staking_pools?user_id=${userId}`);
     const data = await res.json();
-
+    console.log("Data received for create-token-pool", data);
     if (!res.ok || !data.pools) {
       container.innerHTML = `<div class="text-gray-600 italic">No token staking pools found.</div>`;
       return;

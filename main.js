@@ -1068,8 +1068,43 @@ window.openEditRewards = openEditRewards;
 function loadSection(section) {
   console.log(`[📦] Caricando sezione: ${section}`);
   const app = document.getElementById('app');
+  if (section === 'c2e-twitch') {
+    // New C2E - Twitch Section with Menu
+    app.innerHTML = `
+      <h2 class="text-2xl font-semibold mb-4">C2E - Twitch</h2>
+      <div class="menu">
+        <button class="menu-btn" data-menu="log-reward-activity">Log Reward Activity</button>
+        <button class="menu-btn" data-menu="log-storms-giveaways">Log Storms & Giveaways</button>
+        <button class="menu-btn" data-menu="schedule-token-storm">Schedule Token-Storm</button>
+        <button class="menu-btn" data-menu="schedule-nft-giveaway">Schedule NFT-Giveaway</button>
+      </div>
+      <div id="c2e-content">Loading last activity...</div>
+    `;
 
-  if (section === 'wallet') {
+    // Set default view as Log Reward Activity
+    loadLogRewardActivity();
+
+    // Handle menu switching
+    document.querySelectorAll('.menu-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const menu = e.target.getAttribute('data-menu');
+        switch(menu) {
+          case 'log-reward-activity':
+            loadLogRewardActivity();
+            break;
+          case 'log-storms-giveaways':
+            loadLogStormsGiveaways();
+            break;
+          case 'schedule-token-storm':
+            loadScheduleTokenStorm();
+            break;
+          case 'schedule-nft-giveaway':
+            loadScheduleNFTGiveaway();
+            break;
+        }
+      });
+    });
+  } else if (section === 'wallet') {
     app.innerHTML = `
       <h2 class="text-2xl font-semibold mb-4">Wallet</h2>
       <div id="wallet-table">Caricamento Wallet...</div>
@@ -1276,6 +1311,56 @@ function loadSection(section) {
 
   // ✅ Imposta tutto insieme
   container.innerHTML = html;
+} // Load Log Reward Activity
+async function loadLogRewardActivity() {
+  const container = document.getElementById('c2e-content');
+  container.innerHTML = 'Loading Log Reward Activity...';
+  try {
+    const res = await fetch(`${BASE_URL}/log_reward_activity`);
+    const data = await res.json();
+    container.innerHTML = JSON.stringify(data, null, 2);  // Display the data
+  } catch (err) {
+    container.innerHTML = `<div class="text-red-500">Error loading log reward activity</div>`;
+  }
+}
+
+// Load Log Storms & Giveaways
+async function loadLogStormsGiveaways() {
+  const container = document.getElementById('c2e-content');
+  container.innerHTML = 'Loading Log Storms & Giveaways...';
+  try {
+    const res = await fetch(`${BASE_URL}/log_storms_and_giveaways`);
+    const data = await res.json();
+    container.innerHTML = JSON.stringify(data, null, 2);  // Display the data
+  } catch (err) {
+    container.innerHTML = `<div class="text-red-500">Error loading log storms and giveaways</div>`;
+  }
+}
+
+// Load Schedule Token-Storm
+async function loadScheduleTokenStorm() {
+  const container = document.getElementById('c2e-content');
+  container.innerHTML = 'Loading Schedule Token-Storm...';
+  try {
+    const res = await fetch(`${BASE_URL}/schedule_token_storm`);
+    const data = await res.json();
+    container.innerHTML = JSON.stringify(data, null, 2);  // Display the data
+  } catch (err) {
+    container.innerHTML = `<div class="text-red-500">Error loading schedule token-storm</div>`;
+  }
+}
+
+// Load Schedule NFT-Giveaway
+async function loadScheduleNFTGiveaway() {
+  const container = document.getElementById('c2e-content');
+  container.innerHTML = 'Loading Schedule NFT-Giveaway...';
+  try {
+    const res = await fetch(`${BASE_URL}/schedule_nft_giveaway`);
+    const data = await res.json();
+    container.innerHTML = JSON.stringify(data, null, 2);  // Display the data
+  } catch (err) {
+    container.innerHTML = `<div class="text-red-500">Error loading schedule nft-giveaway</div>`;
+  }
 } async function handleNFTStake(farmId, templateId, assetId, isStaked) {
   const { userId, usx_token, wax_account } = window.userData;
   const action = isStaked ? 'remove' : 'add';

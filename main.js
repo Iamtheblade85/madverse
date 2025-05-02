@@ -100,10 +100,10 @@ async function loadCreateTokenStaking() {
     <div id="token-pool-details"></div>
   `;
   console.log("[🖊️] Aggiornamento contenuto del contenitore con HTML dinamico");
+
   document.getElementById('create-new-token-pool-btn').addEventListener('click', () => {
     renderNewTokenPoolForm();
   });
-
   await fetchAndRenderTokenPools();
 }
 window.loadCreateTokenStaking = loadCreateTokenStaking;
@@ -114,13 +114,15 @@ async function fetchAndRenderTokenPools() {
   try {
     const res = await fetch(`${BASE_URL}/get_staking_pools?user_id=${userId}`);
     const data = await res.json();
-    console.log("Data received for create-token-pool", data);
+    console.log("[📥] Data received from backend:", data);
+    console.log("[🧪] Controllo data.pools:", data?.pools);
     if (!res.ok || !data.pools) {
       container.innerHTML = `<div class="text-gray-600 italic">No token staking pools found.</div>`;
       return;
     }
 
     window.tokenPoolsData = data.pools;
+    console.log("[📦] window.tokenPoolsData assegnato:", window.tokenPoolsData);
     renderCreatedTokenPoolButtons(data.pools);
     renderTokenPoolDetails(data.pools[0]);
   } catch (err) {
@@ -233,7 +235,7 @@ function renderNewTokenPoolForm() {
 function renderCreatedTokenPoolButtons(pools) {
   const container = document.getElementById('created-token-pools');
   const searchInput = document.getElementById('search-token-pool');
-
+  console.log("[🧩] Rendering pool buttons. Pools disponibili:", pools);
   function renderButtons(list) {
     container.innerHTML = '';
     list.forEach(pool => {
@@ -242,6 +244,7 @@ function renderCreatedTokenPoolButtons(pools) {
       btn.textContent = pool.deposit_token?.symbol || 'Unknown';
       btn.onclick = () => renderTokenPoolDetails(pool);
       container.appendChild(btn);
+      console.log("[🔘] Pool trovata:", pool);
     });
   }
 
@@ -256,7 +259,8 @@ function renderCreatedTokenPoolButtons(pools) {
 
 function renderTokenPoolDetails(pool) {
   const container = document.getElementById('token-pool-details');
-
+  console.log("[👁️‍🗨️] Mostrando dettagli per pool:", pool);
+  console.log("[🎁] Rewards nella pool:", pool.rewards);
   const rewardsHTML = pool.rewards.map(reward => {
     const daysLeft = reward.daily_reward > 0
       ? Math.floor(reward.total_reward_deposit / reward.daily_reward)

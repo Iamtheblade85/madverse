@@ -89,7 +89,7 @@ async function initApp() {
   }
 }
 async function loadCreateTokenStaking() {
-  const container = document.getElementById('create-token-staking-container');
+  const container = document.getElementById('create-token-pool-container');
   container.innerHTML = `
     <input type="text" id="search-token-pool" placeholder="Search your token..." class="mb-4 p-2 border rounded w-full md:w-1/2">
     <button id="create-new-token-pool-btn" class="ml-2 px-4 py-2 rounded text-white font-bold shadow bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700">
@@ -132,50 +132,97 @@ function renderNewTokenPoolForm() {
   container.innerHTML = `
     <div class="bg-white p-6 rounded shadow max-w-xl mx-auto">
       <h3 class="text-xl font-bold mb-4">Create a New Token Staking Pool</h3>
-      
-      <label class="block mb-2 font-semibold">Token Symbol</label>
+
+      <label class="block mb-2 font-semibold">Deposit Token Symbol</label>
       <input id="new-token-symbol" type="text" class="w-full border p-2 rounded mb-4" placeholder="e.g. CHIPS">
 
-      <label class="block mb-2 font-semibold">Total Reward Amount</label>
-      <input id="total-reward-amount" type="number" class="w-full border p-2 rounded mb-4" placeholder="e.g. 1000">
+      <div id="reward-token-entries"></div>
 
-      <label class="block mb-2 font-semibold">Daily Reward</label>
-      <input id="daily-reward-amount" type="number" class="w-full border p-2 rounded mb-4" placeholder="e.g. 10">
+      <button class="bg-blue-500 text-white px-3 py-1 rounded mb-4" id="add-reward-token">
+        ➕ Add Reward Token
+      </button>
 
-      <button id="submit-new-token-pool" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded shadow-md">
+      <button id="submit-new-token-pool" class="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded shadow-md">
         Create Pool
       </button>
     </div>
   `;
 
+  let rewardIndex = 0;
+
+  function addRewardTokenEntry() {
+    const wrapper = document.getElementById('reward-token-entries');
+    const html = `
+      <div class="reward-token-entry mb-4 border p-3 rounded shadow">
+        <label class="block font-semibold mb-1">Reward Token Symbol</label>
+        <input type="text" class="reward-symbol w-full border p-2 rounded mb-2" placeholder="e.g. WAX">
+
+        <label class="block font-semibold mb-1">Total Reward Amount</label>
+        <input type="number" class="reward-total w-full border p-2 rounded mb-2" placeholder="e.g. 1000">
+
+        <label class="block font-semibold mb-1">Daily Reward</label>
+        <input type="number" class="reward-daily w-full border p-2 rounded mb-2" placeholder="e.g. 10">
+      </div>`;
+    wrapper.insertAdjacentHTML('beforeend', html);
+    rewardIndex++;
+  }
+
+  document.getElementById('add-reward-token').addEventListener('click', addRewardTokenEntry);
+  addRewardTokenEntry(); // Add at least one by default
+
   document.getElementById('submit-new-token-pool').addEventListener('click', async () => {
     const symbol = document.getElementById('new-token-symbol').value.trim().toUpperCase();
-    const totalReward = parseFloat(document.getElementById('total-reward-amount').value);
-    const dailyReward = parseFloat(document.getElementById('daily-reward-amount').value);
+    const { userId, usx_token, wax_account } = window.userData;
 
-    const { userId, usx_token } = window.userData;
+    const rewardTokens = Array.from(document.querySelectorAll('.reward-token-entry')).map(entry => {
+      return {
+        token_symbol: entry.querySelector('.reward-symbol').value.trim().toUpperCase(),
+        total_reward: parseFloat(entry.querySelector('.reward-total').value),
+        daily_reward: parseFloat(entry.querySelector('.reward-daily').value)
+      };
+    });
 
-    if (!symbol || isNaN(totalReward) || isNaN(dailyReward)) {
+    if (!symbol || rewardTokens.some(r => !r.token_symbol || isNaN(r.total_reward) || isNaN(r.daily_reward))) {
       showToast("Please fill all fields with valid values.", "error");
       return;
     }
 
     try {
-      const res = await fetch(`${BASE_URL}/create_staking_pool?user_id=${userId}&usx_token=${usx_token}`, {
+      // 1. Crea la pool
+      const createRes = await fetch(`${BASE_URL}/create_staking_pool?user_id=${userId}&usx_token=${usx_token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          token_symbol: symbol,
-          total_reward_deposit: totalReward,
-          daily_reward: dailyReward
+          deposit_token_symbol: symbol
         })
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create pool");
+      const createData = await createRes.json();
+      if (!createRes.ok) throw new Error(createData.error || "Failed to create pool");
 
-      showToast("Token pool created!", "success");
+      const poolId = createData.pool_id;
+
+      // 2. Aggiungi i reward token
+      for (let reward of rewardTokens) {
+        const rewardRes = await fetch(`${BASE_URL}/add_pool_reward`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pool_id: poolId,
+            token_symbol: reward.token_symbol,
+            total_reward: reward.total_reward,
+            daily_reward: reward.daily_reward,
+            wax_account: wax_account
+          })
+        });
+
+        const rewardData = await rewardRes.json();
+        if (!rewardRes.ok) throw new Error(rewardData.error || "Failed to add reward token");
+      }
+
+      showToast("Token pool created with rewards!", "success");
       await fetchAndRenderTokenPools();
+
     } catch (err) {
       console.error("[❌] Error creating token pool:", err);
       showToast(err.message, "error");
@@ -1050,8 +1097,8 @@ function loadSection(section) {
   } else if (section === 'create-nfts-farm') {
     app.innerHTML = `<h2 class="text-2xl font-semibold mb-4">Create NFTs Staking Farm</h2><div id="create-nfts-farm-container">Loading...</div>`;
     loadCreateNFTFarm(); // definita in create-nft-pool.js
-  } else if (section === 'create-token-staking') {
-    app.innerHTML = `<h2 class="text-2xl font-semibold mb-4">Create Token Staking Pool</h2><div id="create-token-staking-container">Loading...</div>`;
+  } else if (section === 'create-token-pool') {
+    app.innerHTML = `<h2 class="text-2xl font-semibold mb-4">Create Token Staking Pool</h2><div id="create-token-pool-container">Loading...</div>`;
     loadCreateTokenStaking();
   }
 } async function loadNFTFarms() {

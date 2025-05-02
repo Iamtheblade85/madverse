@@ -261,17 +261,21 @@ function renderTokenPoolDetails(pool) {
   const container = document.getElementById('token-pool-details');
   console.log("[👁️‍🗨️] Mostrando dettagli per pool:", pool);
   console.log("[🎁] Rewards nella pool:", pool.rewards);
+
   const rewardsHTML = pool.rewards.map(reward => {
     const daysLeft = reward.daily_reward > 0
       ? Math.floor(reward.total_reward_deposit / reward.daily_reward)
       : '∞';
+
     return `
       <div class="border-t pt-2 mt-2">
         <p class="text-gray-600 mb-1"><strong>🎯 Token:</strong> ${reward.token_symbol}</p>
         <p class="text-gray-600 mb-1">💰 Total Deposited: <strong>${reward.total_reward_deposit}</strong></p>
         <p class="text-gray-600 mb-1">📅 Daily Reward: <strong>${reward.daily_reward}</strong></p>
         <p class="text-gray-600 mb-1">⏳ Days Remaining: <strong>${daysLeft}</strong></p>
-        <button class="btn-action bg-yellow-500 text-white mt-2" onclick="openEditDailyReward(${pool.pool_id}, '${reward.token_symbol}', ${reward.daily_reward}, '${pool.deposit_token?.symbol || ''}')">
+        <button 
+          class="btn-action bg-yellow-500 text-white mt-2" 
+          onclick="openEditDailyReward(${pool.pool_id}, '${reward.token_symbol}', ${reward.daily_reward}, '${pool.deposit_token.symbol}')">
           ✏️ Edit Daily Reward
         </button>
       </div>
@@ -284,7 +288,9 @@ function renderTokenPoolDetails(pool) {
       <p class="text-gray-600 mb-2">Pool Status: <strong>${pool.status}</strong></p>
       <p class="text-gray-600 mb-2">Created: ${pool.created_at}</p>
       ${rewardsHTML || '<p class="text-gray-500 italic">No rewards configured.</p>'}
-      <button class="btn-action bg-yellow-600 text-white mt-4" onclick="openPoolStatusModal(${pool.pool_id}, '${pool.status || 'open'}')">
+      <button 
+        class="btn-action bg-yellow-600 text-white mt-4" 
+        onclick="openPoolStatusModal(${pool.pool_id}, '${pool.status || 'open'}')">
         🔄 Change Pool Status
       </button>
     </div>
@@ -294,14 +300,24 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
   const modal = document.getElementById('modal');
   const body = document.getElementById('modal-body');
 
+  console.log("[✏️] Edit Daily Reward - Parametri:", {
+    poolId,
+    tokenSymbol,
+    currentReward,
+    depositTokenSymbol
+  });
+
   body.innerHTML = `
     <h3 class="text-xl font-bold mb-4">Edit Daily Reward for ${tokenSymbol}</h3>
+    
     <label class="block mb-2 font-semibold">New Daily Reward</label>
     <input id="new-daily-reward" type="number" value="${currentReward}" class="w-full border p-2 rounded mb-4">
+    
     <button id="submit-daily-reward" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">
       Update Reward
     </button>
-    <button class="btn-action bg-blue-500 text-white mt-2" onclick="openDepositToPool(${poolId}, '${depositTokenSymbol}')">
+    
+    <button class="btn-action bg-blue-500 text-white mt-2" onclick="openDepositToPool(${poolId}, '${tokenSymbol}')">
       💰 Deposit More Tokens
     </button>
   `;
@@ -311,6 +327,7 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
 
   document.getElementById('submit-daily-reward').onclick = async () => {
     const newReward = parseFloat(document.getElementById('new-daily-reward').value);
+
     if (isNaN(newReward) || newReward <= 0) {
       showToast("Please enter a valid reward value", "error");
       return;
@@ -318,10 +335,15 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
 
     try {
       const { userId, usx_token } = window.userData;
+
       const res = await fetch(`${BASE_URL}/update_pool_daily_reward?user_id=${userId}&usx_token=${usx_token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pool_id: poolId, new_daily_reward: newReward })
+        body: JSON.stringify({
+          pool_id: poolId,
+          reward_token_symbol: tokenSymbol,  // 👈 parametro corretto per token specifico
+          new_daily_reward: newReward
+        })
       });
 
       const data = await res.json();
@@ -331,7 +353,7 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
       modal.classList.add('hidden');
       fetchAndRenderTokenPools();
     } catch (err) {
-      console.error(err);
+      console.error("[❌] Failed to update reward:", err);
       showToast(err.message, "error");
     }
   };
@@ -341,13 +363,21 @@ function openDepositToPool(poolId, tokenSymbol) {
   const modal = document.getElementById('modal');
   const body = document.getElementById('modal-body');
 
-  const balance = (window.walletBalances?.find(t => t.symbol === tokenSymbol) || {}).amount || 0;
+  const tokenBalance = window.walletBalances?.find(t => t.symbol === tokenSymbol);
+  const balance = tokenBalance?.amount || 0;
+
+  console.log("[💰] Apri modale deposito:", {
+    poolId,
+    tokenSymbol,
+    balance
+  });
 
   body.innerHTML = `
     <h3 class="text-xl font-bold mb-4">Deposit More ${tokenSymbol} into Pool</h3>
     <p class="text-gray-600 mb-2">Available in Wallet: <strong>${balance}</strong></p>
     <label class="block mb-1">Amount</label>
-    <input type="number" id="deposit-amount" class="w-full border p-2 rounded mb-4">
+    <input type="number" id="deposit-amount" class="w-full border p-2 rounded mb-4" placeholder="e.g. 100">
+    
     <button class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded" id="submit-deposit">
       Deposit Tokens
     </button>
@@ -358,6 +388,7 @@ function openDepositToPool(poolId, tokenSymbol) {
 
   document.getElementById('submit-deposit').onclick = async () => {
     const amount = parseFloat(document.getElementById('deposit-amount').value);
+
     if (!amount || amount <= 0 || amount > balance) {
       showToast("Invalid amount", "error");
       return;
@@ -365,6 +396,7 @@ function openDepositToPool(poolId, tokenSymbol) {
 
     try {
       const { userId, usx_token, wax_account } = window.userData;
+
       const res = await fetch(`${BASE_URL}/add_token_to_staking_pool?user_id=${userId}&usx_token=${usx_token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -384,7 +416,7 @@ function openDepositToPool(poolId, tokenSymbol) {
       loadWallet();
       fetchAndRenderTokenPools();
     } catch (err) {
-      console.error(err);
+      console.error("[❌] Error depositing tokens:", err);
       showToast(err.message, "error");
     }
   };
@@ -393,6 +425,8 @@ window.openDepositToPool = openDepositToPool;
 function openPoolStatusModal(poolId, currentStatus) {
   const modal = document.getElementById('modal');
   const body = document.getElementById('modal-body');
+
+  console.log("[⚙️] Aprendo modale status pool:", { poolId, currentStatus });
 
   body.innerHTML = `
     <h3 class="text-xl font-bold mb-4">Change Pool Status</h3>
@@ -414,6 +448,12 @@ function openPoolStatusModal(poolId, currentStatus) {
     const newStatus = document.getElementById('pool-status-select').value;
     const { userId, usx_token } = window.userData;
 
+    console.log("[🔁] Aggiornamento status pool:", {
+      poolId,
+      from: currentStatus,
+      to: newStatus
+    });
+
     try {
       const res = await fetch(`${BASE_URL}/update_token_pool_status?user_id=${userId}&usx_token=${usx_token}`, {
         method: "POST",
@@ -428,7 +468,7 @@ function openPoolStatusModal(poolId, currentStatus) {
       modal.classList.add('hidden');
       fetchAndRenderTokenPools(); // 🔄 Refresh pools
     } catch (err) {
-      console.error("[❌] Error updating pool status:", err);
+      console.error("[❌] Errore durante l'aggiornamento dello stato della pool:", err);
       showToast("Error: " + err.message, "error");
     }
   };

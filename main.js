@@ -271,7 +271,7 @@ function renderTokenPoolDetails(pool) {
         <p class="text-gray-600 mb-1">💰 Total Deposited: <strong>${reward.total_reward_deposit}</strong></p>
         <p class="text-gray-600 mb-1">📅 Daily Reward: <strong>${reward.daily_reward}</strong></p>
         <p class="text-gray-600 mb-1">⏳ Days Remaining: <strong>${daysLeft}</strong></p>
-        <button class="btn-action bg-yellow-500 text-white mt-2" onclick="openEditDailyReward(${pool.pool_id}, '${reward.token_symbol}', ${reward.daily_reward})">
+        <button class="btn-action bg-yellow-500 text-white mt-2" onclick="openEditDailyReward(${pool.pool_id}, '${reward.token_symbol}', ${reward.daily_reward}, '${pool.deposit_token?.symbol || ''}')">
           ✏️ Edit Daily Reward
         </button>
       </div>
@@ -290,7 +290,7 @@ function renderTokenPoolDetails(pool) {
     </div>
   `;
 }
-function openEditDailyReward(poolId, tokenSymbol, currentReward) {
+function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSymbol) {
   const modal = document.getElementById('modal');
   const body = document.getElementById('modal-body');
 
@@ -301,7 +301,7 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward) {
     <button id="submit-daily-reward" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">
       Update Reward
     </button>
-    <button class="btn-action bg-blue-500 text-white mt-2" onclick="openDepositToPool(${pool.pool_id}, '${pool.token_symbol}')">
+    <button class="btn-action bg-blue-500 text-white mt-2" onclick="openDepositToPool(${poolId}, '${depositTokenSymbol}')">
       💰 Deposit More Tokens
     </button>
   `;

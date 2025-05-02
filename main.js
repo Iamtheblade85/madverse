@@ -239,7 +239,7 @@ function renderCreatedTokenPoolButtons(pools) {
     list.forEach(pool => {
       const btn = document.createElement('button');
       btn.className = 'btn-action';
-      btn.textContent = pool.token_symbol;
+      btn.textContent = pool.deposit_token?.symbol || 'Unknown';
       btn.onclick = () => renderTokenPoolDetails(pool);
       container.appendChild(btn);
     });
@@ -249,7 +249,7 @@ function renderCreatedTokenPoolButtons(pools) {
 
   searchInput.addEventListener('input', () => {
     const search = searchInput.value.toLowerCase();
-    const filtered = pools.filter(p => p.token_symbol.toLowerCase().includes(search));
+    const filtered = pools.filter(p => p.deposit_token?.symbol?.toLowerCase().includes(search));
     renderButtons(filtered);
   });
 }
@@ -257,20 +257,33 @@ function renderCreatedTokenPoolButtons(pools) {
 function renderTokenPoolDetails(pool) {
   const container = document.getElementById('token-pool-details');
 
+  const rewardsHTML = pool.rewards.map(reward => {
+    const daysLeft = reward.daily_reward > 0
+      ? Math.floor(reward.total_reward_deposit / reward.daily_reward)
+      : '∞';
+    return `
+      <div class="border-t pt-2 mt-2">
+        <p class="text-gray-600 mb-1"><strong>🎯 Token:</strong> ${reward.token_symbol}</p>
+        <p class="text-gray-600 mb-1">💰 Total Deposited: <strong>${reward.total_reward_deposit}</strong></p>
+        <p class="text-gray-600 mb-1">📅 Daily Reward: <strong>${reward.daily_reward}</strong></p>
+        <p class="text-gray-600 mb-1">⏳ Days Remaining: <strong>${daysLeft}</strong></p>
+        <button class="btn-action bg-yellow-500 text-white mt-2" onclick="openEditDailyReward(${pool.pool_id}, '${reward.token_symbol}', ${reward.daily_reward})">
+          ✏️ Edit Daily Reward
+        </button>
+      </div>
+    `;
+  }).join('');
+
   container.innerHTML = `
     <div class="bg-white p-4 rounded shadow">
-      <h3 class="text-xl font-bold mb-4">${pool.token_symbol} Pool</h3>
-      <p class="text-gray-600 mb-2">Total Deposited: <strong>${pool.total_reward_deposit}</strong></p>
-      <p class="text-gray-600 mb-2">Daily Reward: <strong>${pool.daily_reward}</strong></p>
-      <p class="text-gray-600 mb-2">APR: <strong>${pool.apr || 'N/A'}%</strong></p>
-      <p class="text-gray-600 mb-4">Created: ${pool.creation_date}</p>
+      <h3 class="text-xl font-bold mb-4">${pool.deposit_token?.symbol || 'Unknown'} Pool</h3>
+      <p class="text-gray-600 mb-2">Pool Status: <strong>${pool.status}</strong></p>
+      <p class="text-gray-600 mb-2">Created: ${pool.created_at}</p>
+      ${rewardsHTML || '<p class="text-gray-500 italic">No rewards configured.</p>'}
+      <button class="btn-action bg-yellow-600 text-white mt-4" onclick="openPoolStatusModal(${pool.pool_id}, '${pool.status || 'open'}')">
+        🔄 Change Pool Status
+      </button>
     </div>
-    <button class="btn-action bg-yellow-500 text-white mt-2" onclick="openEditDailyReward(${pool.pool_id}, '${pool.token_symbol}', ${pool.daily_reward})">
-      ✏️ Edit Daily Reward
-    </button>
-    <button class="btn-action bg-yellow-600 text-white" onclick="openPoolStatusModal(${pool.pool_id}, '${pool.status || 'open'}')">
-      🔄 Change Pool Status
-    </button>
   `;
 }
 function openEditDailyReward(poolId, tokenSymbol, currentReward) {

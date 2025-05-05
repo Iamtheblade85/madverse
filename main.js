@@ -1314,14 +1314,69 @@ function loadSection(section) {
 } // Load Log Reward Activity
 async function loadLogRewardActivity() {
   const container = document.getElementById('c2e-content');
-  container.innerHTML = 'Loading Log Reward Activity...';
+  container.innerHTML = 'Loading Log Reward Activity...';  // Mostra un messaggio di caricamento
+
   try {
+    // Richiesta GET all'endpoint per ottenere i log delle attività di reward
     const res = await fetch(`${BASE_URL}/log_reward_activity`);
+    
+    // Verifica se la risposta è stata ok
+    if (!res.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    // Ottieni i dati in formato JSON
     const data = await res.json();
-    container.innerHTML = JSON.stringify(data, null, 2);  // Display the data
+
+    // Se non ci sono dati, mostra un messaggio
+    if (data.length === 0) {
+      container.innerHTML = '<div>No reward activity logs found.</div>';
+      return;
+    }
+
+    // Funzione per visualizzare i dati in una tabella
+    displayLogData(data);
+
   } catch (err) {
-    container.innerHTML = `<div class="text-red-500">Error loading log reward activity</div>`;
+    // Gestione degli errori, nel caso ci sia un problema con la richiesta
+    container.innerHTML = `<div class="text-red-500">Error loading log reward activity: ${err.message}</div>`;
   }
+}
+
+function displayLogData(data) {
+  const container = document.getElementById('c2e-content');
+  
+  // Crea una tabella HTML
+  let tableHTML = '<table class="table-auto border-collapse w-full text-sm text-left text-gray-900">';
+  tableHTML += '<thead>';
+  tableHTML += '<tr>';
+  tableHTML += '<th class="border px-4 py-2">Username</th>';
+  tableHTML += '<th class="border px-4 py-2">Token</th>';
+  tableHTML += '<th class="border px-4 py-2">Amount</th>';
+  tableHTML += '<th class="border px-4 py-2">Channel</th>';
+  tableHTML += '<th class="border px-4 py-2">Sponsor</th>';
+  tableHTML += '<th class="border px-4 py-2">Timestamp</th>';
+  tableHTML += '</tr>';
+  tableHTML += '</thead>';
+
+  // Aggiungi i dati alla tabella
+  tableHTML += '<tbody>';
+  data.forEach(record => {
+    tableHTML += `<tr>`;
+    tableHTML += `<td class="border px-4 py-2">${record.username}</td>`;
+    tableHTML += `<td class="border px-4 py-2">${record.token_symbol}</td>`;
+    tableHTML += `<td class="border px-4 py-2">${record.amount}</td>`;
+    tableHTML += `<td class="border px-4 py-2">${record.channel}</td>`;
+    tableHTML += `<td class="border px-4 py-2">${record.origin_channel}</td>`;
+    tableHTML += `<td class="border px-4 py-2">${new Date(record.timestamp).toLocaleString()}</td>`;
+    tableHTML += `</tr>`;
+  });
+  tableHTML += '</tbody>';
+
+  tableHTML += '</table>';
+
+  // Inserisci la tabella nel contenitore
+  container.innerHTML = tableHTML;
 }
 
 // Load Log Storms & Giveaways

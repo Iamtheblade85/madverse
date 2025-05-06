@@ -1380,20 +1380,54 @@ function displayLogData(data) {
 }
 
 // Load Log Storms & Giveaways
-// Load Log Storms & Giveaways
 async function loadLogStormsGiveaways() {
   const container = document.getElementById('c2e-content');
   container.innerHTML = 'Loading Log Storms & Giveaways...';
+
   try {
-    const res = await fetch(`${BASE_URL}/log_storms_and_giveaways`);
-    const data = await res.json();
-    container.innerHTML = JSON.stringify(data, null, 2);  // Display the data
+    // Mostra il modulo per aggiungere una nuova tempesta
+    container.innerHTML = `
+      <h2 class="text-2xl font-semibold mb-4">Add New Scheduled Storm</h2>
+      <div id="add-storm-form">
+        <label class="block mb-2">Scheduled Time</label>
+        <input type="datetime-local" id="scheduledTime" class="w-full border p-2 rounded mb-4">
+        
+        <label class="block mb-2">Amount</label>
+        <input type="number" id="amount" class="w-full border p-2 rounded mb-4">
+        
+        <label class="block mb-2">Token Symbol</label>
+        <input type="text" id="tokenSymbol" class="w-full border p-2 rounded mb-4">
+        
+        <label class="block mb-2">Timeframe</label>
+        <input type="text" id="timeframe" class="w-full border p-2 rounded mb-4">
+        
+        <label class="block mb-2">Channel</label>
+        <input type="text" id="channelName" class="w-full border p-2 rounded mb-4">
+        
+        <label class="block mb-2">Payment Method</label>
+        <select id="paymentMethod" class="w-full border p-2 rounded mb-4">
+          <option value="twitch">Twitch</option>
+          <option value="telegram">Telegram</option>
+        </select>
+
+        <button id="submitStorm" class="bg-green-600 text-white py-2 px-4 rounded">Add Storm</button>
+      </div>
+      <h2 class="text-2xl font-semibold mt-6 mb-4">Scheduled Storms</h2>
+      <div id="scheduled-storms-table">
+        Loading Scheduled Storms...
+      </div>
+    `;
+
+    // Aggiungi evento per inviare il form
+    document.getElementById('submitStorm').addEventListener('click', addScheduledStorm);
+
+    // Carica la tabella delle tempeste programmate
+    loadScheduledStorms();
+
   } catch (err) {
     container.innerHTML = `<div class="text-red-500">Error loading log storms and giveaways: ${err.message}</div>`;
   }
-}
-
-// Funzione per caricare le tempeste programmate
+}// Funzione per caricare le tempeste programmate
 async function loadScheduledStorms() {
   const container = document.getElementById('c2e-content');
   container.innerHTML = 'Loading Scheduled Storms...';  // Mostra un messaggio di caricamento
@@ -1474,19 +1508,26 @@ async function addScheduledStorm() {
   const timeframe = document.getElementById('timeframe').value;
   const channelName = document.getElementById('channelName').value;
   const paymentMethod = document.getElementById('paymentMethod').value;
-
+  // Prendi il wax_account da window.userData
+  const { userId, usx_token, wax_account } = window.userData;
+  // Se non c'è wax_account, mostra un errore
+  if (!wax_account) {
+    container.innerHTML = `<div class="text-red-500">Error: wax_account is missing.</div>`;
+    return;
+  }
   const payload = {
     scheduled_time: scheduledTime,
     amount: amount,
     token_symbol: tokenSymbol,
     timeframe: timeframe,
     channel_name: channelName,
-    payment_method: paymentMethod
+    payment_method: paymentMethod,
+    wax_account: wax_account,
   };
 
   try {
     // Richiesta POST per aggiungere la tempesta
-    const res = await fetch(`${BASE_URL}/add_storm?user_id=1234&wax_account=example`, {
+    const res = await fetch(`${BASE_URL}/add_storm?user_id=${userId}&&usx_token=${usx_token}&wax_account=${wax_account}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

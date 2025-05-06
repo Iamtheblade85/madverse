@@ -1385,7 +1385,7 @@ async function loadLogStormsGiveaways() {
   container.innerHTML = 'Loading Log Storms & Giveaways...';
 
   try {
-    // Mostra il modulo per aggiungere una nuova tempesta
+    // Mostra il modulo per aggiungere una nuova tempesta solo una volta
     container.innerHTML = `
       <h2 class="text-2xl font-semibold mb-4">Add New Scheduled Storm</h2>
       <div id="add-storm-form">
@@ -1422,15 +1422,16 @@ async function loadLogStormsGiveaways() {
     document.getElementById('submitStorm').addEventListener('click', addScheduledStorm);
 
     // Carica la tabella delle tempeste programmate
-    loadScheduledStorms();
+    loadScheduledStorms(); // Carica la tabella senza sovrascrivere il modulo
 
   } catch (err) {
     container.innerHTML = `<div class="text-red-500">Error loading log storms and giveaways: ${err.message}</div>`;
   }
-}// Funzione per caricare le tempeste programmate
+}
+// Funzione per caricare le tempeste programmate
 async function loadScheduledStorms() {
-  const container = document.getElementById('c2e-content');
-  container.innerHTML = 'Loading Scheduled Storms...';  // Mostra un messaggio di caricamento
+  const tableContainer = document.getElementById('scheduled-storms-table');  // Sezione solo per la tabella
+  tableContainer.innerHTML = 'Loading Scheduled Storms...';  // Mostra un messaggio di caricamento
 
   try {
     // Richiesta GET all'endpoint per ottenere le tempeste programmate
@@ -1446,22 +1447,23 @@ async function loadScheduledStorms() {
 
     // Se i dati sono vuoti, mostra un messaggio
     if (data.length === 0) {
-      container.innerHTML = '<div>No scheduled storms found.</div>';
+      tableContainer.innerHTML = '<div>No scheduled storms found.</div>';
       return;
     }
 
     // Funzione per visualizzare i dati in una tabella
-    displayStormsData(data);
+    displayStormsData(data);  // Visualizza i dati
 
   } catch (err) {
     // Gestione degli errori, nel caso ci sia un problema con la richiesta
-    container.innerHTML = `<div class="text-red-500">Error loading scheduled storms: ${err.message}</div>`;
+    tableContainer.innerHTML = `<div class="text-red-500">Error loading scheduled storms: ${err.message}</div>`;
   }
 }
 
+
 // Funzione per visualizzare i dati delle tempeste programmate
 function displayStormsData(data) {
-  const container = document.getElementById('c2e-content');
+  const tableContainer = document.getElementById('scheduled-storms-table');  // Contenitore della tabella
   
   // Crea una tabella HTML
   let tableHTML = '<table class="table-auto border-collapse w-full text-sm text-left text-gray-900">';
@@ -1494,8 +1496,8 @@ function displayStormsData(data) {
 
   tableHTML += '</table>';
 
-  // Inserisci la tabella nel contenitore
-  container.innerHTML = tableHTML;
+  // Inserisci la tabella solo nel contenitore della tabella
+  tableContainer.innerHTML = tableHTML;  // Ora aggiorniamo solo la tabella
 }
 // Funzione per aggiungere una nuova tempesta programmata
 async function addScheduledStorm() {

@@ -1380,6 +1380,7 @@ function displayLogData(data) {
 }
 
 // Load Log Storms & Giveaways
+// Load Log Storms & Giveaways
 async function loadLogStormsGiveaways() {
   const container = document.getElementById('c2e-content');
   container.innerHTML = 'Loading Log Storms & Giveaways...';
@@ -1388,23 +1389,129 @@ async function loadLogStormsGiveaways() {
     const data = await res.json();
     container.innerHTML = JSON.stringify(data, null, 2);  // Display the data
   } catch (err) {
-    container.innerHTML = `<div class="text-red-500">Error loading log storms and giveaways</div>`;
+    container.innerHTML = `<div class="text-red-500">Error loading log storms and giveaways: ${err.message}</div>`;
   }
 }
 
-// Load Schedule Token-Storm
-async function loadScheduleTokenStorm() {
+// Funzione per caricare le tempeste programmate
+async function loadScheduledStorms() {
   const container = document.getElementById('c2e-content');
-  container.innerHTML = 'Loading Schedule Token-Storm...';
+  container.innerHTML = 'Loading Scheduled Storms...';  // Mostra un messaggio di caricamento
+
   try {
-    const res = await fetch(`${BASE_URL}/schedule_token_storm`);
+    // Richiesta GET all'endpoint per ottenere le tempeste programmate
+    const res = await fetch(`${BASE_URL}/scheduled_storms`);
+    
+    // Verifica se la risposta è stata ok
+    if (!res.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    // Ottieni i dati in formato JSON
     const data = await res.json();
-    container.innerHTML = JSON.stringify(data, null, 2);  // Display the data
+
+    // Se i dati sono vuoti, mostra un messaggio
+    if (data.length === 0) {
+      container.innerHTML = '<div>No scheduled storms found.</div>';
+      return;
+    }
+
+    // Funzione per visualizzare i dati in una tabella
+    displayStormsData(data);
+
   } catch (err) {
-    container.innerHTML = `<div class="text-red-500">Error loading schedule token-storm</div>`;
+    // Gestione degli errori, nel caso ci sia un problema con la richiesta
+    container.innerHTML = `<div class="text-red-500">Error loading scheduled storms: ${err.message}</div>`;
   }
 }
 
+// Funzione per visualizzare i dati delle tempeste programmate
+function displayStormsData(data) {
+  const container = document.getElementById('c2e-content');
+  
+  // Crea una tabella HTML
+  let tableHTML = '<table class="table-auto border-collapse w-full text-sm text-left text-gray-900">';
+  tableHTML += '<thead>';
+  tableHTML += '<tr>';
+  tableHTML += '<th class="border px-4 py-2">ID</th>';
+  tableHTML += '<th class="border px-4 py-2">Scheduled Time</th>';
+  tableHTML += '<th class="border px-4 py-2">Offered By</th>';
+  tableHTML += '<th class="border px-4 py-2">Amount</th>';
+  tableHTML += '<th class="border px-4 py-2">Token</th>';
+  tableHTML += '<th class="border px-4 py-2">Channel</th>';
+  tableHTML += '<th class="border px-4 py-2">Status</th>';
+  tableHTML += '</tr>';
+  tableHTML += '</thead>';
+
+  // Aggiungi i dati alla tabella
+  tableHTML += '<tbody>';
+  data.forEach(storm => {
+    tableHTML += `<tr>`;
+    tableHTML += `<td class="border px-4 py-2">${storm.id}</td>`;
+    tableHTML += `<td class="border px-4 py-2">${new Date(storm.scheduled_time).toLocaleString()}</td>`;
+    tableHTML += `<td class="border px-4 py-2">${storm.offered_by}</td>`;
+    tableHTML += `<td class="border px-4 py-2">${storm.amount}</td>`;
+    tableHTML += `<td class="border px-4 py-2">${storm.token_symbol}</td>`;
+    tableHTML += `<td class="border px-4 py-2">${storm.channel_name}</td>`;
+    tableHTML += `<td class="border px-4 py-2">${storm.status}</td>`;
+    tableHTML += `</tr>`;
+  });
+  tableHTML += '</tbody>';
+
+  tableHTML += '</table>';
+
+  // Inserisci la tabella nel contenitore
+  container.innerHTML = tableHTML;
+}
+// Funzione per aggiungere una nuova tempesta programmata
+async function addScheduledStorm() {
+  const container = document.getElementById('c2e-content');
+  
+  // Ottieni i dati del modulo (puoi anche fare riferimento a un form HTML)
+  const scheduledTime = document.getElementById('scheduledTime').value; // esempio di input
+  const amount = document.getElementById('amount').value;
+  const tokenSymbol = document.getElementById('tokenSymbol').value;
+  const timeframe = document.getElementById('timeframe').value;
+  const channelName = document.getElementById('channelName').value;
+  const paymentMethod = document.getElementById('paymentMethod').value;
+
+  const payload = {
+    scheduled_time: scheduledTime,
+    amount: amount,
+    token_symbol: tokenSymbol,
+    timeframe: timeframe,
+    channel_name: channelName,
+    payment_method: paymentMethod
+  };
+
+  try {
+    // Richiesta POST per aggiungere la tempesta
+    const res = await fetch(`${BASE_URL}/add_storm?user_id=1234&wax_account=example`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    // Verifica se la risposta è stata ok
+    if (!res.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await res.json();
+    
+    if (data.success) {
+      container.innerHTML = `<div class="text-green-500">${data.message}</div>`;
+    } else {
+      container.innerHTML = `<div class="text-red-500">Error: ${data.error}</div>`;
+    }
+
+  } catch (err) {
+    // Gestione degli errori nel caso ci sia un problema con la richiesta
+    container.innerHTML = `<div class="text-red-500">Error adding scheduled storm: ${err.message}</div>`;
+  }
+}
 // Load Schedule NFT-Giveaway
 async function loadScheduleNFTGiveaway() {
   const container = document.getElementById('c2e-content');
@@ -1414,7 +1521,7 @@ async function loadScheduleNFTGiveaway() {
     const data = await res.json();
     container.innerHTML = JSON.stringify(data, null, 2);  // Display the data
   } catch (err) {
-    container.innerHTML = `<div class="text-red-500">Error loading schedule nft-giveaway</div>`;
+    container.innerHTML = `<div class="text-red-500">Error loading schedule nft-giveaway: ${err.message}</div>`;
   }
 } async function handleNFTStake(farmId, templateId, assetId, isStaked) {
   const { userId, usx_token, wax_account } = window.userData;

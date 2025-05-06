@@ -198,54 +198,55 @@
                 break;  
             case 'manage_storms':
               contentFrame.innerHTML = `<p>Loading scheduled storms...</p>`;
-        
+            
               try {
+                // Ottieni i dati da tutte e tre le risposte in parallelo
                 const [stormsResponse, tokensResponse, channelsResponse] = await Promise.all([
                   fetch(`https://iamemanuele.pythonanywhere.com/scheduled_storms`),
                   fetch(`https://iamemanuele.pythonanywhere.com/available_tokens`),
                   fetch(`https://iamemanuele.pythonanywhere.com/available_channels`)
                 ]);
-        
+            
+                // Verifica che tutte le risposte siano riuscite
+                if (!stormsResponse.ok || !tokensResponse.ok || !channelsResponse.ok) {
+                  throw new Error("Failed to fetch data from the server");
+                }
+            
                 const stormsData = await stormsResponse.json();
                 const tokensData = await tokensResponse.json();
                 const channelsData = await channelsResponse.json();
-        
+            
                 const timeframeOptions = ['5m', '10m', '15m', '20m', '30m', '45m', '1h', '2h', '4h', '6h', '12h', '1d', '2d'];
-        
+            
                 contentFrame.innerHTML = `
                   <h2 style="text-align:center; font-size:2rem;">⛈️ Manage Scheduled Storms</h2>
-        
+            
                   <div style="margin: 20px auto; max-width: 600px; padding: 20px; border: 2px solid #333; border-radius: 10px;">
                     <h3 style="text-align:center;">Create a New Storm</h3>
                     <form id="storm-form">
                       <input type="datetime-local" id="scheduled_time" required style="margin-bottom:10px; padding:8px; width:100%;" placeholder="Scheduled Time"/>
                       <input type="number" step="0.0001" id="amount" required style="margin-bottom:10px; padding:8px; width:100%;" placeholder="Amount"/>
-        
                       <select id="token_symbol" required style="margin-bottom:10px; padding:8px; width:100%;">
                         <option value="">Select Token</option>
                         ${tokensData.tokens.map(token => `<option value="${token}">${token}</option>`).join('')}
                       </select>
-        
                       <select id="timeframe" required style="margin-bottom:10px; padding:8px; width:100%;">
                         <option value="">Select Timeframe</option>
                         ${timeframeOptions.map(t => `<option value="${t}">${t}</option>`).join('')}
                       </select>
-        
                       <select id="channel_name" required style="margin-bottom:10px; padding:8px; width:100%;">
                         <option value="">Select Channel</option>
                         ${channelsData.channels.map(ch => `<option value="${ch}">${ch}</option>`).join('')}
                       </select>
-        
                       <select id="payment_method" style="margin-bottom:10px; padding:8px; width:100%;">
                         <option value="twitch">Pay with Twitch Balance</option>
                         <option value="telegram">Pay with Telegram Balance</option>
                       </select>
-        
                       <button type="submit" style="padding:10px; width:100%; background:#4CAF50; color:white; border:none; border-radius:5px;">Schedule Storm</button>
                     </form>
                     <div id="form-feedback" style="margin-top:10px;"></div>
                   </div>
-        
+            
                   <div style="overflow-x:auto;">
                     <table style="width:100%; border-collapse:collapse;">
                       <thead>
@@ -254,55 +255,75 @@
                           <th>Scheduled Time</th>
                           <th>Amount</th>
                           <th>Token</th>
+                          <th>Offered by</th>
                           <th>Status</th>
                         </tr>
                       </thead>
                       <tbody>
-                        ${stormsData.sort((a,b) => new Date(a.scheduled_time) - new Date(b.scheduled_time))
+                        ${stormsData.sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time))
                           .map(storm => `
                             <tr style="border-bottom:1px solid #ccc;">
                               <td>${storm.channel_name}</td>
                               <td>${new Date(storm.scheduled_time).toLocaleString()}</td>
                               <td>${storm.amount}</td>
                               <td>${storm.token_symbol}</td>
+                              <td>${storm.offered_by}</td>
                               <td>${storm.status}</td>
                             </tr>`).join('')}
                       </tbody>
                     </table>
                   </div>
                 `;
+            
+                // Gestione del submit del modulo
                 document.getElementById("storm-form").addEventListener("submit", async (e) => {
                   e.preventDefault();
+            
+                  const scheduledTimeLocal = document.getElementById("scheduled_time").value; // data locale
+                  const scheduledTimeGMT = new Date(scheduledTimeLocal).toISOString(); // converte in GMT (UTC)
+            
                   const payload = {
-                    scheduled_time: document.getElementById("scheduled_time").value,
+                    scheduled_time: scheduledTimeGMT, // ora in GMT
                     amount: parseFloat(document.getElementById("amount").value),
                     token_symbol: document.getElementById("token_symbol").value,
                     timeframe: document.getElementById("timeframe").value,
                     channel_name: document.getElementById("channel_name").value,
                     payment_method: document.getElementById("payment_method").value,
                   };
-        
+            
                   try {
                     const submitResponse = await fetch(`https://iamemanuele.pythonanywhere.com/add_storm?user_id=${userId}&usx_token=${token}`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify(payload),
                     });
+            
                     const result = await submitResponse.json();
-                    document.getElementById("form-feedback").innerHTML = `<p style='color:green;'>Storm scheduled successfully!</p>`;
-                    setTimeout(() => loadContent('manage_storms'), 2000);
+            
+                    if (result.success) {
+                      // Se la risposta ha successo, mostra il messaggio ricevuto
+                      document.getElementById("form-feedback").innerHTML = `<p style='color:green;'>${result.message}</p>`;
+                      setTimeout(() => loadContent('manage_storms'), 2000); // Ricarica il contenuto dopo 2 secondi
+                    } else {
+                      // In caso di errore, mostra il messaggio di errore
+                      document.getElementById("form-feedback").innerHTML = `<p style='color:red;'>${result.message || 'Failed to schedule storm. Try again!'}</p>`;
+                    }
                   } catch (err) {
                     console.error("Error adding storm:", err);
                     document.getElementById("form-feedback").innerHTML = `<p style='color:red;'>Failed to schedule storm. Try again!</p>`;
                   }
                 });
-                return; // ⬅️ AGGIUNGI QUESTO return QUI !
+            
+                return; // Qui il return è corretto, interrompe l'esecuzione del case
+            
               } catch (error) {
                 console.error("Error loading scheduled storms:", error);
                 contentFrame.innerHTML = `<p>Error loading scheduled storms. Try again later.</p>`;
-                return; // ⬅️ AGGIUNGI QUESTO return QUI !
+                return; // Ritorna in caso di errore nel caricamento dei dati
               }
+            
               break;
+
         }
         try {
             const response = await fetch(url);  

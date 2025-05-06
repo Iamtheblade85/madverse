@@ -289,10 +289,11 @@
                     timeframe: document.getElementById("timeframe").value,
                     channel_name: document.getElementById("channel_name").value,
                     payment_method: document.getElementById("payment_method").value,
+                    wax_account: user_wax_account,
                   };
             
                   try {
-                    const submitResponse = await fetch(`https://iamemanuele.pythonanywhere.com/add_storm?user_id=${userId}&usx_token=${token}`, {
+                    const submitResponse = await fetch(`https://iamemanuele.pythonanywhere.com/add_storm?user_id=${userId}&usx_token=${token}&wax_account=${user_wax_account}`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify(payload),

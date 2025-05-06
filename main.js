@@ -1096,7 +1096,7 @@ function loadSection(section) {
             loadLogStormsGiveaways();
             break;
           case 'schedule-token-storm':
-            loadScheduleTokenStorm();
+            loadScheduledStorms();
             break;
           case 'schedule-nft-giveaway':
             loadScheduleNFTGiveaway();

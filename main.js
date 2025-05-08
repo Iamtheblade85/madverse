@@ -2326,12 +2326,12 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
 
   if (action === "withdraw") {
     endpoint = `${BASE_URL}/withdraw`;
-  } else if (action === "swap") { // 🔥 NOTA: nel frontend lo chiamiamo "swap", non "swap_tokens"
+  } else if (action === "swap") {
     endpoint = `${BASE_URL}/swap_tokens`;
   } else if (action === "transfer") {
     endpoint = `${BASE_URL}/transfer`;
   } else if (action === "stake") {
-    endpoint = `${BASE_URL}/stake_add`;
+    endpoint = `${BASE_URL}/stake_add`;  // Usa /stake_add per l'azione "stake"
   }
 
   // Aggiungiamo user_id e usx_token all'URL
@@ -2348,7 +2348,7 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
       token_symbol: token,
       amount: amount
     };
-    
+
     if (action === "swap") {
       bodyData = {
         wax_account: wax_account,
@@ -2363,6 +2363,14 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
         throw new Error("Recipient Wax Account is required for transfer.");
       }
       bodyData.receiver = receiver;
+    } else if (action === "stake") {
+      // Aggiungi i parametri specifici per l'azione "stake"
+      const poolIdInput = document.getElementById('pool-id');
+      const poolId = poolIdInput ? poolIdInput.value.trim() : "";  // Aggiungi l'ID della pool per lo stake
+      if (!poolId) {
+        throw new Error("Pool ID is required for staking.");
+      }
+      bodyData.pool_id = poolId;  // Aggiungi l'ID della pool per lo stake
     }
     
     const body = JSON.stringify(bodyData);
@@ -2405,13 +2413,14 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
     );
   } else if (action === "transfer" && data.message) {
     showToast(`${data.message}`, "success");
+  } else if (action === "stake" && data.message) {
+    showToast(`${data.message}`, "success");
   } else {
     showToast(`${action.charAt(0).toUpperCase() + action.slice(1)} completed successfully`, "success");
   }
 
   console.info("[✅] Azione completata:", data.message || "Successo");
 }
-
 // Funzione toast dinamico
 function showToast(message, type = "success") {
   const toastContainer = document.getElementById('toast-container');

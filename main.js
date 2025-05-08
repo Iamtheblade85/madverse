@@ -2331,7 +2331,7 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
   } else if (action === "transfer") {
     endpoint = `${BASE_URL}/transfer`;
   } else if (action === "stake") {
-    endpoint = `${BASE_URL}/stake`;
+    endpoint = `${BASE_URL}/stake_add`;
   }
 
   // Aggiungiamo user_id e usx_token all'URL

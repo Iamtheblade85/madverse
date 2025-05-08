@@ -1330,14 +1330,17 @@ if (section === 'c2e-twitch') {
 
   // ✅ Imposta tutto insieme
   container.innerHTML = html;
-} // Load Log Reward Activity
+} 
+let originalData = []; // Salvataggio dei dati originali
+let filtersPopulated = false; // Evita di ripopolare i filtri più volte
+
 async function loadLogRewardActivity() {
   const container = document.getElementById('c2e-content');
-  container.innerHTML = 'Loading Log Reward Activity...';  // Messaggio di caricamento
+  container.innerHTML = 'Loading Log Reward Activity...';
 
   try {
     const res = await fetch(`${BASE_URL}/log_reward_activity`);
-    
+
     if (!res.ok) {
       throw new Error('Network response was not ok');
     }
@@ -1349,81 +1352,71 @@ async function loadLogRewardActivity() {
       return;
     }
 
-    // Mostra solo i 20 record più recenti
+    // Salva i dati originali
+    originalData = data;
+
+    // Visualizza i 20 record più recenti
     const recentData = data.slice(0, 20).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-    // Visualizza i dati nella tabella
     displayLogData(recentData);
 
   } catch (err) {
     container.innerHTML = `<div class="text-red-500">Error loading log reward activity: ${err.message}</div>`;
   }
-} let filtersPopulated = false;  // Aggiungi questa variabile
+}
 
 function displayLogData(data) {
   const container = document.getElementById('c2e-content');
-  
-  // Crea una tabella con i filtri per ogni colonna
+
   let tableHTML = `
     <div class="overflow-x-auto mb-4">
-      <button id="reset-filters" class="p-2 bg-gray-400 text-white rounded-md hover:bg-gray-500">Reset Filters</button>
-      <table class="table-auto border-collapse w-full text-sm text-left text-gray-900 mt-4">
+      <div class="flex justify-between items-center mb-4">
+        <div class="flex space-x-2">
+          <button id="reset-filters" class="p-2 bg-gray-400 text-white rounded-md hover:bg-gray-500">Reset Filters</button>
+          <button id="apply-filters" class="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Apply Filters</button>
+        </div>
+        <div class="flex space-x-2">
+          <input id="search-bar" class="p-2 border rounded-md" type="text" placeholder="Search...">
+        </div>
+      </div>
+      <table class="table-auto border-collapse w-full text-sm text-left text-gray-900">
         <thead>
           <tr class="bg-gray-100">
-            <th class="border px-4 py-2">
-              <div class="flex items-center">
-                <span>Username</span>
-                <select id="filter-username" class="ml-2 p-1 text-xs border rounded" multiple>
-                  <option value="">All</option>
-                </select>
-                <button id="sort-username" class="ml-2 text-xs">↕️</button>
-              </div>
+            <th class="border px-4 py-2">Username
+              <select id="filter-username" class="ml-2 p-1 text-xs border rounded">
+                <option value="">All</option>
+              </select>
+              <button id="sort-username" class="ml-2 text-xs">↕️</button>
             </th>
-            <th class="border px-4 py-2">
-              <div class="flex items-center">
-                <span>Token</span>
-                <select id="filter-token" class="ml-2 p-1 text-xs border rounded" multiple>
-                  <option value="">All</option>
-                </select>
-                <button id="sort-token" class="ml-2 text-xs">↕️</button>
-              </div>
+            <th class="border px-4 py-2">Token
+              <select id="filter-token" class="ml-2 p-1 text-xs border rounded">
+                <option value="">All</option>
+              </select>
+              <button id="sort-token" class="ml-2 text-xs">↕️</button>
             </th>
-            <th class="border px-4 py-2">
-              <div class="flex items-center">
-                <span>Amount</span>
-                <button id="sort-amount" class="ml-2 text-xs">↕️</button>
-              </div>
+            <th class="border px-4 py-2">Amount
+              <button id="sort-amount" class="ml-2 text-xs">↕️</button>
             </th>
-            <th class="border px-4 py-2">
-              <div class="flex items-center">
-                <span>Channel</span>
-                <select id="filter-channel" class="ml-2 p-1 text-xs border rounded" multiple>
-                  <option value="">All</option>
-                </select>
-                <button id="sort-channel" class="ml-2 text-xs">↕️</button>
-              </div>
+            <th class="border px-4 py-2">Channel
+              <select id="filter-channel" class="ml-2 p-1 text-xs border rounded">
+                <option value="">All</option>
+              </select>
+              <button id="sort-channel" class="ml-2 text-xs">↕️</button>
             </th>
-            <th class="border px-4 py-2">
-              <div class="flex items-center">
-                <span>Sponsor</span>
-                <select id="filter-sponsor" class="ml-2 p-1 text-xs border rounded" multiple>
-                  <option value="">All</option>
-                </select>
-                <button id="sort-sponsor" class="ml-2 text-xs">↕️</button>
-              </div>
+            <th class="border px-4 py-2">Sponsor
+              <select id="filter-sponsor" class="ml-2 p-1 text-xs border rounded">
+                <option value="">All</option>
+              </select>
+              <button id="sort-sponsor" class="ml-2 text-xs">↕️</button>
             </th>
-            <th class="border px-4 py-2">
-              <div class="flex items-center">
-                <span>Timestamp</span>
-                <button id="sort-timestamp" class="ml-2 text-xs">↕️</button>
-              </div>
+            <th class="border px-4 py-2">Timestamp
+              <button id="sort-timestamp" class="ml-2 text-xs">↕️</button>
             </th>
           </tr>
         </thead>
         <tbody>
   `;
 
-  // Aggiungi i dati alla tabella
   data.forEach(record => {
     tableHTML += `
       <tr>
@@ -1438,133 +1431,125 @@ function displayLogData(data) {
   });
   tableHTML += '</tbody></table></div>';
 
-  // Inserisci la tabella nel contenitore
   container.innerHTML = tableHTML;
 
-  // Popolare i dropdowns dinamicamente solo una volta
   if (!filtersPopulated) {
-    populateFilters(data);  // Popola solo una volta
-    filtersPopulated = true; // Imposta la variabile di stato a true
+    populateFilters(data);
+    filtersPopulated = true;
   }
 
-  // Filtri per ogni colonna
-  document.getElementById('filter-username').addEventListener('change', filterData);
-  document.getElementById('filter-token').addEventListener('change', filterData);
-  document.getElementById('filter-channel').addEventListener('change', filterData);
-  document.getElementById('filter-sponsor').addEventListener('change', filterData);
+  document.getElementById('apply-filters').addEventListener('click', filterData);
+  document.getElementById('reset-filters').addEventListener('click', resetFilters);
+  document.getElementById('search-bar').addEventListener('input', searchFilter);
 
-  // Ordinamento per tutte le colonne con switch tra ascendente e discendente
+  setupSorting(data);
+}
+
+function populateFilters(data) {
+  const usernames = [...new Set(data.map(item => item.username))];
+  const tokens = [...new Set(data.map(item => item.token_symbol))];
+  const channels = [...new Set(data.map(item => item.channel))];
+  const sponsors = [...new Set(data.map(item => item.origin_channel))];
+
+  const usernameSelect = document.getElementById('filter-username');
+  const tokenSelect = document.getElementById('filter-token');
+  const channelSelect = document.getElementById('filter-channel');
+  const sponsorSelect = document.getElementById('filter-sponsor');
+
+  populateDropdown(usernameSelect, usernames);
+  populateDropdown(tokenSelect, tokens);
+  populateDropdown(channelSelect, channels);
+  populateDropdown(sponsorSelect, sponsors);
+}
+
+function populateDropdown(selectElement, options) {
+  options.forEach(option => {
+    const optionElement = document.createElement('option');
+    optionElement.value = option;
+    optionElement.textContent = option;
+    selectElement.appendChild(optionElement);
+  });
+}
+
+function filterData() {
+  const usernameFilter = document.getElementById('filter-username').value.toLowerCase();
+  const tokenFilter = document.getElementById('filter-token').value.toLowerCase();
+  const channelFilter = document.getElementById('filter-channel').value.toLowerCase();
+  const sponsorFilter = document.getElementById('filter-sponsor').value.toLowerCase();
+
+  const filteredData = originalData.filter(record => {
+    return (
+      (usernameFilter === "" || record.username.toLowerCase().includes(usernameFilter)) &&
+      (tokenFilter === "" || record.token_symbol.toLowerCase().includes(tokenFilter)) &&
+      (channelFilter === "" || record.channel.toLowerCase().includes(channelFilter)) &&
+      (sponsorFilter === "" || record.origin_channel.toLowerCase().includes(sponsorFilter))
+    );
+  });
+
+  displayLogData(filteredData);
+}
+
+function resetFilters() {
+  document.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+  document.getElementById('search-bar').value = '';
+  displayLogData(originalData);
+}
+
+function searchFilter(event) {
+  const query = event.target.value.toLowerCase();
+  const filteredData = originalData.filter(record =>
+    record.username.toLowerCase().includes(query) ||
+    record.token_symbol.toLowerCase().includes(query) ||
+    record.channel.toLowerCase().includes(query) ||
+    record.origin_channel.toLowerCase().includes(query)
+  );
+  displayLogData(filteredData);
+}
+
+function setupSorting(data) {
   let usernameAsc = true;
   document.getElementById('sort-username').addEventListener('click', () => {
     usernameAsc = !usernameAsc;
     const sortedData = [...data].sort((a, b) => usernameAsc ? a.username.localeCompare(b.username) : b.username.localeCompare(a.username));
     displayLogData(sortedData);
   });
-  
+
   let tokenAsc = true;
   document.getElementById('sort-token').addEventListener('click', () => {
     tokenAsc = !tokenAsc;
     const sortedData = [...data].sort((a, b) => tokenAsc ? a.token_symbol.localeCompare(b.token_symbol) : b.token_symbol.localeCompare(a.token_symbol));
     displayLogData(sortedData);
   });
-  
+
   let amountAsc = true;
   document.getElementById('sort-amount').addEventListener('click', () => {
     amountAsc = !amountAsc;
     const sortedData = [...data].sort((a, b) => amountAsc ? a.amount - b.amount : b.amount - a.amount);
     displayLogData(sortedData);
   });
-  
+
   let channelAsc = true;
   document.getElementById('sort-channel').addEventListener('click', () => {
     channelAsc = !channelAsc;
     const sortedData = [...data].sort((a, b) => channelAsc ? a.channel.localeCompare(b.channel) : b.channel.localeCompare(a.channel));
     displayLogData(sortedData);
   });
-  
+
   let sponsorAsc = true;
   document.getElementById('sort-sponsor').addEventListener('click', () => {
     sponsorAsc = !sponsorAsc;
     const sortedData = [...data].sort((a, b) => sponsorAsc ? a.origin_channel.localeCompare(b.origin_channel) : b.origin_channel.localeCompare(a.origin_channel));
     displayLogData(sortedData);
   });
-  
+
   let timestampAsc = true;
   document.getElementById('sort-timestamp').addEventListener('click', () => {
     timestampAsc = !timestampAsc;
     const sortedData = [...data].sort((a, b) => timestampAsc ? new Date(a.timestamp) - new Date(b.timestamp) : new Date(b.timestamp) - new Date(a.timestamp));
     displayLogData(sortedData);
   });
-  
-  // Funzione per reset dei filtri
-  document.getElementById('reset-filters').addEventListener('click', () => {
-    // Log per monitorare il reset dei filtri
-    console.log('Resetting filters...');
-  
-    // Reset dei valori dei dropdowns (ripristina a "All")
-    document.querySelectorAll('select[multiple]').forEach(select => {
-      select.selectedIndex = 0;  // Seleziona "All"
-      Array.from(select.options).forEach(option => {
-        option.selected = false; // Deseleziona tutte le altre opzioni
-      });
-    });
-  
-    // Log per confermare che i filtri sono stati resettati
-    console.log('Filters reset complete.');
-  
-    // Ricarica tutti i dati senza filtri e senza ordinamento
-    displayLogData(originalData);  // Usa i dati originali memorizzati
-  
-    // Log per confermare il caricamento dei dati
-    console.log('Data reloaded and displayed without filters.');
-  });
-
-  function populateFilters(data) {
-    // Estrai i valori unici da ogni colonna
-    const usernames = [...new Set(data.map(item => item.username))];
-    const tokens = [...new Set(data.map(item => item.token_symbol))];
-    const channels = [...new Set(data.map(item => item.channel))];
-    const sponsors = [...new Set(data.map(item => item.origin_channel))];
-
-    // Popola i dropdowns con le opzioni uniche
-    const usernameSelect = document.getElementById('filter-username');
-    const tokenSelect = document.getElementById('filter-token');
-    const channelSelect = document.getElementById('filter-channel');
-    const sponsorSelect = document.getElementById('filter-sponsor');
-
-    populateDropdown(usernameSelect, usernames);
-    populateDropdown(tokenSelect, tokens);
-    populateDropdown(channelSelect, channels);
-    populateDropdown(sponsorSelect, sponsors);
-  }
-
-  function populateDropdown(selectElement, options) {
-    options.forEach(option => {
-      const optionElement = document.createElement('option');
-      optionElement.value = option;
-      optionElement.textContent = option;
-      selectElement.appendChild(optionElement);
-    });
-  }
-
-  function filterData() {
-    const usernameFilter = document.getElementById('filter-username').value.toLowerCase();
-    const tokenFilter = document.getElementById('filter-token').value.toLowerCase();
-    const channelFilter = document.getElementById('filter-channel').value.toLowerCase();
-    const sponsorFilter = document.getElementById('filter-sponsor').value.toLowerCase();
-  
-    const filteredData = data.filter(record => {
-      return (
-        (usernameFilter === "" || record.username.toLowerCase().includes(usernameFilter)) &&
-        (tokenFilter === "" || record.token_symbol.toLowerCase().includes(tokenFilter)) &&
-        (channelFilter === "" || record.channel.toLowerCase().includes(channelFilter)) &&
-        (sponsorFilter === "" || record.origin_channel.toLowerCase().includes(sponsorFilter))
-      );
-    });
-  
-    displayLogData(filteredData);
-  }
 }
+
 // Load Log Storms & Giveaways
 async function loadLogStormsGiveaways() {
   const container = document.getElementById('c2e-content');

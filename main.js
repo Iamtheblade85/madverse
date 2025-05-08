@@ -2338,7 +2338,7 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
     console.error("[❌] userId non trovato in window.userData. Assicurati che i dati siano caricati prima di eseguire l'azione.");
     return; // Interrompe l'esecuzione se userId non è presente
   }
-  const { userId, usx_token } = window.userData;
+  const { userId, usx_token, wax_account } = window.userData;
   let endpoint = "";
 
   if (action === "withdraw") {

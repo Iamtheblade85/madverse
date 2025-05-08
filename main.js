@@ -1372,13 +1372,17 @@ function displayLogData(data) {
             <th class="border px-4 py-2">
               <div class="flex items-center">
                 <span>Username</span>
-                <input type="text" id="filter-username" class="ml-2 p-1 text-xs border rounded" placeholder="Filter">
+                <select id="filter-username" class="ml-2 p-1 text-xs border rounded">
+                  <option value="">All</option>
+                </select>
               </div>
             </th>
             <th class="border px-4 py-2">
               <div class="flex items-center">
                 <span>Token</span>
-                <input type="text" id="filter-token" class="ml-2 p-1 text-xs border rounded" placeholder="Filter">
+                <select id="filter-token" class="ml-2 p-1 text-xs border rounded">
+                  <option value="">All</option>
+                </select>
               </div>
             </th>
             <th class="border px-4 py-2">
@@ -1390,13 +1394,17 @@ function displayLogData(data) {
             <th class="border px-4 py-2">
               <div class="flex items-center">
                 <span>Channel</span>
-                <input type="text" id="filter-channel" class="ml-2 p-1 text-xs border rounded" placeholder="Filter">
+                <select id="filter-channel" class="ml-2 p-1 text-xs border rounded">
+                  <option value="">All</option>
+                </select>
               </div>
             </th>
             <th class="border px-4 py-2">
               <div class="flex items-center">
                 <span>Sponsor</span>
-                <input type="text" id="filter-sponsor" class="ml-2 p-1 text-xs border rounded" placeholder="Filter">
+                <select id="filter-sponsor" class="ml-2 p-1 text-xs border rounded">
+                  <option value="">All</option>
+                </select>
               </div>
             </th>
             <th class="border px-4 py-2">
@@ -1429,11 +1437,14 @@ function displayLogData(data) {
   // Inserisci la tabella nel contenitore
   container.innerHTML = tableHTML;
 
+  // Popolare i dropdowns dinamicamente
+  populateFilters(data);
+
   // Filtri per ogni colonna
-  document.getElementById('filter-username').addEventListener('input', filterData);
-  document.getElementById('filter-token').addEventListener('input', filterData);
-  document.getElementById('filter-channel').addEventListener('input', filterData);
-  document.getElementById('filter-sponsor').addEventListener('input', filterData);
+  document.getElementById('filter-username').addEventListener('change', filterData);
+  document.getElementById('filter-token').addEventListener('change', filterData);
+  document.getElementById('filter-channel').addEventListener('change', filterData);
+  document.getElementById('filter-sponsor').addEventListener('change', filterData);
 
   // Ordinamento
   let amountAsc = true;
@@ -1450,6 +1461,34 @@ function displayLogData(data) {
     displayLogData(sortedData);
   });
 
+  function populateFilters(data) {
+    // Estrai i valori unici da ogni colonna
+    const usernames = [...new Set(data.map(item => item.username))];
+    const tokens = [...new Set(data.map(item => item.token_symbol))];
+    const channels = [...new Set(data.map(item => item.channel))];
+    const sponsors = [...new Set(data.map(item => item.origin_channel))];
+
+    // Popola i dropdowns
+    const usernameSelect = document.getElementById('filter-username');
+    const tokenSelect = document.getElementById('filter-token');
+    const channelSelect = document.getElementById('filter-channel');
+    const sponsorSelect = document.getElementById('filter-sponsor');
+
+    populateDropdown(usernameSelect, usernames);
+    populateDropdown(tokenSelect, tokens);
+    populateDropdown(channelSelect, channels);
+    populateDropdown(sponsorSelect, sponsors);
+  }
+
+  function populateDropdown(selectElement, options) {
+    options.forEach(option => {
+      const optionElement = document.createElement('option');
+      optionElement.value = option;
+      optionElement.textContent = option;
+      selectElement.appendChild(optionElement);
+    });
+  }
+
   function filterData() {
     const usernameFilter = document.getElementById('filter-username').value.toLowerCase();
     const tokenFilter = document.getElementById('filter-token').value.toLowerCase();
@@ -1458,17 +1497,16 @@ function displayLogData(data) {
 
     const filteredData = data.filter(record => {
       return (
-        (record.username.toLowerCase().includes(usernameFilter)) &&
-        (record.token_symbol.toLowerCase().includes(tokenFilter)) &&
-        (record.channel.toLowerCase().includes(channelFilter)) &&
-        (record.origin_channel.toLowerCase().includes(sponsorFilter))
+        (usernameFilter === "" || record.username.toLowerCase().includes(usernameFilter)) &&
+        (tokenFilter === "" || record.token_symbol.toLowerCase().includes(tokenFilter)) &&
+        (channelFilter === "" || record.channel.toLowerCase().includes(channelFilter)) &&
+        (sponsorFilter === "" || record.origin_channel.toLowerCase().includes(sponsorFilter))
       );
     });
 
     displayLogData(filteredData);
   }
-}
-// Load Log Storms & Giveaways
+}// Load Log Storms & Giveaways
 async function loadLogStormsGiveaways() {
   const container = document.getElementById('c2e-content');
   container.innerHTML = 'Loading Log Storms & Giveaways...';

@@ -1383,30 +1383,30 @@ function displayLogData(data) {
         <thead>
           <tr class="bg-gray-100">
             <th class="border px-4 py-2">Username
-              <select id="filter-username" class="ml-2 p-1 text-xs border rounded">
-                <option value="">All</option>
-              </select>
+              <div id="filter-username" class="filter-checkboxes">
+                <!-- Dynamically populated checkboxes -->
+              </div>
               <button id="sort-username" class="ml-2 text-xs">↕️</button>
             </th>
             <th class="border px-4 py-2">Token
-              <select id="filter-token" class="ml-2 p-1 text-xs border rounded">
-                <option value="">All</option>
-              </select>
+              <div id="filter-token" class="filter-checkboxes">
+                <!-- Dynamically populated checkboxes -->
+              </div>
               <button id="sort-token" class="ml-2 text-xs">↕️</button>
             </th>
             <th class="border px-4 py-2">Amount
               <button id="sort-amount" class="ml-2 text-xs">↕️</button>
             </th>
             <th class="border px-4 py-2">Channel
-              <select id="filter-channel" class="ml-2 p-1 text-xs border rounded">
-                <option value="">All</option>
-              </select>
+              <div id="filter-channel" class="filter-checkboxes">
+                <!-- Dynamically populated checkboxes -->
+              </div>
               <button id="sort-channel" class="ml-2 text-xs">↕️</button>
             </th>
             <th class="border px-4 py-2">Sponsor
-              <select id="filter-sponsor" class="ml-2 p-1 text-xs border rounded">
-                <option value="">All</option>
-              </select>
+              <div id="filter-sponsor" class="filter-checkboxes">
+                <!-- Dynamically populated checkboxes -->
+              </div>
               <button id="sort-sponsor" class="ml-2 text-xs">↕️</button>
             </th>
             <th class="border px-4 py-2">Timestamp
@@ -1417,6 +1417,7 @@ function displayLogData(data) {
         <tbody>
   `;
 
+  // Aggiungi le righe della tabella
   data.forEach(record => {
     tableHTML += `
       <tr>
@@ -1429,6 +1430,7 @@ function displayLogData(data) {
       </tr>
     `;
   });
+
   tableHTML += '</tbody></table></div>';
 
   container.innerHTML = tableHTML;
@@ -1451,16 +1453,53 @@ function populateFilters(data) {
   const channels = [...new Set(data.map(item => item.channel))];
   const sponsors = [...new Set(data.map(item => item.origin_channel))];
 
-  const usernameSelect = document.getElementById('filter-username');
-  const tokenSelect = document.getElementById('filter-token');
-  const channelSelect = document.getElementById('filter-channel');
-  const sponsorSelect = document.getElementById('filter-sponsor');
+  populateCheckboxes('filter-username', usernames);
+  populateCheckboxes('filter-token', tokens);
+  populateCheckboxes('filter-channel', channels);
+  populateCheckboxes('filter-sponsor', sponsors);
+}
 
-  // Aggiungi opzioni uniche ai dropdown
-  populateDropdown(usernameSelect, usernames);
-  populateDropdown(tokenSelect, tokens);
-  populateDropdown(channelSelect, channels);
-  populateDropdown(sponsorSelect, sponsors);
+function populateCheckboxes(filterId, options) {
+  const filterContainer = document.getElementById(filterId);
+  filterContainer.innerHTML = ''; // Pulisci prima le opzioni
+
+  // Crea la checkbox per "All"
+  const allCheckbox = document.createElement('input');
+  allCheckbox.type = 'checkbox';
+  allCheckbox.id = `${filterId}-all`;
+  allCheckbox.checked = true;
+  allCheckbox.addEventListener('change', toggleAllCheckboxes);
+  const allLabel = document.createElement('label');
+  allLabel.setAttribute('for', `${filterId}-all`);
+  allLabel.textContent = 'All';
+  filterContainer.appendChild(allCheckbox);
+  filterContainer.appendChild(allLabel);
+  filterContainer.appendChild(document.createElement('br'));
+
+  // Aggiungi le checkbox per ciascun valore unico
+  options.forEach(option => {
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = option;
+    checkbox.id = `${filterId}-${option}`;
+    checkbox.addEventListener('change', filterData);
+    const label = document.createElement('label');
+    label.setAttribute('for', `${filterId}-${option}`);
+    label.textContent = option;
+    filterContainer.appendChild(checkbox);
+    filterContainer.appendChild(label);
+    filterContainer.appendChild(document.createElement('br'));
+  });
+}
+
+// Funzione per gestire la selezione/deselezione di "All"
+function toggleAllCheckboxes(event) {
+  const filterId = event.target.id.replace('-all', '');
+  const isChecked = event.target.checked;
+  document.querySelectorAll(`#${filterId} input[type="checkbox"]`).forEach(checkbox => {
+    checkbox.checked = isChecked;
+  });
+  filterData();
 }
 
 function populateDropdown(selectElement, options) {
@@ -1476,21 +1515,26 @@ function populateDropdown(selectElement, options) {
 }
 
 function filterData() {
-  const usernameFilter = document.getElementById('filter-username').value.toLowerCase();
-  const tokenFilter = document.getElementById('filter-token').value.toLowerCase();
-  const channelFilter = document.getElementById('filter-channel').value.toLowerCase();
-  const sponsorFilter = document.getElementById('filter-sponsor').value.toLowerCase();
+  const usernameFilter = getSelectedFilters('filter-username');
+  const tokenFilter = getSelectedFilters('filter-token');
+  const channelFilter = getSelectedFilters('filter-channel');
+  const sponsorFilter = getSelectedFilters('filter-sponsor');
 
   const filteredData = originalData.filter(record => {
     return (
-      (usernameFilter === "" || record.username.toLowerCase().includes(usernameFilter)) &&
-      (tokenFilter === "" || record.token_symbol.toLowerCase().includes(tokenFilter)) &&
-      (channelFilter === "" || record.channel.toLowerCase().includes(channelFilter)) &&
-      (sponsorFilter === "" || record.origin_channel.toLowerCase().includes(sponsorFilter))
+      (usernameFilter.length === 0 || usernameFilter.includes(record.username)) &&
+      (tokenFilter.length === 0 || tokenFilter.includes(record.token_symbol)) &&
+      (channelFilter.length === 0 || channelFilter.includes(record.channel)) &&
+      (sponsorFilter.length === 0 || sponsorFilter.includes(record.origin_channel))
     );
   });
 
   displayLogData(filteredData);
+}
+
+function getSelectedFilters(filterId) {
+  const checkboxes = document.querySelectorAll(`#${filterId} input[type="checkbox"]:checked`);
+  return Array.from(checkboxes).map(checkbox => checkbox.value);
 }
 
 function resetFilters() {
@@ -1519,46 +1563,30 @@ function searchFilter(event) {
 }
 
 function setupSorting(data) {
-  let usernameAsc = true;
-  document.getElementById('sort-username').addEventListener('click', () => {
-    usernameAsc = !usernameAsc;
-    const sortedData = [...data].sort((a, b) => usernameAsc ? a.username.localeCompare(b.username) : b.username.localeCompare(a.username));
-    displayLogData(sortedData);
-  });
+  const sortButtons = document.querySelectorAll('[id^="sort-"]');
+  
+  sortButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const column = button.id.replace('sort-', '');
+      const isAsc = button.classList.contains('asc');
+      const sortedData = [...data].sort((a, b) => {
+        let comparison = 0;
 
-  let tokenAsc = true;
-  document.getElementById('sort-token').addEventListener('click', () => {
-    tokenAsc = !tokenAsc;
-    const sortedData = [...data].sort((a, b) => tokenAsc ? a.token_symbol.localeCompare(b.token_symbol) : b.token_symbol.localeCompare(a.token_symbol));
-    displayLogData(sortedData);
-  });
+        if (typeof a[column] === 'string') {
+          comparison = a[column].localeCompare(b[column]);
+        } else {
+          comparison = a[column] - b[column];
+        }
 
-  let amountAsc = true;
-  document.getElementById('sort-amount').addEventListener('click', () => {
-    amountAsc = !amountAsc;
-    const sortedData = [...data].sort((a, b) => amountAsc ? a.amount - b.amount : b.amount - a.amount);
-    displayLogData(sortedData);
-  });
+        return isAsc ? comparison : -comparison;
+      });
 
-  let channelAsc = true;
-  document.getElementById('sort-channel').addEventListener('click', () => {
-    channelAsc = !channelAsc;
-    const sortedData = [...data].sort((a, b) => channelAsc ? a.channel.localeCompare(b.channel) : b.channel.localeCompare(a.channel));
-    displayLogData(sortedData);
-  });
+      displayLogData(sortedData);
 
-  let sponsorAsc = true;
-  document.getElementById('sort-sponsor').addEventListener('click', () => {
-    sponsorAsc = !sponsorAsc;
-    const sortedData = [...data].sort((a, b) => sponsorAsc ? a.origin_channel.localeCompare(b.origin_channel) : b.origin_channel.localeCompare(a.origin_channel));
-    displayLogData(sortedData);
-  });
-
-  let timestampAsc = true;
-  document.getElementById('sort-timestamp').addEventListener('click', () => {
-    timestampAsc = !timestampAsc;
-    const sortedData = [...data].sort((a, b) => timestampAsc ? new Date(a.timestamp) - new Date(b.timestamp) : new Date(b.timestamp) - new Date(a.timestamp));
-    displayLogData(sortedData);
+      // Toglia l'ordinamento
+      sortButtons.forEach(btn => btn.classList.remove('asc', 'desc'));
+      button.classList.add(isAsc ? 'desc' : 'asc');
+    });
   });
 }
 

@@ -1456,6 +1456,7 @@ function populateFilters(data) {
   const channelSelect = document.getElementById('filter-channel');
   const sponsorSelect = document.getElementById('filter-sponsor');
 
+  // Aggiungi opzioni uniche ai dropdown
   populateDropdown(usernameSelect, usernames);
   populateDropdown(tokenSelect, tokens);
   populateDropdown(channelSelect, channels);
@@ -1463,6 +1464,9 @@ function populateFilters(data) {
 }
 
 function populateDropdown(selectElement, options) {
+  // Pulisce le opzioni esistenti
+  selectElement.innerHTML = '<option value="">All</option>';
+
   options.forEach(option => {
     const optionElement = document.createElement('option');
     optionElement.value = option;
@@ -1490,9 +1494,17 @@ function filterData() {
 }
 
 function resetFilters() {
+  // Ripristina i valori dei dropdowns (a "All")
   document.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+
+  // Pulisci la barra di ricerca
   document.getElementById('search-bar').value = '';
-  displayLogData(originalData);
+
+  // Ripristina i dati originali nella tabella
+  displayLogData(originalData);  // Usa i dati originali per la tabella
+
+  // Ripopolare i dropdown con le opzioni originali
+  populateFilters(originalData); // Popola i filtri con i dati originali
 }
 
 function searchFilter(event) {

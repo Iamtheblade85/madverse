@@ -2351,8 +2351,7 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
   }
 
   // Aggiungiamo user_id e usx_token all'URL
-  const fullUrl = `${endpoint}?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
-
+  const fullUrl = `${endpoint}?user_id=${encodeURIComponent(window.userData.userId)}&usx_token=${encodeURIComponent(window.userData.usx_token)}`;
   console.info(`[📤] Eseguo azione ${action} chiamando: ${fullUrl}`);
 
   let response;

@@ -1358,7 +1358,9 @@ async function loadLogRewardActivity() {
   } catch (err) {
     container.innerHTML = `<div class="text-red-500">Error loading log reward activity: ${err.message}</div>`;
   }
-} function displayLogData(data) {
+} let filtersPopulated = false;  // Aggiungi questa variabile
+
+function displayLogData(data) {
   const container = document.getElementById('c2e-content');
   
   // Crea una tabella con i filtri per ogni colonna
@@ -1435,14 +1437,21 @@ async function loadLogRewardActivity() {
     `;
   });
   tableHTML += '</tbody></table></div>';
-  
+
   // Inserisci la tabella nel contenitore
   container.innerHTML = tableHTML;
 
   // Popolare i dropdowns dinamicamente solo una volta
-  if (document.getElementById('filter-username').children.length === 1) {
-    populateFilters(data);
+  if (!filtersPopulated) {
+    populateFilters(data);  // Popola solo una volta
+    filtersPopulated = true; // Imposta la variabile di stato a true
   }
+
+  // Filtri per ogni colonna
+  document.getElementById('filter-username').addEventListener('change', filterData);
+  document.getElementById('filter-token').addEventListener('change', filterData);
+  document.getElementById('filter-channel').addEventListener('change', filterData);
+  document.getElementById('filter-sponsor').addEventListener('change', filterData);
 
   // Ordinamento per tutte le colonne con switch tra ascendente e discendente
   let usernameAsc = true;
@@ -1488,28 +1497,28 @@ async function loadLogRewardActivity() {
   });
   
   // Funzione per reset dei filtri
-  document.addEventListener('DOMContentLoaded', function() {
-    // Aggiungi l'event listener per il pulsante Reset Filter
-    document.getElementById('reset-filters').addEventListener('click', () => {
-      console.log('Resetting filters...');
-      // Reset dei valori dei dropdowns
-      document.querySelectorAll('select[multiple]').forEach(select => {
-          console.log(`Resetting select dropdown: ${select.id}`);
-          select.selectedIndex = 0;  // Seleziona "All"
-          Array.from(select.options).forEach(option => {
-              option.selected = false; // Deseleziona tutte le altre opzioni
-              console.log(`Deselected option: ${option.value}`);
-          });
-          console.log(`Dropdown reset for: ${select.id} with selectedIndex: ${select.selectedIndex}`);
+  document.getElementById('reset-filters').addEventListener('click', () => {
+    // Log per monitorare il reset dei filtri
+    console.log('Resetting filters...');
+  
+    // Reset dei valori dei dropdowns (ripristina a "All")
+    document.querySelectorAll('select[multiple]').forEach(select => {
+      select.selectedIndex = 0;  // Seleziona "All"
+      Array.from(select.options).forEach(option => {
+        option.selected = false; // Deseleziona tutte le altre opzioni
       });
-  
-      // Ricarica i dati originali senza filtri
-      console.log('Reloading original data without filters or sorting...');
-      displayLogData(originalData);
-      console.log('Data reloaded and displayed.');
     });
-  });
   
+    // Log per confermare che i filtri sono stati resettati
+    console.log('Filters reset complete.');
+  
+    // Ricarica tutti i dati senza filtri e senza ordinamento
+    displayLogData(originalData);  // Usa i dati originali memorizzati
+  
+    // Log per confermare il caricamento dei dati
+    console.log('Data reloaded and displayed without filters.');
+  });
+
   function populateFilters(data) {
     // Estrai i valori unici da ogni colonna
     const usernames = [...new Set(data.map(item => item.username))];
@@ -1543,7 +1552,7 @@ async function loadLogRewardActivity() {
     const tokenFilter = document.getElementById('filter-token').value.toLowerCase();
     const channelFilter = document.getElementById('filter-channel').value.toLowerCase();
     const sponsorFilter = document.getElementById('filter-sponsor').value.toLowerCase();
-
+  
     const filteredData = data.filter(record => {
       return (
         (usernameFilter === "" || record.username.toLowerCase().includes(usernameFilter)) &&
@@ -1552,7 +1561,7 @@ async function loadLogRewardActivity() {
         (sponsorFilter === "" || record.origin_channel.toLowerCase().includes(sponsorFilter))
       );
     });
-
+  
     displayLogData(filteredData);
   }
 }

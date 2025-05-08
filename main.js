@@ -2364,15 +2364,28 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
       }
       bodyData.receiver = receiver;
     } else if (action === "stake") {
-      // Recupero pool_id dal window.tokenPoolsData
+      // Verifica se `window.tokenPoolsData` è già stato caricato
+      if (!window.tokenPoolsData || window.tokenPoolsData.length === 0) {
+        console.info("[🧰] Caricamento dati delle staking pools...");
+        
+        // Chiama la funzione per caricare i dati delle pools
+        await fetchAndRenderTokenPools();
+
+        // Dopo aver caricato i dati, verifica se è stato trovato il pool per il token
+        if (!window.tokenPoolsData || window.tokenPoolsData.length === 0) {
+          throw new Error("No staking pools data available after loading.");
+        }
+      }
+
+      // Recupera il pool_id dal token selezionato
       const poolData = window.tokenPoolsData.find(pool => pool.deposit_token.symbol.toLowerCase() === token.toLowerCase());
       
       if (!poolData) {
         throw new Error(`No staking pool found for token ${token}`);
       }
 
-      // Aggiungo pool_id ai dati per la richiesta di staking
-      bodyData.pool_id = poolData.pool_id;  // Ottieni il pool_id dal dato trovato
+      // Aggiungi il pool_id ai dati per la richiesta di staking
+      bodyData.pool_id = poolData.pool_id;  // Ottieni il pool_id dalla pool trovata
       console.info(`[📤] Pool ID per ${token}: ${poolData.pool_id}`);
     }
     

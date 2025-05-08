@@ -107,7 +107,7 @@ async function loadCreateTokenStaking() {
   await fetchAndRenderTokenPools();
 }
 window.loadCreateTokenStaking = loadCreateTokenStaking;
-async function fetchAndRenderTokenPools() {
+async function fetchAndRenderTokenPools(shouldRender = true) {
   const { userId } = window.userData;
   const container = document.getElementById('token-pool-details');
 
@@ -120,22 +120,24 @@ async function fetchAndRenderTokenPools() {
     // Verifica se il container esiste prima di tentare di modificarlo
     if (!container) {
       console.warn("[⚠️] Container 'token-pool-details' non trovato, solo i dati vengono recuperati.");
-      window.tokenPoolsData = data.pools;  // Salva i dati senza tentare di fare rendering
+      window.tokenPoolsData = data.pools;  // Salva i dati senza fare rendering
       return;  // Esci dalla funzione senza fare rendering
     }
 
-    // Se l'elemento container esiste, fai il rendering
-    if (!res.ok || !data.pools) {
-      container.innerHTML = `<div class="text-gray-600 italic">No token staking pools found.</div>`;
-      return;
-    }
+    // Se la flag shouldRender è true, esegui il rendering
+    if (shouldRender) {
+      if (!res.ok || !data.pools) {
+        container.innerHTML = `<div class="text-gray-600 italic">No token staking pools found.</div>`;
+        return;
+      }
 
-    window.tokenPoolsData = data.pools;
-    console.log("[📦] window.tokenPoolsData assegnato:", window.tokenPoolsData);
-    renderCreatedTokenPoolButtons(data.pools);
-    renderTokenPoolDetails(data.pools[0]);
+      window.tokenPoolsData = data.pools;
+      console.log("[📦] window.tokenPoolsData assegnato:", window.tokenPoolsData);
+      renderCreatedTokenPoolButtons(data.pools);
+      renderTokenPoolDetails(data.pools[0]);
+    }
   } catch (err) {
-    if (container) {
+    if (container && shouldRender) {
       container.innerHTML = `<div class="text-red-500">Error loading token pools.</div>`;
     }
     console.error("[❌] Error loading pools:", err);
@@ -2380,7 +2382,7 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
         console.info("[🧰] Caricamento dati delle staking pools...");
         
         // Chiama la funzione per caricare i dati delle pools
-        await fetchAndRenderTokenPools();
+        await fetchAndRenderTokenPools(false);
 
         // Dopo aver caricato i dati, verifica se è stato trovato il pool per il token
         if (!window.tokenPoolsData || window.tokenPoolsData.length === 0) {

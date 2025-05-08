@@ -116,6 +116,15 @@ async function fetchAndRenderTokenPools() {
     const data = await res.json();
     console.log("[📥] Data received from backend:", data);
     console.log("[🧪] Controllo data.pools:", data?.pools);
+
+    // Se l'elemento container non esiste, solo recuperiamo i dati senza fare rendering
+    if (!container) {
+      window.tokenPoolsData = data.pools;
+      console.log("[📦] Token pools salvati in window.tokenPoolsData:", window.tokenPoolsData);
+      return; // Esci dalla funzione senza fare rendering
+    }
+
+    // Se l'elemento container esiste, continua con il rendering
     if (!res.ok || !data.pools) {
       container.innerHTML = `<div class="text-gray-600 italic">No token staking pools found.</div>`;
       return;
@@ -126,11 +135,12 @@ async function fetchAndRenderTokenPools() {
     renderCreatedTokenPoolButtons(data.pools);
     renderTokenPoolDetails(data.pools[0]);
   } catch (err) {
-    container.innerHTML = `<div class="text-red-500">Error loading token pools.</div>`;
+    if (container) {
+      container.innerHTML = `<div class="text-red-500">Error loading token pools.</div>`;
+    }
     console.error("[❌] Error loading pools:", err);
   }
-}
-function renderNewTokenPoolForm() {
+} function renderNewTokenPoolForm() {
   const container = document.getElementById('token-pool-details');
   container.innerHTML = `
     <div class="bg-white p-6 rounded shadow max-w-xl mx-auto">

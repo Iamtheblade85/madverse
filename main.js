@@ -1081,43 +1081,49 @@ window.openEditRewards = openEditRewards;
 function loadSection(section) {
   console.log(`[📦] Caricando sezione: ${section}`);
   const app = document.getElementById('app');
-  if (section === 'c2e-twitch') {
-    // New C2E - Twitch Section with Menu
-    app.innerHTML = `
-      <h2 class="text-2xl font-semibold mb-4">C2E - Twitch</h2>
-      <div class="menu">
-        <button class="menu-btn" data-menu="log-reward-activity">Log Reward Activity</button>
-        <button class="menu-btn" data-menu="log-storms-giveaways">Log Storms & Giveaways</button>
-        <button class="menu-btn" data-menu="schedule-token-storm">Schedule Token-Storm</button>
-        <button class="menu-btn" data-menu="schedule-nft-giveaway">Schedule NFT-Giveaway</button>
-      </div>
-      <div id="c2e-content">Loading last activity...</div>
-    `;
+if (section === 'c2e-twitch') {
+  // Nuova sezione C2E - Twitch con menu responsivo
+  app.innerHTML = `
+    <h2 class="text-2xl font-semibold mb-4 text-center">C2E - Twitch</h2>
+    <div class="menu flex flex-wrap justify-center gap-4 mb-8">
+      <button class="menu-btn p-4 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" data-menu="log-reward-activity">Log Reward Activity</button>
+      <button class="menu-btn p-4 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" data-menu="log-storms-giveaways">Log Storms & Giveaways</button>
+      <button class="menu-btn p-4 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" data-menu="schedule-token-storm">Schedule Token-Storm</button>
+      <button class="menu-btn p-4 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" data-menu="schedule-nft-giveaway">Schedule NFT-Giveaway</button>
+    </div>
+    <div id="c2e-content" class="text-center text-gray-700">Loading last activity...</div>
+  `;
 
-    // Set default view as Log Reward Activity
-    loadLogRewardActivity();
+  // Set default view as Log Reward Activity
+  loadLogRewardActivity();
 
-    // Handle menu switching
-    document.querySelectorAll('.menu-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const menu = e.target.getAttribute('data-menu');
-        switch(menu) {
-          case 'log-reward-activity':
-            loadLogRewardActivity();
-            break;
-          case 'log-storms-giveaways':
-            loadLogStormsGiveaways();
-            break;
-          case 'schedule-token-storm':
-            loadScheduledStorms();
-            break;
-          case 'schedule-nft-giveaway':
-            loadScheduleNFTGiveaway();
-            break;
-        }
-      });
+  // Gestisci il cambio di menu
+  document.querySelectorAll('.menu-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      // Rimuovi la classe 'active' da tutti i pulsanti
+      document.querySelectorAll('.menu-btn').forEach(button => button.classList.remove('bg-blue-700', 'text-white'));
+
+      // Aggiungi la classe 'active' al pulsante cliccato
+      e.target.classList.add('bg-blue-700', 'text-white');
+      
+      const menu = e.target.getAttribute('data-menu');
+      switch(menu) {
+        case 'log-reward-activity':
+          loadLogRewardActivity();
+          break;
+        case 'log-storms-giveaways':
+          loadLogStormsGiveaways();
+          break;
+        case 'schedule-token-storm':
+          loadScheduledStorms();
+          break;
+        case 'schedule-nft-giveaway':
+          loadScheduleNFTGiveaway();
+          break;
+      }
     });
-  } else if (section === 'wallet') {
+  });
+} else if (section === 'wallet') {
     app.innerHTML = `
       <h2 class="text-2xl font-semibold mb-4">Wallet</h2>
       <div id="wallet-table">Caricamento Wallet...</div>
@@ -1327,31 +1333,29 @@ function loadSection(section) {
 } // Load Log Reward Activity
 async function loadLogRewardActivity() {
   const container = document.getElementById('c2e-content');
-  container.innerHTML = 'Loading Log Reward Activity...';  // Mostra un messaggio di caricamento
+  container.innerHTML = 'Loading Log Reward Activity...';  // Messaggio di caricamento
 
   try {
-    // Richiesta GET all'endpoint per ottenere i log delle attività di reward
     const res = await fetch(`${BASE_URL}/log_reward_activity`);
     
-    // Verifica se la risposta è stata ok
     if (!res.ok) {
       throw new Error('Network response was not ok');
     }
 
-    // Ottieni i dati in formato JSON
     const data = await res.json();
 
-    // Se non ci sono dati, mostra un messaggio
     if (data.length === 0) {
       container.innerHTML = '<div>No reward activity logs found.</div>';
       return;
     }
 
-    // Funzione per visualizzare i dati in una tabella
-    displayLogData(data);
+    // Mostra solo i 20 record più recenti
+    const recentData = data.slice(0, 20).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    // Visualizza i dati nella tabella
+    displayLogData(recentData);
 
   } catch (err) {
-    // Gestione degli errori, nel caso ci sia un problema con la richiesta
     container.innerHTML = `<div class="text-red-500">Error loading log reward activity: ${err.message}</div>`;
   }
 }
@@ -1359,39 +1363,111 @@ async function loadLogRewardActivity() {
 function displayLogData(data) {
   const container = document.getElementById('c2e-content');
   
-  // Crea una tabella HTML
-  let tableHTML = '<table class="table-auto border-collapse w-full text-sm text-left text-gray-900">';
-  tableHTML += '<thead>';
-  tableHTML += '<tr>';
-  tableHTML += '<th class="border px-4 py-2">Username</th>';
-  tableHTML += '<th class="border px-4 py-2">Token</th>';
-  tableHTML += '<th class="border px-4 py-2">Amount</th>';
-  tableHTML += '<th class="border px-4 py-2">Channel</th>';
-  tableHTML += '<th class="border px-4 py-2">Sponsor</th>';
-  tableHTML += '<th class="border px-4 py-2">Timestamp</th>';
-  tableHTML += '</tr>';
-  tableHTML += '</thead>';
+  // Crea una tabella con i filtri per ogni colonna
+  let tableHTML = `
+    <div class="overflow-x-auto">
+      <table class="table-auto border-collapse w-full text-sm text-left text-gray-900">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="border px-4 py-2">
+              <div class="flex items-center">
+                <span>Username</span>
+                <input type="text" id="filter-username" class="ml-2 p-1 text-xs border rounded" placeholder="Filter">
+              </div>
+            </th>
+            <th class="border px-4 py-2">
+              <div class="flex items-center">
+                <span>Token</span>
+                <input type="text" id="filter-token" class="ml-2 p-1 text-xs border rounded" placeholder="Filter">
+              </div>
+            </th>
+            <th class="border px-4 py-2">
+              <div class="flex items-center">
+                <span>Amount</span>
+                <button class="ml-2 text-xs" id="sort-amount">↕️</button>
+              </div>
+            </th>
+            <th class="border px-4 py-2">
+              <div class="flex items-center">
+                <span>Channel</span>
+                <input type="text" id="filter-channel" class="ml-2 p-1 text-xs border rounded" placeholder="Filter">
+              </div>
+            </th>
+            <th class="border px-4 py-2">
+              <div class="flex items-center">
+                <span>Sponsor</span>
+                <input type="text" id="filter-sponsor" class="ml-2 p-1 text-xs border rounded" placeholder="Filter">
+              </div>
+            </th>
+            <th class="border px-4 py-2">
+              <div class="flex items-center">
+                <span>Timestamp</span>
+                <button class="ml-2 text-xs" id="sort-timestamp">↕️</button>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
 
   // Aggiungi i dati alla tabella
-  tableHTML += '<tbody>';
   data.forEach(record => {
-    tableHTML += `<tr>`;
-    tableHTML += `<td class="border px-4 py-2">${record.username}</td>`;
-    tableHTML += `<td class="border px-4 py-2">${record.token_symbol}</td>`;
-    tableHTML += `<td class="border px-4 py-2">${record.amount}</td>`;
-    tableHTML += `<td class="border px-4 py-2">${record.channel}</td>`;
-    tableHTML += `<td class="border px-4 py-2">${record.origin_channel}</td>`;
-    tableHTML += `<td class="border px-4 py-2">${new Date(record.timestamp).toLocaleString()}</td>`;
-    tableHTML += `</tr>`;
+    tableHTML += `
+      <tr>
+        <td class="border px-4 py-2">${record.username}</td>
+        <td class="border px-4 py-2">${record.token_symbol}</td>
+        <td class="border px-4 py-2">${record.amount}</td>
+        <td class="border px-4 py-2">${record.channel}</td>
+        <td class="border px-4 py-2">${record.origin_channel}</td>
+        <td class="border px-4 py-2">${new Date(record.timestamp).toLocaleString()}</td>
+      </tr>
+    `;
   });
-  tableHTML += '</tbody>';
 
-  tableHTML += '</table>';
+  tableHTML += '</tbody></table></div>';
 
   // Inserisci la tabella nel contenitore
   container.innerHTML = tableHTML;
-}
 
+  // Filtri per ogni colonna
+  document.getElementById('filter-username').addEventListener('input', filterData);
+  document.getElementById('filter-token').addEventListener('input', filterData);
+  document.getElementById('filter-channel').addEventListener('input', filterData);
+  document.getElementById('filter-sponsor').addEventListener('input', filterData);
+
+  // Ordinamento
+  let amountAsc = true;
+  document.getElementById('sort-amount').addEventListener('click', () => {
+    amountAsc = !amountAsc;
+    const sortedData = [...data].sort((a, b) => amountAsc ? a.amount - b.amount : b.amount - a.amount);
+    displayLogData(sortedData);
+  });
+
+  let timestampAsc = true;
+  document.getElementById('sort-timestamp').addEventListener('click', () => {
+    timestampAsc = !timestampAsc;
+    const sortedData = [...data].sort((a, b) => timestampAsc ? new Date(a.timestamp) - new Date(b.timestamp) : new Date(b.timestamp) - new Date(a.timestamp));
+    displayLogData(sortedData);
+  });
+
+  function filterData() {
+    const usernameFilter = document.getElementById('filter-username').value.toLowerCase();
+    const tokenFilter = document.getElementById('filter-token').value.toLowerCase();
+    const channelFilter = document.getElementById('filter-channel').value.toLowerCase();
+    const sponsorFilter = document.getElementById('filter-sponsor').value.toLowerCase();
+
+    const filteredData = data.filter(record => {
+      return (
+        (record.username.toLowerCase().includes(usernameFilter)) &&
+        (record.token_symbol.toLowerCase().includes(tokenFilter)) &&
+        (record.channel.toLowerCase().includes(channelFilter)) &&
+        (record.origin_channel.toLowerCase().includes(sponsorFilter))
+      );
+    });
+
+    displayLogData(filteredData);
+  }
+}
 // Load Log Storms & Giveaways
 async function loadLogStormsGiveaways() {
   const container = document.getElementById('c2e-content');

@@ -2364,13 +2364,16 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
       }
       bodyData.receiver = receiver;
     } else if (action === "stake") {
-      // Aggiungi i parametri specifici per l'azione "stake"
-      const poolIdInput = document.getElementById('pool-id');
-      const poolId = poolIdInput ? poolIdInput.value.trim() : "";  // Aggiungi l'ID della pool per lo stake
-      if (!poolId) {
-        throw new Error("Pool ID is required for staking.");
+      // Recupero pool_id dal window.tokenPoolsData
+      const poolData = window.tokenPoolsData.find(pool => pool.deposit_token.symbol.toLowerCase() === token.toLowerCase());
+      
+      if (!poolData) {
+        throw new Error(`No staking pool found for token ${token}`);
       }
-      bodyData.pool_id = poolId;  // Aggiungi l'ID della pool per lo stake
+
+      // Aggiungo pool_id ai dati per la richiesta di staking
+      bodyData.pool_id = poolData.pool_id;  // Ottieni il pool_id dal dato trovato
+      console.info(`[📤] Pool ID per ${token}: ${poolData.pool_id}`);
     }
     
     const body = JSON.stringify(bodyData);

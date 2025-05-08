@@ -1374,6 +1374,7 @@ async function loadLogRewardActivity() {
                 <select id="filter-username" class="ml-2 p-1 text-xs border rounded">
                   <option value="">All</option>
                 </select>
+                <button id="sort-username" class="ml-2 text-xs">↕️</button>
               </div>
             </th>
             <th class="border px-4 py-2">
@@ -1382,6 +1383,7 @@ async function loadLogRewardActivity() {
                 <select id="filter-token" class="ml-2 p-1 text-xs border rounded">
                   <option value="">All</option>
                 </select>
+                <button id="sort-token" class="ml-2 text-xs">↕️</button>
               </div>
             </th>
             <th class="border px-4 py-2">
@@ -1396,6 +1398,7 @@ async function loadLogRewardActivity() {
                 <select id="filter-channel" class="ml-2 p-1 text-xs border rounded">
                   <option value="">All</option>
                 </select>
+                <button id="sort-channel" class="ml-2 text-xs">↕️</button>
               </div>
             </th>
             <th class="border px-4 py-2">
@@ -1404,6 +1407,7 @@ async function loadLogRewardActivity() {
                 <select id="filter-sponsor" class="ml-2 p-1 text-xs border rounded">
                   <option value="">All</option>
                 </select>
+                <button id="sort-sponsor" class="ml-2 text-xs">↕️</button>
               </div>
             </th>
             <th class="border px-4 py-2">
@@ -1436,8 +1440,10 @@ async function loadLogRewardActivity() {
   // Inserisci la tabella nel contenitore
   container.innerHTML = tableHTML;
 
-  // Popolare i dropdowns dinamicamente
-  populateFilters(data);
+  // Popolare i dropdowns dinamicamente solo una volta
+  if (document.getElementById('filter-username').children.length === 1) {
+    populateFilters(data);
+  }
 
   // Filtri per ogni colonna
   document.getElementById('filter-username').addEventListener('change', filterData);
@@ -1445,11 +1451,39 @@ async function loadLogRewardActivity() {
   document.getElementById('filter-channel').addEventListener('change', filterData);
   document.getElementById('filter-sponsor').addEventListener('change', filterData);
 
-  // Ordinamento
+  // Ordinamento per le colonne
+  let usernameAsc = true;
+  document.getElementById('sort-username').addEventListener('click', () => {
+    usernameAsc = !usernameAsc;
+    const sortedData = [...data].sort((a, b) => usernameAsc ? a.username.localeCompare(b.username) : b.username.localeCompare(a.username));
+    displayLogData(sortedData);
+  });
+
+  let tokenAsc = true;
+  document.getElementById('sort-token').addEventListener('click', () => {
+    tokenAsc = !tokenAsc;
+    const sortedData = [...data].sort((a, b) => tokenAsc ? a.token_symbol.localeCompare(b.token_symbol) : b.token_symbol.localeCompare(a.token_symbol));
+    displayLogData(sortedData);
+  });
+
   let amountAsc = true;
   document.getElementById('sort-amount').addEventListener('click', () => {
     amountAsc = !amountAsc;
     const sortedData = [...data].sort((a, b) => amountAsc ? a.amount - b.amount : b.amount - a.amount);
+    displayLogData(sortedData);
+  });
+
+  let channelAsc = true;
+  document.getElementById('sort-channel').addEventListener('click', () => {
+    channelAsc = !channelAsc;
+    const sortedData = [...data].sort((a, b) => channelAsc ? a.channel.localeCompare(b.channel) : b.channel.localeCompare(a.channel));
+    displayLogData(sortedData);
+  });
+
+  let sponsorAsc = true;
+  document.getElementById('sort-sponsor').addEventListener('click', () => {
+    sponsorAsc = !sponsorAsc;
+    const sortedData = [...data].sort((a, b) => sponsorAsc ? a.origin_channel.localeCompare(b.origin_channel) : b.origin_channel.localeCompare(a.origin_channel));
     displayLogData(sortedData);
   });
 
@@ -1462,7 +1496,7 @@ async function loadLogRewardActivity() {
 
   // Funzione per reset dei filtri
   document.getElementById('reset-filters').addEventListener('click', () => {
-    // Reset dei valori dei dropdowns
+    // Reset dei valori dei dropdowns (ripristina a "All")
     document.getElementById('filter-username').value = '';
     document.getElementById('filter-token').value = '';
     document.getElementById('filter-channel').value = '';
@@ -1479,7 +1513,7 @@ async function loadLogRewardActivity() {
     const channels = [...new Set(data.map(item => item.channel))];
     const sponsors = [...new Set(data.map(item => item.origin_channel))];
 
-    // Popola i dropdowns
+    // Popola i dropdowns con le opzioni uniche
     const usernameSelect = document.getElementById('filter-username');
     const tokenSelect = document.getElementById('filter-token');
     const channelSelect = document.getElementById('filter-channel');

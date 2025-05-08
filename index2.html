@@ -55,6 +55,115 @@
       transform: translateY(-2px); /* piccolo sollevamento */
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* leggero ombreggiamento */
     }
+    /* Global Styles */
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f9fafb;
+      color: #333;
+    }
+    
+    .text-gray-500 {
+      color: #6b7280;
+    }
+    
+    .text-gray-700 {
+      color: #4b5563;
+    }
+    
+    .text-sm {
+      font-size: 0.875rem;
+    }
+    
+    /* Container for table */
+    .table-container {
+      width: 90%;
+      margin-top: 20px;
+    }
+    
+    /* Filter Section */
+    .filters {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      padding: 10px;
+      background-color: #ffffff;
+      border-radius: 8px;
+    }
+    
+    .filter-item {
+      flex: 1;
+    }
+    
+    .input-box {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      transition: border 0.3s;
+    }
+    
+    .input-box:focus {
+      outline: none;
+      border-color: #3490dc;
+    }
+    
+    /* Reset Button */
+    .reset-btn {
+      padding: 8px 16px;
+      background-color: #e2e8f0;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      color: #4b5563;
+      transition: background-color 0.3s;
+    }
+    
+    .reset-btn:hover {
+      background-color: #cbd5e0;
+    }
+    
+    /* Table Styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .table-header {
+      text-align: left;
+      padding: 12px 16px;
+      background-color: #f4f4f5;
+      color: #4b5563;
+      font-weight: bold;
+    }
+    
+    .table-row {
+      transition: background-color 0.2s;
+    }
+    
+    .table-row:hover {
+      background-color: #f9fafb;
+    }
+    
+    .table-data {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .shadow-lg {
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+    
+    .rounded-lg {
+      border-radius: 8px;
+    }
+    
+    .overflow-hidden {
+      overflow: hidden;
+    }
+    
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- TailwindCSS CDN -->

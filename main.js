@@ -2329,15 +2329,13 @@ function updateBulkActions() {
     modal.classList.add('hidden');
     onConfirm();
   };
-}
-
-// Funzione che esegue azioni reali
-async function executeAction(action, token, amount, tokenOut = null, contractOut = null) {
-  // Verifica se userId e usxè presente in window.userData
-  if (!window.userData || !window.userData.userId) {
-    console.error("[❌] userId non trovato in window.userData. Assicurati che i dati siano caricati prima di eseguire l'azione.");
-    return; // Interrompe l'esecuzione se userId non è presente
+}async function executeAction(action, token, amount, tokenOut = null, contractOut = null) {
+  // Verifica se userId e wax_account sono presenti in window.userData
+  if (!window.userData || !window.userData.userId || !window.userData.wax_account) {
+    console.error("[❌] userId o wax_account non trovato in window.userData. Assicurati che i dati siano caricati prima di eseguire l'azione.");
+    return; // Interrompe l'esecuzione se userId o wax_account non sono presenti
   }
+
   const { userId, usx_token, wax_account } = window.userData;
   let endpoint = "";
 
@@ -2380,12 +2378,10 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
       }
       bodyData.receiver = receiver;
     } else if (action === "stake") {
-      // Verifica se `window.tokenPoolsData` è già stato caricato
+      // Assicurati che i dati delle pools siano caricati prima di eseguire l'azione
       if (!window.tokenPoolsData || window.tokenPoolsData.length === 0) {
         console.info("[🧰] Caricamento dati delle staking pools...");
-        
-        // Chiama la funzione per caricare i dati delle pools
-        await fetchAndRenderTokenPools(false);
+        await fetchAndRenderTokenPools(false); // False per evitare il rendering
 
         // Dopo aver caricato i dati, verifica se è stato trovato il pool per il token
         if (!window.tokenPoolsData || window.tokenPoolsData.length === 0) {
@@ -2453,6 +2449,7 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
 
   console.info("[✅] Azione completata:", data.message || "Successo");
 }
+
 // Funzione toast dinamico
 function showToast(message, type = "success") {
   const toastContainer = document.getElementById('toast-container');

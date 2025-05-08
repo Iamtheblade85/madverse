@@ -1371,7 +1371,7 @@ async function loadLogRewardActivity() {
             <th class="border px-4 py-2">
               <div class="flex items-center">
                 <span>Username</span>
-                <select id="filter-username" class="ml-2 p-1 text-xs border rounded">
+                <select id="filter-username" class="ml-2 p-1 text-xs border rounded" multiple>
                   <option value="">All</option>
                 </select>
                 <button id="sort-username" class="ml-2 text-xs">↕️</button>
@@ -1380,7 +1380,7 @@ async function loadLogRewardActivity() {
             <th class="border px-4 py-2">
               <div class="flex items-center">
                 <span>Token</span>
-                <select id="filter-token" class="ml-2 p-1 text-xs border rounded">
+                <select id="filter-token" class="ml-2 p-1 text-xs border rounded" multiple>
                   <option value="">All</option>
                 </select>
                 <button id="sort-token" class="ml-2 text-xs">↕️</button>
@@ -1389,13 +1389,13 @@ async function loadLogRewardActivity() {
             <th class="border px-4 py-2">
               <div class="flex items-center">
                 <span>Amount</span>
-                <button class="ml-2 text-xs" id="sort-amount">↕️</button>
+                <button id="sort-amount" class="ml-2 text-xs">↕️</button>
               </div>
             </th>
             <th class="border px-4 py-2">
               <div class="flex items-center">
                 <span>Channel</span>
-                <select id="filter-channel" class="ml-2 p-1 text-xs border rounded">
+                <select id="filter-channel" class="ml-2 p-1 text-xs border rounded" multiple>
                   <option value="">All</option>
                 </select>
                 <button id="sort-channel" class="ml-2 text-xs">↕️</button>
@@ -1404,7 +1404,7 @@ async function loadLogRewardActivity() {
             <th class="border px-4 py-2">
               <div class="flex items-center">
                 <span>Sponsor</span>
-                <select id="filter-sponsor" class="ml-2 p-1 text-xs border rounded">
+                <select id="filter-sponsor" class="ml-2 p-1 text-xs border rounded" multiple>
                   <option value="">All</option>
                 </select>
                 <button id="sort-sponsor" class="ml-2 text-xs">↕️</button>
@@ -1413,7 +1413,7 @@ async function loadLogRewardActivity() {
             <th class="border px-4 py-2">
               <div class="flex items-center">
                 <span>Timestamp</span>
-                <button class="ml-2 text-xs" id="sort-timestamp">↕️</button>
+                <button id="sort-timestamp" class="ml-2 text-xs">↕️</button>
               </div>
             </th>
           </tr>
@@ -1434,9 +1434,8 @@ async function loadLogRewardActivity() {
       </tr>
     `;
   });
-
   tableHTML += '</tbody></table></div>';
-
+  
   // Inserisci la tabella nel contenitore
   container.innerHTML = tableHTML;
 
@@ -1445,67 +1444,72 @@ async function loadLogRewardActivity() {
     populateFilters(data);
   }
 
-  // Filtri per ogni colonna
-  document.getElementById('filter-username').addEventListener('change', filterData);
-  document.getElementById('filter-token').addEventListener('change', filterData);
-  document.getElementById('filter-channel').addEventListener('change', filterData);
-  document.getElementById('filter-sponsor').addEventListener('change', filterData);
-
-  // Ordinamento per le colonne
+  // Ordinamento per tutte le colonne con switch tra ascendente e discendente
   let usernameAsc = true;
   document.getElementById('sort-username').addEventListener('click', () => {
     usernameAsc = !usernameAsc;
     const sortedData = [...data].sort((a, b) => usernameAsc ? a.username.localeCompare(b.username) : b.username.localeCompare(a.username));
     displayLogData(sortedData);
   });
-
+  
   let tokenAsc = true;
   document.getElementById('sort-token').addEventListener('click', () => {
     tokenAsc = !tokenAsc;
     const sortedData = [...data].sort((a, b) => tokenAsc ? a.token_symbol.localeCompare(b.token_symbol) : b.token_symbol.localeCompare(a.token_symbol));
     displayLogData(sortedData);
   });
-
+  
   let amountAsc = true;
   document.getElementById('sort-amount').addEventListener('click', () => {
     amountAsc = !amountAsc;
     const sortedData = [...data].sort((a, b) => amountAsc ? a.amount - b.amount : b.amount - a.amount);
     displayLogData(sortedData);
   });
-
+  
   let channelAsc = true;
   document.getElementById('sort-channel').addEventListener('click', () => {
     channelAsc = !channelAsc;
     const sortedData = [...data].sort((a, b) => channelAsc ? a.channel.localeCompare(b.channel) : b.channel.localeCompare(a.channel));
     displayLogData(sortedData);
   });
-
+  
   let sponsorAsc = true;
   document.getElementById('sort-sponsor').addEventListener('click', () => {
     sponsorAsc = !sponsorAsc;
     const sortedData = [...data].sort((a, b) => sponsorAsc ? a.origin_channel.localeCompare(b.origin_channel) : b.origin_channel.localeCompare(a.origin_channel));
     displayLogData(sortedData);
   });
-
+  
   let timestampAsc = true;
   document.getElementById('sort-timestamp').addEventListener('click', () => {
     timestampAsc = !timestampAsc;
     const sortedData = [...data].sort((a, b) => timestampAsc ? new Date(a.timestamp) - new Date(b.timestamp) : new Date(b.timestamp) - new Date(a.timestamp));
     displayLogData(sortedData);
   });
-
+  
   // Funzione per reset dei filtri
-  document.getElementById('reset-filters').addEventListener('click', () => {
-    // Reset dei valori dei dropdowns (ripristina a "All")
-    document.getElementById('filter-username').value = '';
-    document.getElementById('filter-token').value = '';
-    document.getElementById('filter-channel').value = '';
-    document.getElementById('filter-sponsor').value = '';
-
-    // Ricarica tutti i dati senza filtri
-    displayLogData(data);
+  document.addEventListener('DOMContentLoaded', function() {
+    // Aggiungi l'event listener per il pulsante Reset Filter
+    document.getElementById('reset-filters').addEventListener('click', () => {
+      console.log('Resetting filters...');
+      // Reset dei valori dei dropdowns
+      document.querySelectorAll('select[multiple]').forEach(select => {
+          console.log(`Resetting select dropdown: ${select.id}`);
+          select.selectedIndex = 0;  // Seleziona "All"
+          Array.from(select.options).forEach(option => {
+              option.selected = false; // Deseleziona tutte le altre opzioni
+              console.log(`Deselected option: ${option.value}`);
+          });
+          console.log(`Dropdown reset for: ${select.id} with selectedIndex: ${select.selectedIndex}`);
+      });
+  
+      // Ricarica i dati originali senza filtri
+      console.log('Reloading original data without filters or sorting...');
+      displayLogData(originalData);
+      console.log('Data reloaded and displayed.');
+    });
   });
-
+  
   function populateFilters(data) {
     // Estrai i valori unici da ogni colonna
     const usernames = [...new Set(data.map(item => item.username))];
@@ -1551,7 +1555,8 @@ async function loadLogRewardActivity() {
 
     displayLogData(filteredData);
   }
-}// Load Log Storms & Giveaways
+}
+// Load Log Storms & Giveaways
 async function loadLogStormsGiveaways() {
   const container = document.getElementById('c2e-content');
   container.innerHTML = 'Loading Log Storms & Giveaways...';

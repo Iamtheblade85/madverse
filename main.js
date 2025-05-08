@@ -1358,15 +1358,14 @@ async function loadLogRewardActivity() {
   } catch (err) {
     container.innerHTML = `<div class="text-red-500">Error loading log reward activity: ${err.message}</div>`;
   }
-}
-
-function displayLogData(data) {
+} function displayLogData(data) {
   const container = document.getElementById('c2e-content');
   
   // Crea una tabella con i filtri per ogni colonna
   let tableHTML = `
-    <div class="overflow-x-auto">
-      <table class="table-auto border-collapse w-full text-sm text-left text-gray-900">
+    <div class="overflow-x-auto mb-4">
+      <button id="reset-filters" class="p-2 bg-gray-400 text-white rounded-md hover:bg-gray-500">Reset Filters</button>
+      <table class="table-auto border-collapse w-full text-sm text-left text-gray-900 mt-4">
         <thead>
           <tr class="bg-gray-100">
             <th class="border px-4 py-2">
@@ -1459,6 +1458,18 @@ function displayLogData(data) {
     timestampAsc = !timestampAsc;
     const sortedData = [...data].sort((a, b) => timestampAsc ? new Date(a.timestamp) - new Date(b.timestamp) : new Date(b.timestamp) - new Date(a.timestamp));
     displayLogData(sortedData);
+  });
+
+  // Funzione per reset dei filtri
+  document.getElementById('reset-filters').addEventListener('click', () => {
+    // Reset dei valori dei dropdowns
+    document.getElementById('filter-username').value = '';
+    document.getElementById('filter-token').value = '';
+    document.getElementById('filter-channel').value = '';
+    document.getElementById('filter-sponsor').value = '';
+
+    // Ricarica tutti i dati senza filtri
+    displayLogData(data);
   });
 
   function populateFilters(data) {

@@ -2333,8 +2333,11 @@ function updateBulkActions() {
 
 // Funzione che esegue azioni reali
 async function executeAction(action, token, amount, tokenOut = null, contractOut = null) {
-  const { userId, usx_token, wax_account } = window.userData;
-
+  // Verifica se userId è presente in window.userData
+  if (!window.userData || !window.userData.userId) {
+    console.error("[❌] userId non trovato in window.userData. Assicurati che i dati siano caricati prima di eseguire l'azione.");
+    return; // Interrompe l'esecuzione se userId non è presente
+  }
   let endpoint = "";
 
   if (action === "withdraw") {

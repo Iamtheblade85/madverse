@@ -1455,11 +1455,16 @@ async function loadLogStormsGiveaways() {
           <input type="number" id="amount" class="input-field">
           
           <label class="input-label">Token Symbol</label>
-          <input type="text" id="tokenSymbol" class="input-field">
-          
+          <select id="tokenSymbol" class="input-field">
+            <option value="">Select Token</option>
+          </select>
+
           <label class="input-label">Timeframe</label>
-          <input type="text" id="timeframe" class="input-field">
-          
+          <select id="timeframe" class="input-field">
+            <option value="">Select Timeframe</option>
+            <!-- Timeframe options will be populated dynamically -->
+          </select>
+
           <label class="input-label">Channel</label>
           <input type="text" id="channelName" class="input-field">
           
@@ -1482,11 +1487,59 @@ async function loadLogStormsGiveaways() {
     // Aggiungi evento per inviare il form
     document.getElementById('submitStorm').addEventListener('click', addScheduledStorm);
 
+    // Popola i token simbolo
+    await populateTokenSymbols();
+    // Popola i timeframes dinamicamente
+    populateTimeframes();
+    
+    // Imposta i limiti per l'orario
+    setScheduledTimeMinMax();
+
     // Carica la tabella delle tempeste programmate
-    loadScheduledStorms(); // Carica la tabella senza sovrascrivere il modulo
+    loadScheduledStorms();
   } catch (err) {
     container.innerHTML = `<div class="text-red-500 text-center">Error loading log storms and giveaways: ${err.message}</div>`;
   }
+}
+
+// Funzione per popolare il dropdown dei Token Symbols
+async function populateTokenSymbols() {
+  const tokenSelect = document.getElementById('tokenSymbol');
+  const tokens = window.availableTokens; // I token disponibili sono salvati in `window.availableTokens`
+
+  tokens.forEach(token => {
+    const option = document.createElement('option');
+    option.value = token;
+    option.textContent = token;
+    tokenSelect.appendChild(option);
+  });
+}
+
+// Funzione per popolare il dropdown dei Timeframes
+function populateTimeframes() {
+  const timeframeSelect = document.getElementById('timeframe');
+  const timeframes = ["5m", "10m", "15m", "20m", "30m", "1h", "2h", "3h", "4h", "5h", "6h", "12h", "1d", "2d", "3d", "4d", "5d", "6d", "7d", "15d", "30d", "1y"];
+
+  timeframes.forEach(frame => {
+    const option = document.createElement('option');
+    option.value = frame;
+    option.textContent = frame;
+    timeframeSelect.appendChild(option);
+  });
+}
+
+// Funzione per popolare il campo orario con un minimo di 15 minuti e massimo 1 mese
+function setScheduledTimeMinMax() {
+  const scheduledTimeInput = document.getElementById('scheduledTime');
+  const now = new Date();
+  const minDate = new Date(now.getTime() + 15 * 60000); // 15 minuti da adesso
+  const maxDate = new Date(now.getTime() + 30 * 24 * 60 * 60000); // 1 mese da adesso
+
+  const minDateString = minDate.toISOString().slice(0, 16); // Limite inferiore (15 minuti dopo)
+  const maxDateString = maxDate.toISOString().slice(0, 16); // Limite superiore (1 mese dopo)
+
+  scheduledTimeInput.min = minDateString;
+  scheduledTimeInput.max = maxDateString;
 }
 
 // Funzione per caricare le tempeste programmate
@@ -1604,6 +1657,7 @@ async function addScheduledStorm() {
     container.innerHTML = `<div class="text-red-500">Error adding scheduled storm: ${err.message}</div>`;
   }
 }
+
 // Load Schedule NFT-Giveaway
 async function loadScheduleNFTGiveaway() {
   const container = document.getElementById('c2e-content');

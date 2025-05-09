@@ -1711,7 +1711,8 @@ function addHoverEffectToRows() {
 // Funzione per aggiungere una nuova tempesta programmata
 async function addScheduledStorm() {
   // ✅ Prima leggi i valori dal DOM
-  const scheduledTime = document.getElementById('scheduledTime').value;
+  const scheduledTimeLocal = document.getElementById('scheduledTime').value;
+  const scheduledTimeUTC = new Date(scheduledTimeLocal).toISOString();
   const amount = document.getElementById('amount').value;
   const tokenSymbol = document.getElementById('tokenSymbol').value;
   const timeframe = document.getElementById('timeframe').value;
@@ -1726,7 +1727,7 @@ async function addScheduledStorm() {
   }
 
   const payload = {
-    scheduled_time: scheduledTime,
+    scheduled_time: scheduledTimeUTC,
     amount: amount,
     token_symbol: tokenSymbol,
     timeframe: timeframe,

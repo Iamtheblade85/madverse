@@ -1735,6 +1735,22 @@ function displayStormsData(data) {
   const tableContainer = document.getElementById('scheduled-storms-table');
 
   let tableHTML = `
+    <style>
+      @keyframes pulse-scale {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        70% {
+          transform: scale(2);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(2);
+          opacity: 0;
+        }
+      }
+    </style>
     <div class="table-container" style="width: 100%; overflow-x: auto; padding: 20px;">
       <table class="table-auto w-full" style="border-collapse: collapse;">
         <thead style="background-color: #3b82f6; color: white;">
@@ -1757,9 +1773,11 @@ function displayStormsData(data) {
     const rowColor = index % 2 === 0 ? '#f9f9f9' : '#f1f1f1';
 
     let winnersHTML = '';
+    const winnersRaw = storm.winners_display?.trim();
+
     if (storm.status === 'executed') {
-      if (storm.winners_display && storm.winners_display !== 'soon' && storm.winners_display.trim() !== '') {
-        const winnersArray = storm.winners_display.split(' | ').map(w => w.trim().toUpperCase());
+      if (winnersRaw && winnersRaw.toLowerCase() !== 'soon') {
+        const winnersArray = winnersRaw.split(' | ').map(w => w.trim().toUpperCase());
         for (let i = 0; i < winnersArray.length; i += 2) {
           const left = winnersArray[i];
           const right = winnersArray[i + 1] || '';
@@ -1778,25 +1796,13 @@ function displayStormsData(data) {
 
     const pulse = storm.status === 'pending'
       ? `<div style="
+            position: relative;
             width: 14px;
             height: 14px;
             background-color: #10b981;
             border-radius: 50%;
-            position: relative;
-            display: inline-block;
-          ">
-            <div style="
-              position: absolute;
-              top: -6px;
-              left: -6px;
-              width: 26px;
-              height: 26px;
-              border-radius: 50%;
-              border: 2px solid #10b981;
-              opacity: 0.6;
-              animation: pulse-ring 1.5s ease-out infinite;
-            "></div>
-          </div>`
+            animation: pulse-scale 1.5s infinite ease-out;
+          "></div>`
       : '';
 
     tableHTML += `
@@ -1820,6 +1826,18 @@ function displayStormsData(data) {
   tableContainer.innerHTML = tableHTML;
 
   addHoverEffectToRows();
+}
+
+function addHoverEffectToRows() {
+  const rows = document.querySelectorAll('.table-auto tbody tr');
+  rows.forEach(row => {
+    row.addEventListener('mouseenter', () => {
+      row.style.backgroundColor = '#e2e8f0';
+    });
+    row.addEventListener('mouseleave', () => {
+      row.style.backgroundColor = '';
+    });
+  });
 }
 
 // Aggiungi effetto hover alle righe della tabella per migliorare l'interazione

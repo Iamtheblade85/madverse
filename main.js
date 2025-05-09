@@ -1710,6 +1710,7 @@ function addHoverEffectToRows() {
 
 // Funzione per aggiungere una nuova tempesta programmata
 async function addScheduledStorm() {
+  const container = document.getElementById('c2e-content');
   // ✅ Prima leggi i valori dal DOM
   const scheduledTimeLocal = document.getElementById('scheduledTime').value;
   const scheduledTimeUTC = new Date(scheduledTimeLocal).toISOString();
@@ -1722,7 +1723,8 @@ async function addScheduledStorm() {
   const { userId, usx_token, wax_account } = window.userData;
 
   if (!wax_account) {
-    document.getElementById('c2e-content').innerHTML = `<div class="text-red-500 text-center" style="padding: 10px;">Error: wax_account is missing.</div>`;
+    container.innerHTML = `<div class="text-red-500 text-center">Error: wax_account is missing.</div>`;
+    //document.getElementById('c2e-content').innerHTML = `<div class="text-red-500 text-center" style="padding: 10px;">Error: wax_account is missing.</div>`;
     return;
   }
 

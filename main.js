@@ -1445,72 +1445,81 @@ async function loadLogStormsGiveaways() {
   try {
     // Visualizza il modulo per aggiungere una tempesta
     container.innerHTML = `
-      <div class="section-container" style="padding: 10px; margin: 0 auto; background-color: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border-radius: 8px;">
-        <h2 class="section-title" style="font-size: 1.2rem; font-weight: bold; color: #4B5563; margin-bottom: 16px; text-align: center;">Add New Scheduled Storm</h2>
-        <div id="add-storm-form" class="form-container" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-start;">
+      <div class="section-container" style="padding: 20px; margin: 0 auto; background-color: white; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 12px; max-width: 900px;">
+        <h2 class="section-title" style="font-size: 1.5rem; font-weight: bold; color: #4B5563; margin-bottom: 20px; text-align: center;">Add New Scheduled Storm</h2>
+        <div id="add-storm-form" class="form-container" style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: flex-start;">
 
-          <div style="display: flex; flex-direction: row; gap: 8px; width: 100%; align-items: center;">
-            <label class="input-label" style="font-size: 0.875rem; color: #4B5563; width: 120px;">Scheduled Time</label>
-            <input type="datetime-local" id="scheduledTime" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 200px; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <!-- Scheduled Time and Timeframe -->
+          <div style="display: flex; flex-direction: row; gap: 16px; width: 100%; max-width: 450px;">
+            <div style="flex: 1;">
+              <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Scheduled Time</label>
+              <input type="datetime-local" id="scheduledTime" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+            </div>
+            <div style="flex: 1;">
+              <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Timeframe</label>
+              <select id="timeframe" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+                <option value="">Select Timeframe</option>
+                <option value="5m">5m</option>
+                <option value="10m">10m</option>
+                <option value="15m">15m</option>
+                <option value="20m">20m</option>
+                <option value="30m">30m</option>
+                <option value="1h">1h</option>
+                <option value="2h">2h</option>
+                <option value="3h">3h</option>
+                <option value="4h">4h</option>
+                <option value="5h">5h</option>
+                <option value="6h">6h</option>
+                <option value="12h">12h</option>
+                <option value="1d">1d</option>
+                <option value="2d">2d</option>
+                <option value="3d">3d</option>
+                <option value="4d">4d</option>
+                <option value="5d">5d</option>
+                <option value="6d">6d</option>
+                <option value="7d">7d</option>
+                <option value="15d">15d</option>
+                <option value="30d">30d</option>
+                <option value="1y">1y</option>
+              </select>
+            </div>
           </div>
 
-          <div style="display: flex; flex-direction: row; gap: 8px; width: 100%; align-items: center;">
-            <label class="input-label" style="font-size: 0.875rem; color: #4B5563; width: 120px;">Amount</label>
-            <input type="number" id="amount" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 200px; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <!-- Amount and Token Symbol -->
+          <div style="display: flex; flex-direction: row; gap: 16px; width: 100%; max-width: 450px;">
+            <div style="flex: 1;">
+              <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Amount</label>
+              <input type="number" id="amount" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+            </div>
+            <div style="flex: 1;">
+              <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Token Symbol</label>
+              <select id="tokenSymbol" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+                <option value="">Select Token</option>
+              </select>
+            </div>
           </div>
 
-          <div style="display: flex; flex-direction: row; gap: 8px; width: 100%; align-items: center;">
-            <label class="input-label" style="font-size: 0.875rem; color: #4B5563; width: 120px;">Token Symbol</label>
-            <select id="tokenSymbol" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 200px; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
-              <option value="">Select Token</option>
-            </select>
+          <!-- Channel and Payment Method -->
+          <div style="display: flex; flex-direction: row; gap: 16px; width: 100%; max-width: 450px;">
+            <div style="flex: 1;">
+              <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Channel</label>
+              <select id="channelName" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+                <option value="">Select Channel</option>
+              </select>
+            </div>
+            <div style="flex: 1;">
+              <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Payment Method</label>
+              <select id="paymentMethod" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+                <option value="twitch">Twitch</option>
+                <option value="telegram">Telegram</option>
+              </select>
+            </div>
           </div>
 
-          <div style="display: flex; flex-direction: row; gap: 8px; width: 100%; align-items: center;">
-            <label class="input-label" style="font-size: 0.875rem; color: #4B5563; width: 120px;">Timeframe</label>
-            <select id="timeframe" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 200px; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
-              <option value="">Select Timeframe</option>
-              <option value="5m">5m</option>
-              <option value="10m">10m</option>
-              <option value="15m">15m</option>
-              <option value="20m">20m</option>
-              <option value="30m">30m</option>
-              <option value="1h">1h</option>
-              <option value="2h">2h</option>
-              <option value="3h">3h</option>
-              <option value="4h">4h</option>
-              <option value="5h">5h</option>
-              <option value="6h">6h</option>
-              <option value="12h">12h</option>
-              <option value="1d">1d</option>
-              <option value="2d">2d</option>
-              <option value="3d">3d</option>
-              <option value="4d">4d</option>
-              <option value="5d">5d</option>
-              <option value="6d">6d</option>
-              <option value="7d">7d</option>
-              <option value="15d">15d</option>
-              <option value="30d">30d</option>
-              <option value="1y">1y</option>
-            </select>
-          </div>
-
-          <div style="display: flex; flex-direction: row; gap: 8px; width: 100%; align-items: center;">
-            <label class="input-label" style="font-size: 0.875rem; color: #4B5563; width: 120px;">Channel</label>
-            <select id="channelName" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 200px; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
-              <option value="">Select Channel</option>
-            </select>
-          </div>
-
-          <div style="display: flex; flex-direction: row; gap: 8px; width: 100%; align-items: center;">
-            <label class="input-label" style="font-size: 0.875rem; color: #4B5563; width: 120px;">Payment Method</label>
-            <select id="paymentMethod" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 200px; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
-              <option value="twitch">Twitch</option>
-              <option value="telegram">Telegram</option>
-            </select>
-          </div>
-
-          <button id="submitStorm" class="btn-submit" style="font-size: 0.875rem; padding: 8px 16px; background-color: #10B981; color: white; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%;">Add Storm</button>
+          <!-- Add Storm Button -->
+          <button id="submitStorm" class="btn-submit" style="font-size: 1rem; padding: 12px 24px; background-color: #10B981; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; transition: background-color 0.3s;">
+            Add Storm
+          </button>
         </div>
 
         <h2 class="section-title mt-6">Scheduled Storms</h2>
@@ -1631,6 +1640,9 @@ async function loadScheduledStorms() {
       return;
     }
 
+    // Ordinamento: dal più recente al più vecchio
+    data.sort((a, b) => new Date(b.scheduled_time) - new Date(a.scheduled_time));
+
     displayStormsData(data);
   } catch (err) {
     tableContainer.innerHTML = `<div class="text-red-500 text-center">Error loading scheduled storms: ${err.message}</div>`;
@@ -1642,32 +1654,34 @@ function displayStormsData(data) {
   const tableContainer = document.getElementById('scheduled-storms-table');
   
   let tableHTML = `
-    <div class="table-container">
-      <table class="table-auto w-full">
-        <thead class="thead">
+    <div class="table-container" style="width: 100%; overflow-x: auto;">
+      <table class="table-auto w-full" style="border-collapse: collapse;">
+        <thead style="background-color: #4CAF50; color: white;">
           <tr>
-            <th class="th">ID</th>
-            <th class="th">Scheduled Time</th>
-            <th class="th">Offered By</th>
-            <th class="th">Amount</th>
-            <th class="th">Token</th>
-            <th class="th">Channel</th>
-            <th class="th">Status</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">ID</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Scheduled Time</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Offered By</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Amount</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Token</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Channel</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Status</th>
           </tr>
         </thead>
         <tbody>
   `;
 
-  data.forEach(storm => {
+  // Aggiungi i dati alla tabella, con righe alternate
+  data.forEach((storm, index) => {
+    const rowColor = index % 2 === 0 ? '#f9f9f9' : '#f1f1f1';  // Righe alternate
     tableHTML += `
-      <tr class="table-row">
-        <td class="td">${storm.id}</td>
-        <td class="td">${new Date(storm.scheduled_time).toLocaleString()}</td>
-        <td class="td">${storm.offered_by}</td>
-        <td class="td">${storm.amount}</td>
-        <td class="td">${storm.token_symbol}</td>
-        <td class="td">${storm.channel_name}</td>
-        <td class="td">${storm.status}</td>
+      <tr style="background-color: ${rowColor};">
+        <td style="padding: 8px; border: 1px solid #ddd;">${storm.id}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${new Date(storm.scheduled_time).toLocaleString()}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${storm.offered_by}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${storm.amount}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${storm.token_symbol}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${storm.channel_name}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${storm.status}</td>
       </tr>
     `;
   });

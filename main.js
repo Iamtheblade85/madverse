@@ -1526,7 +1526,7 @@ async function loadLogStormsGiveaways() {
   try {
     // Visualizza il modulo per aggiungere una tempesta
     container.innerHTML = `
-      <div class="section-container" style="padding: 20px; margin: 0 auto; background-color: white; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 12px; max-width: 900px;">
+      <div class="section-container" style="padding: 20px; margin: 0 auto; background-color: white; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 12px; max-width: 97%;">
         <h2 class="section-title" style="font-size: 1.5rem; font-weight: bold; color: #4B5563; margin-bottom: 20px; text-align: center;">Add New Scheduled Storm</h2>
         <div id="add-storm-form" class="form-container" style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: flex-start;">
 

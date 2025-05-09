@@ -1710,9 +1710,7 @@ function addHoverEffectToRows() {
 
 // Funzione per aggiungere una nuova tempesta programmata
 async function addScheduledStorm() {
-  const container = document.getElementById('c2e-content');
-  container.innerHTML = 'Adding Storm...';  // Messaggio di caricamento iniziale
-
+  // ✅ Prima leggi i valori dal DOM
   const scheduledTime = document.getElementById('scheduledTime').value;
   const amount = document.getElementById('amount').value;
   const tokenSymbol = document.getElementById('tokenSymbol').value;
@@ -1723,7 +1721,7 @@ async function addScheduledStorm() {
   const { userId, usx_token, wax_account } = window.userData;
 
   if (!wax_account) {
-    container.innerHTML = `<div class="text-red-500 text-center" style="padding: 10px;">Error: wax_account is missing.</div>`;
+    document.getElementById('c2e-content').innerHTML = `<div class="text-red-500 text-center" style="padding: 10px;">Error: wax_account is missing.</div>`;
     return;
   }
 
@@ -1738,28 +1736,21 @@ async function addScheduledStorm() {
   };
 
   try {
-    const res = await fetch(`${BASE_URL}/add_storm?user_id=${userId}&&usx_token=${usx_token}&wax_account=${wax_account}`, {
+    const res = await fetch(`${BASE_URL}/add_storm?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
-    if (!res.ok) {
-      throw new Error('Network response was not ok');
-    }
-
     const data = await res.json();
 
-    // Messaggio di successo
     if (data.success) {
       container.innerHTML = `<div class="text-green-500 text-center" style="padding: 10px; font-weight: bold;">${data.message}</div>`;
-      loadScheduledStorms(); // Ricarica la tabella dopo aver aggiunto una tempesta
+      loadScheduledStorms();
     } else {
-      // Messaggio di errore
       container.innerHTML = `<div class="text-red-500 text-center" style="padding: 10px; font-weight: bold;">Error: ${data.error}</div>`;
     }
   } catch (err) {
-    // Gestione degli errori generali
     container.innerHTML = `<div class="text-red-500 text-center" style="padding: 10px;">Error adding scheduled storm: ${err.message}</div>`;
   }
 }

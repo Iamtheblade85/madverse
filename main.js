@@ -1803,7 +1803,7 @@ function displayStormsData(data) {
             border-radius: 50%;
             animation: pulse-scale 1.5s infinite ease-out;
           "></div>`
-      : '';
+      : `<div style="width: 14px; height: 14px;"></div>`;
 
     tableHTML += `
       <tr style="background-color: ${rowColor}; transition: background-color 0.3s;">

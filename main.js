@@ -1739,15 +1739,15 @@ function displayStormsData(data) {
       <table class="table-auto w-full" style="border-collapse: collapse;">
         <thead style="background-color: #3b82f6; color: white;">
           <tr>
-            <th class="th" style="padding: 12px; border: 1px solid #ddd;">ID</th>
-            <th class="th" style="padding: 12px; border: 1px solid #ddd;">Scheduled Time</th>
-            <th class="th" style="padding: 12px; border: 1px solid #ddd;">Offered By</th>
-            <th class="th" style="padding: 12px; border: 1px solid #ddd;">Amount</th>
-            <th class="th" style="padding: 12px; border: 1px solid #ddd;">Token</th>
-            <th class="th" style="padding: 12px; border: 1px solid #ddd;">Channel</th>
-            <th class="th" style="padding: 12px; border: 1px solid #ddd;">Status</th>
-            <th class="th" style="padding: 12px; border: 1px solid #ddd;">Winners</th>
-            <th class="th" style="padding: 12px; border: 1px solid #ddd;"></th>
+            <th style="padding: 12px; border: 1px solid #ddd;">ID</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Scheduled Time</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Offered By</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Amount</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Token</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Channel</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Status</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Winners</th>
+            <th style="padding: 12px; border: 1px solid #ddd;"></th>
           </tr>
         </thead>
         <tbody>
@@ -1757,50 +1757,46 @@ function displayStormsData(data) {
     const rowColor = index % 2 === 0 ? '#f9f9f9' : '#f1f1f1';
 
     let winnersHTML = '';
-    if (storm.winners_display && storm.winners_display !== 'soon') {
-      const winnersArray = storm.winners_display.split(' | ');
-      winnersHTML = winnersArray.map(winner => {
-        return `<span style="
-          display: block;
-          font-size: 0.75rem;
-          color: white;
-          font-weight: 600;
-          text-transform: uppercase;
-          text-shadow:
-            -1px -1px 0 #000,
-             1px -1px 0 #000,
-            -1px  1px 0 #000,
-             1px  1px 0 #000;
-          margin-bottom: 4px;
-        ">${winner.trim().toUpperCase()}</span>`;
-      }).join('');
+    if (storm.status === 'executed') {
+      if (storm.winners_display && storm.winners_display !== 'soon' && storm.winners_display.trim() !== '') {
+        const winnersArray = storm.winners_display.split(' | ').map(w => w.trim().toUpperCase());
+        for (let i = 0; i < winnersArray.length; i += 2) {
+          const left = winnersArray[i];
+          const right = winnersArray[i + 1] || '';
+          winnersHTML += `
+            <div style="display: flex; justify-content: space-between; margin: 1px; padding: 0 1px;">
+              <span style="width: 49%; font-size: 0.75rem; font-weight: 600; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">${left}</span>
+              <span style="width: 49%; font-size: 0.75rem; font-weight: 600; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">${right}</span>
+            </div>`;
+        }
+      } else {
+        winnersHTML = `<span style="color: #6b7280;">No winners in the selected time interval :(</span>`;
+      }
     } else {
-      winnersHTML = '<span style="color: #6b7280;">soon</span>';
+      winnersHTML = `<span style="color: #6b7280;">soon</span>`;
     }
 
-    // Pallino pulsante in style inline
     const pulse = storm.status === 'pending'
       ? `<div style="
-          width: 14px;
-          height: 14px;
-          background-color: #10b981;
-          border-radius: 50%;
-          position: relative;
-          display: inline-block;
-        ">
-          <div style="
-            content: '';
-            position: absolute;
-            top: -6px;
-            left: -6px;
-            width: 26px;
-            height: 26px;
+            width: 14px;
+            height: 14px;
+            background-color: #10b981;
             border-radius: 50%;
-            border: 2px solid #10b981;
-            opacity: 0.6;
-            animation: pulse-ring 1.5s ease-out infinite;
-          "></div>
-        </div>`
+            position: relative;
+            display: inline-block;
+          ">
+            <div style="
+              position: absolute;
+              top: -6px;
+              left: -6px;
+              width: 26px;
+              height: 26px;
+              border-radius: 50%;
+              border: 2px solid #10b981;
+              opacity: 0.6;
+              animation: pulse-ring 1.5s ease-out infinite;
+            "></div>
+          </div>`
       : '';
 
     tableHTML += `
@@ -1812,7 +1808,7 @@ function displayStormsData(data) {
         <td style="padding: 8px; border: 1px solid #ddd;">${storm.token_symbol}</td>
         <td style="padding: 8px; border: 1px solid #ddd;">${storm.channel_name}</td>
         <td style="padding: 8px; border: 1px solid #ddd;">${storm.status}</td>
-        <td class="winners-cell" style="padding: 8px; border: 1px solid #ddd;">${winnersHTML}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${winnersHTML}</td>
         <td style="padding: 8px; border: 1px solid #ddd; text-align: center; vertical-align: middle; width: 50px;">
           ${pulse}
         </td>

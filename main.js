@@ -1447,56 +1447,68 @@ async function loadLogStormsGiveaways() {
     container.innerHTML = `
       <div class="section-container" style="padding: 10px; margin: 0 auto; background-color: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border-radius: 8px;">
         <h2 class="section-title" style="font-size: 1.2rem; font-weight: bold; color: #4B5563; margin-bottom: 16px; text-align: center;">Add New Scheduled Storm</h2>
-        <div id="add-storm-form" class="form-container" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;">
+        <div id="add-storm-form" class="form-container" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-start;">
 
-          <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Scheduled Time</label>
-          <input type="datetime-local" id="scheduledTime" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 30%; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <div style="display: flex; flex-direction: row; gap: 8px; width: 100%; align-items: center;">
+            <label class="input-label" style="font-size: 0.875rem; color: #4B5563; width: 120px;">Scheduled Time</label>
+            <input type="datetime-local" id="scheduledTime" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 200px; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+          </div>
 
-          <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Amount</label>
-          <input type="number" id="amount" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 30%; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <div style="display: flex; flex-direction: row; gap: 8px; width: 100%; align-items: center;">
+            <label class="input-label" style="font-size: 0.875rem; color: #4B5563; width: 120px;">Amount</label>
+            <input type="number" id="amount" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 200px; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+          </div>
 
-          <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Token Symbol</label>
-          <select id="tokenSymbol" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 30%; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
-            <option value="">Select Token</option>
-          </select>
+          <div style="display: flex; flex-direction: row; gap: 8px; width: 100%; align-items: center;">
+            <label class="input-label" style="font-size: 0.875rem; color: #4B5563; width: 120px;">Token Symbol</label>
+            <select id="tokenSymbol" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 200px; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+              <option value="">Select Token</option>
+            </select>
+          </div>
 
-          <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Timeframe</label>
-          <select id="timeframe" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 30%; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
-            <option value="">Select Timeframe</option>
-            <option value="5m">5m</option>
-            <option value="10m">10m</option>
-            <option value="15m">15m</option>
-            <option value="20m">20m</option>
-            <option value="30m">30m</option>
-            <option value="1h">1h</option>
-            <option value="2h">2h</option>
-            <option value="3h">3h</option>
-            <option value="4h">4h</option>
-            <option value="5h">5h</option>
-            <option value="6h">6h</option>
-            <option value="12h">12h</option>
-            <option value="1d">1d</option>
-            <option value="2d">2d</option>
-            <option value="3d">3d</option>
-            <option value="4d">4d</option>
-            <option value="5d">5d</option>
-            <option value="6d">6d</option>
-            <option value="7d">7d</option>
-            <option value="15d">15d</option>
-            <option value="30d">30d</option>
-            <option value="1y">1y</option>
-          </select>
+          <div style="display: flex; flex-direction: row; gap: 8px; width: 100%; align-items: center;">
+            <label class="input-label" style="font-size: 0.875rem; color: #4B5563; width: 120px;">Timeframe</label>
+            <select id="timeframe" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 200px; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+              <option value="">Select Timeframe</option>
+              <option value="5m">5m</option>
+              <option value="10m">10m</option>
+              <option value="15m">15m</option>
+              <option value="20m">20m</option>
+              <option value="30m">30m</option>
+              <option value="1h">1h</option>
+              <option value="2h">2h</option>
+              <option value="3h">3h</option>
+              <option value="4h">4h</option>
+              <option value="5h">5h</option>
+              <option value="6h">6h</option>
+              <option value="12h">12h</option>
+              <option value="1d">1d</option>
+              <option value="2d">2d</option>
+              <option value="3d">3d</option>
+              <option value="4d">4d</option>
+              <option value="5d">5d</option>
+              <option value="6d">6d</option>
+              <option value="7d">7d</option>
+              <option value="15d">15d</option>
+              <option value="30d">30d</option>
+              <option value="1y">1y</option>
+            </select>
+          </div>
 
-          <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Channel</label>
-          <select id="channelName" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 30%; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
-            <option value="">Select Channel</option>
-          </select>
+          <div style="display: flex; flex-direction: row; gap: 8px; width: 100%; align-items: center;">
+            <label class="input-label" style="font-size: 0.875rem; color: #4B5563; width: 120px;">Channel</label>
+            <select id="channelName" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 200px; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+              <option value="">Select Channel</option>
+            </select>
+          </div>
 
-          <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Payment Method</label>
-          <select id="paymentMethod" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 30%; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
-            <option value="twitch">Twitch</option>
-            <option value="telegram">Telegram</option>
-          </select>
+          <div style="display: flex; flex-direction: row; gap: 8px; width: 100%; align-items: center;">
+            <label class="input-label" style="font-size: 0.875rem; color: #4B5563; width: 120px;">Payment Method</label>
+            <select id="paymentMethod" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 200px; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+              <option value="twitch">Twitch</option>
+              <option value="telegram">Telegram</option>
+            </select>
+          </div>
 
           <button id="submitStorm" class="btn-submit" style="font-size: 0.875rem; padding: 8px 16px; background-color: #10B981; color: white; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%;">Add Storm</button>
         </div>

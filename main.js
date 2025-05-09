@@ -1438,10 +1438,91 @@ function resetFilters() {
   displayLogData(originalData);
 }
 
-async function loadLogStormsGiveaways() {
+// Storm Scheduler and Logs
+// Funzione per aggiungere una nuova tempesta programmata
+async function addScheduledStorm() {
+  console.log("🔄 addScheduledStorm() called");
   const container = document.getElementById('c2e-content');
-  container.innerHTML = 'Loading Log Storms & Giveaways...';
+  // Leggi valori dal DOM
+  const scheduledTimeLocal = document.getElementById('scheduledTime').value;
+  const scheduledTimeUTC = new Date(scheduledTimeLocal).toISOString();
+  const amount = document.getElementById('amount').value;
+  const tokenSymbol = document.getElementById('tokenSymbol').value;
+  const timeframe = document.getElementById('timeframe').value;
+  const channelName = document.getElementById('channelName').value;
+  const paymentMethod = document.getElementById('paymentMethod').value;
 
+  console.log("📅 scheduledTimeLocal:", scheduledTimeLocal);
+  console.log("🌐 scheduledTimeUTC (to send):", scheduledTimeUTC);
+  console.log("💰 amount:", amount);
+  console.log("🔠 tokenSymbol:", tokenSymbol);
+  console.log("⏱️ timeframe:", timeframe);
+  console.log("📺 channelName:", channelName);
+  console.log("💳 paymentMethod:", paymentMethod);
+
+  const { userId, usx_token, wax_account } = window.userData || {};
+
+  console.log("👤 userId:", userId);
+  console.log("🔐 usx_token:", usx_token);
+  console.log("🧾 wax_account:", wax_account);
+
+  if (!wax_account) {
+    console.error("❌ wax_account is missing.");
+    showToast("Error: wax_account is missing.", "error");
+    return;
+  }
+
+  const payload = {
+    scheduled_time: scheduledTimeUTC,
+    amount,
+    token_symbol: tokenSymbol,
+    timeframe,
+    channel_name: channelName,
+    payment_method: paymentMethod,
+    wax_account
+  };
+
+  console.log("📦 Payload to be sent:", payload);
+
+  try {
+    const url = `${BASE_URL}/add_storm?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`;
+    console.log("🌍 POST URL:", url);
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    console.log("📡 Response status:", res.status);
+
+    const data = await res.json();
+    console.log("📨 Response body:", data);
+
+    if (data.success) {
+      showToast(data.message, "success");
+      console.log("✅ Storm added successfully");
+      loadScheduledStorms(); // aggiorna tabella
+    } else {
+      showToast(`Error: ${data.error}`, "error");
+      console.warn("⚠️ Backend error:", data.error);
+    }
+
+  } catch (err) {
+    console.error("🔥 Network or unexpected error:", err);
+    showToast(`Network error: ${err.message}`, "error");
+  }
+}
+
+async function loadLogStormsGiveaways() {
+  let container = document.getElementById('c2e-content');
+
+  if (!container) {
+    console.error("Elemento 'c2e-content' non trovato nel DOM.");
+    return;
+  }
+
+  container.innerHTML = 'Loading Log Storms & Giveaways...';
   try {
     // Visualizza il modulo per aggiungere una tempesta
     container.innerHTML = `
@@ -1706,81 +1787,6 @@ function addHoverEffectToRows() {
       row.style.backgroundColor = ''; // Rimuove il colore al passaggio
     });
   });
-}
-
-// Funzione per aggiungere una nuova tempesta programmata
-async function addScheduledStorm() {
-  console.log("🔄 addScheduledStorm() called");
-  const container = document.getElementById('c2e-content');
-  // Leggi valori dal DOM
-  const scheduledTimeLocal = document.getElementById('scheduledTime').value;
-  const scheduledTimeUTC = new Date(scheduledTimeLocal).toISOString();
-  const amount = document.getElementById('amount').value;
-  const tokenSymbol = document.getElementById('tokenSymbol').value;
-  const timeframe = document.getElementById('timeframe').value;
-  const channelName = document.getElementById('channelName').value;
-  const paymentMethod = document.getElementById('paymentMethod').value;
-
-  console.log("📅 scheduledTimeLocal:", scheduledTimeLocal);
-  console.log("🌐 scheduledTimeUTC (to send):", scheduledTimeUTC);
-  console.log("💰 amount:", amount);
-  console.log("🔠 tokenSymbol:", tokenSymbol);
-  console.log("⏱️ timeframe:", timeframe);
-  console.log("📺 channelName:", channelName);
-  console.log("💳 paymentMethod:", paymentMethod);
-
-  const { userId, usx_token, wax_account } = window.userData || {};
-
-  console.log("👤 userId:", userId);
-  console.log("🔐 usx_token:", usx_token);
-  console.log("🧾 wax_account:", wax_account);
-
-  if (!wax_account) {
-    console.error("❌ wax_account is missing.");
-    showToast("Error: wax_account is missing.", "error");
-    return;
-  }
-
-  const payload = {
-    scheduled_time: scheduledTimeUTC,
-    amount,
-    token_symbol: tokenSymbol,
-    timeframe,
-    channel_name: channelName,
-    payment_method: paymentMethod,
-    wax_account
-  };
-
-  console.log("📦 Payload to be sent:", payload);
-
-  try {
-    const url = `${BASE_URL}/add_storm?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`;
-    console.log("🌍 POST URL:", url);
-
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    console.log("📡 Response status:", res.status);
-
-    const data = await res.json();
-    console.log("📨 Response body:", data);
-
-    if (data.success) {
-      showToast(data.message, "success");
-      console.log("✅ Storm added successfully");
-      loadScheduledStorms(); // aggiorna tabella
-    } else {
-      showToast(`Error: ${data.error}`, "error");
-      console.warn("⚠️ Backend error:", data.error);
-    }
-
-  } catch (err) {
-    console.error("🔥 Network or unexpected error:", err);
-    showToast(`Network error: ${err.message}`, "error");
-  }
 }
 
 // Load Schedule NFT-Giveaway

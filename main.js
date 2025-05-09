@@ -1604,7 +1604,7 @@ async function loadLogStormsGiveaways() {
         </div>
 
         <h2 class="section-title mt-6">Scheduled Storms</h2>
-        <div id="scheduled-storms-table" style="width: 90%; margin: 0 auto;">
+        <div id="scheduled-storms-table" style="width: 100%; margin: 0 auto;">
           Loading Scheduled Storms...
         </div>
       </div>
@@ -1783,8 +1783,8 @@ function displayStormsData(data) {
           const right = winnersArray[i + 1] || '';
           winnersHTML += `
             <div style="display: flex; justify-content: space-between; margin: 1px; padding: 0 1px;">
-              <span style="width: 49%; font-size: 0.75rem; font-weight: 600; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">${left}</span>
-              <span style="width: 49%; font-size: 0.75rem; font-weight: 600; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">${right}</span>
+              <span style="width: 49%; font-size: 0.75rem; font-weight: 500; color: #1f2937; font-family: 'Inter', sans-serif;">${left}</span>
+              <span style="width: 49%; font-size: 0.75rem; font-weight: 500; color: #1f2937; font-family: 'Inter', sans-serif;">${right}</span>
             </div>`;
         }
       } else {

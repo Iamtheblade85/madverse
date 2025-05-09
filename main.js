@@ -1753,37 +1753,67 @@ function displayStormsData(data) {
         <tbody>
   `;
 
-  const colors = ['#1d4ed8', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
-
   data.forEach((storm, index) => {
     const rowColor = index % 2 === 0 ? '#f9f9f9' : '#f1f1f1';
 
     let winnersHTML = '';
     if (storm.winners_display && storm.winners_display !== 'soon') {
       const winnersArray = storm.winners_display.split(' | ');
-      winnersHTML = winnersArray.map((winner, i) => {
-        const color = colors[i % colors.length];
-        return `<span class="winner-name" style="color: ${color};">${winner}</span>`;
+      winnersHTML = winnersArray.map(winner => {
+        return `<span style="
+          display: block;
+          font-size: 0.75rem;
+          color: white;
+          font-weight: 600;
+          text-transform: uppercase;
+          text-shadow:
+            -1px -1px 0 #000,
+             1px -1px 0 #000,
+            -1px  1px 0 #000,
+             1px  1px 0 #000;
+          margin-bottom: 4px;
+        ">${winner.trim().toUpperCase()}</span>`;
       }).join('');
     } else {
       winnersHTML = '<span style="color: #6b7280;">soon</span>';
     }
 
+    // Pallino pulsante in style inline
     const pulse = storm.status === 'pending'
-      ? '<div class="pulse-dot"></div>'
+      ? `<div style="
+          width: 14px;
+          height: 14px;
+          background-color: #10b981;
+          border-radius: 50%;
+          position: relative;
+          display: inline-block;
+        ">
+          <div style="
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: -6px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid #10b981;
+            opacity: 0.6;
+            animation: pulse-ring 1.5s ease-out infinite;
+          "></div>
+        </div>`
       : '';
-    console.log("Storm ID:", storm.id, "Status:", storm.status);
+
     tableHTML += `
       <tr style="background-color: ${rowColor}; transition: background-color 0.3s;">
-        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.id}</td>
-        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${new Date(storm.scheduled_time).toLocaleString()}</td>
-        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.offered_by}</td>
-        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.amount}</td>
-        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.token_symbol}</td>
-        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.channel_name}</td>
-        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.status}</td>
-        <td class="td winners-cell" style="padding: 8px; border: 1px solid #ddd;">${winnersHTML}</td>
-        <td class="td" style="padding: 8px; border: 1px solid #ddd; text-align: center; vertical-align: middle; width: 50px;">
+        <td style="padding: 8px; border: 1px solid #ddd;">${storm.id}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${new Date(storm.scheduled_time).toLocaleString()}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${storm.offered_by}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${storm.amount}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${storm.token_symbol}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${storm.channel_name}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${storm.status}</td>
+        <td class="winners-cell" style="padding: 8px; border: 1px solid #ddd;">${winnersHTML}</td>
+        <td style="padding: 8px; border: 1px solid #ddd; text-align: center; vertical-align: middle; width: 50px;">
           ${pulse}
         </td>
       </tr>

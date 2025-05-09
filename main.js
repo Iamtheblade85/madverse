@@ -1710,8 +1710,9 @@ function addHoverEffectToRows() {
 
 // Funzione per aggiungere una nuova tempesta programmata
 async function addScheduledStorm() {
-  const container = document.getElementById('c2e-content');
-  // ✅ Prima leggi i valori dal DOM
+  console.log("🔄 addScheduledStorm() called");
+
+  // Leggi valori dal DOM
   const scheduledTimeLocal = document.getElementById('scheduledTime').value;
   const scheduledTimeUTC = new Date(scheduledTimeLocal).toISOString();
   const amount = document.getElementById('amount').value;
@@ -1720,41 +1721,65 @@ async function addScheduledStorm() {
   const channelName = document.getElementById('channelName').value;
   const paymentMethod = document.getElementById('paymentMethod').value;
 
-  const { userId, usx_token, wax_account } = window.userData;
+  console.log("📅 scheduledTimeLocal:", scheduledTimeLocal);
+  console.log("🌐 scheduledTimeUTC (to send):", scheduledTimeUTC);
+  console.log("💰 amount:", amount);
+  console.log("🔠 tokenSymbol:", tokenSymbol);
+  console.log("⏱️ timeframe:", timeframe);
+  console.log("📺 channelName:", channelName);
+  console.log("💳 paymentMethod:", paymentMethod);
+
+  const { userId, usx_token, wax_account } = window.userData || {};
+
+  console.log("👤 userId:", userId);
+  console.log("🔐 usx_token:", usx_token);
+  console.log("🧾 wax_account:", wax_account);
 
   if (!wax_account) {
-    container.innerHTML = `<div class="text-red-500 text-center">Error: wax_account is missing.</div>`;
-    //document.getElementById('c2e-content').innerHTML = `<div class="text-red-500 text-center" style="padding: 10px;">Error: wax_account is missing.</div>`;
+    console.error("❌ wax_account is missing.");
+    showToast("Error: wax_account is missing.", "error");
     return;
   }
 
   const payload = {
     scheduled_time: scheduledTimeUTC,
-    amount: amount,
+    amount,
     token_symbol: tokenSymbol,
-    timeframe: timeframe,
+    timeframe,
     channel_name: channelName,
     payment_method: paymentMethod,
-    wax_account: wax_account,
+    wax_account
   };
 
+  console.log("📦 Payload to be sent:", payload);
+
   try {
-    const res = await fetch(`${BASE_URL}/add_storm?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`, {
+    const url = `${BASE_URL}/add_storm?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`;
+    console.log("🌍 POST URL:", url);
+
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
+    console.log("📡 Response status:", res.status);
+
     const data = await res.json();
+    console.log("📨 Response body:", data);
 
     if (data.success) {
-      container.innerHTML = `<div class="text-green-500 text-center" style="padding: 10px; font-weight: bold;">${data.message}</div>`;
-      loadScheduledStorms();
+      showToast(data.message, "success");
+      console.log("✅ Storm added successfully");
+      loadScheduledStorms(); // aggiorna tabella
     } else {
-      container.innerHTML = `<div class="text-red-500 text-center" style="padding: 10px; font-weight: bold;">Error: ${data.error}</div>`;
+      showToast(`Error: ${data.error}`, "error");
+      console.warn("⚠️ Backend error:", data.error);
     }
+
   } catch (err) {
-    container.innerHTML = `<div class="text-red-500 text-center" style="padding: 10px;">Error adding scheduled storm: ${err.message}</div>`;
+    console.error("🔥 Network or unexpected error:", err);
+    showToast(`Network error: ${err.message}`, "error");
   }
 }
 

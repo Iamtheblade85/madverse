@@ -1772,7 +1772,7 @@ function displayStormsData(data) {
     const pulse = storm.status === 'pending'
       ? '<div class="pulse-dot"></div>'
       : '';
-
+    console.log("Storm ID:", storm.id, "Status:", storm.status);
     tableHTML += `
       <tr style="background-color: ${rowColor}; transition: background-color 0.3s;">
         <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.id}</td>
@@ -1783,7 +1783,9 @@ function displayStormsData(data) {
         <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.channel_name}</td>
         <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.status}</td>
         <td class="td winners-cell" style="padding: 8px; border: 1px solid #ddd;">${winnersHTML}</td>
-        <td class="td" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${pulse}</td>
+        <td class="td" style="padding: 8px; border: 1px solid #ddd; text-align: center; vertical-align: middle; width: 50px;">
+          ${pulse}
+        </td>
       </tr>
     `;
   });

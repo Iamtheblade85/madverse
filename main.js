@@ -1445,23 +1445,23 @@ async function loadLogStormsGiveaways() {
   try {
     // Visualizza il modulo per aggiungere una tempesta
     container.innerHTML = `
-      <div class="section-container" style="padding: 10px; max-width: 800px; margin: 0 auto; background-color: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border-radius: 8px;">
+      <div class="section-container" style="padding: 10px; margin: 0 auto; background-color: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border-radius: 8px;">
         <h2 class="section-title" style="font-size: 1.2rem; font-weight: bold; color: #4B5563; margin-bottom: 16px; text-align: center;">Add New Scheduled Storm</h2>
-        <div id="add-storm-form" class="form-container" style="display: flex; flex-wrap: wrap; gap: 12px;">
+        <div id="add-storm-form" class="form-container" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;">
 
           <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Scheduled Time</label>
-          <input type="datetime-local" id="scheduledTime" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <input type="datetime-local" id="scheduledTime" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 30%; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
 
           <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Amount</label>
-          <input type="number" id="amount" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <input type="number" id="amount" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 30%; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
 
           <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Token Symbol</label>
-          <select id="tokenSymbol" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <select id="tokenSymbol" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 30%; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
             <option value="">Select Token</option>
           </select>
 
           <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Timeframe</label>
-          <select id="timeframe" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <select id="timeframe" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 30%; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
             <option value="">Select Timeframe</option>
             <option value="5m">5m</option>
             <option value="10m">10m</option>
@@ -1488,12 +1488,12 @@ async function loadLogStormsGiveaways() {
           </select>
 
           <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Channel</label>
-          <select id="channelName" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <select id="channelName" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 30%; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
             <option value="">Select Channel</option>
           </select>
 
           <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Payment Method</label>
-          <select id="paymentMethod" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <select id="paymentMethod" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 30%; min-width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
             <option value="twitch">Twitch</option>
             <option value="telegram">Telegram</option>
           </select>
@@ -1502,7 +1502,7 @@ async function loadLogStormsGiveaways() {
         </div>
 
         <h2 class="section-title mt-6">Scheduled Storms</h2>
-        <div id="scheduled-storms-table">
+        <div id="scheduled-storms-table" style="width: 90%; margin: 0 auto;">
           Loading Scheduled Storms...
         </div>
       </div>
@@ -1566,7 +1566,7 @@ async function populateChannels() {
   const channelSelect = document.getElementById('channelName');
   
   try {
-    const res = await fetch('/available_channels');
+    const res = await fetch(`${BASE_URL}/available_channels`);
     const data = await res.json();
     
     if (data.channels && Array.isArray(data.channels)) {

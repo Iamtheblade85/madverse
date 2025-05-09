@@ -1731,7 +1731,6 @@ async function loadScheduledStorms() {
   }
 }
 
-// Funzione per visualizzare i dati delle tempeste programmate
 function displayStormsData(data) {
   const tableContainer = document.getElementById('scheduled-storms-table');
 
@@ -1748,6 +1747,7 @@ function displayStormsData(data) {
             <th class="th" style="padding: 12px; border: 1px solid #ddd;">Channel</th>
             <th class="th" style="padding: 12px; border: 1px solid #ddd;">Status</th>
             <th class="th" style="padding: 12px; border: 1px solid #ddd;">Winners</th>
+            <th class="th" style="padding: 12px; border: 1px solid #ddd;"></th> <!-- Colonna per il pallino -->
           </tr>
         </thead>
         <tbody>
@@ -1777,6 +1777,10 @@ function displayStormsData(data) {
       winnersHTML = '<span style="color: #6b7280;">soon</span>';
     }
 
+    const pulse = storm.status === 'pending'
+      ? '<div class="pulse-dot"></div>'
+      : '';
+
     tableHTML += `
       <tr style="background-color: ${rowColor}; transition: background-color 0.3s;">
         <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.id}</td>
@@ -1787,6 +1791,7 @@ function displayStormsData(data) {
         <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.channel_name}</td>
         <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.status}</td>
         <td class="td" style="padding: 8px; border: 1px solid #ddd;">${winnersHTML}</td>
+        <td class="td" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${pulse}</td>
       </tr>
     `;
   });

@@ -1711,7 +1711,7 @@ function addHoverEffectToRows() {
 // Funzione per aggiungere una nuova tempesta programmata
 async function addScheduledStorm() {
   console.log("🔄 addScheduledStorm() called");
-
+  const container = document.getElementById('c2e-content');
   // Leggi valori dal DOM
   const scheduledTimeLocal = document.getElementById('scheduledTime').value;
   const scheduledTimeUTC = new Date(scheduledTimeLocal).toISOString();

@@ -1453,11 +1453,11 @@ async function loadLogStormsGiveaways() {
           <div style="display: flex; flex-direction: row; gap: 16px; width: 100%; max-width: 450px;">
             <div style="flex: 1;">
               <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Scheduled Time</label>
-              <input type="datetime-local" id="scheduledTime" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+              <input type="datetime-local" id="scheduledTime" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #3b82f6; border-radius: 4px;">
             </div>
             <div style="flex: 1;">
               <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Timeframe</label>
-              <select id="timeframe" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+              <select id="timeframe" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #3b82f6; border-radius: 4px;">
                 <option value="">Select Timeframe</option>
                 <option value="5m">5m</option>
                 <option value="10m">10m</option>
@@ -1489,11 +1489,11 @@ async function loadLogStormsGiveaways() {
           <div style="display: flex; flex-direction: row; gap: 16px; width: 100%; max-width: 450px;">
             <div style="flex: 1;">
               <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Amount</label>
-              <input type="number" id="amount" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+              <input type="number" id="amount" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #3b82f6; border-radius: 4px;">
             </div>
             <div style="flex: 1;">
               <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Token Symbol</label>
-              <select id="tokenSymbol" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+              <select id="tokenSymbol" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #3b82f6; border-radius: 4px;">
                 <option value="">Select Token</option>
               </select>
             </div>
@@ -1503,13 +1503,13 @@ async function loadLogStormsGiveaways() {
           <div style="display: flex; flex-direction: row; gap: 16px; width: 100%; max-width: 450px;">
             <div style="flex: 1;">
               <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Channel</label>
-              <select id="channelName" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+              <select id="channelName" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #3b82f6; border-radius: 4px;">
                 <option value="">Select Channel</option>
               </select>
             </div>
             <div style="flex: 1;">
               <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Payment Method</label>
-              <select id="paymentMethod" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+              <select id="paymentMethod" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #3b82f6; border-radius: 4px;">
                 <option value="twitch">Twitch</option>
                 <option value="telegram">Telegram</option>
               </select>
@@ -1517,7 +1517,7 @@ async function loadLogStormsGiveaways() {
           </div>
 
           <!-- Add Storm Button -->
-          <button id="submitStorm" class="btn-submit" style="font-size: 1rem; padding: 12px 24px; background-color: #10B981; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; transition: background-color 0.3s;">
+          <button id="submitStorm" class="btn-submit" style="font-size: 1rem; padding: 12px 24px; background-color: #3b82f6; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; transition: background-color 0.3s;">
             Add Storm
           </button>
         </div>
@@ -1548,6 +1548,7 @@ async function loadLogStormsGiveaways() {
     container.innerHTML = `<div class="text-red-500 text-center">Error loading log storms and giveaways: ${err.message}</div>`;
   }
 }
+
 
 // Funzione per popolare il dropdown dei Token Symbols
 async function populateTokenSymbols() {
@@ -1622,6 +1623,7 @@ function setScheduledTimeMinMax() {
 }
 
 // Funzione per caricare le tempeste programmate
+// Funzione per caricare le tempeste programmate
 async function loadScheduledStorms() {
   const tableContainer = document.getElementById('scheduled-storms-table');
   tableContainer.innerHTML = 'Loading Scheduled Storms...';
@@ -1652,19 +1654,19 @@ async function loadScheduledStorms() {
 // Funzione per visualizzare i dati delle tempeste programmate
 function displayStormsData(data) {
   const tableContainer = document.getElementById('scheduled-storms-table');
-  
+
   let tableHTML = `
-    <div class="table-container" style="width: 100%; overflow-x: auto;">
+    <div class="table-container" style="width: 100%; overflow-x: auto; padding: 20px;">
       <table class="table-auto w-full" style="border-collapse: collapse;">
-        <thead style="background-color: #4CAF50; color: white;">
+        <thead style="background-color: #3b82f6; color: white;">
           <tr>
-            <th style="padding: 12px; border: 1px solid #ddd;">ID</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Scheduled Time</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Offered By</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Amount</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Token</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Channel</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Status</th>
+            <th class="th" style="padding: 12px; border: 1px solid #ddd;">ID</th>
+            <th class="th" style="padding: 12px; border: 1px solid #ddd;">Scheduled Time</th>
+            <th class="th" style="padding: 12px; border: 1px solid #ddd;">Offered By</th>
+            <th class="th" style="padding: 12px; border: 1px solid #ddd;">Amount</th>
+            <th class="th" style="padding: 12px; border: 1px solid #ddd;">Token</th>
+            <th class="th" style="padding: 12px; border: 1px solid #ddd;">Channel</th>
+            <th class="th" style="padding: 12px; border: 1px solid #ddd;">Status</th>
           </tr>
         </thead>
         <tbody>
@@ -1674,26 +1676,43 @@ function displayStormsData(data) {
   data.forEach((storm, index) => {
     const rowColor = index % 2 === 0 ? '#f9f9f9' : '#f1f1f1';  // Righe alternate
     tableHTML += `
-      <tr style="background-color: ${rowColor};">
-        <td style="padding: 8px; border: 1px solid #ddd;">${storm.id}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${new Date(storm.scheduled_time).toLocaleString()}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${storm.offered_by}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${storm.amount}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${storm.token_symbol}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${storm.channel_name}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${storm.status}</td>
+      <tr style="background-color: ${rowColor}; transition: background-color 0.3s;">
+        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.id}</td>
+        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${new Date(storm.scheduled_time).toLocaleString()}</td>
+        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.offered_by}</td>
+        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.amount}</td>
+        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.token_symbol}</td>
+        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.channel_name}</td>
+        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.status}</td>
       </tr>
     `;
   });
 
   tableHTML += '</tbody></table></div>';
   tableContainer.innerHTML = tableHTML;
+
+  // Miglioramenti all'interazione dell'utente
+  addHoverEffectToRows();
+}
+
+// Aggiungi effetto hover alle righe della tabella per migliorare l'interazione
+function addHoverEffectToRows() {
+  const rows = document.querySelectorAll('.table-row');
+  rows.forEach(row => {
+    row.addEventListener('mouseenter', () => {
+      row.style.backgroundColor = '#e2e8f0'; // Colore chiaro al passaggio del mouse
+    });
+    row.addEventListener('mouseleave', () => {
+      row.style.backgroundColor = ''; // Rimuove il colore al passaggio
+    });
+  });
 }
 
 // Funzione per aggiungere una nuova tempesta programmata
 async function addScheduledStorm() {
   const container = document.getElementById('c2e-content');
-  
+  container.innerHTML = 'Adding Storm...';  // Messaggio di caricamento iniziale
+
   const scheduledTime = document.getElementById('scheduledTime').value;
   const amount = document.getElementById('amount').value;
   const tokenSymbol = document.getElementById('tokenSymbol').value;
@@ -1704,7 +1723,7 @@ async function addScheduledStorm() {
   const { userId, usx_token, wax_account } = window.userData;
 
   if (!wax_account) {
-    container.innerHTML = `<div class="text-red-500">Error: wax_account is missing.</div>`;
+    container.innerHTML = `<div class="text-red-500 text-center" style="padding: 10px;">Error: wax_account is missing.</div>`;
     return;
   }
 
@@ -1731,14 +1750,17 @@ async function addScheduledStorm() {
 
     const data = await res.json();
 
+    // Messaggio di successo
     if (data.success) {
-      container.innerHTML = `<div class="text-green-500">${data.message}</div>`;
-      loadScheduledStorms(); // Reload storms table after adding a new storm
+      container.innerHTML = `<div class="text-green-500 text-center" style="padding: 10px; font-weight: bold;">${data.message}</div>`;
+      loadScheduledStorms(); // Ricarica la tabella dopo aver aggiunto una tempesta
     } else {
-      container.innerHTML = `<div class="text-red-500">Error: ${data.error}</div>`;
+      // Messaggio di errore
+      container.innerHTML = `<div class="text-red-500 text-center" style="padding: 10px; font-weight: bold;">Error: ${data.error}</div>`;
     }
   } catch (err) {
-    container.innerHTML = `<div class="text-red-500">Error adding scheduled storm: ${err.message}</div>`;
+    // Gestione degli errori generali
+    container.innerHTML = `<div class="text-red-500 text-center" style="padding: 10px;">Error adding scheduled storm: ${err.message}</div>`;
   }
 }
 

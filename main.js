@@ -10,6 +10,10 @@ let availableTokens = [];
 let originalStormsData = [];
 let currentSort = { key: '', direction: 'desc' };
 
+function getUniqueValues(data, key) {
+  return [...new Set(data.map(item => item[key]).filter(Boolean))].sort();
+}
+
 // Estrai parametri da URL
 function getUrlParams() {
   const params = new URLSearchParams(window.location.search);
@@ -30,15 +34,15 @@ async function loadAvailableTokens() {
   }
 }
 function applyStormsFiltersAndSort() {
-  const channelFilter = document.getElementById('filter-channel')?.value.toLowerCase() || '';
-  const statusFilter = document.getElementById('filter-status')?.value.toLowerCase() || '';
-  const offeredByFilter = document.getElementById('filter-offeredby')?.value.toLowerCase() || '';
+  const channelFilter = document.getElementById('filter-channel')?.value || '';
+  const statusFilter = document.getElementById('filter-status')?.value || '';
+  const offeredByFilter = document.getElementById('filter-offeredby')?.value || '';
 
-  let filtered = originalStormsData.filter(storm => {
+  let filtered = originalStormsData.filter(record => {
     return (
-      (!channelFilter || storm.channel_name?.toLowerCase().includes(channelFilter)) &&
-      (!statusFilter || storm.status?.toLowerCase().includes(statusFilter)) &&
-      (!offeredByFilter || storm.offered_by?.toLowerCase().includes(offeredByFilter))
+      (!channelFilter || record.channel_name === channelFilter) &&
+      (!statusFilter || record.status === statusFilter) &&
+      (!offeredByFilter || record.offered_by === offeredByFilter)
     );
   });
 
@@ -58,6 +62,7 @@ function applyStormsFiltersAndSort() {
 
   renderStormsTable(filtered);
 }
+
 
 // Funzione iniziale
 async function initApp() {
@@ -1830,7 +1835,13 @@ function displayStormsData(data) {
   const tableContainer = document.getElementById('scheduled-storms-table');
   originalStormsData = data;
 
-  // Freccia ↑ o ↓ accanto all'intestazione
+  const getUniqueValues = (data, key) => [...new Set(data.map(item => item[key]).filter(Boolean))].sort();
+  const createOptions = (values) => `<option value="">All</option>` + values.map(v => `<option value="${v}">${v}</option>`).join('');
+
+  const channels = getUniqueValues(data, 'channel_name');
+  const statuses = getUniqueValues(data, 'status');
+  const offeredBys = getUniqueValues(data, 'offered_by');
+
   const sortArrow = (key) => {
     if (currentSort.key === key) {
       return currentSort.direction === 'asc' ? ' ↑' : ' ↓';
@@ -1838,13 +1849,18 @@ function displayStormsData(data) {
     return '';
   };
 
-  // HTML barra filtri + intestazioni dinamiche
   tableContainer.innerHTML = `
     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 16px;">
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <input id="filter-channel" placeholder="Filter by Channel" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
-        <input id="filter-status" placeholder="Filter by Status" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
-        <input id="filter-offeredby" placeholder="Filter by Offered By" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+        <select id="filter-channel" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+          ${createOptions(channels)}
+        </select>
+        <select id="filter-status" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+          ${createOptions(statuses)}
+        </select>
+        <select id="filter-offeredby" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+          ${createOptions(offeredBys)}
+        </select>
       </div>
       <button id="update-storms" style="background-color: #3b82f6; color: white; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">
         Update Data
@@ -1881,9 +1897,9 @@ function displayStormsData(data) {
   renderStormsTable(data);
 
   // Eventi filtri e aggiornamento
-  document.getElementById('filter-channel').addEventListener('input', applyStormsFiltersAndSort);
-  document.getElementById('filter-status').addEventListener('input', applyStormsFiltersAndSort);
-  document.getElementById('filter-offeredby').addEventListener('input', applyStormsFiltersAndSort);
+  document.getElementById('filter-channel').addEventListener('change', applyStormsFiltersAndSort);
+  document.getElementById('filter-status').addEventListener('change', applyStormsFiltersAndSort);
+  document.getElementById('filter-offeredby').addEventListener('change', applyStormsFiltersAndSort);
   document.getElementById('update-storms').addEventListener('click', loadScheduledStorms);
 }
 

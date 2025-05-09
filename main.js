@@ -1445,36 +1445,57 @@ async function loadLogStormsGiveaways() {
   try {
     // Visualizza il modulo per aggiungere una tempesta
     container.innerHTML = `
-      <div class="section-container">
-        <h2 class="section-title">Add New Scheduled Storm</h2>
-        <div id="add-storm-form" class="form-container">
-          <label class="input-label">Scheduled Time</label>
-          <input type="datetime-local" id="scheduledTime" class="input-field">
-          
-          <label class="input-label">Amount</label>
-          <input type="number" id="amount" class="input-field">
-          
-          <label class="input-label">Token Symbol</label>
-          <select id="tokenSymbol" class="input-field">
+      <div class="section-container" style="padding: 20px; max-width: 1200px; margin: 0 auto; background-color: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border-radius: 8px;">
+        <h2 class="section-title" style="font-size: 1.5rem; font-weight: bold; color: #4B5563; margin-bottom: 20px;">Add New Scheduled Storm</h2>
+        <div id="add-storm-form" class="form-container" style="display: flex; flex-direction: column;">
+          <label class="input-label" style="font-size: 0.875rem; margin-bottom: 8px; color: #4B5563;">Scheduled Time</label>
+          <input type="datetime-local" id="scheduledTime" class="input-field" style="padding: 10px; font-size: 0.875rem; border: 1px solid #E5E7EB; border-radius: 5px; margin-bottom: 16px; width: 100%;">
+
+          <label class="input-label" style="font-size: 0.875rem; margin-bottom: 8px; color: #4B5563;">Amount</label>
+          <input type="number" id="amount" class="input-field" style="padding: 10px; font-size: 0.875rem; border: 1px solid #E5E7EB; border-radius: 5px; margin-bottom: 16px; width: 100%;">
+
+          <label class="input-label" style="font-size: 0.875rem; margin-bottom: 8px; color: #4B5563;">Token Symbol</label>
+          <select id="tokenSymbol" class="input-field" style="padding: 10px; font-size: 0.875rem; border: 1px solid #E5E7EB; border-radius: 5px; margin-bottom: 16px; width: 100%;">
             <option value="">Select Token</option>
           </select>
 
-          <label class="input-label">Timeframe</label>
-          <select id="timeframe" class="input-field">
+          <label class="input-label" style="font-size: 0.875rem; margin-bottom: 8px; color: #4B5563;">Timeframe</label>
+          <select id="timeframe" class="input-field" style="padding: 10px; font-size: 0.875rem; border: 1px solid #E5E7EB; border-radius: 5px; margin-bottom: 16px; width: 100%;">
             <option value="">Select Timeframe</option>
-            <!-- Timeframe options will be populated dynamically -->
+            <option value="5m">5m</option>
+            <option value="10m">10m</option>
+            <option value="15m">15m</option>
+            <option value="20m">20m</option>
+            <option value="30m">30m</option>
+            <option value="1h">1h</option>
+            <option value="2h">2h</option>
+            <option value="3h">3h</option>
+            <option value="4h">4h</option>
+            <option value="5h">5h</option>
+            <option value="6h">6h</option>
+            <option value="12h">12h</option>
+            <option value="1d">1d</option>
+            <option value="2d">2d</option>
+            <option value="3d">3d</option>
+            <option value="4d">4d</option>
+            <option value="5d">5d</option>
+            <option value="6d">6d</option>
+            <option value="7d">7d</option>
+            <option value="15d">15d</option>
+            <option value="30d">30d</option>
+            <option value="1y">1y</option>
           </select>
 
-          <label class="input-label">Channel</label>
-          <input type="text" id="channelName" class="input-field">
-          
-          <label class="input-label">Payment Method</label>
-          <select id="paymentMethod" class="input-field">
+          <label class="input-label" style="font-size: 0.875rem; margin-bottom: 8px; color: #4B5563;">Channel</label>
+          <input type="text" id="channelName" class="input-field" style="padding: 10px; font-size: 0.875rem; border: 1px solid #E5E7EB; border-radius: 5px; margin-bottom: 16px; width: 100%;">
+
+          <label class="input-label" style="font-size: 0.875rem; margin-bottom: 8px; color: #4B5563;">Payment Method</label>
+          <select id="paymentMethod" class="input-field" style="padding: 10px; font-size: 0.875rem; border: 1px solid #E5E7EB; border-radius: 5px; margin-bottom: 16px; width: 100%;">
             <option value="twitch">Twitch</option>
             <option value="telegram">Telegram</option>
           </select>
 
-          <button id="submitStorm" class="btn-submit">Add Storm</button>
+          <button id="submitStorm" class="btn-submit" style="padding: 12px 24px; background-color: #10B981; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; width: 100%;">Add Storm</button>
         </div>
 
         <h2 class="section-title mt-6">Scheduled Storms</h2>
@@ -1489,7 +1510,7 @@ async function loadLogStormsGiveaways() {
 
     // Popola i token simbolo
     await populateTokenSymbols();
-    // Popola i timeframes dinamicamente
+    // Popola i timeframes
     populateTimeframes();
     
     // Imposta i limiti per l'orario
@@ -1505,20 +1526,27 @@ async function loadLogStormsGiveaways() {
 // Funzione per popolare il dropdown dei Token Symbols
 async function populateTokenSymbols() {
   const tokenSelect = document.getElementById('tokenSymbol');
-  const tokens = window.availableTokens; // I token disponibili sono salvati in `window.availableTokens`
-
-  tokens.forEach(token => {
-    const option = document.createElement('option');
-    option.value = token;
-    option.textContent = token;
-    tokenSelect.appendChild(option);
-  });
+  
+  if (window.walletBalances && Array.isArray(window.walletBalances)) {
+    window.walletBalances.forEach(balance => {
+      const option = document.createElement('option');
+      option.value = balance.symbol;
+      option.textContent = balance.symbol;
+      tokenSelect.appendChild(option);
+    });
+  } else {
+    console.error("walletBalances is not defined or not an array");
+    tokenSelect.innerHTML = '<option value="">No tokens available</option>';
+  }
 }
 
 // Funzione per popolare il dropdown dei Timeframes
 function populateTimeframes() {
   const timeframeSelect = document.getElementById('timeframe');
-  const timeframes = ["5m", "10m", "15m", "20m", "30m", "1h", "2h", "3h", "4h", "5h", "6h", "12h", "1d", "2d", "3d", "4d", "5d", "6d", "7d", "15d", "30d", "1y"];
+  const timeframes = [
+    "5m", "10m", "15m", "20m", "30m", "1h", "2h", "3h", "4h", "5h", "6h", "12h",
+    "1d", "2d", "3d", "4d", "5d", "6d", "7d", "15d", "30d", "1y"
+  ];
 
   timeframes.forEach(frame => {
     const option = document.createElement('option');

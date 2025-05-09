@@ -1704,7 +1704,6 @@ function setScheduledTimeMinMax() {
 }
 
 // Funzione per caricare le tempeste programmate
-// Funzione per caricare le tempeste programmate
 async function loadScheduledStorms() {
   const tableContainer = document.getElementById('scheduled-storms-table');
   tableContainer.innerHTML = 'Loading Scheduled Storms...';
@@ -1748,14 +1747,36 @@ function displayStormsData(data) {
             <th class="th" style="padding: 12px; border: 1px solid #ddd;">Token</th>
             <th class="th" style="padding: 12px; border: 1px solid #ddd;">Channel</th>
             <th class="th" style="padding: 12px; border: 1px solid #ddd;">Status</th>
+            <th class="th" style="padding: 12px; border: 1px solid #ddd;">Winners</th>
           </tr>
         </thead>
         <tbody>
   `;
 
-  // Aggiungi i dati alla tabella, con righe alternate
+  const colors = ['#1d4ed8', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
+
   data.forEach((storm, index) => {
-    const rowColor = index % 2 === 0 ? '#f9f9f9' : '#f1f1f1';  // Righe alternate
+    const rowColor = index % 2 === 0 ? '#f9f9f9' : '#f1f1f1';
+
+    let winnersHTML = '';
+    if (storm.winners_display && storm.winners_display !== 'soon') {
+      const winnersArray = storm.winners_display.split(' | ');
+      winnersHTML = winnersArray.map((winner, i) => {
+        const color = colors[i % colors.length];
+        return `<span style="
+          color: ${color};
+          font-weight: bold;
+          text-shadow:
+            -1px -1px 0 #000,
+             1px -1px 0 #000,
+            -1px  1px 0 #000,
+             1px  1px 0 #000;
+        ">${winner}</span>`;
+      }).join(' <span style="color: #6b7280;">|</span> ');
+    } else {
+      winnersHTML = '<span style="color: #6b7280;">soon</span>';
+    }
+
     tableHTML += `
       <tr style="background-color: ${rowColor}; transition: background-color 0.3s;">
         <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.id}</td>
@@ -1765,6 +1786,7 @@ function displayStormsData(data) {
         <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.token_symbol}</td>
         <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.channel_name}</td>
         <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.status}</td>
+        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${winnersHTML}</td>
       </tr>
     `;
   });
@@ -1772,7 +1794,6 @@ function displayStormsData(data) {
   tableHTML += '</tbody></table></div>';
   tableContainer.innerHTML = tableHTML;
 
-  // Miglioramenti all'interazione dell'utente
   addHoverEffectToRows();
 }
 

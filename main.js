@@ -1091,7 +1091,7 @@ if (section === 'c2e-twitch') {
       <button class="menu-btn p-4 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" data-menu="schedule-token-storm">Schedule Token-Storm</button>
       <button class="menu-btn p-4 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" data-menu="schedule-nft-giveaway">Schedule NFT-Giveaway</button>
     </div>
-    <div id="c2e-content" class="text-center text-gray-700">Loading last activity...</div>
+    <div id="c2e-content" class="text-center text-gray-700 w-[95%] mx-auto">Loading last activity...</div>
   `;
 
   // Set default view as Log Reward Activity

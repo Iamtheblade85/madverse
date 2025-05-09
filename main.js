@@ -7,6 +7,8 @@ window.nftsPerPage = 12;
 // Base URL reale
 const BASE_URL = "https://iamemanuele.pythonanywhere.com";
 let availableTokens = [];
+let originalStormsData = [];
+let currentSort = { key: '', direction: 'desc' };
 
 // Estrai parametri da URL
 function getUrlParams() {
@@ -26,6 +28,35 @@ async function loadAvailableTokens() {
   } catch (error) {
     console.error("[❌] Errore caricando tokens:", error);
   }
+}
+function applyStormsFiltersAndSort() {
+  const channelFilter = document.getElementById('filter-channel')?.value.toLowerCase() || '';
+  const statusFilter = document.getElementById('filter-status')?.value.toLowerCase() || '';
+  const offeredByFilter = document.getElementById('filter-offeredby')?.value.toLowerCase() || '';
+
+  let filtered = originalStormsData.filter(storm => {
+    return (
+      (!channelFilter || storm.channel_name?.toLowerCase().includes(channelFilter)) &&
+      (!statusFilter || storm.status?.toLowerCase().includes(statusFilter)) &&
+      (!offeredByFilter || storm.offered_by?.toLowerCase().includes(offeredByFilter))
+    );
+  });
+
+  if (currentSort.key) {
+    filtered.sort((a, b) => {
+      const aVal = a[currentSort.key];
+      const bVal = b[currentSort.key];
+      if (!aVal || !bVal) return 0;
+
+      if (currentSort.direction === 'asc') {
+        return aVal > bVal ? 1 : -1;
+      } else {
+        return aVal < bVal ? 1 : -1;
+      }
+    });
+  }
+
+  renderStormsTable(filtered);
 }
 
 // Funzione iniziale
@@ -1730,48 +1761,14 @@ async function loadScheduledStorms() {
     tableContainer.innerHTML = `<div class="text-red-500 text-center">Error loading scheduled storms: ${err.message}</div>`;
   }
 }
+function renderStormsTable(data) {
+  const tableBody = document.querySelector('.table-auto tbody');
+  if (!tableBody) return;
 
-function displayStormsData(data) {
-  const tableContainer = document.getElementById('scheduled-storms-table');
-
-  let tableHTML = `
-    <style>
-      @keyframes pulse-scale {
-        0% {
-          transform: scale(1);
-          opacity: 1;
-        }
-        70% {
-          transform: scale(2);
-          opacity: 0;
-        }
-        100% {
-          transform: scale(2);
-          opacity: 0;
-        }
-      }
-    </style>
-    <div class="table-container" style="width: 100%; overflow-x: auto; padding: 20px;">
-      <table class="table-auto w-full" style="border-collapse: collapse;">
-        <thead style="background-color: #3b82f6; color: white;">
-          <tr>
-            <th style="padding: 12px; border: 1px solid #ddd;">ID</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Scheduled Time</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Offered By</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Amount</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Token</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Channel</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Status</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Winners</th>
-            <th style="padding: 12px; border: 1px solid #ddd;"></th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
+  let rowsHTML = '';
 
   data.forEach((storm, index) => {
     const rowColor = index % 2 === 0 ? '#f9f9f9' : '#f1f1f1';
-
     let winnersHTML = '';
     const winnersRaw = storm.winners_display?.trim();
 
@@ -1783,8 +1780,8 @@ function displayStormsData(data) {
           const right = winnersArray[i + 1] || '';
           winnersHTML += `
             <div style="display: flex; justify-content: space-between; margin: 1px; padding: 0 1px;">
-              <span style="width: 49%; font-size: 0.75rem; font-weight: 500; color: #1f2937; font-family: 'Inter', sans-serif;">${left}</span>
-              <span style="width: 49%; font-size: 0.75rem; font-weight: 500; color: #1f2937; font-family: 'Inter', sans-serif;">${right}</span>
+              <span style="width: 49%; font-size: 0.75rem; font-weight: 500;">${left}</span>
+              <span style="width: 49%; font-size: 0.75rem; font-weight: 500;">${right}</span>
             </div>`;
         }
       } else {
@@ -1795,17 +1792,10 @@ function displayStormsData(data) {
     }
 
     const pulse = storm.status === 'pending'
-      ? `<div style="
-            position: relative;
-            width: 14px;
-            height: 14px;
-            background-color: #10b981;
-            border-radius: 50%;
-            animation: pulse-scale 1.5s infinite ease-out;
-          "></div>`
+      ? `<div style="position: relative; width: 14px; height: 14px; background-color: #10b981; border-radius: 50%; animation: pulse-scale 1.5s infinite ease-out;"></div>`
       : `<div style="width: 14px; height: 14px;"></div>`;
 
-    tableHTML += `
+    rowsHTML += `
       <tr style="background-color: ${rowColor}; transition: background-color 0.3s;">
         <td style="padding: 8px; border: 1px solid #ddd;">${storm.id}</td>
         <td style="padding: 8px; border: 1px solid #ddd;">${new Date(storm.scheduled_time).toLocaleString()}</td>
@@ -1815,17 +1805,86 @@ function displayStormsData(data) {
         <td style="padding: 8px; border: 1px solid #ddd;">${storm.channel_name}</td>
         <td style="padding: 8px; border: 1px solid #ddd;">${storm.status}</td>
         <td style="padding: 8px; border: 1px solid #ddd;">${winnersHTML}</td>
-        <td style="padding: 8px; border: 1px solid #ddd; text-align: center; vertical-align: middle; width: 50px;">
-          ${pulse}
-        </td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${pulse}</td>
       </tr>
     `;
   });
 
-  tableHTML += '</tbody></table></div>';
-  tableContainer.innerHTML = tableHTML;
-
+  tableBody.innerHTML = rowsHTML;
   addHoverEffectToRows();
+}
+function sortStormsTable(key) {
+  if (currentSort.key === key) {
+    // Inverti direzione se si clicca due volte sullo stesso campo
+    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+  } else {
+    // Altrimenti imposta nuova chiave e direzione ascendente
+    currentSort.key = key;
+    currentSort.direction = 'asc';
+  }
+
+  applyStormsFiltersAndSort(); // Ricalcola tabella con nuovo ordinamento
+}
+
+function displayStormsData(data) {
+  const tableContainer = document.getElementById('scheduled-storms-table');
+  originalStormsData = data;
+
+  // Freccia ↑ o ↓ accanto all'intestazione
+  const sortArrow = (key) => {
+    if (currentSort.key === key) {
+      return currentSort.direction === 'asc' ? ' ↑' : ' ↓';
+    }
+    return '';
+  };
+
+  // HTML barra filtri + intestazioni dinamiche
+  tableContainer.innerHTML = `
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <input id="filter-channel" placeholder="Filter by Channel" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+        <input id="filter-status" placeholder="Filter by Status" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+        <input id="filter-offeredby" placeholder="Filter by Offered By" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+      </div>
+      <button id="update-storms" style="background-color: #3b82f6; color: white; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+        Update Data
+      </button>
+    </div>
+    <style>
+      @keyframes pulse-scale {
+        0% { transform: scale(1); opacity: 1; }
+        70% { transform: scale(2); opacity: 0; }
+        100% { transform: scale(2); opacity: 0; }
+      }
+    </style>
+    <div class="table-container" style="width: 100%; overflow-x: auto; padding: 20px;">
+      <table class="table-auto w-full" style="border-collapse: collapse;">
+        <thead style="background-color: #3b82f6; color: white;">
+          <tr>
+            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortStormsTable('id')">Storm-ID${sortArrow('id')}</th>
+            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortStormsTable('scheduled_time')">Start Time (your local time)${sortArrow('scheduled_time')}</th>
+            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortStormsTable('offered_by')">Offered By${sortArrow('offered_by')}</th>
+            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortStormsTable('amount')">Amount${sortArrow('amount')}</th>
+            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortStormsTable('token_symbol')">Token${sortArrow('token_symbol')}</th>
+            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortStormsTable('channel_name')">Channel${sortArrow('channel_name')}</th>
+            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortStormsTable('status')">Status${sortArrow('status')}</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Winners</th>
+            <th style="padding: 12px; border: 1px solid #ddd;"></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  `;
+
+  // Inizializza righe
+  renderStormsTable(data);
+
+  // Eventi filtri e aggiornamento
+  document.getElementById('filter-channel').addEventListener('input', applyStormsFiltersAndSort);
+  document.getElementById('filter-status').addEventListener('input', applyStormsFiltersAndSort);
+  document.getElementById('filter-offeredby').addEventListener('input', applyStormsFiltersAndSort);
+  document.getElementById('update-storms').addEventListener('click', loadScheduledStorms);
 }
 
 function addHoverEffectToRows() {

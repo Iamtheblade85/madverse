@@ -1747,7 +1747,7 @@ function displayStormsData(data) {
             <th class="th" style="padding: 12px; border: 1px solid #ddd;">Channel</th>
             <th class="th" style="padding: 12px; border: 1px solid #ddd;">Status</th>
             <th class="th" style="padding: 12px; border: 1px solid #ddd;">Winners</th>
-            <th class="th" style="padding: 12px; border: 1px solid #ddd;"></th> <!-- Colonna per il pallino -->
+            <th class="th" style="padding: 12px; border: 1px solid #ddd;"></th>
           </tr>
         </thead>
         <tbody>
@@ -1763,16 +1763,8 @@ function displayStormsData(data) {
       const winnersArray = storm.winners_display.split(' | ');
       winnersHTML = winnersArray.map((winner, i) => {
         const color = colors[i % colors.length];
-        return `<span style="
-          color: ${color};
-          font-weight: bold;
-          text-shadow:
-            -1px -1px 0 #000,
-             1px -1px 0 #000,
-            -1px  1px 0 #000,
-             1px  1px 0 #000;
-        ">${winner}</span>`;
-      }).join(' <span style="color: #6b7280;">|</span> ');
+        return `<span class="winner-name" style="color: ${color};">${winner}</span>`;
+      }).join('');
     } else {
       winnersHTML = '<span style="color: #6b7280;">soon</span>';
     }
@@ -1790,7 +1782,7 @@ function displayStormsData(data) {
         <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.token_symbol}</td>
         <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.channel_name}</td>
         <td class="td" style="padding: 8px; border: 1px solid #ddd;">${storm.status}</td>
-        <td class="td" style="padding: 8px; border: 1px solid #ddd;">${winnersHTML}</td>
+        <td class="td winners-cell" style="padding: 8px; border: 1px solid #ddd;">${winnersHTML}</td>
         <td class="td" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${pulse}</td>
       </tr>
     `;

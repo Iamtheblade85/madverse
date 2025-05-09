@@ -1447,21 +1447,21 @@ async function loadLogStormsGiveaways() {
     container.innerHTML = `
       <div class="section-container" style="padding: 10px; max-width: 800px; margin: 0 auto; background-color: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border-radius: 8px;">
         <h2 class="section-title" style="font-size: 1.2rem; font-weight: bold; color: #4B5563; margin-bottom: 16px; text-align: center;">Add New Scheduled Storm</h2>
-        <div id="add-storm-form" class="form-container" style="display: flex; flex-direction: column; gap: 12px;">
+        <div id="add-storm-form" class="form-container" style="display: flex; flex-wrap: wrap; gap: 12px;">
 
           <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Scheduled Time</label>
-          <input type="datetime-local" id="scheduledTime" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <input type="datetime-local" id="scheduledTime" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
 
           <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Amount</label>
-          <input type="number" id="amount" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <input type="number" id="amount" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
 
           <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Token Symbol</label>
-          <select id="tokenSymbol" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <select id="tokenSymbol" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
             <option value="">Select Token</option>
           </select>
 
           <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Timeframe</label>
-          <select id="timeframe" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <select id="timeframe" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
             <option value="">Select Timeframe</option>
             <option value="5m">5m</option>
             <option value="10m">10m</option>
@@ -1488,10 +1488,12 @@ async function loadLogStormsGiveaways() {
           </select>
 
           <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Channel</label>
-          <input type="text" id="channelName" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <select id="channelName" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
+            <option value="">Select Channel</option>
+          </select>
 
           <label class="input-label" style="font-size: 0.875rem; margin-bottom: 4px; color: #4B5563;">Payment Method</label>
-          <select id="paymentMethod" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;">
+          <select id="paymentMethod" class="input-field" style="font-size: 0.875rem; padding: 6px 10px; width: 150px; border: 1px solid #E5E7EB; border-radius: 4px;">
             <option value="twitch">Twitch</option>
             <option value="telegram">Telegram</option>
           </select>
@@ -1513,7 +1515,9 @@ async function loadLogStormsGiveaways() {
     await populateTokenSymbols();
     // Popola i timeframes
     populateTimeframes();
-    
+    // Popola i canali
+    await populateChannels();
+
     // Imposta i limiti per l'orario
     setScheduledTimeMinMax();
 
@@ -1557,6 +1561,31 @@ function populateTimeframes() {
   });
 }
 
+// Funzione per popolare il dropdown dei Channel
+async function populateChannels() {
+  const channelSelect = document.getElementById('channelName');
+  
+  try {
+    const res = await fetch('/available_channels');
+    const data = await res.json();
+    
+    if (data.channels && Array.isArray(data.channels)) {
+      data.channels.forEach(channel => {
+        const option = document.createElement('option');
+        option.value = channel;
+        option.textContent = channel;
+        channelSelect.appendChild(option);
+      });
+    } else {
+      console.error("Channels data is invalid");
+      channelSelect.innerHTML = '<option value="">No channels available</option>';
+    }
+  } catch (err) {
+    console.error("Error loading channels:", err);
+    channelSelect.innerHTML = '<option value="">Error loading channels</option>';
+  }
+}
+
 // Funzione per popolare il campo orario con un minimo di 15 minuti e massimo 1 mese
 function setScheduledTimeMinMax() {
   const scheduledTimeInput = document.getElementById('scheduledTime');
@@ -1570,27 +1599,6 @@ function setScheduledTimeMinMax() {
   scheduledTimeInput.min = minDateString;
   scheduledTimeInput.max = maxDateString;
 }
-
-// CSS per Layout Orizzontale su Schermi Grandi e Verticale su Schermi Piccoli
-const style = document.createElement('style');
-style.innerHTML = `
-  /* Media Query per Schermi Piccoli */
-  @media (max-width: 768px) {
-    .form-container {
-      flex-direction: column;
-    }
-  }
-  
-  /* Layout Orizzontale su Schermi Grandi */
-  @media (min-width: 769px) {
-    .form-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-  }
-`;
-document.head.appendChild(style);
 
 // Funzione per caricare le tempeste programmate
 async function loadScheduledStorms() {

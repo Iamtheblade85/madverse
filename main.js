@@ -1367,6 +1367,42 @@ if (section === 'c2e-twitch') {
   // ✅ Imposta tutto insieme
   container.innerHTML = html;
 } 
+function applyRewardFiltersAndSort() {
+  const username = document.getElementById('filter-username').value;
+  const channel = document.getElementById('filter-channel').value;
+  const sponsor = document.getElementById('filter-sponsor').value;
+
+  let filtered = originalData.filter(record =>
+    (!username || record.username === username) &&
+    (!channel || record.channel === channel) &&
+    (!sponsor || record.origin_channel === sponsor)
+  );
+
+  if (currentSort.key) {
+    filtered.sort((a, b) => {
+      const aVal = a[currentSort.key];
+      const bVal = b[currentSort.key];
+
+      if (currentSort.direction === 'asc') return aVal > bVal ? 1 : -1;
+      return aVal < bVal ? 1 : -1;
+    });
+  }
+
+  renderRewardTable(filtered);
+}
+function sortRewardTable(key) {
+  if (currentSort.key === key) {
+    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+  } else {
+    currentSort.key = key;
+    currentSort.direction = 'asc';
+  }
+
+  displayLogData(originalData); // aggiorna intestazioni
+  applyRewardFiltersAndSort();  // aggiorna righe
+}
+
+
 async function loadLogRewardActivity() {
   const container = document.getElementById('c2e-content');
   container.innerHTML = 'Loading Log Reward Activity...';  // Message to show while loading
@@ -1397,63 +1433,6 @@ async function loadLogRewardActivity() {
     container.innerHTML = `<div class="text-red-500 text-center">Error loading log reward activity: ${err.message}</div>`;
   }
 }
-
-function displayLogData(data) {
-  const container = document.getElementById('c2e-content');
-  let tableHTML = `
-    <div class="table-container mx-auto p-4">
-      <div class="filters mb-6 flex items-center justify-between">
-        <div class="flex space-x-4">
-          <div class="filter-item">
-            <label for="filter-username" class="text-sm font-medium text-gray-700">Username</label>
-            <input id="filter-username" type="text" class="input-box" placeholder="Search Username">
-          </div>
-          <div class="filter-item">
-            <label for="filter-channel" class="text-sm font-medium text-gray-700">Channel</label>
-            <input id="filter-channel" type="text" class="input-box" placeholder="Search Channel">
-          </div>
-        </div>
-        <button id="reset-filters" class="reset-btn">Reset Filters</button>
-      </div>
-
-      <table class="w-full table-auto shadow-lg rounded-lg overflow-hidden">
-        <thead class="bg-gray-100">
-          <tr>
-            <th class="table-header">Username</th>
-            <th class="table-header">Token</th>
-            <th class="table-header">Amount</th>
-            <th class="table-header">Channel</th>
-            <th class="table-header">Sponsor</th>
-            <th class="table-header">Timestamp</th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
-
-  // Add rows to the table
-  data.forEach(record => {
-    tableHTML += `
-      <tr class="table-row">
-        <td class="table-data">${record.username}</td>
-        <td class="table-data">${record.token_symbol}</td>
-        <td class="table-data">${record.amount}</td>
-        <td class="table-data">${record.channel}</td>
-        <td class="table-data">${record.origin_channel}</td>
-        <td class="table-data">${new Date(record.timestamp).toLocaleString()}</td>
-      </tr>
-    `;
-  });
-
-  tableHTML += '</tbody></table></div>';
-
-  container.innerHTML = tableHTML;
-
-  // Add event listeners for filtering
-  document.getElementById('filter-username').addEventListener('input', filterData);
-  document.getElementById('filter-channel').addEventListener('input', filterData);
-  document.getElementById('reset-filters').addEventListener('click', resetFilters);
-}
-
 function filterData() {
   const usernameFilter = document.getElementById('filter-username').value.toLowerCase();
   const channelFilter = document.getElementById('filter-channel').value.toLowerCase();
@@ -1472,6 +1451,82 @@ function resetFilters() {
   document.getElementById('filter-username').value = '';
   document.getElementById('filter-channel').value = '';
   displayLogData(originalData);
+}
+function renderRewardTable(data) {
+  const tbody = document.querySelector('#c2e-content tbody');
+  let rows = '';
+
+  data.forEach((record, index) => {
+    const bg = index % 2 === 0 ? '#f9f9f9' : '#f1f1f1';
+
+    rows += `
+      <tr style="background-color: ${bg}; transition: background-color 0.3s;">
+        <td style="padding: 10px; border: 1px solid #ddd;">${record.username}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${record.token_symbol}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${record.amount}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${record.channel}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${record.origin_channel}</td>
+        <td style="padding: 10px; border: 1px solid #ddd;">${new Date(record.timestamp).toLocaleString()}</td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = rows;
+}
+
+function displayLogData(data) {
+  const container = document.getElementById('c2e-content');
+  originalData = data;
+
+  const getUniqueValues = (arr, key) => [...new Set(arr.map(item => item[key]).filter(Boolean))].sort();
+  const createOptions = (values) => `<option value="">All</option>` + values.map(v => `<option value="${v}">${v}</option>`).join('');
+  const sortArrow = (key) => currentSort.key === key ? (currentSort.direction === 'asc' ? ' ↑' : ' ↓') : '';
+
+  const usernames = getUniqueValues(data, 'username');
+  const channels = getUniqueValues(data, 'channel');
+  const sponsors = getUniqueValues(data, 'origin_channel');
+
+  container.innerHTML = `
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <select id="filter-username" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+          ${createOptions(usernames)}
+        </select>
+        <select id="filter-channel" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+          ${createOptions(channels)}
+        </select>
+        <select id="filter-sponsor" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+          ${createOptions(sponsors)}
+        </select>
+      </div>
+      <button id="update-rewards" style="background-color: #3b82f6; color: white; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+        Update Data
+      </button>
+    </div>
+
+    <div style="width: 100%; overflow-x: auto; padding: 20px;">
+      <table class="table-auto w-full shadow-lg rounded-lg overflow-hidden" style="border-collapse: collapse;">
+        <thead style="background-color: #3b82f6; color: white;">
+          <tr>
+            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortRewardTable('username')">Username${sortArrow('username')}</th>
+            <th style="padding: 12px; border: 1px solid #ddd;">Token</th>
+            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortRewardTable('amount')">Amount${sortArrow('amount')}</th>
+            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortRewardTable('channel')">Channel${sortArrow('channel')}</th>
+            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortRewardTable('origin_channel')">Sponsor${sortArrow('origin_channel')}</th>
+            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortRewardTable('timestamp')">Timestamp${sortArrow('timestamp')}</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  `;
+
+  renderRewardTable(data);
+
+  document.getElementById('filter-username').addEventListener('change', applyRewardFiltersAndSort);
+  document.getElementById('filter-channel').addEventListener('change', applyRewardFiltersAndSort);
+  document.getElementById('filter-sponsor').addEventListener('change', applyRewardFiltersAndSort);
+  document.getElementById('update-rewards').addEventListener('click', loadLogRewardActivity);
 }
 
 // Storm Scheduler and Logs

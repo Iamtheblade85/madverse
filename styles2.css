@@ -19878,4 +19878,2513 @@ input::placeholder {
   width: 30px !important;
   height: 30px !important;
   color: black !important;
+  fo
+
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === TABLE ROW HOVER ANIMATION === */
+tr {
+  transition: background-color 0.4s ease, transform 0.3s ease !important;
+}
+tr:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  transform: scale(1.005) !important;
+}
+
+/* === NFT INVENTORY UPGRADE === */
+.nft-item {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  padding: 1rem !important;
+  border: 1px solid var(--neon-blue) !important;
+  border-radius: 10px !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+.nft-item:hover {
+  transform: translateY(-5px) scale(1.02) !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 0 15px var(--gold) !important;
+}
+.nft-item img {
+  max-height: 75px !important;
+  object-fit: contain !important;
+  border-radius: 8px !important;
+  box-shadow: 0 0 6px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
+}
+
+/* === EXTENSION PADDING BLOCK === */
+/* === BUTTONS RESTYLING === */
+button, .btn-action, .menu-btn {
+  background: linear-gradient(145deg, var(--neon-blue), var(--neon-pink)) !important;
+  color: var(--black) !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 12px var(--neon-pink), 0 0 24px var(--neon-blue) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+button:hover, .btn-action:hover, .menu-btn:hover {
+  transform: scale(1.08) !important;
+  background: linear-gradient(145deg, var(--neon-pink), var(--neon-blue)) !important;
+  color: var(--white) !important;
+  box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
 }

@@ -1420,3 +1420,134 @@ tr:hover {
     opacity: 1;
   }
 }
+
+/* === PATCHED FOR NFT, TITLE, TABLE CONTRAST === */
+/* === LIMITAZIONE NFT HEIGHT === */
+.nft-image, .nft-preview, #modal-nft img {
+  max-height: 75px !important;
+  object-fit: contain !important;
+  border-radius: 8px !important;
+  box-shadow: 0 0 10px var(--neon-cyan) !important;
+}
+
+/* === MIGLIORAMENTO TABELLE SEZIONE C2E TWITCH === */
+#c2e-content table, .c2e-table {
+  background-color: #1a1a2e !important;
+  color: var(--text-light) !important;
+}
+#c2e-content th, #c2e-content td, .c2e-table th, .c2e-table td {
+  color: var(--text-light) !important;
+  font-size: 1rem !important;
+}
+
+/* === TITOLO ANIMATO "FIRE NEON" === */
+.title-animated {
+  font-size: 3rem !important;
+  position: relative !important;
+  text-transform: uppercase !important;
+  color: var(--gold) !important;
+  text-shadow:
+    0 0 5px var(--gold),
+    0 0 15px var(--gold),
+    0 0 30px var(--neon-pink),
+    0 0 50px var(--neon-pink) !important;
+  animation: fireGlow 2.5s infinite alternate ease-in-out !important;
+}
+
+@keyframes fireGlow {
+  0% {
+    text-shadow:
+      0 0 5px var(--gold),
+      0 0 15px var(--gold),
+      0 0 30px var(--neon-pink),
+      0 0 50px var(--neon-pink);
+  }
+  100% {
+    text-shadow:
+      0 0 10px var(--gold),
+      0 0 25px var(--neon-pink),
+      0 0 50px var(--neon-blue),
+      0 0 75px var(--neon-pink);
+  }
+}
+
+/* === COLOR THEMES === */
+.theme-1 {
+  --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important;
+  --neon-cyan: #00ffff !important;
+  --neon-pink: #ff00ff !important;
+  --gold: #ffd700 !important;
+  --text-light: #f0f0f0 !important;
+}
+
+.theme-2 {
+  --bg-gradient: linear-gradient(135deg, #000428, #004e92) !important;
+  --neon-cyan: #1de9b6 !important;
+  --neon-pink: #ff1744 !important;
+  --gold: #ffc107 !important;
+  --text-light: #ffffff !important;
+}
+
+.theme-3 {
+  --bg-gradient: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d) !important;
+  --neon-cyan: #00e5ff !important;
+  --neon-pink: #f50057 !important;
+  --gold: #ffea00 !important;
+  --text-light: #ffffff !important;
+}
+
+.theme-4 {
+  --bg-gradient: linear-gradient(135deg, #4b6cb7, #182848) !important;
+  --neon-cyan: #40c4ff !important;
+  --neon-pink: #ff4081 !important;
+  --gold: #ffc400 !important;
+  --text-light: #e0f7fa !important;
+}
+
+.theme-5 {
+  --bg-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364) !important;
+  --neon-cyan: #00bcd4 !important;
+  --neon-pink: #ec407a !important;
+  --gold: #ffee58 !important;
+  --text-light: #f8f8f8 !important;
+}
+
+.theme-6 {
+  --bg-gradient: linear-gradient(135deg, #232526, #414345) !important;
+  --neon-cyan: #80d8ff !important;
+  --neon-pink: #f8bbd0 !important;
+  --gold: #ffd740 !important;
+  --text-light: #eeeeee !important;
+}
+
+.theme-7 {
+  --bg-gradient: linear-gradient(135deg, #8e2de2, #4a00e0) !important;
+  --neon-cyan: #69f0ae !important;
+  --neon-pink: #ff5252 !important;
+  --gold: #ffeb3b !important;
+  --text-light: #fafafa !important;
+}
+
+.theme-8 {
+  --bg-gradient: linear-gradient(135deg, #00c6ff, #0072ff) !important;
+  --neon-cyan: #18ffff !important;
+  --neon-pink: #e91e63 !important;
+  --gold: #ffc107 !important;
+  --text-light: #fefefe !important;
+}
+
+.theme-9 {
+  --bg-gradient: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b) !important;
+  --neon-cyan: #64ffda !important;
+  --neon-pink: #ff4081 !important;
+  --gold: #ffd600 !important;
+  --text-light: #f5f5f5 !important;
+}
+
+.theme-10 {
+  --bg-gradient: linear-gradient(135deg, #1e3c72, #2a5298) !important;
+  --neon-cyan: #00bcd4 !important;
+  --neon-pink: #f06292 !important;
+  --gold: #ffeb3b !important;
+  --text-light: #ffffff !important;
+}

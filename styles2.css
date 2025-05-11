@@ -22388,3 +22388,6471 @@ button:hover, .btn-action:hover, .menu-btn:hover {
   color: var(--white) !important;
   box-shadow: 0 0 15px var(--gold), 0 0 30px var(--neon-cyan) !important;
 }
+
+/* === FONT EXTENSIONS === */
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === FONT SYSTEM FOR CRYPTO/NFT/TWITCH THEMES === */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: none !important;
+  color: var(--text-light) !important;
+}
+
+h1, h2, h3, h4, .title-animated {
+  font-family: 'Orbitron', sans-serif !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+}
+
+.subtitle, .section-title {
+  font-family: 'Rajdhani', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  color: var(--gold) !important;
+}
+
+.text-note {
+  font-size: 0.8rem !important;
+  color: #aaa !important;
+  font-style: italic !important;
+}
+
+.text-crypto {
+  font-family: 'Share Tech Mono', monospace !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  color: var(--neon-cyan) !important;
+}
+
+.text-bold {
+  font-weight: 700 !important;
+}
+.text-glow {
+  text-shadow: 0 0 5px var(--gold), 0 0 15px var(--neon-blue) !important;
+}
+.text-underline {
+  border-bottom: 2px solid var(--neon-cyan) !important;
+  padding-bottom: 2px !important;
+}
+.text-animated-fade {
+  opacity: 0;
+  animation: textFadeIn 2s ease-in-out forwards !important;
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* === TABLE EXTENSIONS === */
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}
+
+/* === TABLE DESIGN AND INTERACTION === */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.05) !important;
+}
+
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background-color: rgba(0,0,0,0.4) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+th, td {
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  color: var(--text-light) !important;
+}
+
+th {
+  background-color: rgba(255,255,255,0.1) !important;
+  font-weight: 800 !important;
+  color: var(--gold) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+tr:hover {
+  background-color: rgba(255,255,255,0.05) !important;
+  transform: scale(1.01) !important;
+}
+
+td:empty::after {
+  content: '-' !important;
+  opacity: 0.4 !important;
+  font-style: italic !important;
+}

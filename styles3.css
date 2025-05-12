@@ -48392,13 +48392,56 @@ pre, code {
   border-radius: 6px !important;
   transition: all 0.3s ease-in-out !important;
 }
+
+/* ======= MENU E SUBMENU STILI ======= */
+.navbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--color-bg);
+  padding: 1rem;
+}
+
+.menu-btn {
+  position: relative;
+  font-weight: bold;
+  background: var(--color-accent);
+  color: var(--color-text);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  transition: background 0.3s ease, transform 0.2s;
+}
+
+.menu-btn:hover {
+  transform: translateY(-2px);
+  background: var(--color-accent-hover, #ff66ff);
+}
+
+.menu-btn.active {
+  border: 2px solid var(--color-text);
+}
+
 .submenu {
   display: none;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-left: 1.5rem;
+  margin-top: 0.25rem;
+  animation: fadeInDown 0.3s ease-in-out;
 }
-.submenu:not(.hidden) {
-  display: block;
+
+.submenu.show {
+  display: flex;
 }
-.menu-btn.active {
-  font-weight: bold;
-  border-bottom: 2px solid var(--color-accent);
+
+/* Animation */
+@keyframes fadeInDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

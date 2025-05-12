@@ -1532,3 +1532,655 @@ body.theme-9 { background-image: url('/assets/bg-theme-9.svg'); background-size:
 
 /* Custom Animated Background for selected themes */
 
+
+
+
+/* ===== SUPER THEME 1 ===== */
+body.theme-1 {
+  --bg: hsl(36, 50%, 8%) !important;
+  --text: hsl(36, 100%, 90%) !important;
+  --primary: hsl(36, 60%, 18%) !important;
+  --secondary: hsl(36, 60%, 25%) !important;
+  --accent: hsl(36, 100%, 60%) !important;
+  --accent-light: hsl(36, 100%, 75%) !important;
+  --accent-dark: hsl(36, 100%, 40%) !important;
+  --highlight: hsl(56, 100%, 50%) !important;
+  --dim: hsl(36, 30%, 15%) !important;
+  --glow: hsl(36, 100%, 85%) !important;
+
+  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
+  color: var(--text) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  transition: background 1.2s ease-in-out, color 0.8s ease !important;
+  animation: fadeStrong 6s infinite alternate !important;
+}
+
+/* Theme-specific text glow */
+body.theme-1 h1, body.theme-1 h2, body.theme-1 .title-animated {
+  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
+  animation: glowCycle1 6s ease-in-out infinite !important;
+}
+
+@keyframes glowCycle1 {
+  0% { text-shadow: 0 0 5px var(--glow); }
+  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
+  100% { text-shadow: 0 0 5px var(--glow); }
+}
+
+/* General page fade effect */
+@keyframes fadeSoft {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.1) saturate(1.05); }
+}
+
+@keyframes fadeStrong {
+  0% { filter: brightness(0.9) hue-rotate(0deg); }
+  100% { filter: brightness(1.2) hue-rotate(15deg); }
+}
+
+/* Dynamic backgrounds with multiple gradients */
+body.theme-1::before {
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: -1 !important;
+  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
+              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
+              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
+  opacity: 0.2 !important;
+  animation: bgPulse1 20s ease-in-out infinite !important;
+}
+
+@keyframes bgPulse1 {
+  0% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.05); }
+  100% { opacity: 0.15; transform: scale(1); }
+}
+
+/* ===== SUPER THEME 2 ===== */
+body.theme-2 {
+  --bg: hsl(72, 50%, 8%) !important;
+  --text: hsl(72, 100%, 90%) !important;
+  --primary: hsl(72, 60%, 18%) !important;
+  --secondary: hsl(72, 60%, 25%) !important;
+  --accent: hsl(72, 100%, 60%) !important;
+  --accent-light: hsl(72, 100%, 75%) !important;
+  --accent-dark: hsl(72, 100%, 40%) !important;
+  --highlight: hsl(92, 100%, 50%) !important;
+  --dim: hsl(72, 30%, 15%) !important;
+  --glow: hsl(72, 100%, 85%) !important;
+
+  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
+  color: var(--text) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  transition: background 1.2s ease-in-out, color 0.8s ease !important;
+  animation: fadeSoft 7s infinite alternate !important;
+}
+
+/* Theme-specific text glow */
+body.theme-2 h1, body.theme-2 h2, body.theme-2 .title-animated {
+  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
+  animation: glowCycle2 6s ease-in-out infinite !important;
+}
+
+@keyframes glowCycle2 {
+  0% { text-shadow: 0 0 5px var(--glow); }
+  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
+  100% { text-shadow: 0 0 5px var(--glow); }
+}
+
+/* General page fade effect */
+@keyframes fadeSoft {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.1) saturate(1.05); }
+}
+
+@keyframes fadeStrong {
+  0% { filter: brightness(0.9) hue-rotate(0deg); }
+  100% { filter: brightness(1.2) hue-rotate(15deg); }
+}
+
+/* Dynamic backgrounds with multiple gradients */
+body.theme-2::before {
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: -1 !important;
+  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
+              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
+              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
+  opacity: 0.2 !important;
+  animation: bgPulse2 20s ease-in-out infinite !important;
+}
+
+@keyframes bgPulse2 {
+  0% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.05); }
+  100% { opacity: 0.15; transform: scale(1); }
+}
+
+/* ===== SUPER THEME 3 ===== */
+body.theme-3 {
+  --bg: hsl(108, 50%, 8%) !important;
+  --text: hsl(108, 100%, 90%) !important;
+  --primary: hsl(108, 60%, 18%) !important;
+  --secondary: hsl(108, 60%, 25%) !important;
+  --accent: hsl(108, 100%, 60%) !important;
+  --accent-light: hsl(108, 100%, 75%) !important;
+  --accent-dark: hsl(108, 100%, 40%) !important;
+  --highlight: hsl(128, 100%, 50%) !important;
+  --dim: hsl(108, 30%, 15%) !important;
+  --glow: hsl(108, 100%, 85%) !important;
+
+  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
+  color: var(--text) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  transition: background 1.2s ease-in-out, color 0.8s ease !important;
+  animation: fadeStrong 8s infinite alternate !important;
+}
+
+/* Theme-specific text glow */
+body.theme-3 h1, body.theme-3 h2, body.theme-3 .title-animated {
+  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
+  animation: glowCycle3 6s ease-in-out infinite !important;
+}
+
+@keyframes glowCycle3 {
+  0% { text-shadow: 0 0 5px var(--glow); }
+  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
+  100% { text-shadow: 0 0 5px var(--glow); }
+}
+
+/* General page fade effect */
+@keyframes fadeSoft {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.1) saturate(1.05); }
+}
+
+@keyframes fadeStrong {
+  0% { filter: brightness(0.9) hue-rotate(0deg); }
+  100% { filter: brightness(1.2) hue-rotate(15deg); }
+}
+
+/* Dynamic backgrounds with multiple gradients */
+body.theme-3::before {
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: -1 !important;
+  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
+              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
+              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
+  opacity: 0.2 !important;
+  animation: bgPulse3 20s ease-in-out infinite !important;
+}
+
+@keyframes bgPulse3 {
+  0% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.05); }
+  100% { opacity: 0.15; transform: scale(1); }
+}
+
+/* ===== SUPER THEME 4 ===== */
+body.theme-4 {
+  --bg: hsl(144, 50%, 8%) !important;
+  --text: hsl(144, 100%, 90%) !important;
+  --primary: hsl(144, 60%, 18%) !important;
+  --secondary: hsl(144, 60%, 25%) !important;
+  --accent: hsl(144, 100%, 60%) !important;
+  --accent-light: hsl(144, 100%, 75%) !important;
+  --accent-dark: hsl(144, 100%, 40%) !important;
+  --highlight: hsl(164, 100%, 50%) !important;
+  --dim: hsl(144, 30%, 15%) !important;
+  --glow: hsl(144, 100%, 85%) !important;
+
+  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
+  color: var(--text) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  transition: background 1.2s ease-in-out, color 0.8s ease !important;
+  animation: fadeSoft 9s infinite alternate !important;
+}
+
+/* Theme-specific text glow */
+body.theme-4 h1, body.theme-4 h2, body.theme-4 .title-animated {
+  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
+  animation: glowCycle4 6s ease-in-out infinite !important;
+}
+
+@keyframes glowCycle4 {
+  0% { text-shadow: 0 0 5px var(--glow); }
+  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
+  100% { text-shadow: 0 0 5px var(--glow); }
+}
+
+/* General page fade effect */
+@keyframes fadeSoft {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.1) saturate(1.05); }
+}
+
+@keyframes fadeStrong {
+  0% { filter: brightness(0.9) hue-rotate(0deg); }
+  100% { filter: brightness(1.2) hue-rotate(15deg); }
+}
+
+/* Dynamic backgrounds with multiple gradients */
+body.theme-4::before {
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: -1 !important;
+  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
+              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
+              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
+  opacity: 0.2 !important;
+  animation: bgPulse4 20s ease-in-out infinite !important;
+}
+
+@keyframes bgPulse4 {
+  0% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.05); }
+  100% { opacity: 0.15; transform: scale(1); }
+}
+
+/* ===== SUPER THEME 5 ===== */
+body.theme-5 {
+  --bg: hsl(180, 50%, 8%) !important;
+  --text: hsl(180, 100%, 90%) !important;
+  --primary: hsl(180, 60%, 18%) !important;
+  --secondary: hsl(180, 60%, 25%) !important;
+  --accent: hsl(180, 100%, 60%) !important;
+  --accent-light: hsl(180, 100%, 75%) !important;
+  --accent-dark: hsl(180, 100%, 40%) !important;
+  --highlight: hsl(200, 100%, 50%) !important;
+  --dim: hsl(180, 30%, 15%) !important;
+  --glow: hsl(180, 100%, 85%) !important;
+
+  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
+  color: var(--text) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  transition: background 1.2s ease-in-out, color 0.8s ease !important;
+  animation: fadeStrong 10s infinite alternate !important;
+}
+
+/* Theme-specific text glow */
+body.theme-5 h1, body.theme-5 h2, body.theme-5 .title-animated {
+  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
+  animation: glowCycle5 6s ease-in-out infinite !important;
+}
+
+@keyframes glowCycle5 {
+  0% { text-shadow: 0 0 5px var(--glow); }
+  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
+  100% { text-shadow: 0 0 5px var(--glow); }
+}
+
+/* General page fade effect */
+@keyframes fadeSoft {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.1) saturate(1.05); }
+}
+
+@keyframes fadeStrong {
+  0% { filter: brightness(0.9) hue-rotate(0deg); }
+  100% { filter: brightness(1.2) hue-rotate(15deg); }
+}
+
+/* Dynamic backgrounds with multiple gradients */
+body.theme-5::before {
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: -1 !important;
+  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
+              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
+              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
+  opacity: 0.2 !important;
+  animation: bgPulse5 20s ease-in-out infinite !important;
+}
+
+@keyframes bgPulse5 {
+  0% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.05); }
+  100% { opacity: 0.15; transform: scale(1); }
+}
+
+/* ===== SUPER THEME 6 ===== */
+body.theme-6 {
+  --bg: hsl(216, 50%, 8%) !important;
+  --text: hsl(216, 100%, 90%) !important;
+  --primary: hsl(216, 60%, 18%) !important;
+  --secondary: hsl(216, 60%, 25%) !important;
+  --accent: hsl(216, 100%, 60%) !important;
+  --accent-light: hsl(216, 100%, 75%) !important;
+  --accent-dark: hsl(216, 100%, 40%) !important;
+  --highlight: hsl(236, 100%, 50%) !important;
+  --dim: hsl(216, 30%, 15%) !important;
+  --glow: hsl(216, 100%, 85%) !important;
+
+  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
+  color: var(--text) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  transition: background 1.2s ease-in-out, color 0.8s ease !important;
+  animation: fadeSoft 11s infinite alternate !important;
+}
+
+/* Theme-specific text glow */
+body.theme-6 h1, body.theme-6 h2, body.theme-6 .title-animated {
+  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
+  animation: glowCycle6 6s ease-in-out infinite !important;
+}
+
+@keyframes glowCycle6 {
+  0% { text-shadow: 0 0 5px var(--glow); }
+  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
+  100% { text-shadow: 0 0 5px var(--glow); }
+}
+
+/* General page fade effect */
+@keyframes fadeSoft {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.1) saturate(1.05); }
+}
+
+@keyframes fadeStrong {
+  0% { filter: brightness(0.9) hue-rotate(0deg); }
+  100% { filter: brightness(1.2) hue-rotate(15deg); }
+}
+
+/* Dynamic backgrounds with multiple gradients */
+body.theme-6::before {
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: -1 !important;
+  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
+              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
+              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
+  opacity: 0.2 !important;
+  animation: bgPulse6 20s ease-in-out infinite !important;
+}
+
+@keyframes bgPulse6 {
+  0% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.05); }
+  100% { opacity: 0.15; transform: scale(1); }
+}
+
+/* ===== SUPER THEME 7 ===== */
+body.theme-7 {
+  --bg: hsl(252, 50%, 8%) !important;
+  --text: hsl(252, 100%, 90%) !important;
+  --primary: hsl(252, 60%, 18%) !important;
+  --secondary: hsl(252, 60%, 25%) !important;
+  --accent: hsl(252, 100%, 60%) !important;
+  --accent-light: hsl(252, 100%, 75%) !important;
+  --accent-dark: hsl(252, 100%, 40%) !important;
+  --highlight: hsl(272, 100%, 50%) !important;
+  --dim: hsl(252, 30%, 15%) !important;
+  --glow: hsl(252, 100%, 85%) !important;
+
+  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
+  color: var(--text) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  transition: background 1.2s ease-in-out, color 0.8s ease !important;
+  animation: fadeStrong 12s infinite alternate !important;
+}
+
+/* Theme-specific text glow */
+body.theme-7 h1, body.theme-7 h2, body.theme-7 .title-animated {
+  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
+  animation: glowCycle7 6s ease-in-out infinite !important;
+}
+
+@keyframes glowCycle7 {
+  0% { text-shadow: 0 0 5px var(--glow); }
+  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
+  100% { text-shadow: 0 0 5px var(--glow); }
+}
+
+/* General page fade effect */
+@keyframes fadeSoft {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.1) saturate(1.05); }
+}
+
+@keyframes fadeStrong {
+  0% { filter: brightness(0.9) hue-rotate(0deg); }
+  100% { filter: brightness(1.2) hue-rotate(15deg); }
+}
+
+/* Dynamic backgrounds with multiple gradients */
+body.theme-7::before {
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: -1 !important;
+  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
+              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
+              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
+  opacity: 0.2 !important;
+  animation: bgPulse7 20s ease-in-out infinite !important;
+}
+
+@keyframes bgPulse7 {
+  0% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.05); }
+  100% { opacity: 0.15; transform: scale(1); }
+}
+
+/* ===== SUPER THEME 8 ===== */
+body.theme-8 {
+  --bg: hsl(288, 50%, 8%) !important;
+  --text: hsl(288, 100%, 90%) !important;
+  --primary: hsl(288, 60%, 18%) !important;
+  --secondary: hsl(288, 60%, 25%) !important;
+  --accent: hsl(288, 100%, 60%) !important;
+  --accent-light: hsl(288, 100%, 75%) !important;
+  --accent-dark: hsl(288, 100%, 40%) !important;
+  --highlight: hsl(308, 100%, 50%) !important;
+  --dim: hsl(288, 30%, 15%) !important;
+  --glow: hsl(288, 100%, 85%) !important;
+
+  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
+  color: var(--text) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  transition: background 1.2s ease-in-out, color 0.8s ease !important;
+  animation: fadeSoft 13s infinite alternate !important;
+}
+
+/* Theme-specific text glow */
+body.theme-8 h1, body.theme-8 h2, body.theme-8 .title-animated {
+  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
+  animation: glowCycle8 6s ease-in-out infinite !important;
+}
+
+@keyframes glowCycle8 {
+  0% { text-shadow: 0 0 5px var(--glow); }
+  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
+  100% { text-shadow: 0 0 5px var(--glow); }
+}
+
+/* General page fade effect */
+@keyframes fadeSoft {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.1) saturate(1.05); }
+}
+
+@keyframes fadeStrong {
+  0% { filter: brightness(0.9) hue-rotate(0deg); }
+  100% { filter: brightness(1.2) hue-rotate(15deg); }
+}
+
+/* Dynamic backgrounds with multiple gradients */
+body.theme-8::before {
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: -1 !important;
+  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
+              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
+              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
+  opacity: 0.2 !important;
+  animation: bgPulse8 20s ease-in-out infinite !important;
+}
+
+@keyframes bgPulse8 {
+  0% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.05); }
+  100% { opacity: 0.15; transform: scale(1); }
+}
+
+/* ===== SUPER THEME 9 ===== */
+body.theme-9 {
+  --bg: hsl(324, 50%, 8%) !important;
+  --text: hsl(324, 100%, 90%) !important;
+  --primary: hsl(324, 60%, 18%) !important;
+  --secondary: hsl(324, 60%, 25%) !important;
+  --accent: hsl(324, 100%, 60%) !important;
+  --accent-light: hsl(324, 100%, 75%) !important;
+  --accent-dark: hsl(324, 100%, 40%) !important;
+  --highlight: hsl(344, 100%, 50%) !important;
+  --dim: hsl(324, 30%, 15%) !important;
+  --glow: hsl(324, 100%, 85%) !important;
+
+  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
+  color: var(--text) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  transition: background 1.2s ease-in-out, color 0.8s ease !important;
+  animation: fadeStrong 14s infinite alternate !important;
+}
+
+/* Theme-specific text glow */
+body.theme-9 h1, body.theme-9 h2, body.theme-9 .title-animated {
+  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
+  animation: glowCycle9 6s ease-in-out infinite !important;
+}
+
+@keyframes glowCycle9 {
+  0% { text-shadow: 0 0 5px var(--glow); }
+  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
+  100% { text-shadow: 0 0 5px var(--glow); }
+}
+
+/* General page fade effect */
+@keyframes fadeSoft {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.1) saturate(1.05); }
+}
+
+@keyframes fadeStrong {
+  0% { filter: brightness(0.9) hue-rotate(0deg); }
+  100% { filter: brightness(1.2) hue-rotate(15deg); }
+}
+
+/* Dynamic backgrounds with multiple gradients */
+body.theme-9::before {
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: -1 !important;
+  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
+              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
+              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
+  opacity: 0.2 !important;
+  animation: bgPulse9 20s ease-in-out infinite !important;
+}
+
+@keyframes bgPulse9 {
+  0% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.05); }
+  100% { opacity: 0.15; transform: scale(1); }
+}
+
+/* ===== SUPER THEME 10 ===== */
+body.theme-10 {
+  --bg: hsl(360, 50%, 8%) !important;
+  --text: hsl(360, 100%, 90%) !important;
+  --primary: hsl(360, 60%, 18%) !important;
+  --secondary: hsl(360, 60%, 25%) !important;
+  --accent: hsl(360, 100%, 60%) !important;
+  --accent-light: hsl(360, 100%, 75%) !important;
+  --accent-dark: hsl(360, 100%, 40%) !important;
+  --highlight: hsl(20, 100%, 50%) !important;
+  --dim: hsl(360, 30%, 15%) !important;
+  --glow: hsl(360, 100%, 85%) !important;
+
+  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
+  color: var(--text) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  transition: background 1.2s ease-in-out, color 0.8s ease !important;
+  animation: fadeSoft 15s infinite alternate !important;
+}
+
+/* Theme-specific text glow */
+body.theme-10 h1, body.theme-10 h2, body.theme-10 .title-animated {
+  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
+  animation: glowCycle10 6s ease-in-out infinite !important;
+}
+
+@keyframes glowCycle10 {
+  0% { text-shadow: 0 0 5px var(--glow); }
+  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
+  100% { text-shadow: 0 0 5px var(--glow); }
+}
+
+/* General page fade effect */
+@keyframes fadeSoft {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.1) saturate(1.05); }
+}
+
+@keyframes fadeStrong {
+  0% { filter: brightness(0.9) hue-rotate(0deg); }
+  100% { filter: brightness(1.2) hue-rotate(15deg); }
+}
+
+/* Dynamic backgrounds with multiple gradients */
+body.theme-10::before {
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: -1 !important;
+  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
+              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
+              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
+  opacity: 0.2 !important;
+  animation: bgPulse10 20s ease-in-out infinite !important;
+}
+
+@keyframes bgPulse10 {
+  0% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.05); }
+  100% { opacity: 0.15; transform: scale(1); }
+}

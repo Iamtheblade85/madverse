@@ -1437,7 +1437,7 @@ tr:hover {
 }
 #c2e-content th, #c2e-content td, .c2e-table th, .c2e-table td {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 2rem !important;
 }
 
 /* === TITOLO ANIMATO "FIRE NEON" === */
@@ -1565,7 +1565,7 @@ tr:hover {
   padding: 0.5rem 1rem !important;
   border-radius: 12px !important;
   font-family: 'Orbitron', sans-serif !important;
-  font-size: 1rem !important;
+  font-size: 2rem !important;
   box-shadow: 0 0 10px var(--neon-pink) !important;
 }
 
@@ -1591,7 +1591,7 @@ td {
 
 /* === MEGA TITOLO CHIPSWALLET === */
 .title-animated {
-  font-size: 3.5rem !important;
+  font-size: 4.5rem !important;
   color: var(--gold) !important;
   text-shadow:
     0 0 10px var(--gold),
@@ -1622,11 +1622,11 @@ td {
 /* === ULTIMATE THEME CUSTOMIZATION === */
 /* === SELECT BOX CORRETTO === */
 #theme-selector {
-  width: 15px !important;
-  min-width: 15px !important;
-  max-width: 15px !important;
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
   height: 15px !important;
-  font-size: 0 !important;
+  font-size: 1.5rem !important;
   background-color: var(--gold) !important;
   border-radius: 50% !important;
   overflow: hidden !important;
@@ -1679,7 +1679,7 @@ td {
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   padding: 0.5rem !important;
   transition: background-color 0.3s ease-in-out !important;
-  font-size: 0.9rem !important;
+  font-size: 1.5rem !important;
   color: var(--text-light) !important;
 }
 
@@ -1693,10 +1693,406 @@ td {
 /* === MEDIA QUERIES ADVANCED === */
 @media (max-width: 768px) {
   body, html {
+    font-size: 25px !important;
+  }
+  .menu-btn, .btn-action, .section-title {
+    font-size: 1.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+}
+
+@media (min-width: 1440px) {
+  body {
+    font-size: 20px !important;
+  }
+  .title-animated {
+    font-size: 5rem !important;
+  }
+}
+
+/* === SCROLLBARS STYLE === */
+::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+::-webkit-scrollbar-track {
+  background: #111 !important;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 10px !important;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-pink) !important;
+}
+
+/* === COMMON STATES === */
+a, button, .btn-action, .menu-btn {
+  transition: all 0.25s ease-in-out !important;
+}
+a:hover, button:hover {
+  text-decoration: underline !important;
+}
+input:disabled, button:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+input::placeholder {
+  color: #aaa !important;
+}
+
+/* === ICONS + AVATAR SUPPORT === */
+.avatar, .icon, .logo-small {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 10px var(--neon-blue) !important;
+}
+
+/* === CUSTOM BACKGROUNDS === */
+.bg-grid {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 20px
+  ), repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 20px
+  ) !important;
+}
+
+/* === INPUT GROUP === */
+.input-group {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+.input-group input, .input-group select {
+  flex: 1 !important;
+}
+
+/* === SHIMMER EFFECT === */
+.shimmer {
+  background: linear-gradient(90deg, #222, #333, #222) !important;
+  background-size: 200% 100% !important;
+  animation: shimmerMove 1.5s infinite !important;
+}
+@keyframes shimmerMove {
+  0% { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
+}
+
+/* === EXPANSION BLOCK === */
+/* === MEDIA QUERIES ADVANCED === */
+@media (max-width: 768px) {
+  body, html {
+    font-size: 20px !important;
+  }
+  .menu-btn, .btn-action, .section-title {
+    font-size: 1.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+}
+
+@media (min-width: 1440px) {
+  body {
+    font-size: 20px !important;
+  }
+  .title-animated {
+    font-size: 4rem !important;
+  }
+}
+
+/* === SCROLLBARS STYLE === */
+::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+::-webkit-scrollbar-track {
+  background: #111 !important;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 10px !important;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-pink) !important;
+}
+
+/* === COMMON STATES === */
+a, button, .btn-action, .menu-btn {
+  transition: all 0.25s ease-in-out !important;
+}
+a:hover, button:hover {
+  text-decoration: underline !important;
+}
+input:disabled, button:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+input::placeholder {
+  color: #aaa !important;
+}
+
+/* === ICONS + AVATAR SUPPORT === */
+.avatar, .icon, .logo-small {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 10px var(--neon-blue) !important;
+}
+
+/* === CUSTOM BACKGROUNDS === */
+.bg-grid {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 20px
+  ), repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 20px
+  ) !important;
+}
+
+/* === INPUT GROUP === */
+.input-group {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+.input-group input, .input-group select {
+  flex: 1 !important;
+}
+
+/* === SHIMMER EFFECT === */
+.shimmer {
+  background: linear-gradient(90deg, #222, #333, #222) !important;
+  background-size: 200% 100% !important;
+  animation: shimmerMove 1.5s infinite !important;
+}
+@keyframes shimmerMove {
+  0% { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
+}
+
+/* === EXPANSION BLOCK === */
+/* === MEDIA QUERIES ADVANCED === */
+@media (max-width: 768px) {
+  body, html {
     font-size: 15px !important;
   }
   .menu-btn, .btn-action, .section-title {
-    font-size: 1rem !important;
+    font-size: 1.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+}
+
+@media (min-width: 1440px) {
+  body {
+    font-size: 18px !important;
+  }
+  .title-animated {
+    font-size: 4rem !important;
+  }
+}
+
+/* === SCROLLBARS STYLE === */
+::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+::-webkit-scrollbar-track {
+  background: #111 !important;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 10px !important;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-pink) !important;
+}
+
+/* === COMMON STATES === */
+a, button, .btn-action, .menu-btn {
+  transition: all 0.25s ease-in-out !important;
+}
+a:hover, button:hover {
+  text-decoration: underline !important;
+}
+input:disabled, button:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+input::placeholder {
+  color: #aaa !important;
+}
+
+/* === ICONS + AVATAR SUPPORT === */
+.avatar, .icon, .logo-small {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 10px var(--neon-blue) !important;
+}
+
+/* === CUSTOM BACKGROUNDS === */
+.bg-grid {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 20px
+  ), repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 20px
+  ) !important;
+}
+
+/* === INPUT GROUP === */
+.input-group {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+.input-group input, .input-group select {
+  flex: 1 !important;
+}
+
+/* === SHIMMER EFFECT === */
+.shimmer {
+  background: linear-gradient(90deg, #222, #333, #222) !important;
+  background-size: 200% 100% !important;
+  animation: shimmerMove 1.5s infinite !important;
+}
+@keyframes shimmerMove {
+  0% { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
+}
+
+/* === EXPANSION BLOCK === */
+/* === MEDIA QUERIES ADVANCED === */
+@media (max-width: 768px) {
+  body, html {
+    font-size: 20px !important;
+  }
+  .menu-btn, .btn-action, .section-title {
+    font-size: 1.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+}
+
+@media (min-width: 1440px) {
+  body {
+    font-size: 18px !important;
+  }
+  .title-animated {
+    font-size: 4rem !important;
+  }
+}
+
+/* === SCROLLBARS STYLE === */
+::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+}
+::-webkit-scrollbar-track {
+  background: #111 !important;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 10px !important;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-pink) !important;
+}
+
+/* === COMMON STATES === */
+a, button, .btn-action, .menu-btn {
+  transition: all 0.25s ease-in-out !important;
+}
+a:hover, button:hover {
+  text-decoration: underline !important;
+}
+input:disabled, button:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+input::placeholder {
+  color: #aaa !important;
+}
+
+/* === ICONS + AVATAR SUPPORT === */
+.avatar, .icon, .logo-small {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  border: 2px solid var(--gold) !important;
+  box-shadow: 0 0 10px var(--neon-blue) !important;
+}
+
+/* === CUSTOM BACKGROUNDS === */
+.bg-grid {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 20px
+  ), repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 20px
+  ) !important;
+}
+
+/* === INPUT GROUP === */
+.input-group {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+.input-group input, .input-group select {
+  flex: 1 !important;
+}
+
+/* === SHIMMER EFFECT === */
+.shimmer {
+  background: linear-gradient(90deg, #222, #333, #222) !important;
+  background-size: 200% 100% !important;
+  animation: shimmerMove 1.5s infinite !important;
+}
+@keyframes shimmerMove {
+  0% { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
+}
+
+/* === EXPANSION BLOCK === */
+/* === MEDIA QUERIES ADVANCED === */
+@media (max-width: 768px) {
+  body, html {
+    font-size: 20px !important;
+  }
+  .menu-btn, .btn-action, .section-title {
+    font-size: 1.5rem !important;
     padding: 0.5rem 0.75rem !important;
   }
 }
@@ -1795,7 +2191,7 @@ input::placeholder {
     font-size: 15px !important;
   }
   .menu-btn, .btn-action, .section-title {
-    font-size: 1rem !important;
+    font-size: 1.5rem !important;
     padding: 0.5rem 0.75rem !important;
   }
 }
@@ -1894,7 +2290,7 @@ input::placeholder {
     font-size: 15px !important;
   }
   .menu-btn, .btn-action, .section-title {
-    font-size: 1rem !important;
+    font-size: 1.5rem !important;
     padding: 0.5rem 0.75rem !important;
   }
 }
@@ -1993,7 +2389,7 @@ input::placeholder {
     font-size: 15px !important;
   }
   .menu-btn, .btn-action, .section-title {
-    font-size: 1rem !important;
+    font-size: 1.5rem !important;
     padding: 0.5rem 0.75rem !important;
   }
 }
@@ -2092,7 +2488,7 @@ input::placeholder {
     font-size: 15px !important;
   }
   .menu-btn, .btn-action, .section-title {
-    font-size: 1rem !important;
+    font-size: 1.5rem !important;
     padding: 0.5rem 0.75rem !important;
   }
 }
@@ -2191,7 +2587,7 @@ input::placeholder {
     font-size: 15px !important;
   }
   .menu-btn, .btn-action, .section-title {
-    font-size: 1rem !important;
+    font-size: 1.5rem !important;
     padding: 0.5rem 0.75rem !important;
   }
 }
@@ -2290,7 +2686,7 @@ input::placeholder {
     font-size: 15px !important;
   }
   .menu-btn, .btn-action, .section-title {
-    font-size: 1rem !important;
+    font-size: 1.5rem !important;
     padding: 0.5rem 0.75rem !important;
   }
 }
@@ -2389,7 +2785,7 @@ input::placeholder {
     font-size: 15px !important;
   }
   .menu-btn, .btn-action, .section-title {
-    font-size: 1rem !important;
+    font-size: 1.5rem !important;
     padding: 0.5rem 0.75rem !important;
   }
 }
@@ -2488,403 +2884,7 @@ input::placeholder {
     font-size: 15px !important;
   }
   .menu-btn, .btn-action, .section-title {
-    font-size: 1rem !important;
-    padding: 0.5rem 0.75rem !important;
-  }
-}
-
-@media (min-width: 1440px) {
-  body {
-    font-size: 18px !important;
-  }
-  .title-animated {
-    font-size: 4rem !important;
-  }
-}
-
-/* === SCROLLBARS STYLE === */
-::-webkit-scrollbar {
-  width: 10px !important;
-  height: 10px !important;
-}
-::-webkit-scrollbar-track {
-  background: #111 !important;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 10px !important;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--neon-pink) !important;
-}
-
-/* === COMMON STATES === */
-a, button, .btn-action, .menu-btn {
-  transition: all 0.25s ease-in-out !important;
-}
-a:hover, button:hover {
-  text-decoration: underline !important;
-}
-input:disabled, button:disabled {
-  opacity: 0.6 !important;
-  cursor: not-allowed !important;
-}
-input::placeholder {
-  color: #aaa !important;
-}
-
-/* === ICONS + AVATAR SUPPORT === */
-.avatar, .icon, .logo-small {
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 50% !important;
-  border: 2px solid var(--gold) !important;
-  box-shadow: 0 0 10px var(--neon-blue) !important;
-}
-
-/* === CUSTOM BACKGROUNDS === */
-.bg-grid {
-  background-image: repeating-linear-gradient(
-    0deg,
-    rgba(255, 255, 255, 0.02),
-    rgba(255, 255, 255, 0.02) 1px,
-    transparent 1px,
-    transparent 20px
-  ), repeating-linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.02),
-    rgba(255, 255, 255, 0.02) 1px,
-    transparent 1px,
-    transparent 20px
-  ) !important;
-}
-
-/* === INPUT GROUP === */
-.input-group {
-  display: flex !important;
-  gap: 8px !important;
-  align-items: center !important;
-}
-.input-group input, .input-group select {
-  flex: 1 !important;
-}
-
-/* === SHIMMER EFFECT === */
-.shimmer {
-  background: linear-gradient(90deg, #222, #333, #222) !important;
-  background-size: 200% 100% !important;
-  animation: shimmerMove 1.5s infinite !important;
-}
-@keyframes shimmerMove {
-  0% { background-position: -100% 0; }
-  100% { background-position: 100% 0; }
-}
-
-/* === EXPANSION BLOCK === */
-/* === MEDIA QUERIES ADVANCED === */
-@media (max-width: 768px) {
-  body, html {
-    font-size: 15px !important;
-  }
-  .menu-btn, .btn-action, .section-title {
-    font-size: 1rem !important;
-    padding: 0.5rem 0.75rem !important;
-  }
-}
-
-@media (min-width: 1440px) {
-  body {
-    font-size: 18px !important;
-  }
-  .title-animated {
-    font-size: 4rem !important;
-  }
-}
-
-/* === SCROLLBARS STYLE === */
-::-webkit-scrollbar {
-  width: 10px !important;
-  height: 10px !important;
-}
-::-webkit-scrollbar-track {
-  background: #111 !important;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 10px !important;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--neon-pink) !important;
-}
-
-/* === COMMON STATES === */
-a, button, .btn-action, .menu-btn {
-  transition: all 0.25s ease-in-out !important;
-}
-a:hover, button:hover {
-  text-decoration: underline !important;
-}
-input:disabled, button:disabled {
-  opacity: 0.6 !important;
-  cursor: not-allowed !important;
-}
-input::placeholder {
-  color: #aaa !important;
-}
-
-/* === ICONS + AVATAR SUPPORT === */
-.avatar, .icon, .logo-small {
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 50% !important;
-  border: 2px solid var(--gold) !important;
-  box-shadow: 0 0 10px var(--neon-blue) !important;
-}
-
-/* === CUSTOM BACKGROUNDS === */
-.bg-grid {
-  background-image: repeating-linear-gradient(
-    0deg,
-    rgba(255, 255, 255, 0.02),
-    rgba(255, 255, 255, 0.02) 1px,
-    transparent 1px,
-    transparent 20px
-  ), repeating-linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.02),
-    rgba(255, 255, 255, 0.02) 1px,
-    transparent 1px,
-    transparent 20px
-  ) !important;
-}
-
-/* === INPUT GROUP === */
-.input-group {
-  display: flex !important;
-  gap: 8px !important;
-  align-items: center !important;
-}
-.input-group input, .input-group select {
-  flex: 1 !important;
-}
-
-/* === SHIMMER EFFECT === */
-.shimmer {
-  background: linear-gradient(90deg, #222, #333, #222) !important;
-  background-size: 200% 100% !important;
-  animation: shimmerMove 1.5s infinite !important;
-}
-@keyframes shimmerMove {
-  0% { background-position: -100% 0; }
-  100% { background-position: 100% 0; }
-}
-
-/* === EXPANSION BLOCK === */
-/* === MEDIA QUERIES ADVANCED === */
-@media (max-width: 768px) {
-  body, html {
-    font-size: 15px !important;
-  }
-  .menu-btn, .btn-action, .section-title {
-    font-size: 1rem !important;
-    padding: 0.5rem 0.75rem !important;
-  }
-}
-
-@media (min-width: 1440px) {
-  body {
-    font-size: 18px !important;
-  }
-  .title-animated {
-    font-size: 4rem !important;
-  }
-}
-
-/* === SCROLLBARS STYLE === */
-::-webkit-scrollbar {
-  width: 10px !important;
-  height: 10px !important;
-}
-::-webkit-scrollbar-track {
-  background: #111 !important;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 10px !important;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--neon-pink) !important;
-}
-
-/* === COMMON STATES === */
-a, button, .btn-action, .menu-btn {
-  transition: all 0.25s ease-in-out !important;
-}
-a:hover, button:hover {
-  text-decoration: underline !important;
-}
-input:disabled, button:disabled {
-  opacity: 0.6 !important;
-  cursor: not-allowed !important;
-}
-input::placeholder {
-  color: #aaa !important;
-}
-
-/* === ICONS + AVATAR SUPPORT === */
-.avatar, .icon, .logo-small {
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 50% !important;
-  border: 2px solid var(--gold) !important;
-  box-shadow: 0 0 10px var(--neon-blue) !important;
-}
-
-/* === CUSTOM BACKGROUNDS === */
-.bg-grid {
-  background-image: repeating-linear-gradient(
-    0deg,
-    rgba(255, 255, 255, 0.02),
-    rgba(255, 255, 255, 0.02) 1px,
-    transparent 1px,
-    transparent 20px
-  ), repeating-linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.02),
-    rgba(255, 255, 255, 0.02) 1px,
-    transparent 1px,
-    transparent 20px
-  ) !important;
-}
-
-/* === INPUT GROUP === */
-.input-group {
-  display: flex !important;
-  gap: 8px !important;
-  align-items: center !important;
-}
-.input-group input, .input-group select {
-  flex: 1 !important;
-}
-
-/* === SHIMMER EFFECT === */
-.shimmer {
-  background: linear-gradient(90deg, #222, #333, #222) !important;
-  background-size: 200% 100% !important;
-  animation: shimmerMove 1.5s infinite !important;
-}
-@keyframes shimmerMove {
-  0% { background-position: -100% 0; }
-  100% { background-position: 100% 0; }
-}
-
-/* === EXPANSION BLOCK === */
-/* === MEDIA QUERIES ADVANCED === */
-@media (max-width: 768px) {
-  body, html {
-    font-size: 15px !important;
-  }
-  .menu-btn, .btn-action, .section-title {
-    font-size: 1rem !important;
-    padding: 0.5rem 0.75rem !important;
-  }
-}
-
-@media (min-width: 1440px) {
-  body {
-    font-size: 18px !important;
-  }
-  .title-animated {
-    font-size: 4rem !important;
-  }
-}
-
-/* === SCROLLBARS STYLE === */
-::-webkit-scrollbar {
-  width: 10px !important;
-  height: 10px !important;
-}
-::-webkit-scrollbar-track {
-  background: #111 !important;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 10px !important;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--neon-pink) !important;
-}
-
-/* === COMMON STATES === */
-a, button, .btn-action, .menu-btn {
-  transition: all 0.25s ease-in-out !important;
-}
-a:hover, button:hover {
-  text-decoration: underline !important;
-}
-input:disabled, button:disabled {
-  opacity: 0.6 !important;
-  cursor: not-allowed !important;
-}
-input::placeholder {
-  color: #aaa !important;
-}
-
-/* === ICONS + AVATAR SUPPORT === */
-.avatar, .icon, .logo-small {
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 50% !important;
-  border: 2px solid var(--gold) !important;
-  box-shadow: 0 0 10px var(--neon-blue) !important;
-}
-
-/* === CUSTOM BACKGROUNDS === */
-.bg-grid {
-  background-image: repeating-linear-gradient(
-    0deg,
-    rgba(255, 255, 255, 0.02),
-    rgba(255, 255, 255, 0.02) 1px,
-    transparent 1px,
-    transparent 20px
-  ), repeating-linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.02),
-    rgba(255, 255, 255, 0.02) 1px,
-    transparent 1px,
-    transparent 20px
-  ) !important;
-}
-
-/* === INPUT GROUP === */
-.input-group {
-  display: flex !important;
-  gap: 8px !important;
-  align-items: center !important;
-}
-.input-group input, .input-group select {
-  flex: 1 !important;
-}
-
-/* === SHIMMER EFFECT === */
-.shimmer {
-  background: linear-gradient(90deg, #222, #333, #222) !important;
-  background-size: 200% 100% !important;
-  animation: shimmerMove 1.5s infinite !important;
-}
-@keyframes shimmerMove {
-  0% { background-position: -100% 0; }
-  100% { background-position: 100% 0; }
-}
-
-/* === EXPANSION BLOCK === */
-/* === MEDIA QUERIES ADVANCED === */
-@media (max-width: 768px) {
-  body, html {
-    font-size: 15px !important;
-  }
-  .menu-btn, .btn-action, .section-title {
-    font-size: 1rem !important;
+    font-size: 1.5rem !important;
     padding: 0.5rem 0.75rem !important;
   }
 }
@@ -3003,7 +3003,7 @@ input::placeholder {
 .floating-label-group input:focus + label,
 .floating-label-group input:not(:placeholder-shown) + label {
   top: 0.2rem !important;
-  font-size: 0.75rem !important;
+  font-size: 1.5rem !important;
   color: var(--gold) !important;
 }
 
@@ -3037,7 +3037,7 @@ input::placeholder {
 .badge {
   display: inline-block !important;
   padding: 0.25rem 0.75rem !important;
-  font-size: 0.75rem !important;
+  font-size: 1.75rem !important;
   font-weight: bold !important;
   color: #fff !important;
   background: var(--neon-pink) !important;
@@ -3070,7 +3070,149 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
+  font-weight: bold !important;
+  border-radius: 12px !important;
+  color: var(--black) !important;
+  box-shadow: 0 4px 0 #00000055, 0 4px 10px var(--neon-blue) !important;
+  transform: translateY(0) !important;
+  transition: 0.2s ease !important;
+}
+.btn-3d:active {
+  transform: translateY(4px) !important;
+  box-shadow: none !important;
+}
+
+/* === AUDIO FEEDBACK (placeholder) === */
+.audio-hover:hover {
+  outline: 2px dashed var(--gold) !important;
+  cursor: pointer !important;
+}
+
+/* === ANIMATED DECOR === */
+.decor-border {
+  border-image: linear-gradient(45deg, var(--gold), var(--neon-pink), var(--gold)) 1 !important;
+  border-width: 3px !important;
+  border-style: solid !important;
+}
+
+/* === FLIP CARD === */
+.flip-card {
+  perspective: 1000px !important;
+}
+.flip-card-inner {
+  position: relative !important;
+  width: 100% !important;
+  transform-style: preserve-3d !important;
+  transition: transform 0.6s !important;
+}
+.flip-card:hover .flip-card-inner {
+  transform: rotateY(180deg) !important;
+}
+.flip-card-front, .flip-card-back {
+  position: absolute !important;
+  width: 100% !important;
+  backface-visibility: hidden !important;
+}
+.flip-card-back {
+  transform: rotateY(180deg) !important;
+}
+
+/* === 160KB EXPANSION BLOCK === */
+/* === ADVANCED LAYERS & DEPTH === */
+.card, .panel, .module {
+  background: rgba(0, 0, 0, 0.5) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 20px rgba(0, 255, 255, 0.1), 0 6px 6px rgba(0, 0, 0, 0.3) !important;
+  padding: 1.5rem !important;
+}
+
+/* === FLOATING LABEL INPUT === */
+.floating-label-group {
+  position: relative !important;
+}
+.floating-label-group input {
+  padding: 1.2rem 0.5rem 0.4rem 0.5rem !important;
+}
+.floating-label-group label {
+  position: absolute !important;
+  top: 1rem !important;
+  left: 0.75rem !important;
+  color: var(--text-light) !important;
+  transition: all 0.2s ease !important;
+  pointer-events: none !important;
+}
+.floating-label-group input:focus + label,
+.floating-label-group input:not(:placeholder-shown) + label {
+  top: 0.2rem !important;
+  font-size: 1.75rem !important;
+  color: var(--gold) !important;
+}
+
+/* === PULSE RING === */
+.pulse-ring {
+  position: relative !important;
+}
+.pulse-ring::after {
+  content: '' !important;
+  position: absolute !important;
+  width: 100% !important;
+  height: 100% !important;
+  top: 0;
+  left: 0;
+  border: 2px solid var(--neon-cyan) !important;
+  border-radius: 50% !important;
+  animation: pulseRing 1.8s infinite ease-in-out !important;
+}
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* === BADGES === */
+.badge {
+  display: inline-block !important;
+  padding: 0.25rem 0.75rem !important;
+  font-size: 1.75rem !important;
+  font-weight: bold !important;
+  color: #fff !important;
+  background: var(--neon-pink) !important;
+  border-radius: 1rem !important;
+  text-transform: uppercase !important;
+  box-shadow: 0 0 6px var(--neon-pink) !important;
+}
+.badge.gold { background: var(--gold) !important; color: #000 !important; }
+.badge.cyan { background: var(--neon-cyan) !important; }
+
+/* === CONTAINER & GRID EXTENSIONS === */
+.grid-2 {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 1rem !important;
+}
+.grid-3 {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 1rem !important;
+}
+.grid-4 {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 1rem !important;
+}
+
+/* === 3D BUTTONS === */
+.btn-3d {
+  background: var(--neon-blue) !important;
+  border: none !important;
+  padding: 0.75rem 1.25rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -3212,7 +3354,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -3354,7 +3496,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -3496,7 +3638,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -3638,7 +3780,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -3780,7 +3922,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -3922,7 +4064,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -4064,7 +4206,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -4206,7 +4348,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -4348,7 +4490,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -4490,7 +4632,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -4632,7 +4774,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -4774,7 +4916,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -4916,7 +5058,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -5058,7 +5200,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -5200,7 +5342,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -5342,7 +5484,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -5484,7 +5626,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -5626,7 +5768,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -5768,7 +5910,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -5910,149 +6052,7 @@ input::placeholder {
   background: var(--neon-blue) !important;
   border: none !important;
   padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
-  font-weight: bold !important;
-  border-radius: 12px !important;
-  color: var(--black) !important;
-  box-shadow: 0 4px 0 #00000055, 0 4px 10px var(--neon-blue) !important;
-  transform: translateY(0) !important;
-  transition: 0.2s ease !important;
-}
-.btn-3d:active {
-  transform: translateY(4px) !important;
-  box-shadow: none !important;
-}
-
-/* === AUDIO FEEDBACK (placeholder) === */
-.audio-hover:hover {
-  outline: 2px dashed var(--gold) !important;
-  cursor: pointer !important;
-}
-
-/* === ANIMATED DECOR === */
-.decor-border {
-  border-image: linear-gradient(45deg, var(--gold), var(--neon-pink), var(--gold)) 1 !important;
-  border-width: 3px !important;
-  border-style: solid !important;
-}
-
-/* === FLIP CARD === */
-.flip-card {
-  perspective: 1000px !important;
-}
-.flip-card-inner {
-  position: relative !important;
-  width: 100% !important;
-  transform-style: preserve-3d !important;
-  transition: transform 0.6s !important;
-}
-.flip-card:hover .flip-card-inner {
-  transform: rotateY(180deg) !important;
-}
-.flip-card-front, .flip-card-back {
-  position: absolute !important;
-  width: 100% !important;
-  backface-visibility: hidden !important;
-}
-.flip-card-back {
-  transform: rotateY(180deg) !important;
-}
-
-/* === 160KB EXPANSION BLOCK === */
-/* === ADVANCED LAYERS & DEPTH === */
-.card, .panel, .module {
-  background: rgba(0, 0, 0, 0.5) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 10px 20px rgba(0, 255, 255, 0.1), 0 6px 6px rgba(0, 0, 0, 0.3) !important;
-  padding: 1.5rem !important;
-}
-
-/* === FLOATING LABEL INPUT === */
-.floating-label-group {
-  position: relative !important;
-}
-.floating-label-group input {
-  padding: 1.2rem 0.5rem 0.4rem 0.5rem !important;
-}
-.floating-label-group label {
-  position: absolute !important;
-  top: 1rem !important;
-  left: 0.75rem !important;
-  color: var(--text-light) !important;
-  transition: all 0.2s ease !important;
-  pointer-events: none !important;
-}
-.floating-label-group input:focus + label,
-.floating-label-group input:not(:placeholder-shown) + label {
-  top: 0.2rem !important;
-  font-size: 0.75rem !important;
-  color: var(--gold) !important;
-}
-
-/* === PULSE RING === */
-.pulse-ring {
-  position: relative !important;
-}
-.pulse-ring::after {
-  content: '' !important;
-  position: absolute !important;
-  width: 100% !important;
-  height: 100% !important;
-  top: 0;
-  left: 0;
-  border: 2px solid var(--neon-cyan) !important;
-  border-radius: 50% !important;
-  animation: pulseRing 1.8s infinite ease-in-out !important;
-}
-@keyframes pulseRing {
-  0% {
-    transform: scale(0.8);
-    opacity: 0.6;
-  }
-  100% {
-    transform: scale(1.6);
-    opacity: 0;
-  }
-}
-
-/* === BADGES === */
-.badge {
-  display: inline-block !important;
-  padding: 0.25rem 0.75rem !important;
-  font-size: 0.75rem !important;
-  font-weight: bold !important;
-  color: #fff !important;
-  background: var(--neon-pink) !important;
-  border-radius: 1rem !important;
-  text-transform: uppercase !important;
-  box-shadow: 0 0 6px var(--neon-pink) !important;
-}
-.badge.gold { background: var(--gold) !important; color: #000 !important; }
-.badge.cyan { background: var(--neon-cyan) !important; }
-
-/* === CONTAINER & GRID EXTENSIONS === */
-.grid-2 {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr) !important;
-  gap: 1rem !important;
-}
-.grid-3 {
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr) !important;
-  gap: 1rem !important;
-}
-.grid-4 {
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 1rem !important;
-}
-
-/* === 3D BUTTONS === */
-.btn-3d {
-  background: var(--neon-blue) !important;
-  border: none !important;
-  padding: 0.75rem 1.25rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
   font-weight: bold !important;
   border-radius: 12px !important;
   color: var(--black) !important;
@@ -13264,7 +13264,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13280,7 +13280,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13296,7 +13296,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13312,7 +13312,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13328,7 +13328,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13344,7 +13344,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13360,7 +13360,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13376,7 +13376,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13392,7 +13392,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13408,7 +13408,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -13427,7 +13427,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13443,7 +13443,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13459,7 +13459,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13475,7 +13475,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13491,7 +13491,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13507,7 +13507,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13523,7 +13523,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13539,7 +13539,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13555,7 +13555,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13571,7 +13571,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -13590,7 +13590,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13606,7 +13606,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13622,7 +13622,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13638,7 +13638,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13654,7 +13654,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13670,7 +13670,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13686,7 +13686,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13702,7 +13702,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13718,7 +13718,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13734,7 +13734,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -13753,7 +13753,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13769,7 +13769,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13785,7 +13785,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13801,7 +13801,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13817,7 +13817,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13833,7 +13833,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13849,7 +13849,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13865,7 +13865,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13881,7 +13881,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13897,7 +13897,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -13916,7 +13916,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13932,7 +13932,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13948,7 +13948,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13964,7 +13964,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13980,7 +13980,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -13996,7 +13996,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14012,7 +14012,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14028,7 +14028,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14044,7 +14044,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14060,7 +14060,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -14079,7 +14079,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14095,7 +14095,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14111,7 +14111,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14127,7 +14127,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14143,7 +14143,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14159,7 +14159,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14175,7 +14175,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14191,7 +14191,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14207,7 +14207,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14223,7 +14223,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -14242,7 +14242,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14258,7 +14258,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14274,7 +14274,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14290,7 +14290,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14306,7 +14306,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14322,7 +14322,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14338,7 +14338,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14354,7 +14354,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14370,7 +14370,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14386,7 +14386,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -14405,7 +14405,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14421,7 +14421,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14437,7 +14437,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14453,7 +14453,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14469,7 +14469,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14485,7 +14485,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14501,7 +14501,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14517,7 +14517,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14533,7 +14533,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14549,7 +14549,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -14568,7 +14568,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14584,7 +14584,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14600,7 +14600,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14616,7 +14616,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14632,7 +14632,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14648,7 +14648,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14664,7 +14664,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14680,7 +14680,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14696,7 +14696,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14712,7 +14712,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -14731,7 +14731,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14747,7 +14747,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14763,7 +14763,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14779,7 +14779,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14795,7 +14795,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14811,7 +14811,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14827,7 +14827,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14843,7 +14843,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14859,7 +14859,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14875,7 +14875,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -14894,7 +14894,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14910,7 +14910,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14926,7 +14926,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14942,7 +14942,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14958,7 +14958,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14974,7 +14974,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -14990,7 +14990,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15006,7 +15006,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15022,7 +15022,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15038,7 +15038,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -15057,7 +15057,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15073,7 +15073,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15089,7 +15089,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15105,7 +15105,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15121,7 +15121,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15137,7 +15137,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15153,7 +15153,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15169,7 +15169,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15185,7 +15185,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15201,7 +15201,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -15220,7 +15220,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15236,7 +15236,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15252,7 +15252,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15268,7 +15268,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15284,7 +15284,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15300,7 +15300,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15316,7 +15316,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15332,7 +15332,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15348,7 +15348,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15364,7 +15364,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -15383,7 +15383,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15399,7 +15399,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15415,7 +15415,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15431,7 +15431,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15447,7 +15447,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15463,7 +15463,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15479,7 +15479,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15495,7 +15495,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15511,7 +15511,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15527,7 +15527,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -15546,7 +15546,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15562,7 +15562,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15578,7 +15578,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15594,7 +15594,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15610,7 +15610,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15626,7 +15626,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15642,7 +15642,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15658,7 +15658,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15674,7 +15674,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15690,7 +15690,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -15709,7 +15709,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15725,7 +15725,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15741,7 +15741,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15757,7 +15757,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15773,7 +15773,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15789,7 +15789,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15805,7 +15805,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15821,7 +15821,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15837,7 +15837,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15853,7 +15853,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -15872,7 +15872,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15888,7 +15888,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15904,7 +15904,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15920,7 +15920,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15936,7 +15936,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15952,7 +15952,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15968,7 +15968,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -15984,7 +15984,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -16000,7 +16000,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -16016,7 +16016,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -16035,7 +16035,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -16051,7 +16051,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -16067,7 +16067,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -16083,7 +16083,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -16099,7 +16099,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -16115,7 +16115,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -16131,7 +16131,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -16147,7 +16147,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -16163,7 +16163,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 /* === BUTTON SHAPES PER THEME === */
@@ -16179,7 +16179,7 @@ input::placeholder {
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 
 
@@ -16267,7 +16267,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -16339,7 +16339,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -16410,150 +16410,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
-}
-.modal-scroll {
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-  padding-right: 1rem !important;
-  scrollbar-width: thin !important;
-}
-.modal-scroll::-webkit-scrollbar {
-  width: 8px !important;
-}
-.modal-scroll::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 8px !important;
-}
-
-/* === ANIMAZIONI MODALI === */
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* === MODALI AVANZATI === */
-.modal-wrapper {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10000 !important;
-  animation: fadeIn 0.5s ease !important;
-}
-.modal-3d {
-  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  max-width: 600px !important;
-  width: 90% !important;
-  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
-  animation: scaleIn 0.5s ease forwards !important;
-  position: relative !important;
-}
-.modal-3d .modal-close {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: var(--neon-blue) !important;
-  border-radius: 50% !important;
-  width: 30px !important;
-  height: 30px !important;
-  color: black !important;
-  font-weight: bold !important;
-  border: none !important;
-  box-shadow: 0 0 5px var(--neon-blue) !important;
-  cursor: pointer !important;
-}
-.modal-3d h2 {
-  font-size: 1.8rem !important;
-  color: var(--gold) !important;
-  margin-bottom: 1rem !important;
-}
-.modal-3d p, .modal-3d li {
-  color: var(--text-light) !important;
-  font-size: 1rem !important;
-}
-.modal-scroll {
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-  padding-right: 1rem !important;
-  scrollbar-width: thin !important;
-}
-.modal-scroll::-webkit-scrollbar {
-  width: 8px !important;
-}
-.modal-scroll::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 8px !important;
-}
-
-/* === ANIMAZIONI MODALI === */
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-/* === MODALI AVANZATI === */
-.modal-wrapper {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10000 !important;
-  animation: fadeIn 0.5s ease !important;
-}
-.modal-3d {
-  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  max-width: 600px !important;
-  width: 90% !important;
-  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
-  animation: scaleIn 0.5s ease forwards !important;
-  position: relative !important;
-}
-.modal-3d .modal-close {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: var(--neon-blue) !important;
-  border-radius: 50% !important;
-  width: 30px !important;
-  height: 30px !important;
-  color: black !important;
-  font-weight: bold !important;
-  border: none !important;
-  box-shadow: 0 0 5px var(--neon-blue) !important;
-  cursor: pointer !important;
-}
-.modal-3d h2 {
-  font-size: 1.8rem !important;
-  color: var(--gold) !important;
-  margin-bottom: 1rem !important;
-}
-.modal-3d p, .modal-3d li {
-  color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -16625,7 +16482,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -16696,150 +16553,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
-}
-.modal-scroll {
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-  padding-right: 1rem !important;
-  scrollbar-width: thin !important;
-}
-.modal-scroll::-webkit-scrollbar {
-  width: 8px !important;
-}
-.modal-scroll::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 8px !important;
-}
-
-/* === ANIMAZIONI MODALI === */
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* === MODALI AVANZATI === */
-.modal-wrapper {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10000 !important;
-  animation: fadeIn 0.5s ease !important;
-}
-.modal-3d {
-  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  max-width: 600px !important;
-  width: 90% !important;
-  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
-  animation: scaleIn 0.5s ease forwards !important;
-  position: relative !important;
-}
-.modal-3d .modal-close {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: var(--neon-blue) !important;
-  border-radius: 50% !important;
-  width: 30px !important;
-  height: 30px !important;
-  color: black !important;
-  font-weight: bold !important;
-  border: none !important;
-  box-shadow: 0 0 5px var(--neon-blue) !important;
-  cursor: pointer !important;
-}
-.modal-3d h2 {
-  font-size: 1.8rem !important;
-  color: var(--gold) !important;
-  margin-bottom: 1rem !important;
-}
-.modal-3d p, .modal-3d li {
-  color: var(--text-light) !important;
-  font-size: 1rem !important;
-}
-.modal-scroll {
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-  padding-right: 1rem !important;
-  scrollbar-width: thin !important;
-}
-.modal-scroll::-webkit-scrollbar {
-  width: 8px !important;
-}
-.modal-scroll::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 8px !important;
-}
-
-/* === ANIMAZIONI MODALI === */
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-/* === MODALI AVANZATI === */
-.modal-wrapper {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10000 !important;
-  animation: fadeIn 0.5s ease !important;
-}
-.modal-3d {
-  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  max-width: 600px !important;
-  width: 90% !important;
-  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
-  animation: scaleIn 0.5s ease forwards !important;
-  position: relative !important;
-}
-.modal-3d .modal-close {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: var(--neon-blue) !important;
-  border-radius: 50% !important;
-  width: 30px !important;
-  height: 30px !important;
-  color: black !important;
-  font-weight: bold !important;
-  border: none !important;
-  box-shadow: 0 0 5px var(--neon-blue) !important;
-  cursor: pointer !important;
-}
-.modal-3d h2 {
-  font-size: 1.8rem !important;
-  color: var(--gold) !important;
-  margin-bottom: 1rem !important;
-}
-.modal-3d p, .modal-3d li {
-  color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -16911,7 +16625,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -16982,150 +16696,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
-}
-.modal-scroll {
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-  padding-right: 1rem !important;
-  scrollbar-width: thin !important;
-}
-.modal-scroll::-webkit-scrollbar {
-  width: 8px !important;
-}
-.modal-scroll::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 8px !important;
-}
-
-/* === ANIMAZIONI MODALI === */
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* === MODALI AVANZATI === */
-.modal-wrapper {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10000 !important;
-  animation: fadeIn 0.5s ease !important;
-}
-.modal-3d {
-  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  max-width: 600px !important;
-  width: 90% !important;
-  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
-  animation: scaleIn 0.5s ease forwards !important;
-  position: relative !important;
-}
-.modal-3d .modal-close {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: var(--neon-blue) !important;
-  border-radius: 50% !important;
-  width: 30px !important;
-  height: 30px !important;
-  color: black !important;
-  font-weight: bold !important;
-  border: none !important;
-  box-shadow: 0 0 5px var(--neon-blue) !important;
-  cursor: pointer !important;
-}
-.modal-3d h2 {
-  font-size: 1.8rem !important;
-  color: var(--gold) !important;
-  margin-bottom: 1rem !important;
-}
-.modal-3d p, .modal-3d li {
-  color: var(--text-light) !important;
-  font-size: 1rem !important;
-}
-.modal-scroll {
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-  padding-right: 1rem !important;
-  scrollbar-width: thin !important;
-}
-.modal-scroll::-webkit-scrollbar {
-  width: 8px !important;
-}
-.modal-scroll::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 8px !important;
-}
-
-/* === ANIMAZIONI MODALI === */
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-/* === MODALI AVANZATI === */
-.modal-wrapper {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10000 !important;
-  animation: fadeIn 0.5s ease !important;
-}
-.modal-3d {
-  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  max-width: 600px !important;
-  width: 90% !important;
-  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
-  animation: scaleIn 0.5s ease forwards !important;
-  position: relative !important;
-}
-.modal-3d .modal-close {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: var(--neon-blue) !important;
-  border-radius: 50% !important;
-  width: 30px !important;
-  height: 30px !important;
-  color: black !important;
-  font-weight: bold !important;
-  border: none !important;
-  box-shadow: 0 0 5px var(--neon-blue) !important;
-  cursor: pointer !important;
-}
-.modal-3d h2 {
-  font-size: 1.8rem !important;
-  color: var(--gold) !important;
-  margin-bottom: 1rem !important;
-}
-.modal-3d p, .modal-3d li {
-  color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -17197,7 +16768,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -17268,150 +16839,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
-}
-.modal-scroll {
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-  padding-right: 1rem !important;
-  scrollbar-width: thin !important;
-}
-.modal-scroll::-webkit-scrollbar {
-  width: 8px !important;
-}
-.modal-scroll::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 8px !important;
-}
-
-/* === ANIMAZIONI MODALI === */
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* === MODALI AVANZATI === */
-.modal-wrapper {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10000 !important;
-  animation: fadeIn 0.5s ease !important;
-}
-.modal-3d {
-  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  max-width: 600px !important;
-  width: 90% !important;
-  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
-  animation: scaleIn 0.5s ease forwards !important;
-  position: relative !important;
-}
-.modal-3d .modal-close {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: var(--neon-blue) !important;
-  border-radius: 50% !important;
-  width: 30px !important;
-  height: 30px !important;
-  color: black !important;
-  font-weight: bold !important;
-  border: none !important;
-  box-shadow: 0 0 5px var(--neon-blue) !important;
-  cursor: pointer !important;
-}
-.modal-3d h2 {
-  font-size: 1.8rem !important;
-  color: var(--gold) !important;
-  margin-bottom: 1rem !important;
-}
-.modal-3d p, .modal-3d li {
-  color: var(--text-light) !important;
-  font-size: 1rem !important;
-}
-.modal-scroll {
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-  padding-right: 1rem !important;
-  scrollbar-width: thin !important;
-}
-.modal-scroll::-webkit-scrollbar {
-  width: 8px !important;
-}
-.modal-scroll::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 8px !important;
-}
-
-/* === ANIMAZIONI MODALI === */
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-/* === MODALI AVANZATI === */
-.modal-wrapper {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10000 !important;
-  animation: fadeIn 0.5s ease !important;
-}
-.modal-3d {
-  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  max-width: 600px !important;
-  width: 90% !important;
-  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
-  animation: scaleIn 0.5s ease forwards !important;
-  position: relative !important;
-}
-.modal-3d .modal-close {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: var(--neon-blue) !important;
-  border-radius: 50% !important;
-  width: 30px !important;
-  height: 30px !important;
-  color: black !important;
-  font-weight: bold !important;
-  border: none !important;
-  box-shadow: 0 0 5px var(--neon-blue) !important;
-  cursor: pointer !important;
-}
-.modal-3d h2 {
-  font-size: 1.8rem !important;
-  color: var(--gold) !important;
-  margin-bottom: 1rem !important;
-}
-.modal-3d p, .modal-3d li {
-  color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -17483,7 +16911,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -17554,150 +16982,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
-}
-.modal-scroll {
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-  padding-right: 1rem !important;
-  scrollbar-width: thin !important;
-}
-.modal-scroll::-webkit-scrollbar {
-  width: 8px !important;
-}
-.modal-scroll::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 8px !important;
-}
-
-/* === ANIMAZIONI MODALI === */
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* === MODALI AVANZATI === */
-.modal-wrapper {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10000 !important;
-  animation: fadeIn 0.5s ease !important;
-}
-.modal-3d {
-  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  max-width: 600px !important;
-  width: 90% !important;
-  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
-  animation: scaleIn 0.5s ease forwards !important;
-  position: relative !important;
-}
-.modal-3d .modal-close {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: var(--neon-blue) !important;
-  border-radius: 50% !important;
-  width: 30px !important;
-  height: 30px !important;
-  color: black !important;
-  font-weight: bold !important;
-  border: none !important;
-  box-shadow: 0 0 5px var(--neon-blue) !important;
-  cursor: pointer !important;
-}
-.modal-3d h2 {
-  font-size: 1.8rem !important;
-  color: var(--gold) !important;
-  margin-bottom: 1rem !important;
-}
-.modal-3d p, .modal-3d li {
-  color: var(--text-light) !important;
-  font-size: 1rem !important;
-}
-.modal-scroll {
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-  padding-right: 1rem !important;
-  scrollbar-width: thin !important;
-}
-.modal-scroll::-webkit-scrollbar {
-  width: 8px !important;
-}
-.modal-scroll::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 8px !important;
-}
-
-/* === ANIMAZIONI MODALI === */
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-/* === MODALI AVANZATI === */
-.modal-wrapper {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10000 !important;
-  animation: fadeIn 0.5s ease !important;
-}
-.modal-3d {
-  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  max-width: 600px !important;
-  width: 90% !important;
-  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
-  animation: scaleIn 0.5s ease forwards !important;
-  position: relative !important;
-}
-.modal-3d .modal-close {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: var(--neon-blue) !important;
-  border-radius: 50% !important;
-  width: 30px !important;
-  height: 30px !important;
-  color: black !important;
-  font-weight: bold !important;
-  border: none !important;
-  box-shadow: 0 0 5px var(--neon-blue) !important;
-  cursor: pointer !important;
-}
-.modal-3d h2 {
-  font-size: 1.8rem !important;
-  color: var(--gold) !important;
-  margin-bottom: 1rem !important;
-}
-.modal-3d p, .modal-3d li {
-  color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -17769,7 +17054,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -17840,150 +17125,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
-}
-.modal-scroll {
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-  padding-right: 1rem !important;
-  scrollbar-width: thin !important;
-}
-.modal-scroll::-webkit-scrollbar {
-  width: 8px !important;
-}
-.modal-scroll::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 8px !important;
-}
-
-/* === ANIMAZIONI MODALI === */
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* === MODALI AVANZATI === */
-.modal-wrapper {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10000 !important;
-  animation: fadeIn 0.5s ease !important;
-}
-.modal-3d {
-  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  max-width: 600px !important;
-  width: 90% !important;
-  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
-  animation: scaleIn 0.5s ease forwards !important;
-  position: relative !important;
-}
-.modal-3d .modal-close {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: var(--neon-blue) !important;
-  border-radius: 50% !important;
-  width: 30px !important;
-  height: 30px !important;
-  color: black !important;
-  font-weight: bold !important;
-  border: none !important;
-  box-shadow: 0 0 5px var(--neon-blue) !important;
-  cursor: pointer !important;
-}
-.modal-3d h2 {
-  font-size: 1.8rem !important;
-  color: var(--gold) !important;
-  margin-bottom: 1rem !important;
-}
-.modal-3d p, .modal-3d li {
-  color: var(--text-light) !important;
-  font-size: 1rem !important;
-}
-.modal-scroll {
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-  padding-right: 1rem !important;
-  scrollbar-width: thin !important;
-}
-.modal-scroll::-webkit-scrollbar {
-  width: 8px !important;
-}
-.modal-scroll::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 8px !important;
-}
-
-/* === ANIMAZIONI MODALI === */
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-/* === MODALI AVANZATI === */
-.modal-wrapper {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10000 !important;
-  animation: fadeIn 0.5s ease !important;
-}
-.modal-3d {
-  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  max-width: 600px !important;
-  width: 90% !important;
-  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
-  animation: scaleIn 0.5s ease forwards !important;
-  position: relative !important;
-}
-.modal-3d .modal-close {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: var(--neon-blue) !important;
-  border-radius: 50% !important;
-  width: 30px !important;
-  height: 30px !important;
-  color: black !important;
-  font-weight: bold !important;
-  border: none !important;
-  box-shadow: 0 0 5px var(--neon-blue) !important;
-  cursor: pointer !important;
-}
-.modal-3d h2 {
-  font-size: 1.8rem !important;
-  color: var(--gold) !important;
-  margin-bottom: 1rem !important;
-}
-.modal-3d p, .modal-3d li {
-  color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -18055,7 +17197,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -18126,150 +17268,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
-}
-.modal-scroll {
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-  padding-right: 1rem !important;
-  scrollbar-width: thin !important;
-}
-.modal-scroll::-webkit-scrollbar {
-  width: 8px !important;
-}
-.modal-scroll::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 8px !important;
-}
-
-/* === ANIMAZIONI MODALI === */
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* === MODALI AVANZATI === */
-.modal-wrapper {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10000 !important;
-  animation: fadeIn 0.5s ease !important;
-}
-.modal-3d {
-  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  max-width: 600px !important;
-  width: 90% !important;
-  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
-  animation: scaleIn 0.5s ease forwards !important;
-  position: relative !important;
-}
-.modal-3d .modal-close {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: var(--neon-blue) !important;
-  border-radius: 50% !important;
-  width: 30px !important;
-  height: 30px !important;
-  color: black !important;
-  font-weight: bold !important;
-  border: none !important;
-  box-shadow: 0 0 5px var(--neon-blue) !important;
-  cursor: pointer !important;
-}
-.modal-3d h2 {
-  font-size: 1.8rem !important;
-  color: var(--gold) !important;
-  margin-bottom: 1rem !important;
-}
-.modal-3d p, .modal-3d li {
-  color: var(--text-light) !important;
-  font-size: 1rem !important;
-}
-.modal-scroll {
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-  padding-right: 1rem !important;
-  scrollbar-width: thin !important;
-}
-.modal-scroll::-webkit-scrollbar {
-  width: 8px !important;
-}
-.modal-scroll::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan) !important;
-  border-radius: 8px !important;
-}
-
-/* === ANIMAZIONI MODALI === */
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-/* === MODALI AVANZATI === */
-.modal-wrapper {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 10000 !important;
-  animation: fadeIn 0.5s ease !important;
-}
-.modal-3d {
-  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  max-width: 600px !important;
-  width: 90% !important;
-  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
-  animation: scaleIn 0.5s ease forwards !important;
-  position: relative !important;
-}
-.modal-3d .modal-close {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  background: var(--neon-blue) !important;
-  border-radius: 50% !important;
-  width: 30px !important;
-  height: 30px !important;
-  color: black !important;
-  font-weight: bold !important;
-  border: none !important;
-  box-shadow: 0 0 5px var(--neon-blue) !important;
-  cursor: pointer !important;
-}
-.modal-3d h2 {
-  font-size: 1.8rem !important;
-  color: var(--gold) !important;
-  margin-bottom: 1rem !important;
-}
-.modal-3d p, .modal-3d li {
-  color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -18341,7 +17340,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -18412,7 +17411,7 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;
@@ -18484,7 +17483,1008 @@ input::placeholder {
 }
 .modal-3d p, .modal-3d li {
   color: var(--text-light) !important;
-  font-size: 1rem !important;
+  font-size: 1.5rem !important;
+}
+.modal-scroll {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding-right: 1rem !important;
+  scrollbar-width: thin !important;
+}
+.modal-scroll::-webkit-scrollbar {
+  width: 8px !important;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+}
+
+/* === ANIMAZIONI MODALI === */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* === MODALI AVANZATI === */
+.modal-wrapper {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.5s ease !important;
+}
+.modal-3d {
+  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  max-width: 600px !important;
+  width: 90% !important;
+  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
+  animation: scaleIn 0.5s ease forwards !important;
+  position: relative !important;
+}
+.modal-3d .modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: var(--neon-blue) !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  color: black !important;
+  font-weight: bold !important;
+  border: none !important;
+  box-shadow: 0 0 5px var(--neon-blue) !important;
+  cursor: pointer !important;
+}
+.modal-3d h2 {
+  font-size: 1.8rem !important;
+  color: var(--gold) !important;
+  margin-bottom: 1rem !important;
+}
+.modal-3d p, .modal-3d li {
+  color: var(--text-light) !important;
+  font-size: 1.5rem !important;
+}
+.modal-scroll {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding-right: 1rem !important;
+  scrollbar-width: thin !important;
+}
+.modal-scroll::-webkit-scrollbar {
+  width: 8px !important;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+}
+
+/* === ANIMAZIONI MODALI === */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* === MODALI AVANZATI === */
+.modal-wrapper {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.5s ease !important;
+}
+.modal-3d {
+  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  max-width: 600px !important;
+  width: 90% !important;
+  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
+  animation: scaleIn 0.5s ease forwards !important;
+  position: relative !important;
+}
+.modal-3d .modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: var(--neon-blue) !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  color: black !important;
+  font-weight: bold !important;
+  border: none !important;
+  box-shadow: 0 0 5px var(--neon-blue) !important;
+  cursor: pointer !important;
+}
+.modal-3d h2 {
+  font-size: 1.8rem !important;
+  color: var(--gold) !important;
+  margin-bottom: 1rem !important;
+}
+.modal-3d p, .modal-3d li {
+  color: var(--text-light) !important;
+  font-size: 1.5rem !important;
+}
+.modal-scroll {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding-right: 1rem !important;
+  scrollbar-width: thin !important;
+}
+.modal-scroll::-webkit-scrollbar {
+  width: 8px !important;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+}
+
+/* === ANIMAZIONI MODALI === */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* === MODALI AVANZATI === */
+.modal-wrapper {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.5s ease !important;
+}
+.modal-3d {
+  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  max-width: 600px !important;
+  width: 90% !important;
+  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
+  animation: scaleIn 0.5s ease forwards !important;
+  position: relative !important;
+}
+.modal-3d .modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: var(--neon-blue) !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  color: black !important;
+  font-weight: bold !important;
+  border: none !important;
+  box-shadow: 0 0 5px var(--neon-blue) !important;
+  cursor: pointer !important;
+}
+.modal-3d h2 {
+  font-size: 1.8rem !important;
+  color: var(--gold) !important;
+  margin-bottom: 1rem !important;
+}
+.modal-3d p, .modal-3d li {
+  color: var(--text-light) !important;
+  font-size: 1.5rem !important;
+}
+.modal-scroll {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding-right: 1rem !important;
+  scrollbar-width: thin !important;
+}
+.modal-scroll::-webkit-scrollbar {
+  width: 8px !important;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+}
+
+/* === ANIMAZIONI MODALI === */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* === MODALI AVANZATI === */
+.modal-wrapper {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.5s ease !important;
+}
+.modal-3d {
+  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  max-width: 600px !important;
+  width: 90% !important;
+  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
+  animation: scaleIn 0.5s ease forwards !important;
+  position: relative !important;
+}
+.modal-3d .modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: var(--neon-blue) !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  color: black !important;
+  font-weight: bold !important;
+  border: none !important;
+  box-shadow: 0 0 5px var(--neon-blue) !important;
+  cursor: pointer !important;
+}
+.modal-3d h2 {
+  font-size: 1.8rem !important;
+  color: var(--gold) !important;
+  margin-bottom: 1rem !important;
+}
+.modal-3d p, .modal-3d li {
+  color: var(--text-light) !important;
+  font-size: 1.5rem !important;
+}
+.modal-scroll {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding-right: 1rem !important;
+  scrollbar-width: thin !important;
+}
+.modal-scroll::-webkit-scrollbar {
+  width: 8px !important;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+}
+
+/* === ANIMAZIONI MODALI === */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* === MODALI AVANZATI === */
+.modal-wrapper {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.5s ease !important;
+}
+.modal-3d {
+  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  max-width: 600px !important;
+  width: 90% !important;
+  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
+  animation: scaleIn 0.5s ease forwards !important;
+  position: relative !important;
+}
+.modal-3d .modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: var(--neon-blue) !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  color: black !important;
+  font-weight: bold !important;
+  border: none !important;
+  box-shadow: 0 0 5px var(--neon-blue) !important;
+  cursor: pointer !important;
+}
+.modal-3d h2 {
+  font-size: 1.8rem !important;
+  color: var(--gold) !important;
+  margin-bottom: 1rem !important;
+}
+.modal-3d p, .modal-3d li {
+  color: var(--text-light) !important;
+  font-size: 1.5rem !important;
+}
+.modal-scroll {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding-right: 1rem !important;
+  scrollbar-width: thin !important;
+}
+.modal-scroll::-webkit-scrollbar {
+  width: 8px !important;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+}
+
+/* === ANIMAZIONI MODALI === */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* === MODALI AVANZATI === */
+.modal-wrapper {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.5s ease !important;
+}
+.modal-3d {
+  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  max-width: 600px !important;
+  width: 90% !important;
+  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
+  animation: scaleIn 0.5s ease forwards !important;
+  position: relative !important;
+}
+.modal-3d .modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: var(--neon-blue) !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  color: black !important;
+  font-weight: bold !important;
+  border: none !important;
+  box-shadow: 0 0 5px var(--neon-blue) !important;
+  cursor: pointer !important;
+}
+.modal-3d h2 {
+  font-size: 1.8rem !important;
+  color: var(--gold) !important;
+  margin-bottom: 1rem !important;
+}
+.modal-3d p, .modal-3d li {
+  color: var(--text-light) !important;
+  font-size: 1.5rem !important;
+}
+.modal-scroll {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding-right: 1rem !important;
+  scrollbar-width: thin !important;
+}
+.modal-scroll::-webkit-scrollbar {
+  width: 8px !important;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+}
+
+/* === ANIMAZIONI MODALI === */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* === MODALI AVANZATI === */
+.modal-wrapper {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.5s ease !important;
+}
+.modal-3d {
+  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  max-width: 600px !important;
+  width: 90% !important;
+  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
+  animation: scaleIn 0.5s ease forwards !important;
+  position: relative !important;
+}
+.modal-3d .modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: var(--neon-blue) !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  color: black !important;
+  font-weight: bold !important;
+  border: none !important;
+  box-shadow: 0 0 5px var(--neon-blue) !important;
+  cursor: pointer !important;
+}
+.modal-3d h2 {
+  font-size: 1.8rem !important;
+  color: var(--gold) !important;
+  margin-bottom: 1rem !important;
+}
+.modal-3d p, .modal-3d li {
+  color: var(--text-light) !important;
+  font-size: 1.5rem !important;
+}
+.modal-scroll {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding-right: 1rem !important;
+  scrollbar-width: thin !important;
+}
+.modal-scroll::-webkit-scrollbar {
+  width: 8px !important;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+}
+
+/* === ANIMAZIONI MODALI === */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* === MODALI AVANZATI === */
+.modal-wrapper {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.5s ease !important;
+}
+.modal-3d {
+  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  max-width: 600px !important;
+  width: 90% !important;
+  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
+  animation: scaleIn 0.5s ease forwards !important;
+  position: relative !important;
+}
+.modal-3d .modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: var(--neon-blue) !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  color: black !important;
+  font-weight: bold !important;
+  border: none !important;
+  box-shadow: 0 0 5px var(--neon-blue) !important;
+  cursor: pointer !important;
+}
+.modal-3d h2 {
+  font-size: 1.8rem !important;
+  color: var(--gold) !important;
+  margin-bottom: 1rem !important;
+}
+.modal-3d p, .modal-3d li {
+  color: var(--text-light) !important;
+  font-size: 1.5rem !important;
+}
+.modal-scroll {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding-right: 1rem !important;
+  scrollbar-width: thin !important;
+}
+.modal-scroll::-webkit-scrollbar {
+  width: 8px !important;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+}
+
+/* === ANIMAZIONI MODALI === */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* === MODALI AVANZATI === */
+.modal-wrapper {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.5s ease !important;
+}
+.modal-3d {
+  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  max-width: 600px !important;
+  width: 90% !important;
+  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
+  animation: scaleIn 0.5s ease forwards !important;
+  position: relative !important;
+}
+.modal-3d .modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: var(--neon-blue) !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  color: black !important;
+  font-weight: bold !important;
+  border: none !important;
+  box-shadow: 0 0 5px var(--neon-blue) !important;
+  cursor: pointer !important;
+}
+.modal-3d h2 {
+  font-size: 1.8rem !important;
+  color: var(--gold) !important;
+  margin-bottom: 1rem !important;
+}
+.modal-3d p, .modal-3d li {
+  color: var(--text-light) !important;
+  font-size: 1.5rem !important;
+}
+.modal-scroll {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding-right: 1rem !important;
+  scrollbar-width: thin !important;
+}
+.modal-scroll::-webkit-scrollbar {
+  width: 8px !important;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+}
+
+/* === ANIMAZIONI MODALI === */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* === MODALI AVANZATI === */
+.modal-wrapper {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.5s ease !important;
+}
+.modal-3d {
+  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  max-width: 600px !important;
+  width: 90% !important;
+  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
+  animation: scaleIn 0.5s ease forwards !important;
+  position: relative !important;
+}
+.modal-3d .modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: var(--neon-blue) !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  color: black !important;
+  font-weight: bold !important;
+  border: none !important;
+  box-shadow: 0 0 5px var(--neon-blue) !important;
+  cursor: pointer !important;
+}
+.modal-3d h2 {
+  font-size: 1.8rem !important;
+  color: var(--gold) !important;
+  margin-bottom: 1rem !important;
+}
+.modal-3d p, .modal-3d li {
+  color: var(--text-light) !important;
+  font-size: 1.5rem !important;
+}
+.modal-scroll {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding-right: 1rem !important;
+  scrollbar-width: thin !important;
+}
+.modal-scroll::-webkit-scrollbar {
+  width: 8px !important;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+}
+
+/* === ANIMAZIONI MODALI === */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* === MODALI AVANZATI === */
+.modal-wrapper {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.5s ease !important;
+}
+.modal-3d {
+  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  max-width: 600px !important;
+  width: 90% !important;
+  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
+  animation: scaleIn 0.5s ease forwards !important;
+  position: relative !important;
+}
+.modal-3d .modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: var(--neon-blue) !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  color: black !important;
+  font-weight: bold !important;
+  border: none !important;
+  box-shadow: 0 0 5px var(--neon-blue) !important;
+  cursor: pointer !important;
+}
+.modal-3d h2 {
+  font-size: 1.8rem !important;
+  color: var(--gold) !important;
+  margin-bottom: 1rem !important;
+}
+.modal-3d p, .modal-3d li {
+  color: var(--text-light) !important;
+  font-size: 1.5rem !important;
+}
+.modal-scroll {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding-right: 1rem !important;
+  scrollbar-width: thin !important;
+}
+.modal-scroll::-webkit-scrollbar {
+  width: 8px !important;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+}
+
+/* === ANIMAZIONI MODALI === */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* === MODALI AVANZATI === */
+.modal-wrapper {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.5s ease !important;
+}
+.modal-3d {
+  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  max-width: 600px !important;
+  width: 90% !important;
+  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
+  animation: scaleIn 0.5s ease forwards !important;
+  position: relative !important;
+}
+.modal-3d .modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: var(--neon-blue) !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  color: black !important;
+  font-weight: bold !important;
+  border: none !important;
+  box-shadow: 0 0 5px var(--neon-blue) !important;
+  cursor: pointer !important;
+}
+.modal-3d h2 {
+  font-size: 1.8rem !important;
+  color: var(--gold) !important;
+  margin-bottom: 1rem !important;
+}
+.modal-3d p, .modal-3d li {
+  color: var(--text-light) !important;
+  font-size: 1.5rem !important;
+}
+.modal-scroll {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding-right: 1rem !important;
+  scrollbar-width: thin !important;
+}
+.modal-scroll::-webkit-scrollbar {
+  width: 8px !important;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+}
+
+/* === ANIMAZIONI MODALI === */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* === MODALI AVANZATI === */
+.modal-wrapper {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.5s ease !important;
+}
+.modal-3d {
+  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  max-width: 600px !important;
+  width: 90% !important;
+  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
+  animation: scaleIn 0.5s ease forwards !important;
+  position: relative !important;
+}
+.modal-3d .modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: var(--neon-blue) !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  color: black !important;
+  font-weight: bold !important;
+  border: none !important;
+  box-shadow: 0 0 5px var(--neon-blue) !important;
+  cursor: pointer !important;
+}
+.modal-3d h2 {
+  font-size: 1.8rem !important;
+  color: var(--gold) !important;
+  margin-bottom: 1rem !important;
+}
+.modal-3d p, .modal-3d li {
+  color: var(--text-light) !important;
+  font-size: 1.5rem !important;
+}
+.modal-scroll {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  padding-right: 1rem !important;
+  scrollbar-width: thin !important;
+}
+.modal-scroll::-webkit-scrollbar {
+  width: 8px !important;
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+}
+
+/* === ANIMAZIONI MODALI === */
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* === MODALI AVANZATI === */
+.modal-wrapper {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  animation: fadeIn 0.5s ease !important;
+}
+.modal-3d {
+  background: linear-gradient(135deg, #1f1f2f, #2a2a40) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  max-width: 600px !important;
+  width: 90% !important;
+  box-shadow: 0 0 15px var(--neon-pink), 0 0 40px var(--gold) !important;
+  animation: scaleIn 0.5s ease forwards !important;
+  position: relative !important;
+}
+.modal-3d .modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  background: var(--neon-blue) !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  color: black !important;
+  font-weight: bold !important;
+  border: none !important;
+  box-shadow: 0 0 5px var(--neon-blue) !important;
+  cursor: pointer !important;
+}
+.modal-3d h2 {
+  font-size: 1.8rem !important;
+  color: var(--gold) !important;
+  margin-bottom: 1rem !important;
+}
+.modal-3d p, .modal-3d li {
+  color: var(--text-light) !important;
+  font-size: 1.5rem !important;
 }
 .modal-scroll {
   max-height: 60vh !important;

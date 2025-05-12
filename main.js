@@ -1215,7 +1215,7 @@ if (section === 'c2e-twitch') {
       <div id="pagination" class="flex justify-center items-center space-x-4 mt-6"></div>
   
       <div id="modal-nft" class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center">
-        <div class="bg-white p-6 rounded shadow max-w-md w-full relative" style="max-height: 80vh; overflow-y: auto;">
+        <div class="bg-white p-6 rounded shadow max-w-md w-full relative" >
           <button id="close-modal" class="absolute top-2 right-2 text-red-600 hover:text-red-800 text-4xl font-bold">&times;</button>
           <div id="modal-content"></div>
         </div>
@@ -1460,13 +1460,13 @@ function renderRewardTable(data) {
     const bg = index % 2 === 0 ? '#f9f9f9' : '#f1f1f1';
 
     rows += `
-      <tr style="background-color: ${bg}; transition: background-color 0.3s;">
-        <td style="padding: 10px; border: 1px solid #ddd;">${record.username}</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">${record.token_symbol}</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">${record.amount}</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">${record.channel}</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">${record.origin_channel}</td>
-        <td style="padding: 10px; border: 1px solid #ddd;">${new Date(record.timestamp).toLocaleString()}</td>
+      <tr >
+        <td >${record.username}</td>
+        <td >${record.token_symbol}</td>
+        <td >${record.amount}</td>
+        <td >${record.channel}</td>
+        <td >${record.origin_channel}</td>
+        <td >${new Date(record.timestamp).toLocaleString()}</td>
       </tr>
     `;
   });
@@ -1617,19 +1617,19 @@ async function loadLogStormsGiveaways() {
   try {
     // Visualizza il modulo per aggiungere una tempesta
     container.innerHTML = `
-      <div class="section-container" style="padding: 20px; margin: 0 auto; background-color: white; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 12px; max-width: 97%;">
-        <h2 class="section-title" style="font-size: 1.5rem; font-weight: bold; color: #4B5563; margin-bottom: 20px; text-align: center;">Add New Scheduled Storm</h2>
-        <div id="add-storm-form" class="form-container" style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: flex-start;">
+      <div class="section-container" >
+        <h2 class="section-title" >Add New Scheduled Storm</h2>
+        <div id="add-storm-form" class="form-container" >
 
           <!-- Scheduled Time and Timeframe -->
-          <div style="display: flex; flex-direction: row; gap: 16px; width: 100%; max-width: 450px;">
-            <div style="flex: 1;">
-              <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Scheduled Time</label>
-              <input type="datetime-local" id="scheduledTime" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #3b82f6; border-radius: 4px;">
+          <div >
+            <div >
+              <label class="input-label" >Scheduled Time</label>
+              <input type="datetime-local" id="scheduledTime" class="input-field" >
             </div>
-            <div style="flex: 1;">
-              <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Timeframe</label>
-              <select id="timeframe" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #3b82f6; border-radius: 4px;">
+            <div >
+              <label class="input-label" >Timeframe</label>
+              <select id="timeframe" class="input-field" >
                 <option value="">Select Timeframe</option>
                 <option value="5m">5m</option>
                 <option value="10m">10m</option>
@@ -1658,30 +1658,30 @@ async function loadLogStormsGiveaways() {
           </div>
 
           <!-- Amount and Token Symbol -->
-          <div style="display: flex; flex-direction: row; gap: 16px; width: 100%; max-width: 450px;">
-            <div style="flex: 1;">
-              <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Amount</label>
-              <input type="number" id="amount" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #3b82f6; border-radius: 4px;">
+          <div >
+            <div >
+              <label class="input-label" >Amount</label>
+              <input type="number" id="amount" class="input-field" >
             </div>
-            <div style="flex: 1;">
-              <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Token Symbol</label>
-              <select id="tokenSymbol" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #3b82f6; border-radius: 4px;">
+            <div >
+              <label class="input-label" >Token Symbol</label>
+              <select id="tokenSymbol" class="input-field" >
                 <option value="">Select Token</option>
               </select>
             </div>
           </div>
 
           <!-- Channel and Payment Method -->
-          <div style="display: flex; flex-direction: row; gap: 16px; width: 100%; max-width: 450px;">
-            <div style="flex: 1;">
-              <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Channel</label>
-              <select id="channelName" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #3b82f6; border-radius: 4px;">
+          <div >
+            <div >
+              <label class="input-label" >Channel</label>
+              <select id="channelName" class="input-field" >
                 <option value="">Select Channel</option>
               </select>
             </div>
-            <div style="flex: 1;">
-              <label class="input-label" style="font-size: 0.875rem; color: #4B5563; margin-bottom: 8px; display: block;">Payment Method</label>
-              <select id="paymentMethod" class="input-field" style="font-size: 0.875rem; padding: 8px; width: 100%; border: 1px solid #3b82f6; border-radius: 4px;">
+            <div >
+              <label class="input-label" >Payment Method</label>
+              <select id="paymentMethod" class="input-field" >
                 <option value="twitch">Twitch</option>
                 <option value="telegram">Telegram</option>
               </select>
@@ -1689,7 +1689,7 @@ async function loadLogStormsGiveaways() {
           </div>
 
           <!-- Add Storm Button -->
-          <button id="submitStorm" class="btn-submit" style="font-size: 1rem; padding: 12px 24px; background-color: #3b82f6; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; transition: background-color 0.3s;">
+          <button id="submitStorm" class="btn-submit" >
             Add Storm
           </button>
         </div>
@@ -1839,24 +1839,24 @@ function renderStormsTable(data) {
           const left = winnersArray[i];
           const right = winnersArray[i + 1] || '';
           winnersHTML += `
-            <div style="display: flex; justify-content: space-between; margin: 1px; padding: 0 1px;">
-              <span style="width: 49%; font-size: 0.75rem; font-weight: 500;">${left}</span>
-              <span style="width: 49%; font-size: 0.75rem; font-weight: 500;">${right}</span>
+            <div >
+              <span >${left}</span>
+              <span >${right}</span>
             </div>`;
         }
       } else {
-        winnersHTML = `<span style="color: #6b7280;">No winners in the selected time interval :(</span>`;
+        winnersHTML = `<span >No winners in the selected time interval :(</span>`;
       }
     } else {
-      winnersHTML = `<span style="color: #6b7280;">soon</span>`;
+      winnersHTML = `<span >soon</span>`;
     }
 
     const pulse = storm.status === 'pending'
-      ? `<div style="position: relative; width: 14px; height: 14px; background-color: #10b981; border-radius: 50%; animation: pulse-scale 1.5s infinite ease-out;"></div>`
-      : `<div style="width: 14px; height: 14px;"></div>`;
+      ? `<div ></div>`
+      : `<div ></div>`;
 
     rowsHTML += `
-      <tr style="background-color: ${rowColor}; transition: background-color 0.3s;">
+      <tr >
         <td>${storm.id}</td>
         <td>${new Date(storm.scheduled_time).toLocaleString()}</td>
         <td>${storm.offered_by}</td>
@@ -1905,19 +1905,19 @@ function displayStormsData(data) {
   };
 
   tableContainer.innerHTML = `
-    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <select id="filter-channel" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+    <div >
+      <div >
+        <select id="filter-channel" class="input-box" >
           ${createOptions(channels)}
         </select>
-        <select id="filter-status" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+        <select id="filter-status" class="input-box" >
           ${createOptions(statuses)}
         </select>
-        <select id="filter-offeredby" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+        <select id="filter-offeredby" class="input-box" >
           ${createOptions(offeredBys)}
         </select>
       </div>
-      <button id="update-storms" style="background-color: #3b82f6; color: white; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+      <button id="update-storms" >
         Update Data
       </button>
     </div>
@@ -1928,19 +1928,19 @@ function displayStormsData(data) {
         100% { transform: scale(2); opacity: 0; }
       }
     </style>
-    <div class="table-container" style="width: 100%; overflow-x: auto; padding: 20px;">
-      <table class="table-auto w-full" style="border-collapse: collapse;">
-        <thead style="background-color: #3b82f6; color: white;">
+    <div class="table-container" >
+      <table class="table-auto w-full" >
+        <thead >
           <tr>
-            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortStormsTable('id')">Storm-ID${sortArrow('id')}</th>
-            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortStormsTable('scheduled_time')">Start Time (your local time)${sortArrow('scheduled_time')}</th>
-            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortStormsTable('offered_by')">Offered By${sortArrow('offered_by')}</th>
-            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortStormsTable('amount')">Amount${sortArrow('amount')}</th>
-            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortStormsTable('token_symbol')">Token${sortArrow('token_symbol')}</th>
-            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortStormsTable('channel_name')">Channel${sortArrow('channel_name')}</th>
-            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortStormsTable('status')">Status${sortArrow('status')}</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Winners</th>
-            <th style="padding: 12px; border: 1px solid #ddd;"></th>
+            <th  onclick="sortStormsTable('id')">Storm-ID${sortArrow('id')}</th>
+            <th  onclick="sortStormsTable('scheduled_time')">Start Time (your local time)${sortArrow('scheduled_time')}</th>
+            <th  onclick="sortStormsTable('offered_by')">Offered By${sortArrow('offered_by')}</th>
+            <th  onclick="sortStormsTable('amount')">Amount${sortArrow('amount')}</th>
+            <th  onclick="sortStormsTable('token_symbol')">Token${sortArrow('token_symbol')}</th>
+            <th  onclick="sortStormsTable('channel_name')">Channel${sortArrow('channel_name')}</th>
+            <th  onclick="sortStormsTable('status')">Status${sortArrow('status')}</th>
+            <th >Winners</th>
+            <th ></th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1962,10 +1962,10 @@ function addHoverEffectToRows() {
   const rows = document.querySelectorAll('.table-auto tbody tr');
   rows.forEach(row => {
     row.addEventListener('mouseenter', () => {
-      row.style.backgroundColor = '#e2e8f0';
+      row
     });
     row.addEventListener('mouseleave', () => {
-      row.style.backgroundColor = '';
+      row
     });
   });
 }
@@ -1975,10 +1975,10 @@ function addHoverEffectToRows() {
   const rows = document.querySelectorAll('.table-row');
   rows.forEach(row => {
     row.addEventListener('mouseenter', () => {
-      row.style.backgroundColor = '#e2e8f0'; // Colore chiaro al passaggio del mouse
+      row // Colore chiaro al passaggio del mouse
     });
     row.addEventListener('mouseleave', () => {
-      row.style.backgroundColor = ''; // Rimuove il colore al passaggio
+      row // Rimuove il colore al passaggio
     });
   });
 }
@@ -2308,9 +2308,9 @@ async function loadWallet() {
 
   if (status) filtered = filtered.filter(nft => nft.is_staked === status);
   if (status === "Staked") {
-    document.getElementById('filter-stakable').parentElement.style.display = 'none';
+    document.getElementById('filter-stakable').parentElement
   } else {
-    document.getElementById('filter-stakable').parentElement.style.display = 'block';
+    document.getElementById('filter-stakable').parentElement
     if (stakable) filtered = filtered.filter(nft => nft.is_stakable === stakable);
   }
 

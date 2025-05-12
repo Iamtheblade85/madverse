@@ -88,23 +88,70 @@ input:focus, select:focus, textarea:focus {
   border-radius: 12px !important;
 }
 
-/* Tables */
+/* Enhanced Tables */
 table {
   width: 100% !important;
   border-collapse: collapse !important;
   background-color: #121212 !important;
   margin-top: 1rem !important;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.15) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  transition: all 0.3s ease-in-out !important;
 }
+
 th, td {
   padding: 12px !important;
   border: 1px solid #333 !important;
+  transition: all 0.3s ease-in-out !important;
 }
+
 th {
   background-color: #1e1e2f !important;
   color: var(--gold) !important;
+  font-size: 1.1rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
 }
-tr:hover {
-  background-color: #222 !important;
+
+tr {
+  transition: all 0.3s ease-in-out !important;
+}
+
+/* Wallet Table Specific Boost */
+#wallet-table th,
+#wallet-table td {
+  font-size: 150% !important;
+  color: var(--text-light) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-pink) !important;
+  transition: all 0.4s ease-in-out !important;
+}
+
+/* Row Hover Effects */
+#wallet-table tr:hover > td,
+#wallet-table tr:hover > th {
+  background-color: silver !important;
+  color: black !important;
+  transform: scale(1.01) !important;
+  box-shadow: 0 0 15px silver, 0 0 30px rgba(255,255,255,0.5) !important;
+}
+
+/* Animated Row Entry */
+#wallet-table tr {
+  animation: fadeInRow 0.5s ease-in-out !important;
+}
+
+/* Row Animation Keyframes */
+@keyframes fadeInRow {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Toast */
@@ -48395,4 +48442,61 @@ pre, code {
 #wallet-table tr th,
 #wallet-table tr td {
   font-size: 150% !important;
+}
+/* Enhanced Tables - General and Wallet Specific */
+table,
+#wallet-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  background-color: #121212 !important;
+  margin-top: 1rem !important;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.15) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+table th, table td,
+#wallet-table th, #wallet-table td {
+  padding: 12px !important;
+  border: 1px solid #333 !important;
+  transition: all 0.3s ease-in-out !important;
+  font-size: 150% !important;
+  color: var(--text-light) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-pink) !important;
+}
+
+table th, #wallet-table th {
+  background-color: #1e1e2f !important;
+  color: var(--gold) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+}
+
+table tr, #wallet-table tr {
+  transition: all 0.3s ease-in-out !important;
+  animation: fadeInRow 0.5s ease-in-out !important;
+}
+
+table tr:hover > td,
+table tr:hover > th,
+#wallet-table tr:hover > td,
+#wallet-table tr:hover > th {
+  background-color: silver !important;
+  color: black !important;
+  transform: scale(1.01) !important;
+  box-shadow: 0 0 15px silver, 0 0 30px rgba(255,255,255,0.5) !important;
+}
+
+/* Row Animation */
+@keyframes fadeInRow {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -1,1822 +1,1534 @@
 
 /* ============================================
-   STYLES2.CSS - MULTI THEME DYNAMIC UI SYSTEM
-   Per progetto CryptoWallet (Twitch, NFTs, WAX)
-   - 10 temi unici con effetti globali liquidi
-   - Responsive 300px - 1500px
-   - Tutti elementi UI HTML/JS coperti
-   - Effetti: fuoco, ghiaccio, vento, onde
+   STYLES2.CSS - FULL THEME RECONSTRUCTION
+   Ogni tema è visivamente e strutturalmente unico
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700&family=Share+Tech+Mono&family=Rubik+Mono+One&family=Raleway:wght@300;800&family=VT323&family=Bungee+Hairline&family=Unica+One&display=swap');
 
-body {
-  font-family: 'Press Start 2P', cursive !important;
+* {
+  box-sizing: border-box !important;
   margin: 0 !important;
   padding: 0 !important;
-  box-sizing: border-box !important;
-  transition: background 0.5s ease, color 0.5s ease !important;
+}
+
+html, body {
+  width: 100% !important;
+  height: 100% !important;
+  scroll-behavior: smooth !important;
+  transition: all 0.5s ease-in-out !important;
   overflow-x: hidden !important;
 }
 
-html {
-  scroll-behavior: smooth !important;
-}
-
-* {
-  box-sizing: inherit !important;
-}
-
-:root {
-  --bg: #000 !important;
-  --text: #fff !important;
-  --primary: #111 !important;
-  --accent: #f0f !important;
-}
-
-/* Seguiranno definizioni dettagliate per i 10 temi... */
-
-
-/* ==============================
-   THEMES CON EFFETTI GLOBALI
-   ============================== */
-
-/* Tema 1 - Neon Waves */
+/* ===== THEME 1 ===== */
 body.theme-1 {
-  --bg: #0f0f0f !important;
-  --text: #00ffff !important;
-  --primary: #111111 !important;
-  --accent: #33ffff !important;
-  background: linear-gradient(135deg, #0f0f0f, #1a1a1a) !important;
-  animation: waveBackground 10s infinite linear !important;
-}
-
-/* Tema 2 - Cyber Fire */
-body.theme-2 {
-  --bg: #1a0000 !important;
-  --text: #ffcc00 !important;
-  --primary: #330000 !important;
-  --accent: #ff3300 !important;
-  background: radial-gradient(circle, #330000, #000000) !important;
-  animation: fireBackground 8s infinite alternate !important;
-}
-
-/* Tema 3 - Arctic Ice */
-body.theme-3 {
-  --bg: #003344 !important;
-  --text: #ccffff !important;
-  --primary: #005577 !important;
-  --accent: #66ffff !important;
-  background: linear-gradient(160deg, #003344, #001f2f) !important;
-  animation: iceShimmer 12s infinite alternate !important;
-}
-
-/* Tema 4 - Vortex Wind */
-body.theme-4 {
-  --bg: #001133 !important;
-  --text: #ffffff !important;
-  --primary: #002244 !important;
-  --accent: #66ccff !important;
-  background: repeating-linear-gradient(45deg, #001133, #002244 10px) !important;
-  animation: windFlow 15s linear infinite !important;
-}
-
-/* Tema 5 - Jungle Vibe */
-body.theme-5 {
-  --bg: #002200 !important;
-  --text: #aaffaa !important;
-  --primary: #004400 !important;
-  --accent: #00ff00 !important;
-  background: linear-gradient(to bottom, #001a00, #003300) !important;
-  animation: waveBackground 20s infinite linear !important;
-}
-
-/* Tema 6 - Sunset Blaze */
-body.theme-6 {
-  --bg: #330000 !important;
-  --text: #ffddaa !important;
-  --primary: #660000 !important;
-  --accent: #ff5500 !important;
-  background: linear-gradient(135deg, #330000, #660000) !important;
-  animation: fireBackground 14s infinite alternate !important;
-}
-
-/* Tema 7 - Frozen Pulse */
-body.theme-7 {
-  --bg: #000033 !important;
-  --text: #99ccff !important;
-  --primary: #001144 !important;
-  --accent: #3399ff !important;
-  background: linear-gradient(180deg, #000033, #001144) !important;
-  animation: iceShimmer 10s infinite alternate !important;
-}
-
-/* Tema 8 - Solar Flare */
-body.theme-8 {
-  --bg: #331a00 !important;
-  --text: #ffcc66 !important;
-  --primary: #663300 !important;
-  --accent: #ff6600 !important;
-  background: radial-gradient(circle, #331a00, #000000) !important;
-  animation: fireBackground 11s infinite alternate !important;
-}
-
-/* Tema 9 - Ghost Wind */
-body.theme-9 {
-  --bg: #111111 !important;
-  --text: #cccccc !important;
-  --primary: #222222 !important;
-  --accent: #ffffff !important;
-  background: repeating-linear-gradient(60deg, #111, #222 15px) !important;
-  animation: windFlow 16s linear infinite !important;
-}
-
-/* Tema 10 - Crystal Lake */
-body.theme-10 {
-  --bg: #001f3f !important;
-  --text: #cceeff !important;
-  --primary: #003366 !important;
-  --accent: #66ccff !important;
-  background: linear-gradient(200deg, #001f3f, #003366) !important;
-  animation: iceShimmer 9s infinite alternate !important;
-}
-
-/* ==============================
-   ANIMAZIONI GLOBALI A EFFETTO
-   ============================== */
-@keyframes waveBackground {
-  0% { background-position: 0 0; }
-  100% { background-position: 1000px 0; }
-}
-@keyframes fireBackground {
-  0% { filter: brightness(1) hue-rotate(0deg); }
-  100% { filter: brightness(1.3) hue-rotate(20deg); }
-}
-@keyframes iceShimmer {
-  0% { filter: contrast(1) brightness(1); }
-  100% { filter: contrast(1.1) brightness(1.2); }
-}
-@keyframes windFlow {
-  0% { background-position: 0 0; }
-  100% { background-position: 200px 200px; }
-}
-
-/* ==============================
-   UI ELEMENTS UNIVERSALI
-   ============================== */
-
-body, nav, .menu-btn, button, .btn-action, select, input, textarea, #modal, #modal-content,
-#confirm-modal, #toast-container, .reward-token-entry, .reward-row, #nfts-list div, .menu,
-.table, .input-box, #theme-selector {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border-color: var(--accent) !important;
-  border-width: 1px !important;
-  border-style: solid !important;
-  font-size: 0.75rem !important;
-  line-height: 1.4 !important;
-}
-
-button, .btn-action {
-  cursor: pointer !important;
-  padding: 10px 16px !important;
-  border-radius: 12px !important;
-  text-transform: uppercase !important;
-  font-weight: bold !important;
-  transition: all 0.4s ease-in-out !important;
-}
-
-button:hover, .btn-action:hover {
-  transform: scale(1.05) rotate(-1deg) !important;
-  box-shadow: 0 0 10px var(--accent) !important;
-  background-color: var(--accent) !important;
-  color: var(--bg) !important;
-}
-
-input, select, textarea {
-  padding: 6px 10px !important;
-  border-radius: 8px !important;
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-#theme-selector {
-  font-family: 'Press Start 2P', cursive !important;
-  position: fixed !important;
-  top: 70px !important;
-  right: 20px !important;
-  z-index: 1000 !important;
-  display: none !important;
-  padding: 10px !important;
-}
-
-#theme-toggle-btn {
-  position: fixed !important;
-  top: 20px !important;
-  right: 20px !important;
-  z-index: 1000 !important;
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border-radius: 50% !important;
-  font-size: 20px !important;
-  width: 42px !important;
-  height: 42px !important;
-  border: 2px solid var(--text) !important;
-}
-
-/* ==============================
-   RESPONSIVE MEDIA QUERIES
-   ============================== */
-
-@media (max-width: 600px) {
-  body {
-    font-size: 0.55rem !important;
-  }
-  .menu-btn, .btn-action {
-    padding: 8px 12px !important;
-    font-size: 0.6rem !important;
-  }
-}
-
-@media (min-width: 601px) and (max-width: 1024px) {
-  body {
-    font-size: 0.7rem !important;
-  }
-}
-
-@media (min-width: 1025px) {
-  body {
-    font-size: 0.85rem !important;
-  }
-}
-
-
-
-/* ===================================
-   THEME 1 - STILE UNICO AVANZATO
-   =================================== */
-body.theme-1 {
-  --bg: hsl(36, 70%, 10%) !important;
-  --text: hsl(36, 90%, 90%) !important;
-  --primary: hsl(36, 70%, 20%) !important;
+  --bg: hsl(36, 40%, 10%) !important;
+  --text: hsl(36, 100%, 90%) !important;
+  --primary: hsl(36, 40%, 20%) !important;
   --accent: hsl(36, 100%, 60%) !important;
 
-  background: linear-gradient(135deg, var(--bg), var(--primary)) !important;
+  background-color: var(--bg) !important;
   color: var(--text) !important;
-  animation: theme1-background 20s infinite alternate ease-in-out !important;
   font-family: 'Press Start 2P', cursive !important;
-  letter-spacing: 1px !important;
-  text-shadow: 1px 1px 2px var(--accent) !important;
-  filter: brightness(1.1) contrast(1.05) !important;
-  transition: all 0.7s ease-in-out !important;
-  transform-style: preserve-3d !important;
-  perspective: 800px !important;
-  box-shadow: inset 0 0 100px rgba(255, 255, 255, 0.05) !important;
+  animation: scanlines 1s infinite linear !important;
 }
 
-@keyframes theme1-background {
-  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-  50% { background-position: 100% 50%; filter: hue-rotate(90deg); }
-  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
+nav.theme-1, header.theme-1, footer.theme-1 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border-bottom: 3px solid var(--accent) !important;
+  padding: 10px !important;
 }
 
 button.theme-1, .btn-action.theme-1 {
-  background: var(--accent) !important;
+  background-color: var(--accent) !important;
   color: var(--bg) !important;
+  padding: 12px 18px !important;
   border: 2px solid var(--text) !important;
-  border-radius: 12px !important;
-  padding: 12px 20px !important;
-  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent) !important;
-  transition: transform 0.4s, background-color 0.4s !important;
-  font-weight: bold !important;
+  border-radius: 4px !important;
+  font-size: 0.75rem !important;
   text-transform: uppercase !important;
+  font-weight: bold !important;
+  box-shadow: 0 0 3px var(--accent) !important;
+  transition: all 0.4s ease-in-out !important;
 }
 
-button.theme-1:hover, .btn-action.theme-1:hover {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  transform: scale(1.1) rotate(-2deg) !important;
+button.theme-1:hover {
+  transform: scale(1.05) rotate(-1deg) !important;
+  background-color: var(--text) !important;
+  color: var(--bg) !important;
 }
 
-h1.theme-1, h2.theme-1, h3.theme-1 {
-  color: var(--accent) !important;
-  text-shadow: 2px 2px 5px var(--primary) !important;
-  animation: glowTheme1 3s infinite alternate !important;
-}
-
-@keyframes glowTheme1 {
-  0% { text-shadow: 0 0 5px var(--accent); }
-  100% { text-shadow: 0 0 20px var(--accent); }
-}
-
-input.theme-1, textarea.theme-1, select.theme-1 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 8px !important;
-  box-shadow: inset 0 0 10px var(--accent) !important;
-  transition: box-shadow 0.3s ease-in-out !important;
-}
-
-input.theme-1:focus, textarea.theme-1:focus, select.theme-1:focus {
-  box-shadow: 0 0 15px var(--accent) !important;
-}
-
-
-/* ===================================
-   THEME 2 - STILE UNICO AVANZATO
-   =================================== */
-body.theme-2 {
-  --bg: hsl(72, 70%, 10%) !important;
-  --text: hsl(72, 90%, 90%) !important;
-  --primary: hsl(72, 70%, 20%) !important;
-  --accent: hsl(72, 100%, 60%) !important;
-
-  background: linear-gradient(135deg, var(--bg), var(--primary)) !important;
-  color: var(--text) !important;
-  animation: theme2-background 20s infinite alternate ease-in-out !important;
+table.theme-1 {
+  width: 100% !important;
+  border-collapse: collapse !important;
   font-family: 'Press Start 2P', cursive !important;
-  letter-spacing: 1px !important;
-  text-shadow: 1px 1px 2px var(--accent) !important;
-  filter: brightness(1.1) contrast(1.05) !important;
-  transition: all 0.7s ease-in-out !important;
-  transform-style: preserve-3d !important;
-  perspective: 800px !important;
-  box-shadow: inset 0 0 100px rgba(255, 255, 255, 0.05) !important;
-}
-
-@keyframes theme2-background {
-  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-  50% { background-position: 100% 50%; filter: hue-rotate(90deg); }
-  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-}
-
-button.theme-2, .btn-action.theme-2 {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border: 2px solid var(--text) !important;
-  border-radius: 12px !important;
-  padding: 12px 20px !important;
-  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent) !important;
-  transition: transform 0.4s, background-color 0.4s !important;
-  font-weight: bold !important;
-  text-transform: uppercase !important;
-}
-
-button.theme-2:hover, .btn-action.theme-2:hover {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  transform: scale(1.1) rotate(-2deg) !important;
-}
-
-h1.theme-2, h2.theme-2, h3.theme-2 {
-  color: var(--accent) !important;
-  text-shadow: 2px 2px 5px var(--primary) !important;
-  animation: glowTheme2 3s infinite alternate !important;
-}
-
-@keyframes glowTheme2 {
-  0% { text-shadow: 0 0 5px var(--accent); }
-  100% { text-shadow: 0 0 20px var(--accent); }
-}
-
-input.theme-2, textarea.theme-2, select.theme-2 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 8px !important;
-  box-shadow: inset 0 0 10px var(--accent) !important;
-  transition: box-shadow 0.3s ease-in-out !important;
-}
-
-input.theme-2:focus, textarea.theme-2:focus, select.theme-2:focus {
-  box-shadow: 0 0 15px var(--accent) !important;
-}
-
-
-/* ===================================
-   THEME 3 - STILE UNICO AVANZATO
-   =================================== */
-body.theme-3 {
-  --bg: hsl(108, 70%, 10%) !important;
-  --text: hsl(108, 90%, 90%) !important;
-  --primary: hsl(108, 70%, 20%) !important;
-  --accent: hsl(108, 100%, 60%) !important;
-
-  background: linear-gradient(135deg, var(--bg), var(--primary)) !important;
-  color: var(--text) !important;
-  animation: theme3-background 20s infinite alternate ease-in-out !important;
-  font-family: 'Press Start 2P', cursive !important;
-  letter-spacing: 1px !important;
-  text-shadow: 1px 1px 2px var(--accent) !important;
-  filter: brightness(1.1) contrast(1.05) !important;
-  transition: all 0.7s ease-in-out !important;
-  transform-style: preserve-3d !important;
-  perspective: 800px !important;
-  box-shadow: inset 0 0 100px rgba(255, 255, 255, 0.05) !important;
-}
-
-@keyframes theme3-background {
-  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-  50% { background-position: 100% 50%; filter: hue-rotate(90deg); }
-  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-}
-
-button.theme-3, .btn-action.theme-3 {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border: 2px solid var(--text) !important;
-  border-radius: 12px !important;
-  padding: 12px 20px !important;
-  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent) !important;
-  transition: transform 0.4s, background-color 0.4s !important;
-  font-weight: bold !important;
-  text-transform: uppercase !important;
-}
-
-button.theme-3:hover, .btn-action.theme-3:hover {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  transform: scale(1.1) rotate(-2deg) !important;
-}
-
-h1.theme-3, h2.theme-3, h3.theme-3 {
-  color: var(--accent) !important;
-  text-shadow: 2px 2px 5px var(--primary) !important;
-  animation: glowTheme3 3s infinite alternate !important;
-}
-
-@keyframes glowTheme3 {
-  0% { text-shadow: 0 0 5px var(--accent); }
-  100% { text-shadow: 0 0 20px var(--accent); }
-}
-
-input.theme-3, textarea.theme-3, select.theme-3 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 8px !important;
-  box-shadow: inset 0 0 10px var(--accent) !important;
-  transition: box-shadow 0.3s ease-in-out !important;
-}
-
-input.theme-3:focus, textarea.theme-3:focus, select.theme-3:focus {
-  box-shadow: 0 0 15px var(--accent) !important;
-}
-
-
-/* ===================================
-   THEME 4 - STILE UNICO AVANZATO
-   =================================== */
-body.theme-4 {
-  --bg: hsl(144, 70%, 10%) !important;
-  --text: hsl(144, 90%, 90%) !important;
-  --primary: hsl(144, 70%, 20%) !important;
-  --accent: hsl(144, 100%, 60%) !important;
-
-  background: linear-gradient(135deg, var(--bg), var(--primary)) !important;
-  color: var(--text) !important;
-  animation: theme4-background 20s infinite alternate ease-in-out !important;
-  font-family: 'Press Start 2P', cursive !important;
-  letter-spacing: 1px !important;
-  text-shadow: 1px 1px 2px var(--accent) !important;
-  filter: brightness(1.1) contrast(1.05) !important;
-  transition: all 0.7s ease-in-out !important;
-  transform-style: preserve-3d !important;
-  perspective: 800px !important;
-  box-shadow: inset 0 0 100px rgba(255, 255, 255, 0.05) !important;
-}
-
-@keyframes theme4-background {
-  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-  50% { background-position: 100% 50%; filter: hue-rotate(90deg); }
-  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-}
-
-button.theme-4, .btn-action.theme-4 {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border: 2px solid var(--text) !important;
-  border-radius: 12px !important;
-  padding: 12px 20px !important;
-  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent) !important;
-  transition: transform 0.4s, background-color 0.4s !important;
-  font-weight: bold !important;
-  text-transform: uppercase !important;
-}
-
-button.theme-4:hover, .btn-action.theme-4:hover {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  transform: scale(1.1) rotate(-2deg) !important;
-}
-
-h1.theme-4, h2.theme-4, h3.theme-4 {
-  color: var(--accent) !important;
-  text-shadow: 2px 2px 5px var(--primary) !important;
-  animation: glowTheme4 3s infinite alternate !important;
-}
-
-@keyframes glowTheme4 {
-  0% { text-shadow: 0 0 5px var(--accent); }
-  100% { text-shadow: 0 0 20px var(--accent); }
-}
-
-input.theme-4, textarea.theme-4, select.theme-4 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 8px !important;
-  box-shadow: inset 0 0 10px var(--accent) !important;
-  transition: box-shadow 0.3s ease-in-out !important;
-}
-
-input.theme-4:focus, textarea.theme-4:focus, select.theme-4:focus {
-  box-shadow: 0 0 15px var(--accent) !important;
-}
-
-
-/* ===================================
-   THEME 5 - STILE UNICO AVANZATO
-   =================================== */
-body.theme-5 {
-  --bg: hsl(180, 70%, 10%) !important;
-  --text: hsl(180, 90%, 90%) !important;
-  --primary: hsl(180, 70%, 20%) !important;
-  --accent: hsl(180, 100%, 60%) !important;
-
-  background: linear-gradient(135deg, var(--bg), var(--primary)) !important;
-  color: var(--text) !important;
-  animation: theme5-background 20s infinite alternate ease-in-out !important;
-  font-family: 'Press Start 2P', cursive !important;
-  letter-spacing: 1px !important;
-  text-shadow: 1px 1px 2px var(--accent) !important;
-  filter: brightness(1.1) contrast(1.05) !important;
-  transition: all 0.7s ease-in-out !important;
-  transform-style: preserve-3d !important;
-  perspective: 800px !important;
-  box-shadow: inset 0 0 100px rgba(255, 255, 255, 0.05) !important;
-}
-
-@keyframes theme5-background {
-  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-  50% { background-position: 100% 50%; filter: hue-rotate(90deg); }
-  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-}
-
-button.theme-5, .btn-action.theme-5 {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border: 2px solid var(--text) !important;
-  border-radius: 12px !important;
-  padding: 12px 20px !important;
-  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent) !important;
-  transition: transform 0.4s, background-color 0.4s !important;
-  font-weight: bold !important;
-  text-transform: uppercase !important;
-}
-
-button.theme-5:hover, .btn-action.theme-5:hover {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  transform: scale(1.1) rotate(-2deg) !important;
-}
-
-h1.theme-5, h2.theme-5, h3.theme-5 {
-  color: var(--accent) !important;
-  text-shadow: 2px 2px 5px var(--primary) !important;
-  animation: glowTheme5 3s infinite alternate !important;
-}
-
-@keyframes glowTheme5 {
-  0% { text-shadow: 0 0 5px var(--accent); }
-  100% { text-shadow: 0 0 20px var(--accent); }
-}
-
-input.theme-5, textarea.theme-5, select.theme-5 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 8px !important;
-  box-shadow: inset 0 0 10px var(--accent) !important;
-  transition: box-shadow 0.3s ease-in-out !important;
-}
-
-input.theme-5:focus, textarea.theme-5:focus, select.theme-5:focus {
-  box-shadow: 0 0 15px var(--accent) !important;
-}
-
-
-/* ===================================
-   THEME 6 - STILE UNICO AVANZATO
-   =================================== */
-body.theme-6 {
-  --bg: hsl(216, 70%, 10%) !important;
-  --text: hsl(216, 90%, 90%) !important;
-  --primary: hsl(216, 70%, 20%) !important;
-  --accent: hsl(216, 100%, 60%) !important;
-
-  background: linear-gradient(135deg, var(--bg), var(--primary)) !important;
-  color: var(--text) !important;
-  animation: theme6-background 20s infinite alternate ease-in-out !important;
-  font-family: 'Press Start 2P', cursive !important;
-  letter-spacing: 1px !important;
-  text-shadow: 1px 1px 2px var(--accent) !important;
-  filter: brightness(1.1) contrast(1.05) !important;
-  transition: all 0.7s ease-in-out !important;
-  transform-style: preserve-3d !important;
-  perspective: 800px !important;
-  box-shadow: inset 0 0 100px rgba(255, 255, 255, 0.05) !important;
-}
-
-@keyframes theme6-background {
-  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-  50% { background-position: 100% 50%; filter: hue-rotate(90deg); }
-  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-}
-
-button.theme-6, .btn-action.theme-6 {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border: 2px solid var(--text) !important;
-  border-radius: 12px !important;
-  padding: 12px 20px !important;
-  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent) !important;
-  transition: transform 0.4s, background-color 0.4s !important;
-  font-weight: bold !important;
-  text-transform: uppercase !important;
-}
-
-button.theme-6:hover, .btn-action.theme-6:hover {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  transform: scale(1.1) rotate(-2deg) !important;
-}
-
-h1.theme-6, h2.theme-6, h3.theme-6 {
-  color: var(--accent) !important;
-  text-shadow: 2px 2px 5px var(--primary) !important;
-  animation: glowTheme6 3s infinite alternate !important;
-}
-
-@keyframes glowTheme6 {
-  0% { text-shadow: 0 0 5px var(--accent); }
-  100% { text-shadow: 0 0 20px var(--accent); }
-}
-
-input.theme-6, textarea.theme-6, select.theme-6 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 8px !important;
-  box-shadow: inset 0 0 10px var(--accent) !important;
-  transition: box-shadow 0.3s ease-in-out !important;
-}
-
-input.theme-6:focus, textarea.theme-6:focus, select.theme-6:focus {
-  box-shadow: 0 0 15px var(--accent) !important;
-}
-
-
-/* ===================================
-   THEME 7 - STILE UNICO AVANZATO
-   =================================== */
-body.theme-7 {
-  --bg: hsl(252, 70%, 10%) !important;
-  --text: hsl(252, 90%, 90%) !important;
-  --primary: hsl(252, 70%, 20%) !important;
-  --accent: hsl(252, 100%, 60%) !important;
-
-  background: linear-gradient(135deg, var(--bg), var(--primary)) !important;
-  color: var(--text) !important;
-  animation: theme7-background 20s infinite alternate ease-in-out !important;
-  font-family: 'Press Start 2P', cursive !important;
-  letter-spacing: 1px !important;
-  text-shadow: 1px 1px 2px var(--accent) !important;
-  filter: brightness(1.1) contrast(1.05) !important;
-  transition: all 0.7s ease-in-out !important;
-  transform-style: preserve-3d !important;
-  perspective: 800px !important;
-  box-shadow: inset 0 0 100px rgba(255, 255, 255, 0.05) !important;
-}
-
-@keyframes theme7-background {
-  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-  50% { background-position: 100% 50%; filter: hue-rotate(90deg); }
-  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-}
-
-button.theme-7, .btn-action.theme-7 {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border: 2px solid var(--text) !important;
-  border-radius: 12px !important;
-  padding: 12px 20px !important;
-  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent) !important;
-  transition: transform 0.4s, background-color 0.4s !important;
-  font-weight: bold !important;
-  text-transform: uppercase !important;
-}
-
-button.theme-7:hover, .btn-action.theme-7:hover {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  transform: scale(1.1) rotate(-2deg) !important;
-}
-
-h1.theme-7, h2.theme-7, h3.theme-7 {
-  color: var(--accent) !important;
-  text-shadow: 2px 2px 5px var(--primary) !important;
-  animation: glowTheme7 3s infinite alternate !important;
-}
-
-@keyframes glowTheme7 {
-  0% { text-shadow: 0 0 5px var(--accent); }
-  100% { text-shadow: 0 0 20px var(--accent); }
-}
-
-input.theme-7, textarea.theme-7, select.theme-7 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 8px !important;
-  box-shadow: inset 0 0 10px var(--accent) !important;
-  transition: box-shadow 0.3s ease-in-out !important;
-}
-
-input.theme-7:focus, textarea.theme-7:focus, select.theme-7:focus {
-  box-shadow: 0 0 15px var(--accent) !important;
-}
-
-
-/* ===================================
-   THEME 8 - STILE UNICO AVANZATO
-   =================================== */
-body.theme-8 {
-  --bg: hsl(288, 70%, 10%) !important;
-  --text: hsl(288, 90%, 90%) !important;
-  --primary: hsl(288, 70%, 20%) !important;
-  --accent: hsl(288, 100%, 60%) !important;
-
-  background: linear-gradient(135deg, var(--bg), var(--primary)) !important;
-  color: var(--text) !important;
-  animation: theme8-background 20s infinite alternate ease-in-out !important;
-  font-family: 'Press Start 2P', cursive !important;
-  letter-spacing: 1px !important;
-  text-shadow: 1px 1px 2px var(--accent) !important;
-  filter: brightness(1.1) contrast(1.05) !important;
-  transition: all 0.7s ease-in-out !important;
-  transform-style: preserve-3d !important;
-  perspective: 800px !important;
-  box-shadow: inset 0 0 100px rgba(255, 255, 255, 0.05) !important;
-}
-
-@keyframes theme8-background {
-  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-  50% { background-position: 100% 50%; filter: hue-rotate(90deg); }
-  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-}
-
-button.theme-8, .btn-action.theme-8 {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border: 2px solid var(--text) !important;
-  border-radius: 12px !important;
-  padding: 12px 20px !important;
-  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent) !important;
-  transition: transform 0.4s, background-color 0.4s !important;
-  font-weight: bold !important;
-  text-transform: uppercase !important;
-}
-
-button.theme-8:hover, .btn-action.theme-8:hover {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  transform: scale(1.1) rotate(-2deg) !important;
-}
-
-h1.theme-8, h2.theme-8, h3.theme-8 {
-  color: var(--accent) !important;
-  text-shadow: 2px 2px 5px var(--primary) !important;
-  animation: glowTheme8 3s infinite alternate !important;
-}
-
-@keyframes glowTheme8 {
-  0% { text-shadow: 0 0 5px var(--accent); }
-  100% { text-shadow: 0 0 20px var(--accent); }
-}
-
-input.theme-8, textarea.theme-8, select.theme-8 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 8px !important;
-  box-shadow: inset 0 0 10px var(--accent) !important;
-  transition: box-shadow 0.3s ease-in-out !important;
-}
-
-input.theme-8:focus, textarea.theme-8:focus, select.theme-8:focus {
-  box-shadow: 0 0 15px var(--accent) !important;
-}
-
-
-/* ===================================
-   THEME 9 - STILE UNICO AVANZATO
-   =================================== */
-body.theme-9 {
-  --bg: hsl(324, 70%, 10%) !important;
-  --text: hsl(324, 90%, 90%) !important;
-  --primary: hsl(324, 70%, 20%) !important;
-  --accent: hsl(324, 100%, 60%) !important;
-
-  background: linear-gradient(135deg, var(--bg), var(--primary)) !important;
-  color: var(--text) !important;
-  animation: theme9-background 20s infinite alternate ease-in-out !important;
-  font-family: 'Press Start 2P', cursive !important;
-  letter-spacing: 1px !important;
-  text-shadow: 1px 1px 2px var(--accent) !important;
-  filter: brightness(1.1) contrast(1.05) !important;
-  transition: all 0.7s ease-in-out !important;
-  transform-style: preserve-3d !important;
-  perspective: 800px !important;
-  box-shadow: inset 0 0 100px rgba(255, 255, 255, 0.05) !important;
-}
-
-@keyframes theme9-background {
-  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-  50% { background-position: 100% 50%; filter: hue-rotate(90deg); }
-  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-}
-
-button.theme-9, .btn-action.theme-9 {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border: 2px solid var(--text) !important;
-  border-radius: 12px !important;
-  padding: 12px 20px !important;
-  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent) !important;
-  transition: transform 0.4s, background-color 0.4s !important;
-  font-weight: bold !important;
-  text-transform: uppercase !important;
-}
-
-button.theme-9:hover, .btn-action.theme-9:hover {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  transform: scale(1.1) rotate(-2deg) !important;
-}
-
-h1.theme-9, h2.theme-9, h3.theme-9 {
-  color: var(--accent) !important;
-  text-shadow: 2px 2px 5px var(--primary) !important;
-  animation: glowTheme9 3s infinite alternate !important;
-}
-
-@keyframes glowTheme9 {
-  0% { text-shadow: 0 0 5px var(--accent); }
-  100% { text-shadow: 0 0 20px var(--accent); }
-}
-
-input.theme-9, textarea.theme-9, select.theme-9 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 8px !important;
-  box-shadow: inset 0 0 10px var(--accent) !important;
-  transition: box-shadow 0.3s ease-in-out !important;
-}
-
-input.theme-9:focus, textarea.theme-9:focus, select.theme-9:focus {
-  box-shadow: 0 0 15px var(--accent) !important;
-}
-
-
-/* ===================================
-   THEME 10 - STILE UNICO AVANZATO
-   =================================== */
-body.theme-10 {
-  --bg: hsl(360, 70%, 10%) !important;
-  --text: hsl(360, 90%, 90%) !important;
-  --primary: hsl(360, 70%, 20%) !important;
-  --accent: hsl(360, 100%, 60%) !important;
-
-  background: linear-gradient(135deg, var(--bg), var(--primary)) !important;
-  color: var(--text) !important;
-  animation: theme10-background 20s infinite alternate ease-in-out !important;
-  font-family: 'Press Start 2P', cursive !important;
-  letter-spacing: 1px !important;
-  text-shadow: 1px 1px 2px var(--accent) !important;
-  filter: brightness(1.1) contrast(1.05) !important;
-  transition: all 0.7s ease-in-out !important;
-  transform-style: preserve-3d !important;
-  perspective: 800px !important;
-  box-shadow: inset 0 0 100px rgba(255, 255, 255, 0.05) !important;
-}
-
-@keyframes theme10-background {
-  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-  50% { background-position: 100% 50%; filter: hue-rotate(90deg); }
-  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
-}
-
-button.theme-10, .btn-action.theme-10 {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border: 2px solid var(--text) !important;
-  border-radius: 12px !important;
-  padding: 12px 20px !important;
-  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent) !important;
-  transition: transform 0.4s, background-color 0.4s !important;
-  font-weight: bold !important;
-  text-transform: uppercase !important;
-}
-
-button.theme-10:hover, .btn-action.theme-10:hover {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  transform: scale(1.1) rotate(-2deg) !important;
-}
-
-h1.theme-10, h2.theme-10, h3.theme-10 {
-  color: var(--accent) !important;
-  text-shadow: 2px 2px 5px var(--primary) !important;
-  animation: glowTheme10 3s infinite alternate !important;
-}
-
-@keyframes glowTheme10 {
-  0% { text-shadow: 0 0 5px var(--accent); }
-  100% { text-shadow: 0 0 20px var(--accent); }
-}
-
-input.theme-10, textarea.theme-10, select.theme-10 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 8px !important;
-  box-shadow: inset 0 0 10px var(--accent) !important;
-  transition: box-shadow 0.3s ease-in-out !important;
-}
-
-input.theme-10:focus, textarea.theme-10:focus, select.theme-10:focus {
-  box-shadow: 0 0 15px var(--accent) !important;
-}
-
-
-
-/* ================================
-   MIGLIORAMENTI MODALI E SELECTOR
-   ================================ */
-
-#modal, #confirm-modal {
-  background-color: rgba(0, 0, 0, 0.8) !important;
-  backdrop-filter: blur(8px) !important;
-}
-
-#modal-content, #confirm-modal .bg-white {
   background: var(--primary) !important;
   color: var(--text) !important;
   border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 20px var(--accent) !important;
-  font-size: 0.8rem !important;
-  padding: 20px !important;
-  border-radius: 16px !important;
-  transition: transform 0.5s ease, opacity 0.5s ease !important;
 }
 
-#theme-selector {
-  display: block !important;
-  position: fixed !important;
-  top: 100px !important;
-  right: 20px !important;
-  z-index: 9999 !important;
+table.theme-1 th, table.theme-1 td {
+  padding: 10px !important;
+  border: 1px solid var(--accent) !important;
+  text-align: left !important;
+}
+
+input.theme-1, select.theme-1, textarea.theme-1 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+  padding: 8px !important;
+  border-radius: 5px !important;
+  font-family: 'Press Start 2P', cursive !important;
+}
+
+#theme-selector.theme-1 {
   background-color: var(--primary) !important;
   color: var(--accent) !important;
-  border: 2px solid var(--accent) !important;
+  border: 2px dashed var(--accent) !important;
   font-family: 'Press Start 2P', cursive !important;
-  font-size: 0.75rem !important;
-  padding: 12px 16px !important;
+  font-size: 0.7rem !important;
+  padding: 14px !important;
   border-radius: 12px !important;
-  max-width: 280px !important;
-  min-width: 200px !important;
-  box-shadow: 0 0 10px var(--accent) !important;
+  width: 240px !important;
 }
 
-/* ================================
-   STILI TABELLE PER TUTTI I TEMI
-   ================================ */
+/* ===== THEME 2 ===== */
+body.theme-2 {
+  --bg: hsl(72, 40%, 10%) !important;
+  --text: hsl(72, 100%, 90%) !important;
+  --primary: hsl(72, 40%, 20%) !important;
+  --accent: hsl(72, 100%, 60%) !important;
 
-table, .table {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  animation: glitch 1.5s infinite !important;
+}
+
+nav.theme-2, header.theme-2, footer.theme-2 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border-bottom: 3px solid var(--accent) !important;
+  padding: 10px !important;
+}
+
+button.theme-2, .btn-action.theme-2 {
+  background-color: var(--accent) !important;
+  color: var(--bg) !important;
+  padding: 12px 18px !important;
+  border: 2px solid var(--text) !important;
+  border-radius: 5px !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  box-shadow: 0 0 4px var(--accent) !important;
+  transition: all 0.4s ease-in-out !important;
+}
+
+button.theme-2:hover {
+  transform: scale(1.05) rotate(0deg) !important;
+  background-color: var(--text) !important;
+  color: var(--bg) !important;
+}
+
+table.theme-2 {
   width: 100% !important;
   border-collapse: collapse !important;
-  background-color: var(--primary) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  background: var(--primary) !important;
   color: var(--text) !important;
   border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 10px var(--accent) !important;
-  margin-top: 20px !important;
 }
 
-table thead, .table thead {
-  background-color: var(--accent) !important;
-  color: var(--bg) !important;
-  text-transform: uppercase !important;
-}
-
-table th, table td,
-.table th, .table td {
-  padding: 12px 16px !important;
-  border: 1px solid var(--bg) !important;
-  font-size: 0.75rem !important;
+table.theme-2 th, table.theme-2 td {
+  padding: 10px !important;
+  border: 1px solid var(--accent) !important;
   text-align: left !important;
-  transition: background-color 0.3s ease !important;
 }
 
-table tbody tr:nth-child(even), .table tbody tr:nth-child(even) {
-  background-color: rgba(255, 255, 255, 0.05) !important;
+input.theme-2, select.theme-2, textarea.theme-2 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+  padding: 8px !important;
+  border-radius: 6px !important;
+  font-family: 'Orbitron', sans-serif !important;
 }
 
-table tbody tr:hover, .table tbody tr:hover {
+#theme-selector.theme-2 {
+  background-color: var(--primary) !important;
+  color: var(--accent) !important;
+  border: 2px dashed var(--accent) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  font-size: 0.7rem !important;
+  padding: 14px !important;
+  border-radius: 12px !important;
+  width: 240px !important;
+}
+
+/* ===== THEME 3 ===== */
+body.theme-3 {
+  --bg: hsl(108, 40%, 10%) !important;
+  --text: hsl(108, 100%, 90%) !important;
+  --primary: hsl(108, 40%, 20%) !important;
+  --accent: hsl(108, 100%, 60%) !important;
+
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  animation: neonPulse 3s infinite !important;
+}
+
+nav.theme-3, header.theme-3, footer.theme-3 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border-bottom: 3px solid var(--accent) !important;
+  padding: 10px !important;
+}
+
+button.theme-3, .btn-action.theme-3 {
   background-color: var(--accent) !important;
+  color: var(--bg) !important;
+  padding: 12px 18px !important;
+  border: 2px solid var(--text) !important;
+  border-radius: 6px !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  box-shadow: 0 0 5px var(--accent) !important;
+  transition: all 0.4s ease-in-out !important;
+}
+
+button.theme-3:hover {
+  transform: scale(1.05) rotate(1deg) !important;
+  background-color: var(--text) !important;
   color: var(--bg) !important;
 }
 
-
-
-/* ======= THEME 1 - UI ELEMENTI SPECIALI ======= */
-
-/* Checkbox & Radio */
-input[type="checkbox"].theme-1, input[type="radio"].theme-1 {
-  accent-color: var(--accent) !important;
-  width: 18px !important;
-  height: 18px !important;
-  background-color: var(--primary) !important;
+table.theme-3 {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  background: var(--primary) !important;
+  color: var(--text) !important;
   border: 2px solid var(--accent) !important;
+}
+
+table.theme-3 th, table.theme-3 td {
+  padding: 10px !important;
+  border: 1px solid var(--accent) !important;
+  text-align: left !important;
+}
+
+input.theme-3, select.theme-3, textarea.theme-3 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+  padding: 8px !important;
+  border-radius: 7px !important;
+  font-family: 'Share Tech Mono', monospace !important;
+}
+
+#theme-selector.theme-3 {
+  background-color: var(--primary) !important;
+  color: var(--accent) !important;
+  border: 2px dashed var(--accent) !important;
+  font-family: 'Share Tech Mono', monospace !important;
+  font-size: 0.7rem !important;
+  padding: 14px !important;
+  border-radius: 12px !important;
+  width: 240px !important;
+}
+
+/* ===== THEME 4 ===== */
+body.theme-4 {
+  --bg: hsl(144, 40%, 10%) !important;
+  --text: hsl(144, 100%, 90%) !important;
+  --primary: hsl(144, 40%, 20%) !important;
+  --accent: hsl(144, 100%, 60%) !important;
+
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: 'Rubik Mono One', sans-serif !important;
+  animation: gradientShift 10s infinite linear !important;
+}
+
+nav.theme-4, header.theme-4, footer.theme-4 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border-bottom: 3px solid var(--accent) !important;
+  padding: 10px !important;
+}
+
+button.theme-4, .btn-action.theme-4 {
+  background-color: var(--accent) !important;
+  color: var(--bg) !important;
+  padding: 12px 18px !important;
+  border: 2px solid var(--text) !important;
+  border-radius: 7px !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  box-shadow: 0 0 6px var(--accent) !important;
+  transition: all 0.4s ease-in-out !important;
+}
+
+button.theme-4:hover {
+  transform: scale(1.05) rotate(-1deg) !important;
+  background-color: var(--text) !important;
+  color: var(--bg) !important;
+}
+
+table.theme-4 {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Rubik Mono One', sans-serif !important;
+  background: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+}
+
+table.theme-4 th, table.theme-4 td {
+  padding: 10px !important;
+  border: 1px solid var(--accent) !important;
+  text-align: left !important;
+}
+
+input.theme-4, select.theme-4, textarea.theme-4 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+  padding: 8px !important;
+  border-radius: 8px !important;
+  font-family: 'Rubik Mono One', sans-serif !important;
+}
+
+#theme-selector.theme-4 {
+  background-color: var(--primary) !important;
+  color: var(--accent) !important;
+  border: 2px dashed var(--accent) !important;
+  font-family: 'Rubik Mono One', sans-serif !important;
+  font-size: 0.7rem !important;
+  padding: 14px !important;
+  border-radius: 12px !important;
+  width: 240px !important;
+}
+
+/* ===== THEME 5 ===== */
+body.theme-5 {
+  --bg: hsl(180, 40%, 10%) !important;
+  --text: hsl(180, 100%, 90%) !important;
+  --primary: hsl(180, 40%, 20%) !important;
+  --accent: hsl(180, 100%, 60%) !important;
+
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: 'Raleway', sans-serif !important;
+  animation: rotateHue 15s infinite linear !important;
+}
+
+nav.theme-5, header.theme-5, footer.theme-5 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border-bottom: 3px solid var(--accent) !important;
+  padding: 10px !important;
+}
+
+button.theme-5, .btn-action.theme-5 {
+  background-color: var(--accent) !important;
+  color: var(--bg) !important;
+  padding: 12px 18px !important;
+  border: 2px solid var(--text) !important;
+  border-radius: 8px !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  box-shadow: 0 0 7px var(--accent) !important;
+  transition: all 0.4s ease-in-out !important;
+}
+
+button.theme-5:hover {
+  transform: scale(1.05) rotate(0deg) !important;
+  background-color: var(--text) !important;
+  color: var(--bg) !important;
+}
+
+table.theme-5 {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Raleway', sans-serif !important;
+  background: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+}
+
+table.theme-5 th, table.theme-5 td {
+  padding: 10px !important;
+  border: 1px solid var(--accent) !important;
+  text-align: left !important;
+}
+
+input.theme-5, select.theme-5, textarea.theme-5 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+  padding: 8px !important;
+  border-radius: 9px !important;
+  font-family: 'Raleway', sans-serif !important;
+}
+
+#theme-selector.theme-5 {
+  background-color: var(--primary) !important;
+  color: var(--accent) !important;
+  border: 2px dashed var(--accent) !important;
+  font-family: 'Raleway', sans-serif !important;
+  font-size: 0.7rem !important;
+  padding: 14px !important;
+  border-radius: 12px !important;
+  width: 240px !important;
+}
+
+/* ===== THEME 6 ===== */
+body.theme-6 {
+  --bg: hsl(216, 40%, 10%) !important;
+  --text: hsl(216, 100%, 90%) !important;
+  --primary: hsl(216, 40%, 20%) !important;
+  --accent: hsl(216, 100%, 60%) !important;
+
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: 'VT323', monospace !important;
+  animation: iceShine 4s infinite alternate !important;
+}
+
+nav.theme-6, header.theme-6, footer.theme-6 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border-bottom: 3px solid var(--accent) !important;
+  padding: 10px !important;
+}
+
+button.theme-6, .btn-action.theme-6 {
+  background-color: var(--accent) !important;
+  color: var(--bg) !important;
+  padding: 12px 18px !important;
+  border: 2px solid var(--text) !important;
+  border-radius: 9px !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  box-shadow: 0 0 8px var(--accent) !important;
+  transition: all 0.4s ease-in-out !important;
+}
+
+button.theme-6:hover {
+  transform: scale(1.05) rotate(1deg) !important;
+  background-color: var(--text) !important;
+  color: var(--bg) !important;
+}
+
+table.theme-6 {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'VT323', monospace !important;
+  background: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+}
+
+table.theme-6 th, table.theme-6 td {
+  padding: 10px !important;
+  border: 1px solid var(--accent) !important;
+  text-align: left !important;
+}
+
+input.theme-6, select.theme-6, textarea.theme-6 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+  padding: 8px !important;
+  border-radius: 10px !important;
+  font-family: 'VT323', monospace !important;
+}
+
+#theme-selector.theme-6 {
+  background-color: var(--primary) !important;
+  color: var(--accent) !important;
+  border: 2px dashed var(--accent) !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 0.7rem !important;
+  padding: 14px !important;
+  border-radius: 12px !important;
+  width: 240px !important;
+}
+
+/* ===== THEME 7 ===== */
+body.theme-7 {
+  --bg: hsl(252, 40%, 10%) !important;
+  --text: hsl(252, 100%, 90%) !important;
+  --primary: hsl(252, 40%, 20%) !important;
+  --accent: hsl(252, 100%, 60%) !important;
+
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: 'Bungee Hairline', cursive !important;
+  animation: fireGlow 2s infinite ease-in-out !important;
+}
+
+nav.theme-7, header.theme-7, footer.theme-7 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border-bottom: 3px solid var(--accent) !important;
+  padding: 10px !important;
+}
+
+button.theme-7, .btn-action.theme-7 {
+  background-color: var(--accent) !important;
+  color: var(--bg) !important;
+  padding: 12px 18px !important;
+  border: 2px solid var(--text) !important;
+  border-radius: 10px !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  box-shadow: 0 0 9px var(--accent) !important;
+  transition: all 0.4s ease-in-out !important;
+}
+
+button.theme-7:hover {
+  transform: scale(1.05) rotate(-1deg) !important;
+  background-color: var(--text) !important;
+  color: var(--bg) !important;
+}
+
+table.theme-7 {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Bungee Hairline', cursive !important;
+  background: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+}
+
+table.theme-7 th, table.theme-7 td {
+  padding: 10px !important;
+  border: 1px solid var(--accent) !important;
+  text-align: left !important;
+}
+
+input.theme-7, select.theme-7, textarea.theme-7 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+  padding: 8px !important;
+  border-radius: 11px !important;
+  font-family: 'Bungee Hairline', cursive !important;
+}
+
+#theme-selector.theme-7 {
+  background-color: var(--primary) !important;
+  color: var(--accent) !important;
+  border: 2px dashed var(--accent) !important;
+  font-family: 'Bungee Hairline', cursive !important;
+  font-size: 0.7rem !important;
+  padding: 14px !important;
+  border-radius: 12px !important;
+  width: 240px !important;
+}
+
+/* ===== THEME 8 ===== */
+body.theme-8 {
+  --bg: hsl(288, 40%, 10%) !important;
+  --text: hsl(288, 100%, 90%) !important;
+  --primary: hsl(288, 40%, 20%) !important;
+  --accent: hsl(288, 100%, 60%) !important;
+
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: 'Unica One', sans-serif !important;
+  animation: vaporMove 6s infinite alternate !important;
+}
+
+nav.theme-8, header.theme-8, footer.theme-8 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border-bottom: 3px solid var(--accent) !important;
+  padding: 10px !important;
+}
+
+button.theme-8, .btn-action.theme-8 {
+  background-color: var(--accent) !important;
+  color: var(--bg) !important;
+  padding: 12px 18px !important;
+  border: 2px solid var(--text) !important;
+  border-radius: 11px !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  box-shadow: 0 0 10px var(--accent) !important;
+  transition: all 0.4s ease-in-out !important;
+}
+
+button.theme-8:hover {
+  transform: scale(1.05) rotate(0deg) !important;
+  background-color: var(--text) !important;
+  color: var(--bg) !important;
+}
+
+table.theme-8 {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Unica One', sans-serif !important;
+  background: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+}
+
+table.theme-8 th, table.theme-8 td {
+  padding: 10px !important;
+  border: 1px solid var(--accent) !important;
+  text-align: left !important;
+}
+
+input.theme-8, select.theme-8, textarea.theme-8 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+  padding: 8px !important;
+  border-radius: 12px !important;
+  font-family: 'Unica One', sans-serif !important;
+}
+
+#theme-selector.theme-8 {
+  background-color: var(--primary) !important;
+  color: var(--accent) !important;
+  border: 2px dashed var(--accent) !important;
+  font-family: 'Unica One', sans-serif !important;
+  font-size: 0.7rem !important;
+  padding: 14px !important;
+  border-radius: 12px !important;
+  width: 240px !important;
+}
+
+/* ===== THEME 9 ===== */
+body.theme-9 {
+  --bg: hsl(324, 40%, 10%) !important;
+  --text: hsl(324, 100%, 90%) !important;
+  --primary: hsl(324, 40%, 20%) !important;
+  --accent: hsl(324, 100%, 60%) !important;
+
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: 'Courier New', monospace !important;
+  animation: ghostFade 5s infinite !important;
+}
+
+nav.theme-9, header.theme-9, footer.theme-9 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border-bottom: 3px solid var(--accent) !important;
+  padding: 10px !important;
+}
+
+button.theme-9, .btn-action.theme-9 {
+  background-color: var(--accent) !important;
+  color: var(--bg) !important;
+  padding: 12px 18px !important;
+  border: 2px solid var(--text) !important;
+  border-radius: 12px !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  box-shadow: 0 0 11px var(--accent) !important;
+  transition: all 0.4s ease-in-out !important;
+}
+
+button.theme-9:hover {
+  transform: scale(1.05) rotate(1deg) !important;
+  background-color: var(--text) !important;
+  color: var(--bg) !important;
+}
+
+table.theme-9 {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Courier New', monospace !important;
+  background: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+}
+
+table.theme-9 th, table.theme-9 td {
+  padding: 10px !important;
+  border: 1px solid var(--accent) !important;
+  text-align: left !important;
+}
+
+input.theme-9, select.theme-9, textarea.theme-9 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+  padding: 8px !important;
+  border-radius: 13px !important;
+  font-family: 'Courier New', monospace !important;
+}
+
+#theme-selector.theme-9 {
+  background-color: var(--primary) !important;
+  color: var(--accent) !important;
+  border: 2px dashed var(--accent) !important;
+  font-family: 'Courier New', monospace !important;
+  font-size: 0.7rem !important;
+  padding: 14px !important;
+  border-radius: 12px !important;
+  width: 240px !important;
+}
+
+/* ===== THEME 10 ===== */
+body.theme-10 {
+  --bg: hsl(360, 40%, 10%) !important;
+  --text: hsl(360, 100%, 90%) !important;
+  --primary: hsl(360, 40%, 20%) !important;
+  --accent: hsl(360, 100%, 60%) !important;
+
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: 'Arial Black', sans-serif !important;
+  animation: cyberDrift 8s infinite !important;
+}
+
+nav.theme-10, header.theme-10, footer.theme-10 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border-bottom: 3px solid var(--accent) !important;
+  padding: 10px !important;
+}
+
+button.theme-10, .btn-action.theme-10 {
+  background-color: var(--accent) !important;
+  color: var(--bg) !important;
+  padding: 12px 18px !important;
+  border: 2px solid var(--text) !important;
+  border-radius: 13px !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  box-shadow: 0 0 12px var(--accent) !important;
+  transition: all 0.4s ease-in-out !important;
+}
+
+button.theme-10:hover {
+  transform: scale(1.05) rotate(-1deg) !important;
+  background-color: var(--text) !important;
+  color: var(--bg) !important;
+}
+
+table.theme-10 {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: 'Arial Black', sans-serif !important;
+  background: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+}
+
+table.theme-10 th, table.theme-10 td {
+  padding: 10px !important;
+  border: 1px solid var(--accent) !important;
+  text-align: left !important;
+}
+
+input.theme-10, select.theme-10, textarea.theme-10 {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+  padding: 8px !important;
+  border-radius: 14px !important;
+  font-family: 'Arial Black', sans-serif !important;
+}
+
+#theme-selector.theme-10 {
+  background-color: var(--primary) !important;
+  color: var(--accent) !important;
+  border: 2px dashed var(--accent) !important;
+  font-family: 'Arial Black', sans-serif !important;
+  font-size: 0.7rem !important;
+  padding: 14px !important;
+  border-radius: 12px !important;
+  width: 240px !important;
+}
+
+@keyframes scanlines {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100%; }
+}
+
+@keyframes glitch {
+  0% { transform: skew(0deg); }
+  50% { transform: skew(5deg); }
+  100% { transform: skew(0deg); }
+}
+
+@keyframes neonPulse {
+  0% { text-shadow: 0 0 2px var(--accent); }
+  100% { text-shadow: 0 0 20px var(--accent); }
+}
+
+@keyframes gradientShift {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+@keyframes rotateHue {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+@keyframes iceShine {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.3) saturate(1.2); }
+}
+
+@keyframes fireGlow {
+  0% { box-shadow: 0 0 5px red; }
+  100% { box-shadow: 0 0 20px orange; }
+}
+
+@keyframes vaporMove {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-10px); }
+}
+
+@keyframes ghostFade {
+  0% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+@keyframes cyberDrift {
+  0% { background-position: left; }
+  100% { background-position: right; }
+}
+
+
+
+/* === THEME 1 - ELEMENTI SPECIALI AGGIUNTIVI === */
+
+/* NFT Cards */
+#nfts-list.theme-1 .nft {
+  background-color: var(--primary) !important;
+  border: 2px dotted var(--accent) !important;
+  border-radius: 6px !important;
+  padding: 12px !important;
+  box-shadow: 0 0 4px var(--accent) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+#nfts-list.theme-1 .nft:hover {
+  transform: scale(1.05) rotate(-1deg) !important;
+  box-shadow: 0 0 7px var(--accent) !important;
+}
+
+/* Farm Button Styles */
+.farm-content.theme-1 .btn-action {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  border-radius: 11px !important;
+  padding: 10px 14px !important;
+  font-weight: bold !important;
+  box-shadow: inset 0 0 6px var(--text) !important;
+  transition: all 0.4s ease !important;
+}
+
+.farm-content.theme-1 .btn-action:hover {
+  background: var(--primary) !important;
+  color: var(--accent) !important;
+  transform: translateY(-2px) scale(1.03) !important;
+}
+
+/* Forms avanzati */
+.input-box.theme-1, .form-control.theme-1 {
+  border: 2px solid var(--accent) !important;
+  background: var(--primary) !important;
+  color: var(--text) !important;
+  padding: 8px 12px !important;
+  border-radius: 5px !important;
+  font-size: 0.75rem !important;
+  box-shadow: 0 0 3px var(--accent) !important;
+}
+
+.input-box.theme-1:focus {
+  border-color: var(--text) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
+}
+
+/* Pagination and Bulk Actions */
+#pagination.theme-1 button,
+#bulk-actions.theme-1 button {
+  background-color: var(--primary) !important;
+  color: var(--accent) !important;
+  border: 1px dashed var(--accent) !important;
+  padding: 6px 12px !important;
+  border-radius: 7px !important;
+  font-family: inherit !important;
+  transition: background-color 0.3s ease-in-out !important;
+}
+
+#pagination.theme-1 button:hover,
+#bulk-actions.theme-1 button:hover {
+  background-color: var(--accent) !important;
+  color: var(--bg) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Custom Animated Background for selected themes */
+
+
+/* === THEME 2 - ELEMENTI SPECIALI AGGIUNTIVI === */
+
+/* NFT Cards */
+#nfts-list.theme-2 .nft {
+  background-color: var(--primary) !important;
+  border: 2px dotted var(--accent) !important;
+  border-radius: 7px !important;
+  padding: 12px !important;
+  box-shadow: 0 0 5px var(--accent) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+#nfts-list.theme-2 .nft:hover {
+  transform: scale(1.05) rotate(0deg) !important;
+  box-shadow: 0 0 8px var(--accent) !important;
+}
+
+/* Farm Button Styles */
+.farm-content.theme-2 .btn-action {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+  font-weight: bold !important;
+  box-shadow: inset 0 0 7px var(--text) !important;
+  transition: all 0.4s ease !important;
+}
+
+.farm-content.theme-2 .btn-action:hover {
+  background: var(--primary) !important;
+  color: var(--accent) !important;
+  transform: translateY(-2px) scale(1.03) !important;
+}
+
+/* Forms avanzati */
+.input-box.theme-2, .form-control.theme-2 {
+  border: 2px solid var(--accent) !important;
+  background: var(--primary) !important;
+  color: var(--text) !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  font-size: 0.75rem !important;
+  box-shadow: 0 0 4px var(--accent) !important;
+}
+
+.input-box.theme-2:focus {
+  border-color: var(--text) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
+}
+
+/* Pagination and Bulk Actions */
+#pagination.theme-2 button,
+#bulk-actions.theme-2 button {
+  background-color: var(--primary) !important;
+  color: var(--accent) !important;
+  border: 1px dashed var(--accent) !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  font-family: inherit !important;
+  transition: background-color 0.3s ease-in-out !important;
+}
+
+#pagination.theme-2 button:hover,
+#bulk-actions.theme-2 button:hover {
+  background-color: var(--accent) !important;
+  color: var(--bg) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Custom Animated Background for selected themes */
+
+
+/* === THEME 3 - ELEMENTI SPECIALI AGGIUNTIVI === */
+
+/* NFT Cards */
+#nfts-list.theme-3 .nft {
+  background-color: var(--primary) !important;
+  border: 2px dotted var(--accent) !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  box-shadow: 0 0 6px var(--accent) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+#nfts-list.theme-3 .nft:hover {
+  transform: scale(1.05) rotate(1deg) !important;
+  box-shadow: 0 0 9px var(--accent) !important;
+}
+
+/* Farm Button Styles */
+.farm-content.theme-3 .btn-action {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  border-radius: 13px !important;
+  padding: 10px 14px !important;
+  font-weight: bold !important;
+  box-shadow: inset 0 0 8px var(--text) !important;
+  transition: all 0.4s ease !important;
+}
+
+.farm-content.theme-3 .btn-action:hover {
+  background: var(--primary) !important;
+  color: var(--accent) !important;
+  transform: translateY(-2px) scale(1.03) !important;
+}
+
+/* Forms avanzati */
+.input-box.theme-3, .form-control.theme-3 {
+  border: 2px solid var(--accent) !important;
+  background: var(--primary) !important;
+  color: var(--text) !important;
+  padding: 8px 12px !important;
+  border-radius: 7px !important;
+  font-size: 0.75rem !important;
   box-shadow: 0 0 5px var(--accent) !important;
 }
 
-input[type="checkbox"].theme-1:hover, input[type="radio"].theme-1:hover {
-  transform: scale(1.2) rotate(5deg) !important;
-  transition: all 0.3s ease-in-out !important;
+.input-box.theme-3:focus {
+  border-color: var(--text) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
 }
 
-/* Toast messages */
-#toast-container.theme-1 {
+/* Pagination and Bulk Actions */
+#pagination.theme-3 button,
+#bulk-actions.theme-3 button {
   background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-  animation: toastFadeIn1 0.6s ease-out forwards !important;
+  color: var(--accent) !important;
+  border: 1px dashed var(--accent) !important;
+  padding: 6px 12px !important;
+  border-radius: 9px !important;
+  font-family: inherit !important;
+  transition: background-color 0.3s ease-in-out !important;
 }
 
-@keyframes toastFadeIn1 {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Dropdown */
-select.theme-1 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 10px !important;
-  appearance: none !important;
-  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%) !important;
-  background-position: calc(100% - 15px) center !important;
-  background-repeat: no-repeat !important;
-  background-size: 12px 12px !important;
-}
-
-select.theme-1:hover {
+#pagination.theme-3 button:hover,
+#bulk-actions.theme-3 button:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
+  transform: scale(1.1) !important;
 }
 
-/* Ripple effect simulation (simple) */
-button.theme-1::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute !important;
-  border-radius: 50% !important;
-  width: 100% !important;
-  height: 100% !important;
-  top: 0 !important;
-  left: 0 !important;
-  opacity: 0 !important;
-  transition: opacity 0.4s ease-out !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-}
+/* Custom Animated Background for selected themes */
+body.theme-3 { background-image: url('/assets/bg-theme-3.svg'); background-size: cover !important; background-blend-mode: overlay !important; background-attachment: fixed !important; }
 
-button.theme-1:active::after {
-  opacity: 0.5 !important;
-}
+/* === THEME 4 - ELEMENTI SPECIALI AGGIUNTIVI === */
 
-/* Focus outline accessibile */
-button.theme-1:focus-visible,
-input.theme-1:focus-visible,
-select.theme-1:focus-visible {
-  outline: 3px dashed var(--accent) !important;
-  outline-offset: 4px !important;
-}
-
-/* ======= THEME 2 - UI ELEMENTI SPECIALI ======= */
-
-/* Checkbox & Radio */
-input[type="checkbox"].theme-2, input[type="radio"].theme-2 {
-  accent-color: var(--accent) !important;
-  width: 18px !important;
-  height: 18px !important;
+/* NFT Cards */
+#nfts-list.theme-4 .nft {
   background-color: var(--primary) !important;
+  border: 2px dotted var(--accent) !important;
+  border-radius: 9px !important;
+  padding: 12px !important;
+  box-shadow: 0 0 7px var(--accent) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+#nfts-list.theme-4 .nft:hover {
+  transform: scale(1.05) rotate(-2deg) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
+}
+
+/* Farm Button Styles */
+.farm-content.theme-4 .btn-action {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  border-radius: 14px !important;
+  padding: 10px 14px !important;
+  font-weight: bold !important;
+  box-shadow: inset 0 0 9px var(--text) !important;
+  transition: all 0.4s ease !important;
+}
+
+.farm-content.theme-4 .btn-action:hover {
+  background: var(--primary) !important;
+  color: var(--accent) !important;
+  transform: translateY(-2px) scale(1.03) !important;
+}
+
+/* Forms avanzati */
+.input-box.theme-4, .form-control.theme-4 {
   border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 5px var(--accent) !important;
-}
-
-input[type="checkbox"].theme-2:hover, input[type="radio"].theme-2:hover {
-  transform: scale(1.2) rotate(5deg) !important;
-  transition: all 0.3s ease-in-out !important;
-}
-
-/* Toast messages */
-#toast-container.theme-2 {
-  background-color: var(--primary) !important;
+  background: var(--primary) !important;
   color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-  animation: toastFadeIn2 0.6s ease-out forwards !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  font-size: 0.75rem !important;
+  box-shadow: 0 0 6px var(--accent) !important;
 }
 
-@keyframes toastFadeIn2 {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
+.input-box.theme-4:focus {
+  border-color: var(--text) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
 }
 
-/* Dropdown */
-select.theme-2 {
+/* Pagination and Bulk Actions */
+#pagination.theme-4 button,
+#bulk-actions.theme-4 button {
   background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
+  color: var(--accent) !important;
+  border: 1px dashed var(--accent) !important;
+  padding: 6px 12px !important;
   border-radius: 10px !important;
-  appearance: none !important;
-  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%) !important;
-  background-position: calc(100% - 15px) center !important;
-  background-repeat: no-repeat !important;
-  background-size: 12px 12px !important;
+  font-family: inherit !important;
+  transition: background-color 0.3s ease-in-out !important;
 }
 
-select.theme-2:hover {
+#pagination.theme-4 button:hover,
+#bulk-actions.theme-4 button:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
+  transform: scale(1.1) !important;
 }
 
-/* Ripple effect simulation (simple) */
-button.theme-2::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute !important;
-  border-radius: 50% !important;
-  width: 100% !important;
-  height: 100% !important;
-  top: 0 !important;
-  left: 0 !important;
-  opacity: 0 !important;
-  transition: opacity 0.4s ease-out !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-}
+/* Custom Animated Background for selected themes */
 
-button.theme-2:active::after {
-  opacity: 0.5 !important;
-}
 
-/* Focus outline accessibile */
-button.theme-2:focus-visible,
-input.theme-2:focus-visible,
-select.theme-2:focus-visible {
-  outline: 3px dashed var(--accent) !important;
-  outline-offset: 4px !important;
-}
+/* === THEME 5 - ELEMENTI SPECIALI AGGIUNTIVI === */
 
-/* ======= THEME 3 - UI ELEMENTI SPECIALI ======= */
-
-/* Checkbox & Radio */
-input[type="checkbox"].theme-3, input[type="radio"].theme-3 {
-  accent-color: var(--accent) !important;
-  width: 18px !important;
-  height: 18px !important;
+/* NFT Cards */
+#nfts-list.theme-5 .nft {
   background-color: var(--primary) !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 5px var(--accent) !important;
-}
-
-input[type="checkbox"].theme-3:hover, input[type="radio"].theme-3:hover {
-  transform: scale(1.2) rotate(5deg) !important;
-  transition: all 0.3s ease-in-out !important;
-}
-
-/* Toast messages */
-#toast-container.theme-3 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-  animation: toastFadeIn3 0.6s ease-out forwards !important;
-}
-
-@keyframes toastFadeIn3 {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Dropdown */
-select.theme-3 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
+  border: 2px dotted var(--accent) !important;
   border-radius: 10px !important;
-  appearance: none !important;
-  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%) !important;
-  background-position: calc(100% - 15px) center !important;
-  background-repeat: no-repeat !important;
-  background-size: 12px 12px !important;
+  padding: 12px !important;
+  box-shadow: 0 0 8px var(--accent) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
 }
 
-select.theme-3:hover {
+#nfts-list.theme-5 .nft:hover {
+  transform: scale(1.05) rotate(-1deg) !important;
+  box-shadow: 0 0 11px var(--accent) !important;
+}
+
+/* Farm Button Styles */
+.farm-content.theme-5 .btn-action {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  border-radius: 15px !important;
+  padding: 10px 14px !important;
+  font-weight: bold !important;
+  box-shadow: inset 0 0 10px var(--text) !important;
+  transition: all 0.4s ease !important;
+}
+
+.farm-content.theme-5 .btn-action:hover {
+  background: var(--primary) !important;
+  color: var(--accent) !important;
+  transform: translateY(-2px) scale(1.03) !important;
+}
+
+/* Forms avanzati */
+.input-box.theme-5, .form-control.theme-5 {
+  border: 2px solid var(--accent) !important;
+  background: var(--primary) !important;
+  color: var(--text) !important;
+  padding: 8px 12px !important;
+  border-radius: 9px !important;
+  font-size: 0.75rem !important;
+  box-shadow: 0 0 7px var(--accent) !important;
+}
+
+.input-box.theme-5:focus {
+  border-color: var(--text) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
+}
+
+/* Pagination and Bulk Actions */
+#pagination.theme-5 button,
+#bulk-actions.theme-5 button {
+  background-color: var(--primary) !important;
+  color: var(--accent) !important;
+  border: 1px dashed var(--accent) !important;
+  padding: 6px 12px !important;
+  border-radius: 11px !important;
+  font-family: inherit !important;
+  transition: background-color 0.3s ease-in-out !important;
+}
+
+#pagination.theme-5 button:hover,
+#bulk-actions.theme-5 button:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
+  transform: scale(1.1) !important;
 }
 
-/* Ripple effect simulation (simple) */
-button.theme-3::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute !important;
-  border-radius: 50% !important;
-  width: 100% !important;
-  height: 100% !important;
-  top: 0 !important;
-  left: 0 !important;
-  opacity: 0 !important;
-  transition: opacity 0.4s ease-out !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-}
+/* Custom Animated Background for selected themes */
 
-button.theme-3:active::after {
-  opacity: 0.5 !important;
-}
 
-/* Focus outline accessibile */
-button.theme-3:focus-visible,
-input.theme-3:focus-visible,
-select.theme-3:focus-visible {
-  outline: 3px dashed var(--accent) !important;
-  outline-offset: 4px !important;
-}
+/* === THEME 6 - ELEMENTI SPECIALI AGGIUNTIVI === */
 
-/* ======= THEME 4 - UI ELEMENTI SPECIALI ======= */
-
-/* Checkbox & Radio */
-input[type="checkbox"].theme-4, input[type="radio"].theme-4 {
-  accent-color: var(--accent) !important;
-  width: 18px !important;
-  height: 18px !important;
+/* NFT Cards */
+#nfts-list.theme-6 .nft {
   background-color: var(--primary) !important;
+  border: 2px dotted var(--accent) !important;
+  border-radius: 11px !important;
+  padding: 12px !important;
+  box-shadow: 0 0 9px var(--accent) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+#nfts-list.theme-6 .nft:hover {
+  transform: scale(1.05) rotate(0deg) !important;
+  box-shadow: 0 0 12px var(--accent) !important;
+}
+
+/* Farm Button Styles */
+.farm-content.theme-6 .btn-action {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  border-radius: 16px !important;
+  padding: 10px 14px !important;
+  font-weight: bold !important;
+  box-shadow: inset 0 0 11px var(--text) !important;
+  transition: all 0.4s ease !important;
+}
+
+.farm-content.theme-6 .btn-action:hover {
+  background: var(--primary) !important;
+  color: var(--accent) !important;
+  transform: translateY(-2px) scale(1.03) !important;
+}
+
+/* Forms avanzati */
+.input-box.theme-6, .form-control.theme-6 {
   border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 5px var(--accent) !important;
-}
-
-input[type="checkbox"].theme-4:hover, input[type="radio"].theme-4:hover {
-  transform: scale(1.2) rotate(5deg) !important;
-  transition: all 0.3s ease-in-out !important;
-}
-
-/* Toast messages */
-#toast-container.theme-4 {
-  background-color: var(--primary) !important;
+  background: var(--primary) !important;
   color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-  animation: toastFadeIn4 0.6s ease-out forwards !important;
-}
-
-@keyframes toastFadeIn4 {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Dropdown */
-select.theme-4 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
+  padding: 8px 12px !important;
   border-radius: 10px !important;
-  appearance: none !important;
-  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%) !important;
-  background-position: calc(100% - 15px) center !important;
-  background-repeat: no-repeat !important;
-  background-size: 12px 12px !important;
+  font-size: 0.75rem !important;
+  box-shadow: 0 0 8px var(--accent) !important;
 }
 
-select.theme-4:hover {
+.input-box.theme-6:focus {
+  border-color: var(--text) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
+}
+
+/* Pagination and Bulk Actions */
+#pagination.theme-6 button,
+#bulk-actions.theme-6 button {
+  background-color: var(--primary) !important;
+  color: var(--accent) !important;
+  border: 1px dashed var(--accent) !important;
+  padding: 6px 12px !important;
+  border-radius: 12px !important;
+  font-family: inherit !important;
+  transition: background-color 0.3s ease-in-out !important;
+}
+
+#pagination.theme-6 button:hover,
+#bulk-actions.theme-6 button:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
+  transform: scale(1.1) !important;
 }
 
-/* Ripple effect simulation (simple) */
-button.theme-4::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute !important;
-  border-radius: 50% !important;
-  width: 100% !important;
-  height: 100% !important;
-  top: 0 !important;
-  left: 0 !important;
-  opacity: 0 !important;
-  transition: opacity 0.4s ease-out !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-}
+/* Custom Animated Background for selected themes */
+body.theme-6 { background-image: url('/assets/bg-theme-6.svg'); background-size: cover !important; background-blend-mode: overlay !important; background-attachment: fixed !important; }
 
-button.theme-4:active::after {
-  opacity: 0.5 !important;
-}
+/* === THEME 7 - ELEMENTI SPECIALI AGGIUNTIVI === */
 
-/* Focus outline accessibile */
-button.theme-4:focus-visible,
-input.theme-4:focus-visible,
-select.theme-4:focus-visible {
-  outline: 3px dashed var(--accent) !important;
-  outline-offset: 4px !important;
-}
-
-/* ======= THEME 5 - UI ELEMENTI SPECIALI ======= */
-
-/* Checkbox & Radio */
-input[type="checkbox"].theme-5, input[type="radio"].theme-5 {
-  accent-color: var(--accent) !important;
-  width: 18px !important;
-  height: 18px !important;
+/* NFT Cards */
+#nfts-list.theme-7 .nft {
   background-color: var(--primary) !important;
+  border: 2px dotted var(--accent) !important;
+  border-radius: 12px !important;
+  padding: 12px !important;
+  box-shadow: 0 0 10px var(--accent) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+#nfts-list.theme-7 .nft:hover {
+  transform: scale(1.05) rotate(1deg) !important;
+  box-shadow: 0 0 13px var(--accent) !important;
+}
+
+/* Farm Button Styles */
+.farm-content.theme-7 .btn-action {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  border-radius: 17px !important;
+  padding: 10px 14px !important;
+  font-weight: bold !important;
+  box-shadow: inset 0 0 12px var(--text) !important;
+  transition: all 0.4s ease !important;
+}
+
+.farm-content.theme-7 .btn-action:hover {
+  background: var(--primary) !important;
+  color: var(--accent) !important;
+  transform: translateY(-2px) scale(1.03) !important;
+}
+
+/* Forms avanzati */
+.input-box.theme-7, .form-control.theme-7 {
   border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 5px var(--accent) !important;
-}
-
-input[type="checkbox"].theme-5:hover, input[type="radio"].theme-5:hover {
-  transform: scale(1.2) rotate(5deg) !important;
-  transition: all 0.3s ease-in-out !important;
-}
-
-/* Toast messages */
-#toast-container.theme-5 {
-  background-color: var(--primary) !important;
+  background: var(--primary) !important;
   color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-  animation: toastFadeIn5 0.6s ease-out forwards !important;
+  padding: 8px 12px !important;
+  border-radius: 11px !important;
+  font-size: 0.75rem !important;
+  box-shadow: 0 0 9px var(--accent) !important;
 }
 
-@keyframes toastFadeIn5 {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
+.input-box.theme-7:focus {
+  border-color: var(--text) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
 }
 
-/* Dropdown */
-select.theme-5 {
+/* Pagination and Bulk Actions */
+#pagination.theme-7 button,
+#bulk-actions.theme-7 button {
   background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 10px !important;
-  appearance: none !important;
-  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%) !important;
-  background-position: calc(100% - 15px) center !important;
-  background-repeat: no-repeat !important;
-  background-size: 12px 12px !important;
+  color: var(--accent) !important;
+  border: 1px dashed var(--accent) !important;
+  padding: 6px 12px !important;
+  border-radius: 13px !important;
+  font-family: inherit !important;
+  transition: background-color 0.3s ease-in-out !important;
 }
 
-select.theme-5:hover {
+#pagination.theme-7 button:hover,
+#bulk-actions.theme-7 button:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
+  transform: scale(1.1) !important;
 }
 
-/* Ripple effect simulation (simple) */
-button.theme-5::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute !important;
-  border-radius: 50% !important;
-  width: 100% !important;
-  height: 100% !important;
-  top: 0 !important;
-  left: 0 !important;
-  opacity: 0 !important;
-  transition: opacity 0.4s ease-out !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-}
+/* Custom Animated Background for selected themes */
 
-button.theme-5:active::after {
-  opacity: 0.5 !important;
-}
 
-/* Focus outline accessibile */
-button.theme-5:focus-visible,
-input.theme-5:focus-visible,
-select.theme-5:focus-visible {
-  outline: 3px dashed var(--accent) !important;
-  outline-offset: 4px !important;
-}
+/* === THEME 8 - ELEMENTI SPECIALI AGGIUNTIVI === */
 
-/* ======= THEME 6 - UI ELEMENTI SPECIALI ======= */
-
-/* Checkbox & Radio */
-input[type="checkbox"].theme-6, input[type="radio"].theme-6 {
-  accent-color: var(--accent) !important;
-  width: 18px !important;
-  height: 18px !important;
+/* NFT Cards */
+#nfts-list.theme-8 .nft {
   background-color: var(--primary) !important;
+  border: 2px dotted var(--accent) !important;
+  border-radius: 13px !important;
+  padding: 12px !important;
+  box-shadow: 0 0 11px var(--accent) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+#nfts-list.theme-8 .nft:hover {
+  transform: scale(1.05) rotate(-2deg) !important;
+  box-shadow: 0 0 14px var(--accent) !important;
+}
+
+/* Farm Button Styles */
+.farm-content.theme-8 .btn-action {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  border-radius: 18px !important;
+  padding: 10px 14px !important;
+  font-weight: bold !important;
+  box-shadow: inset 0 0 13px var(--text) !important;
+  transition: all 0.4s ease !important;
+}
+
+.farm-content.theme-8 .btn-action:hover {
+  background: var(--primary) !important;
+  color: var(--accent) !important;
+  transform: translateY(-2px) scale(1.03) !important;
+}
+
+/* Forms avanzati */
+.input-box.theme-8, .form-control.theme-8 {
   border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 5px var(--accent) !important;
-}
-
-input[type="checkbox"].theme-6:hover, input[type="radio"].theme-6:hover {
-  transform: scale(1.2) rotate(5deg) !important;
-  transition: all 0.3s ease-in-out !important;
-}
-
-/* Toast messages */
-#toast-container.theme-6 {
-  background-color: var(--primary) !important;
+  background: var(--primary) !important;
   color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-  animation: toastFadeIn6 0.6s ease-out forwards !important;
+  padding: 8px 12px !important;
+  border-radius: 12px !important;
+  font-size: 0.75rem !important;
+  box-shadow: 0 0 10px var(--accent) !important;
 }
 
-@keyframes toastFadeIn6 {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
+.input-box.theme-8:focus {
+  border-color: var(--text) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
 }
 
-/* Dropdown */
-select.theme-6 {
+/* Pagination and Bulk Actions */
+#pagination.theme-8 button,
+#bulk-actions.theme-8 button {
   background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 10px !important;
-  appearance: none !important;
-  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%) !important;
-  background-position: calc(100% - 15px) center !important;
-  background-repeat: no-repeat !important;
-  background-size: 12px 12px !important;
+  color: var(--accent) !important;
+  border: 1px dashed var(--accent) !important;
+  padding: 6px 12px !important;
+  border-radius: 14px !important;
+  font-family: inherit !important;
+  transition: background-color 0.3s ease-in-out !important;
 }
 
-select.theme-6:hover {
+#pagination.theme-8 button:hover,
+#bulk-actions.theme-8 button:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
+  transform: scale(1.1) !important;
 }
 
-/* Ripple effect simulation (simple) */
-button.theme-6::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute !important;
-  border-radius: 50% !important;
-  width: 100% !important;
-  height: 100% !important;
-  top: 0 !important;
-  left: 0 !important;
-  opacity: 0 !important;
-  transition: opacity 0.4s ease-out !important;
+/* Custom Animated Background for selected themes */
+
+
+/* === THEME 9 - ELEMENTI SPECIALI AGGIUNTIVI === */
+
+/* NFT Cards */
+#nfts-list.theme-9 .nft {
+  background-color: var(--primary) !important;
+  border: 2px dotted var(--accent) !important;
+  border-radius: 14px !important;
+  padding: 12px !important;
+  box-shadow: 0 0 12px var(--accent) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+#nfts-list.theme-9 .nft:hover {
+  transform: scale(1.05) rotate(-1deg) !important;
   box-shadow: 0 0 15px var(--accent) !important;
 }
 
-button.theme-6:active::after {
-  opacity: 0.5 !important;
+/* Farm Button Styles */
+.farm-content.theme-9 .btn-action {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  border-radius: 19px !important;
+  padding: 10px 14px !important;
+  font-weight: bold !important;
+  box-shadow: inset 0 0 14px var(--text) !important;
+  transition: all 0.4s ease !important;
 }
 
-/* Focus outline accessibile */
-button.theme-6:focus-visible,
-input.theme-6:focus-visible,
-select.theme-6:focus-visible {
-  outline: 3px dashed var(--accent) !important;
-  outline-offset: 4px !important;
+.farm-content.theme-9 .btn-action:hover {
+  background: var(--primary) !important;
+  color: var(--accent) !important;
+  transform: translateY(-2px) scale(1.03) !important;
 }
 
-/* ======= THEME 7 - UI ELEMENTI SPECIALI ======= */
-
-/* Checkbox & Radio */
-input[type="checkbox"].theme-7, input[type="radio"].theme-7 {
-  accent-color: var(--accent) !important;
-  width: 18px !important;
-  height: 18px !important;
-  background-color: var(--primary) !important;
+/* Forms avanzati */
+.input-box.theme-9, .form-control.theme-9 {
   border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 5px var(--accent) !important;
-}
-
-input[type="checkbox"].theme-7:hover, input[type="radio"].theme-7:hover {
-  transform: scale(1.2) rotate(5deg) !important;
-  transition: all 0.3s ease-in-out !important;
-}
-
-/* Toast messages */
-#toast-container.theme-7 {
-  background-color: var(--primary) !important;
+  background: var(--primary) !important;
   color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-  animation: toastFadeIn7 0.6s ease-out forwards !important;
+  padding: 8px 12px !important;
+  border-radius: 13px !important;
+  font-size: 0.75rem !important;
+  box-shadow: 0 0 11px var(--accent) !important;
 }
 
-@keyframes toastFadeIn7 {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
+.input-box.theme-9:focus {
+  border-color: var(--text) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
 }
 
-/* Dropdown */
-select.theme-7 {
+/* Pagination and Bulk Actions */
+#pagination.theme-9 button,
+#bulk-actions.theme-9 button {
   background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 10px !important;
-  appearance: none !important;
-  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%) !important;
-  background-position: calc(100% - 15px) center !important;
-  background-repeat: no-repeat !important;
-  background-size: 12px 12px !important;
+  color: var(--accent) !important;
+  border: 1px dashed var(--accent) !important;
+  padding: 6px 12px !important;
+  border-radius: 15px !important;
+  font-family: inherit !important;
+  transition: background-color 0.3s ease-in-out !important;
 }
 
-select.theme-7:hover {
+#pagination.theme-9 button:hover,
+#bulk-actions.theme-9 button:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
+  transform: scale(1.1) !important;
 }
 
-/* Ripple effect simulation (simple) */
-button.theme-7::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute !important;
-  border-radius: 50% !important;
-  width: 100% !important;
-  height: 100% !important;
-  top: 0 !important;
-  left: 0 !important;
-  opacity: 0 !important;
-  transition: opacity 0.4s ease-out !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-}
+/* Custom Animated Background for selected themes */
+body.theme-9 { background-image: url('/assets/bg-theme-9.svg'); background-size: cover !important; background-blend-mode: overlay !important; background-attachment: fixed !important; }
 
-button.theme-7:active::after {
-  opacity: 0.5 !important;
-}
+/* === THEME 10 - ELEMENTI SPECIALI AGGIUNTIVI === */
 
-/* Focus outline accessibile */
-button.theme-7:focus-visible,
-input.theme-7:focus-visible,
-select.theme-7:focus-visible {
-  outline: 3px dashed var(--accent) !important;
-  outline-offset: 4px !important;
-}
-
-/* ======= THEME 8 - UI ELEMENTI SPECIALI ======= */
-
-/* Checkbox & Radio */
-input[type="checkbox"].theme-8, input[type="radio"].theme-8 {
-  accent-color: var(--accent) !important;
-  width: 18px !important;
-  height: 18px !important;
+/* NFT Cards */
+#nfts-list.theme-10 .nft {
   background-color: var(--primary) !important;
+  border: 2px dotted var(--accent) !important;
+  border-radius: 15px !important;
+  padding: 12px !important;
+  box-shadow: 0 0 13px var(--accent) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+#nfts-list.theme-10 .nft:hover {
+  transform: scale(1.05) rotate(0deg) !important;
+  box-shadow: 0 0 16px var(--accent) !important;
+}
+
+/* Farm Button Styles */
+.farm-content.theme-10 .btn-action {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  border-radius: 20px !important;
+  padding: 10px 14px !important;
+  font-weight: bold !important;
+  box-shadow: inset 0 0 15px var(--text) !important;
+  transition: all 0.4s ease !important;
+}
+
+.farm-content.theme-10 .btn-action:hover {
+  background: var(--primary) !important;
+  color: var(--accent) !important;
+  transform: translateY(-2px) scale(1.03) !important;
+}
+
+/* Forms avanzati */
+.input-box.theme-10, .form-control.theme-10 {
   border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 5px var(--accent) !important;
-}
-
-input[type="checkbox"].theme-8:hover, input[type="radio"].theme-8:hover {
-  transform: scale(1.2) rotate(5deg) !important;
-  transition: all 0.3s ease-in-out !important;
-}
-
-/* Toast messages */
-#toast-container.theme-8 {
-  background-color: var(--primary) !important;
+  background: var(--primary) !important;
   color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-  animation: toastFadeIn8 0.6s ease-out forwards !important;
+  padding: 8px 12px !important;
+  border-radius: 14px !important;
+  font-size: 0.75rem !important;
+  box-shadow: 0 0 12px var(--accent) !important;
 }
 
-@keyframes toastFadeIn8 {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
+.input-box.theme-10:focus {
+  border-color: var(--text) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
 }
 
-/* Dropdown */
-select.theme-8 {
+/* Pagination and Bulk Actions */
+#pagination.theme-10 button,
+#bulk-actions.theme-10 button {
   background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 10px !important;
-  appearance: none !important;
-  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%) !important;
-  background-position: calc(100% - 15px) center !important;
-  background-repeat: no-repeat !important;
-  background-size: 12px 12px !important;
+  color: var(--accent) !important;
+  border: 1px dashed var(--accent) !important;
+  padding: 6px 12px !important;
+  border-radius: 16px !important;
+  font-family: inherit !important;
+  transition: background-color 0.3s ease-in-out !important;
 }
 
-select.theme-8:hover {
+#pagination.theme-10 button:hover,
+#bulk-actions.theme-10 button:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
+  transform: scale(1.1) !important;
 }
 
-/* Ripple effect simulation (simple) */
-button.theme-8::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute !important;
-  border-radius: 50% !important;
-  width: 100% !important;
-  height: 100% !important;
-  top: 0 !important;
-  left: 0 !important;
-  opacity: 0 !important;
-  transition: opacity 0.4s ease-out !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-}
+/* Custom Animated Background for selected themes */
 
-button.theme-8:active::after {
-  opacity: 0.5 !important;
-}
-
-/* Focus outline accessibile */
-button.theme-8:focus-visible,
-input.theme-8:focus-visible,
-select.theme-8:focus-visible {
-  outline: 3px dashed var(--accent) !important;
-  outline-offset: 4px !important;
-}
-
-/* ======= THEME 9 - UI ELEMENTI SPECIALI ======= */
-
-/* Checkbox & Radio */
-input[type="checkbox"].theme-9, input[type="radio"].theme-9 {
-  accent-color: var(--accent) !important;
-  width: 18px !important;
-  height: 18px !important;
-  background-color: var(--primary) !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 5px var(--accent) !important;
-}
-
-input[type="checkbox"].theme-9:hover, input[type="radio"].theme-9:hover {
-  transform: scale(1.2) rotate(5deg) !important;
-  transition: all 0.3s ease-in-out !important;
-}
-
-/* Toast messages */
-#toast-container.theme-9 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-  animation: toastFadeIn9 0.6s ease-out forwards !important;
-}
-
-@keyframes toastFadeIn9 {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Dropdown */
-select.theme-9 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 10px !important;
-  appearance: none !important;
-  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%) !important;
-  background-position: calc(100% - 15px) center !important;
-  background-repeat: no-repeat !important;
-  background-size: 12px 12px !important;
-}
-
-select.theme-9:hover {
-  background-color: var(--accent) !important;
-  color: var(--bg) !important;
-}
-
-/* Ripple effect simulation (simple) */
-button.theme-9::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute !important;
-  border-radius: 50% !important;
-  width: 100% !important;
-  height: 100% !important;
-  top: 0 !important;
-  left: 0 !important;
-  opacity: 0 !important;
-  transition: opacity 0.4s ease-out !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-}
-
-button.theme-9:active::after {
-  opacity: 0.5 !important;
-}
-
-/* Focus outline accessibile */
-button.theme-9:focus-visible,
-input.theme-9:focus-visible,
-select.theme-9:focus-visible {
-  outline: 3px dashed var(--accent) !important;
-  outline-offset: 4px !important;
-}
-
-/* ======= THEME 10 - UI ELEMENTI SPECIALI ======= */
-
-/* Checkbox & Radio */
-input[type="checkbox"].theme-10, input[type="radio"].theme-10 {
-  accent-color: var(--accent) !important;
-  width: 18px !important;
-  height: 18px !important;
-  background-color: var(--primary) !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 5px var(--accent) !important;
-}
-
-input[type="checkbox"].theme-10:hover, input[type="radio"].theme-10:hover {
-  transform: scale(1.2) rotate(5deg) !important;
-  transition: all 0.3s ease-in-out !important;
-}
-
-/* Toast messages */
-#toast-container.theme-10 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-  animation: toastFadeIn10 0.6s ease-out forwards !important;
-}
-
-@keyframes toastFadeIn10 {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Dropdown */
-select.theme-10 {
-  background-color: var(--primary) !important;
-  color: var(--text) !important;
-  border: 2px solid var(--accent) !important;
-  padding: 10px !important;
-  border-radius: 10px !important;
-  appearance: none !important;
-  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%) !important;
-  background-position: calc(100% - 15px) center !important;
-  background-repeat: no-repeat !important;
-  background-size: 12px 12px !important;
-}
-
-select.theme-10:hover {
-  background-color: var(--accent) !important;
-  color: var(--bg) !important;
-}
-
-/* Ripple effect simulation (simple) */
-button.theme-10::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute !important;
-  border-radius: 50% !important;
-  width: 100% !important;
-  height: 100% !important;
-  top: 0 !important;
-  left: 0 !important;
-  opacity: 0 !important;
-  transition: opacity 0.4s ease-out !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-}
-
-button.theme-10:active::after {
-  opacity: 0.5 !important;
-}
-
-/* Focus outline accessibile */
-button.theme-10:focus-visible,
-input.theme-10:focus-visible,
-select.theme-10:focus-visible {
-  outline: 3px dashed var(--accent) !important;
-  outline-offset: 4px !important;
-}

@@ -2891,29 +2891,37 @@ function injectThemeSelector() {
   const selector = document.createElement('select');
   selector.id = 'theme-selector';
   selector.className = 'fixed top-4 right-4 z-50 p-2 bg-black text-yellow-400 border-2 border-yellow-400 rounded-lg';
-  selector.innerHTML = Array.from({ length: 10 }, (_, i) => {
-    const num = i + 1;
-    return `<option value="theme-${num}">Theme ${num}</option>`;
-  }).join('');
+  
+  // SOLO i due temi reali
+  selector.innerHTML = `
+    <option value="theme-ai">AI Theme</option>
+    <option value="theme-pixelart">Pixelart Theme</option>
+  `;
 
   document.body.appendChild(selector);
 
   // Applica il tema selezionato
   selector.addEventListener('change', (e) => {
+    // Rimuove tutte le classi "theme-*", lascia le altre intatte
     document.body.className = document.body.className
       .split(' ')
       .filter(c => !c.startsWith('theme-'))
       .join(' ')
       .trim();
+    
     document.body.classList.add(e.target.value);
     localStorage.setItem('selected-theme', e.target.value);
   });
 
-  // Carica tema salvato
+  // Carica il tema salvato
   const savedTheme = localStorage.getItem('selected-theme');
   if (savedTheme) {
     selector.value = savedTheme;
     document.body.classList.add(savedTheme);
+  } else {
+    // Default al tema AI
+    document.body.classList.add('theme-ai');
+    selector.value = 'theme-ai';
   }
 }
 

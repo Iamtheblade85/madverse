@@ -1352,14 +1352,14 @@ input:focus, select:focus, textarea:focus {
 
 /* === TABLES === */
 table {
-  width: 100% !important;
+  width: 90% !important;
   border-collapse: collapse !important;
   margin-top: 2rem !important;
   background-color: rgba(0, 0, 0, 0.6) !important;
   color: var(--text-main) !important;
 }
 th, td {
-  padding: 1rem !important;
+  padding: 1.5rem !important;
   border: 1px solid var(--neon-blue) !important;
 }
 th {
@@ -48391,4 +48391,8 @@ pre, code {
   padding: 0.5rem !important;
   border-radius: 6px !important;
   transition: all 0.3s ease-in-out !important;
+}
+#wallet-table tr th,
+#wallet-table tr td {
+  font-size: 150% !important;
 }

@@ -1,0 +1,251 @@
+
+/* ============================================
+   STYLES2.CSS - MULTI THEME DYNAMIC UI SYSTEM
+   Per progetto CryptoWallet (Twitch, NFTs, WAX)
+   - 10 temi unici con effetti globali liquidi
+   - Responsive 300px - 1500px
+   - Tutti elementi UI HTML/JS coperti
+   - Effetti: fuoco, ghiaccio, vento, onde
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+body {
+  font-family: 'Press Start 2P', cursive !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  transition: background 0.5s ease, color 0.5s ease !important;
+  overflow-x: hidden !important;
+}
+
+html {
+  scroll-behavior: smooth !important;
+}
+
+* {
+  box-sizing: inherit !important;
+}
+
+:root {
+  --bg: #000 !important;
+  --text: #fff !important;
+  --primary: #111 !important;
+  --accent: #f0f !important;
+}
+
+/* Seguiranno definizioni dettagliate per i 10 temi... */
+
+
+/* ==============================
+   THEMES CON EFFETTI GLOBALI
+   ============================== */
+
+/* Tema 1 - Neon Waves */
+body.theme-1 {
+  --bg: #0f0f0f !important;
+  --text: #00ffff !important;
+  --primary: #111111 !important;
+  --accent: #33ffff !important;
+  background: linear-gradient(135deg, #0f0f0f, #1a1a1a) !important;
+  animation: waveBackground 10s infinite linear !important;
+}
+
+/* Tema 2 - Cyber Fire */
+body.theme-2 {
+  --bg: #1a0000 !important;
+  --text: #ffcc00 !important;
+  --primary: #330000 !important;
+  --accent: #ff3300 !important;
+  background: radial-gradient(circle, #330000, #000000) !important;
+  animation: fireBackground 8s infinite alternate !important;
+}
+
+/* Tema 3 - Arctic Ice */
+body.theme-3 {
+  --bg: #003344 !important;
+  --text: #ccffff !important;
+  --primary: #005577 !important;
+  --accent: #66ffff !important;
+  background: linear-gradient(160deg, #003344, #001f2f) !important;
+  animation: iceShimmer 12s infinite alternate !important;
+}
+
+/* Tema 4 - Vortex Wind */
+body.theme-4 {
+  --bg: #001133 !important;
+  --text: #ffffff !important;
+  --primary: #002244 !important;
+  --accent: #66ccff !important;
+  background: repeating-linear-gradient(45deg, #001133, #002244 10px) !important;
+  animation: windFlow 15s linear infinite !important;
+}
+
+/* Tema 5 - Jungle Vibe */
+body.theme-5 {
+  --bg: #002200 !important;
+  --text: #aaffaa !important;
+  --primary: #004400 !important;
+  --accent: #00ff00 !important;
+  background: linear-gradient(to bottom, #001a00, #003300) !important;
+  animation: waveBackground 20s infinite linear !important;
+}
+
+/* Tema 6 - Sunset Blaze */
+body.theme-6 {
+  --bg: #330000 !important;
+  --text: #ffddaa !important;
+  --primary: #660000 !important;
+  --accent: #ff5500 !important;
+  background: linear-gradient(135deg, #330000, #660000) !important;
+  animation: fireBackground 14s infinite alternate !important;
+}
+
+/* Tema 7 - Frozen Pulse */
+body.theme-7 {
+  --bg: #000033 !important;
+  --text: #99ccff !important;
+  --primary: #001144 !important;
+  --accent: #3399ff !important;
+  background: linear-gradient(180deg, #000033, #001144) !important;
+  animation: iceShimmer 10s infinite alternate !important;
+}
+
+/* Tema 8 - Solar Flare */
+body.theme-8 {
+  --bg: #331a00 !important;
+  --text: #ffcc66 !important;
+  --primary: #663300 !important;
+  --accent: #ff6600 !important;
+  background: radial-gradient(circle, #331a00, #000000) !important;
+  animation: fireBackground 11s infinite alternate !important;
+}
+
+/* Tema 9 - Ghost Wind */
+body.theme-9 {
+  --bg: #111111 !important;
+  --text: #cccccc !important;
+  --primary: #222222 !important;
+  --accent: #ffffff !important;
+  background: repeating-linear-gradient(60deg, #111, #222 15px) !important;
+  animation: windFlow 16s linear infinite !important;
+}
+
+/* Tema 10 - Crystal Lake */
+body.theme-10 {
+  --bg: #001f3f !important;
+  --text: #cceeff !important;
+  --primary: #003366 !important;
+  --accent: #66ccff !important;
+  background: linear-gradient(200deg, #001f3f, #003366) !important;
+  animation: iceShimmer 9s infinite alternate !important;
+}
+
+/* ==============================
+   ANIMAZIONI GLOBALI A EFFETTO
+   ============================== */
+@keyframes waveBackground {
+  0% { background-position: 0 0; }
+  100% { background-position: 1000px 0; }
+}
+@keyframes fireBackground {
+  0% { filter: brightness(1) hue-rotate(0deg); }
+  100% { filter: brightness(1.3) hue-rotate(20deg); }
+}
+@keyframes iceShimmer {
+  0% { filter: contrast(1) brightness(1); }
+  100% { filter: contrast(1.1) brightness(1.2); }
+}
+@keyframes windFlow {
+  0% { background-position: 0 0; }
+  100% { background-position: 200px 200px; }
+}
+
+/* ==============================
+   UI ELEMENTS UNIVERSALI
+   ============================== */
+
+body, nav, .menu-btn, button, .btn-action, select, input, textarea, #modal, #modal-content,
+#confirm-modal, #toast-container, .reward-token-entry, .reward-row, #nfts-list div, .menu,
+.table, .input-box, #theme-selector {
+  background-color: var(--primary) !important;
+  color: var(--text) !important;
+  border-color: var(--accent) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  font-size: 0.75rem !important;
+  line-height: 1.4 !important;
+}
+
+button, .btn-action {
+  cursor: pointer !important;
+  padding: 10px 16px !important;
+  border-radius: 12px !important;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
+  transition: all 0.4s ease-in-out !important;
+}
+
+button:hover, .btn-action:hover {
+  transform: scale(1.05) rotate(-1deg) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
+  background-color: var(--accent) !important;
+  color: var(--bg) !important;
+}
+
+input, select, textarea {
+  padding: 6px 10px !important;
+  border-radius: 8px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+#theme-selector {
+  font-family: 'Press Start 2P', cursive !important;
+  position: fixed !important;
+  top: 70px !important;
+  right: 20px !important;
+  z-index: 1000 !important;
+  display: none !important;
+  padding: 10px !important;
+}
+
+#theme-toggle-btn {
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  z-index: 1000 !important;
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  border-radius: 50% !important;
+  font-size: 20px !important;
+  width: 42px !important;
+  height: 42px !important;
+  border: 2px solid var(--text) !important;
+}
+
+/* ==============================
+   RESPONSIVE MEDIA QUERIES
+   ============================== */
+
+@media (max-width: 600px) {
+  body {
+    font-size: 0.55rem !important;
+  }
+  .menu-btn, .btn-action {
+    padding: 8px 12px !important;
+    font-size: 0.6rem !important;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 1024px) {
+  body {
+    font-size: 0.7rem !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  body {
+    font-size: 0.85rem !important;
+  }
+}

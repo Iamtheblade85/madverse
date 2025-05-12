@@ -813,1374 +813,429 @@ input.theme-10, select.theme-10, textarea.theme-10 {
 
 
 
-/* === THEME 1 - ELEMENTI SPECIALI AGGIUNTIVI === */
-
-/* NFT Cards */
-#nfts-list.theme-1 .nft {
-  background-color: var(--primary) !important;
-  border: 2px dotted var(--accent) !important;
-  border-radius: 6px !important;
-  padding: 12px !important;
-  box-shadow: 0 0 4px var(--accent) !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+/* Tabelle dinamiche per theme-1 */
+table.theme-1 tbody tr {
+  transition: background-color 0.4s ease, transform 0.3s ease !important;
 }
 
-#nfts-list.theme-1 .nft:hover {
-  transform: scale(1.05) rotate(-1deg) !important;
-  box-shadow: 0 0 7px var(--accent) !important;
-}
-
-/* Farm Button Styles */
-.farm-content.theme-1 .btn-action {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border-radius: 11px !important;
-  padding: 10px 14px !important;
-  font-weight: bold !important;
-  box-shadow: inset 0 0 6px var(--text) !important;
-  transition: all 0.4s ease !important;
-}
-
-.farm-content.theme-1 .btn-action:hover {
-  background: var(--primary) !important;
-  color: var(--accent) !important;
-  transform: translateY(-2px) scale(1.03) !important;
-}
-
-/* Forms avanzati */
-.input-box.theme-1, .form-control.theme-1 {
-  border: 2px solid var(--accent) !important;
-  background: var(--primary) !important;
-  color: var(--text) !important;
-  padding: 8px 12px !important;
-  border-radius: 5px !important;
-  font-size: 0.75rem !important;
-  box-shadow: 0 0 3px var(--accent) !important;
-}
-
-.input-box.theme-1:focus {
-  border-color: var(--text) !important;
-  box-shadow: 0 0 10px var(--accent) !important;
-}
-
-/* Pagination and Bulk Actions */
-#pagination.theme-1 button,
-#bulk-actions.theme-1 button {
-  background-color: var(--primary) !important;
-  color: var(--accent) !important;
-  border: 1px dashed var(--accent) !important;
-  padding: 6px 12px !important;
-  border-radius: 7px !important;
-  font-family: inherit !important;
-  transition: background-color 0.3s ease-in-out !important;
-}
-
-#pagination.theme-1 button:hover,
-#bulk-actions.theme-1 button:hover {
+table.theme-1 tbody tr:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
-  transform: scale(1.1) !important;
+  transform: scale(1.01) !important;
 }
 
-/* Custom Animated Background for selected themes */
-
-
-/* === THEME 2 - ELEMENTI SPECIALI AGGIUNTIVI === */
-
-/* NFT Cards */
-#nfts-list.theme-2 .nft {
+/* Fix sfondi neutri */
+.modal.theme-1, .dropdown-menu.theme-1, .popup.theme-1,
+.reward-row.theme-1, .farm-card.theme-1, .card.theme-1 {
   background-color: var(--primary) !important;
-  border: 2px dotted var(--accent) !important;
-  border-radius: 7px !important;
-  padding: 12px !important;
-  box-shadow: 0 0 5px var(--accent) !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-}
-
-#nfts-list.theme-2 .nft:hover {
-  transform: scale(1.05) rotate(0deg) !important;
-  box-shadow: 0 0 8px var(--accent) !important;
-}
-
-/* Farm Button Styles */
-.farm-content.theme-2 .btn-action {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
   border-radius: 12px !important;
-  padding: 10px 14px !important;
-  font-weight: bold !important;
-  box-shadow: inset 0 0 7px var(--text) !important;
-  transition: all 0.4s ease !important;
+  padding: 16px !important;
 }
 
-.farm-content.theme-2 .btn-action:hover {
-  background: var(--primary) !important;
-  color: var(--accent) !important;
-  transform: translateY(-2px) scale(1.03) !important;
+/* Pulsanti con effetto acqua */
+button.theme-1, .btn-action.theme-1 {
+  background: radial-gradient(circle at top left, #00ffff, #004466) !important;
+  background-size: 200% 200% !important;
+  animation: waterBubble1 10s infinite alternate ease-in-out !important;
+  color: #002222 !important;
+  box-shadow: inset 0 0 10px #00ffff !important;
 }
 
-/* Forms avanzati */
-.input-box.theme-2, .form-control.theme-2 {
-  border: 2px solid var(--accent) !important;
-  background: var(--primary) !important;
-  color: var(--text) !important;
-  padding: 8px 12px !important;
-  border-radius: 6px !important;
-  font-size: 0.75rem !important;
-  box-shadow: 0 0 4px var(--accent) !important;
+@keyframes waterBubble1 {
+  0% { background-position: 0 0; filter: brightness(1); }
+  100% { background-position: 100% 100%; filter: brightness(1.2); }
 }
 
-.input-box.theme-2:focus {
-  border-color: var(--text) !important;
-  box-shadow: 0 0 10px var(--accent) !important;
+@media (max-width: 768px) {
+  button.theme-1, .btn-action.theme-1 {
+    font-size: 0.65rem !important;
+    padding: 10px !important;
+  }
+
+  table.theme-1 th, table.theme-1 td {
+    font-size: 0.6rem !important;
+    padding: 6px !important;
+  }
 }
 
-/* Pagination and Bulk Actions */
-#pagination.theme-2 button,
-#bulk-actions.theme-2 button {
-  background-color: var(--primary) !important;
-  color: var(--accent) !important;
-  border: 1px dashed var(--accent) !important;
-  padding: 6px 12px !important;
-  border-radius: 8px !important;
-  font-family: inherit !important;
-  transition: background-color 0.3s ease-in-out !important;
+/* Tabelle dinamiche per theme-2 */
+table.theme-2 tbody tr {
+  transition: background-color 0.4s ease, transform 0.3s ease !important;
 }
 
-#pagination.theme-2 button:hover,
-#bulk-actions.theme-2 button:hover {
+table.theme-2 tbody tr:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
-  transform: scale(1.1) !important;
+  transform: scale(1.01) !important;
 }
 
-/* Custom Animated Background for selected themes */
-
-
-/* === THEME 3 - ELEMENTI SPECIALI AGGIUNTIVI === */
-
-/* NFT Cards */
-#nfts-list.theme-3 .nft {
+/* Fix sfondi neutri */
+.modal.theme-2, .dropdown-menu.theme-2, .popup.theme-2,
+.reward-row.theme-2, .farm-card.theme-2, .card.theme-2 {
   background-color: var(--primary) !important;
-  border: 2px dotted var(--accent) !important;
-  border-radius: 8px !important;
-  padding: 12px !important;
-  box-shadow: 0 0 6px var(--accent) !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-}
-
-#nfts-list.theme-3 .nft:hover {
-  transform: scale(1.05) rotate(1deg) !important;
-  box-shadow: 0 0 9px var(--accent) !important;
-}
-
-/* Farm Button Styles */
-.farm-content.theme-3 .btn-action {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border-radius: 13px !important;
-  padding: 10px 14px !important;
-  font-weight: bold !important;
-  box-shadow: inset 0 0 8px var(--text) !important;
-  transition: all 0.4s ease !important;
-}
-
-.farm-content.theme-3 .btn-action:hover {
-  background: var(--primary) !important;
-  color: var(--accent) !important;
-  transform: translateY(-2px) scale(1.03) !important;
-}
-
-/* Forms avanzati */
-.input-box.theme-3, .form-control.theme-3 {
-  border: 2px solid var(--accent) !important;
-  background: var(--primary) !important;
   color: var(--text) !important;
-  padding: 8px 12px !important;
-  border-radius: 7px !important;
-  font-size: 0.75rem !important;
-  box-shadow: 0 0 5px var(--accent) !important;
-}
-
-.input-box.theme-3:focus {
-  border-color: var(--text) !important;
-  box-shadow: 0 0 10px var(--accent) !important;
-}
-
-/* Pagination and Bulk Actions */
-#pagination.theme-3 button,
-#bulk-actions.theme-3 button {
-  background-color: var(--primary) !important;
-  color: var(--accent) !important;
-  border: 1px dashed var(--accent) !important;
-  padding: 6px 12px !important;
-  border-radius: 9px !important;
-  font-family: inherit !important;
-  transition: background-color 0.3s ease-in-out !important;
-}
-
-#pagination.theme-3 button:hover,
-#bulk-actions.theme-3 button:hover {
-  background-color: var(--accent) !important;
-  color: var(--bg) !important;
-  transform: scale(1.1) !important;
-}
-
-/* Custom Animated Background for selected themes */
-body.theme-3 { background-image: url('/assets/bg-theme-3.svg'); background-size: cover !important; background-blend-mode: overlay !important; background-attachment: fixed !important; }
-
-/* === THEME 4 - ELEMENTI SPECIALI AGGIUNTIVI === */
-
-/* NFT Cards */
-#nfts-list.theme-4 .nft {
-  background-color: var(--primary) !important;
-  border: 2px dotted var(--accent) !important;
-  border-radius: 9px !important;
-  padding: 12px !important;
-  box-shadow: 0 0 7px var(--accent) !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-}
-
-#nfts-list.theme-4 .nft:hover {
-  transform: scale(1.05) rotate(-2deg) !important;
-  box-shadow: 0 0 10px var(--accent) !important;
-}
-
-/* Farm Button Styles */
-.farm-content.theme-4 .btn-action {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border-radius: 14px !important;
-  padding: 10px 14px !important;
-  font-weight: bold !important;
-  box-shadow: inset 0 0 9px var(--text) !important;
-  transition: all 0.4s ease !important;
-}
-
-.farm-content.theme-4 .btn-action:hover {
-  background: var(--primary) !important;
-  color: var(--accent) !important;
-  transform: translateY(-2px) scale(1.03) !important;
-}
-
-/* Forms avanzati */
-.input-box.theme-4, .form-control.theme-4 {
   border: 2px solid var(--accent) !important;
-  background: var(--primary) !important;
-  color: var(--text) !important;
-  padding: 8px 12px !important;
-  border-radius: 8px !important;
-  font-size: 0.75rem !important;
-  box-shadow: 0 0 6px var(--accent) !important;
-}
-
-.input-box.theme-4:focus {
-  border-color: var(--text) !important;
   box-shadow: 0 0 10px var(--accent) !important;
-}
-
-/* Pagination and Bulk Actions */
-#pagination.theme-4 button,
-#bulk-actions.theme-4 button {
-  background-color: var(--primary) !important;
-  color: var(--accent) !important;
-  border: 1px dashed var(--accent) !important;
-  padding: 6px 12px !important;
-  border-radius: 10px !important;
-  font-family: inherit !important;
-  transition: background-color 0.3s ease-in-out !important;
-}
-
-#pagination.theme-4 button:hover,
-#bulk-actions.theme-4 button:hover {
-  background-color: var(--accent) !important;
-  color: var(--bg) !important;
-  transform: scale(1.1) !important;
-}
-
-/* Custom Animated Background for selected themes */
-
-
-/* === THEME 5 - ELEMENTI SPECIALI AGGIUNTIVI === */
-
-/* NFT Cards */
-#nfts-list.theme-5 .nft {
-  background-color: var(--primary) !important;
-  border: 2px dotted var(--accent) !important;
-  border-radius: 10px !important;
-  padding: 12px !important;
-  box-shadow: 0 0 8px var(--accent) !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-}
-
-#nfts-list.theme-5 .nft:hover {
-  transform: scale(1.05) rotate(-1deg) !important;
-  box-shadow: 0 0 11px var(--accent) !important;
-}
-
-/* Farm Button Styles */
-.farm-content.theme-5 .btn-action {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border-radius: 15px !important;
-  padding: 10px 14px !important;
-  font-weight: bold !important;
-  box-shadow: inset 0 0 10px var(--text) !important;
-  transition: all 0.4s ease !important;
-}
-
-.farm-content.theme-5 .btn-action:hover {
-  background: var(--primary) !important;
-  color: var(--accent) !important;
-  transform: translateY(-2px) scale(1.03) !important;
-}
-
-/* Forms avanzati */
-.input-box.theme-5, .form-control.theme-5 {
-  border: 2px solid var(--accent) !important;
-  background: var(--primary) !important;
-  color: var(--text) !important;
-  padding: 8px 12px !important;
-  border-radius: 9px !important;
-  font-size: 0.75rem !important;
-  box-shadow: 0 0 7px var(--accent) !important;
-}
-
-.input-box.theme-5:focus {
-  border-color: var(--text) !important;
-  box-shadow: 0 0 10px var(--accent) !important;
-}
-
-/* Pagination and Bulk Actions */
-#pagination.theme-5 button,
-#bulk-actions.theme-5 button {
-  background-color: var(--primary) !important;
-  color: var(--accent) !important;
-  border: 1px dashed var(--accent) !important;
-  padding: 6px 12px !important;
-  border-radius: 11px !important;
-  font-family: inherit !important;
-  transition: background-color 0.3s ease-in-out !important;
-}
-
-#pagination.theme-5 button:hover,
-#bulk-actions.theme-5 button:hover {
-  background-color: var(--accent) !important;
-  color: var(--bg) !important;
-  transform: scale(1.1) !important;
-}
-
-/* Custom Animated Background for selected themes */
-
-
-/* === THEME 6 - ELEMENTI SPECIALI AGGIUNTIVI === */
-
-/* NFT Cards */
-#nfts-list.theme-6 .nft {
-  background-color: var(--primary) !important;
-  border: 2px dotted var(--accent) !important;
-  border-radius: 11px !important;
-  padding: 12px !important;
-  box-shadow: 0 0 9px var(--accent) !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-}
-
-#nfts-list.theme-6 .nft:hover {
-  transform: scale(1.05) rotate(0deg) !important;
-  box-shadow: 0 0 12px var(--accent) !important;
-}
-
-/* Farm Button Styles */
-.farm-content.theme-6 .btn-action {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border-radius: 16px !important;
-  padding: 10px 14px !important;
-  font-weight: bold !important;
-  box-shadow: inset 0 0 11px var(--text) !important;
-  transition: all 0.4s ease !important;
-}
-
-.farm-content.theme-6 .btn-action:hover {
-  background: var(--primary) !important;
-  color: var(--accent) !important;
-  transform: translateY(-2px) scale(1.03) !important;
-}
-
-/* Forms avanzati */
-.input-box.theme-6, .form-control.theme-6 {
-  border: 2px solid var(--accent) !important;
-  background: var(--primary) !important;
-  color: var(--text) !important;
-  padding: 8px 12px !important;
-  border-radius: 10px !important;
-  font-size: 0.75rem !important;
-  box-shadow: 0 0 8px var(--accent) !important;
-}
-
-.input-box.theme-6:focus {
-  border-color: var(--text) !important;
-  box-shadow: 0 0 10px var(--accent) !important;
-}
-
-/* Pagination and Bulk Actions */
-#pagination.theme-6 button,
-#bulk-actions.theme-6 button {
-  background-color: var(--primary) !important;
-  color: var(--accent) !important;
-  border: 1px dashed var(--accent) !important;
-  padding: 6px 12px !important;
   border-radius: 12px !important;
-  font-family: inherit !important;
-  transition: background-color 0.3s ease-in-out !important;
+  padding: 16px !important;
 }
 
-#pagination.theme-6 button:hover,
-#bulk-actions.theme-6 button:hover {
+/* Pulsanti con fuoco animato */
+button.theme-2, .btn-action.theme-2 {
+  background: linear-gradient(-45deg, #ff4500, #ff0000, #ff6347, #8b0000) !important;
+  background-size: 400% 400% !important;
+  animation: fireAnimate2 6s ease infinite !important;
+  color: #000 !important;
+  text-shadow: 0 0 5px #fff !important;
+}
+
+@keyframes fireAnimate2 {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@media (max-width: 768px) {
+  button.theme-2, .btn-action.theme-2 {
+    font-size: 0.65rem !important;
+    padding: 10px !important;
+  }
+
+  table.theme-2 th, table.theme-2 td {
+    font-size: 0.6rem !important;
+    padding: 6px !important;
+  }
+}
+
+/* Tabelle dinamiche per theme-3 */
+table.theme-3 tbody tr {
+  transition: background-color 0.4s ease, transform 0.3s ease !important;
+}
+
+table.theme-3 tbody tr:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
-  transform: scale(1.1) !important;
+  transform: scale(1.01) !important;
 }
 
-/* Custom Animated Background for selected themes */
-body.theme-6 { background-image: url('/assets/bg-theme-6.svg'); background-size: cover !important; background-blend-mode: overlay !important; background-attachment: fixed !important; }
-
-/* === THEME 7 - ELEMENTI SPECIALI AGGIUNTIVI === */
-
-/* NFT Cards */
-#nfts-list.theme-7 .nft {
+/* Fix sfondi neutri */
+.modal.theme-3, .dropdown-menu.theme-3, .popup.theme-3,
+.reward-row.theme-3, .farm-card.theme-3, .card.theme-3 {
   background-color: var(--primary) !important;
-  border: 2px dotted var(--accent) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
   border-radius: 12px !important;
-  padding: 12px !important;
-  box-shadow: 0 0 10px var(--accent) !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+  padding: 16px !important;
 }
 
-#nfts-list.theme-7 .nft:hover {
-  transform: scale(1.05) rotate(1deg) !important;
-  box-shadow: 0 0 13px var(--accent) !important;
+/* Pulsanti con effetto acqua */
+button.theme-3, .btn-action.theme-3 {
+  background: radial-gradient(circle at top left, #00ffff, #004466) !important;
+  background-size: 200% 200% !important;
+  animation: waterBubble3 10s infinite alternate ease-in-out !important;
+  color: #002222 !important;
+  box-shadow: inset 0 0 10px #00ffff !important;
 }
 
-/* Farm Button Styles */
-.farm-content.theme-7 .btn-action {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border-radius: 17px !important;
-  padding: 10px 14px !important;
-  font-weight: bold !important;
-  box-shadow: inset 0 0 12px var(--text) !important;
-  transition: all 0.4s ease !important;
+@keyframes waterBubble3 {
+  0% { background-position: 0 0; filter: brightness(1); }
+  100% { background-position: 100% 100%; filter: brightness(1.2); }
 }
 
-.farm-content.theme-7 .btn-action:hover {
-  background: var(--primary) !important;
-  color: var(--accent) !important;
-  transform: translateY(-2px) scale(1.03) !important;
+@media (max-width: 768px) {
+  button.theme-3, .btn-action.theme-3 {
+    font-size: 0.65rem !important;
+    padding: 10px !important;
+  }
+
+  table.theme-3 th, table.theme-3 td {
+    font-size: 0.6rem !important;
+    padding: 6px !important;
+  }
 }
 
-/* Forms avanzati */
-.input-box.theme-7, .form-control.theme-7 {
-  border: 2px solid var(--accent) !important;
-  background: var(--primary) !important;
-  color: var(--text) !important;
-  padding: 8px 12px !important;
-  border-radius: 11px !important;
-  font-size: 0.75rem !important;
-  box-shadow: 0 0 9px var(--accent) !important;
+/* Tabelle dinamiche per theme-4 */
+table.theme-4 tbody tr {
+  transition: background-color 0.4s ease, transform 0.3s ease !important;
 }
 
-.input-box.theme-7:focus {
-  border-color: var(--text) !important;
-  box-shadow: 0 0 10px var(--accent) !important;
-}
-
-/* Pagination and Bulk Actions */
-#pagination.theme-7 button,
-#bulk-actions.theme-7 button {
-  background-color: var(--primary) !important;
-  color: var(--accent) !important;
-  border: 1px dashed var(--accent) !important;
-  padding: 6px 12px !important;
-  border-radius: 13px !important;
-  font-family: inherit !important;
-  transition: background-color 0.3s ease-in-out !important;
-}
-
-#pagination.theme-7 button:hover,
-#bulk-actions.theme-7 button:hover {
+table.theme-4 tbody tr:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
-  transform: scale(1.1) !important;
+  transform: scale(1.01) !important;
 }
 
-/* Custom Animated Background for selected themes */
-
-
-/* === THEME 8 - ELEMENTI SPECIALI AGGIUNTIVI === */
-
-/* NFT Cards */
-#nfts-list.theme-8 .nft {
+/* Fix sfondi neutri */
+.modal.theme-4, .dropdown-menu.theme-4, .popup.theme-4,
+.reward-row.theme-4, .farm-card.theme-4, .card.theme-4 {
   background-color: var(--primary) !important;
-  border: 2px dotted var(--accent) !important;
-  border-radius: 13px !important;
-  padding: 12px !important;
-  box-shadow: 0 0 11px var(--accent) !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-}
-
-#nfts-list.theme-8 .nft:hover {
-  transform: scale(1.05) rotate(-2deg) !important;
-  box-shadow: 0 0 14px var(--accent) !important;
-}
-
-/* Farm Button Styles */
-.farm-content.theme-8 .btn-action {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border-radius: 18px !important;
-  padding: 10px 14px !important;
-  font-weight: bold !important;
-  box-shadow: inset 0 0 13px var(--text) !important;
-  transition: all 0.4s ease !important;
-}
-
-.farm-content.theme-8 .btn-action:hover {
-  background: var(--primary) !important;
-  color: var(--accent) !important;
-  transform: translateY(-2px) scale(1.03) !important;
-}
-
-/* Forms avanzati */
-.input-box.theme-8, .form-control.theme-8 {
-  border: 2px solid var(--accent) !important;
-  background: var(--primary) !important;
   color: var(--text) !important;
-  padding: 8px 12px !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
   border-radius: 12px !important;
-  font-size: 0.75rem !important;
-  box-shadow: 0 0 10px var(--accent) !important;
+  padding: 16px !important;
 }
 
-.input-box.theme-8:focus {
-  border-color: var(--text) !important;
-  box-shadow: 0 0 10px var(--accent) !important;
+@media (max-width: 768px) {
+  button.theme-4, .btn-action.theme-4 {
+    font-size: 0.65rem !important;
+    padding: 10px !important;
+  }
+
+  table.theme-4 th, table.theme-4 td {
+    font-size: 0.6rem !important;
+    padding: 6px !important;
+  }
 }
 
-/* Pagination and Bulk Actions */
-#pagination.theme-8 button,
-#bulk-actions.theme-8 button {
-  background-color: var(--primary) !important;
-  color: var(--accent) !important;
-  border: 1px dashed var(--accent) !important;
-  padding: 6px 12px !important;
-  border-radius: 14px !important;
-  font-family: inherit !important;
-  transition: background-color 0.3s ease-in-out !important;
+/* Tabelle dinamiche per theme-5 */
+table.theme-5 tbody tr {
+  transition: background-color 0.4s ease, transform 0.3s ease !important;
 }
 
-#pagination.theme-8 button:hover,
-#bulk-actions.theme-8 button:hover {
+table.theme-5 tbody tr:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
-  transform: scale(1.1) !important;
+  transform: scale(1.01) !important;
 }
 
-/* Custom Animated Background for selected themes */
-
-
-/* === THEME 9 - ELEMENTI SPECIALI AGGIUNTIVI === */
-
-/* NFT Cards */
-#nfts-list.theme-9 .nft {
+/* Fix sfondi neutri */
+.modal.theme-5, .dropdown-menu.theme-5, .popup.theme-5,
+.reward-row.theme-5, .farm-card.theme-5, .card.theme-5 {
   background-color: var(--primary) !important;
-  border: 2px dotted var(--accent) !important;
-  border-radius: 14px !important;
-  padding: 12px !important;
-  box-shadow: 0 0 12px var(--accent) !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-}
-
-#nfts-list.theme-9 .nft:hover {
-  transform: scale(1.05) rotate(-1deg) !important;
-  box-shadow: 0 0 15px var(--accent) !important;
-}
-
-/* Farm Button Styles */
-.farm-content.theme-9 .btn-action {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border-radius: 19px !important;
-  padding: 10px 14px !important;
-  font-weight: bold !important;
-  box-shadow: inset 0 0 14px var(--text) !important;
-  transition: all 0.4s ease !important;
-}
-
-.farm-content.theme-9 .btn-action:hover {
-  background: var(--primary) !important;
-  color: var(--accent) !important;
-  transform: translateY(-2px) scale(1.03) !important;
-}
-
-/* Forms avanzati */
-.input-box.theme-9, .form-control.theme-9 {
+  color: var(--text) !important;
   border: 2px solid var(--accent) !important;
-  background: var(--primary) !important;
-  color: var(--text) !important;
-  padding: 8px 12px !important;
-  border-radius: 13px !important;
-  font-size: 0.75rem !important;
-  box-shadow: 0 0 11px var(--accent) !important;
-}
-
-.input-box.theme-9:focus {
-  border-color: var(--text) !important;
   box-shadow: 0 0 10px var(--accent) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
 }
 
-/* Pagination and Bulk Actions */
-#pagination.theme-9 button,
-#bulk-actions.theme-9 button {
-  background-color: var(--primary) !important;
-  color: var(--accent) !important;
-  border: 1px dashed var(--accent) !important;
-  padding: 6px 12px !important;
-  border-radius: 15px !important;
-  font-family: inherit !important;
-  transition: background-color 0.3s ease-in-out !important;
+@media (max-width: 768px) {
+  button.theme-5, .btn-action.theme-5 {
+    font-size: 0.65rem !important;
+    padding: 10px !important;
+  }
+
+  table.theme-5 th, table.theme-5 td {
+    font-size: 0.6rem !important;
+    padding: 6px !important;
+  }
 }
 
-#pagination.theme-9 button:hover,
-#bulk-actions.theme-9 button:hover {
+/* Tabelle dinamiche per theme-6 */
+table.theme-6 tbody tr {
+  transition: background-color 0.4s ease, transform 0.3s ease !important;
+}
+
+table.theme-6 tbody tr:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
-  transform: scale(1.1) !important;
+  transform: scale(1.01) !important;
 }
 
-/* Custom Animated Background for selected themes */
-body.theme-9 { background-image: url('/assets/bg-theme-9.svg'); background-size: cover !important; background-blend-mode: overlay !important; background-attachment: fixed !important; }
-
-/* === THEME 10 - ELEMENTI SPECIALI AGGIUNTIVI === */
-
-/* NFT Cards */
-#nfts-list.theme-10 .nft {
+/* Fix sfondi neutri */
+.modal.theme-6, .dropdown-menu.theme-6, .popup.theme-6,
+.reward-row.theme-6, .farm-card.theme-6, .card.theme-6 {
   background-color: var(--primary) !important;
-  border: 2px dotted var(--accent) !important;
-  border-radius: 15px !important;
-  padding: 12px !important;
-  box-shadow: 0 0 13px var(--accent) !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-}
-
-#nfts-list.theme-10 .nft:hover {
-  transform: scale(1.05) rotate(0deg) !important;
-  box-shadow: 0 0 16px var(--accent) !important;
-}
-
-/* Farm Button Styles */
-.farm-content.theme-10 .btn-action {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
-  border-radius: 20px !important;
-  padding: 10px 14px !important;
-  font-weight: bold !important;
-  box-shadow: inset 0 0 15px var(--text) !important;
-  transition: all 0.4s ease !important;
-}
-
-.farm-content.theme-10 .btn-action:hover {
-  background: var(--primary) !important;
-  color: var(--accent) !important;
-  transform: translateY(-2px) scale(1.03) !important;
-}
-
-/* Forms avanzati */
-.input-box.theme-10, .form-control.theme-10 {
+  color: var(--text) !important;
   border: 2px solid var(--accent) !important;
-  background: var(--primary) !important;
-  color: var(--text) !important;
-  padding: 8px 12px !important;
-  border-radius: 14px !important;
-  font-size: 0.75rem !important;
-  box-shadow: 0 0 12px var(--accent) !important;
-}
-
-.input-box.theme-10:focus {
-  border-color: var(--text) !important;
   box-shadow: 0 0 10px var(--accent) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
 }
 
-/* Pagination and Bulk Actions */
-#pagination.theme-10 button,
-#bulk-actions.theme-10 button {
-  background-color: var(--primary) !important;
-  color: var(--accent) !important;
-  border: 1px dashed var(--accent) !important;
-  padding: 6px 12px !important;
-  border-radius: 16px !important;
-  font-family: inherit !important;
-  transition: background-color 0.3s ease-in-out !important;
+/* Pulsanti con fuoco animato */
+button.theme-6, .btn-action.theme-6 {
+  background: linear-gradient(-45deg, #ff4500, #ff0000, #ff6347, #8b0000) !important;
+  background-size: 400% 400% !important;
+  animation: fireAnimate6 6s ease infinite !important;
+  color: #000 !important;
+  text-shadow: 0 0 5px #fff !important;
 }
 
-#pagination.theme-10 button:hover,
-#bulk-actions.theme-10 button:hover {
+@keyframes fireAnimate6 {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@media (max-width: 768px) {
+  button.theme-6, .btn-action.theme-6 {
+    font-size: 0.65rem !important;
+    padding: 10px !important;
+  }
+
+  table.theme-6 th, table.theme-6 td {
+    font-size: 0.6rem !important;
+    padding: 6px !important;
+  }
+}
+
+/* Tabelle dinamiche per theme-7 */
+table.theme-7 tbody tr {
+  transition: background-color 0.4s ease, transform 0.3s ease !important;
+}
+
+table.theme-7 tbody tr:hover {
   background-color: var(--accent) !important;
   color: var(--bg) !important;
-  transform: scale(1.1) !important;
+  transform: scale(1.01) !important;
 }
 
-/* Custom Animated Background for selected themes */
-
-
-
-
-/* ===== SUPER THEME 1 ===== */
-body.theme-1 {
-  --bg: hsl(36, 50%, 8%) !important;
-  --text: hsl(36, 100%, 90%) !important;
-  --primary: hsl(36, 60%, 18%) !important;
-  --secondary: hsl(36, 60%, 25%) !important;
-  --accent: hsl(36, 100%, 60%) !important;
-  --accent-light: hsl(36, 100%, 75%) !important;
-  --accent-dark: hsl(36, 100%, 40%) !important;
-  --highlight: hsl(56, 100%, 50%) !important;
-  --dim: hsl(36, 30%, 15%) !important;
-  --glow: hsl(36, 100%, 85%) !important;
-
-  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
+/* Fix sfondi neutri */
+.modal.theme-7, .dropdown-menu.theme-7, .popup.theme-7,
+.reward-row.theme-7, .farm-card.theme-7, .card.theme-7 {
+  background-color: var(--primary) !important;
   color: var(--text) !important;
-  font-family: 'Orbitron', sans-serif !important;
-  transition: background 1.2s ease-in-out, color 0.8s ease !important;
-  animation: fadeStrong 6s infinite alternate !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
 }
 
-/* Theme-specific text glow */
-body.theme-1 h1, body.theme-1 h2, body.theme-1 .title-animated {
-  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
-  animation: glowCycle1 6s ease-in-out infinite !important;
+/* Pulsanti con fuoco animato */
+button.theme-7, .btn-action.theme-7 {
+  background: linear-gradient(-45deg, #ff4500, #ff0000, #ff6347, #8b0000) !important;
+  background-size: 400% 400% !important;
+  animation: fireAnimate7 6s ease infinite !important;
+  color: #000 !important;
+  text-shadow: 0 0 5px #fff !important;
 }
 
-@keyframes glowCycle1 {
-  0% { text-shadow: 0 0 5px var(--glow); }
-  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
-  100% { text-shadow: 0 0 5px var(--glow); }
+@keyframes fireAnimate7 {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-/* General page fade effect */
-@keyframes fadeSoft {
-  0% { filter: brightness(1); }
-  100% { filter: brightness(1.1) saturate(1.05); }
+@media (max-width: 768px) {
+  button.theme-7, .btn-action.theme-7 {
+    font-size: 0.65rem !important;
+    padding: 10px !important;
+  }
+
+  table.theme-7 th, table.theme-7 td {
+    font-size: 0.6rem !important;
+    padding: 6px !important;
+  }
 }
 
-@keyframes fadeStrong {
-  0% { filter: brightness(0.9) hue-rotate(0deg); }
-  100% { filter: brightness(1.2) hue-rotate(15deg); }
+/* Tabelle dinamiche per theme-8 */
+table.theme-8 tbody tr {
+  transition: background-color 0.4s ease, transform 0.3s ease !important;
 }
 
-/* Dynamic backgrounds with multiple gradients */
-body.theme-1::before {
-  content: "" !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: -1 !important;
-  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
-              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
-              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
-  opacity: 0.2 !important;
-  animation: bgPulse1 20s ease-in-out infinite !important;
+table.theme-8 tbody tr:hover {
+  background-color: var(--accent) !important;
+  color: var(--bg) !important;
+  transform: scale(1.01) !important;
 }
 
-@keyframes bgPulse1 {
-  0% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(1.05); }
-  100% { opacity: 0.15; transform: scale(1); }
-}
-
-/* ===== SUPER THEME 2 ===== */
-body.theme-2 {
-  --bg: hsl(72, 50%, 8%) !important;
-  --text: hsl(72, 100%, 90%) !important;
-  --primary: hsl(72, 60%, 18%) !important;
-  --secondary: hsl(72, 60%, 25%) !important;
-  --accent: hsl(72, 100%, 60%) !important;
-  --accent-light: hsl(72, 100%, 75%) !important;
-  --accent-dark: hsl(72, 100%, 40%) !important;
-  --highlight: hsl(92, 100%, 50%) !important;
-  --dim: hsl(72, 30%, 15%) !important;
-  --glow: hsl(72, 100%, 85%) !important;
-
-  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
+/* Fix sfondi neutri */
+.modal.theme-8, .dropdown-menu.theme-8, .popup.theme-8,
+.reward-row.theme-8, .farm-card.theme-8, .card.theme-8 {
+  background-color: var(--primary) !important;
   color: var(--text) !important;
-  font-family: 'Orbitron', sans-serif !important;
-  transition: background 1.2s ease-in-out, color 0.8s ease !important;
-  animation: fadeSoft 7s infinite alternate !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
 }
 
-/* Theme-specific text glow */
-body.theme-2 h1, body.theme-2 h2, body.theme-2 .title-animated {
-  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
-  animation: glowCycle2 6s ease-in-out infinite !important;
+@media (max-width: 768px) {
+  button.theme-8, .btn-action.theme-8 {
+    font-size: 0.65rem !important;
+    padding: 10px !important;
+  }
+
+  table.theme-8 th, table.theme-8 td {
+    font-size: 0.6rem !important;
+    padding: 6px !important;
+  }
 }
 
-@keyframes glowCycle2 {
-  0% { text-shadow: 0 0 5px var(--glow); }
-  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
-  100% { text-shadow: 0 0 5px var(--glow); }
+/* Tabelle dinamiche per theme-9 */
+table.theme-9 tbody tr {
+  transition: background-color 0.4s ease, transform 0.3s ease !important;
 }
 
-/* General page fade effect */
-@keyframes fadeSoft {
-  0% { filter: brightness(1); }
-  100% { filter: brightness(1.1) saturate(1.05); }
+table.theme-9 tbody tr:hover {
+  background-color: var(--accent) !important;
+  color: var(--bg) !important;
+  transform: scale(1.01) !important;
 }
 
-@keyframes fadeStrong {
-  0% { filter: brightness(0.9) hue-rotate(0deg); }
-  100% { filter: brightness(1.2) hue-rotate(15deg); }
-}
-
-/* Dynamic backgrounds with multiple gradients */
-body.theme-2::before {
-  content: "" !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: -1 !important;
-  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
-              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
-              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
-  opacity: 0.2 !important;
-  animation: bgPulse2 20s ease-in-out infinite !important;
-}
-
-@keyframes bgPulse2 {
-  0% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(1.05); }
-  100% { opacity: 0.15; transform: scale(1); }
-}
-
-/* ===== SUPER THEME 3 ===== */
-body.theme-3 {
-  --bg: hsl(108, 50%, 8%) !important;
-  --text: hsl(108, 100%, 90%) !important;
-  --primary: hsl(108, 60%, 18%) !important;
-  --secondary: hsl(108, 60%, 25%) !important;
-  --accent: hsl(108, 100%, 60%) !important;
-  --accent-light: hsl(108, 100%, 75%) !important;
-  --accent-dark: hsl(108, 100%, 40%) !important;
-  --highlight: hsl(128, 100%, 50%) !important;
-  --dim: hsl(108, 30%, 15%) !important;
-  --glow: hsl(108, 100%, 85%) !important;
-
-  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
+/* Fix sfondi neutri */
+.modal.theme-9, .dropdown-menu.theme-9, .popup.theme-9,
+.reward-row.theme-9, .farm-card.theme-9, .card.theme-9 {
+  background-color: var(--primary) !important;
   color: var(--text) !important;
-  font-family: 'Orbitron', sans-serif !important;
-  transition: background 1.2s ease-in-out, color 0.8s ease !important;
-  animation: fadeStrong 8s infinite alternate !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
 }
 
-/* Theme-specific text glow */
-body.theme-3 h1, body.theme-3 h2, body.theme-3 .title-animated {
-  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
-  animation: glowCycle3 6s ease-in-out infinite !important;
+@media (max-width: 768px) {
+  button.theme-9, .btn-action.theme-9 {
+    font-size: 0.65rem !important;
+    padding: 10px !important;
+  }
+
+  table.theme-9 th, table.theme-9 td {
+    font-size: 0.6rem !important;
+    padding: 6px !important;
+  }
 }
 
-@keyframes glowCycle3 {
-  0% { text-shadow: 0 0 5px var(--glow); }
-  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
-  100% { text-shadow: 0 0 5px var(--glow); }
+/* Tabelle dinamiche per theme-10 */
+table.theme-10 tbody tr {
+  transition: background-color 0.4s ease, transform 0.3s ease !important;
 }
 
-/* General page fade effect */
-@keyframes fadeSoft {
-  0% { filter: brightness(1); }
-  100% { filter: brightness(1.1) saturate(1.05); }
+table.theme-10 tbody tr:hover {
+  background-color: var(--accent) !important;
+  color: var(--bg) !important;
+  transform: scale(1.01) !important;
 }
 
-@keyframes fadeStrong {
-  0% { filter: brightness(0.9) hue-rotate(0deg); }
-  100% { filter: brightness(1.2) hue-rotate(15deg); }
-}
-
-/* Dynamic backgrounds with multiple gradients */
-body.theme-3::before {
-  content: "" !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: -1 !important;
-  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
-              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
-              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
-  opacity: 0.2 !important;
-  animation: bgPulse3 20s ease-in-out infinite !important;
-}
-
-@keyframes bgPulse3 {
-  0% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(1.05); }
-  100% { opacity: 0.15; transform: scale(1); }
-}
-
-/* ===== SUPER THEME 4 ===== */
-body.theme-4 {
-  --bg: hsl(144, 50%, 8%) !important;
-  --text: hsl(144, 100%, 90%) !important;
-  --primary: hsl(144, 60%, 18%) !important;
-  --secondary: hsl(144, 60%, 25%) !important;
-  --accent: hsl(144, 100%, 60%) !important;
-  --accent-light: hsl(144, 100%, 75%) !important;
-  --accent-dark: hsl(144, 100%, 40%) !important;
-  --highlight: hsl(164, 100%, 50%) !important;
-  --dim: hsl(144, 30%, 15%) !important;
-  --glow: hsl(144, 100%, 85%) !important;
-
-  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
+/* Fix sfondi neutri */
+.modal.theme-10, .dropdown-menu.theme-10, .popup.theme-10,
+.reward-row.theme-10, .farm-card.theme-10, .card.theme-10 {
+  background-color: var(--primary) !important;
   color: var(--text) !important;
-  font-family: 'Orbitron', sans-serif !important;
-  transition: background 1.2s ease-in-out, color 0.8s ease !important;
-  animation: fadeSoft 9s infinite alternate !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 10px var(--accent) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
 }
 
-/* Theme-specific text glow */
-body.theme-4 h1, body.theme-4 h2, body.theme-4 .title-animated {
-  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
-  animation: glowCycle4 6s ease-in-out infinite !important;
+/* Pulsanti con effetto acqua */
+button.theme-10, .btn-action.theme-10 {
+  background: radial-gradient(circle at top left, #00ffff, #004466) !important;
+  background-size: 200% 200% !important;
+  animation: waterBubble10 10s infinite alternate ease-in-out !important;
+  color: #002222 !important;
+  box-shadow: inset 0 0 10px #00ffff !important;
 }
 
-@keyframes glowCycle4 {
-  0% { text-shadow: 0 0 5px var(--glow); }
-  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
-  100% { text-shadow: 0 0 5px var(--glow); }
+@keyframes waterBubble10 {
+  0% { background-position: 0 0; filter: brightness(1); }
+  100% { background-position: 100% 100%; filter: brightness(1.2); }
 }
 
-/* General page fade effect */
-@keyframes fadeSoft {
-  0% { filter: brightness(1); }
-  100% { filter: brightness(1.1) saturate(1.05); }
-}
+@media (max-width: 768px) {
+  button.theme-10, .btn-action.theme-10 {
+    font-size: 0.65rem !important;
+    padding: 10px !important;
+  }
 
-@keyframes fadeStrong {
-  0% { filter: brightness(0.9) hue-rotate(0deg); }
-  100% { filter: brightness(1.2) hue-rotate(15deg); }
-}
-
-/* Dynamic backgrounds with multiple gradients */
-body.theme-4::before {
-  content: "" !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: -1 !important;
-  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
-              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
-              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
-  opacity: 0.2 !important;
-  animation: bgPulse4 20s ease-in-out infinite !important;
-}
-
-@keyframes bgPulse4 {
-  0% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(1.05); }
-  100% { opacity: 0.15; transform: scale(1); }
-}
-
-/* ===== SUPER THEME 5 ===== */
-body.theme-5 {
-  --bg: hsl(180, 50%, 8%) !important;
-  --text: hsl(180, 100%, 90%) !important;
-  --primary: hsl(180, 60%, 18%) !important;
-  --secondary: hsl(180, 60%, 25%) !important;
-  --accent: hsl(180, 100%, 60%) !important;
-  --accent-light: hsl(180, 100%, 75%) !important;
-  --accent-dark: hsl(180, 100%, 40%) !important;
-  --highlight: hsl(200, 100%, 50%) !important;
-  --dim: hsl(180, 30%, 15%) !important;
-  --glow: hsl(180, 100%, 85%) !important;
-
-  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
-  color: var(--text) !important;
-  font-family: 'Orbitron', sans-serif !important;
-  transition: background 1.2s ease-in-out, color 0.8s ease !important;
-  animation: fadeStrong 10s infinite alternate !important;
-}
-
-/* Theme-specific text glow */
-body.theme-5 h1, body.theme-5 h2, body.theme-5 .title-animated {
-  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
-  animation: glowCycle5 6s ease-in-out infinite !important;
-}
-
-@keyframes glowCycle5 {
-  0% { text-shadow: 0 0 5px var(--glow); }
-  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
-  100% { text-shadow: 0 0 5px var(--glow); }
-}
-
-/* General page fade effect */
-@keyframes fadeSoft {
-  0% { filter: brightness(1); }
-  100% { filter: brightness(1.1) saturate(1.05); }
-}
-
-@keyframes fadeStrong {
-  0% { filter: brightness(0.9) hue-rotate(0deg); }
-  100% { filter: brightness(1.2) hue-rotate(15deg); }
-}
-
-/* Dynamic backgrounds with multiple gradients */
-body.theme-5::before {
-  content: "" !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: -1 !important;
-  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
-              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
-              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
-  opacity: 0.2 !important;
-  animation: bgPulse5 20s ease-in-out infinite !important;
-}
-
-@keyframes bgPulse5 {
-  0% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(1.05); }
-  100% { opacity: 0.15; transform: scale(1); }
-}
-
-/* ===== SUPER THEME 6 ===== */
-body.theme-6 {
-  --bg: hsl(216, 50%, 8%) !important;
-  --text: hsl(216, 100%, 90%) !important;
-  --primary: hsl(216, 60%, 18%) !important;
-  --secondary: hsl(216, 60%, 25%) !important;
-  --accent: hsl(216, 100%, 60%) !important;
-  --accent-light: hsl(216, 100%, 75%) !important;
-  --accent-dark: hsl(216, 100%, 40%) !important;
-  --highlight: hsl(236, 100%, 50%) !important;
-  --dim: hsl(216, 30%, 15%) !important;
-  --glow: hsl(216, 100%, 85%) !important;
-
-  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
-  color: var(--text) !important;
-  font-family: 'Orbitron', sans-serif !important;
-  transition: background 1.2s ease-in-out, color 0.8s ease !important;
-  animation: fadeSoft 11s infinite alternate !important;
-}
-
-/* Theme-specific text glow */
-body.theme-6 h1, body.theme-6 h2, body.theme-6 .title-animated {
-  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
-  animation: glowCycle6 6s ease-in-out infinite !important;
-}
-
-@keyframes glowCycle6 {
-  0% { text-shadow: 0 0 5px var(--glow); }
-  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
-  100% { text-shadow: 0 0 5px var(--glow); }
-}
-
-/* General page fade effect */
-@keyframes fadeSoft {
-  0% { filter: brightness(1); }
-  100% { filter: brightness(1.1) saturate(1.05); }
-}
-
-@keyframes fadeStrong {
-  0% { filter: brightness(0.9) hue-rotate(0deg); }
-  100% { filter: brightness(1.2) hue-rotate(15deg); }
-}
-
-/* Dynamic backgrounds with multiple gradients */
-body.theme-6::before {
-  content: "" !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: -1 !important;
-  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
-              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
-              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
-  opacity: 0.2 !important;
-  animation: bgPulse6 20s ease-in-out infinite !important;
-}
-
-@keyframes bgPulse6 {
-  0% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(1.05); }
-  100% { opacity: 0.15; transform: scale(1); }
-}
-
-/* ===== SUPER THEME 7 ===== */
-body.theme-7 {
-  --bg: hsl(252, 50%, 8%) !important;
-  --text: hsl(252, 100%, 90%) !important;
-  --primary: hsl(252, 60%, 18%) !important;
-  --secondary: hsl(252, 60%, 25%) !important;
-  --accent: hsl(252, 100%, 60%) !important;
-  --accent-light: hsl(252, 100%, 75%) !important;
-  --accent-dark: hsl(252, 100%, 40%) !important;
-  --highlight: hsl(272, 100%, 50%) !important;
-  --dim: hsl(252, 30%, 15%) !important;
-  --glow: hsl(252, 100%, 85%) !important;
-
-  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
-  color: var(--text) !important;
-  font-family: 'Orbitron', sans-serif !important;
-  transition: background 1.2s ease-in-out, color 0.8s ease !important;
-  animation: fadeStrong 12s infinite alternate !important;
-}
-
-/* Theme-specific text glow */
-body.theme-7 h1, body.theme-7 h2, body.theme-7 .title-animated {
-  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
-  animation: glowCycle7 6s ease-in-out infinite !important;
-}
-
-@keyframes glowCycle7 {
-  0% { text-shadow: 0 0 5px var(--glow); }
-  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
-  100% { text-shadow: 0 0 5px var(--glow); }
-}
-
-/* General page fade effect */
-@keyframes fadeSoft {
-  0% { filter: brightness(1); }
-  100% { filter: brightness(1.1) saturate(1.05); }
-}
-
-@keyframes fadeStrong {
-  0% { filter: brightness(0.9) hue-rotate(0deg); }
-  100% { filter: brightness(1.2) hue-rotate(15deg); }
-}
-
-/* Dynamic backgrounds with multiple gradients */
-body.theme-7::before {
-  content: "" !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: -1 !important;
-  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
-              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
-              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
-  opacity: 0.2 !important;
-  animation: bgPulse7 20s ease-in-out infinite !important;
-}
-
-@keyframes bgPulse7 {
-  0% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(1.05); }
-  100% { opacity: 0.15; transform: scale(1); }
-}
-
-/* ===== SUPER THEME 8 ===== */
-body.theme-8 {
-  --bg: hsl(288, 50%, 8%) !important;
-  --text: hsl(288, 100%, 90%) !important;
-  --primary: hsl(288, 60%, 18%) !important;
-  --secondary: hsl(288, 60%, 25%) !important;
-  --accent: hsl(288, 100%, 60%) !important;
-  --accent-light: hsl(288, 100%, 75%) !important;
-  --accent-dark: hsl(288, 100%, 40%) !important;
-  --highlight: hsl(308, 100%, 50%) !important;
-  --dim: hsl(288, 30%, 15%) !important;
-  --glow: hsl(288, 100%, 85%) !important;
-
-  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
-  color: var(--text) !important;
-  font-family: 'Orbitron', sans-serif !important;
-  transition: background 1.2s ease-in-out, color 0.8s ease !important;
-  animation: fadeSoft 13s infinite alternate !important;
-}
-
-/* Theme-specific text glow */
-body.theme-8 h1, body.theme-8 h2, body.theme-8 .title-animated {
-  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
-  animation: glowCycle8 6s ease-in-out infinite !important;
-}
-
-@keyframes glowCycle8 {
-  0% { text-shadow: 0 0 5px var(--glow); }
-  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
-  100% { text-shadow: 0 0 5px var(--glow); }
-}
-
-/* General page fade effect */
-@keyframes fadeSoft {
-  0% { filter: brightness(1); }
-  100% { filter: brightness(1.1) saturate(1.05); }
-}
-
-@keyframes fadeStrong {
-  0% { filter: brightness(0.9) hue-rotate(0deg); }
-  100% { filter: brightness(1.2) hue-rotate(15deg); }
-}
-
-/* Dynamic backgrounds with multiple gradients */
-body.theme-8::before {
-  content: "" !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: -1 !important;
-  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
-              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
-              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
-  opacity: 0.2 !important;
-  animation: bgPulse8 20s ease-in-out infinite !important;
-}
-
-@keyframes bgPulse8 {
-  0% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(1.05); }
-  100% { opacity: 0.15; transform: scale(1); }
-}
-
-/* ===== SUPER THEME 9 ===== */
-body.theme-9 {
-  --bg: hsl(324, 50%, 8%) !important;
-  --text: hsl(324, 100%, 90%) !important;
-  --primary: hsl(324, 60%, 18%) !important;
-  --secondary: hsl(324, 60%, 25%) !important;
-  --accent: hsl(324, 100%, 60%) !important;
-  --accent-light: hsl(324, 100%, 75%) !important;
-  --accent-dark: hsl(324, 100%, 40%) !important;
-  --highlight: hsl(344, 100%, 50%) !important;
-  --dim: hsl(324, 30%, 15%) !important;
-  --glow: hsl(324, 100%, 85%) !important;
-
-  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
-  color: var(--text) !important;
-  font-family: 'Orbitron', sans-serif !important;
-  transition: background 1.2s ease-in-out, color 0.8s ease !important;
-  animation: fadeStrong 14s infinite alternate !important;
-}
-
-/* Theme-specific text glow */
-body.theme-9 h1, body.theme-9 h2, body.theme-9 .title-animated {
-  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
-  animation: glowCycle9 6s ease-in-out infinite !important;
-}
-
-@keyframes glowCycle9 {
-  0% { text-shadow: 0 0 5px var(--glow); }
-  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
-  100% { text-shadow: 0 0 5px var(--glow); }
-}
-
-/* General page fade effect */
-@keyframes fadeSoft {
-  0% { filter: brightness(1); }
-  100% { filter: brightness(1.1) saturate(1.05); }
-}
-
-@keyframes fadeStrong {
-  0% { filter: brightness(0.9) hue-rotate(0deg); }
-  100% { filter: brightness(1.2) hue-rotate(15deg); }
-}
-
-/* Dynamic backgrounds with multiple gradients */
-body.theme-9::before {
-  content: "" !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: -1 !important;
-  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
-              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
-              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
-  opacity: 0.2 !important;
-  animation: bgPulse9 20s ease-in-out infinite !important;
-}
-
-@keyframes bgPulse9 {
-  0% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(1.05); }
-  100% { opacity: 0.15; transform: scale(1); }
-}
-
-/* ===== SUPER THEME 10 ===== */
-body.theme-10 {
-  --bg: hsl(360, 50%, 8%) !important;
-  --text: hsl(360, 100%, 90%) !important;
-  --primary: hsl(360, 60%, 18%) !important;
-  --secondary: hsl(360, 60%, 25%) !important;
-  --accent: hsl(360, 100%, 60%) !important;
-  --accent-light: hsl(360, 100%, 75%) !important;
-  --accent-dark: hsl(360, 100%, 40%) !important;
-  --highlight: hsl(20, 100%, 50%) !important;
-  --dim: hsl(360, 30%, 15%) !important;
-  --glow: hsl(360, 100%, 85%) !important;
-
-  background: linear-gradient(120deg, var(--bg), var(--dim)) !important;
-  color: var(--text) !important;
-  font-family: 'Orbitron', sans-serif !important;
-  transition: background 1.2s ease-in-out, color 0.8s ease !important;
-  animation: fadeSoft 15s infinite alternate !important;
-}
-
-/* Theme-specific text glow */
-body.theme-10 h1, body.theme-10 h2, body.theme-10 .title-animated {
-  text-shadow: 0 0 5px var(--glow), 0 0 10px var(--accent-light), 0 0 20px var(--accent) !important;
-  animation: glowCycle10 6s ease-in-out infinite !important;
-}
-
-@keyframes glowCycle10 {
-  0% { text-shadow: 0 0 5px var(--glow); }
-  50% { text-shadow: 0 0 15px var(--accent-light), 0 0 30px var(--accent); }
-  100% { text-shadow: 0 0 5px var(--glow); }
-}
-
-/* General page fade effect */
-@keyframes fadeSoft {
-  0% { filter: brightness(1); }
-  100% { filter: brightness(1.1) saturate(1.05); }
-}
-
-@keyframes fadeStrong {
-  0% { filter: brightness(0.9) hue-rotate(0deg); }
-  100% { filter: brightness(1.2) hue-rotate(15deg); }
-}
-
-/* Dynamic backgrounds with multiple gradients */
-body.theme-10::before {
-  content: "" !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: -1 !important;
-  background: radial-gradient(circle at 30% 30%, var(--accent-light), transparent),
-              radial-gradient(circle at 70% 70%, var(--accent-dark), transparent),
-              linear-gradient(135deg, var(--bg), var(--secondary)) !important;
-  opacity: 0.2 !important;
-  animation: bgPulse10 20s ease-in-out infinite !important;
-}
-
-@keyframes bgPulse10 {
-  0% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(1.05); }
-  100% { opacity: 0.15; transform: scale(1); }
+  table.theme-10 th, table.theme-10 td {
+    font-size: 0.6rem !important;
+    padding: 6px !important;
+  }
 }

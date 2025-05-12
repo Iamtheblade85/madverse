@@ -1487,33 +1487,33 @@ function displayLogData(data) {
   const sponsors = getUniqueValues(data, 'origin_channel');
 
   container.innerHTML = `
-    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <select id="filter-username" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+    <div>
+      <div>
+        <select id="filter-username" class="input-box">
           ${createOptions(usernames)}
         </select>
-        <select id="filter-channel" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+        <select id="filter-channel" class="input-box">
           ${createOptions(channels)}
         </select>
-        <select id="filter-sponsor" class="input-box" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+        <select id="filter-sponsor" class="input-box">
           ${createOptions(sponsors)}
         </select>
       </div>
-      <button id="update-rewards" style="background-color: #3b82f6; color: white; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+      <button id="update-rewards">
         Update Data
       </button>
     </div>
 
-    <div style="width: 100%; overflow-x: auto; padding: 20px;">
-      <table class="table-auto w-full shadow-lg rounded-lg overflow-hidden" style="border-collapse: collapse;">
-        <thead style="background-color: #3b82f6; color: white;">
+    <div>
+      <table id="wallet-table">
+        <thead>
           <tr>
-            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortRewardTable('username')">Username${sortArrow('username')}</th>
-            <th style="padding: 12px; border: 1px solid #ddd;">Token</th>
-            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortRewardTable('amount')">Amount${sortArrow('amount')}</th>
-            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortRewardTable('channel')">Channel${sortArrow('channel')}</th>
-            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortRewardTable('origin_channel')">Sponsor${sortArrow('origin_channel')}</th>
-            <th style="padding: 12px; border: 1px solid #ddd; cursor: pointer;" onclick="sortRewardTable('timestamp')">Timestamp${sortArrow('timestamp')}</th>
+            <th>Username${sortArrow('username')}</th>
+            <th>Token</th>
+            <th>Amount${sortArrow('amount')}</th>
+            <th>Channel${sortArrow('channel')}</th>
+            <th>Sponsor${sortArrow('origin_channel')}</th>
+            <th>Timestamp${sortArrow('timestamp')}</th>
           </tr>
         </thead>
         <tbody></tbody>

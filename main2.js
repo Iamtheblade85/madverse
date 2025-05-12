@@ -2903,42 +2903,47 @@ function showToast(message, type = "success") {
 // Avvio app
 initApp();
 
-// === TEMA: SELECTOR DINAMICO ===
 function injectThemeSelector() {
- const selector = document.createElement('select');
- selector.id = 'theme-selector';
- selector.className = 'fixed top-4 right-4 z-50 p-2 bg-black text-yellow-400 border-2 border-yellow-400 rounded-lg';
+  // Pulsante 🎨 per aprire il selettore
+  const toggleBtn = document.createElement('button');
+  toggleBtn.id = 'theme-toggle-btn';
+  toggleBtn.innerText = '🎨';
 
- selector.innerHTML = Array.from({ length: 10 }, (_, i) => {
- const num = i + 1;
- return `<option value="theme-${num}">Theme ${num}</option>`;
- }).join('');
+  // Selettore temi
+  const selector = document.createElement('select');
+  selector.id = 'theme-selector';
+  selector.setAttribute('aria-label', 'Theme Selector');
 
- document.body.appendChild(selector);
+  selector.innerHTML = Array.from({ length: 10 }, (_, i) => {
+    const num = i + 1;
+    return `<option value="theme-${num}">Theme ${num}</option>`;
+  }).join('');
 
- // Applica il tema selezionato
- selector.addEventListener('change', (e) => {
- // Rimuove tutte le classi "theme-*", lascia le altre intatte
- document.body.className = document.body.className
- .split(' ')
- .filter(c => !c.startsWith('theme-'))
- .join(' ')
- .trim();
+  document.body.appendChild(toggleBtn);
+  document.body.appendChild(selector);
 
- document.body.classList.add(e.target.value);
- localStorage.setItem('selected-theme', e.target.value);
- });
+  // Toggle visibilità selettore
+  toggleBtn.addEventListener('click', () => {
+    selector.style.display = selector.style.display === 'block' ? 'none' : 'block';
+  });
 
- // Carica il tema salvato
- const savedTheme = localStorage.getItem('selected-theme');
- if (savedTheme) {
- selector.value = savedTheme;
- document.body.classList.add(savedTheme);
- } else {
- // Default al tema AI
- document.body.classList.add('theme-ai');
- selector.value = 'theme-ai';
- }
+  // Applica tema selezionato
+  selector.addEventListener('change', (e) => {
+    document.body.className = document.body.className
+      .split(' ')
+      .filter(c => !c.startsWith('theme-'))
+      .join(' ')
+      .trim();
+
+    document.body.classList.add(e.target.value);
+    localStorage.setItem('selected-theme', e.target.value);
+  });
+
+  // Carica tema salvato
+  const savedTheme = localStorage.getItem('selected-theme') || 'theme-1';
+  selector.value = savedTheme;
+  document.body.classList.add(savedTheme);
 }
 
 document.addEventListener('DOMContentLoaded', injectThemeSelector);
+

@@ -2892,12 +2892,11 @@ function injectThemeSelector() {
   selector.id = 'theme-selector';
   selector.className = 'fixed top-4 right-4 z-50 p-2 bg-black text-yellow-400 border-2 border-yellow-400 rounded-lg';
   
-  // SOLO i due temi reali
-  selector.innerHTML = `
-    <option value="theme-ai">AI Theme</option>
-    <option value="theme-pixelart">Pixelart Theme</option>
-  `;
-
+  selector.innerHTML = Array.from({ length: 10 }, (_, i) => {
+    const num = i + 1;
+    return `<option value="theme-${num}">Theme ${num}</option>`;
+  }).join('');
+  
   document.body.appendChild(selector);
 
   // Applica il tema selezionato

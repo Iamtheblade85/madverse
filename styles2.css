@@ -19894,3 +19894,481 @@ nav .group:hover .absolute button {
 nav .group:hover .absolute button:hover {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
+
+
+/* === FONT SIZE GLOBALE TABELLE === */
+td, th {
+  font-size: 2rem !important;
+}
+
+
+
+/* === TEMA LED 1 === */
+.theme-1 {
+  --bg-main: #0a0a0a;
+  --bg-alt: #1a1a1a;
+  --text-light: #7CFC00;
+  --text-dark: #111;
+  --primary: #7CFC00;
+  --accent: #ffffff;
+  --border: #7CFC00;
+}
+
+.theme-1 th, 
+.theme-1 td {
+  font-size: 2rem !important;
+  color: var(--text-light) !important;
+  border: 1px solid var(--border);
+}
+
+.theme-1 .menu-btn {
+  background-color: var(--bg-alt);
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease-in-out;
+}
+
+.theme-1 .menu-btn:hover {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+}
+
+.theme-1 .btn-action {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.theme-1 .btn-action:hover {
+  transform: scale(1.05);
+  background-color: #fff;
+  color: var(--primary);
+  box-shadow: 0 0 20px var(--primary);
+}
+
+/* === TEMA LED 2 === */
+.theme-2 {
+  --bg-main: #0a0a0a;
+  --bg-alt: #1a1a1a;
+  --text-light: #00FFFF;
+  --text-dark: #111;
+  --primary: #00FFFF;
+  --accent: #ffffff;
+  --border: #00FFFF;
+}
+
+.theme-2 th, 
+.theme-2 td {
+  font-size: 2rem !important;
+  color: var(--text-light) !important;
+  border: 1px solid var(--border);
+}
+
+.theme-2 .menu-btn {
+  background-color: var(--bg-alt);
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease-in-out;
+}
+
+.theme-2 .menu-btn:hover {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+}
+
+.theme-2 .btn-action {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.theme-2 .btn-action:hover {
+  transform: scale(1.05);
+  background-color: #fff;
+  color: var(--primary);
+  box-shadow: 0 0 20px var(--primary);
+}
+
+/* === TEMA LED 3 === */
+.theme-3 {
+  --bg-main: #0a0a0a;
+  --bg-alt: #1a1a1a;
+  --text-light: #FFD700;
+  --text-dark: #111;
+  --primary: #FFD700;
+  --accent: #ffffff;
+  --border: #FFD700;
+}
+
+.theme-3 th, 
+.theme-3 td {
+  font-size: 2rem !important;
+  color: var(--text-light) !important;
+  border: 1px solid var(--border);
+}
+
+.theme-3 .menu-btn {
+  background-color: var(--bg-alt);
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease-in-out;
+}
+
+.theme-3 .menu-btn:hover {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+}
+
+.theme-3 .btn-action {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.theme-3 .btn-action:hover {
+  transform: scale(1.05);
+  background-color: #fff;
+  color: var(--primary);
+  box-shadow: 0 0 20px var(--primary);
+}
+
+/* === TEMA LED 4 === */
+.theme-4 {
+  --bg-main: #0a0a0a;
+  --bg-alt: #1a1a1a;
+  --text-light: #FF00FF;
+  --text-dark: #111;
+  --primary: #FF00FF;
+  --accent: #ffffff;
+  --border: #FF00FF;
+}
+
+.theme-4 th, 
+.theme-4 td {
+  font-size: 2rem !important;
+  color: var(--text-light) !important;
+  border: 1px solid var(--border);
+}
+
+.theme-4 .menu-btn {
+  background-color: var(--bg-alt);
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease-in-out;
+}
+
+.theme-4 .menu-btn:hover {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+}
+
+.theme-4 .btn-action {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.theme-4 .btn-action:hover {
+  transform: scale(1.05);
+  background-color: #fff;
+  color: var(--primary);
+  box-shadow: 0 0 20px var(--primary);
+}
+
+/* === TEMA LED 5 === */
+.theme-5 {
+  --bg-main: #0a0a0a;
+  --bg-alt: #1a1a1a;
+  --text-light: #00FF00;
+  --text-dark: #111;
+  --primary: #00FF00;
+  --accent: #ffffff;
+  --border: #00FF00;
+}
+
+.theme-5 th, 
+.theme-5 td {
+  font-size: 2rem !important;
+  color: var(--text-light) !important;
+  border: 1px solid var(--border);
+}
+
+.theme-5 .menu-btn {
+  background-color: var(--bg-alt);
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease-in-out;
+}
+
+.theme-5 .menu-btn:hover {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+}
+
+.theme-5 .btn-action {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.theme-5 .btn-action:hover {
+  transform: scale(1.05);
+  background-color: #fff;
+  color: var(--primary);
+  box-shadow: 0 0 20px var(--primary);
+}
+
+/* === TEMA LED 6 === */
+.theme-6 {
+  --bg-main: #0a0a0a;
+  --bg-alt: #1a1a1a;
+  --text-light: #1E90FF;
+  --text-dark: #111;
+  --primary: #1E90FF;
+  --accent: #ffffff;
+  --border: #1E90FF;
+}
+
+.theme-6 th, 
+.theme-6 td {
+  font-size: 2rem !important;
+  color: var(--text-light) !important;
+  border: 1px solid var(--border);
+}
+
+.theme-6 .menu-btn {
+  background-color: var(--bg-alt);
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease-in-out;
+}
+
+.theme-6 .menu-btn:hover {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+}
+
+.theme-6 .btn-action {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.theme-6 .btn-action:hover {
+  transform: scale(1.05);
+  background-color: #fff;
+  color: var(--primary);
+  box-shadow: 0 0 20px var(--primary);
+}
+
+/* === TEMA LED 7 === */
+.theme-7 {
+  --bg-main: #0a0a0a;
+  --bg-alt: #1a1a1a;
+  --text-light: #FF1493;
+  --text-dark: #111;
+  --primary: #FF1493;
+  --accent: #ffffff;
+  --border: #FF1493;
+}
+
+.theme-7 th, 
+.theme-7 td {
+  font-size: 2rem !important;
+  color: var(--text-light) !important;
+  border: 1px solid var(--border);
+}
+
+.theme-7 .menu-btn {
+  background-color: var(--bg-alt);
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease-in-out;
+}
+
+.theme-7 .menu-btn:hover {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+}
+
+.theme-7 .btn-action {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.theme-7 .btn-action:hover {
+  transform: scale(1.05);
+  background-color: #fff;
+  color: var(--primary);
+  box-shadow: 0 0 20px var(--primary);
+}
+
+/* === TEMA LED 8 === */
+.theme-8 {
+  --bg-main: #0a0a0a;
+  --bg-alt: #1a1a1a;
+  --text-light: #DAA520;
+  --text-dark: #111;
+  --primary: #DAA520;
+  --accent: #ffffff;
+  --border: #DAA520;
+}
+
+.theme-8 th, 
+.theme-8 td {
+  font-size: 2rem !important;
+  color: var(--text-light) !important;
+  border: 1px solid var(--border);
+}
+
+.theme-8 .menu-btn {
+  background-color: var(--bg-alt);
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease-in-out;
+}
+
+.theme-8 .menu-btn:hover {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+}
+
+.theme-8 .btn-action {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.theme-8 .btn-action:hover {
+  transform: scale(1.05);
+  background-color: #fff;
+  color: var(--primary);
+  box-shadow: 0 0 20px var(--primary);
+}
+
+/* === TEMA LED 9 === */
+.theme-9 {
+  --bg-main: #0a0a0a;
+  --bg-alt: #1a1a1a;
+  --text-light: #00CED1;
+  --text-dark: #111;
+  --primary: #00CED1;
+  --accent: #ffffff;
+  --border: #00CED1;
+}
+
+.theme-9 th, 
+.theme-9 td {
+  font-size: 2rem !important;
+  color: var(--text-light) !important;
+  border: 1px solid var(--border);
+}
+
+.theme-9 .menu-btn {
+  background-color: var(--bg-alt);
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease-in-out;
+}
+
+.theme-9 .menu-btn:hover {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+}
+
+.theme-9 .btn-action {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.theme-9 .btn-action:hover {
+  transform: scale(1.05);
+  background-color: #fff;
+  color: var(--primary);
+  box-shadow: 0 0 20px var(--primary);
+}
+
+/* === TEMA LED 10 === */
+.theme-10 {
+  --bg-main: #0a0a0a;
+  --bg-alt: #1a1a1a;
+  --text-light: #FF4500;
+  --text-dark: #111;
+  --primary: #FF4500;
+  --accent: #ffffff;
+  --border: #FF4500;
+}
+
+.theme-10 th, 
+.theme-10 td {
+  font-size: 2rem !important;
+  color: var(--text-light) !important;
+  border: 1px solid var(--border);
+}
+
+.theme-10 .menu-btn {
+  background-color: var(--bg-alt);
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease-in-out;
+}
+
+.theme-10 .menu-btn:hover {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+}
+
+.theme-10 .btn-action {
+  background-color: var(--primary);
+  color: black;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.theme-10 .btn-action:hover {
+  transform: scale(1.05);
+  background-color: #fff;
+  color: var(--primary);
+  box-shadow: 0 0 20px var(--primary);
+}

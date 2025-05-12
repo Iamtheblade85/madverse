@@ -3772,3 +3772,582 @@ button:hover {
 .border-glow-497 { border: 3px solid #0ff !important; }
 .border-glow-498 { border: 4px solid #0ff !important; }
 .border-glow-499 { border: 5px solid #0ff !important; }
+
+/* === INTERACTIVE ENHANCEMENTS === */
+
+/* === ANIMAZIONE TITOLO "FIRE STRIP" === */
+.title-animated {
+  position: relative !important;
+  font-size: 3rem !important;
+  font-weight: bold !important;
+  letter-spacing: 3px !important;
+  color: #fff !important;
+  text-shadow: 0 0 10px #ff6600 !important;
+}
+.title-animated::after {
+  content: '' !important;
+  position: absolute !important;
+  left: 0 !important;
+  bottom: -10px !important;
+  width: 100% !important;
+  height: 5px !important;
+  background: linear-gradient(90deg, transparent, #ff0000, #ff9900, #ffff00, transparent) !important;
+  animation: fire-line 2.5s ease-in-out infinite !important;
+  border-radius: 10px !important;
+  filter: blur(2px) brightness(1.2) !important;
+}
+@keyframes fire-line {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* === INTERAZIONE MENU === */
+#menu button {
+  transition: all 0.4s ease !important;
+  background-color: #1a1a2e !important;
+  color: #00ffe1 !important;
+  border: 2px solid transparent !important;
+}
+#menu button:hover {
+  background-color: #292f45 !important;
+  border-color: #00ffe1 !important;
+  transform: scale(1.05) rotate(-0.5deg) !important;
+  box-shadow: 0 0 10px #00ffe1 !important;
+}
+
+/* === TABELLE INTERATTIVE === */
+table tr:hover {
+  background-color: #273549 !important;
+  transform: scale(1.01) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+table td {
+  transition: background 0.3s, transform 0.3s !important;
+}
+table td:hover {
+  background-color: #334155 !important;
+  transform: scale(1.05) !important;
+}
+
+/* === FORMS INTERATTIVI === */
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: #ff9900 !important;
+  box-shadow: 0 0 12px #ff9900 !important;
+  background-color: #111927 !important;
+}
+input::placeholder, textarea::placeholder {
+  color: #888 !important;
+  font-style: italic !important;
+}
+input:hover, select:hover, textarea:hover {
+  border-color: #00f5ff !important;
+  background-color: #20293a !important;
+  box-shadow: 0 0 8px #00f5ff !important;
+}
+
+/* === BUTTON FEEDBACK === */
+button:active {
+  transform: scale(0.95) !important;
+  filter: brightness(0.9) !important;
+}
+
+
+/* === TABLE & THEME ENHANCEMENTS === */
+
+/* === TABELLE OTTIMIZZATE === */
+table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  background-color: #0a0a0a !important;
+  font-family: 'Gloria Hallelujah', cursive !important;
+  font-size: 2rem !important;
+  color: #00fff2 !important;
+}
+th {
+  background-color: #1f1f3a !important;
+  color: #0ff !important;
+  padding: 1rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+}
+td {
+  background-color: #121219 !important;
+  padding: 1rem !important;
+  border-bottom: 1px solid #333 !important;
+}
+tr:hover td {
+  background-color: #1e1e2f !important;
+  color: #ff66cc !important;
+}
+
+/* === FONT VARIANTE SCRITTURA A MANO === */
+body, table, input, button, select, textarea {
+  font-family: 'Gloria Hallelujah', cursive !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* === RESPONSIVE SCALING === */
+html {
+  font-size: clamp(1.25rem, 1.5vw + 1rem, 4rem) !important;
+}
+
+/* === TEMA LED: PIXELART === */
+.theme-pixelart body {
+  background-color: #0d0d0d !important;
+  color: #00ff99 !important;
+}
+.theme-pixelart table {
+  background: #0d0d0d !important;
+  color: #00ffcc !important;
+}
+.theme-pixelart th {
+  background: #004400 !important;
+}
+.theme-pixelart td {
+  background: #002200 !important;
+}
+
+/* === TEMA LED: AI === */
+.theme-ai body {
+  background: #08002b !important;
+  color: #7df9ff !important;
+}
+.theme-ai table {
+  background: #0a002d !important;
+  color: #ffffff !important;
+}
+.theme-ai th {
+  background: #220040 !important;
+}
+.theme-ai td {
+  background: #1c0030 !important;
+}
+
+/* === THEME SWITCH HANDLING === */
+.theme-selector {
+  position: fixed !important;
+  top: 10px !important;
+  right: 10px !important;
+  z-index: 9999 !important;
+}
+.theme-selector select {
+  font-size: 1.5rem !important;
+  padding: 0.5rem 1rem !important;
+  background: #000 !important;
+  color: #0ff !important;
+  border: 2px solid #0ff !important;
+  border-radius: 10px !important;
+}
+
+/* === DISPLAY BREAKPOINTS === */
+@media (max-width: 480px) {
+  body, table, input, button {
+    font-size: 1.25rem !important;
+  }
+}
+@media (min-width: 1440px) {
+  body, table, input, button {
+    font-size: 3rem !important;
+  }
+}
+@media (min-width: 2560px) {
+  body, table, input, button {
+    font-size: 4rem !important;
+  }
+}
+
+
+/* === FINAL THEME + WALLET TABLE CORRECTION === */
+
+/* === WALLET TABLE DESIGN === */
+#wallet-table {
+  font-family: 'Gloria Hallelujah', cursive !important;
+  background-color: #0a0f1f !important;
+  color: #0ff !important;
+  border-radius: 12px !important;
+  padding: 2rem !important;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3) !important;
+  font-size: 2rem !important;
+  overflow-x: auto !important;
+}
+#wallet-table table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+}
+#wallet-table th, #wallet-table td {
+  padding: 1rem !important;
+  text-align: left !important;
+}
+#wallet-table th {
+  background-color: #112233 !important;
+  color: #0ff !important;
+  border-bottom: 2px solid #0ff !important;
+}
+#wallet-table td {
+  background-color: #0f1a2e !important;
+  border-bottom: 1px solid #333 !important;
+}
+#wallet-table tr:hover td {
+  background-color: #142840 !important;
+  color: #00eaff !important;
+}
+
+
+.theme-pixelart body {
+  background-color: #000000 !important;
+  font-family: 'Press Start 2P', monospace !important;
+  color: #39ff14 !important;
+}
+.theme-pixelart button {
+  background-color: #111 !important;
+  border: 2px dashed #39ff14 !important;
+  font-size: 2rem !important;
+  color: #39ff14 !important;
+  box-shadow: 0 0 6px #39ff14 !important;
+  border-radius: 0 !important;
+}
+.theme-pixelart table {
+  background-color: #0b0b0b !important;
+  color: #39ff14 !important;
+  border: 2px dotted #39ff14 !important;
+}
+.theme-pixelart input, .theme-pixelart select, .theme-pixelart textarea {
+  background: #111 !important;
+  color: #39ff14 !important;
+  border: 2px dotted #39ff14 !important;
+  font-family: 'Press Start 2P', monospace !important;
+}
+
+
+.theme-ai body {
+  background: radial-gradient(circle at top, #1b002b, #00001a) !important;
+  font-family: 'Orbitron', 'Exo 2', sans-serif !important;
+  color: #00e5ff !important;
+}
+.theme-ai button {
+  background: linear-gradient(to right, #6f00ff, #00eaff) !important;
+  font-size: 2rem !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 30px !important;
+  box-shadow: 0 0 20px #00eaff !important;
+}
+.theme-ai table {
+  background: #0e1a2b !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+.theme-ai input, .theme-ai select, .theme-ai textarea {
+  background: #101820 !important;
+  color: #ffffff !important;
+  border: 1px solid #00eaff !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  font-family: 'Orbitron', sans-serif !important;
+}
+
+
+/* === LED CONTRAST HELPERS === */
+.led-contrast-0 { color: hsl(0, 100%, 70%) !important; background-color: hsl(180, 100%, 5%) !important; }
+.led-contrast-1 { color: hsl(1, 100%, 70%) !important; background-color: hsl(181, 100%, 5%) !important; }
+.led-contrast-2 { color: hsl(2, 100%, 70%) !important; background-color: hsl(182, 100%, 5%) !important; }
+.led-contrast-3 { color: hsl(3, 100%, 70%) !important; background-color: hsl(183, 100%, 5%) !important; }
+.led-contrast-4 { color: hsl(4, 100%, 70%) !important; background-color: hsl(184, 100%, 5%) !important; }
+.led-contrast-5 { color: hsl(5, 100%, 70%) !important; background-color: hsl(185, 100%, 5%) !important; }
+.led-contrast-6 { color: hsl(6, 100%, 70%) !important; background-color: hsl(186, 100%, 5%) !important; }
+.led-contrast-7 { color: hsl(7, 100%, 70%) !important; background-color: hsl(187, 100%, 5%) !important; }
+.led-contrast-8 { color: hsl(8, 100%, 70%) !important; background-color: hsl(188, 100%, 5%) !important; }
+.led-contrast-9 { color: hsl(9, 100%, 70%) !important; background-color: hsl(189, 100%, 5%) !important; }
+.led-contrast-10 { color: hsl(10, 100%, 70%) !important; background-color: hsl(190, 100%, 5%) !important; }
+.led-contrast-11 { color: hsl(11, 100%, 70%) !important; background-color: hsl(191, 100%, 5%) !important; }
+.led-contrast-12 { color: hsl(12, 100%, 70%) !important; background-color: hsl(192, 100%, 5%) !important; }
+.led-contrast-13 { color: hsl(13, 100%, 70%) !important; background-color: hsl(193, 100%, 5%) !important; }
+.led-contrast-14 { color: hsl(14, 100%, 70%) !important; background-color: hsl(194, 100%, 5%) !important; }
+.led-contrast-15 { color: hsl(15, 100%, 70%) !important; background-color: hsl(195, 100%, 5%) !important; }
+.led-contrast-16 { color: hsl(16, 100%, 70%) !important; background-color: hsl(196, 100%, 5%) !important; }
+.led-contrast-17 { color: hsl(17, 100%, 70%) !important; background-color: hsl(197, 100%, 5%) !important; }
+.led-contrast-18 { color: hsl(18, 100%, 70%) !important; background-color: hsl(198, 100%, 5%) !important; }
+.led-contrast-19 { color: hsl(19, 100%, 70%) !important; background-color: hsl(199, 100%, 5%) !important; }
+.led-contrast-20 { color: hsl(20, 100%, 70%) !important; background-color: hsl(200, 100%, 5%) !important; }
+.led-contrast-21 { color: hsl(21, 100%, 70%) !important; background-color: hsl(201, 100%, 5%) !important; }
+.led-contrast-22 { color: hsl(22, 100%, 70%) !important; background-color: hsl(202, 100%, 5%) !important; }
+.led-contrast-23 { color: hsl(23, 100%, 70%) !important; background-color: hsl(203, 100%, 5%) !important; }
+.led-contrast-24 { color: hsl(24, 100%, 70%) !important; background-color: hsl(204, 100%, 5%) !important; }
+.led-contrast-25 { color: hsl(25, 100%, 70%) !important; background-color: hsl(205, 100%, 5%) !important; }
+.led-contrast-26 { color: hsl(26, 100%, 70%) !important; background-color: hsl(206, 100%, 5%) !important; }
+.led-contrast-27 { color: hsl(27, 100%, 70%) !important; background-color: hsl(207, 100%, 5%) !important; }
+.led-contrast-28 { color: hsl(28, 100%, 70%) !important; background-color: hsl(208, 100%, 5%) !important; }
+.led-contrast-29 { color: hsl(29, 100%, 70%) !important; background-color: hsl(209, 100%, 5%) !important; }
+.led-contrast-30 { color: hsl(30, 100%, 70%) !important; background-color: hsl(210, 100%, 5%) !important; }
+.led-contrast-31 { color: hsl(31, 100%, 70%) !important; background-color: hsl(211, 100%, 5%) !important; }
+.led-contrast-32 { color: hsl(32, 100%, 70%) !important; background-color: hsl(212, 100%, 5%) !important; }
+.led-contrast-33 { color: hsl(33, 100%, 70%) !important; background-color: hsl(213, 100%, 5%) !important; }
+.led-contrast-34 { color: hsl(34, 100%, 70%) !important; background-color: hsl(214, 100%, 5%) !important; }
+.led-contrast-35 { color: hsl(35, 100%, 70%) !important; background-color: hsl(215, 100%, 5%) !important; }
+.led-contrast-36 { color: hsl(36, 100%, 70%) !important; background-color: hsl(216, 100%, 5%) !important; }
+.led-contrast-37 { color: hsl(37, 100%, 70%) !important; background-color: hsl(217, 100%, 5%) !important; }
+.led-contrast-38 { color: hsl(38, 100%, 70%) !important; background-color: hsl(218, 100%, 5%) !important; }
+.led-contrast-39 { color: hsl(39, 100%, 70%) !important; background-color: hsl(219, 100%, 5%) !important; }
+.led-contrast-40 { color: hsl(40, 100%, 70%) !important; background-color: hsl(220, 100%, 5%) !important; }
+.led-contrast-41 { color: hsl(41, 100%, 70%) !important; background-color: hsl(221, 100%, 5%) !important; }
+.led-contrast-42 { color: hsl(42, 100%, 70%) !important; background-color: hsl(222, 100%, 5%) !important; }
+.led-contrast-43 { color: hsl(43, 100%, 70%) !important; background-color: hsl(223, 100%, 5%) !important; }
+.led-contrast-44 { color: hsl(44, 100%, 70%) !important; background-color: hsl(224, 100%, 5%) !important; }
+.led-contrast-45 { color: hsl(45, 100%, 70%) !important; background-color: hsl(225, 100%, 5%) !important; }
+.led-contrast-46 { color: hsl(46, 100%, 70%) !important; background-color: hsl(226, 100%, 5%) !important; }
+.led-contrast-47 { color: hsl(47, 100%, 70%) !important; background-color: hsl(227, 100%, 5%) !important; }
+.led-contrast-48 { color: hsl(48, 100%, 70%) !important; background-color: hsl(228, 100%, 5%) !important; }
+.led-contrast-49 { color: hsl(49, 100%, 70%) !important; background-color: hsl(229, 100%, 5%) !important; }
+.led-contrast-50 { color: hsl(50, 100%, 70%) !important; background-color: hsl(230, 100%, 5%) !important; }
+.led-contrast-51 { color: hsl(51, 100%, 70%) !important; background-color: hsl(231, 100%, 5%) !important; }
+.led-contrast-52 { color: hsl(52, 100%, 70%) !important; background-color: hsl(232, 100%, 5%) !important; }
+.led-contrast-53 { color: hsl(53, 100%, 70%) !important; background-color: hsl(233, 100%, 5%) !important; }
+.led-contrast-54 { color: hsl(54, 100%, 70%) !important; background-color: hsl(234, 100%, 5%) !important; }
+.led-contrast-55 { color: hsl(55, 100%, 70%) !important; background-color: hsl(235, 100%, 5%) !important; }
+.led-contrast-56 { color: hsl(56, 100%, 70%) !important; background-color: hsl(236, 100%, 5%) !important; }
+.led-contrast-57 { color: hsl(57, 100%, 70%) !important; background-color: hsl(237, 100%, 5%) !important; }
+.led-contrast-58 { color: hsl(58, 100%, 70%) !important; background-color: hsl(238, 100%, 5%) !important; }
+.led-contrast-59 { color: hsl(59, 100%, 70%) !important; background-color: hsl(239, 100%, 5%) !important; }
+.led-contrast-60 { color: hsl(60, 100%, 70%) !important; background-color: hsl(240, 100%, 5%) !important; }
+.led-contrast-61 { color: hsl(61, 100%, 70%) !important; background-color: hsl(241, 100%, 5%) !important; }
+.led-contrast-62 { color: hsl(62, 100%, 70%) !important; background-color: hsl(242, 100%, 5%) !important; }
+.led-contrast-63 { color: hsl(63, 100%, 70%) !important; background-color: hsl(243, 100%, 5%) !important; }
+.led-contrast-64 { color: hsl(64, 100%, 70%) !important; background-color: hsl(244, 100%, 5%) !important; }
+.led-contrast-65 { color: hsl(65, 100%, 70%) !important; background-color: hsl(245, 100%, 5%) !important; }
+.led-contrast-66 { color: hsl(66, 100%, 70%) !important; background-color: hsl(246, 100%, 5%) !important; }
+.led-contrast-67 { color: hsl(67, 100%, 70%) !important; background-color: hsl(247, 100%, 5%) !important; }
+.led-contrast-68 { color: hsl(68, 100%, 70%) !important; background-color: hsl(248, 100%, 5%) !important; }
+.led-contrast-69 { color: hsl(69, 100%, 70%) !important; background-color: hsl(249, 100%, 5%) !important; }
+.led-contrast-70 { color: hsl(70, 100%, 70%) !important; background-color: hsl(250, 100%, 5%) !important; }
+.led-contrast-71 { color: hsl(71, 100%, 70%) !important; background-color: hsl(251, 100%, 5%) !important; }
+.led-contrast-72 { color: hsl(72, 100%, 70%) !important; background-color: hsl(252, 100%, 5%) !important; }
+.led-contrast-73 { color: hsl(73, 100%, 70%) !important; background-color: hsl(253, 100%, 5%) !important; }
+.led-contrast-74 { color: hsl(74, 100%, 70%) !important; background-color: hsl(254, 100%, 5%) !important; }
+.led-contrast-75 { color: hsl(75, 100%, 70%) !important; background-color: hsl(255, 100%, 5%) !important; }
+.led-contrast-76 { color: hsl(76, 100%, 70%) !important; background-color: hsl(256, 100%, 5%) !important; }
+.led-contrast-77 { color: hsl(77, 100%, 70%) !important; background-color: hsl(257, 100%, 5%) !important; }
+.led-contrast-78 { color: hsl(78, 100%, 70%) !important; background-color: hsl(258, 100%, 5%) !important; }
+.led-contrast-79 { color: hsl(79, 100%, 70%) !important; background-color: hsl(259, 100%, 5%) !important; }
+.led-contrast-80 { color: hsl(80, 100%, 70%) !important; background-color: hsl(260, 100%, 5%) !important; }
+.led-contrast-81 { color: hsl(81, 100%, 70%) !important; background-color: hsl(261, 100%, 5%) !important; }
+.led-contrast-82 { color: hsl(82, 100%, 70%) !important; background-color: hsl(262, 100%, 5%) !important; }
+.led-contrast-83 { color: hsl(83, 100%, 70%) !important; background-color: hsl(263, 100%, 5%) !important; }
+.led-contrast-84 { color: hsl(84, 100%, 70%) !important; background-color: hsl(264, 100%, 5%) !important; }
+.led-contrast-85 { color: hsl(85, 100%, 70%) !important; background-color: hsl(265, 100%, 5%) !important; }
+.led-contrast-86 { color: hsl(86, 100%, 70%) !important; background-color: hsl(266, 100%, 5%) !important; }
+.led-contrast-87 { color: hsl(87, 100%, 70%) !important; background-color: hsl(267, 100%, 5%) !important; }
+.led-contrast-88 { color: hsl(88, 100%, 70%) !important; background-color: hsl(268, 100%, 5%) !important; }
+.led-contrast-89 { color: hsl(89, 100%, 70%) !important; background-color: hsl(269, 100%, 5%) !important; }
+.led-contrast-90 { color: hsl(90, 100%, 70%) !important; background-color: hsl(270, 100%, 5%) !important; }
+.led-contrast-91 { color: hsl(91, 100%, 70%) !important; background-color: hsl(271, 100%, 5%) !important; }
+.led-contrast-92 { color: hsl(92, 100%, 70%) !important; background-color: hsl(272, 100%, 5%) !important; }
+.led-contrast-93 { color: hsl(93, 100%, 70%) !important; background-color: hsl(273, 100%, 5%) !important; }
+.led-contrast-94 { color: hsl(94, 100%, 70%) !important; background-color: hsl(274, 100%, 5%) !important; }
+.led-contrast-95 { color: hsl(95, 100%, 70%) !important; background-color: hsl(275, 100%, 5%) !important; }
+.led-contrast-96 { color: hsl(96, 100%, 70%) !important; background-color: hsl(276, 100%, 5%) !important; }
+.led-contrast-97 { color: hsl(97, 100%, 70%) !important; background-color: hsl(277, 100%, 5%) !important; }
+.led-contrast-98 { color: hsl(98, 100%, 70%) !important; background-color: hsl(278, 100%, 5%) !important; }
+.led-contrast-99 { color: hsl(99, 100%, 70%) !important; background-color: hsl(279, 100%, 5%) !important; }
+.led-contrast-100 { color: hsl(100, 100%, 70%) !important; background-color: hsl(280, 100%, 5%) !important; }
+.led-contrast-101 { color: hsl(101, 100%, 70%) !important; background-color: hsl(281, 100%, 5%) !important; }
+.led-contrast-102 { color: hsl(102, 100%, 70%) !important; background-color: hsl(282, 100%, 5%) !important; }
+.led-contrast-103 { color: hsl(103, 100%, 70%) !important; background-color: hsl(283, 100%, 5%) !important; }
+.led-contrast-104 { color: hsl(104, 100%, 70%) !important; background-color: hsl(284, 100%, 5%) !important; }
+.led-contrast-105 { color: hsl(105, 100%, 70%) !important; background-color: hsl(285, 100%, 5%) !important; }
+.led-contrast-106 { color: hsl(106, 100%, 70%) !important; background-color: hsl(286, 100%, 5%) !important; }
+.led-contrast-107 { color: hsl(107, 100%, 70%) !important; background-color: hsl(287, 100%, 5%) !important; }
+.led-contrast-108 { color: hsl(108, 100%, 70%) !important; background-color: hsl(288, 100%, 5%) !important; }
+.led-contrast-109 { color: hsl(109, 100%, 70%) !important; background-color: hsl(289, 100%, 5%) !important; }
+.led-contrast-110 { color: hsl(110, 100%, 70%) !important; background-color: hsl(290, 100%, 5%) !important; }
+.led-contrast-111 { color: hsl(111, 100%, 70%) !important; background-color: hsl(291, 100%, 5%) !important; }
+.led-contrast-112 { color: hsl(112, 100%, 70%) !important; background-color: hsl(292, 100%, 5%) !important; }
+.led-contrast-113 { color: hsl(113, 100%, 70%) !important; background-color: hsl(293, 100%, 5%) !important; }
+.led-contrast-114 { color: hsl(114, 100%, 70%) !important; background-color: hsl(294, 100%, 5%) !important; }
+.led-contrast-115 { color: hsl(115, 100%, 70%) !important; background-color: hsl(295, 100%, 5%) !important; }
+.led-contrast-116 { color: hsl(116, 100%, 70%) !important; background-color: hsl(296, 100%, 5%) !important; }
+.led-contrast-117 { color: hsl(117, 100%, 70%) !important; background-color: hsl(297, 100%, 5%) !important; }
+.led-contrast-118 { color: hsl(118, 100%, 70%) !important; background-color: hsl(298, 100%, 5%) !important; }
+.led-contrast-119 { color: hsl(119, 100%, 70%) !important; background-color: hsl(299, 100%, 5%) !important; }
+.led-contrast-120 { color: hsl(120, 100%, 70%) !important; background-color: hsl(300, 100%, 5%) !important; }
+.led-contrast-121 { color: hsl(121, 100%, 70%) !important; background-color: hsl(301, 100%, 5%) !important; }
+.led-contrast-122 { color: hsl(122, 100%, 70%) !important; background-color: hsl(302, 100%, 5%) !important; }
+.led-contrast-123 { color: hsl(123, 100%, 70%) !important; background-color: hsl(303, 100%, 5%) !important; }
+.led-contrast-124 { color: hsl(124, 100%, 70%) !important; background-color: hsl(304, 100%, 5%) !important; }
+.led-contrast-125 { color: hsl(125, 100%, 70%) !important; background-color: hsl(305, 100%, 5%) !important; }
+.led-contrast-126 { color: hsl(126, 100%, 70%) !important; background-color: hsl(306, 100%, 5%) !important; }
+.led-contrast-127 { color: hsl(127, 100%, 70%) !important; background-color: hsl(307, 100%, 5%) !important; }
+.led-contrast-128 { color: hsl(128, 100%, 70%) !important; background-color: hsl(308, 100%, 5%) !important; }
+.led-contrast-129 { color: hsl(129, 100%, 70%) !important; background-color: hsl(309, 100%, 5%) !important; }
+.led-contrast-130 { color: hsl(130, 100%, 70%) !important; background-color: hsl(310, 100%, 5%) !important; }
+.led-contrast-131 { color: hsl(131, 100%, 70%) !important; background-color: hsl(311, 100%, 5%) !important; }
+.led-contrast-132 { color: hsl(132, 100%, 70%) !important; background-color: hsl(312, 100%, 5%) !important; }
+.led-contrast-133 { color: hsl(133, 100%, 70%) !important; background-color: hsl(313, 100%, 5%) !important; }
+.led-contrast-134 { color: hsl(134, 100%, 70%) !important; background-color: hsl(314, 100%, 5%) !important; }
+.led-contrast-135 { color: hsl(135, 100%, 70%) !important; background-color: hsl(315, 100%, 5%) !important; }
+.led-contrast-136 { color: hsl(136, 100%, 70%) !important; background-color: hsl(316, 100%, 5%) !important; }
+.led-contrast-137 { color: hsl(137, 100%, 70%) !important; background-color: hsl(317, 100%, 5%) !important; }
+.led-contrast-138 { color: hsl(138, 100%, 70%) !important; background-color: hsl(318, 100%, 5%) !important; }
+.led-contrast-139 { color: hsl(139, 100%, 70%) !important; background-color: hsl(319, 100%, 5%) !important; }
+.led-contrast-140 { color: hsl(140, 100%, 70%) !important; background-color: hsl(320, 100%, 5%) !important; }
+.led-contrast-141 { color: hsl(141, 100%, 70%) !important; background-color: hsl(321, 100%, 5%) !important; }
+.led-contrast-142 { color: hsl(142, 100%, 70%) !important; background-color: hsl(322, 100%, 5%) !important; }
+.led-contrast-143 { color: hsl(143, 100%, 70%) !important; background-color: hsl(323, 100%, 5%) !important; }
+.led-contrast-144 { color: hsl(144, 100%, 70%) !important; background-color: hsl(324, 100%, 5%) !important; }
+.led-contrast-145 { color: hsl(145, 100%, 70%) !important; background-color: hsl(325, 100%, 5%) !important; }
+.led-contrast-146 { color: hsl(146, 100%, 70%) !important; background-color: hsl(326, 100%, 5%) !important; }
+.led-contrast-147 { color: hsl(147, 100%, 70%) !important; background-color: hsl(327, 100%, 5%) !important; }
+.led-contrast-148 { color: hsl(148, 100%, 70%) !important; background-color: hsl(328, 100%, 5%) !important; }
+.led-contrast-149 { color: hsl(149, 100%, 70%) !important; background-color: hsl(329, 100%, 5%) !important; }
+.led-contrast-150 { color: hsl(150, 100%, 70%) !important; background-color: hsl(330, 100%, 5%) !important; }
+.led-contrast-151 { color: hsl(151, 100%, 70%) !important; background-color: hsl(331, 100%, 5%) !important; }
+.led-contrast-152 { color: hsl(152, 100%, 70%) !important; background-color: hsl(332, 100%, 5%) !important; }
+.led-contrast-153 { color: hsl(153, 100%, 70%) !important; background-color: hsl(333, 100%, 5%) !important; }
+.led-contrast-154 { color: hsl(154, 100%, 70%) !important; background-color: hsl(334, 100%, 5%) !important; }
+.led-contrast-155 { color: hsl(155, 100%, 70%) !important; background-color: hsl(335, 100%, 5%) !important; }
+.led-contrast-156 { color: hsl(156, 100%, 70%) !important; background-color: hsl(336, 100%, 5%) !important; }
+.led-contrast-157 { color: hsl(157, 100%, 70%) !important; background-color: hsl(337, 100%, 5%) !important; }
+.led-contrast-158 { color: hsl(158, 100%, 70%) !important; background-color: hsl(338, 100%, 5%) !important; }
+.led-contrast-159 { color: hsl(159, 100%, 70%) !important; background-color: hsl(339, 100%, 5%) !important; }
+.led-contrast-160 { color: hsl(160, 100%, 70%) !important; background-color: hsl(340, 100%, 5%) !important; }
+.led-contrast-161 { color: hsl(161, 100%, 70%) !important; background-color: hsl(341, 100%, 5%) !important; }
+.led-contrast-162 { color: hsl(162, 100%, 70%) !important; background-color: hsl(342, 100%, 5%) !important; }
+.led-contrast-163 { color: hsl(163, 100%, 70%) !important; background-color: hsl(343, 100%, 5%) !important; }
+.led-contrast-164 { color: hsl(164, 100%, 70%) !important; background-color: hsl(344, 100%, 5%) !important; }
+.led-contrast-165 { color: hsl(165, 100%, 70%) !important; background-color: hsl(345, 100%, 5%) !important; }
+.led-contrast-166 { color: hsl(166, 100%, 70%) !important; background-color: hsl(346, 100%, 5%) !important; }
+.led-contrast-167 { color: hsl(167, 100%, 70%) !important; background-color: hsl(347, 100%, 5%) !important; }
+.led-contrast-168 { color: hsl(168, 100%, 70%) !important; background-color: hsl(348, 100%, 5%) !important; }
+.led-contrast-169 { color: hsl(169, 100%, 70%) !important; background-color: hsl(349, 100%, 5%) !important; }
+.led-contrast-170 { color: hsl(170, 100%, 70%) !important; background-color: hsl(350, 100%, 5%) !important; }
+.led-contrast-171 { color: hsl(171, 100%, 70%) !important; background-color: hsl(351, 100%, 5%) !important; }
+.led-contrast-172 { color: hsl(172, 100%, 70%) !important; background-color: hsl(352, 100%, 5%) !important; }
+.led-contrast-173 { color: hsl(173, 100%, 70%) !important; background-color: hsl(353, 100%, 5%) !important; }
+.led-contrast-174 { color: hsl(174, 100%, 70%) !important; background-color: hsl(354, 100%, 5%) !important; }
+.led-contrast-175 { color: hsl(175, 100%, 70%) !important; background-color: hsl(355, 100%, 5%) !important; }
+.led-contrast-176 { color: hsl(176, 100%, 70%) !important; background-color: hsl(356, 100%, 5%) !important; }
+.led-contrast-177 { color: hsl(177, 100%, 70%) !important; background-color: hsl(357, 100%, 5%) !important; }
+.led-contrast-178 { color: hsl(178, 100%, 70%) !important; background-color: hsl(358, 100%, 5%) !important; }
+.led-contrast-179 { color: hsl(179, 100%, 70%) !important; background-color: hsl(359, 100%, 5%) !important; }
+.led-contrast-180 { color: hsl(180, 100%, 70%) !important; background-color: hsl(0, 100%, 5%) !important; }
+.led-contrast-181 { color: hsl(181, 100%, 70%) !important; background-color: hsl(1, 100%, 5%) !important; }
+.led-contrast-182 { color: hsl(182, 100%, 70%) !important; background-color: hsl(2, 100%, 5%) !important; }
+.led-contrast-183 { color: hsl(183, 100%, 70%) !important; background-color: hsl(3, 100%, 5%) !important; }
+.led-contrast-184 { color: hsl(184, 100%, 70%) !important; background-color: hsl(4, 100%, 5%) !important; }
+.led-contrast-185 { color: hsl(185, 100%, 70%) !important; background-color: hsl(5, 100%, 5%) !important; }
+.led-contrast-186 { color: hsl(186, 100%, 70%) !important; background-color: hsl(6, 100%, 5%) !important; }
+.led-contrast-187 { color: hsl(187, 100%, 70%) !important; background-color: hsl(7, 100%, 5%) !important; }
+.led-contrast-188 { color: hsl(188, 100%, 70%) !important; background-color: hsl(8, 100%, 5%) !important; }
+.led-contrast-189 { color: hsl(189, 100%, 70%) !important; background-color: hsl(9, 100%, 5%) !important; }
+.led-contrast-190 { color: hsl(190, 100%, 70%) !important; background-color: hsl(10, 100%, 5%) !important; }
+.led-contrast-191 { color: hsl(191, 100%, 70%) !important; background-color: hsl(11, 100%, 5%) !important; }
+.led-contrast-192 { color: hsl(192, 100%, 70%) !important; background-color: hsl(12, 100%, 5%) !important; }
+.led-contrast-193 { color: hsl(193, 100%, 70%) !important; background-color: hsl(13, 100%, 5%) !important; }
+.led-contrast-194 { color: hsl(194, 100%, 70%) !important; background-color: hsl(14, 100%, 5%) !important; }
+.led-contrast-195 { color: hsl(195, 100%, 70%) !important; background-color: hsl(15, 100%, 5%) !important; }
+.led-contrast-196 { color: hsl(196, 100%, 70%) !important; background-color: hsl(16, 100%, 5%) !important; }
+.led-contrast-197 { color: hsl(197, 100%, 70%) !important; background-color: hsl(17, 100%, 5%) !important; }
+.led-contrast-198 { color: hsl(198, 100%, 70%) !important; background-color: hsl(18, 100%, 5%) !important; }
+.led-contrast-199 { color: hsl(199, 100%, 70%) !important; background-color: hsl(19, 100%, 5%) !important; }
+.led-contrast-200 { color: hsl(200, 100%, 70%) !important; background-color: hsl(20, 100%, 5%) !important; }
+.led-contrast-201 { color: hsl(201, 100%, 70%) !important; background-color: hsl(21, 100%, 5%) !important; }
+.led-contrast-202 { color: hsl(202, 100%, 70%) !important; background-color: hsl(22, 100%, 5%) !important; }
+.led-contrast-203 { color: hsl(203, 100%, 70%) !important; background-color: hsl(23, 100%, 5%) !important; }
+.led-contrast-204 { color: hsl(204, 100%, 70%) !important; background-color: hsl(24, 100%, 5%) !important; }
+.led-contrast-205 { color: hsl(205, 100%, 70%) !important; background-color: hsl(25, 100%, 5%) !important; }
+.led-contrast-206 { color: hsl(206, 100%, 70%) !important; background-color: hsl(26, 100%, 5%) !important; }
+.led-contrast-207 { color: hsl(207, 100%, 70%) !important; background-color: hsl(27, 100%, 5%) !important; }
+.led-contrast-208 { color: hsl(208, 100%, 70%) !important; background-color: hsl(28, 100%, 5%) !important; }
+.led-contrast-209 { color: hsl(209, 100%, 70%) !important; background-color: hsl(29, 100%, 5%) !important; }
+.led-contrast-210 { color: hsl(210, 100%, 70%) !important; background-color: hsl(30, 100%, 5%) !important; }
+.led-contrast-211 { color: hsl(211, 100%, 70%) !important; background-color: hsl(31, 100%, 5%) !important; }
+.led-contrast-212 { color: hsl(212, 100%, 70%) !important; background-color: hsl(32, 100%, 5%) !important; }
+.led-contrast-213 { color: hsl(213, 100%, 70%) !important; background-color: hsl(33, 100%, 5%) !important; }
+.led-contrast-214 { color: hsl(214, 100%, 70%) !important; background-color: hsl(34, 100%, 5%) !important; }
+.led-contrast-215 { color: hsl(215, 100%, 70%) !important; background-color: hsl(35, 100%, 5%) !important; }
+.led-contrast-216 { color: hsl(216, 100%, 70%) !important; background-color: hsl(36, 100%, 5%) !important; }
+.led-contrast-217 { color: hsl(217, 100%, 70%) !important; background-color: hsl(37, 100%, 5%) !important; }
+.led-contrast-218 { color: hsl(218, 100%, 70%) !important; background-color: hsl(38, 100%, 5%) !important; }
+.led-contrast-219 { color: hsl(219, 100%, 70%) !important; background-color: hsl(39, 100%, 5%) !important; }
+.led-contrast-220 { color: hsl(220, 100%, 70%) !important; background-color: hsl(40, 100%, 5%) !important; }
+.led-contrast-221 { color: hsl(221, 100%, 70%) !important; background-color: hsl(41, 100%, 5%) !important; }
+.led-contrast-222 { color: hsl(222, 100%, 70%) !important; background-color: hsl(42, 100%, 5%) !important; }
+.led-contrast-223 { color: hsl(223, 100%, 70%) !important; background-color: hsl(43, 100%, 5%) !important; }
+.led-contrast-224 { color: hsl(224, 100%, 70%) !important; background-color: hsl(44, 100%, 5%) !important; }
+.led-contrast-225 { color: hsl(225, 100%, 70%) !important; background-color: hsl(45, 100%, 5%) !important; }
+.led-contrast-226 { color: hsl(226, 100%, 70%) !important; background-color: hsl(46, 100%, 5%) !important; }
+.led-contrast-227 { color: hsl(227, 100%, 70%) !important; background-color: hsl(47, 100%, 5%) !important; }
+.led-contrast-228 { color: hsl(228, 100%, 70%) !important; background-color: hsl(48, 100%, 5%) !important; }
+.led-contrast-229 { color: hsl(229, 100%, 70%) !important; background-color: hsl(49, 100%, 5%) !important; }
+.led-contrast-230 { color: hsl(230, 100%, 70%) !important; background-color: hsl(50, 100%, 5%) !important; }
+.led-contrast-231 { color: hsl(231, 100%, 70%) !important; background-color: hsl(51, 100%, 5%) !important; }
+.led-contrast-232 { color: hsl(232, 100%, 70%) !important; background-color: hsl(52, 100%, 5%) !important; }
+.led-contrast-233 { color: hsl(233, 100%, 70%) !important; background-color: hsl(53, 100%, 5%) !important; }
+.led-contrast-234 { color: hsl(234, 100%, 70%) !important; background-color: hsl(54, 100%, 5%) !important; }
+.led-contrast-235 { color: hsl(235, 100%, 70%) !important; background-color: hsl(55, 100%, 5%) !important; }
+.led-contrast-236 { color: hsl(236, 100%, 70%) !important; background-color: hsl(56, 100%, 5%) !important; }
+.led-contrast-237 { color: hsl(237, 100%, 70%) !important; background-color: hsl(57, 100%, 5%) !important; }
+.led-contrast-238 { color: hsl(238, 100%, 70%) !important; background-color: hsl(58, 100%, 5%) !important; }
+.led-contrast-239 { color: hsl(239, 100%, 70%) !important; background-color: hsl(59, 100%, 5%) !important; }
+.led-contrast-240 { color: hsl(240, 100%, 70%) !important; background-color: hsl(60, 100%, 5%) !important; }
+.led-contrast-241 { color: hsl(241, 100%, 70%) !important; background-color: hsl(61, 100%, 5%) !important; }
+.led-contrast-242 { color: hsl(242, 100%, 70%) !important; background-color: hsl(62, 100%, 5%) !important; }
+.led-contrast-243 { color: hsl(243, 100%, 70%) !important; background-color: hsl(63, 100%, 5%) !important; }
+.led-contrast-244 { color: hsl(244, 100%, 70%) !important; background-color: hsl(64, 100%, 5%) !important; }
+.led-contrast-245 { color: hsl(245, 100%, 70%) !important; background-color: hsl(65, 100%, 5%) !important; }
+.led-contrast-246 { color: hsl(246, 100%, 70%) !important; background-color: hsl(66, 100%, 5%) !important; }
+.led-contrast-247 { color: hsl(247, 100%, 70%) !important; background-color: hsl(67, 100%, 5%) !important; }
+.led-contrast-248 { color: hsl(248, 100%, 70%) !important; background-color: hsl(68, 100%, 5%) !important; }
+.led-contrast-249 { color: hsl(249, 100%, 70%) !important; background-color: hsl(69, 100%, 5%) !important; }
+.led-contrast-250 { color: hsl(250, 100%, 70%) !important; background-color: hsl(70, 100%, 5%) !important; }
+.led-contrast-251 { color: hsl(251, 100%, 70%) !important; background-color: hsl(71, 100%, 5%) !important; }
+.led-contrast-252 { color: hsl(252, 100%, 70%) !important; background-color: hsl(72, 100%, 5%) !important; }
+.led-contrast-253 { color: hsl(253, 100%, 70%) !important; background-color: hsl(73, 100%, 5%) !important; }
+.led-contrast-254 { color: hsl(254, 100%, 70%) !important; background-color: hsl(74, 100%, 5%) !important; }
+.led-contrast-255 { color: hsl(255, 100%, 70%) !important; background-color: hsl(75, 100%, 5%) !important; }
+.led-contrast-256 { color: hsl(256, 100%, 70%) !important; background-color: hsl(76, 100%, 5%) !important; }
+.led-contrast-257 { color: hsl(257, 100%, 70%) !important; background-color: hsl(77, 100%, 5%) !important; }
+.led-contrast-258 { color: hsl(258, 100%, 70%) !important; background-color: hsl(78, 100%, 5%) !important; }
+.led-contrast-259 { color: hsl(259, 100%, 70%) !important; background-color: hsl(79, 100%, 5%) !important; }
+.led-contrast-260 { color: hsl(260, 100%, 70%) !important; background-color: hsl(80, 100%, 5%) !important; }
+.led-contrast-261 { color: hsl(261, 100%, 70%) !important; background-color: hsl(81, 100%, 5%) !important; }
+.led-contrast-262 { color: hsl(262, 100%, 70%) !important; background-color: hsl(82, 100%, 5%) !important; }
+.led-contrast-263 { color: hsl(263, 100%, 70%) !important; background-color: hsl(83, 100%, 5%) !important; }
+.led-contrast-264 { color: hsl(264, 100%, 70%) !important; background-color: hsl(84, 100%, 5%) !important; }
+.led-contrast-265 { color: hsl(265, 100%, 70%) !important; background-color: hsl(85, 100%, 5%) !important; }
+.led-contrast-266 { color: hsl(266, 100%, 70%) !important; background-color: hsl(86, 100%, 5%) !important; }
+.led-contrast-267 { color: hsl(267, 100%, 70%) !important; background-color: hsl(87, 100%, 5%) !important; }
+.led-contrast-268 { color: hsl(268, 100%, 70%) !important; background-color: hsl(88, 100%, 5%) !important; }
+.led-contrast-269 { color: hsl(269, 100%, 70%) !important; background-color: hsl(89, 100%, 5%) !important; }
+.led-contrast-270 { color: hsl(270, 100%, 70%) !important; background-color: hsl(90, 100%, 5%) !important; }
+.led-contrast-271 { color: hsl(271, 100%, 70%) !important; background-color: hsl(91, 100%, 5%) !important; }
+.led-contrast-272 { color: hsl(272, 100%, 70%) !important; background-color: hsl(92, 100%, 5%) !important; }
+.led-contrast-273 { color: hsl(273, 100%, 70%) !important; background-color: hsl(93, 100%, 5%) !important; }
+.led-contrast-274 { color: hsl(274, 100%, 70%) !important; background-color: hsl(94, 100%, 5%) !important; }
+.led-contrast-275 { color: hsl(275, 100%, 70%) !important; background-color: hsl(95, 100%, 5%) !important; }
+.led-contrast-276 { color: hsl(276, 100%, 70%) !important; background-color: hsl(96, 100%, 5%) !important; }
+.led-contrast-277 { color: hsl(277, 100%, 70%) !important; background-color: hsl(97, 100%, 5%) !important; }
+.led-contrast-278 { color: hsl(278, 100%, 70%) !important; background-color: hsl(98, 100%, 5%) !important; }
+.led-contrast-279 { color: hsl(279, 100%, 70%) !important; background-color: hsl(99, 100%, 5%) !important; }
+.led-contrast-280 { color: hsl(280, 100%, 70%) !important; background-color: hsl(100, 100%, 5%) !important; }
+.led-contrast-281 { color: hsl(281, 100%, 70%) !important; background-color: hsl(101, 100%, 5%) !important; }
+.led-contrast-282 { color: hsl(282, 100%, 70%) !important; background-color: hsl(102, 100%, 5%) !important; }
+.led-contrast-283 { color: hsl(283, 100%, 70%) !important; background-color: hsl(103, 100%, 5%) !important; }
+.led-contrast-284 { color: hsl(284, 100%, 70%) !important; background-color: hsl(104, 100%, 5%) !important; }
+.led-contrast-285 { color: hsl(285, 100%, 70%) !important; background-color: hsl(105, 100%, 5%) !important; }
+.led-contrast-286 { color: hsl(286, 100%, 70%) !important; background-color: hsl(106, 100%, 5%) !important; }
+.led-contrast-287 { color: hsl(287, 100%, 70%) !important; background-color: hsl(107, 100%, 5%) !important; }
+.led-contrast-288 { color: hsl(288, 100%, 70%) !important; background-color: hsl(108, 100%, 5%) !important; }
+.led-contrast-289 { color: hsl(289, 100%, 70%) !important; background-color: hsl(109, 100%, 5%) !important; }
+.led-contrast-290 { color: hsl(290, 100%, 70%) !important; background-color: hsl(110, 100%, 5%) !important; }
+.led-contrast-291 { color: hsl(291, 100%, 70%) !important; background-color: hsl(111, 100%, 5%) !important; }
+.led-contrast-292 { color: hsl(292, 100%, 70%) !important; background-color: hsl(112, 100%, 5%) !important; }
+.led-contrast-293 { color: hsl(293, 100%, 70%) !important; background-color: hsl(113, 100%, 5%) !important; }
+.led-contrast-294 { color: hsl(294, 100%, 70%) !important; background-color: hsl(114, 100%, 5%) !important; }
+.led-contrast-295 { color: hsl(295, 100%, 70%) !important; background-color: hsl(115, 100%, 5%) !important; }
+.led-contrast-296 { color: hsl(296, 100%, 70%) !important; background-color: hsl(116, 100%, 5%) !important; }
+.led-contrast-297 { color: hsl(297, 100%, 70%) !important; background-color: hsl(117, 100%, 5%) !important; }
+.led-contrast-298 { color: hsl(298, 100%, 70%) !important; background-color: hsl(118, 100%, 5%) !important; }
+.led-contrast-299 { color: hsl(299, 100%, 70%) !important; background-color: hsl(119, 100%, 5%) !important; }

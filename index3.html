@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,25 +28,25 @@
       <button class="menu-btn" data-section="nfts">NFTs Wallet</button>
 
       <!-- Dropdown Earn -->
-      <div class="dropdown">
-        <button class="menu-btn">Earn ▾</button>
-        <div class="dropdown-content min-w-[180px]">
-          <button class="dropdown-item" data-section="token-staking">Token Staking</button>
-          <button class="dropdown-item" data-section="nfts-staking">NFTs Staking</button>
-          <div class="divider"></div>
-          <div class="pl-4">
-            <button class="dropdown-item" data-section="c2e-telegram">C2E - Telegram</button>
-            <button class="dropdown-item" data-section="c2e-twitch">C2E - Twitch</button>
+      <div class="dropdown relative">
+        <button class="menu-btn toggle-submenu">Earn ▾</button>
+        <div class="dropdown-content submenu absolute bg-white rounded shadow hidden z-50 mt-2 p-2">
+          <button class="dropdown-item block w-full text-left" data-section="token-staking">Token Staking</button>
+          <button class="dropdown-item block w-full text-left" data-section="nfts-staking">NFTs Staking</button>
+          <div class="divider my-2 border-t"></div>
+          <div class="pl-2">
+            <button class="dropdown-item block w-full text-left" data-section="c2e-telegram">C2E - Telegram</button>
+            <button class="dropdown-item block w-full text-left" data-section="c2e-twitch">C2E - Twitch</button>
           </div>
         </div>
       </div>
 
       <!-- Dropdown Creators Tools -->
-      <div class="dropdown">
-        <button class="menu-btn">Creators Tools ▾</button>
-        <div class="dropdown-content min-w-[200px]">
-          <button class="dropdown-item" data-section="create-token-pool">Create Token Staking Pool</button>
-          <button class="dropdown-item" data-section="create-nfts-farm">Create NFTs Staking Pool</button>
+      <div class="dropdown relative">
+        <button class="menu-btn toggle-submenu">Creators Tools ▾</button>
+        <div class="dropdown-content submenu absolute bg-white rounded shadow hidden z-50 mt-2 p-2">
+          <button class="dropdown-item block w-full text-left" data-section="create-token-pool">Create Token Staking Pool</button>
+          <button class="dropdown-item block w-full text-left" data-section="create-nfts-farm">Create NFTs Staking Pool</button>
         </div>
       </div>
     </div>
@@ -78,6 +79,27 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Main Script -->
-  <script src="main2.js"></script>
+  <script src="main2_fixed.js"></script>
+  <script>
+    document.querySelectorAll('.toggle-submenu').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const allSubmenus = document.querySelectorAll('.submenu');
+        allSubmenus.forEach(menu => menu.classList.add('hidden'));
+
+        const submenu = btn.nextElementSibling;
+        if (submenu && submenu.classList.contains('submenu')) {
+          submenu.classList.toggle('hidden');
+        }
+      });
+    });
+
+    document.querySelectorAll('.dropdown-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        const section = e.target.getAttribute('data-section');
+        loadSection(section);
+        document.querySelectorAll('.submenu').forEach(menu => menu.classList.add('hidden'));
+      });
+    });
+  </script>
 </body>
 </html>

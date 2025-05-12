@@ -793,3 +793,257 @@ button, input, select, textarea {
   padding: 1.25rem 1.5rem !important;
   touch-action: manipulation !important;
 }
+
+
+/* === DINAMIC MODALS, TABLES, FILTERS === */
+
+/* === Modale di conferma === */
+.theme-ai #confirm-modal, .theme-pixelart #confirm-modal {
+  padding: 2rem !important;
+  border-radius: 20px !important;
+  max-width: 500px !important;
+  margin: auto !important;
+}
+.theme-ai #confirm-modal {
+  background: #101820 !important;
+  color: #00eaff !important;
+  border: 2px solid #00f7ff !important;
+  box-shadow: 0 0 20px #00eaff !important;
+}
+.theme-pixelart #confirm-modal {
+  background: #0d0d0d !important;
+  color: #FFD700 !important;
+  border: 2px dashed #FFD700 !important;
+  box-shadow: inset 0 0 10px #ff00ff !important;
+  font-family: var(--font-pixel) !important;
+}
+
+/* === Sezioni modali dinamiche (swap, withdraw, stake, ecc) === */
+.theme-ai #modal-body section {
+  background: #0d1525 !important;
+  border: 1px solid #00eaff !important;
+  border-radius: 16px !important;
+  padding: 1.5rem !important;
+  margin-bottom: 1.5rem !important;
+  box-shadow: 0 0 15px #00eaff55 !important;
+}
+.theme-pixelart #modal-body section {
+  background: #111 !important;
+  border: 2px dashed #FFD700 !important;
+  font-family: var(--font-pixel) !important;
+  padding: 1.25rem !important;
+  margin-bottom: 1rem !important;
+}
+
+/* === Input dinamici === */
+.theme-ai input, .theme-ai select, .theme-ai textarea {
+  background: #0e1a2f !important;
+  color: #00eaff !important;
+  border: 2px solid #00f7ff !important;
+  border-radius: 10px !important;
+  padding: 1rem !important;
+}
+.theme-pixelart input, .theme-pixelart select, .theme-pixelart textarea {
+  background: #0a0a0a !important;
+  color: #FFD700 !important;
+  font-family: var(--font-pixel) !important;
+  border: 2px dashed #ff00ff !important;
+  padding: 1rem !important;
+}
+
+/* === Tabelle dinamiche (scheduled-storms-table, winners, ecc) === */
+.theme-ai .scheduled-storms-table th {
+  background: #101820 !important;
+  color: #00eaff !important;
+}
+.theme-pixelart .scheduled-storms-table th {
+  background: #0a0a0a !important;
+  color: #FFD700 !important;
+  font-family: var(--font-pixel) !important;
+}
+.theme-ai .scheduled-storms-table td {
+  background: #0f1b2f !important;
+  color: #fff !important;
+}
+.theme-pixelart .scheduled-storms-table td {
+  background: #111 !important;
+  color: #00ffcc !important;
+}
+
+
+/* === TABLE HOVER & CURSORS === */
+
+/* === Hover Celle con Colore Dinamico === */
+.theme-ai table td:hover {
+  background-color: #1a2b40 !important;
+  color: #FFD700 !important;
+}
+.theme-pixelart table td:hover {
+  background-color: #1f1f1f !important;
+  color: #00ffcc !important;
+  text-shadow: 1px 1px 0 #000 !important;
+}
+
+/* === Cursor Personalizzati === */
+.theme-pixelart * {
+  cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAAXNSR0IArs4c6QAAAKZJREFUKBVjZKAQMFB+IB4AowfFxMjAwGAwYoRAkZcYExA8E6iGRAxIsTjD8kEhgM9MwMJmgx3gIx3HC7o4BoMEkQVRxnhgYnCBh4TAYmfSND3/4wP4dZDQfZkAa0pNEmBggg7FAjNBLjMiDAzA1YXBgZGf79hw4w+fMBeWAALaLiRAtBJjCgMDAwMLAFAFvwE/fBJmDLUAAAAASUVORK5CYII='), auto !important;
+}
+.theme-ai * {
+  cursor: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMu
+b3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI2IiBjeT0iNiIgcj0iNSIgc3Ryb2tlPSIjMDBmZmZmIiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4='), auto !important;
+}
+
+/* === Leggibilità Celle === */
+td, th {
+  line-height: 1.6 !important;
+  letter-spacing: 0.05em !important;
+}
+
+
+/* === MODAL FIX + PALETTE PRECISIONE === */
+
+/* === Fix apertura modale iniziale === */
+#modal, #confirm-modal {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transform: translateY(-20px) !important;
+  transition: all 0.4s ease !important;
+}
+#modal.active, #confirm-modal.active {
+  display: block !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  transform: translateY(0) !important;
+}
+
+/* === Palette migliorate per i temi === */
+.theme-ai {
+  --ai-primary: #00eaff;
+  --ai-secondary: #6f00ff;
+  --ai-background: #0d1117;
+  --ai-surface: #101820;
+  --ai-text: #eaffff;
+  --ai-border: #00c6ff;
+}
+
+.theme-pixelart {
+  --pixel-primary: #39ff14;
+  --pixel-secondary: #ff00ff;
+  --pixel-surface: #0a0a0a;
+  --pixel-text: #ffffff;
+  --pixel-border: #FFD700;
+}
+
+.theme-ai body {
+  background: radial-gradient(circle at top, var(--ai-background), #000012) !important;
+  color: var(--ai-text) !important;
+}
+
+.theme-ai h1, .theme-ai h2, .theme-ai h3 {
+  color: var(--ai-primary) !important;
+  text-shadow: 0 0 10px var(--ai-primary), 0 0 20px var(--ai-secondary) !important;
+}
+
+.theme-pixelart body {
+  background: repeating-linear-gradient(45deg, var(--pixel-surface), #111 10px, var(--pixel-surface) 20px) !important;
+  color: var(--pixel-text) !important;
+}
+
+.theme-pixelart h1, .theme-pixelart h2, .theme-pixelart h3 {
+  color: var(--pixel-secondary) !important;
+  text-shadow: 1px 1px 0 #000, 0 0 6px var(--pixel-secondary) !important;
+}
+
+
+/* === FINAL UI UPGRADES === */
+
+/* === MENU DROPDOWN === */
+.theme-ai #menu .group:hover .group-hover\:visible {
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: #0d1117 !important;
+  border: 1px solid #00eaff !important;
+}
+.theme-pixelart #menu .group:hover .group-hover\:visible {
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: #111 !important;
+  border: 1px dashed #FFD700 !important;
+}
+
+/* === MENU-BTN THEMATICS === */
+.theme-ai .menu-btn {
+  background: linear-gradient(90deg, #00eaff, #6f00ff) !important;
+  color: #fff !important;
+  font-family: var(--font-ai) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 10px #00eaff !important;
+  transition: all 0.3s ease !important;
+}
+.theme-pixelart .menu-btn {
+  background: #1a1a1a !important;
+  color: #FFD700 !important;
+  font-family: var(--font-pixel) !important;
+  border: 2px solid #FFD700 !important;
+  box-shadow: 2px 2px 0 #000 !important;
+  transition: all 0.3s ease !important;
+}
+.theme-ai .menu-btn:hover {
+  background: #101820 !important;
+  color: #FFD700 !important;
+}
+.theme-pixelart .menu-btn:hover {
+  background: #FFD700 !important;
+  color: #000 !important;
+}
+
+/* === NFT CARD OVERLAY === */
+.theme-ai .nft-card:hover .nft-front {
+  transform: scale(1.05) !important;
+  transition: transform 0.3s ease !important;
+  box-shadow: 0 0 20px #00eaff !important;
+}
+.theme-pixelart .nft-card:hover .nft-front {
+  transform: scale(1.03) rotate(-1deg) !important;
+  transition: transform 0.3s ease !important;
+  box-shadow: inset 2px 2px 0 #FFD700 !important;
+}
+
+/* === INPUT SLIDERS === */
+.theme-ai input[type=range]::-webkit-slider-thumb {
+  background: #00f7ff !important;
+}
+.theme-pixelart input[type=range]::-webkit-slider-thumb {
+  background: #FFD700 !important;
+  border: 2px solid #000 !important;
+}
+.theme-ai input[type=range] {
+  background: #223344 !important;
+}
+.theme-pixelart input[type=range] {
+  background: #333 !important;
+}
+
+/* === NFT e FARM SECTIONS === */
+.theme-ai #nfts-list, .theme-ai #nft-farms-container {
+  background: rgba(13, 17, 23, 0.9) !important;
+  border-radius: 16px !important;
+  padding: 1rem !important;
+}
+.theme-pixelart #nfts-list, .theme-pixelart #nft-farms-container {
+  background: #1a1a1a !important;
+  border: 2px dashed #FFD700 !important;
+  padding: 1rem !important;
+  font-family: var(--font-pixel) !important;
+}
+
+/* === SCROLLBARS CONTEXTUALI === */
+.theme-ai *::-webkit-scrollbar-thumb {
+  background: #00eaff !important;
+}
+.theme-pixelart *::-webkit-scrollbar-thumb {
+  background: #FFD700 !important;
+}

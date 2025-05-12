@@ -1473,7 +1473,7 @@ tr:hover {
 
 /* === COLOR THEMES === */
 .theme-1 {
-  --bg-gradient: radial-gradient(circle at top left, #0f0c29, #302b63, #24243e) !important;
+  --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important;
   --neon-cyan: #00ffff !important;
   --neon-pink: #ff00ff !important;
   --gold: #ffd700 !important;
@@ -1481,7 +1481,7 @@ tr:hover {
 }
 
 .theme-2 {
-  --bg-gradient: repeating-linear-gradient(45deg, #000428, #004e92 20%) !important;
+  --bg-gradient: linear-gradient(135deg, #000428, #004e92) !important;
   --neon-cyan: #1de9b6 !important;
   --neon-pink: #ff1744 !important;
   --gold: #ffc107 !important;
@@ -1489,7 +1489,7 @@ tr:hover {
 }
 
 .theme-3 {
-  --bg-gradient: conic-gradient(from 90deg, #1a2a6c, #b21f1f, #fdbb2d) !important;
+  --bg-gradient: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d) !important;
   --neon-cyan: #00e5ff !important;
   --neon-pink: #f50057 !important;
   --gold: #ffea00 !important;
@@ -1497,7 +1497,7 @@ tr:hover {
 }
 
 .theme-4 {
-  --bg-gradient: radial-gradient(ellipse at bottom, #4b6cb7, #182848) !important;
+  --bg-gradient: linear-gradient(135deg, #4b6cb7, #182848) !important;
   --neon-cyan: #40c4ff !important;
   --neon-pink: #ff4081 !important;
   --gold: #ffc400 !important;
@@ -48392,36 +48392,110 @@ pre, code {
   border-radius: 6px !important;
   transition: all 0.3s ease-in-out !important;
 }
-@media (max-width: 768px) {
-  html { font-size: 14px !important; }
-}
-@media (min-width: 769px) and (max-width: 1440px) {
-  html { font-size: 16px !important; }
-}
-@media (min-width: 1441px) {
-  html { font-size: 18px !important; }
+
+/* === MODIFICHE AGGIUNTE === */
+
+/* ================= FONT SIZE ADATTIVO ================= */
+html {
+  font-size: clamp(14px, 1.2vw, 18px);
 }
 
-.table-auto thead {
-  background-color: var(--neon-cyan) !important;
-  color: #000 !important;
-  font-weight: bold !important;
-}
-.table-auto tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
-}
-.table-auto td {
-  font-size: 0.95rem !important;
-  line-height: 1.4 !important;
-  padding: 0.6rem !important;
+/* ================= TABELLE MIGLIORATE ================= */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-size: 1rem;
 }
 
-select, option {
-  background-color: #000 !important;
-  color: var(--neon-cyan) !important;
-  border: 1px solid var(--gold) !important;
+table th, table td {
+  border: 1px solid #ccc;
+  padding: 0.75rem;
+  text-align: left;
 }
-select:focus {
-  outline: none !important;
-  box-shadow: 0 0 10px var(--gold) !important;
+
+table thead {
+  background-color: #f8f9fa;
+  color: #333;
+  font-weight: bold;
+}
+
+table tbody tr:hover {
+  background-color: #eef6ff;
+}
+
+/* ================= DROPDOWN MIGLIORATI ================= */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background: #fff;
+  min-width: 160px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  border: 1px solid #ddd;
+  z-index: 1;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.dropdown-content a {
+  color: #333;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {
+  background-color: #f1f1f1;
+  color: #000;
+}
+
+/* ================= TEMI VISIVAMENTE DIVERSI ================= */
+.theme-dark {
+  background: linear-gradient(135deg, #1e1e2f, #2a2a3f);
+  color: #f0f0f0;
+}
+
+.theme-light {
+  background: linear-gradient(135deg, #fefefe, #f4f4f4);
+  color: #333;
+}
+
+.theme-blue {
+  background: linear-gradient(45deg, #007cf0, #00dfd8);
+  color: #fff;
+}
+
+.theme-red {
+  background: linear-gradient(45deg, #ff416c, #ff4b2b);
+  color: #fff;
+}
+
+.theme-patterned {
+  background: repeating-linear-gradient(
+    45deg,
+    #f3f3f3,
+    #f3f3f3 10px,
+    #e0e0e0 10px,
+    #e0e0e0 20px
+  );
+  color: #222;
+}
+
+/* Temi su componenti specifici */
+.theme-dark table,
+.theme-blue table,
+.theme-red table {
+  border-color: #444;
+}
+
+.theme-patterned .dropdown-content {
+  background: #fffbe6;
+  border-color: #f0c36d;
 }

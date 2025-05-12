@@ -1473,7 +1473,7 @@ tr:hover {
 
 /* === COLOR THEMES === */
 .theme-1 {
-  --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important;
+  --bg-gradient: radial-gradient(circle at top left, #0f0c29, #302b63, #24243e) !important;
   --neon-cyan: #00ffff !important;
   --neon-pink: #ff00ff !important;
   --gold: #ffd700 !important;
@@ -1481,7 +1481,7 @@ tr:hover {
 }
 
 .theme-2 {
-  --bg-gradient: linear-gradient(135deg, #000428, #004e92) !important;
+  --bg-gradient: repeating-linear-gradient(45deg, #000428, #004e92 20%) !important;
   --neon-cyan: #1de9b6 !important;
   --neon-pink: #ff1744 !important;
   --gold: #ffc107 !important;
@@ -1489,7 +1489,7 @@ tr:hover {
 }
 
 .theme-3 {
-  --bg-gradient: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d) !important;
+  --bg-gradient: conic-gradient(from 90deg, #1a2a6c, #b21f1f, #fdbb2d) !important;
   --neon-cyan: #00e5ff !important;
   --neon-pink: #f50057 !important;
   --gold: #ffea00 !important;
@@ -1497,7 +1497,7 @@ tr:hover {
 }
 
 .theme-4 {
-  --bg-gradient: linear-gradient(135deg, #4b6cb7, #182848) !important;
+  --bg-gradient: radial-gradient(ellipse at bottom, #4b6cb7, #182848) !important;
   --neon-cyan: #40c4ff !important;
   --neon-pink: #ff4081 !important;
   --gold: #ffc400 !important;
@@ -48391,4 +48391,37 @@ pre, code {
   padding: 0.5rem !important;
   border-radius: 6px !important;
   transition: all 0.3s ease-in-out !important;
+}
+@media (max-width: 768px) {
+  html { font-size: 14px !important; }
+}
+@media (min-width: 769px) and (max-width: 1440px) {
+  html { font-size: 16px !important; }
+}
+@media (min-width: 1441px) {
+  html { font-size: 18px !important; }
+}
+
+.table-auto thead {
+  background-color: var(--neon-cyan) !important;
+  color: #000 !important;
+  font-weight: bold !important;
+}
+.table-auto tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+.table-auto td {
+  font-size: 0.95rem !important;
+  line-height: 1.4 !important;
+  padding: 0.6rem !important;
+}
+
+select, option {
+  background-color: #000 !important;
+  color: var(--neon-cyan) !important;
+  border: 1px solid var(--gold) !important;
+}
+select:focus {
+  outline: none !important;
+  box-shadow: 0 0 10px var(--gold) !important;
 }

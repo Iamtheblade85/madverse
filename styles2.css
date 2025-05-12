@@ -1,3 +1,10 @@
+/* Optimized universal selector */
+* {
+box-sizing: border-box !important;
+transition: all 0.3s ease-in-out !important;
+scroll-behavior: smooth !important;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Share+Tech+Mono&display=swap');
 
 :root {
@@ -12,9 +19,7 @@
   --box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
 }
 
-* {
-  box-sizing: border-box !important;
-}
+
 
 body {
   margin: 0 !important;
@@ -1275,9 +1280,7 @@ img {
 }
 
 /* Add transition to ALL elements for smooth UX */
-* {
-  transition: all 0.25s ease-in-out !important;
-}
+
 
 /* Smooth scroll inside modal */
 #modal-body {
@@ -1311,11 +1314,7 @@ select {
 }
 
 /* === RESET & GLOBALE === */
-* {
-  box-sizing: border-box !important;
-  transition: all 0.3s ease-in-out !important;
-  scroll-behavior: smooth !important;
-}
+
 body {
   margin: 0 !important;
   padding: 0 !important;
@@ -48499,38 +48498,4 @@ table tr:hover > th,
     opacity: 1;
     transform: translateY(0);
   }
-}
-/* Force reward and storm tables to match wallet-table style */
-#c2e-content table,
-#c2e-content table th,
-#c2e-content table td,
-.table-auto,
-.table-auto th,
-.table-auto td {
-  background-color: #121212 !important;
-  color: var(--text-light) !important;
-  border: 1px solid var(--border-color) !important;
-  padding: 12px !important;
-  font-size: 150% !important;
-  font-family: 'Orbitron', sans-serif !important;
-  text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-pink) !important;
-  transition: all 0.3s ease-in-out !important;
-}
-
-#c2e-content table th,
-.table-auto th {
-  background-color: #1e1e2f !important;
-  color: var(--gold) !important;
-  text-transform: uppercase !important;
-  letter-spacing: 1px !important;
-}
-
-#c2e-content table tr:hover td,
-#c2e-content table tr:hover th,
-.table-auto tr:hover td,
-.table-auto tr:hover th {
-  background-color: silver !important;
-  color: black !important;
-  transform: scale(1.01) !important;
-  box-shadow: 0 0 15px silver, 0 0 30px rgba(255, 255, 255, 0.5) !important;
 }

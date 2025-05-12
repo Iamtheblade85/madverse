@@ -1695,7 +1695,7 @@ async function loadLogStormsGiveaways() {
         </div>
 
         <h2 class="section-title mt-6">Scheduled Storms</h2>
-        <div id="scheduled-storms-table" style="width: 100%; margin: 0 auto;">
+        <div id="wallet-table">
           Loading Scheduled Storms...
         </div>
       </div>
@@ -1796,7 +1796,7 @@ function setScheduledTimeMinMax() {
 
 // Funzione per caricare le tempeste programmate
 async function loadScheduledStorms() {
-  const tableContainer = document.getElementById('scheduled-storms-table');
+  const tableContainer = document.getElementById('wallet-table');
   tableContainer.innerHTML = 'Loading Scheduled Storms...';
 
   try {
@@ -1857,15 +1857,15 @@ function renderStormsTable(data) {
 
     rowsHTML += `
       <tr style="background-color: ${rowColor}; transition: background-color 0.3s;">
-        <td style="padding: 8px; border: 1px solid #ddd;">${storm.id}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${new Date(storm.scheduled_time).toLocaleString()}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${storm.offered_by}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${storm.amount}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${storm.token_symbol}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${storm.channel_name}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${storm.status}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${winnersHTML}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${pulse}</td>
+        <td>${storm.id}</td>
+        <td>${new Date(storm.scheduled_time).toLocaleString()}</td>
+        <td>${storm.offered_by}</td>
+        <td>${storm.amount}</td>
+        <td>${storm.token_symbol}</td>
+        <td>${storm.channel_name}</td>
+        <td>${storm.status}</td>
+        <td>${winnersHTML}</td>
+        <td>${pulse}</td>
       </tr>
     `;
   });
@@ -1887,7 +1887,7 @@ function sortStormsTable(key) {
 }
 
 function displayStormsData(data) {
-  const tableContainer = document.getElementById('scheduled-storms-table');
+  const tableContainer = document.getElementById('wallet-table');
   originalStormsData = data;
 
   const getUniqueValues = (data, key) => [...new Set(data.map(item => item[key]).filter(Boolean))].sort();

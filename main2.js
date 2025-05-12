@@ -107,6 +107,26 @@ async function initApp() {
 
  console.info("[🔗] Collegamento eventi pulsanti menu...");
  document.querySelectorAll('.menu-btn').forEach(btn => {
+btn.addEventListener('click', (e) => {
+    const section = e.target.getAttribute('data-section');
+    loadSection(section);
+
+    // Gestione visuale dei pulsanti attivi
+    document.querySelectorAll('.menu-btn').forEach(b => {
+      b.classList.remove('active', 'bg-blue-700');
+    });
+    e.target.classList.add('active', 'bg-blue-700');
+
+    // Gestione sottomenu
+    const submenu = e.target.nextElementSibling;
+    if (submenu && submenu.classList.contains('submenu')) {
+      const isVisible = !submenu.classList.contains('hidden');
+      document.querySelectorAll('.submenu').forEach(s => s.classList.add('hidden'));
+      if (!isVisible) submenu.classList.remove('hidden');
+    } else {
+      document.querySelectorAll('.submenu').forEach(s => s.classList.add('hidden'));
+    }
+  });
  btn.addEventListener('click', (e) => {
  const section = e.target.getAttribute('data-section');
  loadSection(section);

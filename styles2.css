@@ -48450,3 +48450,39 @@ button, .btn-action, .menu-btn {
   padding: 0.6rem 1.2rem !important;
   letter-spacing: 0.5px !important;
 }
+
+
+
+/* === PATCHED DROPDOWN VISIBILITY FIX === */
+.group:hover .group-hover\:visible {
+  visibility: visible !important;
+}
+.group:hover .group-hover\:opacity-100 {
+  opacity: 1 !important;
+}
+.group:hover .group-hover\:bg-white {
+  background-color: #1a1a2e !important;
+  color: var(--text-light) !important;
+}
+.group .menu-btn {
+  color: var(--text-light) !important;
+}
+.group .menu-btn:hover {
+  background-color: var(--neon-pink) !important;
+  color: var(--white) !important;
+}
+
+/* === RESPONSIVE FONT SIZE FOR TABLES === */
+table, th, td {
+  font-size: 18px !important;
+}
+@media (min-width: 768px) {
+  table, th, td {
+    font-size: 20px !important;
+  }
+}
+@media (min-width: 1024px) {
+  table, th, td {
+    font-size: 22px !important;
+  }
+}

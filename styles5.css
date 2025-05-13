@@ -1,0 +1,1060 @@
+
+/* === STILI GLOBALI COMUNI === */
+:root {
+  --gold: #FFD700;
+}
+
+body {
+  font-family: sans-serif;
+  transition: background 0.4s, color 0.4s;
+}
+
+/* === ANIMAZIONI COMUNI === */
+@keyframes glow {
+  0% { text-shadow: 0 0 5px var(--gold); }
+  50% { text-shadow: 0 0 15px var(--gold); }
+  100% { text-shadow: 0 0 5px var(--gold); }
+}
+@keyframes smoke {
+  0% { opacity: 0.3; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(1.5); }
+}
+
+/* === THEME: CYBERPUNK === */
+.theme-cyberpunk {
+  --bg: #0f0f0f;
+  --text: #00ffff;
+  --accent: #ff00ff;
+  --highlight: #8800ff;
+  --card-bg: #1a1a1a;
+  --btn-bg: #222;
+  --btn-hover: #333;
+  --border: #00ffff;
+  --font-title: 'Orbitron', sans-serif;
+}
+
+.theme-cyberpunk body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Orbitron', sans-serif;
+}
+
+.theme-cyberpunk .title-animated {
+  font-size: clamp(1.5rem, 4vw, 3rem);
+  color: var(--gold);
+  text-shadow: 0 0 5px var(--accent), 0 0 10px var(--gold);
+  animation: glow 2s infinite alternate;
+  font-family: var(--font-title);
+}
+
+/* === Bottoni === */
+.theme-cyberpunk .btn-action {
+  background: linear-gradient(45deg, var(--btn-bg), var(--accent));
+  border: 2px solid var(--accent);
+  color: var(--text);
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.theme-cyberpunk .btn-action::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background: var(--accent);
+  border-radius: 50%;
+  opacity: 0.2;
+  animation: smoke 2s linear infinite;
+}
+.theme-cyberpunk .btn-action:hover {
+  background-color: var(--btn-hover);
+  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--gold);
+}
+
+/* === Card === */
+.theme-cyberpunk .theme-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 10px var(--accent);
+}
+
+/* === Tabelle === */
+.theme-cyberpunk .theme-table-header {
+  background-color: var(--card-bg);
+  color: var(--gold);
+  font-weight: bold;
+}
+.theme-cyberpunk .theme-table-row:hover {
+  background-color: var(--accent);
+  color: black;
+}
+.theme-cyberpunk .theme-td {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* === Input/Select === */
+.theme-cyberpunk .theme-input, 
+.theme-cyberpunk .theme-select {
+  background-color: #111;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  width: 100%;
+}
+
+/* === Responsive Text === */
+h1, h2, h3, h4, p {
+  font-size: clamp(1rem, 2vw, 1.5rem);
+}
+
+/* === Grid === */
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 300px) {
+  .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 600px) {
+  .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 900px) {
+  .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+}
+@media (min-width: 1200px) {
+  .grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
+}
+
+/* === ID Styles for Cyberpunk === */
+.theme-cyberpunk #action-form {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #add-more-reward {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #add-reward-btn {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #add-reward-token {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #amount {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #app {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #bulk-actions {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #bulk-send {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #bulk-withdraw {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #c2e-content {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #channelName {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #close-modal {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #confirm-cancel {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #confirm-message {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #confirm-modal {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #confirm-yes {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #create-new-farm-btn {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #create-new-token-pool-btn {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #create-nfts-farm-container {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #create-token-pool-container {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #created-farm-buttons {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #created-farm-details {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #created-token-pools {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #deposit-amount {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #execution-price {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #filter-channel {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #filter-collection {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #filter-for-sale {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #filter-offeredby {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #filter-sponsor {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #filter-stakable {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #filter-status {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #filter-username {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #loading-spinner {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #menu {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #min-received {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #modal {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #modal-body {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #modal-content {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #modal-nft {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #new-daily-reward {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #new-farm-name {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #new-reward-amount {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #new-token-symbol {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #nft-farm-buttons {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #nft-farm-details {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #nft-farms-container {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #nfts-count {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #nfts-list {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #nfts-loading {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #pagination {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #paymentMethod {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #percent-range {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #pool-buttons {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #pool-status-select {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #preview-button {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #price-impact {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #receiver {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #reward-token-entries {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #rewards-container {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #rewards-deposit-container {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #rewards-edit-container {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #scheduledTime {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #search-created-farm {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #search-nft-farm {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #search-template {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #search-token-pool {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #selected-pool-details {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #sort-by {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #stake-amount {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #stake-range {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #stake-submit {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #stake-summary {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #status-confirm {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #status-select {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #submit-add-template {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #submit-button {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #submit-daily-reward {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #submit-deposit {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #submit-edit-rewards {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #submit-new-farm {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #submit-new-reward {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #submit-new-token-pool {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #submit-pool-status {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #submitStorm {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #swap-data {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #swap-preview {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #template-id {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #timeframe {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #toast-container {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #token-output {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #token-pool-details {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #token-search {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #tokenSymbol {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #update-rewards {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #update-storms {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #wallet-table {
+  color: var(--text);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-family: 'Orbitron', sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-cyberpunk #app {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+.theme-cyberpunk #modal {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+.theme-cyberpunk #modal-body {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+.theme-cyberpunk #modal-content {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+.theme-cyberpunk #confirm-modal {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+.theme-cyberpunk #create-token-pool-container {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+.theme-cyberpunk #create-nfts-farm-container {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+.theme-cyberpunk #nft-farms-container {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+.theme-cyberpunk #nfts-list {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+.theme-cyberpunk #pagination {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}

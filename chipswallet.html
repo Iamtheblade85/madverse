@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CryptoChaos Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- NUOVO STILE TEMATIZZATO -->
+  <link rel="stylesheet" href="styles6.css">
+</head>
+
+<body class="theme-body">
+  <!-- Navbar -->
+  <nav class="theme-navbar">
+    <div class="theme-navbar-title">
+      <h1 class="title-animated">ChipsWallet</h1>
+      <div class="theme-spacer-sm"></div>
+      <p class="theme-subtitle">Built for Users, Powered by Blockchain</p>
+    </div>
+
+    <div id="menu" class="theme-menu">
+      <button class="menu-btn" data-section="wallet">Wallet</button>
+      <button class="menu-btn" data-section="nfts">NFTs Wallet</button>
+
+      <!-- Dropdown Earn -->
+      <div class="theme-dropdown">
+        <button class="menu-btn">Earn ▾</button>
+        <div class="theme-dropdown-content">
+          <button class="menu-btn" data-section="token-staking">Token Staking</button>
+          <button class="menu-btn" data-section="nfts-staking">NFTs Staking</button>
+          <div class="theme-dropdown-divider"></div>
+          <div class="theme-dropdown-group">
+            <button class="menu-btn" data-section="c2e-telegram">C2E - Telegram</button>
+            <button class="menu-btn" data-section="c2e-twitch">C2E - Twitch</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dropdown Creators Tools -->
+      <div class="theme-dropdown">
+        <button class="menu-btn">Creators Tools ▾</button>
+        <div class="theme-dropdown-content">
+          <button class="menu-btn" data-section="create-token-pool">Create Token Staking Pool</button>
+          <button class="menu-btn" data-section="create-nfts-farm">Create NFTs Staking Pool</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contenuto dinamico principale -->
+  <main id="app" class="theme-main"></main>
+
+  <!-- Modale dinamica -->
+  <div id="modal" class="theme-modal hidden">
+    <div id="modal-content" class="theme-modal-content">
+      <button id="close-modal" class="theme-modal-close">&times;</button>
+      <div id="modal-body" class="theme-modal-body">
+        <!-- Contenuto dinamico della modale -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modale di conferma -->
+  <div id="confirm-modal" class="theme-modal hidden">
+    <div class="theme-modal-confirm">
+      <h2 class="theme-title">Confirm Deletion</h2>
+      <p id="confirm-message" class="theme-confirm-message">Are you sure you want to remove this item?</p>
+      <div class="theme-button-group">
+        <button id="confirm-cancel" class="theme-button theme-button-secondary">Cancel</button>
+        <button id="confirm-yes" class="theme-button theme-button-danger">Yes, Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toast-container" class="theme-toast-container"></div>
+
+  <!-- Script principale -->
+  <script src="main3.js"></script>
+</body>
+</html>

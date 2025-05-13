@@ -48814,3 +48814,413 @@ input, select, textarea {
 body.modal-open {
   overflow: hidden !important;
 }
+
+
+/* === PER-THEME BUTTONS & MODALS === */
+
+.theme-1 {
+  --bg-gradient: #330000 !important;
+  --btn-color: #ff6600 !important;
+  --text-color: #fff1e6 !important;
+  --modal-bg: #660000 !important;
+}
+
+.theme-1 button,
+.theme-1 .menu-btn,
+.theme-1 .btn-action {
+  background-color: #ff6600 !important;
+  color: #fff1e6 !important;
+  border: 2px solid #fff1e6 !important;
+  font-weight: bold !important;
+  font-family: inherit !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 10px #ff6600 !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-1 button:hover,
+.theme-1 .menu-btn:hover,
+.theme-1 .btn-action:hover {
+  background-color: #fff1e6 !important;
+  color: #ff6600 !important;
+  box-shadow: 0 0 15px #fff1e6 !important;
+  transform: scale(1.05) !important;
+}
+
+.theme-1 #modal,
+.theme-1 #confirm-modal {
+  background-color: #660000 !important;
+  color: #fff1e6 !important;
+  border: 2px solid #ff6600 !important;
+  box-shadow: 0 0 20px #ff6600 !important;
+}
+
+.theme-2 {
+  --bg-gradient: #004e92 !important;
+  --btn-color: #00e5ff !important;
+  --text-color: #e0f7fa !important;
+  --modal-bg: #003366 !important;
+}
+
+.theme-2 button,
+.theme-2 .menu-btn,
+.theme-2 .btn-action {
+  background-color: #00e5ff !important;
+  color: #e0f7fa !important;
+  border: 2px solid #e0f7fa !important;
+  font-weight: bold !important;
+  font-family: inherit !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 10px #00e5ff !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-2 button:hover,
+.theme-2 .menu-btn:hover,
+.theme-2 .btn-action:hover {
+  background-color: #e0f7fa !important;
+  color: #00e5ff !important;
+  box-shadow: 0 0 15px #e0f7fa !important;
+  transform: scale(1.05) !important;
+}
+
+.theme-2 #modal,
+.theme-2 #confirm-modal {
+  background-color: #003366 !important;
+  color: #e0f7fa !important;
+  border: 2px solid #00e5ff !important;
+  box-shadow: 0 0 20px #00e5ff !important;
+}
+
+.theme-3 {
+  --bg-gradient: #0f2027 !important;
+  --btn-color: #ff00ff !important;
+  --text-color: #f5f5f5 !important;
+  --modal-bg: #1c1c1c !important;
+}
+
+.theme-3 button,
+.theme-3 .menu-btn,
+.theme-3 .btn-action {
+  background-color: #ff00ff !important;
+  color: #f5f5f5 !important;
+  border: 2px solid #f5f5f5 !important;
+  font-weight: bold !important;
+  font-family: inherit !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 10px #ff00ff !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-3 button:hover,
+.theme-3 .menu-btn:hover,
+.theme-3 .btn-action:hover {
+  background-color: #f5f5f5 !important;
+  color: #ff00ff !important;
+  box-shadow: 0 0 15px #f5f5f5 !important;
+  transform: scale(1.05) !important;
+}
+
+.theme-3 #modal,
+.theme-3 #confirm-modal {
+  background-color: #1c1c1c !important;
+  color: #f5f5f5 !important;
+  border: 2px solid #ff00ff !important;
+  box-shadow: 0 0 20px #ff00ff !important;
+}
+
+.theme-4 {
+  --bg-gradient: #ffeaa7 !important;
+  --btn-color: #fd79a8 !important;
+  --text-color: #2d3436 !important;
+  --modal-bg: #fffde7 !important;
+}
+
+.theme-4 button,
+.theme-4 .menu-btn,
+.theme-4 .btn-action {
+  background-color: #fd79a8 !important;
+  color: #2d3436 !important;
+  border: 2px solid #2d3436 !important;
+  font-weight: bold !important;
+  font-family: inherit !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 10px #fd79a8 !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-4 button:hover,
+.theme-4 .menu-btn:hover,
+.theme-4 .btn-action:hover {
+  background-color: #2d3436 !important;
+  color: #fd79a8 !important;
+  box-shadow: 0 0 15px #2d3436 !important;
+  transform: scale(1.05) !important;
+}
+
+.theme-4 #modal,
+.theme-4 #confirm-modal {
+  background-color: #fffde7 !important;
+  color: #2d3436 !important;
+  border: 2px solid #fd79a8 !important;
+  box-shadow: 0 0 20px #fd79a8 !important;
+}
+
+.theme-5 {
+  --bg-gradient: #185a9d !important;
+  --btn-color: #6c5ce7 !important;
+  --text-color: #ffffff !important;
+  --modal-bg: #0f3057 !important;
+}
+
+.theme-5 button,
+.theme-5 .menu-btn,
+.theme-5 .btn-action {
+  background-color: #6c5ce7 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+  font-weight: bold !important;
+  font-family: inherit !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 10px #6c5ce7 !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-5 button:hover,
+.theme-5 .menu-btn:hover,
+.theme-5 .btn-action:hover {
+  background-color: #ffffff !important;
+  color: #6c5ce7 !important;
+  box-shadow: 0 0 15px #ffffff !important;
+  transform: scale(1.05) !important;
+}
+
+.theme-5 #modal,
+.theme-5 #confirm-modal {
+  background-color: #0f3057 !important;
+  color: #ffffff !important;
+  border: 2px solid #6c5ce7 !important;
+  box-shadow: 0 0 20px #6c5ce7 !important;
+}
+
+.theme-6 {
+  --bg-gradient: #5d4037 !important;
+  --btn-color: #ff8a65 !important;
+  --text-color: #fbe9e7 !important;
+  --modal-bg: #3e2723 !important;
+}
+
+.theme-6 button,
+.theme-6 .menu-btn,
+.theme-6 .btn-action {
+  background-color: #ff8a65 !important;
+  color: #fbe9e7 !important;
+  border: 2px solid #fbe9e7 !important;
+  font-weight: bold !important;
+  font-family: inherit !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 10px #ff8a65 !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-6 button:hover,
+.theme-6 .menu-btn:hover,
+.theme-6 .btn-action:hover {
+  background-color: #fbe9e7 !important;
+  color: #ff8a65 !important;
+  box-shadow: 0 0 15px #fbe9e7 !important;
+  transform: scale(1.05) !important;
+}
+
+.theme-6 #modal,
+.theme-6 #confirm-modal {
+  background-color: #3e2723 !important;
+  color: #fbe9e7 !important;
+  border: 2px solid #ff8a65 !important;
+  box-shadow: 0 0 20px #ff8a65 !important;
+}
+
+.theme-7 {
+  --bg-gradient: #302b63 !important;
+  --btn-color: #7c4dff !important;
+  --text-color: #fafafa !important;
+  --modal-bg: #241c51 !important;
+}
+
+.theme-7 button,
+.theme-7 .menu-btn,
+.theme-7 .btn-action {
+  background-color: #7c4dff !important;
+  color: #fafafa !important;
+  border: 2px solid #fafafa !important;
+  font-weight: bold !important;
+  font-family: inherit !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 10px #7c4dff !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-7 button:hover,
+.theme-7 .menu-btn:hover,
+.theme-7 .btn-action:hover {
+  background-color: #fafafa !important;
+  color: #7c4dff !important;
+  box-shadow: 0 0 15px #fafafa !important;
+  transform: scale(1.05) !important;
+}
+
+.theme-7 #modal,
+.theme-7 #confirm-modal {
+  background-color: #241c51 !important;
+  color: #fafafa !important;
+  border: 2px solid #7c4dff !important;
+  box-shadow: 0 0 20px #7c4dff !important;
+}
+
+.theme-8 {
+  --bg-gradient: #a71d31 !important;
+  --btn-color: #ffc300 !important;
+  --text-color: #fff0e6 !important;
+  --modal-bg: #600000 !important;
+}
+
+.theme-8 button,
+.theme-8 .menu-btn,
+.theme-8 .btn-action {
+  background-color: #ffc300 !important;
+  color: #fff0e6 !important;
+  border: 2px solid #fff0e6 !important;
+  font-weight: bold !important;
+  font-family: inherit !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 10px #ffc300 !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-8 button:hover,
+.theme-8 .menu-btn:hover,
+.theme-8 .btn-action:hover {
+  background-color: #fff0e6 !important;
+  color: #ffc300 !important;
+  box-shadow: 0 0 15px #fff0e6 !important;
+  transform: scale(1.05) !important;
+}
+
+.theme-8 #modal,
+.theme-8 #confirm-modal {
+  background-color: #600000 !important;
+  color: #fff0e6 !important;
+  border: 2px solid #ffc300 !important;
+  box-shadow: 0 0 20px #ffc300 !important;
+}
+
+.theme-9 {
+  --bg-gradient: #1b1b2f !important;
+  --btn-color: #e43f5a !important;
+  --text-color: #eeeeee !important;
+  --modal-bg: #162447 !important;
+}
+
+.theme-9 button,
+.theme-9 .menu-btn,
+.theme-9 .btn-action {
+  background-color: #e43f5a !important;
+  color: #eeeeee !important;
+  border: 2px solid #eeeeee !important;
+  font-weight: bold !important;
+  font-family: inherit !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 10px #e43f5a !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-9 button:hover,
+.theme-9 .menu-btn:hover,
+.theme-9 .btn-action:hover {
+  background-color: #eeeeee !important;
+  color: #e43f5a !important;
+  box-shadow: 0 0 15px #eeeeee !important;
+  transform: scale(1.05) !important;
+}
+
+.theme-9 #modal,
+.theme-9 #confirm-modal {
+  background-color: #162447 !important;
+  color: #eeeeee !important;
+  border: 2px solid #e43f5a !important;
+  box-shadow: 0 0 20px #e43f5a !important;
+}
+
+.theme-10 {
+  --bg-gradient: #2f3542 !important;
+  --btn-color: #70a1ff !important;
+  --text-color: #dfe4ea !important;
+  --modal-bg: #1e272e !important;
+}
+
+.theme-10 button,
+.theme-10 .menu-btn,
+.theme-10 .btn-action {
+  background-color: #70a1ff !important;
+  color: #dfe4ea !important;
+  border: 2px solid #dfe4ea !important;
+  font-weight: bold !important;
+  font-family: inherit !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 10px #70a1ff !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-10 button:hover,
+.theme-10 .menu-btn:hover,
+.theme-10 .btn-action:hover {
+  background-color: #dfe4ea !important;
+  color: #70a1ff !important;
+  box-shadow: 0 0 15px #dfe4ea !important;
+  transform: scale(1.05) !important;
+}
+
+.theme-10 #modal,
+.theme-10 #confirm-modal {
+  background-color: #1e272e !important;
+  color: #dfe4ea !important;
+  border: 2px solid #70a1ff !important;
+  box-shadow: 0 0 20px #70a1ff !important;
+}
+
+.theme-11 {
+  --bg-gradient: #006266 !important;
+  --btn-color: #f79f1f !important;
+  --text-color: #fefefe !important;
+  --modal-bg: #001f1f !important;
+}
+
+.theme-11 button,
+.theme-11 .menu-btn,
+.theme-11 .btn-action {
+  background-color: #f79f1f !important;
+  color: #fefefe !important;
+  border: 2px solid #fefefe !important;
+  font-weight: bold !important;
+  font-family: inherit !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 10px #f79f1f !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-11 button:hover,
+.theme-11 .menu-btn:hover,
+.theme-11 .btn-action:hover {
+  background-color: #fefefe !important;
+  color: #f79f1f !important;
+  box-shadow: 0 0 15px #fefefe !important;
+  transform: scale(1.05) !important;
+}
+
+.theme-11 #modal,
+.theme-11 #confirm-modal {
+  background-color: #001f1f !important;
+  color: #fefefe !important;
+  border: 2px solid #f79f1f !important;
+  box-shadow: 0 0 20px #f79f1f !important;
+}

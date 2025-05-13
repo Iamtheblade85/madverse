@@ -318,131 +318,147 @@ const html = `
  });
 }
 function renderCreatedTokenPoolButtons(pools) {
- const container = document.getElementById('created-token-pools');
- const searchInput = document.getElementById('search-token-pool');
- console.log("[🧩] Rendering pool buttons. Pools disponibili:", pools);
- function renderButtons(list) {
- container.innerHTML = '';
- list.forEach(pool => {
- const btn = document.createElement('button');
- applyThemeClasses(btn, 'btn-action');
- btn.textContent = pool.deposit_token?.symbol || 'Unknown';
- btn.onclick = () => renderTokenPoolDetails(pool);
- container.appendChild(btn);
- console.log("[🔘] Pool trovata:", pool);
- });
- }
+  const container = document.getElementById('created-token-pools');
+  const searchInput = document.getElementById('search-token-pool');
 
- renderButtons(pools);
+  console.log("[🧩] Rendering pool buttons. Pools disponibili:", pools);
 
- searchInput.addEventListener('input', () => {
- const search = searchInput.value.toLowerCase();
- const filtered = pools.filter(p => p.deposit_token?.symbol?.toLowerCase().includes(search));
- renderButtons(filtered);
- });
+  function renderButtons(list) {
+    container.innerHTML = '';
+    list.forEach(pool => {
+      const btn = document.createElement('button');
+      applyThemeClasses(btn, 'btn-action');
+      btn.textContent = pool.deposit_token?.symbol || 'Unknown';
+      btn.onclick = () => renderTokenPoolDetails(pool);
+      container.appendChild(btn);
+      console.log("[🔘] Pool trovata:", pool);
+    });
+  }
+
+  renderButtons(pools);
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      const search = searchInput.value.toLowerCase();
+      const filtered = pools.filter(p =>
+        p.deposit_token?.symbol?.toLowerCase().includes(search)
+      );
+      renderButtons(filtered);
+    });
+  }
 }
+
 
 function renderTokenPoolDetails(pool) {
- const container = document.getElementById('token-pool-details');
- console.log("[👁️‍🗨️] Mostrando dettagli per pool:", pool);
- console.log("[🎁] Rewards nella pool:", pool.rewards);
+  const container = document.getElementById('token-pool-details');
+  console.log("[👁️‍🗨️] Mostrando dettagli per pool:", pool);
+  console.log("[🎁] Rewards nella pool:", pool.rewards);
 
- const rewardsHTML = pool.rewards.map(reward => {
- const daysLeft = reward.daily_reward > 0
- ? Math.floor(reward.total_reward_deposit / reward.daily_reward)
- : '∞';
+  const rewardsHTML = (pool.rewards || []).map(reward => {
+    const daysLeft = reward.daily_reward > 0
+      ? Math.floor(reward.total_reward_deposit / reward.daily_reward)
+      : '∞';
 
-return `
-  <div class="theme-card">
-    <p class="theme-text"><strong>🎯 Token:</strong> ${reward.token_symbol}</p>
-    <p class="theme-text">💰 Total Deposited: <strong>${reward.total_reward_deposit}</strong></p>
-    <p class="theme-text">📅 Daily Reward: <strong>${reward.daily_reward}</strong></p>
-    <p class="theme-text">⏳ Days Remaining: <strong>${daysLeft}</strong></p>
-    <button 
-      class="btn-action"
-      onclick="openEditDailyReward(${pool.pool_id}, '${reward.token_symbol}', ${reward.daily_reward}, '${pool.deposit_token.symbol}')">
-      ✏️ Edit Daily Reward
-    </button>
-  </div>
-`;
+    const safeSymbol = reward.token_symbol.replace(/'/g, "\\'");
+    const safeDepositSymbol = pool.deposit_token.symbol.replace(/'/g, "\\'");
 
-container.innerHTML = `
-  <div class="theme-card">
-    <h3 class="theme-title">${pool.deposit_token?.symbol || 'Unknown'} Pool</h3>
-    <p class="theme-text">Pool Status: <strong>${pool.status}</strong></p>
-    <p class="theme-text">Created: ${pool.created_at}</p>
-    ${rewardsHTML || '<p class="theme-alert">No rewards configured.</p>'}
-    <button 
-      class="btn-action"
-      onclick="openPoolStatusModal(${pool.pool_id}, '${pool.status || "open"}')">
-      🔄 Change Pool Status
-    </button>
-  </div>
-`;
+    return `
+      <div class="theme-card">
+        <p class="theme-text"><strong>🎯 Token:</strong> ${reward.token_symbol}</p>
+        <p class="theme-text">💰 Total Deposited: <strong>${reward.total_reward_deposit}</strong></p>
+        <p class="theme-text">📅 Daily Reward: <strong>${reward.daily_reward}</strong></p>
+        <p class="theme-text">⏳ Days Remaining: <strong>${daysLeft}</strong></p>
+        <button 
+          class="btn-action"
+          onclick="openEditDailyReward(${pool.pool_id}, '${safeSymbol}', ${reward.daily_reward}, '${safeDepositSymbol}')">
+          ✏️ Edit Daily Reward
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  const safeStatus = (pool.status || 'open').replace(/'/g, "\\'");
+
+  container.innerHTML = `
+    <div class="theme-card">
+      <h3 class="theme-title">${pool.deposit_token?.symbol || 'Unknown'} Pool</h3>
+      <p class="theme-text">Pool Status: <strong>${pool.status}</strong></p>
+      <p class="theme-text">Created: ${pool.created_at}</p>
+      ${rewardsHTML || '<p class="theme-alert">No rewards configured.</p>'}
+      <button 
+        class="btn-action"
+        onclick="openPoolStatusModal(${pool.pool_id}, '${safeStatus}')">
+        🔄 Change Pool Status
+      </button>
+    </div>
+  `;
 }
+
 function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSymbol) {
- const modal = document.getElementById('modal');
- const body = document.getElementById('modal-body');
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
 
- console.log("[✏️] Edit Daily Reward - Parametri:", {
- poolId,
- tokenSymbol,
- currentReward,
- depositTokenSymbol
- });
+  console.log("[✏️] Edit Daily Reward - Parametri:", {
+    poolId,
+    tokenSymbol,
+    currentReward,
+    depositTokenSymbol
+  });
 
-body.innerHTML = `
-  <h3 class="theme-title">Edit Daily Reward for ${tokenSymbol}</h3>
+  body.innerHTML = `
+    <h3 class="theme-title">Edit Daily Reward for ${tokenSymbol}</h3>
 
-  <label class="block mb-2 font-semibold">New Daily Reward</label>
-  <input id="new-daily-reward" type="number" value="${currentReward}" class="theme-input">
+    <label class="block mb-2 font-semibold">New Daily Reward</label>
+    <input id="new-daily-reward" type="number" value="${currentReward}" class="theme-input">
 
-  <button id="submit-daily-reward" class="btn-action">
-    Update Reward
-  </button>
+    <button id="submit-daily-reward" class="btn-action">
+      Update Reward
+    </button>
 
-  <button class="btn-action" onclick="openDepositToPool(${poolId}, '${tokenSymbol}')">
-    💰 Deposit More Tokens
-  </button>
-`;
+    <button class="btn-action" onclick="openDepositToPool(${poolId}, '${tokenSymbol.replace(/'/g, "\\'")}')">
+      💰 Deposit More Tokens
+    </button>
+  `;
 
- modal.classList.remove('hidden');
- document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+  modal.classList.remove('hidden');
+  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
 
- document.getElementById('submit-daily-reward').onclick = async () => {
- const newReward = parseFloat(document.getElementById('new-daily-reward').value);
+  document.getElementById('submit-daily-reward').onclick = async () => {
+    const newReward = parseFloat(document.getElementById('new-daily-reward').value);
 
- if (isNaN(newReward) || newReward <= 0) {
- showToast("Please enter a valid reward value", "error");
- return;
- }
+    if (isNaN(newReward) || newReward <= 0) {
+      showToast("Please enter a valid reward value", "error");
+      return;
+    }
 
- try {
- const { userId, usx_token } = window.userData;
+    try {
+      const { userId, usx_token } = window.userData;
 
- const res = await fetch(`${BASE_URL}/update_pool_daily_reward?user_id=${userId}&usx_token=${usx_token}`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({
- pool_id: poolId,
- reward_token_symbol: tokenSymbol, // 👈 parametro corretto per token specifico
- new_daily_reward: newReward
- })
- });
+      const res = await fetch(`${BASE_URL}/update_pool_daily_reward?user_id=${userId}&usx_token=${usx_token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pool_id: poolId,
+          reward_token_symbol: tokenSymbol,
+          new_daily_reward: newReward
+        })
+      });
 
- const data = await res.json();
- if (!res.ok) throw new Error(data.error || "Failed to update reward");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update reward");
 
- showToast("Daily reward updated", "success");
- modal.classList.add('hidden');
- fetchAndRenderTokenPools();
- } catch (err) {
- console.error("[❌] Failed to update reward:", err);
- showToast(err.message, "error");
- }
- };
+      showToast("Daily reward updated", "success");
+      modal.classList.add('hidden');
+      fetchAndRenderTokenPools();
+    } catch (err) {
+      console.error("[❌] Failed to update reward:", err);
+      showToast(err.message, "error");
+    }
+  };
 }
+
 window.openEditDailyReward = openEditDailyReward;
+
 function openDepositToPool(poolId, tokenSymbol) {
  const modal = document.getElementById('modal');
  const body = document.getElementById('modal-body');

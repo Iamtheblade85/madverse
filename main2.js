@@ -10,6 +10,11 @@ let availableTokens = [];
 let originalStormsData = [];
 let currentSort = { key: '', direction: 'desc' };
 
+function applyThemeClasses(el, ...classes) {
+  const currentTheme = document.body.className.split(' ').find(c => c.startsWith('theme-'));
+  if (currentTheme) el.classList.add(...classes, currentTheme);
+}
+
 function getUniqueValues(data, key) {
  return [...new Set(data.map(item => item[key]).filter(Boolean))].sort();
 }
@@ -319,7 +324,7 @@ function renderCreatedTokenPoolButtons(pools) {
  container.innerHTML = '';
  list.forEach(pool => {
  const btn = document.createElement('button');
- btn.className = 'btn-action';
+ applyThemeClasses(btn, 'btn-action');
  btn.textContent = pool.deposit_token?.symbol || 'Unknown';
  btn.onclick = () => renderTokenPoolDetails(pool);
  container.appendChild(btn);
@@ -607,7 +612,7 @@ async function fetchAndRenderUserFarms() {
  container.innerHTML = '';
  list.forEach(farm => {
  const btn = document.createElement('button');
- btn.className = 'btn-action';
+ applyThemeClasses(btn, 'btn-action');
  btn.textContent = farm.farm_name;
  btn.onclick = () => renderCreatedFarmDetails(farm);
  container.appendChild(btn);
@@ -747,10 +752,10 @@ function openAddTemplateForm(farmId) {
  document.getElementById('add-reward-btn').onclick = () => {
  const container = document.getElementById('rewards-container');
  const div = document.createElement('div');
- div.className = 'reward-entry flex gap-2 mb-2';
+ div.className = 'reward-entry theme-box flex gap-2 mb-2';
  div.innerHTML = `
- <input type="text" class="token-symbol theme-input w-1/2" placeholder="Token Symbol (e.g. CHIPS)">
- <input type="number" class="reward-amount w-1/2 border p-2 rounded" placeholder="Amount per day">
+   <input type="text" class="token-symbol theme-input w-1/2" placeholder="Token Symbol (e.g. CHIPS)">
+   <input type="number" class="reward-amount theme-input w-1/2" placeholder="Amount per day">
  `;
  container.appendChild(div);
  };
@@ -826,8 +831,8 @@ body.innerHTML = `
 
  function renderRewardRow(token = '') {
  const wallet = window.walletBalances || [];
- const div = document.createElement('div');
- div.className = 'reward-row mb-6 p-3 border rounded bg-gray-50';
+const div = document.createElement('div');
+applyThemeClasses(div, 'reward-row theme-box mb-6');
 div.innerHTML = `
   <label class="block theme-text-sm mb-1">Choose Token</label>
   <select class="token-symbol theme-input w-full mb-2">
@@ -843,6 +848,7 @@ div.innerHTML = `
   <label class="block theme-text-sm mb-1">Amount</label>
   <input type="number" class="amount theme-input w-full" placeholder="Amount" disabled>
 `;
+
 
 
  const select = div.querySelector('.token-symbol');
@@ -1031,13 +1037,12 @@ body.innerHTML = `
  // Aggiunta nuova riga
  document.getElementById('add-reward-btn').onclick = () => {
  const container = document.getElementById('rewards-edit-container');
- const div = document.createElement('div');
- div.className = 'reward-entry flex gap-2 mb-2';
+const div = document.createElement('div');
+applyThemeClasses(div, 'reward-entry flex gap-2 mb-2');
 div.innerHTML = `
   <input type="text" class="token-symbol theme-input w-1/2" placeholder="Token Symbol">
   <input type="number" class="reward-amount theme-input w-1/2" placeholder="Amount per day">
 `;
-
  container.appendChild(div);
  };
 
@@ -1331,7 +1336,7 @@ container.innerHTML = `
  buttonContainer.innerHTML = '';
  list.forEach(farm => {
  const btn = document.createElement('button');
- btn.className = 'btn-action';
+ applyThemeClasses(btn, 'btn-action');
  btn.textContent = farm.farm_name;
  btn.onclick = () => renderNFTFarms([farm]);
  buttonContainer.appendChild(btn);
@@ -2033,7 +2038,7 @@ function renderPoolButtons(pools) {
   container.innerHTML = '';
   pools.forEach(pool => {
     const btn = document.createElement('button');
-    btn.className = 'btn-action';
+    applyThemeClasses(btn, 'btn-action');
     btn.textContent = pool.token_symbol;
     btn.onclick = () => renderPoolDetails(pool);
     container.appendChild(btn);
@@ -2044,7 +2049,7 @@ function renderPoolButtons(pools) {
  container.innerHTML = '';
  pools.forEach(pool => {
  const btn = document.createElement('button');
- btn.className = 'btn-action';
+ applyThemeClasses(btn, 'btn-action');
  btn.textContent = pool.token_symbol;
  btn.onclick = () => renderPoolDetails(pool);
  container.appendChild(btn);

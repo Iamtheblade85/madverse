@@ -775,7 +775,7 @@ function openAddTemplateForm(farmId) {
  const rewards = [];
 
  for (const el of rewardElements) {
- const symbol = el.querySelector('.token-symbol').value.trim().toUpper();
+ const symbol = el.querySelector('.token-symbol').value.trim().toUpperCase();
  const amount = parseFloat(el.querySelector('.reward-amount').value.trim());
 
  if (!symbol || isNaN(amount) || amount <= 0) {
@@ -908,7 +908,7 @@ div.innerHTML = `
  // Skippa riga non valida
  return;
  }
- rewards.push({ token_symbol: symbol.toUpper(), amount });
+ rewards.push({ token_symbol: symbol.toUpperCase(), amount });
  });
 
  if (rewards.length === 0) {
@@ -1126,7 +1126,7 @@ body.innerHTML = `
  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
 
  document.getElementById('submit-new-reward').onclick = async () => {
- const symbol = document.getElementById('new-token-symbol').value.trim().toUpper();
+ const symbol = document.getElementById('new-token-symbol').value.trim().toUpperCase();
  const amount = parseFloat(document.getElementById('new-reward-amount').value.trim());
 
  if (!symbol || isNaN(amount) || amount <= 0) {

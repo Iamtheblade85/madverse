@@ -1519,6 +1519,11 @@ tr:hover {
 
 /* === COLOR THEMES === */
 .theme-1 {
+  --bg-gradient: linear-gradient(135deg, #330000, #cc0000, #ff6600) !important;
+  --neon-cyan: #ff4500 !important;
+  --neon-pink: #ff6347 !important;
+  --gold: #ffcc00 !important;
+  --text-light: #fff5e6 !important;
   --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important;
   --neon-cyan: #00ffff !important;
   --neon-pink: #ff00ff !important;
@@ -1527,6 +1532,11 @@ tr:hover {
 }
 
 .theme-2 {
+  --bg-gradient: linear-gradient(135deg, #004e92, #000428) !important;
+  --neon-cyan: #00e5ff !important;
+  --neon-pink: #0077be !important;
+  --gold: #00bcd4 !important;
+  --text-light: #e0f7fa !important;
   --bg-gradient: linear-gradient(135deg, #000428, #004e92) !important;
   --neon-cyan: #1de9b6 !important;
   --neon-pink: #ff1744 !important;
@@ -1535,6 +1545,11 @@ tr:hover {
 }
 
 .theme-3 {
+  --bg-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364) !important;
+  --neon-cyan: #ff00ff !important;
+  --neon-pink: #00ffff !important;
+  --gold: #ffeb3b !important;
+  --text-light: #f5f5f5 !important;
   --bg-gradient: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d) !important;
   --neon-cyan: #00e5ff !important;
   --neon-pink: #f50057 !important;
@@ -1543,6 +1558,11 @@ tr:hover {
 }
 
 .theme-4 {
+  --bg-gradient: linear-gradient(135deg, #8ec5fc, #e0c3fc) !important;
+  --neon-cyan: #81ecec !important;
+  --neon-pink: #fd79a8 !important;
+  --gold: #ffeaa7 !important;
+  --text-light: #2d3436 !important;
   --bg-gradient: linear-gradient(135deg, #4b6cb7, #182848) !important;
   --neon-cyan: #40c4ff !important;
   --neon-pink: #ff4081 !important;
@@ -1551,6 +1571,11 @@ tr:hover {
 }
 
 .theme-5 {
+  --bg-gradient: linear-gradient(135deg, #43cea2, #185a9d) !important;
+  --neon-cyan: #00cec9 !important;
+  --neon-pink: #6c5ce7 !important;
+  --gold: #fab1a0 !important;
+  --text-light: #ffffff !important;
   --bg-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364) !important;
   --neon-cyan: #00bcd4 !important;
   --neon-pink: #ec407a !important;
@@ -1559,6 +1584,11 @@ tr:hover {
 }
 
 .theme-6 {
+  --bg-gradient: linear-gradient(135deg, #3e2723, #5d4037, #8d6e63) !important;
+  --neon-cyan: #bcaaa4 !important;
+  --neon-pink: #ff8a65 !important;
+  --gold: #ffe57f !important;
+  --text-light: #fbe9e7 !important;
   --bg-gradient: linear-gradient(135deg, #232526, #414345) !important;
   --neon-cyan: #80d8ff !important;
   --neon-pink: #f8bbd0 !important;
@@ -1567,6 +1597,11 @@ tr:hover {
 }
 
 .theme-7 {
+  --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important;
+  --neon-cyan: #7c4dff !important;
+  --neon-pink: #ff4081 !important;
+  --gold: #ffea00 !important;
+  --text-light: #ffffff !important;
   --bg-gradient: linear-gradient(135deg, #8e2de2, #4a00e0) !important;
   --neon-cyan: #69f0ae !important;
   --neon-pink: #ff5252 !important;
@@ -1575,6 +1610,11 @@ tr:hover {
 }
 
 .theme-8 {
+  --bg-gradient: linear-gradient(135deg, #3f0d12, #a71d31, #ff5733) !important;
+  --neon-cyan: #ff6f61 !important;
+  --neon-pink: #c70039 !important;
+  --gold: #ffc300 !important;
+  --text-light: #fff0e6 !important;
   --bg-gradient: linear-gradient(135deg, #00c6ff, #0072ff) !important;
   --neon-cyan: #18ffff !important;
   --neon-pink: #e91e63 !important;
@@ -48563,3 +48603,81 @@ input, select, textarea {
   color: #e0e0e0 !important;
 }
 
+
+
+/* === THEME-SPECIFIC BUTTON EFFECTS === */
+.theme-1 button:hover { animation: firePulse 1s infinite alternate !important; font-family: 'Orbitron', sans-serif !important; }
+.theme-2 button:hover { animation: oceanWave 2s infinite ease-in-out !important; font-family: 'Share Tech Mono', monospace !important; }
+.theme-3 button:hover { animation: glitchPulse 1.5s infinite !important; font-family: 'Press Start 2P', cursive !important; }
+.theme-4 button:hover { animation: bubblePop 1s infinite ease !important; font-family: 'Creepster', cursive !important; }
+.theme-5 button:hover { animation: liquidGlow 2s infinite linear !important; font-family: 'Bangers', cursive !important; }
+.theme-6 button:hover { animation: caveBeat 0.8s infinite alternate !important; font-family: 'Rock Salt', cursive !important; }
+.theme-7 button:hover { animation: sparkTrail 1.2s infinite !important; font-family: 'Monoton', cursive !important; }
+.theme-8 button:hover { animation: lavaFlow 1.8s infinite ease-in-out !important; font-family: 'Rampart One', cursive !important; }
+
+/* === KEYFRAMES === */
+
+@keyframes firePulse {
+  0% { box-shadow: 0 0 5px red; }
+  100% { box-shadow: 0 0 20px orange; }
+}
+@keyframes oceanWave {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes glitchPulse {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.05) rotate(1deg); }
+  50% { transform: scale(1) rotate(-1deg); }
+  75% { transform: scale(1.05) rotate(1deg); }
+  100% { transform: scale(1); }
+}
+@keyframes bubblePop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+@keyframes liquidGlow {
+  0% { box-shadow: 0 0 5px #00ffff; }
+  50% { box-shadow: 0 0 15px #00ffff; }
+  100% { box-shadow: 0 0 5px #00ffff; }
+}
+@keyframes caveBeat {
+  0% { transform: scale(1) rotate(-1deg); }
+  100% { transform: scale(1.05) rotate(1deg); }
+}
+@keyframes sparkTrail {
+  0% { box-shadow: 0 0 5px #ff0; }
+  50% { box-shadow: 0 0 15px #ff0; }
+  100% { box-shadow: 0 0 5px #ff0; }
+}
+@keyframes lavaFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+
+
+/* === FIX CENTRATURA MODALI === */
+#modal, #confirm-modal {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 1000 !important;
+  max-width: 90% !important;
+  width: auto !important;
+  padding: 2rem !important;
+  border-radius: 12px !important;
+  background: var(--bg-gradient) !important;
+  border: 2px solid var(--neon-cyan) !important;
+  box-shadow: 0 0 20px var(--neon-pink) !important;
+  animation: fadeIn 0.5s ease-in-out !important;
+}
+
+#modal-content, #confirm-modal-content {
+  background: transparent !important;
+  color: var(--text-light) !important;
+  font-family: 'Orbitron', sans-serif !important;
+}

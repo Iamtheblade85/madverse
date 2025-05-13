@@ -374,7 +374,7 @@ container.innerHTML = `
     ${rewardsHTML || '<p class="theme-alert">No rewards configured.</p>'}
     <button 
       class="btn-action"
-      onclick="openPoolStatusModal(${pool.pool_id}, '${pool.status || 'open'}')">
+      onclick="openPoolStatusModal(${pool.pool_id}, '${pool.status || "open"}')">
       🔄 Change Pool Status
     </button>
   </div>

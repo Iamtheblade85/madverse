@@ -143,7 +143,7 @@ btn.addEventListener('click', (e) => {
  } catch (error) {
  console.error("[❌] Errore critico in initApp:", error);
  document.getElementById('app').innerHTML = `
- <div class="text-red-500 text-center mt-8">
+ <div class="text-red">
  Errore: ${error.message}<br>Verifica il link o rifai il login.
  </div>`;
  }
@@ -152,8 +152,8 @@ async function loadCreateTokenStaking() {
  const container = document.getElementById('create-token-pool-container');
  console.log("[📦] Contenitore trovato:", container);
  container.innerHTML = `
- <input type="text" id="search-token-pool" placeholder="Search your token..." class="theme-input w-full md:w-1/2 mb-4">
- <button id="create-new-token-pool-btn" class="btn-action ml-2">
+ <input type="text" id="search-token-pool" placeholder="Search your token..." class="theme-input">
+ <button id="create-new-token-pool-btn" class="btn-action">
  ➕ Create New Token Pool
  </button>
  <div id="created-token-pools" class="flex flex-wrap gap-2 mb-4 theme-box"></div>
@@ -216,18 +216,18 @@ container.innerHTML = `
  const container = document.getElementById('token-pool-details');
 container.innerHTML = `
   <div class="theme-card max-w-xl mx-auto">
-    <h3 class="theme-title mb-4">Create a New Token Staking Pool</h3>
+    <h3 class="theme-title">Create a New Token Staking Pool</h3>
 
     <label class="block mb-2 font-semibold">Deposit Token Symbol</label>
-    <input id="new-token-symbol" type="text" class="theme-input w-full mb-4" placeholder="e.g. CHIPS">
+    <input id="new-token-symbol" type="text" class="theme-input" placeholder="e.g. CHIPS">
 
     <div id="reward-token-entries"></div>
 
-    <button class="btn-action mb-4" id="add-reward-token">
+    <button class="btn-action" id="add-reward-token">
       ➕ Add Reward Token
     </button>
 
-    <button id="submit-new-token-pool" class="btn-action w-full font-semibold">
+    <button id="submit-new-token-pool" class="btn-action">
       Create Pool
     </button>
   </div>
@@ -240,13 +240,13 @@ container.innerHTML = `
 const html = `
   <div class="reward-token-entry theme-card mb-4">
     <label class="block font-semibold mb-1">Reward Token Symbol</label>
-    <input type="text" class="reward-symbol theme-input w-full mb-2" placeholder="e.g. WAX">
+    <input type="text" class="reward-symbol theme-input" placeholder="e.g. WAX">
 
     <label class="block font-semibold mb-1">Total Reward Amount</label>
-    <input type="number" class="reward-total theme-input w-full mb-2" placeholder="e.g. 1000">
+    <input type="number" class="reward-total theme-input" placeholder="e.g. 1000">
 
     <label class="block font-semibold mb-1">Daily Reward</label>
-    <input type="number" class="reward-daily theme-input w-full mb-2" placeholder="e.g. 10">
+    <input type="number" class="reward-daily theme-input" placeholder="e.g. 10">
   </div>
 `;
 
@@ -352,13 +352,13 @@ function renderTokenPoolDetails(pool) {
  : '∞';
 
 return `
-  <div class="theme-card mt-2 pt-2 border-t">
-    <p class="theme-text mb-1"><strong>🎯 Token:</strong> ${reward.token_symbol}</p>
-    <p class="theme-text mb-1">💰 Total Deposited: <strong>${reward.total_reward_deposit}</strong></p>
-    <p class="theme-text mb-1">📅 Daily Reward: <strong>${reward.daily_reward}</strong></p>
-    <p class="theme-text mb-1">⏳ Days Remaining: <strong>${daysLeft}</strong></p>
+  <div class="theme-card">
+    <p class="theme-text"><strong>🎯 Token:</strong> ${reward.token_symbol}</p>
+    <p class="theme-text">💰 Total Deposited: <strong>${reward.total_reward_deposit}</strong></p>
+    <p class="theme-text">📅 Daily Reward: <strong>${reward.daily_reward}</strong></p>
+    <p class="theme-text">⏳ Days Remaining: <strong>${daysLeft}</strong></p>
     <button 
-      class="btn-action mt-2"
+      class="btn-action"
       onclick="openEditDailyReward(${pool.pool_id}, '${reward.token_symbol}', ${reward.daily_reward}, '${pool.deposit_token.symbol}')">
       ✏️ Edit Daily Reward
     </button>
@@ -367,12 +367,12 @@ return `
 
 container.innerHTML = `
   <div class="theme-card">
-    <h3 class="theme-title mb-4">${pool.deposit_token?.symbol || 'Unknown'} Pool</h3>
-    <p class="theme-text mb-2">Pool Status: <strong>${pool.status}</strong></p>
-    <p class="theme-text mb-2">Created: ${pool.created_at}</p>
-    ${rewardsHTML || '<p class="theme-alert italic">No rewards configured.</p>'}
+    <h3 class="theme-title">${pool.deposit_token?.symbol || 'Unknown'} Pool</h3>
+    <p class="theme-text">Pool Status: <strong>${pool.status}</strong></p>
+    <p class="theme-text">Created: ${pool.created_at}</p>
+    ${rewardsHTML || '<p class="theme-alert">No rewards configured.</p>'}
     <button 
-      class="btn-action mt-4"
+      class="btn-action"
       onclick="openPoolStatusModal(${pool.pool_id}, '${pool.status || 'open'}')">
       🔄 Change Pool Status
     </button>
@@ -391,16 +391,16 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
  });
 
 body.innerHTML = `
-  <h3 class="theme-title mb-4">Edit Daily Reward for ${tokenSymbol}</h3>
+  <h3 class="theme-title">Edit Daily Reward for ${tokenSymbol}</h3>
 
   <label class="block mb-2 font-semibold">New Daily Reward</label>
-  <input id="new-daily-reward" type="number" value="${currentReward}" class="theme-input w-full mb-4">
+  <input id="new-daily-reward" type="number" value="${currentReward}" class="theme-input">
 
-  <button id="submit-daily-reward" class="btn-action w-full font-semibold">
+  <button id="submit-daily-reward" class="btn-action">
     Update Reward
   </button>
 
-  <button class="btn-action mt-2" onclick="openDepositToPool(${poolId}, '${tokenSymbol}')">
+  <button class="btn-action" onclick="openDepositToPool(${poolId}, '${tokenSymbol}')">
     💰 Deposit More Tokens
   </button>
 `;
@@ -456,12 +456,12 @@ function openDepositToPool(poolId, tokenSymbol) {
  });
 
 body.innerHTML = `
-  <h3 class="theme-title mb-4">Deposit More ${tokenSymbol} into Pool</h3>
-  <p class="theme-text mb-2">Available in Wallet: <strong>${balance}</strong></p>
+  <h3 class="theme-title">Deposit More ${tokenSymbol} into Pool</h3>
+  <p class="theme-text">Available in Wallet: <strong>${balance}</strong></p>
   <label class="block mb-1">Amount</label>
-  <input type="number" id="deposit-amount" class="theme-input w-full mb-4" placeholder="e.g. 100">
+  <input type="number" id="deposit-amount" class="theme-input" placeholder="e.g. 100">
 
-  <button class="btn-action w-full font-semibold" id="submit-deposit">
+  <button class="btn-action" id="submit-deposit">
     Deposit Tokens
   </button>
 `;
@@ -516,13 +516,13 @@ body.innerHTML = `
   <h3 class="theme-title mb-4">Change Pool Status</h3>
 
   <label class="block mb-2 font-semibold">Select new status</label>
-  <select id="pool-status-select" class="theme-input w-full mb-4">
+  <select id="pool-status-select" class="theme-input">
     <option value="open" ${currentStatus === 'open' ? 'selected' : ''}>Open</option>
     <option value="closed" ${currentStatus === 'closed' ? 'selected' : ''}>Closed</option>
     <option value="maintenance" ${currentStatus === 'maintenance' ? 'selected' : ''}>Maintenance</option>
   </select>
 
-  <button id="submit-pool-status" class="btn-action w-full font-semibold">
+  <button id="submit-pool-status" class="btn-action">
     Update Status
   </button>
 `;
@@ -567,11 +567,11 @@ window.openPoolStatusModal = openPoolStatusModal;
 async function loadCreateNFTFarm() {
  const container = document.getElementById('create-nfts-farm-container');
  container.innerHTML = `
- <input type="text" id="search-created-farm" placeholder="Search your farm name..." class="mb-4 p-2 border rounded w-full md:w-1/2">
+ <input type="text" id="search-created-farm" placeholder="Search your farm name..." class="theme-search-farm">
  <button id="create-new-farm-btn" class="btn-action ml-2">
  ➕ Create New NFTs Farm
  </button>
- <div id="created-farm-buttons" class="flex flex-wrap gap-2 mb-4 theme-box"></div>
+ <div id="created-farm-buttons" class="theme-box"></div>
  <div id="created-farm-details"></div>
  `;
 
@@ -591,7 +591,7 @@ async function fetchAndRenderUserFarms() {
  const data = await res.json();
 
  if (!res.ok || !data.farms) {
- container.innerHTML = `<div class="theme-alert italic">You don’t have any NFTs Staking Farm yet.</div>`;
+ container.innerHTML = `<div class="theme-alert">You don’t have any NFTs Staking Farm yet.</div>`;
  return;
  }
 
@@ -646,9 +646,9 @@ function renderCreatedFarmDetails(farm) {
  `).join('');
 
  return `
- <div class="template-block mt-4 pt-4">
- <h4 class="font-bold mb-2">Template ID: ${tpl.template_id}</h4>
- ${rewards || '<div class="text-sm italic text-gray-400">No rewards configured.</div>'}
+ <div class="template-block">
+ <h4 class="h4">Template ID: ${tpl.template_id}</h4>
+ ${rewards || '<div class="theme-cyberpunk-no-rewards>No rewards configured.</div>'}
  <div class="flex flex-wrap gap-2 mt-2">
  <button class="btn-action" onclick="openEditRewards(${tpl.template_id})">✏️ Edit Rewards</button>
  <button class="btn-action" onclick="openAddReward(${tpl.template_id})">➕ Add Reward</button>
@@ -659,33 +659,35 @@ function renderCreatedFarmDetails(farm) {
  }).join('');
 
  container.innerHTML = `
- <div class="theme-card">
- <h3 class="theme-title mb-2 flex flex-wrap items-center gap-2">
- ${farm.farm_name}
- <span class="theme-text-sm font-normal">
+<div class="theme-card">
+  <h3 class="theme-title theme-card-header">
+    ${farm.farm_name}
+    <span class="theme-text-sm">
+
  Status: <strong>${farm.status}</strong> • Created: ${farm.creation_date}
  </span>
  </h3>
- <div class="flex flex-wrap gap-2 mb-4">
- <button class="btn-action" onclick="openAddTemplateForm(${farm.farm_id})">➕ Add Template</button>
- <button class="btn-action" onclick="openDepositForm(${farm.farm_id})">💰 Deposit Rewards</button>
- <button class="btn-action" onclick="confirmFarmClosure(${farm.farm_id})">🚫 Close Farm</button>
- <button class="btn-action" onclick="changeFarmStatus(${farm.farm_id})">🔄 Change Status</button>
- </div>
- <div class="mb-2 flex flex-wrap gap-2">${rewardHTML}</div>
- ${templatesHTML || '<div class="text-gray-500">No templates added yet.</div>'}
- </div>
+<div class="theme-action-buttons">
+  <button class="btn-action" onclick="openAddTemplateForm(${farm.farm_id})">➕ Add Template</button>
+  <button class="btn-action" onclick="openDepositForm(${farm.farm_id})">💰 Deposit Rewards</button>
+  <button class="btn-action" onclick="confirmFarmClosure(${farm.farm_id})">🚫 Close Farm</button>
+  <button class="btn-action" onclick="changeFarmStatus(${farm.farm_id})">🔄 Change Status</button>
+</div>
+<div class="theme-reward-container">${rewardHTML}</div>
+${templatesHTML || '<div class="theme-no-templates">No templates added yet.</div>'}
+
+
  `;
 }
 
 function renderNewFarmForm() {
  const container = document.getElementById('created-farm-details');
  container.innerHTML = `
- <div class="theme-card max-w-xl mx-auto">
- <h3 class="theme-title mb-4">Create a New NFTs Staking Farm</h3>
+ <div class="theme-card">
+ <h3 class="theme-title">Create a New NFTs Staking Farm</h3>
  <label class="block mb-2">Farm Name</label>
- <input id="new-farm-name" type="text" class="theme-input w-full mb-4">
- <button id="submit-new-farm" class="btn-action w-full font-semibold">
+ <input id="new-farm-name" type="text" class="theme-input">
+ <button id="submit-new-farm" class="btn-action">
  Create Farm
  </button>
  </div>
@@ -726,21 +728,21 @@ function openAddTemplateForm(farmId) {
  const { userId, usx_token } = window.userData;
 
  body.innerHTML = `
- <h3 class="theme-title mb-4">➕ Add Template to Farm</h3>
+ <h3 class="theme-title">➕ Add Template to Farm</h3>
  <label class="block mb-2 font-semibold">Template ID</label>
- <input id="template-id" type="number" class="theme-input w-full mb-4" placeholder="e.g. 123456">
+ <input id="template-id" type="number" class="theme-input" placeholder="e.g. 123456">
 
  <div id="rewards-container">
- <label class="block mb-2 font-semibold">Rewards</label>
- <div class="reward-entry flex gap-2 mb-2">
- <input type="text" class="token-symbol theme-input w-1/2" placeholder="Token Symbol (e.g. CHIPS)">
- <input type="number" class="reward-amount theme-input w-1/2" placeholder="Amount per day">
+ <label class="theme-label">Rewards</label>
+ <div class="reward-entry">
+ <input type="text" class="token-symbol theme-input" placeholder="Token Symbol (e.g. CHIPS)">
+ <input type="number" class="reward-amount theme-input" placeholder="Amount per day">
  </div>
  </div>
 
- <button id="add-reward-btn" class="theme-link mb-4">➕ Add another reward</button>
+ <button id="add-reward-btn" class="theme-link">➕ Add another reward</button>
 
- <button id="submit-add-template" class="btn-action w-full font-semibold">
+ <button id="submit-add-template" class="btn-action">
  Add Template
  </button>
  `;
@@ -754,8 +756,8 @@ function openAddTemplateForm(farmId) {
  const div = document.createElement('div');
  div.className = 'reward-entry theme-box flex gap-2 mb-2';
  div.innerHTML = `
-   <input type="text" class="token-symbol theme-input w-1/2" placeholder="Token Symbol (e.g. CHIPS)">
-   <input type="number" class="reward-amount theme-input w-1/2" placeholder="Amount per day">
+   <input type="text" class="token-symbol theme-input" placeholder="Token Symbol (e.g. CHIPS)">
+   <input type="number" class="reward-amount theme-input" placeholder="Amount per day">
  `;
  container.appendChild(div);
  };
@@ -815,10 +817,10 @@ function openDepositForm(farmId) {
  const body = document.getElementById('modal-body');
 
 body.innerHTML = `
-  <h3 class="theme-title mb-4">Deposit Rewards to Farm</h3>
+  <h3 class="theme-title">Deposit Rewards to Farm</h3>
   <div id="rewards-deposit-container"></div>
-  <button id="add-more-reward" class="theme-link mb-4">➕ Add another token</button>
-  <button id="submit-deposit" class="btn-action w-full">Deposit All</button>
+  <button id="add-more-reward" class="theme-link">➕ Add another token</button>
+  <button id="submit-deposit" class="btn-action">Deposit All</button>
 `;
 
 
@@ -834,19 +836,19 @@ body.innerHTML = `
 const div = document.createElement('div');
 applyThemeClasses(div, 'reward-row theme-box mb-6');
 div.innerHTML = `
-  <label class="block theme-text-sm mb-1">Choose Token</label>
-  <select class="token-symbol theme-input w-full mb-2">
+  <label class="block theme-text-sm">Choose Token</label>
+  <select class="token-symbol theme-input">
     <option disabled selected value="">-- Select a token --</option>
     ${wallet.map(t => `<option value="${t.symbol}">${t.symbol}</option>`).join('')}
   </select>
 
-  <div class="available-balance theme-text-sm mb-2 hidden"></div>
+  <div class="available-balance theme-text-sm hidden"></div>
 
-  <label class="block theme-text-sm mb-1">Select %</label>
-  <input type="range" class="percent-range w-full mb-2" min="0" max="100" value="0" disabled>
+  <label class="block theme-text-sm">Select %</label>
+  <input type="range" class="percent-range" min="0" max="100" value="0" disabled>
 
-  <label class="block theme-text-sm mb-1">Amount</label>
-  <input type="number" class="amount theme-input w-full" placeholder="Amount" disabled>
+  <label class="block theme-text-sm">Amount</label>
+  <input type="number" class="amount theme-input" placeholder="Amount" disabled>
 `;
 
 
@@ -937,12 +939,13 @@ function confirmFarmClosure(farmId) {
  const body = document.getElementById('modal-body');
 
 body.innerHTML = `
-  <h3 class="theme-title text-error mb-4">Close Farm</h3>
-  <p class="theme-text mb-4">Are you sure you want to <strong>close</strong> this farm? This will stop all rewards.</p>
-  <div class="flex justify-end gap-4">
+  <h3 class="theme-title text-error">Close Farm</h3>
+  <p class="theme-text">Are you sure you want to <strong>close</strong> this farm? This will stop all rewards.</p>
+  <div class="theme-modal-buttons">
     <button class="btn-secondary" onclick="document.getElementById('modal').classList.add('hidden')">Cancel</button>
     <button class="btn-danger" onclick="changeFarmStatus(${farmId}, 'closed')">Confirm</button>
   </div>
+
 `;
 
  modal.classList.remove('hidden');
@@ -957,13 +960,13 @@ function changeFarmStatus(farmId, newStatus = null) {
 
  if (!newStatus) {
 body.innerHTML = `
-  <h3 class="theme-title mb-4">Change Farm Status</h3>
-  <select id="status-select" class="theme-input w-full mb-4">
+  <h3 class="theme-title">Change Farm Status</h3>
+  <select id="status-select" class="theme-input">
     <option value="open">Open</option>
     <option value="closed">Closed</option>
     <option value="setting">Setting</option>
   </select>
-  <button class="btn-action w-full" id="status-confirm">Update</button>
+  <button class="btn-action" id="status-confirm">Update</button>
 `;
 
  modal.classList.remove('hidden');
@@ -1020,17 +1023,17 @@ body.innerHTML = `
  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
 
  body.innerHTML = `
-  <h3 class="theme-title mb-4">✏️ Edit Rewards for Template ID ${templateId}</h3>
+  <h3 class="theme-title">✏️ Edit Rewards for Template ID ${templateId}</h3>
   <div id="rewards-edit-container">
     ${(template.rewards || []).map(r => `
-      <div class="reward-entry flex gap-2 mb-2">
-        <input type="text" class="token-symbol theme-input w-1/2" value="${r.token_symbol}" placeholder="Token Symbol">
-        <input type="number" class="reward-amount theme-input w-1/2" value="${parseFloat(r.daily_reward_amount)}" placeholder="Amount per day">
+      <div class="reward-entry">
+        <input type="text" class="token-symbol theme-input" value="${r.token_symbol}" placeholder="Token Symbol">
+        <input type="number" class="reward-amount theme-input" value="${parseFloat(r.daily_reward_amount)}" placeholder="Amount per day">
       </div>
     `).join('')}
   </div>
-  <button id="add-reward-btn" class="theme-link mb-4">➕ Add another reward</button>
-  <button id="submit-edit-rewards" class="btn-action w-full font-semibold">Update Rewards</button>
+  <button id="add-reward-btn" class="theme-link">➕ Add another reward</button>
+  <button id="submit-edit-rewards" class="btn-action">Update Rewards</button>
 `;
 
 
@@ -1038,10 +1041,10 @@ body.innerHTML = `
  document.getElementById('add-reward-btn').onclick = () => {
  const container = document.getElementById('rewards-edit-container');
 const div = document.createElement('div');
-applyThemeClasses(div, 'reward-entry flex gap-2 mb-2');
+applyThemeClasses(div, 'reward-entry');
 div.innerHTML = `
-  <input type="text" class="token-symbol theme-input w-1/2" placeholder="Token Symbol">
-  <input type="number" class="reward-amount theme-input w-1/2" placeholder="Amount per day">
+  <input type="text" class="token-symbol theme-input" placeholder="Token Symbol">
+  <input type="number" class="reward-amount theme-input" placeholder="Amount per day">
 `;
  container.appendChild(div);
  };
@@ -1109,12 +1112,12 @@ function removeTemplate(templateId) {
  const body = document.getElementById('modal-body');
 
 body.innerHTML = `
-  <h3 class="theme-title mb-4">➕ Add Reward to Template ID ${templateId}</h3>
-  <div class="reward-entry flex gap-2 mb-4">
-    <input type="text" id="new-token-symbol" class="theme-input w-1/2" placeholder="Token Symbol (e.g. CHIPS)">
-    <input type="number" id="new-reward-amount" class="theme-input w-1/2" placeholder="Amount per day">
+  <h3 class="theme-title">➕ Add Reward to Template ID ${templateId}</h3>
+  <div class="reward-entry">
+    <input type="text" id="new-token-symbol" class="theme-input" placeholder="Token Symbol (e.g. CHIPS)">
+    <input type="number" id="new-reward-amount" class="theme-input" placeholder="Amount per day">
   </div>
-  <button id="submit-new-reward" class="btn-action w-full font-semibold">Add Reward</button>
+  <button id="submit-new-reward" class="btn-action">Add Reward</button>
 `;
 
 
@@ -1161,29 +1164,35 @@ function loadSection(section) {
  const app = document.getElementById('app');
 if (section === 'c2e-twitch') {
  // Nuova sezione C2E - Twitch con menu responsivo
- app.innerHTML = `
- <h2 class="text-2xl font-semibold mb-4 text-center">C2E - Twitch</h2>
- <div class="menu flex flex-wrap justify-center gap-4 mb-8">
-<button class="menu-btn btn-action" data-menu="log-reward-activity">Log Reward Activity</button>
-<button class="menu-btn btn-action" data-menu="log-storms-giveaways">Log Storms & Giveaways</button>
-<button class="menu-btn btn-action" data-menu="schedule-token-storm">Schedule Token-Storm</button>
-<button class="menu-btn btn-action" data-menu="schedule-nft-giveaway">Schedule NFT-Giveaway</button>
+app.innerHTML = `
+  <h2 class="theme-section-title">C2E - Twitch</h2>
+  <div class="theme-menu-container">
+    <button class="menu-btn theme-tab" data-menu="log-reward-activity">Log Reward Activity</button>
+    <button class="menu-btn theme-tab" data-menu="log-storms-giveaways">Log Storms & Giveaways</button>
+    <button class="menu-btn theme-tab" data-menu="schedule-token-storm">Schedule Token-Storm</button>
+    <button class="menu-btn theme-tab" data-menu="schedule-nft-giveaway">Schedule NFT-Giveaway</button>
+  </div>
+  <div id="c2e-content" class="theme-c2e-message">Loading last activity...</div>
+`;
+document.querySelectorAll('.menu-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    // Rimuovi la classe 'active-tab' da tutti
+    document.querySelectorAll('.menu-btn').forEach(button =>
+      button.classList.remove('active-tab')
+    );
 
- </div>
- <div id="c2e-content" class="text-center text-gray-700 w-[95%] mx-auto">Loading last activity...</div>
- `;
+    // Aggiungi la classe attiva
+    e.currentTarget.classList.add('active-tab');
 
- // Set default view as Log Reward Activity
- loadLogRewardActivity();
+    // Carica la vista associata
+    const target = e.currentTarget.getAttribute('data-menu');
+    if (target === 'log-reward-activity') loadLogRewardActivity();
+    if (target === 'log-storms-giveaways') loadLogStormsGiveaways();
+    if (target === 'schedule-token-storm') loadScheduleTokenStorm();
+    if (target === 'schedule-nft-giveaway') loadScheduleNFTGiveaway();
+  });
+});
 
- // Gestisci il cambio di menu
- document.querySelectorAll('.menu-btn').forEach(btn => {
- btn.addEventListener('click', (e) => {
- // Rimuovi la classe 'active' da tutti i pulsanti
- document.querySelectorAll('.menu-btn').forEach(button => button.classList.remove('bg-blue-700', 'text-white'));
-
- // Aggiungi la classe 'active' al pulsante cliccato
- e.target.classList.add('bg-blue-700', 'text-white');
 
  const menu = e.target.getAttribute('data-menu');
  switch(menu) {
@@ -1204,103 +1213,106 @@ if (section === 'c2e-twitch') {
  });
 } else if (section === 'wallet') {
  app.innerHTML = `
- <h2 class="theme-title mb-4">Wallet</h2>
+<h2 class="theme-title">Wallet</h2>
+<div id="wallet-table" class="theme-table">Caricamento Wallet...</div>
 
- <div id="wallet-table">Caricamento Wallet...</div>
  `;
  loadWallet();
  } else if (section === 'nfts') {
 app.innerHTML = `
-  <h2 class="theme-title mb-4">My NFTs</h2>
+<h2 class="theme-title">My NFTs</h2>
 
-  <div class="mb-4 flex flex-wrap gap-4 items-center">
-    <input type="text" id="search-template" placeholder="Search by Template Name..." class="theme-input w-full md:w-1/3">
+<div class="theme-nft-filters">
+  <input type="text" id="search-template" placeholder="Search by Template Name..." class="theme-input theme-nft-input">
 
-    <select id="filter-status" class="theme-input">
-      <option value="">Status</option>
-      <option value="Staked">Staked</option>
-      <option value="Not Staked">Not Staked</option>
-    </select>
+  <select id="filter-status" class="theme-input theme-nft-input">
+    <option value="">Status</option>
+    <option value="Staked">Staked</option>
+    <option value="Not Staked">Not Staked</option>
+  </select>
 
-    <select id="filter-stakable" class="theme-input">
-      <option value="">Stakeability</option>
-      <option value="Stakable">Stakable</option>
-      <option value="Not Stakable">Not Stakable</option>
-    </select>
+  <select id="filter-stakable" class="theme-input theme-nft-input">
+    <option value="">Stakeability</option>
+    <option value="Stakable">Stakable</option>
+    <option value="Not Stakable">Not Stakable</option>
+  </select>
 
-    <select id="filter-for-sale" class="theme-input">
-      <option value="">Sale Status</option>
-      <option value="Yes">For Sale</option>
-      <option value="No">Not For Sale</option>
-    </select>
+  <select id="filter-for-sale" class="theme-input theme-nft-input">
+    <option value="">Sale Status</option>
+    <option value="Yes">For Sale</option>
+    <option value="No">Not For Sale</option>
+  </select>
 
-    <select id="filter-collection" class="theme-input">
-      <option value="">Collection</option>
-    </select>
+  <select id="filter-collection" class="theme-input theme-nft-input">
+    <option value="">Collection</option>
+  </select>
 
-    <select id="sort-by" class="theme-input">
-      <option value="created_at_desc">Newest</option>
-      <option value="created_at_asc">Oldest</option>
-      <option value="template_name_asc">Template (A-Z)</option>
-      <option value="template_name_desc">Template (Z-A)</option>
-    </select>
+  <select id="sort-by" class="theme-input theme-nft-input">
+    <option value="created_at_desc">Newest</option>
+    <option value="created_at_asc">Oldest</option>
+    <option value="template_name_asc">Template (A-Z)</option>
+    <option value="template_name_desc">Template (Z-A)</option>
+  </select>
+</div>
+
+<div id="bulk-actions" class="theme-bulk-actions hidden">
+  <button id="bulk-withdraw" class="btn-action">Withdraw Selected</button>
+  <button id="bulk-send" class="btn-action">Send Selected</button>
+</div>
+
+<div id="nfts-loading" class="theme-alert theme-text-center">🔄 Loading NFTs...</div>
+<div id="nfts-count" class="theme-text-sm"></div>
+
+<div id="nfts-list" class="theme-grid-nfts"></div>
+
+<div id="pagination" class="theme-pagination"></div>
+
+<div id="modal-nft" class="theme-modal">
+  <div class="theme-card theme-modal-content">
+    <button id="close-modal" class="theme-modal-close">&times;</button>
+    <div id="modal-content"></div>
   </div>
-
-  <div id="bulk-actions" class="mb-4 hidden">
-    <button id="bulk-withdraw" class="btn-action mr-2">Withdraw Selected</button>
-    <button id="bulk-send" class="btn-action">Send Selected</button>
-  </div>
-
-  <div id="nfts-loading" class="theme-alert text-center my-4">🔄 Loading NFTs...</div>
-  <div id="nfts-count" class="theme-text-sm mb-2"></div>
-
-  <div id="nfts-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4"></div>
-
-  <div id="pagination" class="flex justify-center items-center space-x-4 mt-6"></div>
-
-  <div id="modal-nft" class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center">
-    <div class="theme-card max-w-md w-full relative">
-      <button id="close-modal" class="absolute top-2 right-2 text-error hover:text-red-800 text-4xl font-bold">&times;</button>
-      <div id="modal-content"></div>
-    </div>
-  </div>
+</div>
 `;
 
  loadNFTs();
  } else if (section === 'token-staking') {
  console.log("[🧪] Entrato in blocco token-staking");
 app.innerHTML = `
-  <h2 class="theme-title mb-4">Token Staking</h2>
+  <h2 class="theme-title theme-staking-title">Token Staking</h2>
 
-  <input type="text" id="search-pools" placeholder="Search token pool name" class="theme-input w-full md:w-1/2 mb-4">
+  <input type="text" id="search-pools" placeholder="Search token pool name" class="theme-input theme-staking-input">
 
-  <div id="pool-buttons" class="flex flex-wrap gap-2 mb-6"></div>
+  <div id="pool-buttons" class="theme-staking-buttons"></div>
 
   <div id="selected-pool-details">
-    <div class="theme-alert text-center">Loading pool data...</div>
+    <div class="theme-alert theme-text-center">Loading pool data...</div>
   </div>
 `;
 
  loadStakingPools(); // 🔥 chiamiamo la funzione che popola tutto
  } else if (section === 'nfts-staking') {
-   app.innerHTML = `
-     <h2 class="theme-title mb-4">NFT Staking</h2>
-     <div id="nft-farms-container" class="theme-box">Loading NFT farms...</div>
-   `;
+app.innerHTML = `
+  <h2 class="theme-title theme-section-title">NFT Staking</h2>
+  <div id="nft-farms-container" class="theme-box theme-staking-box">Loading NFT farms...</div>
+`;
+
    loadNFTFarms();
    
    } else if (section === 'create-nfts-farm') {
-   app.innerHTML = `
-     <h2 class="theme-title mb-4">Create NFTs Staking Farm</h2>
-     <div id="create-nfts-farm-container" class="theme-box">Loading...</div>
-   `;
+app.innerHTML = `
+  <h2 class="theme-title theme-section-title">Create NFTs Staking Farm</h2>
+  <div id="create-nfts-farm-container" class="theme-box theme-staking-box">Loading...</div>
+`;
+
    loadCreateNFTFarm();
    
    } else if (section === 'create-token-pool') {
-   app.innerHTML = `
-     <h2 class="theme-title mb-4">Create Token Staking Pool</h2>
-     <div id="create-token-pool-container" class="theme-box">Loading...</div>
-   `;
+app.innerHTML = `
+  <h2 class="theme-title theme-section-title">Create Token Staking Pool</h2>
+  <div id="create-token-pool-container" class="theme-box theme-staking-box">Loading...</div>
+`;
+
    loadCreateTokenStaking();
    }
  async function loadNFTFarms() {
@@ -1310,7 +1322,7 @@ app.innerHTML = `
  console.log("[🐛] Risposta intera da /nfts_farms:", JSON.stringify(data, null, 2));
  if (!data.farms || data.farms.length === 0) {
    document.getElementById('nft-farms-container').innerHTML = `
-     <div class="theme-alert-error text-center">No NFT farms found.</div>`;
+     <div class="theme-alert-error">No NFT farms found.</div>`;
 
  return;
  }
@@ -1323,12 +1335,10 @@ app.innerHTML = `
 } function renderNFTFarmButtons(farms) {
  const container = document.getElementById('nft-farms-container');
 container.innerHTML = `
-  <input type="text" id="search-nft-farm" placeholder="Search farm name..." class="theme-input w-full md:w-1/2 mb-4">
-  <div id="nft-farm-buttons" class="flex flex-wrap gap-2 mb-4 theme-box"></div>
-  <div id="nft-farm-details" class="theme-box"></div>
+  <input type="text" id="search-nft-farm" placeholder="Search farm name..." class="theme-input theme-search-input">
+  <div id="nft-farm-buttons" class="theme-box theme-farm-buttons"></div>
+  <div id="nft-farm-details" class="theme-box theme-farm-details"></div>
 `;
-
-
  const buttonContainer = document.getElementById('nft-farm-buttons');
  const searchInput = document.getElementById('search-nft-farm');
 
@@ -1355,60 +1365,58 @@ container.innerHTML = `
  let html = '';
 
 html += `
-  <p class="theme-text italic mb-2">
+  <p class="theme-text theme-note-paragraph">
     Don’t have a NFT farm in CHIPS Wallet for your collection yet? You can create one 
-    <button onclick="loadSection('create-nfts-farm')" class="btn-create-farm ml-2">
+    <button onclick="loadSection('create-nfts-farm')" class="btn-create-farm theme-link-button">
       Create NFTs Farm
     </button>
   </p>
 `;
-
  farms.forEach(farm => {
  const templatesHTML = (farm.templates || []).map(template => {
 const nftsHTML = (template.user_nfts || []).map(nft => `
-  <div class="theme-card-sm text-sm text-center">
+  <div class="theme-nft-card">
     <img src="${nft.asset_img}" alt="NFT"
-      class="w-full h-24 object-contain mb-1 rounded"
+      class="theme-nft-img"
       onerror="this.onerror=null;this.src='https://via.placeholder.com/150?text=Image+Not+Found';">
-    <div class="font-semibold truncate">${nft.template_name}</div>
+    <div class="theme-nft-title">${nft.template_name}</div>
     <div class="theme-text-xs">#${nft.asset_id}</div>
-    <button class="nft-stake-btn mt-1 w-full"
+    <button class="nft-stake-btn theme-nft-button"
       onclick="handleNFTStake(${farm.farm_id}, ${template.template_id}, '${nft.asset_id}', ${nft.is_staked})">
       ${nft.is_staked ? 'Unstake' : 'Stake'}
     </button>
   </div>
 `).join('');
-
-
 const rewardsHTML = (template.rewards || []).map(r => {
   const daily = parseFloat(r.daily_reward_amount);
   return `
-    <div class="theme-text-xs">
+    <div class="theme-text-xs theme-reward-entry">
       ${r.token_symbol}: ${isNaN(daily) ? "N/A" : daily.toFixed(4)}/day
     </div>
   `;
-}).join('') || '<div class="theme-alert-soft italic">No rewards</div>';
+}).join('') || '<div class="theme-alert-soft theme-italic">No rewards</div>';
 
 return `
-  <div class="theme-template-block mt-4 pt-4">
-    <h4 class="theme-subtitle mb-2">Template ID: ${template.template_id}</h4>
+  <div class="theme-template-block">
+    <h4 class="theme-subtitle theme-template-id">Template ID: ${template.template_id}</h4>
     ${rewardsHTML}
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mt-2">
-      ${nftsHTML || '<div class="theme-alert-muted text-sm col-span-full">You don’t own NFTs for this template</div>'}
+    <div class="theme-grid-nfts-section">
+      ${nftsHTML || '<div class="theme-alert-muted theme-text-xs theme-nfts-empty">You don’t own NFTs for this template</div>'}
     </div>
   </div>
 `;
+
 const farmRewards = (farm.farm_rewards || []).map(r => `
-  <span class="ml-2 theme-text-xs">
+  <span class="theme-text-xs theme-reward-token">
     💰 ${r.token_symbol}: <strong>${parseFloat(r.total_reward).toFixed(4)}</strong>
   </span>
 `).join('');
 
 html += `
-  <div class="theme-card mt-4">
-    <h3 class="theme-title mb-2 flex flex-wrap items-center gap-2">
+  <div class="theme-card theme-template-wrapper">
+    <h3 class="theme-title theme-template-header">
       ${farm.farm_name}
-      <span class="theme-text-sm font-normal">
+      <span class="theme-text-sm theme-reward-line">
         ${farmRewards}
       </span>
     </h3>
@@ -1469,7 +1477,7 @@ async function loadLogRewardActivity() {
 
  if (data.length === 0) {
   container.innerHTML = `
-    <div class="theme-alert-muted text-center">
+    <div class="theme-alert-muted">
       No reward activity logs found.
     </div>`;
   return;
@@ -1486,7 +1494,7 @@ async function loadLogRewardActivity() {
 
  } catch (err) {
   container.innerHTML = `
-    <div class="theme-alert-error text-center">
+    <div class="theme-alert-error">
       Error loading log reward activity: ${err.message}
     </div>`;
 }
@@ -1538,33 +1546,31 @@ function displayLogData(data) {
   const channels = getUniqueValues(data, 'channel');
   const sponsors = getUniqueValues(data, 'origin_channel');
 
-  container.innerHTML = `
-    <div class="mb-4 flex flex-wrap gap-4 justify-center">
-      <select id="filter-username" class="theme-input w-40">${createOptions(usernames)}</select>
-      <select id="filter-channel" class="theme-input w-40">${createOptions(channels)}</select>
-      <select id="filter-sponsor" class="theme-input w-40">${createOptions(sponsors)}</select>
-      <button id="update-rewards" class="btn-action px-4">Update Data</button>
-    </div>
+container.innerHTML = `
+  <div class="theme-filter-row">
+    <select id="filter-username" class="theme-input theme-select-small">${createOptions(usernames)}</select>
+    <select id="filter-channel" class="theme-input theme-select-small">${createOptions(channels)}</select>
+    <select id="filter-sponsor" class="theme-input theme-select-small">${createOptions(sponsors)}</select>
+    <button id="update-rewards" class="btn-action theme-update-button">Update Data</button>
+  </div>
 
-    <div class="overflow-x-auto theme-box">
-      <table id="wallet-table" class="min-w-full text-sm text-center">
-        <thead>
-          <tr class="theme-table-header">
-            <th>Username${sortArrow('username')}</th>
-            <th>Token</th>
-            <th>Amount${sortArrow('amount')}</th>
-            <th>Channel${sortArrow('channel')}</th>
-            <th>Sponsor${sortArrow('origin_channel')}</th>
-            <th>Timestamp${sortArrow('timestamp')}</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  `;
-
+  <div class="theme-box theme-scroll-container">
+    <table id="wallet-table" class="theme-reward-table">
+      <thead>
+        <tr class="theme-table-header">
+          <th>Username${sortArrow('username')}</th>
+          <th>Token</th>
+          <th>Amount${sortArrow('amount')}</th>
+          <th>Channel${sortArrow('channel')}</th>
+          <th>Sponsor${sortArrow('origin_channel')}</th>
+          <th>Timestamp${sortArrow('timestamp')}</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+`;
   renderRewardTable(data);
-
   document.getElementById('filter-username').addEventListener('change', applyRewardFiltersAndSort);
   document.getElementById('filter-channel').addEventListener('change', applyRewardFiltersAndSort);
   document.getElementById('filter-sponsor').addEventListener('change', applyRewardFiltersAndSort);
@@ -1585,21 +1591,7 @@ async function addScheduledStorm() {
  const timeframe = document.getElementById('timeframe').value;
  const channelName = document.getElementById('channelName').value;
  const paymentMethod = document.getElementById('paymentMethod').value;
-
- console.log("📅 scheduledTimeLocal:", scheduledTimeLocal);
- console.log("🌐 scheduledTimeUTC (to send):", scheduledTimeUTC);
- console.log("💰 amount:", amount);
- console.log("🔠 tokenSymbol:", tokenSymbol);
- console.log("⏱️ timeframe:", timeframe);
- console.log("📺 channelName:", channelName);
- console.log("💳 paymentMethod:", paymentMethod);
-
  const { userId, usx_token, wax_account } = window.userData || {};
-
- console.log("👤 userId:", userId);
- console.log("🔐 usx_token:", usx_token);
- console.log("🧾 wax_account:", wax_account);
-
  if (!wax_account) {
  console.error("❌ wax_account is missing.");
  showToast("Error: wax_account is missing.", "error");
@@ -1620,8 +1612,6 @@ async function addScheduledStorm() {
 
  try {
  const url = `${BASE_URL}/add_storm?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`;
- console.log("🌍 POST URL:", url);
-
  const res = await fetch(url, {
  method: 'POST',
  headers: { 'Content-Type': 'application/json' },
@@ -1656,85 +1646,84 @@ async function loadLogStormsGiveaways() {
     return;
   }
 
-  container.innerHTML = '<div class="theme-alert text-center">Loading Log Storms & Giveaways...</div>';
+  container.innerHTML = '<div class="theme-alert">Loading Log Storms & Giveaways...</div>';
 
   try {
-    container.innerHTML = `
-      <div class="theme-box space-y-6">
-        <h2 class="theme-title">Add New Scheduled Storm</h2>
+container.innerHTML = `
+  <div class="theme-box ">
+    <h2 class="theme-title theme-section-title">Add New Scheduled Storm</h2>
 
-        <div id="add-storm-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="input-label">Scheduled Time</label>
-            <input type="datetime-local" id="scheduledTime" class="theme-input w-full">
-          </div>
-
-          <div>
-            <label class="input-label">Timeframe</label>
-            <select id="timeframe" class="theme-input w-full">
-              <option value="">Select Timeframe</option>
-              <option value="5m">5m</option>
-              <option value="10m">10m</option>
-              <option value="15m">15m</option>
-              <option value="20m">20m</option>
-              <option value="30m">30m</option>
-              <option value="1h">1h</option>
-              <option value="2h">2h</option>
-              <option value="3h">3h</option>
-              <option value="4h">4h</option>
-              <option value="5h">5h</option>
-              <option value="6h">6h</option>
-              <option value="12h">12h</option>
-              <option value="1d">1d</option>
-              <option value="2d">2d</option>
-              <option value="3d">3d</option>
-              <option value="4d">4d</option>
-              <option value="5d">5d</option>
-              <option value="6d">6d</option>
-              <option value="7d">7d</option>
-              <option value="15d">15d</option>
-              <option value="30d">30d</option>
-              <option value="1y">1y</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="input-label">Amount</label>
-            <input type="number" id="amount" class="theme-input w-full">
-          </div>
-
-          <div>
-            <label class="input-label">Token Symbol</label>
-            <select id="tokenSymbol" class="theme-input w-full">
-              <option value="">Select Token</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="input-label">Channel</label>
-            <select id="channelName" class="theme-input w-full">
-              <option value="">Select Channel</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="input-label">Payment Method</label>
-            <select id="paymentMethod" class="theme-input w-full">
-              <option value="twitch">Twitch</option>
-              <option value="telegram">Telegram</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="text-center">
-          <button id="submitStorm" class="btn-action px-6 py-2 mt-4">Add Storm</button>
-        </div>
-
-        <h2 class="theme-title mt-6">Scheduled Storms</h2>
-        <div id="wallet-table" class="theme-box">Loading Scheduled Storms...</div>
+    <div id="add-storm-form" class="theme-grid-form">
+      <div>
+        <label class="input-label">Scheduled Time</label>
+        <input type="datetime-local" id="scheduledTime" class="theme-input theme-input-block">
       </div>
-    `;
 
+      <div>
+        <label class="input-label">Timeframe</label>
+        <select id="timeframe" class="theme-input theme-input-block">
+          <option value="">Select Timeframe</option>
+          <option value="5m">5m</option>
+          <option value="10m">10m</option>
+          <option value="15m">15m</option>
+          <option value="20m">20m</option>
+          <option value="30m">30m</option>
+          <option value="1h">1h</option>
+          <option value="2h">2h</option>
+          <option value="3h">3h</option>
+          <option value="4h">4h</option>
+          <option value="5h">5h</option>
+          <option value="6h">6h</option>
+          <option value="12h">12h</option>
+          <option value="1d">1d</option>
+          <option value="2d">2d</option>
+          <option value="3d">3d</option>
+          <option value="4d">4d</option>
+          <option value="5d">5d</option>
+          <option value="6d">6d</option>
+          <option value="7d">7d</option>
+          <option value="15d">15d</option>
+          <option value="30d">30d</option>
+          <option value="1y">1y</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="input-label">Amount</label>
+        <input type="number" id="amount" class="theme-input theme-input-block">
+      </div>
+
+      <div>
+        <label class="input-label">Token Symbol</label>
+        <select id="tokenSymbol" class="theme-input theme-input-block">
+          <option value="">Select Token</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="input-label">Channel</label>
+        <select id="channelName" class="theme-input theme-input-block">
+          <option value="">Select Channel</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="input-label">Payment Method</label>
+        <select id="paymentMethod" class="theme-input theme-input-block">
+          <option value="twitch">Twitch</option>
+          <option value="telegram">Telegram</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="theme-button-center">
+      <button id="submitStorm" class="btn-action theme-button-lg">Add Storm</button>
+    </div>
+
+    <h2 class="theme-title theme-section-title">Scheduled Storms</h2>
+    <div id="wallet-table" class="theme-box">Loading Scheduled Storms...</div>
+  </div>
+`;
     // Event + Data
     document.getElementById('submitStorm').addEventListener('click', addScheduledStorm);
     await populateTokenSymbols();
@@ -1744,7 +1733,7 @@ async function loadLogStormsGiveaways() {
     loadScheduledStorms();
 
   } catch (err) {
-    container.innerHTML = `<div class="theme-alert-error text-center">Error loading log storms and giveaways: ${err.message}</div>`;
+    container.innerHTML = `<div class="theme-alert-errorr">Error loading log storms and giveaways: ${err.message}</div>`;
   }
 }
 
@@ -1842,7 +1831,7 @@ async function loadScheduledStorms() {
   const tableContainer = document.getElementById('wallet-table');
   if (!tableContainer) return;
 
-  tableContainer.innerHTML = `<div class="theme-alert text-center">Loading Scheduled Storms...</div>`;
+  tableContainer.innerHTML = `<div class="theme-alert">Loading Scheduled Storms...</div>`;
 
   try {
     const res = await fetch(`${BASE_URL}/scheduled_storms`);
@@ -1854,7 +1843,7 @@ async function loadScheduledStorms() {
     const data = await res.json();
 
     if (!Array.isArray(data) || data.length === 0) {
-      tableContainer.innerHTML = `<div class="theme-alert-muted text-center">No scheduled storms found.</div>`;
+      tableContainer.innerHTML = `<div class="theme-alert-muted">No scheduled storms found.</div>`;
       return;
     }
 
@@ -1863,7 +1852,7 @@ async function loadScheduledStorms() {
 
     displayStormsData(data);
   } catch (err) {
-    tableContainer.innerHTML = `<div class="theme-alert-error text-center">Error loading scheduled storms: ${err.message}</div>`;
+    tableContainer.innerHTML = `<div class="theme-alert-error">Error loading scheduled storms: ${err.message}</div>`;
   }
 }
 
@@ -1884,16 +1873,17 @@ function renderStormsTable(data) {
           const left = winnersArray[i];
           const right = winnersArray[i + 1] || '';
           winnersHTML += `
-            <div class="flex justify-between gap-2 text-xs">
+            <div class="theme-winner-row">
               <span class="theme-text-sm">${left}</span>
               <span class="theme-text-sm">${right}</span>
             </div>`;
+
         }
       } else {
-        winnersHTML = `<span class="theme-text-xs italic">No winners in the selected time interval :(</span>`;
+        winnersHTML = `<span class="theme-text-xs">No winners in the selected time interval :(</span>`;
       }
     } else {
-      winnersHTML = `<span class="theme-text-xs italic">Soon</span>`;
+      winnersHTML = `<span class="theme-text-xs">Soon</span>`;
     }
 
     const pulse = storm.status === 'pending'
@@ -1910,7 +1900,7 @@ function renderStormsTable(data) {
         <td class="theme-td">${storm.channel_name}</td>
         <td class="theme-td">${storm.status}</td>
         <td class="theme-td">${winnersHTML}</td>
-        <td class="theme-td text-center">${pulse}</td>
+        <td class="theme-td">${pulse}</td>
       </tr>
     `;
   });
@@ -1950,54 +1940,39 @@ function displayStormsData(data) {
     return '';
   };
 
-  tableContainer.innerHTML = `
-    <div class="mb-4 flex flex-wrap gap-2 justify-center items-center">
-      <select id="filter-channel" class="theme-input w-40">${createOptions(channels)}</select>
-      <select id="filter-status" class="theme-input w-40">${createOptions(statuses)}</select>
-      <select id="filter-offeredby" class="theme-input w-40">${createOptions(offeredBys)}</select>
-      <button id="update-storms" class="btn-action px-4">Update Data</button>
-    </div>
+tableContainer.innerHTML = `
+  <div class="theme-filter-row">
+    <select id="filter-channel" class="theme-input theme-select-small">${createOptions(channels)}</select>
+    <select id="filter-status" class="theme-input theme-select-small">${createOptions(statuses)}</select>
+    <select id="filter-offeredby" class="theme-input theme-select-small">${createOptions(offeredBys)}</select>
+    <button id="update-storms" class="btn-action theme-update-button">Update Data</button>
+  </div>
 
-    <div class="theme-box overflow-x-auto">
-      <table class="theme-table w-full text-sm text-center">
-        <thead>
-          <tr class="theme-table-header">
-            <th onclick="sortStormsTable('id')">Storm-ID${sortArrow('id')}</th>
-            <th onclick="sortStormsTable('scheduled_time')">Start Time${sortArrow('scheduled_time')}</th>
-            <th onclick="sortStormsTable('offered_by')">Offered By${sortArrow('offered_by')}</th>
-            <th onclick="sortStormsTable('amount')">Amount${sortArrow('amount')}</th>
-            <th onclick="sortStormsTable('token_symbol')">Token${sortArrow('token_symbol')}</th>
-            <th onclick="sortStormsTable('channel_name')">Channel${sortArrow('channel_name')}</th>
-            <th onclick="sortStormsTable('status')">Status${sortArrow('status')}</th>
-            <th>Winners</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  `;
-
+  <div class="theme-box theme-scroll-container">
+    <table class="theme-table theme-storms-table theme-table-hover">
+      <thead>
+        <tr class="theme-table-header">
+          <th onclick="sortStormsTable('id')">Storm-ID${sortArrow('id')}</th>
+          <th onclick="sortStormsTable('scheduled_time')">Start Time${sortArrow('scheduled_time')}</th>
+          <th onclick="sortStormsTable('offered_by')">Offered By${sortArrow('offered_by')}</th>
+          <th onclick="sortStormsTable('amount')">Amount${sortArrow('amount')}</th>
+          <th onclick="sortStormsTable('token_symbol')">Token${sortArrow('token_symbol')}</th>
+          <th onclick="sortStormsTable('channel_name')">Channel${sortArrow('channel_name')}</th>
+          <th onclick="sortStormsTable('status')">Status${sortArrow('status')}</th>
+          <th>Winners</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+`;
   renderStormsTable(data);
-
   // Eventi filtri e aggiornamento
   document.getElementById('filter-channel').addEventListener('change', applyStormsFiltersAndSort);
   document.getElementById('filter-status').addEventListener('change', applyStormsFiltersAndSort);
   document.getElementById('filter-offeredby').addEventListener('change', applyStormsFiltersAndSort);
   document.getElementById('update-storms').addEventListener('click', loadScheduledStorms);
-}
-
-
-function addHoverEffectToRows() {
- const rows = document.querySelectorAll('.table-auto tbody tr');
- rows.forEach(row => {
- row.addEventListener('mouseenter', () => {
- row.style.backgroundColor = '#e2e8f0';
- });
- row.addEventListener('mouseleave', () => {
- row.style.backgroundColor = '';
- });
- });
 }
 
 // Aggiungi effetto hover alle righe della tabella per migliorare l'interazione
@@ -2018,19 +1993,19 @@ async function loadScheduleNFTGiveaway() {
   const container = document.getElementById('c2e-content');
   if (!container) return;
 
-  container.innerHTML = `<div class="theme-alert text-center">Loading Schedule NFT-Giveaway...</div>`;
+  container.innerHTML = `<div class="theme-alert">Loading Schedule NFT-Giveaway...</div>`;
 
   try {
     const res = await fetch(`${BASE_URL}/schedule_nft_giveaway`);
     const data = await res.json();
 
     container.innerHTML = `
-      <div class="theme-box overflow-x-auto">
+      <div class="theme-box">
         <pre class="text-xs theme-text-sm">${JSON.stringify(data, null, 2)}</pre>
       </div>
     `;
   } catch (err) {
-    container.innerHTML = `<div class="theme-alert-error text-center">Error loading schedule nft-giveaway: ${err.message}</div>`;
+    container.innerHTML = `<div class="theme-alert-error">Error loading schedule nft-giveaway: ${err.message}</div>`;
   }
 }
 function renderPoolButtons(pools) {
@@ -2064,34 +2039,34 @@ function renderPoolButtons(pools) {
   if (rewardsCount === 2) gridClass = 'theme-grid-2';
   if (rewardsCount > 2) gridClass = 'theme-grid-auto';
 
-  const rewardsHTML = rewards.map(r => `
-    <div class="theme-card p-3">
-      <div class="theme-text-strong">${r.reward_token}</div>
-      <div>Total: ${r.total_reward_deposit}</div>
-      <div>Daily: ${r.daily_reward}</div>
-      <div>APR: ${r.apr}%</div>
-      <div>Days Left: ${r.days_remaining}</div>
-      <div class="theme-positive"><strong>Your Daily:</strong> ${r.user_daily_reward}</div>
+const rewardsHTML = rewards.map(r => `
+  <div class="theme-card theme-reward-card">
+    <div class="theme-text-strong">${r.reward_token}</div>
+    <div>Total: ${r.total_reward_deposit}</div>
+    <div>Daily: ${r.daily_reward}</div>
+    <div>APR: ${r.apr}%</div>
+    <div>Days Left: ${r.days_remaining}</div>
+    <div class="theme-positive"><strong>Your Daily:</strong> ${r.user_daily_reward}</div>
+  </div>
+`).join('');
+
+container.innerHTML = `
+  <div class="theme-box">
+    <h3 class="theme-title theme-section-title">Pool: ${pool.token_symbol}</h3>
+    <p class="theme-text-sm">Total Staked: <strong>${pool.total_staked}</strong></p>
+    <p class="theme-text-sm">You Staked: <strong>${pool.user_staked}</strong></p>
+
+    <div class="theme-button-row">
+      <button class="btn-action" onclick="openStakeModal('add', ${pool.pool_id}, '${pool.token_symbol}')">Add Tokens</button>
+      <button class="btn-action" onclick="openStakeModal('remove', ${pool.pool_id}, '${pool.token_symbol}')">Remove Tokens</button>
     </div>
-  `).join('');
 
-  container.innerHTML = `
-    <div class="theme-box p-4">
-      <h3 class="theme-title mb-2">Pool: ${pool.token_symbol}</h3>
-      <p class="theme-text-sm mb-2">Total Staked: <strong>${pool.total_staked}</strong></p>
-      <p class="theme-text-sm mb-4">You Staked: <strong>${pool.user_staked}</strong></p>
-
-      <div class="flex flex-wrap gap-3 mb-4">
-        <button class="btn-action" onclick="openStakeModal('add', ${pool.pool_id}, '${pool.token_symbol}')">Add Tokens</button>
-        <button class="btn-action" onclick="openStakeModal('remove', ${pool.pool_id}, '${pool.token_symbol}')">Remove Tokens</button>
-      </div>
-
-      <h4 class="theme-subtitle mb-2">Rewards</h4>
-      <div class="theme-grid ${gridClass}">
-        ${rewardsHTML}
-      </div>
+    <h4 class="theme-subtitle theme-subtitle-spaced">Rewards</h4>
+    <div class="theme-grid ${gridClass}">
+      ${rewardsHTML}
     </div>
-  `;
+  </div>
+`;
 }
 function openStakeModal(type, poolId, tokenSymbol) {
   const modal = document.getElementById('modal');
@@ -2112,18 +2087,18 @@ function openStakeModal(type, poolId, tokenSymbol) {
   const availableLabel = type === 'add' ? 'Available in Wallet' : 'Staked in Farm';
 
   modalBody.innerHTML = `
-    <h3 class="theme-title mb-4">${title}</h3>
-    <p class="theme-text-sm mb-2">${availableLabel}: <strong>${balance.toFixed(4)}</strong> ${tokenSymbol}</p>
+    <h3 class="theme-title">${title}</h3>
+    <p class="theme-text-sm">${availableLabel}: <strong>${balance.toFixed(4)}</strong> ${tokenSymbol}</p>
 
-    <label class="theme-label mb-1">Select %</label>
-    <input id="stake-range" type="range" min="0" max="100" value="0" class="theme-range mb-2">
+    <label class="theme-label">Select %</label>
+    <input id="stake-range" type="range" min="0" max="100" value="0" class="theme-range">
 
     <label class="theme-label mb-1">Amount</label>
-    <input id="stake-amount" type="number" step="0.0001" class="theme-input mb-4" value="0">
+    <input id="stake-amount" type="number" step="0.0001" class="theme-input" value="0">
 
-    <div id="stake-summary" class="theme-text-xs mb-4"></div>
+    <div id="stake-summary" class="theme-text-xs"></div>
 
-    <button class="btn-action w-full" id="stake-submit">Go!</button>
+    <button class="btn-action" id="stake-submit">Go!</button>
   `;
 
   modal.classList.remove('hidden');
@@ -2213,7 +2188,7 @@ async function loadWallet() {
     if (window.walletBalances.length > 0) {
       walletTable.innerHTML = `
         <div class="theme-table-wrapper">
-          <table class="theme-table">
+          <table class="theme-table theme-table-hover">
             <thead>
               <tr>
                 <th>Token</th>
@@ -2229,7 +2204,7 @@ async function loadWallet() {
                   <td class="theme-td">${token.amount}</td>
                   <td class="theme-td">${token.stakeable}</td>
                   <td class="theme-td">
-                    <div class="btn-group">
+                    <div class="btn-group theme-wallet-actions">
                       <button class="btn-action" data-action="withdraw" data-token="${token.symbol}">Withdraw</button>
                       <button class="btn-action" data-action="swap" data-token="${token.symbol}">Swap</button>
                       <button class="btn-action" data-action="transfer" data-token="${token.symbol}">Transfer</button>
@@ -2252,7 +2227,7 @@ async function loadWallet() {
       });
 
     } else {
-      walletTable.innerHTML = `<div class="theme-alert text-center">No balances available.</div>`;
+      walletTable.innerHTML = `<div class="theme-alert">No balances available.</div>`;
     }
   } catch (error) {
     console.error("[❌] Error loading Wallet:", error);
@@ -2273,7 +2248,7 @@ async function loadWallet() {
   } catch (error) {
     console.error("[❌] Errore caricando NFTs:", error);
     const loader = document.getElementById('nfts-loading');
-    if (loader) loader.innerHTML = `<div class="theme-alert-error text-center">❌ Error loading NFTs.</div>`;
+    if (loader) loader.innerHTML = `<div class="theme-alert-error">❌ Error loading NFTs.</div>`;
   }
 }
 function populateDropdowns(nfts) {
@@ -2347,25 +2322,24 @@ function renderNFTs() {
   const end = start + window.nftsPerPage;
   const pageNFTs = filtered.slice(start, end);
 
-  if (pageNFTs.length > 0) {
-    nftsList.innerHTML = pageNFTs.map(nft => `
-      <div class="nft-card">
-        <input type="checkbox" 
-          class="nft-checkbox" 
-          onclick="toggleNFTSelection(event, '${nft.asset_id}')" 
-          ${window.selectedNFTs.has(nft.asset_id) ? "checked" : ""}>
+if (pageNFTs.length > 0) {
+  nftsList.innerHTML = pageNFTs.map(nft => `
+    <div class="theme-nft-card">
+      <input type="checkbox" 
+        class="theme-nft-checkbox" 
+        onclick="toggleNFTSelection(event, '${nft.asset_id}')" 
+        ${window.selectedNFTs.has(nft.asset_id) ? "checked" : ""}>
 
-        <div onclick="openNFTModal('${nft.asset_id}')" class="nft-card-content">
-          <img src="${nft.image_url}" alt="NFT Image" class="nft-image" onerror="this.onerror=null;this.src='https://via.placeholder.com/150?text=No+Image';">
-          <h3 class="nft-title">${nft.template_info.template_name}</h3>
-          <p class="nft-id">#${nft.asset_id}</p>
-        </div>
+      <div onclick="openNFTModal('${nft.asset_id}')" class="theme-nft-content">
+        <img src="${nft.image_url}" alt="NFT Image" class="theme-nft-img" onerror="this.onerror=null;this.src='https://via.placeholder.com/150?text=No+Image';">
+        <h3 class="theme-nft-title">${nft.template_info.template_name}</h3>
+        <p class="theme-nft-id">#${nft.asset_id}</p>
       </div>
-    `).join('');
-  } else {
-    nftsList.innerHTML = `<div class="theme-alert text-center">No NFTs match your filters.</div>`;
-  }
-
+    </div>
+  `).join('');
+} else {
+  nftsList.innerHTML = `<div class="theme-alert theme-text-center">No NFTs match your filters.</div>`;
+}
   renderPagination(totalPages);
   updateBulkActions();
 }
@@ -2396,7 +2370,7 @@ function renderPagination(totalPages) {
 
   pagination.innerHTML = `
     <button onclick="changePage(window.currentPage - 1)" class="theme-button-secondary" ${window.currentPage === 1 ? "disabled" : ""}>Previous</button>
-    <span class="theme-text px-2">${window.currentPage} / ${totalPages}</span>
+    <span class="theme-text">${window.currentPage} / ${totalPages}</span>
     <button onclick="changePage(window.currentPage + 1)" class="theme-button-secondary" ${window.currentPage === totalPages ? "disabled" : ""}>Next</button>
   `;
 }
@@ -2414,21 +2388,23 @@ function openNFTModal(assetId) {
   const modal = document.getElementById('modal-nft');
   const content = document.getElementById('modal-content');
 
-  content.innerHTML = `
-    <img src="${nft.image_url}" alt="NFT Image" class="nft-image mb-4" onerror="this.onerror=null;this.src='https://via.placeholder.com/150?text=Image+Not+Found';">
-    <h2 class="theme-title mb-2">${nft.template_info.template_name}</h2>
-    <div class="theme-text-sm">
-      <p><strong>Asset ID:</strong> ${nft.asset_id}</p>
-      <p><strong>Collection:</strong> ${nft.template_info.collection_name}</p>
-      <p><strong>Schema:</strong> ${nft.template_info.schema_name}</p>
-      <p><strong>Stakeable:</strong> ${nft.is_stakable}</p>
-      <p><strong>Staked:</strong> ${nft.is_staked}</p>
-      <p><strong>For Sale:</strong> ${nft.for_sale}</p>
-      <p><strong>Transferable:</strong> ${nft.template_info.is_transferable ? "Yes" : "No"}</p>
-      <p class="text-xs text-gray-400 mt-2">Acquired: ${new Date(nft.created_at).toLocaleDateString()}</p>
-    </div>
-  `;
+content.innerHTML = `
+  <img src="${nft.image_url}" alt="NFT Image" class="theme-nft-modal-img"
+    onerror="this.onerror=null;this.src='https://via.placeholder.com/150?text=Image+Not+Found';">
 
+  <h2 class="theme-title">${nft.template_info.template_name}</h2>
+
+  <div class="theme-text-sm">
+    <p><strong>Asset ID:</strong> ${nft.asset_id}</p>
+    <p><strong>Collection:</strong> ${nft.template_info.collection_name}</p>
+    <p><strong>Schema:</strong> ${nft.template_info.schema_name}</p>
+    <p><strong>Stakeable:</strong> ${nft.is_stakable}</p>
+    <p><strong>Staked:</strong> ${nft.is_staked}</p>
+    <p><strong>For Sale:</strong> ${nft.for_sale}</p>
+    <p><strong>Transferable:</strong> ${nft.template_info.is_transferable ? "Yes" : "No"}</p>
+    <p class="theme-note-muted">Acquired: ${new Date(nft.created_at).toLocaleDateString()}</p>
+  </div>
+`;
   modal.classList.remove('hidden');
   document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
 }
@@ -2555,36 +2531,40 @@ async function bulkSendSelected() {
 
  // Layout for Swap action
 modalBody.innerHTML = `
-<h3 class="theme-title mb-4">Swap ${token}</h3>
-<div class="theme-text-sm mb-2">
-Available Balance: <span class="font-semibold">${balance}</span> ${token}
-</div>
-<form id="action-form" class="theme-form">
-  <div>
-    <label class="theme-label">Percentage</label>
-    <input type="range" id="percent-range" class="theme-range" min="0" max="100" value="0">
+  <h3 class="theme-title">Swap ${token}</h3>
+  <div class="theme-text-sm">
+    Available Balance: <span class="theme-text-strong">${balance}</span> ${token}
   </div>
-  <div>
-    <label class="theme-label">Amount to Swap</label>
-    <input type="number" id="amount" class="theme-input" required min="0.0001" step="0.0001">
-  </div>
-  <div>
-    <label class="theme-label">Choose Output Token</label>
-    <input type="text" id="token-search" placeholder="Search token..." class="theme-input mb-2">
-    <select id="token-output" class="theme-input" size="5"></select>
-  </div>
-  <div id="swap-preview" class="theme-alert hidden">
-    <div id="loading-spinner" class="theme-text-center">🔄 Getting blockchain data...</div>
-    <div id="swap-data" class="hidden">
-      <div>Minimum Received: <span id="min-received" class="font-semibold"></span></div>
-      <div>Price Impact: <span id="price-impact" class="font-semibold"></span>%</div>
-    </div>
-  </div>
-  <button id="preview-button" type="button" class="btn-action bg-theme-yellow">Preview Swap</button>
-  <button id="submit-button" type="submit" class="btn-action bg-theme-green" disabled>Confirm Swap</button>
-</form>
-`;
 
+  <form id="action-form" class="theme-form">
+    <div>
+      <label class="theme-label">Percentage</label>
+      <input type="range" id="percent-range" class="theme-range" min="0" max="100" value="0">
+    </div>
+
+    <div>
+      <label class="theme-label">Amount to Swap</label>
+      <input type="number" id="amount" class="theme-input" required min="0.0001" step="0.0001">
+    </div>
+
+    <div>
+      <label class="theme-label">Choose Output Token</label>
+      <input type="text" id="token-search" placeholder="Search token..." class="theme-input theme-input-spaced">
+      <select id="token-output" class="theme-input" size="5"></select>
+    </div>
+
+    <div id="swap-preview" class="theme-alert hidden">
+      <div id="loading-spinner" class="theme-text-center">🔄 Getting blockchain data...</div>
+      <div id="swap-data" class="hidden">
+        <div>Minimum Received: <span id="min-received" class="theme-text-strong"></span></div>
+        <div>Price Impact: <span id="price-impact" class="theme-text-strong"></span>%</div>
+      </div>
+    </div>
+
+    <button id="preview-button" type="button" class="btn-action theme-btn-yellow">Preview Swap</button>
+    <button id="submit-button" type="submit" class="btn-action theme-btn-green" disabled>Confirm Swap</button>
+  </form>
+`;
  // Load tokens for dropdown and preview button click handler (as already implemented)
  await loadAvailableTokens();
 
@@ -2596,26 +2576,37 @@ modalBody.innerHTML = `
 Available Balance: <span class="font-semibold">${balance}</span> ${token}
 </div>
 ${action === 'transfer' ? `
-  <div class="mb-2">
-    <label class="theme-label">Recipient Wax Account</label>
-    <input type="text" id="receiver" class="theme-input" placeholder="Enter destination wax_account" required>
-  </div>` : `
-  <div class="theme-text-sm mb-2">
-    Destination Wax Account: <span class="font-semibold">${window.userData.wax_account}</span>
-  </div>`}
-<form id="action-form" class="theme-form">
-  <div>
-    <label class="theme-label">Percentage</label>
-    <input type="range" id="percent-range" class="theme-range" min="0" max="100" value="0">
+modalBody.innerHTML = `
+  <h3 class="theme-title theme-spaced-title">${actionTitle} ${token}</h3>
+  <div class="theme-text-sm theme-spaced-text">
+    Available Balance: <span class="theme-text-strong">${balance}</span> ${token}
   </div>
-  <div>
-    <label class="theme-label">Amount</label>
-    <input type="number" id="amount" class="theme-input" required min="0.0001" step="0.0001">
-  </div>
-  <button id="submit-button" type="submit" class="btn-action bg-theme-blue">Confirm ${actionTitle}</button>
-</form>
-`;
 
+  ${action === 'transfer' ? `
+    <div class="theme-spaced-text">
+      <label class="theme-label">Recipient Wax Account</label>
+      <input type="text" id="receiver" class="theme-input" placeholder="Enter destination wax_account" required>
+    </div>` : `
+    <div class="theme-text-sm theme-spaced-text">
+      Destination Wax Account: <span class="theme-text-strong">${window.userData.wax_account}</span>
+    </div>`}
+
+  <form id="action-form" class="theme-form">
+    <div>
+      <label class="theme-label">Percentage</label>
+      <input type="range" id="percent-range" class="theme-range" min="0" max="100" value="0">
+    </div>
+
+    <div>
+      <label class="theme-label">Amount</label>
+      <input type="number" id="amount" class="theme-input" required min="0.0001" step="0.0001">
+    </div>
+
+    <button id="submit-button" type="submit" class="btn-action theme-btn-blue">
+      Confirm ${actionTitle}
+    </button>
+  </form>
+`;
 
  }
 
@@ -2699,7 +2690,7 @@ ${action === 'transfer' ? `
  submitButton.disabled = false;
  } catch (error) {
  console.error("[❌] Error fetching swap preview:", error);
- loadingSpinner.innerHTML = `<div class="text-red-500">⚠️ Failed to load blockchain data.</div>`;
+ loadingSpinner.innerHTML = `<div id ="spinner" class="theme-text-red-500">⚠️ Failed to load blockchain data.</div>`;
  submitButton.disabled = true;
  }
  });
@@ -2890,19 +2881,33 @@ function showToast(message, type = "success") {
 initApp();
 
 function injectThemeSelector() {
-  // Pulsante 🎨 per aprire il selettore
-  const toggleBtn = document.createElement('button');
-  toggleBtn.id = 'theme-toggle-btn';
-  toggleBtn.innerText = '🎨';
+  const themes = [
+    'theme-cyberpunk',
+    'theme-sea',
+    'theme-fire',
+    'theme-ai',
+    'theme-pixel',
+    'theme-neural',
+    'theme-natural',
+    'theme-futuristic',
+    'theme-retro',
+    'theme-hacker'
+  ];
 
-  // Selettore temi
-  const selector = document.createElement('select');
-  selector.id = 'theme-selector';
-  selector.setAttribute('aria-label', 'Theme Selector');
+  // Pulsante 🎨 per mostrare il selettore
+const toggleBtn = document.createElement('button');
+toggleBtn.id = 'theme-toggle-btn';
+toggleBtn.innerText = '🎨';
+toggleBtn.className = 'btn-action theme-selector-button';
 
-  selector.innerHTML = Array.from({ length: 10 }, (_, i) => {
-    const num = i + 1;
-    return `<option value="theme-${num}">Theme ${num}</option>`;
+const selector = document.createElement('select');
+selector.id = 'theme-selector';
+selector.setAttribute('aria-label', 'Theme Selector');
+selector.className = 'theme-input theme-selector-dropdown';
+
+  selector.innerHTML = themes.map(t => {
+    const label = t.replace('theme-', '').replace(/-/g, ' ');
+    return `<option value="${t}">${label[0].toUpperCase() + label.slice(1)}</option>`;
   }).join('');
 
   document.body.appendChild(toggleBtn);
@@ -2926,10 +2931,11 @@ function injectThemeSelector() {
   });
 
   // Carica tema salvato
-  const savedTheme = localStorage.getItem('selected-theme') || 'theme-1';
+  const savedTheme = localStorage.getItem('selected-theme') || themes[0];
   selector.value = savedTheme;
   document.body.classList.add(savedTheme);
 }
 
 document.addEventListener('DOMContentLoaded', injectThemeSelector);
+
 

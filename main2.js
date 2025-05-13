@@ -151,14 +151,15 @@ btn.addEventListener('click', (e) => {
 async function loadCreateTokenStaking() {
  const container = document.getElementById('create-token-pool-container');
  console.log("[📦] Contenitore trovato:", container);
- container.innerHTML = `
- <input type="text" id="search-token-pool" placeholder="Search your token..." class="theme-input">
- <button id="create-new-token-pool-btn" class="btn-action">
- ➕ Create New Token Pool
- </button>
- <div id="created-token-pools" class="flex flex-wrap gap-2 mb-4 theme-box"></div>
- <div id="token-pool-details class="modal theme-card max-w-xl mx-auto"></div>
- `;
+container.innerHTML = `
+  <input type="text" id="search-token-pool" placeholder="Search your token..." class="theme-input">
+  <button id="create-new-token-pool-btn" class="btn-action">
+    ➕ Create New Token Pool
+  </button>
+  <div id="created-token-pools" class="theme-token-pool-list theme-box"></div>
+  <div id="token-pool-details" class="modal theme-card"></div>
+`;
+
  console.log("[🖊️] Aggiornamento contenuto del contenitore con HTML dinamico");
 
  document.getElementById('create-new-token-pool-btn').addEventListener('click', () => {

@@ -1125,54 +1125,66 @@ function removeTemplate(templateId) {
  }
  });
 } function openAddReward(templateId) {
- const modal = document.getElementById('modal');
- const body = document.getElementById('modal-body');
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+  if (!modal || !body) return;
 
-body.innerHTML = `
-  <h3 class="theme-title">➕ Add Reward to Template ID ${templateId}</h3>
-  <div class="reward-entry">
-    <input type="text" id="new-token-symbol" class="theme-input" placeholder="Token Symbol (e.g. CHIPS)">
-    <input type="number" id="new-reward-amount" class="theme-input" placeholder="Amount per day">
-  </div>
-  <button id="submit-new-reward" class="btn-action">Add Reward</button>
-`;
+  body.innerHTML = `
+    <h3 class="theme-title">➕ Add Reward to Template ID ${templateId}</h3>
+    <div class="reward-entry">
+      <input type="text" id="new-token-symbol" class="theme-input" placeholder="Token Symbol (e.g. CHIPS)">
+      <input type="number" id="new-reward-amount" class="theme-input" placeholder="Amount per day">
+    </div>
+    <button id="submit-new-reward" class="btn-action">Add Reward</button>
+  `;
 
+  modal.classList.remove('hidden');
 
- modal.classList.remove('hidden');
- document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+  const closeBtn = document.getElementById('close-modal');
+  if (closeBtn) {
+    closeBtn.onclick = () => modal.classList.add('hidden');
+  }
 
- document.getElementById('submit-new-reward').onclick = async () => {
- const symbol = document.getElementById('new-token-symbol').value.trim().toUpperCase();
- const amount = parseFloat(document.getElementById('new-reward-amount').value.trim());
+  const submitBtn = document.getElementById('submit-new-reward');
+  if (submitBtn) {
+    submitBtn.onclick = async () => {
+      const symbol = document.getElementById('new-token-symbol').value.trim().toUpperCase();
+      const amount = parseFloat(document.getElementById('new-reward-amount').value.trim());
 
- if (!symbol || isNaN(amount) || amount <= 0) {
- showToast("Valid token symbol and amount are required", "error");
- return;
- }
+      if (!symbol || isNaN(amount) || amount <= 0) {
+        showToast("Valid token symbol and amount are required", "error");
+        return;
+      }
 
- try {
- const { userId, usx_token } = window.userData;
- const res = await fetch(`${BASE_URL}/add_template_reward?user_id=${userId}&usx_token=${usx_token}`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({
- template_id: templateId,
- reward: { token_symbol: symbol, daily_reward_amount: amount }
- })
- });
+      try {
+        const { userId, usx_token } = window.userData;
 
- const data = await res.json();
- if (!res.ok) throw new Error(data.error || "Failed to add reward");
+        const res = await fetch(`${BASE_URL}/add_template_reward?user_id=${userId}&usx_token=${usx_token}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            template_id: templateId,
+            reward: {
+              token_symbol: symbol,
+              daily_reward_amount: amount
+            }
+          })
+        });
 
- showToast(data.message || "Reward added", "success");
- modal.classList.add('hidden');
- fetchAndRenderUserFarms();
- } catch (err) {
- console.error("[❌] Error adding reward:", err);
- showToast(err.message, "error");
- }
- };
-} 
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to add reward");
+
+        showToast(data.message || "Reward added", "success");
+        modal.classList.add('hidden');
+        fetchAndRenderUserFarms();
+
+      } catch (err) {
+        console.error("[❌] Error adding reward:", err);
+        showToast(err.message, "error");
+      }
+    };
+  }
+}
 window.openAddReward = openAddReward; 
 window.openEditRewards = openEditRewards;
 // Funzione per caricare dinamicamente sezioni

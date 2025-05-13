@@ -21,1040 +21,3443 @@ body {
 }
 
 /* === THEME: CYBERPUNK === */
-.theme-cyberpunk {
-  --bg: #0f0f0f;
-  --text: #00ffff;
-  --accent: #ff00ff;
-  --highlight: #8800ff;
-  --card-bg: #1a1a1a;
-  --btn-bg: #222;
-  --btn-hover: #333;
-  --border: #00ffff;
-  --font-title: 'Orbitron', sans-serif;
-}
 
-.theme-cyberpunk body {
+/* === CYBERPUNK THEME VARIABLES === */
+.theme-cyberpunk {
+  --bg: #0d0d0d;
+  --text: #f5f5f5;
+  --accent: #ff00ff;
+  --highlight: #39FF14;
+  --gold: #FFD700;
+  --danger: #ff0033;
+  --btn-bg: #1a1a1a;
+  --btn-hover: #333;
+  --border: #555;
+  --card-bg: #111;
+  --modal-bg: rgba(0,0,0,0.9);
   background-color: var(--bg);
   color: var(--text);
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Orbitron', 'Courier New', monospace;
+}
+
+
+/* === CLASSI CSS === */
+
+.theme-cyberpunk .${gridClass} {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk ....classes, {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .active, {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .active-tab {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .amount {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .available-balance {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .block {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .btn-action {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .btn-create-farm {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .btn-danger {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .btn-group {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .btn-secondary {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .configured.</div> {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .currentTheme {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .e.target.value {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .error-message {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .flex {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .flex-wrap {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .font-semibold {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .gap-2 {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .h4 {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .hidden {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .input-label {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .max-w-xl {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .mb-1 {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .mb-2 {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .mb-4 {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .menu-btn {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .ml-2 {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .modal {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .mr-4 {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .mt-2 {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .mx-auto {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .nft-stake-btn {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .no-token-pools-message {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .percent-range {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .reward-amount {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .reward-daily {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .reward-entry {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .reward-symbol {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .reward-token-entry {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .reward-total {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .rewards {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .savedTheme {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .template-block {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .text-error {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .text-red {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .text-xs {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-action-buttons {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-alert {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-alert-error {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-alert-errorr {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-alert-muted {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-alert-soft {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-body {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-box {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-btn-blue {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-btn-green {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-btn-yellow {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-bulk-actions {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-button {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-button-center {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-button-danger {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-button-group {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-button-lg {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-button-row {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-button-secondary {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-c2e-message {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-card {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-card-header {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-confirm-message {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-cyberpunk-no-rewards>No {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-dropdown {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-dropdown-content {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-dropdown-divider {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-dropdown-group {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-farm-buttons {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-farm-details {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-filter-row {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-form {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-grid {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-grid-form {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-grid-nfts {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-grid-nfts-section {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-input {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-input-block {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-input-spaced {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-italic {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-label {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-link {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-link-button {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-main {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-menu {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-menu-container {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-modal {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-modal-body {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-modal-buttons {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-modal-close {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-modal-confirm {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-modal-content {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-navbar {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-navbar-title {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-nft-button {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-nft-card {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-nft-checkbox {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-nft-content {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-nft-filters {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-nft-id {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-nft-img {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-nft-input {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-nft-modal-img {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-nft-title {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-nfts-empty {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-no-templates {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-note-muted {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-note-paragraph {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-pagination {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-positive {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-pulse-complete {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-pulse-pending {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-range {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-reward-card {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-reward-container {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-reward-entry {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-reward-line {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-reward-table {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-reward-token {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-scroll-container {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-search-farm {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-search-input {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-section-title {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-select-small {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-selector-button {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-selector-dropdown {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-spaced-text {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-spaced-title {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-spacer-sm {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-staking-box {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-staking-buttons {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-staking-input {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-staking-title {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-storms-table {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-subtitle {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-subtitle-spaced {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-tab {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-table {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-table-header {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-table-hover {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-table-row {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-table-wrapper {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-td {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-template-block {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-template-header {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-template-id {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-template-wrapper {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-text {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-text-center {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-text-red-500 {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-text-sm {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-text-strong {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-text-xs {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-title {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-toast-container {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-token-pool-list {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-update-button {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-wallet-actions {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
+}
+
+.theme-cyberpunk .theme-winner-row {
+  color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
 }
 
 .theme-cyberpunk .title-animated {
-  font-size: clamp(1.5rem, 4vw, 3rem);
-  color: var(--gold);
-  text-shadow: 0 0 5px var(--accent), 0 0 10px var(--gold);
-  animation: glow 2s infinite alternate;
-  font-family: var(--font-title);
-}
-
-/* === Bottoni === */
-.theme-cyberpunk .btn-action {
-  background: linear-gradient(45deg, var(--btn-bg), var(--accent));
-  border: 2px solid var(--accent);
   color: var(--text);
-  padding: 0.5rem 1rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
-}
-.theme-cyberpunk .btn-action::after {
-  content: '';
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  width: 20px;
-  height: 20px;
-  background: var(--accent);
-  border-radius: 50%;
-  opacity: 0.2;
-  animation: smoke 2s linear infinite;
-}
-.theme-cyberpunk .btn-action:hover {
-  background-color: var(--btn-hover);
-  box-shadow: 0 0 10px var(--accent), 0 0 20px var(--gold);
-}
-
-/* === Card === */
-.theme-cyberpunk .theme-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 0 10px var(--accent);
-}
-
-/* === Tabelle === */
-.theme-cyberpunk .theme-table-header {
-  background-color: var(--card-bg);
-  color: var(--gold);
-  font-weight: bold;
-}
-.theme-cyberpunk .theme-table-row:hover {
-  background-color: var(--accent);
-  color: black;
-}
-.theme-cyberpunk .theme-td {
+  background-color: transparent;
+  border: 1px solid var(--accent);
   padding: 0.5rem;
-  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
 }
 
-/* === Input/Select === */
-.theme-cyberpunk .theme-input, 
-.theme-cyberpunk .theme-select {
-  background-color: #111;
-  border: 1px solid var(--border);
+.theme-cyberpunk .token-symbol {
   color: var(--text);
+  background-color: transparent;
+  border: 1px solid var(--accent);
   padding: 0.5rem;
-  border-radius: 0.25rem;
-  width: 100%;
+  margin-bottom: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  box-shadow: 0 0 6px var(--accent);
+  transition: all 0.3s ease;
 }
 
-/* === Responsive Text === */
-h1, h2, h3, h4, p {
-  font-size: clamp(1rem, 2vw, 1.5rem);
-}
+/* === ID HTML === */
 
-/* === Grid === */
-.grid {
-  display: grid;
-  gap: 1rem;
-}
-@media (min-width: 300px) {
-  .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
-}
-@media (min-width: 600px) {
-  .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-}
-@media (min-width: 900px) {
-  .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
-}
-@media (min-width: 1200px) {
-  .grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
-}
-
-/* === ID Styles for Cyberpunk === */
 .theme-cyberpunk #action-form {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #add-more-reward {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #add-reward-btn {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #add-reward-token {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #amount {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #app {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #bulk-actions {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #bulk-send {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #bulk-withdraw {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #c2e-content {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #channelName {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #close-modal {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #confirm-cancel {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #confirm-message {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #confirm-modal {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #confirm-yes {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #create-new-farm-btn {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #create-new-token-pool-btn {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #create-nfts-farm-container {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #create-token-pool-container {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #created-farm-buttons {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #created-farm-details {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #created-token-pools {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #deposit-amount {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #execution-price {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #filter-channel {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #filter-collection {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #filter-for-sale {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #filter-offeredby {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #filter-sponsor {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #filter-stakable {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #filter-status {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #filter-username {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #loading-spinner {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #menu {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #min-received {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #modal {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #modal-body {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #modal-content {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #modal-nft {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #new-daily-reward {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #new-farm-name {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #new-reward-amount {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #new-token-symbol {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #nft-farm-buttons {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #nft-farm-details {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #nft-farms-container {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #nfts-count {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #nfts-list {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #nfts-loading {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #pagination {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #paymentMethod {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #percent-range {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #pool-buttons {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #pool-status-select {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #preview-button {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #price-impact {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #receiver {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #reward-token-entries {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #rewards-container {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #rewards-deposit-container {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #rewards-edit-container {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #scheduledTime {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #search-created-farm {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #search-nft-farm {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #search-template {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #search-token-pool {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #selected-pool-details {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #sort-by {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #stake-amount {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #stake-range {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #stake-submit {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #stake-summary {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #status-confirm {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #status-select {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #submit-add-template {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #submit-button {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #submit-daily-reward {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #submit-deposit {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #submit-edit-rewards {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #submit-new-farm {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #submit-new-reward {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #submit-new-token-pool {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #submit-pool-status {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #submitStorm {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #swap-data {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #swap-preview {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #template-id {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #timeframe {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #toast-container {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #token-output {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #token-pool-details {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #token-search {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #tokenSymbol {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #update-rewards {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #update-storms {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
+
 .theme-cyberpunk #wallet-table {
   color: var(--text);
   background-color: var(--card-bg);
   border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-  font-family: 'Orbitron', sans-serif;
-  transition: background 0.3s, color 0.3s;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 8px var(--accent);
 }
-.theme-cyberpunk #app {
-  background-color: transparent;
+
+/* === ESTENSIONI AVANZATE === */
+
+/* === STILE PER TITOLO HEAD === */
+.theme-cyberpunk h1.title-animated {
+  font-size: 3rem;
+  color: var(--gold);
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px var(--accent), 0 0 20px var(--highlight);
+  animation: cyberFlicker 2.5s infinite alternate;
+  letter-spacing: 0.1em;
+}
+
+/* === EFFETTO HOVER SU TABELLE === */
+.theme-cyberpunk table.theme-table-hover tbody tr:hover {
+  background-color: #1a1a1a;
+  color: var(--highlight);
+  box-shadow: inset 0 0 10px var(--accent);
+}
+
+/* === PULSANTI ANIMATI === */
+.theme-cyberpunk .btn-action {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(270deg, #ff00ff, #7928ca, #00ffff);
+  background-size: 600% 600%;
+  animation: waveBackground 8s ease infinite;
   border: none;
-  padding: 0;
+  padding: 0.75rem 1.5rem;
+  color: white;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 0 12px var(--accent);
 }
-.theme-cyberpunk #modal {
-  background-color: transparent;
-  border: none;
-  padding: 0;
+
+.theme-cyberpunk .btn-action:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 18px var(--highlight);
 }
-.theme-cyberpunk #modal-body {
-  background-color: transparent;
-  border: none;
-  padding: 0;
+
+/* === ANIMAZIONI === */
+@keyframes cyberFlicker {
+  0% { opacity: 1; text-shadow: 0 0 2px var(--accent); }
+  50% { opacity: 0.7; text-shadow: 0 0 10px var(--highlight); }
+  100% { opacity: 1; text-shadow: 0 0 4px var(--accent), 0 0 8px var(--highlight); }
 }
-.theme-cyberpunk #modal-content {
-  background-color: transparent;
-  border: none;
-  padding: 0;
+
+@keyframes waveBackground {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
-.theme-cyberpunk #confirm-modal {
-  background-color: transparent;
-  border: none;
-  padding: 0;
-}
-.theme-cyberpunk #create-token-pool-container {
-  background-color: transparent;
-  border: none;
-  padding: 0;
-}
-.theme-cyberpunk #create-nfts-farm-container {
-  background-color: transparent;
-  border: none;
-  padding: 0;
-}
-.theme-cyberpunk #nft-farms-container {
-  background-color: transparent;
-  border: none;
-  padding: 0;
-}
-.theme-cyberpunk #nfts-list {
-  background-color: transparent;
-  border: none;
-  padding: 0;
-}
-.theme-cyberpunk #pagination {
-  background-color: transparent;
-  border: none;
-  padding: 0;
-}
+

@@ -2892,11 +2892,8 @@ function injectThemeSelector() {
   selector.id = 'theme-selector';
   selector.className = 'fixed top-4 right-4 z-50 p-2 bg-black text-yellow-400 border-2 border-yellow-400 rounded-lg';
   
-  selector.innerHTML = Array.from({ length: 10 }, (_, i) => {
-    const num = i + 1;
-    return `<option value="theme-${num}">Theme ${num}</option>`;
-  }).join('');
-  
+  const themes = ['Fish Tides', 'Cyberpunk', 'MS-DOS', 'Futuristic', 'Autobots'];
+  selector.innerHTML = themes.map((name, i) => `<option value="theme-${i}">${name}</option>`).join('');
   document.body.appendChild(selector);
 
   // Applica il tema selezionato
@@ -2919,8 +2916,8 @@ function injectThemeSelector() {
     document.body.classList.add(savedTheme);
   } else {
     // Default al tema AI
-    document.body.classList.add('theme-ai');
-    selector.value = 'theme-ai';
+    document.body.classList.add('theme-0');
+    selector.value = 'theme-0';
   }
 }
 

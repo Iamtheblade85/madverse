@@ -48681,3 +48681,136 @@ input, select, textarea {
   color: var(--text-light) !important;
   font-family: 'Orbitron', sans-serif !important;
 }
+
+
+/* === ENHANCED PER-THEME EFFECTS === */
+
+/* === GOOGLE FONTS AGGIUNTIVE === */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pacifico&family=Rock+Salt&family=Monoton&family=Rampart+One&family=Quicksand&family=Bangers&display=swap');
+
+/* === SFONDI E FONT SPECIFICI PER OGNI THEME === */
+
+.theme-1 { /* FUOCO */
+  --bg-gradient: radial-gradient(circle, #330000, #cc0000, #ff6600) !important;
+  font-family: 'Bangers', cursive !important;
+  background-size: 200% 200% !important;
+  animation: fireBackground 10s ease infinite !important;
+}
+@keyframes fireBackground {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.theme-2 { /* MARE */
+  --bg-gradient: linear-gradient(135deg, #004e92, #000428) !important;
+  font-family: 'Quicksand', sans-serif !important;
+  background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg"><path fill="%2300e5ff" fill-opacity="0.3" d="M0,64L48,101.3C96,139,192,213,288,224C384,235,480,181,576,160C672,139,768,149,864,165.3C960,181,1056,203,1152,213.3C1248,224,1344,224,1392,224L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') !important;
+  background-repeat: no-repeat !important;
+  background-position: bottom !important;
+  background-size: cover !important;
+  animation: oceanWaves 20s linear infinite !important;
+}
+@keyframes oceanWaves {
+  0% { background-position: 0 100%; }
+  100% { background-position: 100% 100%; }
+}
+
+.theme-3 { /* GLITCH */
+  font-family: 'Press Start 2P', cursive !important;
+  background: repeating-linear-gradient(45deg, #2c5364, #203a43 10px, #0f2027 10px, #0f2027 20px) !important;
+  animation: glitchShift 1s infinite steps(2) !important;
+}
+@keyframes glitchShift {
+  0% { background-position: 0 0; }
+  100% { background-position: 10px 10px; }
+}
+
+.theme-4 { /* BOLLE POP */
+  font-family: 'Pacifico', cursive !important;
+  background: radial-gradient(circle at 20% 20%, #ffeaa7 0%, transparent 25%),
+              radial-gradient(circle at 80% 40%, #fd79a8 0%, transparent 25%),
+              radial-gradient(circle at 50% 80%, #81ecec 0%, transparent 25%);
+  background-size: 100% 100% !important;
+  animation: bubblesRise 12s linear infinite !important;
+}
+@keyframes bubblesRise {
+  0% { background-position: 0 100%; }
+  100% { background-position: 0 0; }
+}
+
+.theme-5 { /* LIQUIDO */
+  background: linear-gradient(135deg, #43cea2, #185a9d) !important;
+  font-family: 'Orbitron', sans-serif !important;
+  background-size: 400% 400% !important;
+  animation: liquidFlow 15s ease infinite !important;
+}
+@keyframes liquidFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.theme-6 { /* CAVERNICOLO */
+  font-family: 'Rock Salt', cursive !important;
+  background: url('https://www.transparenttextures.com/patterns/rock-wall.png') repeat !important;
+  background-color: #5d4037 !important;
+}
+
+.theme-7 { /* SPARK */
+  font-family: 'Monoton', cursive !important;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important;
+  animation: sparkGlow 4s ease-in-out infinite !important;
+}
+@keyframes sparkGlow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.2); }
+}
+
+.theme-8 { /* LAVA */
+  font-family: 'Rampart One', cursive !important;
+  background: radial-gradient(circle, #3f0d12, #a71d31, #ff5733) !important;
+  animation: lavaPulse 10s ease-in-out infinite !important;
+}
+@keyframes lavaPulse {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.15); }
+  100% { filter: brightness(1); }
+}
+
+
+/* === MODAL POSITION FIX === */
+
+/* === POSIZIONAMENTO CENTRALE FISSO PER MODALI === */
+#modal, #confirm-modal {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  max-width: 90vw !important;
+  max-height: 90vh !important;
+  overflow: auto !important;
+  background: var(--bg-gradient) !important;
+  border: 2px solid var(--neon-cyan) !important;
+  box-shadow: 0 0 25px var(--neon-pink) !important;
+  padding: 2rem !important;
+  border-radius: 12px !important;
+}
+
+#modal-content, #confirm-modal-content {
+  width: 100% !important;
+  background: transparent !important;
+  color: var(--text-light) !important;
+  font-family: inherit !important;
+  text-align: center !important;
+}
+
+/* Nasconde overlay che interferiscono */
+body.modal-open {
+  overflow: hidden !important;
+}

@@ -1,0 +1,528 @@
+/* === THEMES FINAL - FULL COMPATIBILITY MODE === */
+
+@keyframes bubble-effect {
+  0%, 100% { box-shadow: 0 0 5px #5EDFFF, 0 0 15px #5EDFFF; }
+  50% { box-shadow: 0 0 25px #5EDFFF, 0 0 40px #5EDFFF; }
+}
+@keyframes glitch-effect {
+  0% { transform: none; }
+  20% { transform: skewX(5deg); }
+  40% { transform: skewX(-5deg); }
+  60% { transform: skewX(5deg); }
+  80% { transform: skewX(-5deg); }
+  100% { transform: none; }
+}
+@keyframes flicker-effect {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+@keyframes neon-effect {
+  0%, 100% { box-shadow: 0 0 5px #38BDF8, 0 0 10px #38BDF8; }
+  50% { box-shadow: 0 0 20px #38BDF8, 0 0 30px #38BDF8; }
+}
+@keyframes ignite-effect {
+  0% { box-shadow: 0 0 5px #FF4136; }
+  50% { box-shadow: 0 0 20px #FF4136, 0 0 40px #FF851B; }
+  100% { box-shadow: 0 0 5px #FF4136; }
+}
+
+/* === COMMON STRUCTURE FOR THEME-0 === */
+body.theme-0 {
+  background-color: #00293C !important;
+  color: #5EDFFF !important;
+  font-family: 'Balsamiq Sans', cursive !important;
+}
+
+.theme-0 *, .theme-0 *::before, .theme-0 *::after {
+  color: #5EDFFF !important;
+  font-family: 'Balsamiq Sans', cursive !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-0 input, .theme-0 textarea, .theme-0 select {
+  background: transparent !important;
+  border: 1px solid #5EDFFF !important;
+  color: #5EDFFF !important;
+  border-radius: 5px !important;
+  padding: 10px !important;
+}
+
+.theme-0 input:focus, .theme-0 textarea:focus, .theme-0 select:focus {
+  outline: none !important;
+  box-shadow: 0 0 10px #5EDFFF !important;
+}
+
+.theme-0 .menu-btn, .theme-0 .theme-button, .theme-0 .btn-action {
+  background-color: #5EDFFF !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 5px !important;
+  font-weight: bold !important;
+  animation: bubble-effect 1.5s infinite !important;
+}
+
+.theme-0 .menu-btn:hover, .theme-0 .theme-button:hover, .theme-0 .btn-action:hover {
+  transform: scale(1.05) !important;
+  filter: brightness(1.2) !important;
+}
+
+.theme-0 table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  background-color: rgba(0,0,0,0.2) !important;
+}
+
+.theme-0 table th, .theme-0 table td {
+  border: 1px solid #5EDFFF !important;
+  padding: 10px !important;
+}
+
+.theme-0 .theme-modal, .theme-0 .theme-modal-content {
+  background-color: rgba(0,0,0,0.8) !important;
+  color: #5EDFFF !important;
+  border-radius: 10px !important;
+  padding: 20px !important;
+  box-shadow: 0 0 15px #5EDFFF !important;
+}
+
+.theme-0 .theme-toast {
+  background-color: #111 !important;
+  color: #5EDFFF !important;
+  border-left: 4px solid #5EDFFF !important;
+  padding: 10px 15px !important;
+  border-radius: 5px !important;
+}
+
+.theme-0 .reward-token-entry, .theme-0 .reward-row, .theme-0 .reward-entry {
+  background-color: rgba(255,255,255,0.05) !important;
+  border: 1px solid #5EDFFF !important;
+  padding: 10px !important;
+  border-radius: 5px !important;
+}
+
+
+/* === COMMON STRUCTURE FOR THEME-1 === */
+body.theme-1 {
+  background-color: #0f0f0f !important;
+  color: #ff00cc !important;
+  font-family: 'Orbitron', sans-serif !important;
+}
+
+.theme-1 *, .theme-1 *::before, .theme-1 *::after {
+  color: #ff00cc !important;
+  font-family: 'Orbitron', sans-serif !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-1 input, .theme-1 textarea, .theme-1 select {
+  background: transparent !important;
+  border: 1px solid #ff00cc !important;
+  color: #ff00cc !important;
+  border-radius: 5px !important;
+  padding: 10px !important;
+}
+
+.theme-1 input:focus, .theme-1 textarea:focus, .theme-1 select:focus {
+  outline: none !important;
+  box-shadow: 0 0 10px #ff00cc !important;
+}
+
+.theme-1 .menu-btn, .theme-1 .theme-button, .theme-1 .btn-action {
+  background-color: #ff00cc !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 5px !important;
+  font-weight: bold !important;
+  animation: glitch-effect 1.5s infinite !important;
+}
+
+.theme-1 .menu-btn:hover, .theme-1 .theme-button:hover, .theme-1 .btn-action:hover {
+  transform: scale(1.05) !important;
+  filter: brightness(1.2) !important;
+}
+
+.theme-1 table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  background-color: rgba(0,0,0,0.2) !important;
+}
+
+.theme-1 table th, .theme-1 table td {
+  border: 1px solid #ff00cc !important;
+  padding: 10px !important;
+}
+
+.theme-1 .theme-modal, .theme-1 .theme-modal-content {
+  background-color: rgba(0,0,0,0.8) !important;
+  color: #ff00cc !important;
+  border-radius: 10px !important;
+  padding: 20px !important;
+  box-shadow: 0 0 15px #ff00cc !important;
+}
+
+.theme-1 .theme-toast {
+  background-color: #111 !important;
+  color: #ff00cc !important;
+  border-left: 4px solid #ff00cc !important;
+  padding: 10px 15px !important;
+  border-radius: 5px !important;
+}
+
+.theme-1 .reward-token-entry, .theme-1 .reward-row, .theme-1 .reward-entry {
+  background-color: rgba(255,255,255,0.05) !important;
+  border: 1px solid #ff00cc !important;
+  padding: 10px !important;
+  border-radius: 5px !important;
+}
+
+
+/* === COMMON STRUCTURE FOR THEME-2 === */
+body.theme-2 {
+  background-color: #000 !important;
+  color: #00FF00 !important;
+  font-family: 'Courier New', monospace !important;
+}
+
+.theme-2 *, .theme-2 *::before, .theme-2 *::after {
+  color: #00FF00 !important;
+  font-family: 'Courier New', monospace !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-2 input, .theme-2 textarea, .theme-2 select {
+  background: transparent !important;
+  border: 1px solid #00FF00 !important;
+  color: #00FF00 !important;
+  border-radius: 5px !important;
+  padding: 10px !important;
+}
+
+.theme-2 input:focus, .theme-2 textarea:focus, .theme-2 select:focus {
+  outline: none !important;
+  box-shadow: 0 0 10px #00FF00 !important;
+}
+
+.theme-2 .menu-btn, .theme-2 .theme-button, .theme-2 .btn-action {
+  background-color: #00FF00 !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 5px !important;
+  font-weight: bold !important;
+  animation: flicker-effect 1.5s infinite !important;
+}
+
+.theme-2 .menu-btn:hover, .theme-2 .theme-button:hover, .theme-2 .btn-action:hover {
+  transform: scale(1.05) !important;
+  filter: brightness(1.2) !important;
+}
+
+.theme-2 table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  background-color: rgba(0,0,0,0.2) !important;
+}
+
+.theme-2 table th, .theme-2 table td {
+  border: 1px solid #00FF00 !important;
+  padding: 10px !important;
+}
+
+.theme-2 .theme-modal, .theme-2 .theme-modal-content {
+  background-color: rgba(0,0,0,0.8) !important;
+  color: #00FF00 !important;
+  border-radius: 10px !important;
+  padding: 20px !important;
+  box-shadow: 0 0 15px #00FF00 !important;
+}
+
+.theme-2 .theme-toast {
+  background-color: #111 !important;
+  color: #00FF00 !important;
+  border-left: 4px solid #00FF00 !important;
+  padding: 10px 15px !important;
+  border-radius: 5px !important;
+}
+
+.theme-2 .reward-token-entry, .theme-2 .reward-row, .theme-2 .reward-entry {
+  background-color: rgba(255,255,255,0.05) !important;
+  border: 1px solid #00FF00 !important;
+  padding: 10px !important;
+  border-radius: 5px !important;
+}
+
+
+/* === COMMON STRUCTURE FOR THEME-3 === */
+body.theme-3 {
+  background-color: #1E1E2F !important;
+  color: #38BDF8 !important;
+  font-family: 'Rajdhani', sans-serif !important;
+}
+
+.theme-3 *, .theme-3 *::before, .theme-3 *::after {
+  color: #38BDF8 !important;
+  font-family: 'Rajdhani', sans-serif !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-3 input, .theme-3 textarea, .theme-3 select {
+  background: transparent !important;
+  border: 1px solid #38BDF8 !important;
+  color: #38BDF8 !important;
+  border-radius: 5px !important;
+  padding: 10px !important;
+}
+
+.theme-3 input:focus, .theme-3 textarea:focus, .theme-3 select:focus {
+  outline: none !important;
+  box-shadow: 0 0 10px #38BDF8 !important;
+}
+
+.theme-3 .menu-btn, .theme-3 .theme-button, .theme-3 .btn-action {
+  background-color: #38BDF8 !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 5px !important;
+  font-weight: bold !important;
+  animation: neon-effect 1.5s infinite !important;
+}
+
+.theme-3 .menu-btn:hover, .theme-3 .theme-button:hover, .theme-3 .btn-action:hover {
+  transform: scale(1.05) !important;
+  filter: brightness(1.2) !important;
+}
+
+.theme-3 table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  background-color: rgba(0,0,0,0.2) !important;
+}
+
+.theme-3 table th, .theme-3 table td {
+  border: 1px solid #38BDF8 !important;
+  padding: 10px !important;
+}
+
+.theme-3 .theme-modal, .theme-3 .theme-modal-content {
+  background-color: rgba(0,0,0,0.8) !important;
+  color: #38BDF8 !important;
+  border-radius: 10px !important;
+  padding: 20px !important;
+  box-shadow: 0 0 15px #38BDF8 !important;
+}
+
+.theme-3 .theme-toast {
+  background-color: #111 !important;
+  color: #38BDF8 !important;
+  border-left: 4px solid #38BDF8 !important;
+  padding: 10px 15px !important;
+  border-radius: 5px !important;
+}
+
+.theme-3 .reward-token-entry, .theme-3 .reward-row, .theme-3 .reward-entry {
+  background-color: rgba(255,255,255,0.05) !important;
+  border: 1px solid #38BDF8 !important;
+  padding: 10px !important;
+  border-radius: 5px !important;
+}
+
+
+/* === COMMON STRUCTURE FOR THEME-4 === */
+body.theme-4 {
+  background-color: #1F1F1F !important;
+  color: #FF4136 !important;
+  font-family: 'Bebas Neue', cursive !important;
+}
+
+.theme-4 *, .theme-4 *::before, .theme-4 *::after {
+  color: #FF4136 !important;
+  font-family: 'Bebas Neue', cursive !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.theme-4 input, .theme-4 textarea, .theme-4 select {
+  background: transparent !important;
+  border: 1px solid #FF4136 !important;
+  color: #FF4136 !important;
+  border-radius: 5px !important;
+  padding: 10px !important;
+}
+
+.theme-4 input:focus, .theme-4 textarea:focus, .theme-4 select:focus {
+  outline: none !important;
+  box-shadow: 0 0 10px #FF4136 !important;
+}
+
+.theme-4 .menu-btn, .theme-4 .theme-button, .theme-4 .btn-action {
+  background-color: #FF4136 !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 5px !important;
+  font-weight: bold !important;
+  animation: ignite-effect 1.5s infinite !important;
+}
+
+.theme-4 .menu-btn:hover, .theme-4 .theme-button:hover, .theme-4 .btn-action:hover {
+  transform: scale(1.05) !important;
+  filter: brightness(1.2) !important;
+}
+
+.theme-4 table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  background-color: rgba(0,0,0,0.2) !important;
+}
+
+.theme-4 table th, .theme-4 table td {
+  border: 1px solid #FF4136 !important;
+  padding: 10px !important;
+}
+
+.theme-4 .theme-modal, .theme-4 .theme-modal-content {
+  background-color: rgba(0,0,0,0.8) !important;
+  color: #FF4136 !important;
+  border-radius: 10px !important;
+  padding: 20px !important;
+  box-shadow: 0 0 15px #FF4136 !important;
+}
+
+.theme-4 .theme-toast {
+  background-color: #111 !important;
+  color: #FF4136 !important;
+  border-left: 4px solid #FF4136 !important;
+  padding: 10px 15px !important;
+  border-radius: 5px !important;
+}
+
+.theme-4 .reward-token-entry, .theme-4 .reward-row, .theme-4 .reward-entry {
+  background-color: rgba(255,255,255,0.05) !important;
+  border: 1px solid #FF4136 !important;
+  padding: 10px !important;
+  border-radius: 5px !important;
+}
+
+
+
+/* === COMPONENTI AVANZATI === */
+
+/* === COMPONENTI AVANZATI COMUNI === */
+
+/* Badge */
+[class*="theme-"] .badge {
+  display: inline-block !important;
+  padding: 4px 8px !important;
+  border-radius: 12px !important;
+  font-size: 12px !important;
+  background-color: currentColor !important;
+  color: #000 !important;
+}
+
+/* Tabs */
+[class*="theme-"] .tab {
+  display: inline-block !important;
+  padding: 10px 20px !important;
+  cursor: pointer !important;
+  border-bottom: 2px solid transparent !important;
+}
+[class*="theme-"] .tab.active {
+  border-bottom: 2px solid currentColor !important;
+  font-weight: bold !important;
+}
+
+/* Pagination */
+[class*="theme-"] .pagination-btn {
+  background-color: transparent !important;
+  color: currentColor !important;
+  border: 1px solid currentColor !important;
+  padding: 5px 10px !important;
+  margin: 0 5px !important;
+  border-radius: 4px !important;
+}
+[class*="theme-"] .pagination-btn:hover {
+  background-color: currentColor !important;
+  color: #000 !important;
+}
+
+/* Card */
+[class*="theme-"] .card {
+  background-color: rgba(255,255,255,0.05) !important;
+  border: 1px solid currentColor !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+  box-shadow: 0 0 15px currentColor !important;
+}
+
+/* Slider */
+[class*="theme-"] input[type="range"] {
+  width: 100% !important;
+  accent-color: currentColor !important;
+  background: transparent !important;
+}
+
+/* Toggle switch */
+[class*="theme-"] .toggle-switch {
+  position: relative !important;
+  display: inline-block !important;
+  width: 60px !important;
+  height: 34px !important;
+}
+[class*="theme-"] .toggle-switch input {
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+[class*="theme-"] .slider {
+  position: absolute !important;
+  cursor: pointer !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: #ccc !important;
+  transition: .4s !important;
+  border-radius: 34px !important;
+}
+[class*="theme-"] .slider:before {
+  position: absolute !important;
+  content: "" !important;
+  height: 26px !important;
+  width: 26px !important;
+  left: 4px !important;
+  bottom: 4px !important;
+  background-color: white !important;
+  transition: .4s !important;
+  border-radius: 50% !important;
+}
+[class*="theme-"] .toggle-switch input:checked + .slider {
+  background-color: currentColor !important;
+}
+[class*="theme-"] .toggle-switch input:checked + .slider:before {
+  transform: translateX(26px) !important;
+}
+
+/* Overlay */
+[class*="theme-"] .overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: rgba(0, 0, 0, 0.75) !important;
+  z-index: 1000 !important;
+}
+
+/* Scrollbar styling */
+[class*="theme-"] ::-webkit-scrollbar {
+  width: 8px !important;
+}
+[class*="theme-"] ::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+[class*="theme-"] ::-webkit-scrollbar-thumb {
+  background-color: currentColor !important;
+  border-radius: 10px !important;
+}

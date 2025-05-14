@@ -25,18 +25,21 @@
 
 
 
+
 :root {
-  --bg-main: #2e1f14;           /* dark saddle */
-  --bg-secondary: #4e342e;      /* saddle brown */
-  --text-color: #fff5e1;        /* warm ivory */
-  --accent-color: #eab64f;      /* old gold */
-  --highlight-color: #ffdf8c;   /* wheat */
-  --warning-color: #cf6e3b;     /* copper rust */
-  --error-color: #7b1e1e;       /* dried blood */
-  --border-color: #8e5c3b;      /* chestnut frame */
-  --shadow-glow: 0 0 10px rgba(255, 215, 130, 0.25);
-  --font-family: 'Stalinist One', 'Cinzel Decorative', 'Special Elite', 'Courier New', serif;
+  --bg-main: #1c120a;
+  --bg-secondary: #2e1e11;
+  --text-color: #fff8e7;
+  --accent-color: #d4af37;      /* gold */
+  --highlight-color: #b0c4de;   /* light steel (silver) */
+  --error-color: #8b0000;
+  --warning-color: #ffae42;     /* amber/orange */
+  --active-green: #5e7a68;
+  --border-color: #5c3d2e;
+  --shadow-glow: 0 0 12px rgba(255, 215, 0, 0.35);
+  --font-family: 'Orbitron', 'Bebas Neue', 'Special Elite', monospace;
 }
+
 
 
 
@@ -293,18 +296,21 @@ body::before {
 
 
 
+
 :root {
-  --bg-main: #2e1f14;           /* dark saddle */
-  --bg-secondary: #4e342e;      /* saddle brown */
-  --text-color: #fff5e1;        /* warm ivory */
-  --accent-color: #eab64f;      /* old gold */
-  --highlight-color: #ffdf8c;   /* wheat */
-  --warning-color: #cf6e3b;     /* copper rust */
-  --error-color: #7b1e1e;       /* dried blood */
-  --border-color: #8e5c3b;      /* chestnut frame */
-  --shadow-glow: 0 0 10px rgba(255, 215, 130, 0.25);
-  --font-family: 'Stalinist One', 'Cinzel Decorative', 'Special Elite', 'Courier New', serif;
+  --bg-main: #1c120a;
+  --bg-secondary: #2e1e11;
+  --text-color: #fff8e7;
+  --accent-color: #d4af37;      /* gold */
+  --highlight-color: #b0c4de;   /* light steel (silver) */
+  --error-color: #8b0000;
+  --warning-color: #ffae42;     /* amber/orange */
+  --active-green: #5e7a68;
+  --border-color: #5c3d2e;
+  --shadow-glow: 0 0 12px rgba(255, 215, 0, 0.35);
+  --font-family: 'Orbitron', 'Bebas Neue', 'Special Elite', monospace;
 }
+
 
 
 
@@ -1614,7 +1620,7 @@ form {
               linear-gradient(90deg, #ffaa00, #00d4ff, #ffaa00, #00ffc3) border-box;
   animation: borderCycle 6s linear infinite;
   position: relative;
-  z-index: 1000;
+  z-index: 9999;
 }
 
 @keyframes borderCycle {
@@ -5931,4 +5937,19 @@ nav a:active, nav button:active, button:active {
   0% { transform: rotate(0deg); opacity: 0.6; }
   50% { opacity: 1; }
   100% { transform: rotate(360deg); opacity: 0.6; }
+}
+
+
+/* === Video Header Background === */
+header::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('https://assets.mixkit.co/videos/preview/mixkit-sunset-in-the-wild-west-35117-large.mp4') center center no-repeat;
+  background-size: cover;
+  opacity: 0.2;
+  z-index: -1;
+  pointer-events: none;
 }

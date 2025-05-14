@@ -1518,124 +1518,104 @@ tr:hover {
 }
 
 /* === COLOR THEMES === */
-.theme-1 {
-  --bg-gradient: linear-gradient(135deg, #330000, #cc0000, #ff6600) !important;
-  --neon-cyan: #ff4500 !important;
-  --neon-pink: #ff6347 !important;
-  --gold: #ffcc00 !important;
-  --text-light: #fff5e6 !important;
+.theme-1  {
   --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important;
   --neon-cyan: #00ffff !important;
   --neon-pink: #ff00ff !important;
   --gold: #ffd700 !important;
   --text-light: #f0f0f0 !important;
+.theme-1 {
+}
 }
 
-.theme-2 {
-  --bg-gradient: linear-gradient(135deg, #004e92, #000428) !important;
-  --neon-cyan: #00e5ff !important;
-  --neon-pink: #0077be !important;
-  --gold: #00bcd4 !important;
-  --text-light: #e0f7fa !important;
+.theme-2  {
   --bg-gradient: linear-gradient(135deg, #000428, #004e92) !important;
   --neon-cyan: #1de9b6 !important;
   --neon-pink: #ff1744 !important;
   --gold: #ffc107 !important;
   --text-light: #ffffff !important;
+.theme-2 {
+}
 }
 
-.theme-3 {
-  --bg-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364) !important;
-  --neon-cyan: #ff00ff !important;
-  --neon-pink: #00ffff !important;
-  --gold: #ffeb3b !important;
-  --text-light: #f5f5f5 !important;
+.theme-3  {
   --bg-gradient: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d) !important;
   --neon-cyan: #00e5ff !important;
   --neon-pink: #f50057 !important;
   --gold: #ffea00 !important;
   --text-light: #ffffff !important;
+.theme-3 {
+}
 }
 
-.theme-4 {
-  --bg-gradient: linear-gradient(135deg, #8ec5fc, #e0c3fc) !important;
-  --neon-cyan: #81ecec !important;
-  --neon-pink: #fd79a8 !important;
-  --gold: #ffeaa7 !important;
-  --text-light: #2d3436 !important;
+.theme-4  {
   --bg-gradient: linear-gradient(135deg, #4b6cb7, #182848) !important;
   --neon-cyan: #40c4ff !important;
   --neon-pink: #ff4081 !important;
   --gold: #ffc400 !important;
   --text-light: #e0f7fa !important;
+.theme-4 {
+}
 }
 
-.theme-5 {
-  --bg-gradient: linear-gradient(135deg, #43cea2, #185a9d) !important;
-  --neon-cyan: #00cec9 !important;
-  --neon-pink: #6c5ce7 !important;
-  --gold: #fab1a0 !important;
-  --text-light: #ffffff !important;
+.theme-5  {
   --bg-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364) !important;
   --neon-cyan: #00bcd4 !important;
   --neon-pink: #ec407a !important;
   --gold: #ffee58 !important;
   --text-light: #f8f8f8 !important;
+.theme-5 {
+}
 }
 
-.theme-6 {
-  --bg-gradient: linear-gradient(135deg, #3e2723, #5d4037, #8d6e63) !important;
-  --neon-cyan: #bcaaa4 !important;
-  --neon-pink: #ff8a65 !important;
-  --gold: #ffe57f !important;
-  --text-light: #fbe9e7 !important;
+.theme-6  {
   --bg-gradient: linear-gradient(135deg, #232526, #414345) !important;
   --neon-cyan: #80d8ff !important;
   --neon-pink: #f8bbd0 !important;
   --gold: #ffd740 !important;
   --text-light: #eeeeee !important;
+.theme-6 {
+}
 }
 
-.theme-7 {
-  --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important;
-  --neon-cyan: #7c4dff !important;
-  --neon-pink: #ff4081 !important;
-  --gold: #ffea00 !important;
-  --text-light: #ffffff !important;
+.theme-7  {
   --bg-gradient: linear-gradient(135deg, #8e2de2, #4a00e0) !important;
   --neon-cyan: #69f0ae !important;
   --neon-pink: #ff5252 !important;
   --gold: #ffeb3b !important;
   --text-light: #fafafa !important;
+.theme-7 {
+}
 }
 
-.theme-8 {
-  --bg-gradient: linear-gradient(135deg, #3f0d12, #a71d31, #ff5733) !important;
-  --neon-cyan: #ff6f61 !important;
-  --neon-pink: #c70039 !important;
-  --gold: #ffc300 !important;
-  --text-light: #fff0e6 !important;
+.theme-8  {
   --bg-gradient: linear-gradient(135deg, #00c6ff, #0072ff) !important;
   --neon-cyan: #18ffff !important;
   --neon-pink: #e91e63 !important;
   --gold: #ffc107 !important;
   --text-light: #fefefe !important;
+.theme-8 {
+}
 }
 
-.theme-9 {
+.theme-9  {
   --bg-gradient: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b) !important;
   --neon-cyan: #64ffda !important;
   --neon-pink: #ff4081 !important;
   --gold: #ffd600 !important;
   --text-light: #f5f5f5 !important;
+.theme-9 {
+}
 }
 
-.theme-10 {
+.theme-10  {
   --bg-gradient: linear-gradient(135deg, #1e3c72, #2a5298) !important;
   --neon-cyan: #00bcd4 !important;
   --neon-pink: #f06292 !important;
   --gold: #ffeb3b !important;
   --text-light: #ffffff !important;
+.theme-10 {
+}
 }
 
 /* === ENHANCEMENTS PATCH === */
@@ -48574,13 +48554,15 @@ button, .btn-action, .menu-btn {
 }
 
 /* === NUOVO TEMA LAVA === */
-.theme-11 {
+.theme-11  {
   --bg-gradient: linear-gradient(135deg, #ff512f, #dd2476, #ff6e7f) !important;
   --neon-cyan: #ff8a65 !important;
   --neon-pink: #ff1744 !important;
   --gold: #ffc107 !important;
   --text-light: #ffffff !important;
   --lava-glow: 0 0 15px #ff512f, 0 0 30px #ff6e7f, 0 0 45px #ff1744;
+.theme-11 {
+}
 }
 
 .theme-11 body {
@@ -48690,11 +48672,13 @@ input, select, textarea {
 
 /* === SFONDI E FONT SPECIFICI PER OGNI THEME === */
 
-.theme-1 { /* FUOCO */
+.theme-1  {
   --bg-gradient: radial-gradient(circle, #330000, #cc0000, #ff6600) !important;
+.theme-1 { /* FUOCO */
   font-family: 'Bangers', cursive !important;
   background-size: 200% 200% !important;
   animation: fireBackground 10s ease infinite !important;
+}
 }
 @keyframes fireBackground {
   0% { background-position: 0% 50%; }
@@ -48702,8 +48686,9 @@ input, select, textarea {
   100% { background-position: 0% 50%; }
 }
 
-.theme-2 { /* MARE */
+.theme-2  {
   --bg-gradient: linear-gradient(135deg, #004e92, #000428) !important;
+.theme-2 { /* MARE */
   font-family: 'Quicksand', sans-serif !important;
   background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg"><path fill="%2300e5ff" fill-opacity="0.3" d="M0,64L48,101.3C96,139,192,213,288,224C384,235,480,181,576,160C672,139,768,149,864,165.3C960,181,1056,203,1152,213.3C1248,224,1344,224,1392,224L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') !important;
   background-repeat: no-repeat !important;
@@ -48711,21 +48696,25 @@ input, select, textarea {
   background-size: cover !important;
   animation: oceanWaves 20s linear infinite !important;
 }
+}
 @keyframes oceanWaves {
   0% { background-position: 0 100%; }
   100% { background-position: 100% 100%; }
 }
 
+.theme-3  {
 .theme-3 { /* GLITCH */
   font-family: 'Press Start 2P', cursive !important;
   background: repeating-linear-gradient(45deg, #2c5364, #203a43 10px, #0f2027 10px, #0f2027 20px) !important;
   animation: glitchShift 1s infinite steps(2) !important;
+}
 }
 @keyframes glitchShift {
   0% { background-position: 0 0; }
   100% { background-position: 10px 10px; }
 }
 
+.theme-4  {
 .theme-4 { /* BOLLE POP */
   font-family: 'Pacifico', cursive !important;
   background: radial-gradient(circle at 20% 20%, #ffeaa7 0%, transparent 25%),
@@ -48734,16 +48723,19 @@ input, select, textarea {
   background-size: 100% 100% !important;
   animation: bubblesRise 12s linear infinite !important;
 }
+}
 @keyframes bubblesRise {
   0% { background-position: 0 100%; }
   100% { background-position: 0 0; }
 }
 
+.theme-5  {
 .theme-5 { /* LIQUIDO */
   background: linear-gradient(135deg, #43cea2, #185a9d) !important;
   font-family: 'Orbitron', sans-serif !important;
   background-size: 400% 400% !important;
   animation: liquidFlow 15s ease infinite !important;
+}
 }
 @keyframes liquidFlow {
   0% { background-position: 0% 50%; }
@@ -48751,26 +48743,32 @@ input, select, textarea {
   100% { background-position: 0% 50%; }
 }
 
+.theme-6  {
 .theme-6 { /* CAVERNICOLO */
   font-family: 'Rock Salt', cursive !important;
   background: url('https://www.transparenttextures.com/patterns/rock-wall.png') repeat !important;
   background-color: #5d4037 !important;
 }
+}
 
+.theme-7  {
 .theme-7 { /* SPARK */
   font-family: 'Monoton', cursive !important;
   background: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important;
   animation: sparkGlow 4s ease-in-out infinite !important;
+}
 }
 @keyframes sparkGlow {
   0%, 100% { filter: brightness(1); }
   50% { filter: brightness(1.2); }
 }
 
+.theme-8  {
 .theme-8 { /* LAVA */
   font-family: 'Rampart One', cursive !important;
   background: radial-gradient(circle, #3f0d12, #a71d31, #ff5733) !important;
   animation: lavaPulse 10s ease-in-out infinite !important;
+}
 }
 @keyframes lavaPulse {
   0% { filter: brightness(1); }
@@ -48818,11 +48816,13 @@ body.modal-open {
 
 /* === PER-THEME BUTTONS & MODALS === */
 
-.theme-1 {
+.theme-1  {
   --bg-gradient: #330000 !important;
   --btn-color: #ff6600 !important;
   --text-color: #fff1e6 !important;
   --modal-bg: #660000 !important;
+.theme-1 {
+}
 }
 
 .theme-1 button,
@@ -48855,11 +48855,13 @@ body.modal-open {
   box-shadow: 0 0 20px #ff6600 !important;
 }
 
-.theme-2 {
+.theme-2  {
   --bg-gradient: #004e92 !important;
   --btn-color: #00e5ff !important;
   --text-color: #e0f7fa !important;
   --modal-bg: #003366 !important;
+.theme-2 {
+}
 }
 
 .theme-2 button,
@@ -48892,11 +48894,13 @@ body.modal-open {
   box-shadow: 0 0 20px #00e5ff !important;
 }
 
-.theme-3 {
+.theme-3  {
   --bg-gradient: #0f2027 !important;
   --btn-color: #ff00ff !important;
   --text-color: #f5f5f5 !important;
   --modal-bg: #1c1c1c !important;
+.theme-3 {
+}
 }
 
 .theme-3 button,
@@ -48929,11 +48933,13 @@ body.modal-open {
   box-shadow: 0 0 20px #ff00ff !important;
 }
 
-.theme-4 {
+.theme-4  {
   --bg-gradient: #ffeaa7 !important;
   --btn-color: #fd79a8 !important;
   --text-color: #2d3436 !important;
   --modal-bg: #fffde7 !important;
+.theme-4 {
+}
 }
 
 .theme-4 button,
@@ -48966,11 +48972,13 @@ body.modal-open {
   box-shadow: 0 0 20px #fd79a8 !important;
 }
 
-.theme-5 {
+.theme-5  {
   --bg-gradient: #185a9d !important;
   --btn-color: #6c5ce7 !important;
   --text-color: #ffffff !important;
   --modal-bg: #0f3057 !important;
+.theme-5 {
+}
 }
 
 .theme-5 button,
@@ -49003,11 +49011,13 @@ body.modal-open {
   box-shadow: 0 0 20px #6c5ce7 !important;
 }
 
-.theme-6 {
+.theme-6  {
   --bg-gradient: #5d4037 !important;
   --btn-color: #ff8a65 !important;
   --text-color: #fbe9e7 !important;
   --modal-bg: #3e2723 !important;
+.theme-6 {
+}
 }
 
 .theme-6 button,
@@ -49040,11 +49050,13 @@ body.modal-open {
   box-shadow: 0 0 20px #ff8a65 !important;
 }
 
-.theme-7 {
+.theme-7  {
   --bg-gradient: #302b63 !important;
   --btn-color: #7c4dff !important;
   --text-color: #fafafa !important;
   --modal-bg: #241c51 !important;
+.theme-7 {
+}
 }
 
 .theme-7 button,
@@ -49077,11 +49089,13 @@ body.modal-open {
   box-shadow: 0 0 20px #7c4dff !important;
 }
 
-.theme-8 {
+.theme-8  {
   --bg-gradient: #a71d31 !important;
   --btn-color: #ffc300 !important;
   --text-color: #fff0e6 !important;
   --modal-bg: #600000 !important;
+.theme-8 {
+}
 }
 
 .theme-8 button,
@@ -49114,11 +49128,13 @@ body.modal-open {
   box-shadow: 0 0 20px #ffc300 !important;
 }
 
-.theme-9 {
+.theme-9  {
   --bg-gradient: #1b1b2f !important;
   --btn-color: #e43f5a !important;
   --text-color: #eeeeee !important;
   --modal-bg: #162447 !important;
+.theme-9 {
+}
 }
 
 .theme-9 button,
@@ -49151,11 +49167,13 @@ body.modal-open {
   box-shadow: 0 0 20px #e43f5a !important;
 }
 
-.theme-10 {
+.theme-10  {
   --bg-gradient: #2f3542 !important;
   --btn-color: #70a1ff !important;
   --text-color: #dfe4ea !important;
   --modal-bg: #1e272e !important;
+.theme-10 {
+}
 }
 
 .theme-10 button,
@@ -49188,11 +49206,13 @@ body.modal-open {
   box-shadow: 0 0 20px #70a1ff !important;
 }
 
-.theme-11 {
+.theme-11  {
   --bg-gradient: #006266 !important;
   --btn-color: #f79f1f !important;
   --text-color: #fefefe !important;
   --modal-bg: #001f1f !important;
+.theme-11 {
+}
 }
 
 .theme-11 button,
@@ -49289,4 +49309,31 @@ body.theme-6 .menu-button,
 /* Optional: hide JS dropdown logic */
 .dropdown-toggle[aria-expanded="false"] + .dropdown-menu {
   display: none !important;
+}
+
+
+
+#modal,
+#confirm-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(6px) !important;
+  z-index: 9999 !important;
+}
+
+#modal .modal-content,
+#confirm-modal .modal-content {
+  z-index: 10000 !important;
+  position: relative !important;
+  max-width: 90% !important;
+  max-height: 90% !important;
+  overflow-y: auto !important;
+  animation: modalPop 0.4s ease-out !important;
 }

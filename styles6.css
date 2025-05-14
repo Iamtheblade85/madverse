@@ -447,3 +447,12 @@
   border-radius: 25px !important;
 }
 
+.navbar-menu {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  gap: 1rem !important;          /* equivalente a gap-4 */
+  padding: 1rem !important;      /* equivalente a p-4 */
+  flex-wrap: wrap !important;    /* utile su schermi piccoli */
+}

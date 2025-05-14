@@ -1491,21 +1491,22 @@ function resetFilters() {
   document.getElementById('filter-channel').value = '';
   displayLogData(originalData);
 }
+
 function renderRewardTable(data) {
   const tbody = document.querySelector('#c2e-content tbody');
   let rows = '';
 
   data.forEach((record, index) => {
-    const bg = index % 2 === 0 ? '#f9f9f9' : '#f1f1f1';
+    const rowClass = index % 2 === 0 ? 'row-even' : 'row-odd';
 
     rows += `
-      <tr >
-        <td >${record.username}</td>
-        <td >${record.token_symbol}</td>
-        <td >${record.amount}</td>
-        <td >${record.channel}</td>
-        <td >${record.origin_channel}</td>
-        <td >${new Date(record.timestamp).toLocaleString()}</td>
+      <tr class="${rowClass}">
+        <td class="cell">${record.username}</td>
+        <td class="cell">${record.token_symbol}</td>
+        <td class="cell">${record.amount}</td>
+        <td class="cell">${record.channel}</td>
+        <td class="cell">${record.origin_channel}</td>
+        <td class="cell">${new Date(record.timestamp).toLocaleString()}</td>
       </tr>
     `;
   });
@@ -1526,25 +1527,15 @@ function displayLogData(data) {
   const sponsors = getUniqueValues(data, 'origin_channel');
 
   container.innerHTML = `
-    <div>
-      <div>
-        <select id="filter-username" class="input-box">
-          ${createOptions(usernames)}
-        </select>
-        <select id="filter-channel" class="input-box">
-          ${createOptions(channels)}
-        </select>
-        <select id="filter-sponsor" class="input-box">
-          ${createOptions(sponsors)}
-        </select>
-      </div>
-      <button id="update-rewards">
-        Update Data
-      </button>
+    <div class="filter-toolbar">
+      <select id="filter-username" class="filter-select">${createOptions(usernames)}</select>
+      <select id="filter-channel" class="filter-select">${createOptions(channels)}</select>
+      <select id="filter-sponsor" class="filter-select">${createOptions(sponsors)}</select>
+      <button id="update-rewards" class="btn btn-primary">Update Data</button>
     </div>
 
     <div>
-      <table id="wallet-table">
+      <table class="reward-table">
         <thead>
           <tr>
             <th>Username${sortArrow('username')}</th>
@@ -1756,10 +1747,9 @@ async function loadLogStormsGiveaways() {
     // Carica la tabella delle tempeste programmate
     loadScheduledStorms();
   } catch (err) {
-    container.innerHTML = `<div class="text-red-500 text-center">Error loading log storms and giveaways: ${err.message}</div>`;
+    container.innerHTML = `<div class="error-message">Error loading log storms and giveaways: ${err.message}</div>`;
   }
 }
-
 
 // Funzione per popolare il dropdown dei Token Symbols
 async function populateTokenSymbols() {
@@ -1857,17 +1847,16 @@ async function loadScheduledStorms() {
 
     displayStormsData(data);
   } catch (err) {
-    tableContainer.innerHTML = `<div class="text-red-500 text-center">Error loading scheduled storms: ${err.message}</div>`;
+    tableContainer.innerHTML = `<div class="error-message">Error loading scheduled storms: ${err.message}</div>`;
   }
 }
 function renderStormsTable(data) {
-  const tableBody = document.querySelector('.table-auto tbody');
+  const tableBody = document.querySelector('.storm-table tbody');
   if (!tableBody) return;
 
   let rowsHTML = '';
 
   data.forEach((storm, index) => {
-    const rowColor = index % 2 === 0 ? '#f9f9f9' : '#f1f1f1';
     let winnersHTML = '';
     const winnersRaw = storm.winners_display?.trim();
 
@@ -1878,33 +1867,33 @@ function renderStormsTable(data) {
           const left = winnersArray[i];
           const right = winnersArray[i + 1] || '';
           winnersHTML += `
-            <div >
-              <span >${left}</span>
-              <span >${right}</span>
+            <div class="winner-row">
+              <span class="winner-name">${left}</span>
+              <span class="winner-name">${right}</span>
             </div>`;
         }
       } else {
-        winnersHTML = `<span >No winners in the selected time interval :(</span>`;
+        winnersHTML = `<span class="no-winners">No winners in the selected time interval :(</span>`;
       }
     } else {
-      winnersHTML = `<span >soon</span>`;
+      winnersHTML = `<span class="pending-winners">soon</span>`;
     }
 
     const pulse = storm.status === 'pending'
-      ? `<div ></div>`
-      : `<div ></div>`;
+      ? `<div class="status-dot pending"></div>`
+      : `<div class="status-dot executed"></div>`;
 
     rowsHTML += `
-      <tr >
-        <td>${storm.id}</td>
-        <td>${new Date(storm.scheduled_time).toLocaleString()}</td>
-        <td>${storm.offered_by}</td>
-        <td>${storm.amount}</td>
-        <td>${storm.token_symbol}</td>
-        <td>${storm.channel_name}</td>
-        <td>${storm.status}</td>
-        <td>${winnersHTML}</td>
-        <td>${pulse}</td>
+      <tr class="storm-row">
+        <td class="cell">${storm.id}</td>
+        <td class="cell">${new Date(storm.scheduled_time).toLocaleString()}</td>
+        <td class="cell">${storm.offered_by}</td>
+        <td class="cell">${storm.amount}</td>
+        <td class="cell">${storm.token_symbol}</td>
+        <td class="cell">${storm.channel_name}</td>
+        <td class="cell">${storm.status}</td>
+        <td class="cell">${winnersHTML}</td>
+        <td class="cell">${pulse}</td>
       </tr>
     `;
   });
@@ -1912,6 +1901,7 @@ function renderStormsTable(data) {
   tableBody.innerHTML = rowsHTML;
   addHoverEffectToRows();
 }
+
 function sortStormsTable(key) {
   if (currentSort.key === key) {
     // Inverti direzione se si clicca due volte sullo stesso campo
@@ -1944,42 +1934,26 @@ function displayStormsData(data) {
   };
 
   tableContainer.innerHTML = `
-    <div >
-      <div >
-        <select id="filter-channel" class="input-box" >
-          ${createOptions(channels)}
-        </select>
-        <select id="filter-status" class="input-box" >
-          ${createOptions(statuses)}
-        </select>
-        <select id="filter-offeredby" class="input-box" >
-          ${createOptions(offeredBys)}
-        </select>
-      </div>
-      <button id="update-storms" >
-        Update Data
-      </button>
+    <div class="filter-toolbar">
+      <select id="filter-channel" class="filter-select">${createOptions(channels)}</select>
+      <select id="filter-status" class="filter-select">${createOptions(statuses)}</select>
+      <select id="filter-offeredby" class="filter-select">${createOptions(offeredBys)}</select>
+      <button id="update-storms" class="btn btn-primary">Update Data</button>
     </div>
-    <style>
-      @keyframes pulse-scale {
-        0% { transform: scale(1); opacity: 1; }
-        70% { transform: scale(2); opacity: 0; }
-        100% { transform: scale(2); opacity: 0; }
-      }
-    </style>
-    <div class="table-container" >
-      <table class="table-auto w-full" >
-        <thead >
+
+    <div class="table-container">
+      <table class="storm-table">
+        <thead>
           <tr>
-            <th  onclick="sortStormsTable('id')">Storm-ID${sortArrow('id')}</th>
-            <th  onclick="sortStormsTable('scheduled_time')">Start Time (your local time)${sortArrow('scheduled_time')}</th>
-            <th  onclick="sortStormsTable('offered_by')">Offered By${sortArrow('offered_by')}</th>
-            <th  onclick="sortStormsTable('amount')">Amount${sortArrow('amount')}</th>
-            <th  onclick="sortStormsTable('token_symbol')">Token${sortArrow('token_symbol')}</th>
-            <th  onclick="sortStormsTable('channel_name')">Channel${sortArrow('channel_name')}</th>
-            <th  onclick="sortStormsTable('status')">Status${sortArrow('status')}</th>
-            <th >Winners</th>
-            <th ></th>
+            <th onclick="sortStormsTable('id')">Storm-ID${sortArrow('id')}</th>
+            <th onclick="sortStormsTable('scheduled_time')">Start Time${sortArrow('scheduled_time')}</th>
+            <th onclick="sortStormsTable('offered_by')">Offered By${sortArrow('offered_by')}</th>
+            <th onclick="sortStormsTable('amount')">Amount${sortArrow('amount')}</th>
+            <th onclick="sortStormsTable('token_symbol')">Token${sortArrow('token_symbol')}</th>
+            <th onclick="sortStormsTable('channel_name')">Channel${sortArrow('channel_name')}</th>
+            <th onclick="sortStormsTable('status')">Status${sortArrow('status')}</th>
+            <th>Winners</th>
+            <th></th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1987,40 +1961,40 @@ function displayStormsData(data) {
     </div>
   `;
 
-  // Inizializza righe
   renderStormsTable(data);
 
-  // Eventi filtri e aggiornamento
   document.getElementById('filter-channel').addEventListener('change', applyStormsFiltersAndSort);
   document.getElementById('filter-status').addEventListener('change', applyStormsFiltersAndSort);
   document.getElementById('filter-offeredby').addEventListener('change', applyStormsFiltersAndSort);
   document.getElementById('update-storms').addEventListener('click', loadScheduledStorms);
 }
 
+
 function addHoverEffectToRows() {
-  const rows = document.querySelectorAll('.table-auto tbody tr');
+  const rows = document.querySelectorAll('.storm-table tbody tr');
   rows.forEach(row => {
     row.addEventListener('mouseenter', () => {
-      row
+      row.classList.add('hovered');
     });
     row.addEventListener('mouseleave', () => {
-      row
+      row.classList.remove('hovered');
     });
   });
 }
 
 // Aggiungi effetto hover alle righe della tabella per migliorare l'interazione
 function addHoverEffectToRows() {
-  const rows = document.querySelectorAll('.table-row');
+  const rows = document.querySelectorAll('.storm-table tbody tr');
   rows.forEach(row => {
     row.addEventListener('mouseenter', () => {
-      row // Colore chiaro al passaggio del mouse
+      row.classList.add('hovered');
     });
     row.addEventListener('mouseleave', () => {
-      row // Rimuove il colore al passaggio
+      row.classList.remove('hovered');
     });
   });
 }
+
 
 // Load Schedule NFT-Giveaway
 async function loadScheduleNFTGiveaway() {
@@ -2031,7 +2005,7 @@ async function loadScheduleNFTGiveaway() {
     const data = await res.json();
     container.innerHTML = JSON.stringify(data, null, 2);  // Display the data
   } catch (err) {
-    container.innerHTML = `<div class="text-red-500">Error loading schedule nft-giveaway: ${err.message}</div>`;
+    container.innerHTML = `<div class="error-message">Error loading schedule nft-giveaway: ${err.message}</div>`;
   }
 } async function handleNFTStake(farmId, templateId, assetId, isStaked) {
   const { userId, usx_token, wax_account } = window.userData;
@@ -2072,7 +2046,7 @@ async function loadScheduleNFTGiveaway() {
 
   if (!data.pools || data.pools.length === 0) {
     document.getElementById('pool-buttons').innerHTML = `
-      <div class="text-red-500">No staking pools found.</div>`;
+      <div class="error-message">No staking pools found.</div>`;
     return;
   }
 
@@ -2105,82 +2079,89 @@ async function loadScheduleNFTGiveaway() {
   });
 } function renderPoolDetails(pool) {
   const container = document.getElementById('selected-pool-details');
-
   const rewards = pool.rewards_info;
   const rewardsCount = rewards.length;
 
-  // Calcolo responsivo colonne
-  let gridColumns = 'grid-cols-1';
+  // Calcolo responsive grid
+  let gridClass = 'reward-grid cols-1';
   if (rewardsCount === 2) {
-    gridColumns = 'grid-cols-2';
+    gridClass = 'reward-grid cols-2';
   } else if (rewardsCount > 2) {
-    gridColumns = 'sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2';
+    gridClass = 'reward-grid cols-auto';
   }
 
   const rewardsHTML = rewards.map(r => `
-    <div class="p-2 border-b md:border md:rounded">
-      <div class="font-bold text-yellow-700">${r.reward_token}</div>
+    <div class="reward-box">
+      <div class="reward-title">${r.reward_token}</div>
       <div><strong>Total:</strong> ${r.total_reward_deposit}</div>
       <div><strong>Daily:</strong> ${r.daily_reward}</div>
       <div><strong>APR:</strong> ${r.apr}%</div>
       <div><strong>Days Left:</strong> ${r.days_remaining}</div>
-      <div class="text-green-700 font-semibold"><strong>Your Daily:</strong> ${r.user_daily_reward}</div>
+      <div class="reward-user-daily"><strong>Your Daily:</strong> ${r.user_daily_reward}</div>
     </div>
   `).join('');
 
   container.innerHTML = `
-    <div class="bg-white shadow rounded p-4">
-      <h3 class="text-xl font-bold mb-2">Pool: ${pool.token_symbol}</h3>
-      <p class="text-sm text-gray-500 mb-2">Total Staked: <strong>${pool.total_staked}</strong></p>
-      <p class="text-sm text-gray-500 mb-4">You Staked: <strong>${pool.user_staked}</strong></p>
-      <div class="flex flex-wrap gap-4 mb-4">
-        <button class="btn-action" onclick="openStakeModal('add', ${pool.pool_id}, '${pool.token_symbol}')">Add Tokens</button>
-        <button class="btn-action" onclick="openStakeModal('remove', ${pool.pool_id}, '${pool.token_symbol}')">Remove Tokens</button>
-      </div>      
-      <h4 class="font-semibold mb-2">Rewards</h4>
-      <div class="grid gap-4 ${gridColumns}">
+    <div class="card">
+      <h3 class="card-title">Pool: ${pool.token_symbol}</h3>
+      <p class="label">Total Staked: <strong>${pool.total_staked}</strong></p>
+      <p class="label section-space">You Staked: <strong>${pool.user_staked}</strong></p>
+
+      <div class="btn-group section-space">
+        <button class="btn btn-secondary" onclick="openStakeModal('add', ${pool.pool_id}, '${pool.token_symbol}')">Add Tokens</button>
+        <button class="btn btn-secondary" onclick="openStakeModal('remove', ${pool.pool_id}, '${pool.token_symbol}')">Remove Tokens</button>
+      </div>  
+
+      <h4 class="subheading">Rewards</h4>
+      <div class="${gridClass}">
         ${rewardsHTML}
-      </div> 
+      </div>
     </div>
   `;
-} function openStakeModal(type, poolId, tokenSymbol) {
+}
+function openStakeModal(type, poolId, tokenSymbol) {
   const modal = document.getElementById('modal');
   const modalBody = document.getElementById('modal-body');
   const wax_account = window.userData.wax_account;
   const user_id = window.userData.userId;
   const usx_token = window.userData.usx_token;
+
   let balance = 0;
   if (type === 'add') {
     const tokenData = window.walletBalances?.find(t => t.symbol === tokenSymbol);
     balance = tokenData ? parseFloat(tokenData.amount) : 0;
-    console.log(`[🔎] Bilancio wallet per ${tokenSymbol}:`, balance);
   } else if (type === 'remove') {
     const pool = window.stakingPools?.find(p => p.pool_id === poolId);
     balance = pool ? parseFloat(pool.user_staked || "0") : 0;
-    console.log(`[🔎] Staked balance in pool ${poolId} per ${tokenSymbol}:`, balance);
   }
+
   const title = type === 'add' ? 'Add Tokens to Farm' : 'Remove Tokens from Farm';
   const actionUrl = type === 'add' ? 'stake_add' : 'stake_remove';
   const availableLabel = type === 'add' ? 'Available in Wallet' : 'Staked in Farm';
+
   modalBody.innerHTML = `
-    <h3 class="text-xl font-bold mb-4">${title}</h3>
-    <p class="text-gray-600 mb-2">${availableLabel}: <strong>${balance.toFixed(4)}</strong> ${tokenSymbol}</p>
-    <label class="block mb-1 text-sm">Select %</label>
-    <input id="stake-range" type="range" min="0" max="100" value="0" class="w-full mb-2">
-    <label class="block mb-1 text-sm">Amount</label>
-    <input id="stake-amount" type="number" step="0.0001" class="w-full border p-2 rounded mb-4" value="0">
-    <div id="stake-summary" class="text-sm text-gray-500 mb-4"></div>
-    <button class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700" id="stake-submit">
-      Go!
-    </button>
+    <h3 class="modal-title">${title}</h3>
+    <p class="label">${availableLabel}: <strong>${balance.toFixed(4)}</strong> ${tokenSymbol}</p>
+
+    <label class="label">Select %</label>
+    <input id="stake-range" type="range" min="0" max="100" value="0" class="input-range">
+
+    <label class="label">Amount</label>
+    <input id="stake-amount" type="number" step="0.0001" class="input-field" value="0">
+
+    <div id="stake-summary" class="text-muted section-space"></div>
+
+    <button class="btn btn-confirm" id="stake-submit">Go!</button>
   `;
 
   modal.classList.remove('hidden');
   document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+
   const range = document.getElementById('stake-range');
   const input = document.getElementById('stake-amount');
   const summary = document.getElementById('stake-summary');
   const submit = document.getElementById('stake-submit');
+
   function updateSummary(val) {
     let fee = 0;
     let net = val;
@@ -2188,10 +2169,12 @@ async function loadScheduleNFTGiveaway() {
       fee = val * 0.0315;
       net = val - fee;
     }
+
     summary.innerHTML = type === 'add'
       ? `You will add <strong>${val.toFixed(4)}</strong> ${tokenSymbol}`
       : `Requested: <strong>${val.toFixed(4)}</strong> ${tokenSymbol}<br>Fee: ~<strong>${fee.toFixed(4)}</strong><br>Net Received: <strong>${net.toFixed(4)}</strong>`;
   }
+
   range.addEventListener('input', () => {
     const percent = parseFloat(range.value);
     const amount = parseFloat((balance * percent / 100).toFixed(4));
@@ -2233,52 +2216,54 @@ async function loadScheduleNFTGiveaway() {
       showToast(json.message || "Success", "success");
       modal.classList.add('hidden');
       loadWallet();
-      loadStakingPools(); // Refresh
+      loadStakingPools();
     } catch (err) {
       console.error(err);
       showToast("Operation failed: " + err.message, "error");
     }
   };
-} // Caricamento Wallet reale
+}
+ // Caricamento Wallet reale
 async function loadWallet() {
   try {
     const { userId, usx_token } = window.userData;
     const response = await fetch(`${BASE_URL}/saldo?user_id=${userId}&usx_token=${usx_token}`);
     const saldoData = await response.json();
 
-    // 🔥 Salva globalmente i dati del wallet
     window.walletBalances = saldoData.balances || [];
     console.info("[🧮] walletBalances salvati:", window.walletBalances);
 
     const walletTable = document.getElementById('wallet-table');
     if (!walletTable) {
       console.warn("[⚠️] wallet-table non trovato nel DOM. Skipping render.");
-      return; // Non continuare se la tabella non è nel DOM
+      return;
     }
 
     if (window.walletBalances.length > 0) {
       walletTable.innerHTML = `
-        <div class="w-full">
-          <table class="w-full table-auto bg-white rounded-lg shadow text-xs">
-            <thead class="bg-gray-200">
+        <div class="wallet-table-container">
+          <table class="wallet-table card small">
+            <thead class="thead">
               <tr>
-                <th class="px-2 py-1 w-1/4 text-left">Token</th>
-                <th class="px-2 py-1 w-1/4 text-left">Amount</th>
-                <th class="px-2 py-1 w-1/4 text-left">Stakeable</th>
-                <th class="px-2 py-1 w-1/4 text-left">Actions</th>
+                <th class="cell">Token</th>
+                <th class="cell">Amount</th>
+                <th class="cell">Stakeable</th>
+                <th class="cell">Actions</th>
               </tr>
             </thead>
             <tbody>
               ${window.walletBalances.map(token => `
-                <tr class="border-t">
-                  <td class="px-2 py-1 font-bold">${token.symbol}</td>
-                  <td class="px-2 py-1">${token.amount}</td>
-                  <td class="px-2 py-1">${token.stakeable}</td>
-                  <td class="px-2 py-1 flex flex-wrap gap-1">
-                    <button class="btn-action" data-action="withdraw" data-token="${token.symbol}">Withdraw</button>
-                    <button class="btn-action" data-action="swap" data-token="${token.symbol}">Swap</button>
-                    <button class="btn-action" data-action="transfer" data-token="${token.symbol}">Transfer</button>
-                    <button class="btn-action" data-action="stake" data-token="${token.symbol}">Stake</button>
+                <tr class="row-border">
+                  <td class="cell strong">${token.symbol}</td>
+                  <td class="cell">${token.amount}</td>
+                  <td class="cell">${token.stakeable}</td>
+                  <td class="cell">
+                    <div class="btn-group">
+                      <button class="btn-action" data-action="withdraw" data-token="${token.symbol}">Withdraw</button>
+                      <button class="btn-action" data-action="swap" data-token="${token.symbol}">Swap</button>
+                      <button class="btn-action" data-action="transfer" data-token="${token.symbol}">Transfer</button>
+                      <button class="btn-action" data-action="stake" data-token="${token.symbol}">Stake</button>
+                    </div>
                   </td>
                 </tr>
               `).join('')}
@@ -2286,22 +2271,24 @@ async function loadWallet() {
           </table>
         </div>
       `;
+
       document.querySelectorAll('[data-action]').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const action = btn.getAttribute('data-action');
           const token = btn.getAttribute('data-token');
           openModal(action, token);
         });
-      });      
+      });
+
     } else {
-      walletTable.innerHTML = `
-        <div class="text-center text-gray-500">No balances available.</div>
-      `;
+      walletTable.innerHTML = `<div class="empty-state">No balances available.</div>`;
     }
+
   } catch (error) {
     console.error("[❌] Error loading Wallet:", error);
   }
-} async function loadNFTs() {
+}
+ async function loadNFTs() {
   try {
     const { userId, usx_token } = window.userData;
     const response = await fetch(`${BASE_URL}/mynfts?user_id=${userId}&usx_token=${usx_token}`);
@@ -2334,7 +2321,6 @@ async function loadWallet() {
 
   let filtered = [...window.nftsData];
 
-  // Ricerca
   const search = document.getElementById('search-template').value.toLowerCase();
   if (search) {
     filtered = filtered.filter(nft => nft.template_info.template_name.toLowerCase().includes(search));
@@ -2346,17 +2332,13 @@ async function loadWallet() {
   const collection = document.getElementById('filter-collection').value;
 
   if (status) filtered = filtered.filter(nft => nft.is_staked === status);
-  if (status === "Staked") {
-    document.getElementById('filter-stakable').parentElement
-  } else {
-    document.getElementById('filter-stakable').parentElement
-    if (stakable) filtered = filtered.filter(nft => nft.is_stakable === stakable);
+  if (status !== "Staked" && stakable) {
+    filtered = filtered.filter(nft => nft.is_stakable === stakable);
   }
 
   if (forSale) filtered = filtered.filter(nft => nft.for_sale === forSale);
   if (collection) filtered = filtered.filter(nft => nft.template_info.collection_name === collection);
 
-  // Ordinamento
   const sort = document.getElementById('sort-by').value;
   if (sort === "created_at_desc") {
     filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -2370,7 +2352,6 @@ async function loadWallet() {
 
   count.innerText = `${filtered.length} NFTs found`;
 
-  // PAGINAZIONE
   const totalPages = Math.ceil(filtered.length / window.nftsPerPage);
   if (window.currentPage > totalPages) window.currentPage = totalPages || 1;
 
@@ -2380,26 +2361,28 @@ async function loadWallet() {
 
   if (pageNFTs.length > 0) {
     nftsList.innerHTML = pageNFTs.map(nft => `
-      <div class="bg-white rounded-lg shadow relative p-2 hover:shadow-lg transition">
-        <input type="checkbox" 
-          class="absolute top-2 left-2 w-5 h-5 z-10" 
+      <div class="card card-hover nft-card">
+        <input 
+          type="checkbox" 
+          class="nft-checkbox" 
           onclick="toggleNFTSelection(event, '${nft.asset_id}')" 
           ${window.selectedNFTs.has(nft.asset_id) ? "checked" : ""}>
-        
-        <div onclick="openNFTModal('${nft.asset_id}')" class="nft-card-content cursor-pointer">
-          <img src="${nft.image_url}" alt="NFT Image" class="w-full h-48 object-contain rounded">
-          <h3 class="text-md font-semibold mt-2 truncate">${nft.template_info.template_name}</h3>
-          <p class="text-gray-500 text-xs truncate">#${nft.asset_id}</p>
+
+        <div onclick="openNFTModal('${nft.asset_id}')" class="nft-card-content">
+          <img src="${nft.image_url}" alt="NFT Image" class="nft-image">
+          <h3 class="nft-title">${nft.template_info.template_name}</h3>
+          <p class="nft-subtitle">#${nft.asset_id}</p>
         </div>
       </div>
     `).join('');
   } else {
-    nftsList.innerHTML = `<div class="text-center text-gray-500">No NFTs match your filters.</div>`;
+    nftsList.innerHTML = `<div class="empty-state">No NFTs match your filters.</div>`;
   }
 
   renderPagination(totalPages);
   updateBulkActions();
-} function toggleNFTSelection(event, assetId) {
+}
+ function toggleNFTSelection(event, assetId) {
   event.stopPropagation(); // Evita che clicchi anche la card
   if (event.target.checked) {
     window.selectedNFTs.add(assetId);
@@ -2424,19 +2407,26 @@ function updateBulkActions() {
     return;
   }
 
-  let html = `
-    <button onclick="changePage(window.currentPage - 1)" class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400" ${window.currentPage === 1 ? "disabled" : ""}>Previous</button>
-    <span class="px-4">${window.currentPage} / ${totalPages}</span>
-    <button onclick="changePage(window.currentPage + 1)" class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400" ${window.currentPage === totalPages ? "disabled" : ""}>Next</button>
+  pagination.innerHTML = `
+    <button onclick="changePage(window.currentPage - 1)" 
+            class="btn-pagination" 
+            ${window.currentPage === 1 ? "disabled" : ""}>Previous</button>
+    <span class="pagination-info">${window.currentPage} / ${totalPages}</span>
+    <button onclick="changePage(window.currentPage + 1)" 
+            class="btn-pagination" 
+            ${window.currentPage === totalPages ? "disabled" : ""}>Next</button>
   `;
-  pagination.innerHTML = html;
-} function changePage(newPage) {
+}
+
+function changePage(newPage) {
   if (newPage < 1) newPage = 1;
   const totalPages = Math.ceil(window.nftsData.length / window.nftsPerPage);
   if (newPage > totalPages) newPage = totalPages;
   window.currentPage = newPage;
   renderNFTs();
-} function openNFTModal(assetId) {
+}
+
+function openNFTModal(assetId) {
   const nft = window.nftsData.find(n => n.asset_id === assetId);
   if (!nft) return;
 
@@ -2444,21 +2434,22 @@ function updateBulkActions() {
   const content = document.getElementById('modal-content');
 
   content.innerHTML = `
-    <img src="${nft.image_url}" alt="NFT Image" class="w-full object-contain mb-4 rounded">
-    <h2 class="text-xl font-bold mb-2">${nft.template_info.template_name}</h2>
-    <p class="text-gray-600 mb-1"><strong>Asset ID:</strong> ${nft.asset_id}</p>
-    <p class="text-gray-600 mb-1"><strong>Collection:</strong> ${nft.template_info.collection_name}</p>
-    <p class="text-gray-600 mb-1"><strong>Schema:</strong> ${nft.template_info.schema_name}</p>
-    <p class="text-gray-600 mb-1"><strong>Stakeable:</strong> ${nft.is_stakable}</p>
-    <p class="text-gray-600 mb-1"><strong>Staked:</strong> ${nft.is_staked}</p>
-    <p class="text-gray-600 mb-1"><strong>For Sale:</strong> ${nft.for_sale}</p>
-    <p class="text-gray-600 mb-1"><strong>Transferable:</strong> ${nft.template_info.is_transferable ? "Yes" : "No"}</p>
-    <p class="text-gray-400 text-xs mt-2">Acquired: ${new Date(nft.created_at).toLocaleDateString()}</p>
+    <img src="${nft.image_url}" alt="NFT Image" class="modal-image">
+    <h2 class="modal-title">${nft.template_info.template_name}</h2>
+    <p class="nft-detail"><strong>Asset ID:</strong> ${nft.asset_id}</p>
+    <p class="nft-detail"><strong>Collection:</strong> ${nft.template_info.collection_name}</p>
+    <p class="nft-detail"><strong>Schema:</strong> ${nft.template_info.schema_name}</p>
+    <p class="nft-detail"><strong>Stakeable:</strong> ${nft.is_stakable}</p>
+    <p class="nft-detail"><strong>Staked:</strong> ${nft.is_staked}</p>
+    <p class="nft-detail"><strong>For Sale:</strong> ${nft.for_sale}</p>
+    <p class="nft-detail"><strong>Transferable:</strong> ${nft.template_info.is_transferable ? "Yes" : "No"}</p>
+    <p class="nft-subtext">Acquired: ${new Date(nft.created_at).toLocaleDateString()}</p>
   `;
 
   modal.classList.remove('hidden');
   document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
-} function setupFilterEvents() {
+}
+ function setupFilterEvents() {
   document.getElementById('filter-status').addEventListener('change', renderNFTs);
   document.getElementById('filter-collection').addEventListener('change', renderNFTs);
   document.getElementById('sort-by').addEventListener('change', renderNFTs);
@@ -2561,154 +2552,121 @@ function updateBulkActions() {
   const tokenRow = Array.from(document.querySelectorAll('tr')).find(row => row.innerText.includes(token));
   const balanceCell = tokenRow ? tokenRow.querySelectorAll('td')[1] : null;
   const balance = balanceCell ? parseFloat(balanceCell.innerText) : 0;
+
   modalBody.innerHTML = "";
 
-  let contractIn = ""; // Initialize contractIn here
+  let contractIn = "";
+  if (action === "swap") {
+    const match = availableTokens.find(t => t.split("-")[0].toLowerCase() === token.toLowerCase());
+    contractIn = match ? match.split("-")[1] : "";
+  }
 
   if (action === "swap") {
-    // 🔥 Perform token contract search when opening the modal, for safety and to ensure it's correct
-    const match = availableTokens.find(t => t.split("-")[0].toLowerCase() === token.toLowerCase());
-
-    if (match) {
-      // If a match is found, assign the contract part to contractIn
-      contractIn = match.split("-")[1];
-      console.info(`[✅] Token ${token} contract found: ${contractIn}`);
-    } else {
-      // If no match is found, log an error and proceed without setting contractIn
-      console.error(`[❌] No contract found for token: ${token}`);
-    }
-
-    // Layout for Swap action
     modalBody.innerHTML = `
-      <h3 class="text-xl font-semibold mb-4">Swap ${token}</h3>
-      <div class="mb-2 text-gray-600">
-        Available Balance: <span class="font-semibold">${balance}</span> ${token}
-      </div>
-      <form id="action-form" class="space-y-4">
-        <div>
-          <label class="block mb-1">Percentage</label>
-          <input type="range" id="percent-range" class="w-full" min="0" max="100" value="0">
+      <h3 class="modal-title">Swap ${token}</h3>
+      <div class="text-muted">Available: <strong>${balance}</strong> ${token}</div>
+      <form id="action-form" class="form-wrapper">
+        <div class="form-field">
+          <label>Percentage</label>
+          <input type="range" id="percent-range" class="input-range" min="0" max="100" value="0">
         </div>
-        <div>
-          <label class="block mb-1">Amount to Swap</label>
-          <input type="number" id="amount" class="w-full p-2 border rounded" required min="0.0001" step="0.0001">
+        <div class="form-field">
+          <label>Amount to Swap</label>
+          <input type="number" id="amount" class="input-box" required min="0.0001" step="0.0001">
         </div>
-        <div>
-          <label class="block mb-1">Choose Output Token</label>
-          <input type="text" id="token-search" placeholder="Search token..." class="w-full p-2 border rounded mb-2">
-          <select id="token-output" class="w-full p-2 border rounded" size="5"></select>
+        <div class="form-field">
+          <label>Choose Output Token</label>
+          <input type="text" id="token-search" class="input-box" placeholder="Search token...">
+          <select id="token-output" class="input-box" size="5"></select>
         </div>
-        <div id="swap-preview" class="my-4 text-gray-600 hidden">
-          <div id="loading-spinner" class="text-center my-2">🔄 Getting blockchain data...</div>
+        <div id="swap-preview" class="swap-preview hidden">
+          <div id="loading-spinner">🔄 Getting blockchain data...</div>
           <div id="swap-data" class="hidden">
-            <div>Minimum Received: <span id="min-received" class="font-semibold"></span></div>
-            <div>Price Impact: <span id="price-impact" class="font-semibold"></span>%</div>
+            <div>Min Received: <span id="min-received" class="highlight"></span></div>
+            <div>Price Impact: <span id="price-impact" class="highlight"></span>%</div>
           </div>
         </div>
-        <button id="preview-button" type="button" class="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600">
-          Preview Swap
-        </button>
-        <button id="submit-button" type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700" disabled>
-          Confirm Swap
-        </button>
+        <button type="button" id="preview-button" class="btn btn-warning">Preview Swap</button>
+        <button type="submit" id="submit-button" class="btn btn-success" disabled>Confirm Swap</button>
       </form>
     `;
-
-    // Load tokens for dropdown and preview button click handler (as already implemented)
     await loadAvailableTokens();
-
   } else {
-    // Layout for Withdraw, Transfer, Stake (no changes here)
     modalBody.innerHTML = `
-      <h3 class="text-xl font-semibold mb-4">${actionTitle} ${token}</h3>
-      <div class="mb-2 text-gray-600">
-        Available Balance: <span class="font-semibold">${balance}</span> ${token}
-      </div>
+      <h3 class="modal-title">${actionTitle} ${token}</h3>
+      <div class="text-muted">Available: <strong>${balance}</strong> ${token}</div>
       ${action === 'transfer' ? `
-        <div class="mb-2">
-          <label class="block mb-1 text-gray-600">Recipient Wax Account</label>
-          <input type="text" id="receiver" class="w-full p-2 border rounded" placeholder="Enter destination wax_account" required>
+        <div class="form-field">
+          <label>Recipient Wax Account</label>
+          <input type="text" id="receiver" class="input-box" placeholder="Enter destination wax_account" required>
+        </div>` : `
+        <div class="text-muted">Destination: <strong>${window.userData.wax_account}</strong></div>`}
+      <form id="action-form" class="form-wrapper">
+        <div class="form-field">
+          <label>Percentage</label>
+          <input id="percent-range" type="range" class="input-range" min="0" max="100" value="0">
         </div>
-      ` : `
-        <div class="mb-2 text-gray-600">
-          Destination Wax Account: <span class="font-semibold">${window.userData.wax_account}</span>
+        <div class="form-field">
+          <label>Amount</label>
+          <input id="amount" type="number" step="0.0001" class="input-box" required>
         </div>
-      `}
-      <form id="action-form" class="space-y-4">
-        <div>
-          <label class="block mb-1">Percentage</label>
-          <input type="range" id="percent-range" class="w-full" min="0" max="100" value="0">
-        </div>
-        <div>
-          <label class="block mb-1">Amount</label>
-          <input type="number" id="amount" class="w-full p-2 border rounded" required min="0.0001" step="0.0001">
-        </div>
-        <button id="submit-button" type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-          Confirm ${actionTitle}
-        </button>
+        <button id="submit-button" type="submit" class="btn btn-primary">Confirm ${actionTitle}</button>
       </form>
     `;
-
   }
 
   modal.classList.remove('hidden');
   document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
- // Now handle the button actions for 'swap'
-  const percentRange = document.getElementById('percent-range');
-  const amountInput = document.getElementById('amount');
-  const submitButton = document.getElementById('submit-button');
 
-  let swapPreview, loadingSpinner, swapDataContainer, executionPriceSpan, minReceivedSpan, priceImpactSpan;
-  let tokenSearch, tokenOutput, previewButton;
-
-  if (action === "swap") {
-    swapPreview = document.getElementById('swap-preview');
-    loadingSpinner = document.getElementById('loading-spinner');
-    swapDataContainer = document.getElementById('swap-data');
-    executionPriceSpan = document.getElementById('execution-price');
-    minReceivedSpan = document.getElementById('min-received');
-    priceImpactSpan = document.getElementById('price-impact');
-    tokenSearch = document.getElementById('token-search');
-    tokenOutput = document.getElementById('token-output');
-    previewButton = document.getElementById('preview-button');
-
-    // Load tokens only if not already loaded
-    if (availableTokens.length === 0) {
-      await loadAvailableTokens();
+  // Handlers comuni
+  const range = document.getElementById('percent-range');
+  const input = document.getElementById('amount');
+  range.addEventListener('input', () => {
+    const percent = parseFloat(range.value);
+    input.value = (balance * percent / 100).toFixed(4);
+  });
+  input.addEventListener('input', () => {
+    const val = parseFloat(input.value);
+    if (!isNaN(val)) {
+      range.value = Math.min(100, Math.round((val / balance) * 100));
     }
+  });
+
+  // SWAP logic
+  if (action === "swap") {
+    const tokenSearch = document.getElementById('token-search');
+    const tokenOutput = document.getElementById('token-output');
+    const previewButton = document.getElementById('preview-button');
+    const submitButton = document.getElementById('submit-button');
+    const swapPreview = document.getElementById('swap-preview');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const swapDataContainer = document.getElementById('swap-data');
+    const minReceivedSpan = document.getElementById('min-received');
+    const priceImpactSpan = document.getElementById('price-impact');
 
     function updateTokenDropdown(tokens) {
       tokenOutput.innerHTML = tokens.map(t => `<option value="${t}">${t}</option>`).join('');
     }
 
-    // Filter token list based on user input in the search field
     tokenSearch.addEventListener('input', () => {
       const search = tokenSearch.value.toLowerCase();
       const filtered = availableTokens.filter(t => t.toLowerCase().includes(search));
       updateTokenDropdown(filtered);
     });
 
-    // Button to preview swap
     previewButton.addEventListener('click', async () => {
-      const amount = parseFloat(amountInput.value);
+      const amount = parseFloat(input.value);
       const outputSelection = tokenOutput.value;
       if (!amount || amount <= 0 || !outputSelection) {
-        alert("Please enter a valid amount and select output token.");
+        alert("Insert valid amount and output token");
         return;
       }
+
       let [symbolOut, contractOut] = outputSelection.split("-");
-      symbolOut = symbolOut.toLowerCase();
-      contractOut = contractOut.toLowerCase();
       const symbolIn = token.toLowerCase();
-      const contractInLower = contractIn ? contractIn.toLowerCase() : ""; // Ensure contractIn is valid
+      const contractInLower = contractIn.toLowerCase();
 
-      if (!contractInLower) {
-        console.error("[❌] ContractIn is missing or invalid. Aborting swap preview.");
-        alert("Token contract not found. Unable to proceed with the swap preview.");
-        return;
-      }
-
-      const apiUrl = `https://alcor.exchange/api/v2/swapRouter/getRoute?trade_type=EXACT_INPUT&input=${symbolIn}-${contractInLower}&output=${symbolOut}-${contractOut}&amount=${amount}`;
+      const apiUrl = `https://alcor.exchange/api/v2/swapRouter/getRoute?trade_type=EXACT_INPUT&input=${symbolIn}-${contractInLower}&output=${symbolOut.toLowerCase()}-${contractOut.toLowerCase()}&amount=${amount}`;
 
       swapPreview.classList.remove('hidden');
       loadingSpinner.classList.remove('hidden');
@@ -2717,21 +2675,15 @@ function updateBulkActions() {
       try {
         const response = await fetch(apiUrl);
         const data = await response.json();
-      
-        // Sottrarre il 10% da Minimum Received
-        let minReceived = data.minReceived || 0;
-        minReceived = minReceived * 0.90;  // Sottrai il 10%
-      
-        // Aggiornare i valori nell'interfaccia utente
-        minReceivedSpan.textContent = minReceived.toFixed(4) || "-";  // Mostra il valore sottratto del 10%
+        const minReceived = (data.minReceived || 0) * 0.9;
+        minReceivedSpan.textContent = minReceived.toFixed(4);
         priceImpactSpan.textContent = data.priceImpact || "-";
-      
         loadingSpinner.classList.add('hidden');
         swapDataContainer.classList.remove('hidden');
         submitButton.disabled = false;
-      } catch (error) {
-        console.error("[❌] Error fetching swap preview:", error);
-        loadingSpinner.innerHTML = `<div class="text-red-500">⚠️ Failed to load blockchain data.</div>`;
+      } catch (err) {
+        console.error("Swap preview error:", err);
+        loadingSpinner.innerHTML = `<div class="text-error">⚠️ Failed to load blockchain data.</div>`;
         submitButton.disabled = true;
       }
     });
@@ -2904,60 +2856,53 @@ function updateBulkActions() {
   console.info("[✅] Azione completata:", data.message || "Successo");
 }
 
-// Funzione toast dinamico
+/* ─────────────────────────────
+   1. TOAST DINAMICO
+   ───────────────────────────── */
 function showToast(message, type = "success") {
-  const toastContainer = document.getElementById('toast-container');
+  const wrap = document.getElementById('toast-container');
+  if (!wrap) return;
+
   const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;   // <─ classi semantiche
+  toast.textContent = message;
 
-  toast.className = `
-    p-4 rounded shadow mb-2
-    ${type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"}
-  `;
-  toast.innerText = message;
-
-  toastContainer.appendChild(toast);
-
-  setTimeout(() => {
-    toast.remove();
-  }, 10000); // 🔥 Lieve miglioramento: aumentato a 10s così si leggono bene i dettagli swap
+  wrap.appendChild(toast);
+  setTimeout(() => toast.remove(), 10_000);  // 10 s di visibilità
 }
 
-// Avvio app
+/* ─────────────────────────────
+   2. AVVIO APP
+   ───────────────────────────── */
 initApp();
 
-// === TEMA: SELECTOR DINAMICO ===
+/* ─────────────────────────────
+   3. SELECTOR TEMA DINAMICO
+   ───────────────────────────── */
 function injectThemeSelector() {
   const selector = document.createElement('select');
   selector.id = 'theme-selector';
-  selector.className = 'fixed top-4 right-4 z-50 p-2 bg-black text-yellow-400 border-2 border-yellow-400 rounded-lg';
-  
+  selector.className = 'theme-selector';
+
   const themes = ['Fish Tides', 'Cyberpunk', 'MS-DOS', 'Futuristic', 'Autobots'];
-  selector.innerHTML = themes.map((name, i) => `<option value="theme-${i}">${name}</option>`).join('');
+  selector.innerHTML = themes
+    .map((label, i) => `<option value="theme-${i}">${label}</option>`)
+    .join('');
   document.body.appendChild(selector);
 
-  // Applica il tema selezionato
-  selector.addEventListener('change', (e) => {
-    // Rimuove tutte le classi "theme-*", lascia le altre intatte
+  // cambia tema
+  selector.addEventListener('change', e => {
     document.body.className = document.body.className
-      .split(' ')
-      .filter(c => !c.startsWith('theme-'))
-      .join(' ')
+      .replace(/\btheme-\d+\b/g, '')      // rimuove vecchio tema
       .trim();
-    
     document.body.classList.add(e.target.value);
     localStorage.setItem('selected-theme', e.target.value);
   });
 
-  // Carica il tema salvato
-  const savedTheme = localStorage.getItem('selected-theme');
-  if (savedTheme) {
-    selector.value = savedTheme;
-    document.body.classList.add(savedTheme);
-  } else {
-    // Default al tema AI
-    document.body.classList.add('theme-0');
-    selector.value = 'theme-0';
-  }
+  // ripristina tema salvato o default
+  const saved = localStorage.getItem('selected-theme') || 'theme-0';
+  selector.value = saved;
+  document.body.classList.add(saved);
 }
 
 document.addEventListener('DOMContentLoaded', injectThemeSelector);

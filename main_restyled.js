@@ -2883,42 +2883,90 @@ initApp();
 function injectThemeSelector() {
   const selector = document.createElement('select');
   selector.id = 'theme-selector';
-  selector.className = 'theme-selector';
 
-  const themes = ['Fish Tides', 'Cyberpunk', 'MS-DOS', 'Futuristic', 'Autobots'];
-  selector.innerHTML = themes
-    .map((label, i) => `<option value="theme-${i}">${label}</option>`)
-    .join('');
-  document.body.appendChild(selector);
+  // CSS inline con animazioni LED/Neon
+  selector.style.cssText = `
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(145deg, #1a1a1a, #333);
+    color: #ffd700;
+    border: 2px solid #ffae42;
+    border-radius: 6px;
+    font-weight: bold;
+    font-family: 'Orbitron', sans-serif;
+    box-shadow: 0 0 10px #ffae42;
+    transition: all 0.3s ease;
+    z-index: 9999;
+  `;
 
-  // aggiorna i target
-  const targets = [
-    document.body,
-    document.getElementById('navbar'),                  // header
-    document.querySelector('nav.navbar-menu'),          // nav
-    document.getElementById('app')                      // main container
-  ];
-
-  function applyTheme(themeClass) {
-    targets.forEach(el => {
-      if (!el) return;
-      // Rimuove qualsiasi classe theme-X
-      el.className = el.className.replace(/\btheme-\d+\b/g, '').trim();
-      el.classList.add(themeClass);
-    });
-    localStorage.setItem('selected-theme', themeClass);
-  }
-
-  // cambio tema da dropdown
-  selector.addEventListener('change', e => {
-    applyTheme(e.target.value);
+  selector.addEventListener('mouseover', () => {
+    selector.style.boxShadow = '0 0 20px #ffd700, 0 0 40px #ffcc00';
+    selector.style.transform = 'scale(1.05)';
   });
 
-  // ripristina tema salvato o default
-  const saved = localStorage.getItem('selected-theme') || 'theme-0';
-  selector.value = saved;
-  applyTheme(saved);
-}
+  selector.addEventListener('mouseout', () => {
+    selector.style.boxShadow = '0 0 10px #ffae42';
+    selector.style.transform = 'scale(1)';
+  });
 
+  const themes = [
+    { name: 'Caveman', file: 'styles6_caveman2.css' },
+    { name: 'ChipsWallet', file: 'styles6_chipswallet.css' },
+    { name: 'Crypto World', file: 'styles6_crypto.css' },
+    { name: 'Far West', file: 'styles6_farwest.css' },
+    { name: 'Inferno', file: 'styles6_inferno.css' },
+    { name: 'Oceanic Life', file: 'styles6_oceanic.css' },
+    { name: 'Precious Gold', file: 'styles6_precious.css' },
+    { name: 'Streaming', file: 'styles6_streaming.css' }
+  ];
+
+  selector.innerHTML = themes
+    .map(t => `<option value="${t.file}">${t.name}</option>`)
+    .join('');
+
+  // Inserisci accanto al titolo se presente
+  const title = document.querySelector('.app-title');
+  if (title && title.parentElement) {
+    title.parentElement.style.position = 'relative'; // necessario per posizionamento assoluto
+    title.parentElement.appendChild(selector);
+  } else {
+    document.body.appendChild(selector); // fallback
+  }
+
+  // Cambia foglio di stile dinamicamente
+  function swapCSS(href) {
+    let link = document.getElementById('theme-style');
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.id = 'theme-style';
+      document.head.appendChild(link);
+    }
+    link.href = href;
+    localStorage.setItem('selected-css', href);
+  }
+
+  // Cambio dinamico del tema
+  selector.addEventListener('change', e => {
+    swapCSS(e.target.value);
+  });
+
+  // Applica tema salvato
+  const saved = localStorage.getItem('selected-css') || themes[0].file;
+  selector.value = saved;
+  swapCSS(saved);
+}
 document.addEventListener('DOMContentLoaded', injectThemeSelector);
+
+// ✅ Collegamento universale ai pulsanti con attributo data-section
+document.querySelectorAll('[data-section]').forEach(btn => {
+  btn.addEventListener('click', e => {
+    const section = btn.getAttribute('data-section');
+    if (section) {
+      loadSection(section);
+    }
+  });
+});
 

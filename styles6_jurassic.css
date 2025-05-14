@@ -5545,3 +5545,70 @@ table, th, td {
   background-color: var(--bg-secondary) !important;
   color: var(--text-color) !important;
 }
+
+/* === Enhanced Caveman Palette & Detail-Focused Buttons === */
+:root {
+  --bg-main: #fcf4dd !important;         /* sabbia luminosa */
+  --bg-secondary: #2b1f16 !important;    /* marrone roccia */
+  --text-color: #2c2c2c !important;      /* osso chiaro */
+  --accent-color: #cc3e28 !important;    /* rosso ocra intenso */
+  --highlight-color: #4a90a4 !important; /* blu silicio */
+  --border-color: #7a5c36 !important;    /* terra bruciata */
+  --tone-light: #e2c185 !important;      /* giallo minerale */
+  --tone-green: #8aa872 !important;      /* muschio antico */
+  --tone-deep: #2c2c2c !important;       /* nero carbone */
+  --font-family: 'Caesar Dressing', 'Almendra SC', 'Uncial Antiqua', 'Courier New', serif !important;
+}
+
+/* === Buttons with contrasting accents and primitive style === */
+button, .btn {
+  background: linear-gradient(145deg, var(--accent-color), var(--tone-light)) !important;
+  border: 2px solid var(--border-color) !important;
+  color: var(--text-color) !important;
+  font-family: var(--font-family) !important;
+  font-size: 1rem !important;
+  padding: 0.6rem 1.2rem !important;
+  border-radius: 8px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+  transition: all 0.25s ease-in-out !important;
+}
+
+button:hover, .btn:hover {
+  background: linear-gradient(145deg, var(--highlight-color), var(--tone-green)) !important;
+  color: var(--text-color) !important;
+  box-shadow: 0 0 10px var(--highlight-color), 0 0 20px var(--tone-green) !important;
+  transform: scale(1.05) !important;
+}
+
+/* === Section and card backgrounds for high contrast readability === */
+body, .card, .modal, .form-card, .content-box {
+  background-color: var(--bg-main) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+table, th, td {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* === Layout + Contrast Fix === */
+body, html {
+  margin: 0 !important;
+  padding: 0 !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+header, footer, main, #navbar, #app {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  width: 100% !important;
+  max-width: 1200px !important;
+  box-sizing: border-box !important;
+}

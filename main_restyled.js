@@ -2891,19 +2891,29 @@ function injectThemeSelector() {
     .join('');
   document.body.appendChild(selector);
 
-  // cambia tema
+  // aggiorna i target
+  const targets = [document.body, document.getElementById('navbar'), document.getElementById('app')];
+
+  function applyTheme(themeClass) {
+    targets.forEach(el => {
+      if (!el) return;
+      // Rimuove qualsiasi classe theme-X
+      el.className = el.className.replace(/\btheme-\d+\b/g, '').trim();
+      el.classList.add(themeClass);
+    });
+    localStorage.setItem('selected-theme', themeClass);
+  }
+
+  // cambio tema da dropdown
   selector.addEventListener('change', e => {
-    document.body.className = document.body.className
-      .replace(/\btheme-\d+\b/g, '')      // rimuove vecchio tema
-      .trim();
-    document.body.classList.add(e.target.value);
-    localStorage.setItem('selected-theme', e.target.value);
+    applyTheme(e.target.value);
   });
 
   // ripristina tema salvato o default
   const saved = localStorage.getItem('selected-theme') || 'theme-0';
   selector.value = saved;
-  document.body.classList.add(saved);
+  applyTheme(saved);
 }
+
 
 document.addEventListener('DOMContentLoaded', injectThemeSelector);

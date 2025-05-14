@@ -64,7 +64,7 @@ function applyStormsFiltersAndSort() {
 }
 
 
-// Funzione iniziale
+// Funzione iniziale aggiornata per supportare multi-temi via CSS
 async function initApp() {
   try {
     console.info("[🔍] Inizio funzione initApp...");
@@ -87,8 +87,6 @@ async function initApp() {
     console.info("[📦] window.userData attuale:", window.userData);
 
     console.info("[🚪] Verifica credenziali con /main_door in corso...");
-    console.info("[🌐] Chiamata a:", `${BASE_URL}/main_door?user_id=${encodeURIComponent(params.userId)}&usx_token=${encodeURIComponent(params.usx_token)}`);
-
     const response = await fetch(`${BASE_URL}/main_door?user_id=${encodeURIComponent(params.userId)}&usx_token=${encodeURIComponent(params.usx_token)}`);
     const data = await response.json();
     console.info("[📨] Risposta ricevuta da /main_door:", data);
@@ -119,29 +117,44 @@ async function initApp() {
   } catch (error) {
     console.error("[❌] Errore critico in initApp:", error);
     document.getElementById('app').innerHTML = `
-      <div class="text-red-500 text-center mt-8">
+      <div class="error-message centered margin-top-lg">
         Errore: ${error.message}<br>Verifica il link o rifai il login.
       </div>`;
   }
 }
+
 async function loadCreateTokenStaking() {
   const container = document.getElementById('create-token-pool-container');
   console.log("[📦] Contenitore trovato:", container);
+
   container.innerHTML = `
-    <input type="text" id="search-token-pool" placeholder="Search your token..." class="mb-4 p-2 border rounded w-full md:w-1/2">
-    <button id="create-new-token-pool-btn" class="ml-2 px-4 py-2 rounded text-white font-bold shadow bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700">
+    <input 
+      type="text" 
+      id="search-token-pool" 
+      placeholder="Search your token..." 
+      class="input-token-search"
+    >
+
+    <button 
+      id="create-new-token-pool-btn" 
+      class="btn btn-primary create-token-pool-btn"
+    >
       ➕ Create New Token Pool
     </button>
-    <div id="created-token-pools" class="flex flex-wrap gap-2 mb-4"></div>
+
+    <div id="created-token-pools" class="token-pool-list"></div>
     <div id="token-pool-details"></div>
   `;
+
   console.log("[🖊️] Aggiornamento contenuto del contenitore con HTML dinamico");
 
   document.getElementById('create-new-token-pool-btn').addEventListener('click', () => {
     renderNewTokenPoolForm();
   });
+
   await fetchAndRenderTokenPools();
 }
+
 window.loadCreateTokenStaking = loadCreateTokenStaking;
 async function fetchAndRenderTokenPools(shouldRender = true) {
   const { userId } = window.userData;
@@ -153,17 +166,15 @@ async function fetchAndRenderTokenPools(shouldRender = true) {
     console.log("[📥] Data received from backend:", data);
     console.log("[🧪] Controllo data.pools:", data?.pools);
 
-    // Verifica se il container esiste prima di tentare di modificarlo
     if (!container) {
       console.warn("[⚠️] Container 'token-pool-details' non trovato, solo i dati vengono recuperati.");
-      window.tokenPoolsData = data.pools;  // Salva i dati senza fare rendering
-      return;  // Esci dalla funzione senza fare rendering
+      window.tokenPoolsData = data.pools;
+      return;
     }
 
-    // Se la flag shouldRender è true, esegui il rendering
     if (shouldRender) {
       if (!res.ok || !data.pools) {
-        container.innerHTML = `<div class="text-gray-600 italic">No token staking pools found.</div>`;
+        container.innerHTML = `<div class="empty-message">No token staking pools found.</div>`;
         return;
       }
 
@@ -174,27 +185,28 @@ async function fetchAndRenderTokenPools(shouldRender = true) {
     }
   } catch (err) {
     if (container && shouldRender) {
-      container.innerHTML = `<div class="text-red-500">Error loading token pools.</div>`;
+      container.innerHTML = `<div class="error-message">Error loading token pools.</div>`;
     }
     console.error("[❌] Error loading pools:", err);
   }
 }
- function renderNewTokenPoolForm() {
+
+function renderNewTokenPoolForm() {
   const container = document.getElementById('token-pool-details');
   container.innerHTML = `
-    <div class="bg-white p-6 rounded shadow max-w-xl mx-auto">
-      <h3 class="text-xl font-bold mb-4">Create a New Token Staking Pool</h3>
+    <div class="form-card">
+      <h3 class="form-title">Create a New Token Staking Pool</h3>
 
-      <label class="block mb-2 font-semibold">Deposit Token Symbol</label>
-      <input id="new-token-symbol" type="text" class="w-full border p-2 rounded mb-4" placeholder="e.g. CHIPS">
+      <label class="form-label">Deposit Token Symbol</label>
+      <input id="new-token-symbol" type="text" class="form-input" placeholder="e.g. CHIPS">
 
       <div id="reward-token-entries"></div>
 
-      <button class="bg-blue-500 text-white px-3 py-1 rounded mb-4" id="add-reward-token">
+      <button class="btn btn-secondary add-reward-btn" id="add-reward-token">
         ➕ Add Reward Token
       </button>
 
-      <button id="submit-new-token-pool" class="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded shadow-md">
+      <button id="submit-new-token-pool" class="btn btn-primary submit-pool-btn">
         Create Pool
       </button>
     </div>
@@ -205,22 +217,22 @@ async function fetchAndRenderTokenPools(shouldRender = true) {
   function addRewardTokenEntry() {
     const wrapper = document.getElementById('reward-token-entries');
     const html = `
-      <div class="reward-token-entry mb-4 border p-3 rounded shadow">
-        <label class="block font-semibold mb-1">Reward Token Symbol</label>
-        <input type="text" class="reward-symbol w-full border p-2 rounded mb-2" placeholder="e.g. WAX">
+      <div class="reward-token-entry">
+        <label class="form-label">Reward Token Symbol</label>
+        <input type="text" class="form-input reward-symbol" placeholder="e.g. WAX">
 
-        <label class="block font-semibold mb-1">Total Reward Amount</label>
-        <input type="number" class="reward-total w-full border p-2 rounded mb-2" placeholder="e.g. 1000">
+        <label class="form-label">Total Reward Amount</label>
+        <input type="number" class="form-input reward-total" placeholder="e.g. 1000">
 
-        <label class="block font-semibold mb-1">Daily Reward</label>
-        <input type="number" class="reward-daily w-full border p-2 rounded mb-2" placeholder="e.g. 10">
+        <label class="form-label">Daily Reward</label>
+        <input type="number" class="form-input reward-daily" placeholder="e.g. 10">
       </div>`;
     wrapper.insertAdjacentHTML('beforeend', html);
     rewardIndex++;
   }
 
   document.getElementById('add-reward-token').addEventListener('click', addRewardTokenEntry);
-  addRewardTokenEntry(); // Add at least one by default
+  addRewardTokenEntry();
 
   document.getElementById('submit-new-token-pool').addEventListener('click', async () => {
     const symbol = document.getElementById('new-token-symbol').value.trim().toUpperCase();
@@ -240,13 +252,10 @@ async function fetchAndRenderTokenPools(shouldRender = true) {
     }
 
     try {
-      // 1. Crea la pool
       const createRes = await fetch(`${BASE_URL}/create_staking_pool?user_id=${userId}&usx_token=${usx_token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deposit_token_symbol: symbol
-        })
+        body: JSON.stringify({ deposit_token_symbol: symbol })
       });
 
       const createData = await createRes.json();
@@ -254,7 +263,6 @@ async function fetchAndRenderTokenPools(shouldRender = true) {
 
       const poolId = createData.pool_id;
 
-      // 2. Aggiungi i reward token
       for (let reward of rewardTokens) {
         const rewardRes = await fetch(`${BASE_URL}/add_pool_reward`, {
           method: "POST",
@@ -281,15 +289,18 @@ async function fetchAndRenderTokenPools(shouldRender = true) {
     }
   });
 }
+
 function renderCreatedTokenPoolButtons(pools) {
   const container = document.getElementById('created-token-pools');
   const searchInput = document.getElementById('search-token-pool');
+
   console.log("[🧩] Rendering pool buttons. Pools disponibili:", pools);
+
   function renderButtons(list) {
     container.innerHTML = '';
     list.forEach(pool => {
       const btn = document.createElement('button');
-      btn.className = 'btn-action';
+      btn.className = 'token-pool-btn';
       btn.textContent = pool.deposit_token?.symbol || 'Unknown';
       btn.onclick = () => renderTokenPoolDetails(pool);
       container.appendChild(btn);
@@ -306,6 +317,7 @@ function renderCreatedTokenPoolButtons(pools) {
   });
 }
 
+
 function renderTokenPoolDetails(pool) {
   const container = document.getElementById('token-pool-details');
   console.log("[👁️‍🗨️] Mostrando dettagli per pool:", pool);
@@ -317,13 +329,13 @@ function renderTokenPoolDetails(pool) {
       : '∞';
 
     return `
-      <div class="border-t pt-2 mt-2">
-        <p class="text-gray-600 mb-1"><strong>🎯 Token:</strong> ${reward.token_symbol}</p>
-        <p class="text-gray-600 mb-1">💰 Total Deposited: <strong>${reward.total_reward_deposit}</strong></p>
-        <p class="text-gray-600 mb-1">📅 Daily Reward: <strong>${reward.daily_reward}</strong></p>
-        <p class="text-gray-600 mb-1">⏳ Days Remaining: <strong>${daysLeft}</strong></p>
+      <div class="reward-item">
+        <p class="reward-text"><strong>🎯 Token:</strong> ${reward.token_symbol}</p>
+        <p class="reward-text">💰 Total Deposited: <strong>${reward.total_reward_deposit}</strong></p>
+        <p class="reward-text">📅 Daily Reward: <strong>${reward.daily_reward}</strong></p>
+        <p class="reward-text">⏳ Days Remaining: <strong>${daysLeft}</strong></p>
         <button 
-          class="btn-action bg-yellow-500 text-white mt-2" 
+          class="btn btn-warning reward-edit-btn" 
           onclick="openEditDailyReward(${pool.pool_id}, '${reward.token_symbol}', ${reward.daily_reward}, '${pool.deposit_token.symbol}')">
           ✏️ Edit Daily Reward
         </button>
@@ -332,19 +344,20 @@ function renderTokenPoolDetails(pool) {
   }).join('');
 
   container.innerHTML = `
-    <div class="bg-white p-4 rounded shadow">
-      <h3 class="text-xl font-bold mb-4">${pool.deposit_token?.symbol || 'Unknown'} Pool</h3>
-      <p class="text-gray-600 mb-2">Pool Status: <strong>${pool.status}</strong></p>
-      <p class="text-gray-600 mb-2">Created: ${pool.created_at}</p>
-      ${rewardsHTML || '<p class="text-gray-500 italic">No rewards configured.</p>'}
+    <div class="token-pool-card">
+      <h3 class="token-pool-title">${pool.deposit_token?.symbol || 'Unknown'} Pool</h3>
+      <p class="pool-detail"><strong>Status:</strong> ${pool.status}</p>
+      <p class="pool-detail"><strong>Created:</strong> ${pool.created_at}</p>
+      ${rewardsHTML || '<p class="no-rewards-message">No rewards configured.</p>'}
       <button 
-        class="btn-action bg-yellow-600 text-white mt-4" 
+        class="btn btn-warning pool-status-btn" 
         onclick="openPoolStatusModal(${pool.pool_id}, '${pool.status || 'open'}')">
         🔄 Change Pool Status
       </button>
     </div>
   `;
 }
+
 function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSymbol) {
   const modal = document.getElementById('modal');
   const body = document.getElementById('modal-body');
@@ -357,16 +370,21 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
   });
 
   body.innerHTML = `
-    <h3 class="text-xl font-bold mb-4">Edit Daily Reward for ${tokenSymbol}</h3>
+    <h3 class="modal-title">Edit Daily Reward for ${tokenSymbol}</h3>
     
-    <label class="block mb-2 font-semibold">New Daily Reward</label>
-    <input id="new-daily-reward" type="number" value="${currentReward}" class="w-full border p-2 rounded mb-4">
+    <label class="form-label">New Daily Reward</label>
+    <input 
+      id="new-daily-reward" 
+      type="number" 
+      value="${currentReward}" 
+      class="form-input"
+    >
     
-    <button id="submit-daily-reward" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">
+    <button id="submit-daily-reward" class="btn btn-primary full-width">
       Update Reward
     </button>
     
-    <button class="btn-action bg-blue-500 text-white mt-2" onclick="openDepositToPool(${poolId}, '${tokenSymbol}')">
+    <button class="btn btn-secondary mt-medium" onclick="openDepositToPool(${poolId}, '${tokenSymbol}')">
       💰 Deposit More Tokens
     </button>
   `;
@@ -390,7 +408,7 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           pool_id: poolId,
-          reward_token_symbol: tokenSymbol,  // 👈 parametro corretto per token specifico
+          reward_token_symbol: tokenSymbol,
           new_daily_reward: newReward
         })
       });
@@ -407,6 +425,7 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
     }
   };
 }
+
 window.openEditDailyReward = openEditDailyReward;
 function openDepositToPool(poolId, tokenSymbol) {
   const modal = document.getElementById('modal');
@@ -422,12 +441,21 @@ function openDepositToPool(poolId, tokenSymbol) {
   });
 
   body.innerHTML = `
-    <h3 class="text-xl font-bold mb-4">Deposit More ${tokenSymbol} into Pool</h3>
-    <p class="text-gray-600 mb-2">Available in Wallet: <strong>${balance}</strong></p>
-    <label class="block mb-1">Amount</label>
-    <input type="number" id="deposit-amount" class="w-full border p-2 rounded mb-4" placeholder="e.g. 100">
+    <h3 class="modal-title">Deposit More ${tokenSymbol} into Pool</h3>
+    <p class="wallet-info">Available in Wallet: <strong>${balance}</strong></p>
     
-    <button class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded" id="submit-deposit">
+    <label class="form-label">Amount</label>
+    <input 
+      type="number" 
+      id="deposit-amount" 
+      class="form-input" 
+      placeholder="e.g. 100"
+    >
+    
+    <button 
+      id="submit-deposit" 
+      class="btn btn-primary full-width"
+    >
       Deposit Tokens
     </button>
   `;
@@ -470,6 +498,7 @@ function openDepositToPool(poolId, tokenSymbol) {
     }
   };
 }
+
 window.openDepositToPool = openDepositToPool;
 function openPoolStatusModal(poolId, currentStatus) {
   const modal = document.getElementById('modal');
@@ -478,14 +507,16 @@ function openPoolStatusModal(poolId, currentStatus) {
   console.log("[⚙️] Aprendo modale status pool:", { poolId, currentStatus });
 
   body.innerHTML = `
-    <h3 class="text-xl font-bold mb-4">Change Pool Status</h3>
-    <label class="block mb-2 font-semibold">Select new status</label>
-    <select id="pool-status-select" class="w-full border p-2 rounded mb-4">
+    <h3 class="modal-title">Change Pool Status</h3>
+    
+    <label class="form-label">Select new status</label>
+    <select id="pool-status-select" class="form-select">
       <option value="open" ${currentStatus === 'open' ? 'selected' : ''}>Open</option>
       <option value="closed" ${currentStatus === 'closed' ? 'selected' : ''}>Closed</option>
       <option value="maintenance" ${currentStatus === 'maintenance' ? 'selected' : ''}>Maintenance</option>
     </select>
-    <button id="submit-pool-status" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded">
+
+    <button id="submit-pool-status" class="btn btn-warning full-width">
       Update Status
     </button>
   `;
@@ -515,13 +546,14 @@ function openPoolStatusModal(poolId, currentStatus) {
 
       showToast("Pool status updated", "success");
       modal.classList.add('hidden');
-      fetchAndRenderTokenPools(); // 🔄 Refresh pools
+      fetchAndRenderTokenPools();
     } catch (err) {
       console.error("[❌] Errore durante l'aggiornamento dello stato della pool:", err);
       showToast("Error: " + err.message, "error");
     }
   };
 }
+
 window.openPoolStatusModal = openPoolStatusModal;
 
 // === 📦 CREAZIONE & GESTIONE DELLE NFTS FARM DELL'UTENTE ===
@@ -529,11 +561,21 @@ window.openPoolStatusModal = openPoolStatusModal;
 async function loadCreateNFTFarm() {
   const container = document.getElementById('create-nfts-farm-container');
   container.innerHTML = `
-    <input type="text" id="search-created-farm" placeholder="Search your farm name..." class="mb-4 p-2 border rounded w-full md:w-1/2">
-    <button id="create-new-farm-btn" class="ml-2 px-4 py-2 rounded text-white font-bold shadow bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700">
+    <input 
+      type="text" 
+      id="search-created-farm" 
+      placeholder="Search your farm name..." 
+      class="input-farm-search"
+    >
+
+    <button 
+      id="create-new-farm-btn" 
+      class="btn btn-primary create-farm-btn"
+    >
       ➕ Create New NFTs Farm
     </button>
-    <div id="created-farm-buttons" class="flex flex-wrap gap-2 mb-4"></div>
+
+    <div id="created-farm-buttons" class="farm-button-list"></div>
     <div id="created-farm-details"></div>
   `;
 
@@ -543,6 +585,7 @@ async function loadCreateNFTFarm() {
 
   await fetchAndRenderUserFarms();
 }
+
 window.loadCreateNFTFarm = loadCreateNFTFarm;
 async function fetchAndRenderUserFarms() {
   const { userId, usx_token } = window.userData;
@@ -553,20 +596,21 @@ async function fetchAndRenderUserFarms() {
     const data = await res.json();
 
     if (!res.ok || !data.farms) {
-      container.innerHTML = `<div class="text-gray-600 italic">You don’t have any NFTs Staking Farm yet.</div>`;
+      container.innerHTML = `<div class="empty-message">You don’t have any NFTs Staking Farm yet.</div>`;
       return;
     }
 
-    // 🔥 SOLUZIONE: assegna i dati globalmente
+    // 🔥 Salva globalmente
     window.nftFarmsData = data.farms;
 
     renderCreatedFarmButtons(data.farms);
     renderCreatedFarmDetails(data.farms[0]);
   } catch (err) {
-    container.innerHTML = `<div class="text-red-500">Error loading your farms.</div>`;
+    container.innerHTML = `<div class="error-message">Error loading your farms.</div>`;
     console.error("[❌] Error loading user farms:", err);
   }
-} function renderCreatedFarmButtons(farms) {
+}
+function renderCreatedFarmButtons(farms) {
   const container = document.getElementById('created-farm-buttons');
   const searchInput = document.getElementById('search-created-farm');
 
@@ -574,7 +618,7 @@ async function fetchAndRenderUserFarms() {
     container.innerHTML = '';
     list.forEach(farm => {
       const btn = document.createElement('button');
-      btn.className = 'btn-action';
+      btn.className = 'farm-button';
       btn.textContent = farm.farm_name;
       btn.onclick = () => renderCreatedFarmDetails(farm);
       container.appendChild(btn);
@@ -594,47 +638,47 @@ function renderCreatedFarmDetails(farm) {
   const container = document.getElementById('created-farm-details');
 
   const rewardHTML = farm.total_rewards.map(r => `
-    <span class="text-sm text-gray-600 mr-4">
+    <span class="reward-summary">
       💰 ${r.token_symbol}: <strong>${parseFloat(r.total_reward).toFixed(4)}</strong>
     </span>
   `).join('');
 
   const templatesHTML = farm.templates.map(tpl => {
     const rewards = tpl.daily_rewards.map(r => `
-      <div class="text-xs text-gray-700">
+      <div class="reward-detail">
         ${r.token_symbol}: ${parseFloat(r.daily_reward_amount).toFixed(4)}/day
       </div>
     `).join('');
 
     return `
-      <div class="border-t pt-4">
-        <h4 class="font-bold mb-2">Template ID: ${tpl.template_id}</h4>
-        ${rewards || '<div class="text-sm italic text-gray-400">No rewards configured.</div>'}
-        <div class="flex flex-wrap gap-2 mt-2">
-          <button class="btn-action bg-yellow-400 hover:bg-yellow-500" onclick="openEditRewards(${tpl.template_id})">✏️ Edit Rewards</button>
-          <button class="btn-action bg-green-600 text-white" onclick="openAddReward(${tpl.template_id})">➕ Add Reward</button>
-          <button class="btn-action bg-red-600 text-white" onclick="removeTemplate(${tpl.template_id})">🗑️ Remove Template</button>
+      <div class="template-block">
+        <h4 class="template-title">Template ID: ${tpl.template_id}</h4>
+        ${rewards || '<div class="empty-reward">No rewards configured.</div>'}
+        <div class="template-actions">
+          <button class="btn btn-warning" onclick="openEditRewards(${tpl.template_id})">✏️ Edit Rewards</button>
+          <button class="btn btn-primary" onclick="openAddReward(${tpl.template_id})">➕ Add Reward</button>
+          <button class="btn btn-danger" onclick="removeTemplate(${tpl.template_id})">🗑️ Remove Template</button>
         </div>
       </div>
     `;
   }).join('');
 
   container.innerHTML = `
-    <div class="bg-white p-4 rounded shadow">
-      <h3 class="text-xl font-bold mb-2 flex flex-wrap items-center gap-2">
+    <div class="farm-card">
+      <h3 class="farm-title-row">
         ${farm.farm_name}
-        <span class="text-sm font-normal text-gray-500">
+        <span class="farm-meta">
           Status: <strong>${farm.status}</strong> • Created: ${farm.creation_date}
         </span>
       </h3>
-      <div class="flex flex-wrap gap-2 mb-4">
-        <button class="btn-action" onclick="openAddTemplateForm(${farm.farm_id})">➕ Add Template</button>
-        <button class="btn-action" onclick="openDepositForm(${farm.farm_id})">💰 Deposit Rewards</button>
-        <button class="btn-action bg-red-500 text-white" onclick="confirmFarmClosure(${farm.farm_id})">🚫 Close Farm</button>
-        <button class="btn-action bg-yellow-500 text-black" onclick="changeFarmStatus(${farm.farm_id})">🔄 Change Status</button>
+      <div class="farm-actions">
+        <button class="btn btn-secondary" onclick="openAddTemplateForm(${farm.farm_id})">➕ Add Template</button>
+        <button class="btn btn-secondary" onclick="openDepositForm(${farm.farm_id})">💰 Deposit Rewards</button>
+        <button class="btn btn-danger" onclick="confirmFarmClosure(${farm.farm_id})">🚫 Close Farm</button>
+        <button class="btn btn-warning text-dark" onclick="changeFarmStatus(${farm.farm_id})">🔄 Change Status</button>
       </div>
-      <div class="mb-2 flex flex-wrap gap-2">${rewardHTML}</div>
-      ${templatesHTML || '<div class="text-gray-500">No templates added yet.</div>'}
+      <div class="farm-rewards">${rewardHTML}</div>
+      ${templatesHTML || '<div class="empty-templates">No templates added yet.</div>'}
     </div>
   `;
 }
@@ -642,20 +686,22 @@ function renderCreatedFarmDetails(farm) {
 function renderNewFarmForm() {
   const container = document.getElementById('created-farm-details');
   container.innerHTML = `
-    <div class="bg-white p-6 rounded shadow max-w-xl mx-auto">
-      <h3 class="text-xl font-bold mb-4">Create a New NFTs Staking Farm</h3>
-      <label class="block mb-2">Farm Name</label>
-      <input id="new-farm-name" type="text" class="w-full border p-2 rounded mb-4">
-      <button id="submit-new-farm" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded shadow-md">
+    <div class="form-card">
+      <h3 class="form-title">Create a New NFTs Staking Farm</h3>
+
+      <label class="form-label">Farm Name</label>
+      <input id="new-farm-name" type="text" class="form-input">
+
+      <button id="submit-new-farm" class="btn btn-warning full-width">
         Create Farm
       </button>
     </div>
-    <p></p>
   `;
 
   document.getElementById('submit-new-farm').addEventListener('click', async () => {
     const name = document.getElementById('new-farm-name').value.trim();
     const { userId, usx_token } = window.userData;
+
     if (!name) {
       alert("Please enter a farm name.");
       return;
@@ -667,6 +713,7 @@ function renderNewFarmForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ farm_name: name })
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create farm.');
 
@@ -679,29 +726,30 @@ function renderNewFarmForm() {
   });
 }
 
+
 // Azioni su Template
-// ✅ Add Template to Farm
 function openAddTemplateForm(farmId) {
   const modal = document.getElementById('modal');
   const body = document.getElementById('modal-body');
   const { userId, usx_token } = window.userData;
 
   body.innerHTML = `
-    <h3 class="text-xl font-bold mb-4">➕ Add Template to Farm</h3>
-    <label class="block mb-2 font-semibold">Template ID</label>
-    <input id="template-id" type="number" class="w-full border p-2 rounded mb-4" placeholder="e.g. 123456">
+    <h3 class="modal-title">➕ Add Template to Farm</h3>
+
+    <label class="form-label">Template ID</label>
+    <input id="template-id" type="number" class="form-input" placeholder="e.g. 123456">
 
     <div id="rewards-container">
-      <label class="block mb-2 font-semibold">Rewards</label>
-      <div class="reward-entry flex gap-2 mb-2">
-        <input type="text" class="token-symbol w-1/2 border p-2 rounded" placeholder="Token Symbol (e.g. CHIPS)">
-        <input type="number" class="reward-amount w-1/2 border p-2 rounded" placeholder="Amount per day">
+      <label class="form-label">Rewards</label>
+      <div class="reward-entry">
+        <input type="text" class="form-input half-width token-symbol" placeholder="Token Symbol (e.g. CHIPS)">
+        <input type="number" class="form-input half-width reward-amount" placeholder="Amount per day">
       </div>
     </div>
 
-    <button id="add-reward-btn" class="mb-4 text-sm text-blue-600 underline">➕ Add another reward</button>
+    <button id="add-reward-btn" class="link-add-reward">➕ Add another reward</button>
 
-    <button id="submit-add-template" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded shadow">
+    <button id="submit-add-template" class="btn btn-warning full-width">
       Add Template
     </button>
   `;
@@ -709,19 +757,17 @@ function openAddTemplateForm(farmId) {
   modal.classList.remove('hidden');
   document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
 
-  // ➕ Aggiungi nuova riga di reward
   document.getElementById('add-reward-btn').onclick = () => {
     const container = document.getElementById('rewards-container');
     const div = document.createElement('div');
-    div.className = 'reward-entry flex gap-2 mb-2';
+    div.className = 'reward-entry';
     div.innerHTML = `
-      <input type="text" class="token-symbol w-1/2 border p-2 rounded" placeholder="Token Symbol (e.g. CHIPS)">
-      <input type="number" class="reward-amount w-1/2 border p-2 rounded" placeholder="Amount per day">
+      <input type="text" class="form-input half-width token-symbol" placeholder="Token Symbol (e.g. CHIPS)">
+      <input type="number" class="form-input half-width reward-amount" placeholder="Amount per day">
     `;
     container.appendChild(div);
   };
 
-  // 📤 Submit del form
   document.getElementById('submit-add-template').onclick = async () => {
     const templateId = parseInt(document.getElementById('template-id').value.trim());
     if (!templateId) {
@@ -733,7 +779,7 @@ function openAddTemplateForm(farmId) {
     const rewards = [];
 
     for (const el of rewardElements) {
-      const symbol = el.querySelector('.token-symbol').value.trim().toUpper();
+      const symbol = el.querySelector('.token-symbol').value.trim().toUpperCase();
       const amount = parseFloat(el.querySelector('.reward-amount').value.trim());
 
       if (!symbol || isNaN(amount) || amount <= 0) {
@@ -776,10 +822,10 @@ function openDepositForm(farmId) {
   const body = document.getElementById('modal-body');
 
   body.innerHTML = `
-    <h3 class="text-xl font-bold mb-4">Deposit Rewards to Farm</h3>
+    <h3 class="modal-title">Deposit Rewards to Farm</h3>
     <div id="rewards-deposit-container"></div>
-    <button id="add-more-reward" class="text-sm text-blue-600 underline mb-4">➕ Add another token</button>
-    <button id="submit-deposit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Deposit All</button>
+    <button id="add-more-reward" class="link-add-reward">➕ Add another token</button>
+    <button id="submit-deposit" class="btn btn-success full-width">Deposit All</button>
   `;
 
   modal.classList.remove('hidden');
@@ -788,82 +834,77 @@ function openDepositForm(farmId) {
   const container = document.getElementById('rewards-deposit-container');
   const addBtn = document.getElementById('add-more-reward');
   const wallet = window.walletBalances || [];
-  
+
   function renderRewardRow(token = '') {
     const wallet = window.walletBalances || [];
     const div = document.createElement('div');
-    div.className = 'reward-row mb-6 p-3 border rounded bg-gray-50';
+    div.className = 'reward-row';
     div.innerHTML = `
-      <label class="block text-sm font-medium mb-1">Choose Token</label>
-      <select class="token-symbol w-full border p-2 rounded mb-2">
+      <label class="form-label">Choose Token</label>
+      <select class="form-input token-symbol">
         <option disabled selected value="">-- Select a token --</option>
         ${wallet.map(t => `<option value="${t.symbol}">${t.symbol}</option>`).join('')}
       </select>
-  
-      <div class="available-balance text-sm text-gray-600 mb-2 hidden"></div>
-  
-      <label class="block text-sm font-medium mb-1">Select %</label>
-      <input type="range" class="percent-range w-full mb-2" min="0" max="100" value="0" disabled>
-  
-      <label class="block text-sm font-medium mb-1">Amount</label>
-      <input type="number" class="amount w-full border p-2 rounded" placeholder="Amount" disabled>
+
+      <div class="available-balance hidden"></div>
+
+      <label class="form-label">Select %</label>
+      <input type="range" class="range-input percent-range" min="0" max="100" value="0" disabled>
+
+      <label class="form-label">Amount</label>
+      <input type="number" class="form-input amount" placeholder="Amount" disabled>
     `;
-  
+
     const select = div.querySelector('.token-symbol');
     const range = div.querySelector('.percent-range');
     const input = div.querySelector('.amount');
     const balanceText = div.querySelector('.available-balance');
-  
+
     let currentBalance = 0;
-  
+
     select.onchange = () => {
       const selectedToken = select.value;
       currentBalance = parseFloat(wallet.find(t => t.symbol === selectedToken)?.amount || 0);
-  
+
       balanceText.innerHTML = `Available balance in your Wallet: <strong>${currentBalance.toFixed(4)} ${selectedToken}</strong>`;
       balanceText.classList.remove('hidden');
-  
+
       range.disabled = false;
       input.disabled = false;
       input.value = '';
       range.value = 0;
     };
-  
+
     range.oninput = () => {
       const percent = parseFloat(range.value);
       input.value = (currentBalance * percent / 100).toFixed(4);
     };
-  
+
     input.oninput = () => {
       const amount = parseFloat(input.value);
       if (!isNaN(amount)) {
         range.value = Math.min(100, Math.round((amount / currentBalance) * 100));
       }
     };
-  
-    document.getElementById('rewards-deposit-container').appendChild(div);
+
+    container.appendChild(div);
   }
 
-  // Prima riga iniziale
   renderRewardRow();
-
-  addBtn.onclick = () => {
-    renderRewardRow();
-  };
+  addBtn.onclick = () => renderRewardRow();
 
   document.getElementById('submit-deposit').onclick = async () => {
     const rows = document.querySelectorAll('.reward-row');
     const rewards = [];
+
     rows.forEach(row => {
       const selectEl = row.querySelector('.token-symbol');
       const symbol = selectEl?.value?.trim();
       const amount = parseFloat(row.querySelector('.amount').value);
 
-      if (!symbol || symbol === "" || isNaN(amount) || amount <= 0) {
-        // Skippa riga non valida
-        return;
-      }
-      rewards.push({ token_symbol: symbol.toUpper(), amount });
+      if (!symbol || isNaN(amount) || amount <= 0) return;
+
+      rewards.push({ token_symbol: symbol.toUpperCase(), amount });
     });
 
     if (rewards.length === 0) {
@@ -877,8 +918,10 @@ function openDepositForm(farmId) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ farm_id: farmId, rewards })
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Unknown error");
+
       showToast(data.message || "✅ Rewards deposited successfully", "success");
       modal.classList.add('hidden');
       fetchAndRenderUserFarms();
@@ -895,13 +938,14 @@ function confirmFarmClosure(farmId) {
   const body = document.getElementById('modal-body');
 
   body.innerHTML = `
-    <h3 class="text-xl font-bold text-red-600 mb-4">Close Farm</h3>
-    <p class="mb-4">Are you sure you want to <strong>close</strong> this farm? This will stop all rewards.</p>
-    <div class="flex justify-end gap-4">
-      <button class="bg-gray-300 px-4 py-2 rounded" onclick="document.getElementById('modal').classList.add('hidden')">Cancel</button>
-      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="changeFarmStatus(${farmId}, 'closed')">Confirm</button>
+    <h3 class="modal-title text-danger">Close Farm</h3>
+    <p class="modal-text">Are you sure you want to <strong>close</strong> this farm? This will stop all rewards.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="document.getElementById('modal').classList.add('hidden')">Cancel</button>
+      <button class="btn btn-danger" onclick="changeFarmStatus(${farmId}, 'closed')">Confirm</button>
     </div>
   `;
+
   modal.classList.remove('hidden');
   document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
 }
@@ -914,14 +958,15 @@ function changeFarmStatus(farmId, newStatus = null) {
 
   if (!newStatus) {
     body.innerHTML = `
-      <h3 class="text-xl font-bold mb-4">Change Farm Status</h3>
-      <select id="status-select" class="w-full border p-2 rounded mb-4">
+      <h3 class="modal-title">Change Farm Status</h3>
+      <select id="status-select" class="form-select">
         <option value="open">Open</option>
         <option value="closed">Closed</option>
         <option value="setting">Setting</option>
       </select>
-      <button class="bg-yellow-500 hover:bg-yellow-600 text-white w-full py-2 rounded" id="status-confirm">Update</button>
+      <button class="btn btn-warning full-width" id="status-confirm">Update</button>
     `;
+
     modal.classList.remove('hidden');
     document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
 
@@ -929,6 +974,7 @@ function changeFarmStatus(farmId, newStatus = null) {
       const selected = document.getElementById('status-select').value;
       changeFarmStatus(farmId, selected);
     };
+
     return;
   }
 
@@ -947,13 +993,13 @@ function changeFarmStatus(farmId, newStatus = null) {
     .catch(err => {
       showToast("Error: " + err.message, "error");
     });
-} async function openEditRewards(templateId) {
+}
+async function openEditRewards(templateId) {
   const { userId, usx_token } = window.userData;
   const modal = document.getElementById('modal');
   const body = document.getElementById('modal-body');
 
   try {
-    // 🔄 Richiama i dati aggiornati
     const res = await fetch(`${BASE_URL}/get_farms?user_id=${userId}&usx_token=${usx_token}`);
     const data = await res.json();
 
@@ -962,7 +1008,6 @@ function changeFarmStatus(farmId, newStatus = null) {
       return;
     }
 
-    // 🔍 Cerca il template
     const farm = data.farms.find(f => f.templates?.some(t => t.template_id == templateId));
     const template = farm?.templates?.find(t => t.template_id == templateId);
 
@@ -971,39 +1016,34 @@ function changeFarmStatus(farmId, newStatus = null) {
       return;
     }
 
-    // 🪟 Ora puoi mostrare il modal con i dati sicuri
     modal.classList.remove('hidden');
     document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
 
     body.innerHTML = `
-      <h3 class="text-xl font-bold mb-4">✏️ Edit Rewards for Template ID ${templateId}</h3>
+      <h3 class="modal-title">✏️ Edit Rewards for Template ID ${templateId}</h3>
       <div id="rewards-edit-container">
         ${(template.rewards || []).map(r => `
-          <div class="reward-entry flex gap-2 mb-2">
-            <input type="text" class="token-symbol w-1/2 border p-2 rounded" value="${r.token_symbol}" placeholder="Token Symbol">
-            <input type="number" class="reward-amount w-1/2 border p-2 rounded" value="${parseFloat(r.daily_reward_amount)}" placeholder="Amount per day">
+          <div class="reward-entry">
+            <input type="text" class="form-input half-width token-symbol" value="${r.token_symbol}" placeholder="Token Symbol">
+            <input type="number" class="form-input half-width reward-amount" value="${parseFloat(r.daily_reward_amount)}" placeholder="Amount per day">
           </div>
         `).join('')}
       </div>
-      <button id="add-reward-btn" class="mb-4 text-sm text-blue-600 underline">➕ Add another reward</button>
-      <button id="submit-edit-rewards" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded shadow">
-        Update Rewards
-      </button>
+      <button id="add-reward-btn" class="link-add-reward">➕ Add another reward</button>
+      <button id="submit-edit-rewards" class="btn btn-warning full-width">Update Rewards</button>
     `;
 
-    // Aggiunta nuova riga
     document.getElementById('add-reward-btn').onclick = () => {
       const container = document.getElementById('rewards-edit-container');
       const div = document.createElement('div');
-      div.className = 'reward-entry flex gap-2 mb-2';
+      div.className = 'reward-entry';
       div.innerHTML = `
-        <input type="text" class="token-symbol w-1/2 border p-2 rounded" placeholder="Token Symbol">
-        <input type="number" class="reward-amount w-1/2 border p-2 rounded" placeholder="Amount per day">
+        <input type="text" class="form-input half-width token-symbol" placeholder="Token Symbol">
+        <input type="number" class="form-input half-width reward-amount" placeholder="Amount per day">
       `;
       container.appendChild(div);
     };
 
-    // Submit modifiche
     document.getElementById('submit-edit-rewards').onclick = async () => {
       const rewards = [];
       const entries = document.querySelectorAll('.reward-entry');
@@ -1025,9 +1065,10 @@ function changeFarmStatus(farmId, newStatus = null) {
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || "Failed to update rewards");
+
         showToast(result.message || "Rewards updated", "success");
         modal.classList.add('hidden');
-        await fetchAndRenderUserFarms(); // refresh UI
+        await fetchAndRenderUserFarms();
       } catch (err) {
         console.error(err);
         showToast(err.message, "error");
@@ -1038,7 +1079,8 @@ function changeFarmStatus(farmId, newStatus = null) {
     console.error("[❌] Failed to open edit modal:", error);
     showToast("Failed to load data", "error");
   }
-} window.openEditRewards = openEditRewards;
+}
+ window.openEditRewards = openEditRewards;
 
 function removeTemplate(templateId) {
   showConfirmModal(`Are you sure you want to delete Template ${templateId} and all related rewards?`, async () => {
@@ -1066,12 +1108,12 @@ function removeTemplate(templateId) {
   const body = document.getElementById('modal-body');
 
   body.innerHTML = `
-    <h3 class="text-xl font-bold mb-4">➕ Add Reward to Template ID ${templateId}</h3>
-    <div class="reward-entry flex gap-2 mb-4">
-      <input type="text" id="new-token-symbol" class="w-1/2 border p-2 rounded" placeholder="Token Symbol (e.g. CHIPS)">
-      <input type="number" id="new-reward-amount" class="w-1/2 border p-2 rounded" placeholder="Amount per day">
+    <h3 class="modal-title">➕ Add Reward to Template ID ${templateId}</h3>
+    <div class="reward-entry">
+      <input type="text" id="new-token-symbol" class="form-input half-width" placeholder="Token Symbol (e.g. CHIPS)">
+      <input type="number" id="new-reward-amount" class="form-input half-width" placeholder="Amount per day">
     </div>
-    <button id="submit-new-reward" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded shadow">
+    <button id="submit-new-reward" class="btn btn-success full-width">
       Add Reward
     </button>
   `;
@@ -1080,7 +1122,7 @@ function removeTemplate(templateId) {
   document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
 
   document.getElementById('submit-new-reward').onclick = async () => {
-    const symbol = document.getElementById('new-token-symbol').value.trim().toUpper();
+    const symbol = document.getElementById('new-token-symbol').value.trim().toUpperCase();
     const amount = parseFloat(document.getElementById('new-reward-amount').value.trim());
 
     if (!symbol || isNaN(amount) || amount <= 0) {
@@ -1110,146 +1152,145 @@ function removeTemplate(templateId) {
       showToast(err.message, "error");
     }
   };
-} 
+}
+
 window.openAddReward = openAddReward; 
 window.openEditRewards = openEditRewards;
 // Funzione per caricare dinamicamente sezioni
 function loadSection(section) {
   console.log(`[📦] Caricando sezione: ${section}`);
   const app = document.getElementById('app');
-if (section === 'c2e-twitch') {
-  // Nuova sezione C2E - Twitch con menu responsivo
-  app.innerHTML = `
-    <h2 class="text-2xl font-semibold mb-4 text-center">C2E - Twitch</h2>
-    <div class="menu flex flex-wrap justify-center gap-4 mb-8">
-      <button class="menu-btn p-4 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" data-menu="log-reward-activity">Log Reward Activity</button>
-      <button class="menu-btn p-4 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" data-menu="log-storms-giveaways">Log Storms & Giveaways</button>
-      <button class="menu-btn p-4 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" data-menu="schedule-token-storm">Schedule Token-Storm</button>
-      <button class="menu-btn p-4 bg-blue-600 text-white rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" data-menu="schedule-nft-giveaway">Schedule NFT-Giveaway</button>
-    </div>
-    <div id="c2e-content" class="text-center text-gray-700 w-[95%] mx-auto">Loading last activity...</div>
-  `;
 
-  // Set default view as Log Reward Activity
-  loadLogRewardActivity();
-
-  // Gestisci il cambio di menu
-  document.querySelectorAll('.menu-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      // Rimuovi la classe 'active' da tutti i pulsanti
-      document.querySelectorAll('.menu-btn').forEach(button => button.classList.remove('bg-blue-700', 'text-white'));
-
-      // Aggiungi la classe 'active' al pulsante cliccato
-      e.target.classList.add('bg-blue-700', 'text-white');
-      
-      const menu = e.target.getAttribute('data-menu');
-      switch(menu) {
-        case 'log-reward-activity':
-          loadLogRewardActivity();
-          break;
-        case 'log-storms-giveaways':
-          loadLogStormsGiveaways();
-          break;
-        case 'schedule-token-storm':
-          loadScheduledStorms();
-          break;
-        case 'schedule-nft-giveaway':
-          loadScheduleNFTGiveaway();
-          break;
-      }
-    });
-  });
-} else if (section === 'wallet') {
+  if (section === 'c2e-twitch') {
     app.innerHTML = `
-      <h2 class="text-2xl font-semibold mb-4">Wallet</h2>
+      <h2 class="section-title text-center">C2E - Twitch</h2>
+      <div class="c2e-menu">
+        <button class="c2e-menu-btn" data-menu="log-reward-activity">Log Reward Activity</button>
+        <button class="c2e-menu-btn" data-menu="log-storms-giveaways">Log Storms & Giveaways</button>
+        <button class="c2e-menu-btn" data-menu="schedule-token-storm">Schedule Token-Storm</button>
+        <button class="c2e-menu-btn" data-menu="schedule-nft-giveaway">Schedule NFT-Giveaway</button>
+      </div>
+      <div id="c2e-content" class="c2e-content">Loading last activity...</div>
+    `;
+
+    loadLogRewardActivity();
+
+    document.querySelectorAll('.c2e-menu-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.c2e-menu-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+
+        const menu = e.target.getAttribute('data-menu');
+        switch(menu) {
+          case 'log-reward-activity': loadLogRewardActivity(); break;
+          case 'log-storms-giveaways': loadLogStormsGiveaways(); break;
+          case 'schedule-token-storm': loadScheduledStorms(); break;
+          case 'schedule-nft-giveaway': loadScheduleNFTGiveaway(); break;
+        }
+      });
+    });
+
+  } else if (section === 'wallet') {
+    app.innerHTML = `
+      <h2 class="section-title">Wallet</h2>
       <div id="wallet-table">Caricamento Wallet...</div>
     `;
     loadWallet();
+
   } else if (section === 'nfts') {
     app.innerHTML = `
-      <h2 class="text-2xl font-semibold mb-4">My NFTs</h2>
-  
-      <div class="mb-4 flex flex-wrap gap-4 items-center">
-        <input type="text" id="search-template" placeholder="Search by Template Name..." class="p-2 border rounded w-full md:w-1/3">
-  
-        <select id="filter-status" class="p-2 border rounded">
+      <h2 class="section-title">My NFTs</h2>
+
+      <div class="filters-group">
+        <input type="text" id="search-template" placeholder="Search by Template Name..." class="form-input">
+
+        <select id="filter-status" class="form-select">
           <option value="">Status</option>
           <option value="Staked">Staked</option>
           <option value="Not Staked">Not Staked</option>
         </select>
-  
-        <select id="filter-stakable" class="p-2 border rounded">
+
+        <select id="filter-stakable" class="form-select">
           <option value="">Stakeability</option>
           <option value="Stakable">Stakable</option>
           <option value="Not Stakable">Not Stakable</option>
         </select>
-  
-        <select id="filter-for-sale" class="p-2 border rounded">
+
+        <select id="filter-for-sale" class="form-select">
           <option value="">Sale Status</option>
           <option value="Yes">For Sale</option>
           <option value="No">Not For Sale</option>
         </select>
-  
-        <select id="filter-collection" class="p-2 border rounded">
+
+        <select id="filter-collection" class="form-select">
           <option value="">Collection</option>
         </select>
-  
-        <select id="sort-by" class="p-2 border rounded">
+
+        <select id="sort-by" class="form-select">
           <option value="created_at_desc">Newest</option>
           <option value="created_at_asc">Oldest</option>
           <option value="template_name_asc">Template (A-Z)</option>
           <option value="template_name_desc">Template (Z-A)</option>
         </select>
       </div>
-  
-      <div id="bulk-actions" class="mb-4 hidden">
-        <button id="bulk-withdraw" class="bg-blue-500 text-white py-2 px-4 rounded mr-2 hover:bg-blue-600">Withdraw Selected</button>
-        <button id="bulk-send" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">Send Selected</button>
+
+      <div id="bulk-actions" class="bulk-actions hidden">
+        <button id="bulk-withdraw" class="btn btn-secondary">Withdraw Selected</button>
+        <button id="bulk-send" class="btn btn-primary">Send Selected</button>
       </div>
-  
-      <div id="nfts-loading" class="text-center my-4">🔄 Loading NFTs...</div>
-      <div id="nfts-count" class="text-gray-600 mb-2"></div>
-  
-      <div id="nfts-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4"></div>
-  
-      <div id="pagination" class="flex justify-center items-center space-x-4 mt-6"></div>
-  
-      <div id="modal-nft" class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center">
-        <div class="bg-white p-6 rounded shadow max-w-md w-full relative" >
-          <button id="close-modal" class="absolute top-2 right-2 text-red-600 hover:text-red-800 text-4xl font-bold">&times;</button>
+
+      <div id="nfts-loading" class="nfts-loading">🔄 Loading NFTs...</div>
+      <div id="nfts-count" class="nfts-count"></div>
+
+      <div id="nfts-list" class="nfts-grid"></div>
+
+      <div id="pagination" class="pagination"></div>
+
+      <div id="modal-nft" class="modal-backdrop hidden">
+        <div class="modal-box">
+          <button id="close-modal" class="modal-close">&times;</button>
           <div id="modal-content"></div>
         </div>
       </div>
     `;
+
     loadNFTs();
-  } else if (section === 'token-staking') {
-    console.log("[🧪] Entrato in blocco token-staking");
-    app.innerHTML = `
-      <h2 class="text-2xl font-semibold mb-4">Token Staking</h2>
-  
-      <input type="text" id="search-pools" placeholder="Search token pool name" class="mb-4 p-2 border rounded w-full md:w-1/2">
-  
-      <div id="pool-buttons" class="flex flex-wrap gap-2 mb-6"></div>
-  
-      <div id="selected-pool-details">
-        <div class="text-center text-gray-500">Loading pool data...</div>
-      </div>
-    `;
-    loadStakingPools();  // 🔥 chiamiamo la funzione che popola tutto
-  } else if (section === 'nfts-staking') {
-    app.innerHTML = `
-      <h2 class="text-2xl font-semibold mb-4">NFT Staking</h2>
-      <div id="nft-farms-container" class="space-y-4">Loading NFT farms...</div>
-    `;
-    loadNFTFarms();
-  } else if (section === 'create-nfts-farm') {
-    app.innerHTML = `<h2 class="text-2xl font-semibold mb-4">Create NFTs Staking Farm</h2><div id="create-nfts-farm-container">Loading...</div>`;
-    loadCreateNFTFarm(); // definita in create-nft-pool.js
-  } else if (section === 'create-token-pool') {
-    app.innerHTML = `<h2 class="text-2xl font-semibold mb-4">Create Token Staking Pool</h2><div id="create-token-pool-container">Loading...</div>`;
-    loadCreateTokenStaking();
   }
-} async function loadNFTFarms() {
+}
+else if (section === 'token-staking') {
+  console.log("[🧪] Entrato in blocco token-staking");
+  app.innerHTML = `
+    <h2 class="section-title">Token Staking</h2>
+    <input type="text" id="search-pools" placeholder="Search token pool name" class="form-input search-token-pool">
+    <div id="pool-buttons" class="pool-buttons"></div>
+    <div id="selected-pool-details">
+      <div class="loading-message">Loading pool data...</div>
+    </div>
+  `;
+  loadStakingPools();
+
+} else if (section === 'nfts-staking') {
+  app.innerHTML = `
+    <h2 class="section-title">NFT Staking</h2>
+    <div id="nft-farms-container" class="vertical-list">Loading NFT farms...</div>
+  `;
+  loadNFTFarms();
+
+} else if (section === 'create-nfts-farm') {
+  app.innerHTML = `
+    <h2 class="section-title">Create NFTs Staking Farm</h2>
+    <div id="create-nfts-farm-container">Loading...</div>
+  `;
+  loadCreateNFTFarm();
+
+} else if (section === 'create-token-pool') {
+  app.innerHTML = `
+    <h2 class="section-title">Create Token Staking Pool</h2>
+    <div id="create-token-pool-container">Loading...</div>
+  `;
+  loadCreateTokenStaking();
+}
+ async function loadNFTFarms() {
   const { userId, usx_token } = window.userData;
   const res = await fetch(`${BASE_URL}/nfts_farms?user_id=${userId}&usx_token=${usx_token}`);
   const data = await res.json();

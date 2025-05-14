@@ -20,7 +20,10 @@
       <p class="app-subtitle">Built for Users, Powered by Blockchain</p>
     </div>
 
-    <nav class="navbar-menu" role="navigation" aria-label="Main Navigation">
+    <nav class="navbar-menu"
+     role="navigation" aria-label="Main Navigation"
+     style="display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; padding: 1rem;">
+
       <!-- Static Buttons -->
       <button class="menu-button" data-section="wallet">Wallet</button>
       <button class="menu-button" data-section="nfts">NFTs Wallet</button>
@@ -57,25 +60,40 @@
   <!-- Main Content Area -->
   <main id="app" class="main-content" role="main"></main>
 
-  <!-- Generic Modal -->
-  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modal-content">
-      <button id="close-modal" class="modal-close" aria-label="Close modal">&times;</button>
-      <div id="modal-body" class="modal-body"></div>
-    </div>
+<!-- Generic Modal -->
+<div id="modal" class="modal hidden"
+     role="dialog" aria-modal="true"
+     style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background-color: rgba(0, 0, 0, 0.7); z-index: 9999;">
+  <div class="modal-content"
+       style="background-color: #4e342e; padding: 2rem; border-radius: 10px;
+              max-width: 600px; width: 90%; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.6);">
+    <button id="close-modal" class="modal-close"
+            style="position: absolute; top: 1rem; right: 1rem; font-size: 2rem;
+                   background: none; border: none; color: #fff5e1; cursor: pointer;">&times;</button>
+    <div id="modal-body" class="modal-body"></div>
   </div>
+</div>
 
-  <!-- Confirmation Modal -->
-  <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modal-content confirm-box">
-      <h2 class="modal-title">Confirm Deletion</h2>
-      <p id="confirm-message" class="modal-text">Are you sure you want to remove this item?</p>
-      <div class="modal-actions">
-        <button id="confirm-cancel" class="btn-cancel">Cancel</button>
-        <button id="confirm-yes" class="btn-confirm">Yes, Remove</button>
-      </div>
+<!-- Confirmation Modal -->
+<div id="confirm-modal" class="modal hidden"
+     role="dialog" aria-modal="true"
+     style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background-color: rgba(0, 0, 0, 0.7); z-index: 9999;">
+  <div class="modal-content confirm-box"
+       style="background-color: #4e342e; padding: 2rem; border-radius: 10px;
+              max-width: 600px; width: 90%; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.6);">
+    <h2 class="modal-title">Confirm Deletion</h2>
+    <p id="confirm-message" class="modal-text">Are you sure you want to remove this item?</p>
+    <div class="modal-actions">
+      <button id="confirm-cancel" class="btn-cancel">Cancel</button>
+      <button id="confirm-yes" class="btn-confirm">Yes, Remove</button>
     </div>
   </div>
+</div>
+
 
   <!-- Toast Notifications -->
   <aside id="toast-container" class="toast-container" role="status" aria-live="polite"></aside>

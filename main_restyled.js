@@ -1289,6 +1289,7 @@ else if (section === 'token-staking') {
   `;
   loadCreateTokenStaking();
 }
+}
  async function loadNFTFarms() {
   const { userId, usx_token } = window.userData;
   const res = await fetch(`${BASE_URL}/nfts_farms?user_id=${userId}&usx_token=${usx_token}`);

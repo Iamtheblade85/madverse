@@ -2892,7 +2892,12 @@ function injectThemeSelector() {
   document.body.appendChild(selector);
 
   // aggiorna i target
-  const targets = [document.body, document.getElementById('navbar'), document.getElementById('app')];
+  const targets = [
+    document.body,
+    document.getElementById('navbar'),                  // header
+    document.querySelector('nav.navbar-menu'),          // nav
+    document.getElementById('app')                      // main container
+  ];
 
   function applyTheme(themeClass) {
     targets.forEach(el => {
@@ -2915,5 +2920,5 @@ function injectThemeSelector() {
   applyTheme(saved);
 }
 
-
 document.addEventListener('DOMContentLoaded', injectThemeSelector);
+

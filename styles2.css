@@ -49259,3 +49259,34 @@ body.theme-6 .menu-button,
   animation: liquidNeon 4s infinite linear !important;
   box-shadow: 0 0 12px #00fff766, 0 0 24px #ff00c855 !important;
 }
+/* Center navbar */
+.navbar-menu {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+}
+
+/* Dropdown interaction via hover */
+.dropdown {
+  position: relative !important;
+}
+
+.dropdown-menu {
+  display: none !important;
+  position: absolute !important;
+  top: 100% !important;
+  background-color: inherit !important;
+  padding: 10px !important;
+  border-radius: 8px !important;
+  z-index: 100 !important;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block !important;
+}
+
+/* Optional: hide JS dropdown logic */
+.dropdown-toggle[aria-expanded="false"] + .dropdown-menu {
+  display: none !important;
+}

@@ -1256,7 +1256,6 @@ function loadSection(section) {
 
     loadNFTs();
   }
-}
 else if (section === 'token-staking') {
   console.log("[🧪] Entrato in blocco token-staking");
   app.innerHTML = `
@@ -1294,10 +1293,12 @@ else if (section === 'token-staking') {
   const { userId, usx_token } = window.userData;
   const res = await fetch(`${BASE_URL}/nfts_farms?user_id=${userId}&usx_token=${usx_token}`);
   const data = await res.json();
+
   console.log("[🐛] Risposta intera da /nfts_farms:", JSON.stringify(data, null, 2));
+
   if (!data.farms || data.farms.length === 0) {
     document.getElementById('nft-farms-container').innerHTML = `
-      <div class="text-red-500">No NFT farms found.</div>`;
+      <div class="error-message">No NFT farms found.</div>`;
     return;
   }
 
@@ -1306,11 +1307,12 @@ else if (section === 'token-staking') {
 
   const defaultFarm = data.farms.find(f => f.farm_name.toLowerCase().includes('chips')) || data.farms[0];
   renderNFTFarms([defaultFarm]);
-} function renderNFTFarmButtons(farms) {
+}
+function renderNFTFarmButtons(farms) {
   const container = document.getElementById('nft-farms-container');
   container.innerHTML = `
-    <input type="text" id="search-nft-farm" placeholder="Search farm name..." class="mb-4 p-2 border rounded w-full md:w-1/2">
-    <div id="nft-farm-buttons" class="flex flex-wrap gap-2 mb-4"></div>
+    <input type="text" id="search-nft-farm" placeholder="Search farm name..." class="form-input search-farm-input">
+    <div id="nft-farm-buttons" class="farm-button-group"></div>
     <div id="nft-farm-details"></div>
   `;
 
@@ -1335,16 +1337,15 @@ else if (section === 'token-staking') {
     const filtered = farms.filter(f => f.farm_name.toLowerCase().includes(search));
     renderButtons(filtered);
   });
-} function renderNFTFarms(farms) {
+}
+function renderNFTFarms(farms) {
   const container = document.getElementById('nft-farm-details');
   let html = '';
 
-  // ✅ Messaggio introduttivo UNA SOLA VOLTA
   html += `
-    <p class="italic text-gray-600 mb-2">
+    <p class="intro-text">
       Don’t have a NFT farm in CHIPS Wallet for your collection yet? You can create one 
-      <button onclick="loadSection('create-nfts-farm')"
-        class="ml-2 px-4 py-1 bg-yellow-400 text-gray-900 font-bold rounded-lg border-2 border-black shadow-lg transform hover:-translate-y-1 hover:shadow-xl transition-all duration-200 hover:bg-yellow-300 hover:text-black">
+      <button onclick="loadSection('create-nfts-farm')" class="btn btn-create-farm">
         Create NFTs Farm
       </button>
     </p>
@@ -1353,13 +1354,13 @@ else if (section === 'token-staking') {
   farms.forEach(farm => {
     const templatesHTML = (farm.templates || []).map(template => {
       const nftsHTML = (template.user_nfts || []).map(nft => `
-        <div class="bg-gray-100 p-2 rounded shadow-sm text-sm text-center">
+        <div class="nft-card">
           <img src="${nft.asset_img}" alt="NFT"
-            class="w-full h-24 object-contain mb-1 rounded"
+            class="nft-image"
             onerror="this.onerror=null;this.src='https://via.placeholder.com/150?text=Image+Not+Found';">
-          <div class="font-semibold truncate">${nft.template_name}</div>
-          <div class="text-xs text-gray-600">#${nft.asset_id}</div>
-          <button class="mt-1 w-full text-white py-1 rounded ${nft.is_staked ? 'bg-red-500' : 'bg-green-500'}"
+          <div class="nft-name">${nft.template_name}</div>
+          <div class="nft-id">#${nft.asset_id}</div>
+          <button class="${nft.is_staked ? 'btn btn-unstake' : 'btn btn-stake'}"
             onclick="handleNFTStake(${farm.farm_id}, ${template.template_id}, '${nft.asset_id}', ${nft.is_staked})">
             ${nft.is_staked ? 'Unstake' : 'Stake'}
           </button>
@@ -1369,45 +1370,41 @@ else if (section === 'token-staking') {
       const rewardsHTML = (template.rewards || []).map(r => {
         const daily = parseFloat(r.daily_reward_amount);
         return `
-          <div class="text-xs text-gray-700">
+          <div class="nft-reward">
             ${r.token_symbol}: ${isNaN(daily) ? "N/A" : daily.toFixed(4)}/day
           </div>
         `;
-      }).join('') || '<div class="text-sm text-gray-500 italic">No rewards</div>';
+      }).join('') || '<div class="no-rewards">No rewards</div>';
 
       return `
-        <div class="border-t pt-4">
-          <h4 class="font-bold mb-2">Template ID: ${template.template_id}</h4>
+        <div class="template-block">
+          <h4 class="template-title">Template ID: ${template.template_id}</h4>
           ${rewardsHTML}
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mt-2">
-            ${nftsHTML || '<div class="text-gray-400 text-sm col-span-full">You don’t own NFTs for this template</div>'}
+          <div class="nft-grid">
+            ${nftsHTML || '<div class="no-nfts">You don’t own NFTs for this template</div>'}
           </div>
         </div>
       `;
     }).join('');
 
     const farmRewards = (farm.farm_rewards || []).map(r => `
-      <span class="ml-2">
-        💰 ${r.token_symbol}: <strong>${parseFloat(r.total_reward).toFixed(4)}</strong>
-      </span>
+      <span class="farm-reward">💰 ${r.token_symbol}: <strong>${parseFloat(r.total_reward).toFixed(4)}</strong></span>
     `).join('');
 
     html += `
-      <div class="bg-white p-4 rounded shadow">
-        <h3 class="text-xl font-bold mb-2 flex flex-wrap items-center gap-2">
+      <div class="farm-card">
+        <h3 class="farm-title">
           ${farm.farm_name}
-          <span class="text-sm font-normal text-gray-500">
-            ${farmRewards}
-          </span>
+          <span class="farm-rewards">${farmRewards}</span>
         </h3>
         ${templatesHTML}
       </div>
     `;
   });
 
-  // ✅ Imposta tutto insieme
   container.innerHTML = html;
-} 
+}
+
 function applyRewardFiltersAndSort() {
   const username = document.getElementById('filter-username').value;
   const channel = document.getElementById('filter-channel').value;
@@ -1446,7 +1443,7 @@ function sortRewardTable(key) {
 
 async function loadLogRewardActivity() {
   const container = document.getElementById('c2e-content');
-  container.innerHTML = 'Loading Log Reward Activity...';  // Message to show while loading
+  container.innerHTML = 'Loading Log Reward Activity...';
 
   try {
     const res = await fetch(`${BASE_URL}/log_reward_activity`);
@@ -1458,22 +1455,23 @@ async function loadLogRewardActivity() {
     const data = await res.json();
 
     if (data.length === 0) {
-      container.innerHTML = '<div class="text-gray-500 text-center">No reward activity logs found.</div>';
+      container.innerHTML = '<div class="info-message">No reward activity logs found.</div>';
       return;
     }
 
-    // Save original data
     originalData = data;
 
-    // Show the most recent 20 records
-    const recentData = data.slice(0, 20).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const recentData = data
+      .slice(0, 20)
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     displayLogData(recentData);
 
   } catch (err) {
-    container.innerHTML = `<div class="text-red-500 text-center">Error loading log reward activity: ${err.message}</div>`;
+    container.innerHTML = `<div class="error-message">Error loading log reward activity: ${err.message}</div>`;
   }
 }
+
 function filterData() {
   const usernameFilter = document.getElementById('filter-username').value.toLowerCase();
   const channelFilter = document.getElementById('filter-channel').value.toLowerCase();

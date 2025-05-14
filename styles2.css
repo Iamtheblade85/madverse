@@ -49224,3 +49224,38 @@ body.modal-open {
   border: 2px solid #f79f1f !important;
   box-shadow: 0 0 20px #f79f1f !important;
 }
+.navbar-menu {
+  display: flex !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  align-items: center !important;
+}
+/* Nasconde i menu per default */
+.dropdown-menu {
+  display: none !important;
+  position: absolute !important;
+  background-color: inherit !important;
+  z-index: 10 !important;
+  min-width: 200px !important;
+}
+
+/* Mostra il menu al passaggio del mouse */
+.dropdown:hover .dropdown-menu {
+  display: block !important;
+}
+body.theme-0 .menu-button,
+body.theme-1 .menu-button,
+body.theme-2 .menu-button,
+body.theme-3 .menu-button,
+body.theme-4 .menu-button,
+body.theme-5 .menu-button,
+body.theme-6 .menu-button,
+{
+  /* effetto 3D neon */
+  background: linear-gradient(135deg, #ff00c8, #00fff7) !important;
+  color: #fff !important;
+  border: 2px solid #00fff7 !important;
+  animation: liquidNeon 4s infinite linear !important;
+  box-shadow: 0 0 12px #00fff766, 0 0 24px #ff00c855 !important;
+}

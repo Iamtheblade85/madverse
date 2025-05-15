@@ -5085,3 +5085,343 @@ button, .btn, input, select, textarea, .card, .modal {
   50% { text-shadow: 0 0 20px #ff3300, 0 0 30px #ff0000; }
   100% { text-shadow: 0 0 5px #ff9933, 0 0 15px #ff3300; }
 }
+
+
+/* === 🔥 INFERNO EXTREME THEME === */
+
+:root {
+  --inferno-red: #ff1a1a;
+  --inferno-orange: #ff6600;
+  --inferno-yellow: #ffff00;
+  --inferno-white: #ffffff;
+  --inferno-blue: #00ccff;
+  --inferno-purple: #cc00ff;
+  --inferno-black: #000000;
+  --inferno-smoke: #666666;
+  --inferno-glow: 0 0 10px #ff3300, 0 0 20px #ff6600, 0 0 30px #ff9900;
+  --inferno-font: 'Orbitron', 'Share Tech Mono', 'IBM Plex Sans', sans-serif;
+}
+
+/* LED Header Titles */
+.header-title {
+  font-size: 4rem !important;
+  font-weight: 900 !important;
+  font-family: var(--inferno-font) !important;
+  color: var(--inferno-red) !important;
+  text-shadow: 0 0 10px var(--inferno-orange), 0 0 20px var(--inferno-yellow), 0 0 30px var(--inferno-red) !important;
+  animation: ledPulse 1.2s infinite alternate;
+}
+
+@keyframes ledPulse {
+  0% { text-shadow: 0 0 5px var(--inferno-yellow); color: var(--inferno-red); }
+  50% { text-shadow: 0 0 25px var(--inferno-orange); color: var(--inferno-yellow); }
+  100% { text-shadow: 0 0 15px var(--inferno-red); color: var(--inferno-orange); }
+}
+
+.header-subtitle {
+  font-size: 2rem !important;
+  color: var(--inferno-blue);
+  font-weight: bold !important;
+  animation: glowSub 2s infinite ease-in-out;
+}
+
+@keyframes glowSub {
+  0%, 100% { text-shadow: 0 0 5px var(--inferno-blue); }
+  50% { text-shadow: 0 0 15px var(--inferno-purple); }
+}
+
+/* 🔥 Buttons with Fire and LED */
+button, .btn {
+  position: relative;
+  overflow: hidden;
+  padding: 1rem 2rem !important;
+  background: linear-gradient(to right, var(--inferno-red), var(--inferno-orange)) !important;
+  border: 3px solid var(--inferno-yellow) !important;
+  color: var(--inferno-black) !important;
+  font-family: var(--inferno-font) !important;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 1.1rem !important;
+  box-shadow: var(--inferno-glow) !important;
+  animation: buttonGlow 1.5s infinite alternate !important;
+}
+
+button::after, .btn::after {
+  content: "";
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(circle, rgba(255,255,0,0.3), transparent 70%);
+  animation: firePulse 1.2s infinite ease-in-out;
+  z-index: 0;
+}
+
+@keyframes buttonGlow {
+  0% { box-shadow: 0 0 10px var(--inferno-orange); }
+  100% { box-shadow: 0 0 25px var(--inferno-yellow); }
+}
+
+@keyframes firePulse {
+  0% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.1); }
+  100% { opacity: 0.4; transform: scale(1); }
+}
+
+/* Tables Upgrade */
+table {
+  background: linear-gradient(135deg, #220000, #550000) !important;
+  border: 2px solid var(--inferno-yellow) !important;
+  font-family: var(--inferno-font) !important;
+  color: var(--inferno-white) !important;
+  box-shadow: 0 0 15px var(--inferno-orange) !important;
+  animation: tableFlicker 3s infinite;
+}
+
+th {
+  background: var(--inferno-black) !important;
+  color: var(--inferno-yellow) !important;
+  text-shadow: 0 0 5px var(--inferno-yellow);
+  font-size: 1.1rem !important;
+}
+
+td {
+  border: 1px solid var(--inferno-orange);
+  padding: 0.75rem;
+}
+
+@keyframes tableFlicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.95; }
+}
+
+/* Background enhancement */
+body::before {
+  background: radial-gradient(circle at 20% 20%, rgba(255, 0, 0, 0.2), transparent 60%),
+              radial-gradient(circle at 80% 70%, rgba(255, 255, 0, 0.2), transparent 60%),
+              conic-gradient(from 90deg, #660000, #ff0000, #330000);
+  animation: infernoBackground 40s linear infinite;
+  z-index: -1;
+}
+
+@keyframes infernoBackground {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+
+/* === 🔥🔥 INFERNO THEME ULTRA EXTENDED === */
+/* Caratteristiche visive dinamiche, dettagliate, multi-effetto su header, pulsanti, tabelle e sfondi */
+
+:root {
+  --inferno-red: #ff1a1a;
+  --inferno-orange: #ff6600;
+  --inferno-yellow: #ffff33;
+  --inferno-gold: #ffcc00;
+  --inferno-white: #ffffff;
+  --inferno-blue: #00ccff;
+  --inferno-purple: #cc00ff;
+  --inferno-smoke: #666666;
+  --inferno-black: #000000;
+  --inferno-ash: #2e2e2e;
+  --inferno-gray: #888888;
+  --inferno-flame: #ff4500;
+  --inferno-darkred: #330000;
+  --inferno-glow: 0 0 10px #ff3300, 0 0 20px #ff6600, 0 0 30px #ff9900;
+  --inferno-font: 'Orbitron', 'Share Tech Mono', 'IBM Plex Sans', sans-serif;
+}
+
+/* 1. HEADER EXTREME */
+.header-title {
+  font-size: 5rem !important;
+  text-transform: uppercase;
+  font-weight: 900 !important;
+  font-family: var(--inferno-font);
+  background: linear-gradient(45deg, var(--inferno-red), var(--inferno-yellow), var(--inferno-orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: pulseLight 2s infinite alternate, colorShift 10s infinite linear;
+}
+
+.header-subtitle {
+  font-size: 2rem !important;
+  font-style: italic;
+  color: var(--inferno-blue);
+  animation: glowSubtle 3s ease-in-out infinite;
+}
+
+@keyframes pulseLight {
+  from { text-shadow: 0 0 10px var(--inferno-orange); }
+  to   { text-shadow: 0 0 30px var(--inferno-gold); }
+}
+
+@keyframes colorShift {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+@keyframes glowSubtle {
+  0%, 100% { text-shadow: 0 0 10px var(--inferno-blue); }
+  50% { text-shadow: 0 0 20px var(--inferno-purple); }
+}
+
+/* 2. BUTTON EVOLUTION */
+.btn {
+  background: linear-gradient(120deg, var(--inferno-darkred), var(--inferno-red)) !important;
+  color: var(--inferno-white) !important;
+  border: 2px solid var(--inferno-yellow) !important;
+  font-family: var(--inferno-font);
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 10px var(--inferno-orange), 0 0 40px var(--inferno-red);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px var(--inferno-yellow), 0 0 60px var(--inferno-orange);
+}
+
+.btn::before {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%;
+  width: 300%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, var(--inferno-gold), transparent);
+  animation: shimmer 2s infinite;
+  z-index: 0;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+/* 3. TABLE INFERNO */
+table {
+  background-color: var(--inferno-darkred) !important;
+  color: var(--inferno-white);
+  border: 2px solid var(--inferno-gold);
+  box-shadow: 0 0 15px var(--inferno-orange);
+  border-collapse: collapse;
+  width: 100%;
+  font-family: var(--inferno-font);
+  animation: tableShimmer 12s infinite;
+}
+
+th {
+  background: var(--inferno-black);
+  color: var(--inferno-yellow);
+  text-shadow: 0 0 10px var(--inferno-gold);
+  padding: 1rem;
+}
+
+td {
+  border: 1px solid var(--inferno-orange);
+  padding: 0.75rem;
+  background-color: var(--inferno-ash);
+  transition: background 0.3s ease;
+}
+
+tr:hover td {
+  background-color: var(--inferno-red);
+  color: var(--inferno-black);
+}
+
+@keyframes tableShimmer {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.2); }
+  100% { filter: brightness(1); }
+}
+
+/* 4. BODY BACKGROUND ANIMATION */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle, #440000 10%, transparent 40%), 
+              radial-gradient(circle at bottom right, #ff6600, transparent 60%),
+              conic-gradient(from 90deg, #550000, #ff0000, #330000);
+  animation: lavaInferno 30s infinite linear;
+  z-index: -1;
+  opacity: 0.2;
+}
+
+@keyframes lavaInferno {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
+}
+
+/* 5. UNIVERSAL GLOW ON INTERACTIVE ELEMENTS */
+input:focus, textarea:focus, select:focus {
+  border-color: var(--inferno-yellow);
+  box-shadow: 0 0 10px var(--inferno-orange);
+  outline: none;
+  background-color: #1f0000;
+}
+
+/* 6. CARDS & PANELS */
+.card, .form-card, .modal {
+  background: linear-gradient(to bottom, #1a0000, #330000);
+  color: var(--inferno-white);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 2px solid var(--inferno-red);
+  box-shadow: 0 0 15px var(--inferno-orange);
+  font-family: var(--inferno-font);
+  transition: transform 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px) scale(1.01);
+}
+
+/* 7. ANIMATED SMOKE EFFECT */
+.smoke-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.smoke-effect::after {
+  content: "";
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1), transparent);
+  animation: smokeRise 6s ease-in-out infinite;
+  transform: translateX(-50%);
+}
+
+@keyframes smokeRise {
+  0% { transform: translateX(-50%) translateY(0) scale(1); opacity: 0.2; }
+  100% { transform: translateX(-50%) translateY(-80px) scale(1.5); opacity: 0; }
+}
+
+/* 8. UTILITY EFFECTS */
+.glow-text {
+  text-shadow: 0 0 10px var(--inferno-yellow), 0 0 20px var(--inferno-orange);
+}
+
+.border-fire {
+  border: 3px solid var(--inferno-flame);
+  box-shadow: 0 0 15px var(--inferno-flame);
+}
+
+.fire-blink {
+  animation: blinkFire 1s steps(1) infinite;
+}
+
+@keyframes blinkFire {
+  50% { opacity: 0.5; }
+}
+

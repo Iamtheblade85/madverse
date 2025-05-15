@@ -1209,7 +1209,6 @@ function loadSection(section) {
         }
       });
     });
-
   } else if (section === 'wallet') {
       app.innerHTML = `
         <div class="section-container">
@@ -1217,10 +1216,7 @@ function loadSection(section) {
           <div id="wallet-table">Caricamento Wallet...</div>
         </div>
       `;
-    }
-
     loadWallet();
-
   } else if (section === 'nfts') {
     app.innerHTML = `
     <div class="section-container">
@@ -1279,7 +1275,6 @@ function loadSection(section) {
       </div>
       </div>
     `;
-
     loadNFTs();
   }
 else if (section === 'token-staking') {

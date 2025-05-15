@@ -5840,3 +5840,136 @@ tr.row-odd {
   background-color: var(--cave-earth-dark);
   color: var(--cave-bone);
 }
+
+
+/* === 🦴 ULTIMATE CAVEMAN REPLACEMENT: STRONG OVERRIDE === */
+
+@import url('https://fonts.googleapis.com/css2?family=Rock+Salt&family=Dokdo&family=Caveat+Brush&display=swap');
+
+:root {
+  --cave-dark: #3e2b23;
+  --cave-light: #d9c2a3;
+  --cave-sand: #e7d7ba;
+  --cave-coal: #1e1b16;
+  --cave-fire: #c46210;
+  --cave-ash: #857d74;
+  --cave-leaf: #7c9a5b;
+  --cave-clay: #a9746e;
+  --cave-water: #5f9ea0;
+  --cave-bone: #f9f6f2;
+  --cave-stone: #5a4e45;
+  --cave-orange: #e67e22;
+  --cave-font: 'Dokdo', 'Rock Salt', 'Caveat Brush', cursive;
+}
+
+body, html {
+  background: linear-gradient(to bottom, var(--cave-dark), var(--cave-stone)) !important;
+  color: var(--cave-bone) !important;
+  font-family: var(--cave-font) !important;
+}
+
+/* Header */
+.header-title {
+  font-size: 4rem !important;
+  color: var(--cave-orange) !important;
+  text-shadow: 2px 2px var(--cave-coal) !important;
+  animation: shakeCave 4s infinite ease-in-out !important;
+  font-family: var(--cave-font) !important;
+}
+
+.header-subtitle {
+  font-size: 1.5rem !important;
+  color: var(--cave-leaf) !important;
+  font-family: var(--cave-font) !important;
+}
+
+@keyframes shakeCave {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(1deg); }
+  50% { transform: rotate(-1deg); }
+  75% { transform: rotate(1deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Theme Selector */
+#theme-selector {
+  width: 15% !important;
+  background-color: var(--cave-ash) !important;
+  color: var(--cave-dark) !important;
+  border: 2px dashed var(--cave-coal) !important;
+  font-family: var(--cave-font) !important;
+}
+
+/* Buttons */
+button, .btn {
+  background: linear-gradient(45deg, var(--cave-leaf), var(--cave-water)) !important;
+  color: var(--cave-coal) !important;
+  font-weight: bold !important;
+  border: 3px solid var(--cave-stone) !important;
+  font-family: var(--cave-font) !important;
+  padding: 0.6rem 1.2rem !important;
+  border-radius: 6px !important;
+  box-shadow: 0 0 10px var(--cave-ash) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+button:hover, .btn:hover {
+  background: var(--cave-orange) !important;
+  color: var(--cave-bone) !important;
+  transform: scale(1.05) !important;
+}
+
+/* Inputs & Forms */
+input, select, textarea, .form-input, .form-select {
+  background-color: var(--cave-sand) !important;
+  color: var(--cave-coal) !important;
+  border: 2px solid var(--cave-stone) !important;
+  font-family: var(--cave-font) !important;
+  padding: 0.5rem !important;
+  border-radius: 4px !important;
+}
+
+input::placeholder {
+  color: var(--cave-ash) !important;
+}
+
+/* Cards, Containers */
+.card, .form-card, .token-pool-card, .farm-card {
+  background: var(--cave-light) !important;
+  color: var(--cave-dark) !important;
+  border: 2px solid var(--cave-coal) !important;
+  font-family: var(--cave-font) !important;
+  box-shadow: 2px 2px 10px var(--cave-stone) !important;
+}
+
+/* Tables */
+table, th, td {
+  background-color: var(--cave-sand) !important;
+  color: var(--cave-coal) !important;
+  font-family: var(--cave-font) !important;
+  border: 1px solid var(--cave-ash) !important;
+}
+
+th {
+  background-color: var(--cave-clay) !important;
+  color: var(--cave-bone) !important;
+}
+
+tr:nth-child(even) {
+  background-color: var(--cave-water) !important;
+  color: var(--cave-coal) !important;
+}
+
+tr:nth-child(odd) {
+  background-color: var(--cave-leaf) !important;
+  color: var(--cave-coal) !important;
+}
+
+.reward-entry, .reward-item, .reward-summary {
+  background-color: var(--cave-light) !important;
+  color: var(--cave-coal) !important;
+  border: 1px solid var(--cave-stone) !important;
+  padding: 0.5rem !important;
+  font-family: var(--cave-font) !important;
+}
+

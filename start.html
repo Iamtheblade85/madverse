@@ -5,34 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CryptoChaos Portal</title>
 
-  <!-- TailwindCSS CDN (no class usage in HTML) -->
+  <!-- TailwindCSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Custom CSS for themes and components -->
-  <link id="theme-style" rel="stylesheet" href="styles6_farwest.css" />
+  <!-- CyberTribal Glow Theme CSS -->
+  <link id="theme-style" rel="stylesheet" href="cybertribal_glow.css" />
 </head>
 <body class="app">
 
   <!-- Header / Navigation -->
   <header id="navbar" class="navbar">
-    <div class="navbar-brand" style="position: relative;">
+    <div class="navbar-brand">
       <h1 class="app-title">ChipsWallet</h1>
       <p class="app-subtitle">Built for Users, Powered by Blockchain</p>
     </div>
 
-    <nav class="navbar-menu"
-     role="navigation" aria-label="Main Navigation"
-     style="display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; padding: 1rem;">
-
-      <!-- Static Buttons -->
+    <nav class="navbar-menu" role="navigation" aria-label="Main Navigation">
       <button class="menu-button" data-section="wallet">Wallet</button>
       <button class="menu-button" data-section="nfts">NFTs Wallet</button>
 
       <!-- Dropdown: Earn -->
       <div class="dropdown">
-        <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">
-          Earn ▾
-        </button>
+        <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">Earn ▾</button>
         <div class="dropdown-menu hidden" role="menu">
           <button class="dropdown-item" data-section="token-staking">Token Staking</button>
           <button class="dropdown-item" data-section="nfts-staking">NFTs Staking</button>
@@ -46,9 +40,7 @@
 
       <!-- Dropdown: Creators Tools -->
       <div class="dropdown">
-        <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">
-          Creators Tools ▾
-        </button>
+        <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">Creators Tools ▾</button>
         <div class="dropdown-menu hidden" role="menu">
           <button class="dropdown-item" data-section="create-token-pool">Create Token Staking Pool</button>
           <button class="dropdown-item" data-section="create-nfts-farm">Create NFTs Staking Pool</button>
@@ -60,48 +52,33 @@
   <!-- Main Content Area -->
   <main id="app" class="main-content" role="main"></main>
 
-<!-- Generic Modal -->
-<div id="modal" class="modal hidden"
-     role="dialog" aria-modal="true"
-     style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            display: flex; justify-content: center; align-items: center;
-            background-color: rgba(0, 0, 0, 0.7); z-index: 9999;">
-  <div class="modal-content"
-       style="background-color: #4e342e; padding: 2rem; border-radius: 10px;
-              max-width: 600px; width: 90%; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.6);">
-    <button id="close-modal" class="modal-close"
-            style="position: absolute; top: 1rem; right: 1rem; font-size: 2rem;
-                   background: none; border: none; color: #fff5e1; cursor: pointer;">&times;</button>
-    <div id="modal-body" class="modal-body"></div>
-  </div>
-</div>
-
-<!-- Confirmation Modal -->
-<div id="confirm-modal" class="modal hidden"
-     role="dialog" aria-modal="true"
-     style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            display: flex; justify-content: center; align-items: center;
-            background-color: rgba(0, 0, 0, 0.7); z-index: 9999;">
-  <div class="modal-content confirm-box"
-       style="background-color: #4e342e; padding: 2rem; border-radius: 10px;
-              max-width: 600px; width: 90%; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.6);">
-    <h2 class="modal-title">Confirm Deletion</h2>
-    <p id="confirm-message" class="modal-text">Are you sure you want to remove this item?</p>
-    <div class="modal-actions">
-      <button id="confirm-cancel" class="btn-cancel">Cancel</button>
-      <button id="confirm-yes" class="btn-confirm">Yes, Remove</button>
+  <!-- Generic Modal -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <button id="close-modal" class="modal-close">&times;</button>
+      <div id="modal-body" class="modal-body"></div>
     </div>
   </div>
-</div>
 
+  <!-- Confirmation Modal -->
+  <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content confirm-box">
+      <h2 class="modal-title">Confirm Deletion</h2>
+      <p id="confirm-message" class="modal-text">Are you sure you want to remove this item?</p>
+      <div class="modal-actions">
+        <button id="confirm-cancel" class="btn-cancel">Cancel</button>
+        <button id="confirm-yes" class="btn-confirm">Yes, Remove</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Toast Notifications -->
   <aside id="toast-container" class="toast-container" role="status" aria-live="polite"></aside>
 
-  <!-- Scripts -->
+  <!-- JavaScript -->
   <script src="main_restyled.js"></script>
   <script>
-    // Dropdown toggle logic
+    // Toggle dropdown
     document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
       toggle.addEventListener('click', () => {
         document.querySelectorAll('.dropdown-menu').forEach(menu => {
@@ -113,13 +90,22 @@
       });
     });
 
-    // Dropdown item navigation
+    // Navigation handler
     document.querySelectorAll('.dropdown-item').forEach(item => {
       item.addEventListener('click', event => {
         const section = event.target.dataset.section;
-        loadSection(section);
+        if (typeof loadSection === 'function') loadSection(section);
         document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.add('hidden'));
       });
+    });
+
+    // Modal close functionality
+    document.getElementById('close-modal').addEventListener('click', () => {
+      document.getElementById('modal').classList.add('hidden');
+    });
+
+    document.getElementById('confirm-cancel').addEventListener('click', () => {
+      document.getElementById('confirm-modal').classList.add('hidden');
     });
   </script>
 </body>

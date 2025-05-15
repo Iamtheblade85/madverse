@@ -5562,3 +5562,169 @@ body::before {
   0% { background-position: 0% 0%; }
   100% { background-position: 100% 100%; }
 }
+
+
+/* === 🪓 CAVEMAN THEME: NATURAL & PRIMITIVE === */
+
+:root {
+  --cave-earth-dark: #3e2c23;
+  --cave-earth-light: #9c7e5c;
+  --cave-sand: #cbb79d;
+  --cave-ash: #6f5c4c;
+  --cave-charcoal: #2e2b26;
+  --cave-fire-dim: #b35b1e;
+  --cave-clay: #b87333;
+  --cave-bone: #f4f1de;
+  --cave-rock: #5c5148;
+  --cave-shadow: #1d1b17;
+  --cave-highlight: #ddb892;
+  --cave-font: 'Rock Salt', 'Patrick Hand', 'Caveat', cursive;
+}
+
+/* Font Import */
+@import url('https://fonts.googleapis.com/css2?family=Rock+Salt&family=Patrick+Hand&family=Caveat&display=swap');
+
+/* === BODY & BACKGROUND === */
+body {
+  background: linear-gradient(to bottom, var(--cave-charcoal), var(--cave-earth-dark));
+  color: var(--cave-bone);
+  font-family: var(--cave-font);
+}
+
+/* Shadowy animation like fire reflection */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 20% 40%, rgba(139,69,19,0.1), transparent 60%),
+              radial-gradient(circle at 80% 70%, rgba(205,133,63,0.1), transparent 60%);
+  animation: caveShadowMove 30s infinite ease-in-out;
+  z-index: -1;
+  opacity: 0.3;
+}
+
+@keyframes caveShadowMove {
+  0% { transform: translateX(0px); }
+  50% { transform: translateX(20px); }
+  100% { transform: translateX(0px); }
+}
+
+/* === HEADER === */
+.header-title {
+  font-size: 3.5rem;
+  color: var(--cave-clay);
+  font-family: var(--cave-font);
+  text-shadow: 1px 1px var(--cave-shadow);
+  animation: rockShake 4s infinite alternate ease-in-out;
+}
+
+@keyframes rockShake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-1deg); }
+  75% { transform: rotate(1deg); }
+}
+
+.header-subtitle {
+  font-size: 1.6rem;
+  font-style: italic;
+  color: var(--cave-sand);
+  animation: fireDance 5s infinite ease-in-out;
+}
+
+@keyframes fireDance {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; transform: scale(1.01); }
+}
+
+/* === THEME SELECTOR === */
+#theme-selector {
+  width: 15% !important;
+  background-color: var(--cave-ash);
+  color: var(--cave-charcoal);
+  border: 2px dashed var(--cave-earth-light);
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-family: var(--cave-font);
+  font-size: 0.9rem;
+  box-shadow: inset 2px 2px 4px var(--cave-shadow);
+}
+
+/* === BUTTONS === */
+button, .btn {
+  background: linear-gradient(145deg, var(--cave-earth-light), var(--cave-earth-dark));
+  color: var(--cave-bone);
+  font-family: var(--cave-font);
+  border: 2px solid var(--cave-clay);
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 1px 1px 4px var(--cave-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+button:hover, .btn:hover {
+  background: var(--cave-fire-dim);
+  color: var(--cave-charcoal);
+  transform: scale(1.05);
+}
+
+/* === TABLES === */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--cave-rock);
+  color: var(--cave-bone);
+  font-family: var(--cave-font);
+  box-shadow: 0 0 10px var(--cave-shadow);
+  margin-top: 1rem;
+}
+
+th {
+  background-color: var(--cave-charcoal);
+  color: var(--cave-highlight);
+  padding: 0.8rem;
+  text-align: left;
+  border-bottom: 2px solid var(--cave-earth-light);
+}
+
+td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--cave-ash);
+  background-color: var(--cave-earth-dark);
+}
+
+tr:nth-child(even) {
+  background-color: var(--cave-earth-light);
+  color: var(--cave-charcoal);
+}
+
+tr:hover {
+  background-color: var(--cave-clay);
+  color: var(--cave-shadow);
+}
+
+/* === FORM INPUTS === */
+input, select, textarea {
+  background-color: var(--cave-ash);
+  border: 1px solid var(--cave-shadow);
+  color: var(--cave-charcoal);
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-family: var(--cave-font);
+  box-shadow: inset 1px 1px 2px var(--cave-shadow);
+}
+
+/* === CARDS / BOXES === */
+.card, .form-card {
+  background-color: var(--cave-earth-light);
+  border: 2px solid var(--cave-shadow);
+  padding: 1rem;
+  border-radius: 6px;
+  color: var(--cave-charcoal);
+  font-family: var(--cave-font);
+  box-shadow: 2px 2px 8px var(--cave-shadow);
+}
+

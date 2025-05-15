@@ -2804,15 +2804,71 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
 }
 
 .section-container {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.1rem;
-  color: #39ff14;
-  text-shadow: 0 0 5px #39ff14;
-  transition: all 0.3s ease-in-out;
+  position: relative !important;
+  overflow: hidden !important;
+  font-family: var(--font-main) !important;
+  font-size: 1.1rem !important;
+  color: var(--color-secondary) !important;
+  text-shadow: 0 0 5px var(--color-secondary) !important;
+  transition: all var(--transition-speed) ease-in-out !important;
+  width: 95% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  text-align: center !important;
 }
+
+/* Responsive Widths */
+@media (min-width: 600px) {
+  .section-container {
+    width: 95% !important;
+  }
+}
+@media (min-width: 900px) {
+  .section-container {
+    width: 80% !important;
+  }
+}
+@media (min-width: 1200px) {
+  .section-container {
+    width: 65% !important;
+  }
+}
+
+/* Stars Overlay */
+.section-container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0;
+  background: radial-gradient(#fff 1px, transparent 1px),
+              radial-gradient(#fff 1px, transparent 1px);
+  background-size: 20px 20px, 40px 40px;
+  background-position: 0 0, 10px 10px;
+  animation: starsMove 60s linear infinite;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* Moving stars animation */
+@keyframes starsMove {
+  from {
+    background-position: 0 0, 10px 10px;
+  }
+  to {
+    background-position: 1000px 500px, 1010px 510px;
+  }
+}
+
+/* Ensure content is above the stars */
+.section-container > * {
+  position: relative;
+  z-index: 1;
+}
+
 .section-container:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #8e44ad, 0 0 25px #8e44ad;
+  filter: brightness(1.15) !important;
+  box-shadow: 0 0 12px var(--color-accent), 0 0 25px var(--color-highlight) !important;
+  transition: all var(--transition-speed) ease-in-out !important;
 }
 
 .form-container {
@@ -3079,18 +3135,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ffffff;
 }
 
-.btn-group {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1rem;
-  color: #1affd5;
-  text-shadow: 0 0 5px #1affd5;
-  transition: all 0.3s ease-in-out;
-}
-.btn-group:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #00f0ff, 0 0 25px #8e44ad;
-}
-
 .subheading {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
@@ -3211,16 +3255,35 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ff073a;
 }
 
+/* BTN-ACTION con effetto LED liquido animato 3D */
 .btn-action {
-  font-family: "Papyrus", "Courier New", cursive;
+  font-family: var(--font-main);
   font-size: 0.9rem;
-  color: #1affd5;
-  text-shadow: 0 0 5px #1affd5;
-  transition: all 0.3s ease-in-out;
+  color: var(--color-primary);
+  text-shadow: 0 0 5px var(--color-primary);
+  background: linear-gradient(135deg, #1affd5, #39ff14, #00f0ff);
+  background-size: 400% 400%;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  animation: ledLiquidFlow 8s ease infinite;
+  box-shadow: 0 0 8px var(--color-highlight), 0 0 16px var(--color-accent);
+  transition: all var(--transition-speed) ease-in-out;
+  transform-style: preserve-3d;
+  perspective: 1000px;
 }
+
 .btn-action:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #ffe600, 0 0 25px #ff073a;
+  filter: brightness(1.3);
+  transform: scale(1.05) rotateX(5deg) rotateY(3deg);
+  box-shadow: 0 0 15px var(--color-highlight), 0 0 30px var(--color-danger);
+}
+
+/* Liquid flow background animation */
+@keyframes ledLiquidFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .empty-state {
@@ -3708,22 +3771,22 @@ button:hover, .btn:hover, .menu-button:hover {
   flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  background-color: rgba(0, 255, 204, 0.05);
+  border-radius: 10px;
+  box-shadow: 0 0 10px var(--color-primary), 0 0 20px var(--color-cyan);
+  backdrop-filter: blur(4px);
+  transition: all var(--transition-speed) ease-in-out;
 }
 
-.btn-action {
-  padding: 0.4rem 0.8rem;
-  font-size: 0.9rem;
-  font-family: "Papyrus", "Courier New", cursive;
-  border: none;
-  background-color: #8e44ad;
-  color: #ffffff;
-  border-radius: 4px;
-  box-shadow: 0 0 6px #00f0ff;
-  transition: all 0.3s ease-in-out;
+.btn-group:hover {
+  box-shadow: 0 0 16px var(--color-highlight), 0 0 32px var(--color-accent);
+  transform: scale(1.02);
+  background-color: rgba(255, 255, 255, 0.08);
+  transition: all var(--transition-speed) ease-in-out;
 }
 
-.btn-action:hover {
-  background-color: #f39c12;
-  color: #000000;
-  box-shadow: 0 0 12px #ffe600;
-}
+
+
+

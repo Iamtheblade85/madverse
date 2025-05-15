@@ -3814,3 +3814,20 @@ th {
 tr:nth-child(even) {
   background-color: rgba(255, 255, 255, 0.05);
 }
+.modal,
+.modal-backdrop {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translate(-50%, -50%) scale(0.95) !important;
+}
+
+.modal.active,
+.modal-backdrop.active {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: translate(-50%, -50%) scale(1) !important;
+}

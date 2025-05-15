@@ -3787,6 +3787,21 @@ button:hover, .btn:hover, .menu-button:hover {
   transition: all var(--transition-speed) ease-in-out;
 }
 
+/* === HOVER EFFECTS FOR TABLE ROWS - FULLY FORCED === */
+#wallet-table tr:hover,
+.reward-table tr:hover,
+.storm-table tr:hover,
+.wallet-table-container tr:hover,
+.table-container tr:hover,
+.wallet-table tr.row-border:hover {
+  background-color: silver !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  font-size: 102% !important;
+  text-shadow: 0 0 5px #ffffff !important;
+  transition: all var(--transition-speed) ease-in-out !important;
+}
 
 
 

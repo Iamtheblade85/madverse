@@ -1,0 +1,3684 @@
+/* Theme: CyberTribal Glow */
+
+body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Rounded MT Bold", sans-serif; }
+
+@keyframes glow-pulse { 0% { text-shadow: 0 0 5px #0ff; } 50% { text-shadow: 0 0 20px #0ff; } 100% { text-shadow: 0 0 5px #0ff; } }
+
+@keyframes slide-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+
+@keyframes zoom-fade { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+@keyframes neon-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+@keyframes float { 0% { transform: translateY(0); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0); } }
+
+@keyframes wiggle { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+
+@keyframes shimmer { 100% { background-position: 200% center; } }
+
+@keyframes rotate-in { from { transform: rotate(-180deg); opacity: 0; } to { transform: rotate(0); opacity: 1; } }
+
+@keyframes scale-bounce { 0% { transform: scale(0.8); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+@keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+@keyframes blur-fade { 0% { filter: blur(10px); opacity: 0; } 100% { filter: blur(0); opacity: 1; } }
+
+@keyframes drop-in { from { transform: translateY(-200px); } to { transform: translateY(0); } }
+
+@keyframes fade-slide { 0% { opacity: 0; transform: translateX(50px); } 100% { opacity: 1; transform: translateX(0); } }
+
+@keyframes border-flash { 0% { border-color: #fff; } 50% { border-color: #0ff; } 100% { border-color: #fff; } }
+
+@keyframes flicker { 0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; } 20%, 24%, 55% { opacity: 0; } }
+
+@keyframes tilt { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(1deg); } }
+
+@keyframes hover-pop { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+
+@keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.7); } 70% { box-shadow: 0 0 0 10px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
+
+@keyframes flash-text { 0% { color: #fff; } 50% { color: #ff00ff; } 100% { color: #fff; } }
+
+@keyframes expand-bg { 0% { background-size: 100% 100%; } 100% { background-size: 120% 120%; } }
+
+@keyframes pulse-glow { 0% { box-shadow: 0 0 5px #ff0; } 50% { box-shadow: 0 0 20px #ff0; } 100% { box-shadow: 0 0 5px #ff0; } }
+
+@keyframes wave { 0% { transform: rotate(0); } 50% { transform: rotate(5deg); } 100% { transform: rotate(0); } }
+
+@keyframes color-cycle { 0% { color: #f00; } 33% { color: #0f0; } 66% { color: #00f; } 100% { color: #f00; } }
+
+@keyframes scale-in { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+@keyframes light-speed-in { 0% { transform: translateX(100%) skewX(-30deg); } 100% { transform: translateX(0) skewX(0); } }
+
+@keyframes appear-bounce { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+
+@keyframes neon-border { 0%, 100% { border-color: #fff; } 50% { border-color: #0ff; } }
+
+@keyframes drift { 0% { transform: translateX(0); } 50% { transform: translateX(5px); } 100% { transform: translateX(0); } }
+
+@keyframes skew-slide { 0% { transform: skewX(-15deg); opacity: 0; } 100% { transform: skewX(0); opacity: 1; } }
+
+@keyframes soft-glow { 0%, 100% { text-shadow: 0 0 3px #fff; } 50% { text-shadow: 0 0 10px #fff; } }
+
+@media (max-width: 300px) { html { font-size: 10px; } }
+
+@media (max-width: 480px) { html { font-size: 10px; } }
+
+@media (max-width: 600px) { html { font-size: 10px; } }
+
+@media (max-width: 768px) { html { font-size: 10px; } }
+
+@media (max-width: 900px) { html { font-size: 10px; } }
+
+@media (max-width: 1024px) { html { font-size: 10px; } }
+
+@media (max-width: 1200px) { html { font-size: 12px; } }
+
+@media (max-width: 1366px) { html { font-size: 13px; } }
+
+@media (max-width: 1440px) { html { font-size: 14px; } }
+
+@media (max-width: 1600px) { html { font-size: 16px; } }
+
+#theme-style {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+#theme-style:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #ffe600;
+}
+
+#navbar {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+#navbar:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #39ff14;
+}
+
+#app {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+#app:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #00ffcc;
+}
+
+#modal {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+#modal:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #00f0ff;
+}
+
+#close-modal {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+#close-modal:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #00f0ff;
+}
+
+#modal-body {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+#modal-body:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #00ffcc;
+}
+
+#confirm-modal {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+#confirm-modal:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #ff073a;
+}
+
+#confirm-message {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+#confirm-message:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
+}
+
+#confirm-cancel {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+#confirm-cancel:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #f39c12;
+}
+
+#confirm-yes {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+#confirm-yes:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #8e44ad;
+}
+
+#toast-container {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+#toast-container:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #ffffff;
+}
+
+#search-token-pool {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+#search-token-pool:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #1affd5;
+}
+
+#create-new-token-pool-btn {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+#create-new-token-pool-btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #1affd5;
+}
+
+#created-token-pools {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+#created-token-pools:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff00ff;
+}
+
+#token-pool-details {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+#token-pool-details:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #ffe600;
+}
+
+#new-token-symbol {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+#new-token-symbol:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #00f0ff;
+}
+
+#reward-token-entries {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+#reward-token-entries:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #ffe600;
+}
+
+#add-reward-token {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+#add-reward-token:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #39ff14;
+}
+
+#submit-new-token-pool {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+#submit-new-token-pool:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff00ff;
+}
+
+#new-daily-reward {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+#new-daily-reward:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
+}
+
+#submit-daily-reward {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+#submit-daily-reward:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #00ffcc;
+}
+
+#deposit-amount {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+#deposit-amount:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
+}
+
+#submit-deposit {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+#submit-deposit:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
+}
+
+#pool-status-select {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+#pool-status-select:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #f39c12;
+}
+
+#submit-pool-status {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+#submit-pool-status:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #8e44ad;
+}
+
+#search-created-farm {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+#search-created-farm:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #ff00ff;
+}
+
+#create-new-farm-btn {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+#create-new-farm-btn:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #00ffcc;
+}
+
+#created-farm-buttons {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+#created-farm-buttons:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #ffe600;
+}
+
+#created-farm-details {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+#created-farm-details:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #39ff14;
+}
+
+#new-farm-name {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+#new-farm-name:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #1affd5;
+}
+
+#submit-new-farm {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+#submit-new-farm:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #f39c12;
+}
+
+#template-id {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+#template-id:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #1affd5;
+}
+
+#rewards-container {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+#rewards-container:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff00ff;
+}
+
+#add-reward-btn {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+#add-reward-btn:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #00ffcc;
+}
+
+#submit-add-template {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+#submit-add-template:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #ff073a;
+}
+
+#rewards-deposit-container {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+#rewards-deposit-container:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
+}
+
+#add-more-reward {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+#add-more-reward:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
+}
+
+#status-select {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+#status-select:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #8e44ad;
+}
+
+#status-confirm {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+#status-confirm:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #00f0ff;
+}
+
+#rewards-edit-container {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+#rewards-edit-container:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
+}
+
+#submit-edit-rewards {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+#submit-edit-rewards:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #00ffcc;
+}
+
+#new-reward-amount {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+#new-reward-amount:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #00f0ff;
+}
+
+#submit-new-reward {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+#submit-new-reward:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
+}
+
+#c2e-content {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+#c2e-content:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #f39c12;
+}
+
+#wallet-table {
+  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
+  font-size: 1rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+#wallet-table:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #8e44ad;
+}
+
+#search-template {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+#search-template:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #39ff14;
+}
+
+#filter-status {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+#filter-status:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #1affd5;
+}
+
+#filter-stakable {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+#filter-stakable:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #39ff14;
+}
+
+#filter-for-sale {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+#filter-for-sale:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffffff;
+}
+
+#filter-collection {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+#filter-collection:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #1affd5;
+}
+
+#sort-by {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+#sort-by:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #f39c12;
+}
+
+#bulk-actions {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+#bulk-actions:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #39ff14;
+}
+
+#bulk-withdraw {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+#bulk-withdraw:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
+}
+
+#bulk-send {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+#bulk-send:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #00ffcc;
+}
+
+#nfts-loading {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+#nfts-loading:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #39ff14;
+}
+
+#nfts-count {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+#nfts-count:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #00ffcc;
+}
+
+#nfts-list {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+#nfts-list:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #00ffcc;
+}
+
+#pagination {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+#pagination:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
+}
+
+#modal-nft {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+#modal-nft:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
+}
+
+#modal-content {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+#modal-content:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #f39c12;
+}
+
+#search-pools {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+#search-pools:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #1affd5;
+}
+
+#pool-buttons {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+#pool-buttons:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #39ff14;
+}
+
+#selected-pool-details {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+#selected-pool-details:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #8e44ad;
+}
+
+#nft-farms-container {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+#nft-farms-container:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #f39c12;
+}
+
+#create-nfts-farm-container {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+#create-nfts-farm-container:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
+}
+
+#create-token-pool-container {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+#create-token-pool-container:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #ff00ff;
+}
+
+#search-nft-farm {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+#search-nft-farm:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffe600;
+}
+
+#nft-farm-buttons {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+#nft-farm-buttons:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #00ffcc;
+}
+
+#nft-farm-details {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+#nft-farm-details:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #ffffff;
+}
+
+#filter-username {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+#filter-username:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #39ff14;
+}
+
+#filter-channel {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+#filter-channel:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #00f0ff;
+}
+
+#filter-sponsor {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+#filter-sponsor:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #1affd5;
+}
+
+#update-rewards {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+#update-rewards:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffffff;
+}
+
+#add-storm-form {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+#add-storm-form:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
+}
+
+#scheduledTime {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+#scheduledTime:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #1affd5;
+}
+
+#timeframe {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+#timeframe:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffffff;
+}
+
+#amount {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+#amount:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
+}
+
+#tokenSymbol {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+#tokenSymbol:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff00ff;
+}
+
+#channelName {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+#channelName:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #ffffff;
+}
+
+#paymentMethod {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+#paymentMethod:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #00ffcc;
+}
+
+#submitStorm {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+#submitStorm:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #8e44ad;
+}
+
+#filter-offeredby {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+#filter-offeredby:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #00ffcc;
+}
+
+#update-storms {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+#update-storms:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
+}
+
+#stake-range {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+#stake-range:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #39ff14;
+}
+
+#stake-amount {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+#stake-amount:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff073a;
+}
+
+#stake-summary {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+#stake-summary:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffffff;
+}
+
+#stake-submit {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+#stake-submit:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #00f0ff;
+}
+
+#action-form {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+#action-form:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #ff073a;
+}
+
+#percent-range {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+#percent-range:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #39ff14;
+}
+
+#token-search {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+#token-search:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffe600;
+}
+
+#token-output {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+#token-output:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
+}
+
+#swap-preview {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+#swap-preview:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #f39c12;
+}
+
+#loading-spinner {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+#loading-spinner:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #39ff14;
+}
+
+#swap-data {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+#swap-data:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff00ff;
+}
+
+#min-received {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+#min-received:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #39ff14;
+}
+
+#price-impact {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+#price-impact:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #00ffcc;
+}
+
+#preview-button {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+#preview-button:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #00f0ff;
+}
+
+#submit-button {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+#submit-button:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffffff;
+}
+
+#receiver {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+#receiver:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #39ff14;
+}
+
+.app {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.app:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #00f0ff;
+}
+
+.navbar {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.navbar:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #00ffcc;
+}
+
+.navbar-brand {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.navbar-brand:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
+}
+
+.app-title {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+.app-title:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
+}
+
+.app-subtitle {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.app-subtitle:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #00ffcc;
+}
+
+.navbar-menu {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+.navbar-menu:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #00ffcc;
+}
+
+.menu-button {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.menu-button:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #39ff14;
+}
+
+.dropdown {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.dropdown:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
+}
+
+.dropdown-toggle {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.dropdown-toggle:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #1affd5;
+}
+
+.dropdown-menu {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.dropdown-menu:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #ff00ff;
+}
+
+.hidden {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.hidden:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #00ffcc;
+}
+
+.dropdown-item {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.dropdown-item:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffffff;
+}
+
+.dropdown-divider {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+.dropdown-divider:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
+}
+
+.dropdown-group {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+.dropdown-group:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #00f0ff;
+}
+
+.main-content {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+.main-content:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #8e44ad;
+}
+
+.modal {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.modal:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #00ffcc;
+}
+
+.modal-content {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.modal-content:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #1affd5;
+}
+
+.modal-close {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.modal-close:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
+}
+
+.modal-body {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.modal-body:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #8e44ad;
+}
+
+.confirm-box {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.confirm-box:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #f39c12;
+}
+
+.modal-title {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.modal-title:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #ff00ff;
+}
+
+.modal-text {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+.modal-text:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #ffe600;
+}
+
+.modal-actions {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.modal-actions:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #00f0ff;
+}
+
+.btn-cancel {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.btn-cancel:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
+}
+
+.btn-confirm {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.btn-confirm:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
+}
+
+.toast-container {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+.toast-container:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #39ff14;
+}
+
+.error-message {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.error-message:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #ffe600;
+}
+
+.centered {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.centered:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
+}
+
+.margin-top-lg {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.margin-top-lg:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #f39c12;
+}
+
+.input-token-search {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.input-token-search:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #f39c12;
+}
+
+.btn {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #ffffff;
+}
+
+.btn-primary {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.btn-primary:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #ff00ff;
+}
+
+.create-token-pool-btn {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+.create-token-pool-btn:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #ff073a;
+}
+
+.token-pool-list {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.token-pool-list:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #ffffff;
+}
+
+.empty-message {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.empty-message:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
+}
+
+.form-card {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+.form-card:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
+}
+
+.form-title {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.form-title:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
+}
+
+.form-label {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.form-label:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #00ffcc;
+}
+
+.form-input {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.form-input:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #ff073a;
+}
+
+.btn-secondary {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.btn-secondary:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
+}
+
+.add-reward-btn {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.add-reward-btn:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #ffe600;
+}
+
+.submit-pool-btn {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.submit-pool-btn:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #39ff14;
+}
+
+.reward-token-entry {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.reward-token-entry:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #f39c12;
+}
+
+.reward-symbol {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.reward-symbol:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #f39c12;
+}
+
+.reward-total {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.reward-total:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffffff;
+}
+
+.reward-daily {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.reward-daily:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
+}
+
+.reward-item {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.reward-item:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
+}
+
+.reward-text {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.reward-text:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #ff073a;
+}
+
+.btn-warning {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.btn-warning:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #1affd5;
+}
+
+.reward-edit-btn {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+.reward-edit-btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
+}
+
+.token-pool-card {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.token-pool-card:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
+}
+
+.token-pool-title {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+.token-pool-title:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #f39c12;
+}
+
+.pool-detail {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.pool-detail:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #f39c12;
+}
+
+.no-rewards-message {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.no-rewards-message:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #00ffcc;
+}
+
+.pool-status-btn {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.pool-status-btn:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #ff073a;
+}
+
+.full-width {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.full-width:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #ffffff;
+}
+
+.mt-medium {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.mt-medium:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
+}
+
+.wallet-info {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.wallet-info:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffe600;
+}
+
+.form-select {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.form-select:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
+}
+
+.input-farm-search {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+.input-farm-search:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
+}
+
+.create-farm-btn {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.create-farm-btn:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffffff;
+}
+
+.farm-button-list {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.farm-button-list:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
+}
+
+.reward-summary {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+.reward-summary:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #39ff14;
+}
+
+.reward-detail {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+.reward-detail:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #00f0ff;
+}
+
+.template-block {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.template-block:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
+}
+
+.template-title {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.template-title:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #8e44ad;
+}
+
+.empty-reward {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.empty-reward:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff00ff;
+}
+
+.template-actions {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.template-actions:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #1affd5;
+}
+
+.btn-danger {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.btn-danger:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
+}
+
+.farm-card {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.farm-card:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #ffe600;
+}
+
+.farm-title-row {
+  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
+  font-size: 1.2rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.farm-title-row:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
+}
+
+.farm-meta {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.farm-meta:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #ff073a;
+}
+
+.farm-actions {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.farm-actions:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
+}
+
+.text-dark {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.text-dark:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #1affd5;
+}
+
+.farm-rewards {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.farm-rewards:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #00f0ff;
+}
+
+.empty-templates {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.empty-templates:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #00f0ff;
+}
+
+.reward-entry {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.reward-entry:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #1affd5;
+}
+
+.half-width {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.half-width:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #8e44ad;
+}
+
+.token-symbol {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.token-symbol:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #39ff14;
+}
+
+.reward-amount {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.reward-amount:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #00ffcc;
+}
+
+.link-add-reward {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.link-add-reward:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #ffffff;
+}
+
+.btn-success {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+.btn-success:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #ff00ff;
+}
+
+.available-balance {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.available-balance:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
+}
+
+.range-input {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.range-input:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
+}
+
+.percent-range {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+.percent-range:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
+}
+
+.amount {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.amount:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #ffe600;
+}
+
+.text-danger {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.text-danger:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
+}
+
+.section-title {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.section-title:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #ffe600;
+}
+
+.text-center {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.text-center:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #00f0ff;
+}
+
+.c2e-menu {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+.c2e-menu:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #8e44ad;
+}
+
+.c2e-menu-btn {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.c2e-menu-btn:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #8e44ad;
+}
+
+.c2e-content {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+.c2e-content:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #ff00ff;
+}
+
+.filters-group {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+.filters-group:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #8e44ad;
+}
+
+.bulk-actions {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.bulk-actions:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #00ffcc;
+}
+
+.nfts-loading {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.nfts-loading:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff00ff;
+}
+
+.nfts-count {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.nfts-count:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #ff00ff;
+}
+
+.nfts-grid {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.nfts-grid:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #ff073a;
+}
+
+.pagination {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.pagination:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
+}
+
+.modal-backdrop {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+.modal-backdrop:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffe600;
+}
+
+.modal-box {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.modal-box:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffe600;
+}
+
+.search-token-pool {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.search-token-pool:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #8e44ad;
+}
+
+.pool-buttons {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.pool-buttons:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #8e44ad;
+}
+
+.loading-message {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+.loading-message:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #00ffcc;
+}
+
+.vertical-list {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.vertical-list:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #1affd5;
+}
+
+.search-farm-input {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.search-farm-input:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff073a;
+}
+
+.farm-button-group {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.farm-button-group:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffffff;
+}
+
+.intro-text {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.intro-text:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
+}
+
+.btn-create-farm {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.btn-create-farm:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff00ff;
+}
+
+.nft-card {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+.nft-card:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #00f0ff;
+}
+
+.nft-image {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.nft-image:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #39ff14;
+}
+
+.nft-name {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.nft-name:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #00f0ff;
+}
+
+.nft-id {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.nft-id:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #39ff14;
+}
+
+.${nft.is_staked {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+.${nft.is_staked:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
+}
+
+.? {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.?:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
+}
+
+.nft-reward {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.nft-reward:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #ffe600;
+}
+
+.no-rewards {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.no-rewards:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffe600;
+}
+
+.nft-grid {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+.nft-grid:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #39ff14;
+}
+
+.no-nfts {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.no-nfts:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #ff073a;
+}
+
+.farm-reward {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.farm-reward:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #ffffff;
+}
+
+.farm-title {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.farm-title:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffe600;
+}
+
+.info-message {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+.info-message:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
+}
+
+.${rowClass} {
+  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
+  font-size: 1.2rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+.${rowClass}:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
+}
+
+.cell {
+  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
+  font-size: 1.2rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.cell:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffe600;
+}
+
+.filter-toolbar {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.filter-toolbar:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #1affd5;
+}
+
+.filter-select {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.filter-select:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffffff;
+}
+
+.reward-table {
+  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
+  font-size: 1.1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.reward-table:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
+}
+
+.section-container {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+.section-container:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #8e44ad;
+}
+
+.form-container {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.form-container:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
+}
+
+.input-label {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.input-label:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #ff00ff;
+}
+
+.input-field {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.input-field:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #00ffcc;
+}
+
+.btn-submit {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+.btn-submit:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #8e44ad;
+}
+
+.mt-6 {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.mt-6:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #39ff14;
+}
+
+.winner-row {
+  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
+  font-size: 1.1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.winner-row:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
+}
+
+.winner-name {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.winner-name:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff00ff;
+}
+
+.no-winners {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.no-winners:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #ffe600;
+}
+
+.pending-winners {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.pending-winners:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #1affd5;
+}
+
+.status-dot {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.status-dot:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #1affd5;
+}
+
+.pending {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.pending:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffffff;
+}
+
+.executed {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+.executed:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #ff00ff;
+}
+
+.storm-row {
+  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
+  font-size: 0.9rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.storm-row:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
+}
+
+.table-container {
+  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
+  font-size: 1.1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.table-container:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #1affd5;
+}
+
+.storm-table {
+  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
+  font-size: 1.2rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.storm-table:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #ff073a;
+}
+
+.reward-box {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+.reward-box:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #ffe600;
+}
+
+.reward-title {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.reward-title:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #ff00ff;
+}
+
+.reward-user-daily {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+.reward-user-daily:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #00ffcc;
+}
+
+.card {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.card:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
+}
+
+.card-title {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.card-title:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
+}
+
+.label {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.label:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
+}
+
+.section-space {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.section-space:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #ffffff;
+}
+
+.btn-group {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.btn-group:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #8e44ad;
+}
+
+.subheading {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.subheading:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #f39c12;
+}
+
+.${gridClass} {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.${gridClass}:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #f39c12;
+}
+
+.input-range {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.input-range:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
+}
+
+.text-muted {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+.text-muted:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
+}
+
+.wallet-table-container {
+  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
+  font-size: 1.2rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+.wallet-table-container:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #ffe600;
+}
+
+.wallet-table {
+  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
+  font-size: 1rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.wallet-table:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #f39c12;
+}
+
+.small {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.small:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #39ff14;
+}
+
+.thead {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ff073a;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.thead:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #1affd5;
+}
+
+.row-border {
+  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
+  font-size: 1.2rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.row-border:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffe600;
+}
+
+.strong {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.strong:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #ff073a;
+}
+
+.btn-action {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.btn-action:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #ff073a;
+}
+
+.empty-state {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+.empty-state:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
+}
+
+.card-hover {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ffffff;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.card-hover:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #ffe600;
+}
+
+.nft-checkbox {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+.nft-checkbox:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
+}
+
+.nft-card-content {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+.nft-card-content:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #ffe600;
+}
+
+.nft-title {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.nft-title:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
+}
+
+.nft-subtitle {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+}
+.nft-subtitle:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #ff00ff;
+}
+
+.btn-pagination {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.btn-pagination:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
+}
+
+.pagination-info {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.pagination-info:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff073a, 0 0 25px #1affd5;
+}
+
+.modal-image {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.modal-image:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #00f0ff;
+}
+
+.nft-detail {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+.nft-detail:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #ff073a;
+}
+
+.nft-subtext {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.nft-subtext:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #8e44ad, 0 0 25px #8e44ad;
+}
+
+.form-wrapper {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #8e44ad;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+.form-wrapper:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #00ffcc;
+}
+
+.form-field {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #39ff14;
+  transition: all 0.3s ease-in-out;
+}
+.form-field:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #ff00ff;
+}
+
+.input-box {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+.input-box:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
+}
+
+.swap-preview {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ffe600;
+  transition: all 0.3s ease-in-out;
+}
+.swap-preview:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #f39c12;
+}
+
+.highlight {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.2rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+}
+.highlight:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
+}
+
+.text-error {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+.text-error:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #f39c12;
+}

@@ -6,8 +6,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
 
 @keyframes slide-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 
-@keyframes zoom-fade { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-
 @keyframes neon-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
 @keyframes float { 0% { transform: translateY(0); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0); } }
@@ -18,15 +16,13 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
 
 @keyframes rotate-in { from { transform: rotate(-180deg); opacity: 0; } to { transform: rotate(0); opacity: 1; } }
 
-@keyframes scale-bounce { 0% { transform: scale(0.8); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-@keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
 
 @keyframes blur-fade { 0% { filter: blur(10px); opacity: 0; } 100% { filter: blur(0); opacity: 1; } }
 
 @keyframes drop-in { from { transform: translateY(-200px); } to { transform: translateY(0); } }
 
-@keyframes fade-slide { 0% { opacity: 0; transform: translateX(50px); } 100% { opacity: 1; transform: translateX(0); } }
+@keyframes fade-slide { 0% { opacity: 0; transform: translateX(50px); } 10% { opacity: 1; transform: translateX(0); } }
 
 @keyframes border-flash { 0% { border-color: #fff; } 50% { border-color: #0ff; } 100% { border-color: #fff; } }
 
@@ -34,13 +30,9 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
 
 @keyframes tilt { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(1deg); } }
 
-@keyframes hover-pop { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
-
 @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.7); } 70% { box-shadow: 0 0 0 10px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
 
 @keyframes flash-text { 0% { color: #fff; } 50% { color: #ff00ff; } 100% { color: #fff; } }
-
-@keyframes expand-bg { 0% { background-size: 100% 100%; } 100% { background-size: 120% 120%; } }
 
 @keyframes pulse-glow { 0% { box-shadow: 0 0 5px #ff0; } 50% { box-shadow: 0 0 20px #ff0; } 100% { box-shadow: 0 0 5px #ff0; } }
 
@@ -48,17 +40,11 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
 
 @keyframes color-cycle { 0% { color: #f00; } 33% { color: #0f0; } 66% { color: #00f; } 100% { color: #f00; } }
 
-@keyframes scale-in { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-
 @keyframes light-speed-in { 0% { transform: translateX(100%) skewX(-30deg); } 100% { transform: translateX(0) skewX(0); } }
-
-@keyframes appear-bounce { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
 
 @keyframes neon-border { 0%, 100% { border-color: #fff; } 50% { border-color: #0ff; } }
 
 @keyframes drift { 0% { transform: translateX(0); } 50% { transform: translateX(5px); } 100% { transform: translateX(0); } }
-
-@keyframes skew-slide { 0% { transform: skewX(-15deg); opacity: 0; } 100% { transform: skewX(0); opacity: 1; } }
 
 @keyframes soft-glow { 0%, 100% { text-shadow: 0 0 3px #fff; } 50% { text-shadow: 0 0 10px #fff; } }
 
@@ -90,23 +76,61 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #theme-style:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ffe600;
 }
 
-#navbar {
+/* HEADER BASE */
+#navbar,
+.navbar {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
   text-shadow: 0 0 5px #ff073a;
   transition: all 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0;
+  width: 100%;
 }
-#navbar:hover {
-  transform: scale(1.05);
+
+/* HOVER SENZA ZOOM */
+#navbar:hover,
+.navbar:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 8px #ffe600, 0 0 16px #39ff14;
+}
+
+/* BRAND */
+.navbar-brand {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.3rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ff073a;
+  transition: all 0.3s ease-in-out;
+  text-align: center;
+}
+
+.navbar-brand:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 10px #8e44ad, 0 0 18px #00f0ff;
+}
+
+/* MENU BUTTONS */
+.menu-button {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #8e44ad;
+  transition: all 0.3s ease-in-out;
+}
+
+.menu-button:hover {
   filter: brightness(1.2);
-  box-shadow: 0 0 12px #ffe600, 0 0 25px #39ff14;
+  box-shadow: 0 0 12px #f39c12, 0 0 25px #39ff14;
 }
+
 
 #app {
   font-family: "Papyrus", "Courier New", cursive;
@@ -116,7 +140,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #app:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #00ffcc;
 }
@@ -129,7 +152,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #modal:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #00f0ff;
 }
@@ -142,7 +164,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #close-modal:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #00f0ff;
 }
@@ -155,7 +176,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #modal-body:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #00ffcc;
 }
@@ -168,7 +188,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #confirm-modal:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ff073a;
 }
@@ -181,7 +200,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #confirm-message:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
 }
@@ -194,7 +212,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #confirm-cancel:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #f39c12;
 }
@@ -207,7 +224,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #confirm-yes:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #8e44ad;
 }
@@ -220,7 +236,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #toast-container:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ffffff;
 }
@@ -233,7 +248,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #search-token-pool:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #1affd5;
 }
@@ -246,7 +260,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #create-new-token-pool-btn:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #1affd5;
 }
@@ -259,7 +272,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #created-token-pools:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff00ff;
 }
@@ -272,7 +284,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #token-pool-details:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ffe600;
 }
@@ -285,7 +296,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #new-token-symbol:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #00f0ff;
 }
@@ -298,7 +308,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #reward-token-entries:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ffe600;
 }
@@ -311,7 +320,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #add-reward-token:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #39ff14;
 }
@@ -324,7 +332,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #submit-new-token-pool:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff00ff;
 }
@@ -337,7 +344,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #new-daily-reward:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
 }
@@ -350,7 +356,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #submit-daily-reward:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00ffcc;
 }
@@ -363,7 +368,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #deposit-amount:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
 }
@@ -376,7 +380,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #submit-deposit:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
 }
@@ -389,7 +392,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #pool-status-select:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #f39c12;
 }
@@ -402,7 +404,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #submit-pool-status:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #8e44ad;
 }
@@ -415,7 +416,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #search-created-farm:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ff00ff;
 }
@@ -428,7 +428,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #create-new-farm-btn:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #00ffcc;
 }
@@ -441,7 +440,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #created-farm-buttons:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ffe600;
 }
@@ -454,7 +452,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #created-farm-details:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #39ff14;
 }
@@ -467,7 +464,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #new-farm-name:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #1affd5;
 }
@@ -480,7 +476,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #submit-new-farm:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #f39c12;
 }
@@ -493,7 +488,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #template-id:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #1affd5;
 }
@@ -506,7 +500,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #rewards-container:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff00ff;
 }
@@ -519,7 +512,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #add-reward-btn:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #00ffcc;
 }
@@ -532,7 +524,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #submit-add-template:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ff073a;
 }
@@ -545,7 +536,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #rewards-deposit-container:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
 }
@@ -558,7 +548,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #add-more-reward:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
 }
@@ -571,7 +560,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #status-select:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #8e44ad;
 }
@@ -584,7 +572,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #status-confirm:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #00f0ff;
 }
@@ -597,7 +584,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #rewards-edit-container:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
 }
@@ -610,7 +596,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #submit-edit-rewards:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #00ffcc;
 }
@@ -623,7 +608,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #new-reward-amount:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #00f0ff;
 }
@@ -636,7 +620,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #submit-new-reward:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
 }
@@ -649,7 +632,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #c2e-content:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #f39c12;
 }
@@ -662,7 +644,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #wallet-table:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #8e44ad;
 }
@@ -675,7 +656,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #search-template:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #39ff14;
 }
@@ -688,7 +668,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #filter-status:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #1affd5;
 }
@@ -701,7 +680,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #filter-stakable:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #39ff14;
 }
@@ -714,7 +692,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #filter-for-sale:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffffff;
 }
@@ -727,7 +704,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #filter-collection:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #1affd5;
 }
@@ -740,7 +716,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #sort-by:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #f39c12;
 }
@@ -753,7 +728,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #bulk-actions:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #39ff14;
 }
@@ -766,7 +740,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #bulk-withdraw:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
 }
@@ -779,7 +752,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #bulk-send:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #00ffcc;
 }
@@ -792,7 +764,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #nfts-loading:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #39ff14;
 }
@@ -805,7 +776,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #nfts-count:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #00ffcc;
 }
@@ -818,7 +788,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #nfts-list:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #00ffcc;
 }
@@ -831,7 +800,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #pagination:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
 }
@@ -844,7 +812,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #modal-nft:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
 }
@@ -857,7 +824,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #modal-content:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #f39c12;
 }
@@ -870,7 +836,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #search-pools:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #1affd5;
 }
@@ -883,7 +848,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #pool-buttons:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #39ff14;
 }
@@ -896,7 +860,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #selected-pool-details:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #8e44ad;
 }
@@ -909,7 +872,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #nft-farms-container:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #f39c12;
 }
@@ -922,7 +884,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #create-nfts-farm-container:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
 }
@@ -935,7 +896,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #create-token-pool-container:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ff00ff;
 }
@@ -948,7 +908,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #search-nft-farm:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffe600;
 }
@@ -961,7 +920,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #nft-farm-buttons:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #00ffcc;
 }
@@ -974,7 +932,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #nft-farm-details:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ffffff;
 }
@@ -987,7 +944,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #filter-username:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #39ff14;
 }
@@ -1000,7 +956,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #filter-channel:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #00f0ff;
 }
@@ -1013,7 +968,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #filter-sponsor:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #1affd5;
 }
@@ -1026,7 +980,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #update-rewards:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffffff;
 }
@@ -1039,7 +992,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #add-storm-form:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
 }
@@ -1052,7 +1004,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #scheduledTime:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #1affd5;
 }
@@ -1065,7 +1016,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #timeframe:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffffff;
 }
@@ -1078,7 +1028,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #amount:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
 }
@@ -1091,7 +1040,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #tokenSymbol:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff00ff;
 }
@@ -1104,7 +1052,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #channelName:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ffffff;
 }
@@ -1117,7 +1064,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #paymentMethod:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #00ffcc;
 }
@@ -1130,7 +1076,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #submitStorm:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #8e44ad;
 }
@@ -1143,7 +1088,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #filter-offeredby:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #00ffcc;
 }
@@ -1156,7 +1100,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #update-storms:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
 }
@@ -1169,7 +1112,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #stake-range:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #39ff14;
 }
@@ -1182,7 +1124,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #stake-amount:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff073a;
 }
@@ -1195,7 +1136,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #stake-summary:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffffff;
 }
@@ -1208,7 +1148,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #stake-submit:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #00f0ff;
 }
@@ -1221,7 +1160,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #action-form:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ff073a;
 }
@@ -1234,7 +1172,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #percent-range:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #39ff14;
 }
@@ -1247,7 +1184,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #token-search:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffe600;
 }
@@ -1260,7 +1196,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #token-output:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
 }
@@ -1273,7 +1208,7 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #swap-preview:hover {
-  transform: scale(1.15);
+
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #f39c12;
 }
@@ -1286,7 +1221,7 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #loading-spinner:hover {
-  transform: scale(1.05);
+
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #39ff14;
 }
@@ -1299,7 +1234,7 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #swap-data:hover {
-  transform: scale(1.05);
+
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff00ff;
 }
@@ -1312,7 +1247,7 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #min-received:hover {
-  transform: scale(1.05);
+
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #39ff14;
 }
@@ -1325,7 +1260,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #price-impact:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00ffcc;
 }
@@ -1338,7 +1272,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #preview-button:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #00f0ff;
 }
@@ -1351,7 +1284,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #submit-button:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffffff;
 }
@@ -1364,7 +1296,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 #receiver:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #39ff14;
 }
@@ -1377,35 +1308,8 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .app:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #00f0ff;
-}
-
-.navbar {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.1rem;
-  color: #ff073a;
-  text-shadow: 0 0 5px #ff00ff;
-  transition: all 0.3s ease-in-out;
-}
-.navbar:hover {
-  transform: scale(1.05);
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #ffffff, 0 0 25px #00ffcc;
-}
-
-.navbar-brand {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.2rem;
-  color: #f39c12;
-  text-shadow: 0 0 5px #ff073a;
-  transition: all 0.3s ease-in-out;
-}
-.navbar-brand:hover {
-  transform: scale(1.1);
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
 }
 
 .app-title {
@@ -1416,7 +1320,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .app-title:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
 }
@@ -1429,35 +1332,47 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .app-subtitle:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #00ffcc;
 }
 
 .navbar-menu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem 2rem;
+  box-sizing: border-box;
+
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
   text-shadow: 0 0 5px #39ff14;
   transition: all 0.3s ease-in-out;
 }
+
+/* RIMUOVI ZOOM o effetto scale su hover */
 .navbar-menu:hover {
-  transform: scale(1.1);
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #1affd5, 0 0 25px #00ffcc;
+  filter: brightness(1.1);
+  box-shadow: 0 0 12px #1affd5, 0 0 20px #00ffcc;
 }
 
-.menu-button {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.1rem;
-  color: #00ffcc;
-  text-shadow: 0 0 5px #8e44ad;
-  transition: all 0.3s ease-in-out;
+/* PULSANTI MENU */
+.navbar-menu .menu-button {
+  flex: 1 0 auto;
+  min-width: 120px;
+  max-width: 200px;
+  text-align: center;
 }
-.menu-button:hover {
-  transform: scale(1.05);
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #f39c12, 0 0 25px #39ff14;
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  .navbar-menu {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }
 
 .dropdown {
@@ -1468,7 +1383,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .dropdown:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
 }
@@ -1481,7 +1395,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .dropdown-toggle:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #1affd5;
 }
@@ -1494,7 +1407,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .dropdown-menu:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ff00ff;
 }
@@ -1507,7 +1419,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .hidden:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #00ffcc;
 }
@@ -1520,7 +1431,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .dropdown-item:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffffff;
 }
@@ -1533,7 +1443,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .dropdown-divider:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
 }
@@ -1546,7 +1455,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .dropdown-group:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #00f0ff;
 }
@@ -1559,7 +1467,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .main-content:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #8e44ad;
 }
@@ -1572,7 +1479,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .modal:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #00ffcc;
 }
@@ -1585,7 +1491,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .modal-content:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #1affd5;
 }
@@ -1598,7 +1503,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .modal-close:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
 }
@@ -1611,7 +1515,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .modal-body:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #8e44ad;
 }
@@ -1624,7 +1527,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .confirm-box:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #f39c12;
 }
@@ -1637,7 +1539,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .modal-title:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #ff00ff;
 }
@@ -1650,7 +1551,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .modal-text:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffe600;
 }
@@ -1663,7 +1563,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .modal-actions:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #00f0ff;
 }
@@ -1676,7 +1575,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .btn-cancel:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
 }
@@ -1689,7 +1587,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .btn-confirm:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
 }
@@ -1702,7 +1599,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .toast-container:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #39ff14;
 }
@@ -1715,7 +1611,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .error-message:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffe600;
 }
@@ -1728,7 +1623,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .centered:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
 }
@@ -1741,7 +1635,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .margin-top-lg:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #f39c12;
 }
@@ -1754,7 +1647,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .input-token-search:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #f39c12;
 }
@@ -1767,7 +1659,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .btn:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ffffff;
 }
@@ -1780,7 +1671,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .btn-primary:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ff00ff;
 }
@@ -1793,7 +1683,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .create-token-pool-btn:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ff073a;
 }
@@ -1806,7 +1695,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .token-pool-list:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ffffff;
 }
@@ -1819,7 +1707,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .empty-message:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
 }
@@ -1832,7 +1719,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .form-card:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
 }
@@ -1845,7 +1731,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .form-title:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
 }
@@ -1858,7 +1743,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .form-label:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00ffcc;
 }
@@ -1871,7 +1755,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .form-input:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ff073a;
 }
@@ -1884,7 +1767,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .btn-secondary:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
 }
@@ -1897,7 +1779,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .add-reward-btn:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ffe600;
 }
@@ -1910,7 +1791,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .submit-pool-btn:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #39ff14;
 }
@@ -1923,7 +1803,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-token-entry:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #f39c12;
 }
@@ -1936,7 +1815,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-symbol:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #f39c12;
 }
@@ -1949,7 +1827,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-total:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffffff;
 }
@@ -1962,7 +1839,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-daily:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
 }
@@ -1975,7 +1851,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-item:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
 }
@@ -1988,7 +1863,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-text:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ff073a;
 }
@@ -2001,7 +1875,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .btn-warning:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #1affd5;
 }
@@ -2014,7 +1887,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-edit-btn:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
 }
@@ -2027,7 +1899,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .token-pool-card:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
 }
@@ -2040,7 +1911,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .token-pool-title:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #f39c12;
 }
@@ -2053,7 +1923,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .pool-detail:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #f39c12;
 }
@@ -2066,7 +1935,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .no-rewards-message:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #00ffcc;
 }
@@ -2079,7 +1947,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .pool-status-btn:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ff073a;
 }
@@ -2092,7 +1959,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .full-width:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ffffff;
 }
@@ -2105,7 +1971,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .mt-medium:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
 }
@@ -2118,7 +1983,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .wallet-info:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffe600;
 }
@@ -2131,7 +1995,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .form-select:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
 }
@@ -2144,7 +2007,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .input-farm-search:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
 }
@@ -2157,7 +2019,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .create-farm-btn:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffffff;
 }
@@ -2170,7 +2031,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .farm-button-list:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
 }
@@ -2183,7 +2043,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-summary:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #39ff14;
 }
@@ -2196,7 +2055,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-detail:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #00f0ff;
 }
@@ -2209,7 +2067,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .template-block:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
 }
@@ -2222,7 +2079,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .template-title:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #8e44ad;
 }
@@ -2235,7 +2091,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .empty-reward:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff00ff;
 }
@@ -2248,7 +2103,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .template-actions:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #1affd5;
 }
@@ -2261,7 +2115,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .btn-danger:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
 }
@@ -2274,7 +2127,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .farm-card:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffe600;
 }
@@ -2287,7 +2139,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .farm-title-row:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
 }
@@ -2300,7 +2151,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .farm-meta:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ff073a;
 }
@@ -2313,7 +2163,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .farm-actions:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
 }
@@ -2326,7 +2175,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .text-dark:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #1affd5;
 }
@@ -2339,7 +2187,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .farm-rewards:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #00f0ff;
 }
@@ -2352,7 +2199,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .empty-templates:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #00f0ff;
 }
@@ -2365,7 +2211,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-entry:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #1affd5;
 }
@@ -2378,7 +2223,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .half-width:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #8e44ad;
 }
@@ -2391,7 +2235,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .token-symbol:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #39ff14;
 }
@@ -2404,7 +2247,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-amount:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #00ffcc;
 }
@@ -2417,7 +2259,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .link-add-reward:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #ffffff;
 }
@@ -2430,7 +2271,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .btn-success:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ff00ff;
 }
@@ -2443,7 +2283,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .available-balance:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
 }
@@ -2456,7 +2295,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .range-input:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
 }
@@ -2469,7 +2307,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .percent-range:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
 }
@@ -2482,7 +2319,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .amount:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ffe600;
 }
@@ -2495,7 +2331,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .text-danger:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
 }
@@ -2508,7 +2343,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .section-title:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ffe600;
 }
@@ -2521,7 +2355,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .text-center:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #00f0ff;
 }
@@ -2534,7 +2367,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .c2e-menu:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #8e44ad;
 }
@@ -2547,7 +2379,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .c2e-menu-btn:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #8e44ad;
 }
@@ -2560,7 +2391,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .c2e-content:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ff00ff;
 }
@@ -2573,7 +2403,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .filters-group:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #8e44ad;
 }
@@ -2586,7 +2415,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .bulk-actions:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #00ffcc;
 }
@@ -2599,7 +2427,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nfts-loading:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff00ff;
 }
@@ -2612,7 +2439,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nfts-count:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #ff00ff;
 }
@@ -2625,7 +2451,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nfts-grid:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #ff073a;
 }
@@ -2638,7 +2463,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .pagination:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
 }
@@ -2651,7 +2475,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .modal-backdrop:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffe600;
 }
@@ -2664,7 +2487,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .modal-box:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffe600;
 }
@@ -2677,7 +2499,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .search-token-pool:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #8e44ad;
 }
@@ -2690,7 +2511,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .pool-buttons:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #8e44ad;
 }
@@ -2703,7 +2523,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .loading-message:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #00ffcc;
 }
@@ -2716,7 +2535,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .vertical-list:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #1affd5;
 }
@@ -2729,7 +2547,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .search-farm-input:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff073a;
 }
@@ -2742,7 +2559,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .farm-button-group:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffffff;
 }
@@ -2755,7 +2571,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .intro-text:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
 }
@@ -2768,7 +2583,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .btn-create-farm:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff00ff;
 }
@@ -2781,7 +2595,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nft-card:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #00f0ff;
 }
@@ -2794,7 +2607,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nft-image:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #39ff14;
 }
@@ -2807,7 +2619,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nft-name:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #00f0ff;
 }
@@ -2820,7 +2631,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nft-id:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #39ff14;
 }
@@ -2833,7 +2643,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .${nft.is_staked:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
 }
@@ -2846,7 +2655,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .?:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
 }
@@ -2859,7 +2667,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nft-reward:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #ffe600;
 }
@@ -2872,7 +2679,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .no-rewards:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffe600;
 }
@@ -2885,7 +2691,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nft-grid:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #39ff14;
 }
@@ -2898,7 +2703,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .no-nfts:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ff073a;
 }
@@ -2911,7 +2715,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .farm-reward:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ffffff;
 }
@@ -2924,7 +2727,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .farm-title:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffe600;
 }
@@ -2937,7 +2739,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .info-message:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
 }
@@ -2950,7 +2751,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .${rowClass}:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
 }
@@ -2963,7 +2763,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .cell:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffe600;
 }
@@ -2976,7 +2775,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .filter-toolbar:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #1affd5;
 }
@@ -2989,7 +2787,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .filter-select:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffffff;
 }
@@ -3002,7 +2799,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-table:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
 }
@@ -3015,7 +2811,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .section-container:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #8e44ad;
 }
@@ -3028,7 +2823,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .form-container:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
 }
@@ -3041,7 +2835,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .input-label:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ff00ff;
 }
@@ -3054,7 +2847,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .input-field:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #00ffcc;
 }
@@ -3067,7 +2859,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .btn-submit:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #8e44ad;
 }
@@ -3080,7 +2871,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .mt-6:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #39ff14;
 }
@@ -3093,7 +2883,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .winner-row:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
 }
@@ -3106,7 +2895,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .winner-name:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff00ff;
 }
@@ -3119,7 +2907,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .no-winners:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ffe600;
 }
@@ -3132,7 +2919,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .pending-winners:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #1affd5;
 }
@@ -3145,7 +2931,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .status-dot:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #1affd5;
 }
@@ -3158,7 +2943,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .pending:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffffff;
 }
@@ -3171,7 +2955,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .executed:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ff00ff;
 }
@@ -3184,7 +2967,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .storm-row:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
 }
@@ -3197,7 +2979,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .table-container:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #1affd5;
 }
@@ -3210,7 +2991,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .storm-table:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ff073a;
 }
@@ -3223,7 +3003,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-box:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffe600;
 }
@@ -3236,7 +3015,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-title:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ff00ff;
 }
@@ -3249,7 +3027,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .reward-user-daily:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #00ffcc;
 }
@@ -3262,7 +3039,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .card:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
 }
@@ -3275,7 +3051,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .card-title:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
 }
@@ -3288,7 +3063,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .label:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
 }
@@ -3301,7 +3075,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .section-space:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ffffff;
 }
@@ -3314,7 +3087,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .btn-group:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #8e44ad;
 }
@@ -3327,7 +3099,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .subheading:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #f39c12;
 }
@@ -3340,7 +3111,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .${gridClass}:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #f39c12;
 }
@@ -3353,7 +3123,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .input-range:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
 }
@@ -3366,7 +3135,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .text-muted:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
 }
@@ -3379,7 +3147,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .wallet-table-container:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #ffe600;
 }
@@ -3392,7 +3159,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .wallet-table:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #f39c12;
 }
@@ -3405,7 +3171,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .small:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #39ff14;
 }
@@ -3418,7 +3183,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .thead:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #1affd5;
 }
@@ -3431,7 +3195,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .row-border:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffe600;
 }
@@ -3444,7 +3207,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .strong:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ff073a;
 }
@@ -3457,7 +3219,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .btn-action:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ff073a;
 }
@@ -3470,7 +3231,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .empty-state:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
 }
@@ -3483,7 +3243,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .card-hover:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ffe600;
 }
@@ -3496,7 +3255,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nft-checkbox:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
 }
@@ -3509,7 +3267,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nft-card-content:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ffe600;
 }
@@ -3522,7 +3279,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nft-title:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
 }
@@ -3535,7 +3291,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nft-subtitle:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #ff00ff;
 }
@@ -3548,7 +3303,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .btn-pagination:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
 }
@@ -3561,7 +3315,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .pagination-info:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #1affd5;
 }
@@ -3574,7 +3327,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .modal-image:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #00f0ff;
 }
@@ -3587,7 +3339,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nft-detail:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #ff073a;
 }
@@ -3600,7 +3351,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .nft-subtext:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #8e44ad;
 }
@@ -3613,7 +3363,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .form-wrapper:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00ffcc;
 }
@@ -3626,7 +3375,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .form-field:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ff00ff;
 }
@@ -3639,7 +3387,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .input-box:hover {
-  transform: scale(1.05);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
 }
@@ -3652,7 +3399,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .swap-preview:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #f39c12;
 }
@@ -3665,7 +3411,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .highlight:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
 }
@@ -3678,7 +3423,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   transition: all 0.3s ease-in-out;
 }
 .text-error:hover {
-  transform: scale(1.15);
   filter: brightness(1.2);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #f39c12;
 }
@@ -3748,7 +3492,6 @@ button, .btn, .menu-button {
 button:hover, .btn:hover, .menu-button:hover {
   background-color: #39ff14;
   color: #000;
-  transform: scale(1.1);
 }
 
 /* CENTRATURA TITOLI */
@@ -3847,31 +3590,4 @@ button:hover, .btn:hover, .menu-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 16px #ff00ff, 0 0 32px #ff00ff;
 }
-/* NAVBAR MENU CENTRATO E RESPONSIVE */
-.navbar-menu {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding: 1rem 2rem;
-  text-align: center;
-  width: 100%;
-  box-sizing: border-box;
-}
 
-/* PULSANTI MENU ADATTABILI */
-.navbar-menu .menu-button {
-  flex: 1 0 auto;
-  min-width: 120px;
-  max-width: 200px;
-  text-align: center;
-}
-
-/* MENU SU SCHERMI PICCOLI */
-@media (max-width: 600px) {
-  .navbar-menu {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-}

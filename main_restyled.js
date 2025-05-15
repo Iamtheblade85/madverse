@@ -360,6 +360,8 @@ function renderTokenPoolDetails(pool) {
 
 function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSymbol) {
   const modal = document.getElementById('modal');
+  modal.classList.remove('hidden');
+  modal.style.display = 'block';
   const body = document.getElementById('modal-body');
 
   console.log("[✏️] Edit Daily Reward - Parametri:", {
@@ -429,6 +431,8 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
 window.openEditDailyReward = openEditDailyReward;
 function openDepositToPool(poolId, tokenSymbol) {
   const modal = document.getElementById('modal');
+  modal.classList.remove('hidden');
+modal.style.display = 'block';
   const body = document.getElementById('modal-body');
 
   const tokenBalance = window.walletBalances?.find(t => t.symbol === tokenSymbol);
@@ -502,6 +506,8 @@ function openDepositToPool(poolId, tokenSymbol) {
 window.openDepositToPool = openDepositToPool;
 function openPoolStatusModal(poolId, currentStatus) {
   const modal = document.getElementById('modal');
+  modal.classList.remove('hidden');
+modal.style.display = 'block';
   const body = document.getElementById('modal-body');
 
   console.log("[⚙️] Aprendo modale status pool:", { poolId, currentStatus });
@@ -730,6 +736,8 @@ function renderNewFarmForm() {
 // Azioni su Template
 function openAddTemplateForm(farmId) {
   const modal = document.getElementById('modal');
+  modal.classList.remove('hidden');
+modal.style.display = 'block';
   const body = document.getElementById('modal-body');
   const { userId, usx_token } = window.userData;
 
@@ -819,6 +827,8 @@ function openAddTemplateForm(farmId) {
 function openDepositForm(farmId) {
   const { userId, usx_token, wax_account } = window.userData;
   const modal = document.getElementById('modal');
+  modal.classList.remove('hidden');
+modal.style.display = 'block';
   const body = document.getElementById('modal-body');
 
   body.innerHTML = `
@@ -935,6 +945,8 @@ function openDepositForm(farmId) {
 // ✅ Confirm Close
 function confirmFarmClosure(farmId) {
   const modal = document.getElementById('modal');
+  modal.classList.remove('hidden');
+modal.style.display = 'block';
   const body = document.getElementById('modal-body');
 
   body.innerHTML = `
@@ -953,6 +965,8 @@ function confirmFarmClosure(farmId) {
 // ✅ Change Status
 function changeFarmStatus(farmId, newStatus = null) {
   const modal = document.getElementById('modal');
+  modal.classList.remove('hidden');
+modal.style.display = 'block';
   const body = document.getElementById('modal-body');
   const { userId, usx_token } = window.userData;
 
@@ -997,6 +1011,8 @@ function changeFarmStatus(farmId, newStatus = null) {
 async function openEditRewards(templateId) {
   const { userId, usx_token } = window.userData;
   const modal = document.getElementById('modal');
+  modal.classList.remove('hidden');
+modal.style.display = 'block';
   const body = document.getElementById('modal-body');
 
   try {
@@ -1105,6 +1121,8 @@ function removeTemplate(templateId) {
   });
 } function openAddReward(templateId) {
   const modal = document.getElementById('modal');
+  modal.classList.remove('hidden');
+modal.style.display = 'block';
   const body = document.getElementById('modal-body');
 
   body.innerHTML = `
@@ -2139,6 +2157,8 @@ async function loadScheduleNFTGiveaway() {
 }
 function openStakeModal(type, poolId, tokenSymbol) {
   const modal = document.getElementById('modal');
+  modal.classList.remove('hidden');
+modal.style.display = 'block';
   const modalBody = document.getElementById('modal-body');
   const wax_account = window.userData.wax_account;
   const user_id = window.userData.userId;
@@ -2564,6 +2584,8 @@ function openNFTModal(assetId) {
   }
 } async function openModal(action, token) {
   const modal = document.getElementById('modal');
+   modal.classList.remove('hidden');
+modal.style.display = 'block';
   const modalBody = document.getElementById('modal-body');
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
 

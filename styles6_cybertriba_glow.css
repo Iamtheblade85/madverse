@@ -3591,3 +3591,139 @@ button:hover, .btn:hover, .menu-button:hover {
   box-shadow: 0 0 16px #ff00ff, 0 0 32px #ff00ff;
 }
 
+
+/* === FORM & FILTERS === */
+.filters-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.form-input,
+.form-select {
+  background-color: #111;
+  color: #39ff14;
+  border: 1px solid #39ff14;
+  padding: 0.5rem 1rem;
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  border-radius: 5px;
+  box-shadow: 0 0 8px #00ffcc;
+  transition: all 0.3s ease-in-out;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  background-color: #222;
+  border-color: #00f0ff;
+  color: #00ffcc;
+  box-shadow: 0 0 12px #00f0ff;
+}
+
+/* === NFT CARDS === */
+.nft-card {
+  background-color: #1a1a1a;
+  border: 1px solid #00ffcc;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 0 10px #00f0ff;
+  transition: transform 0.3s ease-in-out;
+}
+
+.nft-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 15px #39ff14;
+}
+
+.nft-card-content {
+  text-align: center;
+}
+
+.nft-image {
+  max-height: 120px;
+  width: auto;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .nft-image {
+    max-height: 50px;
+  }
+}
+
+.nft-title {
+  font-size: 1rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #00f0ff;
+}
+
+.nft-subtitle {
+  font-size: 0.8rem;
+  color: #00ffcc;
+  text-shadow: 0 0 3px #39ff14;
+}
+
+/* === TABLES === */
+.wallet-table {
+  width: 100%;
+  max-width: 65%;
+  margin: 2rem auto;
+  border-collapse: collapse;
+  font-family: "Arial Rounded MT Bold", "Papyrus", sans-serif;
+  font-size: 0.95rem;
+  background-color: #111;
+  color: #ffffff;
+  box-shadow: 0 0 12px #1affd5;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+@media (max-width: 1400px) {
+  .wallet-table {
+    max-width: 90%;
+  }
+}
+@media (max-width: 768px) {
+  .wallet-table {
+    max-width: 100%;
+  }
+}
+
+.wallet-table th,
+.wallet-table td {
+  padding: 0.75rem 1rem;
+  border: 1px solid #00ffcc;
+}
+
+.wallet-table .cell.strong {
+  color: #ffe600;
+  font-weight: bold;
+}
+
+.btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.btn-action {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  font-family: "Papyrus", "Courier New", cursive;
+  border: none;
+  background-color: #8e44ad;
+  color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 0 6px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+
+.btn-action:hover {
+  background-color: #f39c12;
+  color: #000000;
+  box-shadow: 0 0 12px #ffe600;
+}

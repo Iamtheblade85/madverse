@@ -5294,3 +5294,89 @@ table th, table td {
     text-align: center;
   }
 }
+
+
+
+
+/* === 🪙 CUSTOM CURSOR: 3D Coin === */
+body {
+  cursor: url('https://cdn-icons-png.flaticon.com/512/138/138292.png') 16 16, auto !important;
+}
+
+/* === Additional LED Animations & Color Variants === */
+
+:root {
+  --alt-color-1: #ff8a00;
+  --alt-color-2: #00ffcc;
+  --alt-color-3: #ff1aff;
+  --alt-color-4: #44ff00;
+  --alt-color-5: #ffd700;
+  --alt-color-6: #00ffff;
+  --alt-color-7: #ff4f81;
+  --alt-color-8: #9d00ff;
+  --alt-color-9: #ffa07a;
+  --alt-color-10: #66ff66;
+  --alt-color-11: #ffcc00;
+  --alt-color-12: #33ccff;
+  --alt-color-13: #ff0066;
+  --alt-color-14: #8aff00;
+}
+
+/* === Button Color Cycling === */
+button:hover, .btn:hover {
+  background: linear-gradient(135deg, var(--alt-color-4), var(--alt-color-13)) !important;
+  color: #000 !important;
+  box-shadow: 0 0 20px var(--alt-color-7), 0 0 30px var(--alt-color-8) !important;
+}
+
+/* === Click Pulse Effect === */
+button:active, .btn:active {
+  transform: scale(0.95) !important;
+  animation: clickPulse 0.4s ease !important;
+}
+
+@keyframes clickPulse {
+  0% {
+    box-shadow: 0 0 0px var(--alt-color-3);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--alt-color-3);
+  }
+  100% {
+    box-shadow: 0 0 0px var(--alt-color-3);
+  }
+}
+
+/* === Gradient LED Border Animation === */
+.card, .modal, .form-card {
+  border: 3px solid;
+  border-image: linear-gradient(45deg, var(--alt-color-5), var(--alt-color-8), var(--alt-color-10)) 1;
+  animation: ledBorderCycle 6s linear infinite !important;
+}
+
+@keyframes ledBorderCycle {
+  0% { border-image: linear-gradient(45deg, var(--alt-color-1), var(--alt-color-2)) 1; }
+  50% { border-image: linear-gradient(45deg, var(--alt-color-11), var(--alt-color-6)) 1; }
+  100% { border-image: linear-gradient(45deg, var(--alt-color-1), var(--alt-color-2)) 1; }
+}
+
+/* === Title LED Glow === */
+.app-title {
+  color: var(--alt-color-11) !important;
+  text-shadow: 0 0 8px var(--alt-color-11), 0 0 15px var(--alt-color-13) !important;
+  animation: glowTitle 2s ease-in-out infinite alternate !important;
+}
+
+@keyframes glowTitle {
+  from {
+    text-shadow: 0 0 4px var(--alt-color-9), 0 0 10px var(--alt-color-13);
+  }
+  to {
+    text-shadow: 0 0 15px var(--alt-color-5), 0 0 30px var(--alt-color-10);
+  }
+}
+
+/* === Custom Cursor on Buttons === */
+button:hover, .btn:hover {
+  cursor: url('https://cdn-icons-png.flaticon.com/512/138/138292.png') 16 16, pointer !important;
+}

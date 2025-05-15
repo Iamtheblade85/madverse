@@ -2778,6 +2778,8 @@ modal.style.display = 'block';
   }
 
   const { userId, usx_token, wax_account } = window.userData;
+  console.info(`User ID: ${userId} | USX Token: ${usx_token} | WAX Account: ${wax_account}`);
+
   let endpoint = "";
 
   if (action === "withdraw") {

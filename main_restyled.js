@@ -2888,6 +2888,7 @@ function injectThemeSelector() {
   selector.style.cssText = `
     position: absolute;
     top: 1rem;
+    width: 15%;
     right: 1.5rem;
     padding: 0.5rem 1rem;
     background: linear-gradient(145deg, #1a1a1a, #333);

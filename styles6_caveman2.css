@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Rock+Salt&family=Caveat+Brush&family=Fredericka+the+Great&family=Special+Elite&family=Indie+Flower&display=swap');
 
 
@@ -5461,4 +5460,178 @@ button::before, .btn::before {
 @keyframes runescroll {
   0% { left: -50%; }
   100% { left: 100%; }
+}
+
+/* === Enhanced Caveman Title and Visuals === */
+.app-title {
+  font-size: 4rem !important;
+  font-weight: 900 !important;
+  color: #FFD700 !important;
+  text-shadow: 3px 3px 5px #000, 0 0 15px #FFD700 !important;
+  background: none !important;
+  display: inline-block !important;
+  width: fit-content !important;
+  margin: 0 auto !important;
+  position: relative !important;
+}
+
+.app-title::before {
+  content: "" !important;
+  animation: none !important;
+}
+
+body::after {
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-image: url('https://www.transparenttextures.com/patterns/navajo.png'), url('https://cdn.pixabay.com/animation/2023/04/13/10/55/10-55-53-607_512.gif') !important;
+  background-repeat: repeat, repeat !important;
+  background-size: 300px, cover !important;
+  opacity: 0.08 !important;
+  z-index: -1 !important;
+  animation: background-move 60s linear infinite !important;
+}
+
+/* Force layout containers to fit content */
+header, footer, main, #navbar, #app {
+  max-width: fit-content !important;
+  width: fit-content !important;
+  margin: auto !important;
+}
+
+/* Enhancements for readability in table rows and form fields */
+tr, td, th, input, select, textarea {
+  font-family: 'IBM Plex Mono', 'VT323', 'Share Tech Mono', monospace !important;
+  font-size: 0.95rem !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* === New Caveman Color Palette & Fonts === */
+:root {
+  --bg-main: #f5f0d1 !important;         /* sabbia */
+  --bg-secondary: #2c2c2c !important;    /* nero roccia */
+  --text-color: #fefbf6 !important;      /* osso bianco */
+  --accent-color: #d04525 !important;    /* rosso ocra */
+  --highlight-color: #406c8d !important; /* blu minerale */
+  --border-color: #8b6f47 !important;    /* argilla */
+  --font-family: 'Caesar Dressing', 'Almendra SC', 'Uncial Antiqua', 'Courier New', serif !important;
+}
+
+body, h1, h2, h3, h4, h5, h6, p, span, button, input, select, textarea {
+  font-family: var(--font-family) !important;
+  color: var(--text-color) !important;
+  background-color: var(--bg-main) !important;
+}
+
+button, .btn {
+  background-color: var(--accent-color) !important;
+  border: 2px solid var(--border-color) !important;
+  color: var(--text-color) !important;
+  font-weight: bold !important;
+  transition: background 0.3s ease !important;
+}
+
+button:hover, .btn:hover {
+  background-color: var(--highlight-color) !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px var(--highlight-color) !important;
+}
+
+table, th, td {
+  border: 1px solid var(--border-color) !important;
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-color) !important;
+}
+
+/* === Enhanced Caveman Palette & Detail-Focused Buttons === */
+:root {
+  --bg-main: #fcf4dd !important;         /* sabbia luminosa */
+  --bg-secondary: #2b1f16 !important;    /* marrone roccia */
+  --text-color: #2c2c2c !important;      /* osso chiaro */
+  --accent-color: #cc3e28 !important;    /* rosso ocra intenso */
+  --highlight-color: #4a90a4 !important; /* blu silicio */
+  --border-color: #7a5c36 !important;    /* terra bruciata */
+  --tone-light: #e2c185 !important;      /* giallo minerale */
+  --tone-green: #8aa872 !important;      /* muschio antico */
+  --tone-deep: #2c2c2c !important;       /* nero carbone */
+  --font-family: 'Caesar Dressing', 'Almendra SC', 'Uncial Antiqua', 'Courier New', serif !important;
+}
+
+/* === Buttons with contrasting accents and primitive style === */
+button, .btn {
+  background: linear-gradient(145deg, var(--accent-color), var(--tone-light)) !important;
+  border: 2px solid var(--border-color) !important;
+  color: var(--text-color) !important;
+  font-family: var(--font-family) !important;
+  font-size: 1rem !important;
+  padding: 0.6rem 1.2rem !important;
+  border-radius: 8px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+  transition: all 0.25s ease-in-out !important;
+}
+
+button:hover, .btn:hover {
+  background: linear-gradient(145deg, var(--highlight-color), var(--tone-green)) !important;
+  color: var(--text-color) !important;
+  box-shadow: 0 0 10px var(--highlight-color), 0 0 20px var(--tone-green) !important;
+  transform: scale(1.05) !important;
+}
+
+/* === Section and card backgrounds for high contrast readability === */
+body, .card, .modal, .form-card, .content-box {
+  background-color: var(--bg-main) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+table, th, td {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* === Layout + Contrast Fix === */
+body, html {
+  margin: 0 !important;
+  padding: 0 !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+header, footer, main, #navbar, #app {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  width: 100% !important;
+  max-width: 1200px !important;
+  box-sizing: border-box !important;
+}
+
+/* === Enhanced .app-title 3D Effect === */
+.app-title {
+  font-size: 3.5rem !important;
+  font-weight: 900 !important;
+  color: #FFD700 !important;
+  font-family: 'Rock Salt', 'Fredericka the Great', serif !important;
+  text-shadow:
+    1px 1px 0 #000,
+    2px 2px 0 #000,
+    3px 3px 0 #000,
+    4px 4px 0 #fff,
+    5px 5px 0 #FFD700,
+    6px 6px 5px rgba(0,0,0,0.5) !important;
+  letter-spacing: 2px !important;
+  line-height: 1.2 !important;
+  background: none !important;
+  display: inline-block !important;
+  margin: 1rem auto !important;
+  padding: 0.5rem 1rem !important;
+  position: relative !important;
+  z-index: 10 !important;
 }

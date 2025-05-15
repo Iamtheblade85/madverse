@@ -5728,3 +5728,115 @@ input, select, textarea {
   box-shadow: 2px 2px 8px var(--cave-shadow);
 }
 
+
+
+/* === 🎯 CONTRAST OPTIMIZATION FOR CAVEMAN THEME === */
+
+.form-label, .modal-title, .section-title {
+  color: var(--cave-bone) !important;
+}
+
+.form-input, .form-select {
+  background-color: var(--cave-earth-dark);
+  color: var(--cave-bone);
+  border: 1px solid var(--cave-charcoal);
+  font-family: var(--cave-font);
+  padding: 0.5rem;
+  border-radius: 6px;
+  box-shadow: inset 1px 1px 2px var(--cave-shadow);
+}
+
+.form-input::placeholder {
+  color: var(--cave-highlight);
+}
+
+.form-input:focus, .form-select:focus {
+  border-color: var(--cave-clay);
+  outline: none;
+  background-color: var(--cave-earth-light);
+}
+
+.btn-primary {
+  background-color: var(--cave-fire-dim);
+  color: var(--cave-bone);
+  border: 2px solid var(--cave-earth-light);
+}
+
+.btn-secondary {
+  background-color: var(--cave-ash);
+  color: var(--cave-charcoal);
+  border: 2px dashed var(--cave-clay);
+}
+
+.btn-warning {
+  background-color: #e59866;
+  color: var(--cave-charcoal);
+  border: 2px solid #a04000;
+}
+
+.btn-danger {
+  background-color: #922b21;
+  color: #fff;
+  border: 2px solid #641e16;
+}
+
+.btn-success {
+  background-color: #239b56;
+  color: #fff;
+  border: 2px solid #1d8348;
+}
+
+.token-pool-card, .farm-card {
+  background-color: var(--cave-rock);
+  color: var(--cave-bone);
+  border: 2px solid var(--cave-earth-light);
+  box-shadow: 2px 2px 10px var(--cave-shadow);
+  padding: 1rem;
+  border-radius: 10px;
+}
+
+.reward-entry, .reward-item {
+  background-color: var(--cave-earth-light);
+  color: var(--cave-charcoal);
+  border: 1px solid var(--cave-shadow);
+  padding: 0.5rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.template-block {
+  border: 2px dashed var(--cave-earth-light);
+  background-color: var(--cave-sand);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: var(--cave-charcoal);
+}
+
+.nft-card {
+  background-color: var(--cave-ash);
+  border: 1px solid var(--cave-shadow);
+  color: var(--cave-charcoal);
+}
+
+.reward-text, .pool-detail, .farm-meta {
+  color: var(--cave-highlight);
+}
+
+.empty-message, .info-message, .error-message, .no-rewards-message {
+  color: var(--cave-bone);
+  background-color: var(--cave-charcoal);
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-family: var(--cave-font);
+  margin: 0.5rem 0;
+}
+
+/* Table rows contrast */
+tr.row-even {
+  background-color: var(--cave-earth-light);
+  color: var(--cave-charcoal);
+}
+tr.row-odd {
+  background-color: var(--cave-earth-dark);
+  color: var(--cave-bone);
+}

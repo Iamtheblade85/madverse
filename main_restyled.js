@@ -2921,7 +2921,8 @@ function injectThemeSelector() {
     { name: 'Oceanic Life', file: 'styles6_oceanic.css' },
     { name: 'Precious Gold', file: 'styles6_precious.css' },
     { name: 'Streaming', file: 'styles6_streaming.css' },
-    { name: 'Jurassic', file: 'styles6_jurassic.css' }
+    { name: 'Jurassic', file: 'styles6_jurassic.css' },
+    { name: 'Cybertribal', file: 'styles6_cybertribal_glow.css' }
   ];
 
   selector.innerHTML = themes

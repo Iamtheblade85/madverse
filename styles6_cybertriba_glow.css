@@ -3814,20 +3814,64 @@ th {
 tr:nth-child(even) {
   background-color: rgba(255, 255, 255, 0.05);
 }
-.modal,
-.modal-backdrop {
-  display: none !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  transform: translate(-50%, -50%) scale(0.95) !important;
+
+
+/* BUTTON FIXES + CONTRASTO VISIVO */
+
+/* RIMOZIONE EFFETTO ZOOM SU FOCUS O CLICK */
+button:focus, button:active,
+.btn:focus, .btn:active,
+.menu-button:focus, .menu-button:active {
+  transform: none !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
-.modal.active,
-.modal-backdrop.active {
-  display: block !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
-  transform: translate(-50%, -50%) scale(1) !important;
+/* NUOVI COLORI ED EFFETTI BUTTON */
+button, .btn, .menu-button {
+  background-color: #1f0033; /* viola scuro per contrasto con sfondo nero */
+  border: 2px solid #ff00ff;
+  color: #00ffe5;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  box-shadow: 0 0 12px #ff00ff, 0 0 24px #ff00ff;
+  text-transform: uppercase;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+button:hover, .btn:hover, .menu-button:hover {
+  background-color: #ff00ff;
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 0 16px #ff00ff, 0 0 32px #ff00ff;
+}
+/* NAVBAR MENU CENTRATO E RESPONSIVE */
+.navbar-menu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* PULSANTI MENU ADATTABILI */
+.navbar-menu .menu-button {
+  flex: 1 0 auto;
+  min-width: 120px;
+  max-width: 200px;
+  text-align: center;
+}
+
+/* MENU SU SCHERMI PICCOLI */
+@media (max-width: 600px) {
+  .navbar-menu {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }

@@ -1163,14 +1163,16 @@ function loadSection(section) {
 
   if (section === 'c2e-twitch') {
     app.innerHTML = `
-      <h2 class="section-title text-center">C2E - Twitch</h2>
-      <div class="c2e-menu">
-        <button class="c2e-menu-btn" data-menu="log-reward-activity">Log Reward Activity</button>
-        <button class="c2e-menu-btn" data-menu="log-storms-giveaways">Log Storms & Giveaways</button>
-        <button class="c2e-menu-btn" data-menu="schedule-token-storm">Schedule Token-Storm</button>
-        <button class="c2e-menu-btn" data-menu="schedule-nft-giveaway">Schedule NFT-Giveaway</button>
+      <div class="section-container">
+        <h2 class="section-title text-center">C2E - Twitch</h2>
+        <div class="c2e-menu">
+          <button class="c2e-menu-btn" data-menu="log-reward-activity">Log Reward Activity</button>
+          <button class="c2e-menu-btn" data-menu="log-storms-giveaways">Log Storms & Giveaways</button>
+          <button class="c2e-menu-btn" data-menu="schedule-token-storm">Schedule Token-Storm</button>
+          <button class="c2e-menu-btn" data-menu="schedule-nft-giveaway">Schedule NFT-Giveaway</button>
+        </div>
+        <div id="c2e-content" class="c2e-content">Loading last activity...</div>
       </div>
-      <div id="c2e-content" class="c2e-content">Loading last activity...</div>
     `;
 
     loadLogRewardActivity();
@@ -1191,14 +1193,19 @@ function loadSection(section) {
     });
 
   } else if (section === 'wallet') {
-    app.innerHTML = `
-      <h2 class="section-title">Wallet</h2>
-      <div id="wallet-table">Caricamento Wallet...</div>
-    `;
+      app.innerHTML = `
+        <div class="section-container">
+          <h2 class="section-title">Wallet</h2>
+          <div id="wallet-table">Caricamento Wallet...</div>
+        </div>
+      `;
+    }
+
     loadWallet();
 
   } else if (section === 'nfts') {
     app.innerHTML = `
+    <div class="section-container">
       <h2 class="section-title">My NFTs</h2>
 
       <div class="filters-group">
@@ -1252,6 +1259,7 @@ function loadSection(section) {
           <div id="modal-content"></div>
         </div>
       </div>
+      </div>
     `;
 
     loadNFTs();
@@ -1259,33 +1267,42 @@ function loadSection(section) {
 else if (section === 'token-staking') {
   console.log("[🧪] Entrato in blocco token-staking");
   app.innerHTML = `
-    <h2 class="section-title">Token Staking</h2>
-    <input type="text" id="search-pools" placeholder="Search token pool name" class="form-input search-token-pool">
-    <div id="pool-buttons" class="pool-buttons"></div>
-    <div id="selected-pool-details">
-      <div class="loading-message">Loading pool data...</div>
+    <div class="section-container">
+      <h2 class="section-title">Token Staking</h2>
+      <input type="text" id="search-pools" placeholder="Search token pool name" class="form-input search-token-pool">
+      <div id="pool-buttons" class="pool-buttons"></div>
+      <div id="selected-pool-details">
+        <div class="loading-message">Loading pool data...</div>
+      </div>
     </div>
   `;
   loadStakingPools();
 
 } else if (section === 'nfts-staking') {
   app.innerHTML = `
-    <h2 class="section-title">NFT Staking</h2>
-    <div id="nft-farms-container" class="vertical-list">Loading NFT farms...</div>
+    <div class="section-container">
+      <h2 class="section-title">NFT Staking</h2>
+      <div id="nft-farms-container" class="vertical-list">Loading NFT farms...</div>
+    </div>
   `;
   loadNFTFarms();
+}
 
-} else if (section === 'create-nfts-farm') {
+else if (section === 'create-nfts-farm') {
   app.innerHTML = `
-    <h2 class="section-title">Create NFTs Staking Farm</h2>
-    <div id="create-nfts-farm-container">Loading...</div>
+    <div class="section-container">
+      <h2 class="section-title">Create NFTs Staking Farm</h2>
+      <div id="create-nfts-farm-container">Loading...</div>
+    </div>
   `;
   loadCreateNFTFarm();
-
-} else if (section === 'create-token-pool') {
+}
+ else if (section === 'create-token-pool') {
   app.innerHTML = `
-    <h2 class="section-title">Create Token Staking Pool</h2>
-    <div id="create-token-pool-container">Loading...</div>
+    <div class="section-container">
+      <h2 class="section-title">Create Token Staking Pool</h2>
+      <div id="create-token-pool-container">Loading...</div>
+    </div>
   `;
   loadCreateTokenStaking();
 }

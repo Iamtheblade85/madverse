@@ -383,7 +383,7 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
   });
 
   body.innerHTML = `
-    <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
+    <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">Edit Daily Reward for ${tokenSymbol}</h3>
     
     <label class="form-label">New Daily Reward</label>
@@ -467,7 +467,7 @@ function openDepositToPool(poolId, tokenSymbol) {
   });
 
   body.innerHTML = `
-    <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
+    <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">Deposit More ${tokenSymbol} into Pool</h3>
     <p class="wallet-info">Available in Wallet: <strong>${balance}</strong></p>
     
@@ -547,7 +547,7 @@ function openPoolStatusModal(poolId, currentStatus) {
   console.log("[⚙️] Aprendo modale status pool:", { poolId, currentStatus });
 
   body.innerHTML = `
-    <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
+    <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">Change Pool Status</h3>
     
     <label class="form-label">Select new status</label>
@@ -787,7 +787,7 @@ function openAddTemplateForm(farmId) {
   const { userId, usx_token } = window.userData;
 
   body.innerHTML = `
-    <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
+    <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">➕ Add Template to Farm</h3>
 
     <label class="form-label">Template ID</label>
@@ -889,7 +889,7 @@ function openDepositForm(farmId) {
   const body = document.getElementById('modal-body');
 
   body.innerHTML = `
-    <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
+    <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">Deposit Rewards to Farm</h3>
     <div id="rewards-deposit-container"></div>
     <button id="add-more-reward" class="link-add-reward">➕ Add another token</button>
@@ -1017,7 +1017,7 @@ function confirmFarmClosure(farmId) {
   const body = document.getElementById('modal-body');
 
   body.innerHTML = `
-    <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
+    <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title text-danger">Close Farm</h3>
     <p class="modal-text">Are you sure you want to <strong>close</strong> this farm? This will stop all rewards.</p>
     <div class="modal-actions">
@@ -1046,7 +1046,7 @@ function changeFarmStatus(farmId, newStatus = null) {
 
   if (!newStatus) {
     body.innerHTML = `
-      <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
+      <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
       <h3 class="modal-title">Change Farm Status</h3>
       <select id="status-select" class="form-select">
         <option value="open">Open</option>
@@ -1119,7 +1119,7 @@ async function openEditRewards(templateId) {
     }
 
     body.innerHTML = `
-      <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
+      <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
       <h3 class="modal-title">✏️ Edit Rewards for Template ID ${templateId}</h3>
       <div id="rewards-edit-container">
         ${(template.rewards || []).map(r => `
@@ -1224,7 +1224,7 @@ function removeTemplate(templateId) {
   const body = document.getElementById('modal-body');
 
   body.innerHTML = `
-    <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
+    <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">➕ Add Reward to Template ID ${templateId}</h3>
     <div class="reward-entry">
       <input type="text" id="new-token-symbol" class="form-input half-width" placeholder="Token Symbol (e.g. CHIPS)">
@@ -1381,7 +1381,7 @@ function loadSection(section) {
 
       <div id="modal-nft" class="modal-backdrop hidden">
         <div class="modal-box">
-          <button id="close-modal" class="modal-close">&times;</button>
+          <button class="modal-close">&times;</button>
           <div id="modal-content"></div>
         </div>
       </div>
@@ -2587,7 +2587,7 @@ function openNFTModal(assetId) {
   const body = document.getElementById('modal-body');
 
   body.innerHTML = `
-    <button id="close-modal" class="modal-close" style="position:absolute; top:1rem; right:1rem;">×</button>
+    <button class="modal-close" style="position:absolute; top:1rem; right:1rem;">×</button>
     <img src="${nft.image_url}" alt="NFT Image"
          style="max-height:150px; width:auto; display:block; margin:0 auto 1rem; opacity:0; transition:opacity 3s ease-in;" 
          onload="this.style.opacity='1'">

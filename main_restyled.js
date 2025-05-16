@@ -3,6 +3,19 @@ window.userData = {};
 window.selectedNFTs = new Set();
 window.currentPage = 1;
 window.nftsPerPage = 12;
+// === Modal Close Listener ===
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll('.modal-close').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.modal.active').forEach(modal => {
+        modal.classList.remove('active');
+      });
+      document.querySelectorAll('.modal-backdrop.active').forEach(backdrop => {
+        backdrop.classList.remove('active');
+      });
+    });
+  });
+});
 
 // Base URL reale
 const BASE_URL = "https://iamemanuele.pythonanywhere.com";

@@ -1,4 +1,23 @@
 /* Theme: CyberTribal Glow */
+/* =================== */
+/* 🧠 Variabili CSS utili */
+:root {
+  --modal-bg: rgba(0, 0, 0, 0.85);
+  --modal-radius: 8px;
+  --modal-padding: 2rem;
+  --modal-glow: #00ffcc;
+  --modal-text-color: #fff;
+  --close-color: #fff;
+  --close-hover: #ff5555;
+
+  /* Variabili aggiuntive per .btn-action */
+  --font-main: "Papyrus", "Courier New", cursive;
+  --color-primary: #39ff14;
+  --color-highlight: #00f0ff;
+  --color-accent: #1affd5;
+  --color-danger: #ff00ff;
+  --transition-speed: 0.3s;
+}
 
 body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Rounded MT Bold", sans-serif; }
 
@@ -15,8 +34,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
 @keyframes shimmer { 100% { background-position: 200% center; } }
 
 @keyframes rotate-in { from { transform: rotate(-180deg); opacity: 0; } to { transform: rotate(0); opacity: 1; } }
-
-
 
 @keyframes blur-fade { 0% { filter: blur(10px); opacity: 0; } 100% { filter: blur(0); opacity: 1; } }
 
@@ -3750,18 +3767,6 @@ button:hover, .btn:hover, .menu-button:hover {
 #close-modal:hover {
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #00f0ff;
-}
-
-/* =================== */
-/* 🧠 Variabili CSS utili */
-:root {
-  --modal-bg: rgba(0, 0, 0, 0.85);
-  --modal-radius: 8px;
-  --modal-padding: 2rem;
-  --modal-glow: #00ffcc;
-  --modal-text-color: #fff;
-  --close-color: #fff;
-  --close-hover: #ff5555;
 }
 
 /* =================== */

@@ -3771,7 +3771,7 @@ button:hover, .btn:hover, .menu-button:hover {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 9999;
+  z-index: 1001;
   background: var(--modal-bg);
   border-radius: var(--modal-radius);
   box-shadow: 0 0 20px var(--modal-glow);
@@ -3843,7 +3843,7 @@ body.modal-open {
   color: var(--close-color);
   cursor: pointer;
   transition: color 0.2s ease-in-out;
-  z-index: 500 !important;
+  z-index: 9999 !important;
 
   font-family: "Papyrus", "Courier New", cursive;
   text-shadow: 0 0 5px #8e44ad;

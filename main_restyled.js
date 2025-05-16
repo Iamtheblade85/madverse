@@ -2201,7 +2201,15 @@ modal.style.display = 'block';
   `;
 
   modal.classList.remove('hidden');
-  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+  modal.style.display = 'block';
+  
+  const closeBtn = modal.querySelector("#close-modal");
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      modal.classList.add("hidden");
+      modal.style.display = "none";
+    };
+  }
 
   const range = document.getElementById('stake-range');
   const input = document.getElementById('stake-amount');

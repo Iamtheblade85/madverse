@@ -2583,11 +2583,14 @@ function openNFTModal(assetId) {
   const nft = window.nftsData.find(n => n.asset_id === assetId);
   if (!nft) return;
 
-  const modal = document.getElementById('modal-nft');
-  const content = document.getElementById('modal-content');
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
 
-  content.innerHTML = `
-    <img src="${nft.image_url}" alt="NFT Image" class="modal-image">
+  body.innerHTML = `
+    <button id="close-modal" class="modal-close" style="position:absolute; top:1rem; right:1rem;">×</button>
+    <img src="${nft.image_url}" alt="NFT Image"
+         style="max-height:150px; width:auto; display:block; margin:0 auto 1rem; opacity:0; transition:opacity 3s ease-in;" 
+         onload="this.style.opacity='1'">
     <h2 class="modal-title">${nft.template_info.template_name}</h2>
     <p class="nft-detail"><strong>Asset ID:</strong> ${nft.asset_id}</p>
     <p class="nft-detail"><strong>Collection:</strong> ${nft.template_info.collection_name}</p>
@@ -2600,8 +2603,19 @@ function openNFTModal(assetId) {
   `;
 
   modal.classList.remove('hidden');
-  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
+
+  const closeBtn = modal.querySelector('#close-modal');
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+  }
 }
+
  function setupFilterEvents() {
   document.getElementById('filter-status').addEventListener('change', renderNFTs);
   document.getElementById('filter-collection').addEventListener('change', renderNFTs);

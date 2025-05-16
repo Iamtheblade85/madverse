@@ -4,17 +4,15 @@ window.selectedNFTs = new Set();
 window.currentPage = 1;
 window.nftsPerPage = 12;
 // === Modal Close Listener ===
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll('.modal-close').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.modal.active').forEach(modal => {
-        modal.classList.remove('active');
-      });
-      document.querySelectorAll('.modal-backdrop.active').forEach(backdrop => {
-        backdrop.classList.remove('active');
-      });
-    });
-  });
+document.addEventListener("click", (event) => {
+  if (event.target.matches('.modal-close')) {
+    const modal = event.target.closest('.modal');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.classList.add('hidden');
+    }
+    document.body.classList.remove('modal-open');
+  }
 });
 
 // Base URL reale

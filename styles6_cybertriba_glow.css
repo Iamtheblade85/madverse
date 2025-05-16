@@ -1395,6 +1395,7 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   color: #ffffff;
   text-shadow: 0 0 5px #ff00ff;
   transition: all 0.3s ease-in-out;
+  display: none !important;
 }
 .hidden:hover {
   filter: brightness(1.2);

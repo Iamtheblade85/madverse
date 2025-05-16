@@ -796,6 +796,7 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
 #modal-content {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
+  padding-top: 3rem !important;
   color: #00ffcc;
   text-shadow: 0 0 5px #00ffcc;
   transition: all 0.3s ease-in-out;
@@ -1460,24 +1461,13 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #00ffcc;
 }
 
-.modal-content {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1rem;
-  color: #ffe600;
-  text-shadow: 0 0 5px #ffe600;
-  transition: all 0.3s ease-in-out;
-}
-.modal-content:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #f39c12, 0 0 25px #1affd5;
-}
-
 .modal-close {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffffff;
   text-shadow: 0 0 5px #8e44ad;
   transition: all 0.3s ease-in-out;
+  z-index: 500 !important;
 }
 .modal-close:hover {
   filter: brightness(1.2);

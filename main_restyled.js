@@ -407,7 +407,7 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
   modal.classList.add('active');
   document.body.classList.add('modal-open');
 
-  const closeBtn = modal.querySelector('#close-modal');
+  const closeBtn = modal.querySelector('.modal-close');
   if (closeBtn) {
     closeBtn.onclick = () => {
       modal.classList.add('hidden');
@@ -2285,6 +2285,7 @@ modal.style.display = 'block';
   const availableLabel = type === 'add' ? 'Available in Wallet' : 'Staked in Farm';
 
   modalBody.innerHTML = `
+    <button class="modal-close close-modal" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">${title}</h3>
     <p class="label">${availableLabel}: <strong>${balance.toFixed(4)}</strong> ${tokenSymbol}</p>
 
@@ -2299,16 +2300,15 @@ modal.style.display = 'block';
     <button class="btn btn-confirm" id="stake-submit">Go!</button>
   `;
 
-  modal.classList.remove('hidden');
-  modal.style.display = 'block';
-  
-  const closeBtn = modal.querySelector("#close-modal");
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      modal.classList.add("hidden");
-      modal.style.display = "none";
-    };
-  }
+modal.classList.remove('hidden');
+modal.style.display = 'block';
+
+const closeBtn = modal.querySelector(".close-modal");
+if (closeBtn) {
+  closeBtn.onclick = () => {
+    modal.classList.add("hidden");
+  };
+}
 
   const range = document.getElementById('stake-range');
   const input = document.getElementById('stake-amount');
@@ -2713,8 +2713,11 @@ function openNFTModal(assetId) {
   }
 } async function openModal(action, token) {
   const modal = document.getElementById('modal');
-   modal.classList.remove('hidden');
-modal.style.display = 'block';
+modal.classList.remove('hidden');
+modal.classList.add('active');
+document.body.classList.add('modal-open');
+
+
   const modalBody = document.getElementById('modal-body');
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
 
@@ -2784,15 +2787,14 @@ modal.style.display = 'block';
     `;
   }
 
-modal.classList.remove('hidden');
-modal.style.display = 'block';
-
-document.getElementById('close-modal').onclick = () => {
-  modal.classList.add('hidden');
-  modal.style.display = 'none';
-};
-
-
+const closeBtn = modal.querySelector('#close-modal');
+if (closeBtn) {
+  closeBtn.onclick = () => {
+    modal.classList.remove('active');
+    modal.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+  };
+}
   const percentRange = document.getElementById('percent-range');
   const amountInput = document.getElementById('amount');
   const submitButton = document.getElementById('submit-button');

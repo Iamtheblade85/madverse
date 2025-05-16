@@ -156,17 +156,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   box-shadow: 0 0 12px #f39c12, 0 0 25px #00f0ff;
 }
 
-#close-modal {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.1rem;
-  color: #00ffcc;
-  text-shadow: 0 0 5px #ffffff;
-  transition: all 0.3s ease-in-out;
-}
-#close-modal:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #39ff14, 0 0 25px #00f0ff;
-}
 
 #modal-body {
   font-family: "Papyrus", "Courier New", cursive;
@@ -634,18 +623,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
 #c2e-content:hover {
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #f39c12;
-}
-
-#wallet-table {
-  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
-  font-size: 1rem;
-  color: #ffe600;
-  text-shadow: 0 0 5px #ffffff;
-  transition: all 0.3s ease-in-out;
-}
-#wallet-table:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #ff073a, 0 0 25px #8e44ad;
 }
 
 #search-template {
@@ -3183,30 +3160,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
 }
 
-.wallet-table-container {
-  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
-  font-size: 1.2rem;
-  color: #ff073a;
-  text-shadow: 0 0 5px #39ff14;
-  transition: all 0.3s ease-in-out;
-}
-.wallet-table-container:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #ffffff, 0 0 25px #ffe600;
-}
-
-.wallet-table {
-  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
-  font-size: 1rem;
-  color: #1affd5;
-  text-shadow: 0 0 5px #ff073a;
-  transition: all 0.3s ease-in-out;
-}
-.wallet-table:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #8e44ad, 0 0 25px #f39c12;
-}
-
 .small {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
@@ -3754,40 +3707,57 @@ button:hover, .btn:hover, .menu-button:hover {
     max-width: 100%;
   }
 }
+/* === CONTAINER === */
+.wallet-table-container {
+  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif !important;
+  font-size: 1.2rem !important;
+  color: #ff073a !important;
+  text-shadow: 0 0 5px #39ff14 !important;
+  transition: all 0.3s ease-in-out !important;
+  text-align: center !important;
+}
 
+.wallet-table-container:hover {
+  filter: brightness(1.2) !important;
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #ffe600 !important;
+}
+
+/* === TABELLA === */
+.wallet-table {
+  width: 100% !important;
+  max-width: 65% !important;
+  margin: 2rem auto !important;
+  border-collapse: collapse !important;
+  font-family: "Arial Rounded MT Bold", "Papyrus", sans-serif !important;
+  font-size: 0.95rem !important;
+  background-color: #111 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 12px #1affd5 !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
+@media (max-width: 1400px) {
+  .wallet-table { max-width: 90% !important; }
+}
+@media (max-width: 768px) {
+  .wallet-table { max-width: 100% !important; }
+}
+
+/* TH / TD */
 .wallet-table th,
 .wallet-table td {
-  padding: 0.75rem 1rem;
-  border: 1px solid #00ffcc;
+  padding: 0.75rem 1rem !important;
+  border: 1px solid #00ffcc !important;
+  transition: all 0.3s ease-in-out !important;
 }
 
 .wallet-table .cell.strong {
-  color: #ffe600;
-  font-weight: bold;
+  color: #ffe600 !important;
+  font-weight: bold !important;
 }
 
-.btn-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
-  align-items: center;
-  padding: 0.5rem;
-  background-color: rgba(0, 255, 204, 0.05);
-  border-radius: 10px;
-  box-shadow: 0 0 10px var(--color-primary), 0 0 20px var(--color-cyan);
-  backdrop-filter: blur(4px);
-  transition: all var(--transition-speed) ease-in-out;
-}
-
-.btn-group:hover {
-  box-shadow: 0 0 16px var(--color-highlight), 0 0 32px var(--color-accent);
-  transform: scale(1.02);
-  background-color: rgba(255, 255, 255, 0.08);
-  transition: all var(--transition-speed) ease-in-out;
-}
-
-/* === HOVER EFFECTS FOR TABLE ROWS - FULLY FORCED === */
+/* === HOVER SU RIGHE === */
 #wallet-table tr:hover,
 .reward-table tr:hover,
 .storm-table tr:hover,
@@ -3795,13 +3765,110 @@ button:hover, .btn:hover, .menu-button:hover {
 .table-container tr:hover,
 .wallet-table tr.row-border:hover {
   background-color: silver !important;
-  color: #000000 !important;
+  color: #00008B !important; /* blu notte LED */
   font-weight: 900 !important;
   text-transform: uppercase !important;
   font-size: 102% !important;
-  text-shadow: 0 0 5px #ffffff !important;
+  text-shadow: 0 0 3px #ffe600, 0 0 7px #ffe600 !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+/* === GRUPPO PULSANTI === */
+.btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.5rem !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0.5rem !important;
+  background-color: rgba(0, 255, 204, 0.05) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 0 10px var(--color-primary), 0 0 20px var(--color-cyan) !important;
+  backdrop-filter: blur(4px) !important;
   transition: all var(--transition-speed) ease-in-out !important;
 }
+
+.btn-group:hover {
+  box-shadow: 0 0 16px var(--color-highlight), 0 0 32px var(--color-accent) !important;
+  transform: scale(1.02) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* === BTN-ACTION effetto LED liquido 3D === */
+.btn-action {
+  font-family: var(--font-main) !important;
+  font-size: 0.9rem !important;
+  color: var(--color-primary) !important;
+  text-shadow: 0 0 5px var(--color-primary) !important;
+  background: linear-gradient(135deg, #1affd5, #39ff14, #00f0ff) !important;
+  background-size: 400% 400% !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 0.6rem 1.2rem !important;
+  animation: ledLiquidFlow 8s ease infinite !important;
+  box-shadow: 0 0 8px var(--color-highlight), 0 0 16px var(--color-accent) !important;
+  transition: all var(--transition-speed) ease-in-out !important;
+  transform-style: preserve-3d !important;
+  perspective: 1000px !important;
+  position: relative !important;
+  z-index: 1 !important;
+  overflow: hidden !important;
+}
+
+.btn-action::before {
+  content: "" !important;
+  position: absolute !important;
+  top: -50% !important;
+  left: -50% !important;
+  width: 200% !important;
+  height: 200% !important;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.2), transparent 70%) !important;
+  animation: pulse-glow-liquid 6s infinite ease-in-out !important;
+  z-index: 0 !important;
+}
+
+.btn-action:hover {
+  filter: brightness(1.3) !important;
+  transform: scale(1.05) rotateX(5deg) rotateY(3deg) !important;
+  box-shadow: 0 0 15px var(--color-highlight), 0 0 30px var(--color-danger) !important;
+  color: #ffe600 !important;
+}
+
+/* === ANIMAZIONE LED liquido === */
+@keyframes ledLiquidFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes pulse-glow-liquid {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+#close-modal {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 2rem !important;
+  color: #00ffcc;
+  text-shadow: 0 0 5px #ffffff;
+  transition: all 0.3s ease-in-out;
+  position: absolute !important;
+  top: 1rem !important;
+  right: 1rem !important;
+  z-index: 9999 !important;
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+#close-modal:hover {
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #39ff14, 0 0 25px #00f0ff;
+}
+
 
 
 

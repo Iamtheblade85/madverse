@@ -1450,42 +1450,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   box-shadow: 0 0 12px #ff073a, 0 0 25px #8e44ad;
 }
 
-.modal {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 0.9rem;
-  color: #39ff14;
-  text-shadow: 0 0 5px #1affd5;
-  transition: all 0.3s ease-in-out;
-}
-.modal:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #ff00ff, 0 0 25px #00ffcc;
-}
-
-.modal-close {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1rem;
-  color: #ffffff;
-  text-shadow: 0 0 5px #8e44ad;
-  transition: all 0.3s ease-in-out;
-  z-index: 500 !important;
-}
-.modal-close:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
-}
-
-.modal-body {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 0.9rem;
-  color: #39ff14;
-  text-shadow: 0 0 5px #ff00ff;
-  transition: all 0.3s ease-in-out;
-}
-.modal-body:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #ffe600, 0 0 25px #8e44ad;
-}
 
 .confirm-box {
   font-family: "Papyrus", "Courier New", cursive;
@@ -1497,42 +1461,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
 .confirm-box:hover {
   filter: brightness(1.2);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #f39c12;
-}
-
-.modal-title {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1rem;
-  color: #ff00ff;
-  text-shadow: 0 0 5px #ffe600;
-  transition: all 0.3s ease-in-out;
-}
-.modal-title:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #ffffff, 0 0 25px #ff00ff;
-}
-
-.modal-text {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.2rem;
-  color: #f39c12;
-  text-shadow: 0 0 5px #ffffff;
-  transition: all 0.3s ease-in-out;
-}
-.modal-text:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #ffe600, 0 0 25px #ffe600;
-}
-
-.modal-actions {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.2rem;
-  color: #ff00ff;
-  text-shadow: 0 0 5px #ff00ff;
-  transition: all 0.3s ease-in-out;
-}
-.modal-actions:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #ff00ff, 0 0 25px #00f0ff;
 }
 
 .btn-cancel {
@@ -2435,30 +2363,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
 }
 
-.modal-backdrop {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1rem;
-  color: #ffe600;
-  text-shadow: 0 0 5px #39ff14;
-  transition: all 0.3s ease-in-out;
-}
-.modal-backdrop:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffe600;
-}
-
-.modal-box {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.1rem;
-  color: #1affd5;
-  text-shadow: 0 0 5px #ff00ff;
-  transition: all 0.3s ease-in-out;
-}
-.modal-box:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffe600;
-}
-
 .search-token-pool {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
@@ -3326,18 +3230,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   box-shadow: 0 0 12px #ff073a, 0 0 25px #1affd5;
 }
 
-.modal-image {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.1rem;
-  color: #00f0ff;
-  text-shadow: 0 0 5px #f39c12;
-  transition: all 0.3s ease-in-out;
-}
-.modal-image:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #00f0ff, 0 0 25px #00f0ff;
-}
-
 .nft-detail {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
@@ -3502,7 +3394,7 @@ button:hover, .btn:hover, .menu-button:hover {
 }
 
 /* CENTRATURA TITOLI */
-h1, .app-title, .modal-title {
+h1, .app-title {
   text-align: center;
   font-size: 2rem;
   color: #ffe600;
@@ -3859,6 +3751,88 @@ button:hover, .btn:hover, .menu-button:hover {
   filter: brightness(1.2);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #00f0ff;
 }
+
+/* =================== */
+/* 🧠 Variabili CSS utili */
+:root {
+  --modal-bg: rgba(0, 0, 0, 0.85);
+  --modal-radius: 8px;
+  --modal-padding: 2rem;
+  --modal-glow: #00ffcc;
+  --modal-text-color: #fff;
+  --close-color: #fff;
+  --close-hover: #ff5555;
+}
+
+/* =================== */
+/* 🌌 Struttura Modale */
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  background: var(--modal-bg);
+  border-radius: var(--modal-radius);
+  box-shadow: 0 0 20px var(--modal-glow);
+  padding: var(--modal-padding);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--modal-text-color);
+
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  text-shadow: 0 0 5px #1affd5;
+  transition: all 0.3s ease-in-out;
+}
+
+.modal:hover {
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #00ffcc;
+}
+
+.modal.active {
+  display: flex;
+  animation: modalFade 0.25s ease-out;
+}
+
+/* Overlay */
+.modal::before {
+  content: '';
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  width: 20000px;
+  height: 20000px;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: -1;
+}
+
+/* Disabilita scroll su apertura modale */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* =================== */
+/* 🌀 Animazione */
+@keyframes modalFade {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -55%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* =================== */
+/* ✖️ Pulsante Chiudi */
 .modal-close {
   position: absolute;
   top: 1rem;
@@ -3866,41 +3840,122 @@ button:hover, .btn:hover, .menu-button:hover {
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: var(--close-color, #fff);
+  color: var(--close-color);
   cursor: pointer;
   transition: color 0.2s ease-in-out;
-}
-.modal-close:hover {
-  color: var(--close-hover, #ff5555);
+  z-index: 500 !important;
+
+  font-family: "Papyrus", "Courier New", cursive;
+  text-shadow: 0 0 5px #8e44ad;
 }
 
+.modal-close:hover {
+  color: var(--close-hover);
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
+}
+
+/* =================== */
+/* 📦 Contenuto */
+.modal-body {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 0.9rem;
+  color: #39ff14;
+  text-shadow: 0 0 5px #ff00ff;
+  transition: all 0.3s ease-in-out;
+}
+
+.modal-body:hover {
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #8e44ad;
+}
+
+.modal-title {
+  font-size: 1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ffe600;
+}
+
+.modal-title:hover {
+  box-shadow: 0 0 12px #ffffff, 0 0 25px #ff00ff;
+}
+
+.modal-text {
+  font-size: 1.2rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ffffff;
+}
+
+.modal-text:hover {
+  box-shadow: 0 0 12px #ffe600, 0 0 25px #ffe600;
+}
+
+.modal-actions {
+  font-size: 1.2rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ff00ff;
+}
+
+.modal-actions:hover {
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #00f0ff;
+}
+
+/* =================== */
+/* 🧾 Modale Immagine */
+.modal-image {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  text-shadow: 0 0 5px #f39c12;
+  transition: all 0.3s ease-in-out;
+}
+
+.modal-image:hover {
+  filter: brightness(1.2);
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #00f0ff;
+}
+
+/* =================== */
+/* 💬 Conferma Box */
+.confirm-box {
+  font-size: 0.9rem;
+  color: #f39c12;
+  text-shadow: 0 0 5px #ffe600;
+}
+
+.confirm-box:hover {
+  box-shadow: 0 0 12px #1affd5, 0 0 25px #f39c12;
+}
+
+/* =================== */
+/* 🧊 Altri stili */
+.modal-backdrop {
+  font-size: 1rem;
+  color: #ffe600;
+  text-shadow: 0 0 5px #39ff14;
+}
+
+.modal-backdrop:hover {
+  box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffe600;
+}
+
+.modal-box {
+  font-size: 1.1rem;
+  color: #1affd5;
+  text-shadow: 0 0 5px #ff00ff;
+}
+
+.modal-box:hover {
+  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffe600;
+}
+
+/* =================== */
+/* 💎 Tabella wallet interattiva */
 .wallet-table tr:hover {
-  background-color: rgba(0, 255, 255, 0.1) !important; /* o qualunque colore a tema glow */
+  background-color: rgba(0, 255, 255, 0.1) !important;
   transition: background-color 0.3s ease !important;
 }
-.modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 9999;
-  background: var(--modal-bg, rgba(0, 0, 0, 0.85));
-  border-radius: var(--modal-radius, 8px);
-  box-shadow: 0 0 20px var(--modal-glow, #00ffcc);
-  padding: var(--modal-padding, 2rem);
-  max-width: 90vw;
-  max-height: 90vh;
-  overflow-y: auto;
-  display: none;
-  color: var(--modal-text-color, #fff);
-}
-.modal.active {
-  display: block;
-  animation: modalFade 0.25s ease-out;
-}
-body.modal-open {
-  overflow: hidden;
-}
+
 
 
 

@@ -373,8 +373,6 @@ function renderTokenPoolDetails(pool) {
 
 function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSymbol) {
   const modal = document.getElementById('modal');
-  modal.classList.remove('hidden');
-  modal.style.display = 'block';
   const body = document.getElementById('modal-body');
 
   console.log("[✏️] Edit Daily Reward - Parametri:", {
@@ -385,6 +383,7 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
   });
 
   body.innerHTML = `
+    <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">Edit Daily Reward for ${tokenSymbol}</h3>
     
     <label class="form-label">New Daily Reward</label>
@@ -405,7 +404,17 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
   `;
 
   modal.classList.remove('hidden');
-  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
+
+  const closeBtn = modal.querySelector('#close-modal');
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+  }
 
   document.getElementById('submit-daily-reward').onclick = async () => {
     const newReward = parseFloat(document.getElementById('new-daily-reward').value);
@@ -433,6 +442,8 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
 
       showToast("Daily reward updated", "success");
       modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
       fetchAndRenderTokenPools();
     } catch (err) {
       console.error("[❌] Failed to update reward:", err);
@@ -444,8 +455,6 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
 window.openEditDailyReward = openEditDailyReward;
 function openDepositToPool(poolId, tokenSymbol) {
   const modal = document.getElementById('modal');
-  modal.classList.remove('hidden');
-modal.style.display = 'block';
   const body = document.getElementById('modal-body');
 
   const tokenBalance = window.walletBalances?.find(t => t.symbol === tokenSymbol);
@@ -458,6 +467,7 @@ modal.style.display = 'block';
   });
 
   body.innerHTML = `
+    <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">Deposit More ${tokenSymbol} into Pool</h3>
     <p class="wallet-info">Available in Wallet: <strong>${balance}</strong></p>
     
@@ -478,7 +488,17 @@ modal.style.display = 'block';
   `;
 
   modal.classList.remove('hidden');
-  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
+
+  const closeBtn = modal.querySelector("#close-modal");
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+  }
 
   document.getElementById('submit-deposit').onclick = async () => {
     const amount = parseFloat(document.getElementById('deposit-amount').value);
@@ -507,6 +527,8 @@ modal.style.display = 'block';
 
       showToast("Tokens deposited successfully", "success");
       modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
       loadWallet();
       fetchAndRenderTokenPools();
     } catch (err) {
@@ -516,16 +538,16 @@ modal.style.display = 'block';
   };
 }
 
+
 window.openDepositToPool = openDepositToPool;
 function openPoolStatusModal(poolId, currentStatus) {
   const modal = document.getElementById('modal');
-  modal.classList.remove('hidden');
-modal.style.display = 'block';
   const body = document.getElementById('modal-body');
 
   console.log("[⚙️] Aprendo modale status pool:", { poolId, currentStatus });
 
   body.innerHTML = `
+    <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">Change Pool Status</h3>
     
     <label class="form-label">Select new status</label>
@@ -541,7 +563,17 @@ modal.style.display = 'block';
   `;
 
   modal.classList.remove('hidden');
-  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
+
+  const closeBtn = modal.querySelector('#close-modal');
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+  }
 
   document.getElementById('submit-pool-status').onclick = async () => {
     const newStatus = document.getElementById('pool-status-select').value;
@@ -565,6 +597,8 @@ modal.style.display = 'block';
 
       showToast("Pool status updated", "success");
       modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
       fetchAndRenderTokenPools();
     } catch (err) {
       console.error("[❌] Errore durante l'aggiornamento dello stato della pool:", err);
@@ -749,12 +783,11 @@ function renderNewFarmForm() {
 // Azioni su Template
 function openAddTemplateForm(farmId) {
   const modal = document.getElementById('modal');
-  modal.classList.remove('hidden');
-modal.style.display = 'block';
   const body = document.getElementById('modal-body');
   const { userId, usx_token } = window.userData;
 
   body.innerHTML = `
+    <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">➕ Add Template to Farm</h3>
 
     <label class="form-label">Template ID</label>
@@ -776,7 +809,17 @@ modal.style.display = 'block';
   `;
 
   modal.classList.remove('hidden');
-  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
+
+  const closeBtn = modal.querySelector('#close-modal');
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+  }
 
   document.getElementById('add-reward-btn').onclick = () => {
     const container = document.getElementById('rewards-container');
@@ -828,6 +871,8 @@ modal.style.display = 'block';
 
       showToast(data.message || "Template added successfully", "success");
       modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
       await fetchAndRenderUserFarms();
     } catch (err) {
       console.error("[❌] Error adding template:", err);
@@ -836,15 +881,15 @@ modal.style.display = 'block';
   };
 }
 
+
 // ✅ Deposit Rewards
 function openDepositForm(farmId) {
   const { userId, usx_token, wax_account } = window.userData;
   const modal = document.getElementById('modal');
-  modal.classList.remove('hidden');
-modal.style.display = 'block';
   const body = document.getElementById('modal-body');
 
   body.innerHTML = `
+    <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">Deposit Rewards to Farm</h3>
     <div id="rewards-deposit-container"></div>
     <button id="add-more-reward" class="link-add-reward">➕ Add another token</button>
@@ -852,7 +897,17 @@ modal.style.display = 'block';
   `;
 
   modal.classList.remove('hidden');
-  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
+
+  const closeBtn = modal.querySelector('#close-modal');
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+  }
 
   const container = document.getElementById('rewards-deposit-container');
   const addBtn = document.getElementById('add-more-reward');
@@ -947,6 +1002,8 @@ modal.style.display = 'block';
 
       showToast(data.message || "✅ Rewards deposited successfully", "success");
       modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
       fetchAndRenderUserFarms();
     } catch (err) {
       console.error("[❌] Error depositing rewards:", err);
@@ -955,36 +1012,41 @@ modal.style.display = 'block';
   };
 }
 
-// ✅ Confirm Close
 function confirmFarmClosure(farmId) {
   const modal = document.getElementById('modal');
-  modal.classList.remove('hidden');
-modal.style.display = 'block';
   const body = document.getElementById('modal-body');
 
   body.innerHTML = `
+    <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title text-danger">Close Farm</h3>
     <p class="modal-text">Are you sure you want to <strong>close</strong> this farm? This will stop all rewards.</p>
     <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="document.getElementById('modal').classList.add('hidden')">Cancel</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('modal').classList.add('hidden'); document.getElementById('modal').classList.remove('active'); document.body.classList.remove('modal-open');">Cancel</button>
       <button class="btn btn-danger" onclick="changeFarmStatus(${farmId}, 'closed')">Confirm</button>
     </div>
   `;
 
   modal.classList.remove('hidden');
-  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
-}
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
 
-// ✅ Change Status
+  const closeBtn = modal.querySelector('#close-modal');
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+  }
+}
 function changeFarmStatus(farmId, newStatus = null) {
   const modal = document.getElementById('modal');
-  modal.classList.remove('hidden');
-modal.style.display = 'block';
   const body = document.getElementById('modal-body');
   const { userId, usx_token } = window.userData;
 
   if (!newStatus) {
     body.innerHTML = `
+      <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
       <h3 class="modal-title">Change Farm Status</h3>
       <select id="status-select" class="form-select">
         <option value="open">Open</option>
@@ -995,7 +1057,17 @@ modal.style.display = 'block';
     `;
 
     modal.classList.remove('hidden');
-    document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+    modal.classList.add('active');
+    document.body.classList.add('modal-open');
+
+    const closeBtn = modal.querySelector('#close-modal');
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
+      };
+    }
 
     document.getElementById('status-confirm').onclick = () => {
       const selected = document.getElementById('status-select').value;
@@ -1015,17 +1087,18 @@ modal.style.display = 'block';
       if (data.error) throw new Error(data.error);
       showToast("✅ Farm status updated", "success");
       modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
       fetchAndRenderUserFarms();
     })
     .catch(err => {
       showToast("Error: " + err.message, "error");
     });
 }
+
 async function openEditRewards(templateId) {
   const { userId, usx_token } = window.userData;
   const modal = document.getElementById('modal');
-  modal.classList.remove('hidden');
-modal.style.display = 'block';
   const body = document.getElementById('modal-body');
 
   try {
@@ -1045,10 +1118,8 @@ modal.style.display = 'block';
       return;
     }
 
-    modal.classList.remove('hidden');
-    document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
-
     body.innerHTML = `
+      <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
       <h3 class="modal-title">✏️ Edit Rewards for Template ID ${templateId}</h3>
       <div id="rewards-edit-container">
         ${(template.rewards || []).map(r => `
@@ -1061,6 +1132,19 @@ modal.style.display = 'block';
       <button id="add-reward-btn" class="link-add-reward">➕ Add another reward</button>
       <button id="submit-edit-rewards" class="btn btn-warning full-width">Update Rewards</button>
     `;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('active');
+    document.body.classList.add('modal-open');
+
+    const closeBtn = modal.querySelector('#close-modal');
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
+      };
+    }
 
     document.getElementById('add-reward-btn').onclick = () => {
       const container = document.getElementById('rewards-edit-container');
@@ -1097,6 +1181,8 @@ modal.style.display = 'block';
 
         showToast(result.message || "Rewards updated", "success");
         modal.classList.add('hidden');
+        modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
         await fetchAndRenderUserFarms();
       } catch (err) {
         console.error(err);
@@ -1109,6 +1195,7 @@ modal.style.display = 'block';
     showToast("Failed to load data", "error");
   }
 }
+
  window.openEditRewards = openEditRewards;
 
 function removeTemplate(templateId) {
@@ -1134,11 +1221,10 @@ function removeTemplate(templateId) {
   });
 } function openAddReward(templateId) {
   const modal = document.getElementById('modal');
-  modal.classList.remove('hidden');
-modal.style.display = 'block';
   const body = document.getElementById('modal-body');
 
   body.innerHTML = `
+    <button id="close-modal" class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">➕ Add Reward to Template ID ${templateId}</h3>
     <div class="reward-entry">
       <input type="text" id="new-token-symbol" class="form-input half-width" placeholder="Token Symbol (e.g. CHIPS)">
@@ -1150,7 +1236,17 @@ modal.style.display = 'block';
   `;
 
   modal.classList.remove('hidden');
-  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
+
+  const closeBtn = modal.querySelector('#close-modal');
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+  }
 
   document.getElementById('submit-new-reward').onclick = async () => {
     const symbol = document.getElementById('new-token-symbol').value.trim().toUpperCase();
@@ -1177,6 +1273,8 @@ modal.style.display = 'block';
 
       showToast(data.message || "Reward added", "success");
       modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
       fetchAndRenderUserFarms();
     } catch (err) {
       console.error("[❌] Error adding reward:", err);
@@ -1184,6 +1282,7 @@ modal.style.display = 'block';
     }
   };
 }
+
 
 window.openAddReward = openAddReward; 
 window.openEditRewards = openEditRewards;
@@ -2794,14 +2893,30 @@ document.getElementById('close-modal').onclick = () => {
 
   msg.textContent = message;
   modal.classList.remove('hidden');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
 
-  // Rimuovi eventuali vecchi listener
-  cancelBtn.onclick = () => modal.classList.add('hidden');
-  yesBtn.onclick = () => {
+  // ✅ Pulizia listener vecchi per evitare duplicazioni
+  const newCancel = cancelBtn.cloneNode(true);
+  const newYes = yesBtn.cloneNode(true);
+
+  cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+  yesBtn.parentNode.replaceChild(newYes, yesBtn);
+
+  newCancel.onclick = () => {
     modal.classList.add('hidden');
+    modal.classList.remove('active');
+    document.body.classList.remove('modal-open');
+  };
+
+  newYes.onclick = () => {
+    modal.classList.add('hidden');
+    modal.classList.remove('active');
+    document.body.classList.remove('modal-open');
     onConfirm();
   };
-}async function executeAction(action, token, amount, tokenOut = null, contractOut = null) {
+}
+async function executeAction(action, token, amount, tokenOut = null, contractOut = null) {
   // Verifica se userId e wax_account sono presenti in window.userData
   if (!window.userData || !window.userData.userId || !window.userData.wax_account) {
     console.error("[❌] userId o wax_account non trovato in window.userData. Assicurati che i dati siano caricati prima di eseguire l'azione.");

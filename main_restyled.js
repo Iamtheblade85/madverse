@@ -2652,6 +2652,9 @@ modal.style.display = 'block';
 
   modal.classList.remove('hidden');
   document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+  const percentRange = document.getElementById('percent-range');
+  const amountInput = document.getElementById('amount');
+  const submitButton = document.getElementById('submit-button');
 
   // Handlers comuni
   const range = document.getElementById('percent-range');

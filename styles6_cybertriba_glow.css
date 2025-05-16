@@ -3738,7 +3738,7 @@ button:hover, .btn:hover, .menu-button:hover {
   position: absolute !important;
   top: 1rem !important;
   right: 1rem !important;
-  z-index: 9999 !important;
+  z-index: 10002 !important;
   background: none !important;
   border: none !important;
   padding: 0 !important;
@@ -3843,8 +3843,7 @@ body.modal-open {
   color: var(--close-color);
   cursor: pointer;
   transition: color 0.2s ease-in-out;
-  z-index: 9999 !important;
-
+  z-index: 10001 !important;
   font-family: "Papyrus", "Courier New", cursive;
   text-shadow: 0 0 5px #8e44ad;
 }

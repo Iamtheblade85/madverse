@@ -2663,8 +2663,15 @@ modal.style.display = 'block';
     `;
   }
 
-  modal.classList.remove('hidden');
-  document.getElementById('close-modal').onclick = () => modal.classList.add('hidden');
+modal.classList.remove('hidden');
+modal.style.display = 'block';
+
+document.getElementById('close-modal').onclick = () => {
+  modal.classList.add('hidden');
+  modal.style.display = 'none';
+};
+
+
   const percentRange = document.getElementById('percent-range');
   const amountInput = document.getElementById('amount');
   const submitButton = document.getElementById('submit-button');

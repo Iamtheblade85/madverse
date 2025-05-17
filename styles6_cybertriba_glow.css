@@ -3773,7 +3773,7 @@ button:hover, .btn:hover, .menu-button:hover {
 /* 🌌 Struttura Modale */
 .modal {
   position: fixed;
-  top: 50%;
+  top: 25%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 1001;

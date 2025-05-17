@@ -1373,7 +1373,7 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
 .dropdown {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
-  color: #ffffff;
+  color: #999;
   text-shadow: 0 0 5px #ff073a;
   transition: all 0.3s ease-in-out;
 }
@@ -2492,6 +2492,7 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
+  max-height: 200px
   text-shadow: 0 0 5px #1affd5;
   transition: all 0.3s ease-in-out;
 }

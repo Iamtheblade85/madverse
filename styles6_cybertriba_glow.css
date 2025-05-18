@@ -2525,30 +2525,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
   box-shadow: 0 0 12px #ffffff, 0 0 25px #39ff14;
 }
 
-.${nft.is_staked {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.1rem;
-  color: #f39c12;
-  text-shadow: 0 0 5px #ffffff;
-  transition: all 0.3s ease-in-out;
-}
-.${nft.is_staked:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
-}
-
-.? {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.2rem;
-  color: #00f0ff;
-  text-shadow: 0 0 5px #1affd5;
-  transition: all 0.3s ease-in-out;
-}
-.?:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
-}
-
 .nft-reward {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
@@ -2631,18 +2607,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
 .info-message:hover {
   filter: brightness(1.2);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
-}
-
-.${rowClass} {
-  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
-  font-size: 1.2rem;
-  color: #ffe600;
-  text-shadow: 0 0 5px #ffffff;
-  transition: all 0.3s ease-in-out;
-}
-.${rowClass}:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
 }
 
 .cell {
@@ -3035,18 +2999,6 @@ body { background-color: #000; color: #fff; font-family: "Poppins", "Arial Round
 .subheading:hover {
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #f39c12;
-}
-
-.${gridClass} {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.1rem;
-  color: #ff00ff;
-  text-shadow: 0 0 5px #00f0ff;
-  transition: all 0.3s ease-in-out;
-}
-.${gridClass}:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px #f39c12, 0 0 25px #f39c12;
 }
 
 .input-range {

@@ -3548,8 +3548,11 @@ button:hover, .btn:hover, .menu-button:hover {
 }
 
 .wallet-table .cell.strong {
-  color: transparent !important;
+  color: #d100ff !important;               /* viola neon */
   font-weight: bold !important;
+  text-shadow: 0 0 3px #ff00ff, 0 0 6px #ffffff !important;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 /* === HOVER OTTIMIZZATO SU RIGHE === */
@@ -3630,9 +3633,16 @@ button:hover, .btn:hover, .menu-button:hover {
 .btn-action:hover {
   filter: brightness(1.15) !important;
   transform: scale(1.07) rotateX(4deg) rotateY(2deg) !important;
-  box-shadow: 0 0 20px #ffe600, 0 0 40px #00ffcc !important;
-  color: #ffffff !important;
-  text-shadow: 0 0 3px #ffe600, 0 0 7px #ff00ff !important;
+  box-shadow: 0 0 20px #d100ff, 0 0 40px #9f00ff !important; /* Viola neon e glow viola più freddo */
+  color: #d100ff !important; /* Testo in viola neon */
+  text-shadow:
+    0 0 3px #9f00ff,
+    0 0 6px #ff00ff,
+    0 0 10px #ffffff !important;
+  font-family: "VT323", "Press Start 2P", "Papyrus", monospace !important; /* Tribale/primitivo/digitale */
+  text-transform: uppercase !important; /* Tutto stampatello */
+  font-weight: bold !important;
+  letter-spacing: 1px !important;
 }
 
 /* === ANIMAZIONI === */

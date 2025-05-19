@@ -1570,12 +1570,12 @@ body {
 .btn {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
-  color: #ffe600;
+  color: #1f51ff;
   text-shadow: 0 0 5px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .btn:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ffffff;
 }
 
@@ -3598,9 +3598,9 @@ button:hover, .btn:hover, .menu-button:hover {
 .btn-action {
   font-family: var(--font-main) !important;
   font-size: 0.9rem !important;
-  color: #ffe600 !important;
+  color: #1f51ff !important;
   text-shadow: 0 0 5px #f39c12, 0 0 8px #ffe600 !important;
-  background: linear-gradient(135deg, #ffe600, #f39c12, #ff00ff) !important;
+  background: linear-gradient(135deg, #1f51ff, #00f0ff, #39ff14) !important;
   background-size: 400% 400% !important;
   border: none !important;
   border-radius: 6px !important;
@@ -3628,7 +3628,7 @@ button:hover, .btn:hover, .menu-button:hover {
 }
 
 .btn-action:hover {
-  filter: brightness(1.35) !important;
+  filter: brightness(1.15) !important;
   transform: scale(1.07) rotateX(4deg) rotateY(2deg) !important;
   box-shadow: 0 0 20px #ffe600, 0 0 40px #00ffcc !important;
   color: #ffffff !important;

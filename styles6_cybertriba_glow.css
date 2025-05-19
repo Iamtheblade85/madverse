@@ -2252,15 +2252,39 @@ body {
 }
 
 .section-title {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 0.9rem;
-  color: #8e44ad;
-  text-shadow: 0 0 5px #00f0ff;
-  transition: all 0.3s ease-in-out;
+  font-size: 3rem; /* 3 volte più grande rispetto allo standard */
+  font-weight: bold;
+  color: #d100ff; /* viola neon acceso */
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow:
+    0 0 4px #ff00ff,
+    0 0 8px #d100ff,
+    0 0 12px #ffffff;
+  font-family: 'Orbitron', 'Papyrus', sans-serif;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #ff00ff;
+  animation: pulse-glow-title 4s ease-in-out infinite;
 }
+
 .section-title:hover {
   filter: brightness(1.2);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ffe600;
+}
+@keyframes pulse-glow-title {
+  0%, 100% {
+    text-shadow:
+      0 0 4px #ff00ff,
+      0 0 8px #d100ff,
+      0 0 12px #ffffff;
+  }
+  50% {
+    text-shadow:
+      0 0 6px #ff00ff,
+      0 0 12px #d100ff,
+      0 0 20px #ffffff;
+  }
 }
 
 .text-center {

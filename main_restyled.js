@@ -3285,7 +3285,8 @@ function injectThemeSelector() {
     { name: 'Precious Gold', file: 'styles6_precious.css' },
     { name: 'Streaming', file: 'styles6_streaming.css' },
     { name: 'Jurassic', file: 'styles6_jurassic.css' },
-    { name: 'Cybertribal', file: 'styles6_cybertriba_glow.css' }
+    { name: 'Cybertribal', file: 'styles6_cybertriba_glow.css' },
+    { name: 'Posetron', file: 'styles6_posetron.css' }
   ];
 
   selector.innerHTML = themes

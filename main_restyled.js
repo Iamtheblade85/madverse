@@ -84,15 +84,16 @@ async function initApp() {
     console.info("[🧩] Parametri ottenuti:", params);
 
     if (!params.userId || !params.usx_token) {
-      console.error("[⛔] Parametri user_id o usx_token mancanti nell'URL:", params);
-      throw new Error("Parametri user_id o usx_token mancanti nell'URL");
+      console.warn("[⚠️] Parametri user_id o usx_token mancanti nell'URL. Attivazione login manuale.");
+      renderAuthButton(false);
+      return; // NON lanciare errore: attendi login da utente
     }
 
     console.info("[💾] Salvando parametri in window.userData...");
     window.userData = {
       userId: params.userId,
       usx_token: params.usx_token,
-      wax_account: null // Da popolare dopo /main_door
+      wax_account: null
     };
     console.info("[📦] window.userData attuale:", window.userData);
 
@@ -102,14 +103,15 @@ async function initApp() {
     console.info("[📨] Risposta ricevuta da /main_door:", data);
 
     if (!data.user_id || !data.wax_account) {
+      console.warn("[⚠️] Credenziali non valide o incomplete. Mostro Login.");
       renderAuthButton(false);
-      console.error("[🛑] Dati incompleti nella risposta di /main_door:", data);
-      throw new Error("Autenticazione fallita");
+      return;
     }
-    
+
     window.userData.wax_account = data.wax_account;
     renderAuthButton(true);
     console.info("[✅] Login effettuato correttamente. Dati utente finali:", window.userData);
+
     await loadAvailableTokens();
     console.info("[🧹] Caricamento prima sezione Wallet...");
     loadSection('wallet');
@@ -132,6 +134,7 @@ async function initApp() {
       </div>`;
   }
 }
+
 function renderAuthButton(isLoggedIn) {
   const container = document.getElementById('auth-button-container');
   if (!container) return;

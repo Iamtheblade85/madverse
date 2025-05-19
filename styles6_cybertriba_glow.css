@@ -537,3 +537,70 @@ button:hover, .btn:hover, .btn-action:hover {
   color: var(--cyber-gold);
   text-shadow: 0 0 8px var(--cyber-gold), 0 0 14px var(--cyber-purple);
 }
+
+/* === COLORI ESPANSI ARMONICI === */
+:root {
+  --cyber-gold: #ffd700;
+  --cyber-dark-gold: #c5a300;
+  --cyber-sun: #ffcc00;
+  --cyber-orange: #ff8800;
+  --cyber-pink: #ff3ec9;
+  --cyber-red: #ff003c;
+  --cyber-purple: #a259ff;
+  --cyber-deep-purple: #6f00ff;
+  --cyber-cyan: #00ffee;
+  --cyber-blue: #3bb2ff;
+  --cyber-green: #00ff99;
+  --cyber-dark-bg: #0a0a0a;
+  --pulse-color: var(--cyber-gold);
+}
+
+/* === GLOW COLOR VARIANTI === */
+.glow-gold {
+  color: var(--cyber-gold);
+  text-shadow: 0 0 5px var(--cyber-gold), 0 0 10px var(--cyber-gold);
+}
+.glow-purple {
+  color: var(--cyber-purple);
+  text-shadow: 0 0 5px var(--cyber-purple), 0 0 10px var(--cyber-purple);
+}
+.glow-cyan {
+  color: var(--cyber-cyan);
+  text-shadow: 0 0 5px var(--cyber-cyan), 0 0 10px var(--cyber-cyan);
+}
+.glow-sun {
+  color: var(--cyber-sun);
+  text-shadow: 0 0 5px var(--cyber-sun), 0 0 10px var(--cyber-sun);
+}
+
+/* === SFONDI MULTICOLORI === */
+.bg-gold-gradient {
+  background: linear-gradient(45deg, #fff3a0, var(--cyber-gold));
+}
+.bg-purple-gradient {
+  background: linear-gradient(to right, var(--cyber-deep-purple), #1a0022);
+}
+.bg-cyan-gradient {
+  background: linear-gradient(to bottom right, var(--cyber-blue), var(--cyber-cyan));
+}
+.bg-pink-glow {
+  background: radial-gradient(circle, var(--cyber-pink), #330015);
+}
+
+/* === BUTTON MULTICOLORE === */
+.btn-multicolor {
+  background: linear-gradient(135deg, var(--cyber-gold), var(--cyber-pink), var(--cyber-purple));
+  color: #000;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px var(--cyber-gold);
+}
+.btn-multicolor:hover {
+  background: linear-gradient(135deg, var(--cyber-green), var(--cyber-blue));
+  color: #000;
+  box-shadow: 0 0 20px var(--cyber-cyan);
+}

@@ -3525,7 +3525,7 @@ button:hover, .btn:hover, .menu-button:hover {
   border-collapse: collapse !important;
   font-family: "Arial Rounded MT Bold", "Papyrus", sans-serif !important;
   font-size: 0.95rem !important;
-  background-color: #111 !important;
+  background-color: transparent !important;
   color: #ffffff !important;
   box-shadow: 0 0 12px #1affd5 !important;
   border-radius: 10px !important;
@@ -3548,15 +3548,15 @@ button:hover, .btn:hover, .menu-button:hover {
 }
 
 .wallet-table .cell.strong {
-  color: #ffe600 !important;
+  color: transparent !important;
   font-weight: bold !important;
 }
 
 /* === HOVER OTTIMIZZATO SU RIGHE === */
 .wallet-table tr:hover,
 .wallet-table tr.row-border:hover {
-  background-color: #999999 !important;       /* argento più scuro */
-  color: #001a66 !important;                  /* blu notte profondo */
+  background-color: #1a1a1a !important;  /* nero leggermente più chiaro dello sfondo */
+  color: #39ff14 !important;             /* verde neon */
   font-weight: bold !important;
   font-size: 1rem !important;
 

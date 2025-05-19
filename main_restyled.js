@@ -583,7 +583,7 @@ function openPoolStatusModal(poolId, currentStatus) {
   if (!modalContent.querySelector('.modal-close')) {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'modal-close';
-    closeBtn.innerHTML = '×';
+    closeBtn.innerHTML = 'X';
     closeBtn.style.cssText = `
       position: absolute;
       top: 1rem;

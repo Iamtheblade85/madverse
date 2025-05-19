@@ -3601,7 +3601,8 @@ button:hover, .btn:hover, .menu-button:hover {
 .btn-action {
   font-family: var(--font-main) !important;
   font-size: 0.9rem !important;
-  color: #1f51ff !important;
+  color: black !important;
+  font-weight: bold !important;
   text-shadow: 0 0 5px #f39c12, 0 0 8px #ffe600 !important;
   background: linear-gradient(135deg, #1f51ff, #00f0ff, #39ff14) !important;
   background-size: 400% 400% !important;

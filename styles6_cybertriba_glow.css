@@ -463,3 +463,77 @@ body.app {
   margin: 1rem auto;
   text-shadow: 0 0 10px #0ff;
 }
+
+/* === FONT IMPORTS === */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Press+Start+2P&display=swap');
+
+/* === APPLY FONTS === */
+body {
+  font-family: 'Nunito', sans-serif;
+}
+h1, h2, h3, h4, h5 {
+  font-family: 'Press Start 2P', cursive;
+}
+
+/* === BACKGROUND ANIMATED STELLAR === */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 20% 30%, #110022, #000011) center/cover;
+  background-image: url('https://assets.codepen.io/13471/starfield.png');
+  background-size: cover;
+  z-index: -10;
+  animation: moveStars 90s linear infinite;
+  opacity: 0.15;
+}
+@keyframes moveStars {
+  from { transform: translateY(0); }
+  to { transform: translateY(-2000px); }
+}
+
+/* === BUTTON ANIMATIONS === */
+button, .btn, .btn-action {
+  animation: pulseLoop 4s ease-in-out infinite;
+}
+button:hover, .btn:hover, .btn-action:hover {
+  animation: neonHover 0.8s infinite alternate;
+}
+
+@keyframes pulseLoop {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 8px var(--pulse-color, #00ffee); }
+  50% { transform: scale(1.05); box-shadow: 0 0 18px var(--pulse-color, #ff00ff); }
+}
+
+@keyframes neonHover {
+  0% { text-shadow: 0 0 6px #fff; }
+  100% { text-shadow: 0 0 18px #ff00ff, 0 0 8px #ffd700; }
+}
+
+/* === RESPONSIVE LAYOUT EXPANSION === */
+@media (min-width: 1200px) {
+  .main-content, .section-container, .modal-content, .staking-card, .wallet-table {
+    max-width: 75%;
+    font-size: 1.1rem;
+  }
+  .modal-content {
+    padding: 3rem;
+  }
+}
+
+/* === COLOR PALETTE DIVERSIFICATA ARMONICA === */
+:root {
+  --cyber-purple: #a259ff;
+  --cyber-gold: #ffd700;
+  --cyber-cyan: #00ffe1;
+  --cyber-blue: #3bb2ff;
+  --cyber-pink: #ff3ec9;
+  --pulse-color: #ff3ec9;
+}
+
+.section-title {
+  color: var(--cyber-gold);
+  text-shadow: 0 0 8px var(--cyber-gold), 0 0 14px var(--cyber-purple);
+}

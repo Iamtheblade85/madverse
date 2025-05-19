@@ -2733,6 +2733,7 @@ document.body.classList.add('modal-open');
 
   if (action === "swap") {
     modalBody.innerHTML = `
+      <button id="close-modal" class="modal-close-btn">&times;</button>
       <h3 class="modal-title">Swap ${token}</h3>
       <div class="text-muted">Available: <strong>${balance}</strong> ${token}</div>
       <form id="action-form" class="form-wrapper">
@@ -2763,6 +2764,7 @@ document.body.classList.add('modal-open');
     await loadAvailableTokens();
   } else {
     modalBody.innerHTML = `
+      <button id="close-modal" class="modal-close-btn">&times;</button>
       <h3 class="modal-title">${actionTitle} ${token}</h3>
       <div class="text-muted">Available: <strong>${balance}</strong> ${token}</div>
       ${action === 'transfer' ? `

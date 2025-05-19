@@ -74,7 +74,6 @@ function applyStormsFiltersAndSort() {
   renderStormsTable(filtered);
 }
 
-
 // Funzione iniziale aggiornata per supportare multi-temi via CSS
 async function initApp() {
   try {
@@ -103,13 +102,13 @@ async function initApp() {
     console.info("[📨] Risposta ricevuta da /main_door:", data);
 
     if (!data.user_id || !data.wax_account) {
+      renderAuthButton(false);
       console.error("[🛑] Dati incompleti nella risposta di /main_door:", data);
       throw new Error("Autenticazione fallita");
     }
-
-    console.info("[🖊️] Aggiornamento wax_account in window.userData...");
+    
     window.userData.wax_account = data.wax_account;
-
+    renderAuthButton(true);
     console.info("[✅] Login effettuato correttamente. Dati utente finali:", window.userData);
     await loadAvailableTokens();
     console.info("[🧹] Caricamento prima sezione Wallet...");
@@ -131,6 +130,107 @@ async function initApp() {
       <div class="error-message centered margin-top-lg">
         Errore: ${error.message}<br>Verifica il link o rifai il login.
       </div>`;
+  }
+}
+function renderAuthButton(isLoggedIn) {
+  const container = document.getElementById('auth-button-container');
+  if (!container) return;
+
+  container.innerHTML = `
+    <button id="auth-toggle-button" style="
+      padding: 6px 12px;
+      font-weight: bold;
+      background-color: black;
+      color: gold;
+      border: 2px solid gold;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 0 5px gold;
+    ">
+      ${isLoggedIn ? 'Logout' : 'Login'}
+    </button>
+  `;
+
+  document.getElementById('auth-toggle-button').onclick = () => {
+    if (isLoggedIn) {
+      fetch(`${BASE_URL}/logout-secure`, { method: 'POST' })
+        .then(() => location.reload())
+        .catch(err => alert("Errore nel logout: " + err));
+    } else {
+      openLoginModal();
+    }
+  };
+}
+function openLoginModal() {
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+  const modalContent = modal.querySelector('.modal-content');
+
+  body.innerHTML = `
+    <h3 class="modal-title">Login</h3>
+    <label class="form-label">Username</label>
+    <input type="text" id="login-username" class="form-input" placeholder="Username">
+
+    <label class="form-label">Wallet Address</label>
+    <input type="text" id="login-wallet" class="form-input" placeholder="Wallet Address">
+
+    <label class="form-label">Auth Token</label>
+    <input type="text" id="login-token" class="form-input" placeholder="Auth Token">
+
+    <button class="btn btn-primary" id="submit-login" style="margin-top: 1rem;">Submit</button>
+  `;
+
+  modal.classList.remove('hidden');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
+
+  document.getElementById('submit-login').onclick = async () => {
+    const username = document.getElementById('login-username').value.trim();
+    const wallet = document.getElementById('login-wallet').value.trim();
+    const token = document.getElementById('login-token').value.trim();
+
+    try {
+      const res = await fetch(`${BASE_URL}/login-secure`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, wallet, token })
+      });
+
+      const data = await res.json();
+      if (!data.user_id || !data.usx_token || !data.wax_account) throw new Error("Login fallito");
+
+      // Reindirizza con nuovi parametri
+      const url = new URL(window.location.href);
+      url.searchParams.set('user_id', data.user_id);
+      url.searchParams.set('usx_token', data.usx_token);
+      window.location.href = url.toString();
+
+    } catch (err) {
+      alert("Login fallito: " + err.message);
+    }
+  };
+
+  // Pulsante chiusura
+  if (!modalContent.querySelector('.modal-close')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: gold;
+      background: none;
+      border: none;
+      cursor: pointer;
+    `;
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+    modalContent.prepend(closeBtn);
   }
 }
 

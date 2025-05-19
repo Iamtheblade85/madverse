@@ -20,9 +20,10 @@
 }
 
 body {
-  background-color: #000;
-  color: #fff;
-  font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
+  background: radial-gradient(circle at top left, #001a13 0%, #000000 100%);
+  color: var(--color-highlight); /* Azzurro neon */
+  font-family: var(--font-main), "Poppins", sans-serif;
+  transition: background var(--transition-speed), color var(--transition-speed);
 }
 
 @keyframes slide-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }

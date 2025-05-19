@@ -1,0 +1,622 @@
+
+/* === GLOBAL RESET === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html, body {
+  font-family: 'Orbitron', sans-serif;
+  background-color: #0a0a0a;
+  color: #00ffee;
+  text-align: center;
+  overflow-x: hidden;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+}
+
+/* === NEON / GLOW EFFECTS === */
+h1, h2, h3, h4, h5 {
+  text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 15px #0ff;
+}
+a, button {
+  text-shadow: 0 0 3px #00ffe1, 0 0 6px #00ffe1;
+  transition: all 0.3s ease;
+}
+button:hover, a:hover {
+  text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
+}
+
+/* === RESPONSIVE CENTERING === */
+.main-content, .section-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  padding: 1rem;
+}
+@media (max-width: 600px) {
+  .main-content, .section-container {
+    padding: 0.5rem;
+  }
+}
+@media (max-width: 300px) {
+  html {
+    font-size: 12px;
+  }
+}
+
+/* === TABLE STYLING === */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  box-shadow: 0 0 10px #0ff;
+}
+th, td {
+  border: 1px solid #222;
+  padding: 0.75rem;
+  color: #00ffee;
+}
+tr:hover {
+  background-color: silver;
+  color: darkblue;
+  border: 2px solid red;
+}
+
+/* === NFT IMAGE SIZING === */
+.nft-image {
+  max-height: 150px;
+  object-fit: contain;
+  border: 2px solid #00ffee;
+  box-shadow: 0 0 10px #00ffee;
+}
+
+/* === FORMS & INPUTS === */
+input, select, textarea {
+  background: #111;
+  border: 1px solid #00ffee;
+  color: #0ff;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  border-radius: 5px;
+  width: 100%;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #ff00ff;
+  box-shadow: 0 0 5px #ff00ff;
+}
+
+/* === STAKING, WALLET, DYNAMIC CONTENT === */
+.wallet-table, .staking-table, .token-pool-card, .farm-card {
+  background-color: #111;
+  border: 1px solid #00ffee;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 10px;
+  box-shadow: 0 0 15px #00ffee;
+}
+
+/* === MODAL === */
+.modal {
+  background: rgba(0, 0, 0, 0.95);
+  border: 2px solid #ff00ff;
+  box-shadow: 0 0 20px #ff00ff;
+}
+.modal-title {
+  text-shadow: 0 0 10px #ff00ff;
+}
+
+/* === TOAST === */
+.toast-container {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 10000;
+}
+.toast-message {
+  background: #111;
+  border: 1px solid #0ff;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #00ffee;
+}
+
+/* === MODAL EXTENDED STYLES === */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(5px);
+  z-index: 999;
+}
+.modal-open {
+  display: block;
+  animation: fadeIn 0.4s ease-out;
+}
+.modal-close {
+  display: none;
+}
+.modal-content {
+  background: #111;
+  border: 2px solid #ff00ff;
+  border-radius: 10px;
+  padding: 2rem;
+  max-width: 500px;
+  margin: 5vh auto;
+  box-shadow: 0 0 25px #ff00ff;
+  z-index: 1000;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === NFT GRID === */
+.nft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  max-width: 1000px;
+  padding: 1rem;
+}
+.nft-card {
+  background: #1a1a1a;
+  border: 1px solid #0ff;
+  border-radius: 12px;
+  padding: 1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.nft-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px #0ff;
+}
+
+/* === STAKING ELEMENTS === */
+.staking-card {
+  background: #111;
+  border: 1px solid #00ffee;
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 1rem 0;
+  text-align: center;
+  box-shadow: 0 0 15px #00ffee;
+}
+.staking-card h3 {
+  color: #0ff;
+  margin-bottom: 1rem;
+}
+.staking-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.staking-actions button {
+  background: #0a0a0a;
+  border: 1px solid #ff00ff;
+  color: #ff00ff;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.staking-actions button:hover {
+  background: #ff00ff;
+  color: #000;
+}
+
+/* === TOAST MESSAGE ENHANCEMENTS === */
+.toast-message.success {
+  border-color: #00ff88;
+  box-shadow: 0 0 15px #00ff88;
+}
+.toast-message.error {
+  border-color: #ff0044;
+  box-shadow: 0 0 15px #ff0044;
+}
+
+/* === ANIMATIONS === */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.toast-message {
+  animation: slideUp 0.5s ease-out;
+}
+
+/* === RESPONSIVE UTILITIES === */
+.hidden {
+  display: none !important;
+}
+.visible {
+  display: block !important;
+}
+
+/* === BUTTONS & ACTIONS === */
+.btn-action {
+  background: linear-gradient(145deg, #0ff, #00f0ff);
+  color: #000;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px #00ffee;
+}
+.btn-action:hover {
+  background: #ff00ff;
+  color: #fff;
+  box-shadow: 0 0 20px #ff00ff;
+}
+
+/* === MODAL POSITIONING & Z-INDEX === */
+.modal-wrapper {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
+  max-width: 90%;
+  width: 100%;
+  padding: 1rem;
+}
+.modal-content {
+  position: relative;
+  z-index: 1002;
+}
+.modal-close-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: #ff00ff;
+  cursor: pointer;
+  text-shadow: 0 0 10px #ff00ff;
+}
+.modal-close-btn:hover {
+  color: #fff;
+}
+
+/* === LED ICONS / ELEMENT DECOR === */
+.led-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #0f0, #080);
+  box-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+/* === GENERAL CARD ENHANCEMENTS === */
+.card {
+  background: #111;
+  border: 1px solid #0ff;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 0 15px #0ff;
+  margin: 1rem auto;
+  max-width: 95%;
+}
+
+/* === ADDITIONAL UTILITIES === */
+.centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fullscreen {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* === APP STRUCTURE === */
+body.app {
+  background-color: #000010;
+  color: #00ffee;
+  font-family: 'Orbitron', sans-serif;
+}
+
+/* === NAVBAR === */
+.navbar {
+  background: linear-gradient(90deg, #111, #0ff, #111);
+  box-shadow: 0 0 15px #00ffee;
+  padding: 1rem 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+}
+.navbar-brand .app-title {
+  font-size: 2rem;
+  color: #00ffee;
+  text-shadow: 0 0 10px #00ffee;
+}
+.navbar-brand .app-subtitle {
+  font-size: 0.9rem;
+  color: #ccc;
+}
+.menu-button, .dropdown-item {
+  background: #111;
+  color: #00ffee;
+  border: 1px solid #00ffee;
+  padding: 0.5rem 1rem;
+  margin: 0.25rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.menu-button:hover, .dropdown-item:hover {
+  background: #00ffee;
+  color: #000;
+  box-shadow: 0 0 10px #00ffee;
+}
+
+/* === DROPDOWN === */
+.dropdown-menu {
+  background: #111;
+  border: 1px solid #0ff;
+  box-shadow: 0 0 15px #0ff;
+  position: absolute;
+  z-index: 1500;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+}
+.dropdown-divider {
+  border-top: 1px solid #444;
+  margin: 0.5rem 0;
+}
+.dropdown-item, .dropdown-group {
+  margin-bottom: 0.5rem;
+}
+
+/* === TABLE HIGHLIGHT FROM ORIGINAL DESIGN === */
+.wallet-table tr:hover,
+.staking-table tr:hover,
+.reward-table tr:hover {
+  background-color: silver;
+  color: darkblue;
+  border: 2px solid red;
+}
+
+/* === MODAL CLASSES === */
+.modal {
+  background: rgba(0, 0, 0, 0.95);
+  border-radius: 10px;
+  padding: 1rem;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 0 20px #0ff;
+  z-index: 9999;
+}
+.modal-content {
+  background: #111;
+  border: 1px solid #ff00ff;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 0 15px #ff00ff;
+}
+.modal-body {
+  color: #fff;
+  padding-top: 2rem; /* Per lasciare spazio al bottone "X" */
+  position: relative;
+  z-index: 1; /* Sicurezza se sfondo animato */
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #ff00ff;
+  text-shadow: 0 0 5px #ff00ff;
+}
+
+/* === CONFIRM MODAL === */
+.confirm-box {
+  background: #111;
+  border: 1px solid #ff073a;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* === BUTTONS === */
+.btn, .btn-primary, .btn-secondary, .btn-warning, .btn-danger {
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  margin: 0.25rem;
+}
+.btn-primary {
+  background: #00ffee;
+  color: #000;
+}
+.btn-secondary {
+  background: #444;
+  color: #0ff;
+}
+.btn-warning {
+  background: #ff0;
+  color: #000;
+}
+.btn-danger {
+  background: #f00;
+  color: #fff;
+}
+
+/* === SECTION TITLES === */
+.section-title {
+  font-size: 2rem;
+  text-align: center;
+  margin: 1rem auto;
+  text-shadow: 0 0 10px #0ff;
+}
+
+/* === FONT IMPORTS === */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Press+Start+2P&display=swap');
+
+/* === APPLY FONTS === */
+body {
+  font-family: 'Nunito', sans-serif;
+}
+h1, h2, h3, h4, h5 {
+  font-family: 'Press Start 2P', cursive;
+}
+
+/* === BACKGROUND ANIMATED STELLAR === */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 20% 30%, #110022, #000011) center/cover;
+  background-image: url('https://assets.codepen.io/13471/starfield.png');
+  background-size: cover;
+  z-index: -10;
+  animation: moveStars 90s linear infinite;
+  opacity: 0.15;
+}
+@keyframes moveStars {
+  from { transform: translateY(0); }
+  to { transform: translateY(-2000px); }
+}
+
+/* === BUTTON ANIMATIONS === */
+button, .btn, .btn-action {
+  animation: pulseLoop 4s ease-in-out infinite;
+}
+button:hover, .btn:hover, .btn-action:hover {
+  animation: neonHover 0.8s infinite alternate;
+}
+
+@keyframes pulseLoop {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 8px var(--pulse-color, #00ffee); }
+  50% { transform: scale(1.05); box-shadow: 0 0 18px var(--pulse-color, #ff00ff); }
+}
+
+@keyframes neonHover {
+  0% { text-shadow: 0 0 6px #fff; }
+  100% { text-shadow: 0 0 18px #ff00ff, 0 0 8px #ffd700; }
+}
+
+/* === RESPONSIVE LAYOUT EXPANSION === */
+@media (min-width: 1200px) {
+  .main-content, .section-container, .modal-content, .staking-card, .wallet-table {
+    max-width: 75%;
+    font-size: 1.1rem;
+  }
+  .modal-content {
+    padding: 3rem;
+  }
+}
+
+/* === COLOR PALETTE DIVERSIFICATA ARMONICA === */
+:root {
+  --cyber-purple: #a259ff;
+  --cyber-gold: #ffd700;
+  --cyber-cyan: #00ffe1;
+  --cyber-blue: #3bb2ff;
+  --cyber-pink: #ff3ec9;
+  --pulse-color: #ff3ec9;
+}
+
+.section-title {
+  color: var(--cyber-gold);
+  text-shadow: 0 0 8px var(--cyber-gold), 0 0 14px var(--cyber-purple);
+}
+
+/* === COLORI ESPANSI ARMONICI === */
+:root {
+  --cyber-gold: #ffd700;
+  --cyber-dark-gold: #c5a300;
+  --cyber-sun: #ffcc00;
+  --cyber-orange: #ff8800;
+  --cyber-pink: #ff3ec9;
+  --cyber-red: #ff003c;
+  --cyber-purple: #a259ff;
+  --cyber-deep-purple: #6f00ff;
+  --cyber-cyan: #00ffee;
+  --cyber-blue: #3bb2ff;
+  --cyber-green: #00ff99;
+  --cyber-dark-bg: #0a0a0a;
+  --pulse-color: var(--cyber-gold);
+}
+
+/* === GLOW COLOR VARIANTI === */
+.glow-gold {
+  color: var(--cyber-gold);
+  text-shadow: 0 0 5px var(--cyber-gold), 0 0 10px var(--cyber-gold);
+}
+.glow-purple {
+  color: var(--cyber-purple);
+  text-shadow: 0 0 5px var(--cyber-purple), 0 0 10px var(--cyber-purple);
+}
+.glow-cyan {
+  color: var(--cyber-cyan);
+  text-shadow: 0 0 5px var(--cyber-cyan), 0 0 10px var(--cyber-cyan);
+}
+.glow-sun {
+  color: var(--cyber-sun);
+  text-shadow: 0 0 5px var(--cyber-sun), 0 0 10px var(--cyber-sun);
+}
+
+/* === SFONDI MULTICOLORI === */
+.bg-gold-gradient {
+  background: linear-gradient(45deg, #fff3a0, var(--cyber-gold));
+}
+.bg-purple-gradient {
+  background: linear-gradient(to right, var(--cyber-deep-purple), #1a0022);
+}
+.bg-cyan-gradient {
+  background: linear-gradient(to bottom right, var(--cyber-blue), var(--cyber-cyan));
+}
+.bg-pink-glow {
+  background: radial-gradient(circle, var(--cyber-pink), #330015);
+}
+
+/* === BUTTON MULTICOLORE === */
+.btn-multicolor {
+  background: linear-gradient(135deg, var(--cyber-gold), var(--cyber-pink), var(--cyber-purple));
+  color: #000;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px var(--cyber-gold);
+}
+.btn-multicolor:hover {
+  background: linear-gradient(135deg, var(--cyber-green), var(--cyber-blue));
+  color: #000;
+  box-shadow: 0 0 20px var(--cyber-cyan);
+}
+.modal-close-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 1rem;
+  font-size: 2rem;
+  color: var(--cyber-gold, #ffd700);
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 9999;
+  text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
+}

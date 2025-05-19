@@ -420,7 +420,6 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
   `;
 
   modal.classList.remove('hidden');
-}
   modal.classList.add('active');
   document.body.classList.add('modal-open');
 

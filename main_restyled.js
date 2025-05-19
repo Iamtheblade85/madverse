@@ -371,6 +371,7 @@ function renderTokenPoolDetails(pool) {
 
 function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSymbol) {
   const modal = document.getElementById('modal');
+  const modalContent = modal.querySelector('.modal-content');
   const body = document.getElementById('modal-body');
 
   console.log("[✏️] Edit Daily Reward - Parametri:", {
@@ -380,10 +381,29 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
     depositTokenSymbol
   });
 
+  // Inserisci la X SOLO una volta, se non c'è
+  if (!modalContent.querySelector('.modal-close')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: var(--cyber-gold, #ffd700);
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 1021;
+      text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
+    `;
+    modalContent.prepend(closeBtn);
+  }
+
+  // Imposta il contenuto dinamico
   body.innerHTML = `
-    <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">Edit Daily Reward for ${tokenSymbol}</h3>
-    
     <label class="form-label">New Daily Reward</label>
     <input 
       id="new-daily-reward" 
@@ -391,17 +411,16 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
       value="${currentReward}" 
       class="form-input"
     >
-    
     <button id="submit-daily-reward" class="btn btn-primary full-width">
       Update Reward
     </button>
-    
     <button class="btn btn-secondary mt-medium" onclick="openDepositToPool(${poolId}, '${tokenSymbol}')">
       💰 Deposit More Tokens
     </button>
   `;
 
   modal.classList.remove('hidden');
+}
   modal.classList.add('active');
   document.body.classList.add('modal-open');
 
@@ -453,6 +472,7 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
 window.openEditDailyReward = openEditDailyReward;
 function openDepositToPool(poolId, tokenSymbol) {
   const modal = document.getElementById('modal');
+  const modalContent = modal.querySelector('.modal-content');
   const body = document.getElementById('modal-body');
 
   const tokenBalance = window.walletBalances?.find(t => t.symbol === tokenSymbol);
@@ -464,8 +484,33 @@ function openDepositToPool(poolId, tokenSymbol) {
     balance
   });
 
+  // Inserisci il bottone close se non c'è già
+  if (!modalContent.querySelector('.modal-close')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: var(--cyber-gold, #ffd700);
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 1011;
+      text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
+    `;
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+    modalContent.prepend(closeBtn);
+  }
+
+  // Inserisci contenuto dentro modal-body
   body.innerHTML = `
-    <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">Deposit More ${tokenSymbol} into Pool</h3>
     <p class="wallet-info">Available in Wallet: <strong>${balance}</strong></p>
     
@@ -488,15 +533,6 @@ function openDepositToPool(poolId, tokenSymbol) {
   modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
-
-  const closeBtn = modal.querySelector("#close-modal");
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-    };
-  }
 
   document.getElementById('submit-deposit').onclick = async () => {
     const amount = parseFloat(document.getElementById('deposit-amount').value);
@@ -536,25 +572,48 @@ function openDepositToPool(poolId, tokenSymbol) {
   };
 }
 
-
 window.openDepositToPool = openDepositToPool;
 function openPoolStatusModal(poolId, currentStatus) {
   const modal = document.getElementById('modal');
+  const modalContent = modal.querySelector('.modal-content');
   const body = document.getElementById('modal-body');
 
   console.log("[⚙️] Aprendo modale status pool:", { poolId, currentStatus });
 
+  // Inserisci il bottone close una sola volta
+  if (!modalContent.querySelector('.modal-close')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: var(--cyber-gold, #ffd700);
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 1011;
+      text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
+    `;
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+    modalContent.prepend(closeBtn);
+  }
+
+  // Contenuto dinamico della modale
   body.innerHTML = `
-    <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">Change Pool Status</h3>
-    
     <label class="form-label">Select new status</label>
     <select id="pool-status-select" class="form-select">
       <option value="open" ${currentStatus === 'open' ? 'selected' : ''}>Open</option>
       <option value="closed" ${currentStatus === 'closed' ? 'selected' : ''}>Closed</option>
       <option value="maintenance" ${currentStatus === 'maintenance' ? 'selected' : ''}>Maintenance</option>
     </select>
-
     <button id="submit-pool-status" class="btn btn-warning full-width">
       Update Status
     </button>
@@ -564,15 +623,7 @@ function openPoolStatusModal(poolId, currentStatus) {
   modal.classList.add('active');
   document.body.classList.add('modal-open');
 
-  const closeBtn = modal.querySelector('#close-modal');
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-    };
-  }
-
+  // Listener pulsante submit
   document.getElementById('submit-pool-status').onclick = async () => {
     const newStatus = document.getElementById('pool-status-select').value;
     const { userId, usx_token } = window.userData;
@@ -604,7 +655,6 @@ function openPoolStatusModal(poolId, currentStatus) {
     }
   };
 }
-
 window.openPoolStatusModal = openPoolStatusModal;
 
 // === 📦 CREAZIONE & GESTIONE DELLE NFTS FARM DELL'UTENTE ===
@@ -781,11 +831,37 @@ function renderNewFarmForm() {
 // Azioni su Template
 function openAddTemplateForm(farmId) {
   const modal = document.getElementById('modal');
+  const modalContent = modal.querySelector('.modal-content');
   const body = document.getElementById('modal-body');
   const { userId, usx_token } = window.userData;
 
+  // Aggiungi il pulsante di chiusura solo se non esiste
+  if (!modalContent.querySelector('.modal-close')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: var(--cyber-gold, #ffd700);
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 1011;
+      text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
+    `;
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+    modalContent.prepend(closeBtn);
+  }
+
+  // Inserisci il contenuto dinamico
   body.innerHTML = `
-    <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">➕ Add Template to Farm</h3>
 
     <label class="form-label">Template ID</label>
@@ -810,15 +886,7 @@ function openAddTemplateForm(farmId) {
   modal.classList.add('active');
   document.body.classList.add('modal-open');
 
-  const closeBtn = modal.querySelector('#close-modal');
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-    };
-  }
-
+  // Add new reward fields
   document.getElementById('add-reward-btn').onclick = () => {
     const container = document.getElementById('rewards-container');
     const div = document.createElement('div');
@@ -830,6 +898,7 @@ function openAddTemplateForm(farmId) {
     container.appendChild(div);
   };
 
+  // Submit handler
   document.getElementById('submit-add-template').onclick = async () => {
     const templateId = parseInt(document.getElementById('template-id').value.trim());
     if (!templateId) {
@@ -879,15 +948,39 @@ function openAddTemplateForm(farmId) {
   };
 }
 
-
 // ✅ Deposit Rewards
 function openDepositForm(farmId) {
   const { userId, usx_token, wax_account } = window.userData;
   const modal = document.getElementById('modal');
+  const modalContent = modal.querySelector('.modal-content');
   const body = document.getElementById('modal-body');
 
+  // Inserisci bottone di chiusura solo se non esiste già
+  if (!modalContent.querySelector('.modal-close')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: var(--cyber-gold, #ffd700);
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 1011;
+      text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
+    `;
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+    modalContent.prepend(closeBtn);
+  }
+
   body.innerHTML = `
-    <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">Deposit Rewards to Farm</h3>
     <div id="rewards-deposit-container"></div>
     <button id="add-more-reward" class="link-add-reward">➕ Add another token</button>
@@ -897,15 +990,6 @@ function openDepositForm(farmId) {
   modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
-
-  const closeBtn = modal.querySelector('#close-modal');
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-    };
-  }
 
   const container = document.getElementById('rewards-deposit-container');
   const addBtn = document.getElementById('add-more-reward');
@@ -1012,39 +1096,95 @@ function openDepositForm(farmId) {
 
 function confirmFarmClosure(farmId) {
   const modal = document.getElementById('modal');
+  const modalContent = modal.querySelector('.modal-content');
   const body = document.getElementById('modal-body');
 
-  body.innerHTML = `
-    <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
-    <h3 class="modal-title text-danger">Close Farm</h3>
-    <p class="modal-text">Are you sure you want to <strong>close</strong> this farm? This will stop all rewards.</p>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="document.getElementById('modal').classList.add('hidden'); document.getElementById('modal').classList.remove('active'); document.body.classList.remove('modal-open');">Cancel</button>
-      <button class="btn btn-danger" onclick="changeFarmStatus(${farmId}, 'closed')">Confirm</button>
-    </div>
-  `;
-
-  modal.classList.remove('hidden');
-  modal.classList.add('active');
-  document.body.classList.add('modal-open');
-
-  const closeBtn = modal.querySelector('#close-modal');
-  if (closeBtn) {
+  // Aggiungi il bottone × solo se non già presente
+  if (!modalContent.querySelector('.modal-close')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: var(--cyber-gold, #ffd700);
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 1011;
+      text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
+    `;
     closeBtn.onclick = () => {
       modal.classList.add('hidden');
       modal.classList.remove('active');
       document.body.classList.remove('modal-open');
     };
+    modalContent.prepend(closeBtn);
   }
+
+  // Inserisci il contenuto principale della modale
+  body.innerHTML = `
+    <h3 class="modal-title text-danger">Close Farm</h3>
+    <p class="modal-text">Are you sure you want to <strong>close</strong> this farm? This will stop all rewards.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="cancel-close-farm">Cancel</button>
+      <button class="btn btn-danger" id="confirm-close-farm">Confirm</button>
+    </div>
+  `;
+
+  // Apri la modale
+  modal.classList.remove('hidden');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
+
+  // Handlers pulsanti
+  document.getElementById('cancel-close-farm').onclick = () => {
+    modal.classList.add('hidden');
+    modal.classList.remove('active');
+    document.body.classList.remove('modal-open');
+  };
+
+  document.getElementById('confirm-close-farm').onclick = () => {
+    changeFarmStatus(farmId, 'closed');
+  };
 }
+
 function changeFarmStatus(farmId, newStatus = null) {
   const modal = document.getElementById('modal');
+  const modalContent = modal.querySelector('.modal-content');
   const body = document.getElementById('modal-body');
   const { userId, usx_token } = window.userData;
 
   if (!newStatus) {
+    // Aggiungi bottone di chiusura se non esiste
+    if (!modalContent.querySelector('.modal-close')) {
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'modal-close';
+      closeBtn.innerHTML = '×';
+      closeBtn.style.cssText = `
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 2rem;
+        color: var(--cyber-gold, #ffd700);
+        background: none;
+        border: none;
+        cursor: pointer;
+        z-index: 1011;
+        text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
+      `;
+      closeBtn.onclick = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
+      };
+      modalContent.prepend(closeBtn);
+    }
+
+    // Inserisci contenuto dinamico della modale
     body.innerHTML = `
-      <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
       <h3 class="modal-title">Change Farm Status</h3>
       <select id="status-select" class="form-select">
         <option value="open">Open</option>
@@ -1054,19 +1194,12 @@ function changeFarmStatus(farmId, newStatus = null) {
       <button class="btn btn-warning full-width" id="status-confirm">Update</button>
     `;
 
+    // Mostra la modale
     modal.classList.remove('hidden');
     modal.classList.add('active');
     document.body.classList.add('modal-open');
 
-    const closeBtn = modal.querySelector('#close-modal');
-    if (closeBtn) {
-      closeBtn.onclick = () => {
-        modal.classList.add('hidden');
-        modal.classList.remove('active');
-        document.body.classList.remove('modal-open');
-      };
-    }
-
+    // Azione del bottone di conferma
     document.getElementById('status-confirm').onclick = () => {
       const selected = document.getElementById('status-select').value;
       changeFarmStatus(farmId, selected);
@@ -1075,6 +1208,7 @@ function changeFarmStatus(farmId, newStatus = null) {
     return;
   }
 
+  // Chiamata fetch per aggiornare lo stato
   fetch(`${BASE_URL}/update_farm_status?user_id=${userId}&usx_token=${usx_token}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1097,6 +1231,7 @@ function changeFarmStatus(farmId, newStatus = null) {
 async function openEditRewards(templateId) {
   const { userId, usx_token } = window.userData;
   const modal = document.getElementById('modal');
+  const modalContent = modal.querySelector('.modal-content');
   const body = document.getElementById('modal-body');
 
   try {
@@ -1116,8 +1251,33 @@ async function openEditRewards(templateId) {
       return;
     }
 
+    // Inserisci bottone di chiusura se non esiste
+    if (!modalContent.querySelector('.modal-close')) {
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'modal-close';
+      closeBtn.innerHTML = '×';
+      closeBtn.style.cssText = `
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 2rem;
+        color: var(--cyber-gold, #ffd700);
+        background: none;
+        border: none;
+        cursor: pointer;
+        z-index: 1011;
+        text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
+      `;
+      closeBtn.onclick = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
+      };
+      modalContent.prepend(closeBtn);
+    }
+
+    // Inserisci il contenuto dinamico
     body.innerHTML = `
-      <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
       <h3 class="modal-title">✏️ Edit Rewards for Template ID ${templateId}</h3>
       <div id="rewards-edit-container">
         ${(template.rewards || []).map(r => `
@@ -1131,19 +1291,12 @@ async function openEditRewards(templateId) {
       <button id="submit-edit-rewards" class="btn btn-warning full-width">Update Rewards</button>
     `;
 
+    // Apri la modale
     modal.classList.remove('hidden');
     modal.classList.add('active');
     document.body.classList.add('modal-open');
 
-    const closeBtn = modal.querySelector('#close-modal');
-    if (closeBtn) {
-      closeBtn.onclick = () => {
-        modal.classList.add('hidden');
-        modal.classList.remove('active');
-        document.body.classList.remove('modal-open');
-      };
-    }
-
+    // Aggiungi reward dinamico
     document.getElementById('add-reward-btn').onclick = () => {
       const container = document.getElementById('rewards-edit-container');
       const div = document.createElement('div');
@@ -1155,6 +1308,7 @@ async function openEditRewards(templateId) {
       container.appendChild(div);
     };
 
+    // Submit update
     document.getElementById('submit-edit-rewards').onclick = async () => {
       const rewards = [];
       const entries = document.querySelectorAll('.reward-entry');
@@ -1193,8 +1347,7 @@ async function openEditRewards(templateId) {
     showToast("Failed to load data", "error");
   }
 }
-
- window.openEditRewards = openEditRewards;
+window.openEditRewards = openEditRewards;
 
 function removeTemplate(templateId) {
   showConfirmModal(`Are you sure you want to delete Template ${templateId} and all related rewards?`, async () => {
@@ -1219,10 +1372,36 @@ function removeTemplate(templateId) {
   });
 } function openAddReward(templateId) {
   const modal = document.getElementById('modal');
+  const modalContent = modal.querySelector('.modal-content');
   const body = document.getElementById('modal-body');
 
+  // Inserisci il bottone di chiusura solo se non già presente
+  if (!modalContent.querySelector('.modal-close')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: var(--cyber-gold, #ffd700);
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 1011;
+      text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
+    `;
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+    modalContent.prepend(closeBtn);
+  }
+
+  // Inserisci contenuto dinamico nel body
   body.innerHTML = `
-    <button class="modal-close" style="position: absolute; top: 1rem; right: 1rem;">×</button>
     <h3 class="modal-title">➕ Add Reward to Template ID ${templateId}</h3>
     <div class="reward-entry">
       <input type="text" id="new-token-symbol" class="form-input half-width" placeholder="Token Symbol (e.g. CHIPS)">
@@ -1233,19 +1412,12 @@ function removeTemplate(templateId) {
     </button>
   `;
 
+  // Mostra la modale
   modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
 
-  const closeBtn = modal.querySelector('#close-modal');
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-    };
-  }
-
+  // Submit handler
   document.getElementById('submit-new-reward').onclick = async () => {
     const symbol = document.getElementById('new-token-symbol').value.trim().toUpperCase();
     const amount = parseFloat(document.getElementById('new-reward-amount').value.trim());
@@ -1280,7 +1452,6 @@ function removeTemplate(templateId) {
     }
   };
 }
-
 
 window.openAddReward = openAddReward; 
 window.openEditRewards = openEditRewards;
@@ -1376,10 +1547,9 @@ function loadSection(section) {
       <div id="nfts-list" class="nfts-grid"></div>
 
       <div id="pagination" class="pagination"></div>
-
       <div id="modal-nft" class="modal-backdrop hidden">
-        <div class="modal-box">
-          <button class="modal-close">&times;</button>
+        <div class="modal-content">
+          <button class="modal-close">X</button>
           <div id="modal-content"></div>
         </div>
       </div>
@@ -2581,11 +2751,10 @@ function openNFTModal(assetId) {
   const nft = window.nftsData.find(n => n.asset_id === assetId);
   if (!nft) return;
 
-  const modal = document.getElementById('modal');
-  const body = document.getElementById('modal-body');
+  const modal = document.getElementById('modal-nft');
+  const modalContent = modal.querySelector('#modal-content');
 
-  body.innerHTML = `
-    <button class="modal-close" style="position:absolute; top:1rem; right:1rem;">×</button>
+  modalContent.innerHTML = `
     <img src="${nft.image_url}" alt="NFT Image"
          style="max-height:150px; width:auto; display:block; margin:0 auto 1rem; opacity:0; transition:opacity 3s ease-in;" 
          onload="this.style.opacity='1'">
@@ -2600,20 +2769,17 @@ function openNFTModal(assetId) {
     <p class="nft-subtext">Acquired: ${new Date(nft.created_at).toLocaleDateString()}</p>
   `;
 
+  // Mostra la modale NFT
   modal.classList.remove('hidden');
-  modal.classList.add('active');
-  document.body.classList.add('modal-open');
 
-  const closeBtn = modal.querySelector('#close-modal');
+  // Gestione bottone ×
+  const closeBtn = modal.querySelector('.modal-close');
   if (closeBtn) {
     closeBtn.onclick = () => {
       modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
     };
   }
 }
-
  function setupFilterEvents() {
   document.getElementById('filter-status').addEventListener('change', renderNFTs);
   document.getElementById('filter-collection').addEventListener('change', renderNFTs);

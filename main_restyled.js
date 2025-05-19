@@ -3352,10 +3352,9 @@ function injectThemeSelector() {
 
   // CSS inline con animazioni LED/Neon
   selector.style.cssText = `
-    position: absolute;
-    top: 1rem;
-    width: 15%;
-    right: 1.5rem;
+    display: block;
+    width: 180px;
+    margin-top: 0.5rem;
     padding: 0.5rem 1rem;
     background: linear-gradient(145deg, #1a1a1a, #333);
     color: #ffd700;
@@ -3392,20 +3391,21 @@ function injectThemeSelector() {
     { name: 'Posetron', file: 'styles6_posetron.css' }
   ];
 
-  selector.innerHTML = themes
-    .map(t => `<option value="${t.file}">${t.name}</option>`)
-    .join('');
+  // Opzione predefinita "Choose your way"
+  selector.innerHTML = `
+    <option disabled selected value="">Choose your way</option>
+    ${themes.map(t => `<option value="${t.file}">${t.name}</option>`).join('')}
+  `;
 
-  // Inserisci accanto al titolo se presente
-  const title = document.querySelector('.app-title');
-  if (title && title.parentElement) {
-    title.parentElement.style.position = 'relative'; // necessario per posizionamento assoluto
-    title.parentElement.appendChild(selector);
+  // Inserisci sotto al bottone Login/Logout
+  const container = document.getElementById('auth-button-container');
+  if (container) {
+    container.appendChild(selector);
   } else {
     document.body.appendChild(selector); // fallback
   }
 
-  // Cambia foglio di stile dinamicamente
+  // Gestione cambio tema
   function swapCSS(href) {
     let link = document.getElementById('theme-style');
     if (!link) {
@@ -3418,15 +3418,19 @@ function injectThemeSelector() {
     localStorage.setItem('selected-css', href);
   }
 
+  // Applica tema salvato, se presente
+  const saved = localStorage.getItem('selected-css');
+  if (saved) {
+    selector.value = saved;
+    swapCSS(saved);
+  }
+
   // Cambio dinamico del tema
   selector.addEventListener('change', e => {
-    swapCSS(e.target.value);
+    if (e.target.value) {
+      swapCSS(e.target.value);
+    }
   });
-
-  // Applica tema salvato
-  const saved = localStorage.getItem('selected-css') || themes[0].file;
-  selector.value = saved;
-  swapCSS(saved);
 }
 document.addEventListener('DOMContentLoaded', injectThemeSelector);
 

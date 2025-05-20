@@ -803,7 +803,7 @@ body {
 }
 
 #modal-nft {
-  z-index: 9999; /* ✅ livello superiore garantito */
+  z-index: 999; /* ✅ livello superiore garantito */
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   top: 20%; 
@@ -3929,7 +3929,9 @@ body.modal-open {
 .modal-backdrop {
   font-size: 1rem;
   color: #ffe600;
-  text-shadow: 0 0 5px #39ff14;
+  position: fixed;
+  top: 50%;
+  left: 50%;
 }
 
 .modal-backdrop:hover {

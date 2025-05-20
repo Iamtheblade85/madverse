@@ -3351,7 +3351,7 @@ body {
 /* Modal Styling (centrato, nascosto inizialmente, alto z-index) */
 .modal {
   position: fixed;
-  top: 50%;
+  top: 15%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 9999;

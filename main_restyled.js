@@ -3054,6 +3054,14 @@ function openNFTModal(assetId) {
         <button type="button" id="preview-button" class="btn btn-warning">Preview Swap</button>
         <button type="submit" id="submit-button" class="btn btn-success" disabled>Confirm Swap</button>
       </form>
+      <div id="modal-confirm-message"
+           style="display: none; margin-top: 1rem;
+                  color: #00f0ff;
+                  font-family: 'Papyrus', 'Courier New', cursive;
+                  font-weight: bold;
+                  text-align: center;
+                  text-shadow: 0 0 5px #ff00ff, 0 0 8px #00f0ff;">
+      </div>
     `;
     await loadAvailableTokens();
   } else {
@@ -3078,6 +3086,14 @@ function openNFTModal(assetId) {
         </div>
         <button id="submit-button" type="submit" class="btn btn-primary">Confirm ${actionTitle}</button>
       </form>
+      <div id="modal-confirm-message"
+           style="display: none; margin-top: 1rem;
+                  color: #00f0ff;
+                  font-family: 'Papyrus', 'Courier New', cursive;
+                  font-weight: bold;
+                  text-align: center;
+                  text-shadow: 0 0 5px #ff00ff, 0 0 8px #00f0ff;">
+      </div>      
     `;
   }
 
@@ -3176,10 +3192,12 @@ if (closeBtn) {
     percentRange.value = Math.min(((manualAmount / balance) * 100).toFixed(0), 100);
   });
 
-  // Submit action
   document.getElementById('action-form').onsubmit = async (e) => {
     e.preventDefault();
     const amount = amountInput.value;
+  
+    const confirmEl = document.getElementById('modal-confirm-message');
+  
     try {
       if (action === "swap") {
         const outputSelection = tokenOutput.value;
@@ -3188,14 +3206,30 @@ if (closeBtn) {
       } else {
         await executeAction(action, token, amount);
       }
-      showToast(`${actionTitle} completed successfully`, "success");
-      modal.classList.add('hidden');
-      loadWallet();
+  
+      if (confirmEl) {
+        confirmEl.textContent = `✅ ${actionTitle} completed successfully. Page will autoreloaded in 5 seconds`;
+        confirmEl.style.color = '#00f0ff';
+        confirmEl.style.display = 'block';
+      }
+  
+      // Puoi ritardare la chiusura per far vedere il messaggio, se vuoi
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        loadWallet();
+      }, 5000);
+  
     } catch (error) {
       console.error(error);
-      showToast(`Error during ${actionTitle}`, "error");
+  
+      if (confirmEl) {
+        confirmEl.textContent = `❌ Error during ${actionTitle}`;
+        confirmEl.style.color = '#ff4444';
+        confirmEl.style.display = 'block';
+      }
     }
   };
+
 } function showConfirmModal(message, onConfirm) {
   const modal = document.getElementById('confirm-modal');
   const msg = document.getElementById('confirm-message');

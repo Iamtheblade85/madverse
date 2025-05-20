@@ -821,6 +821,9 @@ body {
   font-size: 1.1rem;
   padding-top: 3rem !important;
   color: #00ffcc;
+  position: fixed;            /* ✅ fondamentale per top/left */
+  top: 20%;                   /* ✅ 20% dall’alto */
+  left: 50%;                  /* ✅ centrato orizzontalmente */  
   transition: all 0.3s ease-in-out;
 }
 #modal-content:hover {

@@ -476,7 +476,7 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
   const modal = document.getElementById('modal');
   const modalContent = modal.querySelector('.modal-content');
   const body = document.getElementById('modal-body');
-
+  body.innerHTML = '';
   console.log("[✏️] Edit Daily Reward - Parametri:", {
     poolId,
     tokenSymbol,
@@ -488,7 +488,7 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
   if (!modalContent.querySelector('.modal-close')) {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'modal-close';
-    closeBtn.innerHTML = '×';
+    closeBtn.innerHTML = 'X';
     closeBtn.style.cssText = `
       position: absolute;
       top: 1rem;
@@ -514,9 +514,17 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
       value="${currentReward}" 
       class="form-input"
     >
-    <button id="submit-daily-reward" class="btn btn-primary full-width">
+    <button id="submit-daily-reward" class="btn btn-action full-width" style="
+      margin-top: 1rem;
+      background: linear-gradient(135deg, #ffe600, #f39c12, #ff00ff);
+      box-shadow: 0 0 5px #00ffcc, 0 0 20px #ff00ff;
+      color: #000;
+      font-weight: bold;
+      border-radius: 8px;
+    ">
       Update Reward
     </button>
+
     <button class="btn btn-secondary mt-medium" onclick="openDepositToPool(${poolId}, '${tokenSymbol}')">
       💰 Deposit More Tokens
     </button>
@@ -524,7 +532,10 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
 
   modal.classList.remove('hidden');
   modal.classList.add('active');
+  modal.style.display = 'flex'; // ✅ forza visibilità
+  modal.style.zIndex = '9999';  // ✅ garantisce priorità visiva
   document.body.classList.add('modal-open');
+
 
   const closeBtn = modal.querySelector('.modal-close');
   if (closeBtn) {

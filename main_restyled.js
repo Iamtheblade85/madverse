@@ -3492,7 +3492,13 @@ function showModal({ title = '', body = '', footer = '' }) {
   modal.querySelector('.modal-footer').innerHTML = footer;
 
   modal.classList.remove('hidden');
+  modal.classList.add('active');
   document.body.classList.add('modal-open');
+
+  // Rimuovi stili manuali
+  modal.style.top = '';
+  modal.style.left = '';
+  modal.style.transform = '';
 }
 
 function closeModal() {

@@ -3487,29 +3487,36 @@ document.querySelectorAll('[data-section]').forEach(btn => {
 
 function showModal({ title = '', body = '', footer = '' }) {
   const modal = document.getElementById('universal-modal');
+
   modal.querySelector('.modal-header').innerHTML = title;
   modal.querySelector('.modal-body').innerHTML = body;
   modal.querySelector('.modal-footer').innerHTML = footer;
 
+  // Posizionamento dinamico rispetto allo scroll attuale
+  const scrollY = window.scrollY || window.pageYOffset;
+  const viewportHeight = window.innerHeight;
+  const modalHeight = modal.offsetHeight || 300; // fallback
+
+  const top = scrollY + (viewportHeight - modalHeight) / 2;
+  modal.style.top = `${Math.max(top, 40)}px`; // evita che esca sopra
+
   modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
-
-  // Rimuovi stili manuali
-  modal.style.top = '';
-  modal.style.left = '';
-  modal.style.transform = '';
 }
 
 function closeModal() {
   const modal = document.getElementById('universal-modal');
+
   modal.classList.add('hidden');
+  modal.classList.remove('active');
   document.body.classList.remove('modal-open');
 
-  // Pulizia dei contenuti
   modal.querySelector('.modal-header').innerHTML = '';
   modal.querySelector('.modal-body').innerHTML = '';
   modal.querySelector('.modal-footer').innerHTML = '';
+
+  modal.style.top = ''; // pulizia!
 }
 document.querySelector('#universal-modal .modal-close').addEventListener('click', closeModal);
 

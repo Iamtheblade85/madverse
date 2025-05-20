@@ -3002,11 +3002,14 @@ function openNFTModal(assetId) {
   }
 } async function openModal(action, token) {
   const modal = document.getElementById('modal');
-modal.classList.remove('hidden');
-modal.classList.add('active');
-document.body.classList.add('modal-open');
-
-
+  
+  // Rimuove classe hidden e imposta forzatamente la visibilità
+  modal.classList.remove('hidden');
+  modal.classList.add('active');
+  // Forza visibilità e z-index a livello inline
+  modal.style.display = 'flex';
+  modal.style.zIndex = '9999';
+  document.body.classList.add('modal-open');
   const modalBody = document.getElementById('modal-body');
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
 
@@ -3083,6 +3086,7 @@ if (closeBtn) {
   closeBtn.onclick = () => {
     modal.classList.remove('active');
     modal.classList.add('hidden');
+    modal.style.display = 'none';
     document.body.classList.remove('modal-open');
   };
 }

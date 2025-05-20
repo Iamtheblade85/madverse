@@ -498,7 +498,7 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
       background: none;
       border: none;
       cursor: pointer;
-      z-index: 1021;
+      z-index: 9999;
       text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
     `;
     modalContent.prepend(closeBtn);
@@ -600,7 +600,7 @@ function openDepositToPool(poolId, tokenSymbol) {
       background: none;
       border: none;
       cursor: pointer;
-      z-index: 1011;
+      z-index: 9999;
       text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
     `;
     closeBtn.onclick = () => {
@@ -696,7 +696,7 @@ function openPoolStatusModal(poolId, currentStatus) {
       background: none;
       border: none;
       cursor: pointer;
-      z-index: 1011;
+      z-index: 9999;
       text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
     `;
     closeBtn.onclick = () => {
@@ -951,7 +951,7 @@ function openAddTemplateForm(farmId) {
       background: none;
       border: none;
       cursor: pointer;
-      z-index: 1011;
+      z-index: 9999;
       text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
     `;
     closeBtn.onclick = () => {
@@ -1071,7 +1071,7 @@ function openDepositForm(farmId) {
       background: none;
       border: none;
       cursor: pointer;
-      z-index: 1011;
+      z-index: 9999;
       text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
     `;
     closeBtn.onclick = () => {
@@ -1215,7 +1215,7 @@ function confirmFarmClosure(farmId) {
       background: none;
       border: none;
       cursor: pointer;
-      z-index: 1011;
+      z-index: 9999;
       text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
     `;
     closeBtn.onclick = () => {
@@ -1274,7 +1274,7 @@ function changeFarmStatus(farmId, newStatus = null) {
         background: none;
         border: none;
         cursor: pointer;
-        z-index: 1011;
+        z-index: 9999;
         text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
       `;
       closeBtn.onclick = () => {
@@ -1367,7 +1367,7 @@ async function openEditRewards(templateId) {
         background: none;
         border: none;
         cursor: pointer;
-        z-index: 1011;
+        z-index: 9999;
         text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
       `;
       closeBtn.onclick = () => {
@@ -1491,7 +1491,7 @@ function removeTemplate(templateId) {
       background: none;
       border: none;
       cursor: pointer;
-      z-index: 1011;
+      z-index: 9999;
       text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
     `;
     closeBtn.onclick = () => {
@@ -3425,7 +3425,7 @@ function injectThemeSelector() {
     font-family: 'Orbitron', sans-serif;
     box-shadow: 0 0 10px #ffae42;
     transition: all 0.3s ease;
-    z-index: 9999;
+    z-index: 999;
   `;
 
   selector.addEventListener('mouseover', () => {

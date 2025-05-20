@@ -1001,6 +1001,14 @@ function openAddTemplateForm(farmId) {
     </button>
   `;
 
+  // Posizionamento dinamico centrato in viewport attuale
+  const scrollY = window.scrollY || window.pageYOffset;
+  const viewportHeight = window.innerHeight;
+  modal.style.top = `${scrollY + viewportHeight / 2}px`;
+  modal.style.left = '50%';
+  modal.style.transform = 'translate(-50%, -50%)';
+  modal.style.display = 'flex';
+  modal.style.zIndex = '9999';
   modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');

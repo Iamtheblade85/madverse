@@ -1789,12 +1789,17 @@ function renderNFTFarms(farms) {
         `;
       }).join('') || '<div class="no-rewards">No rewards</div>';
       
-      const templateImageHTML = template.user_nfts?.[0]?.asset_img
+      const rawImg = template.user_nfts?.[0]?.asset_img || template.template_img;
+      
+      const imgUrl = rawImg ? `https://ipfs.io/ipfs/${rawImg}` : null;
+      
+      const templateImageHTML = imgUrl
         ? `<div class="template-image-wrapper" style="text-align:center; margin: 0.5rem 0;">
-             <img src="${template.user_nfts[0].asset_img}" alt="Template Image" 
+             <img src="${imgUrl}" alt="Template Image" 
                   style="max-height: 200px; max-width: 100%; object-fit: contain; border-radius: 10px; box-shadow: 0 0 10px #00f0ff;">
            </div>`
         : '';
+
       console.log("Template-Image found: ",templateImageHTML)
       return `
         <div class="template-block">

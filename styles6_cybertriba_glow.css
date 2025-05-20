@@ -803,10 +803,10 @@ body {
 }
 
 #modal-nft {
+  z-index: 9999; /* ✅ livello superiore garantito */
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #modal-nft:hover {
@@ -819,7 +819,6 @@ body {
   font-size: 1.1rem;
   padding-top: 3rem !important;
   color: #00ffcc;
-  text-shadow: 0 0 5px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #modal-content:hover {
@@ -827,11 +826,23 @@ body {
   box-shadow: 0 0 12px #ffffff, 0 0 25px #f39c12;
 }
 
+/* ✅ Immagine NFT dentro modale */
+#modal-content img {
+  display: block;
+  margin: 0 auto;
+  min-height: 250px; /* ✅ altezza minima */
+  max-height: 400px;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 0 15px #00ffcc, 0 0 30px #ff00ff;
+}
+
+
 #search-pools {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ffe600;
-  text-shadow: 0 0 5px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #search-pools:hover {
@@ -843,7 +854,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #pool-buttons:hover {
@@ -855,7 +865,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 #selected-pool-details:hover {
@@ -867,7 +876,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #f39c12;
   transition: all 0.3s ease-in-out;
   display: flex;
   flex-direction: column;
@@ -883,7 +891,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #create-nfts-farm-container:hover {
@@ -895,7 +902,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #create-token-pool-container:hover {
@@ -906,7 +912,6 @@ body {
 #search-nft-farm {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
-  text-shadow: 0 0 5px #ffffff;
   transition: all 0.3s ease-in-out;
   padding: 0.75rem 1rem;
   border: 2px solid #00ffcc;
@@ -926,7 +931,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #nft-farm-buttons:hover {
@@ -938,7 +942,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #nft-farm-details:hover {
@@ -950,7 +953,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #filter-username:hover {
@@ -962,7 +964,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #filter-channel:hover {
@@ -974,7 +975,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #filter-sponsor:hover {
@@ -986,7 +986,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #update-rewards:hover {
@@ -998,7 +997,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #add-storm-form:hover {
@@ -1010,7 +1008,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #scheduledTime:hover {
@@ -1022,7 +1019,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #timeframe:hover {
@@ -1034,7 +1030,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #amount:hover {
@@ -1046,7 +1041,6 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 #tokenSymbol:hover {
@@ -2413,6 +2407,10 @@ body {
   color: #39ff14;
   text-shadow: 0 0 5px #ff00ff;
   transition: all 0.3s ease-in-out;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;  
 }
 .nfts-grid:hover {
   filter: brightness(1.2);
@@ -3353,14 +3351,18 @@ body {
   position: fixed;
   top: 15%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   z-index: 9999;
   background-color: rgba(0, 0, 0, 0.9);
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
-  width: 90%;
-  max-width: 600px;
+
+  width: auto;              /* ✅ Si adatta al contenuto */
+  max-width: 90vw;          /* ✅ Limite orizzontale */
+  height: auto;             /* ✅ Si adatta al contenuto */
+  max-height: 90vh;         /* ✅ Scorrimento verticale se troppo alta */
+  overflow-y: auto;         /* ✅ Scroll se necessario */
 }
 
 /* Mostra il modale con classe .active o quando JS rimuove 'hidden' */

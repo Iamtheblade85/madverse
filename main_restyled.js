@@ -473,11 +473,6 @@ function renderTokenPoolDetails(pool) {
 }
 
 function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSymbol) {
-  const modal = document.getElementById('modal');
-  const modalContent = modal.querySelector('.modal-content');
-  const body = document.getElementById('modal-body');
-  body.innerHTML = '';
-
   console.log("[✏️] Edit Daily Reward - Parametri:", {
     poolId,
     tokenSymbol,
@@ -485,29 +480,7 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
     depositTokenSymbol
   });
 
-  // Inserisci la X SOLO una volta, se non c'è
-  if (!modalContent.querySelector('.modal-close')) {
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'modal-close';
-    closeBtn.innerHTML = 'X';
-    closeBtn.style.cssText = `
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      font-size: 2rem;
-      color: var(--cyber-gold, #ffd700);
-      background: none;
-      border: none;
-      cursor: pointer;
-      z-index: 9999;
-      text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
-    `;
-    modalContent.prepend(closeBtn);
-  }
-
-  // Imposta il contenuto dinamico
-  body.innerHTML = `
-    <h3 class="modal-title">Edit Daily Reward for ${tokenSymbol}</h3>
+  const body = `
     <label class="form-label">New Daily Reward</label>
     <input 
       id="new-daily-reward" 
@@ -531,63 +504,45 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
     </button>
   `;
 
-  // ✅ Posizionamento verticale centrato nella viewport corrente
-  const scrollY = window.scrollY || window.pageYOffset;
-  const viewportHeight = window.innerHeight;
-  modal.style.top = `${scrollY + viewportHeight / 2}px`;
-  modal.style.left = '50%';
-  modal.style.transform = 'translate(-50%, -50%)';
-  modal.style.display = 'flex';
-  modal.style.zIndex = '9999';
+  showModal({
+    title: `<h3 class="modal-title">Edit Daily Reward for ${tokenSymbol}</h3>`,
+    body
+  });
 
-  modal.classList.remove('hidden');
-  modal.classList.add('active');
-  document.body.classList.add('modal-open');
+  setTimeout(() => {
+    document.getElementById('submit-daily-reward').onclick = async () => {
+      const newReward = parseFloat(document.getElementById('new-daily-reward').value);
+      if (isNaN(newReward) || newReward <= 0) {
+        showToast("Please enter a valid reward value", "error");
+        return;
+      }
 
-  const closeBtn = modal.querySelector('.modal-close');
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
+      try {
+        const { userId, usx_token } = window.userData;
+        const res = await fetch(`${BASE_URL}/update_pool_daily_reward?user_id=${userId}&usx_token=${usx_token}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pool_id: poolId,
+            reward_token_symbol: tokenSymbol,
+            new_daily_reward: newReward
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to update reward");
+
+        showToast("Daily reward updated", "success");
+        closeModal();
+        fetchAndRenderTokenPools();
+      } catch (err) {
+        console.error("[❌] Failed to update reward:", err);
+        showToast(err.message, "error");
+      }
     };
-  }
-
-  document.getElementById('submit-daily-reward').onclick = async () => {
-    const newReward = parseFloat(document.getElementById('new-daily-reward').value);
-
-    if (isNaN(newReward) || newReward <= 0) {
-      showToast("Please enter a valid reward value", "error");
-      return;
-    }
-
-    try {
-      const { userId, usx_token } = window.userData;
-
-      const res = await fetch(`${BASE_URL}/update_pool_daily_reward?user_id=${userId}&usx_token=${usx_token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pool_id: poolId,
-          reward_token_symbol: tokenSymbol,
-          new_daily_reward: newReward
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update reward");
-
-      showToast("Daily reward updated", "success");
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-      fetchAndRenderTokenPools();
-    } catch (err) {
-      console.error("[❌] Failed to update reward:", err);
-      showToast(err.message, "error");
-    }
-  };
+  }, 0); // ⏱ attende il render completo del DOM prima di bindare gli eventi
 }
+
 window.openEditDailyReward = openEditDailyReward;
 function openDepositToPool(poolId, tokenSymbol) {
   const modal = document.getElementById('modal');
@@ -3529,4 +3484,28 @@ document.querySelectorAll('[data-section]').forEach(btn => {
     }
   });
 });
+
+function showModal({ title = '', body = '', footer = '' }) {
+  const modal = document.getElementById('universal-modal');
+  modal.querySelector('.modal-header').innerHTML = title;
+  modal.querySelector('.modal-body').innerHTML = body;
+  modal.querySelector('.modal-footer').innerHTML = footer;
+
+  modal.classList.remove('hidden');
+  document.body.classList.add('modal-open');
+}
+
+function closeModal() {
+  const modal = document.getElementById('universal-modal');
+  modal.classList.add('hidden');
+  document.body.classList.remove('modal-open');
+
+  // Pulizia dei contenuti
+  modal.querySelector('.modal-header').innerHTML = '';
+  modal.querySelector('.modal-body').innerHTML = '';
+  modal.querySelector('.modal-footer').innerHTML = '';
+}
+document.querySelector('#universal-modal .modal-close').addEventListener('click', closeModal);
+
+
 

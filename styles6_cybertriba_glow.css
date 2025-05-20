@@ -3785,12 +3785,11 @@ button:hover, .btn:hover, .menu-button:hover {
   color: var(--modal-text-color);
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
-  text-shadow: 0 0 5px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 
 .modal:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #00ffcc;
 }
 
@@ -3805,15 +3804,10 @@ button:hover, .btn:hover, .menu-button:hover {
   position: absolute;
   top: -9999px;
   left: -9999px;
-  width: 20000px;
-  height: 20000px;
+  width: 300px;
+  height: 300px;
   background: rgba(0, 0, 0, 0.5);
   z-index: -1;
-}
-
-/* Disabilita scroll su apertura modale */
-body.modal-open {
-  overflow: hidden;
 }
 
 /* =================== */
@@ -3843,7 +3837,6 @@ body.modal-open {
   transition: color 0.2s ease-in-out;
   z-index: 10001 !important;
   font-family: "Papyrus", "Courier New", cursive;
-  text-shadow: 0 0 5px #8e44ad;
 }
 
 .modal-close:hover {
@@ -3858,19 +3851,18 @@ body.modal-open {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 
 .modal-body:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #8e44ad;
 }
 
 .modal-title {
   font-size: 1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
 }
 
 .modal-title:hover {
@@ -3880,7 +3872,7 @@ body.modal-open {
 .modal-text {
   font-size: 1.2rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
 }
 
 .modal-text:hover {

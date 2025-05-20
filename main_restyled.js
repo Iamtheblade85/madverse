@@ -477,6 +477,7 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
   const modalContent = modal.querySelector('.modal-content');
   const body = document.getElementById('modal-body');
   body.innerHTML = '';
+
   console.log("[✏️] Edit Daily Reward - Parametri:", {
     poolId,
     tokenSymbol,
@@ -530,12 +531,18 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
     </button>
   `;
 
+  // ✅ Posizionamento verticale centrato nella viewport corrente
+  const scrollY = window.scrollY || window.pageYOffset;
+  const viewportHeight = window.innerHeight;
+  modal.style.top = `${scrollY + viewportHeight / 2}px`;
+  modal.style.left = '50%';
+  modal.style.transform = 'translate(-50%, -50%)';
+  modal.style.display = 'flex';
+  modal.style.zIndex = '9999';
+
   modal.classList.remove('hidden');
   modal.classList.add('active');
-  modal.style.display = 'flex'; // ✅ forza visibilità
-  modal.style.zIndex = '9999';  // ✅ garantisce priorità visiva
   document.body.classList.add('modal-open');
-
 
   const closeBtn = modal.querySelector('.modal-close');
   if (closeBtn) {
@@ -581,7 +588,6 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
     }
   };
 }
-
 window.openEditDailyReward = openEditDailyReward;
 function openDepositToPool(poolId, tokenSymbol) {
   const modal = document.getElementById('modal');

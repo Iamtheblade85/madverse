@@ -1795,8 +1795,18 @@ function renderNFTFarms(farms) {
       
       const templateImageHTML = imgUrl
         ? `<div class="template-image-wrapper" style="text-align:center; margin: 0.5rem 0;">
-             <img src="${imgUrl}" alt="Template Image" 
-                  style="max-height: 200px; max-width: 100%; object-fit: contain; border-radius: 10px; box-shadow: 0 0 10px #00f0ff;">
+            <img src="${imgUrl}" alt="Template Image"
+                 style="
+                   display: block;
+                   margin: 0 auto;
+                   max-height: 200px;
+                   max-width: 100%;
+                   object-fit: contain;
+                   border-radius: 10px;
+                   box-shadow: none !important;
+                   filter: none !important;
+                   text-shadow: none !important;
+                 ">
            </div>`
         : '';
 

@@ -806,6 +806,8 @@ body {
   z-index: 9999; /* ✅ livello superiore garantito */
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
+  top: 20%; 
+  left: 50%; 
   color: #f39c12;
   transition: all 0.3s ease-in-out;
 }

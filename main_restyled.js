@@ -1011,7 +1011,7 @@ function openAddTemplateForm(farmId) {
   modal.style.zIndex = '9999';
   modal.classList.remove('hidden');
   modal.classList.add('active');
-  document.body.classList.add('modal-open');
+  document.body.classList.add('modal-active');
 
   // Add new reward fields
   document.getElementById('add-reward-btn').onclick = () => {

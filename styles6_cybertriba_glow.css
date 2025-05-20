@@ -3940,16 +3940,14 @@ button:hover, .btn:hover, .menu-button:hover {
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffe600;
 }
 #universal-modal {
-  position: fixed;
-  top: 50%;
+  position: absolute;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   z-index: 9999;
-  display: none; /* o hidden tramite classi */
+  display: none;
 }
 
 #universal-modal.active {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
+

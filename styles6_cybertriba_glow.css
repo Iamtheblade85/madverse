@@ -868,6 +868,10 @@ body {
   color: #39ff14;
   text-shadow: 0 0 5px #f39c12;
   transition: all 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
 }
 #nft-farms-container:hover {
   filter: brightness(1.2);
@@ -901,12 +905,19 @@ body {
 #search-nft-farm {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
-  color: #ffe600;
   text-shadow: 0 0 5px #ffffff;
   transition: all 0.3s ease-in-out;
+  padding: 0.75rem 1rem;
+  border: 2px solid #00ffcc;
+  border-radius: 6px;
+  color: #00f0ff;
+  box-shadow: 0 0 6px #00ffcc;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 0.5rem;  
 }
 #search-nft-farm:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffe600;
 }
 
@@ -1981,6 +1992,11 @@ body {
   color: #00ffcc;
   text-shadow: 0 0 5px #00f0ff;
   transition: all 0.3s ease-in-out;
+  margin-top: 1.5rem;
+  background: #1a1a1a;
+  border: 1px solid #555;
+  padding: 1rem;
+  border-radius: 6px;  
 }
 .template-block:hover {
   filter: brightness(1.2);
@@ -1989,10 +2005,12 @@ body {
 
 .template-title {
   font-family: "Papyrus", "Courier New", cursive;
-  font-size: 0.9rem;
-  color: #ffffff;
   text-shadow: 0 0 5px #8e44ad;
   transition: all 0.3s ease-in-out;
+  font-size: 1.1rem;
+  color: #00f0ff;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 4px #00f0ff;  
 }
 .template-title:hover {
   filter: brightness(1.2);
@@ -2038,9 +2056,14 @@ body {
 .farm-card {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
+  border: 2px solid #ff00ff;
+  padding: 1.2rem;  
   color: #ff00ff;
   text-shadow: 0 0 5px #8e44ad;
   transition: all 0.3s ease-in-out;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #ff00ff;
+  margin-bottom: 2rem;  
 }
 .farm-card:hover {
   filter: brightness(1.2);
@@ -2473,21 +2496,37 @@ body {
   color: #00f0ff;
   text-shadow: 0 0 5px #8e44ad;
   transition: all 0.3s ease-in-out;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;  
 }
 .farm-button-group:hover {
   filter: brightness(1.2);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffffff;
 }
 
+.farm-button-group .btn-action {
+  flex: 1 1 auto;
+  min-width: 180px;
+  text-align: center;
+}
+
 .intro-text {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
+  background-color: #0a0a0a;
+  line-height: 1.6;
+  padding: 1rem;
+  border-left: 4px solid #00ffcc;  
   text-shadow: 0 0 5px #ff073a;
   transition: all 0.3s ease-in-out;
+  box-shadow: inset 0 0 6px #00f0ff;
+  margin-bottom: 1rem;  
 }
+
 .intro-text:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
 }
 
@@ -2554,10 +2593,11 @@ body {
 
 .nft-reward {
   font-family: "Papyrus", "Courier New", cursive;
-  font-size: 0.9rem;
-  color: #00ffcc;
-  text-shadow: 0 0 5px #00f0ff;
   transition: all 0.3s ease-in-out;
+  font-size: 0.95rem;
+  color: #ffe600;
+  text-shadow: 0 0 3px #f39c12;
+  margin-bottom: 0.25rem;  
 }
 .nft-reward:hover {
   filter: brightness(1.2);
@@ -2567,9 +2607,15 @@ body {
 .no-rewards {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
-  color: #8e44ad;
   text-shadow: 0 0 5px #ffe600;
   transition: all 0.3s ease-in-out;
+  color: #999;
+  background-color: #1a1a1a;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-style: italic;
+  text-align: center;
+  border: 1px dashed #444;  
 }
 .no-rewards:hover {
   filter: brightness(1.2);
@@ -2579,9 +2625,15 @@ body {
 .nft-grid {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
-  color: #1affd5;
   text-shadow: 0 0 5px #00ffcc;
   transition: all 0.3s ease-in-out;
+  color: #999;
+  background-color: #1a1a1a;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-style: italic;
+  text-align: center;
+  border: 1px dashed #444;  
 }
 .nft-grid:hover {
   filter: brightness(1.2);

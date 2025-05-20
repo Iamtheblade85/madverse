@@ -3258,11 +3258,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .nft-detail:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #ff073a;
 }
 
@@ -3548,13 +3548,13 @@ button:hover, .btn:hover, .menu-button:hover {
   border: 1px solid #00ffcc;
   border-radius: 8px;
   padding: 1rem;
-  box-shadow: 0 0 10px #00f0ff;
+  box-shadow: 0 0 3px #00f0ff;
   transition: transform 0.3s ease-in-out;
 }
 
 .nft-card:hover {
   transform: scale(1.03);
-  box-shadow: 0 0 15px #39ff14;
+  box-shadow: 0 0 10px #39ff14;
 }
 
 .nft-card-content {
@@ -3576,13 +3576,13 @@ button:hover, .btn:hover, .menu-button:hover {
 .nft-title {
   font-size: 1rem;
   color: #ffe600;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
 }
 
 .nft-subtitle {
   font-size: 0.8rem;
   color: #00ffcc;
-  text-shadow: 0 0 3px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
 }
 
 /* === WALLET TABLE CONTAINER === */
@@ -3590,7 +3590,7 @@ button:hover, .btn:hover, .menu-button:hover {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif !important;
   font-size: 1.2rem !important;
   color: #ff073a !important;
-  text-shadow: 0 0 5px #39ff14 !important;
+  text-shadow: 0 0 2px #39ff14 !important;
   transition: all 0.3s ease-in-out !important;
   text-align: center !important;
 }
@@ -3610,7 +3610,7 @@ button:hover, .btn:hover, .menu-button:hover {
   font-size: 0.95rem !important;
   background-color: transparent !important;
   color: #ffffff !important;
-  box-shadow: 0 0 12px #1affd5 !important;
+  box-shadow: 0 0 8px #1affd5 !important;
   border-radius: 10px !important;
   overflow: hidden !important;
 }
@@ -3633,7 +3633,7 @@ button:hover, .btn:hover, .menu-button:hover {
 .wallet-table .cell.strong {
   color: #d100ff !important;               /* viola neon */
   font-weight: bold !important;
-  text-shadow: 0 0 3px #ff00ff, 0 0 6px #ffffff !important;
+  text-shadow: 0 0 2px #ff00ff, 0 0 6px #ffffff !important;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -3649,8 +3649,8 @@ button:hover, .btn:hover, .menu-button:hover {
   /* Contorno/bordo giallo con glow */
   text-shadow: 
     0 0 2px #ffe600,   /* bordo interno giallo */
-    0 0 5px #ffe600,   /* glow esterno giallo */
-    0 0 8px #00f0ff;   /* alone neon azzurro */
+    0 0 3px #ffe600,   /* glow esterno giallo */
+    0 0 4px #00f0ff;   /* alone neon azzurro */
 
   transition: all 0.3s ease-in-out !important;
   box-shadow: 
@@ -3686,7 +3686,7 @@ button:hover, .btn:hover, .menu-button:hover {
   font-size: 0.9rem !important;
   color: black !important;
   font-weight: bold !important;
-  text-shadow: 0 0 5px #f39c12, 0 0 8px #ffe600 !important;
+  text-shadow: 0 0 2px #f39c12, 0 0 8px #ffe600 !important;
   background: linear-gradient(135deg, #1f51ff, #00f0ff, #39ff14) !important;
   background-size: 400% 400% !important;
   border: none !important;

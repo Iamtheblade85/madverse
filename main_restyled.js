@@ -545,10 +545,6 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSym
 
 window.openEditDailyReward = openEditDailyReward;
 function openDepositToPool(poolId, tokenSymbol) {
-  const modal = document.getElementById('modal');
-  const modalContent = modal.querySelector('.modal-content');
-  const body = document.getElementById('modal-body');
-
   const tokenBalance = window.walletBalances?.find(t => t.symbol === tokenSymbol);
   const balance = tokenBalance?.amount || 0;
 
@@ -558,36 +554,9 @@ function openDepositToPool(poolId, tokenSymbol) {
     balance
   });
 
-  // Inserisci il bottone close se non c'è già
-  if (!modalContent.querySelector('.modal-close')) {
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'modal-close';
-    closeBtn.innerHTML = '×';
-    closeBtn.style.cssText = `
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      font-size: 2rem;
-      color: var(--cyber-gold, #ffd700);
-      background: none;
-      border: none;
-      cursor: pointer;
-      z-index: 9999;
-      text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
-    `;
-    closeBtn.onclick = () => {
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-    };
-    modalContent.prepend(closeBtn);
-  }
-
-  // Inserisci contenuto dentro modal-body
-  body.innerHTML = `
-    <h3 class="modal-title">Deposit More ${tokenSymbol} into Pool</h3>
+  const body = `
     <p class="wallet-info">Available in Wallet: <strong>${balance}</strong></p>
-    
+
     <label class="form-label">Amount</label>
     <input 
       type="number" 
@@ -595,7 +564,7 @@ function openDepositToPool(poolId, tokenSymbol) {
       class="form-input" 
       placeholder="e.g. 100"
     >
-    
+
     <button 
       id="submit-deposit" 
       class="btn btn-primary full-width"
@@ -604,130 +573,99 @@ function openDepositToPool(poolId, tokenSymbol) {
     </button>
   `;
 
-  modal.classList.remove('hidden');
-  modal.classList.add('active');
-  document.body.classList.add('modal-open');
+  showModal({
+    title: `<h3 class="modal-title">Deposit More ${tokenSymbol} into Pool</h3>`,
+    body
+  });
 
-  document.getElementById('submit-deposit').onclick = async () => {
-    const amount = parseFloat(document.getElementById('deposit-amount').value);
+  setTimeout(() => {
+    document.getElementById('submit-deposit').onclick = async () => {
+      const amount = parseFloat(document.getElementById('deposit-amount').value);
 
-    if (!amount || amount <= 0 || amount > balance) {
-      showToast("Invalid amount", "error");
-      return;
-    }
+      if (!amount || amount <= 0 || amount > balance) {
+        showToast("Invalid amount", "error");
+        return;
+      }
 
-    try {
-      const { userId, usx_token, wax_account } = window.userData;
+      try {
+        const { userId, usx_token, wax_account } = window.userData;
 
-      const res = await fetch(`${BASE_URL}/add_token_to_staking_pool?user_id=${userId}&usx_token=${usx_token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pool_id: poolId,
-          token_symbol: tokenSymbol,
-          amount,
-          wax_account
-        })
-      });
+        const res = await fetch(`${BASE_URL}/add_token_to_staking_pool?user_id=${userId}&usx_token=${usx_token}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pool_id: poolId,
+            token_symbol: tokenSymbol,
+            amount,
+            wax_account
+          })
+        });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Deposit failed");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Deposit failed");
 
-      showToast("Tokens deposited successfully", "success");
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-      loadWallet();
-      fetchAndRenderTokenPools();
-    } catch (err) {
-      console.error("[❌] Error depositing tokens:", err);
-      showToast(err.message, "error");
-    }
-  };
+        showToast("Tokens deposited successfully", "success");
+        closeModal();
+        loadWallet();
+        fetchAndRenderTokenPools();
+      } catch (err) {
+        console.error("[❌] Error depositing tokens:", err);
+        showToast(err.message, "error");
+      }
+    };
+  }, 0); // per attendere il render completo del DOM
 }
-
 window.openDepositToPool = openDepositToPool;
 function openPoolStatusModal(poolId, currentStatus) {
-  const modal = document.getElementById('modal');
-  const modalContent = modal.querySelector('.modal-content');
-  const body = document.getElementById('modal-body');
-
   console.log("[⚙️] Aprendo modale status pool:", { poolId, currentStatus });
 
-  // Inserisci il bottone close una sola volta
-  if (!modalContent.querySelector('.modal-close')) {
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'modal-close';
-    closeBtn.innerHTML = 'X';
-    closeBtn.style.cssText = `
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      font-size: 2rem;
-      color: var(--cyber-gold, #ffd700);
-      background: none;
-      border: none;
-      cursor: pointer;
-      z-index: 9999;
-      text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
-    `;
-    closeBtn.onclick = () => {
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-    };
-    modalContent.prepend(closeBtn);
-  }
-
-  // Contenuto dinamico della modale
-  body.innerHTML = `
-    <h3 class="modal-title">Change Pool Status</h3>
+  const body = `
     <label class="form-label">Select new status</label>
     <select id="pool-status-select" class="form-select">
       <option value="open" ${currentStatus === 'open' ? 'selected' : ''}>Open</option>
       <option value="closed" ${currentStatus === 'closed' ? 'selected' : ''}>Closed</option>
       <option value="maintenance" ${currentStatus === 'maintenance' ? 'selected' : ''}>Maintenance</option>
     </select>
-    <button id="submit-pool-status" class="btn btn-warning full-width">
+    <button id="submit-pool-status" class="btn btn-warning full-width" style="margin-top: 1rem;">
       Update Status
     </button>
   `;
 
-  modal.classList.remove('hidden');
-  modal.classList.add('active');
-  document.body.classList.add('modal-open');
+  showModal({
+    title: `<h3 class="modal-title">Change Pool Status</h3>`,
+    body
+  });
 
-  // Listener pulsante submit
-  document.getElementById('submit-pool-status').onclick = async () => {
-    const newStatus = document.getElementById('pool-status-select').value;
-    const { userId, usx_token } = window.userData;
+  setTimeout(() => {
+    document.getElementById('submit-pool-status').onclick = async () => {
+      const newStatus = document.getElementById('pool-status-select').value;
+      const { userId, usx_token } = window.userData;
 
-    console.log("[🔁] Aggiornamento status pool:", {
-      poolId,
-      from: currentStatus,
-      to: newStatus
-    });
-
-    try {
-      const res = await fetch(`${BASE_URL}/update_token_pool_status?user_id=${userId}&usx_token=${usx_token}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pool_id: poolId, new_status: newStatus })
+      console.log("[🔁] Aggiornamento status pool:", {
+        poolId,
+        from: currentStatus,
+        to: newStatus
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update status");
+      try {
+        const res = await fetch(`${BASE_URL}/update_token_pool_status?user_id=${userId}&usx_token=${usx_token}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pool_id: poolId, new_status: newStatus })
+        });
 
-      showToast("Pool status updated", "success");
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-      fetchAndRenderTokenPools();
-    } catch (err) {
-      console.error("[❌] Errore durante l'aggiornamento dello stato della pool:", err);
-      showToast("Error: " + err.message, "error");
-    }
-  };
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to update status");
+
+        showToast("Pool status updated", "success");
+        closeModal();
+        fetchAndRenderTokenPools();
+      } catch (err) {
+        console.error("[❌] Errore durante l'aggiornamento dello stato della pool:", err);
+        showToast("Error: " + err.message, "error");
+      }
+    };
+  }, 0);
 }
 window.openPoolStatusModal = openPoolStatusModal;
 
@@ -904,40 +842,9 @@ function renderNewFarmForm() {
 
 // Azioni su Template
 function openAddTemplateForm(farmId) {
-  const modal = document.getElementById('modal');
-  const modalContent = modal.querySelector('.modal-content');
-  const body = document.getElementById('modal-body');
   const { userId, usx_token } = window.userData;
 
-  // Aggiungi il pulsante di chiusura solo se non esiste
-  if (!modalContent.querySelector('.modal-close')) {
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'modal-close';
-    closeBtn.innerHTML = '×';
-    closeBtn.style.cssText = `
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      font-size: 2rem;
-      color: var(--cyber-gold, #ffd700);
-      background: none;
-      border: none;
-      cursor: pointer;
-      z-index: 9999;
-      text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
-    `;
-    closeBtn.onclick = () => {
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-    };
-    modalContent.prepend(closeBtn);
-  }
-
-  // Inserisci il contenuto dinamico
-  body.innerHTML = `
-    <h3 class="modal-title">➕ Add Template to Farm</h3>
-
+  const body = `
     <label class="form-label">Template ID</label>
     <input id="template-id" type="number" class="form-input" placeholder="e.g. 123456">
 
@@ -951,264 +858,199 @@ function openAddTemplateForm(farmId) {
 
     <button id="add-reward-btn" class="link-add-reward">➕ Add another reward</button>
 
-    <button id="submit-add-template" class="btn btn-warning full-width">
+    <button id="submit-add-template" class="btn btn-warning full-width" style="margin-top: 1rem;">
       Add Template
     </button>
   `;
 
-  // Posizionamento dinamico centrato in viewport attuale
-  const scrollY = window.scrollY || window.pageYOffset;
-  const viewportHeight = window.innerHeight;
-  modal.style.top = `${scrollY + viewportHeight / 2}px`;
-  modal.style.left = '50%';
-  modal.style.transform = 'translate(-50%, -50%)';
-  modal.style.display = 'flex';
-  modal.style.zIndex = '9999';
-  modal.classList.remove('hidden');
-  modal.classList.add('active');
-  document.body.classList.add('modal-active');
+  showModal({
+    title: `<h3 class="modal-title">➕ Add Template to Farm</h3>`,
+    body
+  });
 
-  // Add new reward fields
-  document.getElementById('add-reward-btn').onclick = () => {
-    const container = document.getElementById('rewards-container');
-    const div = document.createElement('div');
-    div.className = 'reward-entry';
-    div.innerHTML = `
-      <input type="text" class="form-input half-width token-symbol" placeholder="Token Symbol (e.g. CHIPS)">
-      <input type="number" class="form-input half-width reward-amount" placeholder="Amount per day">
-    `;
-    container.appendChild(div);
-  };
+  setTimeout(() => {
+    // Aggiunta nuova riga di reward
+    document.getElementById('add-reward-btn').onclick = () => {
+      const container = document.getElementById('rewards-container');
+      const div = document.createElement('div');
+      div.className = 'reward-entry';
+      div.innerHTML = `
+        <input type="text" class="form-input half-width token-symbol" placeholder="Token Symbol (e.g. CHIPS)">
+        <input type="number" class="form-input half-width reward-amount" placeholder="Amount per day">
+      `;
+      container.appendChild(div);
+    };
 
-  // Submit handler
-  document.getElementById('submit-add-template').onclick = async () => {
-    const templateId = parseInt(document.getElementById('template-id').value.trim());
-    if (!templateId) {
-      showToast("Template ID is required", "error");
-      return;
-    }
-
-    const rewardElements = document.querySelectorAll('.reward-entry');
-    const rewards = [];
-
-    for (const el of rewardElements) {
-      const symbol = el.querySelector('.token-symbol').value.trim().toUpperCase();
-      const amount = parseFloat(el.querySelector('.reward-amount').value.trim());
-
-      if (!symbol || isNaN(amount) || amount <= 0) {
-        showToast("Each reward must have a valid symbol and positive amount", "error");
+    // Submit handler
+    document.getElementById('submit-add-template').onclick = async () => {
+      const templateId = parseInt(document.getElementById('template-id').value.trim());
+      if (!templateId) {
+        showToast("Template ID is required", "error");
         return;
       }
 
-      rewards.push({ token_symbol: symbol, daily_reward_amount: amount });
-    }
+      const rewardElements = document.querySelectorAll('.reward-entry');
+      const rewards = [];
 
-    if (rewards.length === 0) {
-      showToast("At least one reward is required", "error");
-      return;
-    }
+      for (const el of rewardElements) {
+        const symbol = el.querySelector('.token-symbol').value.trim().toUpperCase();
+        const amount = parseFloat(el.querySelector('.reward-amount').value.trim());
 
-    try {
-      const res = await fetch(`${BASE_URL}/add_farm_template?user_id=${userId}&usx_token=${usx_token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ farm_id: farmId, template_id: templateId, rewards })
-      });
+        if (!symbol || isNaN(amount) || amount <= 0) {
+          showToast("Each reward must have a valid symbol and positive amount", "error");
+          return;
+        }
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Unknown error");
+        rewards.push({ token_symbol: symbol, daily_reward_amount: amount });
+      }
 
-      showToast(data.message || "Template added successfully", "success");
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-      await fetchAndRenderUserFarms();
-    } catch (err) {
-      console.error("[❌] Error adding template:", err);
-      showToast(err.message, "error");
-    }
-  };
+      if (rewards.length === 0) {
+        showToast("At least one reward is required", "error");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${BASE_URL}/add_farm_template?user_id=${userId}&usx_token=${usx_token}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ farm_id: farmId, template_id: templateId, rewards })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Unknown error");
+
+        showToast(data.message || "Template added successfully", "success");
+        closeModal();
+        await fetchAndRenderUserFarms();
+      } catch (err) {
+        console.error("[❌] Error adding template:", err);
+        showToast(err.message, "error");
+      }
+    };
+  }, 0);
 }
 
 // ✅ Deposit Rewards
 function openDepositForm(farmId) {
-  const { userId, usx_token, wax_account } = window.userData;
-  const modal = document.getElementById('modal');
-  const modalContent = modal.querySelector('.modal-content');
-  const body = document.getElementById('modal-body');
-
-  // Inserisci bottone di chiusura solo se non esiste già
-  if (!modalContent.querySelector('.modal-close')) {
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'modal-close';
-    closeBtn.innerHTML = '×';
-    closeBtn.style.cssText = `
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      font-size: 2rem;
-      color: var(--cyber-gold, #ffd700);
-      background: none;
-      border: none;
-      cursor: pointer;
-      z-index: 9999;
-      text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
-    `;
-    closeBtn.onclick = () => {
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-    };
-    modalContent.prepend(closeBtn);
-  }
-
-  body.innerHTML = `
-    <h3 class="modal-title">Deposit Rewards to Farm</h3>
-    <div id="rewards-deposit-container"></div>
-    <button id="add-more-reward" class="link-add-reward">➕ Add another token</button>
-    <button id="submit-deposit" class="btn btn-success full-width">Deposit All</button>
-  `;
-
-  modal.classList.remove('hidden');
-  modal.classList.add('active');
-  document.body.classList.add('modal-open');
-
-  const container = document.getElementById('rewards-deposit-container');
-  const addBtn = document.getElementById('add-more-reward');
+  const { userId, usx_token } = window.userData;
   const wallet = window.walletBalances || [];
 
-  function renderRewardRow(token = '') {
-    const wallet = window.walletBalances || [];
-    const div = document.createElement('div');
-    div.className = 'reward-row';
-    div.innerHTML = `
-      <label class="form-label">Choose Token</label>
-      <select class="form-input token-symbol">
-        <option disabled selected value="">-- Select a token --</option>
-        ${wallet.map(t => `<option value="${t.symbol}">${t.symbol}</option>`).join('')}
-      </select>
+  const body = `
+    <div id="rewards-deposit-container"></div>
+    <button id="add-more-reward" class="link-add-reward">➕ Add another token</button>
+    <button id="submit-deposit" class="btn btn-success full-width" style="margin-top: 1rem;">
+      Deposit All
+    </button>
+  `;
 
-      <div class="available-balance hidden"></div>
+  showModal({
+    title: `<h3 class="modal-title">Deposit Rewards to Farm</h3>`,
+    body
+  });
 
-      <label class="form-label">Select %</label>
-      <input type="range" class="range-input percent-range" min="0" max="100" value="0" disabled>
+  setTimeout(() => {
+    const container = document.getElementById('rewards-deposit-container');
+    const addBtn = document.getElementById('add-more-reward');
 
-      <label class="form-label">Amount</label>
-      <input type="number" class="form-input amount" placeholder="Amount" disabled>
-    `;
+    function renderRewardRow() {
+      const div = document.createElement('div');
+      div.className = 'reward-row';
+      div.innerHTML = `
+        <label class="form-label">Choose Token</label>
+        <select class="form-input token-symbol">
+          <option disabled selected value="">-- Select a token --</option>
+          ${wallet.map(t => `<option value="${t.symbol}">${t.symbol}</option>`).join('')}
+        </select>
 
-    const select = div.querySelector('.token-symbol');
-    const range = div.querySelector('.percent-range');
-    const input = div.querySelector('.amount');
-    const balanceText = div.querySelector('.available-balance');
+        <div class="available-balance hidden"></div>
 
-    let currentBalance = 0;
+        <label class="form-label">Select %</label>
+        <input type="range" class="range-input percent-range" min="0" max="100" value="0" disabled>
 
-    select.onchange = () => {
-      const selectedToken = select.value;
-      currentBalance = parseFloat(wallet.find(t => t.symbol === selectedToken)?.amount || 0);
+        <label class="form-label">Amount</label>
+        <input type="number" class="form-input amount" placeholder="Amount" disabled>
+      `;
 
-      balanceText.innerHTML = `Available balance in your Wallet: <strong>${currentBalance.toFixed(4)} ${selectedToken}</strong>`;
-      balanceText.classList.remove('hidden');
+      const select = div.querySelector('.token-symbol');
+      const range = div.querySelector('.percent-range');
+      const input = div.querySelector('.amount');
+      const balanceText = div.querySelector('.available-balance');
 
-      range.disabled = false;
-      input.disabled = false;
-      input.value = '';
-      range.value = 0;
-    };
+      let currentBalance = 0;
 
-    range.oninput = () => {
-      const percent = parseFloat(range.value);
-      input.value = (currentBalance * percent / 100).toFixed(4);
-    };
+      select.onchange = () => {
+        const selectedToken = select.value;
+        currentBalance = parseFloat(wallet.find(t => t.symbol === selectedToken)?.amount || 0);
 
-    input.oninput = () => {
-      const amount = parseFloat(input.value);
-      if (!isNaN(amount)) {
-        range.value = Math.min(100, Math.round((amount / currentBalance) * 100));
-      }
-    };
+        balanceText.innerHTML = `Available balance in your Wallet: <strong>${currentBalance.toFixed(4)} ${selectedToken}</strong>`;
+        balanceText.classList.remove('hidden');
 
-    container.appendChild(div);
-  }
+        range.disabled = false;
+        input.disabled = false;
+        input.value = '';
+        range.value = 0;
+      };
 
-  renderRewardRow();
-  addBtn.onclick = () => renderRewardRow();
+      range.oninput = () => {
+        const percent = parseFloat(range.value);
+        input.value = (currentBalance * percent / 100).toFixed(4);
+      };
 
-  document.getElementById('submit-deposit').onclick = async () => {
-    const rows = document.querySelectorAll('.reward-row');
-    const rewards = [];
+      input.oninput = () => {
+        const amount = parseFloat(input.value);
+        if (!isNaN(amount)) {
+          range.value = Math.min(100, Math.round((amount / currentBalance) * 100));
+        }
+      };
 
-    rows.forEach(row => {
-      const selectEl = row.querySelector('.token-symbol');
-      const symbol = selectEl?.value?.trim();
-      const amount = parseFloat(row.querySelector('.amount').value);
-
-      if (!symbol || isNaN(amount) || amount <= 0) return;
-
-      rewards.push({ token_symbol: symbol.toUpperCase(), amount });
-    });
-
-    if (rewards.length === 0) {
-      showToast("You must enter at least one valid reward", "error");
-      return;
+      container.appendChild(div);
     }
 
-    try {
-      const res = await fetch(`${BASE_URL}/add_token_to_farm_v2?user_id=${userId}&usx_token=${usx_token}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ farm_id: farmId, rewards })
+    // Prima riga
+    renderRewardRow();
+    addBtn.onclick = () => renderRewardRow();
+
+    document.getElementById('submit-deposit').onclick = async () => {
+      const rows = document.querySelectorAll('.reward-row');
+      const rewards = [];
+
+      rows.forEach(row => {
+        const selectEl = row.querySelector('.token-symbol');
+        const symbol = selectEl?.value?.trim();
+        const amount = parseFloat(row.querySelector('.amount').value);
+
+        if (!symbol || isNaN(amount) || amount <= 0) return;
+
+        rewards.push({ token_symbol: symbol.toUpperCase(), amount });
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Unknown error");
+      if (rewards.length === 0) {
+        showToast("You must enter at least one valid reward", "error");
+        return;
+      }
 
-      showToast(data.message || "✅ Rewards deposited successfully", "success");
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-      fetchAndRenderUserFarms();
-    } catch (err) {
-      console.error("[❌] Error depositing rewards:", err);
-      showToast(err.message, "error");
-    }
-  };
-}
+      try {
+        const res = await fetch(`${BASE_URL}/add_token_to_farm_v2?user_id=${userId}&usx_token=${usx_token}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ farm_id: farmId, rewards })
+        });
 
-function confirmFarmClosure(farmId) {
-  const modal = document.getElementById('modal');
-  const modalContent = modal.querySelector('.modal-content');
-  const body = document.getElementById('modal-body');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Unknown error");
 
-  // Aggiungi il bottone × solo se non già presente
-  if (!modalContent.querySelector('.modal-close')) {
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'modal-close';
-    closeBtn.innerHTML = '×';
-    closeBtn.style.cssText = `
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      font-size: 2rem;
-      color: var(--cyber-gold, #ffd700);
-      background: none;
-      border: none;
-      cursor: pointer;
-      z-index: 9999;
-      text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
-    `;
-    closeBtn.onclick = () => {
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
+        showToast(data.message || "✅ Rewards deposited successfully", "success");
+        closeModal();
+        fetchAndRenderUserFarms();
+      } catch (err) {
+        console.error("[❌] Error depositing rewards:", err);
+        showToast(err.message, "error");
+      }
     };
-    modalContent.prepend(closeBtn);
-  }
-
-  // Inserisci il contenuto principale della modale
-  body.innerHTML = `
-    <h3 class="modal-title text-danger">Close Farm</h3>
+  }, 0);
+}
+function confirmFarmClosure(farmId) {
+  const body = `
     <p class="modal-text">Are you sure you want to <strong>close</strong> this farm? This will stop all rewards.</p>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="cancel-close-farm">Cancel</button>
@@ -1216,81 +1058,56 @@ function confirmFarmClosure(farmId) {
     </div>
   `;
 
-  // Apri la modale
-  modal.classList.remove('hidden');
-  modal.classList.add('active');
-  document.body.classList.add('modal-open');
+  showModal({
+    title: `<h3 class="modal-title text-danger">Close Farm</h3>`,
+    body
+  });
 
-  // Handlers pulsanti
-  document.getElementById('cancel-close-farm').onclick = () => {
-    modal.classList.add('hidden');
-    modal.classList.remove('active');
-    document.body.classList.remove('modal-open');
-  };
+  setTimeout(() => {
+    document.getElementById('cancel-close-farm').onclick = () => {
+      closeModal();
+    };
 
-  document.getElementById('confirm-close-farm').onclick = () => {
-    changeFarmStatus(farmId, 'closed');
-  };
+    document.getElementById('confirm-close-farm').onclick = () => {
+      closeModal();
+      changeFarmStatus(farmId, 'closed');
+    };
+  }, 0);
 }
 
 function changeFarmStatus(farmId, newStatus = null) {
-  const modal = document.getElementById('modal');
-  const modalContent = modal.querySelector('.modal-content');
-  const body = document.getElementById('modal-body');
   const { userId, usx_token } = window.userData;
 
+  // Se lo status NON è passato, apri la modale di selezione
   if (!newStatus) {
-    // Aggiungi bottone di chiusura se non esiste
-    if (!modalContent.querySelector('.modal-close')) {
-      const closeBtn = document.createElement('button');
-      closeBtn.className = 'modal-close';
-      closeBtn.innerHTML = '×';
-      closeBtn.style.cssText = `
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        font-size: 2rem;
-        color: var(--cyber-gold, #ffd700);
-        background: none;
-        border: none;
-        cursor: pointer;
-        z-index: 9999;
-        text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
-      `;
-      closeBtn.onclick = () => {
-        modal.classList.add('hidden');
-        modal.classList.remove('active');
-        document.body.classList.remove('modal-open');
-      };
-      modalContent.prepend(closeBtn);
-    }
-
-    // Inserisci contenuto dinamico della modale
-    body.innerHTML = `
-      <h3 class="modal-title">Change Farm Status</h3>
+    const body = `
       <select id="status-select" class="form-select">
         <option value="open">Open</option>
         <option value="closed">Closed</option>
         <option value="setting">Setting</option>
       </select>
-      <button class="btn btn-warning full-width" id="status-confirm">Update</button>
+      <button class="btn btn-warning full-width" id="status-confirm" style="margin-top: 1rem;">
+        Update
+      </button>
     `;
 
-    // Mostra la modale
-    modal.classList.remove('hidden');
-    modal.classList.add('active');
-    document.body.classList.add('modal-open');
+    showModal({
+      title: `<h3 class="modal-title">Change Farm Status</h3>`,
+      body
+    });
 
-    // Azione del bottone di conferma
-    document.getElementById('status-confirm').onclick = () => {
-      const selected = document.getElementById('status-select').value;
-      changeFarmStatus(farmId, selected);
-    };
+    setTimeout(() => {
+      document.getElementById('status-confirm').onclick = () => {
+        const selected = document.getElementById('status-select').value;
+        closeModal();
+        changeFarmStatus(farmId, selected); // ⬅️ Richiama se stesso con status selezionato
+      };
+    }, 0);
 
     return;
   }
 
-  // Chiamata fetch per aggiornare lo stato
+  // Se lo status è stato passato, esegui la chiamata fetch
   fetch(`${BASE_URL}/update_farm_status?user_id=${userId}&usx_token=${usx_token}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1300,9 +1117,7 @@ function changeFarmStatus(farmId, newStatus = null) {
     .then(data => {
       if (data.error) throw new Error(data.error);
       showToast("✅ Farm status updated", "success");
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
+      closeModal();
       fetchAndRenderUserFarms();
     })
     .catch(err => {
@@ -1312,9 +1127,6 @@ function changeFarmStatus(farmId, newStatus = null) {
 
 async function openEditRewards(templateId) {
   const { userId, usx_token } = window.userData;
-  const modal = document.getElementById('modal');
-  const modalContent = modal.querySelector('.modal-content');
-  const body = document.getElementById('modal-body');
 
   try {
     const res = await fetch(`${BASE_URL}/get_farms?user_id=${userId}&usx_token=${usx_token}`);
@@ -1333,34 +1145,7 @@ async function openEditRewards(templateId) {
       return;
     }
 
-    // Inserisci bottone di chiusura se non esiste
-    if (!modalContent.querySelector('.modal-close')) {
-      const closeBtn = document.createElement('button');
-      closeBtn.className = 'modal-close';
-      closeBtn.innerHTML = '×';
-      closeBtn.style.cssText = `
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        font-size: 2rem;
-        color: var(--cyber-gold, #ffd700);
-        background: none;
-        border: none;
-        cursor: pointer;
-        z-index: 9999;
-        text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
-      `;
-      closeBtn.onclick = () => {
-        modal.classList.add('hidden');
-        modal.classList.remove('active');
-        document.body.classList.remove('modal-open');
-      };
-      modalContent.prepend(closeBtn);
-    }
-
-    // Inserisci il contenuto dinamico
-    body.innerHTML = `
-      <h3 class="modal-title">✏️ Edit Rewards for Template ID ${templateId}</h3>
+    const body = `
       <div id="rewards-edit-container">
         ${(template.rewards || []).map(r => `
           <div class="reward-entry">
@@ -1370,59 +1155,60 @@ async function openEditRewards(templateId) {
         `).join('')}
       </div>
       <button id="add-reward-btn" class="link-add-reward">➕ Add another reward</button>
-      <button id="submit-edit-rewards" class="btn btn-warning full-width">Update Rewards</button>
+      <button id="submit-edit-rewards" class="btn btn-warning full-width" style="margin-top: 1rem;">Update Rewards</button>
     `;
 
-    // Apri la modale
-    modal.classList.remove('hidden');
-    modal.classList.add('active');
-    document.body.classList.add('modal-open');
+    showModal({
+      title: `<h3 class="modal-title">✏️ Edit Rewards for Template ID ${templateId}</h3>`,
+      body
+    });
 
-    // Aggiungi reward dinamico
-    document.getElementById('add-reward-btn').onclick = () => {
-      const container = document.getElementById('rewards-edit-container');
-      const div = document.createElement('div');
-      div.className = 'reward-entry';
-      div.innerHTML = `
-        <input type="text" class="form-input half-width token-symbol" placeholder="Token Symbol">
-        <input type="number" class="form-input half-width reward-amount" placeholder="Amount per day">
-      `;
-      container.appendChild(div);
-    };
+    setTimeout(() => {
+      // Aggiungi nuova riga reward
+      document.getElementById('add-reward-btn').onclick = () => {
+        const container = document.getElementById('rewards-edit-container');
+        const div = document.createElement('div');
+        div.className = 'reward-entry';
+        div.innerHTML = `
+          <input type="text" class="form-input half-width token-symbol" placeholder="Token Symbol">
+          <input type="number" class="form-input half-width reward-amount" placeholder="Amount per day">
+        `;
+        container.appendChild(div);
+      };
 
-    // Submit update
-    document.getElementById('submit-edit-rewards').onclick = async () => {
-      const rewards = [];
-      const entries = document.querySelectorAll('.reward-entry');
-      for (const entry of entries) {
-        const symbol = entry.querySelector('.token-symbol').value.trim();
-        const amount = parseFloat(entry.querySelector('.reward-amount').value.trim());
-        if (!symbol || isNaN(amount) || amount <= 0) {
-          showToast("Each reward must be valid", "error");
-          return;
+      // Submit dei rewards aggiornati
+      document.getElementById('submit-edit-rewards').onclick = async () => {
+        const rewards = [];
+        const entries = document.querySelectorAll('.reward-entry');
+
+        for (const entry of entries) {
+          const symbol = entry.querySelector('.token-symbol').value.trim();
+          const amount = parseFloat(entry.querySelector('.reward-amount').value.trim());
+          if (!symbol || isNaN(amount) || amount <= 0) {
+            showToast("Each reward must be valid", "error");
+            return;
+          }
+          rewards.push({ token_symbol: symbol, daily_reward_amount: amount });
         }
-        rewards.push({ token_symbol: symbol, daily_reward_amount: amount });
-      }
 
-      try {
-        const res = await fetch(`${BASE_URL}/update_template_rewards?user_id=${userId}&usx_token=${usx_token}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ template_id: templateId, rewards })
-        });
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.error || "Failed to update rewards");
+        try {
+          const res = await fetch(`${BASE_URL}/update_template_rewards?user_id=${userId}&usx_token=${usx_token}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ template_id: templateId, rewards })
+          });
+          const result = await res.json();
+          if (!res.ok) throw new Error(result.error || "Failed to update rewards");
 
-        showToast(result.message || "Rewards updated", "success");
-        modal.classList.add('hidden');
-        modal.classList.remove('active');
-        document.body.classList.remove('modal-open');
-        await fetchAndRenderUserFarms();
-      } catch (err) {
-        console.error(err);
-        showToast(err.message, "error");
-      }
-    };
+          showToast(result.message || "Rewards updated", "success");
+          closeModal();
+          await fetchAndRenderUserFarms();
+        } catch (err) {
+          console.error(err);
+          showToast(err.message, "error");
+        }
+      };
+    }, 0);
 
   } catch (error) {
     console.error("[❌] Failed to open edit modal:", error);
@@ -1430,7 +1216,6 @@ async function openEditRewards(templateId) {
   }
 }
 window.openEditRewards = openEditRewards;
-
 function removeTemplate(templateId) {
   showConfirmModal(`Are you sure you want to delete Template ${templateId} and all related rewards?`, async () => {
     const { userId, usx_token } = window.userData;
@@ -1453,88 +1238,55 @@ function removeTemplate(templateId) {
     }
   });
 } function openAddReward(templateId) {
-  const modal = document.getElementById('modal');
-  const modalContent = modal.querySelector('.modal-content');
-  const body = document.getElementById('modal-body');
-
-  // Inserisci il bottone di chiusura solo se non già presente
-  if (!modalContent.querySelector('.modal-close')) {
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'modal-close';
-    closeBtn.innerHTML = '×';
-    closeBtn.style.cssText = `
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      font-size: 2rem;
-      color: var(--cyber-gold, #ffd700);
-      background: none;
-      border: none;
-      cursor: pointer;
-      z-index: 9999;
-      text-shadow: 0 0 10px var(--cyber-gold, #ffd700);
-    `;
-    closeBtn.onclick = () => {
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-    };
-    modalContent.prepend(closeBtn);
-  }
-
-  // Inserisci contenuto dinamico nel body
-  body.innerHTML = `
-    <h3 class="modal-title">➕ Add Reward to Template ID ${templateId}</h3>
+  const body = `
     <div class="reward-entry">
       <input type="text" id="new-token-symbol" class="form-input half-width" placeholder="Token Symbol (e.g. CHIPS)">
       <input type="number" id="new-reward-amount" class="form-input half-width" placeholder="Amount per day">
     </div>
-    <button id="submit-new-reward" class="btn btn-success full-width">
+    <button id="submit-new-reward" class="btn btn-success full-width" style="margin-top: 1rem;">
       Add Reward
     </button>
   `;
 
-  // Mostra la modale
-  modal.classList.remove('hidden');
-  modal.classList.add('active');
-  document.body.classList.add('modal-open');
+  showModal({
+    title: `<h3 class="modal-title">➕ Add Reward to Template ID ${templateId}</h3>`,
+    body
+  });
 
-  // Submit handler
-  document.getElementById('submit-new-reward').onclick = async () => {
-    const symbol = document.getElementById('new-token-symbol').value.trim().toUpperCase();
-    const amount = parseFloat(document.getElementById('new-reward-amount').value.trim());
+  setTimeout(() => {
+    document.getElementById('submit-new-reward').onclick = async () => {
+      const symbol = document.getElementById('new-token-symbol').value.trim().toUpperCase();
+      const amount = parseFloat(document.getElementById('new-reward-amount').value.trim());
 
-    if (!symbol || isNaN(amount) || amount <= 0) {
-      showToast("Valid token symbol and amount are required", "error");
-      return;
-    }
+      if (!symbol || isNaN(amount) || amount <= 0) {
+        showToast("Valid token symbol and amount are required", "error");
+        return;
+      }
 
-    try {
-      const { userId, usx_token } = window.userData;
-      const res = await fetch(`${BASE_URL}/add_template_reward?user_id=${userId}&usx_token=${usx_token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          template_id: templateId,
-          reward: { token_symbol: symbol, daily_reward_amount: amount }
-        })
-      });
+      try {
+        const { userId, usx_token } = window.userData;
+        const res = await fetch(`${BASE_URL}/add_template_reward?user_id=${userId}&usx_token=${usx_token}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            template_id: templateId,
+            reward: { token_symbol: symbol, daily_reward_amount: amount }
+          })
+        });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to add reward");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to add reward");
 
-      showToast(data.message || "Reward added", "success");
-      modal.classList.add('hidden');
-      modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-      fetchAndRenderUserFarms();
-    } catch (err) {
-      console.error("[❌] Error adding reward:", err);
-      showToast(err.message, "error");
-    }
-  };
+        showToast(data.message || "Reward added", "success");
+        closeModal();
+        fetchAndRenderUserFarms();
+      } catch (err) {
+        console.error("[❌] Error adding reward:", err);
+        showToast(err.message, "error");
+      }
+    };
+  }, 0);
 }
-
 window.openAddReward = openAddReward; 
 window.openEditRewards = openEditRewards;
 // Funzione per caricare dinamicamente sezioni
@@ -3211,35 +2963,29 @@ if (closeBtn) {
   };
 
 } function showConfirmModal(message, onConfirm) {
-  const modal = document.getElementById('confirm-modal');
-  const msg = document.getElementById('confirm-message');
-  const cancelBtn = document.getElementById('confirm-cancel');
-  const yesBtn = document.getElementById('confirm-yes');
+  const body = `
+    <p class="modal-text">${message}</p>
+    <div class="modal-actions" style="margin-top: 1rem;">
+      <button class="btn btn-secondary" id="confirm-cancel">Cancel</button>
+      <button class="btn btn-danger" id="confirm-yes">Confirm</button>
+    </div>
+  `;
 
-  msg.textContent = message;
-  modal.classList.remove('hidden');
-  modal.classList.add('active');
-  document.body.classList.add('modal-open');
+  showModal({
+    title: `<h3 class="modal-title text-danger">Confirm Action</h3>`,
+    body
+  });
 
-  // ✅ Pulizia listener vecchi per evitare duplicazioni
-  const newCancel = cancelBtn.cloneNode(true);
-  const newYes = yesBtn.cloneNode(true);
+  setTimeout(() => {
+    document.getElementById('confirm-cancel').onclick = () => {
+      closeModal();
+    };
 
-  cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
-  yesBtn.parentNode.replaceChild(newYes, yesBtn);
-
-  newCancel.onclick = () => {
-    modal.classList.add('hidden');
-    modal.classList.remove('active');
-    document.body.classList.remove('modal-open');
-  };
-
-  newYes.onclick = () => {
-    modal.classList.add('hidden');
-    modal.classList.remove('active');
-    document.body.classList.remove('modal-open');
-    onConfirm();
-  };
+    document.getElementById('confirm-yes').onclick = () => {
+      closeModal();
+      onConfirm?.(); // Esegui solo se definito
+    };
+  }, 0);
 }
 async function executeAction(action, token, amount, tokenOut = null, contractOut = null) {
   // Verifica se userId e wax_account sono presenti in window.userData

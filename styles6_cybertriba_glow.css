@@ -3350,7 +3350,6 @@ body {
 
 /* Modal Styling (centrato, nascosto inizialmente, alto z-index) */
 .modal {
-  display: none;
   position: fixed;
   top: 50%;
   left: 50%;
@@ -3773,7 +3772,6 @@ button:hover, .btn:hover, .menu-button:hover {
   max-width: 90vw;
   max-height: 90vh;
   overflow-y: auto;
-  display: none;
   flex-direction: column;
   justify-content: center;
   align-items: center;

@@ -2144,6 +2144,37 @@ function addHoverEffectToRows() {
     });
   });
 }
+function findNFTCardByAssetId(assetId) {
+  const cards = document.querySelectorAll('.nft-card');
+  for (const card of cards) {
+    const idDiv = card.querySelector('.nft-id');
+    if (idDiv && idDiv.textContent.trim() === `#${assetId}`) {
+      return card;
+    }
+  }
+  return null;
+}
+function showNFTCardMessage(cardElement, message, isError = false) {
+  // Rimuovi messaggi esistenti (se presenti)
+  const existing = cardElement.querySelector('.nft-message');
+  if (existing) existing.remove();
+
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'nft-message';
+  msgDiv.style.marginTop = '0.5rem';
+  msgDiv.style.padding = '6px 10px';
+  msgDiv.style.borderRadius = '6px';
+  msgDiv.style.fontSize = '0.9rem';
+  msgDiv.style.color = isError ? 'white' : '#155724';
+  msgDiv.style.backgroundColor = isError ? '#dc3545' : '#d4edda';
+  msgDiv.style.border = isError ? '1px solid #b52a37' : '1px solid #c3e6cb';
+  msgDiv.textContent = message;
+
+  cardElement.appendChild(msgDiv);
+
+  // Rimuovi il messaggio dopo 4 secondi
+  setTimeout(() => msgDiv.remove(), 4000);
+}
 
 // Aggiungi effetto hover alle righe della tabella per migliorare l'interazione
 function addHoverEffectToRows() {
@@ -2172,9 +2203,11 @@ async function loadScheduleNFTGiveaway() {
   }
 } async function handleNFTStake(farmId, templateId, assetId, isStaked) {
   const { userId, usx_token, wax_account } = window.userData;
-  console.log("[📥] Parametri rilevati:", userId, usx_token, wax_account);
   const action = isStaked ? 'remove' : 'add';
   const endpoint = `${BASE_URL}/${isStaked ? 'nft_remove' : 'nft_add'}?user_id=${userId}&usx_token=${usx_token}`;
+
+  // Trova la card NFT prima della fetch
+  const cardElement = findNFTCardByAssetId(assetId);
 
   try {
     const res = await fetch(endpoint, {
@@ -2191,20 +2224,19 @@ async function loadScheduleNFTGiveaway() {
 
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Unknown error');
-    showToast(data.message || 'Success', 'success');
-    
-    // 🔁 Solo refresh della farm modificata
-    const updatedFarm = window.nftFarmsData.find(f => f.farm_id === farmId);
-    console.log("window.nftFarmsData Now:", window.nftFarmsData);
-    console.log("Farm ID:", farmId);
-    console.log("Updated NFTsFarms values:", updatedFarm);
-    if (updatedFarm) {
-      console.log("Starting the Farm Rendering...");
-      renderNFTFarms([updatedFarm]);
+
+    if (cardElement) {
+      showNFTCardMessage(cardElement, data.message || 'Success', false);
     }
+
+    // Ricarica tutte le farms
+    await loadNFTFarms();
+
   } catch (err) {
     console.error(err);
-    showToast("Error: " + err.message, "error");
+    if (cardElement) {
+      showNFTCardMessage(cardElement, "Errore: " + err.message, true);
+    }
   }
 } async function loadStakingPools() {
   const { userId, usx_token } = window.userData;

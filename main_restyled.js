@@ -1300,9 +1300,9 @@ function loadSection(section) {
         <h2 class="section-title text-center">C2E - Twitch</h2>
         <div class="c2e-menu">
           <button class="c2e-menu-btn" data-menu="log-reward-activity">Log Reward Activity</button>
-          <button class="c2e-menu-btn" data-menu="log-storms-giveaways">Log Storms & Giveaways</button>
-          <button class="c2e-menu-btn" data-menu="schedule-token-storm">Schedule Token-Storm</button>
-          <button class="c2e-menu-btn" data-menu="schedule-nft-giveaway">Schedule NFT-Giveaway</button>
+          <button class="c2e-menu-btn" data-menu="log-storms-giveaways">Twitch Storms</button>
+          <button class="c2e-menu-btn" data-menu="twitch-nfts-giveaways">Twitch NFTs Giveaways(soon!)</button>
+          <button class="c2e-menu-btn" data-menu="twitch-game">Twitch Game(soon!)</button>
         </div>
         <div id="c2e-content" class="c2e-content">Loading last activity...</div>
       </div>
@@ -1319,8 +1319,8 @@ function loadSection(section) {
         switch(menu) {
           case 'log-reward-activity': loadLogRewardActivity(); break;
           case 'log-storms-giveaways': loadLogStormsGiveaways(); break;
-          case 'schedule-token-storm': loadScheduledStorms(); break;
-          case 'schedule-nft-giveaway': loadScheduleNFTGiveaway(); break;
+          case 'twitch-nfts-giveaways': loadTwitchNftsGiveaways(); break;
+          case 'twitch-game': loadTwitchGame(); break;
         }
       });
     });

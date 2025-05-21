@@ -2452,13 +2452,26 @@ function openStakeModal(type, poolId, tokenSymbol) {
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || "Unknown error");
 
-        showModalMessage("Your Staking position has been updated", "success");
-        closeModal();
-        loadWallet();
-        loadStakingPools();
+        showModalMessage(
+          "✅ Your staking position has been updated successfully.<br>You can close this window now, or it will close automatically in 10 seconds.",
+          "success"
+        );
+        
+        setTimeout(() => {
+          closeModal();
+          loadWallet();
+          loadStakingPools();
+        }, 10000); // chiude dopo 10 secondi
       } catch (err) {
         console.error(err);
-        showModalMessage(err.message, "error");
+        showModalMessage(
+          `❌ ${err.message || 'An unexpected error occurred.'}<br>You can close this window now, or it will close automatically in 10 seconds.`,
+          "error"
+        );
+      
+        setTimeout(() => {
+          closeModal();
+        }, 10000);
       }
     };
   }, 0);

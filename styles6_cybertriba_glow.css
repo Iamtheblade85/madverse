@@ -821,6 +821,7 @@ body {
   font-size: 1.1rem;
   padding-top: 3rem !important;
   color: #00ffcc;
+  background-color: darkgreen;
   position: fixed;            /* ✅ fondamentale per top/left */
   top: 20%;                   /* ✅ 20% dall’alto */
   left: 50%;                  /* ✅ centrato orizzontalmente */  

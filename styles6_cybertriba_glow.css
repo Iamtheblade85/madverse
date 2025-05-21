@@ -2737,6 +2737,10 @@ body {
   color: #f39c12;
   text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
+  width: 100%;
+  max-width: 70%;
+  overflow-x: auto;
+  display: block; /* necessario per lo scroll se contenuto troppo largo */  
 }
 .reward-table:hover {
   filter: brightness(1.1);

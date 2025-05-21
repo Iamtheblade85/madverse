@@ -1617,8 +1617,6 @@ function sortRewardTable(key) {
   displayLogData(originalData); // aggiorna intestazioni
   applyRewardFiltersAndSort();  // aggiorna righe
 }
-
-
 async function loadLogRewardActivity() {
   const container = document.getElementById('c2e-content');
   container.innerHTML = 'Loading Log Reward Activity...';
@@ -1721,7 +1719,7 @@ function displayLogData(data) {
             <th>Amount${sortArrow('amount')}</th>
             <th>Channel${sortArrow('channel')}</th>
             <th>Sponsor${sortArrow('origin_channel')}</th>
-            <th>Timestamp${sortArrow('timestamp')}</th>
+            <th>When${sortArrow('timestamp')}</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -1860,6 +1858,8 @@ async function loadLogStormsGiveaways() {
                 <option value="7d">7d</option>
                 <option value="15d">15d</option>
                 <option value="30d">30d</option>
+                <option value="30d">90d</option>
+                <option value="30d">180d</option>
                 <option value="1y">1y</option>
               </select>
             </div>
@@ -1951,7 +1951,7 @@ function populateTimeframes() {
   const timeframeSelect = document.getElementById('timeframe');
   const timeframes = [
     "5m", "10m", "15m", "20m", "30m", "1h", "2h", "3h", "4h", "5h", "6h", "12h",
-    "1d", "2d", "3d", "4d", "5d", "6d", "7d", "15d", "30d", "1y"
+    "1d", "2d", "3d", "4d", "5d", "6d", "7d", "15d", "30d", "90d", "180d", "1y"
   ];
 
   timeframes.forEach(frame => {
@@ -2146,8 +2146,6 @@ function displayStormsData(data) {
   document.getElementById('filter-offeredby').addEventListener('change', applyStormsFiltersAndSort);
   document.getElementById('update-storms').addEventListener('click', loadScheduledStorms);
 }
-
-
 function addHoverEffectToRows() {
   const rows = document.querySelectorAll('.storm-table tbody tr');
   rows.forEach(row => {
@@ -2219,7 +2217,6 @@ function addHoverEffectToRows() {
     });
   });
 }
-
 
 // Load Schedule NFT-Giveaway
 async function loadScheduleNFTGiveaway() {
@@ -2362,13 +2359,7 @@ async function loadScheduleNFTGiveaway() {
   `;
 }
 function openStakeModal(type, poolId, tokenSymbol) {
-  const modal = document.getElementById('modal');
-  modal.classList.remove('hidden');
-modal.style.display = 'block';
-  const modalBody = document.getElementById('modal-body');
-  const wax_account = window.userData.wax_account;
-  const user_id = window.userData.userId;
-  const usx_token = window.userData.usx_token;
+  const { wax_account, userId, usx_token } = window.userData;
 
   let balance = 0;
   if (type === 'add') {
@@ -2383,9 +2374,7 @@ modal.style.display = 'block';
   const actionUrl = type === 'add' ? 'stake_add' : 'stake_remove';
   const availableLabel = type === 'add' ? 'Available in Wallet' : 'Staked in Farm';
 
-  modalBody.innerHTML = `
-    <button class="modal-close close-modal" style="position: absolute; top: 1rem; right: 1rem;">×</button>
-    <h3 class="modal-title">${title}</h3>
+  const body = `
     <p class="label">${availableLabel}: <strong>${balance.toFixed(4)}</strong> ${tokenSymbol}</p>
 
     <label class="label">Select %</label>
@@ -2394,87 +2383,97 @@ modal.style.display = 'block';
     <label class="label">Amount</label>
     <input id="stake-amount" type="number" step="0.0001" class="input-field" value="0">
 
-    <div id="stake-summary" class="text-muted section-space"></div>
+    <div id="stake-summary" class="text-muted section-space" style="margin-top: 0.5rem;"></div>
 
-    <button class="btn btn-confirm" id="stake-submit">Go!</button>
+    <button class="btn btn-confirm full-width" id="stake-submit" style="margin-top: 1rem;">
+      Go!
+    </button>
   `;
 
-modal.classList.remove('hidden');
-modal.style.display = 'block';
-
-const closeBtn = modal.querySelector(".close-modal");
-if (closeBtn) {
-  closeBtn.onclick = () => {
-    modal.classList.add("hidden");
-  };
-}
-
-  const range = document.getElementById('stake-range');
-  const input = document.getElementById('stake-amount');
-  const summary = document.getElementById('stake-summary');
-  const submit = document.getElementById('stake-submit');
-
-  function updateSummary(val) {
-    let fee = 0;
-    let net = val;
-    if (type === 'remove') {
-      fee = val * 0.0315;
-      net = val - fee;
-    }
-
-    summary.innerHTML = type === 'add'
-      ? `You will add <strong>${val.toFixed(4)}</strong> ${tokenSymbol}`
-      : `Requested: <strong>${val.toFixed(4)}</strong> ${tokenSymbol}<br>Fee: ~<strong>${fee.toFixed(4)}</strong><br>Net Received: <strong>${net.toFixed(4)}</strong>`;
-  }
-
-  range.addEventListener('input', () => {
-    const percent = parseFloat(range.value);
-    const amount = parseFloat((balance * percent / 100).toFixed(4));
-    input.value = amount;
-    updateSummary(amount);
+  showModal({
+    title: `<h3 class="modal-title">${title}</h3>`,
+    body
   });
 
-  input.addEventListener('input', () => {
-    const val = parseFloat(input.value) || 0;
-    range.value = Math.min(100, Math.round((val / balance) * 100));
-    updateSummary(val);
-  });
+  setTimeout(() => {
+    const range = document.getElementById('stake-range');
+    const input = document.getElementById('stake-amount');
+    const summary = document.getElementById('stake-summary');
+    const submit = document.getElementById('stake-submit');
 
-  submit.onclick = async () => {
-    const amount = parseFloat(input.value);
-    if (!amount || amount <= 0 || amount > balance) {
-      alert("Invalid amount.");
-      return;
+    function updateSummary(val) {
+      let fee = 0;
+      let net = val;
+      if (type === 'remove') {
+        fee = val * 0.0315;
+        net = val - fee;
+      }
+
+      summary.innerHTML = type === 'add'
+        ? `You will add <strong>${val.toFixed(4)}</strong> ${tokenSymbol}`
+        : `Requested: <strong>${val.toFixed(4)}</strong> ${tokenSymbol}<br>Fee: ~<strong>${fee.toFixed(4)}</strong><br>Net Received: <strong>${net.toFixed(4)}</strong>`;
     }
 
-    const body = {
-      user_id,
-      pool_id: poolId,
-      token_symbol: tokenSymbol,
-      wax_account,
-      amount
+    range.addEventListener('input', () => {
+      const percent = parseFloat(range.value);
+      const amount = parseFloat((balance * percent / 100).toFixed(4));
+      input.value = amount;
+      updateSummary(amount);
+    });
+
+    input.addEventListener('input', () => {
+      const val = parseFloat(input.value) || 0;
+      range.value = Math.min(100, Math.round((val / balance) * 100));
+      updateSummary(val);
+    });
+
+    submit.onclick = async () => {
+      const amount = parseFloat(input.value);
+      if (!amount || amount <= 0 || amount > balance) {
+        showModalMessage("Invalid input", "error");
+        return;
+      }
+
+      const payload = {
+        user_id: userId,
+        pool_id: poolId,
+        token_symbol: tokenSymbol,
+        wax_account,
+        amount
+      };
+
+      try {
+        const res = await fetch(`${BASE_URL}/${actionUrl}?user_id=${userId}&usx_token=${usx_token}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Unknown error");
+
+        showModalMessage("Your Staking position has been updated", "success");
+        closeModal();
+        loadWallet();
+        loadStakingPools();
+      } catch (err) {
+        console.error(err);
+        showModalMessage(err.message, "error");
+      }
     };
-
-    try {
-      const res = await fetch(`${BASE_URL}/${actionUrl}?user_id=${user_id}&usx_token=${usx_token}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Unknown error");
-
-      showToast(json.message || "Success", "success");
-      modal.classList.add('hidden');
-      loadWallet();
-      loadStakingPools();
-    } catch (err) {
-      console.error(err);
-      showToast("Operation failed: " + err.message, "error");
-    }
-  };
+  }, 0);
 }
+function showModalMessage(message, type = 'info') {
+  const messageBox = document.querySelector('#universal-modal .modal-message');
+  if (!messageBox) return;
+
+  messageBox.innerHTML = `
+    <div class="modal-alert ${type}">
+      ${message}
+    </div>
+  `;
+}
+
  // Caricamento Wallet reale
 async function loadWallet() {
   try {
@@ -2883,24 +2882,10 @@ async function bulkSendSelected() {
     };
   }, 0);
 } async function openModal(action, token) {
-  const modal = document.getElementById('modal');
-  
-  // Rimuove classe hidden e imposta forzatamente la visibilità
-  modal.classList.remove('hidden');
-  modal.classList.add('active');
-  // Forza visibilità e z-index a livello inline
-  modal.style.display = 'flex';
-  modal.style.zIndex = '9999';
-  document.body.classList.add('modal-open');
-  const modalBody = document.getElementById('modal-body');
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
-
   const tokenRow = Array.from(document.querySelectorAll('tr')).find(row => row.innerText.includes(token));
   const balanceCell = tokenRow ? tokenRow.querySelectorAll('td')[1] : null;
   const balance = balanceCell ? parseFloat(balanceCell.innerText) : 0;
-
-  modalBody.innerHTML = "";
-
   let contractIn = "";
   if (action === "swap") {
     const match = availableTokens.find(t => t.split("-")[0].toLowerCase() === token.toLowerCase());
@@ -2908,8 +2893,8 @@ async function bulkSendSelected() {
   }
 
   if (action === "swap") {
-    modalBody.innerHTML = `
-      <button id="close-modal" class="modal-close-btn">&times;</button>
+    const title = action === 'swap' ? `Swap ${token}` : `${actionTitle} ${token}`;
+    const body = `
       <h3 class="modal-title">Swap ${token}</h3>
       <div class="text-muted">Available: <strong>${balance}</strong> ${token}</div>
       <form id="action-form" class="form-wrapper">
@@ -2936,20 +2921,12 @@ async function bulkSendSelected() {
         <button type="button" id="preview-button" class="btn btn-warning">Preview Swap</button>
         <button type="submit" id="submit-button" class="btn btn-success" disabled>Confirm Swap</button>
       </form>
-      <div id="modal-confirm-message"
-           style="display: none; margin-top: 1rem;
-                  color: #00f0ff;
-                  font-family: 'Papyrus', 'Courier New', cursive;
-                  font-weight: bold;
-                  text-align: center;
-                  text-shadow: 0 0 5px #ff00ff, 0 0 8px #00f0ff;">
-      </div>
-    `;
+    `; 
+    showModal({ title: `<h3 class="modal-title">${title}</h3>`, body });
     await loadAvailableTokens();
   } else {
-    modalBody.innerHTML = `
-      <button id="close-modal" class="modal-close-btn">&times;</button>
-      <h3 class="modal-title">${actionTitle} ${token}</h3>
+    const title = action === 'swap' ? `Swap ${token}` : `${actionTitle} ${token}`;
+    const body = `<h3 class="modal-title">${actionTitle} ${token}</h3>
       <div class="text-muted">Available: <strong>${balance}</strong> ${token}</div>
       ${action === 'transfer' ? `
         <div class="form-field">
@@ -2968,30 +2945,12 @@ async function bulkSendSelected() {
         </div>
         <button id="submit-button" type="submit" class="btn btn-primary">Confirm ${actionTitle}</button>
       </form>
-      <div id="modal-confirm-message"
-           style="display: none; margin-top: 1rem;
-                  color: #00f0ff;
-                  font-family: 'Papyrus', 'Courier New', cursive;
-                  font-weight: bold;
-                  text-align: center;
-                  text-shadow: 0 0 5px #ff00ff, 0 0 8px #00f0ff;">
-      </div>      
-    `;
+      `;
+      showModal({ title: `<h3 class="modal-title">${title}</h3>`, body });
   }
-
-const closeBtn = modal.querySelector('#close-modal');
-if (closeBtn) {
-  closeBtn.onclick = () => {
-    modal.classList.remove('active');
-    modal.classList.add('hidden');
-    modal.style.display = 'none';
-    document.body.classList.remove('modal-open');
-  };
-}
   const percentRange = document.getElementById('percent-range');
   const amountInput = document.getElementById('amount');
   const submitButton = document.getElementById('submit-button');
-
   // Handlers comuni
   const range = document.getElementById('percent-range');
   const input = document.getElementById('amount');
@@ -3076,10 +3035,7 @@ if (closeBtn) {
 
   document.getElementById('action-form').onsubmit = async (e) => {
     e.preventDefault();
-    const amount = amountInput.value;
-  
-    const confirmEl = document.getElementById('modal-confirm-message');
-  
+    const amount = amountInput.value; 
     try {
       if (action === "swap") {
         const outputSelection = tokenOutput.value;
@@ -3088,27 +3044,16 @@ if (closeBtn) {
       } else {
         await executeAction(action, token, amount);
       }
-  
-      if (confirmEl) {
-        confirmEl.textContent = `✅ ${actionTitle} completed successfully. Page will autoreloaded in 5 seconds`;
-        confirmEl.style.color = '#00f0ff';
-        confirmEl.style.display = 'block';
-      }
-  
+      showModalMessage(`✅ ${actionTitle} completed successfully. Page will autoreload in 5 seconds`, 'success'); 
       // Puoi ritardare la chiusura per far vedere il messaggio, se vuoi
       setTimeout(() => {
-        modal.classList.add('hidden');
+        closeModal();
         loadWallet();
       }, 5000);
   
     } catch (error) {
       console.error(error);
-  
-      if (confirmEl) {
-        confirmEl.textContent = `❌ Error during ${actionTitle}`;
-        confirmEl.style.color = '#ff4444';
-        confirmEl.style.display = 'block';
-      }
+      showModalMessage(`❌ Error during ${actionTitle}`, 'error');
     }
   };
 
@@ -3403,15 +3348,13 @@ function showModal({ title = '', body = '', footer = '' }) {
 
 function closeModal() {
   const modal = document.getElementById('universal-modal');
-
   modal.classList.add('hidden');
   modal.classList.remove('active');
   document.body.classList.remove('modal-open');
-
   modal.querySelector('.modal-header').innerHTML = '';
   modal.querySelector('.modal-body').innerHTML = '';
+  modal.querySelector('.modal-message').innerHTML = '';
   modal.querySelector('.modal-footer').innerHTML = '';
-
   modal.style.top = ''; // pulizia!
 }
 document.querySelector('#universal-modal .modal-close').addEventListener('click', closeModal);

@@ -2171,40 +2171,41 @@ function findNFTCardByAssetId(assetId) {
 }
 
 async function showNFTCardMessage(cardElement, message, isError = false) {
-  // Rimuovi eventuali messaggi precedenti
+  // 🔄 Rimuove eventuali messaggi già presenti nella card
   const existing = cardElement.querySelector('.nft-message');
   if (existing) existing.remove();
 
+  // 🧱 Crea un nuovo div per il messaggio
   const msgDiv = document.createElement('div');
-  msgDiv.className = 'nft-message';
-  msgDiv.textContent = message;
+  msgDiv.className = 'nft-message'; // per styling extra via CSS se desiderato
+  msgDiv.textContent = message;     // Imposta il testo del messaggio
 
-  // 🧪 Stile glow cybertribal
-  msgDiv.style.marginTop = '0.75rem';
-  msgDiv.style.padding = '10px 14px';
-  msgDiv.style.borderRadius = '10px';
-  msgDiv.style.fontSize = '0.95rem';
-  msgDiv.style.fontFamily = '"Orbitron", sans-serif'; // esempio di font "cyber"
-  msgDiv.style.letterSpacing = '0.03em';
-  msgDiv.style.textAlign = 'center';
-  msgDiv.style.backdropFilter = 'blur(6px)';
-  msgDiv.style.background = isError
-    ? 'rgba(255, 0, 66, 0.15)'
-    : 'rgba(0, 255, 200, 0.12)';
-  msgDiv.style.border = `1px solid ${isError ? '#ff0042' : '#00ffc8'}`;
-  msgDiv.style.boxShadow = `0 0 10px ${isError ? '#ff0042aa' : '#00ffc8aa'}`;
-  msgDiv.style.color = isError ? '#ff4f7a' : '#00ffe6';
-  msgDiv.style.transition = 'opacity 0.3s ease';
+  // 💄 Stili di base per tema "cybertribal"
+  msgDiv.style.marginTop = '0.75rem';                  // Spazio sopra al messaggio
+  msgDiv.style.padding = '10px 14px';                  // Padding interno
+  msgDiv.style.borderRadius = '10px';                  // Angoli arrotondati
+  msgDiv.style.fontSize = '0.95rem';                   // Dimensione testo
+  msgDiv.style.fontWeight = 'bold';                    // ➕ Testo in grassetto
+  msgDiv.style.fontFamily = '"Orbitron", sans-serif';  // Font cyber
+  msgDiv.style.letterSpacing = '0.03em';               // Spaziatura lettere
+  msgDiv.style.textAlign = 'center';                   // Testo centrato
+  msgDiv.style.backgroundColor = '#000';               // Sfondo nero
+  msgDiv.style.border = `1px solid ${isError ? '#ff1a4b' : '#39ff14'}`; // Bordo neon
+  msgDiv.style.color = isError ? '#ff1a4b' : '#39ff14'; // Colore testo neon
+  msgDiv.style.textShadow = isError
+    ? '0 0 5px #ff1a4b'
+    : '0 0 6px #39ff14';                               // Glow neon leggero
+  msgDiv.style.transition = 'opacity 0.3s ease';       // Dissolvenza
 
+  // 📌 Aggiunge il messaggio nella card NFT
   cardElement.appendChild(msgDiv);
 
-  // 💨 Rimuove il messaggio dopo 4 secondi
+  // ⏳ Rimuove il messaggio dopo 4 secondi
   setTimeout(() => {
-    msgDiv.style.opacity = '0';
-    setTimeout(() => msgDiv.remove(), 300); // attende la dissolvenza
+    msgDiv.style.opacity = '0';             // Inizio dissolvenza
+    setTimeout(() => msgDiv.remove(), 300); // Rimuove dopo fade
   }, 4000);
 }
-
 
 // Aggiungi effetto hover alle righe della tabella per migliorare l'interazione
 function addHoverEffectToRows() {
@@ -2260,12 +2261,18 @@ async function loadScheduleNFTGiveaway() {
     if (!res.ok) throw new Error(data.error || 'Unknown error');
 
     if (cardElement) {
-      await showNFTCardMessage(cardElement, data.message || 'Success', false);
+      await showNFTCardMessage(
+        cardElement,
+        (data.message || 'Success') + '\nYou can now close this window or wait for the farm to reload in 5 seconds...',
+        false
+      );
+    
+      // ⏳ Wait 5 seconds before reloading farms
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    
+      // 🔁 Reload all farms, keeping the current one active
+      await loadNFTFarms(currentFarmName);
     }
-
-    // 🔁 Ricarica tutte le farms mantenendo visibile quella attuale
-    await loadNFTFarms(currentFarmName);
-
   } catch (err) {
     console.error(err);
     if (cardElement) {

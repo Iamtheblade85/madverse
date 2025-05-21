@@ -1438,9 +1438,6 @@ else if (section === 'create-nfts-farm') {
   const { userId, usx_token } = window.userData;
   const res = await fetch(`${BASE_URL}/nfts_farms?user_id=${userId}&usx_token=${usx_token}`);
   const data = await res.json();
-
-  console.log("[🐛] Risposta intera da /nfts_farms:", JSON.stringify(data, null, 2));
-
   if (!data.farms || data.farms.length === 0) {
     document.getElementById('nft-farms-container').innerHTML = `
       <div class="error-message">No NFT farms found.</div>`;
@@ -2175,6 +2172,7 @@ async function loadScheduleNFTGiveaway() {
   }
 } async function handleNFTStake(farmId, templateId, assetId, isStaked) {
   const { userId, usx_token, wax_account } = window.userData;
+  console.log("[📥] Parametri rilevati:", userId, usx_token, wax_account);
   const action = isStaked ? 'remove' : 'add';
   const endpoint = `${BASE_URL}/${isStaked ? 'nft_remove' : 'nft_add'}?user_id=${userId}&usx_token=${usx_token}`;
 

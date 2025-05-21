@@ -3333,17 +3333,19 @@ function showModal({ title = '', body = '', footer = '' }) {
   modal.querySelector('.modal-body').innerHTML = body;
   modal.querySelector('.modal-footer').innerHTML = footer;
 
-  // Posizionamento dinamico rispetto allo scroll attuale
-  const scrollY = window.scrollY || window.pageYOffset;
-  const viewportHeight = window.innerHeight;
-  const modalHeight = modal.offsetHeight || 300; // fallback
-
-  const top = scrollY + (viewportHeight - modalHeight) / 2;
-  modal.style.top = `${Math.max(top, 40)}px`; // evita che esca sopra
-
   modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
+
+  // 💡 Aspetta che il browser calcoli dimensioni visibili
+  setTimeout(() => {
+    const scrollY = window.scrollY || window.pageYOffset;
+    const viewportHeight = window.innerHeight;
+    const modalHeight = modal.offsetHeight || 300;
+
+    const top = scrollY + (viewportHeight - modalHeight) / 2;
+    modal.style.top = `${Math.max(top, 40)}px`;
+  }, 0);
 }
 
 function closeModal() {

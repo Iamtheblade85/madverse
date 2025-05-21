@@ -2723,90 +2723,162 @@ function openNFTModal(assetId) {
   document.getElementById('bulk-send').addEventListener('click', bulkSendSelected);  
 } async function bulkWithdrawSelected() {
   if (window.selectedNFTs.size === 0) return;
-  if (!confirm(`Withdraw ${window.selectedNFTs.size} selected NFTs?`)) return;
-  const selectedIds = Array.from(window.selectedNFTs);
-  console.log("[⚡] Withdraw Selected NFTs:", selectedIds);
-  const { userId, usx_token, wax_account } = window.userData; // 🔥 wax_account aggiunto qui sopra!
-  const endpoint = `${BASE_URL}/withdraw_nft_v2?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ wax_account: wax_account, asset_ids: selectedIds }) // 🔥 body corretto qui
-    });
 
-    const data = await response.json();
+  showConfirmModal(`Withdraw ${window.selectedNFTs.size} selected NFTs?`, async () => {
+    const selectedIds = Array.from(window.selectedNFTs);
+    console.log("[⚡] Withdraw Selected NFTs:", selectedIds);
 
-    if (!response.ok) {
-      console.error("[❌] Errore server:", data.error || "Unknown error");
-      showToast(`Error withdrawing NFTs: ${data.error || 'Unknown error'}`, "error");
-      return;
+    const { userId, usx_token, wax_account } = window.userData;
+    const endpoint = `${BASE_URL}/withdraw_nft_v2?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
+
+    // Mostra feedback di attesa nel modale
+    const modalBody = document.querySelector('#universal-modal .modal-body');
+    modalBody.innerHTML = `<p class="modal-text">Processing withdrawal of ${selectedIds.length} NFTs...</p>`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          wax_account: wax_account,
+          asset_ids: selectedIds
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("[❌] Errore server:", data.error || "Unknown error");
+
+        modalBody.innerHTML = `
+          <p class="modal-text text-danger">❌ Error withdrawing NFTs:</p>
+          <p>${data.error || 'Unknown error'}</p>
+          <button class="btn btn-secondary mt-medium" onclick="closeModal()">Close</button>
+        `;
+        return;
+      }
+
+      modalBody.innerHTML = `
+        <p class="modal-text text-success">✅ Successfully withdrawn ${selectedIds.length} NFTs</p>
+        <button class="btn btn-primary mt-medium" onclick="closeModal()">OK</button>
+      `;
+
+      window.selectedNFTs.clear();
+      await loadNFTs();
+
+    } catch (error) {
+      console.error("[❌] Errore rete:", error);
+
+      modalBody.innerHTML = `
+        <p class="modal-text text-danger">❌ Network or server error during NFT withdraw</p>
+        <button class="btn btn-secondary mt-medium" onclick="closeModal()">Close</button>
+      `;
     }
-
-    showToast(`✅ Successfully withdrawn ${selectedIds.length} NFTs`, "success");
-
-    window.selectedNFTs.clear();
-    await loadNFTs();
-
-  } catch (error) {
-    console.error("[❌] Errore rete:", error);
-    showToast("Network or server error during NFT withdraw", "error");
-  }
-} async function bulkSendSelected() {
+  });
+}
+ async function bulkSendSelected() {
   if (window.selectedNFTs.size === 0) return;
 
   const selectedIds = Array.from(window.selectedNFTs);
-  
-  // Apri un piccolo modale customizzato
-  const receiver = prompt(
-    `⚡ You are about to transfer these NFTs:\n\n${selectedIds.join(", ")}\n\nPlease enter the receiver's WAX account:`
-  );
-  
-  if (!receiver) {
-    showToast("Transfer cancelled: no recipient specified.", "error");
-    return;
-  }
 
-  if (!confirm(`Confirm transfer of ${selectedIds.length} NFTs to ${receiver}?`)) {
-    showToast("Transfer cancelled.", "error");
-    return;
-  }
+  // Step 1: chiedi il destinatario via modale
+  const body = `
+    <p>⚡ You are about to transfer these NFTs:</p>
+    <p style="font-size: 0.9rem; word-break: break-all;">${selectedIds.join(", ")}</p>
+    <label class="form-label mt-medium">Enter receiver's WAX account:</label>
+    <input type="text" id="receiver-account" class="form-input" placeholder="e.g. receiver.wam">
+    <div class="modal-actions mt-medium">
+      <button class="btn btn-secondary" id="cancel-transfer">Cancel</button>
+      <button class="btn btn-primary" id="confirm-receiver">Continue</button>
+    </div>
+  `;
 
-  const { userId, usx_token } = window.userData;
-  const endpoint = `${BASE_URL}/transfer_nfts?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
-  const bodyData = { wax_account: wax_account, asset_ids: selectedIds };
-  console.log("[📤] Body da inviare:", JSON.stringify(bodyData));
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(bodyData)
-    });
+  showModal({
+    title: `<h3 class="modal-title">Send Selected NFTs</h3>`,
+    body
+  });
 
-    const data = await response.json();
-    console.log("[📤] Dati ricevuti dal backend:", data);
-    if (!response.ok || data.error) {
-      console.error("[❌] Transfer error:", data.error || "Unknown error");
-      showToast(`❌ Transfer failed: ${data.error || "Unknown error"}`, "error");
-      return;
-    }
+  setTimeout(() => {
+    document.getElementById('cancel-transfer').onclick = () => closeModal();
 
-    showToast(`✅ Successfully transferred ${selectedIds.length} NFTs to ${receiver}`, "success");
+    document.getElementById('confirm-receiver').onclick = () => {
+      const receiver = document.getElementById('receiver-account').value.trim();
 
-    // Dopo successo
-    window.selectedNFTs.clear();
-    updateBulkActions();
-    await loadNFTs();
+      if (!receiver) {
+        const modalBody = document.querySelector('#universal-modal .modal-body');
+        modalBody.insertAdjacentHTML('beforeend', `<p class="text-danger mt-small">❌ You must enter a valid WAX account.</p>`);
+        return;
+      }
 
-  } catch (error) {
-    console.error("[❌] Network error:", error);
-    showToast("Network error or server unreachable.", "error");
-  }
+      // Step 2: conferma invio
+      const confirmBody = `
+        <p>You are about to transfer <strong>${selectedIds.length}</strong> NFTs to <strong>${receiver}</strong>.</p>
+        <div class="modal-actions mt-medium">
+          <button class="btn btn-secondary" id="cancel-final">Cancel</button>
+          <button class="btn btn-danger" id="confirm-send">Confirm & Send</button>
+        </div>
+      `;
+
+      showModal({
+        title: `<h3 class="modal-title">Confirm Transfer</h3>`,
+        body: confirmBody
+      });
+
+      setTimeout(() => {
+        document.getElementById('cancel-final').onclick = () => closeModal();
+
+        document.getElementById('confirm-send').onclick = async () => {
+          const { userId, usx_token, wax_account } = window.userData;
+          const endpoint = `${BASE_URL}/transfer_nfts?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
+          const bodyData = { wax_account: wax_account, asset_ids: selectedIds, receiver };
+
+          const modalBody = document.querySelector('#universal-modal .modal-body');
+          modalBody.innerHTML = `<p>🔄 Sending NFTs to <strong>${receiver}</strong>...</p>`;
+
+          try {
+            const response = await fetch(endpoint, {
+              method: "POST",
+              headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(bodyData)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || data.error) {
+              console.error("[❌] Transfer error:", data.error || "Unknown error");
+              modalBody.innerHTML = `
+                <p class="text-danger">❌ Transfer failed:</p>
+                <p>${data.error || "Unknown error"}</p>
+                <button class="btn btn-secondary mt-medium" onclick="closeModal()">Close</button>
+              `;
+              return;
+            }
+
+            modalBody.innerHTML = `
+              <p class="text-success">✅ Successfully transferred ${selectedIds.length} NFTs to <strong>${receiver}</strong></p>
+              <button class="btn btn-primary mt-medium" onclick="closeModal()">OK</button>
+            `;
+
+            window.selectedNFTs.clear();
+            updateBulkActions();
+            await loadNFTs();
+
+          } catch (error) {
+            console.error("[❌] Network error:", error);
+            modalBody.innerHTML = `
+              <p class="text-danger">❌ Network or server error during transfer.</p>
+              <button class="btn btn-secondary mt-medium" onclick="closeModal()">Close</button>
+            `;
+          }
+        };
+      }, 0);
+    };
+  }, 0);
 } async function openModal(action, token) {
   const modal = document.getElementById('modal');
   

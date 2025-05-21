@@ -3326,7 +3326,29 @@ document.querySelectorAll('[data-section]').forEach(btn => {
   });
 });
 
+function ensureUniversalModalExists() {
+  if (document.getElementById('universal-modal')) return;
+
+  const modal = document.createElement('div');
+  modal.id = 'universal-modal';
+  modal.className = 'modal hidden';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <button class="modal-close">×</button>
+      <div class="modal-header"></div>
+      <div class="modal-message"></div>
+      <div class="modal-body"></div>
+      <div class="modal-footer"></div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // Bind close once
+  modal.querySelector('.modal-close').addEventListener('click', closeModal);
+}
+
 function showModal({ title = '', body = '', footer = '' }) {
+  ensureUniversalModalExists()
   const modal = document.getElementById('universal-modal');
 
   modal.querySelector('.modal-header').innerHTML = title;

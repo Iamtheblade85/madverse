@@ -1541,8 +1541,6 @@ function renderNFTFarms(farms) {
                  ">
            </div>`
         : '';
-
-      console.log("Template-Image found: ",templateImageHTML)
       return `
         <div class="template-block">
           <h4 class="template-title">Template ID: ${template.template_id}</h4>

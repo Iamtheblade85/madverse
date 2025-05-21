@@ -28,7 +28,7 @@ body {
 
 @keyframes slide-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 
-@keyframes glow-pulse { 0% { text-shadow: 0 0 2px #0ff; } 50% { text-shadow: 0 0 20px #0ff; } 100% { text-shadow: 0 0 2px #0ff; } }
+@keyframes glow-pulse { 0% { text-shadow: 0 0 1px #0ff; } 50% { text-shadow: 0 0 20px #0ff; } 100% { text-shadow: 0 0 1px #0ff; } }
 
 @keyframes pulse-glow { 0% { box-shadow: 0 0 5px #ff0; } 50% { box-shadow: 0 0 20px #ff0; } 100% { box-shadow: 0 0 5px #ff0; } }
 @keyframes neon-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
@@ -93,11 +93,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #theme-style:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ffe600;
 }
 
@@ -107,7 +107,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
   display: flex;
   flex-direction: column;
@@ -128,14 +128,14 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.3rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
   text-align: center;
 }
 
 .navbar-brand:hover {
   filter: brightness(1.1);
-  box-shadow: 0 0 10px #8e44ad, 0 0 18px #00f0ff;
+  box-shadow: 0 0 4px #8e44ad, 0 0 18px #00f0ff;
 }
 
 /* MENU BUTTONS */
@@ -143,12 +143,12 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 
 .menu-button:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #39ff14;
 }
 
@@ -156,7 +156,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #app:hover {
@@ -168,11 +168,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #modal:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #00f0ff;
 }
 
@@ -182,11 +182,11 @@ body {
   font-size: 1rem;
   color: #00f0ff;
   z-index: 9999;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #modal-body:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #00ffcc;
 }
 
@@ -194,11 +194,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #confirm-modal:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ff073a;
 }
 
@@ -206,11 +206,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #confirm-message:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
 }
 
@@ -218,11 +218,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #confirm-cancel:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #f39c12;
 }
 
@@ -230,11 +230,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #confirm-yes:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #8e44ad;
 }
 
@@ -242,11 +242,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #toast-container:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ffffff;
 }
 
@@ -254,11 +254,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #search-token-pool:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #1affd5;
 }
 
@@ -266,11 +266,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffe600;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #create-new-token-pool-btn:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #1affd5;
 }
 
@@ -278,11 +278,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #created-token-pools:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff00ff;
 }
 
@@ -290,11 +290,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #token-pool-details:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ffe600;
 }
 
@@ -302,11 +302,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #new-token-symbol:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #00f0ff;
 }
 
@@ -314,11 +314,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #reward-token-entries:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ffe600;
 }
 
@@ -326,11 +326,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffe600;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #add-reward-token:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #39ff14;
 }
 
@@ -338,11 +338,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #submit-new-token-pool:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff00ff;
 }
 
@@ -350,11 +350,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #new-daily-reward:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
 }
 
@@ -362,11 +362,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ffe600;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #submit-daily-reward:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00ffcc;
 }
 
@@ -374,11 +374,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #deposit-amount:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
 }
 
@@ -386,11 +386,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 #submit-deposit:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
 }
 
@@ -398,11 +398,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #pool-status-select:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #f39c12;
 }
 
@@ -410,11 +410,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 #submit-pool-status:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #8e44ad;
 }
 
@@ -422,11 +422,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 #search-created-farm:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ff00ff;
 }
 
@@ -434,11 +434,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #create-new-farm-btn:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #00ffcc;
 }
 
@@ -446,11 +446,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #created-farm-buttons:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ffe600;
 }
 
@@ -458,11 +458,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #created-farm-details:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #39ff14;
 }
 
@@ -470,11 +470,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffe600;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #new-farm-name:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #1affd5;
 }
 
@@ -482,11 +482,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #submit-new-farm:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #f39c12;
 }
 
@@ -494,11 +494,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #template-id:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #1affd5;
 }
 
@@ -506,11 +506,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 #rewards-container:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff00ff;
 }
 
@@ -518,11 +518,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #add-reward-btn:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #00ffcc;
 }
 
@@ -530,11 +530,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #submit-add-template:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ff073a;
 }
 
@@ -542,11 +542,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #rewards-deposit-container:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
 }
 
@@ -554,11 +554,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #add-more-reward:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
 }
 
@@ -566,11 +566,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #status-select:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #8e44ad;
 }
 
@@ -578,11 +578,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #status-confirm:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #00f0ff;
 }
 
@@ -590,11 +590,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #rewards-edit-container:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
 }
 
@@ -602,11 +602,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #submit-edit-rewards:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #00ffcc;
 }
 
@@ -614,11 +614,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #new-reward-amount:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #00f0ff;
 }
 
@@ -626,11 +626,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #submit-new-reward:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
 }
 
@@ -638,11 +638,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #c2e-content:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #f39c12;
 }
 
@@ -650,11 +650,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #search-template:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #39ff14;
 }
 
@@ -662,11 +662,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #filter-status:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #1affd5;
 }
 
@@ -674,11 +674,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #filter-stakable:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #39ff14;
 }
 
@@ -686,11 +686,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #filter-for-sale:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffffff;
 }
 
@@ -698,11 +698,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #filter-collection:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #1affd5;
 }
 
@@ -710,11 +710,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #sort-by:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #f39c12;
 }
 
@@ -722,11 +722,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #bulk-actions:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #39ff14;
 }
 
@@ -734,11 +734,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #bulk-withdraw:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
 }
 
@@ -746,11 +746,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #bulk-send:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #00ffcc;
 }
 
@@ -758,11 +758,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #nfts-loading:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #39ff14;
 }
 
@@ -770,11 +770,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #nfts-count:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #00ffcc;
 }
 
@@ -782,11 +782,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #nfts-list:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #00ffcc;
 }
 
@@ -794,11 +794,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #pagination:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
 }
 
@@ -812,7 +812,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #modal-nft:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
 }
 
@@ -827,7 +827,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #modal-content:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #f39c12;
 }
 
@@ -851,7 +851,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #search-pools:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #1affd5;
 }
 
@@ -862,7 +862,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #pool-buttons:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #39ff14;
 }
 
@@ -873,7 +873,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #selected-pool-details:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #8e44ad;
 }
 
@@ -888,7 +888,7 @@ body {
   padding: 1.5rem;
 }
 #nft-farms-container:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #f39c12;
 }
 
@@ -899,7 +899,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #create-nfts-farm-container:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
 }
 
@@ -910,7 +910,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #create-token-pool-container:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ff00ff;
 }
 
@@ -939,7 +939,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #nft-farm-buttons:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #00ffcc;
 }
 
@@ -950,7 +950,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #nft-farm-details:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ffffff;
 }
 
@@ -961,7 +961,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #filter-username:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #39ff14;
 }
 
@@ -972,7 +972,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #filter-channel:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #00f0ff;
 }
 
@@ -983,7 +983,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #filter-sponsor:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #1affd5;
 }
 
@@ -994,7 +994,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #update-rewards:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffffff;
 }
 
@@ -1005,7 +1005,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #add-storm-form:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
 }
 
@@ -1016,7 +1016,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #scheduledTime:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #1affd5;
 }
 
@@ -1027,7 +1027,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #timeframe:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffffff;
 }
 
@@ -1038,7 +1038,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #amount:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
 }
 
@@ -1049,7 +1049,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 #tokenSymbol:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff00ff;
 }
 
@@ -1057,11 +1057,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #channelName:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ffffff;
 }
 
@@ -1069,11 +1069,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 #paymentMethod:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #00ffcc;
 }
 
@@ -1081,11 +1081,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #submitStorm:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #8e44ad;
 }
 
@@ -1093,11 +1093,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 #filter-offeredby:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #00ffcc;
 }
 
@@ -1105,11 +1105,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #update-storms:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
 }
 
@@ -1117,11 +1117,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 #stake-range:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #39ff14;
 }
 
@@ -1129,11 +1129,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #stake-amount:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff073a;
 }
 
@@ -1141,11 +1141,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #stake-summary:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffffff;
 }
 
@@ -1153,11 +1153,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #stake-submit:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #00f0ff;
 }
 
@@ -1165,11 +1165,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 #action-form:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ff073a;
 }
 
@@ -1177,11 +1177,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #percent-range:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #39ff14;
 }
 
@@ -1189,11 +1189,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #token-search:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffe600;
 }
 
@@ -1201,11 +1201,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #token-output:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
 }
 
@@ -1213,12 +1213,12 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #swap-preview:hover {
 
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #f39c12;
 }
 
@@ -1226,12 +1226,12 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #loading-spinner:hover {
 
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #39ff14;
 }
 
@@ -1239,12 +1239,12 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #swap-data:hover {
 
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff00ff;
 }
 
@@ -1252,12 +1252,12 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #min-received:hover {
 
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #39ff14;
 }
 
@@ -1265,11 +1265,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #price-impact:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00ffcc;
 }
 
@@ -1277,11 +1277,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #preview-button:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #00f0ff;
 }
 
@@ -1289,11 +1289,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 #submit-button:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffffff;
 }
 
@@ -1301,11 +1301,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #receiver:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #39ff14;
 }
 
@@ -1313,11 +1313,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .app:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #00f0ff;
 }
 
@@ -1325,11 +1325,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .app-title:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
 }
 
@@ -1337,11 +1337,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .app-subtitle:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #00ffcc;
 }
 
@@ -1358,7 +1358,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 
@@ -1388,11 +1388,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #999;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .dropdown:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
 }
 
@@ -1400,11 +1400,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .dropdown-toggle:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #1affd5;
 }
 
@@ -1412,11 +1412,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffe600;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .dropdown-menu:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ff00ff;
 }
 
@@ -1424,12 +1424,12 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
   display: none !important;
 }
 .hidden:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #00ffcc;
 }
 
@@ -1437,11 +1437,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .dropdown-item:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffffff;
 }
 
@@ -1449,11 +1449,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .dropdown-divider:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
 }
 
@@ -1461,11 +1461,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .dropdown-group:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #00f0ff;
 }
 
@@ -1473,11 +1473,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .main-content:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #8e44ad;
 }
 
@@ -1486,11 +1486,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .confirm-box:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #f39c12;
 }
 
@@ -1498,11 +1498,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .btn-cancel:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
 }
 
@@ -1510,11 +1510,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .btn-confirm:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
 }
 
@@ -1522,11 +1522,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .toast-container:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #39ff14;
 }
 
@@ -1534,11 +1534,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .error-message:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffe600;
 }
 
@@ -1546,11 +1546,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .centered:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
 }
 
@@ -1558,11 +1558,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .margin-top-lg:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #f39c12;
 }
 
@@ -1570,11 +1570,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .input-token-search:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #f39c12;
 }
 
@@ -1582,7 +1582,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #1f51ff;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .btn:hover {
@@ -1594,11 +1594,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .btn-primary:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ff00ff;
 }
 
@@ -1606,11 +1606,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .create-token-pool-btn:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ff073a;
 }
 
@@ -1618,11 +1618,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ffe600;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .token-pool-list:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ffffff;
 }
 
@@ -1630,11 +1630,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .empty-message:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
 }
 
@@ -1642,11 +1642,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .form-card:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
 }
 
@@ -1654,11 +1654,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .form-title:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
 }
 
@@ -1666,11 +1666,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .form-label:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00ffcc;
 }
 
@@ -1678,11 +1678,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .form-input:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ff073a;
 }
 
@@ -1690,11 +1690,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .btn-secondary:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
 }
 
@@ -1702,11 +1702,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .add-reward-btn:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ffe600;
 }
 
@@ -1714,11 +1714,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .submit-pool-btn:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #39ff14;
 }
 
@@ -1726,11 +1726,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .reward-token-entry:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #f39c12;
 }
 
@@ -1738,11 +1738,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .reward-symbol:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #f39c12;
 }
 
@@ -1750,11 +1750,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .reward-total:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffffff;
 }
 
@@ -1762,11 +1762,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .reward-daily:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
 }
 
@@ -1774,11 +1774,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .reward-item:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
 }
 
@@ -1786,11 +1786,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .reward-text:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ff073a;
 }
 
@@ -1798,11 +1798,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .btn-warning:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #1affd5;
 }
 
@@ -1810,11 +1810,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .reward-edit-btn:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
 }
 
@@ -1822,11 +1822,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .token-pool-card:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
 }
 
@@ -1834,11 +1834,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .token-pool-title:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #f39c12;
 }
 
@@ -1846,11 +1846,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .pool-detail:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #f39c12;
 }
 
@@ -1858,11 +1858,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .no-rewards-message:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #00ffcc;
 }
 
@@ -1870,11 +1870,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .pool-status-btn:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ff073a;
 }
 
@@ -1882,11 +1882,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .full-width:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ffffff;
 }
 
@@ -1894,11 +1894,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .mt-medium:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
 }
 
@@ -1906,7 +1906,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: ##ffe600;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .wallet-info:hover {
@@ -1918,11 +1918,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .form-select:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
 }
 
@@ -1930,11 +1930,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .input-farm-search:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #8e44ad;
 }
 
@@ -1942,11 +1942,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .create-farm-btn:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffffff;
 }
 
@@ -1954,11 +1954,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .farm-button-list:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
 }
 
@@ -1966,11 +1966,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .reward-summary:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #39ff14;
 }
 
@@ -1978,11 +1978,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .reward-detail:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #00f0ff;
 }
 
@@ -1990,7 +1990,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
   margin-top: 1.5rem;
   background: #1a1a1a;
@@ -1999,13 +1999,13 @@ body {
   border-radius: 6px;  
 }
 .template-block:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
 }
 
 .template-title {
   font-family: "Papyrus", "Courier New", cursive;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
   font-size: 1.1rem;
   color: #00f0ff;
@@ -2013,7 +2013,7 @@ body {
   text-shadow: 0 0 4px #00f0ff;  
 }
 .template-title:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #8e44ad;
 }
 
@@ -2021,11 +2021,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .empty-reward:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff00ff;
 }
 
@@ -2033,11 +2033,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .template-actions:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #1affd5;
 }
 
@@ -2045,11 +2045,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .btn-danger:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
 }
 
@@ -2059,14 +2059,14 @@ body {
   border: 2px solid #ff00ff;
   padding: 1.2rem;  
   color: #ff00ff;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
   border-radius: 10px;
-  box-shadow: 0 0 10px #ff00ff;
+  box-shadow: 0 0 4px #ff00ff;
   margin-bottom: 2rem;  
 }
 .farm-card:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffe600;
 }
 
@@ -2074,7 +2074,7 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 1.2rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .farm-title-row:hover {
@@ -2086,11 +2086,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .farm-meta:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ff073a;
 }
 
@@ -2098,11 +2098,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .farm-actions:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
 }
 
@@ -2110,11 +2110,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .text-dark:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #1affd5;
 }
 
@@ -2122,11 +2122,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .farm-rewards:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #00f0ff;
 }
 
@@ -2134,11 +2134,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .empty-templates:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #00f0ff;
 }
 
@@ -2146,11 +2146,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .reward-entry:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #1affd5;
 }
 
@@ -2158,11 +2158,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .half-width:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #8e44ad;
 }
 
@@ -2170,11 +2170,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .token-symbol:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #39ff14;
 }
 
@@ -2182,11 +2182,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .reward-amount:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #00ffcc;
 }
 
@@ -2194,11 +2194,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .link-add-reward:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #ffffff;
 }
 
@@ -2206,11 +2206,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .btn-success:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ff00ff;
 }
 
@@ -2218,11 +2218,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .available-balance:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
 }
 
@@ -2230,11 +2230,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .range-input:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
 }
 
@@ -2242,11 +2242,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffe600;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .percent-range:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
 }
 
@@ -2254,11 +2254,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .amount:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ffe600;
 }
 
@@ -2266,11 +2266,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .text-danger:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
 }
 
@@ -2292,7 +2292,7 @@ body {
 }
 
 .section-title:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ffe600;
 }
 @keyframes pulse-glow-title {
@@ -2314,11 +2314,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .text-center:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #00f0ff;
 }
 
@@ -2326,11 +2326,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .c2e-menu:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #8e44ad;
 }
 
@@ -2338,11 +2338,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .c2e-menu-btn:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #8e44ad;
 }
 
@@ -2350,11 +2350,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .c2e-content:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ff00ff;
 }
 
@@ -2362,11 +2362,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .filters-group:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #8e44ad;
 }
 
@@ -2374,11 +2374,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .bulk-actions:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #00ffcc;
 }
 
@@ -2386,11 +2386,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .nfts-loading:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff00ff;
 }
 
@@ -2398,11 +2398,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .nfts-count:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #ff00ff;
 }
 
@@ -2410,7 +2410,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
@@ -2418,7 +2418,7 @@ body {
   margin-top: 2rem;  
 }
 .nfts-grid:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #ff073a;
 }
 
@@ -2426,11 +2426,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .pagination:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
 }
 
@@ -2438,11 +2438,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .search-token-pool:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #8e44ad;
 }
 
@@ -2450,11 +2450,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .pool-buttons:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #8e44ad;
 }
 
@@ -2462,11 +2462,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .loading-message:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #00ffcc;
 }
 
@@ -2474,11 +2474,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .vertical-list:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #1affd5;
 }
 
@@ -2486,11 +2486,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .search-farm-input:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ff073a;
 }
 
@@ -2498,14 +2498,14 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;  
 }
 .farm-button-group:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ffffff;
 }
 
@@ -2523,7 +2523,7 @@ body {
   line-height: 1.6;
   padding: 1rem;
   border-left: 4px solid #00ffcc;  
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
   box-shadow: inset 0 0 6px #00f0ff;
   margin-bottom: 1rem;  
@@ -2538,11 +2538,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .btn-create-farm:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff00ff;
 }
 
@@ -2550,11 +2550,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .nft-card:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #00f0ff;
 }
 
@@ -2563,11 +2563,11 @@ body {
   font-size: 1.2rem;
   color: #1affd5;
   max-height: 200px
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .nft-image:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #39ff14;
 }
 
@@ -2575,11 +2575,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffe600;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .nft-name:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #00f0ff;
 }
 
@@ -2587,11 +2587,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .nft-id:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #39ff14;
 }
 
@@ -2604,14 +2604,14 @@ body {
   margin-bottom: 0.25rem;  
 }
 .nft-reward:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #ffe600;
 }
 
 .no-rewards {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
   color: #999;
   background-color: #1a1a1a;
@@ -2622,14 +2622,14 @@ body {
   border: 1px dashed #444;  
 }
 .no-rewards:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffe600;
 }
 
 .nft-grid {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
   color: #999;
   background-color: #1a1a1a;
@@ -2640,7 +2640,7 @@ body {
   border: 1px dashed #444;  
 }
 .nft-grid:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #39ff14;
 }
 
@@ -2648,11 +2648,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .no-nfts:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ff073a;
 }
 
@@ -2660,11 +2660,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .farm-reward:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ffffff;
 }
 
@@ -2672,11 +2672,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .farm-title:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffe600;
 }
 
@@ -2684,11 +2684,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .info-message:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
 }
 
@@ -2696,7 +2696,7 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 1.2rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .cell:hover {
@@ -2710,11 +2710,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .filter-toolbar:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #1affd5;
 }
 
@@ -2722,11 +2722,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .filter-select:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffffff;
 }
 
@@ -2734,11 +2734,11 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .reward-table:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
 }
 
@@ -2748,7 +2748,7 @@ body {
   font-family: var(--font-main) !important;
   font-size: 1.1rem !important;
   color: var(--color-secondary) !important;
-  text-shadow: 0 0 2px var(--color-secondary) !important;
+  text-shadow: 0 0 1px var(--color-secondary) !important;
   transition: all var(--transition-speed) ease-in-out !important;
   width: 95% !important;
   max-width: 100% !important;
@@ -2814,11 +2814,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .form-container:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
 }
 
@@ -2826,11 +2826,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .input-label:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ff00ff;
 }
 
@@ -2838,11 +2838,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .input-field:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #00ffcc;
 }
 
@@ -2850,11 +2850,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .btn-submit:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #8e44ad;
 }
 
@@ -2862,11 +2862,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .mt-6:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #39ff14;
 }
 
@@ -2878,7 +2878,7 @@ body {
   transition: all 0.3s ease-in-out;
 }
 .winner-row:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
 }
 
@@ -2886,11 +2886,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .winner-name:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff00ff;
 }
 
@@ -2898,11 +2898,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffe600;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .no-winners:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ffe600;
 }
 
@@ -2910,11 +2910,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .pending-winners:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #1affd5;
 }
 
@@ -2922,11 +2922,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .status-dot:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #1affd5;
 }
 
@@ -2934,11 +2934,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .pending:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ffffff;
 }
 
@@ -2946,11 +2946,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .executed:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ff00ff;
 }
 
@@ -2958,7 +2958,7 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 0.9rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .storm-row:hover {
@@ -2970,11 +2970,11 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .table-container:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #1affd5;
 }
 
@@ -2982,11 +2982,11 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .storm-table:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ff073a;
 }
 
@@ -2994,11 +2994,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .reward-box:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffe600;
 }
 
@@ -3006,11 +3006,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .reward-title:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ff00ff;
 }
 
@@ -3018,11 +3018,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .reward-user-daily:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #00ffcc;
 }
 
@@ -3030,11 +3030,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .card:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
 }
 
@@ -3042,11 +3042,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .card-title:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #ff00ff;
 }
 
@@ -3054,11 +3054,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .label:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
 }
 
@@ -3066,11 +3066,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .section-space:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ffffff;
 }
 
@@ -3078,11 +3078,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .subheading:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #f39c12;
 }
 
@@ -3090,11 +3090,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .input-range:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #8e44ad;
 }
 
@@ -3102,11 +3102,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .text-muted:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
 }
 
@@ -3114,11 +3114,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .small:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #1affd5, 0 0 25px #39ff14;
 }
 
@@ -3126,11 +3126,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .thead:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #1affd5;
 }
 
@@ -3138,11 +3138,11 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 1.2rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .row-border:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #ffe600;
 }
 
@@ -3150,11 +3150,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffe600;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .strong:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ff073a;
 }
 
@@ -3162,11 +3162,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ffe600;
-  text-shadow: 0 0 2px #00ffcc;
+  text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .empty-state:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #ff073a;
 }
 
@@ -3174,11 +3174,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffffff;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .card-hover:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ffe600;
 }
 
@@ -3186,11 +3186,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .nft-checkbox:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
 }
 
@@ -3198,11 +3198,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #8e44ad;
+  text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .nft-card-content:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #ffe600;
 }
 
@@ -3210,11 +3210,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .nft-title:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00f0ff;
 }
 
@@ -3222,11 +3222,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .nft-subtitle:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #ff00ff;
 }
 
@@ -3234,11 +3234,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .btn-pagination:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
 }
 
@@ -3246,11 +3246,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .pagination-info:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ff073a, 0 0 25px #1affd5;
 }
 
@@ -3258,7 +3258,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .nft-detail:hover {
@@ -3270,11 +3270,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .nft-subtext:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #8e44ad;
 }
 
@@ -3282,11 +3282,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #8e44ad;
-  text-shadow: 0 0 2px #1affd5;
+  text-shadow: 0 0 1px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .form-wrapper:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #00ffcc;
 }
 
@@ -3294,11 +3294,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .form-field:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ff00ff;
 }
 
@@ -3306,11 +3306,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .input-box:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #f39c12;
 }
 
@@ -3318,11 +3318,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .swap-preview:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #f39c12;
 }
 
@@ -3330,11 +3330,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #39ff14;
-  text-shadow: 0 0 2px #ff073a;
+  text-shadow: 0 0 1px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .highlight:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00ffcc, 0 0 25px #ffffff;
 }
 
@@ -3342,11 +3342,11 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .text-error:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #f39c12;
 }
 
@@ -3446,7 +3446,7 @@ input, select, textarea, .form-input {
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: #39ff14;
-  box-shadow: 0 0 10px #39ff14;
+  box-shadow: 0 0 4px #39ff14;
 }
 
 /* STILE POTENZIATO TABELLE */
@@ -3548,13 +3548,13 @@ button:hover, .btn:hover, .menu-button:hover {
   border: 1px solid #00ffcc;
   border-radius: 8px;
   padding: 1rem;
-  box-shadow: 0 0 3px #00f0ff;
+  box-shadow: 0 0 1px #00f0ff;
   transition: transform 0.3s ease-in-out;
 }
 
 .nft-card:hover {
-  transform: scale(1.03);
-  box-shadow: 0 0 10px #39ff14;
+  transform: scale(1.01);
+  box-shadow: 0 0 4px #39ff14;
 }
 
 .nft-card-content {
@@ -3576,13 +3576,13 @@ button:hover, .btn:hover, .menu-button:hover {
 .nft-title {
   font-size: 1rem;
   color: #ffe600;
-  text-shadow: 0 0 2px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
 }
 
 .nft-subtitle {
   font-size: 0.8rem;
   color: #00ffcc;
-  text-shadow: 0 0 2px #39ff14;
+  text-shadow: 0 0 1px #39ff14;
 }
 
 /* === WALLET TABLE CONTAINER === */
@@ -3590,14 +3590,14 @@ button:hover, .btn:hover, .menu-button:hover {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif !important;
   font-size: 1.2rem !important;
   color: #ff073a !important;
-  text-shadow: 0 0 2px #39ff14 !important;
+  text-shadow: 0 0 1px #39ff14 !important;
   transition: all 0.3s ease-in-out !important;
   text-align: center !important;
 }
 
 .wallet-table-container:hover {
   filter: brightness(1.1) !important;
-  box-shadow: 0 0 10px #ffffff, 0 0 20px #ffe600 !important;
+  box-shadow: 0 0 4px #ffffff, 0 0 20px #ffe600 !important;
 }
 
 /* === WALLET TABLE === */
@@ -3633,7 +3633,7 @@ button:hover, .btn:hover, .menu-button:hover {
 .wallet-table .cell.strong {
   color: #d100ff !important;               /* viola neon */
   font-weight: bold !important;
-  text-shadow: 0 0 2px #ff00ff, 0 0 6px #ffffff !important;
+  text-shadow: 0 0 1px #ff00ff, 0 0 6px #ffffff !important;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -3669,7 +3669,7 @@ button:hover, .btn:hover, .menu-button:hover {
   padding: 0.5rem !important;
   background-color: rgba(0, 0, 0, 0.3) !important;
   border-radius: 10px !important;
-  box-shadow: 0 0 10px #ffe600, 0 0 20px #00ffcc !important;
+  box-shadow: 0 0 4px #ffe600, 0 0 20px #00ffcc !important;
   backdrop-filter: blur(6px) !important;
   transition: all var(--transition-speed) ease-in-out !important;
 }
@@ -3686,7 +3686,7 @@ button:hover, .btn:hover, .menu-button:hover {
   font-size: 0.9rem !important;
   color: black !important;
   font-weight: bold !important;
-  text-shadow: 0 0 2px #f39c12, 0 0 8px #ffe600 !important;
+  text-shadow: 0 0 1px #f39c12, 0 0 8px #ffe600 !important;
   background: linear-gradient(135deg, #1f51ff, #00f0ff, #39ff14) !important;
   background-size: 400% 400% !important;
   border: none !important;
@@ -3745,7 +3745,7 @@ button:hover, .btn:hover, .menu-button:hover {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 2rem !important;
   color: #00ffcc;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
   position: absolute !important;
   top: 1rem !important;
@@ -3760,7 +3760,7 @@ button:hover, .btn:hover, .menu-button:hover {
 }
 
 #close-modal:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #00f0ff;
 }
 
@@ -3841,7 +3841,7 @@ button:hover, .btn:hover, .menu-button:hover {
 
 .modal-close:hover {
   color: var(--close-hover);
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #ffffff, 0 0 25px #8e44ad;
 }
 
@@ -3862,7 +3862,7 @@ button:hover, .btn:hover, .menu-button:hover {
 .modal-title {
   font-size: 1rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
 }
 
 .modal-title:hover {
@@ -3872,7 +3872,7 @@ button:hover, .btn:hover, .menu-button:hover {
 .modal-text {
   font-size: 1.2rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
 }
 
 .modal-text:hover {
@@ -3882,7 +3882,7 @@ button:hover, .btn:hover, .menu-button:hover {
 .modal-actions {
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
 }
 
 .modal-actions:hover {
@@ -3895,12 +3895,12 @@ button:hover, .btn:hover, .menu-button:hover {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 2px #f39c12;
+  text-shadow: 0 0 1px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 
 .modal-image:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #00f0ff;
 }
 
@@ -3909,7 +3909,7 @@ button:hover, .btn:hover, .menu-button:hover {
 .confirm-box {
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 2px #ffe600;
+  text-shadow: 0 0 1px #ffe600;
 }
 
 .confirm-box:hover {
@@ -3933,7 +3933,7 @@ button:hover, .btn:hover, .menu-button:hover {
 .modal-box {
   font-size: 1.1rem;
   color: #1affd5;
-  text-shadow: 0 0 2px #ff00ff;
+  text-shadow: 0 0 1px #ff00ff;
 }
 
 .modal-box:hover {

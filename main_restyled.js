@@ -2170,7 +2170,7 @@ function findNFTCardByAssetId(assetId) {
   return null;
 }
 
-function showNFTCardMessage(cardElement, message, isError = false) {
+async function showNFTCardMessage(cardElement, message, isError = false) {
   // Rimuovi eventuali messaggi precedenti
   const existing = cardElement.querySelector('.nft-message');
   if (existing) existing.remove();
@@ -2260,7 +2260,7 @@ async function loadScheduleNFTGiveaway() {
     if (!res.ok) throw new Error(data.error || 'Unknown error');
 
     if (cardElement) {
-      showNFTCardMessage(cardElement, data.message || 'Success', false);
+      await showNFTCardMessage(cardElement, data.message || 'Success', false);
     }
 
     // 🔁 Ricarica tutte le farms mantenendo visibile quella attuale
@@ -2269,7 +2269,7 @@ async function loadScheduleNFTGiveaway() {
   } catch (err) {
     console.error(err);
     if (cardElement) {
-      showNFTCardMessage(cardElement, "Errore: " + err.message, true);
+      await showNFTCardMessage(cardElement, "Errore: " + err.message, true);
     }
   }
 }

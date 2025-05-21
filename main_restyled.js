@@ -2113,12 +2113,20 @@ function displayStormsData(data) {
 
   tableContainer.innerHTML = `
     <div class="filter-toolbar">
-      <select id="filter-channel" class="filter-select">${createOptions(channels)}</select>
-      <select id="filter-status" class="filter-select">${createOptions(statuses)}</select>
-      <select id="filter-offeredby" class="filter-select">${createOptions(offeredBys)}</select>
+      <div class="filter-group">
+        <label for="filter-channel">Channel:</label>
+        <select id="filter-channel" class="filter-select">${createOptions(channels)}</select>
+      </div>
+      <div class="filter-group">
+        <label for="filter-status">Status:</label>
+        <select id="filter-status" class="filter-select">${createOptions(statuses)}</select>
+      </div>
+      <div class="filter-group">
+        <label for="filter-offeredby">Offered By:</label>
+        <select id="filter-offeredby" class="filter-select">${createOptions(offeredBys)}</select>
+      </div>
       <button id="update-storms" class="btn btn-primary">Update Data</button>
     </div>
-
     <div class="table-container">
       <table class="storm-table">
         <thead>

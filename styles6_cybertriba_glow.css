@@ -2745,7 +2745,7 @@ body {
 
 .section-container {
   position: relative !important;
-  overflow: hidden !important;
+  /*overflow: hidden !important;*/
   font-family: var(--font-main) !important;
   font-size: 1.1rem !important;
   color: var(--color-secondary) !important;
@@ -3613,7 +3613,7 @@ button:hover, .btn:hover, .menu-button:hover {
   color: #ffffff !important;
   box-shadow: 0 0 8px #1affd5 !important;
   border-radius: 10px !important;
-  overflow: hidden !important;
+  /*overflow: hidden !important;*/
 }
 
 @media (max-width: 1400px) {
@@ -3700,7 +3700,7 @@ button:hover, .btn:hover, .menu-button:hover {
   perspective: 1000px !important;
   position: relative !important;
   z-index: 1 !important;
-  overflow: hidden !important;
+  /*overflow: hidden !important;*/
 }
 
 .btn-action::before {

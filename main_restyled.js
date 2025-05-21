@@ -2731,7 +2731,6 @@ function openNFTModal(assetId) {
     const { userId, usx_token, wax_account } = window.userData;
     const endpoint = `${BASE_URL}/withdraw_nft_v2?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
 
-    // Mostra feedback di attesa nel modale
     const modalBody = document.querySelector('#universal-modal .modal-body');
     modalBody.innerHTML = `<p class="modal-text">Processing withdrawal of ${selectedIds.length} NFTs...</p>`;
 
@@ -2751,7 +2750,6 @@ function openNFTModal(assetId) {
 
       if (!response.ok) {
         console.error("[❌] Errore server:", data.error || "Unknown error");
-
         modalBody.innerHTML = `
           <p class="modal-text text-danger">❌ Error withdrawing NFTs:</p>
           <p>${data.error || 'Unknown error'}</p>
@@ -2760,17 +2758,19 @@ function openNFTModal(assetId) {
         return;
       }
 
+      // ✅ Successo: mostra bottone che gestisce chiusura e aggiornamento
       modalBody.innerHTML = `
         <p class="modal-text text-success">✅ Successfully withdrawn ${selectedIds.length} NFTs</p>
-        <button class="btn btn-primary mt-medium" onclick="closeModal()">OK</button>
+        <button class="btn btn-primary mt-medium" id="close-withdraw-success">Thanks, mate!</button>
       `;
-
-      window.selectedNFTs.clear();
-      await loadNFTs();
+      document.getElementById('close-withdraw-success').onclick = async () => {
+        closeModal();
+        window.selectedNFTs.clear();
+        await loadNFTs();
+      };
 
     } catch (error) {
       console.error("[❌] Errore rete:", error);
-
       modalBody.innerHTML = `
         <p class="modal-text text-danger">❌ Network or server error during NFT withdraw</p>
         <button class="btn btn-secondary mt-medium" onclick="closeModal()">Close</button>
@@ -2778,12 +2778,12 @@ function openNFTModal(assetId) {
     }
   });
 }
- async function bulkSendSelected() {
+
+async function bulkSendSelected() {
   if (window.selectedNFTs.size === 0) return;
 
   const selectedIds = Array.from(window.selectedNFTs);
 
-  // Step 1: chiedi il destinatario via modale
   const body = `
     <p>⚡ You are about to transfer these NFTs:</p>
     <p style="font-size: 0.9rem; word-break: break-all;">${selectedIds.join(", ")}</p>
@@ -2812,7 +2812,6 @@ function openNFTModal(assetId) {
         return;
       }
 
-      // Step 2: conferma invio
       const confirmBody = `
         <p>You are about to transfer <strong>${selectedIds.length}</strong> NFTs to <strong>${receiver}</strong>.</p>
         <div class="modal-actions mt-medium">
@@ -2832,7 +2831,7 @@ function openNFTModal(assetId) {
         document.getElementById('confirm-send').onclick = async () => {
           const { userId, usx_token, wax_account } = window.userData;
           const endpoint = `${BASE_URL}/transfer_nfts?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
-          const bodyData = { wax_account: wax_account, asset_ids: selectedIds, receiver };
+          const bodyData = { wax_account, asset_ids: selectedIds, receiver };
 
           const modalBody = document.querySelector('#universal-modal .modal-body');
           modalBody.innerHTML = `<p>🔄 Sending NFTs to <strong>${receiver}</strong>...</p>`;
@@ -2859,14 +2858,18 @@ function openNFTModal(assetId) {
               return;
             }
 
+            // ✅ Mostra il messaggio di successo con bottone "OK" che gestisce pulizia e aggiornamento
             modalBody.innerHTML = `
               <p class="text-success">✅ Successfully transferred ${selectedIds.length} NFTs to <strong>${receiver}</strong></p>
-              <button class="btn btn-primary mt-medium" onclick="closeModal()">OK</button>
+              <button class="btn btn-primary mt-medium" id="close-send-success">OK</button>
             `;
 
-            window.selectedNFTs.clear();
-            updateBulkActions();
-            await loadNFTs();
+            document.getElementById('close-send-success').onclick = async () => {
+              closeModal();
+              window.selectedNFTs.clear();
+              updateBulkActions();
+              await loadNFTs();
+            };
 
           } catch (error) {
             console.error("[❌] Network error:", error);

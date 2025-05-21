@@ -28,7 +28,7 @@ body {
 
 @keyframes slide-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 
-@keyframes glow-pulse { 0% { text-shadow: 0 0 5px #0ff; } 50% { text-shadow: 0 0 20px #0ff; } 100% { text-shadow: 0 0 5px #0ff; } }
+@keyframes glow-pulse { 0% { text-shadow: 0 0 2px #0ff; } 50% { text-shadow: 0 0 20px #0ff; } 100% { text-shadow: 0 0 2px #0ff; } }
 
 @keyframes pulse-glow { 0% { box-shadow: 0 0 5px #ff0; } 50% { box-shadow: 0 0 20px #ff0; } 100% { box-shadow: 0 0 5px #ff0; } }
 @keyframes neon-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
@@ -93,7 +93,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #theme-style:hover {
@@ -107,7 +107,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
   display: flex;
   flex-direction: column;
@@ -128,7 +128,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.3rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
   text-align: center;
 }
@@ -143,7 +143,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 
@@ -156,7 +156,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #app:hover {
@@ -168,7 +168,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #modal:hover {
@@ -182,7 +182,7 @@ body {
   font-size: 1rem;
   color: #00f0ff;
   z-index: 9999;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #modal-body:hover {
@@ -194,7 +194,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #confirm-modal:hover {
@@ -206,7 +206,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #confirm-message:hover {
@@ -218,7 +218,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #confirm-cancel:hover {
@@ -230,7 +230,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #confirm-yes:hover {
@@ -242,7 +242,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #toast-container:hover {
@@ -254,7 +254,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #search-token-pool:hover {
@@ -266,7 +266,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffe600;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #create-new-token-pool-btn:hover {
@@ -278,7 +278,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #created-token-pools:hover {
@@ -290,7 +290,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #token-pool-details:hover {
@@ -302,7 +302,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #new-token-symbol:hover {
@@ -314,7 +314,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #reward-token-entries:hover {
@@ -326,7 +326,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffe600;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #add-reward-token:hover {
@@ -338,7 +338,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #submit-new-token-pool:hover {
@@ -350,7 +350,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #new-daily-reward:hover {
@@ -362,7 +362,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ffe600;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #submit-daily-reward:hover {
@@ -374,7 +374,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #deposit-amount:hover {
@@ -386,7 +386,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 #submit-deposit:hover {
@@ -398,7 +398,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #pool-status-select:hover {
@@ -410,7 +410,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 #submit-pool-status:hover {
@@ -422,7 +422,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 #search-created-farm:hover {
@@ -434,7 +434,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #create-new-farm-btn:hover {
@@ -446,7 +446,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #created-farm-buttons:hover {
@@ -458,7 +458,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #created-farm-details:hover {
@@ -470,7 +470,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffe600;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #new-farm-name:hover {
@@ -482,7 +482,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #submit-new-farm:hover {
@@ -494,7 +494,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #template-id:hover {
@@ -506,7 +506,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 #rewards-container:hover {
@@ -518,7 +518,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #add-reward-btn:hover {
@@ -530,7 +530,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #submit-add-template:hover {
@@ -542,7 +542,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #rewards-deposit-container:hover {
@@ -554,7 +554,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #add-more-reward:hover {
@@ -566,7 +566,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #status-select:hover {
@@ -578,7 +578,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #status-confirm:hover {
@@ -590,7 +590,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #rewards-edit-container:hover {
@@ -602,7 +602,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #submit-edit-rewards:hover {
@@ -614,7 +614,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #new-reward-amount:hover {
@@ -626,7 +626,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #submit-new-reward:hover {
@@ -638,7 +638,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #c2e-content:hover {
@@ -650,7 +650,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #search-template:hover {
@@ -662,7 +662,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #filter-status:hover {
@@ -674,7 +674,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #filter-stakable:hover {
@@ -686,7 +686,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #filter-for-sale:hover {
@@ -698,7 +698,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 #filter-collection:hover {
@@ -710,7 +710,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #sort-by:hover {
@@ -722,7 +722,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #bulk-actions:hover {
@@ -734,7 +734,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #bulk-withdraw:hover {
@@ -746,7 +746,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #bulk-send:hover {
@@ -758,7 +758,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #nfts-loading:hover {
@@ -770,7 +770,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #nfts-count:hover {
@@ -782,7 +782,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #nfts-list:hover {
@@ -794,7 +794,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #pagination:hover {
@@ -1057,7 +1057,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #channelName:hover {
@@ -1069,7 +1069,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 #paymentMethod:hover {
@@ -1081,7 +1081,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #submitStorm:hover {
@@ -1093,7 +1093,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 #filter-offeredby:hover {
@@ -1105,7 +1105,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #update-storms:hover {
@@ -1117,7 +1117,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 #stake-range:hover {
@@ -1129,7 +1129,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #stake-amount:hover {
@@ -1141,7 +1141,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #stake-summary:hover {
@@ -1153,7 +1153,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 #stake-submit:hover {
@@ -1165,7 +1165,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 #action-form:hover {
@@ -1177,7 +1177,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #percent-range:hover {
@@ -1189,7 +1189,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #token-search:hover {
@@ -1201,7 +1201,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #token-output:hover {
@@ -1213,7 +1213,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 #swap-preview:hover {
@@ -1226,7 +1226,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #loading-spinner:hover {
@@ -1239,7 +1239,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 #swap-data:hover {
@@ -1252,7 +1252,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 #min-received:hover {
@@ -1265,7 +1265,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 #price-impact:hover {
@@ -1277,7 +1277,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 #preview-button:hover {
@@ -1289,7 +1289,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 #submit-button:hover {
@@ -1301,7 +1301,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 #receiver:hover {
@@ -1313,7 +1313,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .app:hover {
@@ -1325,7 +1325,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .app-title:hover {
@@ -1337,7 +1337,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .app-subtitle:hover {
@@ -1358,7 +1358,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 
@@ -1388,7 +1388,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #999;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .dropdown:hover {
@@ -1400,7 +1400,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .dropdown-toggle:hover {
@@ -1412,7 +1412,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffe600;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .dropdown-menu:hover {
@@ -1424,7 +1424,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
   display: none !important;
 }
@@ -1437,7 +1437,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .dropdown-item:hover {
@@ -1449,7 +1449,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .dropdown-divider:hover {
@@ -1461,7 +1461,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .dropdown-group:hover {
@@ -1473,7 +1473,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .main-content:hover {
@@ -1486,7 +1486,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .confirm-box:hover {
@@ -1498,7 +1498,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .btn-cancel:hover {
@@ -1510,7 +1510,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .btn-confirm:hover {
@@ -1522,7 +1522,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .toast-container:hover {
@@ -1534,7 +1534,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .error-message:hover {
@@ -1546,7 +1546,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .centered:hover {
@@ -1558,7 +1558,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .margin-top-lg:hover {
@@ -1570,7 +1570,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .input-token-search:hover {
@@ -1582,7 +1582,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #1f51ff;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .btn:hover {
@@ -1594,7 +1594,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .btn-primary:hover {
@@ -1606,7 +1606,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .create-token-pool-btn:hover {
@@ -1618,7 +1618,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ffe600;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .token-pool-list:hover {
@@ -1630,7 +1630,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .empty-message:hover {
@@ -1642,7 +1642,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .form-card:hover {
@@ -1654,7 +1654,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .form-title:hover {
@@ -1666,7 +1666,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .form-label:hover {
@@ -1678,7 +1678,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .form-input:hover {
@@ -1690,7 +1690,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .btn-secondary:hover {
@@ -1702,7 +1702,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .add-reward-btn:hover {
@@ -1714,7 +1714,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .submit-pool-btn:hover {
@@ -1726,7 +1726,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .reward-token-entry:hover {
@@ -1738,7 +1738,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .reward-symbol:hover {
@@ -1750,7 +1750,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .reward-total:hover {
@@ -1762,7 +1762,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .reward-daily:hover {
@@ -1774,7 +1774,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .reward-item:hover {
@@ -1786,7 +1786,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .reward-text:hover {
@@ -1798,7 +1798,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .btn-warning:hover {
@@ -1810,7 +1810,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .reward-edit-btn:hover {
@@ -1822,7 +1822,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .token-pool-card:hover {
@@ -1834,7 +1834,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .token-pool-title:hover {
@@ -1846,7 +1846,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .pool-detail:hover {
@@ -1858,7 +1858,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .no-rewards-message:hover {
@@ -1870,7 +1870,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .pool-status-btn:hover {
@@ -1882,7 +1882,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .full-width:hover {
@@ -1894,7 +1894,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .mt-medium:hover {
@@ -1906,7 +1906,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: ##ffe600;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .wallet-info:hover {
@@ -1918,7 +1918,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .form-select:hover {
@@ -1930,7 +1930,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .input-farm-search:hover {
@@ -1942,7 +1942,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .create-farm-btn:hover {
@@ -1954,7 +1954,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .farm-button-list:hover {
@@ -1966,7 +1966,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .reward-summary:hover {
@@ -1978,7 +1978,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .reward-detail:hover {
@@ -1990,7 +1990,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
   margin-top: 1.5rem;
   background: #1a1a1a;
@@ -2005,7 +2005,7 @@ body {
 
 .template-title {
   font-family: "Papyrus", "Courier New", cursive;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
   font-size: 1.1rem;
   color: #00f0ff;
@@ -2021,7 +2021,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .empty-reward:hover {
@@ -2033,7 +2033,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .template-actions:hover {
@@ -2045,7 +2045,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .btn-danger:hover {
@@ -2059,7 +2059,7 @@ body {
   border: 2px solid #ff00ff;
   padding: 1.2rem;  
   color: #ff00ff;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
   border-radius: 10px;
   box-shadow: 0 0 10px #ff00ff;
@@ -2074,11 +2074,11 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 1.2rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .farm-title-row:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.1);
   box-shadow: 0 0 12px #8e44ad, 0 0 25px #00f0ff;
 }
 
@@ -2086,7 +2086,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .farm-meta:hover {
@@ -2098,7 +2098,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .farm-actions:hover {
@@ -2110,7 +2110,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .text-dark:hover {
@@ -2122,7 +2122,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .farm-rewards:hover {
@@ -2134,7 +2134,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .empty-templates:hover {
@@ -2146,7 +2146,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .reward-entry:hover {
@@ -2158,7 +2158,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .half-width:hover {
@@ -2170,7 +2170,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .token-symbol:hover {
@@ -2182,7 +2182,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .reward-amount:hover {
@@ -2194,7 +2194,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .link-add-reward:hover {
@@ -2206,7 +2206,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .btn-success:hover {
@@ -2218,7 +2218,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .available-balance:hover {
@@ -2230,7 +2230,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .range-input:hover {
@@ -2242,7 +2242,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffe600;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .percent-range:hover {
@@ -2254,7 +2254,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .amount:hover {
@@ -2266,7 +2266,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .text-danger:hover {
@@ -2314,7 +2314,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .text-center:hover {
@@ -2326,7 +2326,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .c2e-menu:hover {
@@ -2338,7 +2338,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .c2e-menu-btn:hover {
@@ -2350,7 +2350,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .c2e-content:hover {
@@ -2362,7 +2362,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .filters-group:hover {
@@ -2374,7 +2374,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .bulk-actions:hover {
@@ -2386,7 +2386,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .nfts-loading:hover {
@@ -2398,7 +2398,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .nfts-count:hover {
@@ -2410,7 +2410,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
@@ -2426,7 +2426,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .pagination:hover {
@@ -2438,7 +2438,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .search-token-pool:hover {
@@ -2450,7 +2450,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .pool-buttons:hover {
@@ -2462,7 +2462,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .loading-message:hover {
@@ -2474,7 +2474,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .vertical-list:hover {
@@ -2486,7 +2486,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .search-farm-input:hover {
@@ -2498,7 +2498,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
   display: flex;
   flex-wrap: wrap;
@@ -2523,7 +2523,7 @@ body {
   line-height: 1.6;
   padding: 1rem;
   border-left: 4px solid #00ffcc;  
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
   box-shadow: inset 0 0 6px #00f0ff;
   margin-bottom: 1rem;  
@@ -2538,7 +2538,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .btn-create-farm:hover {
@@ -2550,7 +2550,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .nft-card:hover {
@@ -2563,7 +2563,7 @@ body {
   font-size: 1.2rem;
   color: #1affd5;
   max-height: 200px
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .nft-image:hover {
@@ -2575,7 +2575,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffe600;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .nft-name:hover {
@@ -2587,7 +2587,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .nft-id:hover {
@@ -2611,7 +2611,7 @@ body {
 .no-rewards {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
   color: #999;
   background-color: #1a1a1a;
@@ -2629,7 +2629,7 @@ body {
 .nft-grid {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
   color: #999;
   background-color: #1a1a1a;
@@ -2648,7 +2648,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .no-nfts:hover {
@@ -2660,7 +2660,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .farm-reward:hover {
@@ -2672,7 +2672,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .farm-title:hover {
@@ -2684,7 +2684,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .info-message:hover {
@@ -2696,7 +2696,7 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 1.2rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .cell:hover {
@@ -2710,7 +2710,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .filter-toolbar:hover {
@@ -2722,7 +2722,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .filter-select:hover {
@@ -2734,7 +2734,7 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .reward-table:hover {
@@ -2748,7 +2748,7 @@ body {
   font-family: var(--font-main) !important;
   font-size: 1.1rem !important;
   color: var(--color-secondary) !important;
-  text-shadow: 0 0 5px var(--color-secondary) !important;
+  text-shadow: 0 0 2px var(--color-secondary) !important;
   transition: all var(--transition-speed) ease-in-out !important;
   width: 95% !important;
   max-width: 100% !important;
@@ -2814,7 +2814,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .form-container:hover {
@@ -2826,7 +2826,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .input-label:hover {
@@ -2838,7 +2838,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .input-field:hover {
@@ -2850,7 +2850,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .btn-submit:hover {
@@ -2862,7 +2862,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .mt-6:hover {
@@ -2874,7 +2874,7 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 1px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .winner-row:hover {
@@ -2886,7 +2886,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .winner-name:hover {
@@ -2898,7 +2898,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ffe600;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .no-winners:hover {
@@ -2910,7 +2910,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .pending-winners:hover {
@@ -2922,7 +2922,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .status-dot:hover {
@@ -2934,7 +2934,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .pending:hover {
@@ -2946,7 +2946,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .executed:hover {
@@ -2958,11 +2958,11 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 0.9rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .storm-row:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.15);
   box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff073a;
 }
 
@@ -2970,7 +2970,7 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .table-container:hover {
@@ -2982,7 +2982,7 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 1.2rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .storm-table:hover {
@@ -2994,7 +2994,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .reward-box:hover {
@@ -3006,7 +3006,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .reward-title:hover {
@@ -3018,7 +3018,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .reward-user-daily:hover {
@@ -3030,7 +3030,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .card:hover {
@@ -3042,7 +3042,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .card-title:hover {
@@ -3054,7 +3054,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .label:hover {
@@ -3066,7 +3066,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .section-space:hover {
@@ -3078,7 +3078,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .subheading:hover {
@@ -3090,7 +3090,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #00f0ff;
+  text-shadow: 0 0 2px #00f0ff;
   transition: all 0.3s ease-in-out;
 }
 .input-range:hover {
@@ -3102,7 +3102,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .text-muted:hover {
@@ -3114,7 +3114,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .small:hover {
@@ -3126,7 +3126,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff073a;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .thead:hover {
@@ -3138,7 +3138,7 @@ body {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 1.2rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .row-border:hover {
@@ -3150,7 +3150,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffe600;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .strong:hover {
@@ -3162,7 +3162,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ffe600;
-  text-shadow: 0 0 5px #00ffcc;
+  text-shadow: 0 0 2px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
 .empty-state:hover {
@@ -3174,7 +3174,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ffffff;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .card-hover:hover {
@@ -3186,7 +3186,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .nft-checkbox:hover {
@@ -3198,7 +3198,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #8e44ad;
+  text-shadow: 0 0 2px #8e44ad;
   transition: all 0.3s ease-in-out;
 }
 .nft-card-content:hover {
@@ -3210,7 +3210,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .nft-title:hover {
@@ -3222,7 +3222,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .nft-subtitle:hover {
@@ -3234,7 +3234,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .btn-pagination:hover {
@@ -3246,7 +3246,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .pagination-info:hover {
@@ -3270,7 +3270,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .nft-subtext:hover {
@@ -3282,7 +3282,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #8e44ad;
-  text-shadow: 0 0 5px #1affd5;
+  text-shadow: 0 0 2px #1affd5;
   transition: all 0.3s ease-in-out;
 }
 .form-wrapper:hover {
@@ -3294,7 +3294,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #39ff14;
+  text-shadow: 0 0 2px #39ff14;
   transition: all 0.3s ease-in-out;
 }
 .form-field:hover {
@@ -3306,7 +3306,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00ffcc;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 .input-box:hover {
@@ -3318,7 +3318,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .swap-preview:hover {
@@ -3330,7 +3330,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #39ff14;
-  text-shadow: 0 0 5px #ff073a;
+  text-shadow: 0 0 2px #ff073a;
   transition: all 0.3s ease-in-out;
 }
 .highlight:hover {
@@ -3342,7 +3342,7 @@ body {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
   transition: all 0.3s ease-in-out;
 }
 .text-error:hover {
@@ -3648,9 +3648,9 @@ button:hover, .btn:hover, .menu-button:hover {
 
   /* Contorno/bordo giallo con glow */
   text-shadow: 
-    0 0 2px #ffe600,   /* bordo interno giallo */
-    0 0 3px #ffe600,   /* glow esterno giallo */
-    0 0 4px #00f0ff;   /* alone neon azzurro */
+    0 0 1px #ffe600,   /* bordo interno giallo */
+    0 0 2px #ffe600,   /* glow esterno giallo */
+    0 0 3px #00f0ff;   /* alone neon azzurro */
 
   transition: all 0.3s ease-in-out !important;
   box-shadow: 
@@ -3745,7 +3745,7 @@ button:hover, .btn:hover, .menu-button:hover {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 2rem !important;
   color: #00ffcc;
-  text-shadow: 0 0 5px #ffffff;
+  text-shadow: 0 0 2px #ffffff;
   transition: all 0.3s ease-in-out;
   position: absolute !important;
   top: 1rem !important;
@@ -3882,7 +3882,7 @@ button:hover, .btn:hover, .menu-button:hover {
 .modal-actions {
   font-size: 1.2rem;
   color: #ff00ff;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
 }
 
 .modal-actions:hover {
@@ -3895,7 +3895,7 @@ button:hover, .btn:hover, .menu-button:hover {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
   color: #00f0ff;
-  text-shadow: 0 0 5px #f39c12;
+  text-shadow: 0 0 2px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 
@@ -3909,7 +3909,7 @@ button:hover, .btn:hover, .menu-button:hover {
 .confirm-box {
   font-size: 0.9rem;
   color: #f39c12;
-  text-shadow: 0 0 5px #ffe600;
+  text-shadow: 0 0 2px #ffe600;
 }
 
 .confirm-box:hover {
@@ -3933,7 +3933,7 @@ button:hover, .btn:hover, .menu-button:hover {
 .modal-box {
   font-size: 1.1rem;
   color: #1affd5;
-  text-shadow: 0 0 5px #ff00ff;
+  text-shadow: 0 0 2px #ff00ff;
 }
 
 .modal-box:hover {

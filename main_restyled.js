@@ -1434,10 +1434,11 @@ else if (section === 'create-nfts-farm') {
   loadCreateTokenStaking();
 }
 }
- async function loadNFTFarms() {
+async function loadNFTFarms(defaultFarmName = null) {
   const { userId, usx_token } = window.userData;
   const res = await fetch(`${BASE_URL}/nfts_farms?user_id=${userId}&usx_token=${usx_token}`);
   const data = await res.json();
+
   if (!data.farms || data.farms.length === 0) {
     document.getElementById('nft-farms-container').innerHTML = `
       <div class="error-message">No NFT farms found.</div>`;
@@ -1447,7 +1448,21 @@ else if (section === 'create-nfts-farm') {
   window.nftFarmsData = data.farms;
   renderNFTFarmButtons(data.farms);
 
-  const defaultFarm = data.farms.find(f => f.farm_name.toLowerCase().includes('chips')) || data.farms[0];
+  // 🔍 Se specificato, cerca farm col nome desiderato
+  let defaultFarm = null;
+  if (defaultFarmName) {
+    defaultFarm = data.farms.find(f =>
+      f.farm_name.toLowerCase().includes(defaultFarmName.toLowerCase())
+    );
+  }
+
+  // 🎯 Se non trovata o non specificata, fallback
+  if (!defaultFarm) {
+    defaultFarm = data.farms.find(f =>
+      f.farm_name.toLowerCase().includes('chips')
+    ) || data.farms[0];
+  }
+
   renderNFTFarms([defaultFarm]);
 }
 function renderNFTFarmButtons(farms) {
@@ -2154,27 +2169,42 @@ function findNFTCardByAssetId(assetId) {
   }
   return null;
 }
+
 function showNFTCardMessage(cardElement, message, isError = false) {
-  // Rimuovi messaggi esistenti (se presenti)
+  // Rimuovi eventuali messaggi precedenti
   const existing = cardElement.querySelector('.nft-message');
   if (existing) existing.remove();
 
   const msgDiv = document.createElement('div');
   msgDiv.className = 'nft-message';
-  msgDiv.style.marginTop = '0.5rem';
-  msgDiv.style.padding = '6px 10px';
-  msgDiv.style.borderRadius = '6px';
-  msgDiv.style.fontSize = '0.9rem';
-  msgDiv.style.color = isError ? 'white' : '#155724';
-  msgDiv.style.backgroundColor = isError ? '#dc3545' : '#d4edda';
-  msgDiv.style.border = isError ? '1px solid #b52a37' : '1px solid #c3e6cb';
   msgDiv.textContent = message;
+
+  // 🧪 Stile glow cybertribal
+  msgDiv.style.marginTop = '0.75rem';
+  msgDiv.style.padding = '10px 14px';
+  msgDiv.style.borderRadius = '10px';
+  msgDiv.style.fontSize = '0.95rem';
+  msgDiv.style.fontFamily = '"Orbitron", sans-serif'; // esempio di font "cyber"
+  msgDiv.style.letterSpacing = '0.03em';
+  msgDiv.style.textAlign = 'center';
+  msgDiv.style.backdropFilter = 'blur(6px)';
+  msgDiv.style.background = isError
+    ? 'rgba(255, 0, 66, 0.15)'
+    : 'rgba(0, 255, 200, 0.12)';
+  msgDiv.style.border = `1px solid ${isError ? '#ff0042' : '#00ffc8'}`;
+  msgDiv.style.boxShadow = `0 0 10px ${isError ? '#ff0042aa' : '#00ffc8aa'}`;
+  msgDiv.style.color = isError ? '#ff4f7a' : '#00ffe6';
+  msgDiv.style.transition = 'opacity 0.3s ease';
 
   cardElement.appendChild(msgDiv);
 
-  // Rimuovi il messaggio dopo 4 secondi
-  setTimeout(() => msgDiv.remove(), 4000);
+  // 💨 Rimuove il messaggio dopo 4 secondi
+  setTimeout(() => {
+    msgDiv.style.opacity = '0';
+    setTimeout(() => msgDiv.remove(), 300); // attende la dissolvenza
+  }, 4000);
 }
+
 
 // Aggiungi effetto hover alle righe della tabella per migliorare l'interazione
 function addHoverEffectToRows() {
@@ -2209,6 +2239,10 @@ async function loadScheduleNFTGiveaway() {
   // Trova la card NFT prima della fetch
   const cardElement = findNFTCardByAssetId(assetId);
 
+  // 🔍 Trova il nome della farm corrente per ricaricarla dopo
+  const currentFarm = window.nftFarmsData?.find(f => f.farm_id === farmId);
+  const currentFarmName = currentFarm?.farm_name || null;
+
   try {
     const res = await fetch(endpoint, {
       method: "POST",
@@ -2229,8 +2263,8 @@ async function loadScheduleNFTGiveaway() {
       showNFTCardMessage(cardElement, data.message || 'Success', false);
     }
 
-    // Ricarica tutte le farms
-    await loadNFTFarms();
+    // 🔁 Ricarica tutte le farms mantenendo visibile quella attuale
+    await loadNFTFarms(currentFarmName);
 
   } catch (err) {
     console.error(err);
@@ -2238,7 +2272,8 @@ async function loadScheduleNFTGiveaway() {
       showNFTCardMessage(cardElement, "Errore: " + err.message, true);
     }
   }
-} async function loadStakingPools() {
+}
+ async function loadStakingPools() {
   const { userId, usx_token } = window.userData;
   const res = await fetch(`${BASE_URL}/open_pools?user_id=${userId}&usx_token=${usx_token}`);
   const data = await res.json();

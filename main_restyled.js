@@ -1499,7 +1499,7 @@ function renderNFTFarms(farms) {
         <div class="nft-card">
           <img src="${nft.asset_img}" alt="NFT"
             class="nft-image"
-            onerror="this.onerror=null;this.src='https://via.placeholder.com/150?text=Image+Not+Found';">
+            onerror="this.onerror=null;this.src='https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeig2o4vay6s22kwcv6r6vt5psv3llsavotgr56g3ar2zcbf44ct4ge';">
           <div class="nft-name">${nft.template_name}</div>
           <div class="nft-id">#${nft.asset_id}</div>
           <button class="${nft.is_staked ? 'btn btn-unstake' : 'btn btn-stake'}"

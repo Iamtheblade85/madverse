@@ -2514,7 +2514,9 @@ async function loadWallet() {
                       <button class="btn-action" data-action="withdraw" data-token="${token.symbol}">Withdraw</button>
                       <button class="btn-action" data-action="swap" data-token="${token.symbol}">Swap</button>
                       <button class="btn-action" data-action="transfer" data-token="${token.symbol}">Transfer</button>
-                      <button class="btn-action" data-action="stake" data-token="${token.symbol}">Stake</button>
+                      ${token.stakeable ? `
+                        <button class="btn-action" data-action="stake" data-token="${token.symbol}">Stake</button>
+                      ` : ''}
                     </div>
                   </td>
                 </tr>
@@ -2568,11 +2570,8 @@ async function loadWallet() {
   const nftsList = document.getElementById('nfts-list');
   const loading = document.getElementById('nfts-loading');
   const count = document.getElementById('nfts-count');
-
   loading.classList.add('hidden');
-
   let filtered = [...window.nftsData];
-
   const search = document.getElementById('search-template').value.toLowerCase();
   if (search) {
     filtered = filtered.filter(nft => nft.template_info.template_name.toLowerCase().includes(search));
@@ -2624,11 +2623,12 @@ async function loadWallet() {
           <img src="${nft.image_url}" alt="NFT Image" class="nft-image">
           <h3 class="nft-title">${nft.template_info.template_name}</h3>
           <p class="nft-subtitle">#${nft.asset_id}</p>
+          <p class="nft-subtitle">${nft.nft_id}</p>
         </div>
       </div>
     `).join('');
   } else {
-    nftsList.innerHTML = `<div class="empty-state">No NFTs match your filters.</div>`;
+    nftsList.innerHTML = `<div class="empty-state">No NFTs in your wallet match the filters.</div>`;
   }
 
   renderPagination(totalPages);
@@ -2690,14 +2690,15 @@ function openNFTModal(assetId) {
          style="max-height:150px; width:auto; display:block; margin:0 auto 1rem; opacity:0; transition:opacity 3s ease-in;" 
          onload="this.style.opacity='1'">
     <h2 class="modal-title">${nft.template_info.template_name}</h2>
+    <p class="nft-subtitle"><strong>NFT ID:</strong>${nft.nft_id}</p>
     <p class="nft-detail"><strong>Asset ID:</strong> ${nft.asset_id}</p>
     <p class="nft-detail"><strong>Collection:</strong> ${nft.template_info.collection_name}</p>
     <p class="nft-detail"><strong>Schema:</strong> ${nft.template_info.schema_name}</p>
-    <p class="nft-detail"><strong>Stakeable:</strong> ${nft.is_stakable}</p>
-    <p class="nft-detail"><strong>Staked:</strong> ${nft.is_staked}</p>
-    <p class="nft-detail"><strong>For Sale:</strong> ${nft.for_sale}</p>
-    <p class="nft-detail"><strong>Transferable:</strong> ${nft.template_info.is_transferable ? "Yes" : "No"}</p>
-    <p class="nft-subtext">Acquired: ${new Date(nft.created_at).toLocaleDateString()}</p>
+    <p class="nft-detail"><strong>Stakable?</strong> ${nft.is_stakable}</p>
+    <p class="nft-detail"><strong>Staked?</strong> ${nft.is_staked}</p>
+    <p class="nft-detail"><strong>On Sale?</strong> ${nft.for_sale}</p>
+    <p class="nft-detail"><strong>Transferable?</strong> ${nft.template_info.is_transferable ? "Yes" : "No"}</p>
+    <p class="nft-subtext">Acquired at: ${new Date(nft.created_at).toLocaleDateString()}</p>
   `;
 
   // Mostra la modale NFT

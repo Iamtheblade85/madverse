@@ -2195,7 +2195,11 @@ async function loadScheduleNFTGiveaway() {
     
     // 🔁 Solo refresh della farm modificata
     const updatedFarm = window.nftFarmsData.find(f => f.farm_id === farmId);
+    console.log("window.nftFarmsData Now:", window.nftFarmsData);
+    console.log("Farm ID:", farmId);
+    console.log("Updated NFTsFarms values:", updatedFarm);
     if (updatedFarm) {
+      console.log("Starting the Farm Rendering...");
       renderNFTFarms([updatedFarm]);
     }
   } catch (err) {

@@ -3654,7 +3654,7 @@ button:hover, .btn:hover, .menu-button:hover {
 /* === WALLET TABLE === */
 .wallet-table {
   width: 100% !important;
-  max-width: 65% !important;
+  /*max-width: 65% !important;*/
   margin: 2rem auto !important;
   border-collapse: collapse !important;
   font-family: "Arial Rounded MT Bold", "Papyrus", sans-serif !important;

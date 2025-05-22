@@ -1498,12 +1498,28 @@ async function loadTwitchNftsGiveaways() {
 }
 async function populateGiveawayChannels() {
   const select = document.getElementById('nftGiveawayChannel');
-  const res = await fetch(`${BASE_URL}/available_channels`);
-  const data = await res.json();
 
-  select.innerHTML = `<option value="">Select Channel</option>` +
-    data.map(ch => `<option value="${ch.name}">${ch.name}</option>`).join('');
+  try {
+    const res = await fetch(`${BASE_URL}/available_channels`);
+    const data = await res.json();
+
+    if (!Array.isArray(data.channels)) {
+      console.error("❌ Invalid data format from /available_channels:", data);
+      showToast("Failed to load channels.", "error");
+      select.innerHTML = `<option value="">No channels</option>`;
+      return;
+    }
+
+    select.innerHTML = `<option value="">Select Channel</option>` +
+      data.channels.map(ch => `<option value="${ch}">${ch}</option>`).join('');
+
+  } catch (err) {
+    console.error("❌ Error loading channels:", err);
+    showToast("Error loading channel list.", "error");
+    select.innerHTML = `<option value="">Error</option>`;
+  }
 }
+
 async function submitNftGiveaway() {
   const giveawayTime = new Date(document.getElementById('nftGiveawayTime').value).toISOString();
   const templateId = document.getElementById('nftTemplateId').value.trim();

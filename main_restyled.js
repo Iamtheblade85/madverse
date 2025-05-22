@@ -1393,72 +1393,88 @@ function loadSection(section) {
     `;
     loadNFTs();
   }
-else if (section === 'token-staking') {
-  console.log("[🧪] Entrato in blocco token-staking");
-  app.innerHTML = `
-    <div class="section-container">
-      <h2 class="section-title">Token Staking</h2>
-      <input type="text" id="search-pools" placeholder="Search token pool name" class="form-input search-token-pool">
-      <div id="pool-buttons" class="pool-buttons"></div>
-      <div id="selected-pool-details">
-        <div class="loading-message">Loading pool data...</div>
+  else if (section === 'token-staking') {
+    console.log("[🧪] Entrato in blocco token-staking");
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">Token Staking</h2>
+        <input type="text" id="search-pools" placeholder="Search token pool name" class="form-input search-token-pool">
+        <div id="pool-buttons" class="pool-buttons"></div>
+        <div id="selected-pool-details">
+          <div class="loading-message">Loading pool data...</div>
+        </div>
       </div>
-    </div>
-  `;
-  loadStakingPools();
+    `;
+    loadStakingPools();
+  
+  } else if (section === 'nfts-staking') {
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">NFT Staking</h2>
+        <div id="nft-farms-container" class="vertical-list">Loading NFT farms...</div>
+      </div>
+    `;
+    loadNFTFarms();
+  }
+  
+  else if (section === 'create-nfts-farm') {
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">Create NFTs Staking Farm</h2>
+        <div id="create-nfts-farm-container">Loading...</div>
+      </div>
+    `;
+    loadCreateNFTFarm();
+  }
+   else if (section === 'create-token-pool') {
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">Create Token Staking Pool</h2>
+        <div id="create-token-pool-container">Loading...</div>
+      </div>
+    `;
+    loadCreateTokenStaking();
+  }
+}
+function populateNFTDropdown(nfts) {
+  const dropdown = document.getElementById("nftAssetDropdown");
 
-} else if (section === 'nfts-staking') {
-  app.innerHTML = `
-    <div class="section-container">
-      <h2 class="section-title">NFT Staking</h2>
-      <div id="nft-farms-container" class="vertical-list">Loading NFT farms...</div>
-    </div>
-  `;
-  loadNFTFarms();
+  if (!nfts || !nfts.length) {
+    dropdown.innerHTML = `<option value="">No NFTs found</option>`;
+    return;
+  }
+
+  dropdown.innerHTML = `<option value="">Select NFT</option>` + 
+    nfts.map(nft => 
+      `<option value="${nft.asset_id}" data-collection="${nft.collection}" data-template="${nft.template_id}">
+        ${nft.asset_id} - ${nft.template_name}
+      </option>`
+    ).join('');
 }
 
-else if (section === 'create-nfts-farm') {
-  app.innerHTML = `
-    <div class="section-container">
-      <h2 class="section-title">Create NFTs Staking Farm</h2>
-      <div id="create-nfts-farm-container">Loading...</div>
-    </div>
-  `;
-  loadCreateNFTFarm();
-}
- else if (section === 'create-token-pool') {
-  app.innerHTML = `
-    <div class="section-container">
-      <h2 class="section-title">Create Token Staking Pool</h2>
-      <div id="create-token-pool-container">Loading...</div>
-    </div>
-  `;
-  loadCreateTokenStaking();
-}
-}
 async function loadTwitchNftsGiveaways() {
   const container = document.getElementById('c2e-content');
   container.innerHTML = 'Loading Twitch NFTs Giveaways...';
 
   container.innerHTML = `
-    <div class="section-container">
-      <h2 class="section-title">Add New NFTs Giveaway</h2>
       <div class="form-container" id="nft-giveaway-form">
-        <label class="input-label">Giveaway Time</label>
-        <input type="datetime-local" id="nftGiveawayTime" class="input-field" />
-
-        <label class="input-label">NFT Template ID</label>
-        <input type="number" id="nftTemplateId" class="input-field" placeholder="e.g. 123456" />
-
+        <label class="input-label">Select NFT to Giveaway</label>
+        <select id="nftAssetDropdown" class="input-field"></select>
+      
         <label class="input-label">Collection Name</label>
-        <input type="text" id="nftCollection" class="input-field" placeholder="e.g. mygamecol" />
-
+        <input type="text" id="nftCollection" class="input-field" readonly />
+      
+        <label class="input-label">Template ID</label>
+        <input type="text" id="nftTemplateId" class="input-field" readonly />
+      
+        <label class="input-label">Draw Date & Time</label>
+        <input type="datetime-local" id="nftGiveawayTime" class="input-field" />
+      
         <label class="input-label">Channel</label>
         <select id="nftGiveawayChannel" class="input-field"></select>
-
+      
         <button id="submitNftGiveaway" class="btn-submit">Add NFT Giveaway</button>
       </div>
-
       <h2 class="section-title mt-6">Scheduled NFTs Giveaways</h2>
       <div class="filter-toolbar">
         <input type="text" id="filter-template-id" class="filter-input" placeholder="Template ID..." />
@@ -1489,9 +1505,19 @@ async function loadTwitchNftsGiveaways() {
     document.getElementById('filter-status').value = '';
     applyNftGiveawayFiltersAndSort();
   });
+  document.getElementById("nftAssetDropdown").addEventListener("change", (e) => {
+    const selectedOption = e.target.selectedOptions[0];
+    document.getElementById("nftCollection").value = selectedOption.getAttribute("data-collection") || "";
+    document.getElementById("nftTemplateId").value = selectedOption.getAttribute("data-template") || "";
+  });
 
   // Carica canali disponibili
   await populateGiveawayChannels();
+  if (window.nftsData && window.nftsData.length) {
+    populateNFTDropdown(window.nftsData);
+  } else {
+    console.warn("⚠️ No NFTs found in window.nftsData");
+  }
 
   // Carica la lista dei giveaway programmati
   loadScheduledNftGiveaways();
@@ -1521,24 +1547,27 @@ async function populateGiveawayChannels() {
 }
 
 async function submitNftGiveaway() {
-  const giveawayTime = new Date(document.getElementById('nftGiveawayTime').value).toISOString();
-  const templateId = document.getElementById('nftTemplateId').value.trim();
-  const collection = document.getElementById('nftCollection').value.trim();
+  const assetId = document.getElementById("nftAssetDropdown").value;
+  const templateId = document.getElementById("nftTemplateId").value;
+  const collection = document.getElementById("nftCollection").value;
+  const drawTime = new Date(document.getElementById('nftGiveawayTime').value).toISOString();
   const channel = document.getElementById('nftGiveawayChannel').value;
 
-  const { userId, usx_token, wax_account } = window.userData;
+  const { userId, usx_token, wax_account, username } = window.userData;
 
-  if (!templateId || !collection || !channel || !giveawayTime || !wax_account) {
-    showToast("Please fill all fields.", "error");
+  if (!assetId || !templateId || !collection || !drawTime || !channel) {
+    showToast("Please fill all required fields.", "error");
     return;
   }
 
   const payload = {
-    scheduled_time: giveawayTime,
+    asset_id: assetId,
     template_id: parseInt(templateId),
     collection_name: collection,
+    scheduled_time: drawTime,
     channel_name: channel,
-    wax_account
+    wax_account_donor: wax_account,
+    username_donor: username
   };
 
   try {
@@ -1549,7 +1578,7 @@ async function submitNftGiveaway() {
     });
 
     const data = await res.json();
-    if (!res.ok || data.error) throw new Error(data.error || "Failed to create giveaway");
+    if (!res.ok || data.error) throw new Error(data.error || "Failed to schedule giveaway");
 
     showToast("NFT Giveaway scheduled!", "success");
     loadScheduledNftGiveaways();
@@ -1559,6 +1588,7 @@ async function submitNftGiveaway() {
     showToast(err.message, "error");
   }
 }
+
 async function loadScheduledNftGiveaways() {
   const table = document.getElementById('nft-giveaways-table');
   table.innerHTML = "Loading...";
@@ -1630,20 +1660,24 @@ function renderNftGiveawaysTable(data) {
       <thead>
         <tr>
           <th onclick="sortNftGiveaways('scheduled_time')">Time${sortArrow('scheduled_time')}</th>
+          <th onclick="sortNftGiveaways('asset_id')">Asset ID${sortArrow('asset_id')}</th>
           <th onclick="sortNftGiveaways('template_id')">Template ID${sortArrow('template_id')}</th>
           <th onclick="sortNftGiveaways('collection_name')">Collection${sortArrow('collection_name')}</th>
           <th onclick="sortNftGiveaways('channel_name')">Channel${sortArrow('channel_name')}</th>
           <th onclick="sortNftGiveaways('status')">Status${sortArrow('status')}</th>
+          <th onclick="sortNftGiveaways('winner')">Winner${sortArrow('winner')}</th>
         </tr>
       </thead>
       <tbody>
         ${data.map(g => `
           <tr>
             <td>${new Date(g.scheduled_time).toLocaleString()}</td>
+            <td>${g.asset_id}</td>
             <td>${g.template_id}</td>
             <td>${g.collection_name}</td>
             <td>${g.channel_name}</td>
             <td>${g.status || 'pending'}</td>
+            <td>${g.winner || '-'}</td>
           </tr>`).join('')}
       </tbody>
     </table>
@@ -1651,6 +1685,7 @@ function renderNftGiveawaysTable(data) {
 
   table.innerHTML = html;
 }
+
 function sortNftGiveaways(key) {
   if (nftGiveawaySort.key === key) {
     nftGiveawaySort.direction = nftGiveawaySort.direction === 'asc' ? 'desc' : 'asc';

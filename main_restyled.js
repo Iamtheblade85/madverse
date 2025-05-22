@@ -1903,7 +1903,7 @@ async function loadLogStormsGiveaways() {
         </div>
 
         <h2 class="section-title mt-6">Scheduled Storms</h2>
-        <div id="table-container">
+        <div id="table-container" class="table-container">
           Loading Scheduled Storms...
         </div>
       </div>
@@ -2003,7 +2003,7 @@ function setScheduledTimeMinMax() {
 
 // Funzione per caricare le tempeste programmate
 async function loadScheduledStorms() {
-  const tableContainer = document.getElementById('table-container');
+  const tableContainer = document.getElementById('c2e-content');
   tableContainer.innerHTML = 'Loading Scheduled Storms...';
 
   try {
@@ -2029,7 +2029,7 @@ async function loadScheduledStorms() {
   }
 }
 function renderStormsTable(data) {
-  const tableBody = document.querySelector('.storm-table tbody');
+  const tableBody = document.querySelector('#c2e-content tbody');
   if (!tableBody) return;
 
   let rowsHTML = '';
@@ -2094,7 +2094,7 @@ function sortStormsTable(key) {
 }
 
 function displayStormsData(data) {
-  const tableContainer = document.getElementById('table-container');
+  const tableContainer = document.getElementById('c2e-content');
   originalStormsData = data;
 
   const getUniqueValues = (data, key) => [...new Set(data.map(item => item[key]).filter(Boolean))].sort();
@@ -2127,7 +2127,8 @@ function displayStormsData(data) {
       </div>
       <button id="update-storms" class="btn btn-primary">Update Data</button>
     </div>
-      <table class="storm-table">
+    <div>
+      <table class="reward-table">
         <thead>
           <tr>
             <th onclick="sortStormsTable('id')">Storm-ID${sortArrow('id')}</th>
@@ -2143,8 +2144,8 @@ function displayStormsData(data) {
         </thead>
         <tbody></tbody>
       </table>
+    </div>
   `;
-
   renderStormsTable(data);
 
   document.getElementById('filter-channel').addEventListener('change', applyStormsFiltersAndSort);
@@ -2153,7 +2154,7 @@ function displayStormsData(data) {
   document.getElementById('update-storms').addEventListener('click', loadScheduledStorms);
 }
 function addHoverEffectToRows() {
-  const rows = document.querySelectorAll('.storm-table tbody tr');
+  const rows = document.querySelectorAll('.reward-table tbody tr');
   rows.forEach(row => {
     row.addEventListener('mouseenter', () => {
       row.classList.add('hovered');

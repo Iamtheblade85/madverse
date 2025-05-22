@@ -3011,10 +3011,14 @@ body {
 .table-container {
   font-family: "Poppins", "Arial Rounded MT Bold", sans-serif;
   font-size: 1.1rem;
+  overflow-x: auto;
+  width: 100%;  
   color: #39ff14;
   text-shadow: 0 0 1px #8e44ad;
   transition: all 0.3s ease-in-out;
+  display: block; /* ✅ importante per il comportamento di overflow */
 }
+
 .table-container:hover {
   filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #1affd5;
@@ -3026,7 +3030,11 @@ body {
   color: #1affd5;
   text-shadow: 0 0 1px #ff00ff;
   transition: all 0.3s ease-in-out;
+  width: 100%;
+  min-width: max-content; /* ✅ forza la tabella a non schiacciarsi troppo */
+  border-collapse: collapse;
 }
+
 .storm-table:hover {
   filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ff073a;

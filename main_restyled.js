@@ -1903,7 +1903,7 @@ async function loadLogStormsGiveaways() {
         </div>
 
         <h2 class="section-title mt-6">Scheduled Storms</h2>
-        <div id="wallet-table">
+        <div id="table-container">
           Loading Scheduled Storms...
         </div>
       </div>
@@ -2003,7 +2003,7 @@ function setScheduledTimeMinMax() {
 
 // Funzione per caricare le tempeste programmate
 async function loadScheduledStorms() {
-  const tableContainer = document.getElementById('wallet-table');
+  const tableContainer = document.getElementById('table-container');
   tableContainer.innerHTML = 'Loading Scheduled Storms...';
 
   try {
@@ -2094,7 +2094,7 @@ function sortStormsTable(key) {
 }
 
 function displayStormsData(data) {
-  const tableContainer = document.getElementById('wallet-table');
+  const tableContainer = document.getElementById('table-container');
   originalStormsData = data;
 
   const getUniqueValues = (data, key) => [...new Set(data.map(item => item[key]).filter(Boolean))].sort();
@@ -2127,7 +2127,6 @@ function displayStormsData(data) {
       </div>
       <button id="update-storms" class="btn btn-primary">Update Data</button>
     </div>
-    <div class="table-container">
       <table class="storm-table">
         <thead>
           <tr>
@@ -2144,7 +2143,6 @@ function displayStormsData(data) {
         </thead>
         <tbody></tbody>
       </table>
-    </div>
   `;
 
   renderStormsTable(data);

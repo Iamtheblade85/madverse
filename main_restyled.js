@@ -1498,7 +1498,7 @@ async function loadTwitchNftsGiveaways() {
 }
 async function populateGiveawayChannels() {
   const select = document.getElementById('nftGiveawayChannel');
-  const res = await fetch(`${BASE_URL}/get_channels`);
+  const res = await fetch(`${BASE_URL}/available_channels`);
   const data = await res.json();
 
   select.innerHTML = `<option value="">Select Channel</option>` +

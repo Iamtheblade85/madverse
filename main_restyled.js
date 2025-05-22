@@ -20,6 +20,8 @@ const BASE_URL = "https://iamemanuele.pythonanywhere.com";
 let availableTokens = [];
 let originalStormsData = [];
 let currentSort = { key: '', direction: 'desc' };
+let originalNftGiveawaysData = [];
+let nftGiveawaySort = { key: '', direction: 'asc' };
 
 function getUniqueValues(data, key) {
   return [...new Set(data.map(item => item[key]).filter(Boolean))].sort();
@@ -1434,6 +1436,216 @@ else if (section === 'create-nfts-farm') {
   loadCreateTokenStaking();
 }
 }
+async function loadTwitchNftsGiveaways() {
+  const container = document.getElementById('c2e-content');
+  container.innerHTML = 'Loading Twitch NFTs Giveaways...';
+
+  container.innerHTML = `
+    <div class="section-container">
+      <h2 class="section-title">Add New NFTs Giveaway</h2>
+      <div class="form-container" id="nft-giveaway-form">
+        <label class="input-label">Giveaway Time</label>
+        <input type="datetime-local" id="nftGiveawayTime" class="input-field" />
+
+        <label class="input-label">NFT Template ID</label>
+        <input type="number" id="nftTemplateId" class="input-field" placeholder="e.g. 123456" />
+
+        <label class="input-label">Collection Name</label>
+        <input type="text" id="nftCollection" class="input-field" placeholder="e.g. mygamecol" />
+
+        <label class="input-label">Channel</label>
+        <select id="nftGiveawayChannel" class="input-field"></select>
+
+        <button id="submitNftGiveaway" class="btn-submit">Add NFT Giveaway</button>
+      </div>
+
+      <h2 class="section-title mt-6">Scheduled NFTs Giveaways</h2>
+      <div class="filter-toolbar">
+        <input type="text" id="filter-template-id" class="filter-input" placeholder="Template ID..." />
+        <input type="text" id="filter-collection" class="filter-input" placeholder="Collection..." />
+        <select id="filter-channel" class="filter-select"></select>
+        <select id="filter-status" class="filter-select">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="sent">Sent</option>
+          <option value="failed">Failed</option>
+        </select>
+        <button class="btn btn-secondary" id="reset-nft-filters">Reset</button>
+      </div>
+      <div id="nft-giveaways-table" class="table-container">Loading scheduled giveaways...</div>
+    </div>
+  `;
+
+  // Event listener per invio form
+  document.getElementById('submitNftGiveaway').addEventListener('click', submitNftGiveaway);
+  document.getElementById('filter-template-id').addEventListener('input', applyNftGiveawayFiltersAndSort);
+  document.getElementById('filter-collection').addEventListener('input', applyNftGiveawayFiltersAndSort);
+  document.getElementById('filter-channel').addEventListener('change', applyNftGiveawayFiltersAndSort);
+  document.getElementById('filter-status').addEventListener('change', applyNftGiveawayFiltersAndSort);
+  document.getElementById('reset-nft-filters').addEventListener('click', () => {
+    document.getElementById('filter-template-id').value = '';
+    document.getElementById('filter-collection').value = '';
+    document.getElementById('filter-channel').value = '';
+    document.getElementById('filter-status').value = '';
+    applyNftGiveawayFiltersAndSort();
+  });
+
+  // Carica canali disponibili
+  await populateGiveawayChannels();
+
+  // Carica la lista dei giveaway programmati
+  loadScheduledNftGiveaways();
+}
+async function populateGiveawayChannels() {
+  const select = document.getElementById('nftGiveawayChannel');
+  const res = await fetch(`${BASE_URL}/get_channels`);
+  const data = await res.json();
+
+  select.innerHTML = `<option value="">Select Channel</option>` +
+    data.map(ch => `<option value="${ch.name}">${ch.name}</option>`).join('');
+}
+async function submitNftGiveaway() {
+  const giveawayTime = new Date(document.getElementById('nftGiveawayTime').value).toISOString();
+  const templateId = document.getElementById('nftTemplateId').value.trim();
+  const collection = document.getElementById('nftCollection').value.trim();
+  const channel = document.getElementById('nftGiveawayChannel').value;
+
+  const { userId, usx_token, wax_account } = window.userData;
+
+  if (!templateId || !collection || !channel || !giveawayTime || !wax_account) {
+    showToast("Please fill all fields.", "error");
+    return;
+  }
+
+  const payload = {
+    scheduled_time: giveawayTime,
+    template_id: parseInt(templateId),
+    collection_name: collection,
+    channel_name: channel,
+    wax_account
+  };
+
+  try {
+    const res = await fetch(`${BASE_URL}/add_nft_giveaway?user_id=${userId}&usx_token=${usx_token}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || "Failed to create giveaway");
+
+    showToast("NFT Giveaway scheduled!", "success");
+    loadScheduledNftGiveaways();
+
+  } catch (err) {
+    console.error(err);
+    showToast(err.message, "error");
+  }
+}
+async function loadScheduledNftGiveaways() {
+  const table = document.getElementById('nft-giveaways-table');
+  table.innerHTML = "Loading...";
+
+  const { userId, usx_token } = window.userData;
+
+  try {
+    const res = await fetch(`${BASE_URL}/get_scheduled_nft_giveaways?user_id=${userId}&usx_token=${usx_token}`);
+    const data = await res.json();
+
+    if (!data.length) {
+      table.innerHTML = "<div class='info-message'>No giveaways scheduled.</div>";
+      return;
+    }
+
+    // Salva i dati originali per filtri e ordinamenti
+    originalNftGiveawaysData = data;
+
+    // Popola filtro canali dinamicamente
+    const uniqueChannels = [...new Set(data.map(g => g.channel_name).filter(Boolean))];
+    const channelSelect = document.getElementById('filter-channel');
+    if (channelSelect) {
+      channelSelect.innerHTML = `<option value="">All Channels</option>` +
+        uniqueChannels.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+
+    // Applica subito i filtri e sorting correnti
+    applyNftGiveawayFiltersAndSort();
+
+  } catch (err) {
+    console.error(err);
+    table.innerHTML = `<div class="error-message">Failed to load giveaways: ${err.message}</div>`;
+  }
+}
+
+function applyNftGiveawayFiltersAndSort() {
+  const templateFilter = document.getElementById('filter-template-id')?.value.trim();
+  const collectionFilter = document.getElementById('filter-collection')?.value.trim().toLowerCase();
+  const channelFilter = document.getElementById('filter-channel')?.value;
+  const statusFilter = document.getElementById('filter-status')?.value;
+
+  let filtered = originalNftGiveawaysData.filter(g => {
+    return (
+      (!templateFilter || g.template_id.toString().includes(templateFilter)) &&
+      (!collectionFilter || g.collection_name.toLowerCase().includes(collectionFilter)) &&
+      (!channelFilter || g.channel_name === channelFilter) &&
+      (!statusFilter || g.status === statusFilter)
+    );
+  });
+
+  if (nftGiveawaySort.key) {
+    filtered.sort((a, b) => {
+      const aVal = a[nftGiveawaySort.key];
+      const bVal = b[nftGiveawaySort.key];
+
+      if (nftGiveawaySort.direction === 'asc') return aVal > bVal ? 1 : -1;
+      else return aVal < bVal ? 1 : -1;
+    });
+  }
+
+  renderNftGiveawaysTable(filtered);
+}
+function renderNftGiveawaysTable(data) {
+  const table = document.getElementById('nft-giveaways-table');
+  const sortArrow = (key) => nftGiveawaySort.key === key ? (nftGiveawaySort.direction === 'asc' ? ' ↑' : ' ↓') : '';
+
+  const html = `
+    <table class="styled-table">
+      <thead>
+        <tr>
+          <th onclick="sortNftGiveaways('scheduled_time')">Time${sortArrow('scheduled_time')}</th>
+          <th onclick="sortNftGiveaways('template_id')">Template ID${sortArrow('template_id')}</th>
+          <th onclick="sortNftGiveaways('collection_name')">Collection${sortArrow('collection_name')}</th>
+          <th onclick="sortNftGiveaways('channel_name')">Channel${sortArrow('channel_name')}</th>
+          <th onclick="sortNftGiveaways('status')">Status${sortArrow('status')}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(g => `
+          <tr>
+            <td>${new Date(g.scheduled_time).toLocaleString()}</td>
+            <td>${g.template_id}</td>
+            <td>${g.collection_name}</td>
+            <td>${g.channel_name}</td>
+            <td>${g.status || 'pending'}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+
+  table.innerHTML = html;
+}
+function sortNftGiveaways(key) {
+  if (nftGiveawaySort.key === key) {
+    nftGiveawaySort.direction = nftGiveawaySort.direction === 'asc' ? 'desc' : 'asc';
+  } else {
+    nftGiveawaySort.key = key;
+    nftGiveawaySort.direction = 'asc';
+  }
+  applyNftGiveawayFiltersAndSort();
+}
+window.sortNftGiveaways = sortNftGiveaways;
+
 async function loadNFTFarms(defaultFarmName = null) {
   const { userId, usx_token } = window.userData;
   const res = await fetch(`${BASE_URL}/nfts_farms?user_id=${userId}&usx_token=${usx_token}`);

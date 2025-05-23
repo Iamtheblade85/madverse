@@ -1755,6 +1755,7 @@ function renderNftGiveawaysTable(data) {
       <thead>
         <tr>
           <th onclick="sortNftGiveaways('scheduled_time')">Time${sortArrow('scheduled_time')}</th>
+          <th onclick="sortNftGiveaways('username_donor')">Sponsored by${sortArrow('username_donor')}</th>
           <th onclick="sortNftGiveaways('asset_id')">Asset ID${sortArrow('asset_id')}</th>
           <th onclick="sortNftGiveaways('template_id')">Template ID${sortArrow('template_id')}</th>
           <th onclick="sortNftGiveaways('collection_name')">Collection${sortArrow('collection_name')}</th>
@@ -1767,6 +1768,7 @@ function renderNftGiveawaysTable(data) {
         ${data.map(g => `
           <tr>
             <td>${new Date(g.scheduled_time).toLocaleString()}</td>
+            <td>${g.username_donor || '-'}</td>
             <td>${g.asset_id}</td>
             <td>${g.template_id}</td>
             <td>${g.collection_name}</td>

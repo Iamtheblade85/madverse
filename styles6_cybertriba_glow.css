@@ -2043,9 +2043,9 @@ body {
 }
 .template-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
-  margin-top: 1.5rem;
+  margin-top: 1.5rem;  
 }
 
 .btn-danger {
@@ -2636,15 +2636,22 @@ body {
 .nft-grid {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.1rem;
-  text-shadow: 0 0 1px #00ffcc;
-  transition: all 0.3s ease-in-out;
   color: #999;
+  text-shadow: 0 0 1px #00ffcc;
+  font-style: italic;
+  text-align: center;
+
   background-color: #1a1a1a;
   padding: 0.75rem;
   border-radius: 4px;
-  font-style: italic;
-  text-align: center;
-  border: 1px dashed #444;  
+  border: 1px dashed #444;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+
+  transition: all 0.3s ease-in-out;
 }
 .nft-grid:hover {
   filter: brightness(1.1);

@@ -1640,15 +1640,34 @@ body {
 }
 
 .form-card {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.1rem;
   color: #f39c12;
   text-shadow: 0 0 1px #00ffcc;
   transition: all 0.3s ease-in-out;
 }
+.form-card {
+  background-color: #111;
+  border: 1px solid #00ffcc;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+  margin-top: 1.5rem;
+}
+
 .form-card:hover {
   filter: brightness(1.1);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffffff;
+}
+.form-input,
+.form-label,
+.reward-token-entry,
+#new-token-symbol {
+  display: block;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+#submit-new-token-pool,
+#add-reward-token {
+  margin-top: 1.2rem;
 }
 
 .form-title {
@@ -1733,6 +1752,12 @@ body {
 .reward-token-entry:hover {
   filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #f39c12;
+}
+#reward-token-entries {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
 }
 
 .reward-symbol {
@@ -3510,7 +3535,7 @@ h1, .app-title {
 }
 
 /* STILE AVANZATO PER FORM */
-form, .form-card {
+form {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid #00f0ff;
   padding: 1.5rem;

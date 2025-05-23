@@ -330,10 +330,18 @@ function renderNewTokenPoolForm() {
       </div>
     </div>
   `;
-
+  // Step navigation
+  document.getElementById('go-to-step-2').addEventListener('click', () => {
+    document.getElementById('step-1').style.display = 'none';
+    document.getElementById('step-2').style.display = 'block';
+  });
+  
+  document.getElementById('back-to-step-1').addEventListener('click', () => {
+    document.getElementById('step-2').style.display = 'none';
+    document.getElementById('step-1').style.display = 'block';
+  });
 
   let rewardIndex = 0;
-
   function addRewardTokenEntry() {
     const wrapper = document.getElementById('reward-token-entries');
     const html = `

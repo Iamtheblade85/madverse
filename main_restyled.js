@@ -1531,7 +1531,7 @@ async function loadTwitchNftsGiveaways() {
         <input type="text" id="nftTemplateId" class="input-field" readonly />
       
         <label class="input-label">Draw Date & Time</label>
-        <input type="datetime-local" id="nftGiveawayTime" class="input-field" />
+        <input type="text" id="nftGiveawayTime" class="input-field" placeholder="Select date & time" readonly />
       
         <label class="input-label">Channel</label>
         <select id="nftGiveawayChannel" class="input-field"></select>
@@ -1554,6 +1554,16 @@ async function loadTwitchNftsGiveaways() {
       <div id="nft-giveaways-table" class="table-container">Loading scheduled giveaways...</div>
     </div>
   `;
+  flatpickr("#nftGiveawayTime", {
+    enableTime: true,
+    dateFormat: "Y-m-d H:i",
+    time_24hr: true,
+    defaultDate: new Date(),
+    allowInput: false,
+    locale: {
+      firstDayOfWeek: 1 // Inizia da lunedì
+    }
+  });
 
   // Event listener per invio form
   document.getElementById('submitNftGiveaway').addEventListener('click', submitNftGiveaway);

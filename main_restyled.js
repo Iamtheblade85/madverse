@@ -1643,7 +1643,7 @@ async function submitNftGiveaway() {
   const drawTime = new Date(document.getElementById('nftGiveawayTime').value).toISOString();
   const channel = document.getElementById('nftGiveawayChannel').value;
 
-  const { userId, usx_token, wax_account, username } = window.userData;
+  const { userId, usx_token, wax_account } = window.userData;
 
   if (!assetId || !templateId || !collection || !drawTime || !channel) {
     showToast("Please fill all required fields.", "error");
@@ -1656,8 +1656,7 @@ async function submitNftGiveaway() {
     collection_name: collection,
     scheduled_time: drawTime,
     channel_name: channel,
-    wax_account_donor: wax_account,
-    username_donor: username
+    wax_account_donor: wax_account
   };
 
   try {

@@ -46,6 +46,12 @@ async function loadAvailableTokens() {
     console.error("[❌] Errore caricando tokens:", error);
   }
 }
+
+function handleNFTImageError(img) {
+  img.onerror = null;
+  img.src = 'https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeig2o4vay6s22kwcv6r6vt5psv3llsavotgr56g3ar2zcbf44ct4ge';
+}
+
 function applyStormsFiltersAndSort() {
   const channelFilter = document.getElementById('filter-channel')?.value || '';
   const statusFilter = document.getElementById('filter-status')?.value || '';
@@ -1863,20 +1869,11 @@ function renderNFTFarms(farms) {
 
   farms.forEach(farm => {
     const templatesHTML = (farm.templates || []).map(template => {
-    const nftsHTML = (template.user_nfts || []).map(nft => {
-      const isVideo = nft.asset_img?.match(/\.(mp4|webm)$/i);
-      return `
+      const nftsHTML = (template.user_nfts || []).map(nft => `
         <div class="nft-card">
-          ${isVideo ? `
-            <video src="${nft.asset_img}" class="nft-video" autoplay loop muted playsinline>
-              <source src="${nft.asset_img}" type="video/mp4">
-              Il tuo browser non supporta i video.
-            </video>
-          ` : `
-            <img src="${nft.asset_img}" alt="NFT"
-              class="nft-image"
-              onerror="this.onerror=null;this.src='https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeig2o4vay6s22kwcv6r6vt5psv3llsavotgr56g3ar2zcbf44ct4ge';">
-          `}
+          <img src="${nft.asset_img}" alt="NFT"
+            class="nft-image"
+            onerror="handleNFTImageError(this)">
           <div class="nft-name">${nft.template_name}</div>
           <div class="nft-id">#${nft.asset_id}</div>
           <button class="${nft.is_staked ? 'btn btn-unstake' : 'btn btn-stake'}"
@@ -1884,9 +1881,7 @@ function renderNFTFarms(farms) {
             ${nft.is_staked ? 'Unstake' : 'Stake'}
           </button>
         </div>
-      `;
-    }).join('');
-
+      `).join('');
 
       const rewardsHTML = (template.rewards || []).map(r => {
         const daily = parseFloat(r.daily_reward_amount);
@@ -1898,7 +1893,6 @@ function renderNFTFarms(farms) {
       }).join('') || '<div class="no-rewards">No rewards</div>';
       
       const rawImg = template.user_nfts?.[0]?.asset_img || template.template_img;
-      
       const imgUrl = rawImg ? `https://ipfs.io/ipfs/${rawImg}` : null;
       
       const templateImageHTML = imgUrl
@@ -2952,10 +2946,13 @@ async function loadWallet() {
   const loading = document.getElementById('nfts-loading');
   const count = document.getElementById('nfts-count');
   loading.classList.add('hidden');
+
   let filtered = [...window.nftsData];
   const search = document.getElementById('search-template').value.toLowerCase();
   if (search) {
-    filtered = filtered.filter(nft => nft.template_info.template_name.toLowerCase().includes(search));
+    filtered = filtered.filter(nft =>
+      nft.template_info.template_name.toLowerCase().includes(search)
+    );
   }
 
   const status = document.getElementById('filter-status').value;
@@ -2967,9 +2964,10 @@ async function loadWallet() {
   if (status !== "Staked" && stakable) {
     filtered = filtered.filter(nft => nft.is_stakable === stakable);
   }
-
   if (forSale) filtered = filtered.filter(nft => nft.for_sale === forSale);
-  if (collection) filtered = filtered.filter(nft => nft.template_info.collection_name === collection);
+  if (collection) filtered = filtered.filter(nft =>
+    nft.template_info.collection_name === collection
+  );
 
   const sort = document.getElementById('sort-by').value;
   if (sort === "created_at_desc") {
@@ -2977,9 +2975,13 @@ async function loadWallet() {
   } else if (sort === "created_at_asc") {
     filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
   } else if (sort === "template_name_asc") {
-    filtered.sort((a, b) => a.template_info.template_name.localeCompare(b.template_info.template_name));
+    filtered.sort((a, b) =>
+      a.template_info.template_name.localeCompare(b.template_info.template_name)
+    );
   } else if (sort === "template_name_desc") {
-    filtered.sort((a, b) => b.template_info.template_name.localeCompare(a.template_info.template_name));
+    filtered.sort((a, b) =>
+      b.template_info.template_name.localeCompare(a.template_info.template_name)
+    );
   }
 
   count.innerText = `${filtered.length} NFTs found`;
@@ -3001,7 +3003,11 @@ async function loadWallet() {
           ${window.selectedNFTs.has(nft.asset_id) ? "checked" : ""}>
 
         <div onclick="openNFTModal('${nft.asset_id}')" class="nft-card-content">
-          <img src="${nft.image_url}" alt="NFT Image" class="nft-image">
+          <img 
+            src="${nft.image_url}" 
+            alt="NFT Image" 
+            class="nft-image" 
+            onerror="handleNFTImageError(this)">
           <h3 class="nft-title">${nft.template_info.template_name}</h3>
           <p class="nft-subtitle">#${nft.asset_id}</p>
           <p class="nft-subtitle">${nft.nft_id}</p>
@@ -3015,6 +3021,7 @@ async function loadWallet() {
   renderPagination(totalPages);
   updateBulkActions();
 }
+
  function toggleNFTSelection(event, assetId) {
   event.stopPropagation(); // Evita che clicchi anche la card
   if (event.target.checked) {

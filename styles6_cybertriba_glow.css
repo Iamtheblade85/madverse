@@ -3039,41 +3039,55 @@ body {
   filter: brightness(1.1);
   box-shadow: 0 0 12px #39ff14, 0 0 25px #ff073a;
 }
-
+.reward-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
 .reward-box {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
   color: #ff00ff;
+  background: rgba(10, 10, 10, 0.7);
+  border: 1px solid #39ff14;
+  border-radius: 1rem;
+  padding: 1rem 1.5rem;
   text-shadow: 0 0 1px #39ff14;
   transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 8px rgba(57, 255, 20, 0.4);
 }
 .reward-box:hover {
   filter: brightness(1.1);
+  transform: scale(1.03);
   box-shadow: 0 0 12px #ffe600, 0 0 25px #ffe600;
 }
 
 .reward-title {
   font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.4rem;
   color: #00f0ff;
   text-shadow: 0 0 1px #ffe600;
   transition: all 0.3s ease-in-out;
 }
 .reward-title:hover {
   filter: brightness(1.1);
-  box-shadow: 0 0 12px #ff073a, 0 0 25px #ff00ff;
+  box-shadow: 0 0 8px #ff073a, 0 0 16px #ff00ff;
 }
 
 .reward-user-daily {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 1.2rem;
+  margin-top: 0.6rem;
   color: #00f0ff;
+  font-style: italic;
   text-shadow: 0 0 1px #ffffff;
   transition: all 0.3s ease-in-out;
 }
 .reward-user-daily:hover {
   filter: brightness(1.1);
-  box-shadow: 0 0 12px #ff073a, 0 0 25px #00ffcc;
+  box-shadow: 0 0 8px #ff073a, 0 0 16px #00ffcc;
 }
 
 .card {

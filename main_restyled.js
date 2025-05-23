@@ -310,23 +310,27 @@ async function fetchAndRenderTokenPools(shouldRender = true) {
 function renderNewTokenPoolForm() {
   const container = document.getElementById('token-pool-details');
   container.innerHTML = `
-    <div class="form-card">
-      <h3 class="form-title">Create a New Token Staking Pool</h3>
-
-      <label class="form-label">Deposit Token Symbol</label>
-      <input id="new-token-symbol" type="text" class="form-input" placeholder="e.g. CHIPS">
-
-      <div id="reward-token-entries"></div>
-
-      <button class="btn btn-secondary add-reward-btn" id="add-reward-token">
-        ➕ Add Reward Token
-      </button>
-
-      <button id="submit-new-token-pool" class="btn btn-primary submit-pool-btn">
-        Create Pool
-      </button>
+    <div class="form-card" id="create-pool-form">
+      <div id="step-1" class="form-step active-step">
+        <h3 class="form-title">Step 1: Deposit Token</h3>
+        <label class="form-label">Deposit Token Symbol</label>
+        <input id="new-token-symbol" type="text" class="form-input" placeholder="e.g. CHIPS">
+        <button class="btn btn-primary" id="go-to-step-2">Next ➡️</button>
+      </div>
+  
+      <div id="step-2" class="form-step" style="display: none;">
+        <h3 class="form-title">Step 2: Reward Tokens</h3>
+        <div id="reward-token-entries" class="reward-token-grid"></div>
+  
+        <button class="btn btn-secondary add-reward-btn" id="add-reward-token">➕ Add Reward Token</button>
+        <div class="step-buttons">
+          <button class="btn btn-secondary" id="back-to-step-1">⬅️ Back</button>
+          <button class="btn btn-primary submit-pool-btn" id="submit-new-token-pool">✅ Create Pool</button>
+        </div>
+      </div>
     </div>
   `;
+
 
   let rewardIndex = 0;
 

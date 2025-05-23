@@ -3651,17 +3651,7 @@ function injectThemeSelector() {
   });
 
   const themes = [
-    { name: 'Caveman', file: 'styles6_caveman2.css' },
-    { name: 'ChipsWallet', file: 'styles6_chipswallet.css' },
-    { name: 'Crypto World', file: 'styles6_crypto.css' },
-    { name: 'Far West', file: 'styles6_farwest.css' },
-    { name: 'Inferno', file: 'styles6_inferno.css' },
-    { name: 'Oceanic Life', file: 'styles6_oceanic.css' },
-    { name: 'Precious Gold', file: 'styles6_precious.css' },
-    { name: 'Streaming', file: 'styles6_streaming.css' },
-    { name: 'Jurassic', file: 'styles6_jurassic.css' },
     { name: 'Cybertribal', file: 'styles6_cybertriba_glow.css' },
-    { name: 'Posetron', file: 'styles6_posetron.css' }
   ];
 
   // Opzione predefinita "Choose your way"

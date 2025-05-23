@@ -793,7 +793,9 @@ function renderCreatedFarmDetails(farm) {
         <button class="btn btn-warning text-dark" onclick="changeFarmStatus(${farm.farm_id})">🔄 Change Status</button>
       </div>
       <div class="farm-rewards">${rewardHTML}</div>
-      ${templatesHTML || '<div class="empty-templates">No templates added yet.</div>'}
+      ${templatesHTML
+        ? `<div class="template-grid">${templatesHTML}</div>`
+        : '<div class="empty-templates">No templates added yet.</div>'}
     </div>
   `;
 }
@@ -1758,6 +1760,7 @@ function renderNFTFarmButtons(farms) {
     renderButtons(filtered);
   });
 }
+
 function renderNFTFarms(farms) {
   const container = document.getElementById('nft-farm-details');
   let html = '';
@@ -1816,6 +1819,7 @@ function renderNFTFarms(farms) {
                  ">
            </div>`
         : '';
+
       return `
         <div class="template-block">
           <h4 class="template-title">Template ID: ${template.template_id}</h4>
@@ -1838,7 +1842,9 @@ function renderNFTFarms(farms) {
           ${farm.farm_name}
           <span class="farm-rewards">${farmRewards}</span>
         </h3>
-        ${templatesHTML}
+        <div class="template-grid">
+          ${templatesHTML || '<div class="empty-templates">No templates available.</div>'}
+        </div>
       </div>
     `;
   });
@@ -2592,12 +2598,7 @@ async function loadScheduleNFTGiveaway() {
   const rewardsCount = rewards.length;
 
   // Calcolo responsive grid
-  let gridClass = 'reward-grid cols-1';
-  if (rewardsCount === 2) {
-    gridClass = 'reward-grid cols-2';
-  } else if (rewardsCount > 2) {
-    gridClass = 'reward-grid cols-auto';
-  }
+  const gridClass = 'reward-grid';
 
   const rewardsHTML = rewards.map(r => `
     <div class="reward-box">

@@ -654,26 +654,61 @@ function openPoolStatusModal(poolId, currentStatus) {
     document.getElementById('submit-pool-status').onclick = async () => {
       const newStatus = document.getElementById('pool-status-select').value;
       const { userId, usx_token } = window.userData;
-
+    
       console.log("[🔁] Aggiornamento status pool:", {
         poolId,
         from: currentStatus,
         to: newStatus
       });
-
+    
       try {
         const res = await fetch(`${BASE_URL}/update_token_pool_status?user_id=${userId}&usx_token=${usx_token}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ pool_id: poolId, new_status: newStatus })
         });
-
+    
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to update status");
-
-        showToast("Pool status updated", "success");
-        closeModal();
-        fetchAndRenderTokenPools();
+    
+        const modalBody = document.querySelector('.modal-body');
+    
+        const feedbackBox = document.createElement('div');
+        feedbackBox.innerHTML = `
+          <p style="
+            font-family: Papyrus, 'Courier New', cursive;
+            font-size: 1.1rem;
+            background-color: #111;
+            border: 1px solid #00ffcc;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            color: #39ff14;
+            text-shadow: 0 0 1px #f39c12;
+            box-shadow: 0 0 12px #00ffcc;
+            text-align: center;
+          ">
+            ✅ Status updated successfully.<br>
+            🔄 This window will close in <strong>5 seconds</strong>.<br>
+            <button onclick="closeModal()" style="
+              margin-top: 0.75rem;
+              font-size: 0.9rem;
+              background-color: transparent;
+              border: 1px solid #f39c12;
+              color: #ffe600;
+              padding: 0.4rem 1rem;
+              border-radius: 6px;
+              cursor: pointer;
+              transition: all 0.2s ease-in-out;
+            ">Close Now</button>
+          </p>
+        `;
+        modalBody.appendChild(feedbackBox);
+    
+        setTimeout(() => {
+          closeModal();
+          fetchAndRenderTokenPools();
+        }, 5000);
       } catch (err) {
         console.error("[❌] Errore durante l'aggiornamento dello stato della pool:", err);
         showToast("Error: " + err.message, "error");

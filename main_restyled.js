@@ -1502,11 +1502,17 @@ function populateNFTDropdown(nfts) {
   }
 
   dropdown.innerHTML = `<option value="">Select NFT</option>` + 
-    nfts.map(nft => 
-      `<option value="${nft.asset_id}" data-collection="${nft.collection}" data-template="${nft.template_id}">
-        ${nft.asset_id} - ${nft.template_name}
-      </option>`
-    ).join('');
+    nfts.map(nft => {
+      const info = nft.template_info || {};
+      return `
+        <option 
+          value="${nft.asset_id}" 
+          data-collection="${info.collection_name || ''}" 
+          data-template="${info.template_id || ''}">
+          ${nft.asset_id} - ${info.template_name || 'Unnamed Template'}
+        </option>
+      `;
+    }).join('');
 }
 
 async function loadTwitchNftsGiveaways() {
@@ -1570,12 +1576,29 @@ async function loadTwitchNftsGiveaways() {
 
   // Carica canali disponibili
   await populateGiveawayChannels();
-  if (window.nftsData && window.nftsData.length) {
+  // Popola opzioni con asset dell utente
+  if (window.nftsData && window.nftsData.length > 0) {
     populateNFTDropdown(window.nftsData);
   } else {
-    console.warn("⚠️ No NFTs found in window.nftsData");
+    const { userId, usx_token } = window.userData;
+  
+    try {
+      const response = await fetch(`${BASE_URL}/mynfts?user_id=${userId}&usx_token=${usx_token}`);
+      const nftsData = await response.json();
+  
+      if (!nftsData.nfts || nftsData.nfts.length < 1) {
+        console.warn("⚠️ No NFTs found in response.");
+      } else {
+        window.nftsData = nftsData.nfts;
+        console.info("[🔵] NFTs caricati:", window.nftsData.length);
+        populateNFTDropdown(window.nftsData);
+      }
+    } catch (err) {
+      console.error("❌ Errore nel caricamento degli NFT:", err);
+      showToast("Error loading NFTs", "error");
+    }
   }
-
+  
   // Carica la lista dei giveaway programmati
   loadScheduledNftGiveaways();
 }

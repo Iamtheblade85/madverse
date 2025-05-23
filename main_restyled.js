@@ -3009,8 +3009,8 @@ async function loadWallet() {
             class="nft-image" 
             onerror="handleNFTImageError(this)">
           <h3 class="nft-title">${nft.template_info.template_name}</h3>
-          <p class="nft-subtitle">#${nft.asset_id}</p>
-          <p class="nft-subtitle">${nft.nft_id}</p>
+          <p class="nft-subtitle"><strong>Asset ID:</strong> #${nft.asset_id}</p>
+          <p class="nft-subtitle"><strong>NFT ID:</strong> ${nft.nft_id}</p>
         </div>
       </div>
     `).join('');

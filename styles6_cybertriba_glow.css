@@ -2041,6 +2041,12 @@ body {
   filter: brightness(1.1);
   box-shadow: 0 0 12px #00f0ff, 0 0 25px #1affd5;
 }
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
 
 .btn-danger {
   font-family: "Papyrus", "Courier New", cursive;

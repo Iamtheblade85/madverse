@@ -3124,16 +3124,26 @@ body {
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ffffff;
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Rock+Salt&display=swap');
+
 .subheading {
-  font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1rem;
+  font-family: 'Rock Salt', "Papyrus", "Courier New", cursive;
+  font-size: 2rem;
   color: #ff073a;
-  text-shadow: 0 0 1px #f39c12;
+  text-shadow:
+    0 0 1px #f39c12,
+    1px 1px 3px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease-in-out;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
+
 .subheading:hover {
   filter: brightness(1.1);
-  box-shadow: 0 0 12px #8e44ad, 0 0 25px #f39c12;
+  box-shadow:
+    0 0 8px #8e44ad,
+    0 0 16px #f39c12;
+  transform: scale(1.03) rotate(-0.5deg);
 }
 
 .input-range {

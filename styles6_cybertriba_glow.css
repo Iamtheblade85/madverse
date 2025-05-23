@@ -4090,3 +4090,56 @@ button:hover, .btn:hover, .menu-button:hover {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+.token-pool-card {
+  background-color: #111;
+  border: 1px solid #00ffcc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+  color: #f39c12;
+  text-shadow: 0 0 1px #00f0ff;
+  transition: all 0.3s ease-in-out;
+}
+
+.token-pool-card:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 0 20px #00ffcc, 0 0 40px #f39c12;
+}
+
+.token-pool-title {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  color: #ff073a;
+  text-shadow: 0 0 2px #00f0ff;
+}
+
+.pool-detail {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #ffe600;
+}
+
+.reward-item {
+  background-color: #1a1a1a;
+  border: 1px solid #8e44ad;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  box-shadow: 0 0 6px rgba(255, 0, 255, 0.3);
+}
+
+.reward-text {
+  margin: 0.25rem 0;
+  font-size: 1rem;
+  color: #00ffcc;
+  text-shadow: 0 0 1px #ffffff;
+}
+
+.reward-edit-btn {
+  margin-top: 0.75rem;
+}
+
+.pool-status-btn {
+  margin-top: 1.5rem;
+}

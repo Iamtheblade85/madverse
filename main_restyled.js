@@ -1487,6 +1487,14 @@ function loadSection(section) {
 }
 function populateNFTDropdown(nfts) {
   const dropdown = document.getElementById("nftAssetDropdown");
+  console.log("[🧪] populateNFTDropdown() called");
+  console.log("[📦] nfts received:", nfts);
+  console.log("[📦] dropdown element:", dropdown);
+
+  if (!dropdown) {
+    console.warn("⚠️ Dropdown not found in DOM!");
+    return;
+  }
 
   if (!nfts || !nfts.length) {
     dropdown.innerHTML = `<option value="">No NFTs found</option>`;

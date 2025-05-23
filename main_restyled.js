@@ -1863,11 +1863,20 @@ function renderNFTFarms(farms) {
 
   farms.forEach(farm => {
     const templatesHTML = (farm.templates || []).map(template => {
-      const nftsHTML = (template.user_nfts || []).map(nft => `
+    const nftsHTML = (template.user_nfts || []).map(nft => {
+      const isVideo = nft.asset_img?.match(/\.(mp4|webm)$/i);
+      return `
         <div class="nft-card">
-          <img src="${nft.asset_img}" alt="NFT"
-            class="nft-image"
-            onerror="this.onerror=null;this.src='https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeig2o4vay6s22kwcv6r6vt5psv3llsavotgr56g3ar2zcbf44ct4ge';">
+          ${isVideo ? `
+            <video src="${nft.asset_img}" class="nft-video" autoplay loop muted playsinline>
+              <source src="${nft.asset_img}" type="video/mp4">
+              Il tuo browser non supporta i video.
+            </video>
+          ` : `
+            <img src="${nft.asset_img}" alt="NFT"
+              class="nft-image"
+              onerror="this.onerror=null;this.src='https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeig2o4vay6s22kwcv6r6vt5psv3llsavotgr56g3ar2zcbf44ct4ge';">
+          `}
           <div class="nft-name">${nft.template_name}</div>
           <div class="nft-id">#${nft.asset_id}</div>
           <button class="${nft.is_staked ? 'btn btn-unstake' : 'btn btn-stake'}"
@@ -1875,7 +1884,9 @@ function renderNFTFarms(farms) {
             ${nft.is_staked ? 'Unstake' : 'Stake'}
           </button>
         </div>
-      `).join('');
+      `;
+    }).join('');
+
 
       const rewardsHTML = (template.rewards || []).map(r => {
         const daily = parseFloat(r.daily_reward_amount);

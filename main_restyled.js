@@ -1358,8 +1358,8 @@ function loadSection(section) {
         <div class="c2e-menu">
           <button class="c2e-menu-btn" data-menu="log-reward-activity">Log Reward Activity</button>
           <button class="c2e-menu-btn" data-menu="log-storms-giveaways">Twitch Storms</button>
-          <button class="c2e-menu-btn" data-menu="twitch-nfts-giveaways">Twitch NFTs Giveaways(soon!)</button>
-          <button class="c2e-menu-btn" data-menu="twitch-game">Twitch Game(soon!)</button>
+          <button class="c2e-menu-btn" data-menu="twitch-nfts-giveaways">Twitch NFTs Giveaways(NEW!)</button>
+          <button class="c2e-menu-btn" data-menu="twitch-game">Twitch Game(!soon!)</button>
         </div>
         <div id="c2e-content" class="c2e-content">Loading last activity...</div>
       </div>

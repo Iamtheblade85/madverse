@@ -4143,3 +4143,75 @@ button:hover, .btn:hover, .menu-button:hover {
 .pool-status-btn {
   margin-top: 1.5rem;
 }
+
+/* === CyberTriba Glow Theme for flatpickr === */
+.flatpickr-calendar {
+  background: #1a1a1a;
+  border: 1px solid #00f0ff;
+  box-shadow: 0 0 12px #00f0ff, 0 0 25px #f39c12;
+  font-family: "Papyrus", "Courier New", cursive;
+  color: #f39c12;
+  border-radius: 10px;
+}
+
+.flatpickr-months {
+  background: #111;
+  color: #ffe600;
+  text-shadow: 0 0 1px #00f0ff;
+  border-bottom: 1px solid #00f0ff;
+}
+
+.flatpickr-month {
+  color: #ffe600;
+}
+
+.flatpickr-weekdays {
+  background: #111;
+  color: #39ff14;
+  border-bottom: 1px dashed #555;
+}
+
+.flatpickr-weekday {
+  color: #39ff14;
+  text-shadow: 0 0 1px #00ffcc;
+}
+
+.flatpickr-day {
+  background: transparent;
+  color: #00f0ff;
+  border: 1px solid transparent;
+}
+
+.flatpickr-day:hover {
+  background: #222;
+  border-color: #00f0ff;
+  box-shadow: 0 0 8px #00f0ff;
+}
+
+.flatpickr-day.today {
+  background: #ff00ff;
+  color: #1a1a1a;
+  font-weight: bold;
+  box-shadow: 0 0 10px #ff00ff;
+}
+
+.flatpickr-day.selected {
+  background: #f39c12;
+  color: #1a1a1a;
+  font-weight: bold;
+  box-shadow: 0 0 10px #f39c12;
+}
+
+.flatpickr-time {
+  background: #111;
+  border-top: 1px solid #00f0ff;
+}
+
+.flatpickr-time input,
+.flatpickr-time .flatpickr-time-separator {
+  background: transparent;
+  color: #00ffcc;
+  border: none;
+  font-size: 1.1rem;
+  text-shadow: 0 0 1px #00f0ff;
+}

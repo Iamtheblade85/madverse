@@ -1343,25 +1343,25 @@ function loadSection(section) {
         <input type="text" id="search-template" placeholder="Search by Template Name..." class="form-input">
 
         <select id="filter-status" class="form-select">
-          <option value="">Status</option>
+          <option value="">All</option>
           <option value="Staked">Staked</option>
           <option value="Not Staked">Not Staked</option>
         </select>
 
         <select id="filter-stakable" class="form-select">
-          <option value="">Stakeability</option>
+          <option value="">All</option>
           <option value="Stakable">Stakable</option>
           <option value="Not Stakable">Not Stakable</option>
         </select>
 
         <select id="filter-for-sale" class="form-select">
-          <option value="">Sale Status</option>
+          <option value="">All</option>
           <option value="Yes">For Sale</option>
           <option value="No">Not For Sale</option>
         </select>
 
         <select id="filter-collection" class="form-select">
-          <option value="">Collection</option>
+          <option value="">All</option>
         </select>
 
         <select id="sort-by" class="form-select">
@@ -2621,7 +2621,7 @@ async function loadScheduleNFTGiveaway() {
         <button class="btn btn-secondary" onclick="openStakeModal('remove', ${pool.pool_id}, '${pool.token_symbol}')">Remove Tokens</button>
       </div>  
 
-      <h4 class="subheading">Rewards</h4>
+      <h2 class="subheading">Rewards</h2>
       <div class="${gridClass}">
         ${rewardsHTML}
       </div>

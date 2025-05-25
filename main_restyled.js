@@ -1538,7 +1538,22 @@ async function loadTwitchNftsGiveaways() {
       
         <label class="input-label">Draw Date & Time</label>
         <input type="text" id="nftGiveawayTime" class="input-field" placeholder="Select date & time" readonly />
-      
+        
+        <label class="input-label">Timeframe</label>
+        <select id="nftGiveawayTimeframe" class="input-field">
+          <option value="">Select duration</option>
+          <option value="10m">10 minutes</option>
+          <option value="15m">15 minutes</option>
+          <option value="30m">30 minutes</option>
+          <option value="45m">45 minutes</option>
+          <option value="1h">1 hour</option>
+          <option value="2h">2 hours</option>
+          <option value="3h">3 hours</option>
+          <option value="1d">1 day</option>
+          <option value="2d">2 days</option>
+          <option value="3d">3 days</option>
+        </select>
+
         <label class="input-label">Channel</label>
         <select id="nftGiveawayChannel" class="input-field"></select>
       
@@ -1648,7 +1663,7 @@ async function submitNftGiveaway() {
   const collection = document.getElementById("nftCollection").value;
   const drawTime = new Date(document.getElementById('nftGiveawayTime').value).toISOString();
   const channel = document.getElementById('nftGiveawayChannel').value;
-
+  const timeframe = document.getElementById('nftGiveawayTimeframe').value;
   const { userId, usx_token, wax_account } = window.userData;
 
   if (!assetId || !templateId || !collection || !drawTime || !channel) {
@@ -1662,7 +1677,8 @@ async function submitNftGiveaway() {
     collection_name: collection,
     scheduled_time: drawTime,
     channel_name: channel,
-    wax_account_donor: wax_account
+    wax_account_donor: wax_account,
+    timeframe: timeframe
   };
 
   try {
@@ -1760,6 +1776,7 @@ function renderNftGiveawaysTable(data) {
           <th onclick="sortNftGiveaways('template_id')">Template ID${sortArrow('template_id')}</th>
           <th onclick="sortNftGiveaways('collection_name')">Collection${sortArrow('collection_name')}</th>
           <th onclick="sortNftGiveaways('channel_name')">Channel${sortArrow('channel_name')}</th>
+          <th onclick="sortNftGiveaways('timeframe')">Time Interval${sortArrow('timeframe')}</th>
           <th onclick="sortNftGiveaways('status')">Status${sortArrow('status')}</th>
           <th onclick="sortNftGiveaways('winner')">Winner${sortArrow('winner')}</th>
         </tr>
@@ -1773,6 +1790,7 @@ function renderNftGiveawaysTable(data) {
             <td>${g.template_id}</td>
             <td>${g.collection_name}</td>
             <td>${g.channel_name}</td>
+            <td>${g.timeframe || '-'}</td>
             <td>${g.status || 'pending'}</td>
             <td>${g.winner || '-'}</td>
           </tr>`).join('')}

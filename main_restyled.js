@@ -1732,9 +1732,15 @@ async function populateGiveawayChannels() {
 
 async function submitNftGiveaway() {
   const assetCheckboxes = document.querySelectorAll('.asset-checkbox:checked');
-  const assetIds = Array.from(assetCheckboxes).map(cb => cb.value);
-  const templateIds = [...new Set(Array.from(assetCheckboxes).map(cb => cb.dataset.template))];
-  const collectionNames = [...new Set(Array.from(assetCheckboxes).map(cb => cb.dataset.collection))];
+  
+  const assetObjects = Array.from(assetCheckboxes).map(cb => ({
+    asset_id: cb.value,
+    template_id: cb.dataset.template,
+    collection_name: cb.dataset.collection
+  }));
+  
+  const assetIds = assetObjects.map(obj => obj.asset_id);
+  const templateIds = [...new Set(assetObjects.map(obj => obj.template_id))];
 
   if (assetIds.length === 0) {
     showToast("Select at least one NFT", "error");
@@ -1758,9 +1764,9 @@ async function submitNftGiveaway() {
   }
 
   const payload = {
+    asset_objects: assetObjects, // 👈 nuova struttura [{ asset_id, template_id, collection_name }]
     asset_ids: assetIds,
-    template_ids: templateIds.map(id => parseInt(id)),
-    collection_name: collectionNames[0],
+    template_ids: templateIds,
     scheduled_time: drawTime,
     channel_name: channel,
     wax_account_donor: wax_account,
@@ -1857,54 +1863,55 @@ function renderNftGiveawaysTable(data) {
 
   const html = `
     <table class="styled-table">
-      <thead>
-        <tr>
-          <th>Time</th>
-          <th>Donor</th>
-          <th>Channel</th>
-          <th>Collection</th>
-          <th>Templates</th>
-          <th>Assets & Winners</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${data.map((g, index) => {
-          const winners = (g.winner || "").split(",").map(w => w.trim()).filter(Boolean);
-          const assets = (g.asset_ids || "").split(",").map(a => a.trim()).filter(Boolean);
-          const templateIds = (g.template_ids || "").split(",").map(t => t.trim());
-          const templateNames = (g.template_names || "").split(",").map(n => n.trim());
-      
-          const rowSpan = Math.max(winners.length, 1);
-      
-          const winnerBlocks = winners.map((winner, i) => {
-            const asset = assets[i] || "-";
-            const colorClass = `winner-color-${i % 5}`;
-            return `
-              <div class="winner-block ${colorClass}">
-                <strong>${winner}</strong> won NFT <code>${asset}</code>
-              </div>
-            `;
-          }).join('');
-      
-          return `
-            <tr>
-              <td>${new Date(g.scheduled_time).toLocaleString()}</td>
-              <td>${g.username_donor || '-'}</td>
-              <td>${g.channel_name || '-'}</td>
-              <td>${g.collection_name}</td>
-              <td>
-                ${templateIds.map((id, i) => `${id} - ${templateNames[i] || ''}`).join("<br>")}
-              </td>
-              <td>${winnerBlocks || "<em>No winners yet</em>"}</td>
-              <td>${g.status || 'pending'}</td>
-            </tr>
-          `;
-        }).join('')}
-      </tbody>
-    </table>
-  `;
-
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Donor</th>
+        <th>Channel</th>
+        <th>Winners + Assets</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${data.map((g, index) => {
+        const winners = (g.winner || "").split(",").map(w => w.trim()).filter(Boolean);
+        const assetIds = (g.asset_id || "").split(",").map(a => a.trim());
+        const templateIds = (g.template_id || "").split(",").map(t => t.trim());
+        const templateNames = (g.template_names || "").split(",").map(n => n.trim());
+        const collectionNames = (g.collection_names || "").split(",").map(c => c.trim());
+    
+        const rows = [];
+    
+        for (let i = 0; i < Math.max(winners.length, 1); i++) {
+          const winner = winners[i] || "-";
+          const assetId = assetIds[i] || "-";
+          const templateId = templateIds[i] || "-";
+          const templateName = templateNames[i] || "-";
+          const collection = collectionNames[i] || "-";
+          const colorClass = `winner-color-${i % 5}`;
+    
+          rows.push(`
+            <div class="winner-block ${colorClass}">
+              <strong>${winner}</strong> won 
+              <code>${assetId}</code> 
+              (Template: ${templateId} - ${templateName}, Collection: ${collection})
+            </div>
+          `);
+        }
+    
+        return `
+          <tr>
+            <td>${new Date(g.scheduled_time).toLocaleString()}</td>
+            <td>${g.username_donor || '-'}</td>
+            <td>${g.channel_name || '-'}</td>
+            <td>${rows.join('')}</td>
+            <td>${g.status || 'pending'}</td>
+          </tr>
+        `;
+      }).join('')}
+    </tbody>
+  </table>
+`;
   table.innerHTML = html;
 }
 

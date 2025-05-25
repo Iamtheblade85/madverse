@@ -4231,19 +4231,75 @@ button:hover, .btn:hover, .menu-button:hover {
 .winner-color-3 { background-color: #9b59b6; }  /* purple */
 .winner-color-4 { background-color: #e74c3c; }  /* red */
 
+.template-block {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  color: #ccc;
+  box-shadow: 0 0 10px #0ff2, 0 0 20px #0ff1a inset;
+}
+
+.template-block hr {
+  border: none;
+  border-top: 1px solid #444;
+  margin: 0.5rem 0 1rem;
+}
+
+.template-block strong {
+  color: #0ff;
+  font-weight: 600;
+}
+
+.template-block button {
+  background-color: #0ff;
+  color: #000;
+  border: none;
+  padding: 4px 10px;
+  margin: 4px 4px 10px 0;
+  border-radius: 5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.template-block button:hover {
+  background-color: #0cc;
+  color: #111;
+  box-shadow: 0 0 5px #0ff, 0 0 10px #0ff;
+}
+
 .checkbox-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 6px;
-  margin-top: 8px;
+  margin-top: 1rem;
 }
-.template-block {
-  background: #f9f9f9;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  margin-bottom: 12px;
+
+.checkbox-grid label {
+  display: flex;
+  align-items: center;
+  background: #1a1a1a;
+  padding: 6px 8px;
+  border-radius: 5px;
+  color: #eee;
+  font-size: 0.85rem;
+  border: 1px solid #333;
+  transition: background 0.2s ease;
 }
+
+.checkbox-grid label:hover {
+  background: #222;
+  border-color: #0ff;
+}
+
+.asset-checkbox {
+  margin-right: 6px;
+  accent-color: #0ff;
+  transform: scale(1.2);
+}
+
 .winner-block {
   padding: 6px 8px;
   border-radius: 6px;

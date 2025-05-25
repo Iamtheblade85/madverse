@@ -4215,3 +4215,32 @@ button:hover, .btn:hover, .menu-button:hover {
   font-size: 1.1rem;
   text-shadow: 0 0 1px #00f0ff;
 }
+
+.winner-block {
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+  color: #fff;
+  display: inline-block;
+}
+
+.winner-color-0 { background-color: #2ecc71; }  /* green */
+.winner-color-1 { background-color: #3498db; }  /* blue */
+.winner-color-2 { background-color: #e67e22; }  /* orange */
+.winner-color-3 { background-color: #9b59b6; }  /* purple */
+.winner-color-4 { background-color: #e74c3c; }  /* red */
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+.template-block {
+  background: #f9f9f9;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}

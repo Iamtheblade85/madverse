@@ -1527,14 +1527,9 @@ async function loadTwitchNftsGiveaways() {
 
   container.innerHTML = `
       <div class="form-container" id="nft-giveaway-form">
-        <label class="input-label">Select NFT to Giveaway</label>
-        <select id="nftAssetDropdown" class="input-field"></select>
-      
-        <label class="input-label">Collection Name</label>
-        <input type="text" id="nftCollection" class="input-field" readonly />
-      
-        <label class="input-label">Template ID</label>
-        <input type="text" id="nftTemplateId" class="input-field" readonly />
+        <label class="input-label">Select Template(s)</label>
+        <div id="templateMultiSelect" class="template-multi-select"></div>
+        <div id="templateDetailsContainer" class="template-details-wrapper"></div>
       
         <label class="input-label">Draw Date & Time</label>
         <input type="text" id="nftGiveawayTime" class="input-field" placeholder="Select date & time" readonly />
@@ -1607,6 +1602,21 @@ async function loadTwitchNftsGiveaways() {
 
   // Carica canali disponibili
   await populateGiveawayChannels();
+  if (!window.nftsData) {
+    const { userId, usx_token } = window.userData;
+    try {
+      const response = await fetch(`${BASE_URL}/mynfts?user_id=${userId}&usx_token=${usx_token}`);
+      const nftsData = await response.json();
+      window.nftsData = nftsData.nfts || [];
+    } catch (err) {
+      console.error("❌ Failed to fetch NFTs:", err);
+      showToast("Error loading NFTs", "error");
+      return;
+    }
+  }
+  
+  setupMultiTemplateSelector(window.nftsData);
+    
   // Popola opzioni con asset dell utente
   if (window.nftsData && window.nftsData.length > 0) {
     populateNFTDropdown(window.nftsData);
@@ -1633,6 +1643,69 @@ async function loadTwitchNftsGiveaways() {
   // Carica la lista dei giveaway programmati
   loadScheduledNftGiveaways();
 }
+function setupMultiTemplateSelector(nfts) {
+  const container = document.getElementById("templateMultiSelect");
+  const detailsContainer = document.getElementById("templateDetailsContainer");
+  const templates = {};
+
+  nfts.forEach(nft => {
+    const tpl = nft.template_info;
+    if (!tpl?.template_id) return;
+    if (!templates[tpl.template_id]) {
+      templates[tpl.template_id] = {
+        name: tpl.template_name || 'Unnamed',
+        collection: tpl.collection_name || 'unknown',
+        assets: []
+      };
+    }
+    templates[tpl.template_id].assets.push(nft.asset_id);
+  });
+
+  container.innerHTML = Object.entries(templates).map(([tplId, info]) => `
+    <label class="checkbox-label">
+      <input type="checkbox" class="template-checkbox" value="${tplId}" data-name="${info.name}" data-collection="${info.collection}">
+      ${tplId} - ${info.name}
+    </label>
+  `).join('');
+
+  container.querySelectorAll('.template-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const tplId = cb.value;
+      const name = cb.dataset.name;
+      const collection = cb.dataset.collection;
+      const assets = templates[tplId].assets;
+      const sectionId = `tpl-assets-${tplId}`;
+      const exists = document.getElementById(sectionId);
+
+      if (cb.checked && !exists) {
+        const section = document.createElement('div');
+        section.id = sectionId;
+        section.classList.add('template-block');
+        section.innerHTML = `
+          <hr>
+          <strong>Template:</strong> ${tplId} - ${name} <br/>
+          <strong>Collection:</strong> ${collection} <br/>
+          <strong>Owned NFTs:</strong> ${assets.length}
+          <div>
+            <button onclick="document.querySelectorAll('#${sectionId} .asset-checkbox').forEach(cb => cb.checked = true)">Select All</button>
+            <button onclick="document.querySelectorAll('#${sectionId} .asset-checkbox').forEach(cb => cb.checked = false)">Reset</button>
+          </div>
+          <div class="checkbox-grid">
+            ${assets.map(aid => `
+              <label>
+                <input type="checkbox" class="asset-checkbox" data-template="${tplId}" data-collection="${collection}" value="${aid}"/> ${aid}
+              </label>
+            `).join('')}
+          </div>
+        `;
+        detailsContainer.appendChild(section);
+      } else if (!cb.checked && exists) {
+        exists.remove();
+      }
+    });
+  });
+}
+
 async function populateGiveawayChannels() {
   const select = document.getElementById('nftGiveawayChannel');
 
@@ -1658,27 +1731,40 @@ async function populateGiveawayChannels() {
 }
 
 async function submitNftGiveaway() {
-  const assetId = document.getElementById("nftAssetDropdown").value;
-  const templateId = document.getElementById("nftTemplateId").value;
-  const collection = document.getElementById("nftCollection").value;
-  const drawTime = new Date(document.getElementById('nftGiveawayTime').value).toISOString();
-  const channel = document.getElementById('nftGiveawayChannel').value;
-  const timeframe = document.getElementById('nftGiveawayTimeframe').value;
+  const assetCheckboxes = document.querySelectorAll('.asset-checkbox:checked');
+  const assetIds = Array.from(assetCheckboxes).map(cb => cb.value);
+  const templateIds = [...new Set(Array.from(assetCheckboxes).map(cb => cb.dataset.template))];
+  const collectionNames = [...new Set(Array.from(assetCheckboxes).map(cb => cb.dataset.collection))];
+
+  if (assetIds.length === 0) {
+    showToast("Select at least one NFT", "error");
+    return;
+  }
+
+  if (collectionNames.length !== 1) {
+    showToast("All selected NFTs must belong to the same collection", "error");
+    return;
+  }
+
+  const drawTimeInput = document.getElementById('nftGiveawayTime');
+  const drawTime = drawTimeInput && drawTimeInput.value ? new Date(drawTimeInput.value).toISOString() : null;
+  const channel = document.getElementById('nftGiveawayChannel')?.value;
+  const timeframe = document.getElementById('nftGiveawayTimeframe')?.value;
   const { userId, usx_token, wax_account } = window.userData;
 
-  if (!assetId || !templateId || !collection || !drawTime || !channel) {
-    showToast("Please fill all required fields.", "error");
+  if (!drawTime || !channel || !timeframe) {
+    showToast("Please fill all required fields (time, channel, timeframe)", "error");
     return;
   }
 
   const payload = {
-    asset_id: assetId,
-    template_id: parseInt(templateId),
-    collection_name: collection,
+    asset_ids: assetIds,
+    template_ids: templateIds.map(id => parseInt(id)),
+    collection_name: collectionNames[0],
     scheduled_time: drawTime,
     channel_name: channel,
     wax_account_donor: wax_account,
-    timeframe: timeframe
+    timeframe
   };
 
   try {
@@ -1689,13 +1775,16 @@ async function submitNftGiveaway() {
     });
 
     const data = await res.json();
-    if (!res.ok || data.error) throw new Error(data.error || "Failed to schedule giveaway");
 
-    showToast("NFT Giveaway scheduled!", "success");
+    if (!res.ok || data.error) {
+      throw new Error(data.error || "Failed to schedule giveaway");
+    }
+
+    showToast("NFT Storm scheduled successfully!", "success");
     loadScheduledNftGiveaways();
 
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error submitting NFT giveaway:", err);
     showToast(err.message, "error");
   }
 }

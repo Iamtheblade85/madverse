@@ -1594,11 +1594,6 @@ async function loadTwitchNftsGiveaways() {
     document.getElementById('filter-status').value = '';
     applyNftGiveawayFiltersAndSort();
   });
-  document.getElementById("nftAssetDropdown").addEventListener("change", (e) => {
-    const selectedOption = e.target.selectedOptions[0];
-    document.getElementById("nftCollection").value = selectedOption.getAttribute("data-collection") || "";
-    document.getElementById("nftTemplateId").value = selectedOption.getAttribute("data-template") || "";
-  });
 
   // Carica canali disponibili
   await populateGiveawayChannels();
@@ -1614,10 +1609,10 @@ async function loadTwitchNftsGiveaways() {
       return;
     }
   }
-     
+    
   // Popola opzioni con asset dell utente
-  if (window.nftsData && window.nftsData.length > 0) {
-    populateNFTDropdown(window.nftsData);
+  if (!window.nftsData && !window.nftsData.length > 0) {
+    setupMultiTemplateSelector(window.nftsData);
   } else {
     const { userId, usx_token } = window.userData;
   
@@ -1630,14 +1625,14 @@ async function loadTwitchNftsGiveaways() {
       } else {
         window.nftsData = nftsData.nfts;
         console.info("[🔵] NFTs caricati:", window.nftsData.length);
-        populateNFTDropdown(window.nftsData);
+        setupMultiTemplateSelector(window.nftsData);
       }
     } catch (err) {
       console.error("❌ Errore nel caricamento degli NFT:", err);
       showToast("Error loading NFTs", "error");
     }
   }
-  setupMultiTemplateSelector(window.nftsData);
+  
   // Carica la lista dei giveaway programmati
   loadScheduledNftGiveaways();
 }

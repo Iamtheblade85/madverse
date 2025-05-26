@@ -2537,7 +2537,7 @@ function setScheduledTimeMinMax() {
 
 // Funzione per caricare le tempeste programmate
 async function loadScheduledStorms() {
-  const tableContainer = document.getElementById('c2e-content');
+  const tableContainer = document.getElementById('table-container');
   tableContainer.innerHTML = 'Loading Scheduled Storms...';
 
   try {

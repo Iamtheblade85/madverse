@@ -1923,16 +1923,18 @@ function renderNftGiveawaysTable(data) {
     const collections = [...new Set(group.map(g => g.collection_name))].join(', ');
     const status = group[0].status || 'pending';
 
-    const winnerBlocks = `
-      <div class="winners-wrapper">
-        ${group.map((g, i) => `
-          <div class="winner-row">
-            <span class="winner-name">${(g.winner || '-').toUpperCase()}</span>
-            <span class="winner-asset">→ ${g.asset_id || '???'}</span>
-          </div>
-        `).join('')}
-      </div>
-    `;
+    let winnerBlocks = `<div class="winners-wrapper">`;
+
+    group.forEach((g, i) => {
+      const colorIndex = i % 6; // 6 colori per esempio
+      winnerBlocks += `
+        <div class="winner-row winner-color-${colorIndex}">
+          <span class="winner-name">winner: ${(g.winner || '-').toUpperCase()}</span>
+          <span class="winner-asset">→ asset: ${g.asset_id || '???'}</span>
+        </div>`;
+    });
+
+    winnerBlocks += `</div>`;
 
     html += `
       <tr>
@@ -1950,7 +1952,7 @@ function renderNftGiveawaysTable(data) {
   html += `</tbody></table>`;
   table.innerHTML = html;
 
-  // Aggiungi animazione click alle righe
+  // Click animato
   document.querySelectorAll('.winner-row').forEach(row => {
     row.addEventListener('click', () => {
       row.classList.add('clicked');
@@ -1958,7 +1960,6 @@ function renderNftGiveawaysTable(data) {
     });
   });
 }
-
 
 function sortNftGiveaways(key) {
   if (nftGiveawaySort.key === key) {

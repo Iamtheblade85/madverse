@@ -2563,7 +2563,7 @@ async function loadScheduledStorms() {
   }
 }
 function renderStormsTable(data) {
-  const tableBody = document.querySelector('#c2e-content tbody');
+  const tableBody = document.querySelector('#table-container tbody');
   if (!tableBody) return;
 
   let rowsHTML = '';
@@ -2628,7 +2628,7 @@ function sortStormsTable(key) {
 }
 
 function displayStormsData(data) {
-  const tableContainer = document.getElementById('c2e-content');
+  const tableContainer = document.getElementById('table-container');
   originalStormsData = data;
 
   const getUniqueValues = (data, key) => [...new Set(data.map(item => item[key]).filter(Boolean))].sort();

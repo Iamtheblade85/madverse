@@ -1800,7 +1800,7 @@ async function populateGiveawayChannels() {
   }
 }
 
-function submitNftGiveaway() {
+async function submitNftGiveaway() {
   const wrapper = document.getElementById("giveaway-templates-wrapper");
   const blocks = wrapper.querySelectorAll(".giveaway-template-block");
 

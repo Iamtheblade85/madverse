@@ -1922,11 +1922,20 @@ function renderNftGiveawaysTable(data) {
     const templates = [...new Set(group.map(g => g.template_id))].join(', ');
     const collections = [...new Set(group.map(g => g.collection_name))].join(', ');
     const status = group[0].status || 'pending';
-
     const winnerBlocks = group.map((g, i) => {
-      const color = i % 2 === 0 ? '#0ff' : '#f0f';
-      return `<span style="color:${color}; margin-right:6px;">${g.winner || '-'} → ${g.asset_id}</span>`;
-    }).join("<br>");
+      const bgColor = i % 2 === 0 ? '#f4f4f4' : '#e9e9e9';
+      return `
+        <div style="
+          background-color: ${bgColor}; 
+          padding: 4px 8px; 
+          border-radius: 4px; 
+          margin-bottom: 2px;
+          font-size: 0.9em;
+        ">
+          <strong>${g.winner || '-'}</strong> → <code>${g.asset_id}</code>
+        </div>
+      `;
+    }).join('');
 
     html += `
       <tr>

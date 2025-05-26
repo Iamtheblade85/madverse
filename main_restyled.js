@@ -1617,7 +1617,7 @@ async function loadTwitchNftsGiveaways() {
     
   // Popola opzioni con asset dell utente
   if (!window.nftsData && !window.nftsData.length > 0) {
-    setupMultiTemplateSelector(window.nftsData);
+    setupDynamicTemplateSelector(window.nftsData);
   } else {
     const { userId, usx_token } = window.userData;
   
@@ -1630,7 +1630,7 @@ async function loadTwitchNftsGiveaways() {
       } else {
         window.nftsData = nftsData.nfts;
         console.info("[🔵] NFTs caricati:", window.nftsData.length);
-        setupMultiTemplateSelector(window.nftsData);
+        setupDynamicTemplateSelector(window.nftsData);
       }
     } catch (err) {
       console.error("❌ Errore nel caricamento degli NFT:", err);
@@ -1640,78 +1640,8 @@ async function loadTwitchNftsGiveaways() {
   
   // Carica la lista dei giveaway programmati
   loadScheduledNftGiveaways();
-  setupDynamicTemplateSelector();
 }
-function setupMultiTemplateSelector(nfts) {
-  const container = document.getElementById("templateMultiSelect");
-  const detailsContainer = document.getElementById("templateDetailsContainer");
 
-  const templates = {};
-
-  nfts.forEach(nft => {
-    const tpl = nft.template_info;
-    if (!tpl || !tpl.template_id || !tpl.template_name) return;
-
-    const tplId = tpl.template_id;
-
-    if (!templates[tplId]) {
-      templates[tplId] = {
-        name: tpl.template_name,
-        collection: tpl.collection_name || "unknown",
-        assets: []
-      };
-    }
-
-    templates[tplId].assets.push(nft.asset_id);
-  });
-
-  // Render the checkbox group for template selection
-  container.innerHTML = Object.entries(templates).map(([tplId, info]) => `
-    <label class="checkbox-label">
-      <input type="checkbox" class="template-checkbox" value="${tplId}" data-name="${info.name}" data-collection="${info.collection}">
-      ${tplId} - ${info.name}
-    </label>
-  `).join('');
-
-  // Add dynamic handlers when a template is selected
-  container.querySelectorAll(".template-checkbox").forEach(cb => {
-    cb.addEventListener("change", () => {
-      const tplId = cb.value;
-      const name = cb.dataset.name;
-      const collection = cb.dataset.collection;
-      const assets = templates[tplId].assets;
-      const sectionId = `tpl-assets-${tplId}`;
-      const exists = document.getElementById(sectionId);
-
-      if (cb.checked && !exists) {
-        const section = document.createElement("div");
-        section.id = sectionId;
-        section.classList.add("template-block");
-        section.innerHTML = `
-          <hr>
-          <strong>Template:</strong> ${tplId} - ${name}<br/>
-          <strong>Collection:</strong> ${collection}<br/>
-          <strong>Owned NFTs:</strong> ${assets.length}
-          <div>
-            <button onclick="document.querySelectorAll('#${sectionId} .asset-checkbox').forEach(cb => cb.checked = true)">Select All</button>
-            <button onclick="document.querySelectorAll('#${sectionId} .asset-checkbox').forEach(cb => cb.checked = false)">Reset</button>
-          </div>
-          <div class="checkbox-grid">
-            ${assets.map(aid => `
-              <label>
-                <input type="checkbox" class="asset-checkbox" data-template="${tplId}" data-collection="${collection}" value="${aid}" />
-                ${aid}
-              </label>
-            `).join("")}
-          </div>
-        `;
-        detailsContainer.appendChild(section);
-      } else if (!cb.checked && exists) {
-        exists.remove();
-      }
-    });
-  });
-}
 function setupDynamicTemplateSelector() {
   const wrapper = document.getElementById("giveaway-templates-wrapper");
   const btn = document.getElementById("add-template-btn");
@@ -1834,6 +1764,7 @@ async function submitNftGiveaway() {
 
   const assetIds = assetObjects.map(a => a.asset_id);
   const templateIds = [...new Set(selectedTemplates)];
+  const collectionNames = [...new Set(assetObjects.map(a => a.collection_name))];
 
   if (assetIds.length === 0) {
     showToast("Select at least one NFT", "error");

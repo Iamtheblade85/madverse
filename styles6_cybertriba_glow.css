@@ -4300,23 +4300,6 @@ button:hover, .btn:hover, .menu-button:hover {
   transform: scale(1.2);
 }
 
-.winner-block {
-  padding: 6px 8px;
-  border-radius: 6px;
-  margin-bottom: 4px;
-  font-size: 0.9rem;
-  color: #fff;
-  display: block;
-  white-space: nowrap;
-  overflow-x: auto;
-}
-
-.winner-color-0 { background-color: #2ecc71; }  /* green */
-.winner-color-1 { background-color: #3498db; }  /* blue */
-.winner-color-2 { background-color: #e67e22; }  /* orange */
-.winner-color-3 { background-color: #9b59b6; }  /* purple */
-.winner-color-4 { background-color: #e74c3c; }  /* red */
-
 .giveaway-template-block {
   border: 1px solid #444;
   border-radius: 8px;
@@ -4345,31 +4328,31 @@ button:hover, .btn:hover, .menu-button:hover {
   margin-bottom: 6px;
   border-radius: 8px;
   font-family: monospace;
+  font-weight: bold;            /* ✅ più leggibile */
+  font-size: 0.95rem;
   transition: all 0.3s ease;
 }
 
 /* Colori alternati */
-.winner-row:nth-child(5n+1) { background-color: #2ecc71; color: #000; } /* green */
-.winner-row:nth-child(5n+2) { background-color: #3498db; color: #fff; } /* blue */
-.winner-row:nth-child(5n+3) { background-color: #e67e22; color: #fff; } /* orange */
-.winner-row:nth-child(5n+4) { background-color: #9b59b6; color: #fff; } /* purple */
-.winner-row:nth-child(5n+5) { background-color: #e74c3c; color: #fff; } /* red */
+.winner-row:nth-child(6n+1) { background-color: #2ecc71; color: #000; } /* green */
+.winner-row:nth-child(6n+2) { background-color: #3498db; color: #fff; } /* blue */
+.winner-row:nth-child(6n+3) { background-color: #e67e22; color: #fff; } /* orange */
+.winner-row:nth-child(6n+4) { background-color: #9b59b6; color: #fff; } /* purple */
+.winner-row:nth-child(6n+5) { background-color: #f1c40f; color: #000; } /* yellow */
+.winner-row:nth-child(6n+6) { background-color: #e74c3c; color: #fff; } /* red */
 
-/* Hover: inversione colori */
 .winner-row:hover {
   background-color: #fff !important;
   color: #000 !important;
   cursor: pointer;
 }
 
-/* Click: effetto stella cadente */
 .winner-row.clicked {
   animation: shooting-star 0.7s ease-in-out;
   background: linear-gradient(90deg, #fff700, #ff00cc, #00ffff);
   color: #000;
 }
 
-/* Keyframes per stella cadente */
 @keyframes shooting-star {
   0% {
     background-position: 100% 0;
@@ -4380,6 +4363,7 @@ button:hover, .btn:hover, .menu-button:hover {
     opacity: 0.5;
   }
 }
+
 .winners-wrapper {
   max-height: 400px;
   overflow-y: auto;

@@ -1529,8 +1529,8 @@ async function loadTwitchNftsGiveaways() {
       <div class="form-container" id="nft-giveaway-form">
         <div id="giveaway-template-section">
           <div class="template-selection-info">
-            <p>Seleziona uno o più <strong>template ID</strong> dai tuoi NFT. Solo gli NFT appartenenti a quei template saranno disponibili per il giveaway.</p>
-            <p>Il numero di vincitori equivale al numero totale di NFT selezionati. Puoi limitare i vincitori impostando un <strong>limite massimo</strong>.</p>
+            <p>Select one or more <strong>template IDs</strong> from your NFTs. Only NFTs belonging to the selected templates will be eligible for the giveaway.</p>
+            <p>The number of winners will match the total number of NFTs selected. You can limit the number of winners by setting a <strong>maximum limit</strong>.</p>
           </div>
           <div id="giveaway-templates-wrapper"></div>
           <button class="btn btn-secondary" id="add-template-btn">➕ Add another template</button>

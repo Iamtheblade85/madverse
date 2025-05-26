@@ -1923,21 +1923,25 @@ function renderNftGiveawaysTable(data) {
     const collections = [...new Set(group.map(g => g.collection_name))].join(', ');
     const status = group[0].status || 'pending';
 
-    // Estrai e visualizza ogni coppia winner-asset
-    const first = group[0]; // uno solo per riga
-    const winners = first.winner.split(',').map(w => w.trim());
-    const assets = first.asset_id.split(',').map(a => a.trim());
+    const first = group[0];
+    const winners = (first.winner || "").split(',').map(w => w.trim()).filter(Boolean);
+    const assets = (first.asset_id || "").split(',').map(a => a.trim()).filter(Boolean);
 
-    let winnerBlocks = `<div class="winners-wrapper">`;
-    for (let i = 0; i < winners.length; i++) {
-      const colorIndex = i % 6;
-      winnerBlocks += `
-        <div class="winner-row winner-color-${colorIndex}">
-          <span class="winner-name">winner: ${winners[i].toUpperCase()}</span>
-          <span class="winner-asset">→ asset: ${assets[i] || '???'}</span>
-        </div>`;
+    let winnerBlocks = '';
+    if (winners.length === 0 || assets.length === 0) {
+      winnerBlocks = `<div class="info-message">No winners assigned yet (giveaway is pending or failed).</div>`;
+    } else {
+      winnerBlocks = `<div class="winners-wrapper">`;
+      for (let i = 0; i < winners.length; i++) {
+        const colorIndex = i % 6;
+        winnerBlocks += `
+          <div class="winner-row winner-color-${colorIndex}">
+            <span class="winner-name">winner: ${winners[i].toUpperCase()}</span>
+            <span class="winner-asset">→ asset: ${assets[i] || '???'}</span>
+          </div>`;
+      }
+      winnerBlocks += `</div>`;
     }
-    winnerBlocks += `</div>`;
 
     html += `
       <tr>

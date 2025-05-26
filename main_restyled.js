@@ -2571,19 +2571,25 @@ function renderStormsTable(data) {
   data.forEach((storm, index) => {
     let winnersHTML = '';
     const winnersRaw = storm.winners_display?.trim();
+    const assetsRaw = storm.asset_ids_display?.trim(); // presunto campo parallelo
 
     if (storm.status === 'executed') {
       if (winnersRaw && winnersRaw.toLowerCase() !== 'soon') {
-        const winnersArray = winnersRaw.split(' | ').map(w => w.trim().toUpperCase());
-        for (let i = 0; i < winnersArray.length; i += 2) {
-          const left = winnersArray[i];
-          const right = winnersArray[i + 1] || '';
+        const winnersArray = winnersRaw.split(' | ').map(w => w.trim());
+        const assetArray = assetsRaw ? assetsRaw.split(' | ').map(a => a.trim()) : [];
+
+        winnersHTML += `<div class="winners-wrapper">`; // scroll container
+
+        winnersArray.forEach((winner, i) => {
+          const asset = assetArray[i] || '???';
           winnersHTML += `
             <div class="winner-row">
-              <span class="winner-name">${left}</span>
-              <span class="winner-name">${right}</span>
+              <span class="winner-name">${winner.toUpperCase()}</span>
+              <span class="winner-asset">→ ${asset}</span>
             </div>`;
-        }
+        });
+
+        winnersHTML += `</div>`;
       } else {
         winnersHTML = `<span class="no-winners">No winners in the selected time interval :(</span>`;
       }
@@ -2612,6 +2618,14 @@ function renderStormsTable(data) {
 
   tableBody.innerHTML = rowsHTML;
   addHoverEffectToRows();
+
+  // Attiva animazione su click
+  document.querySelectorAll('.winner-row').forEach(row => {
+    row.addEventListener('click', () => {
+      row.classList.add('clicked');
+      setTimeout(() => row.classList.remove('clicked'), 700);
+    });
+  });
 }
 
 function sortStormsTable(key) {

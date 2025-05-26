@@ -1923,17 +1923,20 @@ function renderNftGiveawaysTable(data) {
     const collections = [...new Set(group.map(g => g.collection_name))].join(', ');
     const status = group[0].status || 'pending';
 
-    let winnerBlocks = `<div class="winners-wrapper">`;
+    // Estrai e visualizza ogni coppia winner-asset
+    const first = group[0]; // uno solo per riga
+    const winners = first.winner.split(',').map(w => w.trim());
+    const assets = first.asset_id.split(',').map(a => a.trim());
 
-    group.forEach((g, i) => {
-      const colorIndex = i % 6; // 6 colori per esempio
+    let winnerBlocks = `<div class="winners-wrapper">`;
+    for (let i = 0; i < winners.length; i++) {
+      const colorIndex = i % 6;
       winnerBlocks += `
         <div class="winner-row winner-color-${colorIndex}">
-          <span class="winner-name">winner: ${(g.winner || '-').toUpperCase()}</span>
-          <span class="winner-asset">→ asset: ${g.asset_id || '???'}</span>
+          <span class="winner-name">winner: ${winners[i].toUpperCase()}</span>
+          <span class="winner-asset">→ asset: ${assets[i] || '???'}</span>
         </div>`;
-    });
-
+    }
     winnerBlocks += `</div>`;
 
     html += `
@@ -1952,7 +1955,7 @@ function renderNftGiveawaysTable(data) {
   html += `</tbody></table>`;
   table.innerHTML = html;
 
-  // Click animato
+  // Click effect
   document.querySelectorAll('.winner-row').forEach(row => {
     row.addEventListener('click', () => {
       row.classList.add('clicked');

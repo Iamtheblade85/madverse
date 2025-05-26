@@ -1527,10 +1527,15 @@ async function loadTwitchNftsGiveaways() {
 
   container.innerHTML = `
       <div class="form-container" id="nft-giveaway-form">
-        <label class="input-label">Select Template(s)</label>
-        <div id="templateMultiSelect" class="template-multi-select"></div>
-        <div id="templateDetailsContainer" class="template-details-wrapper"></div>
-      
+        <div id="giveaway-template-section">
+          <div class="template-selection-info">
+            <p>Seleziona uno o più <strong>template ID</strong> dai tuoi NFT. Solo gli NFT appartenenti a quei template saranno disponibili per il giveaway.</p>
+            <p>Il numero di vincitori equivale al numero totale di NFT selezionati. Puoi limitare i vincitori impostando un <strong>limite massimo</strong>.</p>
+          </div>
+          <div id="giveaway-templates-wrapper"></div>
+          <button class="btn btn-secondary" id="add-template-btn">➕ Add another template</button>
+        </div>
+        
         <label class="input-label">Draw Date & Time</label>
         <input type="text" id="nftGiveawayTime" class="input-field" placeholder="Select date & time" readonly />
         
@@ -1635,6 +1640,7 @@ async function loadTwitchNftsGiveaways() {
   
   // Carica la lista dei giveaway programmati
   loadScheduledNftGiveaways();
+  setupDynamicTemplateSelector();
 }
 function setupMultiTemplateSelector(nfts) {
   const container = document.getElementById("templateMultiSelect");
@@ -1706,6 +1712,69 @@ function setupMultiTemplateSelector(nfts) {
     });
   });
 }
+function setupDynamicTemplateSelector() {
+  const wrapper = document.getElementById("giveaway-templates-wrapper");
+  const btn = document.getElementById("add-template-btn");
+  let index = 0;
+
+  function renderTemplateInput() {
+    const tplDiv = document.createElement("div");
+    tplDiv.className = "giveaway-template-block";
+
+    const templateOptions = Object.entries(groupTemplatesById(window.nftsData)).map(([tplId, obj]) => {
+      return `<option value="${tplId}" data-collection="${obj.collection}" data-count="${obj.assets.length}">${tplId} - ${obj.name} (${obj.assets.length} owned)</option>`;
+    }).join('');
+
+    tplDiv.innerHTML = `
+      <label class="form-label">Template</label>
+      <select class="form-input template-dropdown" data-index="${index}">
+        <option disabled selected value="">-- Select Template --</option>
+        ${templateOptions}
+      </select>
+      <label class="form-label mt-1">NFTs to Give Away <span class="max-available"></span></label>
+      <input type="number" class="form-input nft-count-input" min="1" value="1" />
+    `;
+
+    wrapper.appendChild(tplDiv);
+
+    const dropdown = tplDiv.querySelector('.template-dropdown');
+    const maxText = tplDiv.querySelector('.max-available');
+    const inputField = tplDiv.querySelector('.nft-count-input');
+
+    dropdown.addEventListener('change', () => {
+      const selected = dropdown.options[dropdown.selectedIndex];
+      const max = selected.getAttribute('data-count') || 0;
+      maxText.innerText = `(max: ${max})`;
+      inputField.max = max;
+      inputField.value = Math.min(max, 1);
+    });
+
+    index++;
+  }
+
+  // Iniziale
+  renderTemplateInput();
+  btn.addEventListener('click', renderTemplateInput);
+}
+
+function groupTemplatesById(nfts) {
+  const map = {};
+  for (const nft of nfts) {
+    const info = nft.template_info;
+    if (!info || !info.template_id) continue;
+
+    const tplId = info.template_id;
+    if (!map[tplId]) {
+      map[tplId] = {
+        name: info.template_name || "Unnamed",
+        collection: info.collection_name || "unknown",
+        assets: []
+      };
+    }
+    map[tplId].assets.push(nft);
+  }
+  return map;
+}
 
 async function populateGiveawayChannels() {
   const select = document.getElementById('nftGiveawayChannel');
@@ -1731,17 +1800,40 @@ async function populateGiveawayChannels() {
   }
 }
 
-async function submitNftGiveaway() {
-  const assetCheckboxes = document.querySelectorAll('.asset-checkbox:checked');
-  
-  const assetObjects = Array.from(assetCheckboxes).map(cb => ({
-    asset_id: cb.value,
-    template_id: cb.dataset.template,
-    collection_name: cb.dataset.collection
-  }));
-  
-  const assetIds = assetObjects.map(obj => obj.asset_id);
-  const templateIds = [...new Set(assetObjects.map(obj => obj.template_id))];
+function submitNftGiveaway() {
+  const wrapper = document.getElementById("giveaway-templates-wrapper");
+  const blocks = wrapper.querySelectorAll(".giveaway-template-block");
+
+  const assetObjects = [];
+  const selectedTemplates = [];
+
+  const nfts = window.nftsData || [];
+
+  for (const block of blocks) {
+    const tplSelect = block.querySelector(".template-dropdown");
+    const countInput = block.querySelector(".nft-count-input");
+    const tplId = tplSelect?.value;
+    const max = parseInt(tplSelect.selectedOptions[0]?.dataset.count || 0);
+    const collection = tplSelect.selectedOptions[0]?.dataset.collection || "";
+    const count = parseInt(countInput?.value || "0");
+
+    if (!tplId || isNaN(count) || count < 1 || count > max) {
+      showToast("Please review template selection: invalid values", "error");
+      return;
+    }
+
+    const matchingAssets = nfts.filter(n => n.template_info?.template_id == tplId).slice(0, count);
+    assetObjects.push(...matchingAssets.map(n => ({
+      asset_id: n.asset_id,
+      template_id: tplId,
+      collection_name: collection
+    })));
+
+    selectedTemplates.push(tplId);
+  }
+
+  const assetIds = assetObjects.map(a => a.asset_id);
+  const templateIds = [...new Set(selectedTemplates)];
 
   if (assetIds.length === 0) {
     showToast("Select at least one NFT", "error");
@@ -1860,59 +1952,56 @@ function applyNftGiveawayFiltersAndSort() {
 }
 function renderNftGiveawaysTable(data) {
   const table = document.getElementById('nft-giveaways-table');
-  const sortArrow = (key) => nftGiveawaySort.key === key ? (nftGiveawaySort.direction === 'asc' ? ' ↑' : ' ↓') : '';
 
-  const html = `
+  // Raggruppa per ID logico (time + channel + donor)
+  const grouped = {};
+  for (const g of data) {
+    const key = `${g.scheduled_time}|${g.channel_name}|${g.username_donor}`;
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(g);
+  }
+
+  let html = `
     <table class="styled-table">
-    <thead>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Sponsored by</th>
+          <th>Templates</th>
+          <th>Collections</th>
+          <th>Channel</th>
+          <th>Status</th>
+          <th>Winners & Assets</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  for (const [key, group] of Object.entries(grouped)) {
+    const [time, channel, donor] = key.split('|');
+    const templates = [...new Set(group.map(g => g.template_id))].join(', ');
+    const collections = [...new Set(group.map(g => g.collection_name))].join(', ');
+    const status = group[0].status || 'pending';
+
+    const winnerBlocks = group.map((g, i) => {
+      const color = i % 2 === 0 ? '#0ff' : '#f0f';
+      return `<span style="color:${color}; margin-right:6px;">${g.winner || '-'} → ${g.asset_id}</span>`;
+    }).join("<br>");
+
+    html += `
       <tr>
-        <th>Time</th>
-        <th>Donor</th>
-        <th>Channel</th>
-        <th>Winners + Assets</th>
-        <th>Status</th>
+        <td>${new Date(time).toLocaleString()}</td>
+        <td>${donor}</td>
+        <td>${templates}</td>
+        <td>${collections}</td>
+        <td>${channel}</td>
+        <td>${status}</td>
+        <td>${winnerBlocks}</td>
       </tr>
-    </thead>
-    <tbody>
-      ${data.map((g, index) => {
-        const winners = (g.winner || "").split(",").map(w => w.trim()).filter(Boolean);
-        const assetIds = (g.asset_id || "").split(",").map(a => a.trim());
-        const templateIds = (g.template_id || "").split(",").map(t => t.trim());
-        const templateNames = (g.template_names || "").split(",").map(n => n.trim());
-        const collectionNames = (g.collection_names || "").split(",").map(c => c.trim());
-    
-        const rows = [];
-    
-        for (let i = 0; i < Math.max(winners.length, 1); i++) {
-          const winner = winners[i] || "-";
-          const assetId = assetIds[i] || "-";
-          const templateId = templateIds[i] || "-";
-          const templateName = templateNames[i] || "-";
-          const collection = collectionNames[i] || "-";
-          const colorClass = `winner-color-${i % 5}`;
-    
-          rows.push(`
-            <div class="winner-block ${colorClass}">
-              <strong>${winner}</strong> won 
-              <code>${assetId}</code> 
-              (Template: ${templateId} - ${templateName}, Collection: ${collection})
-            </div>
-          `);
-        }
-    
-        return `
-          <tr>
-            <td>${new Date(g.scheduled_time).toLocaleString()}</td>
-            <td>${g.username_donor || '-'}</td>
-            <td>${g.channel_name || '-'}</td>
-            <td>${rows.join('')}</td>
-            <td>${g.status || 'pending'}</td>
-          </tr>
-        `;
-      }).join('')}
-    </tbody>
-  </table>
-`;
+    `;
+  }
+
+  html += `</tbody></table>`;
   table.innerHTML = html;
 }
 

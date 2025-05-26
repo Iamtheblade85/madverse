@@ -1754,7 +1754,14 @@ async function submitNftGiveaway() {
       return;
     }
 
-    const matchingAssets = nfts.filter(n => n.template_info?.template_id == tplId).slice(0, count);
+    const matchingAssets = nfts
+      .filter(n =>
+        n.template_info?.template_id == tplId &&
+        n.gived_out !== 'locked' &&
+        n.gived_out !== 'yes'
+      )
+      .slice(0, count);
+
     assetObjects.push(...matchingAssets.map(n => ({
       asset_id: n.asset_id,
       template_id: tplId,

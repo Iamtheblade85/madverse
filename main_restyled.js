@@ -1690,6 +1690,8 @@ function setupDynamicTemplateSelector() {
 function groupTemplatesById(nfts) {
   const map = {};
   for (const nft of nfts) {
+    if (nft.gived_out === 'locked') continue;  // 👈 ESCLUSO
+
     const info = nft.template_info;
     if (!info || !info.template_id) continue;
 

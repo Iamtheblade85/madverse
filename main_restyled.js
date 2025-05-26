@@ -1893,7 +1893,7 @@ function applyNftGiveawayFiltersAndSort() {
 function renderNftGiveawaysTable(data) {
   const table = document.getElementById('nft-giveaways-table');
 
-  // Raggruppa per ID logico (time + channel + donor)
+  // Raggruppa per ID logico
   const grouped = {};
   for (const g of data) {
     const key = `${g.scheduled_time}|${g.channel_name}|${g.username_donor}`;
@@ -1905,12 +1905,12 @@ function renderNftGiveawaysTable(data) {
     <table class="styled-table">
       <thead>
         <tr>
-          <th>Time</th>
-          <th>Sponsored by</th>
+          <th onclick="sortNftGiveaways('scheduled_time')">Time</th>
+          <th onclick="sortNftGiveaways('username_donor')">Sponsored by</th>
           <th>Templates</th>
           <th>Collections</th>
-          <th>Channel</th>
-          <th>Status</th>
+          <th onclick="sortNftGiveaways('channel_name')">Channel</th>
+          <th onclick="sortNftGiveaways('status')">Status</th>
           <th>Winners & Assets</th>
         </tr>
       </thead>
@@ -1922,20 +1922,17 @@ function renderNftGiveawaysTable(data) {
     const templates = [...new Set(group.map(g => g.template_id))].join(', ');
     const collections = [...new Set(group.map(g => g.collection_name))].join(', ');
     const status = group[0].status || 'pending';
-    const winnerBlocks = group.map((g, i) => {
-      const bgColor = i % 2 === 0 ? '#f4f4f4' : '#e9e9e9';
-      return `
-        <div style="
-          background-color: ${bgColor}; 
-          padding: 4px 8px; 
-          border-radius: 4px; 
-          margin-bottom: 2px;
-          font-size: 0.9em;
-        ">
-          <strong>${g.winner || '-'}</strong> → <code>${g.asset_id}</code>
-        </div>
-      `;
-    }).join('');
+
+    const winnerBlocks = `
+      <div class="winners-wrapper">
+        ${group.map((g, i) => `
+          <div class="winner-row">
+            <span class="winner-name">${(g.winner || '-').toUpperCase()}</span>
+            <span class="winner-asset">→ ${g.asset_id || '???'}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
 
     html += `
       <tr>
@@ -1952,7 +1949,16 @@ function renderNftGiveawaysTable(data) {
 
   html += `</tbody></table>`;
   table.innerHTML = html;
+
+  // Aggiungi animazione click alle righe
+  document.querySelectorAll('.winner-row').forEach(row => {
+    row.addEventListener('click', () => {
+      row.classList.add('clicked');
+      setTimeout(() => row.classList.remove('clicked'), 700);
+    });
+  });
 }
+
 
 function sortNftGiveaways(key) {
   if (nftGiveawaySort.key === key) {
@@ -2568,24 +2574,20 @@ function renderStormsTable(data) {
 
   let rowsHTML = '';
 
-  data.forEach((storm, index) => {
+  data.forEach((storm) => {
     let winnersHTML = '';
     const winnersRaw = storm.winners_display?.trim();
-    const assetsRaw = storm.asset_ids_display?.trim(); // presunto campo parallelo
 
     if (storm.status === 'executed') {
       if (winnersRaw && winnersRaw.toLowerCase() !== 'soon') {
-        const winnersArray = winnersRaw.split(' | ').map(w => w.trim());
-        const assetArray = assetsRaw ? assetsRaw.split(' | ').map(a => a.trim()) : [];
+        const winnersArray = winnersRaw.split(' | ').map(w => w.trim().toUpperCase());
 
-        winnersHTML += `<div class="winners-wrapper">`; // scroll container
+        winnersHTML += `<div class="winners-wrapper">`;
 
         winnersArray.forEach((winner, i) => {
-          const asset = assetArray[i] || '???';
           winnersHTML += `
             <div class="winner-row">
-              <span class="winner-name">${winner.toUpperCase()}</span>
-              <span class="winner-asset">→ ${asset}</span>
+              <span class="winner-name">${winner}</span>
             </div>`;
         });
 
@@ -2619,7 +2621,7 @@ function renderStormsTable(data) {
   tableBody.innerHTML = rowsHTML;
   addHoverEffectToRows();
 
-  // Attiva animazione su click
+  // Effetto stella cadente al click
   document.querySelectorAll('.winner-row').forEach(row => {
     row.addEventListener('click', () => {
       row.classList.add('clicked');

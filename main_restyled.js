@@ -1538,8 +1538,25 @@ async function loadAccountSection() {
   const container = document.querySelector('.loading-message');
   const sectionsWrapper = document.getElementById('account-sections');
 
+  // Se abbiamo già tutti i dati, evita fetch
+  if (window.accountData &&
+      window.accountData.userInfo &&
+      window.accountData.telegram &&
+      window.accountData.twitch &&
+      window.accountData.passes &&
+      window.accountData.activity &&
+      window.accountData.dailyBox) {
+    
+    // Mostra loader almeno 5 secondi prima del render
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    container.classList.add('hidden');
+    sectionsWrapper.style.display = 'block';
+    renderAccountSubsection('info');
+    return;
+  }
+
   try {
-    // Caricamento dati iniziale
+    // Caricamento dati da endpoint
     const userInfoRes = await fetch(`${BASE_URL}/account/info?user_id=${userId}&usx_token=${usx_token}`);
     const userInfo = await userInfoRes.json();
 
@@ -1557,7 +1574,6 @@ async function loadAccountSection() {
       fetch(`${BASE_URL}/account/daily_box?user_id=${userId}&usx_token=${usx_token}`)
     ]);
 
-    // Salva i dati globalmente
     window.accountData = {
       userInfo,
       telegram: await telegramRewardsRes.json(),
@@ -1567,12 +1583,12 @@ async function loadAccountSection() {
       dailyBox: await dailyBoxRes.json()
     };
 
-    container.classList.add('hidden');
-    document.getElementById('account-sections').style.display = 'block';
+    // Mostra loader almeno 5 secondi
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
+    container.classList.add('hidden');
     sectionsWrapper.style.display = 'block';
 
-    // Render iniziale solo della sezione info
     renderAccountSubsection('info');
 
   } catch (err) {

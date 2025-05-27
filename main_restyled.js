@@ -3823,6 +3823,7 @@ function injectThemeSelector() {
     display: block;
     width: 180px;
     margin-top: 0.5rem;
+    margin-right: 0.5rem;
     padding: 0.5rem 1rem;
     background: linear-gradient(145deg, #1a1a1a, #333);
     color: #ffd700;

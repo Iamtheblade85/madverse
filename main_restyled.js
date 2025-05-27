@@ -1527,28 +1527,33 @@ function loadSection(section) {
         </div>
   
         <div id="account-sections" style="display: none;">
-          <details open class="account-block2">
+          <details open class="account-block2 decorated-block">
             <summary class="section-title2">👤 Personal Info</summary>
+            <img class="block-deco left" src="https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeicm355ngr7bjtn7bifflfcndjct4hlyj36efpfdrgfufpm4t6esfq" alt="decor-left">
             <div id="personal-info"></div>
           </details>
   
-          <details class="account-block2">
+          <details class="account-block2" decorated-block">
             <summary class="section-title2">💬 Chat Rewards</summary>
+            <img class="block-deco left" src="https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeieyvsd5m7lertnqcnrcucrkjpyksajvx7f2jkpxvstevtwztmbk5u" alt="decor-left">
             <div id="chat-rewards"></div>
           </details>
   
-          <details class="account-block2">
+          <details class="account-block2" decorated-block">
             <summary class="section-title2">🎟️ Telegram Passes</summary>
+            <img class="block-deco left" src="https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeiaqwjojgpvt3qad4urb7acfxzo565rlzmjl4hhrpcoxrjkoicxuyy" alt="decor-left">
             <div id="telegram-passes"></div>
           </details>
   
-          <details class="account-block2">
+          <details class="account-block2" decorated-block">
             <summary class="section-title2">📜 Recent Activity</summary>
+            <img class="block-deco left" src="https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeicmgskdkv7l7zinxbmolfbwt36375h54gjss2sp4wrcynrvn4trsu" alt="decor-left">
             <div id="recent-activity"></div>
           </details>
   
-          <details class="account-block2">
+          <details class="account-block2" decorated-block">
             <summary class="section-title2">🎁 Daily Box</summary>
+            <img class="block-deco left" src="https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeifupqrjp4bgyfcdghqf7vctnygcvmq4fqrqihhhktrcvxyvxzcxwq" alt="decor-left">
             <div id="daily-box"></div>
           </details>
         </div>

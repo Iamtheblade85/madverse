@@ -1696,7 +1696,6 @@ function renderDailyBox(data) {
     : `<span class="status-badge2 inactive2">VIP Inactive ❌</span>`;
 
   document.getElementById('daily-box').innerHTML = `
-    <h3 class="section-title2">🎁 Daily Box</h3>
     <p class="subtitle2">
       As a ChipsWallet member you can open one Daily Chest per day.<br>
       If you own the <strong>VIP Membership NFT</strong>, you can also claim a VIP Chest.<br>
@@ -1723,7 +1722,6 @@ function renderDailyBox(data) {
 
 function renderPersonalInfo(info) {
   document.getElementById('personal-info').innerHTML = `
-    <h3 class="section-title2">👤 Personal Info</h3>
     <p><strong>Username:</strong> ${info.username}</p>
     <p><strong>Wax Account:</strong> ${info.wax_account}</p>
     <p><strong>Role:</strong> ${info.role}</p>
@@ -1791,7 +1789,6 @@ function renderChatRewards(telegram, twitch) {
   }
 
   document.getElementById('chat-rewards').innerHTML = `
-    <h3 class="section-title2">💬 Chat Rewards</h3>
     ${renderPlatform(telegram, '📢')}
     ${renderPlatform(twitch, '🎮')}
   `;
@@ -1804,7 +1801,6 @@ function renderTelegramPasses(passes) {
   };
 
   document.getElementById('telegram-passes').innerHTML = `
-    <h3 class="section-title2">🎟️ Telegram Passes</h3>
     <ul>
       ${passes.map(p => `
         <li>
@@ -1820,7 +1816,6 @@ function renderTelegramPasses(passes) {
 
 function renderRecentActivity(data) {
   document.getElementById('recent-activity').innerHTML = `
-    <h3 class="section-title2">📜 Recent Activity</h3>
     <ul class="subtitle2">
       <li><strong>🎁 Last Boxes Claimed:</strong> ${data.last_boxes_claimed?.join(", ") || "None"}</li>
       <li><strong>💬 Last Chat Reward:</strong> ${data.last_chat_reward || "None"}</li>

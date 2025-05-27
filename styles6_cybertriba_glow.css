@@ -4730,7 +4730,7 @@ details[open] > div {
 }
 
 .block-deco.left {
-  left: -60px;
+  left: 2%;
   transform: rotate(-2deg);
 }
 .block-deco.right {

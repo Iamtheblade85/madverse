@@ -2942,13 +2942,78 @@ body {
 .winner-name {
   font-family: "Papyrus", "Courier New", cursive;
   font-size: 0.9rem;
-  color: #00f0ff;
-  text-shadow: 0 0 1px #8e44ad;
-  transition: all 0.3s ease-in-out;
+  /* Colore di base bianco + ombra neon rossa più sottile */
+  color: #ffffff;
+  text-shadow: 
+    0 0 2px #ff0000,
+    0 0 4px #ff0000,
+    0 0 6px #ff0000;
+  animation: colorShadowLoop 3s ease-in-out infinite;
 }
+
+@keyframes colorShadowLoop {
+  0%, 100% {
+    /* inizio/fine: testo bianco, ombra rossa sottile */
+    color: #ffffff;
+    text-shadow:
+      0 0 2px #ff0000,
+      0 0 4px #ff0000,
+      0 0 6px #ff0000;
+  }
+  50% {
+    /* metà ciclo: testo rosso, ombra bianca sottile */
+    color: #ff0000;
+    text-shadow:
+      0 0 2px #ffffff,
+      0 0 4px #ffffff,
+      0 0 6px #ffffff;
+  }
+}
+
 .winner-name:hover {
   filter: brightness(1.1);
-  box-shadow: 0 0 12px #ff00ff, 0 0 25px #ff00ff;
+  box-shadow: 0 0 8px #ff0000, 0 0 16px #ff0000;
+}
+
+/* wrapper cell: centra il dot */
+.live-element {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25em;
+}
+
+/* il pallino */
+.live-element .dot {
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: 50%;
+  background-color: var(--live-color);
+  box-shadow:
+    0 0 4px var(--live-color),
+    0 0 8px var(--live-color);
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+
+/* variabili di stato */
+.live-element.pending   { --live-color: #00ff00; } /* verde neon */
+.live-element.failed    { --live-color: #ff0000; } /* rosso neon */
+.live-element.concluded { --live-color: #0000ff; } /* blu neon */
+
+/* keyframes di “pulsing” */
+@keyframes livePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 4px var(--live-color),
+      0 0 8px var(--live-color);
+  }
+  50% {
+    transform: scale(1.3);
+    box-shadow:
+      0 0 8px var(--live-color),
+      0 0 16px var(--live-color);
+  }
 }
 
 .no-winners {

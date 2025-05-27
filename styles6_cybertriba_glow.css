@@ -4525,3 +4525,101 @@ button:hover, .btn:hover, .menu-button:hover {
   0%   { transform: scale(0.6); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
+
+/* === ACCOUNT INFO CARD === */
+.account-card2 {
+  background-color: rgba(0, 0, 0, 0.6);
+  border: 2px solid #00ffcc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 10px #00ffcc, 0 0 20px #8e44ad;
+  font-family: "Papyrus", "Courier New", cursive;
+  color: #ffe600;
+  text-shadow: 0 0 2px #000;
+  animation: fade-slide 0.4s ease-in-out;
+}
+
+/* === XP BAR === */
+.xp-bar2 {
+  background: linear-gradient(to right, #222, #111);
+  border: 1px solid #39ff14;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 0.5rem 0 1rem 0;
+  height: 16px;
+  box-shadow: 0 0 5px #39ff14;
+}
+.xp-fill2 {
+  height: 100%;
+  background: linear-gradient(to right, #39ff14, #8e44ad);
+  box-shadow: 0 0 6px #00ffcc;
+  transition: width 0.5s ease-in-out;
+}
+
+/* === TABLE STYLING === */
+.reward-table2 {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+.reward-table2 th,
+.reward-table2 td {
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  border: 1px solid #00ffcc;
+  color: #fff;
+  text-shadow: 0 0 2px #000;
+}
+.reward-table2 th {
+  background-color: #111;
+  color: #ffe600;
+  text-shadow: 0 0 2px #000;
+}
+
+/* === DETAILS / SPOILERS === */
+details summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: #39ff14;
+  margin-top: 0.5rem;
+}
+details[open] summary {
+  color: #f39c12;
+}
+
+/* === SECTION TITLE === */
+.section-title2 {
+  font-size: 1.6rem;
+  margin-bottom: 1.2rem;
+  color: #f39c12;
+  text-shadow: 0 0 3px #000;
+}
+
+/* === SUBTITLE === */
+.subtitle2 {
+  font-size: 1rem;
+  color: #ffe600;
+  text-shadow: 0 0 1px #000;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+/* === STATUS BADGE === */
+.status-badge2 {
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-weight: bold;
+  display: inline-block;
+  margin: 0.4rem 0;
+}
+.status-badge.active2 {
+  background-color: #28a745;
+  color: #fff;
+  box-shadow: 0 0 8px #39ff14;
+}
+.status-badge.inactive2 {
+  background-color: #aa3333;
+  color: #fff;
+  box-shadow: 0 0 8px #ff073a;
+}

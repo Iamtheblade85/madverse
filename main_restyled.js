@@ -1910,8 +1910,10 @@ function renderNftGiveawaysTable(data) {
           <th>Templates</th>
           <th>Collections</th>
           <th onclick="sortNftGiveaways('channel_name')">Channel</th>
+          <th>Timeframe</th>
           <th onclick="sortNftGiveaways('status')">Status</th>
           <th>Winners & Assets</th>
+          <th>Live</th>
         </tr>
       </thead>
       <tbody>
@@ -1922,14 +1924,20 @@ function renderNftGiveawaysTable(data) {
     const templates = [...new Set(group.map(g => g.template_id))].join(', ');
     const collections = [...new Set(group.map(g => g.collection_name))].join(', ');
     const status = group[0].status || 'pending';
-
+    const timeframe = group[0].timeframe || '0';
     const first = group[0];
     const winners = (first.winner || "").split(',').map(w => w.trim()).filter(Boolean);
     const assets = (first.asset_id || "").split(',').map(a => a.trim()).filter(Boolean);
 
     let winnerBlocks = '';
-    if (winners.length === 0 || assets.length === 0) {
-      winnerBlocks = `<div class="info-message">No winners assigned yet (giveaway is pending or failed).</div>`;
+    if (status === 'failed') {
+      winnerBlocks = `<div class="info-message">
+        No eligible winners in the ${timeframe}
+      </div>`;
+    } else if (status === 'pending') {
+      winnerBlocks = `<div class="info-message">
+        Coming soon
+      </div>`;
     } else {
       winnerBlocks = `<div class="winners-wrapper">`;
       for (let i = 0; i < winners.length; i++) {
@@ -1950,8 +1958,12 @@ function renderNftGiveawaysTable(data) {
         <td>${templates}</td>
         <td>${collections}</td>
         <td>${channel}</td>
+        <td>${timeframe}</td>
         <td>${status}</td>
         <td>${winnerBlocks}</td>
+        <td class="live-element ${status}">
+          <span class="dot"></span>
+        </td>        
       </tr>
     `;
   }

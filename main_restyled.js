@@ -2198,7 +2198,7 @@ async function loadLogRewardActivity() {
     originalData = data;
 
     const recentData = data
-      .slice(0, 20)
+      .slice(0, 40)
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     displayLogData(recentData);

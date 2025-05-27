@@ -1606,50 +1606,101 @@ function renderPersonalInfo(info) {
   document.getElementById('personal-info').innerHTML = `
     <h3>👤 Personal Info</h3>
     <p><strong>Username:</strong> ${info.username}</p>
-    <p><strong>Email:</strong> ${info.email}</p>
-    <p><strong>Account Created:</strong> ${info.created_at}</p>
-    <p><strong>Wallet:</strong> ${info.wallet_address}</p>
+    <p><strong>Wax Account:</strong> ${info.wax_account}</p>
+    <p><strong>Role:</strong> ${info.role}</p>
   `;
 }
 
 function renderChatRewards(telegram, twitch) {
+  function renderBoosters(boosters, typeLabel, icon) {
+    if (!boosters || boosters.length === 0) return `<p>No ${typeLabel} Boosters.</p>`;
+
+    return `
+      <details>
+        <summary>${icon} ${typeLabel} Boosters</summary>
+        ${boosters.map(b => `
+          <p>
+            ${b.type}: <strong>${b.points} pts</strong>
+            ${b.channel ? `— <em>Only for ${b.channel}</em>` : `— <strong>Global</strong>`}
+          </p>
+        `).join('')}
+      </details>
+    `;
+  }
+
+  function renderPlatform(platform, icon) {
+    const progress = Math.min((platform.xp / platform.xp_needed) * 100, 100).toFixed(1);
+
+    const boostersHTML = `
+      ${renderBoosters(platform.boosters?.xp, "XP", "📈")}
+      ${renderBoosters(platform.boosters?.reward, "Reward", "💰")}
+    `;
+
+    const rewardsHTML = (platform.channels || []).map(ch => `
+      <details>
+        <summary>📣 ${ch.name}</summary>
+        <table class="reward-table">
+          <thead>
+            <tr><th>Token</th><th>Short Msg</th><th>Long Msg</th></tr>
+          </thead>
+          <tbody>
+            ${ch.rewards.map(r => `
+              <tr>
+                <td>${r.token}</td>
+                <td>${r.short_msg_reward}</td>
+                <td>${r.long_msg_reward}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </details>
+    `).join('');
+
+    return `
+      <div class="account-block">
+        <h4>${icon} ${platform.platform || 'Platform'}</h4>
+        <p><strong>Username:</strong> ${platform.username}</p>
+        <p><strong>Level:</strong> ${platform.level}</p>
+        <p><strong>XP:</strong> ${platform.xp} / ${platform.xp_needed}</p>
+        <div class="xp-bar"><div class="xp-fill" style="width:${progress}%"></div></div>
+        ${boostersHTML}
+        <h5 class="mt-2">💬 Channel Rewards</h5>
+        ${rewardsHTML || '<p>No channel-specific rewards.</p>'}
+      </div>
+    `;
+  }
+
   document.getElementById('chat-rewards').innerHTML = `
     <h3>💬 Chat Rewards</h3>
-
-    <details>
-      <summary>Telegram Boosters</summary>
-      ${telegram.boosters.map(b => `<p>🚀 ${b.type}: ${b.points} points</p>`).join('')}
-    </details>
-
-    <details>
-      <summary>Twitch Boosters</summary>
-      ${twitch.boosters.map(b => `<p>🎮 ${b.type}: ${b.points} points</p>`).join('')}
-    </details>
+    ${renderPlatform(telegram, '📢')}
+    ${renderPlatform(twitch, '🎮')}
   `;
 }
 
 function renderTelegramPasses(passes) {
-  if (!passes.length) {
-    document.getElementById('telegram-passes').innerHTML = `
-      <h3>🎟️ Telegram Room Passes</h3>
-      <p>No active passes.</p>`;
-    return;
-  }
+  const passColors = {
+    "active": "✅ Active",
+    "expired": "❌ Expired"
+  };
 
   document.getElementById('telegram-passes').innerHTML = `
-    <h3>🎟️ Telegram Room Passes</h3>
+    <h3>🎟️ Telegram Passes</h3>
     <ul>
-      ${passes.map(p => `<li><strong>${p.room}</strong> - valid until ${p.expires}</li>`).join('')}
+      ${passes.map(p =>
+        `<li><strong>${p.type}:</strong> ${passColors[p.status] || p.status}</li>`
+      ).join('')}
     </ul>
   `;
 }
 
-function renderRecentActivity(logs) {
+function renderRecentActivity(data) {
   document.getElementById('recent-activity').innerHTML = `
     <h3>📜 Recent Activity</h3>
-    <ul>
-      ${logs.slice(0, 10).map(act => `<li>${act.timestamp} - ${act.action}</li>`).join('')}
-    </ul>
+    <p><strong>🎁 Last Boxes Claimed:</strong> ${data.last_boxes_claimed?.join(", ") || "None"}</p>
+    <p><strong>💬 Last Chat Reward:</strong> ${data.last_chat_reward || "None"}</p>
+    <p><strong>⛈️ Last Storm Win:</strong> ${data.last_storm_win || "None"}</p>
+    <p><strong>🎉 Last NFT Giveaway:</strong> ${data.last_nft_giveaway || "None"}</p>
+    <p><strong>🍀 Last LuckyDraw Tokens:</strong> ${data.last_luckydraw_tokens || "None"}</p>
+    <p><strong>🌪️ Last NFT Storm:</strong> ${data.last_nft_storm || "None"}</p>
   `;
 }
 

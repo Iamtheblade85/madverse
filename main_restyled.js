@@ -1573,27 +1573,27 @@ function renderAccountSubsection(sectionId) {
 
   switch (sectionId) {
     case 'info':
-      wrapper.innerHTML = `<div class="account-card" id="personal-info"></div>`;
+      wrapper.innerHTML = `<div class="account-card2" id="personal-info"></div>`;
       renderPersonalInfo(data.userInfo);
       break;
 
     case 'chat':
-      wrapper.innerHTML = `<div class="account-card" id="chat-rewards"></div>`;
+      wrapper.innerHTML = `<div class="account-card2" id="chat-rewards"></div>`;
       renderChatRewards(data.telegram, data.twitch);
       break;
 
     case 'passes':
-      wrapper.innerHTML = `<div class="account-card" id="telegram-passes"></div>`;
+      wrapper.innerHTML = `<div class="account-card2" id="telegram-passes"></div>`;
       renderTelegramPasses(data.passes);
       break;
 
     case 'activity':
-      wrapper.innerHTML = `<div class="account-card" id="recent-activity"></div>`;
+      wrapper.innerHTML = `<div class="account-card2" id="recent-activity"></div>`;
       renderRecentActivity(data.activity);
       break;
 
     case 'daily':
-      wrapper.innerHTML = `<div class="account-card" id="daily-box"></div>`;
+      wrapper.innerHTML = `<div class="account-card2" id="daily-box"></div>`;
       renderDailyBox(data.dailyBox);
       break;
 
@@ -1621,24 +1621,27 @@ function renderDailyBox(data) {
     : `<p>🎲 Dice not rolled yet.</p>`;
 
   const vipStatus = vip_active
-    ? `<span class="status-badge active">VIP Active ✅</span>`
-    : `<span class="status-badge inactive">VIP Inactive ❌</span>`;
+    ? `<span class="status-badge2 active2">VIP Active ✅</span>`
+    : `<span class="status-badge2 inactive2">VIP Inactive ❌</span>`;
 
   document.getElementById('daily-box').innerHTML = `
-    <h3>🎁 Daily Box</h3>
-    <p class="subtitle">
+    <h3 class="section-title2">🎁 Daily Box</h3>
+    <p class="subtitle2">
       As a ChipsWallet member you can open one Daily Chest per day.<br>
       If you own the <strong>VIP Membership NFT</strong>, you can also claim a VIP Chest.<br>
       Not enough? Roll the dice — if you get a 6, win an extra Chest!<br>
       Chest types include <strong>Wood</strong>, <strong>Bronze</strong>, <strong>Gold</strong>...<br>
-      Ever heard of a <strong>Platinum Chest</strong>? Check the blends here: <br>
+      Ever heard of a <strong>Platinum Chest</strong>? Check the blends here:<br>
       <a href="https://neftyblocks.com/collection/cryptochaos1/blends" target="_blank">
         https://neftyblocks.com/collection/cryptochaos1/blends
       </a>
     </p>
-    ${vipStatus} — <a href="https://neftyblocks.com/collection/cryptochaos1/drops/210578" target="_blank">
-      Get VIP NFT
-    </a>
+    <div class="mb-2">
+      ${vipStatus} — 
+      <a href="https://neftyblocks.com/collection/cryptochaos1/drops/210578" target="_blank">
+        Get VIP NFT
+      </a>
+    </div>
     <div class="box-results mt-3">
       ${animationHTML}
       ${diceHTML}
@@ -1649,7 +1652,7 @@ function renderDailyBox(data) {
 
 function renderPersonalInfo(info) {
   document.getElementById('personal-info').innerHTML = `
-    <h3>👤 Personal Info</h3>
+    <h3 class="section-title2">👤 Personal Info</h3>
     <p><strong>Username:</strong> ${info.username}</p>
     <p><strong>Wax Account:</strong> ${info.wax_account}</p>
     <p><strong>Role:</strong> ${info.role}</p>
@@ -1684,7 +1687,7 @@ function renderChatRewards(telegram, twitch) {
     const rewardsHTML = (platform.channels || []).map(ch => `
       <details>
         <summary>📣 ${ch.name}</summary>
-        <table class="reward-table">
+        <table class="reward-table2">
           <thead>
             <tr><th>Token</th><th>Short Msg</th><th>Long Msg</th></tr>
           </thead>
@@ -1701,51 +1704,60 @@ function renderChatRewards(telegram, twitch) {
     `).join('');
 
     return `
-      <div class="account-block">
+      <div class="account-card2">
         <h4>${icon} ${platform.platform || 'Platform'}</h4>
         <p><strong>Username:</strong> ${platform.username}</p>
         <p><strong>Level:</strong> ${platform.level}</p>
         <p><strong>XP:</strong> ${platform.xp} / ${platform.xp_needed}</p>
-        <div class="xp-bar"><div class="xp-fill" style="width:${progress}%"></div></div>
+        <div class="xp-bar2">
+          <div class="xp-fill2" style="width:${progress}%"></div>
+        </div>
         ${boostersHTML}
-        <h5 class="mt-2">💬 Channel Rewards</h5>
+        <h5 class="subtitle2">💬 Channel Rewards</h5>
         ${rewardsHTML || '<p>No channel-specific rewards.</p>'}
       </div>
     `;
   }
 
   document.getElementById('chat-rewards').innerHTML = `
-    <h3>💬 Chat Rewards</h3>
+    <h3 class="section-title2">💬 Chat Rewards</h3>
     ${renderPlatform(telegram, '📢')}
     ${renderPlatform(twitch, '🎮')}
   `;
 }
 
 function renderTelegramPasses(passes) {
-  const passColors = {
-    "active": "✅ Active",
-    "expired": "❌ Expired"
+  const statusClass = {
+    "active": "status-badge2 active2",
+    "expired": "status-badge2 inactive2"
   };
 
   document.getElementById('telegram-passes').innerHTML = `
-    <h3>🎟️ Telegram Passes</h3>
+    <h3 class="section-title2">🎟️ Telegram Passes</h3>
     <ul>
-      ${passes.map(p =>
-        `<li><strong>${p.type}:</strong> ${passColors[p.status] || p.status}</li>`
-      ).join('')}
+      ${passes.map(p => `
+        <li>
+          <strong>${p.type}:</strong>
+          <span class="${statusClass[p.status] || 'status-badge2'}">
+            ${p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+          </span>
+        </li>
+      `).join('')}
     </ul>
   `;
 }
 
 function renderRecentActivity(data) {
   document.getElementById('recent-activity').innerHTML = `
-    <h3>📜 Recent Activity</h3>
-    <p><strong>🎁 Last Boxes Claimed:</strong> ${data.last_boxes_claimed?.join(", ") || "None"}</p>
-    <p><strong>💬 Last Chat Reward:</strong> ${data.last_chat_reward || "None"}</p>
-    <p><strong>⛈️ Last Storm Win:</strong> ${data.last_storm_win || "None"}</p>
-    <p><strong>🎉 Last NFT Giveaway:</strong> ${data.last_nft_giveaway || "None"}</p>
-    <p><strong>🍀 Last LuckyDraw Tokens:</strong> ${data.last_luckydraw_tokens || "None"}</p>
-    <p><strong>🌪️ Last NFT Storm:</strong> ${data.last_nft_storm || "None"}</p>
+    <h3 class="section-title2">📜 Recent Activity</h3>
+    <ul class="subtitle2">
+      <li><strong>🎁 Last Boxes Claimed:</strong> ${data.last_boxes_claimed?.join(", ") || "None"}</li>
+      <li><strong>💬 Last Chat Reward:</strong> ${data.last_chat_reward || "None"}</li>
+      <li><strong>⛈️ Last Storm Win:</strong> ${data.last_storm_win || "None"}</li>
+      <li><strong>🎉 Last NFT Giveaway:</strong> ${data.last_nft_giveaway || "None"}</li>
+      <li><strong>🍀 Last LuckyDraw Tokens:</strong> ${data.last_luckydraw_tokens || "None"}</li>
+      <li><strong>🌪️ Last NFT Storm:</strong> ${data.last_nft_storm || "None"}</li>
+    </ul>
   `;
 }
 

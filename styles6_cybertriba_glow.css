@@ -4754,3 +4754,78 @@ details[open] > div {
     display: none !important;
   }
 }
+
+/* === FOOTER BASE === */
+.footer-cybertribal {
+  background: linear-gradient(to top, #000000, #0d0d0d);
+  border-top: 2px solid #00ffcc;
+  padding: 2rem 1rem 1rem 1rem;
+  text-align: center;
+  font-family: "Papyrus", "Courier New", cursive;
+  color: #ffe600;
+  text-shadow: 0 0 2px #000;
+  box-shadow: 0 0 10px #00ffcc;
+  position: relative;
+  z-index: 10;
+}
+
+.footer-cybertribal .footer-inner {
+  max-width: 1024px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* === TEXT === */
+.footer-cybertribal .footer-text {
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.footer-cybertribal .footer-sub {
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+/* === LINKS === */
+.footer-cybertribal .footer-links,
+.footer-cybertribal .footer-telegram,
+.footer-cybertribal .footer-twitch {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.footer-cybertribal .footer-links a,
+.footer-cybertribal .footer-telegram a,
+.footer-cybertribal .footer-twitch a {
+  color: #00ffcc;
+  font-weight: bold;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-cybertribal .footer-links a:hover,
+.footer-cybertribal .footer-telegram a:hover,
+.footer-cybertribal .footer-twitch a:hover {
+  color: #f39c12;
+}
+
+/* === RESPONSIVE LAYOUT === */
+@media (min-width: 700px) {
+  .footer-cybertribal .footer-links,
+  .footer-cybertribal .footer-telegram,
+  .footer-cybertribal .footer-twitch {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+
+  .footer-cybertribal .footer-sub {
+    text-align: center;
+  }
+}

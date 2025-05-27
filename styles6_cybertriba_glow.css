@@ -4457,3 +4457,55 @@ button:hover, .btn:hover, .menu-button:hover {
   background-color: #111;
   padding: 8px;
 }
+
+.subtitle {
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #39ff14;
+  text-shadow: 0 0 1px #00ffcc;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease-in-out;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-shadow: 0 0 1px #fff;
+  transition: all 0.3s ease-in-out;
+}
+
+.status-badge.active {
+  background-color: #28a745;
+  color: #fff;
+  box-shadow: 0 0 8px #28a745, 0 0 12px #39ff14;
+}
+
+.status-badge.inactive {
+  background-color: #aa3333;
+  color: #fff;
+  box-shadow: 0 0 8px #aa3333, 0 0 12px #ff073a;
+}
+
+.box-results {
+  margin-top: 1rem;
+  font-family: "Papyrus", "Courier New", cursive;
+  font-size: 1rem;
+  color: #00ffcc;
+  text-shadow: 0 0 1px #39ff14;
+}
+
+.box-animation p {
+  font-size: 1.5rem;
+  animation: pop 0.5s ease;
+  color: #ffe600;
+  text-shadow: 0 0 6px #ff073a;
+  margin-bottom: 0.5rem;
+}
+
+@keyframes pop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}

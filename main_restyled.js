@@ -1493,7 +1493,7 @@ function loadSection(section) {
   else if (section === 'account') {
     app.innerHTML = `
       <div class="section-container">
-        <h2 class="section-title">Account Overview</h2>
+        <h2 class="section-title">Account Overview (Section under construction)</h2>
         
         <div class="account-submenu">
           <button data-section="info">Info</button>

@@ -141,15 +141,31 @@ body {
 /* MENU BUTTONS */
 .menu-button {
   font-family: "Papyrus", "Courier New", cursive;
-  font-size: 1.1rem;
-  color: #00ffcc;
-  text-shadow: 0 0 1px #8e44ad;
+  font-size: clamp(0.9rem, 1.5vw, 1.1rem); /* Adattivo */
+  background: black;
+  color: #ffd700; /* oro base */
+  background-image: linear-gradient(90deg, #ffdf00, #ffa500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  border: 1px solid transparent;
+  text-shadow:
+    1px 1px 2px #000,      /* bordo nero per contrasto */
+    0 0 4px #f39c12,       /* glow dorato leggero */
+    0 0 6px #f39c12;
   transition: all 0.3s ease-in-out;
 }
 
 .menu-button:hover {
+  background-color: #8e44ad; /* viola */
+  box-shadow: 0 0 8px #f39c12, 0 0 25px #39ff14;
   filter: brightness(1.1);
-  box-shadow: 0 0 12px #f39c12, 0 0 25px #39ff14;
+  color: #fff5cc; /* testo oro chiaro */
+  -webkit-text-fill-color: #fff5cc;
+  background-image: none;
+  text-shadow:
+    2px 2px 3px #000,      /* bordo nero forte */
+    0 0 8px #ffe600,       /* glow più intenso */
+    0 0 12px #ffd700;
 }
 
 #app {

@@ -1619,7 +1619,11 @@ async function loadAccountSection() {
     container.classList.add('hidden');
     sectionsWrapper.style.display = 'block';
 
-    renderAccountSubsection('info');
+    renderPersonalInfo(window.accountData.userInfo);
+    renderChatRewards(window.accountData.telegram, window.accountData.twitch);
+    renderTelegramPasses(window.accountData.passes);
+    renderRecentActivity(window.accountData.activity);
+    renderDailyBox(window.accountData.dailyBox);
 
   } catch (err) {
     container.innerHTML = `<div class="error-message">❌ Error loading account data: ${err.message}</div>`;

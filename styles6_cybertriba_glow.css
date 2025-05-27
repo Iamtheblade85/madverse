@@ -4702,3 +4702,55 @@ details[open] > div {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* === IMAGE DECORATIONS IN BLOCK === */
+/* === BLOCCO PRINCIPALE === */
+.decorated-block {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 12px #00ffcc88, 0 0 24px #8e44ad55;
+  backdrop-filter: blur(4px);
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+/* === DECORAZIONI AI LATI === */
+.block-deco {
+  position: absolute;
+  top: 15%;
+  height: 70%;
+  opacity: 0.8;
+  z-index: 0;
+  pointer-events: none;
+  transition: transform 0.4s ease, filter 0.4s ease;
+  filter: drop-shadow(0 0 6px #00ffcc) brightness(1.2) contrast(1.1);
+}
+
+.block-deco.left {
+  left: -60px;
+  transform: rotate(-2deg);
+}
+.block-deco.right {
+  right: -60px;
+  transform: rotate(2deg);
+}
+
+/* === ANIMAZIONE LEGGERA FLOAT === */
+@keyframes floatSlow {
+  0% { transform: translateY(0px) rotate(2deg); }
+  50% { transform: translateY(-4px) rotate(2.5deg); }
+  100% { transform: translateY(0px) rotate(2deg); }
+}
+.block-deco {
+  animation: floatSlow 5s ease-in-out infinite;
+}
+
+/* === MEDIA QUERY: nasconde le immagini sui dispositivi piccoli === */
+@media (max-width: 700px) {
+  .block-deco {
+    display: none !important;
+  }
+}

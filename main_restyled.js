@@ -1493,29 +1493,43 @@ function loadSection(section) {
   else if (section === 'account') {
     app.innerHTML = `
       <div class="section-container">
-        <h2 class="section-title">Account Overview (Section under construction)</h2>
-        
-        <div class="account-submenu">
-          <button data-section="info">Info</button>
-          <button data-section="chat">Chat</button>
-          <button data-section="passes">Passes</button>
-          <button data-section="activity">Activity</button>
-          <button data-section="daily">Daily Box</button>
+        <h2 class="section-title2">💠 Account Overview</h2>
+  
+        <div class="loading-message typing-loader">
+          <div class="typing-text">⌛ Loading blockchain data... please wait</div>
+          <div class="spinner-bar"></div>
         </div>
   
-        <div class="loading-message">Loading your data from the server, please wait until loaded...</div>
-        <div id="account-sections" style="display:none"></div>
+        <div id="account-sections" style="display: none;">
+          <details open class="account-block2">
+            <summary class="section-title2">👤 Personal Info</summary>
+            <div id="personal-info"></div>
+          </details>
+  
+          <details class="account-block2">
+            <summary class="section-title2">💬 Chat Rewards</summary>
+            <div id="chat-rewards"></div>
+          </details>
+  
+          <details class="account-block2">
+            <summary class="section-title2">🎟️ Telegram Passes</summary>
+            <div id="telegram-passes"></div>
+          </details>
+  
+          <details class="account-block2">
+            <summary class="section-title2">📜 Recent Activity</summary>
+            <div id="recent-activity"></div>
+          </details>
+  
+          <details class="account-block2">
+            <summary class="section-title2">🎁 Daily Box</summary>
+            <div id="daily-box"></div>
+          </details>
+        </div>
       </div>
     `;
   
-    loadAccountSection(); // carica i dati e mostra solo info
-    document.addEventListener('click', (e) => {
-      const btn = e.target.closest('.account-submenu button');
-      if (btn) {
-        const section = btn.dataset.section;
-        renderAccountSubsection(section);
-      }
-    });
+    loadAccountSection();
   }
 }
 
@@ -1553,7 +1567,9 @@ async function loadAccountSection() {
       dailyBox: await dailyBoxRes.json()
     };
 
-    container.style.display = 'none';
+    container.classList.add('hidden');
+    document.getElementById('account-sections').style.display = 'block';
+
     sectionsWrapper.style.display = 'block';
 
     // Render iniziale solo della sezione info

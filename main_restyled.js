@@ -1494,18 +1494,28 @@ function loadSection(section) {
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title">Account Overview</h2>
-        <div class="loading-message">Loading your data from the server, please wait until loaded...</div>
         
-        <div id="account-sections" style="display:none">
-          <div class="account-card" id="personal-info"></div>
-          <div class="account-card" id="daily-box"></div>
-          <div class="account-card" id="chat-rewards"></div>
-          <div class="account-card" id="telegram-passes"></div>
-          <div class="account-card" id="recent-activity"></div>
+        <div class="account-submenu">
+          <button data-section="info">Info</button>
+          <button data-section="chat">Chat</button>
+          <button data-section="passes">Passes</button>
+          <button data-section="activity">Activity</button>
+          <button data-section="daily">Daily Box</button>
         </div>
+  
+        <div class="loading-message">Loading your data from the server, please wait until loaded...</div>
+        <div id="account-sections" style="display:none"></div>
       </div>
     `;
-    loadAccountSection(); // chiamata asincrona
+  
+    loadAccountSection(); // carica i dati e mostra solo info
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.account-submenu button');
+      if (btn) {
+        const section = btn.dataset.section;
+        renderAccountSubsection(section);
+      }
+    });
   }
 }
 
@@ -1515,11 +1525,10 @@ async function loadAccountSection() {
   const sectionsWrapper = document.getElementById('account-sections');
 
   try {
-    // Primo: carica user info
+    // Caricamento dati iniziale
     const userInfoRes = await fetch(`${BASE_URL}/account/info?user_id=${userId}&usx_token=${usx_token}`);
     const userInfo = await userInfoRes.json();
 
-    // In parallelo: le altre fetch
     const [
       telegramRewardsRes,
       twitchRewardsRes,
@@ -1534,26 +1543,62 @@ async function loadAccountSection() {
       fetch(`${BASE_URL}/account/daily_box?user_id=${userId}&usx_token=${usx_token}`)
     ]);
 
-    const telegram = await telegramRewardsRes.json();
-    const twitch = await twitchRewardsRes.json();
-    const passes = await passesRes.json();
-    const activity = await activityRes.json();
-    const dailyBox = await dailyBoxRes.json();
+    // Salva i dati globalmente
+    window.accountData = {
+      userInfo,
+      telegram: await telegramRewardsRes.json(),
+      twitch: await twitchRewardsRes.json(),
+      passes: await passesRes.json(),
+      activity: await activityRes.json(),
+      dailyBox: await dailyBoxRes.json()
+    };
 
-    // Nascondi messaggio di caricamento e mostra la sezione
     container.style.display = 'none';
     sectionsWrapper.style.display = 'block';
 
-    // Rendering delle sezioni
-    renderPersonalInfo(userInfo);
-    renderChatRewards(telegram, twitch);
-    renderTelegramPasses(passes);
-    renderRecentActivity(activity);
-    renderDailyBox(dailyBox);
+    // Render iniziale solo della sezione info
+    renderAccountSubsection('info');
 
   } catch (err) {
     container.innerHTML = `<div class="error-message">❌ Error loading account data: ${err.message}</div>`;
     console.error("[❌] Error loading account:", err);
+  }
+}
+
+function renderAccountSubsection(sectionId) {
+  const data = window.accountData;
+  const wrapper = document.getElementById('account-sections');
+
+  wrapper.innerHTML = ''; // pulisce tutto
+
+  switch (sectionId) {
+    case 'info':
+      wrapper.innerHTML = `<div class="account-card" id="personal-info"></div>`;
+      renderPersonalInfo(data.userInfo);
+      break;
+
+    case 'chat':
+      wrapper.innerHTML = `<div class="account-card" id="chat-rewards"></div>`;
+      renderChatRewards(data.telegram, data.twitch);
+      break;
+
+    case 'passes':
+      wrapper.innerHTML = `<div class="account-card" id="telegram-passes"></div>`;
+      renderTelegramPasses(data.passes);
+      break;
+
+    case 'activity':
+      wrapper.innerHTML = `<div class="account-card" id="recent-activity"></div>`;
+      renderRecentActivity(data.activity);
+      break;
+
+    case 'daily':
+      wrapper.innerHTML = `<div class="account-card" id="daily-box"></div>`;
+      renderDailyBox(data.dailyBox);
+      break;
+
+    default:
+      wrapper.innerHTML = `<p>Section not found</p>`;
   }
 }
 

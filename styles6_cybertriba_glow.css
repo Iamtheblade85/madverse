@@ -4681,3 +4681,24 @@ details[open] summary {
   to { opacity: 1; }
 }
 
+.account-block2 {
+  border: 2px solid #00ffcc;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 8px #00ffcc, 0 0 20px #8e44ad;
+  font-family: "Papyrus", "Courier New", cursive;
+  animation: fade-slide 0.4s ease-in-out;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.3s ease;
+}
+
+details[open] > div {
+  animation: expandFade 0.6s ease-in-out;
+}
+
+@keyframes expandFade {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

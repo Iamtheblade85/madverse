@@ -1490,7 +1490,169 @@ function loadSection(section) {
     `;
     loadCreateTokenStaking();
   }
+  else if (section === 'account') {
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">Account Overview</h2>
+        <div class="loading-message">Loading your data from the server, please wait until loaded...</div>
+        
+        <div id="account-sections" style="display:none">
+          <div class="account-card" id="personal-info"></div>
+          <div class="account-card" id="daily-box"></div>
+          <div class="account-card" id="chat-rewards"></div>
+          <div class="account-card" id="telegram-passes"></div>
+          <div class="account-card" id="recent-activity"></div>
+        </div>
+      </div>
+    `;
+    loadAccountSection(); // chiamata asincrona
+  }
 }
+
+async function loadAccountSection() {
+  const { userId, usx_token } = window.userData;
+  const container = document.querySelector('.loading-message');
+  const sectionsWrapper = document.getElementById('account-sections');
+
+  try {
+    // Primo: carica user info
+    const userInfoRes = await fetch(`${BASE_URL}/account/info?user_id=${userId}&usx_token=${usx_token}`);
+    const userInfo = await userInfoRes.json();
+
+    // In parallelo: le altre fetch
+    const [
+      telegramRewardsRes,
+      twitchRewardsRes,
+      passesRes,
+      activityRes,
+      dailyBoxRes
+    ] = await Promise.all([
+      fetch(`${BASE_URL}/account/telegram_rewards?user_id=${userId}&usx_token=${usx_token}`),
+      fetch(`${BASE_URL}/account/twitch_rewards?user_id=${userId}&usx_token=${usx_token}`),
+      fetch(`${BASE_URL}/account/passes?user_id=${userId}&usx_token=${usx_token}`),
+      fetch(`${BASE_URL}/account/activity?user_id=${userId}&usx_token=${usx_token}`),
+      fetch(`${BASE_URL}/account/daily_box?user_id=${userId}&usx_token=${usx_token}`)
+    ]);
+
+    const telegram = await telegramRewardsRes.json();
+    const twitch = await twitchRewardsRes.json();
+    const passes = await passesRes.json();
+    const activity = await activityRes.json();
+    const dailyBox = await dailyBoxRes.json();
+
+    // Nascondi messaggio di caricamento e mostra la sezione
+    container.style.display = 'none';
+    sectionsWrapper.style.display = 'block';
+
+    // Rendering delle sezioni
+    renderPersonalInfo(userInfo);
+    renderChatRewards(telegram, twitch);
+    renderTelegramPasses(passes);
+    renderRecentActivity(activity);
+    renderDailyBox(dailyBox);
+
+  } catch (err) {
+    container.innerHTML = `<div class="error-message">❌ Error loading account data: ${err.message}</div>`;
+    console.error("[❌] Error loading account:", err);
+  }
+}
+
+function renderDailyBox(data) {
+  const { boxes = [], vip_active, claimed, dice_result } = data;
+
+  const boxImages = {
+    wood: '📦 Legno',
+    bronze: '🟤 Bronzo',
+    gold: '🟡 Oro',
+    platinum: '💎 Platino'
+  };
+
+  const animationHTML = boxes.length > 0
+    ? `<div class="box-animation">${boxes.map(type => `<p>${boxImages[type] || type}</p>`).join('')}</div>`
+    : `<p>No boxes available today.</p>`;
+
+  const diceHTML = (typeof dice_result === 'number')
+    ? `<p>🎲 Dice rolled: <strong>${dice_result}</strong></p>`
+    : `<p>🎲 Dice not rolled yet.</p>`;
+
+  const vipStatus = vip_active
+    ? `<span class="status-badge active">VIP Active ✅</span>`
+    : `<span class="status-badge inactive">VIP Inactive ❌</span>`;
+
+  document.getElementById('daily-box').innerHTML = `
+    <h3>🎁 Daily Box</h3>
+    <p class="subtitle">
+      As a ChipsWallet member you can open one Daily Chest per day.<br>
+      If you own the <strong>VIP Membership NFT</strong>, you can also claim a VIP Chest.<br>
+      Not enough? Roll the dice — if you get a 6, win an extra Chest!<br>
+      Chest types include <strong>Wood</strong>, <strong>Bronze</strong>, <strong>Gold</strong>...<br>
+      Ever heard of a <strong>Platinum Chest</strong>? Check the blends here: <br>
+      <a href="https://neftyblocks.com/collection/cryptochaos1/blends" target="_blank">
+        https://neftyblocks.com/collection/cryptochaos1/blends
+      </a>
+    </p>
+    ${vipStatus} — <a href="https://neftyblocks.com/collection/cryptochaos1/drops/210578" target="_blank">
+      Get VIP NFT
+    </a>
+    <div class="box-results mt-3">
+      ${animationHTML}
+      ${diceHTML}
+      ${claimed ? '<p>✅ Box claimed today</p>' : '<p>🚫 Not claimed yet</p>'}
+    </div>
+  `;
+}
+
+function renderPersonalInfo(info) {
+  document.getElementById('personal-info').innerHTML = `
+    <h3>👤 Personal Info</h3>
+    <p><strong>Username:</strong> ${info.username}</p>
+    <p><strong>Email:</strong> ${info.email}</p>
+    <p><strong>Account Created:</strong> ${info.created_at}</p>
+    <p><strong>Wallet:</strong> ${info.wallet_address}</p>
+  `;
+}
+
+function renderChatRewards(telegram, twitch) {
+  document.getElementById('chat-rewards').innerHTML = `
+    <h3>💬 Chat Rewards</h3>
+
+    <details>
+      <summary>Telegram Boosters</summary>
+      ${telegram.boosters.map(b => `<p>🚀 ${b.type}: ${b.points} points</p>`).join('')}
+    </details>
+
+    <details>
+      <summary>Twitch Boosters</summary>
+      ${twitch.boosters.map(b => `<p>🎮 ${b.type}: ${b.points} points</p>`).join('')}
+    </details>
+  `;
+}
+
+function renderTelegramPasses(passes) {
+  if (!passes.length) {
+    document.getElementById('telegram-passes').innerHTML = `
+      <h3>🎟️ Telegram Room Passes</h3>
+      <p>No active passes.</p>`;
+    return;
+  }
+
+  document.getElementById('telegram-passes').innerHTML = `
+    <h3>🎟️ Telegram Room Passes</h3>
+    <ul>
+      ${passes.map(p => `<li><strong>${p.room}</strong> - valid until ${p.expires}</li>`).join('')}
+    </ul>
+  `;
+}
+
+function renderRecentActivity(logs) {
+  document.getElementById('recent-activity').innerHTML = `
+    <h3>📜 Recent Activity</h3>
+    <ul>
+      ${logs.slice(0, 10).map(act => `<li>${act.timestamp} - ${act.action}</li>`).join('')}
+    </ul>
+  `;
+}
+
 function populateNFTDropdown(nfts) {
   const dropdown = document.getElementById("nftAssetDropdown");
   console.log("[🧪] populateNFTDropdown() called");

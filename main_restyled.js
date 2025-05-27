@@ -1493,8 +1493,34 @@ function loadSection(section) {
   else if (section === 'account') {
     app.innerHTML = `
       <div class="section-container">
+      
         <h2 class="section-title2">💠 Account Overview</h2>
-  
+        
+        <p style="
+        font-family: 'Rock Salt', cursive;
+        text-transform: uppercase;
+        font-size: 1rem;
+        color: #ffe600;
+        margin-top: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        border-right: 2px solid #ffe600;
+        display: inline-block;
+        animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
+        position: relative;
+      ">
+        Section not fully implemented yet — but why not peek behind the scenes?
+        <span style="
+          position: absolute;
+          left: 0;
+          bottom: -4px;
+          height: 2px;
+          width: 0;
+          background: #f39c12;
+          animation: underlineSlide 2.5s ease-in-out 3s forwards;
+        "></span>
+      </p>
+
         <div class="loading-message typing-loader">
           <div class="typing-text">⌛ Loading blockchain data... please wait</div>
           <div class="spinner-bar"></div>
@@ -1551,7 +1577,11 @@ async function loadAccountSection() {
     await new Promise(resolve => setTimeout(resolve, 5000));
     container.classList.add('hidden');
     sectionsWrapper.style.display = 'block';
-    renderAccountSubsection('info');
+    renderPersonalInfo(window.accountData.userInfo);
+    renderChatRewards(window.accountData.telegram, window.accountData.twitch);
+    renderTelegramPasses(window.accountData.passes);
+    renderRecentActivity(window.accountData.activity);
+    renderDailyBox(window.accountData.dailyBox);
     return;
   }
 

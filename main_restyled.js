@@ -1721,10 +1721,17 @@ function renderDailyBox(data) {
 }
 
 function renderPersonalInfo(info) {
-  document.getElementById('personal-info').innerHTML = `
-    <p><strong>Username:</strong> ${info.username}</p>
-    <p><strong>Wax Account:</strong> ${info.wax_account}</p>
-    <p><strong>Role:</strong> ${info.role}</p>
+  const container = document.getElementById('personal-info');
+
+  container.innerHTML = `
+    <div class="card-glow">
+      <h2 class="glow-text">👤 ${info.telegram_username || 'Unknown'}</h2>
+      <p><span class="label">🎮 Twitch:</span> ${info.twitch_username || 'N/A'}</p>
+      <p><span class="label">🔑 Wax Account:</span> <code>${info.wax_account}</code></p>
+      <p><span class="label">🏅 Role:</span> <span class="role-tag">${info.role}</span></p>
+      <p><span class="label">📈 Staking Rank:</span> ${info.staking_rank ? `#${info.staking_rank}` : 'Out of Top 50'}</p>
+      <p><span class="label">🧩 NFT Rank:</span> ${info.nft_rank ? `#${info.nft_rank}` : 'Out of Top 50'}</p>
+    </div>
   `;
 }
 

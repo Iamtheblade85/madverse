@@ -3384,6 +3384,7 @@ function openStakeModal(type, poolId, tokenSymbol) {
     };
   }, 0);
 }
+
 function showModalMessage(message, type = 'info') {
   const messageBox = document.querySelector('#universal-modal .modal-message');
   if (!messageBox) return;
@@ -3462,7 +3463,8 @@ async function loadWallet() {
     console.error("[❌] Error loading Wallet:", error);
   }
 }
- async function loadNFTs() {
+ 
+async function loadNFTs() {
   try {
     const { userId, usx_token } = window.userData;
     const response = await fetch(`${BASE_URL}/mynfts?user_id=${userId}&usx_token=${usx_token}`);
@@ -3478,15 +3480,21 @@ async function loadWallet() {
     console.error("[❌] Errore caricando NFTs:", error);
     document.getElementById('nfts-loading').innerText = "❌ Error loading NFTs.";
   }
-} function populateDropdowns(nfts) {
+}
+
+function populateDropdowns(nfts) {
   const collections = [...new Set(nfts.map(nft => nft.template_info.collection_name))];
   const collectionSelect = document.getElementById('filter-collection');
   collectionSelect.innerHTML += collections.sort().map(c => `<option value="${c}">${c}</option>`).join('');
-} function populateCollectionFilter(nfts) {
+} 
+
+function populateCollectionFilter(nfts) {
   const filterCollection = document.getElementById('filter-collection');
   const collections = [...new Set(nfts.map(nft => nft.template_info.collection_name))];
   filterCollection.innerHTML += collections.sort().map(col => `<option value="${col}">${col}</option>`).join('');
-} function renderNFTs() {
+} 
+
+function renderNFTs() {
   const nftsList = document.getElementById('nfts-list');
   const loading = document.getElementById('nfts-loading');
   const count = document.getElementById('nfts-count');
@@ -3548,11 +3556,30 @@ async function loadWallet() {
           ${window.selectedNFTs.has(nft.asset_id) ? "checked" : ""}>
 
         <div onclick="openNFTModal('${nft.asset_id}')" class="nft-card-content">
-          <img 
-            src="${nft.image_url}" 
-            alt="NFT Image" 
-            class="nft-image" 
-            onerror="handleNFTImageError(this)">
+          ${nft.image_url ? `
+            <img 
+              src="${nft.image_url}" 
+              alt="NFT Image" 
+              class="nft-image" 
+              onerror="handleNFTImageError(this)">
+          ` : nft.video_url ? `
+            <video 
+              src="${nft.video_url}" 
+              class="nft-video" 
+              controls 
+              autoplay 
+              muted 
+              loop 
+              playsinline 
+              onerror="handleNFTImageError(this)">
+              Il tuo browser non supporta i video.
+            </video>
+          ` : `
+            <img 
+              src="fallback.jpg" 
+              alt="Fallback NFT" 
+              class="nft-image">
+          `}
           <h3 class="nft-title">${nft.template_info.template_name}</h3>
           <p class="nft-subtitle"><strong>Asset ID:</strong> #${nft.asset_id}</p>
           <p class="nft-subtitle"><strong>NFT ID:</strong> ${nft.nft_id}</p>

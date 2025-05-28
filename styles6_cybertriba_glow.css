@@ -4829,3 +4829,32 @@ details[open] > div {
     text-align: center;
   }
 }
+.card-glow {
+  border: 2px solid #0ff;
+  border-radius: 15px;
+  padding: 20px;
+  margin-top: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 15px #00fff2, 0 0 30px #0085ff;
+  transition: all 0.3s ease-in-out;
+}
+
+.glow-text {
+  font-size: 1.6em;
+  color: #00ffff;
+  text-shadow: 0 0 10px #00f2ff, 0 0 20px #0080ff;
+}
+
+.label {
+  color: #ff00ff;
+  font-weight: bold;
+}
+
+.role-tag {
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: linear-gradient(to right, #3cf 0%, #09f 100%);
+  box-shadow: 0 0 8px #0ff;
+  color: black;
+  font-weight: bold;
+}

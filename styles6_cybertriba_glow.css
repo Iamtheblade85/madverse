@@ -4721,6 +4721,8 @@ details[open] > div {
 .block-deco {
   position: absolute;
   top: 15%;
+  max-width: 100px;
+  height: auto;
   height: 70%;
   opacity: 0.8;
   z-index: 0;
@@ -4730,7 +4732,7 @@ details[open] > div {
 }
 
 .block-deco.left {
-  left: 2%;
+  left: 0;
   transform: rotate(-2deg);
 }
 .block-deco.right {

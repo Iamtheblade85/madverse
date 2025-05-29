@@ -1779,20 +1779,20 @@ function renderChatRewards(telegram, twitch) {
       </details>
     `).join('');
 
-    return `
-      <div class="account-card2">
-        <h4>${icon} ${platform.platform || 'Platform'}</h4>
-        <p><strong>Username:</strong> ${platform.username}</p>
-        <p><strong>Level:</strong> ${platform.level}</p>
-        <p><strong>XP:</strong> ${platform.xp} / ${platform.xp_needed}</p>
-        <div class="xp-bar2">
-          <div class="xp-fill2" style="width:${progress}%"></div>
-        </div>
-        ${boostersHTML}
-        <h5 class="subtitle2">💬 Channel Rewards</h5>
-        ${rewardsHTML || '<p>No channel-specific rewards.</p>'}
+  return `
+    <div class="card-glow">
+      <h2 class="glow-text">${icon} ${platform.platform || 'Platform'}</h2>
+      <p><span class="label">👤 Username:</span> ${platform.username}</p>
+      <p><span class="label">🏅 Level:</span> ${platform.level}</p>
+      <p><span class="label">📈 XP:</span> ${platform.xp} / ${platform.xp_needed}</p>
+      <div class="xp-bar2">
+        <div class="xp-fill2" style="width:${progress}%"></div>
       </div>
-    `;
+      ${boostersHTML}
+      <h5 class="subtitle2">💬 Channel Rewards</h5>
+      ${rewardsHTML || '<p>No channel-specific rewards.</p>'}
+    </div>
+  `;
   }
 
   document.getElementById('chat-rewards').innerHTML = `

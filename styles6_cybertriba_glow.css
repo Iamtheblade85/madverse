@@ -4682,6 +4682,7 @@ details[open] summary {
 }
 
 .account-block2 {
+  position: relative;
   border: 2px solid #00ffcc;
   border-radius: 12px;
   margin-bottom: 1.5rem;
@@ -4720,15 +4721,20 @@ details[open] > div {
 /* === DECORAZIONI AI LATI === */
 .block-deco {
   position: absolute;
-  top: 15%;
-  max-width: 100px;
-  height: auto;
-  height: 70%;
+  top: 0;                  /* Allineamento preciso */
+  left: 0;                 /* Aggiunto per chiarezza */
+  width: auto;             /* Responsivo */
+  max-width: 180px;        /* Limita larghezza */
+  max-height: 100%;        /* Impedisce overflow verticale */
+  height: auto;            /* Mantiene proporzioni */
+  object-fit: contain;     /* Responsivo */
   opacity: 0.8;
   z-index: 0;
+  display: block;
   pointer-events: none;
   transition: transform 0.4s ease, filter 0.4s ease;
   filter: drop-shadow(0 0 6px #00ffcc) brightness(1.2) contrast(1.1);
+  animation: floatSlow 5s ease-in-out infinite;
 }
 
 .block-deco.left {

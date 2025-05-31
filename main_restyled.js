@@ -1798,15 +1798,41 @@ function renderChatRewards(telegram, twitch) {
       </details>
     `;
   }
+  function renderXPBoosters(boosters, typeLabel, icon) {
+    if (!boosters || boosters.length === 0) return `<p>No ${typeLabel} Boosters.</p>`;
+  
+    const rows = boosters.map(b => `
+      <tr>
+        <td><strong>${b.type}</strong></td>
+        <td>${b.points}</td>
+        <td>${b.channel}</td>
+      </tr>
+    `).join('');
+  
+    return `
+      <details open>
+        <summary>${icon} ${typeLabel} Boosters</summary>
+        <table class="reward-table2">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Points</th>
+              <th>Channel</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </details>
+    `;
+  }
 
   function renderPlatform(platform, icon) {
     const progress = Math.min((platform.xp / platform.xp_needed) * 100, 100).toFixed(1);
-
     const boostersHTML = `
-      ${renderBoosters(platform.boosters?.xp, "XP", "📈")}
+      ${renderXPBoosters(platform.boosters?.xp, "XP", "📈")}
       ${renderBoosters(platform.boosters?.reward, "Reward", "💰")}
     `;
-
+    
     const rewardsHTML = (platform.channels || []).map(ch => `
       <details>
         <summary>📣 ${ch.name}</summary>

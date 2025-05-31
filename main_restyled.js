@@ -1738,16 +1738,63 @@ function renderPersonalInfo(info) {
 function renderChatRewards(telegram, twitch) {
   function renderBoosters(boosters, typeLabel, icon) {
     if (!boosters || boosters.length === 0) return `<p>No ${typeLabel} Boosters.</p>`;
-
+  
+    const marketplaceLinks = {
+      common: "https://neftyblocks.com/collection/cryptochaos1/drops/219979",
+      rare: "https://neftyblocks.com/collection/cryptochaos1/drops/219980",
+      epic: "https://neftyblocks.com/collection/cryptochaos1/drops/219981",
+      legendary: "https://neftyblocks.com/collection/cryptochaos1/drops/219983"
+    };
+  
+    let totalFlatBoost = 0;
+    let totalPercentBoost = 0;
+  
+    const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
+  
+    const rows = boosters.map(b => {
+      const singleBoost = b.boost.replace('%', '').replace('+', '');
+      const isPercent = b.boost.includes('%');
+      const numericBoost = parseFloat(singleBoost);
+      const totalBoost = numericBoost * b.count;
+  
+      if (isPercent) {
+        totalPercentBoost += totalBoost;
+      } else {
+        totalFlatBoost += totalBoost;
+      }
+  
+      const rarityName = `${capitalize(b.type)} Chips Mining Amplifier`;
+  
+      return `
+        <tr>
+          <td><strong>${rarityName}</strong></td>
+          <td>${b.count}</td>
+          <td>${b.boost}</td>
+          <td>${isPercent ? totalBoost + '%' : '+' + totalBoost}</td>
+          <td><a href="${marketplaceLinks[b.type]}" target="_blank">🔗 Marketplace</a></td>
+        </tr>
+      `;
+    }).join('');
+  
     return `
-      <details>
+      <details open>
         <summary>${icon} ${typeLabel} Boosters</summary>
-        ${boosters.map(b => `
-          <p>
-            ${b.type}: <strong>${b.points} pts</strong>
-            ${b.channel ? `— <em>Only for ${b.channel}</em>` : `— <strong>Global</strong>`}
-          </p>
-        `).join('')}
+        <table class="reward-table2">
+          <thead>
+            <tr>
+              <th>Booster</th>
+              <th>Count</th>
+              <th>Boost Each</th>
+              <th>Total Boost</th>
+              <th>Marketplace</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p class="mt-2">
+          <strong>Total Flat Boost:</strong> +${totalFlatBoost}<br>
+          <strong>Total Percent Boost:</strong> ${totalPercentBoost}%
+        </p>
       </details>
     `;
   }

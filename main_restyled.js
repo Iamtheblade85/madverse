@@ -1804,20 +1804,20 @@ function renderChatRewards(telegram, twitch) {
     if (!boosters || boosters.length === 0) return `<p>No ${typeLabel} Boosters.</p>`;
   
       const rows = boosters.map(b => {
-        const statusLabel = b.status === "expired"
-          ? `<span style="color: #888;">❌ Expired</span>`
-          : `<span style="color: green;">✅ Active</span>`;
-      
-        return `
-          <tr>
-            <td><strong>${b.type}</strong></td>
-            <td>${b.points}</td>
-            <td>${b.channel}</td>
-            <td>${b.boost || "-"} XP</td>
-            <td>${statusLabel}</td>
-          </tr>
-        `;
-      });
+      const statusLabel = b.status === "expired"
+        ? `<span style="color: #888;">❌ Expired</span>`
+        : `<span style="color: green;">✅ Active</span>`;
+    
+      return `
+        <tr>
+          <td><strong>${b.type}</strong></td>
+          <td>${b.points}</td>
+          <td>${b.channel}</td>
+          <td>${b.boost || "-"} XP</td>
+          <td>${statusLabel}</td>
+        </tr>
+      `;
+    }).join(''); // 🔥 IMPORTANTE!
     return `
       <details open>
         <summary>${icon} ${typeLabel} Boosters</summary>

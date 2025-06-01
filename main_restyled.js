@@ -1772,7 +1772,7 @@ function renderChatRewards(telegram, twitch) {
           <td>${b.boost}</td>
           <td>${isPercent ? totalBoost + '%' : '+' + totalBoost}</td>
           <td>Global</td>
-          <td><a href="${marketplaceLinks[b.type]}" target="_blank">🔗 Marketplace</a></td>
+          <td><a href="${marketplaceLinks[b.type]}" target="_blank">🔗 Link</a></td>
         </tr>
       `;
     }).join('');
@@ -1794,7 +1794,6 @@ function renderChatRewards(telegram, twitch) {
           <tbody>${rows}</tbody>
         </table>
         <p class="mt-2">
-          <strong>Total Flat Boost:</strong> +${totalFlatBoost}<br>
           <strong>Total Percent Boost:</strong> ${totalPercentBoost}%
         </p>
       </details>
@@ -1806,8 +1805,10 @@ function renderChatRewards(telegram, twitch) {
       const rows = boosters.map(b => {
       const statusLabel = b.status === "expired"
         ? `<span style="color: #888;">❌ Expired</span>`
-        : `<span style="color: green;">✅ Active</span>`;
-    
+        : b.status === "active"
+          ? `<span style="color: green;">✅ Active</span>`
+          : `<span style="color: orange;">🚫 Not Owned</span>`;
+        
       return `
         <tr>
           <td><strong>${b.type}</strong></td>
@@ -1815,6 +1816,7 @@ function renderChatRewards(telegram, twitch) {
           <td>${b.channel}</td>
           <td>${b.boost || "-"} XP</td>
           <td>${statusLabel}</td>
+          <td><a href="${b.marketplace}" target="_blank">🔗 Link</a></td>
         </tr>
       `;
     }).join(''); // 🔥 IMPORTANTE!
@@ -1829,6 +1831,7 @@ function renderChatRewards(telegram, twitch) {
               <th>Usecase</th>
               <th>Boost</th>
               <th>Status</th>
+              <th>Marketplace</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>

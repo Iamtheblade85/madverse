@@ -1838,15 +1838,24 @@ function renderChatRewards(telegram, twitch) {
         <summary>📣 ${ch.name}</summary>
         <table class="reward-table2">
           <thead>
-            <tr><th>Token</th><th>Short Msg</th><th>Long Msg</th></tr>
+            <tr>
+              <th>Token</th>
+              <th>Short Msg Reward</th>
+              <th>Short Msg XP</th>
+              <th>Long Msg Reward</th>
+              <th>Long Msg XP</th>
+            </tr>
           </thead>
           <tbody>
             ${ch.rewards.map(r => `
               <tr>
                 <td>${r.token}</td>
                 <td>${r.short_msg_reward}</td>
+                <td>${r.short_msg_xp}</td>
                 <td>${r.long_msg_reward}</td>
-              </tr>`).join('')}
+                <td>${r.long_msg_xp}</td>
+              </tr>
+            `).join('')}
           </tbody>
         </table>
       </details>

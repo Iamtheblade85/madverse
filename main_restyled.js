@@ -1801,13 +1801,21 @@ function renderChatRewards(telegram, twitch) {
   function renderXPBoosters(boosters, typeLabel, icon) {
     if (!boosters || boosters.length === 0) return `<p>No ${typeLabel} Boosters.</p>`;
   
-    const rows = boosters.map(b => `
-      <tr>
-        <td><strong>${b.type}</strong></td>
-        <td>${b.points}</td>
-        <td>${b.channel}</td>
-      </tr>
-    `).join('');
+    const rows = boosters.map(b => {
+      const statusLabel = b.status === "expired"
+        ? `<span style="color: #888;">❌ Expired</span>`
+        : `<span style="color: green;">✅ Active</span>`;
+  
+      return `
+        <tr>
+          <td><strong>${b.type}</strong></td>
+          <td>${b.points}</td>
+          <td>${b.channel}</td>
+          <td>${b.boost || "-"}</td>
+          <td>${statusLabel}</td>
+        </tr>
+      `;
+    }).join('');
   
     return `
       <details open>
@@ -1818,6 +1826,8 @@ function renderChatRewards(telegram, twitch) {
               <th>Type</th>
               <th>Points</th>
               <th>Channel</th>
+              <th>Boost</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -1825,6 +1835,7 @@ function renderChatRewards(telegram, twitch) {
       </details>
     `;
   }
+
 
   function renderPlatform(platform, icon) {
     const progress = Math.min((platform.xp / platform.xp_needed) * 100, 100).toFixed(1);

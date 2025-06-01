@@ -1771,6 +1771,7 @@ function renderChatRewards(telegram, twitch) {
           <td>${b.count}</td>
           <td>${b.boost}</td>
           <td>${isPercent ? totalBoost + '%' : '+' + totalBoost}</td>
+          <td>Global</td>
           <td><a href="${marketplaceLinks[b.type]}" target="_blank">🔗 Marketplace</a></td>
         </tr>
       `;
@@ -1783,9 +1784,10 @@ function renderChatRewards(telegram, twitch) {
           <thead>
             <tr>
               <th>Booster</th>
-              <th>Count</th>
-              <th>Boost Each</th>
+              <th>Qty</th>
+              <th>Boost %</th>
               <th>Total Boost</th>
+              <th>Usecase</th>
               <th>Marketplace</th>
             </tr>
           </thead>
@@ -1801,22 +1803,21 @@ function renderChatRewards(telegram, twitch) {
   function renderXPBoosters(boosters, typeLabel, icon) {
     if (!boosters || boosters.length === 0) return `<p>No ${typeLabel} Boosters.</p>`;
   
-    const rows = boosters.map(b => {
-      const statusLabel = b.status === "expired"
-        ? `<span style="color: #888;">❌ Expired</span>`
-        : `<span style="color: green;">✅ Active</span>`;
-  
-      return `
-        <tr>
-          <td><strong>${b.type}</strong></td>
-          <td>${b.points}</td>
-          <td>${b.channel}</td>
-          <td>${b.boost || "-"}</td>
-          <td>${statusLabel}</td>
-        </tr>
-      `;
-    }).join('');
-  
+      const rows = boosters.map(b => {
+        const statusLabel = b.status === "expired"
+          ? `<span style="color: #888;">❌ Expired</span>`
+          : `<span style="color: green;">✅ Active</span>`;
+      
+        return `
+          <tr>
+            <td><strong>${b.type}</strong></td>
+            <td>${b.points}</td>
+            <td>${b.channel}</td>
+            <td>${b.boost || "-"} XP</td>
+            <td>${statusLabel}</td>
+          </tr>
+        `;
+      });
     return `
       <details open>
         <summary>${icon} ${typeLabel} Boosters</summary>
@@ -1824,8 +1825,8 @@ function renderChatRewards(telegram, twitch) {
           <thead>
             <tr>
               <th>Type</th>
-              <th>Points</th>
-              <th>Channel</th>
+              <th>Qty</th>
+              <th>Usecase</th>
               <th>Boost</th>
               <th>Status</th>
             </tr>

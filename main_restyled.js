@@ -1952,15 +1952,7 @@ function formatActivityEntry(entry) {
 }
 
 function renderRecentActivity(data) {
-  function renderActivitySection(activity, label, icon) {
-    const entries = [
-      { key: 'last_chat_reward', title: '💬 Last Chat Reward' },
-      { key: 'last_storm_win', title: '⛈️ Last Storm Win' },
-      { key: 'last_nft_giveaway', title: '🎉 Last NFT Giveaway' },
-      { key: 'last_luckydraw_tokens', title: '🍀 Last LuckyDraw Tokens' },
-      { key: 'last_nft_storm', title: '🌪️ Last NFT Storm' },
-    ];
-
+  function renderActivitySection(activity, label, icon, entries) {
     const renderedEntries = entries.map(({ key, title }) => {
       if (!(key in activity) || !activity[key]) {
         return `<tr><td colspan="2" style="color:#888;">${title}</td><td style="color:#aaa;">None</td></tr>`;
@@ -2015,8 +2007,22 @@ function renderRecentActivity(data) {
     </div>
   `;
 
-  const telegramHTML = renderActivitySection(data.telegram, 'Telegram', '📢');
-  const twitchHTML = renderActivitySection(data.twitch, 'Twitch', '🎮');
+  const telegramEntries = [
+    { key: 'last_chat_reward', title: '💬 Last Chat Reward' },
+    { key: 'last_storm_win', title: '⛈️ Last Storm Win' },
+    { key: 'last_nft_giveaway', title: '🎉 Last NFT Giveaway' },
+    { key: 'last_luckydraw_tokens', title: '🍀 Last LuckyDraw Tokens' },
+  ];
+  
+  const twitchEntries = [
+    { key: 'last_chat_reward', title: '💬 Last Chat Reward' },
+    { key: 'last_storm_win', title: '⛈️ Last Storm Win' },
+    { key: 'last_nft_storm', title: '🌪️ Last NFT Storm' },
+  ];
+  
+  const telegramHTML = renderActivitySection(data.telegram, 'Telegram', '📢', telegramEntries);
+  const twitchHTML = renderActivitySection(data.twitch, 'Twitch', '🎮', twitchEntries);
+
 
   document.getElementById('recent-activity').innerHTML = `
     ${boxesHtml}

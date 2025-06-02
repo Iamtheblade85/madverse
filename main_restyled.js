@@ -1851,6 +1851,10 @@ function renderChatRewards(telegram, twitch) {
     const isTwitch = platform.platform === "Twitch";
     
     const rewardsHTML = (platform.channels || []).map(ch => {
+      const passLabel = ch.pass
+        ? `<span style="color: orange;">🔑 <a href="${ch.pass}" target="_blank">Pass richiesto</a></span>`
+        : `<span style="color: green;">✅ Free access</span>`;
+    
       const rows = ch.rewards.map(r => isTwitch
         ? `
           <tr>
@@ -1888,7 +1892,7 @@ function renderChatRewards(telegram, twitch) {
     
       return `
         <details>
-          <summary>📣 ${ch.name}</summary>
+          <summary>📣 ${ch.name} — ${passLabel}</summary>
           <table class="reward-table2">
             <thead>${headers}</thead>
             <tbody>${rows}</tbody>
@@ -1896,6 +1900,7 @@ function renderChatRewards(telegram, twitch) {
         </details>
       `;
     }).join('');
+
 
   return `
     <div class="card-glow">

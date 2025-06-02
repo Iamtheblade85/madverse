@@ -1950,6 +1950,37 @@ function formatActivityEntry(entry) {
 
   return `<span>${entry}</span>`;
 }
+function relabelKey(key) {
+  const map = {
+    contest_id: "🆔 Contest ID",
+    nft_id: "🧩 NFT ID",
+    template_name: "🖼️ Template Name",
+    image: "🖼️ NFT Image",
+    timestamp: "⏰ Datetime",
+    token_symbol: "🪙 Token",
+    amount: "💰 Amount",
+    winner: "🏆 Winner",
+    asset_id: "🧬 Asset ID",
+    num_winners: "🎯 Winners",
+    box_type: "📦 Box Type",
+    reward: "🎁 Reward",
+    username: "👤 Username",
+    origin_channel: "📡 Origin",
+    channel: "📺 Channel",
+    stormed_by: "⚡ Stormed By",
+    msg: "💬 Message",
+    thread: "🧵 Thread",
+    chat_id: "🗨️ Chat Name",
+    end_time: "⏳ When",
+    end_date: "📅 When",
+    asset_img: "🖼️ NFT Image",
+    asset_video: "🎞️ NFT Video",
+    fee: "💸 Fee",
+    template_id: "🔖 Template ID"
+  };
+
+  return map[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
 
 function renderRecentActivity(data) {
   function renderActivitySection(activity, label, icon, entries) {
@@ -1964,7 +1995,7 @@ function renderRecentActivity(data) {
         const rows = value.map(v => `
           <div class="activity-object" style="margin-bottom:8px;">
             ${Object.entries(v).map(([k, val]) => `
-              <span class='activity-label' style="color:#ff00ff; font-weight:bold; margin-right:6px;">${k}:</span>
+              <span class='activity-label' style="color:#ff00ff; font-weight:bold; margin-right:6px;">${relabelKey(k)}:</span>
               <span class='activity-value' style="color:#00ffee;">${val}</span>
             `).join('<br>')}
           </div>
@@ -1977,9 +2008,9 @@ function renderRecentActivity(data) {
           if (k === 'asset_img') {
             return `<img src="${val}" alt="NFT Image" style="max-width:120px; border-radius:8px; margin-top:6px;">`;
           }
-          return `
-            <span class='activity-label' style="color:#ff00ff; font-weight:bold; margin-right:6px;">${k}:</span>
-            <span class='activity-value' style="color:#00ffee;">${val}</span>`;
+        return `
+          <span class='activity-label' style="color:#ff00ff; font-weight:bold; margin-right:6px;">${relabelKey(k)}:</span>
+          <span class='activity-value' style="color:#00ffee;">${val}</span>`;
         }).join('<br>');
 
         return `<tr><td colspan="2">${title}</td><td>${objectRows}</td></tr>`;

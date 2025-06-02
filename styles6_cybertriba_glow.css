@@ -4866,3 +4866,25 @@ details[open] > div {
   color: black;
   font-weight: bold;
 }
+.activity-label {
+  color: #ff00ff;
+  font-weight: bold;
+  margin-right: 5px;
+  text-shadow: 0 0 3px #ff00ff;
+}
+
+.activity-value {
+  color: #00ffee;
+  text-shadow: 0 0 3px #00ffee;
+}
+
+.activity-object {
+  margin-bottom: 0.8rem;
+}
+
+.activity-divider {
+  border: 0;
+  border-top: 1px dashed #444;
+  margin: 8px 0;
+  opacity: 0.5;
+}

@@ -1538,13 +1538,7 @@ function loadSection(section) {
             <img class="block-deco left" src="https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeieyvsd5m7lertnqcnrcucrkjpyksajvx7f2jkpxvstevtwztmbk5u" alt="decor-left">
             <div id="chat-rewards"></div>
           </details>
-  
-          <details class="account-block2" decorated-block">
-            <summary class="section-title2">🎟️ Telegram Passes</summary>
-            <img class="block-deco left" src="https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeiaqwjojgpvt3qad4urb7acfxzo565rlzmjl4hhrpcoxrjkoicxuyy" alt="decor-left">
-            <div id="telegram-passes"></div>
-          </details>
-  
+    
           <details class="account-block2" decorated-block">
             <summary class="section-title2">📜 Recent Activity</summary>
             <img class="block-deco left" src="https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeicmgskdkv7l7zinxbmolfbwt36375h54gjss2sp4wrcynrvn4trsu" alt="decor-left">
@@ -1569,27 +1563,6 @@ async function loadAccountSection() {
   const container = document.querySelector('.loading-message');
   const sectionsWrapper = document.getElementById('account-sections');
 
-  // Se abbiamo già tutti i dati, evita fetch
-  if (window.accountData &&
-      window.accountData.userInfo &&
-      window.accountData.telegram &&
-      window.accountData.twitch &&
-      window.accountData.passes &&
-      window.accountData.activity &&
-      window.accountData.dailyBox) {
-    
-    // Mostra loader almeno 5 secondi prima del render
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    container.classList.add('hidden');
-    sectionsWrapper.style.display = 'block';
-    renderPersonalInfo(window.accountData.userInfo);
-    renderChatRewards(window.accountData.telegram, window.accountData.twitch);
-    renderTelegramPasses(window.accountData.passes);
-    renderRecentActivity(window.accountData.activity);
-    renderDailyBox(window.accountData.dailyBox);
-    return;
-  }
-
   try {
     // Caricamento dati da endpoint
     const userInfoRes = await fetch(`${BASE_URL}/account/info?user_id=${userId}&usx_token=${usx_token}`);
@@ -1604,7 +1577,6 @@ async function loadAccountSection() {
     ] = await Promise.all([
       fetch(`${BASE_URL}/account/telegram_rewards?user_id=${userId}&usx_token=${usx_token}`),
       fetch(`${BASE_URL}/account/twitch_rewards?user_id=${userId}&usx_token=${usx_token}`),
-      fetch(`${BASE_URL}/account/passes?user_id=${userId}&usx_token=${usx_token}`),
       fetch(`${BASE_URL}/account/activity?user_id=${userId}&usx_token=${usx_token}`),
       fetch(`${BASE_URL}/account/daily_box?user_id=${userId}&usx_token=${usx_token}`)
     ]);
@@ -1613,7 +1585,6 @@ async function loadAccountSection() {
       userInfo,
       telegram: await telegramRewardsRes.json(),
       twitch: await twitchRewardsRes.json(),
-      passes: await passesRes.json(),
       activity: await activityRes.json(),
       dailyBox: await dailyBoxRes.json()
     };
@@ -1626,7 +1597,6 @@ async function loadAccountSection() {
 
     renderPersonalInfo(window.accountData.userInfo);
     renderChatRewards(window.accountData.telegram, window.accountData.twitch);
-    renderTelegramPasses(window.accountData.passes);
     renderRecentActivity(window.accountData.activity);
     renderDailyBox(window.accountData.dailyBox);
 
@@ -1917,8 +1887,19 @@ function renderChatRewards(telegram, twitch) {
     
       return `
         <details>
-          <summary style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: bold;">📣 ${ch.name}</span>
+          <summary style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+            <span style="
+              background-color: #d0e6ff;
+              color: #1e3a8a;
+              padding: 6px 12px;
+              border-radius: 6px;
+              font-weight: bold;
+              cursor: pointer;
+              transition: background-color 0.2s ease-in-out;
+            " onmouseover="this.style.backgroundColor='#bcdfff';"
+              onmouseout="this.style.backgroundColor='#d0e6ff';">
+              📣 ${ch.name}
+            </span>
             ${passLabel}
           </summary>
           <table class="reward-table2 mt-2">
@@ -1950,26 +1931,6 @@ function renderChatRewards(telegram, twitch) {
   document.getElementById('chat-rewards').innerHTML = `
     ${renderPlatform(telegram, '📢')}
     ${renderPlatform(twitch, '🎮')}
-  `;
-}
-
-function renderTelegramPasses(passes) {
-  const statusClass = {
-    "active": "status-badge2 active2",
-    "expired": "status-badge2 inactive2"
-  };
-
-  document.getElementById('telegram-passes').innerHTML = `
-    <ul>
-      ${passes.map(p => `
-        <li>
-          <strong>${p.type}:</strong>
-          <span class="${statusClass[p.status] || 'status-badge2'}">
-            ${p.status.charAt(0).toUpperCase() + p.status.slice(1)}
-          </span>
-        </li>
-      `).join('')}
-    </ul>
   `;
 }
 

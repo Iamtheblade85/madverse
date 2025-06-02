@@ -1898,7 +1898,7 @@ function renderChatRewards(telegram, twitch) {
               transition: background-color 0.2s ease-in-out;
             " onmouseover="this.style.backgroundColor='#bcdfff';"
               onmouseout="this.style.backgroundColor='#d0e6ff';">
-              📣 ${ch.name}
+              📣 ${ch.name}(Details)
             </span>
             ${passLabel}
           </summary>

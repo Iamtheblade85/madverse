@@ -1933,15 +1933,26 @@ function renderChatRewards(telegram, twitch) {
   `;
 }
 
+function formatActivityEntry(entry) {
+  if (!entry) return "None";
+  if (Array.isArray(entry)) return entry.map(e => `<span>${e}</span>`).join(", ");
+  if (typeof entry === 'object') {
+    return Object.entries(entry).map(([key, val]) => {
+      return `<span style="color:#ff00ff;">${key}:</span> <span style="color:#00ffee;">${val}</span>`;
+    }).join("<br>");
+  }
+  return `<span>${entry}</span>`;
+}
+
 function renderRecentActivity(data) {
   document.getElementById('recent-activity').innerHTML = `
     <ul class="subtitle2">
-      <li><strong>🎁 Last Boxes Claimed:</strong> ${data.last_boxes_claimed?.join(", ") || "None"}</li>
-      <li><strong>💬 Last Chat Reward:</strong> ${data.last_chat_reward || "None"}</li>
-      <li><strong>⛈️ Last Storm Win:</strong> ${data.last_storm_win || "None"}</li>
-      <li><strong>🎉 Last NFT Giveaway:</strong> ${data.last_nft_giveaway || "None"}</li>
-      <li><strong>🍀 Last LuckyDraw Tokens:</strong> ${data.last_luckydraw_tokens || "None"}</li>
-      <li><strong>🌪️ Last NFT Storm:</strong> ${data.last_nft_storm || "None"}</li>
+      <li><strong>🎁 Last Boxes Claimed:</strong> ${formatActivityEntry(data.last_boxes_claimed)}</li>
+      <li><strong>💬 Last Chat Reward:</strong> ${formatActivityEntry(data.telegram?.last_chat_reward)}</li>
+      <li><strong>⛈️ Last Storm Win:</strong> ${formatActivityEntry(data.telegram?.last_storm_win)}</li>
+      <li><strong>🎉 Last NFT Giveaway:</strong> ${formatActivityEntry(data.telegram?.last_nft_giveaway)}</li>
+      <li><strong>🍀 Last LuckyDraw Tokens:</strong> ${formatActivityEntry(data.telegram?.last_luckydraw_tokens)}</li>
+      <li><strong>🌪️ Last NFT Storm:</strong> ${formatActivityEntry(data.twitch?.last_nft_storm)}</li>
     </ul>
   `;
 }

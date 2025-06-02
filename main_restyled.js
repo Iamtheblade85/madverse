@@ -1957,15 +1957,31 @@ function formatActivityEntry(entry) {
 }
 
 function renderRecentActivity(data) {
+  const telegram = data.telegram || {};
+  const twitch = data.twitch || {};
+
   document.getElementById('recent-activity').innerHTML = `
-    <ul class="subtitle2">
-      <li><strong>🎁 Last Boxes Claimed:</strong> ${formatActivityEntry(data.last_boxes_claimed)}</li>
-      <li><strong>💬 Last Chat Reward:</strong> ${formatActivityEntry(data.telegram?.last_chat_reward)}</li>
-      <li><strong>⛈️ Last Storm Win:</strong> ${formatActivityEntry(data.telegram?.last_storm_win)}</li>
-      <li><strong>🎉 Last NFT Giveaway:</strong> ${formatActivityEntry(data.telegram?.last_nft_giveaway)}</li>
-      <li><strong>🍀 Last LuckyDraw Tokens:</strong> ${formatActivityEntry(data.telegram?.last_luckydraw_tokens)}</li>
-      <li><strong>🌪️ Last NFT Storm:</strong> ${formatActivityEntry(data.twitch?.last_nft_storm)}</li>
-    </ul>
+    <div class="activity-section">
+      <h3 class="activity-source glow-text">📢 Telegram Activity</h3>
+      <ul class="subtitle2">
+        <li><strong>🎁 Last Boxes Claimed:</strong> ${formatActivityEntry(data.last_boxes_claimed)}</li>
+        <li><strong>💬 Last Chat Reward:</strong> ${formatActivityEntry(telegram.last_chat_reward)}</li>
+        <li><strong>⛈️ Last Storm Win:</strong> ${formatActivityEntry(telegram.last_storm_win)}</li>
+        <li><strong>🎉 Last NFT Giveaway:</strong> ${formatActivityEntry(telegram.last_nft_giveaway)}</li>
+        <li><strong>🍀 Last LuckyDraw Tokens:</strong> ${formatActivityEntry(telegram.last_luckydraw_tokens)}</li>
+      </ul>
+    </div>
+
+    <hr class="activity-divider" style="margin: 2rem 0;">
+
+    <div class="activity-section">
+      <h3 class="activity-source glow-text">🎮 Twitch Activity</h3>
+      <ul class="subtitle2">
+        <li><strong>💬 Last Chat Reward:</strong> ${formatActivityEntry(twitch.last_chat_reward)}</li>
+        <li><strong>⛈️ Last Storm Win:</strong> ${formatActivityEntry(twitch.last_storm_win)}</li>
+        <li><strong>🌪️ Last NFT Storm:</strong> ${formatActivityEntry(twitch.last_nft_storm)}</li>
+      </ul>
+    </div>
   `;
 }
 

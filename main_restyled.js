@@ -1952,50 +1952,81 @@ function formatActivityEntry(entry) {
 }
 
 function renderRecentActivity(data) {
-  const telegram = data.telegram || {};
-  const twitch = data.twitch || {};
+  const renderEntry = (entry) => {
+    if (!entry) return `<p>None</p>`;
 
-  const sectionHTML = (title, contentHTML, idSuffix) => `
-    <div class="activity-section">
-      <button class="activity-toggle" onclick="toggleActivitySection('${idSuffix}')">${title}</button>
-      <div class="activity-content" id="${idSuffix}">
-        ${contentHTML}
-      </div>
-    </div>
-  `;
+    if (Array.isArray(entry)) {
+      return entry.map(item => {
+        if (typeof item === 'object') {
+          return `
+            <div class="activity-object">
+              ${Object.entries(item).map(([k, v]) => `
+                <span class="activity-label">${k}:</span>
+                <span class="activity-value">${v}</span>
+              `).join('<br>')}
+            </div>
+          `;
+        }
+        return `<span class="activity-value">${item}</span>`;
+      }).join("<hr class='activity-divider'>");
+    }
 
-  const telegramHTML = `
-    <ul class="subtitle2">
-      <li><strong>🎁 Last Boxes Claimed:</strong> ${formatActivityEntry(data.last_boxes_claimed)}</li>
-      <li><strong>💬 Last Chat Reward:</strong> ${formatActivityEntry(telegram.last_chat_reward)}</li>
-      <li><strong>⛈️ Last Storm Win:</strong> ${formatActivityEntry(telegram.last_storm_win)}</li>
-      <li><strong>🎉 Last NFT Giveaway:</strong> ${formatActivityEntry(telegram.last_nft_giveaway)}</li>
-      <li><strong>🍀 Last LuckyDraw Tokens:</strong> ${formatActivityEntry(telegram.last_luckydraw_tokens)}</li>
-    </ul>
-  `;
+    if (typeof entry === 'object') {
+      return `
+        <div class="activity-object">
+          ${Object.entries(entry).map(([k, v]) => {
+            if (k === 'asset_img') {
+              return `<img src="${v}" alt="NFT" class="nft-preview-img" style="max-width:120px;margin-top:6px;">`;
+            }
+            return `
+              <span class="activity-label">${k}:</span>
+              <span class="activity-value">${v}</span>
+            `;
+          }).join('<br>')}
+        </div>
+      `;
+    }
 
-  const twitchHTML = `
-    <ul class="subtitle2">
-      <li><strong>💬 Last Chat Reward:</strong> ${formatActivityEntry(twitch.last_chat_reward)}</li>
-      <li><strong>⛈️ Last Storm Win:</strong> ${formatActivityEntry(twitch.last_storm_win)}</li>
-      <li><strong>🌪️ Last NFT Storm:</strong> ${formatActivityEntry(twitch.last_nft_storm)}</li>
-    </ul>
-  `;
+    return `<span class="activity-value">${entry}</span>`;
+  };
 
   document.getElementById('recent-activity').innerHTML = `
-    ${sectionHTML("📢 Telegram Activity", telegramHTML, "telegram-activity")}
-    ${sectionHTML("🎮 Twitch Activity", twitchHTML, "twitch-activity")}
+    <div class="activity-section">
+      <button class="activity-toggle" onclick="toggleActivitySection('telegram-activity')">
+        📢 <span class="activity-source">Telegram Activity</span>
+      </button>
+      <div class="activity-content" id="telegram-activity">
+        <ul class="subtitle2">
+          <li><strong>🎁 Last Boxes Claimed:</strong> ${renderEntry(data.last_boxes_claimed)}</li>
+          <li><strong>💬 Last Chat Reward:</strong> ${renderEntry(data.telegram?.last_chat_reward)}</li>
+          <li><strong>⛈️ Last Storm Win:</strong> ${renderEntry(data.telegram?.last_storm_win)}</li>
+          <li><strong>🎉 Last NFT Giveaway:</strong> ${renderEntry(data.telegram?.last_nft_giveaway)}</li>
+          <li><strong>🍀 Last LuckyDraw Tokens:</strong> ${renderEntry(data.telegram?.last_luckydraw_tokens)}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="activity-section">
+      <button class="activity-toggle" onclick="toggleActivitySection('twitch-activity')">
+        🎮 <span class="activity-source">Twitch Activity</span>
+      </button>
+      <div class="activity-content" id="twitch-activity">
+        <ul class="subtitle2">
+          <li><strong>💬 Last Chat Reward:</strong> ${renderEntry(data.twitch?.last_chat_reward)}</li>
+          <li><strong>⛈️ Last Storm Win:</strong> ${renderEntry(data.twitch?.last_storm_win)}</li>
+          <li><strong>🌪️ Last NFT Storm:</strong> ${renderEntry(data.twitch?.last_nft_storm)}</li>
+        </ul>
+      </div>
+    </div>
   `;
 }
 
 function toggleActivitySection(id) {
-  const content = document.getElementById(id);
-  const toggle = content.previousElementSibling;
+  const el = document.getElementById(id);
+  el.classList.toggle('collapsed');
 
-  content.classList.toggle('collapsed');
-  toggle.classList.toggle('collapsed');
+  // puoi anche animare qui con CSS transitions
 }
-
 
 function populateNFTDropdown(nfts) {
   const dropdown = document.getElementById("nftAssetDropdown");

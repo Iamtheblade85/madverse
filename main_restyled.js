@@ -1935,12 +1935,24 @@ function renderChatRewards(telegram, twitch) {
 
 function formatActivityEntry(entry) {
   if (!entry) return "None";
-  if (Array.isArray(entry)) return entry.map(e => `<span>${e}</span>`).join(", ");
+
+  if (Array.isArray(entry)) {
+    return entry.map(item => {
+      if (typeof item === 'object') {
+        return `<div class="activity-object">${Object.entries(item).map(([k, v]) => `
+          <span class="activity-label">${k}:</span> <span class="activity-value">${v}</span>
+        `).join("<br>")}</div>`;
+      }
+      return `<span>${item}</span>`;
+    }).join("<hr class='activity-divider'>");
+  }
+
   if (typeof entry === 'object') {
     return Object.entries(entry).map(([key, val]) => {
-      return `<span style="color:#ff00ff;">${key}:</span> <span style="color:#00ffee;">${val}</span>`;
+      return `<span class="activity-label">${key}:</span> <span class="activity-value">${val}</span>`;
     }).join("<br>");
   }
+
   return `<span>${entry}</span>`;
 }
 

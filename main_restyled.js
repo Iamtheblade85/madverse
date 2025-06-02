@@ -3542,30 +3542,72 @@ async function loadWallet() {
         <button class="wallet-switch telegram-btn" data-wallet="telegram">🤖 Telegram Wallet</button>
       </div>
       <div style="text-align: center;">
-        <p style="
-          font-family: 'Rock Salt', cursive;
-          text-transform: uppercase;
-          font-size: 1rem;
-          color: #ffe600;
-          margin-top: 1rem;
-          white-space: nowrap;
-          overflow: hidden;
-          border-right: 2px solid #ffe600;
-          display: inline-block;
-          animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
-          position: relative;
-        ">
-          Transfer tokens between your wallets using the built-in Bridge. It's seamless, secure, and slick.
-          <span style="
-            position: absolute;
-            left: 0;
-            bottom: -4px;
-            height: 2px;
-            width: 0;
-            background: #f39c12;
-            animation: underlineSlide 2.5s ease-in-out 3s forwards;
-          "></span>
-        </p>
+        <div style="display: inline-block; text-align: left; margin-top: 1rem;">
+          <p style="
+            font-family: 'Rock Salt', cursive;
+            text-transform: uppercase;
+            font-size: 1rem;
+            color: #00f0ff;
+            margin: 0.25rem 0;
+            text-shadow: 0 0 6px #00f0ff;
+          ">
+            Stake your tokens to let them work for you — easy gains, zero stress.
+          </p>
+          <p style="
+            font-family: 'Rock Salt', cursive;
+            text-transform: uppercase;
+            font-size: 1rem;
+            color: #ff00ff;
+            margin: 0.25rem 0;
+            text-shadow: 0 0 6px #ff00ff;
+          ">
+            Withdraw your assets whenever you want. It's your crypto, your rules.
+          </p>
+          <p style="
+            font-family: 'Rock Salt', cursive;
+            text-transform: uppercase;
+            font-size: 1rem;
+            color: #00ff44;
+            margin: 0.25rem 0;
+            text-shadow: 0 0 6px #00ff44;
+          ">
+            Swap tokens like a pro — fast, fair, and frictionless.
+          </p>
+          <p style="
+            font-family: 'Rock Salt', cursive;
+            text-transform: uppercase;
+            font-size: 1rem;
+            color: #ffa500;
+            margin: 0.25rem 0;
+            text-shadow: 0 0 6px #ffa500;
+          ">
+            Transfer tokens to friends or alt accounts in a blink.
+          </p>
+          <p style="
+            font-family: 'Rock Salt', cursive;
+            text-transform: uppercase;
+            font-size: 1rem;
+            color: #ffe600;
+            margin: 0.25rem 0;
+            text-shadow: 0 0 6px #ffe600;
+            position: relative;
+            border-right: 2px solid #ffe600;
+            white-space: nowrap;
+            overflow: hidden;
+            animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
+          ">
+            Transfer tokens between your wallets using the built-in Bridge. It's seamless, secure, and slick.
+            <span style="
+              position: absolute;
+              left: 0;
+              bottom: -4px;
+              height: 2px;
+              width: 0;
+              background: #f39c12;
+              animation: underlineSlide 2.5s ease-in-out 3s forwards;
+            "></span>
+          </p>
+        </div>
       </div>
       <div id="wallet-content"></div>
     `;
@@ -4356,7 +4398,6 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
     throw new Error(data.error);
   }
 
-  // ✅ A questo punto siamo sicuri che la risposta è valida
   let feedbackText = "";
   
   if (action === "swap" && data.details) {
@@ -4365,13 +4406,13 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
       <div style="
         margin-top: 1rem;
         padding: 1rem;
-        border-left: 5px solid #2ecc71;
-        background: linear-gradient(135deg, #e6ffe6, #f0fff4);
-        color: #0a4226;
-        font-family: 'Courier New', Courier, monospace;
+        border-left: 4px solid #00ffcc;
+        background: rgba(0, 255, 204, 0.05);
+        color: #00ffcc;
+        font-family: 'Courier New', monospace;
         font-size: 0.92rem;
         border-radius: 6px;
-        box-shadow: 0 0 6px rgba(0,0,0,0.2);
+        box-shadow: 0 0 12px #00ffcc88;
         animation: fadeIn 0.4s ease-in-out;
       ">
         <strong>Swap Completed</strong><br>
@@ -4385,18 +4426,18 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
       <div style="
         margin-top: 1rem;
         padding: 1rem;
-        border-left: 5px solid #3498db;
-        background: linear-gradient(135deg, #eaf6ff, #f0fbff);
-        color: #003366;
-        font-family: 'Courier New', Courier, monospace;
+        border-left: 4px solid #ff33cc;
+        background: rgba(255, 51, 204, 0.07);
+        color: #ff33cc;
+        font-family: 'Courier New', monospace;
         font-size: 0.92rem;
         border-radius: 6px;
-        box-shadow: 0 0 6px rgba(0,0,0,0.15);
+        box-shadow: 0 0 12px #ff33cc88;
         animation: fadeIn 0.4s ease-in-out;
       ">
         <strong>Bridge Successful 🔁</strong><br>
-        From: <span style="color:#e67e22; font-weight:bold">${data.from_wallet.toUpperCase()}</span> → 
-        To: <span style="color:#2980b9; font-weight:bold">${data.to_wallet.toUpperCase()}</span><br><br>
+        From: <span style="color:#ff8800; font-weight:bold">${data.from_wallet.toUpperCase()}</span> →
+        To: <span style="color:#00bfff; font-weight:bold">${data.to_wallet.toUpperCase()}</span><br><br>
         <em>Token:</em> <strong>${token}</strong><br>
         <em>Amount Sent:</em> ${amount}<br>
         <em>Fee (2%):</em> ${data.fee_applied.toFixed(4)}<br>
@@ -4408,13 +4449,13 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
       <div style="
         margin-top: 1rem;
         padding: 1rem;
-        border-left: 5px solid #8e44ad;
-        background: linear-gradient(135deg, #f5e9ff, #f9f2ff);
-        color: #3b175b;
-        font-family: 'Courier New', Courier, monospace;
+        border-left: 4px solid #aa66ff;
+        background: rgba(170, 102, 255, 0.07);
+        color: #aa66ff;
+        font-family: 'Courier New', monospace;
         font-size: 0.92rem;
         border-radius: 6px;
-        box-shadow: 0 0 6px rgba(0,0,0,0.1);
+        box-shadow: 0 0 12px #aa66ff88;
         animation: fadeIn 0.4s ease-in-out;
       ">
         <strong>${action.charAt(0).toUpperCase() + action.slice(1)}:</strong> ${data.message}
@@ -4425,13 +4466,13 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
       <div style="
         margin-top: 1rem;
         padding: 1rem;
-        border-left: 5px solid #2ecc71;
-        background: linear-gradient(135deg, #e6ffe6, #f0fff4);
-        color: #0a4226;
-        font-family: 'Courier New', Courier, monospace;
+        border-left: 4px solid #33ff77;
+        background: rgba(51, 255, 119, 0.07);
+        color: #33ff77;
+        font-family: 'Courier New', monospace;
         font-size: 0.92rem;
         border-radius: 6px;
-        box-shadow: 0 0 6px rgba(0,0,0,0.2);
+        box-shadow: 0 0 12px #33ff7788;
         animation: fadeIn 0.4s ease-in-out;
       ">
         <strong>${action} completed successfully.</strong>
@@ -4439,12 +4480,9 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
     `;
   }
   
-  // Inietta nel form
   const feedbackDiv = document.createElement('div');
   feedbackDiv.innerHTML = feedbackText;
   document.querySelector('#action-form').appendChild(feedbackDiv);
-
-  console.info("[✅] Azione completata:", data.message || "Successo");
 }
 
 /* ─────────────────────────────

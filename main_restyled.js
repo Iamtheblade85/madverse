@@ -1848,33 +1848,54 @@ function renderChatRewards(telegram, twitch) {
       ${renderBoosters(platform.boosters?.reward, "Reward", "💰")}
     `;
     
-    const rewardsHTML = (platform.channels || []).map(ch => `
-      <details>
-        <summary>📣 ${ch.name}</summary>
-        <table class="reward-table2">
-          <thead>
-            <tr>
-              <th>Token</th>
-              <th>Short Msg Reward</th>
-              <th>Short Msg XP</th>
-              <th>Long Msg Reward</th>
-              <th>Long Msg XP</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${ch.rewards.map(r => `
-              <tr>
-                <td>${r.token}</td>
-                <td>${r.short_msg_reward}</td>
-                <td>${r.short_msg_xp}</td>
-                <td>${r.long_msg_reward}</td>
-                <td>${r.long_msg_xp}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </details>
-    `).join('');
+    const isTwitch = platform.platform === "Twitch";
+    
+    const rewardsHTML = (platform.channels || []).map(ch => {
+      const rows = ch.rewards.map(r => isTwitch
+        ? `
+          <tr>
+            <td>${r.token}</td>
+            <td>${r.msg_reward}</td>
+          </tr>
+        `
+        : `
+          <tr>
+            <td>${r.token}</td>
+            <td>${r.short_msg_reward}</td>
+            <td>${r.short_msg_xp}</td>
+            <td>${r.long_msg_reward}</td>
+            <td>${r.long_msg_xp}</td>
+          </tr>
+        `
+      ).join('');
+    
+      const headers = isTwitch
+        ? `
+          <tr>
+            <th>Token</th>
+            <th>Msg Reward</th>
+          </tr>
+        `
+        : `
+          <tr>
+            <th>Token</th>
+            <th>Short Msg Reward</th>
+            <th>Short Msg XP</th>
+            <th>Long Msg Reward</th>
+            <th>Long Msg XP</th>
+          </tr>
+        `;
+    
+      return `
+        <details>
+          <summary>📣 ${ch.name}</summary>
+          <table class="reward-table2">
+            <thead>${headers}</thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </details>
+      `;
+    }).join('');
 
   return `
     <div class="card-glow">

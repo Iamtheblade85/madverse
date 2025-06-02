@@ -4943,4 +4943,52 @@ details[open] > div {
   padding: 1rem;
   position: relative;
 }
+.activity-section {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #333;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+.activity-toggle {
+  width: 100%;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #ffe600;
+  background: linear-gradient(90deg, #111, #222);
+  border: none;
+  padding: 0.5rem;
+  border-radius: 10px 10px 0 0;
+  cursor: pointer;
+  text-shadow: 0 0 5px #ffe600;
+  transition: background 0.3s ease;
+}
+
+.activity-toggle:hover {
+  background: linear-gradient(90deg, #222, #333);
+}
+
+.activity-content {
+  padding: 1rem;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.activity-content.collapsed {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.nft-preview-img {
+  border-radius: 8px;
+  box-shadow: 0 0 6px #0ff;
+  margin-top: 5px;
+}
 

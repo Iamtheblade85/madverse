@@ -1622,11 +1622,6 @@ function renderAccountSubsection(sectionId) {
       renderChatRewards(data.telegram, data.twitch);
       break;
 
-    case 'passes':
-      wrapper.innerHTML = `<div class="account-card2" id="telegram-passes"></div>`;
-      renderTelegramPasses(data.passes);
-      break;
-
     case 'activity':
       wrapper.innerHTML = `<div class="account-card2" id="recent-activity"></div>`;
       renderRecentActivity(data.activity);
@@ -1960,30 +1955,47 @@ function renderRecentActivity(data) {
   const telegram = data.telegram || {};
   const twitch = data.twitch || {};
 
-  document.getElementById('recent-activity').innerHTML = `
+  const sectionHTML = (title, contentHTML, idSuffix) => `
     <div class="activity-section">
-      <h3 class="activity-source glow-text">📢 Telegram Activity</h3>
-      <ul class="subtitle2">
-        <li><strong>🎁 Last Boxes Claimed:</strong> ${formatActivityEntry(data.last_boxes_claimed)}</li>
-        <li><strong>💬 Last Chat Reward:</strong> ${formatActivityEntry(telegram.last_chat_reward)}</li>
-        <li><strong>⛈️ Last Storm Win:</strong> ${formatActivityEntry(telegram.last_storm_win)}</li>
-        <li><strong>🎉 Last NFT Giveaway:</strong> ${formatActivityEntry(telegram.last_nft_giveaway)}</li>
-        <li><strong>🍀 Last LuckyDraw Tokens:</strong> ${formatActivityEntry(telegram.last_luckydraw_tokens)}</li>
-      </ul>
-    </div>
-
-    <hr class="activity-divider" style="margin: 2rem 0;">
-
-    <div class="activity-section">
-      <h3 class="activity-source glow-text">🎮 Twitch Activity</h3>
-      <ul class="subtitle2">
-        <li><strong>💬 Last Chat Reward:</strong> ${formatActivityEntry(twitch.last_chat_reward)}</li>
-        <li><strong>⛈️ Last Storm Win:</strong> ${formatActivityEntry(twitch.last_storm_win)}</li>
-        <li><strong>🌪️ Last NFT Storm:</strong> ${formatActivityEntry(twitch.last_nft_storm)}</li>
-      </ul>
+      <button class="activity-toggle" onclick="toggleActivitySection('${idSuffix}')">${title}</button>
+      <div class="activity-content" id="${idSuffix}">
+        ${contentHTML}
+      </div>
     </div>
   `;
+
+  const telegramHTML = `
+    <ul class="subtitle2">
+      <li><strong>🎁 Last Boxes Claimed:</strong> ${formatActivityEntry(data.last_boxes_claimed)}</li>
+      <li><strong>💬 Last Chat Reward:</strong> ${formatActivityEntry(telegram.last_chat_reward)}</li>
+      <li><strong>⛈️ Last Storm Win:</strong> ${formatActivityEntry(telegram.last_storm_win)}</li>
+      <li><strong>🎉 Last NFT Giveaway:</strong> ${formatActivityEntry(telegram.last_nft_giveaway)}</li>
+      <li><strong>🍀 Last LuckyDraw Tokens:</strong> ${formatActivityEntry(telegram.last_luckydraw_tokens)}</li>
+    </ul>
+  `;
+
+  const twitchHTML = `
+    <ul class="subtitle2">
+      <li><strong>💬 Last Chat Reward:</strong> ${formatActivityEntry(twitch.last_chat_reward)}</li>
+      <li><strong>⛈️ Last Storm Win:</strong> ${formatActivityEntry(twitch.last_storm_win)}</li>
+      <li><strong>🌪️ Last NFT Storm:</strong> ${formatActivityEntry(twitch.last_nft_storm)}</li>
+    </ul>
+  `;
+
+  document.getElementById('recent-activity').innerHTML = `
+    ${sectionHTML("📢 Telegram Activity", telegramHTML, "telegram-activity")}
+    ${sectionHTML("🎮 Twitch Activity", twitchHTML, "twitch-activity")}
+  `;
 }
+
+function toggleActivitySection(id) {
+  const content = document.getElementById(id);
+  const toggle = content.previousElementSibling;
+
+  content.classList.toggle('collapsed');
+  toggle.classList.toggle('collapsed');
+}
+
 
 function populateNFTDropdown(nfts) {
   const dropdown = document.getElementById("nftAssetDropdown");

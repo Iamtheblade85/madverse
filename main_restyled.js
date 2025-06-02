@@ -1571,7 +1571,6 @@ async function loadAccountSection() {
     const [
       telegramRewardsRes,
       twitchRewardsRes,
-      passesRes,
       activityRes,
       dailyBoxRes
     ] = await Promise.all([

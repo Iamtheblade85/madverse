@@ -1853,15 +1853,33 @@ function renderChatRewards(telegram, twitch) {
     const rewardsHTML = (platform.channels || []).map(ch => {
       const passLabel = ch.pass
         ? `
-          <span style="display: inline-block; background: #ffe8cc; color: #d35400; padding: 4px 8px; border-radius: 6px; font-weight: bold;">
-            🔒 <a href="${ch.pass}" target="_blank" style="color: #d35400; text-decoration: underline;">This Pass is Required</a>
-          </span>
+          <a href="${ch.pass}" target="_blank" style="
+            background-color: #ffefd5;
+            border: 1px solid #f4a261;
+            color: #e76f51;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 0 4px rgba(0,0,0,0.1);
+            transition: all 0.2s ease-in-out;
+          " onmouseover="this.style.backgroundColor='#ffe0b3';"
+            onmouseout="this.style.backgroundColor='#ffefd5';">
+            🔑 Pass Required
+          </a>
         `
         : `
-          <span style="display: inline-block; background: #e8ffe8; color: #2e7d32; padding: 4px 8px; border-radius: 6px; font-weight: bold;">
+          <span style="
+            background-color: #e0ffe0;
+            color: #2e7d32;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-weight: 600;
+          ">
             ✅ Free Access
           </span>
         `;
+    
       const rows = ch.rewards.map(r => isTwitch
         ? `
           <tr>
@@ -1884,7 +1902,7 @@ function renderChatRewards(telegram, twitch) {
         ? `
           <tr>
             <th>Token</th>
-            <th>Msg Reward</th>
+            <th>Message Reward</th>
           </tr>
         `
         : `
@@ -1899,14 +1917,18 @@ function renderChatRewards(telegram, twitch) {
     
       return `
         <details>
-          <summary>📣 ${ch.name} — ${passLabel}</summary>
-          <table class="reward-table2">
+          <summary style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: bold;">📣 ${ch.name}</span>
+            ${passLabel}
+          </summary>
+          <table class="reward-table2 mt-2">
             <thead>${headers}</thead>
             <tbody>${rows}</tbody>
           </table>
         </details>
       `;
     }).join('');
+
 
 
   return `

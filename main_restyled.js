@@ -1952,72 +1952,76 @@ function formatActivityEntry(entry) {
 }
 
 function renderRecentActivity(data) {
-  const renderEntry = (entry) => {
-    if (!entry) return `<p>None</p>`;
+  function renderActivitySection(activity, label, icon) {
+    const entries = [
+      { key: 'last_chat_reward', title: '💬 Last Chat Reward' },
+      { key: 'last_storm_win', title: '⛈️ Last Storm Win' },
+      { key: 'last_nft_giveaway', title: '🎉 Last NFT Giveaway' },
+      { key: 'last_luckydraw_tokens', title: '🍀 Last LuckyDraw Tokens' },
+      { key: 'last_nft_storm', title: '🌪️ Last NFT Storm' },
+    ];
 
-    if (Array.isArray(entry)) {
-      return entry.map(item => {
-        if (typeof item === 'object') {
+    const renderedEntries = entries.map(({ key, title }) => {
+      if (!(key in activity) || !activity[key]) {
+        return `<tr><td colspan="2" style="color:#888;">${title}</td><td style="color:#aaa;">None</td></tr>`;
+      }
+
+      const value = activity[key];
+
+      if (Array.isArray(value)) {
+        const rows = value.map(v => `
+          <div class="activity-object" style="margin-bottom:8px;">
+            ${Object.entries(v).map(([k, val]) => `
+              <span class='activity-label' style="color:#ff00ff; font-weight:bold; margin-right:6px;">${k}:</span>
+              <span class='activity-value' style="color:#00ffee;">${val}</span>
+            `).join('<br>')}
+          </div>
+        `).join('<hr style="border:0; border-top:1px dashed #444; margin:8px 0;">');
+        return `<tr><td colspan="2">${title}</td><td>${rows}</td></tr>`;
+      }
+
+      if (typeof value === 'object') {
+        const objectRows = Object.entries(value).map(([k, val]) => {
+          if (k === 'asset_img') {
+            return `<img src="${val}" alt="NFT Image" style="max-width:120px; border-radius:8px; margin-top:6px;">`;
+          }
           return `
-            <div class="activity-object">
-              ${Object.entries(item).map(([k, v]) => `
-                <span class="activity-label">${k}:</span>
-                <span class="activity-value">${v}</span>
-              `).join('<br>')}
-            </div>
-          `;
-        }
-        return `<span class="activity-value">${item}</span>`;
-      }).join("<hr class='activity-divider'>");
-    }
+            <span class='activity-label' style="color:#ff00ff; font-weight:bold; margin-right:6px;">${k}:</span>
+            <span class='activity-value' style="color:#00ffee;">${val}</span>`;
+        }).join('<br>');
 
-    if (typeof entry === 'object') {
-      return `
-        <div class="activity-object">
-          ${Object.entries(entry).map(([k, v]) => {
-            if (k === 'asset_img') {
-              return `<img src="${v}" alt="NFT" class="nft-preview-img" style="max-width:120px;margin-top:6px;">`;
-            }
-            return `
-              <span class="activity-label">${k}:</span>
-              <span class="activity-value">${v}</span>
-            `;
-          }).join('<br>')}
-        </div>
-      `;
-    }
+        return `<tr><td colspan="2">${title}</td><td>${objectRows}</td></tr>`;
+      }
 
-    return `<span class="activity-value">${entry}</span>`;
-  };
+      return `<tr><td colspan="2">${title}</td><td><span class='activity-value' style="color:#00ffee;">${value}</span></td></tr>`;
+    }).join('');
+
+    return `
+      <details open class="card-glow" style="margin-bottom:2rem; padding:1.5rem; background:rgba(0,0,0,0.3); border-radius:12px; box-shadow:0 0 12px #0ff;">
+        <summary class="glow-text" style="text-align:center; font-size:1.4rem; padding:0.8rem 0; cursor:pointer;">${icon} ${label} Activity</summary>
+        <table class="reward-table2" style="width:100%; margin-top:1rem; border-collapse: collapse;">
+          <tbody>${renderedEntries}</tbody>
+        </table>
+      </details>
+    `;
+  }
+
+  const boxesHtml = `
+    <div class="card-glow" style="margin-bottom:2rem; padding:1.5rem; background:rgba(0,0,0,0.3); border-radius:12px; box-shadow:0 0 12px #0ff;">
+      <h2 class="glow-text" style="text-align:center;">🎁 Boxes Claimed</h2>
+      ${data.last_boxes_claimed?.length
+        ? `<p class="activity-value" style="color:#00ffee; text-align:center;">${data.last_boxes_claimed.join(", ")}</p>`
+        : `<p class="activity-value" style="color:#aaa; text-align:center;">None</p>`}
+    </div>
+  `;
+
+  const telegramHTML = renderActivitySection(data.telegram, 'Telegram', '📢');
+  const twitchHTML = renderActivitySection(data.twitch, 'Twitch', '🎮');
 
   document.getElementById('recent-activity').innerHTML = `
-    <div class="activity-section">
-      <button class="activity-toggle" onclick="toggleActivitySection('telegram-activity')">
-        📢 <span class="activity-source">Telegram Activity</span>
-      </button>
-      <div class="activity-content" id="telegram-activity">
-        <ul class="subtitle2">
-          <li><strong>🎁 Last Boxes Claimed:</strong> ${renderEntry(data.last_boxes_claimed)}</li>
-          <li><strong>💬 Last Chat Reward:</strong> ${renderEntry(data.telegram?.last_chat_reward)}</li>
-          <li><strong>⛈️ Last Storm Win:</strong> ${renderEntry(data.telegram?.last_storm_win)}</li>
-          <li><strong>🎉 Last NFT Giveaway:</strong> ${renderEntry(data.telegram?.last_nft_giveaway)}</li>
-          <li><strong>🍀 Last LuckyDraw Tokens:</strong> ${renderEntry(data.telegram?.last_luckydraw_tokens)}</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="activity-section">
-      <button class="activity-toggle" onclick="toggleActivitySection('twitch-activity')">
-        🎮 <span class="activity-source">Twitch Activity</span>
-      </button>
-      <div class="activity-content" id="twitch-activity">
-        <ul class="subtitle2">
-          <li><strong>💬 Last Chat Reward:</strong> ${renderEntry(data.twitch?.last_chat_reward)}</li>
-          <li><strong>⛈️ Last Storm Win:</strong> ${renderEntry(data.twitch?.last_storm_win)}</li>
-          <li><strong>🌪️ Last NFT Storm:</strong> ${renderEntry(data.twitch?.last_nft_storm)}</li>
-        </ul>
-      </div>
-    </div>
+    ${boxesHtml}
+    ${telegramHTML}
+    ${twitchHTML}
   `;
 }
 

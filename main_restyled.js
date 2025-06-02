@@ -1852,9 +1852,16 @@ function renderChatRewards(telegram, twitch) {
     
     const rewardsHTML = (platform.channels || []).map(ch => {
       const passLabel = ch.pass
-        ? `<span style="color: orange;">🔑 <a href="${ch.pass}" target="_blank">Pass richiesto</a></span>`
-        : `<span style="color: green;">✅ Free access</span>`;
-    
+        ? `
+          <span style="display: inline-block; background: #ffe8cc; color: #d35400; padding: 4px 8px; border-radius: 6px; font-weight: bold;">
+            🔒 <a href="${ch.pass}" target="_blank" style="color: #d35400; text-decoration: underline;">This Pass is Required</a>
+          </span>
+        `
+        : `
+          <span style="display: inline-block; background: #e8ffe8; color: #2e7d32; padding: 4px 8px; border-radius: 6px; font-weight: bold;">
+            ✅ Free Access
+          </span>
+        `;
       const rows = ch.rewards.map(r => isTwitch
         ? `
           <tr>

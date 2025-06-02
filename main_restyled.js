@@ -2008,11 +2008,12 @@ function renderRecentActivity(data) {
           if (k === 'asset_img') {
             return `<img src="${val}" alt="NFT Image" style="max-width:120px; border-radius:8px; margin-top:6px;">`;
           }
-        return `
-          <span class='activity-label' style="color:#ff00ff; font-weight:bold; margin-right:6px;">${relabelKey(k)}:</span>
-          <span class='activity-value' style="color:#00ffee;">${val}</span>`;
+      
+          return `
+            <span class='activity-label' style="color:#ff00ff; font-weight:bold; margin-right:6px;">${relabelKey(k)}:</span>
+            <span class='activity-value' style="color:#00ffee;">${val}</span>`;
         }).join('<br>');
-
+      
         return `<tr><td colspan="2">${title}</td><td>${objectRows}</td></tr>`;
       }
 
@@ -2065,8 +2066,6 @@ function renderRecentActivity(data) {
 function toggleActivitySection(id) {
   const el = document.getElementById(id);
   el.classList.toggle('collapsed');
-
-  // puoi anche animare qui con CSS transitions
 }
 
 function populateNFTDropdown(nfts) {

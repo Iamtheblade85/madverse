@@ -1886,7 +1886,7 @@ function renderChatRewards(telegram, twitch) {
         <div class="xp-fill2" style="width:${progress}%"></div>
       </div>
       ${boostersHTML}
-      <h5 class="subtitle2">💬 Channel Rewards</h5>
+      <h2 class="glow-text">💬 Channel Rewards</h2>
       ${rewardsHTML || '<p>No channel-specific rewards.</p>'}
     </div>
   `;

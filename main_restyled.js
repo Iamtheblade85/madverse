@@ -3541,6 +3541,32 @@ async function loadWallet() {
         <button class="wallet-switch twitch-btn" data-wallet="twitch">🎮 Twitch Wallet</button>
         <button class="wallet-switch telegram-btn" data-wallet="telegram">🤖 Telegram Wallet</button>
       </div>
+      <div style="text-align: center;">
+        <p style="
+          font-family: 'Rock Salt', cursive;
+          text-transform: uppercase;
+          font-size: 1rem;
+          color: #ffe600;
+          margin-top: 1rem;
+          white-space: nowrap;
+          overflow: hidden;
+          border-right: 2px solid #ffe600;
+          display: inline-block;
+          animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
+          position: relative;
+        ">
+          Transfer tokens between your wallets using the built-in Bridge. It's seamless, secure, and slick.
+          <span style="
+            position: absolute;
+            left: 0;
+            bottom: -4px;
+            height: 2px;
+            width: 0;
+            background: #f39c12;
+            animation: underlineSlide 2.5s ease-in-out 3s forwards;
+          "></span>
+        </p>
+      </div>
       <div id="wallet-content"></div>
     `;
 
@@ -3572,7 +3598,6 @@ function renderWalletTable(type) {
           <tr>
             <th class="cell">Token</th>
             <th class="cell">Amount</th>
-            <th class="cell">Stakeable</th>
             <th class="cell">Actions</th>
           </tr>
         </thead>
@@ -3581,15 +3606,14 @@ function renderWalletTable(type) {
             <tr class="row-border">
               <td class="cell strong">${token.symbol}</td>
               <td class="cell">${token.amount}</td>
-              <td class="cell">${token.stakeable}</td>
               <td class="cell">
                 <div class="btn-group">
                   <button class="btn-action" data-action="withdraw" data-token="${token.symbol}" data-wallet="${type}">Withdraw</button>
                   <button class="btn-action" data-action="swap" data-token="${token.symbol}" data-wallet="${type}">Swap</button>
                   <button class="btn-action" data-action="transfer" data-token="${token.symbol}" data-wallet="${type}">Transfer</button>
-                  ${token.stakeable ? `
-                    <button class="btn-action" data-action="stake" data-token="${token.symbol}" data-wallet="${type}">Stake</button>
-                  ` : ''}
+                  <button class="btn-action" data-action="bridge_to" data-token="${token.symbol}" data-wallet="${type}">
+                    🔁 Move to ${type === 'twitch' ? 'Telegram' : 'Twitch'}
+                  </button>
                 </div>
               </td>
             </tr>
@@ -3599,11 +3623,12 @@ function renderWalletTable(type) {
     </div>
   `;
 
+  // 🔧 CORRETTO: Rimozione doppia dichiarazione di `walletType`
   document.querySelectorAll('[data-action]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const action = btn.getAttribute('data-action');
-      const token = btn.getAttribute('data-token');
-      const walletType = btn.getAttribute('data-wallet');
+    const action = btn.getAttribute('data-action');
+    const token = btn.getAttribute('data-token');
+    const walletType = btn.getAttribute('data-wallet') || 'telegram';
+    btn.addEventListener('click', () => {
       openModal(action, token, walletType);
     });
   });
@@ -4030,7 +4055,30 @@ async function bulkSendSelected() {
     `; 
     showModal({ title: `<h3 class="modal-title">${title}</h3>`, body });
     await loadAvailableTokens();
-  } else {
+  }
+    else if (action === "bridge_to") {
+      const targetWallet = walletType === 'twitch' ? 'telegram' : 'twitch';
+      const title = `Bridge ${token} → ${targetWallet.charAt(0).toUpperCase() + targetWallet.slice(1)}`;
+      const body = `
+        <h3 class="modal-title">${title}</h3>
+        <div class="text-muted">From: <strong>${walletType}</strong> | To: <strong>${targetWallet}</strong></div>
+        <div class="text-muted">Available: <strong>${balance}</strong> ${token}</div>
+        <form id="action-form" class="form-wrapper">
+          <div class="form-field">
+            <div class="form-field">
+              <label>Percentage</label>
+              <input type="range" id="percent-range" class="input-range" min="0" max="100" value="0">
+            </div>          
+            <label>Amount to Transfer</label>
+            <input id="amount" type="number" step="0.0001" class="input-box" required>
+          </div>
+          <button id="submit-button" type="submit" class="btn btn-glow">Bridge Now</button>
+        </form>
+      `;
+      showModal({ title: `<h3 class="modal-title">${title}</h3>`, body });
+    }
+  
+  else {
     const title = action === 'swap' ? `Swap ${token}` : `${actionTitle} ${token}`;
     const body = `<h3 class="modal-title">${actionTitle} ${token}</h3>
       <div class="text-muted">Available: <strong>${balance}</strong> ${token}</div>
@@ -4163,7 +4211,9 @@ async function bulkSendSelected() {
     }
   };
 
-} function showConfirmModal(message, onConfirm) {
+} 
+    
+function showConfirmModal(message, onConfirm) {
   const body = `
     <p class="modal-text">${message}</p>
     <div class="modal-actions" style="margin-top: 1rem;">
@@ -4209,7 +4259,9 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
   } else if (action === "stake") {
     endpoint = `${BASE_URL}/stake_add`;  // Usa /stake_add per l'azione "stake"
   }
-
+  else if (action === "bridge_to") {
+    endpoint = `${BASE_URL}/bridge_token`;
+  }
   // Aggiungiamo user_id e usx_token all'URL
   const fullUrl = `${endpoint}?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
   console.info(`[📤] Eseguo azione ${action} chiamando: ${fullUrl}`);
@@ -4263,6 +4315,15 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
       bodyData.pool_id = poolData.pool_id;  // Ottieni il pool_id dalla pool trovata
       console.info(`[📤] Pool ID per ${token}: ${poolData.pool_id}`);
     }
+    else if (action === "bridge_to") {
+      bodyData = {
+        wax_account: wax_account,
+        token_symbol: token,
+        amount: amount,
+        from_wallet: walletType,
+        to_wallet: walletType === "twitch" ? "telegram" : "twitch"
+      };
+    }
     
     const body = JSON.stringify(bodyData);
     response = await fetch(fullUrl, {
@@ -4296,19 +4357,92 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
   }
 
   // ✅ A questo punto siamo sicuri che la risposta è valida
+  let feedbackText = "";
+  
   if (action === "swap" && data.details) {
     const details = data.details;
-    showToast(
-      `Swap Success!\n${details.amount} ${details.from_token} ➡️ ${details.received_amount.toFixed(4)} ${details.to_token}\nPrice: ${details.execution_price}\nCommission: ${details.commission.toFixed(4)}`,
-      "success"
-    );
-  } else if (action === "transfer" && data.message) {
-    showToast(`${data.message}`, "success");
-  } else if (action === "stake" && data.message) {
-    showToast(`${data.message}`, "success");
+    feedbackText = `
+      <div style="
+        margin-top: 1rem;
+        padding: 1rem;
+        border-left: 5px solid #2ecc71;
+        background: linear-gradient(135deg, #e6ffe6, #f0fff4);
+        color: #0a4226;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.92rem;
+        border-radius: 6px;
+        box-shadow: 0 0 6px rgba(0,0,0,0.2);
+        animation: fadeIn 0.4s ease-in-out;
+      ">
+        <strong>Swap Completed</strong><br>
+        ${details.amount} ${details.from_token} ➡️ ${details.received_amount.toFixed(4)} ${details.to_token}<br>
+        <em>Price:</em> ${details.execution_price}<br>
+        <em>Fee:</em> ${details.commission.toFixed(4)}
+      </div>
+    `;
+  } else if (action === "bridge_to" && data.net_amount && data.fee_applied !== undefined) {
+    feedbackText = `
+      <div style="
+        margin-top: 1rem;
+        padding: 1rem;
+        border-left: 5px solid #3498db;
+        background: linear-gradient(135deg, #eaf6ff, #f0fbff);
+        color: #003366;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.92rem;
+        border-radius: 6px;
+        box-shadow: 0 0 6px rgba(0,0,0,0.15);
+        animation: fadeIn 0.4s ease-in-out;
+      ">
+        <strong>Bridge Successful 🔁</strong><br>
+        From: <span style="color:#e67e22; font-weight:bold">${data.from_wallet.toUpperCase()}</span> → 
+        To: <span style="color:#2980b9; font-weight:bold">${data.to_wallet.toUpperCase()}</span><br><br>
+        <em>Token:</em> <strong>${token}</strong><br>
+        <em>Amount Sent:</em> ${amount}<br>
+        <em>Fee (2%):</em> ${data.fee_applied.toFixed(4)}<br>
+        <em>Received:</em> ${data.net_amount.toFixed(4)}
+      </div>
+    `;
+  } else if (data.message) {
+    feedbackText = `
+      <div style="
+        margin-top: 1rem;
+        padding: 1rem;
+        border-left: 5px solid #8e44ad;
+        background: linear-gradient(135deg, #f5e9ff, #f9f2ff);
+        color: #3b175b;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.92rem;
+        border-radius: 6px;
+        box-shadow: 0 0 6px rgba(0,0,0,0.1);
+        animation: fadeIn 0.4s ease-in-out;
+      ">
+        <strong>${action.charAt(0).toUpperCase() + action.slice(1)}:</strong> ${data.message}
+      </div>
+    `;
   } else {
-    showToast(`${action.charAt(0).toUpperCase() + action.slice(1)} completed successfully`, "success");
+    feedbackText = `
+      <div style="
+        margin-top: 1rem;
+        padding: 1rem;
+        border-left: 5px solid #2ecc71;
+        background: linear-gradient(135deg, #e6ffe6, #f0fff4);
+        color: #0a4226;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.92rem;
+        border-radius: 6px;
+        box-shadow: 0 0 6px rgba(0,0,0,0.2);
+        animation: fadeIn 0.4s ease-in-out;
+      ">
+        <strong>${action} completed successfully.</strong>
+      </div>
+    `;
   }
+  
+  // Inietta nel form
+  const feedbackDiv = document.createElement('div');
+  feedbackDiv.innerHTML = feedbackText;
+  document.querySelector('#action-form').appendChild(feedbackDiv);
 
   console.info("[✅] Azione completata:", data.message || "Successo");
 }

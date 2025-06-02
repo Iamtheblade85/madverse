@@ -3517,7 +3517,7 @@ function showModalMessage(message, type = 'info') {
 
 async function loadWallet() {
   try {
-    const { userId, usx_token } = window.userData;
+    const { userId, usx_token, wax_account } = window.userData;
 
     // Carica Telegram
     const resTelegram = await fetch(`${BASE_URL}/saldo?user_id=${userId}&usx_token=${usx_token}`);
@@ -3525,7 +3525,7 @@ async function loadWallet() {
     window.walletBalances = dataTelegram.balances || [];
 
     // Carica Twitch
-    const resTwitch = await fetch(`${BASE_URL}/saldo/twitch?user_id=${userId}&usx_token=${usx_token}`);
+    const resTwitch = await fetch(`${BASE_URL}/saldo/twitch?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`);
     const dataTwitch = await resTwitch.json();
     window.twitchWalletBalances = dataTwitch.balances || [];
 

@@ -3515,72 +3515,98 @@ function showModalMessage(message, type = 'info') {
   `;
 }
 
- // Caricamento Wallet reale
 async function loadWallet() {
   try {
     const { userId, usx_token } = window.userData;
-    const response = await fetch(`${BASE_URL}/saldo?user_id=${userId}&usx_token=${usx_token}`);
-    const saldoData = await response.json();
 
-    window.walletBalances = saldoData.balances || [];
-    console.info("[🧮] walletBalances salvati:", window.walletBalances);
+    // Carica Telegram
+    const resTelegram = await fetch(`${BASE_URL}/saldo?user_id=${userId}&usx_token=${usx_token}`);
+    const dataTelegram = await resTelegram.json();
+    window.walletBalances = dataTelegram.balances || [];
+
+    // Carica Twitch
+    const resTwitch = await fetch(`${BASE_URL}/saldo/twitch?user_id=${userId}&usx_token=${usx_token}`);
+    const dataTwitch = await resTwitch.json();
+    window.twitchWalletBalances = dataTwitch.balances || [];
 
     const walletTable = document.getElementById('wallet-table');
     if (!walletTable) {
-      console.warn("[⚠️] wallet-table non trovato nel DOM. Skipping render.");
+      console.warn("[⚠️] wallet-table non trovato nel DOM.");
       return;
     }
 
-    if (window.walletBalances.length > 0) {
-      walletTable.innerHTML = `
-        <div class="wallet-table-container">
-          <table class="wallet-table card small">
-            <thead class="thead">
-              <tr>
-                <th class="cell">Token</th>
-                <th class="cell">Amount</th>
-                <th class="cell">Stakeable</th>
-                <th class="cell">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${window.walletBalances.map(token => `
-                <tr class="row-border">
-                  <td class="cell strong">${token.symbol}</td>
-                  <td class="cell">${token.amount}</td>
-                  <td class="cell">${token.stakeable}</td>
-                  <td class="cell">
-                    <div class="btn-group">
-                      <button class="btn-action" data-action="withdraw" data-token="${token.symbol}">Withdraw</button>
-                      <button class="btn-action" data-action="swap" data-token="${token.symbol}">Swap</button>
-                      <button class="btn-action" data-action="transfer" data-token="${token.symbol}">Transfer</button>
-                      ${token.stakeable ? `
-                        <button class="btn-action" data-action="stake" data-token="${token.symbol}">Stake</button>
-                      ` : ''}
-                    </div>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      `;
+    // Pulsanti wallet selector animati
+    walletTable.innerHTML = `
+      <div class="wallet-switch-container">
+        <button class="wallet-switch twitch-btn" data-wallet="twitch">🎮 Twitch Wallet</button>
+        <button class="wallet-switch telegram-btn" data-wallet="telegram">🤖 Telegram Wallet</button>
+      </div>
+      <div id="wallet-content"></div>
+    `;
 
-      document.querySelectorAll('[data-action]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const action = btn.getAttribute('data-action');
-          const token = btn.getAttribute('data-token');
-          openModal(action, token);
-        });
+    document.querySelectorAll('.wallet-switch').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const type = btn.getAttribute('data-wallet');
+        renderWalletTable(type);
       });
-
-    } else {
-      walletTable.innerHTML = `<div class="empty-state">No balances available.</div>`;
-    }
+    });
 
   } catch (error) {
-    console.error("[❌] Error loading Wallet:", error);
+    console.error("[❌] Error loading wallets:", error);
   }
+}
+
+function renderWalletTable(type) {
+  const balances = type === 'twitch' ? window.twitchWalletBalances : window.walletBalances;
+  const container = document.getElementById('wallet-content');
+
+  if (!balances || balances.length === 0) {
+    container.innerHTML = `<div class="empty-state">No balances for ${type} wallet.</div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="wallet-table-container">
+      <table class="wallet-table card small">
+        <thead class="thead">
+          <tr>
+            <th class="cell">Token</th>
+            <th class="cell">Amount</th>
+            <th class="cell">Stakeable</th>
+            <th class="cell">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${balances.map(token => `
+            <tr class="row-border">
+              <td class="cell strong">${token.symbol}</td>
+              <td class="cell">${token.amount}</td>
+              <td class="cell">${token.stakeable}</td>
+              <td class="cell">
+                <div class="btn-group">
+                  <button class="btn-action" data-action="withdraw" data-token="${token.symbol}" data-wallet="${type}">Withdraw</button>
+                  <button class="btn-action" data-action="swap" data-token="${token.symbol}" data-wallet="${type}">Swap</button>
+                  <button class="btn-action" data-action="transfer" data-token="${token.symbol}" data-wallet="${type}">Transfer</button>
+                  ${token.stakeable ? `
+                    <button class="btn-action" data-action="stake" data-token="${token.symbol}" data-wallet="${type}">Stake</button>
+                  ` : ''}
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  document.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const action = btn.getAttribute('data-action');
+      const token = btn.getAttribute('data-token');
+      const walletType = btn.getAttribute('data-wallet');
+      openModal(action, token, walletType);
+    });
+  });
 }
  
 async function loadNFTs() {
@@ -3961,11 +3987,11 @@ async function bulkSendSelected() {
       }, 0);
     };
   }, 0);
-} async function openModal(action, token) {
+} async function openModal(action, token, walletType = 'telegram') {
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
-  const tokenRow = Array.from(document.querySelectorAll('tr')).find(row => row.innerText.includes(token));
-  const balanceCell = tokenRow ? tokenRow.querySelectorAll('td')[1] : null;
-  const balance = balanceCell ? parseFloat(balanceCell.innerText) : 0;
+  const balances = walletType === 'twitch' ? window.twitchWalletBalances : window.walletBalances;
+  const tokenInfo = balances.find(t => t.symbol === token);
+  const balance = tokenInfo ? parseFloat(tokenInfo.amount) : 0;
   let contractIn = "";
   if (action === "swap") {
     const match = availableTokens.find(t => t.split("-")[0].toLowerCase() === token.toLowerCase());
@@ -4120,9 +4146,9 @@ async function bulkSendSelected() {
       if (action === "swap") {
         const outputSelection = tokenOutput.value;
         const [symbolOut, contractOut] = outputSelection.split("-");
-        await executeAction(action, token, amount, symbolOut, contractOut);
+        await executeAction(action, token, amount, symbolOut, contractOut, walletType));
       } else {
-        await executeAction(action, token, amount);
+        await executeAction(action, token, amount, null, null, walletType);
       }
       showModalMessage(`✅ ${actionTitle} completed successfully. Page will autoreload in 5 seconds`, 'success'); 
       // Puoi ritardare la chiusura per far vedere il messaggio, se vuoi
@@ -4162,7 +4188,7 @@ async function bulkSendSelected() {
     };
   }, 0);
 }
-async function executeAction(action, token, amount, tokenOut = null, contractOut = null) {
+async function executeAction(action, token, amount, tokenOut = null, contractOut = null, walletType = "telegram") {
   // Verifica se userId e wax_account sono presenti in window.userData
   if (!window.userData || !window.userData.userId || !window.userData.wax_account) {
     console.error("[❌] userId o wax_account non trovato in window.userData. Assicurati che i dati siano caricati prima di eseguire l'azione.");
@@ -4195,7 +4221,8 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
     let bodyData = {
       wax_account: wax_account,
       token_symbol: token,
-      amount: amount
+      amount: amount,
+      wallet_type: walletType
     };
 
     if (action === "swap") {
@@ -4203,7 +4230,8 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
         wax_account: wax_account,
         from_token: token,
         to_token: tokenOut,
-        amount: amount
+        amount: amount,
+        wallet_type: walletType
       };
     } else if (action === "transfer") {
       const receiverInput = document.getElementById('receiver');

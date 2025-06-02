@@ -4146,7 +4146,7 @@ async function bulkSendSelected() {
       if (action === "swap") {
         const outputSelection = tokenOutput.value;
         const [symbolOut, contractOut] = outputSelection.split("-");
-        await executeAction(action, token, amount, symbolOut, contractOut, walletType));
+        await executeAction(action, token, amount, symbolOut, contractOut, walletType);
       } else {
         await executeAction(action, token, amount, null, null, walletType);
       }

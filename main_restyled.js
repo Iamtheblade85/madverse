@@ -1574,7 +1574,7 @@ function setActiveTab(tabId) {
 async function loadLpLeague() {
   const container = document.querySelector('.section-container');
 
-  if (!window.userData || !window.userData.userId || !window.userData.usx_token || !window.userData.waxAccount) {
+  if (!window.userData || !window.userData.userId || !window.userData.usx_token || !window.userData.wax_account) {
     container.innerHTML += `<div class="error-message">User data is missing. Please log in again.</div>`;
     return;
   }

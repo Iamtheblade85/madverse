@@ -1579,7 +1579,7 @@ async function loadLpLeague() {
     return;
   }
 
-  const { userId, usx_token, waxAccount } = window.userData;
+  const { userId, usx_token, wax_account } = window.userData;
 
   container.innerHTML = `
     <div class="lp-tabs">

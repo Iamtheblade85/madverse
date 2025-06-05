@@ -1565,6 +1565,54 @@ function loadSection(section) {
     loadAccountSection();
   }
 }
+
+function setActiveTab(tabId) {
+  document.querySelectorAll('.lp-tab').forEach(tab => tab.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+}
+
+async function loadLpLeague() {
+  const container = document.querySelector('.section-container');
+
+  if (!window.userData || !window.userData.userId || !window.userData.usx_token || !window.userData.waxAccount) {
+    container.innerHTML += `<div class="error-message">User data is missing. Please log in again.</div>`;
+    return;
+  }
+
+  const { userId, usx_token, waxAccount } = window.userData;
+
+  container.innerHTML = `
+    <div class="lp-tabs">
+      <button id="tab-instructions" class="lp-tab active">Instructions</button>
+      <button id="tab-leaderboard" class="lp-tab">Leaderboard</button>
+    </div>
+    <div id="lp-content" class="lp-content">
+      <div class="info-message">Click on "Leaderboard" to view rankings.</div>
+    </div>
+  `;
+
+  document.getElementById('tab-instructions').addEventListener('click', () => {
+    document.getElementById('lp-content').innerHTML = `
+      <div class="instructions">
+        <h3>How to Participate in LP League</h3>
+        <ul>
+          <li>Stake LP tokens on supported pools (CHIWAX, CHISQJ, ALCOR).</li>
+          <li>Points are based on LP delta and token value (in WAX).</li>
+          <li>Top performers earn WAX rewards from the prize pool.</li>
+          <li>Daily activity boosts score and badges!</li>
+        </ul>
+      </div>
+    `;
+    setActiveTab('tab-instructions');
+  });
+
+  document.getElementById('tab-leaderboard').addEventListener('click', async () => {
+    document.getElementById('lp-content').innerHTML = `<div class="loading">Loading LP League data...</div>`;
+    setActiveTab('tab-leaderboard');
+    await loadLpLeagueData(userId, usx_token, waxAccount);
+  });
+}
+
 async function loadLpLeagueData(userId, token, waxAccount) {
   const container = document.getElementById('lp-content');
 

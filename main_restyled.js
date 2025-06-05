@@ -18,6 +18,7 @@ document.addEventListener("click", (event) => {
 // Base URL reale
 const BASE_URL = "https://iamemanuele.pythonanywhere.com";
 let availableTokens = [];
+let originalData = [];
 let originalStormsData = [];
 let currentSort = { key: '', direction: 'desc' };
 let originalNftGiveawaysData = [];
@@ -1385,11 +1386,18 @@ function loadSection(section) {
       app.innerHTML = `
         <div class="section-container">
           <h2 class="section-title">Wallet</h2>
-          <div id="wallet-table">Caricamento Wallet...</div>
+          <div id="wallet-table">Loading Wallet...</div>
         </div>
       `;
     loadWallet();
-  } else if (section === 'nfts') {
+  } else if (section === 'lp-league') {
+      app.innerHTML = `
+        <div class="section-container">
+          <h2 class="section-title">LP LEAGUE : are you ready for it?</h2>
+        </div>
+      `;
+    loadLpLeague();
+  }  else if (section === 'nfts') {
     app.innerHTML = `
     <div class="section-container">
       <h2 class="section-title">My NFTs</h2>
@@ -1556,6 +1564,141 @@ function loadSection(section) {
   
     loadAccountSection();
   }
+}
+async function loadLpLeagueData(userId, token, waxAccount) {
+  const container = document.getElementById('lp-content');
+
+  try {
+    const res = await fetch(`${BASE_URL}/lp_league?userId=${encodeURIComponent(userId)}&token=${encodeURIComponent(token)}&waxAccount=${encodeURIComponent(waxAccount)}`);
+
+    if (!res.ok) throw new Error('Failed to fetch LP League data');
+
+    const json = await res.json();
+    const data = json.users;
+
+    if (!Array.isArray(data) || data.length === 0) {
+      container.innerHTML = '<div class="info-message">No LP League data available.</div>';
+      return;
+    }
+
+    originalData = data;
+    currentSort = { key: '', direction: 'asc' };
+
+    displayLpLeagueData(data);
+
+  } catch (err) {
+    container.innerHTML = `<div class="error-message">Error: ${err.message}</div>`;
+  }
+}
+
+function displayLpLeagueData(data) {
+  const container = document.getElementById('lp-content');
+
+  const getUnique = (arr, key) => [...new Set(arr.map(item => item[key]).filter(Boolean))].sort();
+  const createOptions = values => `<option value="">All</option>` + values.map(v => `<option value="${v}">${v}</option>`).join('');
+  const sortArrow = key => currentSort.key === key ? (currentSort.direction === 'asc' ? ' ↑' : ' ↓') : '';
+
+  const usernames = getUnique(data, 'username');
+  const topPools = getUnique(data, 'top_pool');
+
+  container.innerHTML = `
+    <div class="filter-toolbar">
+      <select id="filter-username" class="filter-select">${createOptions(usernames)}</select>
+      <select id="filter-pool" class="filter-select">${createOptions(topPools)}</select>
+      <button id="refresh-leaderboard" class="btn btn-primary">Refresh</button>
+    </div>
+
+    <table class="reward-table">
+      <thead>
+        <tr>
+          <th onclick="sortLpTable('rank')">#${sortArrow('rank')}</th>
+          <th onclick="sortLpTable('username')">Username${sortArrow('username')}</th>
+          <th>Badges</th>
+          <th onclick="sortLpTable('total_points')">Points${sortArrow('total_points')}</th>
+          <th onclick="sortLpTable('reward')">Reward (WAX)${sortArrow('reward')}</th>
+          <th onclick="sortLpTable('lp_activity_score')">Activity${sortArrow('lp_activity_score')}</th>
+          <th onclick="sortLpTable('daily_delta')">Δ 24h${sortArrow('daily_delta')}</th>
+          <th>Top Pool</th>
+          <th>Last Update</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  `;
+
+  renderLpTable(data);
+
+  document.getElementById('filter-username').addEventListener('change', applyLpFiltersAndSort);
+  document.getElementById('filter-pool').addEventListener('change', applyLpFiltersAndSort);
+  document.getElementById('refresh-leaderboard').addEventListener('click', () =>
+    loadLpLeagueData(window.userData.userId, window.userData.usx_token, window.userData.waxAccount)
+  );
+}
+
+function renderLpTable(data) {
+  const tbody = document.querySelector('#lp-content tbody');
+  let rows = '';
+
+  data.forEach((record, index) => {
+    const rowClass = index % 2 === 0 ? 'row-even' : 'row-odd';
+    const badgeDisplay = record.badges.length ? record.badges.map(b => `<span class="badge">${b}</span>`).join(' ') : '';
+    const topPool = record.top_pool || '';
+    const lastUpdate = record.last_update ? new Date(record.last_update).toLocaleString() : '';
+
+    rows += `
+      <tr class="${rowClass}">
+        <td>${record.rank}</td>
+        <td>${record.username}</td>
+        <td>${badgeDisplay}</td>
+        <td>${record.total_points.toFixed(2)}</td>
+        <td>${record.reward.toFixed(2)}</td>
+        <td>${record.lp_activity_score}</td>
+        <td>${record.daily_delta}</td>
+        <td>${topPool}</td>
+        <td>${lastUpdate}</td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = rows;
+}
+
+function applyLpFiltersAndSort() {
+  const username = document.getElementById('filter-username').value;
+  const pool = document.getElementById('filter-pool').value;
+
+  let filtered = originalData.filter(record =>
+    (!username || record.username === username) &&
+    (!pool || record.top_pool === pool)
+  );
+
+  if (currentSort.key) {
+    filtered.sort((a, b) => {
+      const aVal = a[currentSort.key];
+      const bVal = b[currentSort.key];
+
+      if (typeof aVal === 'string') {
+        return currentSort.direction === 'asc'
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
+      }
+
+      return currentSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+  }
+
+  renderLpTable(filtered);
+}
+
+function sortLpTable(key) {
+  if (currentSort.key === key) {
+    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+  } else {
+    currentSort.key = key;
+    currentSort.direction = 'asc';
+  }
+
+  applyLpFiltersAndSort();
 }
 
 async function loadAccountSection() {

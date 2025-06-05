@@ -1617,7 +1617,7 @@ async function loadLpLeagueData(userId, token, waxAccount) {
   const container = document.getElementById('lp-content');
 
   try {
-    const res = await fetch(`${BASE_URL}/lp_league?userId=${encodeURIComponent(userId)}&token=${encodeURIComponent(token)}&waxAccount=${encodeURIComponent(waxAccount)}`);
+    const res = await fetch(`${BASE_URL}/lp_league?userId=${encodeURIComponent(userId)}&token=${encodeURIComponent(usx_token)}&waxAccount=${encodeURIComponent(wax_account)}`);
 
     if (!res.ok) throw new Error('Failed to fetch LP League data');
 

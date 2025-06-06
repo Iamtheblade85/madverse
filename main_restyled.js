@@ -1594,34 +1594,91 @@ async function loadLpLeague() {
 
   document.getElementById('tab-instructions').addEventListener('click', () => {
     document.getElementById('lp-content').innerHTML = `
-      <div class="instructions">
-        <h3>How to Participate in LP League</h3>
-        <ul>
+      <div class="instructions" style="
+        font-family: 'Papyrus', 'Courier New', cursive;
+        font-size: 1.1rem;
+        color: #39ff14;
+        text-shadow: 0 0 2px #00ffcc, 0 0 5px #00ffcc;
+        padding: 2rem;
+        border: 2px solid #00ffcc;
+        border-radius: 12px;
+        box-shadow: 0 0 15px #00ffcc, 0 0 30px #ff00ff;
+        animation: fade-slide 1s ease-in-out;
+        background: rgba(0, 0, 0, 0.5);
+      ">
+        <h3 style="
+          font-size: 1.5rem;
+          color: #FFD700;
+          text-shadow: 0 0 3px #FFD700, 0 0 10px #FFE600;
+          animation: glow-pulse 2s infinite;
+          text-align: center;
+          margin-bottom: 1rem;
+        ">How to Participate in LP League</h3>
+    
+        <ul style="
+          list-style-type: square;
+          padding-left: 1.5rem;
+          line-height: 1.6;
+          font-size: 1.1rem;
+        ">
           <li>Stake LP tokens on supported pools (CHIWAX, CHISQJ, ALCOR).</li>
-          <li>Points are based on LP delta and token value (in WAX).</li>
+          <li>Earn Points based on LP delta and token value (in WAX).</li>
           <li>Top performers earn WAX rewards from the prize pool.</li>
-          <li>Daily activity boosts score and badges!</li>
+          <li>Daily activity boosts score and earns you Badges!</li>
         </ul>
+    
+        <hr style="border-color: #00ffcc; margin: 1.5rem 0;">
+    
+        <h4 style="
+          font-size: 1.3rem;
+          color: #1affd5;
+          text-shadow: 0 0 2px #00f0ff, 0 0 8px #00f0ff;
+          margin-bottom: 0.5rem;
+          animation: glow-pulse 2s infinite;
+        ">Badge System & Extra Rewards</h4>
+    
+        <p style="margin-bottom: 1rem;">
+          Earn badges by completing various achievements during the LP League. Each badge grants you extra points (1 to 3). The <b>Top 5 players with the highest Badge Points</b> will receive <span style="color: #FFD700;">exclusive NFT rewards</span> + bonus WAX, in addition to the LP League rewards.
+        </p>
+    
+        <div style="
+          display: flex;
+          flex-direction: column;
+          gap: 0.6rem;
+          font-size: 1rem;
+        ">
+          <div style="border: 1px solid #FFD700; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #FFD700;">
+            <b>🏆 Top 3</b> → Place in Top 3. <span style="color: #FFD700;">(+3 Points)</span>
+          </div>
+          <div style="border: 1px solid #C0C0C0; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #C0C0C0;">
+            <b>🥈 Top 10</b> → Place in Top 10. <span style="color: #C0C0C0;">(+2 Points)</span>
+          </div>
+          <div style="border: 1px solid #4CAF50; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #4CAF50;">
+            <b>Volume Hunter</b> → Reach 1,000+ Points. <span style="color: #4CAF50;">(+1 Point)</span>
+          </div>
+          <div style="border: 1px solid #FF5722; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #FF5722;">
+            <b>Heavy Hitter</b> → Reach 5,000+ Points. <span style="color: #FF5722;">(+2 Points)</span>
+          </div>
+          <div style="border: 1px solid #2196F3; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #2196F3;">
+            <b>Consistency</b> → 5+ Activity Movements. <span style="color: #2196F3;">(+1 Point)</span>
+          </div>
+          <div style="border: 1px solid #9C27B0; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #9C27B0;">
+            <b>Ultra Consistent</b> → 20+ Activity Movements. <span style="color: #9C27B0;">(+3 Points)</span>
+          </div>
+          <div style="border: 1px solid #795548; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #795548;">
+            <b>Daily Grinder</b> → 3+ Daily Deltas. <span style="color: #795548;">(+2 Points)</span>
+          </div>
+          <div style="border: 1px solid #E91E63; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #E91E63;">
+            <b>First Mover</b> → Active since Day 1. <span style="color: #E91E63;">(+3 Points)</span>
+          </div>
+        </div>
+    
+        <p style="margin-top: 1rem; font-style: italic; color: #1affd5;">
+          Badge Points Leaderboard is visible in the "Badge-Points Leaderboard" tab.
+        </p>
       </div>
-      <div class="badge-explanation">
-        <h3>About Badges & Badge Points</h3>
-        <p>By participating in the LP League, you can earn special Badges based on your activity, consistency, and performance. Each Badge gives you extra <strong>Badge Points</strong>.</p>
-        <p><strong>The top 5 users by Badge Points will receive exclusive extra rewards in addition to the regular LP League prizes!</strong></p>
-        <h4>Badge List:</h4>
-        <ul>
-          <li><strong>Top 3</strong> (3 pts): Finish in the top 3 of the leaderboard.</li>
-          <li><strong>Top 10</strong> (2 pts): Finish in the top 10 of the leaderboard.</li>
-          <li><strong>Volume Hunter</strong> (2 pts): Reach at least 1000 total points.</li>
-          <li><strong>Heavy Hitter</strong> (3 pts): Reach at least 5000 total points.</li>
-          <li><strong>Consistency</strong> (1 pt): Make at least 5 LP movements.</li>
-          <li><strong>Ultra Consistent</strong> (2 pts): Make at least 20 LP movements.</li>
-          <li><strong>Daily Grinder</strong> (2 pts): Make at least 3 LP movements in the last 24h.</li>
-          <li><strong>First Mover</strong> (1 pt): Join the League on Day 1.</li>
-        </ul>
-        <p>The top 5 users with the highest total Badge Points will receive <strong>extra WAX prizes</strong> at the end of the season!</p>
-      </div>
-      
     `;
+
     setActiveTab('tab-instructions');
   });
 

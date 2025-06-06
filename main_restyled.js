@@ -2303,9 +2303,12 @@ function showChestModal(videoUrl, rewards, onCloseCallback) {
   const rewardsArea = document.createElement('div');
   rewardsArea.style.display = 'none';
   rewardsArea.style.marginTop = '1rem';
-  rewardsArea.style.flexWrap = 'wrap';
-  rewardsArea.style.justifyContent = 'center';
+  rewardsArea.style.width = '100%';
+  rewardsArea.style.display = 'grid';
+  rewardsArea.style.gridTemplateColumns = 'repeat(auto-fit, minmax(120px, 1fr))';
   rewardsArea.style.gap = '1rem';
+  rewardsArea.style.justifyItems = 'center';
+
   inner.appendChild(rewardsArea);
 
   // Pulsante chiudi
@@ -2333,6 +2336,9 @@ function showChestModal(videoUrl, rewards, onCloseCallback) {
       itemDiv.style.textAlign = 'center';
       itemDiv.style.transition = 'all 0.3s ease';
       itemDiv.style.background = '#222';
+      itemDiv.style.width = '100%';
+      itemDiv.style.maxWidth = '140px';
+      itemDiv.style.boxSizing = 'border-box';
 
       itemDiv.innerHTML = `
         <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem;">
@@ -2343,7 +2349,7 @@ function showChestModal(videoUrl, rewards, onCloseCallback) {
       rewardsArea.appendChild(itemDiv);
     });
 
-    rewardsArea.style.display = 'flex';
+    rewardsArea.style.display = 'grid';
     closeButton.style.display = 'block';
   });
 

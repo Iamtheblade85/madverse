@@ -2128,8 +2128,6 @@ function renderAccountSubsection(sectionId) {
 }
 
 async function renderDailyBox(data) {
-  const { can_open, chest_type, chest_result } = data;
-
   const boxImages = {
     wood: '📦 Wood',
     bronze: '🟤 Bronze',
@@ -2150,14 +2148,47 @@ async function renderDailyBox(data) {
     </div>
   `;
 
-  if (!can_open) {
+  // Caso: utente ha chests pending da aprire
+  if (data.pending_chests && data.pending_chests.length > 0) {
     html += `
       <div class="box-results mt-3">
-        <p>✅ You have already claimed your chest today: <strong>${boxImages[chest_type] || chest_type}</strong></p>
+        <p>🚀 You have <strong>${data.pending_chests.length}</strong> chest(s) ready to open:</p>
+        <div class="pending-chests-buttons" style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem;">
+    `;
+
+    data.pending_chests.forEach(chest => {
+      html += `
+        <button class="btn btn-primary btn-open-chest" data-chest-id="${chest.id}" data-chest-type="${chest.chest_type}" style="
+          flex:1 1 180px;
+          padding:1rem;
+          border-radius:12px;
+          box-shadow:0 0 10px #0ff;
+          font-size:1rem;
+          transition: all 0.3s ease;
+        ">
+          🎁 Open ${boxImages[chest.chest_type] || chest.chest_type} Chest
+        </button>
+      `;
+    });
+
+    html += `
+        </div>
+        <div id="chest-reveal-area" style="margin-top:2rem;"></div>
+      </div>
+    `;
+
+  } else if (data.opened_today) {
+    // Caso: utente ha già aperto oggi → mostra risultato
+    html += `
+      <div class="box-results mt-3">
+        <p>✅ You have already claimed your chest today: <strong>${boxImages[data.last_opened_result?.chest_type] || data.last_opened_result?.chest_type}</strong></p>
         <div class="box-items mt-2">
-          ${(chest_result?.items || []).map(item => `
-            <div class="box-item card-glow" style="padding:1rem; margin-bottom:1rem; border-radius:12px; text-align:center; transition: all 0.3s ease;">
-              <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem; transition: transform 0.3s;">
+          ${(data.last_opened_result?.items || []).map(item => `
+            <div class="box-item card-glow" style="
+              padding:1rem; margin-bottom:1rem; border-radius:12px; text-align:center; transition: all 0.3s ease;
+              ${item.type === 'Chest' ? 'border: 2px solid gold; box-shadow: 0 0 12px gold, 0 0 24px gold;' : ''}
+            ">
+              <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem;">
               <div><strong>${item.name}</strong> (${item.type})</div>
               <div style="font-size:0.9rem; color:#aaa;">${item.description}</div>
             </div>
@@ -2165,23 +2196,26 @@ async function renderDailyBox(data) {
         </div>
       </div>
     `;
+
   } else {
+    // Caso: utente non ha pending e non ha ancora aperto → nessuna chest disponibile
     html += `
       <div class="box-results mt-3">
-        <p>🚀 You can open your Daily Chest: <strong>${boxImages[chest_type] || chest_type}</strong></p>
-        <button id="btn-open-chest" class="btn btn-primary">🎁 Open Chest</button>
-        <div id="chest-reveal-area" style="margin-top:2rem;"></div>
+        <p>🚫 No chest available at the moment. Please check back tomorrow!</p>
       </div>
     `;
   }
 
   document.getElementById('daily-box').innerHTML = html;
 
-  // Se può aprire → aggiungi event listener per Open Chest
-  if (can_open) {
-    document.getElementById('btn-open-chest').addEventListener('click', async () => {
-      document.getElementById('btn-open-chest').disabled = true;
-      document.getElementById('btn-open-chest').innerText = "Opening...";
+  // UX: Se ci sono pending chests → abilita i bottoni
+  document.querySelectorAll('.btn-open-chest').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const chestId = btn.getAttribute('data-chest-id');
+      const chestType = btn.getAttribute('data-chest-type');
+
+      btn.disabled = true;
+      btn.innerText = `Opening ${chestType}...`;
 
       const revealRes = await fetch(`${BASE_URL}/daily_chest_reveal`, {
         method: "POST",
@@ -2189,12 +2223,14 @@ async function renderDailyBox(data) {
         body: JSON.stringify({
           user_id: window.userData.userId,
           usx_token: window.userData.usx_token,
-          wax_account: window.userData.wax_account
+          wax_account: window.userData.wax_account,
+          chest_id: chestId
         })
       });
 
       const revealData = await revealRes.json();
 
+      // Mostra contenuto
       document.getElementById('chest-reveal-area').innerHTML = `
         <h3>🎁 Chest Content:</h3>
         <div class="box-items mt-2">
@@ -2203,7 +2239,7 @@ async function renderDailyBox(data) {
               padding:1rem; margin-bottom:1rem; border-radius:12px; text-align:center; transition: all 0.3s ease;
               ${item.type === 'Chest' ? 'border: 2px solid gold; box-shadow: 0 0 12px gold, 0 0 24px gold;' : ''}
             ">
-              <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem; transition: transform 0.3s;">
+              <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem;">
               <div><strong>${item.name}</strong> (${item.type})</div>
               <div style="font-size:0.9rem; color:#aaa;">${item.description}</div>
             </div>
@@ -2211,20 +2247,18 @@ async function renderDailyBox(data) {
         </div>
       `;
 
-      // CHECK se c'è un item tipo "Chest" per abilitare bonus chest flow
+      // Check se c'è un item tipo Chest per abilitarne apertura bonus
       const bonusChestItem = revealData.items.find(item => item.type === 'Chest');
 
       if (bonusChestItem) {
-        const bonusChestType = bonusChestItem.category; // "wood", "bronze", ecc.
+        const bonusChestType = bonusChestItem.category;
 
         const bonusButtonHTML = `
           <button id="btn-open-bonus-chest" class="btn btn-warning mt-3">🎁 Open Bonus ${bonusChestType.charAt(0).toUpperCase() + bonusChestType.slice(1)} Chest</button>
         `;
 
-        // Appendi il bottone sotto l'area chest reveal
         document.getElementById('chest-reveal-area').insertAdjacentHTML('beforeend', bonusButtonHTML);
 
-        // Listener bottone
         document.getElementById('btn-open-bonus-chest').addEventListener('click', async () => {
           document.getElementById('btn-open-bonus-chest').disabled = true;
           document.getElementById('btn-open-bonus-chest').innerText = "Opening Bonus Chest...";
@@ -2242,7 +2276,6 @@ async function renderDailyBox(data) {
 
           const bonusRevealData = await bonusRevealRes.json();
 
-          // Appendi i nuovi items BONUS sotto l'area
           document.getElementById('chest-reveal-area').insertAdjacentHTML('beforeend', `
             <h3 style="margin-top:2rem;">🎁 Bonus Chest Content:</h3>
             <div class="box-items mt-2">
@@ -2261,7 +2294,7 @@ async function renderDailyBox(data) {
         });
       }
 
-      // UX: Reload dopo apertura per aggiornare correttamente lo stato daily_box
+      // UX: Dopo reveal → reload automatico dailyBox per aggiornare lista
       setTimeout(async () => {
         console.log("🔄 Reloading daily box data...");
         const dailyBoxRes = await fetch(`${BASE_URL}/daily_chest_open`, {
@@ -2277,7 +2310,7 @@ async function renderDailyBox(data) {
         renderDailyBox(window.accountData.dailyBox);
       }, 3000);
     });
-  }
+  });
 }
 
 function renderPersonalInfo(info) {

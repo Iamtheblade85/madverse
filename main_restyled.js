@@ -1679,7 +1679,7 @@ function displayLpLeagueData(data) {
   document.getElementById('filter-username').addEventListener('change', applyLpFiltersAndSort);
   document.getElementById('filter-pool').addEventListener('change', applyLpFiltersAndSort);
   document.getElementById('refresh-leaderboard').addEventListener('click', () =>
-    loadLpLeagueData(window.userData.userId, window.userData.usx_token, window.userData.waxAccount)
+    loadLpLeagueData(window.userData.userId, window.userData.usx_token, window.userData.wax_account)
   );
 }
 
@@ -1689,10 +1689,44 @@ function renderLpTable(data) {
 
   data.forEach((record, index) => {
     const rowClass = index % 2 === 0 ? 'row-even' : 'row-odd';
-    const badgeDisplay = record.badges.length ? record.badges.map(b => `<span class="badge">${b}</span>`).join(' ') : '';
-    const topPool = record.top_pool || '';
-    const lastUpdate = record.last_update ? new Date(record.last_update).toLocaleString() : '';
+    const badgeStyle = `
+      display: inline-block;
+      padding: 6px 10px;
+      margin: 4px 0;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      color: white;
+      animation: fadeIn 0.6s ease-in-out;
+      text-align: center;
+      width: 100%;
+      box-sizing: border-box;
+    `;
+    
+    // Funzione per decidere colore sfondo badge
+    const getBadgeColor = (badgeName) => {
+      switch (badgeName) {
+        case 'Top 3': return '#FFD700';         // oro
+        case 'Top 10': return '#C0C0C0';        // argento
+        case 'Volume Hunter': return '#4CAF50'; // verde
+        case 'Heavy Hitter': return '#FF5722';  // arancione
+        case 'Consistency': return '#2196F3';   // blu
+        case 'Ultra Consistent': return '#9C27B0'; // viola
+        case 'Daily Grinder': return '#795548'; // marrone
+        case 'First Mover': return '#E91E63';   // rosa
+        default: return '#607D8B';              // grigio
+      }
+    };
+    
+    const badgeDisplay = record.badges.length
+      ? record.badges.map(b => `
+        <span class="badge" style="${badgeStyle}; background-color: ${getBadgeColor(b)};" title="${b}">
+          ${b}
+        </span>
+      `).join('<br>')
+      : '';
 
+    const topPool = record.top_pool || '';
     rows += `
       <tr class="${rowClass}">
         <td>${record.rank}</td>
@@ -1703,7 +1737,6 @@ function renderLpTable(data) {
         <td>${record.lp_activity_score}</td>
         <td>${record.daily_delta}</td>
         <td>${topPool}</td>
-        <td>${lastUpdate}</td>
       </tr>
     `;
   });

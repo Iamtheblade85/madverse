@@ -1613,11 +1613,11 @@ async function loadLpLeague() {
   });
 }
 
-async function loadLpLeagueData(userId, token, wax_account) {
+async function loadLpLeagueData(userId, usx_token, wax_account) {
   const container = document.getElementById('lp-content');
 
   try {
-    const res = await fetch(`${BASE_URL}/lp_league?userId=${encodeURIComponent(userId)}&token=${encodeURIComponent(usx_token)}&wax_account=${encodeURIComponent(wax_account)}`);
+    const res = await fetch(`${BASE_URL}/lp_league?userId=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}&wax_account=${encodeURIComponent(wax_account)}`);
 
     if (!res.ok) throw new Error('Failed to fetch LP League data');
 

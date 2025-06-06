@@ -1626,7 +1626,7 @@ async function loadLpLeague() {
         ">
           <li>Stake LP tokens on supported pools (Taco CHIPS/WAX, Taco CHIPS/SQJ, ALCOR CHIPS/WAX, ALCOR CHIPS/SQJ, ALCOR SQJ/WAX).</li>
           <li>Earn Points based on LP delta and token value (in WAX).</li>
-          <li>Top performers earn WAX rewards from the prize pool.</li>
+          <li>Top performers earn WAX rewards from the <strong>15,000 WAX</strong> prize pool.</li>
           <li>Daily activity boosts score and earns you Badges!</li>
         </ul>
     
@@ -1707,6 +1707,7 @@ async function loadLpLeague() {
     `;
 
     setActiveTab('tab-instructions');
+    document.getElementById('tab-instructions').click();
   });
 
   document.getElementById('tab-leaderboard').addEventListener('click', async () => {

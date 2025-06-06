@@ -2059,7 +2059,15 @@ async function loadAccountSection() {
       fetch(`${BASE_URL}/account/telegram_rewards?user_id=${userId}&usx_token=${usx_token}`),
       fetch(`${BASE_URL}/account/twitch_rewards?user_id=${userId}&usx_token=${usx_token}`),
       fetch(`${BASE_URL}/account/activity?user_id=${userId}&usx_token=${usx_token}`),
-      fetch(`${BASE_URL}/account/daily_box?user_id=${userId}&usx_token=${usx_token}`)
+      fetch(`${BASE_URL}/daily_chest_open`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: userId,
+          usx_token: usx_token,
+          wax_account: window.userData.wax_account
+        })
+      })
     ]);
 
     window.accountData = {
@@ -2119,51 +2127,157 @@ function renderAccountSubsection(sectionId) {
   }
 }
 
-function renderDailyBox(data) {
-  const { boxes = [], vip_active, claimed, dice_result } = data;
+async function renderDailyBox(data) {
+  const { can_open, chest_type, chest_result } = data;
 
   const boxImages = {
-    wood: '📦 Legno',
-    bronze: '🟤 Bronzo',
-    gold: '🟡 Oro',
-    platinum: '💎 Platino'
+    wood: '📦 Wood',
+    bronze: '🟤 Bronze',
+    gold: '🟡 Gold',
+    platinum: '💎 Platinum'
   };
 
-  const animationHTML = boxes.length > 0
-    ? `<div class="box-animation">${boxes.map(type => `<p>${boxImages[type] || type}</p>`).join('')}</div>`
-    : `<p>No boxes available today.</p>`;
-
-  const diceHTML = (typeof dice_result === 'number')
-    ? `<p>🎲 Dice rolled: <strong>${dice_result}</strong></p>`
-    : `<p>🎲 Dice not rolled yet.</p>`;
-
-  const vipStatus = vip_active
-    ? `<span class="status-badge2 active2">VIP Active ✅</span>`
-    : `<span class="status-badge2 inactive2">VIP Inactive ❌</span>`;
-
-  document.getElementById('daily-box').innerHTML = `
+  let html = `
     <p class="subtitle2">
       As a ChipsWallet member you can open one Daily Chest per day.<br>
       If you own the <strong>VIP Membership NFT</strong>, you can also claim a VIP Chest.<br>
-      Not enough? Roll the dice — if you get a 6, win an extra Chest!<br>
-      Chest types include <strong>Wood</strong>, <strong>Bronze</strong>, <strong>Gold</strong>...<br>
-      Ever heard of a <strong>Platinum Chest</strong>? Check the blends here:<br>
-      <a href="https://neftyblocks.com/collection/cryptochaos1/blends" target="_blank">
-        https://neftyblocks.com/collection/cryptochaos1/blends
-      </a>
+      Chest types include <strong>Wood</strong>, <strong>Bronze</strong>, <strong>Gold</strong>, <strong>Platinum</strong>.<br>
     </p>
     <div class="mb-2">
-      ${vipStatus} — 
-      <a href="https://neftyblocks.com/collection/cryptochaos1/drops/210578" target="_blank">
-        Get VIP NFT
-      </a>
-    </div>
-    <div class="box-results mt-3">
-      ${animationHTML}
-      ${diceHTML}
-      ${claimed ? '<p>✅ Box claimed today</p>' : '<p>🚫 Not claimed yet</p>'}
+      <span class="status-badge2 ${window.accountData.userInfo.vip_active ? 'active2' : 'inactive2'}">
+        ${window.accountData.userInfo.vip_active ? 'VIP Active ✅' : 'VIP Inactive ❌'}
+      </span>
     </div>
   `;
+
+  if (!can_open) {
+    html += `
+      <div class="box-results mt-3">
+        <p>✅ You have already claimed your chest today: <strong>${boxImages[chest_type] || chest_type}</strong></p>
+        <div class="box-items mt-2">
+          ${(chest_result?.items || []).map(item => `
+            <div class="box-item card-glow" style="padding:1rem; margin-bottom:1rem; border-radius:12px; text-align:center; transition: all 0.3s ease;">
+              <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem; transition: transform 0.3s;">
+              <div><strong>${item.name}</strong> (${item.type})</div>
+              <div style="font-size:0.9rem; color:#aaa;">${item.description}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } else {
+    html += `
+      <div class="box-results mt-3">
+        <p>🚀 You can open your Daily Chest: <strong>${boxImages[chest_type] || chest_type}</strong></p>
+        <button id="btn-open-chest" class="btn btn-primary">🎁 Open Chest</button>
+        <div id="chest-reveal-area" style="margin-top:2rem;"></div>
+      </div>
+    `;
+  }
+
+  document.getElementById('daily-box').innerHTML = html;
+
+  // Se può aprire → aggiungi event listener per Open Chest
+  if (can_open) {
+    document.getElementById('btn-open-chest').addEventListener('click', async () => {
+      document.getElementById('btn-open-chest').disabled = true;
+      document.getElementById('btn-open-chest').innerText = "Opening...";
+
+      const revealRes = await fetch(`${BASE_URL}/daily_chest_reveal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: window.userData.userId,
+          usx_token: window.userData.usx_token,
+          wax_account: window.userData.wax_account
+        })
+      });
+
+      const revealData = await revealRes.json();
+
+      document.getElementById('chest-reveal-area').innerHTML = `
+        <h3>🎁 Chest Content:</h3>
+        <div class="box-items mt-2">
+          ${revealData.items.map(item => `
+            <div class="box-item card-glow" style="
+              padding:1rem; margin-bottom:1rem; border-radius:12px; text-align:center; transition: all 0.3s ease;
+              ${item.type === 'Chest' ? 'border: 2px solid gold; box-shadow: 0 0 12px gold, 0 0 24px gold;' : ''}
+            ">
+              <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem; transition: transform 0.3s;">
+              <div><strong>${item.name}</strong> (${item.type})</div>
+              <div style="font-size:0.9rem; color:#aaa;">${item.description}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      // CHECK se c'è un item tipo "Chest" per abilitare bonus chest flow
+      const bonusChestItem = revealData.items.find(item => item.type === 'Chest');
+
+      if (bonusChestItem) {
+        const bonusChestType = bonusChestItem.category; // "wood", "bronze", ecc.
+
+        const bonusButtonHTML = `
+          <button id="btn-open-bonus-chest" class="btn btn-warning mt-3">🎁 Open Bonus ${bonusChestType.charAt(0).toUpperCase() + bonusChestType.slice(1)} Chest</button>
+        `;
+
+        // Appendi il bottone sotto l'area chest reveal
+        document.getElementById('chest-reveal-area').insertAdjacentHTML('beforeend', bonusButtonHTML);
+
+        // Listener bottone
+        document.getElementById('btn-open-bonus-chest').addEventListener('click', async () => {
+          document.getElementById('btn-open-bonus-chest').disabled = true;
+          document.getElementById('btn-open-bonus-chest').innerText = "Opening Bonus Chest...";
+
+          const bonusRevealRes = await fetch(`${BASE_URL}/daily_chest_reveal_bonus`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_id: window.userData.userId,
+              usx_token: window.userData.usx_token,
+              wax_account: window.userData.wax_account,
+              bonus_chest_type: bonusChestType
+            })
+          });
+
+          const bonusRevealData = await bonusRevealRes.json();
+
+          // Appendi i nuovi items BONUS sotto l'area
+          document.getElementById('chest-reveal-area').insertAdjacentHTML('beforeend', `
+            <h3 style="margin-top:2rem;">🎁 Bonus Chest Content:</h3>
+            <div class="box-items mt-2">
+              ${bonusRevealData.items.map(item => `
+                <div class="box-item card-glow" style="
+                  padding:1rem; margin-bottom:1rem; border-radius:12px; text-align:center; transition: all 0.3s ease;
+                  ${item.type === 'Chest' ? 'border: 2px solid gold; box-shadow: 0 0 12px gold, 0 0 24px gold;' : ''}
+                ">
+                  <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem;">
+                  <div><strong>${item.name}</strong> (${item.type})</div>
+                  <div style="font-size:0.9rem; color:#aaa;">${item.description}</div>
+                </div>
+              `).join('')}
+            </div>
+          `);
+        });
+      }
+
+      // UX: Reload dopo apertura per aggiornare correttamente lo stato daily_box
+      setTimeout(async () => {
+        console.log("🔄 Reloading daily box data...");
+        const dailyBoxRes = await fetch(`${BASE_URL}/daily_chest_open`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: window.userData.userId,
+            usx_token: window.userData.usx_token,
+            wax_account: window.userData.wax_account
+          })
+        });
+        window.accountData.dailyBox = await dailyBoxRes.json();
+        renderDailyBox(window.accountData.dailyBox);
+      }, 3000);
+    });
+  }
 }
 
 function renderPersonalInfo(info) {

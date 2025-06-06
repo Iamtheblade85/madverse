@@ -1640,7 +1640,6 @@ async function loadLpLeague() {
 function displayBadgePointsLeaderboard(data) {
   const container = document.getElementById('lp-content');
 
-  // Badge point mapping
   const badgePointsMap = {
     'Top 3': 3,
     'Top 10': 2,
@@ -1652,7 +1651,6 @@ function displayBadgePointsLeaderboard(data) {
     'First Mover': 1
   };
 
-  // Compute badge points per user
   const badgePointsData = data.map(record => {
     const totalBadgePoints = record.badges.reduce((sum, badge) => {
       return sum + (badgePointsMap[badge] || 0);
@@ -1665,12 +1663,10 @@ function displayBadgePointsLeaderboard(data) {
     };
   });
 
-  // Sort descending by badge points
   badgePointsData.sort((a, b) => b.totalBadgePoints - a.totalBadgePoints);
 
-  // Display table
   container.innerHTML = `
-    <table class="reward-table">
+    <table class="reward-table badge-points-table">
       <thead>
         <tr>
           <th>#</th>
@@ -1681,17 +1677,35 @@ function displayBadgePointsLeaderboard(data) {
       </thead>
       <tbody>
         ${badgePointsData.map((record, index) => `
-          <tr>
+          <tr class="${index < 5 ? 'top5-animate' : ''}">
             <td>${index + 1}</td>
             <td>${record.username}</td>
             <td>${record.totalBadgePoints}</td>
-            <td>${record.badges.map(b => `<span class="badge">${b}</span>`).join(' ')}</td>
+            <td>${record.badges.map(b => `
+              <span class="badge-animated" style="background-color: ${getBadgeColor(b)};" title="${b}">${b}</span>
+            `).join(' ')}</td>
           </tr>
         `).join('')}
       </tbody>
     </table>
-    <div class="info-message">Top 5 users will receive extra WAX rewards!</div>
+
+    <div class="badge-reward-glow">✨ Top 5 users will receive extra WAX rewards! ✨</div>
   `;
+}
+
+// Reuse your getBadgeColor function:
+function getBadgeColor(badgeName) {
+  switch (badgeName) {
+    case 'Top 3': return '#FFD700';
+    case 'Top 10': return '#C0C0C0';
+    case 'Volume Hunter': return '#4CAF50';
+    case 'Heavy Hitter': return '#FF5722';
+    case 'Consistency': return '#2196F3';
+    case 'Ultra Consistent': return '#9C27B0';
+    case 'Daily Grinder': return '#795548';
+    case 'First Mover': return '#E91E63';
+    default: return '#607D8B';
+  }
 }
 
 async function loadLpLeagueData(userId, usx_token, wax_account) {

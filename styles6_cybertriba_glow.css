@@ -4992,3 +4992,40 @@ details[open] > div {
   margin-top: 5px;
 }
 
+@keyframes fadeInBadge {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes glowText {
+  0% { text-shadow: 0 0 5px #FFD700, 0 0 10px #FFD700; }
+  50% { text-shadow: 0 0 20px #FFD700, 0 0 30px #FFD700; }
+  100% { text-shadow: 0 0 5px #FFD700, 0 0 10px #FFD700; }
+}
+
+.badge-animated {
+  display: inline-block;
+  padding: 6px 10px;
+  margin: 3px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+  animation: fadeInBadge 0.6s ease-in-out;
+}
+
+.top5-animate {
+  border: 3px solid gold;
+  box-shadow: 0 0 20px gold;
+  animation: fadeInBadge 0.8s ease-in-out;
+}
+
+.badge-reward-glow {
+  margin-top: 20px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #FFD700;
+  text-align: center;
+  animation: glowText 2s infinite;
+}

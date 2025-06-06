@@ -1609,11 +1609,11 @@ async function loadLpLeague() {
   document.getElementById('tab-leaderboard').addEventListener('click', async () => {
     document.getElementById('lp-content').innerHTML = `<div class="loading">Loading LP League data...</div>`;
     setActiveTab('tab-leaderboard');
-    await loadLpLeagueData(userId, usx_token, waxAccount);
+    await loadLpLeagueData(userId, usx_token, wax_account);
   });
 }
 
-async function loadLpLeagueData(userId, token, waxAccount) {
+async function loadLpLeagueData(userId, token, wax_account) {
   const container = document.getElementById('lp-content');
 
   try {

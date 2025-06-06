@@ -1585,6 +1585,7 @@ async function loadLpLeague() {
     <div class="lp-tabs">
       <button id="tab-instructions" class="lp-tab active">Instructions</button>
       <button id="tab-leaderboard" class="lp-tab">Leaderboard</button>
+      <button id="tab-badges" class="lp-tab">Badge-Points Leaderboard</button>
     </div>
     <div id="lp-content" class="lp-content">
       <div class="info-message">Click on "Leaderboard" to view rankings.</div>
@@ -1602,6 +1603,24 @@ async function loadLpLeague() {
           <li>Daily activity boosts score and badges!</li>
         </ul>
       </div>
+      <div class="badge-explanation">
+        <h3>About Badges & Badge Points</h3>
+        <p>By participating in the LP League, you can earn special Badges based on your activity, consistency, and performance. Each Badge gives you extra <strong>Badge Points</strong>.</p>
+        <p><strong>The top 5 users by Badge Points will receive exclusive extra rewards in addition to the regular LP League prizes!</strong></p>
+        <h4>Badge List:</h4>
+        <ul>
+          <li><strong>Top 3</strong> (3 pts): Finish in the top 3 of the leaderboard.</li>
+          <li><strong>Top 10</strong> (2 pts): Finish in the top 10 of the leaderboard.</li>
+          <li><strong>Volume Hunter</strong> (2 pts): Reach at least 1000 total points.</li>
+          <li><strong>Heavy Hitter</strong> (3 pts): Reach at least 5000 total points.</li>
+          <li><strong>Consistency</strong> (1 pt): Make at least 5 LP movements.</li>
+          <li><strong>Ultra Consistent</strong> (2 pts): Make at least 20 LP movements.</li>
+          <li><strong>Daily Grinder</strong> (2 pts): Make at least 3 LP movements in the last 24h.</li>
+          <li><strong>First Mover</strong> (1 pt): Join the League on Day 1.</li>
+        </ul>
+        <p>The top 5 users with the highest total Badge Points will receive <strong>extra WAX prizes</strong> at the end of the season!</p>
+      </div>
+      
     `;
     setActiveTab('tab-instructions');
   });
@@ -1611,6 +1630,68 @@ async function loadLpLeague() {
     setActiveTab('tab-leaderboard');
     await loadLpLeagueData(userId, usx_token, wax_account);
   });
+  
+  document.getElementById('tab-badges').addEventListener('click', () => {
+    document.getElementById('lp-content').innerHTML = `<div class="loading">Loading Badge-Points Leaderboard...</div>`;
+    setActiveTab('tab-badges');
+    displayBadgePointsLeaderboard(originalData);
+  });
+}
+function displayBadgePointsLeaderboard(data) {
+  const container = document.getElementById('lp-content');
+
+  // Badge point mapping
+  const badgePointsMap = {
+    'Top 3': 3,
+    'Top 10': 2,
+    'Volume Hunter': 2,
+    'Heavy Hitter': 3,
+    'Consistency': 1,
+    'Ultra Consistent': 2,
+    'Daily Grinder': 2,
+    'First Mover': 1
+  };
+
+  // Compute badge points per user
+  const badgePointsData = data.map(record => {
+    const totalBadgePoints = record.badges.reduce((sum, badge) => {
+      return sum + (badgePointsMap[badge] || 0);
+    }, 0);
+
+    return {
+      username: record.username,
+      totalBadgePoints,
+      badges: record.badges
+    };
+  });
+
+  // Sort descending by badge points
+  badgePointsData.sort((a, b) => b.totalBadgePoints - a.totalBadgePoints);
+
+  // Display table
+  container.innerHTML = `
+    <table class="reward-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+          <th>Badge Points</th>
+          <th>Badges</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${badgePointsData.map((record, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${record.username}</td>
+            <td>${record.totalBadgePoints}</td>
+            <td>${record.badges.map(b => `<span class="badge">${b}</span>`).join(' ')}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <div class="info-message">Top 5 users will receive extra WAX rewards!</div>
+  `;
 }
 
 async function loadLpLeagueData(userId, usx_token, wax_account) {

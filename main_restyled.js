@@ -2229,73 +2229,12 @@ async function renderDailyBox(data) {
       });
 
       const revealData = await revealRes.json();
-
-      // Mostra contenuto
-      document.getElementById('chest-reveal-area').innerHTML = `
-        <h3>🎁 Chest Content:</h3>
-        <div class="box-items mt-2">
-          ${revealData.items.map(item => `
-            <div class="box-item card-glow" style="
-              padding:1rem; margin-bottom:1rem; border-radius:12px; text-align:center; transition: all 0.3s ease;
-              ${item.type === 'Chest' ? 'border: 2px solid gold; box-shadow: 0 0 12px gold, 0 0 24px gold;' : ''}
-            ">
-              <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem;">
-              <div><strong>${item.name}</strong> (${item.type})</div>
-              <div style="font-size:0.9rem; color:#aaa;">${item.description}</div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-
-      // Check se c'è un item tipo Chest per abilitarne apertura bonus
-      const bonusChestItem = revealData.items.find(item => item.type === 'Chest');
-
-      if (bonusChestItem) {
-        const bonusChestType = bonusChestItem.category;
-
-        const bonusButtonHTML = `
-          <button id="btn-open-bonus-chest" class="btn btn-warning mt-3">🎁 Open Bonus ${bonusChestType.charAt(0).toUpperCase() + bonusChestType.slice(1)} Chest</button>
-        `;
-
-        document.getElementById('chest-reveal-area').insertAdjacentHTML('beforeend', bonusButtonHTML);
-
-        document.getElementById('btn-open-bonus-chest').addEventListener('click', async () => {
-          document.getElementById('btn-open-bonus-chest').disabled = true;
-          document.getElementById('btn-open-bonus-chest').innerText = "Opening Bonus Chest...";
-
-          const bonusRevealRes = await fetch(`${BASE_URL}/daily_chest_reveal_bonus`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              user_id: window.userData.userId,
-              usx_token: window.userData.usx_token,
-              wax_account: window.userData.wax_account,
-              bonus_chest_type: bonusChestType
-            })
-          });
-
-          const bonusRevealData = await bonusRevealRes.json();
-
-          document.getElementById('chest-reveal-area').insertAdjacentHTML('beforeend', `
-            <h3 style="margin-top:2rem;">🎁 Bonus Chest Content:</h3>
-            <div class="box-items mt-2">
-              ${bonusRevealData.items.map(item => `
-                <div class="box-item card-glow" style="
-                  padding:1rem; margin-bottom:1rem; border-radius:12px; text-align:center; transition: all 0.3s ease;
-                  ${item.type === 'Chest' ? 'border: 2px solid gold; box-shadow: 0 0 12px gold, 0 0 24px gold;' : ''}
-                ">
-                  <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem;">
-                  <div><strong>${item.name}</strong> (${item.type})</div>
-                  <div style="font-size:0.9rem; color:#aaa;">${item.description}</div>
-                </div>
-              `).join('')}
-            </div>
-          `);
-        });
-      }
-
-      // UX: Dopo reveal → reload automatico dailyBox per aggiornare lista
-      setTimeout(async () => {
+  // --- AGGIUNGI QUESTO ---
+    showChestModal(
+      revealData.chest_video, 
+      revealData.items,
+      async () => {
+        // onCloseCallback → reload della dailyBox section
         console.log("🔄 Reloading daily box data...");
         const dailyBoxRes = await fetch(`${BASE_URL}/daily_chest_open`, {
           method: "POST",
@@ -2308,9 +2247,108 @@ async function renderDailyBox(data) {
         });
         window.accountData.dailyBox = await dailyBoxRes.json();
         renderDailyBox(window.accountData.dailyBox);
-      }, 3000);
-    });
+      }
+    );
   });
+});
+}
+
+function showChestModal(videoUrl, rewards, onCloseCallback) {
+  // Rimuovi eventuale modale precedente
+  const oldModal = document.getElementById('chest-modal');
+  if (oldModal) oldModal.remove();
+
+  // Crea modale base
+  const modal = document.createElement('div');
+  modal.id = 'chest-modal';
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.width = '100vw';
+  modal.style.height = '100vh';
+  modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+  modal.style.display = 'flex';
+  modal.style.justifyContent = 'center';
+  modal.style.alignItems = 'center';
+  modal.style.zIndex = '9999';
+  modal.style.flexDirection = 'column';
+  modal.style.padding = '2rem';
+  modal.style.boxSizing = 'border-box';
+
+  // Contenitore interno
+  const inner = document.createElement('div');
+  inner.style.background = '#111';
+  inner.style.padding = '1rem';
+  inner.style.borderRadius = '12px';
+  inner.style.maxWidth = '800px';
+  inner.style.width = '100%';
+  inner.style.boxShadow = '0 0 20px rgba(0,255,255,0.6)';
+  inner.style.display = 'flex';
+  inner.style.flexDirection = 'column';
+  inner.style.alignItems = 'center';
+  inner.style.position = 'relative';
+
+  // Video
+  const video = document.createElement('video');
+  video.src = videoUrl;
+  video.autoplay = true;
+  video.controls = false;
+  video.style.width = '100%';
+  video.style.borderRadius = '12px';
+  video.style.marginBottom = '1rem';
+
+  inner.appendChild(video);
+
+  // Area rewards (inizialmente nascosta)
+  const rewardsArea = document.createElement('div');
+  rewardsArea.style.display = 'none';
+  rewardsArea.style.marginTop = '1rem';
+  rewardsArea.style.flexWrap = 'wrap';
+  rewardsArea.style.justifyContent = 'center';
+  rewardsArea.style.gap = '1rem';
+  inner.appendChild(rewardsArea);
+
+  // Pulsante chiudi
+  const closeButton = document.createElement('button');
+  closeButton.innerText = '✅ Close and Reload';
+  closeButton.className = 'btn btn-primary';
+  closeButton.style.marginTop = '1rem';
+  closeButton.style.display = 'none';
+  closeButton.addEventListener('click', () => {
+    modal.remove();
+    if (typeof onCloseCallback === 'function') {
+      onCloseCallback();
+    }
+  });
+  inner.appendChild(closeButton);
+
+  // Quando il video termina → mostra rewards
+  video.addEventListener('ended', () => {
+    // Popola rewards
+    rewards.forEach(item => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'box-item card-glow';
+      itemDiv.style.padding = '1rem';
+      itemDiv.style.borderRadius = '12px';
+      itemDiv.style.textAlign = 'center';
+      itemDiv.style.transition = 'all 0.3s ease';
+      itemDiv.style.background = '#222';
+
+      itemDiv.innerHTML = `
+        <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem;">
+        <div><strong>${item.name}</strong> (${item.type})</div>
+        <div style="font-size:0.9rem; color:#aaa;">${item.description}</div>
+      `;
+
+      rewardsArea.appendChild(itemDiv);
+    });
+
+    rewardsArea.style.display = 'flex';
+    closeButton.style.display = 'block';
+  });
+
+  modal.appendChild(inner);
+  document.body.appendChild(modal);
 }
 
 function renderPersonalInfo(info) {

@@ -1904,7 +1904,8 @@ function displayLpLeagueData(data) {
           <th>Badges</th>
           <th onclick="sortLpTable('total_points')">Points${sortArrow('total_points')}</th>
           <th onclick="sortLpTable('reward')">Reward (WAX)${sortArrow('reward')}</th>
-          <th onclick="sortLpTable('lp_activity_score')">Movements${sortArrow('lp_activity_score')}</th>
+          <th onclick="sortLpTable('lp_activity_score')">Total Movements${sortArrow('lp_activity_score')}</th>
+          <th>24h Movements</th>
           <th>Top Pool</th>
         </tr>
       </thead>

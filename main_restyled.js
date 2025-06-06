@@ -1660,14 +1660,12 @@ function displayLpLeagueData(data) {
       <thead>
         <tr>
           <th onclick="sortLpTable('rank')">#${sortArrow('rank')}</th>
-          <th onclick="sortLpTable('username')">Username${sortArrow('username')}</th>
+          <th onclick="sortLpTable('username')">User${sortArrow('username')}</th>
           <th>Badges</th>
           <th onclick="sortLpTable('total_points')">Points${sortArrow('total_points')}</th>
           <th onclick="sortLpTable('reward')">Reward (WAX)${sortArrow('reward')}</th>
-          <th onclick="sortLpTable('lp_activity_score')">Activity${sortArrow('lp_activity_score')}</th>
-          <th onclick="sortLpTable('daily_delta')">Δ 24h${sortArrow('daily_delta')}</th>
+          <th onclick="sortLpTable('lp_activity_score')">Movements${sortArrow('lp_activity_score')}</th>
           <th>Top Pool</th>
-          <th>Last Update</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -1686,9 +1684,22 @@ function displayLpLeagueData(data) {
 function renderLpTable(data) {
   const tbody = document.querySelector('#lp-content tbody');
   let rows = '';
-
+  
+  const currentUser = window.userData.wax_account;
+  
   data.forEach((record, index) => {
     const rowClass = index % 2 === 0 ? 'row-even' : 'row-odd';
+    const isCurrentUser = record.username === currentUser;
+  
+    const highlightStyle = isCurrentUser ? `
+      border: 3px solid gold;
+      box-shadow: 0 0 20px gold;
+      transform: scale(1.2);
+      transition: all 0.3s ease-in-out;
+      z-index: 1;
+      position: relative;
+    ` : '';
+  
     const badgeStyle = `
       display: inline-block;
       padding: 6px 10px;
@@ -1696,28 +1707,32 @@ function renderLpTable(data) {
       border-radius: 12px;
       font-size: 12px;
       font-weight: bold;
-      color: white;
+      color: red;
+      text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000;
       animation: fadeIn 0.6s ease-in-out;
       text-align: center;
       width: 100%;
       box-sizing: border-box;
     `;
-    
-    // Funzione per decidere colore sfondo badge
+  
     const getBadgeColor = (badgeName) => {
       switch (badgeName) {
-        case 'Top 3': return '#FFD700';         // oro
-        case 'Top 10': return '#C0C0C0';        // argento
-        case 'Volume Hunter': return '#4CAF50'; // verde
-        case 'Heavy Hitter': return '#FF5722';  // arancione
-        case 'Consistency': return '#2196F3';   // blu
-        case 'Ultra Consistent': return '#9C27B0'; // viola
-        case 'Daily Grinder': return '#795548'; // marrone
-        case 'First Mover': return '#E91E63';   // rosa
-        default: return '#607D8B';              // grigio
+        case 'Top 3': return '#FFD700';
+        case 'Top 10': return '#C0C0C0';
+        case 'Volume Hunter': return '#4CAF50';
+        case 'Heavy Hitter': return '#FF5722';
+        case 'Consistency': return '#2196F3';
+        case 'Ultra Consistent': return '#9C27B0';
+        case 'Daily Grinder': return '#795548';
+        case 'First Mover': return '#E91E63';
+        default: return '#607D8B';
       }
     };
-    
+  
     const badgeDisplay = record.badges.length
       ? record.badges.map(b => `
         <span class="badge" style="${badgeStyle}; background-color: ${getBadgeColor(b)};" title="${b}">
@@ -1725,10 +1740,10 @@ function renderLpTable(data) {
         </span>
       `).join('<br>')
       : '';
-
+  
     const topPool = record.top_pool || '';
     rows += `
-      <tr class="${rowClass}">
+      <tr class="${rowClass}" style="${highlightStyle}">
         <td>${record.rank}</td>
         <td>${record.username}</td>
         <td>${badgeDisplay}</td>
@@ -1740,8 +1755,9 @@ function renderLpTable(data) {
       </tr>
     `;
   });
-
+  
   tbody.innerHTML = rows;
+
 }
 
 function applyLpFiltersAndSort() {

@@ -2258,6 +2258,31 @@ function showChestModal(videoUrl, rewards, onCloseCallback) {
   const oldModal = document.getElementById('chest-modal');
   if (oldModal) oldModal.remove();
 
+  // Aggiungi animazioni CSS dinamicamente
+  const style = document.createElement('style');
+  style.innerHTML = `
+    @keyframes shake {
+      0% { transform: translate(0, 0); }
+      10% { transform: translate(-10px, 0); }
+      20% { transform: translate(10px, 0); }
+      30% { transform: translate(-10px, 0); }
+      40% { transform: translate(10px, 0); }
+      50% { transform: translate(-10px, 0); }
+      60% { transform: translate(10px, 0); }
+      70% { transform: translate(-10px, 0); }
+      80% { transform: translate(10px, 0); }
+      90% { transform: translate(-10px, 0); }
+      100% { transform: translate(0, 0); }
+    }
+
+    @keyframes glow-border {
+      0% { box-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 30px #0ff; }
+      50% { box-shadow: 0 0 20px #0ff, 0 0 40px #0ff, 0 0 60px #0ff; }
+      100% { box-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 30px #0ff; }
+    }
+  `;
+  document.head.appendChild(style);
+
   // Crea modale base
   const modal = document.createElement('div');
   modal.id = 'chest-modal';
@@ -2282,11 +2307,11 @@ function showChestModal(videoUrl, rewards, onCloseCallback) {
   inner.style.borderRadius = '12px';
   inner.style.maxWidth = '800px';
   inner.style.width = '100%';
-  inner.style.boxShadow = '0 0 20px rgba(0,255,255,0.6)';
   inner.style.display = 'flex';
   inner.style.flexDirection = 'column';
   inner.style.alignItems = 'center';
   inner.style.position = 'relative';
+  inner.style.animation = 'shake 2s, glow-border 2s infinite';
 
   // Video
   const video = document.createElement('video');
@@ -2319,11 +2344,17 @@ function showChestModal(videoUrl, rewards, onCloseCallback) {
   closeButton.style.display = 'none';
   closeButton.addEventListener('click', () => {
     modal.remove();
+    style.remove(); // pulizia della style aggiunta
     if (typeof onCloseCallback === 'function') {
       onCloseCallback();
     }
   });
   inner.appendChild(closeButton);
+
+  // Dopo 2s rimuovi l'effetto shake
+  setTimeout(() => {
+    inner.style.animation = 'glow-border 2s infinite';
+  }, 2000);
 
   // Quando il video termina → mostra rewards
   video.addEventListener('ended', () => {

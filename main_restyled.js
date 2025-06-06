@@ -1598,83 +1598,110 @@ async function loadLpLeague() {
         font-family: 'Papyrus', 'Courier New', cursive;
         font-size: 1.1rem;
         color: #39ff14;
-        text-shadow: 0 0 2px #00ffcc, 0 0 5px #00ffcc;
+        text-shadow: 0 0 3px #00ffcc, 0 0 7px #00ffcc;
         padding: 2rem;
         border: 2px solid #00ffcc;
-        border-radius: 12px;
-        box-shadow: 0 0 15px #00ffcc, 0 0 30px #ff00ff;
+        border-radius: 14px;
+        box-shadow: 0 0 20px #00ffcc, 0 0 40px #ff00ff;
         animation: fade-slide 1s ease-in-out;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.6);
+        max-width: 900px;
+        margin: 0 auto;
       ">
         <h3 style="
-          font-size: 1.5rem;
+          font-size: 1.7rem;
           color: #FFD700;
-          text-shadow: 0 0 3px #FFD700, 0 0 10px #FFE600;
+          text-shadow: 0 0 5px #FFD700, 0 0 15px #FFE600;
           animation: glow-pulse 2s infinite;
           text-align: center;
-          margin-bottom: 1rem;
+          margin-bottom: 1.5rem;
         ">How to Participate in LP League</h3>
     
         <ul style="
           list-style-type: square;
-          padding-left: 1.5rem;
-          line-height: 1.6;
-          font-size: 1.1rem;
+          padding-left: 1.8rem;
+          line-height: 1.7;
+          font-size: 1.15rem;
+          margin-bottom: 1.8rem;
         ">
-          <li>Stake LP tokens on supported pools (CHIWAX, CHISQJ, ALCOR).</li>
+          <li>Stake LP tokens on supported pools (Taco CHIPS/WAX, Taco CHIPS/SQJ, ALCOR CHIPS/WAX, ALCOR CHIPS/SQJ, ALCOR SQJ/WAX).</li>
           <li>Earn Points based on LP delta and token value (in WAX).</li>
           <li>Top performers earn WAX rewards from the prize pool.</li>
           <li>Daily activity boosts score and earns you Badges!</li>
         </ul>
     
-        <hr style="border-color: #00ffcc; margin: 1.5rem 0;">
+        <hr style="border-color: #00ffcc; margin: 1.8rem 0;">
     
         <h4 style="
-          font-size: 1.3rem;
+          font-size: 1.4rem;
           color: #1affd5;
-          text-shadow: 0 0 2px #00f0ff, 0 0 8px #00f0ff;
-          margin-bottom: 0.5rem;
+          text-shadow: 0 0 3px #00f0ff, 0 0 10px #00f0ff;
+          margin-bottom: 0.8rem;
           animation: glow-pulse 2s infinite;
         ">Badge System & Extra Rewards</h4>
     
-        <p style="margin-bottom: 1rem;">
-          Earn badges by completing various achievements during the LP League. Each badge grants you extra points (1 to 3). The <b>Top 5 players with the highest Badge Points</b> will receive <span style="color: #FFD700;">exclusive NFT rewards</span> + bonus WAX, in addition to the LP League rewards.
+        <p style="margin-bottom: 1.2rem; line-height: 1.6;">
+          Earn badges by completing various achievements during the LP League. Each badge grants you extra points (1 to 3). The <b>Top 5 players with the highest Badge Points</b> will receive a share of <span style="color: #FFD700; font-weight: bold;">2,000,000 $CHIPS tokens</span> as extra bonus rewards, in addition to the LP League rewards.
         </p>
+    
+        <div style="
+          border: 2px dashed #FFD700;
+          border-radius: 12px;
+          padding: 1rem;
+          box-shadow: 0 0 15px #FFD700, 0 0 25px #FFD700;
+          margin-bottom: 1.5rem;
+          font-size: 1rem;
+          background: rgba(0, 0, 0, 0.4);
+        ">
+          <p style="margin-bottom: 0.8rem; text-align: center; font-weight: bold; color: #FFD700;">Top 5 Badge Points Holders will receive:</p>
+          <ul style="
+            list-style: none;
+            padding-left: 0;
+            text-align: center;
+            line-height: 1.6;
+          ">
+            <li style="color: #FFD700;">🥇 1st place → 1,000,000 $CHIPS</li>
+            <li style="color: #C0C0C0;">🥈 2nd place → 500,000 $CHIPS</li>
+            <li style="color: #CD7F32;">🥉 3rd place → 300,000 $CHIPS</li>
+            <li style="color: #00ffcc;">4th place → 150,000 $CHIPS</li>
+            <li style="color: #1affd5;">5th place → 50,000 $CHIPS</li>
+          </ul>
+        </div>
     
         <div style="
           display: flex;
           flex-direction: column;
-          gap: 0.6rem;
+          gap: 0.8rem;
           font-size: 1rem;
         ">
-          <div style="border: 1px solid #FFD700; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #FFD700;">
+          <div style="border: 1px solid #FFD700; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #FFD700;">
             <b>🏆 Top 3</b> → Place in Top 3. <span style="color: #FFD700;">(+3 Points)</span>
           </div>
-          <div style="border: 1px solid #C0C0C0; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #C0C0C0;">
+          <div style="border: 1px solid #C0C0C0; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #C0C0C0;">
             <b>🥈 Top 10</b> → Place in Top 10. <span style="color: #C0C0C0;">(+2 Points)</span>
           </div>
-          <div style="border: 1px solid #4CAF50; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #4CAF50;">
+          <div style="border: 1px solid #4CAF50; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #4CAF50;">
             <b>Volume Hunter</b> → Reach 1,000+ Points. <span style="color: #4CAF50;">(+1 Point)</span>
           </div>
-          <div style="border: 1px solid #FF5722; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #FF5722;">
+          <div style="border: 1px solid #FF5722; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #FF5722;">
             <b>Heavy Hitter</b> → Reach 5,000+ Points. <span style="color: #FF5722;">(+2 Points)</span>
           </div>
-          <div style="border: 1px solid #2196F3; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #2196F3;">
+          <div style="border: 1px solid #2196F3; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #2196F3;">
             <b>Consistency</b> → 5+ Activity Movements. <span style="color: #2196F3;">(+1 Point)</span>
           </div>
-          <div style="border: 1px solid #9C27B0; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #9C27B0;">
+          <div style="border: 1px solid #9C27B0; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #9C27B0;">
             <b>Ultra Consistent</b> → 20+ Activity Movements. <span style="color: #9C27B0;">(+3 Points)</span>
           </div>
-          <div style="border: 1px solid #795548; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #795548;">
+          <div style="border: 1px solid #795548; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #795548;">
             <b>Daily Grinder</b> → 3+ Daily Deltas. <span style="color: #795548;">(+2 Points)</span>
           </div>
-          <div style="border: 1px solid #E91E63; border-radius: 8px; padding: 0.6rem; box-shadow: 0 0 12px #E91E63;">
+          <div style="border: 1px solid #E91E63; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #E91E63;">
             <b>First Mover</b> → Active since Day 1. <span style="color: #E91E63;">(+3 Points)</span>
           </div>
         </div>
     
-        <p style="margin-top: 1rem; font-style: italic; color: #1affd5;">
-          Badge Points Leaderboard is visible in the "Badge-Points Leaderboard" tab.
+        <p style="margin-top: 1.2rem; font-style: italic; color: #1affd5;">
+          The Badge Points Leaderboard is visible in the "Badge-Points Leaderboard" tab.
         </p>
       </div>
     `;
@@ -1722,31 +1749,92 @@ function displayBadgePointsLeaderboard(data) {
 
   badgePointsData.sort((a, b) => b.totalBadgePoints - a.totalBadgePoints);
 
-  container.innerHTML = `
-    <table class="reward-table badge-points-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Username</th>
-          <th>Badge Points</th>
-          <th>Badges</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${badgePointsData.map((record, index) => `
-          <tr class="${index < 5 ? 'top5-animate' : ''}">
-            <td>${index + 1}</td>
-            <td>${record.username}</td>
-            <td>${record.totalBadgePoints}</td>
-            <td>${record.badges.map(b => `
-              <span class="badge-animated" style="background-color: ${getBadgeColor(b)};" title="${b}">${b}</span>
-            `).join(' ')}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
+  const prizeMap = {
+    1: '1,000,000 $CHIPS',
+    2: '500,000 $CHIPS',
+    3: '300,000 $CHIPS',
+    4: '150,000 $CHIPS',
+    5: '50,000 $CHIPS'
+  };
 
-    <div class="badge-reward-glow">✨ Top 5 users will receive extra WAX rewards! ✨</div>
+  container.innerHTML = `
+    <div style="
+      font-family: 'Papyrus', 'Courier New', cursive;
+      color: #39ff14;
+      text-shadow: 0 0 3px #00ffcc, 0 0 7px #00ffcc;
+      padding: 1.5rem;
+      border: 2px solid #00ffcc;
+      border-radius: 14px;
+      box-shadow: 0 0 20px #00ffcc, 0 0 40px #ff00ff;
+      animation: fade-slide 1s ease-in-out;
+      background: rgba(0, 0, 0, 0.6);
+      max-width: 1000px;
+      margin: 0 auto;
+    ">
+      <h3 style="
+        font-size: 1.6rem;
+        color: #FFD700;
+        text-shadow: 0 0 5px #FFD700, 0 0 15px #FFE600;
+        animation: glow-pulse 2s infinite;
+        text-align: center;
+        margin-bottom: 1.5rem;
+      ">Badge Points Leaderboard</h3>
+
+      <table class="reward-table badge-points-table" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background-color: rgba(0,255,255,0.1);">
+            <th style="padding: 8px; border-bottom: 2px solid #00ffcc;">#</th>
+            <th style="padding: 8px; border-bottom: 2px solid #00ffcc;">Username</th>
+            <th style="padding: 8px; border-bottom: 2px solid #00ffcc;">Badge Points</th>
+            <th style="padding: 8px; border-bottom: 2px solid #00ffcc;">Badges</th>
+            <th style="padding: 8px; border-bottom: 2px solid #00ffcc;">Prize</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${badgePointsData.map((record, index) => `
+            <tr class="${index < 5 ? 'top5-animate' : ''}" style="
+              text-align: center;
+              border-bottom: 1px solid rgba(0,255,255,0.2);
+              ${index < 5 ? 'font-weight:bold; color: #FFD700;' : ''}
+            ">
+              <td style="padding: 8px;">${index + 1}</td>
+              <td style="padding: 8px;">${record.username}</td>
+              <td style="padding: 8px;">${record.totalBadgePoints}</td>
+              <td style="padding: 8px;">${record.badges.map(b => `
+                <span class="badge-animated" style="
+                  display: inline-block;
+                  padding: 6px 10px;
+                  margin: 3px;
+                  border-radius: 12px;
+                  font-size: 12px;
+                  font-weight: bold;
+                  color: white;
+                  background-color: ${getBadgeColor(b)};
+                  text-shadow: 0 0 2px #000, 0 0 5px #000;
+                  animation: fadeInBadge 0.6s ease-in-out;
+                  transition: transform 0.2s ease-in-out;
+                " onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"
+                >${b}</span>
+              `).join(' ')}</td>
+              <td style="padding: 8px;">
+                ${prizeMap[index + 1] ? `<span style="color: #FFD700;">${prizeMap[index + 1]}</span>` : '-'}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div class="badge-reward-glow" style="
+        margin-top: 2rem;
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #FFD700;
+        text-align: center;
+        animation: glowText 2s infinite;
+      ">
+        ✨ The Top 5 players will receive a total of 2,000,000 $CHIPS tokens as extra rewards! ✨
+      </div>
+    </div>
   `;
 }
 

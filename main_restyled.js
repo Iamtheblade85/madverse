@@ -5107,6 +5107,7 @@ function showConfirmModal(message, onConfirm) {
   }, 0);
 }
 async function executeAction(action, token, amount, tokenOut = null, contractOut = null, walletType = "telegram") {
+  let tokenOutput = null;
   // Verifica se userId e wax_account sono presenti in window.userData
   if (!window.userData || !window.userData.userId || !window.userData.wax_account) {
     console.error("[❌] userId o wax_account non trovato in window.userData. Assicurati che i dati siano caricati prima di eseguire l'azione.");

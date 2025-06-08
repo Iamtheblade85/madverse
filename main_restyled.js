@@ -2182,7 +2182,11 @@ async function renderDailyBox(data) {
     html += `
       <div class="box-results mt-3">
         <p>✅ You have already claimed your chest today: <strong>${boxImages[data.last_opened_result?.chest_type] || data.last_opened_result?.chest_type}</strong></p>
-        <div class="box-items mt-2">
+        <div class="box-items mt-2" style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 1rem;
+        ">
           ${(data.last_opened_result?.items || []).map(item => `
             <div class="box-item card-glow" style="
               padding:1rem; margin-bottom:1rem; border-radius:12px; text-align:center; transition: all 0.3s ease;
@@ -2252,6 +2256,27 @@ async function renderDailyBox(data) {
   });
 });
 }
+function parseDescription(description) {
+  const result = {};
+
+  // Se non inizia con template_name, ritorna come testo semplice
+  if (!description.startsWith('template_name:')) {
+    result.plainText = description;
+    return result;
+  }
+
+  // Split prima in blocchi
+  const parts = description.split(/[|;]/);
+
+  parts.forEach(part => {
+    const [key, value] = part.split(':').map(x => x.trim());
+    if (key && value) {
+      result[key] = value;
+    }
+  });
+
+  return result;
+}
 
 function showChestModal(videoUrl, rewards, onCloseCallback) {
   // Rimuovi eventuale modale precedente
@@ -2317,7 +2342,7 @@ function showChestModal(videoUrl, rewards, onCloseCallback) {
   const video = document.createElement('video');
   video.src = videoUrl;
   video.autoplay = true;
-  video.controls = false;
+  video.controls = true;
   video.style.width = '100%';
   video.style.borderRadius = '12px';
   video.style.marginBottom = '1rem';
@@ -2371,10 +2396,39 @@ function showChestModal(videoUrl, rewards, onCloseCallback) {
       itemDiv.style.maxWidth = '140px';
       itemDiv.style.boxSizing = 'border-box';
 
+      const parsedDescription = parseDescription(item.description);
+      
+      let descriptionHtml = '';
+      
+      if (parsedDescription.plainText) {
+        // caso normale → testo semplice
+        descriptionHtml = `<div style="font-size:0.9rem; color:#aaa;">${parsedDescription.plainText}</div>`;
+      } else {
+        // caso strutturato → mostro i key/value in una mini griglia
+        descriptionHtml = `
+          <div style="
+            display:grid;
+            grid-template-columns: auto 1fr;
+            gap: 4px 8px;
+            text-align:left;
+            font-size:0.85rem;
+            margin-top:0.5rem;
+            background:rgba(255,255,255,0.05);
+            padding:0.5rem;
+            border-radius:8px;
+          ">
+            ${Object.entries(parsedDescription).map(([key, value]) => `
+              <div style="color:#999;">${key}:</div>
+              <div style="color:#0f0;">${value}</div>
+            `).join('')}
+          </div>
+        `;
+      }
+      
       itemDiv.innerHTML = `
         <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem;">
         <div><strong>${item.name}</strong> (${item.type})</div>
-        <div style="font-size:0.9rem; color:#aaa;">${item.description}</div>
+        ${descriptionHtml}
       `;
 
       rewardsArea.appendChild(itemDiv);

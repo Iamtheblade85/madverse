@@ -5040,7 +5040,7 @@ async function bulkSendSelected() {
       range.value = Math.min(100, Math.round((val / balance) * 100));
     }
   });
-
+  const tokenOutput = document.getElementById('token-output');
   // SWAP logic
   if (action === "swap") {
     const tokenSearch = document.getElementById('token-search');

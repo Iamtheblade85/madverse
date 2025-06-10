@@ -5024,3 +5024,35 @@ details[open] > div {
   text-align: center;
   animation: glowText 2s infinite;
 }
+
+.wallet-switch-container {
+  display: flex;
+  justify-content: center;
+  gap: 2rem; /* spazio tra i bottoni */
+  padding: 2rem 0;
+}
+
+.wallet-switch {
+  font-weight: bold;
+  font-size: 1.1rem;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0ff, #00f0ff, #39ff14);
+  background-size: 400% 400%;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 0 8px #0ff, 0 0 16px #00f0ff, 0 0 32px #00f0ff;
+  border: none;
+  cursor: pointer;
+  transition: all 0.4s ease-in-out, transform 0.3s ease-in-out;
+  transform: scale(1.2);
+}
+
+.wallet-switch:hover {
+  background-position: 100% 0;
+  box-shadow: 0 0 16px #ff00ff, 0 0 32px #ff00ff, 0 0 64px #ff00ff;
+  transform: scale(1.25) rotateX(5deg) rotateY(5deg);
+  color: #ff00ff;
+  text-shadow: 0 0 3px #ff00ff, 0 0 6px #ffffff, 0 0 12px #ff00ff;
+}

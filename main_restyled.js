@@ -1356,12 +1356,24 @@ function loadSection(section) {
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title text-center">C2E - Twitch</h2>
-        <div class="c2e-menu">
-          <button class="c2e-menu-btn" data-menu="log-reward-activity">Log Reward Activity</button>
-          <button class="c2e-menu-btn" data-menu="log-storms-giveaways">Twitch Storms</button>
-          <button class="c2e-menu-btn" data-menu="twitch-nfts-giveaways">Twitch NFTs Giveaways(NEW!)</button>
-          <button class="c2e-menu-btn" data-menu="twitch-game">Twitch Game(!soon!)</button>
-        </div>
+          <div class="c2e-menu">
+            <button class="c2e-menu-btn" data-menu="log-reward-activity"
+              style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+              Log Reward Activity
+            </button>
+            <button class="c2e-menu-btn" data-menu="log-storms-giveaways"
+              style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+              Twitch Storms
+            </button>
+            <button class="c2e-menu-btn" data-menu="twitch-nfts-giveaways"
+              style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+              Twitch NFTs Giveaways(NEW!)
+            </button>
+            <button class="c2e-menu-btn" data-menu="twitch-game"
+              style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+              Twitch Game(!soon!)
+            </button>
+          </div>
         <div id="c2e-content" class="c2e-content">Loading last activity...</div>
       </div>
     `;
@@ -2278,7 +2290,9 @@ function parseDescription(description) {
   parts.forEach(part => {
     const [key, value] = part.split(':').map(x => x.trim());
     if (key && value) {
-      result[key] = value;
+      if (key === 'template_name' || key === 'asset_id') {
+        result[key] = value;
+      }
     }
   });
 
@@ -3581,7 +3595,7 @@ function renderRewardTable(data) {
       <tr class="${rowClass}">
         <td class="cell">${record.username}</td>
         <td class="cell">${record.token_symbol}</td>
-        <td class="cell">${record.amount}</td>
+        <td class="cell">${parseFloat(record.amount).toFixed(4)}</td>
         <td class="cell">${record.channel}</td>
         <td class="cell">${record.origin_channel}</td>
         <td class="cell">${new Date(record.timestamp).toLocaleString()}</td>
@@ -4428,9 +4442,10 @@ async function loadWallet() {
     // Pulsanti wallet selector animati
     walletTable.innerHTML = `
       <div class="wallet-switch-container">
-        <button class="wallet-switch twitch-btn" data-wallet="twitch" style="font-weight: bold; transform: scale(1.2); transform-origin: center; transition: transform 0.3s ease-in-out; display: inline-block;">🎮 Twitch Wallet</button>
-        <button class="wallet-switch telegram-btn" data-wallet="telegram" style="font-weight: bold; transform: scale(1.2); transform-origin: center; transition: transform 0.3s ease-in-out; display: inline-block;">🤖 Telegram Wallet</button>
+        <button class="wallet-switch twitch-btn" data-wallet="twitch">🎮 Twitch Wallet</button>
+        <button class="wallet-switch telegram-btn" data-wallet="telegram">🤖 Telegram Wallet</button>
       </div>
+
       <div style="text-align: center;">
         <div style="display: inline-block; text-align: left; margin-top: 1rem;">
           <p style="

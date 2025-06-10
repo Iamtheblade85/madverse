@@ -3865,7 +3865,6 @@ button:hover, .btn:hover, .menu-button:hover {
   border-radius: 10px !important;
   box-shadow: 0 0 4px #ffe600, 0 0 20px #00ffcc !important;
   backdrop-filter: blur(6px) !important;
-  transition: all var(--transition-speed) ease-in-out !important;
 }
 
 .btn-group:hover {
@@ -3888,7 +3887,6 @@ button:hover, .btn:hover, .menu-button:hover {
   padding: 0.6rem 1.2rem !important;
   animation: ledLiquidFlow 8s ease infinite !important;
   box-shadow: 0 0 8px #00ffcc, 0 0 16px #ff00ff !important;
-  transition: all var(--transition-speed) ease-in-out !important;
   transform-style: preserve-3d !important;
   perspective: 1000px !important;
   position: relative !important;
@@ -3910,8 +3908,7 @@ button:hover, .btn:hover, .menu-button:hover {
 
 .btn-action:hover {
   filter: brightness(1.15) !important;
-  transform: scale(1.07) rotateX(4deg) rotateY(2deg) !important;
-  box-shadow: 0 0 20px #d100ff, 0 0 40px #9f00ff !important; /* Viola neon e glow viola più freddo */
+  box-shadow: 0 0 5px #d100ff, 0 0 10px #9f00ff !important; /* Viola neon e glow viola più freddo */
   color: #d100ff !important; /* Testo in viola neon */
   text-shadow:
     0 0 3px #9f00ff,

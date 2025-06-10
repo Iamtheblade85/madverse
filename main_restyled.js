@@ -5067,11 +5067,11 @@ async function openModal(action, token, walletType = 'telegram') {
       return { symbol, contract };
     });
 
-    tokenSearch.addEventListener('input', () => {
-      const search = tokenSearch.value.toLowerCase();
-      const filtered = availableTokensDetailed.filter(t =>
-        t.symbol.toLowerCase().includes(search) || t.contract.toLowerCase().includes(search)
-      );
+      tokenSearch.addEventListener('input', () => {
+        const search = tokenSearch.value.toLowerCase();
+        const filtered = availableTokensDetailed.filter(t =>
+          t.symbol.toLowerCase().includes(search)  // ← SOLO simbolo
+        );
     
       tokenSuggestions.innerHTML = filtered.map(t => `
         <li class="token-suggestion-item" data-symbol="${t.symbol}" data-contract="${t.contract}">

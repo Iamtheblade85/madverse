@@ -1401,32 +1401,37 @@ function loadSection(section) {
     app.innerHTML = `
     <div class="section-container">
       <h2 class="section-title">My NFTs</h2>
-
       <div class="filters-group">
+        <label for="search-template">Template:</label>
         <input type="text" id="search-template" placeholder="Search by Template Name..." class="form-input">
-
+      
+        <label for="filter-status">Status:</label>
         <select id="filter-status" class="form-select">
           <option value="">All</option>
           <option value="Staked">Staked</option>
           <option value="Not Staked">Not Staked</option>
         </select>
-
+      
+        <label for="filter-stakable">Stakable:</label>
         <select id="filter-stakable" class="form-select">
           <option value="">All</option>
           <option value="Stakable">Stakable</option>
           <option value="Not Stakable">Not Stakable</option>
         </select>
-
+      
+        <label for="filter-for-sale">For Sale:</label>
         <select id="filter-for-sale" class="form-select">
           <option value="">All</option>
           <option value="Yes">For Sale</option>
           <option value="No">Not For Sale</option>
         </select>
-
+      
+        <label for="filter-collection">Collection:</label>
         <select id="filter-collection" class="form-select">
           <option value="">All</option>
         </select>
-
+      
+        <label for="sort-by">Sort By:</label>
         <select id="sort-by" class="form-select">
           <option value="created_at_desc">Newest</option>
           <option value="created_at_asc">Oldest</option>
@@ -1434,6 +1439,7 @@ function loadSection(section) {
           <option value="template_name_desc">Template (Z-A)</option>
         </select>
       </div>
+
 
       <div id="bulk-actions" class="bulk-actions hidden">
         <button id="bulk-withdraw" class="btn btn-secondary">Withdraw Selected</button>
@@ -2177,11 +2183,12 @@ async function renderDailyBox(data) {
       </div>
     `;
 
-  } else if (data.opened_today) {
+  } 
+  if (data.last_opened_result) {
     // Caso: utente ha già aperto oggi → mostra risultato
     html += `
       <div class="box-results mt-3">
-        <p>✅ You have already claimed your chest today: <strong>${boxImages[data.last_opened_result?.chest_type] || data.last_opened_result?.chest_type}</strong></p>
+        <p>✅ Your last claimed chest : <strong>${boxImages[data.last_opened_result?.chest_type] || data.last_opened_result?.chest_type}</strong></p>
         <div class="box-items mt-2" style="
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -2201,7 +2208,8 @@ async function renderDailyBox(data) {
       </div>
     `;
 
-  } else {
+  } 
+  if !(data.pending_chests && data.pending_chests.length > 0){
     // Caso: utente non ha pending e non ha ancora aperto → nessuna chest disponibile
     html += `
       <div class="box-results mt-3">
@@ -3599,8 +3607,11 @@ function displayLogData(data) {
 
   container.innerHTML = `
     <div class="filter-toolbar">
+      <label for="filter-username">Filter by Username:</label>
       <select id="filter-username" class="filter-select">${createOptions(usernames)}</select>
+      <label for="filter-channel">Filter by Channel:</label>
       <select id="filter-channel" class="filter-select">${createOptions(channels)}</select>
+      <label for="filter-sponsor">Filter by Sponsor:</label>
       <select id="filter-sponsor" class="filter-select">${createOptions(sponsors)}</select>
       <button id="update-rewards" class="btn btn-primary">Update Data</button>
     </div>
@@ -4418,8 +4429,8 @@ async function loadWallet() {
     // Pulsanti wallet selector animati
     walletTable.innerHTML = `
       <div class="wallet-switch-container">
-        <button class="wallet-switch twitch-btn" data-wallet="twitch">🎮 Twitch Wallet</button>
-        <button class="wallet-switch telegram-btn" data-wallet="telegram">🤖 Telegram Wallet</button>
+        <button class="wallet-switch twitch-btn" data-wallet="twitch" style="font-weight: bold; transform: scale(1.2); transform-origin: center; transition: transform 0.3s ease-in-out; display: inline-block;">🎮 Twitch Wallet</button>
+        <button class="wallet-switch telegram-btn" data-wallet="telegram" style="font-weight: bold; transform: scale(1.2); transform-origin: center; transition: transform 0.3s ease-in-out; display: inline-block;">🤖 Telegram Wallet</button>
       </div>
       <div style="text-align: center;">
         <div style="display: inline-block; text-align: left; margin-top: 1rem;">

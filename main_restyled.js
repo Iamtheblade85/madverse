@@ -5055,8 +5055,8 @@ async function openModal(action, token, walletType = 'telegram') {
   if (action === "swap") {
     const tokenSearch = document.getElementById('token-search');
     const tokenSuggestions = document.getElementById('token-suggestions');
-    const selectedTokenSymbol = document.getElementById('selected-token-symbol');
-    const selectedTokenContract = document.getElementById('selected-token-contract');
+    selectedTokenSymbol = document.getElementById('selected-token-symbol');
+    selectedTokenContract = document.getElementById('selected-token-contract');
     const previewButton = document.getElementById('preview-button');
     const submitButton = document.getElementById('submit-button');
     const swapPreview = document.getElementById('swap-preview');

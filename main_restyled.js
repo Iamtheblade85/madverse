@@ -4937,6 +4937,8 @@ async function bulkSendSelected() {
 } 
 
 async function openModal(action, token, walletType = 'telegram') {
+  let selectedTokenSymbol = null;
+  let selectedTokenContract = null;   
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
   const balances = walletType === 'twitch' ? window.twitchWalletBalances : window.walletBalances;
   const tokenInfo = balances.find(t => t.symbol === token);

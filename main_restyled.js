@@ -4964,8 +4964,13 @@ async function openModal(action, token, walletType = 'telegram') {
         <div class="form-field">
           <label>Choose Output Token</label>
           <input type="text" id="token-search" class="input-box" placeholder="Search token...">
-          <select id="token-output" class="input-box" size="5"></select>
+          <ul id="token-suggestions" class="token-suggestions"></ul>
         </div>
+        
+        <!-- Aggiungi questi 2 hidden per tener traccia del token scelto -->
+        <input type="hidden" id="selected-token-symbol">
+        <input type="hidden" id="selected-token-contract">
+
         <div id="swap-preview" class="swap-preview hidden">
           <div id="loading-spinner">🔄 Getting blockchain data...</div>
           <div id="swap-data" class="hidden">
@@ -5043,11 +5048,13 @@ async function openModal(action, token, walletType = 'telegram') {
       range.value = Math.min(100, Math.round((val / balance) * 100));
     }
   });
-  const tokenOutput = document.getElementById('token-output');
+
   // SWAP logic
   if (action === "swap") {
     const tokenSearch = document.getElementById('token-search');
-    const tokenOutput = document.getElementById('token-output');
+    const tokenSuggestions = document.getElementById('token-suggestions');
+    const selectedTokenSymbol = document.getElementById('selected-token-symbol');
+    const selectedTokenContract = document.getElementById('selected-token-contract');
     const previewButton = document.getElementById('preview-button');
     const submitButton = document.getElementById('submit-button');
     const swapPreview = document.getElementById('swap-preview');
@@ -5055,32 +5062,51 @@ async function openModal(action, token, walletType = 'telegram') {
     const swapDataContainer = document.getElementById('swap-data');
     const minReceivedSpan = document.getElementById('min-received');
     const priceImpactSpan = document.getElementById('price-impact');
-
-    function updateTokenDropdown(tokens) {
-      tokenOutput.innerHTML = tokens.map(t => `<option value="${t}">${t}</option>`).join('');
-      console.log("[DEBUG] updateTokenDropdown -> tokens:", tokens);
-    }
+    const availableTokensDetailed = availableTokens.map(t => {
+      const [symbol, contract] = t.split("-");
+      return { symbol, contract };
+    });
 
     tokenSearch.addEventListener('input', () => {
       const search = tokenSearch.value.toLowerCase();
-      const filtered = availableTokens.filter(t => t.toLowerCase().includes(search));
-      updateTokenDropdown(filtered);
+      const filtered = availableTokensDetailed.filter(t =>
+        t.symbol.toLowerCase().includes(search) || t.contract.toLowerCase().includes(search)
+      );
+    
+      tokenSuggestions.innerHTML = filtered.map(t => `
+        <li class="token-suggestion-item" data-symbol="${t.symbol}" data-contract="${t.contract}">
+          <strong>${t.symbol}</strong> — <small>${t.contract}</small>
+        </li>
+      `).join('');
+    });
+    
+    tokenSuggestions.addEventListener('click', (e) => {
+      const item = e.target.closest('.token-suggestion-item');
+      if (!item) return;
+      const symbol = item.getAttribute('data-symbol');
+      const contract = item.getAttribute('data-contract');
+    
+      tokenSearch.value = `${symbol} - ${contract}`;
+      selectedTokenSymbol.value = symbol;
+      selectedTokenContract.value = contract;
+      
+      tokenSuggestions.innerHTML = ''; // chiudi la lista
     });
 
     previewButton.addEventListener('click', async () => {
       
       const amount = parseFloat(input.value);
-      const outputSelection = tokenOutput.value;
     
-      if (!amount || amount <= 0 || !outputSelection) {
+      const symbolOut = selectedTokenSymbol.value;
+      const contractOut = selectedTokenContract.value;
+      
+      if (!amount || amount <= 0 || !symbolOut || !contractOut) {
         alert("Insert valid amount and output token");
         return;
       }
-    
+
       console.log("[DEBUG] Click su Preview Swap");
-      console.log("[DEBUG] Amount:", amount, "Output selection:", outputSelection);
-    
-      let [symbolOut, contractOut] = outputSelection.split("-");
+      console.log("[DEBUG] Amount:", amount, "Output selection:", symbolOut, contractOut);
       const symbolIn = token.toLowerCase();
       const contractInLower = contractIn.toLowerCase();
     
@@ -5148,11 +5174,11 @@ async function openModal(action, token, walletType = 'telegram') {
         console.log("[DEBUG] Action:", action);
         console.log("[DEBUG] AmountInput value:", amountInput.value);
         if (action === "swap") {
-            console.log("[DEBUG] Selected output token:", tokenOutput.value);
+          console.log("[DEBUG] Selected output token:", selectedTokenSymbol.value, selectedTokenContract.value);
         }
                 
-        const outputSelection = tokenOutput.value;
-        const [symbolOut, contractOut] = outputSelection.split("-");
+        const symbolOut = selectedTokenSymbol.value;
+        const contractOut = selectedTokenContract.value;
         await executeAction(action, token, amount, symbolOut, contractOut, walletType);
       } else {
         await executeAction(action, token, amount, null, null, walletType);

@@ -5127,7 +5127,7 @@ async function openModal(action, token, walletType = 'telegram') {
         submitButton.disabled = true;
       }
     });
-
+  }
   // Percentuale su amount
   percentRange.addEventListener('input', () => {
     const percent = parseFloat(percentRange.value);

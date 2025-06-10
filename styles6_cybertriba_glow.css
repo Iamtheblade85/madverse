@@ -3857,7 +3857,7 @@ button:hover, .btn:hover, .menu-button:hover {
 .btn-group {
   display: flex !important;
   flex-wrap: wrap !important;
-  gap: 0.5rem !important;
+  gap: 2rem !important;
   justify-content: center !important;
   align-items: center !important;
   padding: 0.5rem !important;
@@ -3869,7 +3869,6 @@ button:hover, .btn:hover, .menu-button:hover {
 
 .btn-group:hover {
   box-shadow: 0 0 16px #00f0ff, 0 0 32px #ffe600 !important;
-  transform: scale(1.02) !important;
   background-color: rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -3888,7 +3887,6 @@ button:hover, .btn:hover, .menu-button:hover {
   animation: ledLiquidFlow 8s ease infinite !important;
   box-shadow: 0 0 8px #00ffcc, 0 0 16px #ff00ff !important;
   transform-style: preserve-3d !important;
-  perspective: 1000px !important;
   position: relative !important;
   z-index: 1 !important;
   /*overflow: hidden !important;*/

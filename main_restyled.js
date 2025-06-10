@@ -4977,6 +4977,7 @@ async function bulkSendSelected() {
     `; 
     showModal({ title: `<h3 class="modal-title">${title}</h3>`, body });
     await loadAvailableTokens();
+    console.log("4980 - [DEBUG] Modal Swap aperta. contractIn =", contractIn);
   }
     else if (action === "bridge_to") {
       const targetWallet = walletType === 'twitch' ? 'telegram' : 'twitch';
@@ -5055,6 +5056,7 @@ async function bulkSendSelected() {
 
     function updateTokenDropdown(tokens) {
       tokenOutput.innerHTML = tokens.map(t => `<option value="${t}">${t}</option>`).join('');
+      console.log("[DEBUG] updateTokenDropdown -> tokens:", tokens);
     }
 
     tokenSearch.addEventListener('input', () => {
@@ -5064,13 +5066,15 @@ async function bulkSendSelected() {
     });
 
     previewButton.addEventListener('click', async () => {
+      
       const amount = parseFloat(input.value);
       const outputSelection = tokenOutput.value;
       if (!amount || amount <= 0 || !outputSelection) {
         alert("Insert valid amount and output token");
         return;
       }
-
+      console.log("[DEBUG] Click su Preview Swap");
+      console.log("[DEBUG] Amount:", amount, "Output selection:", outputSelection);
       let [symbolOut, contractOut] = outputSelection.split("-");
       const symbolIn = token.toLowerCase();
       const contractInLower = contractIn.toLowerCase();
@@ -5084,6 +5088,9 @@ async function bulkSendSelected() {
       try {
         const response = await fetch(apiUrl);
         const data = await response.json();
+        console.log("[DEBUG] API URL chiamata swap router:", apiUrl);
+        console.log("[DEBUG] Response swap router:", data);
+
         const minReceived = (data.minReceived || 0) * 0.9;
         minReceivedSpan.textContent = minReceived.toFixed(4);
         priceImpactSpan.textContent = data.priceImpact || "-";
@@ -5114,6 +5121,13 @@ async function bulkSendSelected() {
     const amount = amountInput.value; 
     try {
       if (action === "swap") {
+        console.log("[DEBUG] Submit form triggered");
+        console.log("[DEBUG] Action:", action);
+        console.log("[DEBUG] AmountInput value:", amountInput.value);
+        if (action === "swap") {
+            console.log("[DEBUG] Selected output token:", tokenOutput.value);
+        }
+                
         const outputSelection = tokenOutput.value;
         const [symbolOut, contractOut] = outputSelection.split("-");
         await executeAction(action, token, amount, symbolOut, contractOut, walletType);

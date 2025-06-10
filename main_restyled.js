@@ -2155,9 +2155,9 @@ async function renderDailyBox(data) {
 
   let html = `
     <p class="subtitle2">
-      As a ChipsWallet member you can open one Daily Chest per day.<br>
-      If you own the <strong>VIP Membership NFT</strong>, you can also claim a VIP Chest.<br>
+      If you own the <strong>VIP Membership NFT</strong>, you can also claim a Chips Chest.<br>
       Chest types include <strong>Wood</strong>, <strong>Bronze</strong>, <strong>Gold</strong>, <strong>Platinum</strong>.<br>
+      Will you get Tokens, NFTs, Evet-Tickets and more? You can also scroll the chests-blends ;)
     </p>
     <div class="mb-2">
       <span class="status-badge2 ${window.accountData.userInfo.vip_active ? 'active2' : 'inactive2'}">
@@ -2809,15 +2809,6 @@ function renderRecentActivity(data) {
     `;
   }
 
-  const boxesHtml = `
-    <div class="card-glow" style="margin-bottom:2rem; padding:1.5rem; background:rgba(0,0,0,0.3); border-radius:12px; box-shadow:0 0 12px #0ff;">
-      <h2 class="glow-text" style="text-align:center;">🎁 Boxes Claimed</h2>
-      ${data.last_boxes_claimed?.length
-        ? `<p class="activity-value" style="color:#00ffee; text-align:center;">${data.last_boxes_claimed.join(", ")}</p>`
-        : `<p class="activity-value" style="color:#aaa; text-align:center;">None</p>`}
-    </div>
-  `;
-
   const telegramEntries = [
     { key: 'last_chat_reward', title: '💬 Last Chat Reward' },
     { key: 'last_storm_win', title: '⛈️ Last Storm Win' },
@@ -2836,7 +2827,6 @@ function renderRecentActivity(data) {
 
 
   document.getElementById('recent-activity').innerHTML = `
-    ${boxesHtml}
     ${telegramHTML}
     ${twitchHTML}
   `;

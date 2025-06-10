@@ -4934,7 +4934,9 @@ async function bulkSendSelected() {
       }, 0);
     };
   }, 0);
-} async function openModal(action, token, walletType = 'telegram') {
+} 
+
+async function openModal(action, token, walletType = 'telegram') {
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
   const balances = walletType === 'twitch' ? window.twitchWalletBalances : window.walletBalances;
   const tokenInfo = balances.find(t => t.symbol === token);
@@ -5069,41 +5071,62 @@ async function bulkSendSelected() {
       
       const amount = parseFloat(input.value);
       const outputSelection = tokenOutput.value;
+    
       if (!amount || amount <= 0 || !outputSelection) {
         alert("Insert valid amount and output token");
         return;
       }
+    
       console.log("[DEBUG] Click su Preview Swap");
       console.log("[DEBUG] Amount:", amount, "Output selection:", outputSelection);
+    
       let [symbolOut, contractOut] = outputSelection.split("-");
       const symbolIn = token.toLowerCase();
       const contractInLower = contractIn.toLowerCase();
-
-      const apiUrl = `https://alcor.exchange/api/v2/swapRouter/getRoute?trade_type=EXACT_INPUT&input=${symbolIn}-${contractInLower}&output=${symbolOut.toLowerCase()}-${contractOut.toLowerCase()}&amount=${amount}`;
-
+    
+      const previewUrl = `${BASE_URL}/preview_swap?user_id=${encodeURIComponent(window.userData.userId)}&usx_token=${encodeURIComponent(window.userData.usx_token)}`;
+    
+      const bodyData = {
+        wax_account: window.userData.wax_account,
+        from_token: token,
+        to_token: symbolOut,
+        amount: amount,
+        wallet_type: walletType
+      };
+    
+      console.log("[DEBUG] Chiamata preview_swap URL:", previewUrl);
+      console.log("[DEBUG] Body preview_swap:", bodyData);
+    
       swapPreview.classList.remove('hidden');
       loadingSpinner.classList.remove('hidden');
       swapDataContainer.classList.add('hidden');
-
+    
       try {
-        const response = await fetch(apiUrl);
+        const response = await fetch(previewUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(bodyData)
+        });
+    
         const data = await response.json();
-        console.log("[DEBUG] API URL chiamata swap router:", apiUrl);
-        console.log("[DEBUG] Response swap router:", data);
-
+        console.log("[DEBUG] Response preview_swap:", data);
+    
         const minReceived = (data.minReceived || 0) * 0.9;
         minReceivedSpan.textContent = minReceived.toFixed(4);
         priceImpactSpan.textContent = data.priceImpact || "-";
+    
         loadingSpinner.classList.add('hidden');
         swapDataContainer.classList.remove('hidden');
         submitButton.disabled = false;
+    
       } catch (err) {
         console.error("Swap preview error:", err);
-        loadingSpinner.innerHTML = `<div class="text-error">⚠️ Failed to load blockchain data.</div>`;
+        loadingSpinner.innerHTML = `<div class="text-error">⚠️ Failed to load preview data.</div>`;
         submitButton.disabled = true;
       }
     });
-  }
 
   // Percentuale su amount
   percentRange.addEventListener('input', () => {

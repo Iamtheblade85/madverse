@@ -3856,7 +3856,7 @@ button:hover, .btn:hover, .menu-button:hover {
 /* === BTN GROUP === */
 .btn-group {
   display: flex !important;
-  flex-wrap: wrap !important;
+  /*flex-wrap: wrap !important;*/
   gap: 2rem !important;
   justify-content: center !important;
   align-items: center !important;

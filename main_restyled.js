@@ -2209,8 +2209,7 @@ async function renderDailyBox(data) {
     `;
 
   } 
-  if !(data.pending_chests && data.pending_chests.length > 0){
-    // Caso: utente non ha pending e non ha ancora aperto → nessuna chest disponibile
+  if ((!data.pending_chests || data.pending_chests.length === 0)) {
     html += `
       <div class="box-results mt-3">
         <p>🚫 No chest available at the moment. Please check back tomorrow!</p>

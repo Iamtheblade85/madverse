@@ -4442,8 +4442,16 @@ async function loadWallet() {
     // Pulsanti wallet selector animati
     walletTable.innerHTML = `
       <div class="wallet-switch-container">
-        <button class="wallet-switch twitch-btn" data-wallet="twitch">🎮 Twitch Wallet</button>
-        <button class="wallet-switch telegram-btn" data-wallet="telegram">🤖 Telegram Wallet</button>
+        <button class="wallet-switch twitch-btn" data-wallet="twitch"
+          style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          🎮 Twitch Wallet
+        </button>
+        
+        <button class="wallet-switch telegram-btn" data-wallet="telegram"
+          style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          🤖 Telegram Wallet
+        </button>
+
       </div>
 
       <div style="text-align: center;">

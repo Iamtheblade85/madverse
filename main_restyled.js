@@ -2275,9 +2275,9 @@ async function renderDailyBox(data) {
   });
 });
 }
-function parseDescription(description) {
-  const result = {};
 
+function parseDescription(description) {
+  const result = [];
   // Se non inizia con template_name, ritorna come testo semplice
   if (!description.startsWith('template_name:')) {
     result.plainText = description;
@@ -2286,16 +2286,14 @@ function parseDescription(description) {
 
   // Split prima in blocchi
   const parts = description.split(/[|;]/);
-
   parts.forEach(part => {
     const [key, value] = part.split(':').map(x => x.trim());
     if (key && value) {
       if (key === 'template_name' || key === 'asset_id') {
-        result[key] = value;
+        result.push(value); // solo il valore!
       }
     }
   });
-
   return result;
 }
 

@@ -1351,7 +1351,7 @@ window.openEditRewards = openEditRewards;
 async function loadSection(section) {
   console.log(`[📦] Caricando sezione: ${section}`);
   const app = document.getElementById('app');
-
+  const { userId, usx_token, wax_account } = window.userData;
   if (section === 'c2e-twitch') {
     app.innerHTML = `
       <div class="section-container">

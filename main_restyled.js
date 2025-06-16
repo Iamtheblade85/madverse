@@ -1516,6 +1516,26 @@ function loadSection(section) {
     `;
     loadCreateTokenStaking();
   }
+  else if (section === 'daily') {
+    const dailyBoxRes = await fetch(`${BASE_URL}/daily_chest_open`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: userId,
+        usx_token: usx_token,
+        wax_account: window.userData.wax_account
+      })
+    });
+  
+    const dailyBoxData = await dailyBoxRes.json();
+    window.accountData = {
+      ...window.accountData,
+      dailyBox: dailyBoxData
+    };
+    wrapper.innerHTML = `<div class="account-card2" id="daily-box"></div>`;
+    renderDailyBox(window.accountData.dailyBox);
+  }
+ 
   else if (section === 'account') {
     app.innerHTML = `
       <div class="section-container">
@@ -2058,6 +2078,7 @@ function sortLpTable(key) {
   applyLpFiltersAndSort();
 }
 
+
 async function loadAccountSection() {
   const { userId, usx_token } = window.userData;
   const container = document.querySelector('.loading-message');
@@ -2071,21 +2092,11 @@ async function loadAccountSection() {
     const [
       telegramRewardsRes,
       twitchRewardsRes,
-      activityRes,
-      dailyBoxRes
+      activityRes
     ] = await Promise.all([
       fetch(`${BASE_URL}/account/telegram_rewards?user_id=${userId}&usx_token=${usx_token}`),
       fetch(`${BASE_URL}/account/twitch_rewards?user_id=${userId}&usx_token=${usx_token}`),
-      fetch(`${BASE_URL}/account/activity?user_id=${userId}&usx_token=${usx_token}`),
-      fetch(`${BASE_URL}/daily_chest_open`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: userId,
-          usx_token: usx_token,
-          wax_account: window.userData.wax_account
-        })
-      })
+      fetch(`${BASE_URL}/account/activity?user_id=${userId}&usx_token=${usx_token}`)
     ]);
 
     window.accountData = {
@@ -2093,7 +2104,6 @@ async function loadAccountSection() {
       telegram: await telegramRewardsRes.json(),
       twitch: await twitchRewardsRes.json(),
       activity: await activityRes.json(),
-      dailyBox: await dailyBoxRes.json()
     };
 
     // Mostra loader almeno 5 secondi
@@ -2105,7 +2115,6 @@ async function loadAccountSection() {
     renderPersonalInfo(window.accountData.userInfo);
     renderChatRewards(window.accountData.telegram, window.accountData.twitch);
     renderRecentActivity(window.accountData.activity);
-    renderDailyBox(window.accountData.dailyBox);
 
   } catch (err) {
     container.innerHTML = `<div class="error-message">❌ Error loading account data: ${err.message}</div>`;
@@ -2116,9 +2125,7 @@ async function loadAccountSection() {
 function renderAccountSubsection(sectionId) {
   const data = window.accountData;
   const wrapper = document.getElementById('account-sections');
-
   wrapper.innerHTML = ''; // pulisce tutto
-
   switch (sectionId) {
     case 'info':
       wrapper.innerHTML = `<div class="account-card2" id="personal-info"></div>`;
@@ -2133,11 +2140,6 @@ function renderAccountSubsection(sectionId) {
     case 'activity':
       wrapper.innerHTML = `<div class="account-card2" id="recent-activity"></div>`;
       renderRecentActivity(data.activity);
-      break;
-
-    case 'daily':
-      wrapper.innerHTML = `<div class="account-card2" id="daily-box"></div>`;
-      renderDailyBox(data.dailyBox);
       break;
 
     default:
@@ -2200,25 +2202,58 @@ async function renderDailyBox(data) {
     // Caso: utente ha già aperto oggi → mostra risultato
     html += `
       <div class="box-results mt-3">
-        <p>✅ Your last claimed chest : <strong>${boxImages[data.last_opened_result?.chest_type] || data.last_opened_result?.chest_type}</strong></p>
+        <p style="font-size:1.1rem; color:#fff; margin-bottom:1rem;">
+          ✅ Your last claimed chest: 
+          <strong style="color:gold;">
+            ${boxImages[data.last_opened_result?.chest_type] || data.last_opened_result?.chest_type}
+          </strong>
+        </p>
+    
         <div class="box-items mt-2" style="
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-          gap: 1rem;
+          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+          gap: 1.5rem;
+          padding: 0.5rem;
         ">
           ${(data.last_opened_result?.items || []).map(item => `
             <div class="box-item card-glow" style="
-              padding:1rem; margin-bottom:1rem; border-radius:12px; text-align:center; transition: all 0.3s ease;
-              ${item.type === 'Chest' ? 'border: 2px solid gold; box-shadow: 0 0 12px gold, 0 0 24px gold;' : ''}
-            ">
-              <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem;">
-              <div><strong>${item.name}</strong> (${item.type})</div>
-              <div style="font-size:0.9rem; color:#aaa;">${item.description}</div>
+              background: #1a1a1a;
+              padding: 1rem;
+              border-radius: 16px;
+              text-align: center;
+              transition: transform 0.2s ease, box-shadow 0.2s ease;
+              border: 1px solid rgba(255,255,255,0.1);
+              box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+              cursor: pointer;
+            "
+            onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 16px rgba(255,255,255,0.2)'"
+            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 6px rgba(0,0,0,0.5)'"
+            >
+              <img src="${item.media_url}" alt="${item.name}" style="
+                max-width: 100px;
+                height: auto;
+                margin-bottom: 0.75rem;
+                border-radius: 8px;
+                box-shadow: 0 0 8px rgba(0,0,0,0.3);
+              ">
+    
+              <div style="font-weight: bold; font-size: 1rem; color: #fff;">
+                ${item.name}
+              </div>
+    
+              <div style="font-size: 0.85rem; color: #ccc; margin-bottom: 0.25rem;">
+                (${item.type})
+              </div>
+    
+              <div style="font-size: 0.8rem; color: #999;">
+                ${item.description?.match(/Template ID: (\d+)/)?.[1] ?? ''}
+              </div>
             </div>
           `).join('')}
         </div>
       </div>
     `;
+
 
   } 
   if ((!data.pending_chests || data.pending_chests.length === 0)) {
@@ -2278,22 +2313,30 @@ async function renderDailyBox(data) {
 
 function parseDescription(description) {
   const result = [];
-  // Se non inizia con template_name, ritorna come testo semplice
-  if (!description.startsWith('template_name:')) {
-    result.plainText = description;
+
+  // Se non inizia con 'Template ID:', ritorna la descrizione intera
+  if (!description.startsWith('Template ID:')) {
+    result.push(description);
     return result;
   }
 
-  // Split prima in blocchi
+  // Split della descrizione in parti
   const parts = description.split(/[|;]/);
+  let templateIdFound = false;
+
   parts.forEach(part => {
     const [key, value] = part.split(':').map(x => x.trim());
-    if (key && value) {
-      if (key === 'template_name' || key === 'asset_id') {
-        result.push(value); // solo il valore!
-      }
+    if (key === 'Template ID' && value) {
+      result.push(`Template ID: ${value}`);
+      templateIdFound = true;
     }
   });
+
+  // Se per qualche motivo non è stato trovato il Template ID, restituisce la descrizione originale
+  if (!templateIdFound) {
+    result.push(description);
+  }
+
   return result;
 }
 
@@ -2415,35 +2458,7 @@ function showChestModal(videoUrl, rewards, onCloseCallback) {
       itemDiv.style.maxWidth = '140px';
       itemDiv.style.boxSizing = 'border-box';
 
-      const parsedDescription = parseDescription(item.description);
-      
-      let descriptionHtml = '';
-      
-      if (parsedDescription.plainText) {
-        // caso normale → testo semplice
-        descriptionHtml = `<div style="font-size:0.9rem; color:#aaa;">${parsedDescription.plainText}</div>`;
-      } else {
-        // caso strutturato → mostro i key/value in una mini griglia
-        descriptionHtml = `
-          <div style="
-            display:grid;
-            grid-template-columns: auto 1fr;
-            gap: 4px 8px;
-            text-align:left;
-            font-size:0.85rem;
-            margin-top:0.5rem;
-            background:rgba(255,255,255,0.05);
-            padding:0.5rem;
-            border-radius:8px;
-          ">
-            ${Object.entries(parsedDescription).map(([key, value]) => `
-              <div style="color:#999;">${key}:</div>
-              <div style="color:#0f0;">${value}</div>
-            `).join('')}
-          </div>
-        `;
-      }
-      
+      const descriptionHtml = `<div style="font-size:0.9rem; color:#aaa;">${item.description}</div>`;  
       itemDiv.innerHTML = `
         <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem;">
         <div><strong>${item.name}</strong> (${item.type})</div>

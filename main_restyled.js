@@ -1348,7 +1348,7 @@ function removeTemplate(templateId) {
 window.openAddReward = openAddReward; 
 window.openEditRewards = openEditRewards;
 // Funzione per caricare dinamicamente sezioni
-function loadSection(section) {
+async function loadSection(section) {
   console.log(`[📦] Caricando sezione: ${section}`);
   const app = document.getElementById('app');
 

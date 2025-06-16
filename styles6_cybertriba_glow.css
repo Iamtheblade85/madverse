@@ -2336,26 +2336,11 @@ body {
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
   border-bottom: 2px solid #ff00ff;
-  animation: pulse-glow-title 4s ease-in-out infinite;
 }
 
 .section-title:hover {
   filter: brightness(1.1);
   box-shadow: 0 0 12px #f39c12, 0 0 25px #ffe600;
-}
-@keyframes pulse-glow-title {
-  0%, 100% {
-    text-shadow:
-      0 0 4px #ff00ff,
-      0 0 8px #d100ff,
-      0 0 12px #ffffff;
-  }
-  50% {
-    text-shadow:
-      0 0 6px #ff00ff,
-      0 0 12px #d100ff,
-      0 0 20px #ffffff;
-  }
 }
 
 .text-center {
@@ -3900,7 +3885,6 @@ button:hover, .btn:hover, .menu-button:hover {
   width: 200% !important;
   height: 200% !important;
   background: radial-gradient(circle at center, rgba(255,255,255,0.15), transparent 70%) !important;
-  animation: pulse-glow-liquid 6s infinite ease-in-out !important;
   z-index: 0 !important;
 }
 

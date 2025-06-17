@@ -2656,9 +2656,17 @@ function showChestModal(videoUrl, rewards, onCloseCallback) {
       itemDiv.style.width = '100%';
       itemDiv.style.maxWidth = '140px';
       itemDiv.style.boxSizing = 'border-box';
+  
+      // ❗ MANCAVA QUESTO
+      const descriptionHtml = `<div style="font-size:0.9rem; color:#aaa;">${item.description}</div>`;
+      itemDiv.innerHTML = `
+        <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem;">
+        <div><strong>${item.name}</strong> (${item.type})</div>
+      `;
+  
       rewardsArea.appendChild(itemDiv);
     });
-
+  
     rewardsArea.style.display = 'grid';
     closeButton.style.display = 'block';
   });

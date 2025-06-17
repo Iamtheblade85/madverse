@@ -88,52 +88,93 @@ async function initApp() {
   try {
     console.info("[🔍] Inizio funzione initApp...");
 
-    console.info("[🛰️] Estrazione parametri da URL in corso...");
-    const params = getUrlParams();
-    console.info("[🧩] Parametri ottenuti:", params);
-
-    if (!params.userId || !params.usx_token) {
-      console.warn("[⚠️] Parametri user_id o usx_token mancanti nell'URL. Attivazione login manuale.");
-      renderAuthButton(false);
-      return; // NON lanciare errore: attendi login da utente
-    }
-
-    console.info("[💾] Salvando parametri in window.userData...");
-    window.userData = {
-      userId: params.userId,
-      usx_token: params.usx_token,
-      wax_account: null
+    const appName = "ChaosPortal";
+    const chain = {
+      chainId: "1064487b3cd1a897a9dd1b404ad17b8462923c063053f08d7340a1ade8e3e43b",
+      rpcEndpoints: [{
+        protocol: "https",
+        host: "wax.greymass.com",
+        port: 443
+      }]
     };
-    console.info("[📦] window.userData attuale:", window.userData);
 
-    console.info("[🚪] Verifica credenziali con /main_door in corso...");
-    const response = await fetch(`${BASE_URL}/main_door?user_id=${encodeURIComponent(params.userId)}&usx_token=${encodeURIComponent(params.usx_token)}`);
-    const data = await response.json();
-    console.info("[📨] Risposta ricevuta da /main_door:", data);
+    const anchor = new Anchor.AnchorAuthenticator([chain], { appName });
+    const waxAuth = new waxjs_ual.WaxAuthenticator([chain], { appName });
+    const wombat = new wombat_ual.Wombat([chain], { appName });
 
-    if (!data.user_id || !data.wax_account) {
-      console.warn("[⚠️] Credenziali non valide o incomplete. Mostro Login.");
-      renderAuthButton(false);
-      return;
-    }
+    const ual = new UAL.UAL([chain], appName, [anchor, waxAuth, wombat]);
+    window.ual = ual;
 
-    window.userData.wax_account = data.wax_account;
-    renderAuthButton(true);
-    console.info("[✅] Login effettuato correttamente. Dati utente finali:", window.userData);
+    const authContainer = document.getElementById("auth-button-container");
+    
+    // Crea il messaggio di benvenuto
+    const welcomeSpan = document.createElement("span");
+    welcomeSpan.className = "text-white ml-4 font-semibold";
+    authContainer.appendChild(welcomeSpan);
+    
+    // Crea il bottone login/logout
+    const loginBtn = document.createElement("button");
+    loginBtn.className = "px-4 py-2 bg-cyan-600 text-white rounded shadow hover:bg-cyan-700";
+    loginBtn.innerText = "Login";
+    authContainer.appendChild(loginBtn);
 
-    await loadAvailableTokens();
-    console.info("[🧹] Caricamento prima sezione Wallet...");
-    loadSection('wallet');
-
-    console.info("[🔗] Collegamento eventi pulsanti menu...");
-    document.querySelectorAll('.menu-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const section = e.target.getAttribute('data-section');
-        loadSection(section);
-      });
+    loginBtn.addEventListener("click", () => {
+      if (ual.activeUser) {
+        ual.logout();
+        loginBtn.innerText = "Login";
+        window.userData = {};
+        welcomeSpan.innerText = ""; // 🔄 cancella il messaggio di benvenuto
+        console.info("[🚪] Logout eseguito.");
+      } else {
+        ual.init().then(() => ual.showModal());
+      }
     });
 
-    console.info("[🏁] initApp completato senza errori.");
+    const checkLogin = setInterval(async () => {
+      if (ual && ual.activeUser) {
+        clearInterval(checkLogin);
+
+        const accountName = await ual.activeUser.getAccountName();
+        window.userData.wax_account = accountName;
+        welcomeSpan.innerText = `Welcome ${accountName}`;
+        loginBtn.innerText = "Logout";
+        console.info("[✅] Login completato:", accountName);
+
+        // 🔗 Chiamata a /main_door
+        try {
+          const response = await fetch(`${BASE_URL}/main_door?user_id=${accountName}`);
+          const result = await response.json();
+
+          if (result && result.userId && result.usx_token) {
+            window.userData.userId = result.userId;
+            window.userData.usx_token = result.usx_token;
+
+            console.info("[🔑] Dati utente caricati:", window.userData);
+          } else {
+            console.warn("[⚠️] Dati incompleti da main_door:", result);
+          }
+        } catch (error) {
+          console.error("[❌] Errore nella chiamata a /main_door:", error);
+        }
+
+        // ✅ Dopo login & fetch: carica dati e menu
+        console.info("[✅] Login effettuato correttamente. Dati utente finali:", window.userData);
+
+        await loadAvailableTokens();
+        console.info("[🧹] Caricamento prima sezione Wallet...");
+        loadSection('wallet');
+
+        console.info("[🔗] Collegamento eventi pulsanti menu...");
+        document.querySelectorAll('.menu-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const section = e.target.getAttribute('data-section');
+            loadSection(section);
+          });
+        });
+
+        console.info("[🏁] initApp completato senza errori.");
+      }
+    }, 1000);
 
   } catch (error) {
     console.error("[❌] Errore critico in initApp:", error);
@@ -143,6 +184,8 @@ async function initApp() {
       </div>`;
   }
 }
+
+window.addEventListener("load", initApp);
 
 function renderAuthButton(isLoggedIn) {
   const container = document.getElementById('auth-button-container');

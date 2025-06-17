@@ -1523,6 +1523,7 @@ function removeTemplate(templateId) {
 }
 window.openAddReward = openAddReward; 
 window.openEditRewards = openEditRewards;
+
 // Funzione per caricare dinamicamente sezioni
 async function loadSection(section) {
   console.log(`[📦] Caricando sezione: ${section}`);
@@ -1691,36 +1692,37 @@ async function loadSection(section) {
       </div>
     `;
     loadCreateTokenStaking();
-  }
-  else if (section === 'daily') {
+  } else if (section === 'daily') {
+  app.innerHTML = `
+    <div class="section-container">
+      <h2 class="section-title">Daily Chest</h2>
+      <div id="daily-box">Loading...</div>
+    </div>
+  `;
+
+  try {
     const dailyBoxRes = await fetch(`${BASE_URL}/daily_chest_open`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        userId: userId,
-        usx_token: usx_token,
-        wax_account: window.userData.wax_account
+        userId,
+        usx_token,
+        wax_account
       })
     });
-  
+
     const dailyBoxData = await dailyBoxRes.json();
     window.accountData = {
       ...window.accountData,
       dailyBox: dailyBoxData
     };
-  
-    let wrapper = document.getElementById("section-container");
-    if (!wrapper) {
-      wrapper = document.createElement("div");
-      wrapper.id = "wrapper";
-      document.body.appendChild(wrapper);
-    }
-  
-    wrapper.innerHTML = `<div class="account-card2" id="daily-box"></div>`;
-    renderDailyBox(window.accountData.dailyBox);
-  }
 
-  else if (section === 'account') {
+    renderDailyBox(dailyBoxData);
+  } catch (err) {
+    console.error("[❌] Failed to fetch daily box:", err);
+    document.getElementById('daily-box').innerText = "Failed to load Daily Chest.";
+  }
+}  else if (section === 'account') {
     app.innerHTML = `
       <div class="section-container">
       

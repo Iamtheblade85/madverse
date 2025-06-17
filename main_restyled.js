@@ -97,7 +97,18 @@ async function initApp() {
         port: 443
       }]
     };
-
+    if (typeof Anchor === "undefined") {
+      console.error("[❌] Libreria Anchor non caricata correttamente.");
+      return;
+    }
+    if (typeof waxjs_ual === "undefined") {
+      console.error("[❌] Libreria waxjs_ual non caricata correttamente.");
+      return;
+    }
+    if (typeof wombat_ual === "undefined") {
+      console.error("[❌] Libreria wombat_ual non caricata correttamente.");
+      return;
+    }
     const anchor = new Anchor.AnchorAuthenticator([chain], { appName });
     const waxAuth = new waxjs_ual.WaxAuthenticator([chain], { appName });
     const wombat = new wombat_ual.Wombat([chain], { appName });

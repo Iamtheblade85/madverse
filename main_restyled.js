@@ -231,11 +231,17 @@ function openLoginModal() {
     <input type="password" id="login-password" class="form-input" placeholder="Password" required>
 
     <label style="margin-top: 1rem;">
-      <input type="checkbox" id="remember-me"> Ricordami
+      <input type="checkbox" id="remember-me"> Remember Me
     </label>
 
-    <button class="btn btn-primary" id="submit-login" style="margin-top: 1rem;">Accedi</button>
+    <button class="btn btn-primary" id="submit-login" style="margin-top: 1rem;">Login</button>
+
+    <div style="margin-top: 1rem; font-size: 0.9rem;">
+      You still haven’t an account? → 
+      <button id="register-button" style="color: gold; background: none; border: none; cursor: pointer;">Register</button>
+    </div>
   `;
+
 
   modal.classList.remove('hidden');
   modal.classList.add('active');
@@ -265,8 +271,130 @@ function openLoginModal() {
       alert("Errore nel login: " + err.message);
     }
   };
+  document.getElementById('register-button').onclick = () => openRegisterModal();
 
   // Aggiungi pulsante chiusura se non esiste
+  if (!modalContent.querySelector('.modal-close')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: gold;
+      background: none;
+      border: none;
+      cursor: pointer;
+    `;
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+    modalContent.prepend(closeBtn);
+  }
+}
+
+function openRegisterModal() {
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+  const modalContent = modal.querySelector('.modal-content');
+
+  body.innerHTML = `
+    <h3 class="modal-title">Register</h3>
+    <label class="form-label">Email</label>
+    <input type="email" id="reg-email" class="form-input" placeholder="Email" required>
+
+    <label class="form-label">Password</label>
+    <input type="password" id="reg-password" class="form-input" placeholder="Password" required>
+
+    <label class="form-label">Confirm Password</label>
+    <input type="password" id="reg-password-confirm" class="form-input" placeholder="Repeat Password" required>
+
+    <label class="form-label">Telegram Username (without @)</label>
+    <input type="text" id="reg-telegram" class="form-input" placeholder="Telegram username">
+
+    <label class="form-label">Twitch Username</label>
+    <input type="text" id="reg-twitch" class="form-input" placeholder="Twitch username">
+
+    <div id="register-feedback" style="margin-top: 1rem; font-size: 0.9rem; color: gold;"></div>
+
+    <button class="btn btn-primary" id="submit-register" style="margin-top: 1rem;">Submit</button>
+  `;
+
+  modal.classList.remove('hidden');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
+
+  document.getElementById('submit-register').onclick = async () => {
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value.trim();
+    const confirm = document.getElementById('reg-password-confirm').value.trim();
+    const telegram = document.getElementById('reg-telegram').value.trim();
+    const twitch = document.getElementById('reg-twitch').value.trim();
+    const feedback = document.getElementById('register-feedback');
+
+    if (!email || !password || !confirm) {
+      feedback.textContent = "Please fill in all required fields.";
+      return;
+    }
+    if (password !== confirm) {
+      feedback.textContent = "Passwords do not match.";
+      return;
+    }
+    if (!telegram && !twitch) {
+      feedback.textContent = "You must provide at least one contact: Telegram or Twitch.";
+      return;
+    }
+
+    try {
+      const res = await fetch(`${BASE_URL}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, telegram, twitch })
+      });
+
+      const data = await res.json();
+      feedback.textContent = data.message || "Registration complete.";
+      document.getElementById('submit-register').disabled = true;
+
+      // Blocca i campi
+      ['reg-email', 'reg-password', 'reg-password-confirm', 'reg-telegram', 'reg-twitch']
+        .forEach(id => document.getElementById(id).setAttribute('disabled', true));
+
+      // Attendi 3 secondi → login automatico → reload
+      setTimeout(async () => {
+        const loginRes = await fetch(`${BASE_URL}/login_mail`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const loginData = await loginRes.json();
+        if (!loginData.user_id || !loginData.usx_token || !loginData.wax_account) {
+          alert("Login failed after registration.");
+          location.reload();
+          return;
+        }
+
+        saveUserData({ ...loginData, email, password }, true);
+        finalizeAppLoad();
+
+        // Chiudi modale
+        modal.classList.add('hidden');
+        modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
+
+      }, 3000);
+
+    } catch (err) {
+      feedback.textContent = "Error during registration: " + err.message;
+    }
+  };
+
+  // Pulsante chiusura
   if (!modalContent.querySelector('.modal-close')) {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'modal-close';

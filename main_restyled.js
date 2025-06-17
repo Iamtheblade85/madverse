@@ -98,75 +98,68 @@ function saveUserData(data, remember = false) {
 }
 
 async function initApp() {
-  try {
-    console.info("[🔁] initApp avviata...");
+  console.info("[🔁] initApp started");
 
-    // 1. Prova login automatico da localStorage
-    const saved = localStorage.getItem('userData');
-    if (saved) {
-      try {
-        window.userData = JSON.parse(saved);
-        const { email, password } = window.userData;
+  // 1. Login automatico da localStorage (email + password)
+  const saved = localStorage.getItem('userData');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      const { email, password } = parsed;
 
-        if (email && password) {
-          console.info("[🔐] Tentativo login automatico con email...");
-          const res = await fetch(`${BASE_URL}/login_mail`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-          });
+      if (email && password) {
+        console.info("[🔐] Attempting auto-login via /login_mail...");
 
-          const data = await res.json();
-          if (data.user_id && data.usx_token && data.wax_account) {
-            saveUserData({ ...data, email, password }, true);
-            console.info("[✅] Login automatico con email riuscito:", data);
-            await finalizeAppLoad();
-            return;
-          } else {
-            console.warn("[⚠️] Login email fallito: dati incompleti");
-            window.userData = {};
-            localStorage.removeItem('userData');
-          }
+        const res = await fetch(`${BASE_URL}/login_mail`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.user_id && data.usx_token && data.wax_account) {
+          console.info("[✅] Auto-login successful.");
+          saveUserData({ ...data, email, password }, true);
+          return finalizeAppLoad();
+        } else {
+          console.warn("[⚠️] Auto-login failed:", data.message || data.error);
         }
-      } catch (err) {
-        console.warn("[⚠️] Errore nel parsing localStorage:", err);
-        localStorage.removeItem('userData');
-        window.userData = {};
       }
+    } catch (err) {
+      console.error("[❌] Error during auto-login:", err);
     }
+  }
 
-    // 2. Prova login via URL parameters
-    const params = getUrlParams();
-    if (params.userId && params.usx_token) {
-      console.info("[🌐] Tentativo login da URL params...");
-      const response = await fetch(`${BASE_URL}/main_door?user_id=${encodeURIComponent(params.userId)}&usx_token=${encodeURIComponent(params.usx_token)}`);
-      const data = await response.json();
+  // 2. Fallback login: user_id + usx_token da URL
+  const urlParams = getUrlParams();
+  if (urlParams.userId && urlParams.usx_token) {
+    console.info("[🌐] Attempting fallback login via /main_door...");
+
+    try {
+      const res = await fetch(`${BASE_URL}/main_door?user_id=${encodeURIComponent(urlParams.userId)}&usx_token=${encodeURIComponent(urlParams.usx_token)}`);
+      const data = await res.json();
 
       if (data.user_id && data.wax_account) {
         window.userData = {
           user_id: data.user_id,
-          usx_token: params.usx_token,
+          usx_token: urlParams.usx_token,
           wax_account: data.wax_account
         };
-        console.info("[✅] Login da URL riuscito:", window.userData);
-        await finalizeAppLoad();
-        return;
+        console.info("[✅] Backdoor login successful.");
+        return finalizeAppLoad();
       } else {
-        console.warn("[⚠️] /main_door ha restituito dati incompleti");
+        console.warn("[⚠️] Backdoor login failed:", data.message || data.error);
       }
+    } catch (err) {
+      console.error("[❌] Error in fallback login:", err);
     }
-
-    // 3. Nessun login valido → mostra pulsante login
-    console.warn("[🚪] Nessun login valido. Mostro pulsante login.");
-    renderAuthButton(false);
-
-  } catch (error) {
-    console.error("[❌] Errore critico in initApp:", error);
-    document.getElementById('app').innerHTML = `
-      <div class="error-message centered margin-top-lg">
-        Errore: ${error.message}<br>Verifica il link o rifai il login.
-      </div>`;
   }
+
+  // 3. Nessun login valido → mostra login/registrazione
+  console.warn("[🚪] No valid login found. Showing login modal.");
+  renderAuthButton(false);
+  openLoginModal();
 }
 
 async function finalizeAppLoad() {

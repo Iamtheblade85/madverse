@@ -84,45 +84,48 @@ function applyStormsFiltersAndSort() {
 }
 
 // Funzione iniziale aggiornata per supportare multi-temi via CSS
-// === Funzione principale ===
 async function initApp() {
   try {
     console.info("[🔍] Inizio funzione initApp...");
 
-    const storedUser = JSON.parse(localStorage.getItem("userData"));
-    if (!storedUser || !storedUser.userId || !storedUser.usx_token || !storedUser.wax_account) {
-      console.warn("[⚠️] Nessun utente salvato. Mostro modale di autenticazione.");
-      showLoginOrRegisterModal();
-      return;
+    console.info("[🛰️] Estrazione parametri da URL in corso...");
+    const params = getUrlParams();
+    console.info("[🧩] Parametri ottenuti:", params);
+
+    if (!params.userId || !params.usx_token) {
+      console.warn("[⚠️] Parametri user_id o usx_token mancanti nell'URL. Attivazione login manuale.");
+      renderAuthButton(false);
+      return; // NON lanciare errore: attendi login da utente
     }
 
-    window.userData = storedUser;
+    console.info("[💾] Salvando parametri in window.userData...");
+    window.userData = {
+      userId: params.userId,
+      usx_token: params.usx_token,
+      wax_account: null
+    };
+    console.info("[📦] window.userData attuale:", window.userData);
 
-    console.info("[🚪] Verifica credenziali via POST a /main_door...");
-    const response = await fetch(`${BASE_URL}/main_door`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: storedUser.userId,
-        usx_token: storedUser.usx_token,
-        wax_account: storedUser.wax_account
-      })
-    });
-
+    console.info("[🚪] Verifica credenziali con /main_door in corso...");
+    const response = await fetch(`${BASE_URL}/main_door?user_id=${encodeURIComponent(params.userId)}&usx_token=${encodeURIComponent(params.usx_token)}`);
     const data = await response.json();
-    console.info("[📨] Risposta /main_door:", data);
+    console.info("[📨] Risposta ricevuta da /main_door:", data);
 
-    if (!data.success) {
-      console.warn("[⚠️] Login automatico fallito. Mostro login.");
-      localStorage.removeItem("userData");
-      showLoginOrRegisterModal();
+    if (!data.user_id || !data.wax_account) {
+      console.warn("[⚠️] Credenziali non valide o incomplete. Mostro Login.");
+      renderAuthButton(false);
       return;
     }
 
+    window.userData.wax_account = data.wax_account;
     renderAuthButton(true);
+    console.info("[✅] Login effettuato correttamente. Dati utente finali:", window.userData);
+
     await loadAvailableTokens();
+    console.info("[🧹] Caricamento prima sezione Wallet...");
     loadSection('wallet');
 
+    console.info("[🔗] Collegamento eventi pulsanti menu...");
     document.querySelectorAll('.menu-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const section = e.target.getAttribute('data-section');
@@ -131,112 +134,117 @@ async function initApp() {
     });
 
     console.info("[🏁] initApp completato senza errori.");
+
   } catch (error) {
     console.error("[❌] Errore critico in initApp:", error);
     document.getElementById('app').innerHTML = `
       <div class="error-message centered margin-top-lg">
         Errore: ${error.message}<br>Verifica il link o rifai il login.
       </div>`;
-    showLoginOrRegisterModal();
   }
 }
 
-function showLoginOrRegisterModal() {
-  const modal = document.getElementById("auth-modal");
-  modal.classList.add("active");
-  modal.classList.remove("hidden");
-  document.body.classList.add("modal-open");
-}
+function renderAuthButton(isLoggedIn) {
+  const container = document.getElementById('auth-button-container');
+  if (!container) return;
 
-async function submitLogin() {
-  const wax = document.getElementById("login-wax").value.trim();
-  const password = document.getElementById("login-password").value;
-  const usx_token = document.getElementById("login-usx-token").value;
-  const remember = document.getElementById("remember-me").checked;
+  container.innerHTML = `
+    <button id="auth-toggle-button" style="
+      padding: 6px 12px;
+      font-weight: bold;
+      background-color: black;
+      color: gold;
+      border: 2px solid gold;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 0 5px gold;
+    ">
+      ${isLoggedIn ? 'Logout' : 'Login'}
+    </button>
+  `;
 
-  try {
-    const response = await fetch(`${BASE_URL}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ wax_account: wax, password, usx_token })
-    });
-
-    const data = await response.json();
-    if (data.success && data.user_id) {
-      const userData = {
-        userId: data.user_id,
-        wax_account: data.wax_account,
-        usx_token: data.usx_token || usx_token
-      };
-      if (remember) localStorage.setItem("userData", JSON.stringify(userData));
-      window.userData = userData;
-      document.getElementById("auth-modal").classList.add("hidden");
-      await initApp();
+  document.getElementById('auth-toggle-button').onclick = () => {
+    if (isLoggedIn) {
+      fetch(`${BASE_URL}/logout-secure`, { method: 'POST' })
+        .then(() => location.reload())
+        .catch(err => alert("Errore nel logout: " + err));
     } else {
-      alert("Login fallito: " + (data.message || "Credenziali errate."));
+      openLoginModal();
     }
-  } catch (err) {
-    console.error("Errore login:", err);
-    alert("Errore durante il login.");
+  };
+}
+function openLoginModal() {
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+  const modalContent = modal.querySelector('.modal-content');
+
+  body.innerHTML = `
+    <h3 class="modal-title">Login</h3>
+    <label class="form-label">Username</label>
+    <input type="text" id="login-username" class="form-input" placeholder="Username">
+
+    <label class="form-label">Wallet Address</label>
+    <input type="text" id="login-wallet" class="form-input" placeholder="Wallet Address">
+
+    <label class="form-label">Auth Token</label>
+    <input type="text" id="login-token" class="form-input" placeholder="Auth Token">
+
+    <button class="btn btn-primary" id="submit-login" style="margin-top: 1rem;">Submit</button>
+  `;
+
+  modal.classList.remove('hidden');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
+
+  document.getElementById('submit-login').onclick = async () => {
+    const username = document.getElementById('login-username').value.trim();
+    const wallet = document.getElementById('login-wallet').value.trim();
+    const token = document.getElementById('login-token').value.trim();
+
+    try {
+      const res = await fetch(`${BASE_URL}/login-secure`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, wallet, token })
+      });
+
+      const data = await res.json();
+      if (!data.user_id || !data.usx_token || !data.wax_account) throw new Error("Login fallito");
+
+      // Reindirizza con nuovi parametri
+      const url = new URL(window.location.href);
+      url.searchParams.set('user_id', data.user_id);
+      url.searchParams.set('usx_token', data.usx_token);
+      window.location.href = url.toString();
+
+    } catch (err) {
+      alert("Login fallito: " + err.message);
+    }
+  };
+
+  // Pulsante chiusura
+  if (!modalContent.querySelector('.modal-close')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: gold;
+      background: none;
+      border: none;
+      cursor: pointer;
+    `;
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+    modalContent.prepend(closeBtn);
   }
 }
-
-async function submitRegistration() {
-  const wax = document.getElementById("reg-wax").value.trim();
-  const email = document.getElementById("reg-email").value.trim();
-  const password = document.getElementById("reg-password").value;
-  const twitch = document.getElementById("reg-twitch").value.trim();
-  const telegram = document.getElementById("reg-telegram").value.trim();
-  const usx_token = document.getElementById("reg-usx-token").value.trim();
-
-  try {
-    const response = await fetch(`${BASE_URL}/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        wax_account: wax,
-        email,
-        password,
-        twitch_username: twitch,
-        telegram_username: telegram,
-        usx_token
-      })
-    });
-
-    const data = await response.json();
-    if (data.success && data.user_id) {
-      const userData = {
-        userId: data.user_id,
-        wax_account: wax,
-        usx_token
-      };
-      localStorage.setItem("userData", JSON.stringify(userData));
-      window.userData = userData;
-      document.getElementById("auth-modal").classList.add("hidden");
-      await initApp();
-    } else {
-      alert("Errore registrazione: " + (data.message || "Controlla i campi."));
-    }
-  } catch (err) {
-    console.error("Errore registrazione:", err);
-    alert("Errore durante la registrazione.");
-  }
-}
-
-// === Cambio tab Login/Registrazione ===
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("login-tab").addEventListener("click", () => {
-    document.getElementById("login-form").classList.remove("hidden");
-    document.getElementById("register-form").classList.add("hidden");
-  });
-
-  document.getElementById("register-tab").addEventListener("click", () => {
-    document.getElementById("register-form").classList.remove("hidden");
-    document.getElementById("login-form").classList.add("hidden");
-  });
-});
-
-
 
 async function loadCreateTokenStaking() {
   const container = document.getElementById('create-token-pool-container');

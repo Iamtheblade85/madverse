@@ -2389,10 +2389,10 @@ async function renderDailyBox(data) {
     `;
 
   }
-  if !(data.vip_active) {
+  if (!data.vip_active) {
     html += `
       <div class="box-results mt-3">
-        <p>🚀 You don´t have <strong>VIP Membership NFT Pass</strong>! Get one to be able open the chests.</p>
+        <p class="intro-text">🚀 You don’t have <strong>VIP Membership NFT Pass</strong>! Get one to be able to open the chests.</p>
         <div class="pending-chests-buttons" style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem;">
     `;
   }

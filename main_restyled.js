@@ -4595,7 +4595,7 @@ function showModalMessage(message, type = 'info') {
 async function loadWallet() {
   try {
     const { userId, usx_token, wax_account } = window.userData;
-
+    console.log("window.data",window.userData)
     // Carica Telegram
     const resTelegram = await fetch(`${BASE_URL}/saldo?user_id=${userId}&usx_token=${usx_token}`);
     const dataTelegram = await resTelegram.json();

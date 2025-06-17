@@ -306,8 +306,11 @@ function openRegisterModal() {
   
     <label class="form-label">Confirm Password <span style="color: gold;">(required)</span></label>
     <input type="password" id="reg-password-confirm" class="form-input" placeholder="Repeat Password" required>
-  
-    <label class="form-label">Telegram Username (without @) <span style="color: gray;">(optional)</span></label>
+
+    <label class="form-label">Wax Wallet <span style="color: gold;">(required)</span></label>
+    <input type="text" id="reg-wax_account" class="form-input" placeholder="your wax wallet here" required>
+    
+    <label class="form-label">Telegram Username (without @) <span style="color: gray;"></span></label>
     <input type="text" id="reg-telegram" class="form-input" placeholder="Telegram username">
   
     <label class="form-label">Twitch Username <span style="color: gray;">(optional)</span></label>
@@ -330,28 +333,29 @@ function openRegisterModal() {
     const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value.trim();
     const confirm = document.getElementById('reg-password-confirm').value.trim();
+    const wax_account = document.getElementById('reg-wax_account').value.trim();
     const telegram = document.getElementById('reg-telegram').value.trim();
     const twitch = document.getElementById('reg-twitch').value.trim();
     const feedback = document.getElementById('register-feedback');
 
-    if (!email || !password || !confirm) {
+    if (!email || !password || !confirm || !wax_account || !telegram ) {
       feedback.textContent = "Please fill in all required fields.";
       return;
     }
     if (password !== confirm) {
-      feedback.textContent = "Passwords do not match.";
+      feedback.textContent = "Passwords do not match. Please check both fields";
       return;
     }
-    if (!telegram && !twitch) {
-      feedback.textContent = "You must provide at least one contact: Telegram or Twitch.";
-      return;
-    }
+    //if (!telegram && !twitch) {
+      //feedback.textContent = "You must provide at least Telegram account. Twitch is optional.";
+      //return;
+    //}
 
     try {
       const res = await fetch(`${BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, telegram, twitch })
+        body: JSON.stringify({ email, password, telegram, twitch, wax_account })
       });
 
       const data = await res.json();
@@ -359,7 +363,7 @@ function openRegisterModal() {
       document.getElementById('submit-register').disabled = true;
 
       // Blocca i campi
-      ['reg-email', 'reg-password', 'reg-password-confirm', 'reg-telegram', 'reg-twitch']
+      ['reg-email', 'reg-password', 'reg-password-confirm', 'reg-wax_account', 'reg-telegram', 'reg-twitch']
         .forEach(id => document.getElementById(id).setAttribute('disabled', true));
 
       // Attendi 3 secondi → login automatico → reload

@@ -2428,7 +2428,7 @@ async function renderDailyBox(data) {
             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 6px rgba(0,0,0,0.5)'"
             >
               <img src="${item.media_url}" alt="${item.name}" style="
-                max-width: 100px;
+                max-width: 150px;
                 height: auto;
                 margin-bottom: 0.75rem;
                 border-radius: 8px;
@@ -2441,10 +2441,6 @@ async function renderDailyBox(data) {
     
               <div style="font-size: 0.85rem; color: #ccc; margin-bottom: 0.25rem;">
                 (${item.type})
-              </div>
-    
-              <div style="font-size: 0.8rem; color: #999;">
-                ${item.description?.match(/Template ID: (\d+)/)?.[1] ?? ''}
               </div>
             </div>
           `).join('')}
@@ -2603,10 +2599,15 @@ function showChestModal(videoUrl, rewards, onCloseCallback) {
   video.src = videoUrl;
   video.autoplay = true;
   video.controls = true;
-  video.style.width = '100%';
+  video.muted = true;
   video.style.borderRadius = '12px';
   video.style.marginBottom = '1rem';
-
+  
+  // ✅ Limiti responsive
+  video.style.maxHeight = '40vh';
+  video.style.maxWidth = '100%';
+  video.style.height = 'auto';
+  video.style.width = 'auto';
   inner.appendChild(video);
 
   // Area rewards (inizialmente nascosta)
@@ -2655,14 +2656,6 @@ function showChestModal(videoUrl, rewards, onCloseCallback) {
       itemDiv.style.width = '100%';
       itemDiv.style.maxWidth = '140px';
       itemDiv.style.boxSizing = 'border-box';
-
-      const descriptionHtml = `<div style="font-size:0.9rem; color:#aaa;">${item.description}</div>`;  
-      itemDiv.innerHTML = `
-        <img src="${item.media_url}" alt="${item.name}" style="max-width:100px; margin-bottom:0.5rem;">
-        <div><strong>${item.name}</strong> (${item.type})</div>
-        ${descriptionHtml}
-      `;
-
       rewardsArea.appendChild(itemDiv);
     });
 

@@ -88,7 +88,7 @@ function saveUserData(data, remember = false) {
   window.userData = {
     email: data.email,
     password: data.password,
-    user_id: data.user_id,
+    user_id: data.userId,
     usx_token: data.usx_token,
     wax_account: data.wax_account
   };

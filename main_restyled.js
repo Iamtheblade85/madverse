@@ -297,23 +297,28 @@ function openRegisterModal() {
 
   body.innerHTML = `
     <h3 class="modal-title">Register</h3>
-    <label class="form-label">Email</label>
+    
+    <label class="form-label">Email <span style="color: gold;">(required)</span></label>
     <input type="email" id="reg-email" class="form-input" placeholder="Email" required>
-
-    <label class="form-label">Password</label>
+  
+    <label class="form-label">Password <span style="color: gold;">(required)</span></label>
     <input type="password" id="reg-password" class="form-input" placeholder="Password" required>
-
-    <label class="form-label">Confirm Password</label>
+  
+    <label class="form-label">Confirm Password <span style="color: gold;">(required)</span></label>
     <input type="password" id="reg-password-confirm" class="form-input" placeholder="Repeat Password" required>
-
-    <label class="form-label">Telegram Username (without @)</label>
+  
+    <label class="form-label">Telegram Username (without @) <span style="color: gray;">(optional)</span></label>
     <input type="text" id="reg-telegram" class="form-input" placeholder="Telegram username">
-
-    <label class="form-label">Twitch Username</label>
+  
+    <label class="form-label">Twitch Username <span style="color: gray;">(optional)</span></label>
     <input type="text" id="reg-twitch" class="form-input" placeholder="Twitch username">
-
+  
+    <div style="margin-top: 0.5rem; font-size: 0.85rem; color: gray;">
+      You must provide at least one contact method (Telegram or Twitch).
+    </div>
+  
     <div id="register-feedback" style="margin-top: 1rem; font-size: 0.9rem; color: gold;"></div>
-
+  
     <button class="btn btn-primary" id="submit-register" style="margin-top: 1rem;">Submit</button>
   `;
 

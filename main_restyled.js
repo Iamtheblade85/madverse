@@ -37,17 +37,6 @@ function getUrlParams() {
   };
 }
 
-document.addEventListener("click", (event) => {
-  if (event.target.matches('.modal-close')) {
-    const modal = event.target.closest('.modal');
-    if (modal) {
-      modal.classList.remove('active');
-      modal.classList.add('hidden');
-    }
-    document.body.classList.remove('modal-open');
-  }
-});
-
 async function loadAvailableTokens() {
   try {
     const response = await fetch('https://alcor.exchange/api/v2/tokens');

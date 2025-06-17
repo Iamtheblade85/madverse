@@ -2,92 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>UAL Login Test</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <!-- Tailwind per stile base -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- ✅ UAL Core -->
-<!-- UAL Core -->
-<script src="https://unpkg.com/ual@2.0.0/dist/ual.min.js"></script>
-
-<!-- UAL Anchor -->
-<script src="https://unpkg.com/ual-anchor@2.0.0/dist/ual-anchor.min.js"></script>
-
-<!-- UAL WAX Cloud Wallet -->
-<script src="https://unpkg.com/ual-wax@2.0.0/dist/ual-wax.min.js"></script>
-
-<!-- UAL Wombat -->
-<script src="https://unpkg.com/ual-wombat@2.0.0/dist/ual-wombat.min.js"></script>
-
+  <title>UAL Login ESM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
-<body class="bg-gray-900 text-white flex items-center justify-center h-screen">
+<body style="background:#111; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column;">
+  <button id="loginBtn" style="padding:10px 20px; font-size:16px;">Login</button>
+  <p id="welcome" style="margin-top:1rem;"></p>
 
-  <div id="auth-button-container" class="text-center">
-    <!-- Il bottone e il messaggio verranno generati da JS -->
-  </div>
+  <script type="module">
+    import { UALJs } from 'https://cdn.skypack.dev/ual-js';
+    import { Anchor } from 'https://cdn.skypack.dev/ual-anchor';
+    import { Wax } from 'https://cdn.skypack.dev/ual-wax';
+    import { Wombat } from 'https://cdn.skypack.dev/ual-wombat';
 
-  <script>
-    async function initApp() {
-      console.info("[🔍] Inizio funzione initApp...");
+    const appName = "UAL Demo";
+    const chain = {
+      chainId: "1064487b3cd1a897a9dd1b404ad17b8462923c063053f08d7340a1ade8e3e43b",
+      rpcEndpoints: [{ protocol: "https", host: "wax.greymass.com", port: 443 }]
+    };
 
-      if (typeof Anchor === "undefined") {
-        console.error("[❌] Anchor non è definito. La libreria non è stata caricata.");
+    const anchor = new Anchor([chain], { appName });
+    const wax = new Wax([chain], { appName });
+    const wombat = new Wombat([chain], { appName });
+
+    const ual = new UALJs([chain], appName, [anchor, wax, wombat]);
+    await ual.init();
+    window.ual = ual;
+
+    const btn = document.getElementById("loginBtn");
+    const welcome = document.getElementById("welcome");
+
+    btn.addEventListener("click", async () => {
+      if (ual.activeUser) {
+        await ual.logout();
+        btn.textContent = "Login";
+        welcome.textContent = "";
         return;
       }
 
-      const appName = "UAL Demo";
-      const chain = {
-        chainId: "1064487b3cd1a897a9dd1b404ad17b8462923c063053f08d7340a1ade8e3e43b",
-        rpcEndpoints: [{
-          protocol: "https",
-          host: "wax.greymass.com",
-          port: 443
-        }]
-      };
-
-      const anchor = new Anchor.AnchorAuthenticator([chain], { appName });
-      const waxAuth = new waxjs_ual.WaxAuthenticator([chain], { appName });
-      const wombat = new wombat_ual.Wombat([chain], { appName });
-
-      const ual = new UAL.UAL([chain], appName, [anchor, waxAuth, wombat]);
-      window.ual = ual;
-
-      const container = document.getElementById("auth-button-container");
-
-      const welcome = document.createElement("span");
-      welcome.className = "ml-4 font-semibold text-green-400";
-
-      const btn = document.createElement("button");
-      btn.className = "bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded";
-      btn.textContent = "Login";
-      container.appendChild(btn);
-      container.appendChild(welcome);
-
-      btn.addEventListener("click", () => {
-        if (ual.activeUser) {
-          ual.logout();
-          welcome.textContent = "";
-          btn.textContent = "Login";
-          console.info("[🚪] Logout eseguito.");
-        } else {
-          ual.init().then(() => ual.showModal());
-        }
-      });
+      await ual.showModal();
 
       const checkLogin = setInterval(async () => {
-        if (ual && ual.activeUser) {
+        if (ual.activeUser) {
           clearInterval(checkLogin);
           const account = await ual.activeUser.getAccountName();
-          welcome.textContent = `Welcome ${account}`;
           btn.textContent = "Logout";
-          console.info("[✅] Login con successo:", account);
+          welcome.textContent = `Welcome ${account}`;
         }
       }, 1000);
-    }
-
-    window.addEventListener("load", initApp);
+    });
   </script>
 </body>
 </html>

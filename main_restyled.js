@@ -84,108 +84,57 @@ function applyStormsFiltersAndSort() {
 }
 
 // Funzione iniziale aggiornata per supportare multi-temi via CSS
+// Funzione iniziale aggiornata per supportare multi-temi via CSS
 async function initApp() {
   try {
     console.info("[🔍] Inizio funzione initApp...");
 
-    const appName = "ChaosPortal";
-    const chain = {
-      chainId: "1064487b3cd1a897a9dd1b404ad17b8462923c063053f08d7340a1ade8e3e43b",
-      rpcEndpoints: [{
-        protocol: "https",
-        host: "wax.greymass.com",
-        port: 443
-      }]
+    console.info("[🛰️] Estrazione parametri da URL in corso...");
+    const params = getUrlParams();
+    console.info("[🧩] Parametri ottenuti:", params);
+
+    if (!params.userId || !params.usx_token) {
+      console.warn("[⚠️] Parametri user_id o usx_token mancanti nell'URL. Attivazione login manuale.");
+      renderAuthButton(false);
+      return; // NON lanciare errore: attendi login da utente
+    }
+
+    console.info("[💾] Salvando parametri in window.userData...");
+    window.userData = {
+      userId: params.userId,
+      usx_token: params.usx_token,
+      wax_account: null
     };
-    if (typeof Anchor === "undefined") {
-      console.error("[❌] Libreria Anchor non caricata correttamente.");
+    console.info("[📦] window.userData attuale:", window.userData);
+
+    console.info("[🚪] Verifica credenziali con /main_door in corso...");
+    const response = await fetch(`${BASE_URL}/main_door?user_id=${encodeURIComponent(params.userId)}&usx_token=${encodeURIComponent(params.usx_token)}`);
+    const data = await response.json();
+    console.info("[📨] Risposta ricevuta da /main_door:", data);
+
+    if (!data.user_id || !data.wax_account) {
+      console.warn("[⚠️] Credenziali non valide o incomplete. Mostro Login.");
+      renderAuthButton(false);
       return;
     }
-    if (typeof waxjs_ual === "undefined") {
-      console.error("[❌] Libreria waxjs_ual non caricata correttamente.");
-      return;
-    }
-    if (typeof wombat_ual === "undefined") {
-      console.error("[❌] Libreria wombat_ual non caricata correttamente.");
-      return;
-    }
-    const anchor = new Anchor.AnchorAuthenticator([chain], { appName });
-    const waxAuth = new waxjs_ual.WaxAuthenticator([chain], { appName });
-    const wombat = new wombat_ual.Wombat([chain], { appName });
 
-    const ual = new UAL.UAL([chain], appName, [anchor, waxAuth, wombat]);
-    window.ual = ual;
+    window.userData.wax_account = data.wax_account;
+    renderAuthButton(true);
+    console.info("[✅] Login effettuato correttamente. Dati utente finali:", window.userData);
 
-    const authContainer = document.getElementById("auth-button-container");
-    
-    // Crea il messaggio di benvenuto
-    const welcomeSpan = document.createElement("span");
-    welcomeSpan.className = "text-white ml-4 font-semibold";
-    authContainer.appendChild(welcomeSpan);
-    
-    // Crea il bottone login/logout
-    const loginBtn = document.createElement("button");
-    loginBtn.className = "px-4 py-2 bg-cyan-600 text-white rounded shadow hover:bg-cyan-700";
-    loginBtn.innerText = "Login";
-    authContainer.appendChild(loginBtn);
+    await loadAvailableTokens();
+    console.info("[🧹] Caricamento prima sezione Wallet...");
+    loadSection('wallet');
 
-    loginBtn.addEventListener("click", () => {
-      if (ual.activeUser) {
-        ual.logout();
-        loginBtn.innerText = "Login";
-        window.userData = {};
-        welcomeSpan.innerText = ""; // 🔄 cancella il messaggio di benvenuto
-        console.info("[🚪] Logout eseguito.");
-      } else {
-        ual.init().then(() => ual.showModal());
-      }
+    console.info("[🔗] Collegamento eventi pulsanti menu...");
+    document.querySelectorAll('.menu-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const section = e.target.getAttribute('data-section');
+        loadSection(section);
+      });
     });
 
-    const checkLogin = setInterval(async () => {
-      if (ual && ual.activeUser) {
-        clearInterval(checkLogin);
-
-        const accountName = await ual.activeUser.getAccountName();
-        window.userData.wax_account = accountName;
-        welcomeSpan.innerText = `Welcome ${accountName}`;
-        loginBtn.innerText = "Logout";
-        console.info("[✅] Login completato:", accountName);
-
-        // 🔗 Chiamata a /main_door
-        try {
-          const response = await fetch(`${BASE_URL}/main_door?user_id=${accountName}`);
-          const result = await response.json();
-
-          if (result && result.userId && result.usx_token) {
-            window.userData.userId = result.userId;
-            window.userData.usx_token = result.usx_token;
-
-            console.info("[🔑] Dati utente caricati:", window.userData);
-          } else {
-            console.warn("[⚠️] Dati incompleti da main_door:", result);
-          }
-        } catch (error) {
-          console.error("[❌] Errore nella chiamata a /main_door:", error);
-        }
-
-        // ✅ Dopo login & fetch: carica dati e menu
-        console.info("[✅] Login effettuato correttamente. Dati utente finali:", window.userData);
-
-        await loadAvailableTokens();
-        console.info("[🧹] Caricamento prima sezione Wallet...");
-        loadSection('wallet');
-
-        console.info("[🔗] Collegamento eventi pulsanti menu...");
-        document.querySelectorAll('.menu-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const section = e.target.getAttribute('data-section');
-            loadSection(section);
-          });
-        });
-
-        console.info("[🏁] initApp completato senza errori.");
-      }
-    }, 1000);
+    console.info("[🏁] initApp completato senza errori.");
 
   } catch (error) {
     console.error("[❌] Errore critico in initApp:", error);
@@ -193,6 +142,111 @@ async function initApp() {
       <div class="error-message centered margin-top-lg">
         Errore: ${error.message}<br>Verifica il link o rifai il login.
       </div>`;
+  }
+}
+
+
+
+
+function renderAuthButton(isLoggedIn) {
+  const container = document.getElementById('auth-button-container');
+  if (!container) return;
+
+  container.innerHTML = `
+    <button id="auth-toggle-button" style="
+      padding: 6px 12px;
+      font-weight: bold;
+      background-color: black;
+      color: gold;
+      border: 2px solid gold;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 0 5px gold;
+    ">
+      ${isLoggedIn ? 'Logout' : 'Login'}
+    </button>
+  `;
+
+  document.getElementById('auth-toggle-button').onclick = () => {
+    if (isLoggedIn) {
+      fetch(`${BASE_URL}/logout-secure`, { method: 'POST' })
+        .then(() => location.reload())
+        .catch(err => alert("Errore nel logout: " + err));
+    } else {
+      openLoginModal();
+    }
+  };
+}
+function openLoginModal() {
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+  const modalContent = modal.querySelector('.modal-content');
+
+  body.innerHTML = `
+    <h3 class="modal-title">Login</h3>
+    <label class="form-label">Username</label>
+    <input type="text" id="login-username" class="form-input" placeholder="Username">
+
+    <label class="form-label">Wallet Address</label>
+    <input type="text" id="login-wallet" class="form-input" placeholder="Wallet Address">
+
+    <label class="form-label">Auth Token</label>
+    <input type="text" id="login-token" class="form-input" placeholder="Auth Token">
+
+    <button class="btn btn-primary" id="submit-login" style="margin-top: 1rem;">Submit</button>
+  `;
+
+  modal.classList.remove('hidden');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
+
+  document.getElementById('submit-login').onclick = async () => {
+    const username = document.getElementById('login-username').value.trim();
+    const wallet = document.getElementById('login-wallet').value.trim();
+    const token = document.getElementById('login-token').value.trim();
+
+    try {
+      const res = await fetch(`${BASE_URL}/login-secure`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, wallet, token })
+      });
+
+      const data = await res.json();
+      if (!data.user_id || !data.usx_token || !data.wax_account) throw new Error("Login fallito");
+
+      // Reindirizza con nuovi parametri
+      const url = new URL(window.location.href);
+      url.searchParams.set('user_id', data.user_id);
+      url.searchParams.set('usx_token', data.usx_token);
+      window.location.href = url.toString();
+
+    } catch (err) {
+      alert("Login fallito: " + err.message);
+    }
+  };
+
+  // Pulsante chiusura
+  if (!modalContent.querySelector('.modal-close')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: gold;
+      background: none;
+      border: none;
+      cursor: pointer;
+    `;
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+    modalContent.prepend(closeBtn);
   }
 }
 

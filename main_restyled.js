@@ -1589,6 +1589,14 @@ async function loadSection(section) {
         </div>
       `;
     loadWallet();
+  } else if (section === 'goblin-dex') {
+      app.innerHTML = `
+        <div class="section-container">
+          <h2 class="section-title">Goblin Dex</h2>
+          <div id="wallet-table">Loading character...</div>
+        </div>
+      `;
+    loadGoblinDex();
   } else if (section === 'lp-league') {
       app.innerHTML = `
         <div class="section-container">

@@ -11,6 +11,17 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <!-- TailwindCSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- UAL (Universal Authenticator Library) -->
+  <script src="https://cdn.jsdelivr.net/npm/ual@2.0.0/dist/ual.min.js"></script>
+  
+  <!-- Anchor Authenticator -->
+  <script src="https://cdn.jsdelivr.net/npm/ual-anchor@2.0.0/dist/ual-anchor.min.js"></script>
+  
+  <!-- WAX Cloud Wallet Authenticator -->
+  <script src="https://cdn.jsdelivr.net/npm/ual-wax@2.0.0/dist/ual-wax.min.js"></script>
+  
+  <!-- Wombat Authenticator -->
+  <script src="https://cdn.jsdelivr.net/npm/ual-wombat@2.0.0/dist/ual-wombat.min.js"></script>
 
   <!-- CyberTribal Glow Theme CSS -->
   <link id="theme-style" rel="stylesheet" href="styles6_cybertriba_glow.css"/>
@@ -62,36 +73,7 @@
     style="display: flex; justify-content: center; align-items: flex-start; width: 100%; min-height: 100vh; margin: 0 auto; padding: 2rem; box-sizing: border-box;">
   </main>
   
-  <!-- Generic Modals -->
-  <div id="auth-modal" class="modal hidden">
-    <div class="modal-content">
-      <button class="modal-close">×</button>
-  
-      <div class="auth-tabs">
-        <button id="login-tab">Login</button>
-        <button id="register-tab">Register</button>
-      </div>
-  
-      <div id="login-form">
-        <input type="text" id="login-wax" placeholder="Wax Account" />
-        <input type="password" id="login-password" placeholder="Password" />
-        <input type="text" id="login-usx-token" placeholder="USX Token" />
-        <label><input type="checkbox" id="remember-me" /> Remember me</label>
-        <button onclick="submitLogin()">Login</button>
-      </div>
-  
-      <div id="register-form" class="hidden">
-        <input type="text" id="reg-wax" placeholder="Wax Account" />
-        <input type="email" id="reg-email" placeholder="Email" />
-        <input type="password" id="reg-password" placeholder="Password" />
-        <input type="text" id="reg-twitch" placeholder="Twitch Username" />
-        <input type="text" id="reg-telegram" placeholder="Telegram Username (without @)" />
-        <input type="text" id="reg-usx-token" placeholder="USX Token" />
-        <button onclick="submitRegistration()">Register</button>
-      </div>
-    </div>
-  </div>
-  
+  <!-- Generic Modals --> 
   <div id="modal" class="modal-dirty hidden" role="dialog" aria-modal="true"
        style="position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%);
               z-index: 9999; background-color: rgba(0, 0, 0, 0.85); padding: 2rem;

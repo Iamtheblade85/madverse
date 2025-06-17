@@ -1517,34 +1517,33 @@ async function loadSection(section) {
     loadCreateTokenStaking();
   }
   else if (section === 'daily') {
-  const dailyBoxRes = await fetch(`${BASE_URL}/daily_chest_open`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userId: userId,
-      usx_token: usx_token,
-      wax_account: window.userData.wax_account
-    })
-  });
-
-  const dailyBoxData = await dailyBoxRes.json();
-  window.accountData = {
-    ...window.accountData,
-    dailyBox: dailyBoxData
-  };
-
-  let wrapper = document.getElementById("section-content");
-  if (!wrapper) {
-    wrapper = document.createElement("div");
-    wrapper.id = "wrapper";
-    document.body.appendChild(wrapper);
+    const dailyBoxRes = await fetch(`${BASE_URL}/daily_chest_open`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: userId,
+        usx_token: usx_token,
+        wax_account: window.userData.wax_account
+      })
+    });
+  
+    const dailyBoxData = await dailyBoxRes.json();
+    window.accountData = {
+      ...window.accountData,
+      dailyBox: dailyBoxData
+    };
+  
+    let wrapper = document.getElementById("section-content");
+    if (!wrapper) {
+      wrapper = document.createElement("div");
+      wrapper.id = "wrapper";
+      document.body.appendChild(wrapper);
+    }
+  
+    wrapper.innerHTML = `<div class="account-card2" id="daily-box"></div>`;
+    renderDailyBox(window.accountData.dailyBox);
   }
 
-  wrapper.innerHTML = `<div class="account-card2" id="daily-box"></div>`;
-  renderDailyBox(window.accountData.dailyBox);
-}
-
- 
   else if (section === 'account') {
     app.innerHTML = `
       <div class="section-container">
@@ -1600,11 +1599,6 @@ async function loadSection(section) {
             <div id="recent-activity"></div>
           </details>
   
-          <details class="account-block2" decorated-block">
-            <summary class="section-title2">🎁 Daily Box</summary>
-            <img class="block-deco left" src="https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeifupqrjp4bgyfcdghqf7vctnygcvmq4fqrqihhhktrcvxyvxzcxwq" alt="decor-left">
-            <div id="daily-box"></div>
-          </details>
         </div>
       </div>
     `;
@@ -2166,13 +2160,13 @@ async function renderDailyBox(data) {
 
   let html = `
     <p class="subtitle2">
-      If you own the <strong>VIP Membership NFT</strong>, you can also claim a Chips Chest.<br>
+      If you own the <strong>VIP Membership NFT</strong>, you can claim a Chest daily.<br>
       Chest types include <strong>Wood</strong>, <strong>Bronze</strong>, <strong>Gold</strong>, <strong>Platinum</strong>.<br>
       Will you get Tokens, NFTs, Evet-Tickets and more? You can also scroll the chests-blends ;)
     </p>
     <div class="mb-2">
-      <span class="status-badge2 ${window.accountData.userInfo.vip_active ? 'active2' : 'inactive2'}">
-        ${window.accountData.userInfo.vip_active ? 'VIP Active ✅' : 'VIP Inactive ❌'}
+      <span class="status-badge2 ${data.vip_pass ? 'active2' : 'inactive2'}">
+        ${data.vip_pass ? 'VIP Active ✅' : 'VIP Inactive ❌'}
       </span>
     </div>
   `;

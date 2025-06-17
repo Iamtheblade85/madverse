@@ -1533,7 +1533,7 @@ async function loadSection(section) {
       dailyBox: dailyBoxData
     };
   
-    let wrapper = document.getElementById("section-content");
+    let wrapper = document.getElementById("section-container");
     if (!wrapper) {
       wrapper = document.createElement("div");
       wrapper.id = "wrapper";

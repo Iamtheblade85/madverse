@@ -184,7 +184,7 @@ function renderAuthButton(isLoggedIn) {
   const container = document.getElementById('auth-button-container');
   if (!container) return;
 
-  container.innerHTML = `
+  let html = `
     <button id="auth-toggle-button" style="
       padding: 6px 12px;
       font-weight: bold;
@@ -198,6 +198,16 @@ function renderAuthButton(isLoggedIn) {
       ${isLoggedIn ? 'Logout' : 'Login'}
     </button>
   `;
+
+  if (isLoggedIn && window.userData?.wax_account) {
+    html += `
+      <div class="intro-text" style="margin-top: 0.5rem;">
+        Welcome ${window.userData.wax_account}
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
 
   document.getElementById('auth-toggle-button').onclick = () => {
     if (isLoggedIn) {
@@ -2343,14 +2353,14 @@ async function renderDailyBox(data) {
       Will you get Tokens, NFTs, Evet-Tickets and more? You can also scroll the chests-blends ;)
     </p>
     <div class="mb-2">
-      <span class="status-badge2 ${data.vip_pass ? 'active2' : 'inactive2'}">
-        ${data.vip_pass ? 'VIP Active ✅' : 'VIP Inactive ❌'}
+      <span class="status-badge2 ${data.vip_active ? 'active2' : 'inactive2'}">
+        ${data.vip_active ? 'VIP Active ✅' : 'VIP Inactive ❌'}
       </span>
     </div>
   `;
 
   // Caso: utente ha chests pending da aprire
-  if (data.pending_chests && data.pending_chests.length > 0) {
+  if (data.pending_chests && data.pending_chests.length > 0 && data.vip_active) {
     html += `
       <div class="box-results mt-3">
         <p>🚀 You have <strong>${data.pending_chests.length}</strong> chest(s) ready to open:</p>
@@ -2378,7 +2388,14 @@ async function renderDailyBox(data) {
       </div>
     `;
 
-  } 
+  }
+  if !(data.vip_active) {
+    html += `
+      <div class="box-results mt-3">
+        <p>🚀 You don´t have <strong>VIP Membership NFT Pass</strong>! Get one to be able open the chests.</p>
+        <div class="pending-chests-buttons" style="display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem;">
+    `;
+  }
   if (data.last_opened_result) {
     // Caso: utente ha già aperto oggi → mostra risultato
     html += `
@@ -5664,12 +5681,7 @@ function showToast(message, type = "success") {
 }
 
 /* ─────────────────────────────
-   2. AVVIO APP
-   ───────────────────────────── */
-initApp();
-
-/* ─────────────────────────────
-   3. SELECTOR TEMA DINAMICO
+   2. SELECTOR TEMA DINAMICO
    ───────────────────────────── */
 function injectThemeSelector() {
   const selector = document.createElement('select');

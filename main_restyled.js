@@ -1988,7 +1988,7 @@ async function renderGoblinInventory() {
           outline: none;
           background: #222;
           color: #0ff;
-          font-size: 0.9rem;
+          font-size: 1rem;
           box-shadow: 0 0 5px #0ff;
         ">
     
@@ -1997,7 +1997,7 @@ async function renderGoblinInventory() {
           border-radius: 8px;
           background: #222;
           color: #fff;
-          font-size: 0.9rem;
+          font-size: 1rem;
           box-shadow: 0 0 5px #0ff;
         ">
           <option value="">All Rarities</option>
@@ -2014,7 +2014,7 @@ async function renderGoblinInventory() {
           border-radius: 8px;
           background: #222;
           color: #0ff;
-          font-size: 0.9rem;
+          font-size: 1rem;
           box-shadow: 0 0 5px #0ff;
         ">
     
@@ -2025,7 +2025,7 @@ async function renderGoblinInventory() {
             border-radius: 8px;
             background: #222;
             color: #0ff;
-            font-size: 0.9rem;
+            font-size: 1rem;
             box-shadow: 0 0 5px #0ff;
           ">
         `).join('')}
@@ -2035,7 +2035,7 @@ async function renderGoblinInventory() {
           border-radius: 8px;
           background: #222;
           color: #0ff;
-          font-size: 0.9rem;
+          font-size: 1rem;
           box-shadow: 0 0 5px #0ff;
         ">
           <option value="6">6</option>
@@ -2066,7 +2066,7 @@ async function renderGoblinInventory() {
             background: #222;
             color: #0ff;
             border-radius: 8px;
-            font-size: 0.85rem;
+            font-size: 1rem;
             box-shadow: 0 0 6px #0ff;
             transition: all 0.2s ease;
           ">
@@ -2116,31 +2116,31 @@ async function renderGoblinInventory() {
             box-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
           ">
     
-          <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.3rem; color: #ffe600;">
+          <div style="font-size: 1.25rem; font-weight: bold; margin-bottom: 0.3rem; color: #ffe600;">
             ${nft.name}
           </div>
     
-          <div style="font-size: 0.8rem; margin-bottom: 0.2rem;">
+          <div style="font-size: 1rem; margin-bottom: 0.2rem;">
             <span style="color: #888;">Rarity:</span> 
             <span class="${getRarityColorClass(nft.rarity)}">${nft.rarity}</span>
           </div>
     
-          <div style="font-size: 0.8rem; margin-bottom: 0.2rem;">
+          <div style="font-size: 1rem; margin-bottom: 0.2rem;">
             <span style="color: #888;">Edition:</span> <span style="color:#fff;">${nft.edition}</span>
           </div>
-          <div style="font-size: 0.75rem;">
+          <div style="font-size: 1rem;">
             <span style="color: #888;">Asset ID:</span> <span style="color:#ccc;">${nft.asset_id}</span>
           </div>
-          <div style="font-size: 0.75rem; margin-bottom: 0.4rem;">
+          <div style="font-size: 1rem; margin-bottom: 0.4rem;">
             <span style="color: #888;">Mint #:</span> <span style="color:#ccc;">${nft.template_mint}</span>
           </div>
     
-          <div style="margin: 0.5rem 0; font-size: 0.7rem; color: #aaa; min-height: 30px; font-style: italic;">
+          <div style="margin: 0.5rem 0; font-size: 1rem; color: #aaa; min-height: 30px; font-style: italic;">
             “${nft.description}”
           </div>
     
           <div class="goblin-attributes" style="
-            font-size: 0.7rem;
+            font-size: 1rem;
             color: #0ff;
             text-align: left;
             margin: 0.75rem 0;

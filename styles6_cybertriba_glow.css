@@ -5070,3 +5070,97 @@ details[open] > div {
 .border-glow-purple { box-shadow: 0 0 15px #c066ff; }
 .border-glow-gold { box-shadow: 0 0 15px #ffcc00; }
 .border-glow-red { box-shadow: 0 0 15px #ff4444; }
+
+/* Neon Glow Buttons */
+.btn-glow {
+  background: transparent;
+  border: 2px solid #0ff;
+  color: #0ff;
+  padding: 0.6rem 1.2rem;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-shadow: 0 0 4px #0ff;
+}
+
+.btn-glow:hover {
+  background: #0ff;
+  color: #000;
+  box-shadow: 0 0 10px #0ff;
+}
+
+/* Neon Text Labels */
+.label {
+  color: #aaa;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.label span {
+  color: #fff;
+}
+
+/* Glow Container */
+.blend-card {
+  background: linear-gradient(to bottom, #0f0f0f, #1a1a1a);
+  border-radius: 16px;
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 0 12px #00f0ff;
+  font-family: 'Orbitron', sans-serif;
+  transition: transform 0.2s ease;
+  color: #fff;
+}
+
+.blend-card:hover {
+  transform: scale(1.03);
+}
+
+/* Grid layout */
+#blend-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  padding-bottom: 3rem;
+}
+
+/* Filter Select & Inputs */
+select, input[type="number"] {
+  background-color: #111;
+  border: 1px solid #0ff;
+  border-radius: 8px;
+  color: #fff;
+  padding: 0.6rem;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+select:focus, input[type="number"]:focus {
+  box-shadow: 0 0 5px #0ff;
+}
+
+/* Neon Glow Headers */
+.section-title {
+  text-shadow: 0 0 6px #0ff;
+  font-family: 'Orbitron', sans-serif;
+  color: #ffe600;
+}
+
+/* Responsive top images */
+.blend-header-images {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.blend-header-images img {
+  height: 120px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px #00f0ff;
+  margin: 0.5rem;
+}

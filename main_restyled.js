@@ -2285,11 +2285,6 @@ async function renderGoblinBlend() {
     <div style="margin-bottom: 2rem; padding: 1rem; background: #111; border-radius: 12px; box-shadow: 0 0 10px #0ff; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: center;">
       <button id="refresh-blends" class="btn btn-glow" style="padding: 0.6rem 1.2rem;">🔄 Refresh Data</button>
 
-      <select id="filter-owned" style="padding: 0.6rem; border-radius: 8px;">
-        <option value="">All Goblins</option>
-        <option value="owned">Only Owned</option>
-      </select>
-
       <select id="filter-rarity" style="padding: 0.6rem; border-radius: 8px;">
         <option value="">All Rarities</option>
         <option value="common">Common</option>
@@ -2299,7 +2294,6 @@ async function renderGoblinBlend() {
         <option value="mythic">Mythic</option>
       </select>
 
-      <input id="filter-level" type="number" min="1" placeholder="Min Level" style="width: 130px; padding: 0.6rem; border-radius: 8px;">
       <input id="filter-edition" type="number" min="1" placeholder="Edition" style="width: 130px; padding: 0.6rem; border-radius: 8px;">
     </div>
 
@@ -2313,22 +2307,64 @@ async function renderGoblinBlend() {
 
   const blendResults = document.getElementById("blend-results");
 
-  async function fetchBlendData() {
-    try {
-      const res = await fetch(`${BASE_URL}/get_blend_data`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          wax_account: window.userData.wax_account,
-          user_id: window.userData.userId,
-          usx_token: window.userData.usx_token
-        })
-      });
-      return await res.json();
-    } catch (err) {
-      console.error("Error fetching blend data:", err);
-      return [];
-    }
+  async function fetchUserGoblinData() {
+    const res = await fetch(`${BASE_URL}/user_nfts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        wax_account: window.userData.wax_account,
+        user_id: window.userData.userId,
+        usx_token: window.userData.usx_token
+      })
+    });
+    return await res.json();
+  }
+
+  function generateLevelBlends(userNfts) {
+    const blends = [];
+    const groupedByLevel = {};
+
+    const magicStones = userNfts.filter(nft => nft.template_id === '893711');
+    if (magicStones.length === 0) return blends;
+
+    userNfts.forEach(nft => {
+      const lvl = parseInt(nft.level);
+      if (!groupedByLevel[lvl]) groupedByLevel[lvl] = [];
+      if (nft.template_id !== '893711') {
+        groupedByLevel[lvl].push(nft);
+      }
+    });
+
+    Object.entries(groupedByLevel).forEach(([lvlStr, goblins]) => {
+      const lvl = parseInt(lvlStr);
+      const blendCount = Math.floor(goblins.length / 3);
+      const usable = Math.min(blendCount, magicStones.length);
+
+      for (let i = 0; i < usable; i++) {
+        blends.push({
+          name: `Upgrade to Level ${lvl + 1}`,
+          img: goblins[i * 3].img,
+          level: lvl + 1,
+          rarity: goblins[i * 3].rarity,
+          edition: goblins[i * 3].edition,
+          blend_id: `blend_lvl_${lvl + 1}`,
+          blend_link: `https://neftyblocks.com/cryptochaos1/blends/blend_lvl_${lvl + 1}`
+        });
+      }
+    });
+
+    return blends;
+  }
+
+  function applyFilters(blends) {
+    const rarity = document.getElementById('filter-rarity').value;
+    const edition = +document.getElementById('filter-edition').value || null;
+
+    return blends.filter(item => {
+      if (rarity && item.rarity.toLowerCase() !== rarity.toLowerCase()) return false;
+      if (edition && +item.edition !== edition) return false;
+      return true;
+    });
   }
 
   function renderBlendResults(data) {
@@ -2343,51 +2379,31 @@ async function renderGoblinBlend() {
         transition: transform 0.2s ease;
         color: #fff;
       " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-        <img src="${item.img}" alt="${item.name}" style="width: 100%; border-radius: 12px; margin-bottom: 0.75rem; box-shadow: 0 0 12px rgba(0, 255, 255, 0.4);">
-        
+        <img src="${item.img}" alt="${item.name}" style="width: 100%; border-radius: 12px; margin-bottom: 0.75rem;">
         <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.4rem; color: #ffe600;">${item.name}</div>
-        <div style="font-size: 0.8rem; color: #aaa;">Rarity: <span style="color: #fff;">${item.rarity}</span></div>
         <div style="font-size: 0.8rem; color: #aaa;">Level: <span style="color: #fff;">${item.level}</span></div>
+        <div style="font-size: 0.8rem; color: #aaa;">Rarity: <span style="color: #fff;">${item.rarity}</span></div>
         <div style="font-size: 0.8rem; color: #aaa;">Edition: <span style="color: #fff;">${item.edition}</span></div>
-        
         <div style="margin-top: 0.8rem;">
-          <a href="https://neftyblocks.com/cryptochaos1/blends/${item.blend_id}" target="_blank"
-            class="btn btn-glow" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">🧪 Blend on Nefty</a>
+          <a href="${item.blend_link}" target="_blank" class="btn btn-glow" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">🧪 Blend on Nefty</a>
         </div>
       </div>
     `).join('');
   }
 
-  function applyBlendFilters(data) {
-    const owned = document.getElementById('filter-owned').value;
-    const rarity = document.getElementById('filter-rarity').value;
-    const level = +document.getElementById('filter-level').value || null;
-    const edition = +document.getElementById('filter-edition').value || null;
+  let userNfts = await fetchUserGoblinData();
+  let allBlends = generateLevelBlends(userNfts);
+  renderBlendResults(allBlends);
 
-    return data.filter(item => {
-      if (owned === 'owned' && !item.owned) return false;
-      if (rarity && item.rarity.toLowerCase() !== rarity.toLowerCase()) return false;
-      if (level && +item.level < level) return false;
-      if (edition && +item.edition !== edition) return false;
-      return true;
-    });
-  }
-
-  // Initial Load
-  let allBlendData = await fetchBlendData();
-  renderBlendResults(allBlendData);
-
-  // Refresh
   document.getElementById("refresh-blends").addEventListener("click", async () => {
-    allBlendData = await fetchBlendData();
-    renderBlendResults(applyBlendFilters(allBlendData));
+    userNfts = await fetchUserGoblinData();
+    allBlends = generateLevelBlends(userNfts);
+    renderBlendResults(applyFilters(allBlends));
   });
 
-  // Filter listeners
-  ['filter-owned', 'filter-rarity', 'filter-level', 'filter-edition'].forEach(id => {
+  ['filter-rarity', 'filter-edition'].forEach(id => {
     document.getElementById(id).addEventListener("input", () => {
-      const filtered = applyBlendFilters(allBlendData);
-      renderBlendResults(filtered);
+      renderBlendResults(applyFilters(allBlends));
     });
   });
 }

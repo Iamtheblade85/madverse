@@ -2319,26 +2319,22 @@ async function renderGoblinBlend() {
   function renderBlendResults(blends) {
     blendResults.innerHTML = blends.map(item => {
       const ingredientList = item.ingredients.map(ing => {
-        const owned = item.owned_templates?.[ing.template_id] || [];
-        const ownedCount = owned.length;
-        const neededCount = ing.quantity;
+        const ownedCount = ing.owned || 0;
+        const neededCount = ing.needed || ing.quantity || 0;
         const ratio = `${ownedCount}/${neededCount}`;
-        
-        let color = "#0f0"; // green
-        if (ownedCount === 0) color = "#f00"; // red
-        else if (ownedCount < neededCount) color = "#ffa500"; // orange
-        
-        const assetIds = owned.length > 0
-          ? `<br><span style="color:#888;font-size:0.7rem;">Assets: ${owned.join(', ')}</span>`
+  
+        let color = "#0f0"; // green (complete)
+        if (ownedCount === 0) color = "#f00"; // red (none)
+        else if (ownedCount < neededCount) color = "#ffa500"; // orange (partial)
+  
+        const assetIds = ing.asset_ids?.length > 0
+          ? `<br><span style="color:#888;font-size:0.7rem;">Assets: ${ing.asset_ids.join(', ')}</span>`
           : "";
   
-        const filterInfo = ing.filters
-          ? ` <span style="color:#999;">[${Object.entries(ing.filters).map(([k, v]) => `${k}: ${v}`).join(', ')}]</span>`
-          : "";
-  
-        return `<li style="color: ${color}; font-size: 0.8rem;">
-          ${ratio} × (schema: ${ing.schema_name}, id: ${ing.template_id})${filterInfo}${assetIds}
-        </li>`;
+        return `
+          <li style="color: ${color}; font-size: 0.8rem;">
+            ${ratio} × (schema: ${ing.schema_name}, id: ${ing.template_id})${assetIds}
+          </li>`;
       }).join('');
   
       return `
@@ -2372,6 +2368,7 @@ async function renderGoblinBlend() {
       `;
     }).join('');
   }
+
 
   async function fetchBlendData() {
     const payload = {

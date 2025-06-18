@@ -2305,69 +2305,6 @@ async function renderGoblinBlend() {
 
   const blendResults = document.getElementById("blend-results");
 
-  async function fetchUserGoblinData() {
-    const res = await fetch(`${BASE_URL}/user_nfts`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        wax_account: window.userData.wax_account,
-        user_id: window.userData.userId,
-        usx_token: window.userData.usx_token
-      })
-    });
-    return await res.json();
-  }
-
-  function generateUpgradeBlends(userNfts) {
-    const blends = [];
-    const goblinsByLevel = {};
-    const ownedMagicStones = userNfts.filter(n => n.template_id === '893711');
-
-    userNfts.forEach(nft => {
-      const lvl = parseInt(nft.level);
-      if (!goblinsByLevel[lvl]) goblinsByLevel[lvl] = [];
-      if (nft.template_id !== '893711') {
-        goblinsByLevel[lvl].push(nft);
-      }
-    });
-
-    Object.entries(goblinsByLevel).forEach(([lvlStr, goblins]) => {
-      const lvl = parseInt(lvlStr);
-      const upgradeToLevel = lvl + 1;
-      const possibleBlends = Math.min(Math.floor(goblins.length / 3), ownedMagicStones.length);
-
-      if (possibleBlends === 0) return;
-
-      for (let i = 0; i < possibleBlends; i++) {
-        const ingredients = {
-          goblins: goblins.slice(i * 3, i * 3 + 3),
-          stone: ownedMagicStones[i]
-        };
-
-        const missing = {
-          goblins: goblins.length < 3,
-          stone: ownedMagicStones.length < 1
-        };
-
-        const preview = goblins[i * 3];
-
-        blends.push({
-          name: `Upgrade to Level ${upgradeToLevel}`,
-          img: preview.img,
-          level: upgradeToLevel,
-          rarity: preview.rarity,
-          edition: preview.edition,
-          blend_id: `blend_lvl_${upgradeToLevel}`,
-          blend_link: `https://neftyblocks.com/cryptochaos1/blends/blend_lvl_${upgradeToLevel}`,
-          ingredients,
-          missing
-        });
-      }
-    });
-
-    return blends;
-  }
-
   function applyFilters(blends) {
     const rarity = document.getElementById('filter-rarity').value;
     const edition = +document.getElementById('filter-edition').value || null;
@@ -2418,15 +2355,28 @@ async function renderGoblinBlend() {
   }
 
   // Initial load
-  let userNfts = await fetchUserGoblinData();
-  let allBlends = generateUpgradeBlends(userNfts);
-  renderBlendResults(allBlends);
+  async function fetchBlendData() {
+    const res = await fetch(`${BASE_URL}/get_blend_data`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        wax_account: window.userData.wax_account,
+        user_id: window.userData.userId,
+        usx_token: window.userData.usx_token
+      })
+    });
+    return await res.json();
+  }
+  
+  // Initial load
+  let blendData = await fetchBlendData();
+  renderBlendResults(blendData);
+
 
   // Refresh
   document.getElementById("refresh-blends").addEventListener("click", async () => {
-    userNfts = await fetchUserGoblinData();
-    allBlends = generateUpgradeBlends(userNfts);
-    renderBlendResults(applyFilters(allBlends));
+    blendData = await fetchBlendData();
+    renderBlendResults(applyFilters(blendData));
   });
 
   // Filters

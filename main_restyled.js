@@ -1878,6 +1878,25 @@ function loadGoblinDex() {
   renderGoblinInventory();
 }
 
+function getRarityColorClass(rarity) {
+  switch (rarity.toLowerCase()) {
+    case 'common': return 'neon-green';
+    case 'rare': return 'neon-blue';
+    case 'epic': return 'neon-purple';
+    case 'legendary': return 'neon-gold';
+    case 'mythic': return 'neon-red';
+    default: return 'neon-white';
+  }
+}
+
+function getLevelColorClass(level) {
+  if (level >= 10) return 'neon-red';
+  if (level >= 7) return 'neon-gold';
+  if (level >= 4) return 'neon-purple';
+  if (level >= 2) return 'neon-blue';
+  return 'neon-green';
+}
+
 async function renderGoblinInventory() {
   const container = document.getElementById('goblin-content');
   container.innerHTML = `<p class="subtitle2">Fetching your goblins...</p>`;
@@ -1974,21 +1993,51 @@ async function renderGoblinInventory() {
           width: 100%;
           max-width: 200px;
           min-width: 170px;
-          background:#111;
-          padding:1rem;
-          border-radius:16px;
-          text-align:center;
-          box-shadow:0 0 15px #0ff;
+          background: linear-gradient(to bottom, #111, #1a1a1a);
+          padding: 1rem;
+          border-radius: 16px;
+          text-align: center;
+          box-shadow: 0 0 15px #0ff;
+          font-family: 'Orbitron', sans-serif;
+          color: #fff;
+          position: relative;
         ">
-          <img src="${nft.img}" alt="${nft.name}" style="max-width:100%; border-radius:12px; margin-bottom:0.5rem;">
-          <div style="color:#fff; font-weight:bold;">${nft.name}</div>
-          <div style="color:#aaa; font-size:0.85rem;">Rarity: ${nft.rarity}</div>
-          <div style="margin:0.5rem 0; font-size:0.8rem; color:#ccc;">${nft.description}</div>
-          <div class="goblin-attributes" style="font-size:0.75rem; color:#0ff; margin-bottom:0.5rem;">
-            ${['level','resistance','accuracy','loot-hungry','speed','daily-power']
-              .map(key => `<div><strong>${key.replace('-', ' ')}:</strong> ${nft[key]}</div>`).join('')}
+          <img src="${nft.img}" alt="${nft.name}" style="
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 0 8px #0ff;
+          ">
+          
+          <div style="font-size: 1rem; font-weight: bold; margin-bottom: 0.25rem; color: #ffe600;">
+            ${nft.name}
           </div>
-          <div class="goblin-actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:center;">
+          
+          <div style="font-size: 0.75rem;">Rarity:
+            <span class="${getRarityColorClass(nft.rarity)}">${nft.rarity}</span>
+          </div>
+          <div style="font-size: 0.75rem; color: #0ff;">Edition: <span style="color:#fff;">${nft.edition}</span></div>
+          <div style="font-size: 0.75rem; color: #0ff;">Asset ID: <span style="color:#ccc;">${nft.asset_id}</span></div>
+          <div style="font-size: 0.75rem; color: #0ff;">Mint #: <span style="color:#ccc;">${nft.template_mint}</span></div>
+      
+          <div style="margin: 0.5rem 0; font-size: 0.7rem; color: #aaa; min-height: 30px;">
+            "${nft.description}"
+          </div>
+      
+          <div class="goblin-attributes" style="font-size: 0.7rem; color: #0ff; text-align:left; margin: 0.5rem 0;">
+            <div>
+              <span style="color:#aaa;">Level:</span>
+              <strong class="${getLevelColorClass(nft.level)}"> ${nft.level}</strong>
+            </div>
+            ${['resistance','accuracy','loot-hungry','speed','daily-power']
+              .map(key => `
+                <div>
+                  <span style="color:#aaa;">${key.replace('-', ' ')}:</span>
+                  <strong style="color:#fff;"> ${nft[key]}</strong>
+                </div>`).join('')}
+          </div>
+
+          <div class="goblin-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-top: 0.5rem;">
             <button class="btn btn-glow" onclick="selectAsDefault('${nft.name}')">Select</button>
             <button class="btn btn-glow" onclick="openCraft('${nft.name}')">Craft</button>
             <button class="btn btn-glow" onclick="openBlend('${nft.name}')">Blend</button>

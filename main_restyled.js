@@ -1827,7 +1827,7 @@ function loadGoblinDex() {
         </button>
         <button class="goblin-menu-btn" data-menu="blend"
           style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-          Blend & Craft
+          Blend & Rotate slot
         </button>
         <button class="goblin-menu-btn" data-menu="history"
           style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
@@ -2164,7 +2164,7 @@ async function renderGoblinInventory() {
             margin-top: 0.75rem;
           ">
             <button class="btn btn-glow btn-action" onclick="selectAsDefault('${nft.name}')">🎯 Use in Dwarf´s Cave</button>
-            <button class="btn btn-glow btn-action" onclick="openBlend('${nft.name}')">🧪 Blend & Craft</button>
+            <button class="btn btn-glow btn-action" onclick="openBlend('${nft.name}')">🧪 Blend & Rotate slot</button>
           </div>
         </div>
       `).join('');
@@ -2272,44 +2272,103 @@ function renderDwarfsCave() {
 async function renderGoblinBlend() {
   const container = document.getElementById('goblin-content');
   container.innerHTML = `
-    <div style="display: flex; justify-content: space-around; align-items: center; margin-bottom: 2rem;">
-      <img src="https://example.com/levels.jpg" alt="Levels" style="height: 120px; border-radius: 12px; box-shadow: 0 0 15px #00f0ff;">
-      <img src="https://example.com/rotation.jpg" alt="Rotation Cycle" style="height: 120px; border-radius: 12px; box-shadow: 0 0 15px #00f0ff;">
+    <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem;">
+      <button id="tab-level" class="btn btn-glow active-tab">Level Upgrades</button>
+      <button id="tab-rotation" class="btn btn-glow">Slot Rotation</button>
     </div>
 
-    <div style="margin-bottom: 2rem; padding: 1rem; background: #111; border-radius: 12px; box-shadow: 0 0 10px #0ff; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: center;">
-      <button id="refresh-blends" class="btn btn-glow" style="padding: 0.6rem 1.2rem;">🔄 Refresh Data</button>
-      <select id="filter-rarity" style="padding: 0.6rem; border-radius: 8px;">
-        <option value="">All Rarities</option>
-        <option value="common">Common</option>
-        <option value="rare">Rare</option>
-        <option value="epic">Epic</option>
-        <option value="legendary">Legendary</option>
-        <option value="mythic">Mythic</option>
-      </select>
-      <input id="filter-edition" type="number" min="1" placeholder="Edition" style="width: 130px; padding: 0.6rem; border-radius: 8px;">
+    <div id="tab-content">
+      <p style="color: #0ff;">Loading...</p>
     </div>
-
-    <div id="blend-results" style="
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-      padding-bottom: 3rem;
-    "></div>
   `;
 
-  const blendResults = document.getElementById("blend-results");
+  const tabContent = document.getElementById("tab-content");
+  const levelBtn = document.getElementById("tab-level");
+  const rotationBtn = document.getElementById("tab-rotation");
 
-  function applyFilters(blends) {
-    const rarity = document.getElementById('filter-rarity').value;
-    const edition = +document.getElementById('filter-edition').value || null;
+  levelBtn.addEventListener("click", () => {
+    setActiveTab("level");
+  });
 
-    return blends.filter(b => {
-      if (rarity && b.rarity.toLowerCase() !== rarity.toLowerCase()) return false;
-      if (edition && +b.edition !== edition) return false;
-      return true;
-    });
+  rotationBtn.addEventListener("click", () => {
+    setActiveTab("rotation");
+  });
+
+  async function setActiveTab(tabName) {
+    // Aggiorna stile tab
+    [levelBtn, rotationBtn].forEach(btn => btn.classList.remove("active-tab"));
+    if (tabName === "level") levelBtn.classList.add("active-tab");
+    else rotationBtn.classList.add("active-tab");
+
+    // Mostra contenuto
+    tabContent.innerHTML = `<p style="color: #0ff;">Loading...</p>`;
+
+    if (tabName === "level") {
+      await renderLevelUpgrades();
+    } else {
+      await renderSlotRotation();
+    }
   }
+
+  // Attiva tab iniziale
+await setActiveTab("level");
+
+  
+  
+  async function renderLevelUpgrades() {
+    tabContent.innerHTML = `
+      <div style="display: flex; justify-content: space-around; align-items: center; margin-bottom: 2rem;">
+        <img src="https://example.com/levels.jpg" alt="Levels" style="height: 120px; border-radius: 12px; box-shadow: 0 0 15px #00f0ff;">
+        <img src="https://example.com/rotation.jpg" alt="Rotation Cycle" style="height: 120px; border-radius: 12px; box-shadow: 0 0 15px #00f0ff;">
+      </div>
+
+      <div style="margin-bottom: 2rem; padding: 1rem; background: #111; border-radius: 12px; box-shadow: 0 0 10px #0ff; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: center;">
+        <button id="refresh-blends" class="btn btn-glow" style="padding: 0.6rem 1.2rem;">🔄 Refresh Data</button>
+        <select id="filter-rarity" style="padding: 0.6rem; border-radius: 8px;">
+          <option value="">All Rarities</option>
+          <option value="common">Common</option>
+          <option value="rare">Rare</option>
+          <option value="epic">Epic</option>
+          <option value="legendary">Legendary</option>
+          <option value="mythic">Mythic</option>
+        </select>
+        <input id="filter-edition" type="number" min="1" placeholder="Edition" style="width: 130px; padding: 0.6rem; border-radius: 8px;">
+      </div>
+
+      <div id="blend-results" style="
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        padding-bottom: 3rem;
+      "></div>
+    `;
+
+    const blendResults = document.getElementById("blend-results");
+
+    function applyFilters(blends) {
+      const rarity = document.getElementById('filter-rarity').value;
+      const edition = +document.getElementById('filter-edition').value || null;
+
+      return blends.filter(b => {
+        if (rarity && b.rarity.toLowerCase() !== rarity.toLowerCase()) return false;
+        if (edition && +b.edition !== edition) return false;
+        return true;
+      });
+    }
+
+    async function fetchBlendData() {
+      const payload = {
+        wax_account: window.userData.wax_account,
+        user_id: window.userData.userId,
+        usx_token: window.userData.usx_token
+      };
+      const res = await fetch(`${BASE_URL}/get_blend_data`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
+    }
 
   function renderBlendResults(blends) {
     blendResults.innerHTML = blends.map(item => {
@@ -2368,64 +2427,53 @@ async function renderGoblinBlend() {
   }
 
 
-  async function fetchBlendData() {
-    const payload = {
-      wax_account: window.userData.wax_account,
-      user_id: window.userData.userId,
-      usx_token: window.userData.usx_token
-    };
-    console.groupCollapsed("🔄 [FetchBlendData] calling /get_blend_data");
-    console.log("➡️ Sending payload:", payload);
-    const startTime = performance.now();
-    const res = await fetch(`${BASE_URL}/get_blend_data`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const duration = (performance.now() - startTime).toFixed(2);
-    console.log(`⏱️ Response status: ${res.status} (${duration} ms)`);
-    let data;
-    try {
-      data = await res.json();
-      console.log("⬅️ Received data:", data);
-    } catch (err) {
-      console.error("❌ Error parsing JSON:", err);
-      throw err;
-    }
-    console.groupEnd();
-    return data;
-  }
-
-  // Initial load
-  console.log("📥 [Frontend] Initial load start");
-  let blendData;
-  try {
-    blendData = await fetchBlendData();
-    console.log("✅ [Frontend] Data fetched successfully:", blendData);
-    renderBlendResults(blendData);
-  } catch (err) {
-    console.error("❌ [Frontend] fetchBlendData failed:", err);
-    blendResults.innerHTML = "<p style='color:red'>Failed to load blends data.</p>";
-  }
-
-  // Refresh
-  document.getElementById("refresh-blends").addEventListener("click", async () => {
-    console.log("🔄 [Frontend] Refresh button clicked");
+    let blendData;
     try {
       blendData = await fetchBlendData();
-      renderBlendResults(applyFilters(blendData));
+      renderBlendResults(blendData);
     } catch (err) {
-      console.error("❌ [Frontend] Error during refresh:", err);
+      blendResults.innerHTML = "<p style='color:red'>Failed to load blends data.</p>";
     }
-  });
 
-  // Filters
-  ['filter-rarity', 'filter-edition'].forEach(id => {
-    document.getElementById(id).addEventListener("input", () => {
-      console.log(`🎚️ Filter changed (${id}), applying filters`);
+    document.getElementById("refresh-blends").addEventListener("click", async () => {
+      blendData = await fetchBlendData();
       renderBlendResults(applyFilters(blendData));
     });
-  });
+
+    ['filter-rarity', 'filter-edition'].forEach(id => {
+      document.getElementById(id).addEventListener("input", () => {
+        renderBlendResults(applyFilters(blendData));
+      });
+    });
+  }
+
+  async function renderSlotRotation() {
+    try {
+      const payload = {
+        wax_account: window.userData.wax_account,
+        user_id: window.userData.userId,
+        usx_token: window.userData.usx_token
+      };
+
+      const res = await fetch(`${BASE_URL}/get_rotations_data`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      tabContent.innerHTML = `
+        <div style="padding: 1rem; background: #111; color: #fff; border-radius: 12px;">
+          <h2 style="text-align:center; margin-bottom:1rem;">🌀 Slot Rotation Info</h2>
+          <pre style="white-space: pre-wrap;">${JSON.stringify(data, null, 2)}</pre>
+        </div>
+      `;
+    } catch (err) {
+      console.error("Error fetching rotation data:", err);
+      tabContent.innerHTML = `<p style="color:red">❌ Failed to load slot rotation data.</p>`;
+    }
+  }
 }
 
 function renderGoblinHistory() {

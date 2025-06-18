@@ -1827,11 +1827,7 @@ function loadGoblinDex() {
         </button>
         <button class="goblin-menu-btn" data-menu="blend"
           style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-          Blend
-        </button>
-        <button class="goblin-menu-btn" data-menu="upgrade"
-          style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-          Craft
+          Blend & Craft
         </button>
         <button class="goblin-menu-btn" data-menu="history"
           style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
@@ -2168,8 +2164,7 @@ async function renderGoblinInventory() {
             margin-top: 0.75rem;
           ">
             <button class="btn btn-glow btn-action" onclick="selectAsDefault('${nft.name}')">🎯 Use in Dwarf´s Cave</button>
-            <button class="btn btn-glow btn-action" onclick="openCraft('${nft.name}')">🛠 Craft</button>
-            <button class="btn btn-glow btn-action" onclick="openBlend('${nft.name}')">🧪 Blend</button>
+            <button class="btn btn-glow btn-action" onclick="openBlend('${nft.name}')">🧪 Blend & Craft</button>
           </div>
         </div>
       `).join('');
@@ -2328,7 +2323,7 @@ async function renderGoblinBlend() {
         else if (ownedCount < neededCount) color = "#ffa500"; // orange (partial)
   
         const assetIds = ing.asset_ids?.length > 0
-          ? `<br><span style="color:#888;font-size:0.7rem;">Assets: ${ing.asset_ids.join(', ')}</span>`
+          ? `<br><span style="color:#888;font-size:0.95rem;">Assets: ${ing.asset_ids.join(', ')}</span>`
           : "";
   
         return `
@@ -2348,11 +2343,11 @@ async function renderGoblinBlend() {
           transition: transform 0.2s ease;
           color: #fff;
         " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-          <img src="${item.img}" alt="${item.name}" style="width: 100%; border-radius: 12px; margin-bottom: 0.75rem;">
-          <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.4rem; color: #ffe600;">${item.name}</div>
-          <div style="font-size: 0.8rem; color: #aaa;">Level: <span style="color: #fff;">${item.level}</span></div>
-          <div style="font-size: 0.8rem; color: #aaa;">Rarity: <span style="color: #fff;">${item.rarity}</span></div>
-          <div style="font-size: 0.8rem; color: #aaa;">Edition: <span style="color: #fff;">${item.edition}</span></div>
+          <img src="${item.img}" alt="${item.name}" style="width: 80%; border-radius: 12px; margin-bottom: 0.75rem;">
+          <div style="font-size: 1.25rem; font-weight: bold; margin-bottom: 0.4rem; color: #ffe600;">${item.name}</div>
+          <div style="font-size: 1rem; color: #aaa;">Level: <span style="color: #fff;">${item.level}</span></div>
+          <div style="font-size: 1rem; color: #aaa;">Rarity: <span style="color: #fff;">${item.rarity}</span></div>
+          <div style="font-size: 1rem; color: #aaa;">Edition: <span style="color: #fff;">${item.edition}</span></div>
   
           <div style="margin-top: 1rem; text-align: left;">
             <strong style="color: #ffe600;">🔹 Ingredients:</strong>
@@ -2362,8 +2357,11 @@ async function renderGoblinBlend() {
           </div>
   
           <div style="margin-top: 1rem;">
-            <a href="${item.blend_link}" target="_blank" class="btn btn-glow" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">🧪 Blend on Nefty</a>
+            <a href="${item.blend_link}" target="_blank" class="btn btn-glow" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">🧪 Blend on NeftyBlock</a>
           </div>
+          <div style="margin-top: 1rem;">
+            <a href="${item.craft_link}" target="_blank" class="btn btn-glow" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">🧪 Level upgrade on NeftyBlock</a>
+          </div>          
         </div>
       `;
     }).join('');

@@ -19,6 +19,7 @@ document.addEventListener("click", (event) => {
 const BASE_URL = "https://iamemanuele.pythonanywhere.com";
 let availableTokens = [];
 let originalData = [];
+let filteredData = [];
 let originalStormsData = [];
 let currentSort = { key: '', direction: 'desc' };
 let originalNftGiveawaysData = [];
@@ -1593,7 +1594,7 @@ async function loadSection(section) {
       app.innerHTML = `
         <div class="section-container">
           <h2 class="section-title">Goblin Dex</h2>
-          <div id="wallet-table">Loading character...</div>
+          <div id="goblin-dex">Loading character...</div>
         </div>
       `;
     loadGoblinDex();
@@ -1801,6 +1802,404 @@ async function loadSection(section) {
   
     loadAccountSection();
   }
+}
+
+function loadGoblinDex() {
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="section-container">
+      <h2 class="section-title text-center">Goblin Dex</h2>
+      <div class="goblin-menu">
+        <button class="goblin-menu-btn active-tab" data-menu="inventory"
+          style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          Goblin Inventory
+        </button>
+        <button class="goblin-menu-btn" data-menu="dwarf-cave"
+          style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          Dwarf's Cave
+        </button>
+        <button class="goblin-menu-btn" data-menu="blend"
+          style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          Blend
+        </button>
+        <button class="goblin-menu-btn" data-menu="upgrade"
+          style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          Upgrade
+        </button>
+        <button class="goblin-menu-btn" data-menu="history"
+          style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          History
+        </button>
+        <button class="goblin-menu-btn" data-menu="hall-of-fame"
+          style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          Hall Of Fame
+        </button>
+      </div>
+      <div id="goblin-content" class="goblin-content">
+        Loading Goblin Inventory...
+      </div>
+    </div>
+  `;
+
+  // Gestione click menu
+  document.querySelectorAll('.goblin-menu-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.goblin-menu-btn').forEach(b => b.classList.remove('active-tab'));
+      btn.classList.add('active-tab');
+      const selected = btn.getAttribute('data-menu');
+
+      // Caricamento dinamico
+      switch (selected) {
+        case 'inventory':
+          renderGoblinInventory();
+          break;
+        case 'dwarf-cave':
+          renderDwarfsCave();
+          break;
+        case 'blend':
+          renderGoblinBlend();
+          break;
+        case 'upgrade':
+          renderGoblinUpgrade();
+          break;
+        case 'history':
+          renderGoblinHistory();
+          break;
+        case 'hall-of-fame':
+          renderGoblinHallOfFame();
+          break;
+        default:
+          document.getElementById('goblin-content').innerText = "Unknown section.";
+      }
+    });
+  });
+
+  // Carica la sezione di default (Goblin Inventory)
+  renderGoblinInventory();
+}
+
+async function renderGoblinInventory() {
+  const container = document.getElementById('goblin-content');
+  container.innerHTML = `<p class="subtitle2">Fetching your goblins...</p>`;
+
+  try {
+    const res = await fetch(`${BASE_URL}/user_nfts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        wax_account: window.userData.wax_account,
+        user_id: window.userData.user_id,
+        usx_token: window.userData.usx_token
+      })
+    });
+
+    const nfts = await res.json();
+    if (!Array.isArray(nfts) || nfts.length === 0) {
+      container.innerHTML = `<p>No goblins found in your inventory.</p>`;
+      return;
+    }
+
+    let sortBy = null;
+    let sortAsc = true;
+    let currentPage = 1;
+    let itemsPerPage = 12;
+
+    function paginate(data) {
+      const start = (currentPage - 1) * itemsPerPage;
+      return data.slice(start, start + itemsPerPage);
+    }
+
+    function renderPagination(totalItems) {
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      const pagination = document.getElementById('pagination-controls');
+      pagination.innerHTML = '';
+      for (let i = 1; i <= totalPages; i++) {
+        pagination.innerHTML += `<button class="page-btn ${i === currentPage ? 'active-tab' : ''}" data-page="${i}">${i}</button>`;
+      }
+      document.querySelectorAll('.page-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentPage = parseInt(btn.getAttribute('data-page'));
+          applyFiltersAndSort();
+        });
+      });
+    }
+
+    container.innerHTML = `
+      <div class="goblin-filters" id="goblin-filters" style="margin-bottom:1rem; padding:1rem; background:#111; border-radius:12px; box-shadow:0 0 10px #0ff;">
+        <input id="filter-name" placeholder="Search by name..." style="padding:0.5rem; width:160px; margin-right:1rem;">
+        <select id="filter-rarity">
+          <option value="">All Rarities</option>
+          <option value="common">Common</option>
+          <option value="rare">Rare</option>
+          <option value="epic">Epic</option>
+          <option value="legendary">Legendary</option>
+          <option value="mythic">Mythic</option>
+        </select>
+        <input id="filter-edition" type="number" min="1" placeholder="Edition" style="width:80px; margin-left:1rem;">
+        ${['level', 'loot-hungry', 'speed', 'resistance', 'accuracy', 'daily-power'].map(attr => `
+          <input id="filter-${attr}" type="number" min="0" placeholder="${attr}" style="width:90px; margin-left:0.5rem;">
+        `).join('')}
+        <select id="items-per-page" style="margin-left:1rem;">
+          <option value="6">6</option>
+          <option value="12" selected>12</option>
+          <option value="24">24</option>
+        </select>
+        <button id="reset-filters" class="btn btn-glow" style="margin-left:1rem;">Reset</button>
+      </div>
+
+      <div id="sort-buttons" style="margin-bottom:1rem;">
+        ${['level', 'loot-hungry', 'speed', 'resistance', 'accuracy', 'daily-power'].map(attr => `
+          <button class="btn btn-glow sort-btn" data-sort="${attr}" style="margin-right:0.5rem;">
+            Sort by ${attr}
+          </button>
+        `).join('')}
+      </div>
+
+      <div id="goblin-grid" class="goblin-inventory-grid" style="
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        padding: 1rem;
+      "></div>
+      <div id="pagination-controls" class="pagination-controls" style="margin-top:1.5rem; text-align:center;"></div>
+    `;
+
+    const gridContainer = document.getElementById('goblin-grid');
+
+    function renderGrid(data) {
+      const paginated = paginate(data);
+      gridContainer.innerHTML = paginated.map(nft => `
+        <div class="goblin-card neon-border" style="background:#111; padding:1rem; border-radius:16px; text-align:center; box-shadow:0 0 15px #0ff;">
+          <img src="${nft.img}" alt="${nft.name}" style="max-width:100%; border-radius:12px; margin-bottom:0.5rem;">
+          <div style="color:#fff; font-weight:bold;">${nft.name}</div>
+          <div style="color:#aaa; font-size:0.85rem;">Rarity: ${nft.rarity}</div>
+          <div style="margin:0.5rem 0; font-size:0.8rem; color:#ccc;">${nft.description}</div>
+          <div class="goblin-attributes" style="font-size:0.75rem; color:#0ff; margin-bottom:0.5rem;">
+            ${['level','resistance','accuracy','loot-hungry','speed','daily-power']
+              .map(key => `<div><strong>${key.replace('-', ' ')}:</strong> ${nft[key]}</div>`).join('')}
+          </div>
+          <div class="goblin-actions" style="display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:center;">
+            <button class="btn btn-glow" onclick="selectAsDefault('${nft.name}')">Select</button>
+            <button class="btn btn-glow" onclick="openCraft('${nft.name}')">Craft</button>
+            <button class="btn btn-glow" onclick="openBlend('${nft.name}')">Blend</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function applyFiltersAndSort() {
+      const name = document.getElementById("filter-name").value.toLowerCase();
+      const rarity = document.getElementById("filter-rarity").value.toLowerCase();
+      const edition = document.getElementById("filter-edition").value;
+      itemsPerPage = parseInt(document.getElementById("items-per-page").value) || 12;
+
+      const attrFilters = {
+        "level": +document.getElementById("filter-level").value || null,
+        "loot-hungry": +document.getElementById("filter-loot-hungry").value || null,
+        "speed": +document.getElementById("filter-speed").value || null,
+        "resistance": +document.getElementById("filter-resistance").value || null,
+        "accuracy": +document.getElementById("filter-accuracy").value || null,
+        "daily-power": +document.getElementById("filter-daily-power").value || null,
+      };
+
+      let filtered = nfts.filter(nft => {
+        if (name && !nft.name.toLowerCase().includes(name)) return false;
+        if (rarity && nft.rarity.toLowerCase() !== rarity) return false;
+        if (edition && nft.edition != edition) return false;
+        for (const key in attrFilters) {
+          if (attrFilters[key] !== null && (+nft[key] || 0) < attrFilters[key]) return false;
+        }
+        return true;
+      });
+
+      if (sortBy) {
+        filtered = filtered.sort((a, b) => {
+          const aVal = +a[sortBy] || 0;
+          const bVal = +b[sortBy] || 0;
+          return sortAsc ? aVal - bVal : bVal - aVal;
+        });
+      }
+
+      renderGrid(filtered);
+      renderPagination(filtered.length);
+    }
+
+    document.querySelectorAll('#goblin-filters input, #goblin-filters select').forEach(el => {
+      el.addEventListener('input', applyFiltersAndSort);
+    });
+
+    document.getElementById("reset-filters").addEventListener("click", () => {
+      document.querySelectorAll('#goblin-filters input, #goblin-filters select').forEach(el => el.value = '');
+      sortBy = null;
+      sortAsc = true;
+      currentPage = 1;
+      applyFiltersAndSort();
+    });
+
+    document.querySelectorAll(".sort-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const field = btn.getAttribute("data-sort");
+        if (sortBy === field) {
+          sortAsc = !sortAsc;
+        } else {
+          sortBy = field;
+          sortAsc = true;
+        }
+        applyFiltersAndSort();
+      });
+    });
+
+    applyFiltersAndSort();
+
+  } catch (err) {
+    console.error("[renderGoblinInventory] Error:", err);
+    container.innerHTML = `<p>Error loading inventory.</p>`;
+  }
+}
+
+function renderDwarfsCave() {
+  document.getElementById('goblin-content').innerHTML = `
+    <p style="
+      font-family: 'Rock Salt', cursive;
+      text-transform: uppercase;
+      font-size: 1rem;
+      color: #ffe600;
+      margin-top: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 2px solid #ffe600;
+      display: inline-block;
+      animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
+      position: relative;
+    ">
+      Enter the depths of the Dwarf’s Cave — Hunt treasures, evade traps, and dig the unknown!
+      <span style="
+        position: absolute;
+        left: 0;
+        bottom: -4px;
+        height: 2px;
+        width: 0;
+        background: #f39c12;
+        animation: underlineSlide 2.5s ease-in-out 3s forwards;
+      "></span>
+    </p>
+  `;
+}
+
+function renderBlend() {
+  document.getElementById('goblin-content').innerHTML = `
+    <p style="
+      font-family: 'Rock Salt', cursive;
+      text-transform: uppercase;
+      font-size: 1rem;
+      color: #ffe600;
+      margin-top: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 2px solid #ffe600;
+      display: inline-block;
+      animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
+      position: relative;
+    ">
+      Transform your Goblins — Discover powerful blends never seen before.
+      <span style="
+        position: absolute;
+        left: 0;
+        bottom: -4px;
+        height: 2px;
+        width: 0;
+        background: #f39c12;
+        animation: underlineSlide 2.5s ease-in-out 3s forwards;
+      "></span>
+    </p>
+  `;
+}
+
+function renderUpgrade() {
+  document.getElementById('goblin-content').innerHTML = `
+    <p style="
+      font-family: 'Rock Salt', cursive;
+      text-transform: uppercase;
+      font-size: 1rem;
+      color: #ffe600;
+      margin-top: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 2px solid #ffe600;
+      display: inline-block;
+      animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
+      position: relative;
+    ">
+      Upgrade your warriors — Make them faster, stronger, and more chaotic!
+      <span style="
+        position: absolute;
+        left: 0;
+        bottom: -4px;
+        height: 2px;
+        width: 0;
+        background: #f39c12;
+        animation: underlineSlide 2.5s ease-in-out 3s forwards;
+      "></span>
+    </p>
+  `;
+}
+
+function renderHistory() {
+  document.getElementById('goblin-content').innerHTML = `
+    <p style="
+      font-family: 'Rock Salt', cursive;
+      text-transform: uppercase;
+      font-size: 1rem;
+      color: #ffe600;
+      margin-top: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 2px solid #ffe600;
+      display: inline-block;
+      animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
+      position: relative;
+    ">
+      Travel back in time — Track your goblin deeds, blends, and victories!
+      <span style="
+        position: absolute;
+        left: 0;
+        bottom: -4px;
+        height: 2px;
+        width: 0;
+        background: #f39c12;
+        animation: underlineSlide 2.5s ease-in-out 3s forwards;
+      "></span>
+    </p>
+  `;
+}
+
+function renderHallOfFame() {
+  document.getElementById('goblin-content').innerHTML = `
+    <p style="
+      font-family: 'Rock Salt', cursive;
+      text-transform: uppercase;
+      font-size: 1rem;
+      color: #ffe600;
+      margin-top: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 2px solid #ffe600;
+      display: inline-block;
+      animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
+      position: relative;
+    ">
+      Bow before legends — Only the most epic goblins make it to the Hall of Fame!
+      <span style="
+        position: absolute;
+        left: 0;
+        bottom: -4px;
+        height: 2px;
+        width: 0;
+        background: #f39c12;
+        animation: underlineSlide 2.5s ease-in-out 3s forwards;
+      "></span>
+    </p>
+  `;
 }
 
 function setActiveTab(tabId) {

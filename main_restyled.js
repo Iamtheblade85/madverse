@@ -2274,36 +2274,125 @@ function renderDwarfsCave() {
   `;
 }
 
-function renderBlend() {
-  document.getElementById('goblin-content').innerHTML = `
-    <p style="
-      font-family: 'Rock Salt', cursive;
-      text-transform: uppercase;
-      font-size: 1rem;
-      color: #ffe600;
-      margin-top: 1rem;
-      white-space: nowrap;
-      overflow: hidden;
-      border-right: 2px solid #ffe600;
-      display: inline-block;
-      animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
-      position: relative;
-    ">
-      Transform your Goblins — Discover powerful blends never seen before.
-      <span style="
-        position: absolute;
-        left: 0;
-        bottom: -4px;
-        height: 2px;
-        width: 0;
-        background: #f39c12;
-        animation: underlineSlide 2.5s ease-in-out 3s forwards;
-      "></span>
-    </p>
+async function renderGoblinBlend() {
+  const container = document.getElementById('goblin-content');
+  container.innerHTML = `
+    <div style="display: flex; justify-content: space-around; align-items: center; margin-bottom: 2rem;">
+      <img src="https://example.com/levels.jpg" alt="Levels" style="height: 120px; border-radius: 12px; box-shadow: 0 0 15px #00f0ff;">
+      <img src="https://example.com/rotation.jpg" alt="Rotation Cycle" style="height: 120px; border-radius: 12px; box-shadow: 0 0 15px #00f0ff;">
+    </div>
+
+    <div style="margin-bottom: 2rem; padding: 1rem; background: #111; border-radius: 12px; box-shadow: 0 0 10px #0ff; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: center;">
+      <button id="refresh-blends" class="btn btn-glow" style="padding: 0.6rem 1.2rem;">🔄 Refresh Data</button>
+
+      <select id="filter-owned" style="padding: 0.6rem; border-radius: 8px;">
+        <option value="">All Goblins</option>
+        <option value="owned">Only Owned</option>
+      </select>
+
+      <select id="filter-rarity" style="padding: 0.6rem; border-radius: 8px;">
+        <option value="">All Rarities</option>
+        <option value="common">Common</option>
+        <option value="rare">Rare</option>
+        <option value="epic">Epic</option>
+        <option value="legendary">Legendary</option>
+        <option value="mythic">Mythic</option>
+      </select>
+
+      <input id="filter-level" type="number" min="1" placeholder="Min Level" style="width: 130px; padding: 0.6rem; border-radius: 8px;">
+      <input id="filter-edition" type="number" min="1" placeholder="Edition" style="width: 130px; padding: 0.6rem; border-radius: 8px;">
+    </div>
+
+    <div id="blend-results" style="
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      padding-bottom: 3rem;
+    "></div>
   `;
+
+  const blendResults = document.getElementById("blend-results");
+
+  async function fetchBlendData() {
+    try {
+      const res = await fetch(`${BASE_URL}/get_blend_data`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wax_account: window.userData.wax_account,
+          user_id: window.userData.userId,
+          usx_token: window.userData.usx_token
+        })
+      });
+      return await res.json();
+    } catch (err) {
+      console.error("Error fetching blend data:", err);
+      return [];
+    }
+  }
+
+  function renderBlendResults(data) {
+    blendResults.innerHTML = data.map(item => `
+      <div style="
+        background: linear-gradient(to bottom, #0f0f0f, #1a1a1a);
+        border-radius: 16px;
+        padding: 1rem;
+        text-align: center;
+        box-shadow: 0 0 12px #00f0ff;
+        font-family: 'Orbitron', sans-serif;
+        transition: transform 0.2s ease;
+        color: #fff;
+      " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+        <img src="${item.img}" alt="${item.name}" style="width: 100%; border-radius: 12px; margin-bottom: 0.75rem; box-shadow: 0 0 12px rgba(0, 255, 255, 0.4);">
+        
+        <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.4rem; color: #ffe600;">${item.name}</div>
+        <div style="font-size: 0.8rem; color: #aaa;">Rarity: <span style="color: #fff;">${item.rarity}</span></div>
+        <div style="font-size: 0.8rem; color: #aaa;">Level: <span style="color: #fff;">${item.level}</span></div>
+        <div style="font-size: 0.8rem; color: #aaa;">Edition: <span style="color: #fff;">${item.edition}</span></div>
+        
+        <div style="margin-top: 0.8rem;">
+          <a href="https://neftyblocks.com/cryptochaos1/blends/${item.blend_id}" target="_blank"
+            class="btn btn-glow" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">🧪 Blend on Nefty</a>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function applyBlendFilters(data) {
+    const owned = document.getElementById('filter-owned').value;
+    const rarity = document.getElementById('filter-rarity').value;
+    const level = +document.getElementById('filter-level').value || null;
+    const edition = +document.getElementById('filter-edition').value || null;
+
+    return data.filter(item => {
+      if (owned === 'owned' && !item.owned) return false;
+      if (rarity && item.rarity.toLowerCase() !== rarity.toLowerCase()) return false;
+      if (level && +item.level < level) return false;
+      if (edition && +item.edition !== edition) return false;
+      return true;
+    });
+  }
+
+  // Initial Load
+  let allBlendData = await fetchBlendData();
+  renderBlendResults(allBlendData);
+
+  // Refresh
+  document.getElementById("refresh-blends").addEventListener("click", async () => {
+    allBlendData = await fetchBlendData();
+    renderBlendResults(applyBlendFilters(allBlendData));
+  });
+
+  // Filter listeners
+  ['filter-owned', 'filter-rarity', 'filter-level', 'filter-edition'].forEach(id => {
+    document.getElementById(id).addEventListener("input", () => {
+      const filtered = applyBlendFilters(allBlendData);
+      renderBlendResults(filtered);
+    });
+  });
 }
 
-function renderUpgrade() {
+function renderGoblinUpgrade() {
   document.getElementById('goblin-content').innerHTML = `
     <p style="
       font-family: 'Rock Salt', cursive;
@@ -2332,7 +2421,7 @@ function renderUpgrade() {
   `;
 }
 
-function renderHistory() {
+function renderGoblinHistory() {
   document.getElementById('goblin-content').innerHTML = `
     <p style="
       font-family: 'Rock Salt', cursive;
@@ -2361,7 +2450,7 @@ function renderHistory() {
   `;
 }
 
-function renderHallOfFame() {
+function renderGoblinHallOfFame() {
   document.getElementById('goblin-content').innerHTML = `
     <p style="
       font-family: 'Rock Salt', cursive;

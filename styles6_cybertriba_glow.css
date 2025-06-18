@@ -5039,3 +5039,28 @@ details[open] > div {
      1px  1px 0 red,
      0 0 12px #ffe600; /* glow potente giallo in hover */
 }
+
+.neon-green {
+  color: #39ff14;
+  text-shadow: 0 0 6px #39ff14;
+}
+.neon-blue {
+  color: #00d0ff;
+  text-shadow: 0 0 6px #00d0ff;
+}
+.neon-purple {
+  color: #c770ff;
+  text-shadow: 0 0 6px #c770ff;
+}
+.neon-gold {
+  color: #ffd700;
+  text-shadow: 0 0 6px #ffd700;
+}
+.neon-red {
+  color: #ff0040;
+  text-shadow: 0 0 6px #ff0040;
+}
+.neon-white {
+  color: #fff;
+  text-shadow: 0 0 6px #ccc;
+}

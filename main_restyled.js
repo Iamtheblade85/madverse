@@ -1807,35 +1807,43 @@ async function loadSection(section) {
 function loadGoblinDex() {
   const app = document.getElementById('app');
   app.innerHTML = `
-    <div class="section-container">
-      <h2 class="section-title text-center">Goblin Dex</h2>
-      <div class="goblin-menu">
+    <div class="section-container" style="padding: 2rem; font-size: 1.3rem;">
+      <h2 class="section-title text-center" style="margin-bottom: 2rem; font-size: 2.6rem;">Goblin Dex</h2>
+  
+      <div class="goblin-menu" style="
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      ">
         <button class="goblin-menu-btn active-tab" data-menu="inventory"
-          style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
           Goblin Inventory
         </button>
         <button class="goblin-menu-btn" data-menu="dwarf-cave"
-          style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
           Dwarf's Cave
         </button>
         <button class="goblin-menu-btn" data-menu="blend"
-          style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
           Blend
         </button>
         <button class="goblin-menu-btn" data-menu="upgrade"
-          style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
           Upgrade
         </button>
         <button class="goblin-menu-btn" data-menu="history"
-          style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
           History
         </button>
         <button class="goblin-menu-btn" data-menu="hall-of-fame"
-          style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
           Hall Of Fame
         </button>
       </div>
-      <div id="goblin-content" class="goblin-content">
+  
+      <div id="goblin-content" class="goblin-content" style="font-size: 1.2rem;">
         Loading Goblin Inventory...
       </div>
     </div>
@@ -1897,6 +1905,22 @@ function getLevelColorClass(level) {
   return 'neon-green';
 }
 
+function getRarityBorderClass(rarity) {
+  const map = {
+    common: 'border-glow-green',
+    rare: 'border-glow-blue',
+    epic: 'border-glow-purple',
+    legendary: 'border-glow-gold',
+    mythic: 'border-glow-red'
+  };
+  return map[rarity.toLowerCase()] || '';
+}
+
+function getLabelColor(index) {
+  const colors = ['#0ff', '#ff66cc', '#ffcc00', '#00ff99', '#66b2ff'];
+  return colors[index % colors.length];
+}
+
 async function renderGoblinInventory() {
   const container = document.getElementById('goblin-content');
   container.innerHTML = `<p class="subtitle2">Fetching your goblins...</p>`;
@@ -1944,9 +1968,38 @@ async function renderGoblinInventory() {
     }
 
     container.innerHTML = `
-      <div class="goblin-filters" id="goblin-filters" style="margin-bottom:1rem; padding:1rem; background:#111; border-radius:12px; box-shadow:0 0 10px #0ff;">
-        <input id="filter-name" placeholder="Search by name..." style="padding:0.5rem; width:160px; margin-right:1rem;">
-        <select id="filter-rarity">
+      <div class="goblin-filters" id="goblin-filters" style="
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: linear-gradient(to right, #111, #1a1a1a);
+        border-radius: 16px;
+        box-shadow: 0 0 12px #0ff;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        font-family: 'Orbitron', sans-serif;
+      ">
+        <input id="filter-name" placeholder="🔍 Search name..." style="
+          padding: 0.6rem;
+          width: 180px;
+          border-radius: 8px;
+          border: none;
+          outline: none;
+          background: #222;
+          color: #0ff;
+          font-size: 0.9rem;
+          box-shadow: 0 0 5px #0ff;
+        ">
+    
+        <select id="filter-rarity" style="
+          padding: 0.6rem;
+          border-radius: 8px;
+          background: #222;
+          color: #fff;
+          font-size: 0.9rem;
+          box-shadow: 0 0 5px #0ff;
+        ">
           <option value="">All Rarities</option>
           <option value="common">Common</option>
           <option value="rare">Rare</option>
@@ -1954,93 +2007,169 @@ async function renderGoblinInventory() {
           <option value="legendary">Legendary</option>
           <option value="mythic">Mythic</option>
         </select>
-        <input id="filter-edition" type="number" min="1" placeholder="Edition" style="width:80px; margin-left:1rem;">
+    
+        <input id="filter-edition" type="number" min="1" placeholder="Edition #" style="
+          width: 100px;
+          padding: 0.6rem;
+          border-radius: 8px;
+          background: #222;
+          color: #0ff;
+          font-size: 0.9rem;
+          box-shadow: 0 0 5px #0ff;
+        ">
+    
         ${['level', 'loot-hungry', 'speed', 'resistance', 'accuracy', 'daily-power'].map(attr => `
-          <input id="filter-${attr}" type="number" min="0" placeholder="${attr}" style="width:90px; margin-left:0.5rem;">
+          <input id="filter-${attr}" type="number" min="0" placeholder="${attr}" style="
+            width: 100px;
+            padding: 0.6rem;
+            border-radius: 8px;
+            background: #222;
+            color: #0ff;
+            font-size: 0.9rem;
+            box-shadow: 0 0 5px #0ff;
+          ">
         `).join('')}
-        <select id="items-per-page" style="margin-left:1rem;">
+    
+        <select id="items-per-page" style="
+          padding: 0.6rem;
+          border-radius: 8px;
+          background: #222;
+          color: #0ff;
+          font-size: 0.9rem;
+          box-shadow: 0 0 5px #0ff;
+        ">
           <option value="6">6</option>
           <option value="12" selected>12</option>
           <option value="24">24</option>
         </select>
-        <button id="reset-filters" class="btn btn-glow" style="margin-left:1rem;">Reset</button>
+    
+        <button id="reset-filters" class="btn btn-glow" style="
+          padding: 0.6rem 1.2rem;
+          background: #c00;
+          color: #fff;
+          border-radius: 8px;
+          box-shadow: 0 0 8px #f00;
+          font-weight: bold;
+        ">🔄 Reset</button>
       </div>
-
-      <div id="sort-buttons" style="margin-bottom:1rem;">
+    
+      <div id="sort-buttons" style="
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+      ">
         ${['level', 'loot-hungry', 'speed', 'resistance', 'accuracy', 'daily-power'].map(attr => `
-          <button class="btn btn-glow sort-btn" data-sort="${attr}" style="margin-right:0.5rem;">
-            Sort by ${attr}
+          <button class="btn btn-glow sort-btn" data-sort="${attr}" style="
+            padding: 0.5rem 1rem;
+            background: #222;
+            color: #0ff;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            box-shadow: 0 0 6px #0ff;
+            transition: all 0.2s ease;
+          ">
+            ⬍ Sort: ${attr}
           </button>
         `).join('')}
       </div>
-
+    
       <div id="goblin-grid" class="goblin-inventory-grid" style="
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(170px, 200px));
         justify-content: center;
-        gap: 1.5rem;
-        padding: 1rem;
+        gap: 2rem;
+        padding: 1rem 1rem 0 1rem;
       "></div>
-      <div id="pagination-controls" class="pagination-controls" style="margin-top:1.5rem; text-align:center;"></div>
+    
+      <div id="pagination-controls" class="pagination-controls" style="
+        margin-top: 2rem;
+        text-align: center;
+      "></div>
     `;
 
     const gridContainer = document.getElementById('goblin-grid');
 
     function renderGrid(data) {
       const paginated = paginate(data);
+    
       gridContainer.innerHTML = paginated.map(nft => `
-        <div class="goblin-card neon-border" style="
+        <div class="goblin-card ${getRarityBorderClass(nft.rarity)}" style="
           width: 100%;
           max-width: 200px;
           min-width: 170px;
-          background: linear-gradient(to bottom, #111, #1a1a1a);
-          padding: 1rem;
-          border-radius: 16px;
+          background: linear-gradient(to bottom, #0d0d0d, #1a1a1a);
+          padding: 1.2rem;
+          border-radius: 18px;
           text-align: center;
-          box-shadow: 0 0 15px #0ff;
           font-family: 'Orbitron', sans-serif;
           color: #fff;
           position: relative;
-        ">
+          transition: transform 0.2s ease;
+        " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+    
           <img src="${nft.img}" alt="${nft.name}" style="
             width: 100%;
             border-radius: 12px;
-            margin-bottom: 0.5rem;
-            box-shadow: 0 0 8px #0ff;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
           ">
-          
-          <div style="font-size: 1rem; font-weight: bold; margin-bottom: 0.25rem; color: #ffe600;">
+    
+          <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.3rem; color: #ffe600;">
             ${nft.name}
           </div>
-          
-          <div style="font-size: 0.75rem;">Rarity:
+    
+          <div style="font-size: 0.8rem; margin-bottom: 0.2rem;">
+            <span style="color: #888;">Rarity:</span> 
             <span class="${getRarityColorClass(nft.rarity)}">${nft.rarity}</span>
           </div>
-          <div style="font-size: 0.75rem; color: #0ff;">Edition: <span style="color:#fff;">${nft.edition}</span></div>
-          <div style="font-size: 0.75rem; color: #0ff;">Asset ID: <span style="color:#ccc;">${nft.asset_id}</span></div>
-          <div style="font-size: 0.75rem; color: #0ff;">Mint #: <span style="color:#ccc;">${nft.template_mint}</span></div>
-      
-          <div style="margin: 0.5rem 0; font-size: 0.7rem; color: #aaa; min-height: 30px;">
-            "${nft.description}"
+    
+          <div style="font-size: 0.8rem; margin-bottom: 0.2rem;">
+            <span style="color: #888;">Edition:</span> <span style="color:#fff;">${nft.edition}</span>
           </div>
-      
-          <div class="goblin-attributes" style="font-size: 0.7rem; color: #0ff; text-align:left; margin: 0.5rem 0;">
-            <div>
-              <span style="color:#aaa;">Level:</span>
-              <strong class="${getLevelColorClass(nft.level)}"> ${nft.level}</strong>
+          <div style="font-size: 0.75rem;">
+            <span style="color: #888;">Asset ID:</span> <span style="color:#ccc;">${nft.asset_id}</span>
+          </div>
+          <div style="font-size: 0.75rem; margin-bottom: 0.4rem;">
+            <span style="color: #888;">Mint #:</span> <span style="color:#ccc;">${nft.template_mint}</span>
+          </div>
+    
+          <div style="margin: 0.5rem 0; font-size: 0.7rem; color: #aaa; min-height: 30px; font-style: italic;">
+            “${nft.description}”
+          </div>
+    
+          <div class="goblin-attributes" style="
+            font-size: 0.7rem;
+            color: #0ff;
+            text-align: left;
+            margin: 0.75rem 0;
+            background: rgba(0,255,255,0.05);
+            padding: 0.5rem;
+            border-radius: 10px;
+          ">
+            <div style="margin-bottom: 0.25rem;">
+              <span style="color:#ffa500;">⚔ Level:</span> 
+              <strong class="${getLevelColorClass(nft.level)}" style="margin-left: 4px;">${nft.level}</strong>
             </div>
             ${['resistance','accuracy','loot-hungry','speed','daily-power']
-              .map(key => `
-                <div>
-                  <span style="color:#aaa;">${key.replace('-', ' ')}:</span>
-                  <strong style="color:#fff;"> ${nft[key]}</strong>
+              .map((key, i) => `
+                <div style="margin-bottom: 0.25rem;">
+                  <span style="color:${getLabelColor(i)};">${key.replace('-', ' ')}:</span>
+                  <strong style="color:#fff; margin-left: 4px;">${nft[key]}</strong>
                 </div>`).join('')}
           </div>
-
-          <div class="goblin-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-top: 0.5rem;">
-            <button class="btn btn-glow" onclick="selectAsDefault('${nft.name}')">Select</button>
-            <button class="btn btn-glow" onclick="openCraft('${nft.name}')">Craft</button>
-            <button class="btn btn-glow" onclick="openBlend('${nft.name}')">Blend</button>
+    
+          <div class="goblin-actions" style="
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 0.75rem;
+          ">
+            <button class="btn btn-glow btn-action" onclick="selectAsDefault('${nft.name}')">🎯 Select</button>
+            <button class="btn btn-glow btn-action" onclick="openCraft('${nft.name}')">🛠 Craft</button>
+            <button class="btn btn-glow btn-action" onclick="openBlend('${nft.name}')">🧪 Blend</button>
           </div>
         </div>
       `).join('');

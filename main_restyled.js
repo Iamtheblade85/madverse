@@ -2373,37 +2373,62 @@ async function renderGoblinBlend() {
     }).join('');
   }
 
-  // Initial load
   async function fetchBlendData() {
+    const payload = {
+      wax_account: window.userData.wax_account,
+      user_id: window.userData.userId,
+      usx_token: window.userData.usx_token
+    };
+    console.groupCollapsed("🔄 [FetchBlendData] calling /get_blend_data");
+    console.log("➡️ Sending payload:", payload);
+    const startTime = performance.now();
     const res = await fetch(`${BASE_URL}/get_blend_data`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        wax_account: window.userData.wax_account,
-        user_id: window.userData.userId,
-        usx_token: window.userData.usx_token
-      })
+      body: JSON.stringify(payload)
     });
-    return await res.json();
+    const duration = (performance.now() - startTime).toFixed(2);
+    console.log(`⏱️ Response status: ${res.status} (${duration} ms)`);
+    let data;
+    try {
+      data = await res.json();
+      console.log("⬅️ Received data:", data);
+    } catch (err) {
+      console.error("❌ Error parsing JSON:", err);
+      throw err;
+    }
+    console.groupEnd();
+    return data;
   }
-  
-  // Initial load
-  let blendData = await fetchBlendData();
-  console.log("Response from endpoint /get_blend_data: ", blendData);
-  
-  renderBlendResults(blendData);
 
+  // Initial load
+  console.log("📥 [Frontend] Initial load start");
+  let blendData;
+  try {
+    blendData = await fetchBlendData();
+    console.log("✅ [Frontend] Data fetched successfully:", blendData);
+    renderBlendResults(blendData);
+  } catch (err) {
+    console.error("❌ [Frontend] fetchBlendData failed:", err);
+    blendResults.innerHTML = "<p style='color:red'>Failed to load blends data.</p>";
+  }
 
   // Refresh
   document.getElementById("refresh-blends").addEventListener("click", async () => {
-    blendData = await fetchBlendData();
-    renderBlendResults(applyFilters(blendData));
+    console.log("🔄 [Frontend] Refresh button clicked");
+    try {
+      blendData = await fetchBlendData();
+      renderBlendResults(applyFilters(blendData));
+    } catch (err) {
+      console.error("❌ [Frontend] Error during refresh:", err);
+    }
   });
 
   // Filters
   ['filter-rarity', 'filter-edition'].forEach(id => {
     document.getElementById(id).addEventListener("input", () => {
-      renderBlendResults(applyFilters(allBlends));
+      console.log(`🎚️ Filter changed (${id}), applying filters`);
+      renderBlendResults(applyFilters(blendData));
     });
   });
 }

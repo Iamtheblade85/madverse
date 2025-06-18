@@ -2319,15 +2319,25 @@ async function renderGoblinBlend() {
   function renderBlendResults(blends) {
     blendResults.innerHTML = blends.map(item => {
       const ingredientList = item.ingredients.map(ing => {
-        const missingEntry = item.missing.find(m => m.template_id === ing.template_id);
-        const quantityOwned = ing.quantity - (missingEntry?.missing || 0);
-        const isMissing = quantityOwned < ing.quantity;
-        const filterStr = ing.filters
-          ? ` [${Object.entries(ing.filters).map(([k, v]) => `${k}: ${v}`).join(', ')}]`
+        const owned = item.owned_templates?.[ing.template_id] || [];
+        const ownedCount = owned.length;
+        const neededCount = ing.quantity;
+        const ratio = `${ownedCount}/${neededCount}`;
+        
+        let color = "#0f0"; // green
+        if (ownedCount === 0) color = "#f00"; // red
+        else if (ownedCount < neededCount) color = "#ffa500"; // orange
+        
+        const assetIds = owned.length > 0
+          ? `<br><span style="color:#888;font-size:0.7rem;">Assets: ${owned.join(', ')}</span>`
           : "";
   
-        return `<li style="color: ${isMissing ? 'red' : '#0f0'};">
-          ${isMissing ? '❌' : '✅'} ${ing.quantity}x (schema: ${ing.schema_name}, id: ${ing.template_id})${filterStr}
+        const filterInfo = ing.filters
+          ? ` <span style="color:#999;">[${Object.entries(ing.filters).map(([k, v]) => `${k}: ${v}`).join(', ')}]</span>`
+          : "";
+  
+        return `<li style="color: ${color}; font-size: 0.8rem;">
+          ${ratio} × (schema: ${ing.schema_name}, id: ${ing.template_id})${filterInfo}${assetIds}
         </li>`;
       }).join('');
   
@@ -2349,8 +2359,8 @@ async function renderGoblinBlend() {
           <div style="font-size: 0.8rem; color: #aaa;">Edition: <span style="color: #fff;">${item.edition}</span></div>
   
           <div style="margin-top: 1rem; text-align: left;">
-            <strong style="color: #ffe600;">🔹 Ingredients Required:</strong>
-            <ul style="list-style-type: none; padding-left: 0; font-size: 0.75rem; margin-top: 0.3rem;">
+            <strong style="color: #ffe600;">🔹 Ingredients:</strong>
+            <ul style="list-style-type: none; padding-left: 0; margin-top: 0.5rem;">
               ${ingredientList}
             </ul>
           </div>

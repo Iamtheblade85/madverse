@@ -2318,9 +2318,19 @@ async function renderGoblinBlend() {
 
   function renderBlendResults(blends) {
     blendResults.innerHTML = blends.map(item => {
-      const goblinList = item.ingredients.goblins.map(g =>
-        `<li style="color: #0f0;">✅ ${g.name} (lvl ${g.level})</li>`).join('');
-      const missingStone = item.missing.stone ? `<li style="color: red;">❌ Missing Magic Stone</li>` : `<li style="color: #0f0;">✅ Magic Stone</li>`;
+      const ingredientList = item.ingredients.map(ing => {
+        const missingEntry = item.missing.find(m => m.template_id === ing.template_id);
+        const quantityOwned = ing.quantity - (missingEntry?.missing || 0);
+        const isMissing = quantityOwned < ing.quantity;
+        const filterStr = ing.filters
+          ? ` [${Object.entries(ing.filters).map(([k, v]) => `${k}: ${v}`).join(', ')}]`
+          : "";
+  
+        return `<li style="color: ${isMissing ? 'red' : '#0f0'};">
+          ${isMissing ? '❌' : '✅'} ${ing.quantity}x (schema: ${ing.schema_name}, id: ${ing.template_id})${filterStr}
+        </li>`;
+      }).join('');
+  
       return `
         <div style="
           background: linear-gradient(to bottom, #0f0f0f, #1a1a1a);
@@ -2337,15 +2347,14 @@ async function renderGoblinBlend() {
           <div style="font-size: 0.8rem; color: #aaa;">Level: <span style="color: #fff;">${item.level}</span></div>
           <div style="font-size: 0.8rem; color: #aaa;">Rarity: <span style="color: #fff;">${item.rarity}</span></div>
           <div style="font-size: 0.8rem; color: #aaa;">Edition: <span style="color: #fff;">${item.edition}</span></div>
-
+  
           <div style="margin-top: 1rem; text-align: left;">
             <strong style="color: #ffe600;">🔹 Ingredients Required:</strong>
             <ul style="list-style-type: none; padding-left: 0; font-size: 0.75rem; margin-top: 0.3rem;">
-              ${goblinList}
-              ${missingStone}
+              ${ingredientList}
             </ul>
           </div>
-
+  
           <div style="margin-top: 1rem;">
             <a href="${item.blend_link}" target="_blank" class="btn btn-glow" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">🧪 Blend on Nefty</a>
           </div>

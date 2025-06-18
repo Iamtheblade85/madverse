@@ -1957,7 +1957,8 @@ async function renderGoblinInventory() {
 
       <div id="goblin-grid" class="goblin-inventory-grid" style="
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(170px, 200px));
+        justify-content: center;
         gap: 1.5rem;
         padding: 1rem;
       "></div>
@@ -1969,7 +1970,16 @@ async function renderGoblinInventory() {
     function renderGrid(data) {
       const paginated = paginate(data);
       gridContainer.innerHTML = paginated.map(nft => `
-        <div class="goblin-card neon-border" style="background:#111; padding:1rem; border-radius:16px; text-align:center; box-shadow:0 0 15px #0ff;">
+        <div class="goblin-card neon-border" style="
+          width: 100%;
+          max-width: 200px;
+          min-width: 170px;
+          background:#111;
+          padding:1rem;
+          border-radius:16px;
+          text-align:center;
+          box-shadow:0 0 15px #0ff;
+        ">
           <img src="${nft.img}" alt="${nft.name}" style="max-width:100%; border-radius:12px; margin-bottom:0.5rem;">
           <div style="color:#fff; font-weight:bold;">${nft.name}</div>
           <div style="color:#aaa; font-size:0.85rem;">Rarity: ${nft.rarity}</div>

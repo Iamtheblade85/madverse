@@ -2284,7 +2284,6 @@ async function renderGoblinBlend() {
 
     <div style="margin-bottom: 2rem; padding: 1rem; background: #111; border-radius: 12px; box-shadow: 0 0 10px #0ff; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: center;">
       <button id="refresh-blends" class="btn btn-glow" style="padding: 0.6rem 1.2rem;">🔄 Refresh Data</button>
-
       <select id="filter-rarity" style="padding: 0.6rem; border-radius: 8px;">
         <option value="">All Rarities</option>
         <option value="common">Common</option>
@@ -2293,13 +2292,12 @@ async function renderGoblinBlend() {
         <option value="legendary">Legendary</option>
         <option value="mythic">Mythic</option>
       </select>
-
       <input id="filter-edition" type="number" min="1" placeholder="Edition" style="width: 130px; padding: 0.6rem; border-radius: 8px;">
     </div>
 
     <div id="blend-results" style="
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 1.5rem;
       padding-bottom: 3rem;
     "></div>
@@ -2320,35 +2318,49 @@ async function renderGoblinBlend() {
     return await res.json();
   }
 
-  function generateLevelBlends(userNfts) {
+  function generateUpgradeBlends(userNfts) {
     const blends = [];
-    const groupedByLevel = {};
-
-    const magicStones = userNfts.filter(nft => nft.template_id === '893711');
-    if (magicStones.length === 0) return blends;
+    const goblinsByLevel = {};
+    const ownedMagicStones = userNfts.filter(n => n.template_id === '893711');
 
     userNfts.forEach(nft => {
       const lvl = parseInt(nft.level);
-      if (!groupedByLevel[lvl]) groupedByLevel[lvl] = [];
+      if (!goblinsByLevel[lvl]) goblinsByLevel[lvl] = [];
       if (nft.template_id !== '893711') {
-        groupedByLevel[lvl].push(nft);
+        goblinsByLevel[lvl].push(nft);
       }
     });
 
-    Object.entries(groupedByLevel).forEach(([lvlStr, goblins]) => {
+    Object.entries(goblinsByLevel).forEach(([lvlStr, goblins]) => {
       const lvl = parseInt(lvlStr);
-      const blendCount = Math.floor(goblins.length / 3);
-      const usable = Math.min(blendCount, magicStones.length);
+      const upgradeToLevel = lvl + 1;
+      const possibleBlends = Math.min(Math.floor(goblins.length / 3), ownedMagicStones.length);
 
-      for (let i = 0; i < usable; i++) {
+      if (possibleBlends === 0) return;
+
+      for (let i = 0; i < possibleBlends; i++) {
+        const ingredients = {
+          goblins: goblins.slice(i * 3, i * 3 + 3),
+          stone: ownedMagicStones[i]
+        };
+
+        const missing = {
+          goblins: goblins.length < 3,
+          stone: ownedMagicStones.length < 1
+        };
+
+        const preview = goblins[i * 3];
+
         blends.push({
-          name: `Upgrade to Level ${lvl + 1}`,
-          img: goblins[i * 3].img,
-          level: lvl + 1,
-          rarity: goblins[i * 3].rarity,
-          edition: goblins[i * 3].edition,
-          blend_id: `blend_lvl_${lvl + 1}`,
-          blend_link: `https://neftyblocks.com/cryptochaos1/blends/blend_lvl_${lvl + 1}`
+          name: `Upgrade to Level ${upgradeToLevel}`,
+          img: preview.img,
+          level: upgradeToLevel,
+          rarity: preview.rarity,
+          edition: preview.edition,
+          blend_id: `blend_lvl_${upgradeToLevel}`,
+          blend_link: `https://neftyblocks.com/cryptochaos1/blends/blend_lvl_${upgradeToLevel}`,
+          ingredients,
+          missing
         });
       }
     });
@@ -2360,81 +2372,69 @@ async function renderGoblinBlend() {
     const rarity = document.getElementById('filter-rarity').value;
     const edition = +document.getElementById('filter-edition').value || null;
 
-    return blends.filter(item => {
-      if (rarity && item.rarity.toLowerCase() !== rarity.toLowerCase()) return false;
-      if (edition && +item.edition !== edition) return false;
+    return blends.filter(b => {
+      if (rarity && b.rarity.toLowerCase() !== rarity.toLowerCase()) return false;
+      if (edition && +b.edition !== edition) return false;
       return true;
     });
   }
 
-  function renderBlendResults(data) {
-    blendResults.innerHTML = data.map(item => `
-      <div style="
-        background: linear-gradient(to bottom, #0f0f0f, #1a1a1a);
-        border-radius: 16px;
-        padding: 1rem;
-        text-align: center;
-        box-shadow: 0 0 12px #00f0ff;
-        font-family: 'Orbitron', sans-serif;
-        transition: transform 0.2s ease;
-        color: #fff;
-      " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-        <img src="${item.img}" alt="${item.name}" style="width: 100%; border-radius: 12px; margin-bottom: 0.75rem;">
-        <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.4rem; color: #ffe600;">${item.name}</div>
-        <div style="font-size: 0.8rem; color: #aaa;">Level: <span style="color: #fff;">${item.level}</span></div>
-        <div style="font-size: 0.8rem; color: #aaa;">Rarity: <span style="color: #fff;">${item.rarity}</span></div>
-        <div style="font-size: 0.8rem; color: #aaa;">Edition: <span style="color: #fff;">${item.edition}</span></div>
-        <div style="margin-top: 0.8rem;">
-          <a href="${item.blend_link}" target="_blank" class="btn btn-glow" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">🧪 Blend on Nefty</a>
+  function renderBlendResults(blends) {
+    blendResults.innerHTML = blends.map(item => {
+      const goblinList = item.ingredients.goblins.map(g =>
+        `<li style="color: #0f0;">✅ ${g.name} (lvl ${g.level})</li>`).join('');
+      const missingStone = item.missing.stone ? `<li style="color: red;">❌ Missing Magic Stone</li>` : `<li style="color: #0f0;">✅ Magic Stone</li>`;
+      return `
+        <div style="
+          background: linear-gradient(to bottom, #0f0f0f, #1a1a1a);
+          border-radius: 16px;
+          padding: 1rem;
+          text-align: center;
+          box-shadow: 0 0 12px #00f0ff;
+          font-family: 'Orbitron', sans-serif;
+          transition: transform 0.2s ease;
+          color: #fff;
+        " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+          <img src="${item.img}" alt="${item.name}" style="width: 100%; border-radius: 12px; margin-bottom: 0.75rem;">
+          <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.4rem; color: #ffe600;">${item.name}</div>
+          <div style="font-size: 0.8rem; color: #aaa;">Level: <span style="color: #fff;">${item.level}</span></div>
+          <div style="font-size: 0.8rem; color: #aaa;">Rarity: <span style="color: #fff;">${item.rarity}</span></div>
+          <div style="font-size: 0.8rem; color: #aaa;">Edition: <span style="color: #fff;">${item.edition}</span></div>
+
+          <div style="margin-top: 1rem; text-align: left;">
+            <strong style="color: #ffe600;">🔹 Ingredients Required:</strong>
+            <ul style="list-style-type: none; padding-left: 0; font-size: 0.75rem; margin-top: 0.3rem;">
+              ${goblinList}
+              ${missingStone}
+            </ul>
+          </div>
+
+          <div style="margin-top: 1rem;">
+            <a href="${item.blend_link}" target="_blank" class="btn btn-glow" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">🧪 Blend on Nefty</a>
+          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
+  // Initial load
   let userNfts = await fetchUserGoblinData();
-  let allBlends = generateLevelBlends(userNfts);
+  let allBlends = generateUpgradeBlends(userNfts);
   renderBlendResults(allBlends);
 
+  // Refresh
   document.getElementById("refresh-blends").addEventListener("click", async () => {
     userNfts = await fetchUserGoblinData();
-    allBlends = generateLevelBlends(userNfts);
+    allBlends = generateUpgradeBlends(userNfts);
     renderBlendResults(applyFilters(allBlends));
   });
 
+  // Filters
   ['filter-rarity', 'filter-edition'].forEach(id => {
     document.getElementById(id).addEventListener("input", () => {
       renderBlendResults(applyFilters(allBlends));
     });
   });
-}
-
-function renderGoblinUpgrade() {
-  document.getElementById('goblin-content').innerHTML = `
-    <p style="
-      font-family: 'Rock Salt', cursive;
-      text-transform: uppercase;
-      font-size: 1rem;
-      color: #ffe600;
-      margin-top: 1rem;
-      white-space: nowrap;
-      overflow: hidden;
-      border-right: 2px solid #ffe600;
-      display: inline-block;
-      animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
-      position: relative;
-    ">
-      Upgrade your warriors — Make them faster, stronger, and more chaotic!
-      <span style="
-        position: absolute;
-        left: 0;
-        bottom: -4px;
-        height: 2px;
-        width: 0;
-        background: #f39c12;
-        animation: underlineSlide 2.5s ease-in-out 3s forwards;
-      "></span>
-    </p>
-  `;
 }
 
 function renderGoblinHistory() {

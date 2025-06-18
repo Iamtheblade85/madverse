@@ -2389,6 +2389,8 @@ async function renderGoblinBlend() {
   
   // Initial load
   let blendData = await fetchBlendData();
+  console.log("Response from endpoint /get_blend_data: ", blendData);
+  
   renderBlendResults(blendData);
 
 

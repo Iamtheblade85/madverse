@@ -5064,3 +5064,9 @@ details[open] > div {
   color: #fff;
   text-shadow: 0 0 6px #ccc;
 }
+
+.border-glow-green { box-shadow: 0 0 15px #00ff99; }
+.border-glow-blue { box-shadow: 0 0 15px #66b2ff; }
+.border-glow-purple { box-shadow: 0 0 15px #c066ff; }
+.border-glow-gold { box-shadow: 0 0 15px #ffcc00; }
+.border-glow-red { box-shadow: 0 0 15px #ff4444; }

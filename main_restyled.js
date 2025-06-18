@@ -1831,7 +1831,7 @@ function loadGoblinDex() {
         </button>
         <button class="goblin-menu-btn" data-menu="upgrade"
           style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-          Upgrade
+          Craft
         </button>
         <button class="goblin-menu-btn" data-menu="history"
           style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
@@ -2167,7 +2167,7 @@ async function renderGoblinInventory() {
             justify-content: center;
             margin-top: 0.75rem;
           ">
-            <button class="btn btn-glow btn-action" onclick="selectAsDefault('${nft.name}')">🎯 Select</button>
+            <button class="btn btn-glow btn-action" onclick="selectAsDefault('${nft.name}')">🎯 Use in Dwarf´s Cave</button>
             <button class="btn btn-glow btn-action" onclick="openCraft('${nft.name}')">🛠 Craft</button>
             <button class="btn btn-glow btn-action" onclick="openBlend('${nft.name}')">🧪 Blend</button>
           </div>

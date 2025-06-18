@@ -1888,7 +1888,7 @@ async function renderGoblinInventory() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         wax_account: window.userData.wax_account,
-        user_id: window.userData.user_id,
+        user_id: window.userData.userId,
         usx_token: window.userData.usx_token
       })
     });

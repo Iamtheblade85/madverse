@@ -3884,7 +3884,6 @@ button:hover, .btn:hover, .menu-button:hover {
   box-shadow: 0 0 5px #d100ff, 0 0 10px #9f00ff !important; /* Viola neon e glow viola più freddo */
   color: #d100ff !important; /* Testo in viola neon */
   font-family: "VT323", "Press Start 2P", "Papyrus", monospace !important; /* Tribale/primitivo/digitale */
-  text-transform: uppercase !important; /* Tutto stampatello */
   font-weight: bold !important;
   letter-spacing: 1px !important;
 }

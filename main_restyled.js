@@ -2324,6 +2324,7 @@ await setActiveTab("level");
 
       <div style="margin-bottom: 2rem; padding: 1rem; background: #111; border-radius: 12px; box-shadow: 0 0 10px #0ff; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: center;">
         <button id="refresh-blends" class="btn btn-glow" style="padding: 0.6rem 1.2rem;">🔄 Refresh Data</button>
+        <input id="filter-name" type="text" placeholder="Search name..." style="padding: 0.6rem; border-radius: 8px;">
         <select id="filter-rarity" style="padding: 0.6rem; border-radius: 8px;">
           <option value="">All Rarities</option>
           <option value="common">Common</option>
@@ -2332,8 +2333,19 @@ await setActiveTab("level");
           <option value="legendary">Legendary</option>
           <option value="mythic">Mythic</option>
         </select>
-        <input id="filter-edition" type="number" min="1" placeholder="Edition" style="width: 130px; padding: 0.6rem; border-radius: 8px;">
+        <input id="filter-edition" type="number" min="1" placeholder="Edition" style="width: 120px; padding: 0.6rem; border-radius: 8px;">
+        <input id="filter-level" type="number" min="1" max="5" placeholder="Level" style="width: 100px; padding: 0.6rem; border-radius: 8px;">
+        <select id="filter-attr" style="padding: 0.6rem; border-radius: 8px;">
+          <option value="">Any Attribute</option>
+          <option value="accuracy">Accuracy</option>
+          <option value="resistance">Resistance</option>
+          <option value="speed">Speed</option>
+          <option value="loot-hungry">Loot-Hungry</option>
+        </select>
+
       </div>
+      <button id="refresh-blends" class="btn btn-glow">🔄 Refresh</button>
+      <button id="force-update" class="btn btn-glow">⟳ Update</button>
 
       <div id="blend-results" style="
         display: grid;
@@ -2346,15 +2358,22 @@ await setActiveTab("level");
     const blendResults = document.getElementById("blend-results");
 
     function applyFilters(blends) {
-      const rarity = document.getElementById('filter-rarity').value;
+      const name = document.getElementById('filter-name').value.toLowerCase();
+      const rarity = document.getElementById('filter-rarity').value.toLowerCase();
       const edition = +document.getElementById('filter-edition').value || null;
-
+      const level = +document.getElementById('filter-level').value || null;
+      const attr = document.getElementById('filter-attr').value.toLowerCase();
+    
       return blends.filter(b => {
-        if (rarity && b.rarity.toLowerCase() !== rarity.toLowerCase()) return false;
+        if (name && !b.name.toLowerCase().includes(name)) return false;
+        if (rarity && b.rarity.toLowerCase() !== rarity) return false;
         if (edition && +b.edition !== edition) return false;
+        if (level && +b.level !== level) return false;
+        if (attr && b.ingredients.every(i => i.filters?.main_attr?.toLowerCase() !== attr)) return false;
         return true;
       });
     }
+
 
     async function fetchBlendData() {
       const payload = {
@@ -2440,11 +2459,32 @@ await setActiveTab("level");
       renderBlendResults(applyFilters(blendData));
     });
 
-    ['filter-rarity', 'filter-edition'].forEach(id => {
+    document.getElementById("force-update").addEventListener("click", async () => {
+      blendResults.innerHTML = "<p style='color: #0ff;'>Updating...</p>";
+      try {
+        const res = await fetch(`${BASE_URL}/get_blend_data`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            wax_account: window.userData.wax_account,
+            user_id: window.userData.userId,
+            usx_token: window.userData.usx_token,
+            force_update: true  // 👈 Se il backend lo supporta
+          })
+        });
+        blendData = await res.json();
+        renderBlendResults(applyFilters(blendData));
+      } catch (e) {
+        blendResults.innerHTML = "<p style='color:red;'>❌ Failed to update.</p>";
+      }
+    });
+    
+    ['filter-name', 'filter-rarity', 'filter-edition', 'filter-level', 'filter-attr'].forEach(id => {
       document.getElementById(id).addEventListener("input", () => {
         renderBlendResults(applyFilters(blendData));
       });
     });
+
   }
 
   async function renderSlotRotation() {

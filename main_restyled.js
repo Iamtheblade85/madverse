@@ -2358,22 +2358,24 @@ await setActiveTab("level");
     const blendResults = document.getElementById("blend-results");
 
     function applyFilters(blends) {
-      const name = document.getElementById('filter-name').value.toLowerCase();
       const rarity = document.getElementById('filter-rarity').value.toLowerCase();
       const edition = +document.getElementById('filter-edition').value || null;
-      const level = +document.getElementById('filter-level').value || null;
-      const attr = document.getElementById('filter-attr').value.toLowerCase();
+      const attr = document.getElementById('filter-attr')?.value.toLowerCase();
+      const name = document.getElementById('filter-name')?.value.toLowerCase();
     
       return blends.filter(b => {
-        if (name && !b.name.toLowerCase().includes(name)) return false;
         if (rarity && b.rarity.toLowerCase() !== rarity) return false;
         if (edition && +b.edition !== edition) return false;
-        if (level && +b.level !== level) return false;
-        if (attr && b.ingredients.every(i => i.filters?.main_attr?.toLowerCase() !== attr)) return false;
+        if (name && !b.name.toLowerCase().includes(name)) return false;
+    
+        if (attr) {
+          const mainAttr = b.ingredients[0]?.filters?.main_attr?.toLowerCase();
+          if (mainAttr !== attr) return false;
+        }
+    
         return true;
       });
     }
-
 
     async function fetchBlendData() {
       const payload = {

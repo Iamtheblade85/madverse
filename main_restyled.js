@@ -1823,7 +1823,7 @@ function loadGoblinDex() {
         </button>
         <button class="goblin-menu-btn" data-menu="dwarf-cave"
           style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-          Dwarf's Cave
+          Dwarfen Gold Cave
         </button>
         <button class="goblin-menu-btn" data-menu="blend"
           style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">

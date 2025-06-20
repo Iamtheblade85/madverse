@@ -3260,9 +3260,11 @@ async function renderDailyBox(data) {
           chest_id: chestId
         })
       });
-
+      
       const revealData = await revealRes.json();
-      const sendRes = await fetch(`${BASE_URL}/withdraw_chest_prizes`, {
+      
+      // 🔥 Esegui questa in background senza attendere
+      fetch(`${BASE_URL}/withdraw_chest_prizes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -3272,6 +3274,26 @@ async function renderDailyBox(data) {
           chest_id: chestId
         })
       });
+      
+      // 🔮 Mostra subito il modale, senza attendere withdraw
+      showChestModal(
+        revealData.chest_video,
+        revealData.items,
+        async () => {
+          console.log("🔄 Reloading daily box data...");
+          const dailyBoxRes = await fetch(`${BASE_URL}/daily_chest_open`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: window.userData.userId,
+              usx_token: window.userData.usx_token,
+              wax_account: window.userData.wax_account
+            })
+          });
+          window.accountData.dailyBox = await dailyBoxRes.json();
+          renderDailyBox(window.accountData.dailyBox);
+        }
+      );
 
   // --- AGGIUNGI QUESTO ---
     showChestModal(

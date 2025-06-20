@@ -3272,7 +3272,7 @@ async function renderDailyBox(data) {
           chest_id: chestId
         })
       });
-      const sendData = await sendRes.json();
+
   // --- AGGIUNGI QUESTO ---
     showChestModal(
       revealData.chest_video, 

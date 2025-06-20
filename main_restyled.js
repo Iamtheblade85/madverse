@@ -3262,6 +3262,17 @@ async function renderDailyBox(data) {
       });
 
       const revealData = await revealRes.json();
+      const sendRes = await fetch(`${BASE_URL}/withdraw_chest_prizes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: window.userData.userId,
+          usx_token: window.userData.usx_token,
+          wax_account: window.userData.wax_account,
+          chest_id: chestId
+        })
+      });
+      const sendData = await sendRes.json();
   // --- AGGIUNGI QUESTO ---
     showChestModal(
       revealData.chest_video, 

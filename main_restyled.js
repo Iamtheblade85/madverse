@@ -2242,7 +2242,7 @@ async function renderGoblinInventory() {
 
 async function renderDwarfsCave() {
   const container = document.getElementById('goblin-content');
-  container.innerHTML = `<p class="subtitle2">Loading your goblins for expedition...</p>`;
+  container.innerHTML = `<p class="subtitle2">Loading goblins for expedition...</p>`;
 
   try {
     const res = await fetch(`${BASE_URL}/user_nfts`, {
@@ -2255,155 +2255,153 @@ async function renderDwarfsCave() {
       })
     });
 
-    const goblins = await res.json();
-    if (!Array.isArray(goblins) || goblins.length === 0) {
-      container.innerHTML = `<p>No goblins available.</p>`;
+    const goblins = (await res.json()).filter(nft => nft.type === "goblin");
+    if (goblins.length === 0) {
+      container.innerHTML = `<p>No goblins found for the expedition.</p>`;
       return;
     }
 
-    let selectedGoblins = new Set();
-    let currentPage = 1;
-    let itemsPerPage = 12;
-    let sortBy = null;
+    let selected = new Set();
+    let sortBy = "rarity";
     let sortAsc = true;
 
-    function renderCaveGrid(data) {
-      const start = (currentPage - 1) * itemsPerPage;
-      const paginated = data.slice(start, start + itemsPerPage);
+    function getAttrValue(g, attr) {
+      return parseInt(g[attr] || 0);
+    }
 
-      const grid = paginated.map(g => `
-        <div class="goblin-card ${getRarityBorderClass(g.rarity)}" style="position:relative;">
-          <input type="checkbox" class="select-goblin-checkbox"
-            data-id="${g.asset_id}"
-            ${selectedGoblins.has(g.asset_id) ? 'checked' : ''}
-            style="position:absolute;top:8px;right:8px;transform:scale(1.5);z-index:10;">
-          <img src="${g.img}" style="width:100%; border-radius:8px; margin-bottom:0.5rem;">
-          <div style="color:#ffe600; font-weight:bold;">${g.name}</div>
-          <div style="font-size:0.9rem; color:#ccc;">Lv. ${g.level} • ${g.rarity}</div>
-          <div style="font-size:0.8rem; color:#aaa;">Power: ${g["daily-power"]}</div>
+    function highlightStyle(assetId) {
+      return selected.has(assetId) ? 'box-shadow: 0 0 10px #ffe600; background: rgba(255,255,0,0.05);' : '';
+    }
+
+    function renderList(filteredList = goblins) {
+      const sorted = [...filteredList].sort((a, b) => {
+        const av = getAttrValue(a, sortBy);
+        const bv = getAttrValue(b, sortBy);
+        return sortAsc ? av - bv : bv - av;
+      });
+
+      document.getElementById('goblin-list').innerHTML = sorted.map(g => `
+        <div class="goblin-line" style="
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 0.6rem 1rem;
+          border-bottom: 1px solid #333;
+          border-radius: 10px;
+          ${highlightStyle(g.asset_id)}
+        ">
+          <img src="${g.img}" style="width:50px; height:auto; border-radius:8px;">
+
+          <div style="flex:1; font-size: 0.95rem; font-family: Orbitron, sans-serif; color: #fff;">
+            <div><strong style="color:#ffe600;">${g.name}</strong></div>
+            <div style="color:#ccc;">Rarity: <span class="${getRarityColorClass(g.rarity)}">${g.rarity}</span></div>
+            <div style="color:#aaa;">Level: ${g.level} | Main: ${g.main_attr}</div>
+          </div>
+
+          <input type="checkbox" class="select-goblin-checkbox" data-id="${g.asset_id}"
+            ${selected.has(g.asset_id) ? "checked" : ""}
+            style="transform: scale(1.4); accent-color: #ffe600;">
         </div>
-      `).join('');
+      `).join("");
 
-      document.getElementById('goblin-grid').innerHTML = grid;
-
-      // Selezione
       document.querySelectorAll('.select-goblin-checkbox').forEach(cb => {
         cb.addEventListener('change', () => {
           const id = cb.getAttribute('data-id');
           if (cb.checked) {
-            if (selectedGoblins.size >= 50) {
+            if (selected.size >= 50) {
               cb.checked = false;
-              alert("⛔ Max 50 goblins can be selected.");
+              alert("⛔ Max 50 goblins allowed.");
             } else {
-              selectedGoblins.add(id);
+              selected.add(id);
             }
           } else {
-            selectedGoblins.delete(id);
+            selected.delete(id);
           }
-          updateExpeditionArea();
+          updateSummary();
+          renderList();
         });
       });
     }
 
-    function renderPaginationControls(data) {
-      const totalPages = Math.ceil(data.length / itemsPerPage);
-      const pagination = document.getElementById('pagination-controls');
-      pagination.innerHTML = '';
-      for (let i = 1; i <= totalPages; i++) {
-        pagination.innerHTML += `<button class="page-btn ${i === currentPage ? 'active-tab' : ''}" data-page="${i}">${i}</button>`;
-      }
-      document.querySelectorAll('.page-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          currentPage = parseInt(btn.getAttribute('data-page'));
-          applyFilters();
-        });
-      });
-    }
-
-    function updateExpeditionArea() {
-      const area = document.getElementById('expedition-arena');
-      area.innerHTML = `
-        <p style="color:#ffe600;">Selected Goblins: ${selectedGoblins.size} / 50</p>
-        <button class="btn btn-glow" id="start-expedition" style="margin-top:1rem;">🚀 Start Expedition</button>
+    function updateSummary() {
+      document.getElementById("selection-summary").innerHTML = `
+        <span style="color:#ffe600;">Selected: ${selected.size} / 50</span>
+        <button class="btn btn-glow" id="start-expedition-btn" style="margin-left:1rem;">🚀 Start Expedition</button>
       `;
-      document.getElementById('start-expedition').onclick = () => {
-        if (selectedGoblins.size === 0) return alert("Select at least 1 goblin.");
-        // Chiamata al backend per avviare la spedizione
-        console.log("Launching expedition with goblins:", [...selectedGoblins]);
-        // TODO: integrazione con Python API backend
+      document.getElementById("start-expedition-btn").onclick = () => {
+        if (selected.size === 0) {
+          alert("Select at least 1 goblin.");
+          return;
+        }
+        // TODO: Chiamata backend
+        console.log("[EXPEDITION] Goblins:", [...selected]);
       };
     }
 
-    function applyFilters() {
-      let filtered = [...goblins];
-      if (sortBy) {
-        filtered.sort((a, b) => {
-          const av = +a[sortBy] || 0;
-          const bv = +b[sortBy] || 0;
-          return sortAsc ? av - bv : bv - av;
-        });
-      }
-      renderCaveGrid(filtered);
-      renderPaginationControls(filtered);
+    function autoSelectBestGoblins() {
+      selected.clear();
+      const scored = goblins.map(g => ({
+        id: g.asset_id,
+        score: g.level + getAttrValue(g, g.main_attr)
+      }));
+      scored.sort((a, b) => b.score - a.score);
+      scored.slice(0, 50).forEach(g => selected.add(g.id));
+      renderList();
+      updateSummary();
     }
 
     container.innerHTML = `
-      <div style="margin-bottom:1rem; display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center;">
-        <button class="btn btn-glow" id="select-all">✅ Select First 50</button>
+      <div style="margin-bottom: 1rem; text-align: center; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;">
+        <button class="btn btn-glow" id="select-50">✅ Select First 50</button>
         <button class="btn btn-glow" id="deselect-all">❌ Deselect All</button>
+        <button class="btn btn-glow" id="select-best">🏆 Best 50 Goblins</button>
         <select id="sort-cave" class="btn btn-glow">
-          <option value="">Sort by...</option>
-          <option value="level">Level</option>
-          <option value="daily-power">Daily Power</option>
-          <option value="loot-hungry">Loot-Hungry</option>
-          <option value="speed">Speed</option>
+          <option value="rarity">Sort by Rarity</option>
+          <option value="level">Sort by Level</option>
+          <option value="daily-power">Sort by Power</option>
+          <option value="loot-hungry">Sort by Loot-Hungry</option>
         </select>
       </div>
 
-      <div id="goblin-grid" style="
-        display:grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap:1.2rem;
-        justify-items:center;
+      <div id="goblin-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+
+      <div id="selection-summary" style="
+        margin-top: 1.5rem;
+        padding: 1rem;
+        text-align: center;
+        background: #111;
+        border-radius: 12px;
+        box-shadow: 0 0 10px #0ff;
+        font-family: Orbitron, sans-serif;
+        font-size: 1rem;
+        color: #fff;
       "></div>
-
-      <div id="pagination-controls" style="margin-top:1.5rem; text-align:center;"></div>
-
-      <div id="expedition-arena" style="
-        margin-top:2.5rem;
-        padding:1.5rem;
-        background:linear-gradient(to right, #1a1a1a, #111);
-        border-radius:18px;
-        text-align:center;
-        color:#fff;
-        box-shadow:0 0 12px #0ff;
-      ">
-        <p>Selected Goblins: 0 / 50</p>
-      </div>
     `;
 
-    document.getElementById('select-all').onclick = () => {
-      selectedGoblins.clear();
-      goblins.slice(0, 50).forEach(g => selectedGoblins.add(g.asset_id));
-      applyFilters();
-      updateExpeditionArea();
+    document.getElementById('select-50').onclick = () => {
+      selected.clear();
+      goblins.slice(0, 50).forEach(g => selected.add(g.asset_id));
+      renderList();
+      updateSummary();
     };
 
     document.getElementById('deselect-all').onclick = () => {
-      selectedGoblins.clear();
-      applyFilters();
-      updateExpeditionArea();
+      selected.clear();
+      renderList();
+      updateSummary();
+    };
+
+    document.getElementById('select-best').onclick = () => {
+      autoSelectBestGoblins();
     };
 
     document.getElementById('sort-cave').addEventListener('change', (e) => {
       sortBy = e.target.value;
-      sortAsc = true;
-      applyFilters();
+      renderList();
     });
 
-    applyFilters();
-    updateExpeditionArea();
-
+    renderList();
+    updateSummary();
   } catch (err) {
     console.error("[renderDwarfsCave] Error:", err);
     container.innerHTML = `<p>Error loading cave interface.</p>`;

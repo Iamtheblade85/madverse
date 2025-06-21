@@ -2240,33 +2240,174 @@ async function renderGoblinInventory() {
   }
 }
 
-function renderDwarfsCave() {
-  document.getElementById('goblin-content').innerHTML = `
-    <p style="
-      font-family: 'Rock Salt', cursive;
-      text-transform: uppercase;
-      font-size: 1rem;
-      color: #ffe600;
-      margin-top: 1rem;
-      white-space: nowrap;
-      overflow: hidden;
-      border-right: 2px solid #ffe600;
-      display: inline-block;
-      animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
-      position: relative;
-    ">
-      Enter the depths of the Dwarf’s Cave — Hunt treasures, evade traps, and dig the unknown!
-      <span style="
-        position: absolute;
-        left: 0;
-        bottom: -4px;
-        height: 2px;
-        width: 0;
-        background: #f39c12;
-        animation: underlineSlide 2.5s ease-in-out 3s forwards;
-      "></span>
-    </p>
-  `;
+async function renderDwarfsCave() {
+  const container = document.getElementById('goblin-content');
+  container.innerHTML = `<p class="subtitle2">Loading your goblins for expedition...</p>`;
+
+  try {
+    const res = await fetch(`${BASE_URL}/user_nfts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        wax_account: window.userData.wax_account,
+        user_id: window.userData.userId,
+        usx_token: window.userData.usx_token
+      })
+    });
+
+    const goblins = await res.json();
+    if (!Array.isArray(goblins) || goblins.length === 0) {
+      container.innerHTML = `<p>No goblins available.</p>`;
+      return;
+    }
+
+    let selectedGoblins = new Set();
+    let currentPage = 1;
+    let itemsPerPage = 12;
+    let sortBy = null;
+    let sortAsc = true;
+
+    function renderCaveGrid(data) {
+      const start = (currentPage - 1) * itemsPerPage;
+      const paginated = data.slice(start, start + itemsPerPage);
+
+      const grid = paginated.map(g => `
+        <div class="goblin-card ${getRarityBorderClass(g.rarity)}" style="position:relative;">
+          <input type="checkbox" class="select-goblin-checkbox"
+            data-id="${g.asset_id}"
+            ${selectedGoblins.has(g.asset_id) ? 'checked' : ''}
+            style="position:absolute;top:8px;right:8px;transform:scale(1.5);z-index:10;">
+          <img src="${g.img}" style="width:100%; border-radius:8px; margin-bottom:0.5rem;">
+          <div style="color:#ffe600; font-weight:bold;">${g.name}</div>
+          <div style="font-size:0.9rem; color:#ccc;">Lv. ${g.level} • ${g.rarity}</div>
+          <div style="font-size:0.8rem; color:#aaa;">Power: ${g["daily-power"]}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('goblin-grid').innerHTML = grid;
+
+      // Selezione
+      document.querySelectorAll('.select-goblin-checkbox').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const id = cb.getAttribute('data-id');
+          if (cb.checked) {
+            if (selectedGoblins.size >= 50) {
+              cb.checked = false;
+              alert("⛔ Max 50 goblins can be selected.");
+            } else {
+              selectedGoblins.add(id);
+            }
+          } else {
+            selectedGoblins.delete(id);
+          }
+          updateExpeditionArea();
+        });
+      });
+    }
+
+    function renderPaginationControls(data) {
+      const totalPages = Math.ceil(data.length / itemsPerPage);
+      const pagination = document.getElementById('pagination-controls');
+      pagination.innerHTML = '';
+      for (let i = 1; i <= totalPages; i++) {
+        pagination.innerHTML += `<button class="page-btn ${i === currentPage ? 'active-tab' : ''}" data-page="${i}">${i}</button>`;
+      }
+      document.querySelectorAll('.page-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentPage = parseInt(btn.getAttribute('data-page'));
+          applyFilters();
+        });
+      });
+    }
+
+    function updateExpeditionArea() {
+      const area = document.getElementById('expedition-arena');
+      area.innerHTML = `
+        <p style="color:#ffe600;">Selected Goblins: ${selectedGoblins.size} / 50</p>
+        <button class="btn btn-glow" id="start-expedition" style="margin-top:1rem;">🚀 Start Expedition</button>
+      `;
+      document.getElementById('start-expedition').onclick = () => {
+        if (selectedGoblins.size === 0) return alert("Select at least 1 goblin.");
+        // Chiamata al backend per avviare la spedizione
+        console.log("Launching expedition with goblins:", [...selectedGoblins]);
+        // TODO: integrazione con Python API backend
+      };
+    }
+
+    function applyFilters() {
+      let filtered = [...goblins];
+      if (sortBy) {
+        filtered.sort((a, b) => {
+          const av = +a[sortBy] || 0;
+          const bv = +b[sortBy] || 0;
+          return sortAsc ? av - bv : bv - av;
+        });
+      }
+      renderCaveGrid(filtered);
+      renderPaginationControls(filtered);
+    }
+
+    container.innerHTML = `
+      <div style="margin-bottom:1rem; display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center;">
+        <button class="btn btn-glow" id="select-all">✅ Select First 50</button>
+        <button class="btn btn-glow" id="deselect-all">❌ Deselect All</button>
+        <select id="sort-cave" class="btn btn-glow">
+          <option value="">Sort by...</option>
+          <option value="level">Level</option>
+          <option value="daily-power">Daily Power</option>
+          <option value="loot-hungry">Loot-Hungry</option>
+          <option value="speed">Speed</option>
+        </select>
+      </div>
+
+      <div id="goblin-grid" style="
+        display:grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap:1.2rem;
+        justify-items:center;
+      "></div>
+
+      <div id="pagination-controls" style="margin-top:1.5rem; text-align:center;"></div>
+
+      <div id="expedition-arena" style="
+        margin-top:2.5rem;
+        padding:1.5rem;
+        background:linear-gradient(to right, #1a1a1a, #111);
+        border-radius:18px;
+        text-align:center;
+        color:#fff;
+        box-shadow:0 0 12px #0ff;
+      ">
+        <p>Selected Goblins: 0 / 50</p>
+      </div>
+    `;
+
+    document.getElementById('select-all').onclick = () => {
+      selectedGoblins.clear();
+      goblins.slice(0, 50).forEach(g => selectedGoblins.add(g.asset_id));
+      applyFilters();
+      updateExpeditionArea();
+    };
+
+    document.getElementById('deselect-all').onclick = () => {
+      selectedGoblins.clear();
+      applyFilters();
+      updateExpeditionArea();
+    };
+
+    document.getElementById('sort-cave').addEventListener('change', (e) => {
+      sortBy = e.target.value;
+      sortAsc = true;
+      applyFilters();
+    });
+
+    applyFilters();
+    updateExpeditionArea();
+
+  } catch (err) {
+    console.error("[renderDwarfsCave] Error:", err);
+    container.innerHTML = `<p>Error loading cave interface.</p>`;
+  }
 }
 
 async function renderGoblinBlend() {

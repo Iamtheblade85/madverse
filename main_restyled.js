@@ -2290,9 +2290,11 @@ async function renderDwarfsCave() {
           border-radius: 10px;
           ${highlightStyle(g.asset_id)}
         ">
-          <img src="${g.img}" style="width:50px; height:auto; border-radius:8px;">
+          <div style="flex-basis: 15%; max-width: 15%;">
+            <img src="${g.img}" style="width:50px; height:auto; border-radius:8px;">
+          </div>
 
-          <div style="flex:1; font-size: 0.95rem; font-family: Orbitron, sans-serif; color: #fff;">
+          <div style="flex-basis: 15%; max-width: 15%; font-size: 0.95rem; font-family: Orbitron, sans-serif; color: #fff;">
             <div><strong style="color:#ffe600;">${g.name}</strong></div>
             <div style="color:#ccc;">Rarity: <span class="${getRarityColorClass(g.rarity)}">${g.rarity}</span></div>
             <div style="color:#aaa;">Level: ${g.level} | Main: ${g.main_attr}</div>
@@ -2351,31 +2353,45 @@ async function renderDwarfsCave() {
     }
 
     container.innerHTML = `
-      <div style="margin-bottom: 1rem; text-align: center; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;">
-        <button class="btn btn-glow" id="select-50">✅ Select First 50</button>
-        <button class="btn btn-glow" id="deselect-all">❌ Deselect All</button>
-        <button class="btn btn-glow" id="select-best">🏆 Best 50 Goblins</button>
-        <select id="sort-cave" class="btn btn-glow">
-          <option value="rarity">Sort by Rarity</option>
-          <option value="level">Sort by Level</option>
-          <option value="daily-power">Sort by Power</option>
-          <option value="loot-hungry">Sort by Loot-Hungry</option>
-        </select>
+      <div style="display: flex; flex-wrap: wrap; gap: 2rem;">
+        <div style="flex: 1 1 60%; min-width: 300px;">
+          <div style="margin-bottom: 1rem; text-align: center; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;">
+            <button class="btn btn-glow" id="select-50">✅ Select First 50</button>
+            <button class="btn btn-glow" id="deselect-all">❌ Deselect All</button>
+            <button class="btn btn-glow" id="select-best">🏆 Best 50 Goblins</button>
+            <select id="sort-cave" class="btn btn-glow">
+              <option value="rarity">Sort by Rarity</option>
+              <option value="level">Sort by Level</option>
+              <option value="daily-power">Sort by Power</option>
+              <option value="loot-hungry">Sort by Loot-Hungry</option>
+            </select>
+          </div>
+
+          <div id="goblin-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+
+          <div id="selection-summary" style="
+            margin-top: 1.5rem;
+            padding: 1rem;
+            text-align: center;
+            background: #111;
+            border-radius: 12px;
+            box-shadow: 0 0 10px #0ff;
+            font-family: Orbitron, sans-serif;
+            font-size: 1rem;
+            color: #fff;
+          "></div>
+        </div>
+
+        <div style="flex: 1 1 35%; min-width: 250px; background: #1c1c1c; border-radius: 12px; padding: 1.5rem; color: #eee; font-family: 'Orbitron', sans-serif; font-size: 0.95rem; line-height: 1.6; box-shadow: 0 0 10px #0ff;">
+          <h3 style="color:#ffe600; font-size:1.6rem; margin-bottom: 1rem;">📜 Welcome to the Dwarf’s Gold Cave</h3>
+          <p>💥 Ready to send your goblins into the depths? Choose up to <strong>50 warriors</strong> to explore the mysterious cave — the more, the merrier (and lootier)!</p>
+          <p>💰 Every expedition is <strong>free</strong> and rewards you with variable <strong>CHIPS tokens</strong> and even precious <strong>NFT treasures</strong> to help your goblin empire grow.</p>
+          <p>📈 Goblins with higher <strong>level</strong> and dominant <strong>main attribute</strong> (accuracy, resistance, etc.) will earn you better rewards!</p>
+          <p>🏆 Use the <strong>"Best 50 Goblins"</strong> button if you’re not sure who to send. We'll auto-pick your elite team!</p>
+          <p>🎁 Don’t forget to open your <strong>Daily Chest</strong> for surprise bonuses, extra NFTs, and power boosts to fuel your next expedition.</p>
+          <p style="margin-top:1.5rem; font-style: italic; color: #aaa;">Tip: Check back often — treasure respawns, and goblins love digging daily!</p>
+        </div>
       </div>
-
-      <div id="goblin-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
-
-      <div id="selection-summary" style="
-        margin-top: 1.5rem;
-        padding: 1rem;
-        text-align: center;
-        background: #111;
-        border-radius: 12px;
-        box-shadow: 0 0 10px #0ff;
-        font-family: Orbitron, sans-serif;
-        font-size: 1rem;
-        color: #fff;
-      "></div>
     `;
 
     document.getElementById('select-50').onclick = () => {

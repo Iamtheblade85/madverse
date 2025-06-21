@@ -2330,13 +2330,85 @@ async function renderDwarfsCave() {
         <span style="color:#ffe600;">Selected: ${selected.size} / 50</span>
         <button class="btn btn-glow" id="start-expedition-btn" style="margin-left:1rem;">🚀 Start Expedition</button>
       `;
-      document.getElementById("start-expedition-btn").onclick = () => {
+      document.getElementById("start-expedition-btn").onclick = async () => {
         if (selected.size === 0) {
           alert("Select at least 1 goblin.");
           return;
         }
-        // TODO: Chiamata backend
-        console.log("[EXPEDITION] Goblins:", [...selected]);
+
+        const assetIds = [...selected];
+
+        try {
+          const startRes = await fetch(`${BASE_URL}/start_expedition`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              wax_account: window.userData.wax_account,
+              goblins: assetIds
+            })
+          });
+          const expeditionData = await startRes.json();
+
+          const startTime = Date.now();
+          const durationMs = expeditionData.duration_seconds * 1000;
+          const endTime = startTime + durationMs;
+
+          const summaryContainer = document.getElementById('selection-summary');
+          const countdownDiv = document.createElement('div');
+          countdownDiv.id = 'expedition-countdown';
+          countdownDiv.style = "font-size: 1.4rem; margin-top: 1rem; color: #0ff; font-family: Orbitron, sans-serif;";
+
+          const gif = document.createElement('img');
+          gif.src = "https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif";
+          gif.style = "width: 100%; max-width: 300px; margin-top: 1rem; border-radius: 12px; box-shadow: 0 0 10px #ffe600;";
+
+          summaryContainer.innerHTML = `<h3 style='color:#ffe600;'>⛏️ Expedition in progress!</h3>`;
+          summaryContainer.appendChild(countdownDiv);
+          summaryContainer.appendChild(gif);
+
+          const timer = setInterval(async () => {
+            const remaining = endTime - Date.now();
+            if (remaining <= 0) {
+              clearInterval(timer);
+              countdownDiv.textContent = "⏳ Expedition completed! Fetching results...";
+
+              const resultRes = await fetch(`${BASE_URL}/end_expedition`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  wax_account: window.userData.wax_account
+                })
+              });
+
+              const result = await resultRes.json();
+              const summary = `
+                <h3 style='color:#ffe600;'>🎉 Expedition Complete</h3>
+                <p>Total Goblins Used: ${result.stats.total_goblins}</p>
+                <p>Total Tokens: ${Object.entries(result.stats.tokens).map(([symbol, amt]) => `${symbol}: ${amt}`).join(", ")}</p>
+                <p>Total NFTs: ${result.stats.total_nfts}</p>
+                <h4>Updated Goblins Power:</h4>
+                <ul>${result.goblins.map(g => `<li>${g.name} - New Power: ${g.daily_power}</li>`).join('')}</ul>
+                <h4>NFT Rewards:</h4>
+                <ul>${result.nfts.map(n => `<li>${n.template_name} x${n.quantity}</li>`).join('')}</ul>
+                <button class='btn btn-glow' id='start-again-btn'>🔁 Start Again</button>
+              `;
+              summaryContainer.innerHTML = summary;
+              document.getElementById("start-again-btn").onclick = () => {
+                selected = new Set(assetIds);
+                updateSummary();
+                renderList();
+              };
+              return;
+            }
+            const mins = Math.floor(remaining / 60000);
+            const secs = Math.floor((remaining % 60000) / 1000);
+            countdownDiv.textContent = `⏳ Time Left: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+          }, 1000);
+
+        } catch (error) {
+          console.error("Expedition start failed:", error);
+          alert("🚫 Failed to start expedition. Please try again.");
+        }
       };
     }
 

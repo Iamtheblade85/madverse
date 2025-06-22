@@ -2518,8 +2518,11 @@ async function renderDwarfsCave() {
       renderList();
       updateSummary();
     }
+    // ✅ Salva l'HTML corrente del blocco spedizione prima che venga cancellato
+    const expeditionSummaryHTML = document.getElementById('expedition-summary-block')?.outerHTML || '<div id="expedition-summary-block" style="margin-bottom: 2rem;"></div>';
 
     container.innerHTML = `
+      ${expeditionSummaryHTML}
       <div style="display: flex; flex-wrap: wrap; gap: 2rem;">
         <div style="flex: 1 1 60%; min-width: 300px;">
           <div style="margin-bottom: 1rem; text-align: center; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;">

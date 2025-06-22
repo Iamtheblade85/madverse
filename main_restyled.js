@@ -2242,7 +2242,22 @@ async function renderGoblinInventory() {
 
 async function renderDwarfsCave() {
   const container = document.getElementById('goblin-content');
-  container.innerHTML = `<p class="subtitle2">Loading goblins for expedition...</p>`;
+  container.innerHTML = `
+    <div id="expedition-summary-block" style="margin-bottom: 2rem;"></div>
+  
+    <div id="dwarfs-menu" style="margin-bottom: 1.5rem;">
+      <p class="subtitle2">Select your goblins and start the expedition!</p>
+    </div>
+  
+    <div style="display: flex; flex-wrap: wrap; gap: 2rem;">
+      <div id="goblin-list" style="flex: 1 1 60%;"></div>
+      <div id="selection-summary" style="flex: 1 1 35%; padding: 1rem; background: #111; border-radius: 12px; box-shadow: 0 0 10px #0ff; font-family: Orbitron, sans-serif; font-size: 1rem; color: #fff;">
+        <h3 style="color:#ffe600;">📋 Goblin Selection</h3>
+        <!-- This will be filled dynamically -->
+      </div>
+    </div>
+  `;
+
 
   try {
     const res = await fetch(`${BASE_URL}/user_nfts`, {
@@ -2326,7 +2341,7 @@ async function renderDwarfsCave() {
     }
     
     async function renderExpeditionCountdown(expedition_id, seconds, assetIds = []) {
-      const summaryContainer = document.getElementById('selection-summary');
+      const summaryContainer = document.getElementById('expedition-summary-block');
       const countdownDiv = document.createElement('div');
       countdownDiv.id = 'expedition-countdown';
       countdownDiv.style = "font-size: 1.4rem; margin-top: 1rem; color: #0ff; font-family: Orbitron, sans-serif;";
@@ -2359,16 +2374,73 @@ async function renderDwarfsCave() {
     
           const result = await resultRes.json();
           const summary = `
-            <h3 style='color:#ffe600;'>🎉 Expedition Complete</h3>
-            <p>Total Goblins Used: ${result.stats.total_goblins}</p>
-            <p>Total Tokens: ${Object.entries(result.stats.tokens).map(([symbol, amt]) => `${symbol}: ${amt}`).join(", ")}</p>
-            <p>Total NFTs: ${result.stats.total_nfts}</p>
-            <h4>Updated Goblins Power:</h4>
-            <ul>${result.goblins.map(g => `<li>${g.name} - New Power: ${g.daily_power}</li>`).join('')}</ul>
-            <h4>NFT Rewards:</h4>
-            <ul>${result.nfts.map(n => `<li>${n.template_name} x${n.quantity}</li>`).join('')}</ul>
-            <button class='btn btn-glow' id='start-again-btn'>🔁 Start Again</button>
+            <div style="
+              padding: 1.5rem;
+              background: #0b0b0b;
+              border-radius: 16px;
+              box-shadow: 0 0 15px #0ff;
+              font-family: Orbitron, sans-serif;
+              color: #fff;
+              text-align: left;
+              margin-bottom: 2rem;
+            ">
+          
+              <h2 style="color:#ffe600; margin-bottom: 1rem; text-align:center;">🎉 Expedition Complete</h2>
+          
+              <div style="margin-bottom: 1.5rem;">
+                <p style="font-size: 1.1rem;"><strong>Total Goblins Used:</strong> <span style="color:#0ff;">${result.stats.total_goblins}</span></p>
+                <p style="font-size: 1.1rem;"><strong>Total Tokens:</strong> 
+                  ${Object.entries(result.stats.tokens).map(([symbol, amt]) => 
+                    `<span style="color:#0f0; font-weight: bold;">${symbol}: ${amt}</span>`).join(", ")}
+                </p>
+                <p style="font-size: 1.1rem;"><strong>Total NFTs:</strong> 
+                  <span style="color:#ffa500; font-weight: bold;">${result.stats.total_nfts}</span>
+                </p>
+              </div>
+          
+              <div style="margin-bottom: 1.5rem;">
+                <h3 style="color:#0ff; font-size: 1.1rem; margin-bottom: 0.5rem;">🧪 Goblins Power Update</h3>
+                <ul style="list-style: none; padding-left: 0;">
+                  ${result.goblins.map(g => `
+                    <li style="margin-bottom: 0.4rem;">
+                      <span style="color:#ffe600;">${g.name}</span> → 
+                      <span style="color:#0f0;">Power: ${g.daily_power}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+          
+              <div>
+                <h3 style="color:#ffa500; font-size: 1.1rem; margin-bottom: 0.5rem;">🎁 NFT Rewards</h3>
+                ${
+                  result.nfts.length > 0
+                  ? `<ul style="list-style: none; padding-left: 0;">
+                      ${result.nfts.map(n => `
+                        <li style="margin-bottom: 0.4rem;">
+                          <span style="color:#00f0ff;">${n.template_name}</span> × 
+                          <span style="color:#0ff;">${n.quantity}</span>
+                        </li>
+                      `).join('')}
+                    </ul>`
+                  : `<p style="color:#888;">No NFTs dropped this time.</p>`
+                }
+              </div>
+          
+              <div style="text-align: center; margin-top: 2rem;">
+                <button class='btn btn-glow' id='start-again-btn' style="
+                  padding: 0.8rem 1.6rem;
+                  font-size: 1rem;
+                  border-radius: 12px;
+                  background: linear-gradient(to right, #ffe600, #ff9900);
+                  color: #000;
+                  font-weight: bold;
+                  box-shadow: 0 0 10px #ffe600;
+                  transition: background 0.3s ease;
+                ">🔁 Start Again</button>
+              </div>
+            </div>
           `;
+
           summaryContainer.innerHTML = summary;
           document.getElementById("start-again-btn").onclick = () => {
             selected = new Set(assetIds);

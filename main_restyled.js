@@ -2240,27 +2240,94 @@ async function renderGoblinInventory() {
   }
 }
 
+// Complete renderDwarfsCave function with full features
 async function renderDwarfsCave() {
   console.log("[renderDwarfsCave] Start loading interface");
+
   const container = document.getElementById('goblin-content');
   container.innerHTML = `
-    <div id="expedition-summary-block" style="margin-bottom: 2rem;"></div>
-  
-    <div id="dwarfs-menu" style="margin-bottom: 1.5rem;">
-      <p class="subtitle2">Select your goblins and start the expedition!</p>
+    <div id="expedition-summary-block" style="margin-bottom: 2rem;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 2rem;
+        align-items: flex-start;
+        font-family: Orbitron, sans-serif;">
+      <div style="flex: 1;">
+        <h3 style='color:#ffe600;'>⛏️ Global Expeditions in Progress</h3>
+        <video id="expedition-video" src="expedition_run.mp4" autoplay loop muted style="width: 100%; max-width: 480px; border-radius: 12px; box-shadow: 0 0 10px #ffe600;"></video>
+      </div>
+      <div id="global-expedition-list" style="flex: 1; background:#111; border-radius: 12px; padding: 1rem; color: #fff; box-shadow: 0 0 10px #0ff; font-size: 0.95rem; line-height: 1.5;"></div>
     </div>
-  
+    <div id="feedback-area" style="margin-bottom: 1rem; color: #0ff; font-family: Orbitron, sans-serif;"></div>
+    <div id="dwarfs-menu" style="margin-bottom: 1.5rem;"><p class="subtitle2">Select your goblins and start the expedition!</p></div>
     <div style="display: flex; flex-wrap: wrap; gap: 2rem;">
-      <div id="goblin-list" style="flex: 1 1 60%;"></div>
-      <div id="selection-summary" style="flex: 1 1 35%; padding: 1rem; background: #111; border-radius: 12px; box-shadow: 0 0 10px #0ff; font-family: Orbitron, sans-serif; font-size: 1rem; color: #fff;">
-        <h3 style="color:#ffe600;">📋 Goblin Selection</h3>
-        <!-- This will be filled dynamically -->
+      <div style="flex: 1 1 60%; min-width: 300px;">
+        <div style="margin-bottom: 1rem; text-align: center; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;">
+          <button class="btn btn-glow" id="select-50">✅ Select First 50</button>
+          <button class="btn btn-glow" id="deselect-all">❌ Deselect All</button>
+          <button class="btn btn-glow" id="select-best">🏆 Best 50 Goblins</button>
+          <select id="sort-cave" class="btn btn-glow">
+            <option value="rarity">Sort by Rarity</option>
+            <option value="level">Sort by Level</option>
+            <option value="daily_power">Sort by Power</option>
+            <option value="loot_hungry">Sort by Loot-Hungry</option>
+          </select>
+        </div>
+        <div id="selection-summary" style="margin-top: 1.5rem; padding: 1rem; text-align: center; background: #111; border-radius: 12px; box-shadow: 0 0 10px #0ff; font-family: Orbitron, sans-serif; font-size: 1rem; color: #fff;"></div>
+        <div id="goblin-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+      </div>
+      <div style="flex: 1 1 35%; min-width: 250px; background: #1c1c1c; border-radius: 12px; padding: 1.5rem; color: #eee; font-family: 'Orbitron', sans-serif; font-size: 0.95rem; line-height: 1.6; box-shadow: 0 0 10px #0ff;">
+        <h3 style="color:#ffe600; font-size:1.6rem; margin-bottom: 1rem;">📜 Welcome to the Dwarf’s Gold Cave</h3>
+        <p>💥 Ready to send your goblins into the depths? Choose up to <strong>50 warriors</strong> to explore the mysterious cave — the more, the merrier (and lootier)!</p>
+        <p>💰 Every expedition is <strong>free</strong> and rewards you with variable <strong>CHIPS tokens</strong> and even precious <strong>NFT treasures</strong> to help your goblin empire grow.</p>
+        <p>📈 Goblins with higher <strong>level</strong> and dominant <strong>main attribute</strong> (accuracy, resistance, etc.) will earn you better rewards!</p>
+        <p>🏆 Use the <strong>"Best 50 Goblins"</strong> button if you’re not sure who to send. We'll auto-pick your elite team!</p>
+        <p>🎁 Don’t forget to open your <strong>Daily Chest</strong> for surprise bonuses, extra NFTs, and power boosts to fuel your next expedition.</p>
+        <p style="margin-top:1.5rem; font-style: italic; color: #aaa;">Tip: Check back often — treasure respawns, and goblins love digging daily!</p>
       </div>
     </div>
   `;
 
+  const feedback = (msg) => {
+    document.getElementById('feedback-area').innerHTML = `<div style="padding: 0.5rem 1rem; background: #222; border-left: 5px solid #0ff; border-radius: 8px;">${msg}</div>`;
+  };
+
+  const renderGlobalExpeditions = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/all_expeditions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+
+      const list = document.getElementById('global-expedition-list');
+      if (!Array.isArray(data) || data.length === 0) {
+        list.innerHTML = `<p style='color: #888;'>No expeditions in progress.</p>`;
+        return;
+      }
+
+      list.innerHTML = data.map((entry, i) => {
+        const bg = i % 2 === 0 ? '#1a1a1a' : '#2a2a2a';
+        const mins = Math.floor(entry.seconds_remaining / 60);
+        const secs = entry.seconds_remaining % 60;
+        return `
+          <div style="background: ${bg}; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem;">
+            <div><strong style="color: #ffe600;">${entry.wax_account}</strong></div>
+            <div style="color: #0ff;">Goblins: ${entry.total_goblins}</div>
+            <div style="color: #0f0;">⏳ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}</div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      console.error("[renderGlobalExpeditions] Error:", err);
+    }
+  };
+
+  setInterval(renderGlobalExpeditions, 5000);
+  await renderGlobalExpeditions();
+
   try {
-    console.log("[renderDwarfsCave] Fetching user goblins...");
     const res = await fetch(`${BASE_URL}/user_nfts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -2270,34 +2337,26 @@ async function renderDwarfsCave() {
         usx_token: window.userData.usx_token
       })
     });
-
+  
     const goblins = (await res.json()).filter(nft => nft.type === "goblin");
-    console.log(`[renderDwarfsCave] Goblins fetched: ${goblins.length}`);
-
     if (goblins.length === 0) {
-      container.innerHTML = `<p>No goblins found for the expedition.</p>`;
+      feedback("No goblins available for expedition.");
       return;
     }
-
+  
     let selected = new Set();
     let sortBy = "rarity";
-    let sortAsc = true;
-
+  
     function getAttrValue(g, attr) {
       return parseInt(g[attr] || 0);
     }
-
+  
     function highlightStyle(assetId) {
       return selected.has(assetId) ? 'box-shadow: 0 0 10px #ffe600; background: rgba(255,255,0,0.05);' : '';
     }
-
+  
     function renderList(filteredList = goblins) {
-      const sorted = [...filteredList].sort((a, b) => {
-        const av = getAttrValue(a, sortBy);
-        const bv = getAttrValue(b, sortBy);
-        return sortAsc ? av - bv : bv - av;
-      });
-
+      const sorted = [...filteredList].sort((a, b) => getAttrValue(b, sortBy) - getAttrValue(a, sortBy));
       document.getElementById('goblin-list').innerHTML = sorted.map(g => `
         <div class="goblin-line" style="
           display: flex;
@@ -2311,202 +2370,39 @@ async function renderDwarfsCave() {
           <div style="flex-basis: 15%; max-width: 15%;">
             <img src="${g.img}" style="width:50px; height:auto; border-radius:8px;">
           </div>
-
           <div style="flex-basis: 15%; max-width: 15%; font-size: 0.95rem; font-family: Orbitron, sans-serif; color: #fff;">
             <div><strong style="color:#ffe600;">${g.name}</strong></div>
-            <div style="color:#ccc;">Rarity: <span class="${getRarityColorClass(g.rarity)}">${g.rarity}</span></div>
+            <div style="color:#ccc;">Rarity: <span>${g.rarity}</span></div>
             <div style="color:#aaa;">Level: ${g.level} | Main: ${g.main_attr}</div>
           </div>
-
           <input type="checkbox" class="select-goblin-checkbox" data-id="${g.asset_id}"
             ${selected.has(g.asset_id) ? "checked" : ""}
             style="transform: scale(1.4); accent-color: #ffe600;">
         </div>
       `).join("");
-
+  
       document.querySelectorAll('.select-goblin-checkbox').forEach(cb => {
         cb.addEventListener('change', () => {
           const id = cb.getAttribute('data-id');
-          if (cb.checked) {
-            if (selected.size >= 50) {
-              cb.checked = false;
-              alert("⛔ Max 50 goblins allowed.");
-            } else {
-              selected.add(id);
-            }
-          } else {
-            selected.delete(id);
-          }
+          cb.checked ? selected.add(id) : selected.delete(id);
           updateSummary();
           renderList();
         });
       });
     }
-    
-    async function renderExpeditionCountdown(expedition_id, seconds, assetIds = []) {
-      const summaryContainer = document.getElementById('expedition-summary-block');
-      summaryContainer.style.display = "flex";
-      summaryContainer.style.flexDirection = "column";
-      summaryContainer.style.alignItems = "center";
-      summaryContainer.style.justifyContent = "center"; // opzionale per centratura verticale
-      summaryContainer.style.textAlign = "center";      // opzionale per il testo
-           
-      const countdownDiv = document.createElement('div');
-      countdownDiv.id = 'expedition-countdown';
-      countdownDiv.style = "font-size: 1.4rem; margin-top: 1rem; color: #0ff; font-family: Orbitron, sans-serif;";
-    
-      const video = document.createElement('video');
-      video.src = "expedition_run.mp4";
-      video.style = "width: 100%; max-width: 500px; margin-top: 1rem; border-radius: 12px; box-shadow: 0 0 10px #ffe600;";
-      video.autoplay = true;
-      video.loop = true;
-      video.muted = true;
-    
-      summaryContainer.innerHTML = `<h3 style='color:#ffe600;'>⛏️ Expedition in progress!</h3>`;
-      summaryContainer.appendChild(countdownDiv);
-      summaryContainer.appendChild(video);
-    
-      let endTime = Date.now() + (seconds * 1000);
-    
-      const timer = setInterval(async () => {
-        const remaining = endTime - Date.now();
-        if (remaining <= 0) {
-          clearInterval(timer);
-          countdownDiv.textContent = "⏳ Expedition completed! Fetching results...";
-    
-          const resultRes = await fetch(`${BASE_URL}/end_expedition`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              wax_account: window.userData.wax_account,
-              user_id: window.userData.userId,
-              usx_token: window.userData.usx_token
-            })
-          });
-    
-          const result = await resultRes.json();
-          const summary = `
-            <div style="
-              padding: 1.5rem;
-              background: #0b0b0b;
-              border-radius: 16px;
-              box-shadow: 0 0 15px #0ff;
-              font-family: Orbitron, sans-serif;
-              color: #fff;
-              text-align: left;
-              margin-bottom: 2rem;
-            ">
-          
-              <h2 style="color:#ffe600; margin-bottom: 1rem; text-align:center;">🎉 Expedition Complete</h2>
-          
-              <div style="margin-bottom: 1.5rem;">
-                <p style="font-size: 1.1rem;"><strong>Total Goblins Used:</strong> <span style="color:#0ff;">${result.stats.total_goblins}</span></p>
-                <p style="font-size: 1.1rem;"><strong>Total Tokens:</strong> 
-                  ${Object.entries(result.stats.tokens).map(([symbol, amt]) => 
-                    `<span style="color:#0f0; font-weight: bold;">${symbol}: ${amt}</span>`).join(", ")}
-                </p>
-                <p style="font-size: 1.1rem;"><strong>Total NFTs:</strong> 
-                  <span style="color:#ffa500; font-weight: bold;">${result.stats.total_nfts}</span>
-                </p>
-              </div>
-          
-              <div style="margin-bottom: 1.5rem;">
-                <h3 style="color:#0ff; font-size: 1.1rem; margin-bottom: 0.5rem;">🧪 Goblins Power Update</h3>
-                <ul style="list-style: none; padding-left: 0;">
-                  ${result.goblins.map(g => `
-                    <li style="margin-bottom: 0.4rem;">
-                      <span style="color:#ffe600;">${g.name}</span> → 
-                      <span style="color:#0f0;">Power: ${g.daily_power}</span>
-                    </li>
-                  `).join('')}
-                </ul>
-              </div>
-          
-              <div>
-                <h3 style="color:#ffa500; font-size: 1.1rem; margin-bottom: 0.5rem;">🎁 NFT Rewards</h3>
-                ${
-                  result.nfts.length > 0
-                  ? `<ul style="list-style: none; padding-left: 0;">
-                      ${result.nfts.map(n => `
-                        <li style="margin-bottom: 0.4rem;">
-                          <span style="color:#00f0ff;">${n.template_name}</span> × 
-                          <span style="color:#0ff;">${n.quantity}</span>
-                        </li>
-                      `).join('')}
-                    </ul>`
-                  : `<p style="color:#888;">No NFTs dropped this time.</p>`
-                }
-              </div>
-          
-              <div style="text-align: center; margin-top: 2rem;">
-                <button class='btn btn-glow' id='start-again-btn' style="
-                  padding: 0.8rem 1.6rem;
-                  font-size: 1rem;
-                  border-radius: 12px;
-                  background: linear-gradient(to right, #ffe600, #ff9900);
-                  color: #000;
-                  font-weight: bold;
-                  box-shadow: 0 0 10px #ffe600;
-                  transition: background 0.3s ease;
-                ">🔁 Start Again</button>
-              </div>
-            </div>
-          `;
-
-          summaryContainer.innerHTML = summary;
-          const btn = document.getElementById("start-again-btn");
-          if (btn) {
-            btn.onclick = async () => {
-              btn.scrollIntoView({ behavior: "smooth", block: "center" });
-              selected = new Set(assetIds);
-              updateSummary();
-              renderList();
-          
-              try {
-                const startRes = await fetch(`${BASE_URL}/start_expedition`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    wax_account: window.userData.wax_account,
-                    user_id: window.userData.userId,
-                    usx_token: window.userData.usx_token,
-                    goblin_ids: [...assetIds]
-                  })
-                });
-          
-                const expeditionData = await startRes.json();
-                const expedition_id = expeditionData.expedition_id;
-                const durationSeconds = expeditionData.duration_seconds;
-          
-                await renderExpeditionCountdown(expedition_id, durationSeconds, assetIds);
-              } catch (error) {
-                console.error("Failed to restart expedition:", error);
-                alert("🚫 Could not start expedition again.");
-              }
-            };
-          }
-          return;
-        }
-    
-        const mins = Math.floor(remaining / 60000);
-        const secs = Math.floor((remaining % 60000) / 1000);
-        countdownDiv.textContent = `⏳ Time Left: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-      }, 1000);
-    }
-
+  
     function updateSummary() {
-      document.getElementById("selection-summary").innerHTML = `
+      const summary = document.getElementById("selection-summary");
+      summary.innerHTML = `
         <span style="color:#ffe600;">Selected: ${selected.size} / 50</span>
         <button class="btn btn-glow" id="start-expedition-btn" style="margin-left:1rem;">🚀 Start Expedition</button>
       `;
       document.getElementById("start-expedition-btn").onclick = async () => {
         if (selected.size === 0) {
-          alert("Select at least 1 goblin.");
+          feedback("Select at least 1 goblin to start.");
           return;
         }
-      
         const assetIds = [...selected];
-      
         try {
           const startRes = await fetch(`${BASE_URL}/start_expedition`, {
             method: "POST",
@@ -2518,33 +2414,101 @@ async function renderDwarfsCave() {
               goblin_ids: assetIds
             })
           });
-      
+  
           const expeditionData = await startRes.json();
-      
-          // ⛏️ Se la spedizione è già in corso
           if (startRes.status === 409) {
-            console.log("[⚠️ Already in expedition]");
-      
-            const countdownSeconds = expeditionData.seconds_remaining || 0;
-            const expedition_id = expeditionData.expedition_id;
-      
-            await renderExpeditionCountdown(expedition_id, countdownSeconds);
-            return;
+            feedback("You already have an active expedition.");
+          } else {
+            feedback("Expedition started successfully!");
+            await renderUserCountdown(expeditionData.expedition_id, expeditionData.duration_seconds, assetIds);
           }
-      
-          // 🎯 Spedizione avviata normalmente
-          const expedition_id = expeditionData.expedition_id;
-          const durationSeconds = expeditionData.duration_seconds;
-      
-          await renderExpeditionCountdown(expedition_id, durationSeconds, assetIds);
-      
         } catch (error) {
-          console.error("Expedition start failed:", error);
-          alert("🚫 Failed to start expedition. Please try again.");
+          console.error("[Expedition Start] Error:", error);
+          feedback("Failed to start expedition.");
         }
       };
     }
-
+  
+    async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
+      const countdownDiv = document.createElement("div");
+      countdownDiv.id = "user-expedition-countdown";
+      countdownDiv.style = "font-size: 1.2rem; margin-top: 1rem; color: #0ff; font-family: Orbitron, sans-serif; text-align: center;";
+  
+      const summaryBlock = document.getElementById("expedition-summary-block");
+      summaryBlock.appendChild(countdownDiv);
+  
+      const endTime = Date.now() + seconds * 1000;
+      const timer = setInterval(async () => {
+        const remaining = endTime - Date.now();
+        if (remaining <= 0) {
+          clearInterval(timer);
+          countdownDiv.innerText = "⏳ Expedition completed! Retrieving results...";
+  
+          const resultRes = await fetch(`${BASE_URL}/end_expedition`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              wax_account: window.userData.wax_account,
+              user_id: window.userData.userId,
+              usx_token: window.userData.usx_token
+            })
+          });
+  
+          const result = await resultRes.json();
+  
+          countdownDiv.innerHTML = `
+            <div style="
+              padding: 1rem;
+              margin-top: 1rem;
+              background: #0b0b0b;
+              border-radius: 12px;
+              box-shadow: 0 0 10px #0ff;
+              font-family: Orbitron, sans-serif;
+              color: #fff;
+            ">
+              <h2 style="color:#ffe600;">🎉 Expedition Complete</h2>
+              <p><strong>Total Goblins:</strong> <span style="color:#0ff;">${result.stats.total_goblins}</span></p>
+              <p><strong>Total Tokens:</strong> ${Object.entries(result.stats.tokens).map(([s, a]) => `<span style="color:#0f0;">${s}: ${a}</span>`).join(', ')}</p>
+              <p><strong>Total NFTs:</strong> <span style="color:#ffa500;">${result.stats.total_nfts}</span></p>
+  
+              <h3 style="margin-top:1rem; color:#0ff;">🧪 Power Update</h3>
+              <ul style="list-style: none; padding: 0;">${result.goblins.map(g => `<li><span style="color:#ffe600;">${g.name}</span> → <span style="color:#0f0;">Power: ${g.daily_power}</span></li>`).join('')}</ul>
+  
+              <h3 style="margin-top:1rem; color:#ffa500;">🎁 NFT Rewards</h3>
+              ${
+                result.nfts.length
+                  ? `<ul style="list-style: none; padding: 0;">${result.nfts.map(n => `<li><span style="color:#00f0ff;">${n.template_name}</span> × <span style="color:#0ff;">${n.quantity}</span></li>`).join('')}</ul>`
+                  : `<p style="color:#888;">No NFTs dropped this time.</p>`
+              }
+  
+              <button class="btn btn-glow" id="start-again-btn" style="
+                margin-top: 1rem;
+                padding: 0.6rem 1.2rem;
+                border-radius: 8px;
+                font-weight: bold;
+                background: linear-gradient(to right, #ffe600, #ff9900);
+                box-shadow: 0 0 8px #ffe600;
+                color: #000;
+              ">🔁 Start Again</button>
+            </div>
+          `;
+  
+          document.getElementById("start-again-btn").onclick = async () => {
+            selected = new Set(assetIds);
+            renderList();
+            updateSummary();
+            document.getElementById("start-expedition-btn").click();
+          };
+          return;
+        }
+  
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        countdownDiv.textContent = `⏳ Time Left: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      }, 1000);
+    }
+  
+    // Auto-select best 50 goblins
     function autoSelectBestGoblins() {
       selected.clear();
       const scored = goblins.map(g => ({
@@ -2556,110 +2520,59 @@ async function renderDwarfsCave() {
       renderList();
       updateSummary();
     }
-    // ✅ Salva l'HTML corrente del blocco spedizione prima che venga cancellato
-    const expeditionSummaryHTML = document.getElementById('expedition-summary-block')?.outerHTML || '<div id="expedition-summary-block" style="margin-bottom: 2rem;"></div>';
-
-    container.innerHTML = `
-      ${expeditionSummaryHTML}
-      <div style="display: flex; flex-wrap: wrap; gap: 2rem;">
-        <div style="flex: 1 1 60%; min-width: 300px;">
-          <div style="margin-bottom: 1rem; text-align: center; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;">
-            <button class="btn btn-glow" id="select-50">✅ Select First 50</button>
-            <button class="btn btn-glow" id="deselect-all">❌ Deselect All</button>
-            <button class="btn btn-glow" id="select-best">🏆 Best 50 Goblins</button>
-            <select id="sort-cave" class="btn btn-glow">
-              <option value="rarity">Sort by Rarity</option>
-              <option value="level">Sort by Level</option>
-              <option value="daily-power">Sort by Power</option>
-              <option value="loot-hungry">Sort by Loot-Hungry</option>
-            </select>
-          </div>
-          <div id="selection-summary" style="
-            margin-top: 1.5rem;
-            padding: 1rem;
-            text-align: center;
-            background: #111;
-            border-radius: 12px;
-            box-shadow: 0 0 10px #0ff;
-            font-family: Orbitron, sans-serif;
-            font-size: 1rem;
-            color: #fff;
-          "></div>
-          <div id="goblin-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
-        </div>
-
-        <div style="flex: 1 1 35%; min-width: 250px; background: #1c1c1c; border-radius: 12px; padding: 1.5rem; color: #eee; font-family: 'Orbitron', sans-serif; font-size: 0.95rem; line-height: 1.6; box-shadow: 0 0 10px #0ff;">
-          <h3 style="color:#ffe600; font-size:1.6rem; margin-bottom: 1rem;">📜 Welcome to the Dwarf’s Gold Cave</h3>
-          <p>💥 Ready to send your goblins into the depths? Choose up to <strong>50 warriors</strong> to explore the mysterious cave — the more, the merrier (and lootier)!</p>
-          <p>💰 Every expedition is <strong>free</strong> and rewards you with variable <strong>CHIPS tokens</strong> and even precious <strong>NFT treasures</strong> to help your goblin empire grow.</p>
-          <p>📈 Goblins with higher <strong>level</strong> and dominant <strong>main attribute</strong> (accuracy, resistance, etc.) will earn you better rewards!</p>
-          <p>🏆 Use the <strong>"Best 50 Goblins"</strong> button if you’re not sure who to send. We'll auto-pick your elite team!</p>
-          <p>🎁 Don’t forget to open your <strong>Daily Chest</strong> for surprise bonuses, extra NFTs, and power boosts to fuel your next expedition.</p>
-          <p style="margin-top:1.5rem; font-style: italic; color: #aaa;">Tip: Check back often — treasure respawns, and goblins love digging daily!</p>
-        </div>
-      </div>
-    `;
-
+  
     document.getElementById('select-50').onclick = () => {
       selected.clear();
       goblins.slice(0, 50).forEach(g => selected.add(g.asset_id));
       renderList();
       updateSummary();
     };
-
+  
     document.getElementById('deselect-all').onclick = () => {
       selected.clear();
       renderList();
       updateSummary();
     };
-
+  
     document.getElementById('select-best').onclick = () => {
       autoSelectBestGoblins();
     };
-
+  
     document.getElementById('sort-cave').addEventListener('change', (e) => {
       sortBy = e.target.value;
       renderList();
     });
-
+  
     renderList();
     updateSummary();
-
-    // 🆕 Check for active expedition AFTER rendering the UI
-    console.log("[renderDwarfsCave] Checking for active expedition...");
-    try {
-      const expeditionRes = await fetch(`${BASE_URL}/expedition_status`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          wax_account: window.userData.wax_account,
-          user_id: window.userData.userId,
-          usx_token: window.userData.usx_token
-        })
-      });
-
-      console.log("[renderDwarfsCave] Expedition status response:", expeditionRes.status);
-      if (expeditionRes.status === 200) {
-        const expeditionData = await expeditionRes.json();
-        console.log("[renderDwarfsCave] Expedition in progress:", expeditionData);
-        const expedition_id = expeditionData.expedition_id;
-        const countdownSeconds = expeditionData.seconds_remaining;
-        const assetIds = expeditionData.goblin_ids || [];
-
-        selected = new Set(assetIds);
-        await renderExpeditionCountdown(expedition_id, countdownSeconds, assetIds);
-      } else {
-        console.log("[renderDwarfsCave] No expedition in progress.");
-      }
-    } catch (err) {
-      console.warn("[renderDwarfsCave] Expedition status check failed:", err);
+  
+    // Check for user's expedition in progress
+    const expeditionRes = await fetch(`${BASE_URL}/expedition_status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        wax_account: window.userData.wax_account,
+        user_id: window.userData.userId,
+        usx_token: window.userData.usx_token
+      })
+    });
+  
+    if (expeditionRes.status === 200) {
+      const expeditionData = await expeditionRes.json();
+      const expedition_id = expeditionData.expedition_id;
+      const countdownSeconds = expeditionData.seconds_remaining;
+      const assetIds = expeditionData.goblin_ids || [];
+      selected = new Set(assetIds);
+      await renderUserCountdown(expedition_id, countdownSeconds, assetIds);
     }
-
+  
   } catch (err) {
     console.error("[renderDwarfsCave] Error:", err);
-    container.innerHTML = `<p>Error loading cave interface.</p>`;
+    feedback("Error loading goblin data or expedition info.");
   }
+
 }
+
 
 async function renderGoblinBlend() {
   const container = document.getElementById('goblin-content');

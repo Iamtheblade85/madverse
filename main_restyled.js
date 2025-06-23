@@ -2451,10 +2451,33 @@ async function renderDwarfsCave() {
           `;
 
           summaryContainer.innerHTML = summary;
-          document.getElementById("start-again-btn").onclick = () => {
+          document.getElementById("start-again-btn").onclick = async () => {
             selected = new Set(assetIds);
             updateSummary();
             renderList();
+          
+            // Avvia una nuova spedizione con gli stessi goblin
+            try {
+              const startRes = await fetch(`${BASE_URL}/start_expedition`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  wax_account: window.userData.wax_account,
+                  user_id: window.userData.userId,
+                  usx_token: window.userData.usx_token,
+                  goblin_ids: [...assetIds]
+                })
+              });
+          
+              const expeditionData = await startRes.json();
+              const expedition_id = expeditionData.expedition_id;
+              const durationSeconds = expeditionData.duration_seconds;
+          
+              await renderExpeditionCountdown(expedition_id, durationSeconds, assetIds);
+            } catch (error) {
+              console.error("Failed to restart expedition:", error);
+              alert("🚫 Could not start expedition again.");
+            }
           };
           return;
         }

@@ -2323,6 +2323,8 @@ async function renderDwarfsCave() {
     document.getElementById('feedback-area').innerHTML = `<div style="padding: 0.5rem 1rem; background: #222; border-left: 5px solid #0ff; border-radius: 8px;">${msg}</div>`;
   };
 
+  let globalCountdownInterval;
+  
   const renderGlobalExpeditions = async () => {
     try {
       const res = await fetch(`${BASE_URL}/all_expeditions`, {
@@ -2330,34 +2332,66 @@ async function renderDwarfsCave() {
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
-
+  
       const list = document.getElementById('global-expedition-list');
       if (!list) {
         console.warn("Missing expedition list container");
         return;
       }
-
+  
+      // Clear old content
+      list.innerHTML = '';
+  
+      // Clear previous interval if any
+      if (globalCountdownInterval) {
+        clearInterval(globalCountdownInterval);
+      }
+  
       if (!Array.isArray(data) || data.length === 0) {
         list.innerHTML = `<p style='color: #888;'>No expeditions in progress.</p>`;
         return;
       }
-
-      list.innerHTML = data.map((entry, i) => {
+  
+      // Prepare data with endTimes
+      const expeditions = data.map((entry, i) => {
+        const endTime = Date.now() + (entry.seconds_remaining * 1000);
+        const timerId = `global-timer-${i}`;
         const bg = i % 2 === 0 ? '#1a1a1a' : '#2a2a2a';
-        const mins = Math.floor(entry.seconds_remaining / 60);
-        const secs = entry.seconds_remaining % 60;
-        return `
+  
+        // Render initial row
+        list.innerHTML += `
           <div style="background: ${bg}; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem;">
             <div><strong style="color: #ffe600;">${entry.wax_account}</strong></div>
             <div style="color: #0ff;">Goblins: ${entry.total_goblins}</div>
-            <div style="color: #0f0;">⏳ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}</div>
+            <div id="${timerId}" style="color: #0f0;">⏳ calculating...</div>
           </div>
         `;
-      }).join('');
+  
+        return { endTime, timerId };
+      });
+  
+      // Single interval to update all timers
+      globalCountdownInterval = setInterval(() => {
+        const now = Date.now();
+        expeditions.forEach(({ endTime, timerId }) => {
+          const el = document.getElementById(timerId);
+          if (!el) return;
+  
+          const remaining = endTime - now;
+          if (remaining <= 0) {
+            el.textContent = "✅ Completed";
+          } else {
+            const mins = Math.floor(remaining / 60000);
+            const secs = Math.floor((remaining % 60000) / 1000);
+            el.textContent = `⏳ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+          }
+        });
+      }, 1000);
     } catch (err) {
       console.error("[renderGlobalExpeditions] Error:", err);
     }
   };
+
   await renderGlobalExpeditions(); 
 
   try {
@@ -2454,6 +2488,7 @@ async function renderDwarfsCave() {
           } else {
             feedback("Expedition started successfully!");
             await renderUserCountdown(expeditionData.expedition_id, expeditionData.duration_seconds, assetIds);
+            await renderGlobalExpeditions();
           }
         } catch (error) {
           console.error("[Expedition Start] Error:", error);
@@ -2517,7 +2552,7 @@ async function renderDwarfsCave() {
             feedback("Malformed expedition result.");
             return;
           }
-
+          await renderGlobalExpeditions();
           // Rimuovi riga dalla lista globale se presente
           const list = document.getElementById('global-expedition-list');
           if (list) {
@@ -2560,9 +2595,6 @@ async function renderDwarfsCave() {
               document.getElementById("start-expedition-btn").click();
             };
           }
-    
-          // Ricontrolla se ci sono spedizioni attive globali
-          setTimeout(renderGlobalExpeditions, 1000);
         }
     
         const mins = Math.floor(remaining / 60000);

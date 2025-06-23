@@ -2302,6 +2302,11 @@ async function renderDwarfsCave() {
       const data = await res.json();
 
       const list = document.getElementById('global-expedition-list');
+      if (!list) {
+        console.warn("Missing expedition list container");
+        return;
+      }
+
       if (!Array.isArray(data) || data.length === 0) {
         list.innerHTML = `<p style='color: #888;'>No expeditions in progress.</p>`;
         return;
@@ -2428,86 +2433,146 @@ async function renderDwarfsCave() {
         }
       };
     }
-  
+      
+    // Countdown dell'utente con gestione completamento
     async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
+      const summaryBlock = document.getElementById("expedition-summary-block");
+      if (!summaryBlock) return;
+    
+      const existing = document.getElementById("user-expedition-countdown");
+      if (existing) existing.remove();
+    
       const countdownDiv = document.createElement("div");
       countdownDiv.id = "user-expedition-countdown";
       countdownDiv.style = "font-size: 1.2rem; margin-top: 1rem; color: #0ff; font-family: Orbitron, sans-serif; text-align: center;";
-  
-      const summaryBlock = document.getElementById("expedition-summary-block");
       summaryBlock.appendChild(countdownDiv);
-  
-      const endTime = Date.now() + seconds * 1000;
+    
+      let endTime = Date.now() + seconds * 1000;
+    
       const timer = setInterval(async () => {
         const remaining = endTime - Date.now();
         if (remaining <= 0) {
           clearInterval(timer);
-          countdownDiv.innerText = "⏳ Expedition completed! Retrieving results...";
-  
+          countdownDiv.textContent = "⏳ Expedition completed! Fetching results...";
+    
           const resultRes = await fetch(`${BASE_URL}/end_expedition`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               wax_account: window.userData.wax_account,
               user_id: window.userData.userId,
-              usx_token: window.userData.usx_token
+              usx_token: window.userData.usx_token,
+              expedition_id: expedition_id
             })
           });
-  
+    
+          if (!resultRes.ok) {
+            feedback("Failed to retrieve expedition result.");
+            return;
+          }
+    
           const result = await resultRes.json();
-  
+          if (!result || !result.stats || !result.goblins) {
+            feedback("Malformed expedition result.");
+            return;
+          }
+    
+          // Rimuovi riga dalla lista globale se presente
+          const list = document.getElementById('global-expedition-list');
+          if (list) {
+            Array.from(list.children).forEach(div => {
+              if (div.innerHTML.includes(window.userData.wax_account)) {
+                div.remove();
+              }
+            });
+          }
+    
+          // Visualizza risultati
           countdownDiv.innerHTML = `
-            <div style="
-              padding: 1rem;
-              margin-top: 1rem;
-              background: #0b0b0b;
-              border-radius: 12px;
-              box-shadow: 0 0 10px #0ff;
-              font-family: Orbitron, sans-serif;
-              color: #fff;
-            ">
+            <div style="padding: 1rem; margin-top: 1rem; background: #0b0b0b; border-radius: 12px; box-shadow: 0 0 10px #0ff; color: #fff;">
               <h2 style="color:#ffe600;">🎉 Expedition Complete</h2>
               <p><strong>Total Goblins:</strong> <span style="color:#0ff;">${result.stats.total_goblins}</span></p>
-              <p><strong>Total Tokens:</strong> ${Object.entries(result.stats.tokens).map(([s, a]) => `<span style="color:#0f0;">${s}: ${a}</span>`).join(', ')}</p>
+              <p><strong>Total Tokens:</strong> ${Object.entries(result.stats.tokens).map(([s,a]) => `<span style="color:#0f0;">${s}: ${a}</span>`).join(', ')}</p>
               <p><strong>Total NFTs:</strong> <span style="color:#ffa500;">${result.stats.total_nfts}</span></p>
-  
+    
               <h3 style="margin-top:1rem; color:#0ff;">🧪 Power Update</h3>
               <ul style="list-style: none; padding: 0;">${result.goblins.map(g => `<li><span style="color:#ffe600;">${g.name}</span> → <span style="color:#0f0;">Power: ${g.daily_power}</span></li>`).join('')}</ul>
-  
+    
               <h3 style="margin-top:1rem; color:#ffa500;">🎁 NFT Rewards</h3>
               ${
                 result.nfts.length
                   ? `<ul style="list-style: none; padding: 0;">${result.nfts.map(n => `<li><span style="color:#00f0ff;">${n.template_name}</span> × <span style="color:#0ff;">${n.quantity}</span></li>`).join('')}</ul>`
                   : `<p style="color:#888;">No NFTs dropped this time.</p>`
               }
-  
-              <button class="btn btn-glow" id="start-again-btn" style="
-                margin-top: 1rem;
-                padding: 0.6rem 1.2rem;
-                border-radius: 8px;
-                font-weight: bold;
-                background: linear-gradient(to right, #ffe600, #ff9900);
-                box-shadow: 0 0 8px #ffe600;
-                color: #000;
-              ">🔁 Start Again</button>
+    
+              <button class="btn btn-glow" id="start-again-btn" style="margin-top: 1rem; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: bold; background: linear-gradient(to right, #ffe600, #ff9900); box-shadow: 0 0 8px #ffe600; color: #000;">🔁 Start Again</button>
             </div>
           `;
-  
-          document.getElementById("start-again-btn").onclick = async () => {
-            selected = new Set(assetIds);
-            renderList();
-            updateSummary();
-            document.getElementById("start-expedition-btn").click();
-          };
-          return;
+    
+          // Riavvio
+          const btn = document.getElementById("start-again-btn");
+          if (btn) {
+            btn.onclick = async () => {
+              selected = new Set(assetIds);
+              renderList();
+              updateSummary();
+              document.getElementById("start-expedition-btn").click();
+            };
+          }
+    
+          // Ricontrolla se ci sono spedizioni attive globali
+          setTimeout(renderGlobalExpeditions, 1000);
         }
-  
+    
         const mins = Math.floor(remaining / 60000);
         const secs = Math.floor((remaining % 60000) / 1000);
         countdownDiv.textContent = `⏳ Time Left: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
       }, 1000);
     }
-  
+      // Lista globale delle spedizioni attive
+    async function renderGlobalExpeditions() {
+      try {
+        const list = document.getElementById('global-expedition-list');
+        if (!list) {
+          console.warn("[renderGlobalExpeditions] Container not found.");
+          return;
+        }
+    
+        const res = await fetch(`${BASE_URL}/all_expeditions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+    
+        if (!res.ok) {
+          feedback("Error loading global expeditions.");
+          return;
+        }
+    
+        const data = await res.json();
+    
+        if (!Array.isArray(data) || data.length === 0) {
+          list.innerHTML = `<p style='color: #888;'>No expeditions in progress.</p>`;
+          return;
+        }
+    
+        list.innerHTML = data.map((entry, i) => {
+          const bg = i % 2 === 0 ? '#1a1a1a' : '#2a2a2a';
+          const mins = Math.floor(entry.seconds_remaining / 60);
+          const secs = entry.seconds_remaining % 60;
+          return `
+            <div style="background: ${bg}; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem;">
+              <div><strong style="color: #ffe600;">${entry.wax_account}</strong></div>
+              <div style="color: #0ff;">Goblins: ${entry.total_goblins}</div>
+              <div style="color: #0f0;">⏳ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}</div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error("[renderGlobalExpeditions] Error:", err);
+        feedback("Unable to load global expeditions.");
+      }
+    }
+
     // Auto-select best 50 goblins
     function autoSelectBestGoblins() {
       selected.clear();
@@ -2545,7 +2610,7 @@ async function renderDwarfsCave() {
   
     renderList();
     updateSummary();
-  
+
     // Check for user's expedition in progress
     const expeditionRes = await fetch(`${BASE_URL}/expedition_status`, {
       method: "POST",

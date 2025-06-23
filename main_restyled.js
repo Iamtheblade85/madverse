@@ -2280,34 +2280,6 @@ async function renderDwarfsCave() {
     let sortBy = "rarity";
     let sortAsc = true;
 
-    // 🆕 Check if an expedition is already running
-    try {
-      const expeditionRes = await fetch(`${BASE_URL}/expedition_status`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          wax_account: window.userData.wax_account,
-          user_id: window.userData.userId,
-          usx_token: window.userData.usx_token
-        })
-      });
-    
-      if (expeditionRes.status === 200) {
-        const expeditionData = await expeditionRes.json();
-        const expedition_id = expeditionData.expedition_id;
-        const countdownSeconds = expeditionData.seconds_remaining;
-        const assetIds = expeditionData.goblin_ids || [];
-    
-        // Rendi visivamente selezionati i goblin in uso
-        selected = new Set(assetIds);
-    
-        await renderExpeditionCountdown(expedition_id, countdownSeconds, assetIds);
-        return; // blocca la UI normale
-      }
-    } catch (err) {
-      console.warn("[Expedition Check] No active expedition or error occurred.");
-    }
-
     function getAttrValue(g, attr) {
       return parseInt(g[attr] || 0);
     }
@@ -2653,6 +2625,32 @@ async function renderDwarfsCave() {
     console.error("[renderDwarfsCave] Error:", err);
     container.innerHTML = `<p>Error loading cave interface.</p>`;
   }
+    // 🆕 Check if an expedition is already running
+    try {
+      const expeditionRes = await fetch(`${BASE_URL}/expedition_status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wax_account: window.userData.wax_account,
+          user_id: window.userData.userId,
+          usx_token: window.userData.usx_token
+        })
+      });
+    
+      if (expeditionRes.status === 200) {
+        const expeditionData = await expeditionRes.json();
+        const expedition_id = expeditionData.expedition_id;
+        const countdownSeconds = expeditionData.seconds_remaining;
+        const assetIds = expeditionData.goblin_ids || [];
+    
+        // Rendi visivamente selezionati i goblin in uso
+        selected = new Set(assetIds);
+    
+        await renderExpeditionCountdown(expedition_id, countdownSeconds, assetIds);
+      }
+    } catch (err) {
+      console.warn("[Expedition Check] No active expedition or error occurred.");
+    }  
 }
 
 async function renderGoblinBlend() {

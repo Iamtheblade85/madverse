@@ -2346,13 +2346,16 @@ async function renderDwarfsCave() {
       countdownDiv.id = 'expedition-countdown';
       countdownDiv.style = "font-size: 1.4rem; margin-top: 1rem; color: #0ff; font-family: Orbitron, sans-serif;";
     
-      const gif = document.createElement('img');
-      gif.src = "https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif";
-      gif.style = "width: 100%; max-width: 300px; margin-top: 1rem; border-radius: 12px; box-shadow: 0 0 10px #ffe600;";
+      const video = document.createElement('video');
+      video.src = "expedition_run.mp4";
+      video.style = "width: 100%; max-width: 500px; margin-top: 1rem; border-radius: 12px; box-shadow: 0 0 10px #ffe600;";
+      video.autoplay = true;
+      video.loop = true;
+      video.muted = true;
     
       summaryContainer.innerHTML = `<h3 style='color:#ffe600;'>⛏️ Expedition in progress!</h3>`;
       summaryContainer.appendChild(countdownDiv);
-      summaryContainer.appendChild(gif);
+      summaryContainer.appendChild(video);
     
       let endTime = Date.now() + (seconds * 1000);
     

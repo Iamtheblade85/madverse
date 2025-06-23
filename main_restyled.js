@@ -2240,6 +2240,30 @@ async function renderGoblinInventory() {
   }
 }
 
+function updateRecentExpeditionsList(result, wax_account) {
+  const recentList = document.getElementById("recent-expeditions-list");
+  if (!recentList) return;
+
+  const now = new Date();
+  const formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+  const entry = document.createElement("div");
+  entry.style = "margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;";
+  entry.innerHTML = `
+    <div><strong style="color: #ffe600;">${wax_account}</strong> at ${formattedTime}</div>
+    <div style="color: #0f0;">CHIPS: ${result.stats.tokens.CHIPS}</div>
+    <div style="color: #ffa500;">NFTs: ${result.nfts.length}</div>
+  `;
+
+  recentList.prepend(entry);
+
+  while (recentList.children.length > 6) {
+    if (recentList.lastChild.tagName !== "H4") {
+      recentList.removeChild(recentList.lastChild);
+    } else break;
+  }
+}
+
 // Complete renderDwarfsCave function with full features
 async function renderDwarfsCave() {
   console.log("[renderDwarfsCave] Start loading interface");
@@ -2257,8 +2281,14 @@ async function renderDwarfsCave() {
         <h3 style='color:#ffe600;'>⛏️ Global Expeditions in Progress</h3>
         <video id="expedition-video" src="expedition_run.mp4" autoplay loop muted style="width: 100%; max-width: 480px; border-radius: 12px; box-shadow: 0 0 10px #ffe600;"></video>
       </div>
-      <div id="global-expedition-list" style="flex: 1; background:#111; border-radius: 12px; padding: 1rem; color: #fff; box-shadow: 0 0 10px #0ff; font-size: 0.95rem; line-height: 1.5;"></div>
+      <div style="flex: 1;">
+        <div id="global-expedition-list" style="background:#111; border-radius: 12px; padding: 1rem; color: #fff; box-shadow: 0 0 10px #0ff; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;"></div>
+        <div id="recent-expeditions-list" style="background:#0b0b0b; border-radius: 12px; padding: 1rem; color: #fff; box-shadow: 0 0 10px #ffa500; font-size: 0.95rem; line-height: 1.5;">
+          <h4 style="color:#ffa500;">🕒 Recent Expedition Results</h4>
+        </div>
+      </div>
     </div>
+
     <div id="feedback-area" style="margin-bottom: 1rem; color: #0ff; font-family: Orbitron, sans-serif;"></div>
     <div id="dwarfs-menu" style="margin-bottom: 1.5rem;"><p class="subtitle2">Select your goblins and start the expedition!</p></div>
     <div style="display: flex; flex-wrap: wrap; gap: 2rem;">
@@ -2328,9 +2358,7 @@ async function renderDwarfsCave() {
       console.error("[renderGlobalExpeditions] Error:", err);
     }
   };
-
-  setInterval(renderGlobalExpeditions, 5000);
-  await renderGlobalExpeditions();
+  await renderGlobalExpeditions(); 
 
   try {
     const res = await fetch(`${BASE_URL}/user_nfts`, {
@@ -2479,7 +2507,7 @@ async function renderDwarfsCave() {
           }
           
           const result = await resultRes.json();
-          
+          updateRecentExpeditionsList(result, window.userData.wax_account);
           console.groupCollapsed("[📥] Received /end_expedition response");
           console.log("✅ Response:", result);
           console.groupEnd();
@@ -2541,49 +2569,6 @@ async function renderDwarfsCave() {
         const secs = Math.floor((remaining % 60000) / 1000);
         countdownDiv.textContent = `⏳ Time Left: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
       }, 1000);
-    }
-      // Lista globale delle spedizioni attive
-    async function renderGlobalExpeditions() {
-      try {
-        const list = document.getElementById('global-expedition-list');
-        if (!list) {
-          console.warn("[renderGlobalExpeditions] Container not found.");
-          return;
-        }
-    
-        const res = await fetch(`${BASE_URL}/all_expeditions`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" }
-        });
-    
-        if (!res.ok) {
-          feedback("Error loading global expeditions.");
-          return;
-        }
-    
-        const data = await res.json();
-    
-        if (!Array.isArray(data) || data.length === 0) {
-          list.innerHTML = `<p style='color: #888;'>No expeditions in progress.</p>`;
-          return;
-        }
-    
-        list.innerHTML = data.map((entry, i) => {
-          const bg = i % 2 === 0 ? '#1a1a1a' : '#2a2a2a';
-          const mins = Math.floor(entry.seconds_remaining / 60);
-          const secs = entry.seconds_remaining % 60;
-          return `
-            <div style="background: ${bg}; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem;">
-              <div><strong style="color: #ffe600;">${entry.wax_account}</strong></div>
-              <div style="color: #0ff;">Goblins: ${entry.total_goblins}</div>
-              <div style="color: #0f0;">⏳ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}</div>
-            </div>
-          `;
-        }).join('');
-      } catch (err) {
-        console.error("[renderGlobalExpeditions] Error:", err);
-        feedback("Unable to load global expeditions.");
-      }
     }
 
     // Auto-select best 50 goblins
@@ -2648,7 +2633,6 @@ async function renderDwarfsCave() {
     console.error("[renderDwarfsCave] Error:", err);
     feedback("Error loading goblin data or expedition info.");
   }
-
 }
 
 

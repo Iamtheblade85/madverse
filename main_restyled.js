@@ -2342,6 +2342,12 @@ async function renderDwarfsCave() {
     
     async function renderExpeditionCountdown(expedition_id, seconds, assetIds = []) {
       const summaryContainer = document.getElementById('expedition-summary-block');
+      summaryContainer.style.display = "flex";
+      summaryContainer.style.flexDirection = "column";
+      summaryContainer.style.alignItems = "center";
+      summaryContainer.style.justifyContent = "center"; // opzionale per centratura verticale
+      summaryContainer.style.textAlign = "center";      // opzionale per il testo
+           
       const countdownDiv = document.createElement('div');
       countdownDiv.id = 'expedition-countdown';
       countdownDiv.style = "font-size: 1.4rem; margin-top: 1rem; color: #0ff; font-family: Orbitron, sans-serif;";
@@ -2539,9 +2545,6 @@ async function renderDwarfsCave() {
               <option value="loot-hungry">Sort by Loot-Hungry</option>
             </select>
           </div>
-
-          <div id="goblin-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
-
           <div id="selection-summary" style="
             margin-top: 1.5rem;
             padding: 1rem;
@@ -2553,6 +2556,7 @@ async function renderDwarfsCave() {
             font-size: 1rem;
             color: #fff;
           "></div>
+          <div id="goblin-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
         </div>
 
         <div style="flex: 1 1 35%; min-width: 250px; background: #1c1c1c; border-radius: 12px; padding: 1.5rem; color: #eee; font-family: 'Orbitron', sans-serif; font-size: 0.95rem; line-height: 1.6; box-shadow: 0 0 10px #0ff;">

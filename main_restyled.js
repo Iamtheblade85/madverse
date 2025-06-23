@@ -2455,28 +2455,41 @@ async function renderDwarfsCave() {
           clearInterval(timer);
           countdownDiv.textContent = "⏳ Expedition completed! Fetching results...";
     
+          const payload = {
+            wax_account: window.userData.wax_account,
+            user_id: window.userData.userId,
+            usx_token: window.userData.usx_token,
+            expedition_id: expedition_id
+          };
+          
+          console.groupCollapsed("[📤] Sending /end_expedition request");
+          console.log("🔸 Payload:", payload);
+          console.groupEnd();
+          
           const resultRes = await fetch(`${BASE_URL}/end_expedition`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              wax_account: window.userData.wax_account,
-              user_id: window.userData.userId,
-              usx_token: window.userData.usx_token,
-              expedition_id: expedition_id
-            })
+            body: JSON.stringify(payload)
           });
-    
+          
           if (!resultRes.ok) {
+            console.error(`[❌] /end_expedition failed — HTTP ${resultRes.status}`);
             feedback("Failed to retrieve expedition result.");
             return;
           }
-    
+          
           const result = await resultRes.json();
+          
+          console.groupCollapsed("[📥] Received /end_expedition response");
+          console.log("✅ Response:", result);
+          console.groupEnd();
+          
           if (!result || !result.stats || !result.goblins) {
+            console.warn("[⚠️] Malformed /end_expedition result");
             feedback("Malformed expedition result.");
             return;
           }
-    
+
           // Rimuovi riga dalla lista globale se presente
           const list = document.getElementById('global-expedition-list');
           if (list) {

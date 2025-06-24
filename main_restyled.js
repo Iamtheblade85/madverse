@@ -2264,7 +2264,12 @@ function updateRecentExpeditionsList(result, wax_account) {
   }
 }
 
-function initGoblinCanvasAnimation(canvas) {
+function getColorForAccount(i) {
+  const palette = ['#ffd700', '#00ffff', '#ff69b4', '#7fff00', '#ffa500', '#00ff7f', '#ff4500'];
+  return palette[i % palette.length];
+}
+
+function initGoblinCanvasAnimation(canvas, expeditions) {
   const ctx = canvas.getContext("2d");
   const GRID_SIZE = 90;
   let cellSize = 10;
@@ -2273,14 +2278,17 @@ function initGoblinCanvasAnimation(canvas) {
   const shovelSprite = new Image();
   shovelSprite.src = "shovel_sprite.png"; // Sprite con frame orizzontali
 
-  const goblins = Array.from({ length: 5 }).map(() => ({
+  const goblins = expeditions.map((entry, i) => ({
     x: Math.floor(Math.random() * GRID_SIZE),
     y: Math.floor(Math.random() * GRID_SIZE),
+    wax_account: entry.wax_account,
     path: [],
     digging: false,
     shovelFrame: 0,
-    frameTimer: 0
+    frameTimer: 0,
+    color: getColorForAccount(i)
   }));
+
 
   const bgImg = new Image();
   bgImg.src = "cave-grid.png";
@@ -2296,34 +2304,31 @@ function initGoblinCanvasAnimation(canvas) {
     ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
   }
 
-   function drawGoblin(g) {
+  function drawGoblin(g) {
     const px = g.x * cellSize;
     const py = g.y * cellSize;
   
-    const goblinScale = 4;  // quadruplica goblin
-    const shovelScale = 2;  // raddoppia pala
-  
-    // Goblin ingrandito
+    const goblinScale = 5;
+    const shovelScale = 3;
     const goblinSize = cellSize * goblinScale;
     const goblinOffset = (goblinSize - cellSize) / 2;
-    ctx.drawImage(
-      goblinImage,
-      0, 0, 128, 128,
-      px - goblinOffset, py - goblinOffset,
-      goblinSize, goblinSize
-    );
   
-    // Shovel più grande (in fumetto sopra la testa)
+    // Goblin
+    ctx.drawImage(goblinImage, 0, 0, 128, 128, px - goblinOffset, py - goblinOffset, goblinSize, goblinSize);
+  
+    // Nome
+    ctx.font = `${cellSize * 0.5}px Orbitron`;
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(0,0,0,0.6)";
+    ctx.fillRect(px - cellSize, py - cellSize * 1.3, cellSize * 2, cellSize * 0.7);
+    ctx.fillStyle = g.color;
+    ctx.fillText(g.wax_account, px, py - cellSize * 0.8);
+  
+    // Shovel animata
     if (g.digging) {
       const fx = g.shovelFrame * 128;
       const shovelSize = cellSize * shovelScale;
-      ctx.drawImage(
-        shovelSprite,
-        fx, 0, 128, 128,
-        px - (shovelSize - cellSize) / 2,
-        py - shovelSize,
-        shovelSize, shovelSize
-      );
+      ctx.drawImage(shovelSprite, fx, 0, 128, 128, px - (shovelSize - cellSize) / 2, py - shovelSize, shovelSize, shovelSize);
     }
   }
 
@@ -2481,7 +2486,11 @@ async function renderDwarfsCave() {
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
-  
+      const canvas = document.getElementById("caveCanvas");
+      if (canvas) {
+        initGoblinCanvasAnimation(canvas, data);
+      }
+
       const list = document.getElementById('global-expedition-list');
       if (!list) {
         console.warn("Missing expedition list container");

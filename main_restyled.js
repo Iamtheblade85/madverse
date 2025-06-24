@@ -2264,6 +2264,155 @@ function updateRecentExpeditionsList(result, wax_account) {
   }
 }
 
+let commandPollingInterval = null;
+
+function startCommandPolling(canvas) {
+  if (window.perkPollingActive || commandPollingInterval !== null) return;
+
+  window.perkPollingActive = true;
+
+  commandPollingInterval = setInterval(async () => {
+    if (!document.getElementById("caveCanvas")) {
+      stopCommandPolling();
+      return;
+    }
+
+    try {
+      const res = await fetch(`${BASE_URL}/check_perk_command`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wax_account: window.userData.wax_account })
+      });
+
+      if (!res.ok) return;
+
+      const perk = await res.json(); // { perk: "drago", wax_account: "xyz" }
+      if (perk && perk.perk) {
+        triggerPerkAnimation(canvas, perk.perk, perk.wax_account);
+      }
+    } catch (err) {
+      console.warn("Polling perk failed", err);
+    }
+  }, 15000);
+}
+
+function stopCommandPolling() {
+  if (commandPollingInterval !== null) {
+    clearInterval(commandPollingInterval);
+    commandPollingInterval = null;
+    window.perkPollingActive = false;
+  }
+}
+
+// 1. Aggiungi questa funzione globale accanto a initGoblinCanvasAnimation
+function triggerPerkAnimation(canvas, perkName, wax_account) {
+  const ctx = canvas.getContext("2d");
+  const GRID_SIZE = 90;
+  const cellSize = canvas.width / GRID_SIZE;
+  const feedbackArea = document.getElementById("feedback-area");
+
+  const perkSprites = {
+    "drago": { src: "perk_dragon.png", frames: 4 },
+    "nano": { src: "perk_dwarf.png", frames: 4 },
+    "scheletro": { src: "perk_skeleton.png", frames: 4 },
+    "gatto": { src: "perk_blackcat.png", frames: 4 }
+  };
+
+  const perk = perkSprites[perkName] || perkSprites["drago"];
+  const image = new Image();
+  image.src = perk.src;
+
+  const dir = Math.random() < 0.5 ? "left-to-right" : "right-to-left";
+  const startX = dir === "left-to-right" ? -5 : GRID_SIZE + 5;
+  const y = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
+  let x = startX;
+
+  const speed = 0.3 + Math.random() * 0.3;
+  const frameDelay = 8;
+  let frame = 0;
+  let tick = 0;
+  let dropped = false;
+  let chest = null;
+  let perkDone = false;
+
+  const dropChance = Math.random();
+
+  function animate() {
+    if (perkDone) return;
+
+    tick++;
+    if (tick >= frameDelay) {
+      tick = 0;
+      frame = (frame + 1) % perk.frames;
+    }
+
+    // position in px
+    const px = x * cellSize;
+    const py = y * cellSize;
+    const spriteSize = cellSize * 3;
+
+    // Clear area first (optional: you can skip if your canvas redraws every frame)
+    // ctx.clearRect(px - spriteSize, py - spriteSize, spriteSize * 2, spriteSize * 2);
+
+    // Draw sprite frame
+    ctx.drawImage(
+      image,
+      frame * 128, 0, 128, 128,
+      px - spriteSize / 2, py - spriteSize / 2,
+      spriteSize, spriteSize
+    );
+
+    // Drop chest
+    if (!dropped && dropChance < 0.2 && Math.random() < 0.02) {
+      dropped = true;
+      chest = { x, y, taken: false };
+    }
+
+    // Draw chest
+    if (chest && !chest.taken) {
+      const cx = chest.x * cellSize;
+      const cy = chest.y * cellSize;
+      ctx.fillStyle = "gold";
+      ctx.fillRect(cx - cellSize / 2, cy - cellSize / 2, cellSize, cellSize);
+
+      for (const g of window.activeGoblins || []) {
+        if (Math.abs(g.x - chest.x) < 1 && Math.abs(g.y - chest.y) < 1) {
+          chest.taken = true;
+
+          const div = document.createElement("div");
+          div.style = `
+            margin-top: 1rem;
+            padding: 0.8rem;
+            background: #111;
+            border-left: 5px solid #0f0;
+            border-radius: 10px;
+            color: #fff;
+            font-family: Orbitron, sans-serif;
+            box-shadow: 0 0 10px #0f0;
+          `;
+          div.innerHTML = `🎁 <strong>${wax_account}</strong> collected a <span style='color: gold;'>bonus chest</span> from the <strong>${perkName}</strong>!`;
+          feedbackArea.appendChild(div);
+        }
+      }
+    }
+
+    // Movement
+    x += dir === "left-to-right" ? speed : -speed;
+
+    // Stop if outside grid
+    if ((dir === "left-to-right" && x > GRID_SIZE + 5) || (dir === "right-to-left" && x < -5)) {
+      perkDone = true;
+      return;
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  image.onload = () => {
+    requestAnimationFrame(animate);
+  };
+}
+
 function getColorForAccount(i) {
   const palette = ['#ffd700', '#00ffff', '#ff69b4', '#7fff00', '#ffa500', '#00ff7f', '#ff4500'];
   return palette[i % palette.length];
@@ -2396,8 +2545,10 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
     new Promise(res => (goblinImage.onload = res)),
     new Promise(res => (shovelSprite.onload = res))
   ]).then(() => {
+    resizeCanvas();           // ← una volta sola qui
     animate(performance.now());
   });
+  window.activeGoblins = goblins;
 }
 
 // Complete renderDwarfsCave function with full features
@@ -2512,15 +2663,18 @@ async function renderDwarfsCave() {
           <video id="expedition-video" src="expedition_run.mp4" autoplay muted loop
                  style="width: 100%; max-width: 480px; border-radius: 12px; box-shadow: 0 0 10px #ffe600;"></video>
         `;
+        stopCommandPolling(); // ⛔ STOP qui!
         list.innerHTML = `<p style='color: #888;'>No expeditions in progress.</p>`;
         return;
-      } else {
+      }
+       else {
         // 🧱 Expeditions exist → show canvas
         if (!canvas) {
           wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
         }
         const activeCanvas = document.getElementById("caveCanvas");
         initGoblinCanvasAnimation(activeCanvas, data);
+        startCommandPolling(activeCanvas); // ✅ START polling solo se canvas presente
       }
   
       // Render expeditions in the list

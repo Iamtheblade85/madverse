@@ -2279,8 +2279,9 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
   shovelSprite.src = "shovel_sprite.png"; // Sprite con frame orizzontali
 
   const goblins = expeditions.map((entry, i) => ({
-    x: Math.floor(Math.random() * GRID_SIZE),
-    y: Math.floor(Math.random() * GRID_SIZE),
+    x: Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1),
+    y: Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1),
+
     wax_account: entry.wax_account,
     path: [],
     digging: false,
@@ -2336,8 +2337,8 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
     if (g.digging) return;
 
     if (g.path.length === 0) {
-      const tx = Math.floor(Math.random() * GRID_SIZE);
-      const ty = Math.floor(Math.random() * GRID_SIZE);
+      const tx = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
+      const ty = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
       g.path = generatePath(g.x, g.y, tx, ty);
     }
 

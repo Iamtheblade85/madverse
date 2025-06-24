@@ -2299,11 +2299,14 @@ function initGoblinCanvasAnimation(canvas) {
   function drawGoblin(g) {
     const px = g.x * cellSize;
     const py = g.y * cellSize;
-    ctx.drawImage(goblinImage, px, py, cellSize, cellSize);
-
+    
+    // Goblin
+    ctx.drawImage(goblinImage, 0, 0, 128, 128, px, py, cellSize, cellSize);
+  
+    // Shovel
     if (g.digging) {
-      const fx = g.shovelFrame * 32;
-      ctx.drawImage(shovelSprite, fx, 0, 32, 32, px, py - cellSize * 0.8, cellSize, cellSize);
+      const fx = g.shovelFrame * 128; // frame width
+      ctx.drawImage(shovelSprite, fx, 0, 128, 128, px, py - cellSize * 0.8, cellSize, cellSize);
     }
   }
 

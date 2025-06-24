@@ -1,0 +1,62 @@
+const tmi = require('tmi.js');
+const WebSocket = require('ws');
+
+// ✅ CONFIGURA
+const TWITCH_USERNAME = 'tuo_bot_username';
+const TWITCH_OAUTH = 'oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+const TWITCH_CHANNEL = 'tuo_nome_canale';
+const FRONTEND_WS_URL = 'ws://localhost:8080'; // Cambia se in hosting
+
+const ws = new WebSocket(FRONTEND_WS_URL);
+const dexCooldowns = new Map();
+
+const client = new tmi.Client({
+  identity: {
+    username: TWITCH_USERNAME,
+    password: TWITCH_OAUTH
+  },
+  channels: [TWITCH_CHANNEL]
+});
+
+client.connect();
+
+client.on('message', (channel, tags, msg, self) => {
+  if (self) return;
+  const username = tags['display-name'] || tags.username;
+  const wax_account = tags.username;
+
+  const cleanMsg = msg.trim().toLowerCase();
+
+  if (cleanMsg === '!dex') {
+    const last = dexCooldowns.get(username);
+    const now = Date.now();
+
+    if (last && now - last < 10 * 60 * 1000) {
+      console.log(`⏳ [!dex] Cooldown attivo per ${username}`);
+      return;
+    }
+
+    dexCooldowns.set(username, now);
+    console.log(`🐲 [!dex] da ${username}`);
+
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'dex',
+        user: username,
+        wax_account
+      }));
+    }
+  }
+
+  if (cleanMsg === '!goblin') {
+    console.log(`⛏️ [!goblin] da ${username}`);
+
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'goblin',
+        user: username,
+        wax_account
+      }));
+    }
+  }
+});

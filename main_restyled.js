@@ -2486,37 +2486,48 @@ async function renderDwarfsCave() {
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
+  
+      const wrapper = document.getElementById("video-or-canvas");
       const canvas = document.getElementById("caveCanvas");
-      if (canvas) {
-        initGoblinCanvasAnimation(canvas, data);
-      }
-
+      const video = document.getElementById("expedition-video");
+  
       const list = document.getElementById('global-expedition-list');
-      if (!list) {
-        console.warn("Missing expedition list container");
+      if (!list || !wrapper) {
+        console.warn("Missing container");
         return;
       }
   
-      // Clear old content
+      // Clear old list content
       list.innerHTML = '';
   
-      // Clear previous interval if any
+      // Clear previous countdowns
       if (globalCountdownInterval) {
         clearInterval(globalCountdownInterval);
       }
   
       if (!Array.isArray(data) || data.length === 0) {
+        // 🔁 No expeditions → show video
+        wrapper.innerHTML = `
+          <video id="expedition-video" src="expedition_run.mp4" autoplay muted loop
+                 style="width: 100%; max-width: 480px; border-radius: 12px; box-shadow: 0 0 10px #ffe600;"></video>
+        `;
         list.innerHTML = `<p style='color: #888;'>No expeditions in progress.</p>`;
         return;
+      } else {
+        // 🧱 Expeditions exist → show canvas
+        if (!canvas) {
+          wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
+        }
+        const activeCanvas = document.getElementById("caveCanvas");
+        initGoblinCanvasAnimation(activeCanvas, data);
       }
   
-      // Prepare data with endTimes
+      // Render expeditions in the list
       const expeditions = data.map((entry, i) => {
         const endTime = Date.now() + (entry.seconds_remaining * 1000);
         const timerId = `global-timer-${i}`;
         const bg = i % 2 === 0 ? '#1a1a1a' : '#2a2a2a';
   
-        // Render initial row
         list.innerHTML += `
           <div style="background: ${bg}; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem;">
             <div><strong style="color: #ffe600;">${entry.wax_account}</strong></div>
@@ -2528,7 +2539,7 @@ async function renderDwarfsCave() {
         return { endTime, timerId };
       });
   
-      // Single interval to update all timers
+      // Countdown
       globalCountdownInterval = setInterval(() => {
         const now = Date.now();
         expeditions.forEach(({ endTime, timerId }) => {

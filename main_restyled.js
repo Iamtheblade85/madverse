@@ -2296,17 +2296,34 @@ function initGoblinCanvasAnimation(canvas) {
     ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
   }
 
-  function drawGoblin(g) {
+   function drawGoblin(g) {
     const px = g.x * cellSize;
     const py = g.y * cellSize;
-    
-    // Goblin
-    ctx.drawImage(goblinImage, 0, 0, 128, 128, px, py, cellSize, cellSize);
   
-    // Shovel
+    const goblinScale = 4;  // quadruplica goblin
+    const shovelScale = 2;  // raddoppia pala
+  
+    // Goblin ingrandito
+    const goblinSize = cellSize * goblinScale;
+    const goblinOffset = (goblinSize - cellSize) / 2;
+    ctx.drawImage(
+      goblinImage,
+      0, 0, 128, 128,
+      px - goblinOffset, py - goblinOffset,
+      goblinSize, goblinSize
+    );
+  
+    // Shovel più grande (in fumetto sopra la testa)
     if (g.digging) {
-      const fx = g.shovelFrame * 128; // frame width
-      ctx.drawImage(shovelSprite, fx, 0, 128, 128, px, py - cellSize * 0.8, cellSize, cellSize);
+      const fx = g.shovelFrame * 128;
+      const shovelSize = cellSize * shovelScale;
+      ctx.drawImage(
+        shovelSprite,
+        fx, 0, 128, 128,
+        px - (shovelSize - cellSize) / 2,
+        py - shovelSize,
+        shovelSize, shovelSize
+      );
     }
   }
 

@@ -2264,6 +2264,116 @@ function updateRecentExpeditionsList(result, wax_account) {
   }
 }
 
+function initGoblinCanvasAnimation(canvas) {
+  const ctx = canvas.getContext("2d");
+  const GRID_SIZE = 90;
+  let cellSize = 10;
+  const goblinImage = new Image();
+  goblinImage.src = "goblin.png"; // Usa una sprite 64x64 o simile
+  const shovelSprite = new Image();
+  shovelSprite.src = "shovel_sprite.png"; // Sprite con frame orizzontali
+
+  const goblins = Array.from({ length: 5 }).map(() => ({
+    x: Math.floor(Math.random() * GRID_SIZE),
+    y: Math.floor(Math.random() * GRID_SIZE),
+    path: [],
+    digging: false,
+    shovelFrame: 0,
+    frameTimer: 0
+  }));
+
+  const bgImg = new Image();
+  bgImg.src = "cave-grid.png";
+
+  function resizeCanvas() {
+    const min = Math.min(canvas.parentElement.clientWidth, 900);
+    canvas.width = min;
+    canvas.height = min;
+    cellSize = canvas.width / GRID_SIZE;
+  }
+
+  function drawGrid() {
+    ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+  }
+
+  function drawGoblin(g) {
+    const px = g.x * cellSize;
+    const py = g.y * cellSize;
+    ctx.drawImage(goblinImage, px, py, cellSize, cellSize);
+
+    if (g.digging) {
+      const fx = g.shovelFrame * 32;
+      ctx.drawImage(shovelSprite, fx, 0, 32, 32, px, py - cellSize * 0.8, cellSize, cellSize);
+    }
+  }
+
+  function moveGoblin(g) {
+    if (g.digging) return;
+
+    if (g.path.length === 0) {
+      const tx = Math.floor(Math.random() * GRID_SIZE);
+      const ty = Math.floor(Math.random() * GRID_SIZE);
+      g.path = generatePath(g.x, g.y, tx, ty);
+    }
+
+    if (g.path.length > 0) {
+      const [nx, ny] = g.path.shift();
+      g.x = nx;
+      g.y = ny;
+
+      if (g.path.length === 0) {
+        g.digging = true;
+        g.shovelFrame = 0;
+        g.frameTimer = 0;
+        setTimeout(() => { g.digging = false; }, 2000);
+      }
+    }
+  }
+
+  function generatePath(x1, y1, x2, y2) {
+    const path = [];
+    let cx = x1, cy = y1;
+    while (cx !== x2 || cy !== y2) {
+      if (cx !== x2) cx += x2 > cx ? 1 : -1;
+      else if (cy !== y2) cy += y2 > cy ? 1 : -1;
+      path.push([cx, cy]);
+    }
+    return path;
+  }
+
+  function updateAnimations(delta) {
+    goblins.forEach(g => {
+      if (g.digging) {
+        g.frameTimer += delta;
+        if (g.frameTimer >= 100) {
+          g.shovelFrame = (g.shovelFrame + 1) % 6; // 6 frame shovel
+          g.frameTimer = 0;
+        }
+      }
+    });
+  }
+
+  let last = performance.now();
+  function animate(now) {
+    const delta = now - last;
+    last = now;
+    resizeCanvas();
+    drawGrid();
+    goblins.forEach(moveGoblin);
+    goblins.forEach(drawGoblin);
+    updateAnimations(delta);
+    requestAnimationFrame(animate);
+  }
+
+  Promise.all([
+    new Promise(res => (bgImg.onload = res)),
+    new Promise(res => (goblinImage.onload = res)),
+    new Promise(res => (shovelSprite.onload = res))
+  ]).then(() => {
+    animate(performance.now());
+  });
+}
+
 // Complete renderDwarfsCave function with full features
 async function renderDwarfsCave() {
   console.log("[renderDwarfsCave] Start loading interface");
@@ -2279,7 +2389,10 @@ async function renderDwarfsCave() {
         font-family: Orbitron, sans-serif;">
       <div style="flex: 1;">
         <h3 style='color:#ffe600;'>⛏️ Global Expeditions in Progress</h3>
-        <video id="expedition-video" src="expedition_run.mp4" autoplay loop muted style="width: 100%; max-width: 480px; border-radius: 12px; box-shadow: 0 0 10px #ffe600;"></video>
+        <div id="video-or-canvas" style="width: 100%;">
+          <video id="expedition-video" src="expedition_run.mp4" autoplay muted style="width: 100%; max-width: 480px; border-radius: 12px; box-shadow: 0 0 10px #ffe600;"></video>
+        </div>
+
       </div>
       <div style="flex: 1;">
         <div id="global-expedition-list" style="background:#111; border-radius: 12px; padding: 1rem; color: #fff; box-shadow: 0 0 10px #0ff; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;"></div>
@@ -2318,6 +2431,22 @@ async function renderDwarfsCave() {
       </div>
     </div>
   `;
+  const video = document.getElementById("expedition-video");
+  const wrapper = document.getElementById("video-or-canvas");
+  
+  video.onended = () => {
+    // Rimuove il video
+    wrapper.innerHTML = '';
+  
+    // Crea e inserisce il canvas
+    const canvas = document.createElement("canvas");
+    canvas.id = "caveCanvas";
+    canvas.style = "width: 100%; height: auto; display: block;";
+    wrapper.appendChild(canvas);
+  
+    // Avvia la logica della caverna animata
+    initGoblinCanvasAnimation(canvas);
+  };
 
   const feedback = (msg) => {
     document.getElementById('feedback-area').innerHTML = `<div style="padding: 0.5rem 1rem; background: #222; border-left: 5px solid #0ff; border-radius: 8px;">${msg}</div>`;

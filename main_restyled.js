@@ -2349,7 +2349,7 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
     // position in px
     const px = x * cellSize;
     const py = y * cellSize;
-    const spriteSize = 128 * 8;
+    const spriteSize = 128;
     ctx.imageSmoothingEnabled = false;
     // Clear area first (optional: you can skip if your canvas redraws every frame)
     // ctx.clearRect(px - spriteSize, py - spriteSize, spriteSize * 2, spriteSize * 2);
@@ -2372,8 +2372,9 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
     if (chest && !chest.taken) {
       const cx = chest.x * cellSize;
       const cy = chest.y * cellSize;
+      const chestSize = cellSize * 10;
       ctx.fillStyle = "gold";
-      ctx.fillRect(cx - cellSize / 2, cy - cellSize / 2, cellSize, cellSize);
+      ctx.fillRect(cx - chestSize / 2, cy - chestSize / 2, chestSize, chestSize);
 
       for (const g of window.activeGoblins || []) {
         if (Math.abs(g.x - chest.x) < 1 && Math.abs(g.y - chest.y) < 1) {

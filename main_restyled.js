@@ -2331,7 +2331,10 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
   image.src = perk.src;
 
   const dir = Math.random() < 0.5 ? "left-to-right" : "right-to-left";
-  const startX = dir === "left-to-right" ? -5 : GRID_SIZE + 5;
+  const minX = 5;
+  const maxX = GRID_SIZE - 5;
+  const startX = dir === "left-to-right" ? minX : maxX;
+
   const y = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
   let x = startX;
 
@@ -2414,6 +2417,23 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
     color: getColorForAccount(i)
   }));
 
+  function drawChests() {
+    if (!window.activeChests) return;
+  
+    window.activeChests.forEach(ch => {
+      if (ch.taken) return;
+  
+      const cx = ch.x * cellSize;
+      const cy = ch.y * cellSize;
+      const chestSize = cellSize * 9; // ⬅️ 9x9 celle
+  
+      ctx.fillStyle = "gold";
+      ctx.strokeStyle = "#ff0";
+      ctx.lineWidth = 2;
+      ctx.fillRect(cx - chestSize / 2, cy - chestSize / 2, chestSize, chestSize);
+      ctx.strokeRect(cx - chestSize / 2, cy - chestSize / 2, chestSize, chestSize);
+    });
+  }
 
   const bgImg = new Image();
   bgImg.src = "cave-grid.png";
@@ -2510,6 +2530,7 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
     last = now;
     resizeCanvas();
     drawGrid();
+    drawChests();
     goblins.forEach(moveGoblin);
     goblins.forEach(drawGoblin);
     updateAnimations(delta);

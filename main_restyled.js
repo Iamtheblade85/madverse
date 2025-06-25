@@ -2311,12 +2311,13 @@ function stopCommandPolling() {
   }
 }
 
-// 1. Aggiungi questa funzione globale accanto a initGoblinCanvasAnimation
+// Funzione globale accanto a initGoblinCanvasAnimation
 function triggerPerkAnimation(canvas, perkName, wax_account) {
+  if (!window.activeChests) window.activeChests = [];
+
   const ctx = canvas.getContext("2d");
   const GRID_SIZE = 90;
   const cellSize = canvas.width / GRID_SIZE;
-  const feedbackArea = document.getElementById("feedback-area");
 
   const perkSprites = {
     "dragon": { src: "perk_dragon.png", frames: 6 },
@@ -2325,7 +2326,7 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
     "black_cat": { src: "perk_blackcat.png", frames: 6 }
   };
 
-  const perk = perkSprites[perkName] || perkSprites["drago"];
+  const perk = perkSprites[perkName] || perkSprites["dragon"];
   const image = new Image();
   image.src = perk.src;
 
@@ -2339,10 +2340,7 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
   let frame = 0;
   let tick = 0;
   let dropped = false;
-  let chest = null;
   let perkDone = false;
-
-  const dropChance = Math.random();
 
   function animate() {
     if (perkDone) return;
@@ -2353,15 +2351,11 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
       frame = (frame + 1) % perk.frames;
     }
 
-    // position in px
+    // Disegna perk
     const px = x * cellSize;
     const py = y * cellSize;
     const spriteSize = 32;
     ctx.imageSmoothingEnabled = false;
-    // Clear area first (optional: you can skip if your canvas redraws every frame)
-    // ctx.clearRect(px - spriteSize, py - spriteSize, spriteSize * 2, spriteSize * 2);
-
-    // Draw sprite frame
     ctx.drawImage(
       image,
       frame * 128, 0, 128, 128,
@@ -2369,45 +2363,18 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
       spriteSize, spriteSize
     );
 
-    // Drop chest
+    // Drop chest 1 volta con 25% di probabilità
     if (!dropped && Math.random() < 0.25) {
       dropped = true;
-      chest = { x, y, taken: false };
+      const chest = { x: Math.round(x), y: y, taken: false, from: perkName, wax_account };
+      window.activeChests.push(chest);
+      console.log("📦 Chest dropped at", chest.x, chest.y);
     }
 
-    // Draw chest
-    if (chest && !chest.taken) {
-      const cx = chest.x * cellSize;
-      const cy = chest.y * cellSize;
-      const chestSize = cellSize * 10;
-      ctx.fillStyle = "gold";
-      ctx.fillRect(cx - chestSize / 2, cy - chestSize / 2, chestSize, chestSize);
-
-      for (const g of window.activeGoblins || []) {
-        if (Math.abs(g.x - chest.x) < 1 && Math.abs(g.y - chest.y) < 1) {
-          chest.taken = true;
-
-          const div = document.createElement("div");
-          div.style = `
-            margin-top: 1rem;
-            padding: 0.8rem;
-            background: #111;
-            border-left: 5px solid #0f0;
-            border-radius: 10px;
-            color: #fff;
-            font-family: Orbitron, sans-serif;
-            box-shadow: 0 0 10px #0f0;
-          `;
-          div.innerHTML = `🎁 <strong>${wax_account}</strong> collected a <span style='color: gold;'>bonus chest</span> from the <strong>${perkName}</strong>!`;
-          feedbackArea.appendChild(div);
-        }
-      }
-    }
-
-    // Movement
+    // Movimento
     x += dir === "left-to-right" ? speed : -speed;
 
-    // Stop if outside grid
+    // Ferma animazione fuori griglia
     if ((dir === "left-to-right" && x > GRID_SIZE + 5) || (dir === "right-to-left" && x < -5)) {
       perkDone = true;
       return;

@@ -2286,7 +2286,14 @@ function startCommandPolling(canvas) {
 
       if (!res.ok) return;
 
-      const perk = await res.json(); // { perk: "drago", wax_account: "xyz" }
+      let perk = null;
+      try {
+        perk = await res.json();
+      } catch (err) {
+        console.warn("[Polling] Empty or invalid JSON:", err);
+        return;
+      }
+
       if (perk && perk.perk) {
         triggerPerkAnimation(canvas, perk.perk, perk.wax_account);
       }
@@ -2445,6 +2452,7 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
   bgImg.src = "cave-grid.png";
 
   function resizeCanvas() {
+    if (!canvas || !canvas.parentElement) return;
     const min = Math.min(canvas.parentElement.clientWidth, 900);
     canvas.width = min;
     canvas.height = min;

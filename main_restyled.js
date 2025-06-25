@@ -2325,7 +2325,6 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
     "skeletton": { src: "perk_skeleton.png", frames: 6 },
     "black_cat": { src: "perk_blackcat.png", frames: 6 }
   };
-
   const perk = perkSprites[perkName] || perkSprites["dragon"];
   const image = new Image();
   image.src = perk.src;
@@ -2404,7 +2403,8 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
   goblinImage.src = "goblin.png"; // Usa una sprite 64x64 o simile
   const shovelSprite = new Image();
   shovelSprite.src = "shovel_sprite.png"; // Sprite con frame orizzontali
-
+  const chestImage = new Image();
+  chestImage.src = "chest.png";
   const goblins = expeditions.map((entry, i) => ({
     x: Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1),
     y: Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1),
@@ -2418,22 +2418,26 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
   }));
 
   function drawChests() {
-    if (!window.activeChests) return;
+    if (!window.activeChests || !chestImage.complete) return;
   
     window.activeChests.forEach(ch => {
       if (ch.taken) return;
   
       const cx = ch.x * cellSize;
       const cy = ch.y * cellSize;
-      const chestSize = cellSize * 9; // ⬅️ 9x9 celle
   
-      ctx.fillStyle = "gold";
-      ctx.strokeStyle = "#ff0";
-      ctx.lineWidth = 2;
-      ctx.fillRect(cx - chestSize / 2, cy - chestSize / 2, chestSize, chestSize);
-      ctx.strokeRect(cx - chestSize / 2, cy - chestSize / 2, chestSize, chestSize);
+      // Disegna l'immagine centrata sul punto della griglia
+      const imgWidth = chestImage.width;
+      const imgHeight = chestImage.height;
+  
+      ctx.drawImage(
+        chestImage,
+        cx - imgWidth / 2,
+        cy - imgHeight / 2
+      );
     });
   }
+
 
   const bgImg = new Image();
   bgImg.src = "cave-grid.png";
@@ -2540,7 +2544,8 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
   Promise.all([
     new Promise(res => (bgImg.onload = res)),
     new Promise(res => (goblinImage.onload = res)),
-    new Promise(res => (shovelSprite.onload = res))
+    new Promise(res => (shovelSprite.onload = res)),
+    new Promise(res => (chestImage.onload = res))
   ]).then(() => {
     resizeCanvas();           // ← una volta sola qui
     animate(performance.now());

@@ -2426,17 +2426,21 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
       const cx = ch.x * cellSize;
       const cy = ch.y * cellSize;
   
-      // Disegna l'immagine centrata sul punto della griglia
-      const imgWidth = chestImage.width;
-      const imgHeight = chestImage.height;
+      // Riduci la chest a 1/4 della sua dimensione originale per lato
+      const scale = 0.15;
+      const scaledWidth = chestImage.width * scale;
+      const scaledHeight = chestImage.height * scale;
   
       ctx.drawImage(
         chestImage,
-        cx - imgWidth / 2,
-        cy - imgHeight / 2
+        cx - scaledWidth / 2,
+        cy - scaledHeight / 2,
+        scaledWidth,
+        scaledHeight
       );
     });
   }
+
 
 
   const bgImg = new Image();
@@ -2495,6 +2499,34 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
       const [nx, ny] = g.path.shift();
       g.x = nx;
       g.y = ny;
+      // Controlla se il goblin è su una chest o vicino (9x9 celle)
+      if (window.activeChests) {
+        window.activeChests.forEach(ch => {
+          if (ch.taken) return;
+      
+          const dx = Math.abs(g.x - ch.x);
+          const dy = Math.abs(g.y - ch.y);
+      
+          if (dx <= 4 && dy <= 4) { // distanza massima 4 celle per lato = 9x9
+            ch.taken = true;
+      
+            const feedbackArea = document.getElementById("feedback-area");
+            const div = document.createElement("div");
+            div.style = `
+              margin-top: 1rem;
+              padding: 0.8rem;
+              background: #111;
+              border-left: 5px solid #0f0;
+              border-radius: 10px;
+              color: #fff;
+              font-family: Orbitron, sans-serif;
+              box-shadow: 0 0 10px #0f0;
+            `;
+            div.innerHTML = `🎁 <strong>${g.wax_account}</strong> collected a <span style='color: gold;'>bonus chest</span> from the <strong>${ch.from}</strong>!`;
+            feedbackArea.appendChild(div);
+          }
+        });
+      }
 
       if (g.path.length === 0) {
         g.digging = true;
@@ -2667,6 +2699,10 @@ async function renderDwarfsCave() {
         `;
         stopCommandPolling(); // ⛔ STOP qui!
         list.innerHTML = `<p style='color: #888;'>No expeditions in progress.</p>`;
+        // Rimuovi tutte le chest se non ci sono spedizioni attive
+        if (window.activeChests) {
+          window.activeChests = [];
+        }     
         return;
       }
        else {

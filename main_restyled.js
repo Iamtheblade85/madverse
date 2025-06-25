@@ -2312,10 +2312,10 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
   const feedbackArea = document.getElementById("feedback-area");
 
   const perkSprites = {
-    "drago": { src: "perk_dragon.png", frames: 4 },
-    "nano": { src: "perk_dwarf.png", frames: 4 },
-    "scheletro": { src: "perk_skeleton.png", frames: 4 },
-    "gatto": { src: "perk_blackcat.png", frames: 4 }
+    "dragon": { src: "perk_dragon.png", frames: 4 },
+    "dwarf": { src: "perk_dwarf.png", frames: 4 },
+    "skeletton": { src: "perk_skeleton.png", frames: 4 },
+    "black_cat": { src: "perk_blackcat.png", frames: 4 }
   };
 
   const perk = perkSprites[perkName] || perkSprites["drago"];

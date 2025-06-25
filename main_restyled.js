@@ -2312,10 +2312,10 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
   const feedbackArea = document.getElementById("feedback-area");
 
   const perkSprites = {
-    "dragon": { src: "perk_dragon.png", frames: 4 },
-    "dwarf": { src: "perk_dwarf.png", frames: 4 },
-    "skeletton": { src: "perk_skeleton.png", frames: 4 },
-    "black_cat": { src: "perk_blackcat.png", frames: 4 }
+    "dragon": { src: "perk_dragon.png", frames: 6 },
+    "dwarf": { src: "perk_dwarf.png", frames: 6 },
+    "skeletton": { src: "perk_skeleton.png", frames: 6 },
+    "black_cat": { src: "perk_blackcat.png", frames: 6 }
   };
 
   const perk = perkSprites[perkName] || perkSprites["drago"];
@@ -2349,8 +2349,8 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
     // position in px
     const px = x * cellSize;
     const py = y * cellSize;
-    const spriteSize = cellSize * 3;
-
+    const spriteSize = 128 * 8;
+    ctx.imageSmoothingEnabled = false;
     // Clear area first (optional: you can skip if your canvas redraws every frame)
     // ctx.clearRect(px - spriteSize, py - spriteSize, spriteSize * 2, spriteSize * 2);
 

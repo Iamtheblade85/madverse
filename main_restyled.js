@@ -2349,7 +2349,7 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
     // position in px
     const px = x * cellSize;
     const py = y * cellSize;
-    const spriteSize = 128;
+    const spriteSize = 32;
     ctx.imageSmoothingEnabled = false;
     // Clear area first (optional: you can skip if your canvas redraws every frame)
     // ctx.clearRect(px - spriteSize, py - spriteSize, spriteSize * 2, spriteSize * 2);

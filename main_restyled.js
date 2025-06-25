@@ -2363,7 +2363,7 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
     );
 
     // Drop chest
-    if (!dropped && dropChance < 0.2 && Math.random() < 0.02) {
+    if (!dropped && Math.random() < 0.25) {
       dropped = true;
       chest = { x, y, taken: false };
     }

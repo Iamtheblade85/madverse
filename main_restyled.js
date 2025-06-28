@@ -3203,13 +3203,6 @@ await setActiveTab("level");
               ${ingredientList}
             </ul>
           </div>
-  
-          <div style="margin-top: 1rem;">
-            <a href="${item.blend_link}" target="_blank" class="btn btn-glow" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">🧪 Blend on NeftyBlock</a>
-          </div>
-          <div style="margin-top: 1rem;">
-            <a href="${item.craft_link}" target="_blank" class="btn btn-glow" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">🧪 Level upgrade on NeftyBlock</a>
-          </div>          
         </div>
       `;
     }).join('');
@@ -3239,7 +3232,7 @@ await setActiveTab("level");
             wax_account: window.userData.wax_account,
             user_id: window.userData.userId,
             usx_token: window.userData.usx_token,
-            force_update: true  // 👈 Se il backend lo supporta
+            force_update: true
           })
         });
         blendData = await res.json();

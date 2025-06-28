@@ -43,7 +43,6 @@ async function loadAvailableTokens() {
     const response = await fetch('https://alcor.exchange/api/v2/tokens');
     const tokens = await response.json();
     availableTokens = tokens.map(t => `${t.symbol}-${t.contract}`);
-    console.info("[✅] Tokens disponibili caricati:", availableTokens);
   } catch (error) {
     console.error("[❌] Errore caricando tokens:", error);
   }
@@ -109,8 +108,6 @@ async function initApp() {
       const { email, password } = parsed;
 
       if (email && password) {
-        console.info("[🔐] Attempting auto-login via /login_mail...");
-
         const res = await fetch(`${BASE_URL}/login_mail`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -118,14 +115,10 @@ async function initApp() {
         });
 
         const data = await res.json();
-
         if (res.ok && data.user_id && data.usx_token && data.wax_account) {
-          console.info("[✅] Auto-login successful.");
           saveUserData({ ...data, email, password }, true);
           return finalizeAppLoad();
-        } else {
-          console.warn("[⚠️] Auto-login failed:", data.message || data.error);
-        }
+        } 
       }
     } catch (err) {
       console.error("[❌] Error during auto-login:", err);
@@ -135,8 +128,6 @@ async function initApp() {
   // 2. Fallback login: user_id + usx_token da URL
   const urlParams = getUrlParams();
   if (urlParams.userId && urlParams.usx_token) {
-    console.info("[🌐] Attempting fallback login via /main_door...");
-
     try {
       const res = await fetch(`${BASE_URL}/main_door?user_id=${encodeURIComponent(urlParams.userId)}&usx_token=${encodeURIComponent(urlParams.usx_token)}`);
       const data = await res.json();
@@ -147,18 +138,14 @@ async function initApp() {
           usx_token: urlParams.usx_token,
           wax_account: data.wax_account
         };
-        console.info("[✅] Backdoor login successful.");
         return finalizeAppLoad();
-      } else {
-        console.warn("[⚠️] Backdoor login failed:", data.message || data.error);
-      }
+      } 
     } catch (err) {
       console.error("[❌] Error in fallback login:", err);
     }
   }
 
   // 3. Nessun login valido → mostra login/registrazione
-  console.warn("[🚪] No valid login found. Showing login modal.");
   renderAuthButton(false);
   openLoginModal();
 }
@@ -177,8 +164,6 @@ async function finalizeAppLoad() {
       loadSection(section);
     });
   });
-
-  console.info("[🏁] Applicazione inizializzata con successo.");
 }
 
 function renderAuthButton(isLoggedIn) {
@@ -435,8 +420,6 @@ window.addEventListener("load", initApp);
 
 async function loadCreateTokenStaking() {
   const container = document.getElementById('create-token-pool-container');
-  console.log("[📦] Contenitore trovato:", container);
-
   container.innerHTML = `
     <input 
       type="text" 
@@ -456,8 +439,6 @@ async function loadCreateTokenStaking() {
     <div id="token-pool-details"></div>
   `;
 
-  console.log("[🖊️] Aggiornamento contenuto del contenitore con HTML dinamico");
-
   document.getElementById('create-new-token-pool-btn').addEventListener('click', () => {
     renderNewTokenPoolForm();
   });
@@ -473,11 +454,7 @@ async function fetchAndRenderTokenPools(shouldRender = true) {
   try {
     const res = await fetch(`${BASE_URL}/get_staking_pools?user_id=${userId}`);
     const data = await res.json();
-    console.log("[📥] Data received from backend:", data);
-    console.log("[🧪] Controllo data.pools:", data?.pools);
-
     if (!container) {
-      console.warn("[⚠️] Container 'token-pool-details' non trovato, solo i dati vengono recuperati.");
       window.tokenPoolsData = data.pools;
       return;
     }
@@ -489,7 +466,6 @@ async function fetchAndRenderTokenPools(shouldRender = true) {
       }
 
       window.tokenPoolsData = data.pools;
-      console.log("[📦] window.tokenPoolsData assegnato:", window.tokenPoolsData);
       renderCreatedTokenPoolButtons(data.pools);
       renderTokenPoolDetails(data.pools[0]);
     }
@@ -616,8 +592,6 @@ function renderCreatedTokenPoolButtons(pools) {
   const container = document.getElementById('created-token-pools');
   const searchInput = document.getElementById('search-token-pool');
 
-  console.log("[🧩] Rendering pool buttons. Pools disponibili:", pools);
-
   function renderButtons(list) {
     container.innerHTML = '';
     list.forEach(pool => {
@@ -626,7 +600,6 @@ function renderCreatedTokenPoolButtons(pools) {
       btn.textContent = pool.deposit_token?.symbol || 'Unknown';
       btn.onclick = () => renderTokenPoolDetails(pool);
       container.appendChild(btn);
-      console.log("[🔘] Pool trovata:", pool);
     });
   }
 
@@ -642,9 +615,6 @@ function renderCreatedTokenPoolButtons(pools) {
 
 function renderTokenPoolDetails(pool) {
   const container = document.getElementById('token-pool-details');
-  console.log("[👁️‍🗨️] Mostrando dettagli per pool:", pool);
-  console.log("[🎁] Rewards nella pool:", pool.rewards);
-
   const rewardsHTML = pool.rewards.map(reward => {
     const daysLeft = reward.daily_reward > 0
       ? Math.floor(reward.total_reward_deposit / reward.daily_reward)
@@ -681,13 +651,6 @@ function renderTokenPoolDetails(pool) {
 }
 
 function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSymbol) {
-  console.log("[✏️] Edit Daily Reward - Parametri:", {
-    poolId,
-    tokenSymbol,
-    currentReward,
-    depositTokenSymbol
-  });
-
   const body = `
     <label class="form-label">New Daily Reward</label>
     <input 
@@ -755,13 +718,6 @@ window.openEditDailyReward = openEditDailyReward;
 function openDepositToPool(poolId, tokenSymbol) {
   const tokenBalance = window.walletBalances?.find(t => t.symbol === tokenSymbol);
   const balance = tokenBalance?.amount || 0;
-
-  console.log("[💰] Apri modale deposito:", {
-    poolId,
-    tokenSymbol,
-    balance
-  });
-
   const body = `
     <p class="wallet-info">Available in Wallet: <strong>${balance}</strong></p>
 
@@ -825,8 +781,6 @@ function openDepositToPool(poolId, tokenSymbol) {
 }
 window.openDepositToPool = openDepositToPool;
 function openPoolStatusModal(poolId, currentStatus) {
-  console.log("[⚙️] Aprendo modale status pool:", { poolId, currentStatus });
-
   const body = `
     <label class="form-label">Select new status</label>
     <select id="pool-status-select" class="form-select">
@@ -848,12 +802,6 @@ function openPoolStatusModal(poolId, currentStatus) {
     document.getElementById('submit-pool-status').onclick = async () => {
       const newStatus = document.getElementById('pool-status-select').value;
       const { userId, usx_token } = window.userData;
-    
-      console.log("[🔁] Aggiornamento status pool:", {
-        poolId,
-        from: currentStatus,
-        to: newStatus
-      });
     
       try {
         const res = await fetch(`${BASE_URL}/update_token_pool_status?user_id=${userId}&usx_token=${usx_token}`, {
@@ -1537,7 +1485,6 @@ window.openEditRewards = openEditRewards;
 
 // Funzione per caricare dinamicamente sezioni
 async function loadSection(section) {
-  console.log(`[📦] Caricando sezione: ${section}`);
   const app = document.getElementById('app');
   const { userId, usx_token, wax_account } = window.userData;
   if (section === 'c2e-twitch') {
@@ -1671,7 +1618,6 @@ async function loadSection(section) {
     loadNFTs();
   }
   else if (section === 'token-staking') {
-    console.log("[🧪] Entrato in blocco token-staking");
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title">Token Staking</h2>
@@ -2374,7 +2320,6 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
       dropped = true;
       const chest = { x: Math.round(x), y: y, taken: false, from: perkName, wax_account };
       window.activeChests.push(chest);
-      console.log("📦 Chest dropped at", chest.x, chest.y);
     }
 
     // Movimento
@@ -2619,8 +2564,6 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
 
 // Complete renderDwarfsCave function with full features
 async function renderDwarfsCave() {
-  console.log("[renderDwarfsCave] Start loading interface");
-
   const container = document.getElementById('goblin-content');
   container.innerHTML = `
     <div id="expedition-summary-block" style="margin-bottom: 2rem;
@@ -2954,10 +2897,6 @@ async function renderDwarfsCave() {
             expedition_id: expedition_id
           };
           
-          console.groupCollapsed("[📤] Sending /end_expedition request");
-          console.log("🔸 Payload:", payload);
-          console.groupEnd();
-          
           const resultRes = await fetch(`${BASE_URL}/end_expedition`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -2972,9 +2911,6 @@ async function renderDwarfsCave() {
           
           const result = await resultRes.json();
           updateRecentExpeditionsList(result, window.userData.wax_account);
-          console.groupCollapsed("[📥] Received /end_expedition response");
-          console.log("✅ Response:", result);
-          console.groupEnd();
           
           if (!result || !result.stats || !result.goblins) {
             console.warn("[⚠️] Malformed /end_expedition result");
@@ -4112,7 +4048,6 @@ async function renderDailyBox(data) {
         revealData.chest_video,
         revealData.items,
         async () => {
-          console.log("🔄 Reloading daily box data...");
           const dailyBoxRes = await fetch(`${BASE_URL}/daily_chest_open`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -4133,7 +4068,6 @@ async function renderDailyBox(data) {
       revealData.items,
       async () => {
         // onCloseCallback → reload della dailyBox section
-        console.log("🔄 Reloading daily box data...");
         const dailyBoxRes = await fetch(`${BASE_URL}/daily_chest_open`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -4697,9 +4631,6 @@ function toggleActivitySection(id) {
 
 function populateNFTDropdown(nfts) {
   const dropdown = document.getElementById("nftAssetDropdown");
-  console.log("[🧪] populateNFTDropdown() called");
-  console.log("[📦] nfts received:", nfts);
-  console.log("[📦] dropdown element:", dropdown);
 
   if (!dropdown) {
     console.warn("⚠️ Dropdown not found in DOM!");
@@ -5505,7 +5436,6 @@ function displayLogData(data) {
 // Storm Scheduler and Logs
 // Funzione per aggiungere una nuova tempesta programmata
 async function addScheduledStorm() {
-  console.log("🔄 addScheduledStorm() called");
   const container = document.getElementById('c2e-content');
   // Leggi valori dal DOM
   const scheduledTimeLocal = document.getElementById('scheduledTime').value;
@@ -5515,21 +5445,7 @@ async function addScheduledStorm() {
   const timeframe = document.getElementById('timeframe').value;
   const channelName = document.getElementById('channelName').value;
   const paymentMethod = document.getElementById('paymentMethod').value;
-
-  console.log("📅 scheduledTimeLocal:", scheduledTimeLocal);
-  console.log("🌐 scheduledTimeUTC (to send):", scheduledTimeUTC);
-  console.log("💰 amount:", amount);
-  console.log("🔠 tokenSymbol:", tokenSymbol);
-  console.log("⏱️ timeframe:", timeframe);
-  console.log("📺 channelName:", channelName);
-  console.log("💳 paymentMethod:", paymentMethod);
-
   const { userId, usx_token, wax_account } = window.userData || {};
-
-  console.log("👤 userId:", userId);
-  console.log("🔐 usx_token:", usx_token);
-  console.log("🧾 wax_account:", wax_account);
-
   if (!wax_account) {
     console.error("❌ wax_account is missing.");
     showToast("Error: wax_account is missing.", "error");
@@ -5546,26 +5462,17 @@ async function addScheduledStorm() {
     wax_account
   };
 
-  console.log("📦 Payload to be sent:", payload);
-
   try {
     const url = `${BASE_URL}/add_storm?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`;
-    console.log("🌍 POST URL:", url);
-
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
-    console.log("📡 Response status:", res.status);
-
     const data = await res.json();
-    console.log("📨 Response body:", data);
 
     if (data.success) {
       showToast(data.message, "success");
-      console.log("✅ Storm added successfully");
       loadScheduledStorms(); // aggiorna tabella
     } else {
       showToast(`Error: ${data.error}`, "error");
@@ -6065,7 +5972,6 @@ async function loadScheduleNFTGiveaway() {
   const { userId, usx_token } = window.userData;
   const res = await fetch(`${BASE_URL}/open_pools?user_id=${userId}&usx_token=${usx_token}`);
   const data = await res.json();
-  console.log("[📥] Risposta da /open_pools:", data);
 
   if (!data.pools || data.pools.length === 0) {
     document.getElementById('pool-buttons').innerHTML = `
@@ -6270,7 +6176,6 @@ function showModalMessage(message, type = 'info') {
 async function loadWallet() {
   try {
     const { userId, usx_token, wax_account } = window.userData;
-    console.log("window.data",window.userData)
     // Carica Telegram
     const resTelegram = await fetch(`${BASE_URL}/saldo?user_id=${userId}&usx_token=${usx_token}`);
     const dataTelegram = await resTelegram.json();
@@ -6659,11 +6564,8 @@ function openNFTModal(assetId) {
 
   showConfirmModal(`Withdraw ${window.selectedNFTs.size} selected NFTs?`, async () => {
     const selectedIds = Array.from(window.selectedNFTs);
-    console.log("[⚡] Withdraw Selected NFTs:", selectedIds);
-
     const { userId, usx_token, wax_account } = window.userData;
     const endpoint = `${BASE_URL}/withdraw_nft_v2?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
-
     const modalBody = document.querySelector('#universal-modal .modal-body');
     modalBody.innerHTML = `<p class="modal-text">Processing withdrawal of ${selectedIds.length} NFTs...</p>`;
 
@@ -6867,7 +6769,6 @@ async function openModal(action, token, walletType = 'telegram') {
     `; 
     showModal({ title: `<h3 class="modal-title">${title}</h3>`, body });
     await loadAvailableTokens();
-    console.log("4980 - [DEBUG] Modal Swap aperta. contractIn =", contractIn);
   }
     else if (action === "bridge_to") {
       const targetWallet = walletType === 'twitch' ? 'telegram' : 'twitch';
@@ -6987,9 +6888,6 @@ async function openModal(action, token, walletType = 'telegram') {
         alert("Insert valid amount and output token");
         return;
       }
-
-      console.log("[DEBUG] Click su Preview Swap");
-      console.log("[DEBUG] Amount:", amount, "Output selection:", symbolOut, contractOut);
       const symbolIn = token.toLowerCase();
       const contractInLower = contractIn.toLowerCase();
     
@@ -7002,10 +6900,7 @@ async function openModal(action, token, walletType = 'telegram') {
         amount: amount,
         wallet_type: walletType
       };
-    
-      console.log("[DEBUG] Chiamata preview_swap URL:", previewUrl);
-      console.log("[DEBUG] Body preview_swap:", bodyData);
-    
+   
       swapPreview.classList.remove('hidden');
       loadingSpinner.classList.remove('hidden');
       swapDataContainer.classList.add('hidden');
@@ -7019,9 +6914,7 @@ async function openModal(action, token, walletType = 'telegram') {
           body: JSON.stringify(bodyData)
         });
     
-        const data = await response.json();
-        console.log("[DEBUG] Response preview_swap:", data);
-    
+        const data = await response.json();   
         const minReceived = (data.minReceived || 0) * 0.9;
         minReceivedSpan.textContent = minReceived.toFixed(4);
         priceImpactSpan.textContent = data.priceImpact || "-";
@@ -7052,14 +6945,7 @@ async function openModal(action, token, walletType = 'telegram') {
     e.preventDefault();
     const amount = amountInput.value; 
     try {
-      if (action === "swap") {
-        console.log("[DEBUG] Submit form triggered");
-        console.log("[DEBUG] Action:", action);
-        console.log("[DEBUG] AmountInput value:", amountInput.value);
-        if (action === "swap") {
-          console.log("[DEBUG] Selected output token:", selectedTokenSymbol.value, selectedTokenContract.value);
-        }
-                
+      if (action === "swap") {               
         const symbolOut = selectedTokenSymbol.value;
         const contractOut = selectedTokenContract.value;
         await executeAction(action, token, amount, symbolOut, contractOut, walletType);

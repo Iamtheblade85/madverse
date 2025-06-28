@@ -2480,7 +2480,7 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
     ctx.fillStyle = "rgba(0,0,0,0.6)";
     ctx.fillRect(px - cellSize, py + cellSize * 1.2, cellSize * 2, cellSize * 0.7);
     ctx.fillStyle = g.color;
-    ctx.fillText(g.wax_account, px, py + cellSize * 2.5);
+    ctx.fillText(g.wax_account, px, py + cellSize * 5);
   
     // Shovel animata
     if (g.digging) {

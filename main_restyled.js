@@ -2890,7 +2890,15 @@ async function renderDwarfsCave() {
           feedback("Select at least 1 goblin to start.");
           return;
         }
-        const assetIds = [...selected];
+        const assetIds = [...selected].filter(id => {
+          const gob = goblins.find(g => g.asset_id === id);
+          return gob && parseInt(gob.daily_power) >= 5;
+        });
+        if (assetIds.length === 0) {
+          feedback("All selected goblins are too tired to go on an expedition.");
+          return;
+        }
+
         try {
           const startRes = await fetch(`${BASE_URL}/start_expedition`, {
             method: "POST",
@@ -3027,10 +3035,13 @@ async function renderDwarfsCave() {
     // Auto-select best 50 goblins
     function autoSelectBestGoblins() {
       selected.clear();
-      const scored = goblins.map(g => ({
-        id: g.asset_id,
-        score: g.level + getAttrValue(g, g.main_attr)
-      }));
+      const scored = goblins
+        .filter(g => parseInt(g.daily_power) >= 5)
+        .map(g => ({
+          id: g.asset_id,
+          score: g.level + getAttrValue(g, g.main_attr)
+        }));
+
       scored.sort((a, b) => b.score - a.score);
       scored.slice(0, 50).forEach(g => selected.add(g.id));
       renderList();
@@ -3039,10 +3050,11 @@ async function renderDwarfsCave() {
   
     document.getElementById('select-50').onclick = () => {
       selected.clear();
-      goblins.slice(0, 50).forEach(g => selected.add(g.asset_id));
+      goblins.filter(g => parseInt(g.daily_power) >= 5).slice(0, 50).forEach(g => selected.add(g.asset_id));
       renderList();
       updateSummary();
     };
+
   
     document.getElementById('deselect-all').onclick = () => {
       selected.clear();

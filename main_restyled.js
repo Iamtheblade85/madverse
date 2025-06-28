@@ -2247,12 +2247,15 @@ function updateRecentExpeditionsList(result, wax_account) {
   const now = new Date();
   const formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
+  const chips = result?.stats?.tokens?.CHIPS ?? 0;
+  const nfts = Array.isArray(result?.nfts) ? result.nfts.length : 0;
+
   const entry = document.createElement("div");
   entry.style = "margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;";
   entry.innerHTML = `
     <div><strong style="color: #ffe600;">${wax_account}</strong> at ${formattedTime}</div>
-    <div style="color: #0f0;">CHIPS: ${result.stats.tokens.CHIPS}</div>
-    <div style="color: #ffa500;">NFTs: ${result.nfts.length}</div>
+    <div style="color: #0f0;">CHIPS: ${chips}</div>
+    <div style="color: #ffa500;">NFTs: ${nfts}</div>
   `;
 
   recentList.prepend(entry);
@@ -2263,6 +2266,7 @@ function updateRecentExpeditionsList(result, wax_account) {
     } else break;
   }
 }
+
 
 let commandPollingInterval = null;
 
@@ -2471,12 +2475,12 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
     ctx.drawImage(goblinImage, 0, 0, 128, 128, px - goblinOffset, py - goblinOffset, goblinSize, goblinSize);
   
     // Nome
-    ctx.font = `${cellSize * 0.5}px Orbitron`;
+    ctx.font = `${cellSize * 2}px Orbitron`;
     ctx.textAlign = "center";
     ctx.fillStyle = "rgba(0,0,0,0.6)";
-    ctx.fillRect(px - cellSize, py - cellSize * 1.3, cellSize * 2, cellSize * 0.7);
+    ctx.fillRect(px - cellSize, py + cellSize * 1.2, cellSize * 2, cellSize * 0.7);
     ctx.fillStyle = g.color;
-    ctx.fillText(g.wax_account, px, py - cellSize * 0.8);
+    ctx.fillText(g.wax_account, px, py + cellSize * 2.5);
   
     // Shovel animata
     if (g.digging) {
@@ -2509,21 +2513,49 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
       
           if (dx <= 4 && dy <= 4) { // distanza massima 4 celle per lato = 9x9
             ch.taken = true;
-      
-            const feedbackArea = document.getElementById("feedback-area");
-            const div = document.createElement("div");
-            div.style = `
-              margin-top: 1rem;
-              padding: 0.8rem;
-              background: #111;
-              border-left: 5px solid #0f0;
-              border-radius: 10px;
-              color: #fff;
-              font-family: Orbitron, sans-serif;
-              box-shadow: 0 0 10px #0f0;
-            `;
-            div.innerHTML = `🎁 <strong>${g.wax_account}</strong> collected a <span style='color: gold;'>bonus chest</span> from the <strong>${ch.from}</strong>!`;
-            feedbackArea.appendChild(div);
+            (async () => {
+              try {
+                const res = await fetch(`${BASE_URL}/chest_reward`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    wax_account: g.wax_account,
+                    perk_type: ch.from
+                  })
+                });
+            
+                if (!res.ok) throw new Error("Reward fetch failed");
+                const reward = await res.json();
+            
+                const feedbackArea = document.getElementById("feedback-area");
+                const div = document.createElement("div");
+                div.style = `
+                  margin-top: 1rem;
+                  padding: 0.8rem;
+                  background: #111;
+                  border-left: 5px solid #0f0;
+                  border-radius: 10px;
+                  color: #fff;
+                  font-family: Orbitron, sans-serif;
+                  box-shadow: 0 0 10px #0f0;
+                `;
+                div.innerHTML = `
+                  🎁 <strong>${g.wax_account}</strong> won <span style="color: #0f0;">${reward.stats.tokens.CHIPS} CHIPS</span>
+                  and <span style="color: #ffa500;">${reward.nfts.length} NFTs</span> from <strong>${ch.from}</strong>!
+                `;
+                feedbackArea.appendChild(div);
+            
+                // Dopo 20 secondi sposta in recent-expeditions-list
+                setTimeout(() => {
+                  if (div.parentElement) div.remove();
+                  updateRecentExpeditionsList(reward, g.wax_account);
+                }, 20000);
+            
+              } catch (err) {
+                console.warn("⚠️ Failed to fetch reward:", err);
+              }
+            })();
+
           }
         });
       }

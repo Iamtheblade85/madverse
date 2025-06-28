@@ -2101,17 +2101,6 @@ async function renderGoblinInventory() {
                   <strong style="color:#fff; margin-left: 4px;">${nft[key]}</strong>
                 </div>`).join('')}
           </div>
-    
-          <div class="goblin-actions" style="
-            display: flex;
-            gap: 0.4rem;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 0.75rem;
-          ">
-            <button class="btn btn-glow btn-action" onclick="selectAsDefault('${nft.name}')">🎯 Use in Dwarf´s Cave</button>
-            <button class="btn btn-glow btn-action" onclick="openBlend('${nft.name}')">🧪 Blend & Rotate slot</button>
-          </div>
         </div>
       `).join('');
     }
@@ -3203,6 +3192,9 @@ await setActiveTab("level");
               ${ingredientList}
             </ul>
           </div>
+          <div style="margin-top: 1rem;">
+            <a href="${item.blend_link}" target="_blank" class="btn btn-glow" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">🧪Blend @NeftyBlock</a>
+          </div>              
         </div>
       `;
     }).join('');

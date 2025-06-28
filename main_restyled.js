@@ -2857,6 +2857,7 @@ async function renderDwarfsCave() {
               <div><strong style="color:#ffe600;">${g.name}</strong></div>
               <div style="color:#ccc;">Rarity: <span>${g.rarity}</span></div>
               <div style="color:#aaa;">Level: ${g.level} | Main: ${g.main_attr}</div>
+              <div style="color:#0ff;">Power: ${g["daily_power"]}</div>
               ${isExhausted ? `<div style="color:#f44; font-size: 0.7rem; margin-top: 4px;">Needs rest until tomorrow</div>` : ''}
             </div>
             <input type="checkbox" class="select-goblin-checkbox" data-id="${g.asset_id}"

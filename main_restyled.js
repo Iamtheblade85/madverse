@@ -1706,7 +1706,7 @@ async function loadSection(section) {
         animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
         position: relative;
       ">
-        Section not fully implemented yet — but why not peek behind the scenes?
+        Why not peek behind the scenes?
         <span style="
           position: absolute;
           left: 0;
@@ -1719,7 +1719,7 @@ async function loadSection(section) {
       </p>
 
         <div class="loading-message typing-loader">
-          <div class="typing-text">⌛ Loading blockchain data... please wait</div>
+          <div class="typing-text">⌛ Loading blockchain data... please wait, I need only 5 seconds </div>
           <div class="spinner-bar"></div>
         </div>
   
@@ -1748,6 +1748,106 @@ async function loadSection(section) {
   
     loadAccountSection();
   }
+}
+
+function showAllNewsSection() {
+  alert("🧪 Full News Library coming soon...");
+}
+
+async function loadLatestNews() {
+  const { usx_token } = window.userData;
+
+  let wrapper = document.getElementById('news-wrapper');
+  if (!wrapper) {
+    wrapper = document.createElement('div');
+    wrapper.id = 'news-wrapper';
+    wrapper.style.display = 'block';
+    wrapper.classList.add('fade-in');
+    document.getElementById('main-wrapper').prepend(wrapper);
+  } else {
+    wrapper.innerHTML = '';
+    wrapper.style.display = 'block';
+  }
+
+  const accountWrapper = document.getElementById('account-sections');
+  if (accountWrapper) accountWrapper.style.display = 'none';
+
+  try {
+    const newsRes = await fetch(`${BASE_URL}/news/latest?usx_token=${usx_token}`);
+    const newsData = await newsRes.json();
+
+    wrapper.innerHTML = `
+      <div class="account-card2">
+        <h2 class="glow-text">📰 Latest News</h2>
+        ${newsData.length > 0
+          ? newsData.map(article => `
+              <div class="news-item-card">
+                ${article.image_url ? `<img src="${article.image_url}" alt="News Image" class="news-img"/>` : ''}
+                <div class="news-content">
+                  <div class="news-header">
+                    <span class="news-category">${article.category || 'General'}</span>
+                    <h3 class="news-title">${article.title}</h3>
+                  </div>
+                  <p class="news-summary">${article.summary}</p>
+                  <div class="news-footer">
+                    <small>📅 ${article.date}</small>
+                    <button onclick="loadFullArticle(${article.id})" class="news-readmore-btn">🔎 Read More</button>
+                  </div>
+                </div>
+              </div>
+            `).join('')
+          : '<p>No news available.</p>'
+        }
+
+        <div class="news-bottom-link">
+          <a href="#" onclick="showAllNewsSection()" class="view-all-btn">📚 View All Articles</a>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    wrapper.innerHTML = `<div class="error-message">❌ Failed to load news: ${err.message}</div>`;
+    console.error("[❌] Error loading news:", err);
+  }
+}
+
+async function loadFullArticle(newsId) {
+  const wrapper = document.getElementById('news-wrapper');
+  wrapper.innerHTML = `<p class="loading-message">⏳ Loading article...</p>`;
+
+  try {
+    const res = await fetch(`${BASE_URL}/news/${newsId}`);
+    const article = await res.json();
+
+    if (article.error) {
+      wrapper.innerHTML = `<p class="error-message">❌ ${article.error}</p>`;
+      return;
+    }
+
+    wrapper.innerHTML = `
+      <div class="account-card2">
+        <button onclick="loadLatestNews()" class="back-btn">🔙 Back to News</button>
+        <h2 class="glow-text">${article.title}</h2>
+        <small>📅 ${article.date} | 🏷️ ${article.category || 'General'}</small>
+        ${article.image_url ? `<img src="${article.image_url}" class="news-img-full"/>` : ''}
+        <div class="news-full-content">
+          <p>${article.content}</p>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    wrapper.innerHTML = `<div class="error-message">❌ Error loading article: ${err.message}</div>`;
+    console.error("[❌] Error loading full article:", err);
+  }
+}
+
+function showNewsSection() {
+  const wrapper = document.getElementById('news-wrapper');
+  if (wrapper) wrapper.style.display = 'block';
+
+  const accountWrapper = document.getElementById('account-sections');
+  if (accountWrapper) accountWrapper.style.display = 'none';
+
+  loadLatestNews();
 }
 
 function loadGoblinDex() {

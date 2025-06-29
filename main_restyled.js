@@ -4240,6 +4240,68 @@ function showChestModal(videoUrl, rewards, onCloseCallback) {
   document.body.appendChild(modal);
 }
 
+function showEmailEditForm(currentEmail) {
+  const emailBlock = document.getElementById('email-block');
+
+  emailBlock.innerHTML = `
+    <form id="email-form">
+      <label for="new-email" class="label">📧 New Email:</label>
+      <input type="email" id="new-email" value="${currentEmail}" required placeholder="Enter new email..." />
+      <button type="submit" class="small-btn">💾 Save</button>
+      <button type="button" class="small-btn cancel" id="cancel-email-btn">✖ Cancel</button>
+      <div id="email-feedback" class="form-feedback" style="margin-top: 8px;"></div>
+    </form>
+  `;
+
+  const feedbackEl = document.getElementById('email-feedback');
+
+  document.getElementById('cancel-email-btn').addEventListener('click', () => {
+    renderPersonalInfo(window.accountData.userInfo); // ripristina
+  });
+
+  document.getElementById('email-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newEmail = document.getElementById('new-email').value;
+    feedbackEl.innerHTML = '⏳ Updating...';
+    feedbackEl.style.color = '#888';
+
+    try {
+      const res = await fetch(`${BASE_URL}/account/update_email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: window.userData.userId,
+          usx_token: window.userData.usx_token,
+          new_email: newEmail
+        })
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        feedbackEl.innerHTML = '✅ Email updated successfully!';
+        feedbackEl.style.color = 'limegreen';
+
+        // aggiorna localmente
+        window.accountData.userInfo.email = newEmail;
+
+        // Dopo un breve delay, ricarica la sezione
+        setTimeout(() => {
+          renderPersonalInfo(window.accountData.userInfo);
+        }, 1500);
+      } else {
+        feedbackEl.innerHTML = `❌ ${result.error || 'Unknown error.'}`;
+        feedbackEl.style.color = 'crimson';
+      }
+    } catch (err) {
+      feedbackEl.innerHTML = `❌ Failed to update email: ${err.message}`;
+      feedbackEl.style.color = 'crimson';
+    }
+  });
+}
+
 function renderPersonalInfo(info) {
   const container = document.getElementById('personal-info');
 
@@ -4251,9 +4313,21 @@ function renderPersonalInfo(info) {
       <p><span class="label">🏅 Role:</span> <span class="role-tag">${info.role}</span></p>
       <p><span class="label">📈 Chips Staking Rank:</span> ${info.staking_rank ? `#${info.staking_rank}` : 'Out of Top 50'}</p>
       <p><span class="label">🧩 Chips NFTs Farm Staking Rank:</span> ${info.nft_rank ? `#${info.nft_rank}` : 'Out of Top 50'}</p>
+
+      <div id="email-block">
+        <p><span class="label">📧 Email:</span> <span id="email-text">${info.email || 'Not Set'}</span></p>
+        <button class="small-btn" id="change-email-btn">✏️ Change Email</button>
+      </div>
     </div>
   `;
+
+  // Aggiungi handler per il pulsante
+  const btn = document.getElementById('change-email-btn');
+  btn.addEventListener('click', () => {
+    showEmailEditForm(info.email || '');
+  });
 }
+
 
 function renderChatRewards(telegram, twitch) {
   function renderBoosters(boosters, typeLabel, icon) {

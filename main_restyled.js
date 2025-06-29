@@ -1748,16 +1748,18 @@ async function loadSection(section) {
   
     loadAccountSection();
   }
-}
+    else if (section === 'loadLatestNews') {
+      app.innerHTML = `
+        <div class="section-container">
+          <h2 class="section-title">Guides and Infos</h2>  
+        </div>
+     `;
+      showNewsSection()
+    }
+  }
 
 function showNewsSection() {
-  hideAccountSections();
   loadNewsList({ page: 1 });
-}
-
-function hideAccountSections() {
-  const acc = document.getElementById('account-sections');
-  if (acc) acc.style.display = 'none';
 }
 
 function getSearchQuery() {

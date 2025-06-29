@@ -5847,7 +5847,16 @@ async function loadLogStormsGiveaways() {
 // Funzione per popolare il dropdown dei Token Symbols
 async function populateTokenSymbols() {
   const tokenSelect = document.getElementById('tokenSymbol');
-  
+    const { userId, usx_token, wax_account } = window.userData;
+    // Carica Telegram
+    const resTelegram = await fetch(`${BASE_URL}/saldo?user_id=${userId}&usx_token=${usx_token}`);
+    const dataTelegram = await resTelegram.json();
+    window.walletBalances = dataTelegram.balances || [];
+
+    // Carica Twitch
+    const resTwitch = await fetch(`${BASE_URL}/saldo/twitch?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`);
+    const dataTwitch = await resTwitch.json();
+    window.twitchWalletBalances = dataTwitch.balances || [];  
   if (window.walletBalances && Array.isArray(window.walletBalances)) {
     window.walletBalances.forEach(balance => {
       const option = document.createElement('option');

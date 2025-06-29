@@ -1813,21 +1813,22 @@ async function loadNewsList({ page = 1, search = '', category = '' } = {}) {
         </div>
 
         ${articles.length > 0 ? articles.map(article => `
-          <div class="news-item-card">
-            ${article.image_url ? `<img src="${article.image_url}" alt="img" class="news-img"/>` : ''}
+          <div class="news-item-card" style="background:#1e1e2f; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #444;">
+            ${article.image_url ? `<img src="${article.image_url}" alt="img" class="news-img" style="width:100%; max-height:200px; object-fit:cover; border-radius:8px; margin-bottom:10px;" />` : ''}
             <div class="news-content">
-              <div class="news-header">
-                <span class="news-category">${article.category || 'General'}</span>
-                <h3 class="news-title">${article.title}</h3>
+              <div class="news-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                <span class="news-category" style="background:#3b3b5c; color:#8ef; padding:2px 8px; border-radius:5px; font-size:12px;">${article.category || 'General'}</span>
+                <small style="color:#ccc;">📅 ${article.date}</small>
               </div>
-              <p class="news-summary">${article.summary}</p>
-              <div class="news-footer">
-                <small>📅 ${article.date}</small>
-                <button onclick="loadFullArticle(${article.id})" class="news-readmore-btn">🔎 Read More</button>
+              <h3 class="news-title" style="color:#f0f0f0; font-size:20px; margin:5px 0;">${article.title}</h3>
+              <p class="news-summary" style="color:#bbb; font-size:15px; line-height:1.6;">${article.summary}</p>
+              <div class="news-footer" style="margin-top:10px;">
+                <button onclick="loadFullArticle(${article.id})" class="news-readmore-btn" style="background:#3498db; color:white; padding:6px 12px; border:none; border-radius:5px; cursor:pointer;">🔎 Read More</button>
               </div>
             </div>
           </div>
-        `).join('') : `<p>No news available.</p>`}
+        `).join('') : `<p style="color:#999;">No news available.</p>`}
+
 
         <div class="pagination">${renderPaginationControls(current_page, total_pages)}</div>
       </div>
@@ -1855,14 +1856,17 @@ async function loadFullArticle(newsId) {
     }
 
     wrapper.innerHTML = `
-      <div class="account-card2">
-        <button onclick="loadNewsList({ page: 1 })" class="back-btn">🔙 Back</button>
-        <h2 class="glow-text">${article.title}</h2>
-        <small>📅 ${article.date} | 🏷️ ${article.category || 'General'}</small>
-        ${article.image_url ? `<img src="${article.image_url}" class="news-img-full"/>` : ''}
-        <div class="news-full-content">${article.content}</div>
+      <div class="account-card2" style="padding:20px; background:#1a1a2a; color:#ddd; border-radius:10px;">
+        <button onclick="loadNewsList({ page: 1 })" class="back-btn" style="margin-bottom:15px; background:#666; color:white; padding:6px 12px; border:none; border-radius:5px; cursor:pointer;">🔙 Back</button>
+        <h2 class="glow-text" style="font-size:28px; color:#8ef;">${article.title}</h2>
+        <small style="display:block; margin:5px 0 15px; color:#aaa;">📅 ${article.date} | 🏷️ ${article.category || 'General'}</small>
+        ${article.image_url ? `<img src="${article.image_url}" class="news-img-full" style="width:100%; max-height:300px; object-fit:cover; border-radius:10px; margin-bottom:20px;" />` : ''}
+        <div class="news-full-content" style="font-size:16px; line-height:1.7; color:#ccc;">
+          ${article.content}
+        </div>
       </div>
     `;
+
   } catch (err) {
     wrapper.innerHTML = `<div class="error-message">❌ Error loading article: ${err.message}</div>`;
     console.error("[❌] Error loading full article:", err);

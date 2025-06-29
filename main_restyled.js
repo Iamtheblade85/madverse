@@ -1859,9 +1859,7 @@ async function loadFullArticle(newsId) {
         <h2 class="glow-text">${article.title}</h2>
         <small>📅 ${article.date} | 🏷️ ${article.category || 'General'}</small>
         ${article.image_url ? `<img src="${article.image_url}" class="news-img-full"/>` : ''}
-        <div class="news-full-content">
-          <p>${article.content}</p>
-        </div>
+        <div class="news-full-content">${article.content}</div>
       </div>
     `;
   } catch (err) {

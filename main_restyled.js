@@ -1748,7 +1748,7 @@ async function loadSection(section) {
   
     loadAccountSection();
   }
-    else if (section === 'loadLatestNews') {
+  else if (section === 'loadLatestNews') {
       app.innerHTML = `
         <div class="section-container">
           <h2 class="section-title">Guides and Infos</h2>  
@@ -1805,28 +1805,69 @@ async function loadNewsList({ page = 1, search = '', category = '' } = {}) {
           <input type="text" id="news-search" placeholder="🔍 Search news..." />
           <select id="news-category">
             <option value="">📂 All</option>
-            <option value="update">🔧 Updates</option>
-            <option value="event">🎉 Events</option>
-            <option value="guide">📘 Guides</option>
-            <option value="drop">🎁 Drops</option>
+            <option value="Update">🔧 Updates</option>
+            <option value="Event">🎉 Events</option>
+            <option value="Guide">📘 Guides</option>
+            /*<option value="Drop">🎁 Drops</option>*/
           </select>
         </div>
 
         ${articles.length > 0 ? articles.map(article => `
-          <div class="news-item-card" style="background:#1e1e2f; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #444;">
-            ${article.image_url ? `<img src="${article.image_url}" alt="img" class="news-img" style="width:100%; max-height:200px; object-fit:cover; border-radius:8px; margin-bottom:10px;" />` : ''}
+          <div class="news-item-card" style="
+            background: linear-gradient(145deg, #1a1a2a, #2a2a40);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.15);
+            transition: transform 0.3s ease;
+          ">
+            ${article.image_url ? `<img src="${article.image_url}" alt="img" class="news-img" style="width:100%; max-height:200px; object-fit:cover; border-radius:8px; margin-bottom:12px; box-shadow:0 0 8px rgba(0,255,255,0.2);" />` : ''}
+          
             <div class="news-content">
-              <div class="news-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                <span class="news-category" style="background:#3b3b5c; color:#8ef; padding:2px 8px; border-radius:5px; font-size:12px;">${article.category || 'General'}</span>
-                <small style="color:#ccc;">📅 ${article.date}</small>
+              <div class="news-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span class="news-category" style="
+                  background: rgba(0, 255, 255, 0.1);
+                  color: #00f0ff;
+                  padding: 4px 10px;
+                  border-radius: 6px;
+                  font-size: 13px;
+                  font-weight: bold;
+                  text-shadow: 0 0 5px #00ffff;
+                ">${article.category || 'General'}</span>
+          
+                <small style="color:#aaa;">📅 ${article.date}</small>
               </div>
-              <h3 class="news-title" style="color:#f0f0f0; font-size:20px; margin:5px 0;">${article.title}</h3>
-              <p class="news-summary" style="color:#bbb; font-size:15px; line-height:1.6;">${article.summary}</p>
-              <div class="news-footer" style="margin-top:10px;">
-                <button onclick="loadFullArticle(${article.id})" class="news-readmore-btn" style="background:#3498db; color:white; padding:6px 12px; border:none; border-radius:5px; cursor:pointer;">🔎 Read More</button>
+          
+              <h3 class="news-title" style="
+                color: #8ef;
+                font-size: 22px;
+                margin: 8px 0;
+                text-shadow: 0 0 6px #0ff;
+              ">${article.title}</h3>
+          
+              <p class="news-summary" style="
+                color: #ccc;
+                font-size: 15px;
+                line-height: 1.6;
+              ">${article.summary}</p>
+          
+              <div class="news-footer" style="margin-top:12px;">
+                <button onclick="loadFullArticle(${article.id})" class="news-readmore-btn" style="
+                  background: #00f0ff;
+                  color: #000;
+                  font-weight: bold;
+                  padding: 8px 14px;
+                  border: none;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  box-shadow: 0 0 8px #0ff;
+                  transition: background 0.2s ease;
+                ">🔎 Read More</button>
               </div>
             </div>
           </div>
+
         `).join('') : `<p style="color:#999;">No news available.</p>`}
 
 

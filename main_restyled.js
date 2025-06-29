@@ -1752,6 +1752,7 @@ async function loadSection(section) {
       app.innerHTML = `
         <div class="section-container">
           <h2 class="section-title">Guides and Infos</h2>  
+          <div id="main-wrapper"></div>
         </div>
      `;
       showNewsSection()

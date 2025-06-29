@@ -155,7 +155,7 @@ async function finalizeAppLoad() {
   await loadAvailableTokens();
 
   // Caricamento iniziale sezione principale
-  loadSection('wallet');
+  loadSection('loadLatestNews');
 
   // Collega pulsanti menu
   document.querySelectorAll('.menu-btn').forEach(btn => {
@@ -1750,60 +1750,88 @@ async function loadSection(section) {
   }
 }
 
-function showAllNewsSection() {
-  alert("🧪 Full News Library coming soon...");
+function showNewsSection() {
+  hideAccountSections();
+  loadNewsList({ page: 1 });
 }
 
-async function loadLatestNews() {
+function hideAccountSections() {
+  const acc = document.getElementById('account-sections');
+  if (acc) acc.style.display = 'none';
+}
+
+function getSearchQuery() {
+  return document.getElementById('news-search')?.value || '';
+}
+
+function getSelectedCategory() {
+  return document.getElementById('news-category')?.value || '';
+}
+
+function createNewsWrapper() {
+  const wrapper = document.createElement('div');
+  wrapper.id = 'news-wrapper';
+  wrapper.classList.add('fade-in');
+  wrapper.style.display = 'block';
+  document.getElementById('main-wrapper').prepend(wrapper);
+  return wrapper;
+}
+
+function debounce(fn, delay) {
+  let timeout;
+  return function () {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn.apply(this, arguments), delay);
+  };
+}
+
+async function loadNewsList({ page = 1, search = '', category = '' } = {}) {
   const { usx_token } = window.userData;
-
-  let wrapper = document.getElementById('news-wrapper');
-  if (!wrapper) {
-    wrapper = document.createElement('div');
-    wrapper.id = 'news-wrapper';
-    wrapper.style.display = 'block';
-    wrapper.classList.add('fade-in');
-    document.getElementById('main-wrapper').prepend(wrapper);
-  } else {
-    wrapper.innerHTML = '';
-    wrapper.style.display = 'block';
-  }
-
-  const accountWrapper = document.getElementById('account-sections');
-  if (accountWrapper) accountWrapper.style.display = 'none';
+  const wrapper = document.getElementById('news-wrapper') || createNewsWrapper();
+  wrapper.innerHTML = `<p class="loading-message">⏳ Loading news...</p>`;
 
   try {
-    const newsRes = await fetch(`${BASE_URL}/news/latest?usx_token=${usx_token}`);
-    const newsData = await newsRes.json();
+    const res = await fetch(`${BASE_URL}/news/list?usx_token=${usx_token}&page=${page}&search=${encodeURIComponent(search)}&category=${category}`);
+    const { articles, total_pages, current_page } = await res.json();
 
     wrapper.innerHTML = `
       <div class="account-card2">
-        <h2 class="glow-text">📰 Latest News</h2>
-        ${newsData.length > 0
-          ? newsData.map(article => `
-              <div class="news-item-card">
-                ${article.image_url ? `<img src="${article.image_url}" alt="News Image" class="news-img"/>` : ''}
-                <div class="news-content">
-                  <div class="news-header">
-                    <span class="news-category">${article.category || 'General'}</span>
-                    <h3 class="news-title">${article.title}</h3>
-                  </div>
-                  <p class="news-summary">${article.summary}</p>
-                  <div class="news-footer">
-                    <small>📅 ${article.date}</small>
-                    <button onclick="loadFullArticle(${article.id})" class="news-readmore-btn">🔎 Read More</button>
-                  </div>
-                </div>
-              </div>
-            `).join('')
-          : '<p>No news available.</p>'
-        }
+        <h2 class="glow-text">📰 News</h2>
 
-        <div class="news-bottom-link">
-          <a href="#" onclick="showAllNewsSection()" class="view-all-btn">📚 View All Articles</a>
+        <div class="news-filters">
+          <input type="text" id="news-search" placeholder="🔍 Search news..." />
+          <select id="news-category">
+            <option value="">📂 All</option>
+            <option value="update">🔧 Updates</option>
+            <option value="event">🎉 Events</option>
+            <option value="guide">📘 Guides</option>
+            <option value="drop">🎁 Drops</option>
+          </select>
         </div>
+
+        ${articles.length > 0 ? articles.map(article => `
+          <div class="news-item-card">
+            ${article.image_url ? `<img src="${article.image_url}" alt="img" class="news-img"/>` : ''}
+            <div class="news-content">
+              <div class="news-header">
+                <span class="news-category">${article.category || 'General'}</span>
+                <h3 class="news-title">${article.title}</h3>
+              </div>
+              <p class="news-summary">${article.summary}</p>
+              <div class="news-footer">
+                <small>📅 ${article.date}</small>
+                <button onclick="loadFullArticle(${article.id})" class="news-readmore-btn">🔎 Read More</button>
+              </div>
+            </div>
+          </div>
+        `).join('') : `<p>No news available.</p>`}
+
+        <div class="pagination">${renderPaginationControls(current_page, total_pages)}</div>
       </div>
     `;
+
+    bindNewsFilters();
+
   } catch (err) {
     wrapper.innerHTML = `<div class="error-message">❌ Failed to load news: ${err.message}</div>`;
     console.error("[❌] Error loading news:", err);
@@ -1825,7 +1853,7 @@ async function loadFullArticle(newsId) {
 
     wrapper.innerHTML = `
       <div class="account-card2">
-        <button onclick="loadLatestNews()" class="back-btn">🔙 Back to News</button>
+        <button onclick="loadNewsList({ page: 1 })" class="back-btn">🔙 Back</button>
         <h2 class="glow-text">${article.title}</h2>
         <small>📅 ${article.date} | 🏷️ ${article.category || 'General'}</small>
         ${article.image_url ? `<img src="${article.image_url}" class="news-img-full"/>` : ''}
@@ -1840,14 +1868,22 @@ async function loadFullArticle(newsId) {
   }
 }
 
-function showNewsSection() {
-  const wrapper = document.getElementById('news-wrapper');
-  if (wrapper) wrapper.style.display = 'block';
+function renderPaginationControls(current, total) {
+  let html = '';
+  for (let i = 1; i <= total; i++) {
+    html += `<button class="${i === current ? 'active' : ''}" onclick="loadNewsList({ page: ${i}, search: getSearchQuery(), category: getSelectedCategory() })">${i}</button>`;
+  }
+  return html;
+}
 
-  const accountWrapper = document.getElementById('account-sections');
-  if (accountWrapper) accountWrapper.style.display = 'none';
+function bindNewsFilters() {
+  document.getElementById('news-search')?.addEventListener('input', debounce(() => {
+    loadNewsList({ page: 1, search: getSearchQuery(), category: getSelectedCategory() });
+  }, 300));
 
-  loadLatestNews();
+  document.getElementById('news-category')?.addEventListener('change', () => {
+    loadNewsList({ page: 1, search: getSearchQuery(), category: getSelectedCategory() });
+  });
 }
 
 function loadGoblinDex() {

@@ -2664,15 +2664,17 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
       g.x = nx;
       g.y = ny;
       // Controlla se il goblin è su una chest o vicino (9x9 celle)
+
       if (window.activeChests) {
         window.activeChests.forEach(ch => {
-          if (ch.taken) return;
+          if (ch.taken || ch.taken_by) return;
       
           const dx = Math.abs(g.x - ch.x);
           const dy = Math.abs(g.y - ch.y);
       
           if (dx <= 4 && dy <= 4) { // distanza massima 4 celle per lato = 9x9
             ch.taken = true;
+            ch.taken_by = g.wax_account;
             (async () => {
               try {
                 const res = await fetch(`${BASE_URL}/chest_reward`, {

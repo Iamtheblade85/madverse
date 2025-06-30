@@ -2063,6 +2063,12 @@ async function renderGoblinInventory() {
     });
 
     const nfts = await res.json();
+    // Mappa daily_power → daily-power
+    nfts.forEach(nft => {
+      if (nft.daily_power !== undefined) {
+        nft["daily-power"] = nft.daily_power;
+      }
+    });    
     if (!Array.isArray(nfts) || nfts.length === 0) {
       container.innerHTML = `<p>No goblins found in your inventory.</p>`;
       return;

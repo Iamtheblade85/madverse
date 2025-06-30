@@ -2699,10 +2699,22 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
                   font-family: Orbitron, sans-serif;
                   box-shadow: 0 0 10px #0f0;
                 `;
-                div.innerHTML = `
-                  🎁 <strong>${g.wax_account}</strong> won <span style="color: #0f0;">${reward.stats.tokens.CHIPS} CHIPS</span>
-                  and <span style="color: #ffa500;">${reward.nfts.length} NFTs</span> from <strong>${ch.from}</strong>!
-                `;
+                const chips = reward?.stats?.tokens?.CHIPS ?? 0;
+                const nfts = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
+                
+                if (chips === 0 && nfts === 0) {
+                  div.innerHTML = `
+                    🕳️ <strong>${g.wax_account}</strong> opened a chest from <strong>${ch.from}</strong>...<br>
+                    but it was completely empty!<br>
+                    The goblins are now racing rat-spiders instead of looting 🐀🕷️💨
+                  `;
+                } else {
+                  div.innerHTML = `
+                    🎁 <strong>${g.wax_account}</strong> won <span style="color: #0f0;">${chips} CHIPS</span>
+                    and <span style="color: #ffa500;">${nfts} NFTs</span> from <strong>${ch.from}</strong>!
+                  `;
+                }
+
                 feedbackArea.appendChild(div);
             
                 // Dopo 20 secondi sposta in recent-expeditions-list

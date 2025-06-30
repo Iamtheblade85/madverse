@@ -2458,8 +2458,13 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
   const startX = dir === "left-to-right" ? minX : maxX;
 
   const y = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
-  let x = startX;
+  const baseY = y;
 
+  const zigzagAmplitude = 3 + Math.random() * 4;
+  const zigzagFrequency = 0.15 + Math.random() * 0.15;
+  const waveY = (xPos) => baseY + Math.sin(xPos * zigzagFrequency) * zigzagAmplitude;
+
+  let x = startX;
   const speed = 0.3 + Math.random() * 0.3;
   const frameDelay = 8;
   let frame = 0;
@@ -2476,9 +2481,8 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
       frame = (frame + 1) % perk.frames;
     }
 
-    // Disegna perk
     const px = x * cellSize;
-    const py = y * cellSize;
+    const py = waveY(x) * cellSize;
     const spriteSize = 32;
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(
@@ -2488,32 +2492,42 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
       spriteSize, spriteSize
     );
 
-    // Drop chest 1 volta con 25% di probabilità
     if (!dropped && Math.random() < 0.25) {
       dropped = true;
-      const chest = { x: Math.round(x), y: y, taken: false, from: perkName, wax_account };
+
+      function getRandomSafeCoord() {
+        const margin = Math.floor(GRID_SIZE * 0.15);
+        return Math.floor(Math.random() * (GRID_SIZE - 2 * margin)) + margin;
+      }
+
+      const chest = {
+        x: Math.round(x),
+        y: y,
+        destX: getRandomSafeCoord(),
+        destY: getRandomSafeCoord(),
+        taken: false,
+        from: perkName,
+        wax_account
+      };
+
       window.activeChests.push(chest);
-    
-      // safe async call
+
       fetch(`${BASE_URL}/spawn_chest`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           wax_account: wax_account,
           perk_type: perkName,
-          x: chest.x,
-          y: chest.y
+          x: chest.destX,
+          y: chest.destY
         })
       }).catch(err => {
         console.warn("⚠️ Failed to report chest spawn to backend:", err);
       });
     }
 
-
-    // Movimento
     x += dir === "left-to-right" ? speed : -speed;
 
-    // Ferma animazione fuori griglia
     if ((dir === "left-to-right" && x > GRID_SIZE + 5) || (dir === "right-to-left" && x < -5)) {
       perkDone = true;
       return;

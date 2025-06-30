@@ -2856,7 +2856,8 @@ async function renderDwarfsCave() {
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
-  
+      window.activeGoblins = data;
+
       const wrapper = document.getElementById("video-or-canvas");
       const canvas = document.getElementById("caveCanvas");
       const video = document.getElementById("expedition-video");
@@ -3150,6 +3151,12 @@ async function renderDwarfsCave() {
             return;
           }
           await renderGlobalExpeditions();
+          const wrapper = document.getElementById("video-or-canvas");
+          wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
+          const newCanvas = document.getElementById("caveCanvas");
+          initGoblinCanvasAnimation(newCanvas, window.activeGoblins || []);
+          startCommandPolling(newCanvas);
+                    
           // Rimuovi riga dalla lista globale se presente
           const list = document.getElementById('global-expedition-list');
           if (list) {

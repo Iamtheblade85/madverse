@@ -2493,22 +2493,22 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
       dropped = true;
       const chest = { x: Math.round(x), y: y, taken: false, from: perkName, wax_account };
       window.activeChests.push(chest);
-      // 🔁 Invia la chest al backend
-      try {
-        await fetch(`${BASE_URL}/spawn_chest`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            wax_account: wax_account,
-            perk_type: perkName,
-            x: chest.x,
-            y: chest.y
-          })
-        });
-      } catch (err) {
+    
+      // safe async call
+      fetch(`${BASE_URL}/spawn_chest`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wax_account: wax_account,
+          perk_type: perkName,
+          x: chest.x,
+          y: chest.y
+        })
+      }).catch(err => {
         console.warn("⚠️ Failed to report chest spawn to backend:", err);
-      }      
+      });
     }
+
 
     // Movimento
     x += dir === "left-to-right" ? speed : -speed;

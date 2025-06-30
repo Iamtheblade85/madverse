@@ -2493,6 +2493,21 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
       dropped = true;
       const chest = { x: Math.round(x), y: y, taken: false, from: perkName, wax_account };
       window.activeChests.push(chest);
+      // 🔁 Invia la chest al backend
+      try {
+        await fetch(`${BASE_URL}/spawn_chest`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            wax_account: wax_account,
+            perk_type: perkName,
+            x: chest.x,
+            y: chest.y
+          })
+        });
+      } catch (err) {
+        console.warn("⚠️ Failed to report chest spawn to backend:", err);
+      }      
     }
 
     // Movimento
@@ -2838,7 +2853,10 @@ async function renderDwarfsCave() {
       if (globalCountdownInterval) {
         clearInterval(globalCountdownInterval);
       }
-  
+      
+      // Reset
+      window.activeChests = [];
+      
       if (!Array.isArray(data) || data.length === 0) {
         // 🔁 No expeditions → show video
         wrapper.innerHTML = `
@@ -2853,16 +2871,36 @@ async function renderDwarfsCave() {
         }     
         return;
       }
-       else {
+       else {        
+        // Per ogni spedizione, aggiungi le chest
+        data.forEach(entry => {
+          if (Array.isArray(entry.chests)) {
+            entry.chests.forEach(ch => {
+              window.activeChests.push({
+                x: ch.x,
+                y: ch.y,
+                taken: false,
+                from: ch.from || "unknown",
+                wax_account: entry.wax_account
+              });
+            });
+          }
+        });
+         
         // 🧱 Expeditions exist → show canvas
         if (!canvas) {
           wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
+          const activeCanvas = document.getElementById("caveCanvas");
+          initGoblinCanvasAnimation(activeCanvas, data);
+          startCommandPolling(activeCanvas); // ✅ START polling solo se canvas presente
         }
-        const activeCanvas = document.getElementById("caveCanvas");
-        initGoblinCanvasAnimation(activeCanvas, data);
-        startCommandPolling(activeCanvas); // ✅ START polling solo se canvas presente
-      }
-  
+        if (!canvas) {
+          wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
+          const activeCanvas = document.getElementById("caveCanvas");
+          initGoblinCanvasAnimation(activeCanvas, data);
+          startCommandPolling(activeCanvas);
+        }
+       }
       // Render expeditions in the list
       const expeditions = data.map((entry, i) => {
         const endTime = Date.now() + (entry.seconds_remaining * 1000);

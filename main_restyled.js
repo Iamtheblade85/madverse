@@ -2393,7 +2393,7 @@ function startCommandPolling(canvas) {
   if (window.perkPollingActive || commandPollingInterval !== null) return;
 
   window.perkPollingActive = true;
-
+  window.currentCanvas = canvas;
   commandPollingInterval = setInterval(async () => {
     if (!document.getElementById("caveCanvas")) {
       stopCommandPolling();
@@ -2435,7 +2435,13 @@ function stopCommandPolling() {
 }
 
 // Funzione globale accanto a initGoblinCanvasAnimation
-function triggerPerkAnimation(canvas, perkName, wax_account) {
+function triggerPerkAnimation(_canvas, perkName, wax_account) {
+  const canvas = window.currentCanvas || _canvas;
+  if (!canvas) {
+    console.warn("❌ No canvas available for perk animation.");
+    return;
+  }
+
   if (!window.activeChests) window.activeChests = [];
 
   const ctx = canvas.getContext("2d");

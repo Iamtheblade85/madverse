@@ -2521,7 +2521,14 @@ function triggerPerkAnimation(canvas, perkName, wax_account) {
           x: chest.destX,
           y: chest.destY
         })
-      }).catch(err => {
+      })
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && json.chest_id) {
+          chest.id = json.chest_id; // ✅ assegna ID alla chest
+        }
+      })
+      .catch(err => {
         console.warn("⚠️ Failed to report chest spawn to backend:", err);
       });
     }

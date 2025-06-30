@@ -2011,6 +2011,7 @@ function loadGoblinDex() {
 }
 
 function getRarityColorClass(rarity) {
+  if (typeof rarity !== 'string') return 'neon-white';
   switch (rarity.toLowerCase()) {
     case 'common': return 'neon-green';
     case 'rare': return 'neon-blue';
@@ -2030,6 +2031,7 @@ function getLevelColorClass(level) {
 }
 
 function getRarityBorderClass(rarity) {
+  if (typeof rarity !== 'string') return '';
   const map = {
     common: 'border-glow-green',
     rare: 'border-glow-blue',

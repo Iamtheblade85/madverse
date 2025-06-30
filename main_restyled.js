@@ -3171,11 +3171,13 @@ async function renderDwarfsCave() {
           const result = await resultRes.json();
           updateRecentExpeditionsList(result, window.userData.wax_account);
           
-          if (!result || !result.stats || !result.goblins) {
-            console.warn("[⚠️] Malformed /end_expedition result");
+          if (!result || !result.stats) {
+            console.warn("[⚠️] Malformed /end_expedition result: missing stats");
+            console.log("Result after end expedition:", result);
             feedback("Malformed expedition result.");
             return;
           }
+
           await renderGlobalExpeditions();
           const wrapper = document.getElementById("video-or-canvas");
           wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;

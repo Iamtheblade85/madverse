@@ -2485,81 +2485,27 @@ function triggerPerkAnimation(_canvas, perkName, wax_account) {
   let dropped = false;
   let perkDone = false;
 
-  function animate() {
-    if (perkDone) return;
-
-    tick++;
-    if (tick >= frameDelay) {
-      tick = 0;
-      frame = (frame + 1) % perk.frames;
-    }
-
-    const px = x * cellSize;
-    const py = waveY(x) * cellSize;
-    const spriteSize = 32;
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(
-      image,
-      frame * 128, 0, 128, 128,
-      px - spriteSize / 2, py - spriteSize / 2,
-      spriteSize, spriteSize
-    );
-
-    if (!dropped && Math.random() < 0.25) {
-      dropped = true;
-
-      function getRandomSafeCoord() {
-        const margin = Math.floor(GRID_SIZE * 0.15);
-        return Math.floor(Math.random() * (GRID_SIZE - 2 * margin)) + margin;
-      }
-
-      const chest = {
-        x: Math.round(x),
-        y: y,
-        destX: getRandomSafeCoord(),
-        destY: getRandomSafeCoord(),
-        taken: false,
-        from: perkName,
-        wax_account
-      };
-
-      window.activeChests.push(chest);
-
-      fetch(`${BASE_URL}/spawn_chest`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          wax_account: wax_account,
-          perk_type: perkName,
-          x: chest.destX,
-          y: chest.destY
-        })
-      })
-      .then(res => res.json())
-      .then(json => {
-        if (json.success && json.chest_id) {
-          chest.id = json.chest_id; // ✅ assegna ID alla chest
-        }
-      })
-      .catch(err => {
-        console.warn("⚠️ Failed to report chest spawn to backend:", err);
-      });
-    }
-
-    x += dir === "left-to-right" ? speed : -speed;
-
-    if ((dir === "left-to-right" && x > GRID_SIZE + 5) || (dir === "right-to-left" && x < -5)) {
-      perkDone = true;
-      return;
-    }
-
-    window.activePerks.push({
+  image.onload = () => {
+    const waveFunc = (xPos) => baseY + Math.sin(xPos * zigzagFrequency) * zigzagAmplitude;
+  
+    const perkObj = {
       image,
       frame: 0,
       tick: 0,
-      x, y, dir, perkName, dropped: false
-    });
-  }
+      x,
+      y: baseY,
+      dir,
+      perkName,
+      dropped: false,
+      waveY: waveFunc,
+      speed,
+      frames: perk.frames,
+      wax_account,
+      hasDropped: false
+    };
+  
+    window.activePerks.push(perkObj);
+  };
 }
 
 function getColorForAccount(i) {
@@ -2629,19 +2575,19 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
   function drawGrid() {
     ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
   }
+  
   function drawPerks() {
     if (!window.activePerks) return;
   
     for (let p of window.activePerks) {
-      // aggiorna frame
       p.tick++;
       if (p.tick >= 8) {
         p.tick = 0;
-        p.frame = (p.frame + 1) % 6;
+        p.frame = (p.frame + 1) % p.frames;
       }
   
       const px = p.x * cellSize;
-      const py = waveY(p.x) * cellSize;
+      const py = p.waveY(p.x) * cellSize;
   
       ctx.drawImage(
         p.image,
@@ -2650,16 +2596,55 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
         32, 32
       );
   
-      // muovi perk
-      p.x += p.dir === "left-to-right" ? 0.3 : -0.3;
+      // Drop chest solo 1 volta
+      if (!p.hasDropped && Math.random() < 0.25) {
+        p.hasDropped = true;
   
-      // fine animazione
+        function getRandomSafeCoord() {
+          const margin = Math.floor(GRID_SIZE * 0.15);
+          return Math.floor(Math.random() * (GRID_SIZE - 2 * margin)) + margin;
+        }
+  
+        const chest = {
+          x: Math.round(p.x),
+          y: Math.round(p.y),
+          destX: getRandomSafeCoord(),
+          destY: getRandomSafeCoord(),
+          taken: false,
+          from: p.perkName,
+          wax_account: p.wax_account
+        };
+  
+        window.activeChests.push(chest);
+  
+        fetch(`${BASE_URL}/spawn_chest`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            wax_account: p.wax_account,
+            perk_type: p.perkName,
+            x: chest.destX,
+            y: chest.destY
+          })
+        })
+        .then(res => res.json())
+        .then(json => {
+          if (json.success && json.chest_id) {
+            chest.id = json.chest_id;
+          }
+        })
+        .catch(err => {
+          console.warn("⚠️ Failed to report chest spawn:", err);
+        });
+      }
+  
+      p.x += p.dir === "left-to-right" ? p.speed : -p.speed;
+  
       if ((p.dir === "left-to-right" && p.x > 95) || (p.dir === "right-to-left" && p.x < -5)) {
         p.done = true;
       }
     }
   
-    // rimuovi quelli completati
     window.activePerks = window.activePerks.filter(p => !p.done);
   }
 
@@ -2765,7 +2750,9 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
                   if (div.parentElement) div.remove();
                   updateRecentExpeditionsList(reward, g.wax_account);
                 }, 20000);
-            
+                setTimeout(() => {
+                  window.activeChests = window.activeChests.filter(c => c !== ch);
+                }, 5000);
               } catch (err) {
                 console.warn("⚠️ Failed to fetch reward:", err);
               }

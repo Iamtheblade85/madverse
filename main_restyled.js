@@ -2421,7 +2421,6 @@ function startCommandPolling(canvas) {
       try {
         perk = await res.json();
       } catch (err) {
-        console.warn("[Polling] Empty or invalid JSON:", err);
         return;
       }
 

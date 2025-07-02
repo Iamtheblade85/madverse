@@ -3355,53 +3355,7 @@ async function renderDwarfsCave() {
       const assetIds = expeditionData.goblin_ids || [];
       selected = new Set(assetIds);
       await renderUserCountdown(expedition_id, countdownSeconds, assetIds);
-    }
-    
-    // ✅ Fallback polling se countdown non parte
-    /*
-    setInterval(async () => {
-      try {
-        const res = await fetch(`${BASE_URL}/expedition_status`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            wax_account: window.userData.wax_account,
-            user_id: window.userData.userId,
-            usx_token: window.userData.usx_token
-          })
-        });
-    
-        if (!res.ok) return;
-        const data = await res.json();
-    
-        if (data.seconds_remaining <= 0) {
-          const endRes = await fetch(`${BASE_URL}/end_expedition`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              wax_account: window.userData.wax_account,
-              user_id: window.userData.userId,
-              usx_token: window.userData.usx_token,
-              expedition_id: data.expedition_id
-            })
-          });
-    
-          const result = await endRes.json();
-          updateRecentExpeditionsList(result, window.userData.wax_account);
-          await renderGlobalExpeditions();
-    
-          const canvas = document.getElementById("caveCanvas");
-          if (canvas && window.activeGoblins) {
-            initGoblinCanvasAnimation(canvas, window.activeGoblins);
-          }
-        }
-      } catch (err) {
-        console.warn("[Auto End Expedition] Error:", err);
-      }
-    }, 10000);
-    */
-
-  
+    }  
   } catch (err) {
     console.error("[renderDwarfsCave] Error:", err);
     feedback("Error loading goblin data or expedition info.");

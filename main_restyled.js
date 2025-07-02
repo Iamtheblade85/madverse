@@ -2853,7 +2853,7 @@ async function renderDwarfsCave() {
     </div>
   `;
   const video = document.getElementById("expedition-video");
-  const wrapper = document.getElementById("video-or-canvas");
+  let wrapper = document.getElementById("video-or-canvas");
   
   video.onended = () => {
     // Rimuove il video
@@ -2884,7 +2884,7 @@ async function renderDwarfsCave() {
       const data = await res.json();
       window.activeGoblins = data;
 
-      const wrapper = document.getElementById("video-or-canvas");
+      wrapper = document.getElementById("video-or-canvas");
       const canvas = document.getElementById("caveCanvas");
       const video = document.getElementById("expedition-video");
   
@@ -2942,12 +2942,6 @@ async function renderDwarfsCave() {
           initGoblinCanvasAnimation(activeCanvas, data);
           startCommandPolling(activeCanvas); // ✅ START polling solo se canvas presente
         }
-        if (!canvas) {
-          wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
-          const activeCanvas = document.getElementById("caveCanvas");
-          initGoblinCanvasAnimation(activeCanvas, data);
-          startCommandPolling(activeCanvas);
-        }
        }
       // Render expeditions in the list
       const expeditions = data.map((entry, i) => {
@@ -2988,7 +2982,16 @@ async function renderDwarfsCave() {
     }
   };
 
-  await renderGlobalExpeditions(); 
+  await renderGlobalExpeditions();
+  
+  // 🔁 Aggiorna la mappa ogni 30 secondi per vedere nuove spedizioni degli altri
+  setInterval(async () => {
+    const canvas = document.getElementById("caveCanvas");
+    if (canvas) {
+      await renderGlobalExpeditions();
+      initGoblinCanvasAnimation(canvas, window.activeGoblins || []);
+    }
+  }, 30000); // ogni 30 secondi
 
   try {
     const res = await fetch(`${BASE_URL}/user_nfts`, {
@@ -3187,7 +3190,7 @@ async function renderDwarfsCave() {
           }
 
           await renderGlobalExpeditions();
-          const wrapper = document.getElementById("video-or-canvas");
+          wrapper = document.getElementById("video-or-canvas");
           wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
           const newCanvas = document.getElementById("caveCanvas");
           initGoblinCanvasAnimation(newCanvas, window.activeGoblins || []);
@@ -3228,7 +3231,7 @@ async function renderDwarfsCave() {
           
           // Esegui tutte le modifiche di DOM prima
           await renderGlobalExpeditions();
-          const wrapper = document.getElementById("video-or-canvas");
+          wrapper = document.getElementById("video-or-canvas");
           wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
           const newCanvas = document.getElementById("caveCanvas");
           initGoblinCanvasAnimation(newCanvas, window.activeGoblins || []);

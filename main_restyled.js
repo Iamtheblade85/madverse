@@ -3233,7 +3233,7 @@ async function renderDwarfsCave() {
           await renderGlobalExpeditions();
           wrapper = document.getElementById("video-or-canvas");
           wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
-          const newCanvas = document.getElementById("caveCanvas");
+          newCanvas = document.getElementById("caveCanvas");
           initGoblinCanvasAnimation(newCanvas, window.activeGoblins || []);
           startCommandPolling(newCanvas);
           
@@ -3241,18 +3241,6 @@ async function renderDwarfsCave() {
           countdownDiv.innerHTML = expeditionResultHTML;
           
           // Event listener per bottone
-          const btn = document.getElementById("start-again-btn");
-          if (btn) {
-            btn.onclick = async () => {
-              selected = new Set(assetIds);
-              renderList();
-              updateSummary();
-              document.getElementById("start-expedition-btn").click();
-            };
-          }
-
-    
-          // Riavvio
           const btn = document.getElementById("start-again-btn");
           if (btn) {
             btn.onclick = async () => {

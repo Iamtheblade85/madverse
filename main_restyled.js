@@ -3192,7 +3192,7 @@ async function renderDwarfsCave() {
           await renderGlobalExpeditions();
           wrapper = document.getElementById("video-or-canvas");
           wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
-          const newCanvas = document.getElementById("caveCanvas");
+          let newCanvas = document.getElementById("caveCanvas");
           initGoblinCanvasAnimation(newCanvas, window.activeGoblins || []);
           startCommandPolling(newCanvas);
                     

@@ -3358,6 +3358,7 @@ async function renderDwarfsCave() {
     }
     
     // ✅ Fallback polling se countdown non parte
+    /*
     setInterval(async () => {
       try {
         const res = await fetch(`${BASE_URL}/expedition_status`, {
@@ -3398,6 +3399,8 @@ async function renderDwarfsCave() {
         console.warn("[Auto End Expedition] Error:", err);
       }
     }, 10000);
+    */
+
   
   } catch (err) {
     console.error("[renderDwarfsCave] Error:", err);

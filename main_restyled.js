@@ -3318,7 +3318,6 @@ async function renderDwarfsCave() {
       updateSummary();
     };
 
-  
     document.getElementById('deselect-all').onclick = () => {
       selected.clear();
       renderList();

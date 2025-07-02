@@ -2558,7 +2558,7 @@ function triggerPerkAnimation(_canvas, perkName, wax_account) {
       image,
       frame: 0,
       tick: 0,
-      x, y, dir, perkName, dropped: false, ...
+      x, y, dir, perkName, dropped: false
     });
   }
 }

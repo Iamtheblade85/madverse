@@ -3211,7 +3211,7 @@ async function renderDwarfsCave() {
           });
           
           if (!resultRes.ok) {
-            console.error([❌] /end_expedition failed — HTTP ${resultRes.status});
+            console.error(`❌ /end_expedition failed — HTTP ${resultRes.status}`);
             feedback("Failed to retrieve expedition result.");
             return;
           }

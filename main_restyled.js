@@ -3,6 +3,8 @@ window.userData = {};
 window.selectedNFTs = new Set();
 window.currentPage = 1;
 window.nftsPerPage = 12;
+window.activePerks = []; // Oggetti: { image, frame, x, y, tick, dir, etc }
+
 // === Modal Close Listener ===
 document.addEventListener("click", (event) => {
   if (event.target.matches('.modal-close')) {
@@ -2552,12 +2554,13 @@ function triggerPerkAnimation(_canvas, perkName, wax_account) {
       return;
     }
 
-    requestAnimationFrame(animate);
+    window.activePerks.push({
+      image,
+      frame: 0,
+      tick: 0,
+      x, y, dir, perkName, dropped: false, ...
+    });
   }
-
-  image.onload = () => {
-    requestAnimationFrame(animate);
-  };
 }
 
 function getColorForAccount(i) {
@@ -2626,6 +2629,39 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
 
   function drawGrid() {
     ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+  }
+  function drawPerks() {
+    if (!window.activePerks) return;
+  
+    for (let p of window.activePerks) {
+      // aggiorna frame
+      p.tick++;
+      if (p.tick >= 8) {
+        p.tick = 0;
+        p.frame = (p.frame + 1) % 6;
+      }
+  
+      const px = p.x * cellSize;
+      const py = waveY(p.x) * cellSize;
+  
+      ctx.drawImage(
+        p.image,
+        p.frame * 128, 0, 128, 128,
+        px - 16, py - 16,
+        32, 32
+      );
+  
+      // muovi perk
+      p.x += p.dir === "left-to-right" ? 0.3 : -0.3;
+  
+      // fine animazione
+      if ((p.dir === "left-to-right" && p.x > 95) || (p.dir === "right-to-left" && p.x < -5)) {
+        p.done = true;
+      }
+    }
+  
+    // rimuovi quelli completati
+    window.activePerks = window.activePerks.filter(p => !p.done);
   }
 
   function drawGoblin(g) {
@@ -2779,6 +2815,7 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
     resizeCanvas();
     drawGrid();
     drawChests();
+    drawPerks();
     goblins.forEach(moveGoblin);
     goblins.forEach(drawGoblin);
     updateAnimations(delta);

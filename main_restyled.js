@@ -3208,12 +3208,12 @@ async function renderDwarfsCave() {
       const wax_account = window.userData?.wax_account;
       if (!wax_account) return;
     
-      // Inizializza mappa globale dei timer per wax_account
+      // Inizializza mappa globale dei timer se non esiste
       if (!window.expeditionTimersRunning) {
         window.expeditionTimersRunning = {};
       }
     
-      // ⛔ Se già c'è un timer attivo per questo utente, salta
+      // ⛔ Skip se già presente un timer per questo wax_account
       if (window.expeditionTimersRunning[wax_account]) {
         console.log(`[TIMER] Already running for ${wax_account}, skipping setup.`);
         return;
@@ -3244,7 +3244,7 @@ async function renderDwarfsCave() {
           countdownDiv.textContent = "⏳ Expedition completed! Checking status...";
     
           try {
-            // 🔍 Verifica prima lo status per evitare doppia chiamata
+            // 🔍 Controllo stato prima della chiamata a /end_expedition
             const statusCheck = await fetch(`${BASE_URL}/expedition_status`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -3267,7 +3267,7 @@ async function renderDwarfsCave() {
               return;
             }
     
-            // ⛏️ Fetch result
+            // ⛏️ Chiama /end_expedition
             const resultRes = await fetch(`${BASE_URL}/end_expedition`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -3296,7 +3296,7 @@ async function renderDwarfsCave() {
               return;
             }
     
-            // 🧠 Reset e aggiorna canvas
+            // 🧠 Reset canvas
             await renderGlobalExpeditions();
             let wrapper = document.getElementById("video-or-canvas");
             wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
@@ -3304,7 +3304,7 @@ async function renderDwarfsCave() {
             initGoblinCanvasAnimation(newCanvas, window.activeGoblins || []);
             startCommandPolling(newCanvas);
     
-            // Rimuovi dalla lista globale
+            // 🔄 Rimuovi dalla lista globale
             const list = document.getElementById('global-expedition-list');
             if (list) {
               Array.from(list.children).forEach(div => {
@@ -3312,7 +3312,7 @@ async function renderDwarfsCave() {
               });
             }
     
-            // 🪙 Mostra risultati
+            // 🪙 Mostra risultato
             const expeditionResultHTML = `
               <div style="padding: 1rem; margin-top: 1rem; background: #0b0b0b; border-radius: 12px; box-shadow: 0 0 10px #0ff; color: #fff;">
                 <h2 style="color:#ffe600;">🎉 Expedition Complete</h2>
@@ -3336,7 +3336,6 @@ async function renderDwarfsCave() {
     
             countdownDiv.innerHTML = expeditionResultHTML;
     
-            // Bottone per reinviare
             const btn = document.getElementById("start-again-btn");
             if (btn) {
               btn.onclick = async () => {
@@ -3351,12 +3350,18 @@ async function renderDwarfsCave() {
             console.error("🔥 Error during expedition result fetch:", err);
             countdownDiv.textContent = "⚠️ Expedition fetch error.";
           } finally {
-              window.expeditionTimersRunning[wax_account] = false;    
-              return;
+            window.expeditionTimersRunning[wax_account] = false;
           }
+    
+        } else {
+          // ⏳ Countdown update
+          const mins = Math.floor(remaining / 60000);
+          const secs = Math.floor((remaining % 60000) / 1000);
+          countdownDiv.textContent = `⏳ Time Left: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
-        // If remaining time is greater than 0 then ???
-      }
+      }, 1000);
+    }
+
 
     // Auto-select best 50 goblins
     function autoSelectBestGoblins() {

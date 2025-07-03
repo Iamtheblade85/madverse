@@ -4,7 +4,8 @@ window.selectedNFTs = new Set();
 window.currentPage = 1;
 window.nftsPerPage = 12;
 window.activePerks = []; // Oggetti: { image, frame, x, y, tick, dir, etc }
-
+window.activeChests = [];
+window.expeditionTimersRunning = window.expeditionTimersRunning || {};
 if (!window.recentExpeditionKeys) {
   window.recentExpeditionKeys = new Set();
   setInterval(() => window.recentExpeditionKeys.clear(), 120000); // ogni 2 minuti reset
@@ -3204,113 +3205,164 @@ async function renderDwarfsCave() {
       const summaryBlock = document.getElementById("expedition-summary-block");
       if (!summaryBlock) return;
     
+      const wax_account = window.userData?.wax_account;
+      if (!wax_account) return;
+    
+      // Inizializza mappa globale dei timer per wax_account
+      if (!window.expeditionTimersRunning) {
+        window.expeditionTimersRunning = {};
+      }
+    
+      // ⛔ Se già c'è un timer attivo per questo utente, salta
+      if (window.expeditionTimersRunning[wax_account]) {
+        console.log(`[TIMER] Already running for ${wax_account}, skipping setup.`);
+        return;
+      }
+      window.expeditionTimersRunning[wax_account] = true;
+    
       const existing = document.getElementById("user-expedition-countdown");
       if (existing) existing.remove();
     
       const countdownDiv = document.createElement("div");
       countdownDiv.id = "user-expedition-countdown";
-      countdownDiv.style = "font-size: 1.2rem; margin-top: 1rem; color: #0ff; font-family: Orbitron, sans-serif; text-align: center;";
+      countdownDiv.style = `
+        font-size: 1.2rem;
+        margin-top: 1rem;
+        color: #0ff;
+        font-family: Orbitron, sans-serif;
+        text-align: center;
+      `;
       summaryBlock.appendChild(countdownDiv);
     
       let endTime = Date.now() + seconds * 1000;
     
       const timer = setInterval(async () => {
         const remaining = endTime - Date.now();
+    
         if (remaining <= 0) {
           clearInterval(timer);
-          countdownDiv.textContent = "⏳ Expedition completed! Fetching results...";
+          countdownDiv.textContent = "⏳ Expedition completed! Checking status...";
     
-          const payload = {
-            wax_account: window.userData.wax_account,
-            user_id: window.userData.userId,
-            usx_token: window.userData.usx_token,
-            expedition_id: expedition_id
-          };
-          
-          const resultRes = await fetch(`${BASE_URL}/end_expedition`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
-          
-          if (!resultRes.ok) {
-            console.error(`❌ /end_expedition failed — HTTP ${resultRes.status}`);
-            feedback("Failed to retrieve expedition result.");
-            return;
-          }
-          
-          const result = await resultRes.json();
-          updateRecentExpeditionsList(result, window.userData.wax_account);
-          
-          if (!result || !result.stats) {
-            console.warn("[⚠️] Malformed /end_expedition result: missing stats");
-            console.log("Result after end expedition:", result);
-            feedback("Malformed expedition result.");
-            return;
-          }
-
-          await renderGlobalExpeditions();
-          wrapper = document.getElementById("video-or-canvas");
-          wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
-          let newCanvas = document.getElementById("caveCanvas");
-          initGoblinCanvasAnimation(newCanvas, window.activeGoblins || []);
-          startCommandPolling(newCanvas);
-                    
-          // Rimuovi riga dalla lista globale se presente
-          const list = document.getElementById('global-expedition-list');
-          if (list) {
-            Array.from(list.children).forEach(div => {
-              if (div.innerHTML.includes(window.userData.wax_account)) {
-                div.remove();
-              }
+          try {
+            // 🔍 Verifica prima lo status per evitare doppia chiamata
+            const statusCheck = await fetch(`${BASE_URL}/expedition_status`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                wax_account,
+                user_id: window.userData.userId,
+                usx_token: window.userData.usx_token
+              })
             });
+    
+            if (!statusCheck.ok) {
+              throw new Error(`Status check failed with ${statusCheck.status}`);
+            }
+    
+            const statusData = await statusCheck.json();
+    
+            if (statusData.status === "completed") {
+              console.log(`[INFO] Expedition for ${wax_account} already completed. Skipping final fetch.`);
+              window.expeditionTimersRunning[wax_account] = false;
+              return;
+            }
+    
+            // ⛏️ Fetch result
+            const resultRes = await fetch(`${BASE_URL}/end_expedition`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                wax_account,
+                user_id: window.userData.userId,
+                usx_token: window.userData.usx_token,
+                expedition_id
+              })
+            });
+    
+            if (!resultRes.ok) {
+              console.error(`❌ /end_expedition failed for ${wax_account} — HTTP ${resultRes.status}`);
+              countdownDiv.textContent = "❌ Failed to retrieve expedition result.";
+              window.expeditionTimersRunning[wax_account] = false;
+              return;
+            }
+    
+            const result = await resultRes.json();
+            updateRecentExpeditionsList(result, wax_account);
+    
+            if (!result || !result.stats) {
+              countdownDiv.textContent = "⚠️ Malformed expedition result.";
+              console.warn("[⚠️] Malformed /end_expedition result", result);
+              window.expeditionTimersRunning[wax_account] = false;
+              return;
+            }
+    
+            // 🧠 Reset e aggiorna canvas
+            await renderGlobalExpeditions();
+            let wrapper = document.getElementById("video-or-canvas");
+            wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
+            let newCanvas = document.getElementById("caveCanvas");
+            initGoblinCanvasAnimation(newCanvas, window.activeGoblins || []);
+            startCommandPolling(newCanvas);
+    
+            // Rimuovi dalla lista globale
+            const list = document.getElementById('global-expedition-list');
+            if (list) {
+              Array.from(list.children).forEach(div => {
+                if (div.innerHTML.includes(wax_account)) div.remove();
+              });
+            }
+    
+            // 🪙 Mostra risultati
+            const expeditionResultHTML = `
+              <div style="padding: 1rem; margin-top: 1rem; background: #0b0b0b; border-radius: 12px; box-shadow: 0 0 10px #0ff; color: #fff;">
+                <h2 style="color:#ffe600;">🎉 Expedition Complete</h2>
+                <p><strong>Total Goblins:</strong> <span style="color:#0ff;">${result.stats.total_goblins}</span></p>
+                <p><strong>Total Tokens:</strong> ${Object.entries(result.stats.tokens).map(([s,a]) => `<span style="color:#0f0;">${s}: ${a}</span>`).join(', ')}</p>
+                <p><strong>Total NFTs:</strong> <span style="color:#ffa500;">${result.stats.total_nfts}</span></p>
+    
+                <h3 style="margin-top:1rem; color:#0ff;">🧪 Power Update</h3>
+                <ul style="list-style: none; padding: 0;">${result.goblins.map(g => `<li><span style="color:#ffe600;">${g.name}</span> → <span style="color:#0f0;">Power: ${g.daily_power}</span></li>`).join('')}</ul>
+    
+                <h3 style="margin-top:1rem; color:#ffa500;">🎁 NFT Rewards</h3>
+                ${
+                  result.nfts.length
+                    ? `<ul style="list-style: none; padding: 0;">${result.nfts.map(n => `<li><span style="color:#00f0ff;">${n.template_name}</span> × <span style="color:#0ff;">${n.quantity}</span></li>`).join('')}</ul>`
+                    : `<p style="color:#888;">No NFTs dropped this time.</p>`
+                }
+    
+                <button class="btn btn-glow" id="start-again-btn" style="margin-top: 1rem; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: bold; background: linear-gradient(to right, #ffe600, #ff9900); box-shadow: 0 0 8px #ffe600; color: #000;">🔁 Start Again</button>
+              </div>
+            `;
+    
+            countdownDiv.innerHTML = expeditionResultHTML;
+    
+            // Bottone per reinviare
+            const btn = document.getElementById("start-again-btn");
+            if (btn) {
+              btn.onclick = async () => {
+                const selected = new Set(assetIds);
+                renderList();
+                updateSummary();
+                document.getElementById("start-expedition-btn")?.click();
+              };
+            }
+    
+          } catch (err) {
+            console.error("🔥 Error during expedition result fetch:", err);
+            countdownDiv.textContent = "⚠️ Expedition fetch error.";
+          } finally {
+            window.expeditionTimersRunning[wax_account] = false;
           }
     
-                    // Visualizza risultati
-          // Prepara il contenuto dei risultati prima di eventuali modifiche al DOM
-          const expeditionResultHTML = `
-            <div style="padding: 1rem; margin-top: 1rem; background: #0b0b0b; border-radius: 12px; box-shadow: 0 0 10px #0ff; color: #fff;">
-              <h2 style="color:#ffe600;">🎉 Expedition Complete</h2>
-              <p><strong>Total Goblins:</strong> <span style="color:#0ff;">${result.stats.total_goblins}</span></p>
-              <p><strong>Total Tokens:</strong> ${Object.entries(result.stats.tokens).map(([s,a]) => `<span style="color:#0f0;">${s}: ${a}</span>`).join(', ')}</p>
-              <p><strong>Total NFTs:</strong> <span style="color:#ffa500;">${result.stats.total_nfts}</span></p>
-          
-              <h3 style="margin-top:1rem; color:#0ff;">🧪 Power Update</h3>
-              <ul style="list-style: none; padding: 0;">${result.goblins.map(g => `<li><span style="color:#ffe600;">${g.name}</span> → <span style="color:#0f0;">Power: ${g.daily_power}</span></li>`).join('')}</ul>
-          
-              <h3 style="margin-top:1rem; color:#ffa500;">🎁 NFT Rewards</h3>
-              ${
-                result.nfts.length
-                  ? `<ul style="list-style: none; padding: 0;">${result.nfts.map(n => `<li><span style="color:#00f0ff;">${n.template_name}</span> × <span style="color:#0ff;">${n.quantity}</span></li>`).join('')}</ul>`
-                  : `<p style="color:#888;">No NFTs dropped this time.</p>`
-              }
-          
-              <button class="btn btn-glow" id="start-again-btn" style="margin-top: 1rem; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: bold; background: linear-gradient(to right, #ffe600, #ff9900); box-shadow: 0 0 8px #ffe600; color: #000;">🔁 Start Again</button>
-            </div>
-          `;
-          
-          // Esegui tutte le modifiche di DOM prima
-          await renderGlobalExpeditions();
-          wrapper = document.getElementById("video-or-canvas");
-          wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
-          newCanvas = document.getElementById("caveCanvas");
-          initGoblinCanvasAnimation(newCanvas, window.activeGoblins || []);
-          startCommandPolling(newCanvas);
-          
-          // Poi applica i risultati finali (ora che il DOM è stabile)
-          countdownDiv.innerHTML = expeditionResultHTML;
-          
-          // Event listener per bottone
-          const btn = document.getElementById("start-again-btn");
-          if (btn) {
-            btn.onclick = async () => {
-              selected = new Set(assetIds);
-              renderList();
-              updateSummary();
-              document.getElementById("start-expedition-btn").click();
-            };
-          }
+          return;
         }
+    
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        countdownDiv.textContent = `⏳ Time Left: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      }, 1000);
+    }
+
     
         const mins = Math.floor(remaining / 60000);
         const secs = Math.floor((remaining % 60000) / 1000);

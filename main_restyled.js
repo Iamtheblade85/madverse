@@ -6069,28 +6069,39 @@ async function loadLogStormsGiveaways() {
 // Funzione per popolare il dropdown dei Token Symbols
 async function populateTokenSymbols() {
   const tokenSelect = document.getElementById('tokenSymbol');
-    const { userId, usx_token, wax_account } = window.userData;
-    // Carica Telegram
-    const resTelegram = await fetch(`${BASE_URL}/saldo?user_id=${userId}&usx_token=${usx_token}`);
-    const dataTelegram = await resTelegram.json();
-    window.walletBalances = dataTelegram.balances || [];
+  const { userId, usx_token, wax_account } = window.userData;
 
-    // Carica Twitch
-    const resTwitch = await fetch(`${BASE_URL}/saldo/twitch?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`);
-    const dataTwitch = await resTwitch.json();
-    window.twitchWalletBalances = dataTwitch.balances || [];  
-  if (window.walletBalances && Array.isArray(window.walletBalances)) {
-    window.walletBalances.forEach(balance => {
-      const option = document.createElement('option');
-      option.value = balance.symbol;
-      option.textContent = balance.symbol;
-      tokenSelect.appendChild(option);
-    });
-  } else {
-    console.error("walletBalances is not defined or not an array");
-    tokenSelect.innerHTML = '<option value="">No tokens available</option>';
-  }
+  // Recupera bilanci da Telegram
+  const resTelegram = await fetch(`${BASE_URL}/saldo?user_id=${userId}&usx_token=${usx_token}`);
+  const dataTelegram = await resTelegram.json();
+  window.walletBalances = dataTelegram.balances || [];
+
+  // Recupera bilanci da Twitch
+  const resTwitch = await fetch(`${BASE_URL}/saldo/twitch?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`);
+  const dataTwitch = await resTwitch.json();
+  window.twitchWalletBalances = dataTwitch.balances || [];
+
+  // Unisci e filtra bilanci univoci per simbolo
+  const combinedBalances = [...window.walletBalances, ...window.twitchWalletBalances];
+  const uniqueSymbols = new Map(); // usare Map per salvare anche l'importo
+
+  combinedBalances.forEach(balance => {
+    if (balance.symbol && !uniqueSymbols.has(balance.symbol)) {
+      uniqueSymbols.set(balance.symbol, balance.amount || 0);
+    }
+  });
+
+  // Aggiungi le opzioni al select
+  uniqueSymbols.forEach((amount, symbol) => {
+    const option = document.createElement('option');
+    option.value = symbol;
+    option.textContent = `${symbol} (available: ${amount})`;
+    tokenSelect.appendChild(option);
+  });
+
+  // Log di debug
 }
+
 
 // Funzione per popolare il dropdown dei Timeframes
 function populateTimeframes() {

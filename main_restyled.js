@@ -2,7 +2,7 @@
 window.userData = {};
 window.selectedNFTs = new Set();
 window.currentPage = 1;
-window.nftsPerPage = 12;
+window.nftsPerPage = 24;
 window.activePerks = []; // Oggetti: { image, frame, x, y, tick, dir, etc }
 window.activeChests = [];
 window.expeditionTimersRunning = window.expeditionTimersRunning || {};

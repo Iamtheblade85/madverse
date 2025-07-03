@@ -2632,6 +2632,9 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
           if (json.success && json.chest_id) {
             chest.id = json.chest_id;
           }
+          else {
+            console.warn("⚠️ Chest spawned without ID, potential duplication risk.");
+          }
         })
         .catch(err => {
           console.warn("⚠️ Failed to report chest spawn:", err);
@@ -2693,8 +2696,8 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
 
       if (window.activeChests) {
         window.activeChests.forEach(ch => {
-          if (ch.taken || ch.taken_by) return;
-      
+          if (ch.taken || ch.taken_by || ch.claiming) return;
+          ch.claiming = true;
           const dx = Math.abs(g.x - ch.x);
           const dy = Math.abs(g.y - ch.y);
       
@@ -2703,6 +2706,8 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
             ch.taken_by = g.wax_account;
             (async () => {
               try {
+                console.log(`[CHEST_REWARD] ${g.wax_account} is claiming chest from ${ch.from} @ (${ch.x},${ch.y})`);
+              
                 const res = await fetch(`${BASE_URL}/chest_reward`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -2711,10 +2716,27 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
                     perk_type: ch.from
                   })
                 });
-            
+              
                 if (!res.ok) throw new Error("Reward fetch failed");
+              
                 const reward = await res.json();
-            
+              
+                // 👇 LOG POST-RISPOSTA
+                const chips = reward?.stats?.tokens?.CHIPS ?? 0;
+                const nfts = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
+              
+                console.log(`[CHEST_RESULT] ${g.wax_account} won ${chips} CHIPS and ${nfts} NFTs from chest dropped by ${ch.from}.`);
+                console.log(`[CHEST_RESULT] Goblin position: (${g.x},${g.y})`);
+                console.log(`[CHEST_RESULT] Current active chests:`);
+                console.table(window.activeChests.map(c => ({
+                  id: c.id || 'no_id',
+                  from: c.from,
+                  taken: c.taken,
+                  taken_by: c.taken_by || '—',
+                  x: c.x,
+                  y: c.y
+                })));
+              
                 const feedbackArea = document.getElementById("feedback-area");
                 const div = document.createElement("div");
                 div.style = `
@@ -2727,9 +2749,7 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
                   font-family: Orbitron, sans-serif;
                   box-shadow: 0 0 10px #0f0;
                 `;
-                const chips = reward?.stats?.tokens?.CHIPS ?? 0;
-                const nfts = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
-                
+              
                 if (chips === 0 && nfts === 0) {
                   div.innerHTML = `
                     🕳️ <strong>${g.wax_account}</strong> opened a chest from <strong>${ch.from}</strong>...<br>
@@ -2742,22 +2762,24 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
                     and <span style="color: #ffa500;">${nfts} NFTs</span> from <strong>${ch.from}</strong>!
                   `;
                 }
-
+              
                 feedbackArea.appendChild(div);
-            
-                // Dopo 20 secondi sposta in recent-expeditions-list
+              
+                // Dopo 20 sec → sposta in recent list
                 setTimeout(() => {
                   if (div.parentElement) div.remove();
                   updateRecentExpeditionsList(reward, g.wax_account);
                 }, 20000);
+              
+                // Dopo 5 sec → rimuovi la chest
                 setTimeout(() => {
                   window.activeChests = window.activeChests.filter(c => c !== ch);
                 }, 5000);
               } catch (err) {
                 console.warn("⚠️ Failed to fetch reward:", err);
+                ch.claiming = false;
               }
             })();
-
           }
         });
       }

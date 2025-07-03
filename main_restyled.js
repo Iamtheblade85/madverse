@@ -5,6 +5,11 @@ window.currentPage = 1;
 window.nftsPerPage = 12;
 window.activePerks = []; // Oggetti: { image, frame, x, y, tick, dir, etc }
 
+if (!window.recentExpeditionKeys) {
+  window.recentExpeditionKeys = new Set();
+  setInterval(() => window.recentExpeditionKeys.clear(), 120000); // ogni 2 minuti reset
+}
+
 // === Modal Close Listener ===
 document.addEventListener("click", (event) => {
   if (event.target.matches('.modal-close')) {
@@ -2372,10 +2377,19 @@ function updateRecentExpeditionsList(result, wax_account) {
   if (!recentList) return;
 
   const now = new Date();
-  const formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  const minute = now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
 
   const chips = result?.stats?.tokens?.CHIPS ?? 0;
   const nfts = Array.isArray(result?.nfts) ? result.nfts.length : 0;
+
+  const key = `${wax_account}-${chips}-${nfts}-${minute}`;
+  if (window.recentExpeditionKeys.has(key)) {
+    console.log(`[SKIP] Duplicate expedition reward for ${wax_account}`);
+    return;
+  }
+  window.recentExpeditionKeys.add(key);
+
+  const formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
   const entry = document.createElement("div");
   entry.style = "margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;";
@@ -2393,7 +2407,6 @@ function updateRecentExpeditionsList(result, wax_account) {
     } else break;
   }
 }
-
 
 let commandPollingInterval = null;
 
@@ -2696,14 +2709,14 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
 
       if (window.activeChests) {
         window.activeChests.forEach(ch => {
-          if (ch.taken || ch.taken_by || ch.claiming) return;
-          ch.claiming = true;
           const dx = Math.abs(g.x - ch.x);
           const dy = Math.abs(g.y - ch.y);
-      
-          if (dx <= 4 && dy <= 4) { // distanza massima 4 celle per lato = 9x9
+          
+          if (dx <= 4 && dy <= 4 && !ch.taken && !ch.taken_by && !ch.claiming) {
+            ch.claiming = true;
             ch.taken = true;
             ch.taken_by = g.wax_account;
+          
             (async () => {
               try {
                 console.log(`[CHEST_REWARD] ${g.wax_account} is claiming chest from ${ch.from} @ (${ch.x},${ch.y})`);
@@ -2713,7 +2726,8 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
                     wax_account: g.wax_account,
-                    perk_type: ch.from
+                    perk_type: ch.from,
+                    chest_id: ch.id
                   })
                 });
               
@@ -2769,12 +2783,13 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
                 setTimeout(() => {
                   if (div.parentElement) div.remove();
                   updateRecentExpeditionsList(reward, g.wax_account);
-                }, 20000);
+                }, 10000);
               
                 // Dopo 5 sec → rimuovi la chest
                 setTimeout(() => {
                   window.activeChests = window.activeChests.filter(c => c !== ch);
-                }, 5000);
+                }, 1000);
+                ch.claiming = false;
               } catch (err) {
                 console.warn("⚠️ Failed to fetch reward:", err);
                 ch.claiming = false;

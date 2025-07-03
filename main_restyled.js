@@ -3351,11 +3351,12 @@ async function renderDwarfsCave() {
             console.error("🔥 Error during expedition result fetch:", err);
             countdownDiv.textContent = "⚠️ Expedition fetch error.";
           } finally {
-            window.expeditionTimersRunning[wax_account] = false;
+              window.expeditionTimersRunning[wax_account] = false;    
+              return;
           }
-    
-          return;
         }
+        // If remaining time is greater than 0 then ???
+      }
 
     // Auto-select best 50 goblins
     function autoSelectBestGoblins() {

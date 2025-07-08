@@ -3250,7 +3250,11 @@ async function renderDwarfsCave() {
             }            
           } else {
             feedback("Expedition started successfully!");
-            window.expeditionTimersRunning[wax_account] = false;
+            const wax_account = window.userData?.wax_account;
+            if (wax_account) {
+              window.expeditionTimersRunning[wax_account] = false;
+            }
+
             await renderUserCountdown(expeditionData.expedition_id, expeditionData.duration_seconds, assetIds);
             await renderGlobalExpeditions();
             const canvas = document.getElementById("caveCanvas");

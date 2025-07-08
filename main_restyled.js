@@ -3239,6 +3239,9 @@ async function renderDwarfsCave() {
           });
   
           const expeditionData = await startRes.json();
+          console.log("[START EXPEDITION] Response from server:", expeditionData);
+          console.log("[START EXPEDITION] duration_seconds =", expeditionData.duration_seconds);
+                   
           if (startRes.status === 409) {
             feedback("You already have an active expedition.");
             const canvas = document.getElementById("caveCanvas");
@@ -3263,6 +3266,8 @@ async function renderDwarfsCave() {
       
     // Render del risultato della expedition dell'utente con gestione completamento
     async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
+      console.log("[TIMER DEBUG] seconds =", seconds, " → valid?", typeof seconds === "number" && !isNaN(seconds));
+
       const summaryBlock = document.getElementById("expedition-summary-block");
       if (!summaryBlock) return;
     
@@ -3339,14 +3344,16 @@ async function renderDwarfsCave() {
                 expedition_id
               })
             });
-    
+            
+            const result = await resultRes.json();
+
             if (!resultRes.ok) {
               console.error(`❌ /end_expedition failed for ${wax_account} — HTTP ${resultRes.status}`);
               countdownDiv.textContent = "❌ Failed to retrieve expedition result.";
               window.expeditionTimersRunning[wax_account] = false;
               return;
             }
-    
+              
             await renderRecentExpeditionsList();
     
             if (!result || !result.stats) {

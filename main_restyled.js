@@ -3378,7 +3378,7 @@ async function renderDwarfsCave() {
               });
             }
     
-            //updateRecentExpeditionsList(result, wax_account);
+            updateRecentExpeditionsList(result, wax_account);
             countdownDiv.textContent = "✅ Expedition complete!";
             setTimeout(() => countdownDiv.remove(), 2000);
     

@@ -2792,6 +2792,13 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
               try {
                 console.log(`[CHEST_REWARD] ${g.wax_account} is claiming chest from ${ch.from} @ (${ch.x},${ch.y})`);
               
+                // 🔍 Logga i dati prima di inviarli
+                console.log("🧪 Chest reward payload:", {
+                  wax_account: g.wax_account,
+                  perk_type: ch.from,
+                  chest_id: ch.id
+                });
+              
                 const res = await fetch(`${BASE_URL}/chest_reward`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -2801,7 +2808,7 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
                     chest_id: ch.id
                   })
                 });
-              
+
                 if (!res.ok) throw new Error("Reward fetch failed");
               
                 const reward = await res.json();

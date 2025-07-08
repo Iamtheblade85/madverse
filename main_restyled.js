@@ -2373,6 +2373,76 @@ async function renderGoblinInventory() {
   }
 }
 
+function appendBonusChestReward(reward, wax_account, source) {
+  const container = document.getElementById("bonus-chest-rewards");
+  if (!container) return;
+
+  const div = document.createElement("div");
+  div.style = "margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;";
+
+  const now = new Date();
+  const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+  const chips = reward?.stats?.tokens?.CHIPS ?? 0;
+  const nfts = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
+
+  div.innerHTML = `
+    <div><strong style="color: #0f0;">${wax_account}</strong> opened a chest from <strong>${source}</strong> at ${time}</div>
+    <div style="color: #0f0;">CHIPS: ${chips}</div>
+    <div style="color: #ffa500;">NFTs: ${nfts}</div>
+  `;
+
+  container.prepend(div);
+
+  // Mantieni max 6 bonus
+  while (container.children.length > 7) {
+    if (container.lastChild.tagName !== "H4") {
+      container.removeChild(container.lastChild);
+    } else break;
+  }
+}
+
+async function renderRecentExpeditionsList() {
+  try {
+    const res = await fetch(`${BASE_URL}/recent_expeditions`);
+    if (!res.ok) throw new Error("Failed to fetch recent expeditions");
+
+    const list = await res.json();
+    const container = document.getElementById("recent-expeditions-list");
+    if (!container) return;
+
+    // Mantieni solo il titolo
+    container.innerHTML = `<h4 style="color:#ffa500;">🕒 Recent Expedition Results</h4>`;
+
+    list.slice(0, 6).forEach(item => {
+      const div = document.createElement("div");
+      div.style = "margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;";
+
+      const dt = new Date(item.timestamp);
+      const formattedTime = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      div.innerHTML = `
+        <div><strong style="color: #ffe600;">${item.wax_account}</strong> at ${formattedTime}</div>
+        <div style="color: #0f0;">CHIPS: ${item.chips}</div>
+        <div style="color: #ffa500;">
+          NFTs:
+          ${
+            item.nfts.length > 0
+              ? `<ul style="margin: 0; padding-left: 1rem;">${item.nfts.map(nft =>
+                  `<li>${nft.schema} #${nft.template_id} × ${nft.quantity}</li>`
+                ).join('')}</ul>`
+              : 'None'
+          }
+        </div>
+
+      `;
+      container.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error("[renderRecentExpeditionsList] Error:", err);
+  }
+}
+
 function updateRecentExpeditionsList(result, wax_account) {
   const recentList = document.getElementById("recent-expeditions-list");
   if (!recentList) return;
@@ -2739,19 +2809,7 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
                 // 👇 LOG POST-RISPOSTA
                 const chips = reward?.stats?.tokens?.CHIPS ?? 0;
                 const nfts = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
-              
-                console.log(`[CHEST_RESULT] ${g.wax_account} won ${chips} CHIPS and ${nfts} NFTs from chest dropped by ${ch.from}.`);
-                console.log(`[CHEST_RESULT] Goblin position: (${g.x},${g.y})`);
-                console.log(`[CHEST_RESULT] Current active chests:`);
-                console.table(window.activeChests.map(c => ({
-                  id: c.id || 'no_id',
-                  from: c.from,
-                  taken: c.taken,
-                  taken_by: c.taken_by || '—',
-                  x: c.x,
-                  y: c.y
-                })));
-              
+                            
                 const feedbackArea = document.getElementById("feedback-area");
                 const div = document.createElement("div");
                 div.style = `
@@ -2780,12 +2838,12 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
               
                 feedbackArea.appendChild(div);
               
-                // Dopo 20 sec → sposta in recent list
+                // Dopo 10 sec → sposta in recent list
                 setTimeout(() => {
                   if (div.parentElement) div.remove();
-                  updateRecentExpeditionsList(reward, g.wax_account);
+                  appendBonusChestReward(reward, g.wax_account, ch.from);  // 👈 nuova funzione
                 }, 10000);
-              
+
                 // Dopo 5 sec → rimuovi la chest
                 setTimeout(() => {
                   window.activeChests = window.activeChests.filter(c => c !== ch);
@@ -2881,6 +2939,9 @@ async function renderDwarfsCave() {
         <div id="recent-expeditions-list" style="background:#0b0b0b; border-radius: 12px; padding: 1rem; color: #fff; box-shadow: 0 0 10px #ffa500; font-size: 0.95rem; line-height: 1.5;">
           <h4 style="color:#ffa500;">🕒 Recent Expedition Results</h4>
         </div>
+        <div id="bonus-chest-rewards" style="background:#101010; border-radius: 12px; padding: 1rem; color: #fff; box-shadow: 0 0 10px #0f0; font-size: 0.95rem; line-height: 1.5; margin-top: 1.5rem;">
+          <h4 style="color:#0f0;">🎁 Chest Bonus Rewards (!chest @ Twitch)</h4>
+        </div>        
       </div>
     </div>
 
@@ -3286,8 +3347,7 @@ async function renderDwarfsCave() {
               return;
             }
     
-            const result = await resultRes.json();
-            updateRecentExpeditionsList(result, wax_account);
+            await renderRecentExpeditionsList();
     
             if (!result || !result.stats) {
               countdownDiv.textContent = "⚠️ Malformed expedition result.";
@@ -3675,8 +3735,9 @@ await setActiveTab("level");
   }
 }
 
-function renderGoblinHistory() {
-  document.getElementById('goblin-content').innerHTML = `
+async function renderGoblinHistory() {
+  const container = document.getElementById('goblin-content');
+  container.innerHTML = `
     <p style="
       font-family: 'Rock Salt', cursive;
       text-transform: uppercase;
@@ -3701,7 +3762,71 @@ function renderGoblinHistory() {
         animation: underlineSlide 2.5s ease-in-out 3s forwards;
       "></span>
     </p>
+    <div id="history-table-container" style="margin-top: 2rem;"></div>
   `;
+
+  const tableContainer = document.getElementById('history-table-container');
+
+  try {
+    const res = await fetch(`${BASE_URL}/user_expedition_history`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wax_account: window.userData.wax_account })
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch history");
+
+    const history = await res.json();
+
+    if (!history.length) {
+      tableContainer.innerHTML = `<p style="color:#ccc;">No expedition history since July 7, 2025.</p>`;
+      return;
+    }
+
+    let table = `
+      <table style="
+        width: 100%;
+        border-collapse: collapse;
+        font-family: Orbitron, sans-serif;
+        color: #fff;
+        box-shadow: 0 0 10px #ffe600;
+        border-radius: 12px;
+        overflow: hidden;
+      ">
+        <thead>
+          <tr style="background: #222;">
+            <th style="padding: 0.75rem;">#</th>
+            <th style="padding: 0.75rem;">Date</th>
+            <th style="padding: 0.75rem;">Duration</th>
+            <th style="padding: 0.75rem;">CHIPS</th>
+            <th style="padding: 0.75rem;">NFTs</th>
+            <th style="padding: 0.75rem;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${history.map((h, i) => {
+            const date = new Date(h.start_time).toLocaleString();
+            return `
+              <tr style="background: ${i % 2 === 0 ? '#111' : '#1c1c1c'};">
+                <td style="padding: 0.6rem; text-align: center;">${h.expedition_id}</td>
+                <td style="padding: 0.6rem;">${date}</td>
+                <td style="padding: 0.6rem; text-align: center;">${h.duration_minutes} min</td>
+                <td style="padding: 0.6rem; color: #0f0; text-align: center;">${h.chips}</td>
+                <td style="padding: 0.6rem; color: #ffa500; text-align: center;">${h.nfts}</td>
+                <td style="padding: 0.6rem; text-align: center;">${h.status}</td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    `;
+
+    tableContainer.innerHTML = table;
+
+  } catch (err) {
+    console.error("❌ Error in renderGoblinHistory:", err);
+    tableContainer.innerHTML = `<p style="color:#f44;">Failed to load history data.</p>`;
+  }
 }
 
 function renderGoblinHallOfFame() {
@@ -3719,7 +3844,7 @@ function renderGoblinHallOfFame() {
       animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
       position: relative;
     ">
-      Bow before legends — Only the most epic goblins make it to the Hall of Fame!
+      Under CONSTRUCTION ; Bow before legends — Only the most epic goblins make it to the Hall of Fame!
       <span style="
         position: absolute;
         left: 0;

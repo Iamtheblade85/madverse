@@ -3378,39 +3378,9 @@ async function renderDwarfsCave() {
               });
             }
     
-            // 🪙 Mostra risultato
-            const expeditionResultHTML = `
-              <div style="padding: 1rem; margin-top: 1rem; background: #0b0b0b; border-radius: 12px; box-shadow: 0 0 10px #0ff; color: #fff;">
-                <h2 style="color:#ffe600;">🎉 Expedition Complete</h2>
-                <p><strong>Total Goblins:</strong> <span style="color:#0ff;">${result.stats.total_goblins}</span></p>
-                <p><strong>Total Tokens:</strong> ${Object.entries(result.stats.tokens).map(([s,a]) => `<span style="color:#0f0;">${s}: ${a}</span>`).join(', ')}</p>
-                <p><strong>Total NFTs:</strong> <span style="color:#ffa500;">${result.stats.total_nfts}</span></p>
-    
-                <h3 style="margin-top:1rem; color:#0ff;">🧪 Power Update</h3>
-                <ul style="list-style: none; padding: 0;">${result.goblins.map(g => `<li><span style="color:#ffe600;">${g.name}</span> → <span style="color:#0f0;">Power: ${g.daily_power}</span></li>`).join('')}</ul>
-    
-                <h3 style="margin-top:1rem; color:#ffa500;">🎁 NFT Rewards</h3>
-                ${
-                  result.nfts.length
-                    ? `<ul style="list-style: none; padding: 0;">${result.nfts.map(n => `<li><span style="color:#00f0ff;">${n.template_name}</span> × <span style="color:#0ff;">${n.quantity}</span></li>`).join('')}</ul>`
-                    : `<p style="color:#888;">No NFTs dropped this time.</p>`
-                }
-    
-                <button class="btn btn-glow" id="start-again-btn" style="margin-top: 1rem; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: bold; background: linear-gradient(to right, #ffe600, #ff9900); box-shadow: 0 0 8px #ffe600; color: #000;">🔁 Start Again</button>
-              </div>
-            `;
-    
-            countdownDiv.innerHTML = expeditionResultHTML;
-    
-            const btn = document.getElementById("start-again-btn");
-            if (btn) {
-              btn.onclick = async () => {
-                const selected = new Set(assetIds);
-                renderList();
-                updateSummary();
-                document.getElementById("start-expedition-btn")?.click();
-              };
-            }
+            //updateRecentExpeditionsList(result, wax_account);
+            countdownDiv.textContent = "✅ Expedition complete!";
+            setTimeout(() => countdownDiv.remove(), 2000);
     
           } catch (err) {
             console.error("🔥 Error during expedition result fetch:", err);
@@ -3741,6 +3711,12 @@ await setActiveTab("level");
   }
 }
 
+function formatDuration(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}m ${secs}s`;
+}
+
 async function renderGoblinHistory() {
   const container = document.getElementById('goblin-content');
   container.innerHTML = `
@@ -3816,7 +3792,7 @@ async function renderGoblinHistory() {
               <tr style="background: ${i % 2 === 0 ? '#111' : '#1c1c1c'};">
                 <td style="padding: 0.6rem; text-align: center;">${h.expedition_id}</td>
                 <td style="padding: 0.6rem;">${date}</td>
-                <td style="padding: 0.6rem; text-align: center;">${h.duration_minutes} min</td>
+                <td style="padding: 0.6rem; text-align: center;">${formatDuration(h.duration_minutes)}</td>
                 <td style="padding: 0.6rem; color: #0f0; text-align: center;">${h.chips}</td>
                 <td style="padding: 0.6rem; color: #ffa500; text-align: center;">${h.nfts}</td>
                 <td style="padding: 0.6rem; text-align: center;">${h.status}</td>

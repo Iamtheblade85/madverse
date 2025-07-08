@@ -3113,7 +3113,7 @@ async function renderDwarfsCave() {
       await renderGlobalExpeditions();
       initGoblinCanvasAnimation(canvas, window.activeGoblins || []);
     }
-  }, 30000); // ogni 30 secondi
+  }, 20000); // ogni 30 secondi
 
   try {
     const res = await fetch(`${BASE_URL}/user_nfts`, {
@@ -3439,6 +3439,7 @@ async function renderDwarfsCave() {
   
     renderList();
     updateSummary();
+    await renderRecentExpeditionsList();
 
     // Check for user's expedition in progress
     const expeditionRes = await fetch(`${BASE_URL}/expedition_status`, {

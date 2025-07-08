@@ -3332,12 +3332,6 @@ async function renderDwarfsCave() {
     
             const statusData = await statusCheck.json();
     
-            if (statusData.status === "completed") {
-              console.log(`[INFO] Expedition for ${wax_account} already completed. Skipping final fetch.`);
-              window.expeditionTimersRunning[wax_account] = false;
-              return;
-            }
-    
             // ⛏️ Chiama /end_expedition
             const resultRes = await fetch(`${BASE_URL}/end_expedition`, {
               method: "POST",

@@ -3812,8 +3812,9 @@ async function renderGoblinHistory() {
   }
 }
 
-function renderGoblinHallOfFame() {
-  document.getElementById('goblin-content').innerHTML = `
+async function renderGoblinHallOfFame() {
+  const container = document.getElementById('goblin-content');
+  container.innerHTML = `
     <p style="
       font-family: 'Rock Salt', cursive;
       text-transform: uppercase;
@@ -3827,7 +3828,7 @@ function renderGoblinHallOfFame() {
       animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
       position: relative;
     ">
-      Under CONSTRUCTION ; Bow before legends — Only the most epic goblins make it to the Hall of Fame!
+      Bow before legends — Only the most epic goblins make it to the Hall of Fame!
       <span style="
         position: absolute;
         left: 0;
@@ -3838,7 +3839,88 @@ function renderGoblinHallOfFame() {
         animation: underlineSlide 2.5s ease-in-out 3s forwards;
       "></span>
     </p>
+    <div id="hof-table-container" style="margin-top: 2rem;"></div>
   `;
+
+  const tableContainer = document.getElementById("hof-table-container");
+
+  try {
+    const res = await fetch(`${BASE_URL}/goblin_hall_of_fame`);
+    if (!res.ok) throw new Error("Failed to fetch Hall of Fame data");
+
+    const hof = await res.json();
+
+    if (!hof.length) {
+      tableContainer.innerHTML = `<p style="color:#ccc;">No goblins have made it to the Hall of Fame yet.</p>`;
+      return;
+    }
+
+    const waxAccount = window.userData?.wax_account || null;
+
+    let table = `
+      <table style="
+        width: 100%;
+        border-collapse: collapse;
+        font-family: Orbitron, sans-serif;
+        color: #fff;
+        box-shadow: 0 0 10px #ffe600;
+        border-radius: 12px;
+        overflow: hidden;
+      ">
+        <thead>
+          <tr style="background: #222;">
+            <th style="padding: 0.75rem;">#</th>
+            <th style="padding: 0.75rem;">Goblin ID</th>
+            <th style="padding: 0.75rem;">Expeditions</th>
+            <th style="padding: 0.75rem;">Wins</th>
+            <th style="padding: 0.75rem;">CHIPS</th>
+            <th style="padding: 0.75rem;">NFTs</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${hof.map((gob, i) => {
+            const isUserGoblin = waxAccount && gob.goblin_id.includes(waxAccount);
+            const bg = isUserGoblin
+              ? 'linear-gradient(90deg, #ffe60055, #0ff055)'
+              : i % 2 === 0
+              ? '#111'
+              : '#1a1a1a';
+
+            const placeMedal =
+              i === 0
+                ? "🥇"
+                : i === 1
+                ? "🥈"
+                : i === 2
+                ? "🥉"
+                : `${i + 1}`;
+
+            const nftSummary = gob.nfts
+              .map(n => `${n.id.split('#')[0]} #${n.id.split('#')[1]} × ${n.qty}`)
+              .slice(0, 3)
+              .join(", ");
+
+            return `
+              <tr style="background: ${bg}; font-weight: ${isUserGoblin ? "bold" : "normal"};">
+                <td style="padding: 0.6rem; text-align: center;">${placeMedal}</td>
+                <td style="padding: 0.6rem; text-align: center;">${gob.goblin_id}</td>
+                <td style="padding: 0.6rem; text-align: center;">${gob.expeditions_count}</td>
+                <td style="padding: 0.6rem; text-align: center;">${gob.wins}</td>
+                <td style="padding: 0.6rem; color: #0f0; text-align: center;">${gob.total_chips}</td>
+                <td style="padding: 0.6rem; color: #ffa500; text-align: center;">${nftSummary || "—"}</td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    `;
+
+    tableContainer.innerHTML = table;
+
+  } catch (err) {
+    console.error("[renderGoblinHallOfFame] Error:", err);
+    tableContainer.innerHTML = `<p style="color:#f44;">Failed to load Hall of Fame.</p>`;
+  }
 }
 
 function setActiveTab(tabId) {

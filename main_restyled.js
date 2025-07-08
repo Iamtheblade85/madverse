@@ -3871,6 +3871,7 @@ async function renderGoblinHallOfFame() {
           <tr style="background: #222;">
             <th style="padding: 0.75rem;">#</th>
             <th style="padding: 0.75rem;">Goblin ID</th>
+            <th style="padding: 0.75rem;">Owner</th>
             <th style="padding: 0.75rem;">Expeditions</th>
             <th style="padding: 0.75rem;">Wins</th>
             <th style="padding: 0.75rem;">CHIPS</th>
@@ -3879,12 +3880,12 @@ async function renderGoblinHallOfFame() {
         </thead>
         <tbody>
           ${hof.map((gob, i) => {
-            const isUserGoblin = waxAccount && gob.goblin_id.includes(waxAccount);
-            const bg = isUserGoblin
-              ? 'linear-gradient(90deg, #ffe60055, #0ff055)'
-              : i % 2 === 0
-              ? '#111'
-              : '#1a1a1a';
+            const isUserGoblin = waxAccount && gob.owner === waxAccount;
+            const rowStyle = isUserGoblin
+              ? `background: #1a1; font-weight: bold; border: 2px solid #0f0;
+                 box-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+                 animation: pulse 1.5s infinite alternate ease-in-out;`
+              : `background: ${i % 2 === 0 ? '#111' : '#1a1a1a'};`;
 
             const placeMedal =
               i === 0
@@ -3901,9 +3902,10 @@ async function renderGoblinHallOfFame() {
               .join(", ");
 
             return `
-              <tr style="background: ${bg}; font-weight: ${isUserGoblin ? "bold" : "normal"};">
+              <tr style="${rowStyle}">
                 <td style="padding: 0.6rem; text-align: center;">${placeMedal}</td>
                 <td style="padding: 0.6rem; text-align: center;">${gob.goblin_id}</td>
+                <td style="padding: 0.6rem; text-align: center;">${gob.owner}</td>
                 <td style="padding: 0.6rem; text-align: center;">${gob.expeditions_count}</td>
                 <td style="padding: 0.6rem; text-align: center;">${gob.wins}</td>
                 <td style="padding: 0.6rem; color: #0f0; text-align: center;">${gob.total_chips}</td>

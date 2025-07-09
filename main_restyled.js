@@ -2789,6 +2789,7 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
         })
         .then(res => res.json())
         .then(json => {
+          console.log("🧪 spawn_chest response:", json);
           if (json.success && json.chest_id) {
             chest.id = json.chest_id;
             chest.claimable = true;

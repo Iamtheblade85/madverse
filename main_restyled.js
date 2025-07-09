@@ -3023,6 +3023,7 @@ async function renderDwarfsCave() {
         font-family: Orbitron, sans-serif;">
       <div style="flex: 1;">
         <h3 style='color:#ffe600;'>⛏️ Global Expeditions in Progress</h3>
+        <div id="feedback-area"></div>
         <div id="video-or-canvas" style="width: 100%;">
           <video id="expedition-video" src="expedition_run.mp4" autoplay muted style="width: 100%; max-width: 480px; border-radius: 12px; box-shadow: 0 0 10px #ffe600;"></video>
         </div>

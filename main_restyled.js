@@ -2880,7 +2880,15 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
             console.log("🧪 Chest caught",ch.id)
             (async () => {
               try {
-                console.log(`[CHEST_REWARD] ${g.wax_account} is claiming chest from ${ch.from} @ (${ch.x},${ch.y})`);             
+                console.log("🧪 Chest reward payload:", {
+                  wax_account: g.wax_account,
+                  chest_origin: ch.from,
+                  position: { x: ch.x, y: ch.y },
+                  chest_id: ch.id ?? "(missing)",
+                  taken: ch.taken ?? false,
+                  claimable: ch.claimable ?? false
+                });
+           
                 // 🔍 Logga i dati prima di inviarli
                 console.log("🧪 Chest reward payload:", {
                   wax_account: g.wax_account,

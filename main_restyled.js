@@ -2759,7 +2759,8 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
           destY: getRandomSafeCoord(),
           taken: false,
           from: p.perkName,
-          wax_account: p.wax_account
+          wax_account: p.wax_account,
+          claimable: false
         };
   
         console.log(`🎁 Spawning chest from "${p.perkName}" at (${chest.destX}, ${chest.destY})`);
@@ -2780,6 +2781,7 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
         .then(json => {
           if (json.success && json.chest_id) {
             chest.id = json.chest_id;
+            chest.claimable = true;
             console.log(`✅ Chest spawned successfully with ID: ${chest.id}`);
           } else {
             console.warn("⚠️ Chest spawned without ID, possible duplication risk.");
@@ -2850,7 +2852,7 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
           const dx = Math.abs(g.x - ch.x);
           const dy = Math.abs(g.y - ch.y);
           
-          if (dx <= 4 && dy <= 4 && !ch.taken && !ch.taken_by && !ch.claiming) {
+          if (dx <= 3 && dy <= 3 && !ch.taken && !ch.taken_by && !ch.claiming && ch.claimable) {
             ch.claiming = true;
             ch.taken = true;
             ch.taken_by = g.wax_account;

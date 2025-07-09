@@ -2626,6 +2626,8 @@ function triggerPerkAnimation(_canvas, perkName, wax_account) {
   let perkDone = false;
 
   image.onload = () => {
+    console.log(`✅ Image loaded: ${perk.src}`);
+  
     const waveFunc = (xPos) => baseY + Math.sin(xPos * zigzagFrequency) * zigzagAmplitude;
   
     const perkObj = {
@@ -2644,8 +2646,15 @@ function triggerPerkAnimation(_canvas, perkName, wax_account) {
       hasDropped: false
     };
   
+    if (!window.activePerks) window.activePerks = [];
     window.activePerks.push(perkObj);
+    console.log(`🎯 Pushed new perk: ${perkName} by ${wax_account}`);
   };
+  
+  image.onerror = () => {
+    console.error(`❌ Failed to load image: ${perk.src}`);
+  };
+
 }
 
 function getColorForAccount(i) {
@@ -2717,12 +2726,20 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
   }
   
   function drawPerks() {
+
     if (!window.activePerks) return;
     if (window.activePerks.length === 0) return;
   
     console.log(`🎨 Drawing ${window.activePerks.length} active perk(s)...`);
   
     for (let p of window.activePerks) {
+      if (!p.image || !p.image.complete) {
+        console.log(`⏳ Skipping "${p.perkName}" — image not loaded yet.`);
+        continue;
+      }
+    
+      console.log(`🎨 Drawing perk: ${p.perkName}, x=${p.x.toFixed(1)}, y=${p.y.toFixed(1)}, frame=${p.frame}`);
+
       console.log(`➡️ Perk "${p.perkName}" from ${p.wax_account}`);
       console.log(`   • pos = (${p.x.toFixed(2)}, ${p.y.toFixed(2)}), dir = ${p.dir}`);
       console.log(`   • frame = ${p.frame}/${p.frames}, tick = ${p.tick}`);
@@ -2972,8 +2989,9 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
     last = now;
     resizeCanvas();
     drawGrid();
-    drawChests();
+    console.log("🔁 Frame tick - calling drawPerks()");
     drawPerks();
+    drawChests();
     goblins.forEach(moveGoblin);
     goblins.forEach(drawGoblin);
     updateAnimations(delta);

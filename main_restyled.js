@@ -2498,15 +2498,12 @@ function startCommandPolling(canvas) {
       return;
     }
 
-    console.log("🔄 Polling /check_perk_command...");
     try {
       const res = await fetch(`${BASE_URL}/check_perk_command`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ wax_account: window.userData.wax_account })
       });
-
-      console.log(`📡 Response status: ${res.status}`);
 
       if (!res.ok) {
         console.warn("❌ Backend responded with an error.");
@@ -2516,16 +2513,13 @@ function startCommandPolling(canvas) {
       let perk = null;
       try {
         perk = await res.json();
-        console.log("📥 JSON response from backend:", perk);
       } catch (err) {
         console.warn("⚠️ Failed to parse JSON:", err);
         return;
       }
 
       if (perk && perk.perk) {
-        console.log(`🎯 Triggering animation for perk "${perk.perk}" by ${perk.wax_account}`);
         triggerPerkAnimation(canvas, perk.perk, perk.wax_account);
-
         // Feedback visuale
         const perkInfo = {
           dragon:    { label: "Dragon",    icon: "🐉" },
@@ -2565,12 +2559,11 @@ function startCommandPolling(canvas) {
           }, 10000);
         }
       } else {
-        console.log("🟡 No new perk command received this cycle.");
       }
     } catch (err) {
       console.warn("❌ Polling perk failed:", err);
     }
-  }, 15000);
+  }, 30000);
 }
 
 function stopCommandPolling() {
@@ -2868,8 +2861,18 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
         window.activeChests.forEach(ch => {
           const dx = Math.abs(g.x - ch.x);
           const dy = Math.abs(g.y - ch.y);
+          console.log(`[CHEST CHECK] Goblin ${g.wax_account}
+            → Position: (${g.x}, ${g.y})
+            → Chest at: (${ch.x}, ${ch.y})
+            → Distance: dx = ${dx}, dy = ${dy}
+            → Chest Status:
+               • taken      = ${ch.taken}
+               • taken_by   = ${ch.taken_by}
+               • claiming   = ${ch.claiming}
+               • claimable  = ${ch.claimable}
+          `);
           
-          if (dx <= 3 && dy <= 3 && !ch.taken && !ch.taken_by && !ch.claiming && ch.claimable) {
+          if (dx <= 5 && dy <= 5 && !ch.taken && !ch.taken_by && !ch.claiming && ch.claimable) {
             ch.claiming = true;
             ch.taken = true;
             ch.taken_by = g.wax_account;
@@ -2989,7 +2992,6 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
     last = now;
     resizeCanvas();
     drawGrid();
-    console.log("🔁 Frame tick - calling drawPerks()");
     drawPerks();
     drawChests();
     goblins.forEach(moveGoblin);

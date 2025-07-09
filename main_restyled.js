@@ -2873,7 +2873,7 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
             ch.claiming = true;
             ch.taken = true;
             ch.taken_by = g.wax_account;
-          
+            console.log("🧪 Chest caught",ch.id)
             (async () => {
               try {
                 console.log(`[CHEST_REWARD] ${g.wax_account} is claiming chest from ${ch.from} @ (${ch.x},${ch.y})`);

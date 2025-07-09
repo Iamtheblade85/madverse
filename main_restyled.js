@@ -2482,16 +2482,23 @@ function updateRecentExpeditionsList(result, wax_account) {
 let commandPollingInterval = null;
 
 function startCommandPolling(canvas) {
-  if (window.perkPollingActive || commandPollingInterval !== null) return;
+  if (window.perkPollingActive || commandPollingInterval !== null) {
+    console.log("⏳ Polling already active. Skipping start.");
+    return;
+  }
 
+  console.log("🚀 Starting command polling...");
   window.perkPollingActive = true;
   window.currentCanvas = canvas;
+
   commandPollingInterval = setInterval(async () => {
     if (!document.getElementById("caveCanvas")) {
+      console.warn("🛑 Canvas not found. Stopping polling.");
       stopCommandPolling();
       return;
     }
 
+    console.log("🔄 Polling /check_perk_command...");
     try {
       const res = await fetch(`${BASE_URL}/check_perk_command`, {
         method: "POST",
@@ -2499,26 +2506,36 @@ function startCommandPolling(canvas) {
         body: JSON.stringify({ wax_account: window.userData.wax_account })
       });
 
-      if (!res.ok) return;
+      console.log(`📡 Response status: ${res.status}`);
+
+      if (!res.ok) {
+        console.warn("❌ Backend responded with an error.");
+        return;
+      }
 
       let perk = null;
       try {
         perk = await res.json();
+        console.log("📥 JSON response from backend:", perk);
       } catch (err) {
+        console.warn("⚠️ Failed to parse JSON:", err);
         return;
       }
 
       if (perk && perk.perk) {
+        console.log(`🎯 Triggering animation for perk "${perk.perk}" by ${perk.wax_account}`);
         triggerPerkAnimation(canvas, perk.perk, perk.wax_account);
+
+        // Feedback visuale
         const perkInfo = {
-          dragon:      { label: "Dragon",      icon: "🐉" },
-          dwarf:       { label: "Dwarf",       icon: "⛏️" },
-          skeleton:    { label: "Skeleton",    icon: "💀" },
-          black_cat:   { label: "Black Cat",   icon: "🐈‍⬛" }
+          dragon:    { label: "Dragon",    icon: "🐉" },
+          dwarf:     { label: "Dwarf",     icon: "⛏️" },
+          skeleton:  { label: "Skeleton",  icon: "💀" },
+          black_cat: { label: "Black Cat", icon: "🐈‍⬛" }
         };
-        
+
         const info = perkInfo[perk.perk] || { label: perk.perk, icon: "✨" };
-        
+
         const feedbackArea = document.getElementById("feedback-area");
         if (feedbackArea) {
           const div = document.createElement("div");
@@ -2542,14 +2559,16 @@ function startCommandPolling(canvas) {
             <span><strong>${perk.wax_account}</strong> triggered the <strong>${info.label}</strong> perk via <code>!chest</code></span>
           `;
           feedbackArea.appendChild(div);
-        
+
           setTimeout(() => {
             if (div.parentElement) div.remove();
           }, 10000);
         }
+      } else {
+        console.log("🟡 No new perk command received this cycle.");
       }
     } catch (err) {
-      console.warn("Polling perk failed", err);
+      console.warn("❌ Polling perk failed:", err);
     }
   }, 15000);
 }

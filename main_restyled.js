@@ -2510,6 +2510,43 @@ function startCommandPolling(canvas) {
 
       if (perk && perk.perk) {
         triggerPerkAnimation(canvas, perk.perk, perk.wax_account);
+        const perkInfo = {
+          dragon:      { label: "Dragon",      icon: "🐉" },
+          dwarf:       { label: "Dwarf",       icon: "⛏️" },
+          skeleton:    { label: "Skeleton",    icon: "💀" },
+          black_cat:   { label: "Black Cat",   icon: "🐈‍⬛" }
+        };
+        
+        const info = perkInfo[perk.perk] || { label: perk.perk, icon: "✨" };
+        
+        const feedbackArea = document.getElementById("feedback-area");
+        if (feedbackArea) {
+          const div = document.createElement("div");
+          div.style = `
+            margin: 0.5rem 0;
+            padding: 0.8rem;
+            background: #111;
+            border-left: 5px solid #0ff;
+            border-radius: 10px;
+            color: #fff;
+            font-family: Orbitron, sans-serif;
+            box-shadow: 0 0 10px #0ff;
+            animation: glow-pulse 1.5s ease-in-out infinite alternate;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1rem;
+          `;
+          div.innerHTML = `
+            <span style="font-size: 1.5rem;">${info.icon}</span>
+            <span><strong>${perk.wax_account}</strong> triggered the <strong>${info.label}</strong> perk via <code>!chest</code></span>
+          `;
+          feedbackArea.appendChild(div);
+        
+          setTimeout(() => {
+            if (div.parentElement) div.remove();
+          }, 10000);
+        }
       }
     } catch (err) {
       console.warn("Polling perk failed", err);
@@ -2662,8 +2699,16 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
   
   function drawPerks() {
     if (!window.activePerks) return;
+    if (window.activePerks.length === 0) return;
+  
+    console.log(`🎨 Drawing ${window.activePerks.length} active perk(s)...`);
   
     for (let p of window.activePerks) {
+      console.log(`➡️ Perk "${p.perkName}" from ${p.wax_account}`);
+      console.log(`   • pos = (${p.x.toFixed(2)}, ${p.y.toFixed(2)}), dir = ${p.dir}`);
+      console.log(`   • frame = ${p.frame}/${p.frames}, tick = ${p.tick}`);
+      console.log(`   • dropped = ${p.hasDropped}, done = ${p.done}`);
+  
       p.tick++;
       if (p.tick >= 8) {
         p.tick = 0;
@@ -2680,7 +2725,6 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
         32, 32
       );
   
-      // Drop chest solo 1 volta
       if (!p.hasDropped && Math.random() < 0.25) {
         p.hasDropped = true;
   
@@ -2699,6 +2743,8 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
           wax_account: p.wax_account
         };
   
+        console.log(`🎁 Spawning chest from "${p.perkName}" at (${chest.destX}, ${chest.destY})`);
+  
         window.activeChests.push(chest);
   
         fetch(`${BASE_URL}/spawn_chest`, {
@@ -2715,9 +2761,9 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
         .then(json => {
           if (json.success && json.chest_id) {
             chest.id = json.chest_id;
-          }
-          else {
-            console.warn("⚠️ Chest spawned without ID, potential duplication risk.");
+            console.log(`✅ Chest spawned successfully with ID: ${chest.id}`);
+          } else {
+            console.warn("⚠️ Chest spawned without ID, possible duplication risk.");
           }
         })
         .catch(err => {
@@ -2729,11 +2775,13 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
   
       if ((p.dir === "left-to-right" && p.x > 95) || (p.dir === "right-to-left" && p.x < -5)) {
         p.done = true;
+        console.log(`🛑 Perk "${p.perkName}" has exited the canvas.`);
       }
     }
   
     window.activePerks = window.activePerks.filter(p => !p.done);
   }
+
 
   function drawGoblin(g) {
     const px = g.x * cellSize;

@@ -2505,18 +2505,18 @@ function startCommandPolling(canvas) {
         body: JSON.stringify({ wax_account: window.userData.wax_account })
       });
 
-      if (!res.ok) {
-        console.warn("❌ Backend responded with an error.");
+      const text = await res.text();  
+      if (!text) {
+        return;
+      }
+      
+      let perk = null;
+      try {
+        perk = JSON.parse(text);  
+      } catch (err) {
         return;
       }
 
-      let perk = null;
-      try {
-        perk = await res.json();
-      } catch (err) {
-        console.warn("⚠️ Failed to parse JSON:", err);
-        return;
-      }
 
       if (perk && perk.perk) {
         triggerPerkAnimation(canvas, perk.perk, perk.wax_account);
@@ -2862,16 +2862,16 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
         window.activeChests.forEach(ch => {
           const dx = Math.abs(g.x - ch.x);
           const dy = Math.abs(g.y - ch.y);
-          console.log(`[CHEST CHECK] Goblin ${g.wax_account}
-            → Position: (${g.x}, ${g.y})
-            → Chest at: (${ch.x}, ${ch.y})
-            → Distance: dx = ${dx}, dy = ${dy}
-            → Chest Status:
-               • taken      = ${ch.taken}
-               • taken_by   = ${ch.taken_by}
-               • claiming   = ${ch.claiming}
-               • claimable  = ${ch.claimable}
-          `);
+          //console.log(`[CHEST CHECK] Goblin ${g.wax_account}
+            //→ Position: (${g.x}, ${g.y})
+            //→ Chest at: (${ch.x}, ${ch.y})
+            //→ Distance: dx = ${dx}, dy = ${dy}
+            //→ Chest Status:
+               //• taken      = ${ch.taken}
+               //• taken_by   = ${ch.taken_by}
+               //• claiming   = ${ch.claiming}
+               //• claimable  = ${ch.claimable}
+          `//);
           
           if (dx <= 5 && dy <= 5 && !ch.taken && !ch.taken_by && !ch.claiming && ch.claimable) {
             ch.claiming = true;

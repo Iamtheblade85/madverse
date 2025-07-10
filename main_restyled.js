@@ -3041,6 +3041,25 @@ async function renderDwarfsCave() {
           <h4 style="color:#0f0;">🎁 Chest Bonus Rewards (!chest @ Twitch)</h4>
         </div>        
       </div>
+      <div style="
+        flex: 1;
+        background: linear-gradient(135deg, #3e1f05, #140b02);
+        border: 2px solid #ffd700;
+        border-radius: 16px;
+        padding: 1.5rem;
+        color: #ffeabf;
+        font-family: 'Papyrus', 'Fantasy', cursive;
+        font-size: 1.3rem;
+        line-height: 1.6;
+        box-shadow: 0 0 25px #ffb800, inset 0 0 12px #ffa500;
+        text-align: center;
+        animation: flickerGlow 2s infinite alternate;
+        letter-spacing: 1px;
+        text-shadow: 1px 1px 2px #000, 0 0 10px #ffa500;
+      ">
+        🔥 Want to change your Goblin for another one with a different Ability?<br>
+        <strong>Great!</strong> The next evolution is <u>coming next week</u>!
+      </div>
     </div>
 
     <div id="feedback-area" style="margin-bottom: 1rem; color: #0ff; font-family: Orbitron, sans-serif;"></div>
@@ -3072,6 +3091,14 @@ async function renderDwarfsCave() {
       </div>
     </div>
   `;
+  const style = document.createElement("style");
+  style.textContent = `
+  @keyframes flickerGlow {
+    0% { box-shadow: 0 0 15px #ffb800, inset 0 0 6px #ffa500; opacity: 0.95; }
+    100% { box-shadow: 0 0 35px #ffcc00, inset 0 0 14px #ffcc00; opacity: 1; }
+  }`;
+  document.head.appendChild(style);
+    
   const video = document.getElementById("expedition-video");
   let wrapper = document.getElementById("video-or-canvas");
   

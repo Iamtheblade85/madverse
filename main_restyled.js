@@ -3041,27 +3041,26 @@ async function renderDwarfsCave() {
           <h4 style="color:#0f0;">🎁 Chest Bonus Rewards (!chest @ Twitch)</h4>
         </div>        
       </div>
-      <div style="
-        flex: 1;
-        background: linear-gradient(135deg, #3e1f05, #140b02);
-        border: 2px solid #ffd700;
-        border-radius: 16px;
-        padding: 1.5rem;
-        color: #ffeabf;
-        font-family: 'Papyrus', 'Fantasy', cursive;
-        font-size: 1.3rem;
-        line-height: 1.6;
-        box-shadow: 0 0 25px #ffb800, inset 0 0 12px #ffa500;
-        text-align: center;
-        animation: flickerGlow 2s infinite alternate;
-        letter-spacing: 1px;
-        text-shadow: 1px 1px 2px #000, 0 0 10px #ffa500;
-      ">
-        🔥 Want to change your Goblin for another one with a different Ability?<br>
-        <strong>Great!</strong> The next evolution is <u>coming next week</u>!
       </div>
-    </div>
-
+        <div style="
+          flex: 1;
+          background: linear-gradient(135deg, #3e1f05, #140b02);
+          border: 2px solid #ffd700;
+          border-radius: 16px;
+          padding: 1.5rem;
+          color: #ffeabf;
+          font-family: 'Papyrus', 'Fantasy', cursive;
+          font-size: 1.3rem;
+          line-height: 1.6;
+          box-shadow: 0 0 25px #ffb800, inset 0 0 12px #ffa500;
+          text-align: center;
+          animation: flickerGlow 2s infinite alternate;
+          letter-spacing: 1px;
+          text-shadow: 1px 1px 2px #000, 0 0 10px #ffa500;
+        ">
+          🔥 Want to change your Goblin for another one with a different Ability?<br>
+          <strong>Great!</strong> The next evolution is <u>coming next week</u>! #RotationPower
+        </div>
     <div id="feedback-area" style="margin-bottom: 1rem; color: #0ff; font-family: Orbitron, sans-serif;"></div>
     <div id="dwarfs-menu" style="margin-bottom: 1.5rem;"><p class="subtitle2">Select your goblins and start the expedition!</p></div>
     <div style="display: flex; flex-wrap: wrap; gap: 2rem;">

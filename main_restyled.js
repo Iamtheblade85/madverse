@@ -2880,14 +2880,14 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
             console.log("🧪 Chest caught: ",ch.id)
             (async () => {
               try {
-                console.log("🧪 Chest reward payload:", {
-                  wax_account: g.wax_account,
-                  perk_type: ch.from,
-                  chest_id: ch.id ?? "(missing)",
-                  position: { x: ch.x, y: ch.y },
-                  taken: ch.taken ?? false,
-                  claimable: ch.claimable ?? false
-                });
+                console.log("🧪 Chest reward payload:");
+                console.log("  wax_account:", g.wax_account);
+                console.log("  perk_type:", ch.from);
+                console.log("  chest_id:", ch.id ?? "(missing)");
+                console.log("  position:", ch.x, ch.y);
+                console.log("  taken:", ch.taken ?? false);
+                console.log("  claimable:", ch.claimable ?? false);
+
               
                 const res = await fetch(`${BASE_URL}/chest_reward`, {
                   method: "POST",

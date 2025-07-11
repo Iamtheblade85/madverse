@@ -2862,22 +2862,12 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
         window.activeChests.forEach(ch => {
           const dx = Math.abs(g.x - ch.x);
           const dy = Math.abs(g.y - ch.y);
-          //console.log(`[CHEST CHECK] Goblin ${g.wax_account}
-            //→ Position: (${g.x}, ${g.y})
-            //→ Chest at: (${ch.x}, ${ch.y})
-            //→ Distance: dx = ${dx}, dy = ${dy}
-            //→ Chest Status:
-               //• taken      = ${ch.taken}
-               //• taken_by   = ${ch.taken_by}
-               //• claiming   = ${ch.claiming}
-               //• claimable  = ${ch.claimable}
-          //`);
           
           if (dx <= 5 && dy <= 5 && !ch.taken && !ch.taken_by && !ch.claiming && ch.claimable) {
             ch.claiming = true;
             ch.taken = true;
             ch.taken_by = g.wax_account;
-            console.log("🧪 Chest caught: ",ch.id)
+            console.log("🧪 Chest caught: ",ch.id);
             (async () => {
               try {
                 console.log("🧪 Chest reward payload:");

@@ -5034,6 +5034,29 @@ function showEmailEditForm(currentEmail) {
 function renderPersonalInfo(info) {
   const container = document.getElementById('personal-info');
 
+  const sub = info.subscription;
+
+  const subscriptionHTML = sub ? `
+    <div style="margin-top: 20px; padding: 15px; border: 1px solid #44c4e7; border-radius: 10px; background-color: #101820; color: #e0f7fa;">
+      <h3 style="margin-bottom: 10px;">📦 Active Subscription</h3>
+      <p><span style="font-weight:bold;">📺 Channel:</span> ${sub.channel}</p>
+      <p><span style="font-weight:bold;">📆 Term:</span> ${sub.subscription_term} (${sub.duration_months} month${sub.duration_months > 1 ? 's' : ''})</p>
+      <p><span style="font-weight:bold;">🎯 Version:</span> ${sub.version}</p>
+      <p><span style="font-weight:bold;">💸 Price (USD):</span> $${sub.price_usd} (${sub.discount_percent}% discount)</p>
+      <p><span style="font-weight:bold;">🪙 Paid in WAX:</span> ${sub.paid_wax_amount} ${sub.token_symbol}</p>
+      <p><span style="font-weight:bold;">💵 Value in USD:</span> ~$${sub.usd_value_estimated} @ ${sub.usd_to_wax_rate} USD/WAX</p>
+      <p><span style="font-weight:bold;">🕒 Start:</span> ${sub.start_date}</p>
+      <p><span style="font-weight:bold;">⏳ Expires:</span> ${sub.expiry_date}</p>
+      <p><span style="font-weight:bold;">📌 Status:</span> <span style="color: ${sub.is_active ? '#00ff99' : '#ff6666'}; font-weight: bold;">${sub.is_active ? 'Active' : 'Expired'}</span></p>
+      <p><span style="font-weight:bold;">📝 Memo:</span> <code>${sub.memo || 'N/A'}</code></p>
+    </div>
+  ` : `
+    <div style="margin-top: 20px; padding: 15px; border: 1px dashed #aaa; border-radius: 10px; background-color: #1a1a1a; color: #ccc;">
+      <h3 style="margin-bottom: 10px;">📦 Subscription</h3>
+      <p>You don´t  own any Twitch-Channel with an active CryptoChips Sub. Consider to activate one. </p>
+    </div>
+  `;
+
   container.innerHTML = `
     <div class="card-glow">
       <h2 class="glow-text">👤 ${info.telegram_username || 'Unknown'}</h2>
@@ -5047,16 +5070,16 @@ function renderPersonalInfo(info) {
         <p><span class="label">📧 Email:</span> <span id="email-text">${info.email || 'Not Set'}</span></p>
         <button class="small-btn" id="change-email-btn">✏️ Change Email</button>
       </div>
+
+      ${subscriptionHTML}
     </div>
   `;
 
-  // Aggiungi handler per il pulsante
   const btn = document.getElementById('change-email-btn');
   btn.addEventListener('click', () => {
     showEmailEditForm(info.email || '');
   });
 }
-
 
 function renderChatRewards(telegram, twitch) {
   function renderBoosters(boosters, typeLabel, icon) {

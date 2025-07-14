@@ -363,7 +363,26 @@ function openRegisterModal() {
       });
 
       const data = await res.json();
-      feedback.textContent = data.message || "Registration complete.";
+      if (res.status === 400 && data.error === "Telegram ID not found") {
+        feedback.innerHTML = `
+          <div style="border: 1px solid #ff4d4d; border-radius: 8px; padding: 1rem; background:#1f1f1f; color:#ffdcdc;">
+            <strong>🚫 You’re almost there!</strong><br><br>
+            <span style="color:#ffb3b3;">To finish linking your wallet you need to register once in our Telegram bot.</span><br><br>
+            <ol style="padding-left:1.2rem; font-size:0.9rem;">
+              <li>Open <strong>Telegram</strong> and search <a href="https://t.me/xchaos18_bot" target="_blank" style="color:#7ec8ff;">@xchaos18_bot</a></li>
+              <li>Send the command:<br>
+                  <code style="background:#2b2b2b; padding:4px 6px; border-radius:4px;">/register ${wax_account || "&lt;your_wallet&gt;"}</code>
+              </li>
+              <li>Wait for the bot’s confirmation.</li>
+              <li>Return here and press <em>Submit</em> again.</li>
+            </ol>
+            <small style="color:gray;">(This is required only the first time – afterwards you can ignore the bot.)</small>
+          </div>
+        `;
+        return;           // interrompe il flusso: non disabilita i campi né avvia l’auto-login
+      } else {
+        feedback.textContent = data.message || "Registration complete.";
+      }
       document.getElementById('submit-register').disabled = true;
 
       // Blocca i campi

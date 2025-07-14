@@ -371,7 +371,7 @@ function openRegisterModal() {
             <ol style="padding-left:1.2rem; font-size:0.9rem;">
               <li>Open <strong>Telegram</strong> and search <a href="https://t.me/xchaos18_bot" target="_blank" style="color:#7ec8ff;">@xchaos18_bot</a></li>
               <li>Send the command:<br>
-                  <code style="background:#2b2b2b; padding:4px 6px; border-radius:4px;">/register ${wax_account || "&lt;your_wallet&gt;"}</code>
+                  <code style="background:#2b2b2b; padding:4px 6px; border-radius:4px;">/join ${wax_account || "&lt;your_wallet&gt;"}</code>
               </li>
               <li>Wait for the bot’s confirmation.</li>
               <li>Return here and press <em>Submit</em> again.</li>

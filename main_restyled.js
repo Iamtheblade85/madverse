@@ -3945,6 +3945,11 @@ async function renderGoblinHistory() {
   }
 }
 
+const PAGE_SIZE = 100;
+let fullData = [];
+let filteredData = [];
+let currentPage = 1;
+
 async function renderGoblinHallOfFame() {
   const container = document.getElementById('goblin-content');
   container.innerHTML = `
@@ -3972,7 +3977,24 @@ async function renderGoblinHallOfFame() {
         animation: underlineSlide 2.5s ease-in-out 3s forwards;
       "></span>
     </p>
-    <div id="hof-table-container" style="margin-top: 2rem;"></div>
+
+    <div style="margin: 1rem 0; display: flex; gap: 1rem; flex-wrap: wrap;">
+      <label>
+        Filter by Owner:
+        <select id="owner-filter">
+          <option value="">All</option>
+        </select>
+      </label>
+      <label>
+        Filter by Goblin ID:
+        <select id="goblin-filter">
+          <option value="">All</option>
+        </select>
+      </label>
+    </div>
+
+    <div id="hof-table-container"></div>
+    <div id="pagination-controls" style="margin-top: 1rem; text-align: center;"></div>
   `;
 
   const tableContainer = document.getElementById("hof-table-container");
@@ -3982,81 +4004,181 @@ async function renderGoblinHallOfFame() {
     if (!res.ok) throw new Error("Failed to fetch Hall of Fame data");
 
     const hof = await res.json();
-
     if (!hof.length) {
       tableContainer.innerHTML = `<p style="color:#ccc;">No goblins have made it to the Hall of Fame yet.</p>`;
       return;
     }
 
-    const waxAccount = window.userData?.wax_account || null;
+    // Ordinamento
+    hof.sort((a, b) =>
+      b.total_chips - a.total_chips ||
+      b.total_nfts - a.total_nfts ||
+      b.avg_chips_per_exp - a.avg_chips_per_exp ||
+      b.nfts_per_exp - a.nfts_per_exp ||
+      b.win_rate - a.win_rate ||
+      b.expeditions_count - a.expeditions_count
+    );
 
-    let table = `
-      <table style="
-        width: 100%;
-        border-collapse: collapse;
-        font-family: Orbitron, sans-serif;
-        color: #fff;
-        box-shadow: 0 0 10px #ffe600;
-        border-radius: 12px;
-        overflow: hidden;
-      ">
-        <thead>
-          <tr style="background: #222;">
-            <th style="padding: 0.75rem;">#</th>
-            <th style="padding: 0.75rem;">Goblin ID</th>
-            <th style="padding: 0.75rem;">Owner</th>
-            <th style="padding: 0.75rem;">Expeditions</th>
-            <th style="padding: 0.75rem;">Wins</th>
-            <th style="padding: 0.75rem;">CHIPS</th>
-            <th style="padding: 0.75rem;">NFTs</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${hof.map((gob, i) => {
-            const isUserGoblin = waxAccount && gob.owner === waxAccount;
-            const rowStyle = isUserGoblin
-              ? `background: #1a1; font-weight: bold; border: 2px solid #0f0;
-                 box-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
-                 animation: pulse 1.5s infinite alternate ease-in-out;`
-              : `background: ${i % 2 === 0 ? '#111' : '#1a1a1a'};`;
+    fullData = hof;
+    populateFilters2(hof);
+    applyFiltersAndRender2();
 
-            const placeMedal =
-              i === 0
-                ? "🥇"
-                : i === 1
-                ? "🥈"
-                : i === 2
-                ? "🥉"
-                : `${i + 1}`;
+    document.getElementById("owner-filter").addEventListener("change", () => {
+      currentPage = 1;
+      applyFiltersAndRender2();
+    });
 
-            const nftSummary = gob.nfts
-              .map(n => `${n.id.split('#')[0]} #${n.id.split('#')[1]} × ${n.qty}`)
-              .slice(0, 3)
-              .join(", ");
-
-            return `
-              <tr style="${rowStyle}">
-                <td style="padding: 0.6rem; text-align: center;">${placeMedal}</td>
-                <td style="padding: 0.6rem; text-align: center;">${gob.goblin_id}</td>
-                <td style="padding: 0.6rem; text-align: center;">${gob.owner}</td>
-                <td style="padding: 0.6rem; text-align: center;">${gob.expeditions_count}</td>
-                <td style="padding: 0.6rem; text-align: center;">${gob.wins}</td>
-                <td style="padding: 0.6rem; color: #0f0; text-align: center;">${gob.total_chips}</td>
-                <td style="padding: 0.6rem; color: #ffa500; text-align: center;">${nftSummary || "—"}</td>
-              </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
-    `;
-
-    tableContainer.innerHTML = table;
+    document.getElementById("goblin-filter").addEventListener("change", () => {
+      currentPage = 1;
+      applyFiltersAndRender2();
+    });
 
   } catch (err) {
     console.error("[renderGoblinHallOfFame] Error:", err);
     tableContainer.innerHTML = `<p style="color:#f44;">Failed to load Hall of Fame.</p>`;
   }
 }
+
+function populateFilters2(data) {
+  const ownerSet = new Set();
+  const goblinSet = new Set();
+  data.forEach(g => {
+    ownerSet.add(g.owner);
+    goblinSet.add(g.goblin_id);
+  });
+
+  const ownerFilter = document.getElementById("owner-filter");
+  [...ownerSet].sort().forEach(o => {
+    const opt = document.createElement("option");
+    opt.value = o;
+    opt.textContent = o;
+    ownerFilter.appendChild(opt);
+  });
+
+  const goblinFilter = document.getElementById("goblin-filter");
+  [...goblinSet].sort((a, b) => a - b).forEach(gid => {
+    const opt = document.createElement("option");
+    opt.value = gid;
+    opt.textContent = gid;
+    goblinFilter.appendChild(opt);
+  });
+}
+
+function applyFiltersAndRender2() {
+  const owner = document.getElementById("owner-filter").value;
+  const goblinId = document.getElementById("goblin-filter").value;
+
+  filteredData = fullData.filter(g =>
+    (!owner || g.owner === owner) &&
+    (!goblinId || String(g.goblin_id) === goblinId)
+  );
+
+  renderTablePage2();
+  renderPaginationControls2();
+}
+
+function renderTablePage2() {
+  const tableContainer = document.getElementById("hof-table-container");
+  const waxAccount = window.userData?.wax_account || null;
+
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = filteredData.slice(start, start + PAGE_SIZE);
+
+  const rows = pageItems.map((gob, i) => {
+    const index = start + i;
+    const isUserGoblin = waxAccount && gob.owner === waxAccount;
+    const rowStyle = isUserGoblin
+      ? `background: #1a1; font-weight: bold; border: 2px solid #0f0;
+         box-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+         animation: pulse 1.5s infinite alternate ease-in-out;`
+      : `background: ${index % 2 === 0 ? '#111' : '#1a1a1a'};`;
+
+    const placeMedal =
+      index === 0 ? "🥇" :
+      index === 1 ? "🥈" :
+      index === 2 ? "🥉" : `${index + 1}`;
+
+    return `
+      <tr style="${rowStyle}">
+        <td style="padding: 0.6rem; text-align: center;">${placeMedal}</td>
+        <td style="padding: 0.6rem; text-align: center;">${gob.goblin_id}</td>
+        <td style="padding: 0.6rem; text-align: center;">${gob.owner}</td>
+        <td style="padding: 0.6rem; text-align: center;">${gob.expeditions_count}</td>
+        <td style="padding: 0.6rem; text-align: center;">${gob.wins}</td>
+        <td style="padding: 0.6rem; text-align: center;">${(gob.win_rate * 100).toFixed(1)}%</td>
+        <td style="padding: 0.6rem; color: #0f0; text-align: center;">${gob.total_chips}</td>
+        <td style="padding: 0.6rem; text-align: center;">${gob.avg_chips_per_exp.toFixed(2)}</td>
+        <td style="padding: 0.6rem; color: #ffa500; text-align: center;">${gob.total_nfts}</td>
+        <td style="padding: 0.6rem; text-align: center;">${gob.nfts_per_exp.toFixed(2)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  const table = `
+    <table style="
+      width: 100%;
+      border-collapse: collapse;
+      font-family: Orbitron, sans-serif;
+      color: #fff;
+      box-shadow: 0 0 10px #ffe600;
+      border-radius: 12px;
+      overflow: hidden;
+    ">
+      <thead>
+        <tr style="background: #222;">
+          <th style="padding: 0.75rem;">#</th>
+          <th style="padding: 0.75rem;">Goblin ID</th>
+          <th style="padding: 0.75rem;">Owner</th>
+          <th style="padding: 0.75rem;">Expeditions</th>
+          <th style="padding: 0.75rem;">Wins</th>
+          <th style="padding: 0.75rem;">Win %</th>
+          <th style="padding: 0.75rem;">CHIPS</th>
+          <th style="padding: 0.75rem;">CHIPS/EXP</th>
+          <th style="padding: 0.75rem;">NFTs</th>
+          <th style="padding: 0.75rem;">NFTs/EXP</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+
+  tableContainer.innerHTML = table;
+}
+
+function renderPaginationControls2() {
+  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+  const container = document.getElementById("pagination-controls");
+
+  if (totalPages <= 1) {
+    container.innerHTML = "";
+    return;
+  }
+
+  let controls = "";
+
+  for (let i = 1; i <= totalPages; i++) {
+    controls += `
+      <button onclick="changePage2(${i})" style="
+        margin: 0 4px;
+        padding: 6px 10px;
+        background: ${i === currentPage ? '#ffe600' : '#333'};
+        color: ${i === currentPage ? '#000' : '#fff'};
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      ">${i}</button>
+    `;
+  }
+
+  container.innerHTML = controls;
+}
+
+function changePage2(page) {
+  currentPage = page;
+  renderTablePage2();
+  renderPaginationControls2();
+}
+
 
 function setActiveTab(tabId) {
   document.querySelectorAll('.lp-tab').forEach(tab => tab.classList.remove('active'));

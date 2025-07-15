@@ -4105,11 +4105,14 @@ function renderTablePage2() {
         <td style="padding: 0.6rem; text-align: center;">${gob.owner}</td>
         <td style="padding: 0.6rem; text-align: center;">${gob.expeditions_count}</td>
         <td style="padding: 0.6rem; text-align: center;">${gob.wins}</td>
-        <td style="padding: 0.6rem; text-align: center;">${(gob.win_rate * 100).toFixed(1)}%</td>
+<td style="padding: 0.6rem; text-align: center;">${((gob.win_rate ?? 0) * 100).toFixed(1)}%</td>
+
+
         <td style="padding: 0.6rem; color: #0f0; text-align: center;">${gob.total_chips}</td>
-        <td style="padding: 0.6rem; text-align: center;">${gob.avg_chips_per_exp.toFixed(2)}</td>
+<td style="padding: 0.6rem; text-align: center;">${(gob.avg_chips_per_exp ?? 0).toFixed(2)}</td>
+
         <td style="padding: 0.6rem; color: #ffa500; text-align: center;">${gob.total_nfts}</td>
-        <td style="padding: 0.6rem; text-align: center;">${gob.nfts_per_exp.toFixed(2)}</td>
+<td style="padding: 0.6rem; text-align: center;">${(gob.nfts_per_exp ?? 0).toFixed(2)}</td>
       </tr>
     `;
   }).join("");

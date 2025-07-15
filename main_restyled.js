@@ -3947,7 +3947,7 @@ async function renderGoblinHistory() {
 
 const PAGE_SIZE = 100;
 let fullData = [];
-let filteredData = [];
+let filteredData2 = [];
 let currentPage = 1;
 
 async function renderGoblinHallOfFame() {
@@ -4068,7 +4068,7 @@ function applyFiltersAndRender2() {
   const owner = document.getElementById("owner-filter").value;
   const goblinId = document.getElementById("goblin-filter").value;
 
-  filteredData = fullData.filter(g =>
+  filteredData2 = fullData.filter(g =>
     (!owner || g.owner === owner) &&
     (!goblinId || String(g.goblin_id) === goblinId)
   );
@@ -4082,7 +4082,7 @@ function renderTablePage2() {
   const waxAccount = window.userData?.wax_account || null;
 
   const start = (currentPage - 1) * PAGE_SIZE;
-  const pageItems = filteredData.slice(start, start + PAGE_SIZE);
+  const pageItems = filteredData2.slice(start, start + PAGE_SIZE);
 
   const rows = pageItems.map((gob, i) => {
     const index = start + i;
@@ -4146,7 +4146,7 @@ function renderTablePage2() {
 }
 
 function renderPaginationControls2() {
-  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+  const totalPages = Math.ceil(filteredData2.length / PAGE_SIZE);
   const container = document.getElementById("pagination-controls");
 
   if (totalPages <= 1) {

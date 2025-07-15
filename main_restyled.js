@@ -3151,7 +3151,9 @@ async function renderDwarfsCave() {
   
       // Clear old list content
       list.innerHTML = '';
-  
+      list.style.display = "flex";
+      list.style.flexWrap = "wrap";
+      list.style.gap = "0.5rem";
       // Clear previous countdowns
       if (globalCountdownInterval) {
         clearInterval(globalCountdownInterval);
@@ -3203,15 +3205,13 @@ async function renderDwarfsCave() {
         const endTime = Date.now() + (entry.seconds_remaining * 1000);
         const timerId = `global-timer-${i}`;
         const bg = i % 2 === 0 ? '#1a1a1a' : '#2a2a2a';
-  
         list.innerHTML += `
-          <div style="background: ${bg}; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem;">
+          <div style="background: ${bg}; padding: 0.75rem; border-radius: 8px; width: 200px;">
             <div><strong style="color: #ffe600;">${entry.wax_account}</strong></div>
             <div style="color: #0ff;">Goblins: ${entry.total_goblins}</div>
             <div id="${timerId}" style="color: #0f0;">⏳ calculating...</div>
           </div>
         `;
-  
         return { endTime, timerId };
       });
   

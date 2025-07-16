@@ -6369,11 +6369,26 @@ function displayLogData(data) {
   document.getElementById('update-rewards').addEventListener('click', loadLogRewardActivity);
 }
 
+function showStormFeedback(message, isError = false) {
+  const feedback = document.getElementById('storm-feedback');
+  if (!feedback) return;
+
+  feedback.style.display = 'block';
+  feedback.style.backgroundColor = isError ? 'salmon' : 'lightgreen';
+  feedback.style.color = isError ? '#721c24' : '#155724';
+  feedback.style.border = isError ? '1px solid #f5c6cb' : '1px solid #c3e6cb';
+  feedback.textContent = message;
+
+  // Nascondi il messaggio dopo 5 secondi
+  setTimeout(() => {
+    feedback.style.display = 'none';
+  }, 5000);
+}
+
 // Storm Scheduler and Logs
 // Funzione per aggiungere una nuova tempesta programmata
 async function addScheduledStorm() {
   const container = document.getElementById('c2e-content');
-  // Leggi valori dal DOM
   const scheduledTimeLocal = document.getElementById('scheduledTime').value;
   const scheduledTimeUTC = new Date(scheduledTimeLocal).toISOString();
   const amount = document.getElementById('amount').value;
@@ -6382,9 +6397,10 @@ async function addScheduledStorm() {
   const channelName = document.getElementById('channelName').value;
   const paymentMethod = document.getElementById('paymentMethod').value;
   const { userId, usx_token, wax_account } = window.userData || {};
+
   if (!wax_account) {
     console.error("❌ wax_account is missing.");
-    showToast("Error: wax_account is missing.", "error");
+    showStormFeedback("Error: wax_account is missing.", true);
     return;
   }
 
@@ -6405,19 +6421,20 @@ async function addScheduledStorm() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
+
     const data = await res.json();
 
     if (data.success) {
-      showToast(data.message, "success");
+      showStormFeedback(data.message, false); 
       loadScheduledStorms(); // aggiorna tabella
     } else {
-      showToast(`Error: ${data.error}`, "error");
+      showStormFeedback(`Error: ${data.error}`, true); 
       console.warn("⚠️ Backend error:", data.error);
     }
 
   } catch (err) {
     console.error("🔥 Network or unexpected error:", err);
-    showToast(`Network error: ${err.message}`, "error");
+    showStormFeedback(`Network error: ${err.message}`, true); 
   }
 }
 
@@ -6438,14 +6455,14 @@ async function loadLogStormsGiveaways() {
         <div id="add-storm-form" class="form-container" >
 
           <!-- Scheduled Time and Timeframe -->
-          <div >
-            <div >
-              <label class="input-label" >Scheduled Time</label>
-              <input type="datetime-local" id="scheduledTime" class="input-field" >
+          <div style="display: flex; gap: 16px; align-items: flex-start;">
+            <div style="flex: 0 0 20%;">
+              <label class="input-label">Scheduled Time</label>
+              <input type="datetime-local" id="scheduledTime" class="input-field">
             </div>
-            <div >
-              <label class="input-label" >Timeframe</label>
-              <select id="timeframe" class="input-field" >
+            <div style="flex: 0 0 20%;">
+              <label class="input-label">Timeframe</label>
+              <select id="timeframe" class="input-field">
                 <option value="">Select Timeframe</option>
                 <option value="5m">5m</option>
                 <option value="10m">10m</option>
@@ -6468,8 +6485,8 @@ async function loadLogStormsGiveaways() {
                 <option value="7d">7d</option>
                 <option value="15d">15d</option>
                 <option value="30d">30d</option>
-                <option value="30d">90d</option>
-                <option value="30d">180d</option>
+                <option value="90d">90d</option>
+                <option value="180d">180d</option>
                 <option value="1y">1y</option>
               </select>
             </div>
@@ -6477,6 +6494,13 @@ async function loadLogStormsGiveaways() {
 
           <!-- Amount and Token Symbol -->
           <div >
+            <div >
+              <label class="input-label" >Payment Method</label>
+              <select id="paymentMethod" class="input-field" >
+                <option value="twitch">Twitch</option>
+                <option value="telegram">Telegram</option>
+              </select>
+            </div>          
             <div >
               <label class="input-label" >Amount</label>
               <input type="number" id="amount" class="input-field" >
@@ -6488,8 +6512,6 @@ async function loadLogStormsGiveaways() {
               </select>
             </div>
           </div>
-
-          <!-- Channel and Payment Method -->
           <div >
             <div >
               <label class="input-label" >Channel</label>
@@ -6497,17 +6519,14 @@ async function loadLogStormsGiveaways() {
                 <option value="">Select Channel</option>
               </select>
             </div>
-            <div >
-              <label class="input-label" >Payment Method</label>
-              <select id="paymentMethod" class="input-field" >
-                <option value="twitch">Twitch</option>
-                <option value="telegram">Telegram</option>
-              </select>
-            </div>
           </div>
-
+          <div style="height: 10px;"></div>
+          
+          <!-- Feedback Backend -->
+          <div id="storm-feedback" style="margin-bottom: 16px; padding: 10px; border-radius: 6px; display: none; font-weight: bold; font-size: 14px;"></div>
+          
           <!-- Add Storm Button -->
-          <button id="submitStorm" class="btn-submit" >
+          <button id="submitStorm" class="btn-submit">
             Add Storm
           </button>
         </div>
@@ -6523,7 +6542,12 @@ async function loadLogStormsGiveaways() {
     document.getElementById('submitStorm').addEventListener('click', addScheduledStorm);
 
     // Popola i token simbolo
-    await populateTokenSymbols();
+    const paymentMethodSelect = document.getElementById('paymentMethod');
+    paymentMethodSelect.addEventListener('change', () => {
+      const walletType = paymentMethodSelect.value;
+      populateTokenSymbols(walletType);
+    });
+
     // Popola i timeframes
     populateTimeframes();
     // Popola i canali
@@ -6539,26 +6563,30 @@ async function loadLogStormsGiveaways() {
   }
 }
 
-// Funzione per popolare il dropdown dei Token Symbols
-async function populateTokenSymbols() {
+async function populateTokenSymbols(walletType) {
   const tokenSelect = document.getElementById('tokenSymbol');
+  tokenSelect.innerHTML = '';
   const { userId, usx_token, wax_account } = window.userData;
 
-  // Recupera bilanci da Telegram
-  const resTelegram = await fetch(`${BASE_URL}/saldo?user_id=${userId}&usx_token=${usx_token}`);
-  const dataTelegram = await resTelegram.json();
-  window.walletBalances = dataTelegram.balances || [];
+  let balances = [];
 
-  // Recupera bilanci da Twitch
-  const resTwitch = await fetch(`${BASE_URL}/saldo/twitch?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`);
-  const dataTwitch = await resTwitch.json();
-  window.twitchWalletBalances = dataTwitch.balances || [];
+  if (walletType === 'telegram') {
+    const resTelegram = await fetch(`${BASE_URL}/saldo?user_id=${userId}&usx_token=${usx_token}`);
+    const dataTelegram = await resTelegram.json();
+    balances = dataTelegram.balances || [];
+  } else if (walletType === 'twitch') {
+    // Recupera bilanci da Twitch
+    const resTwitch = await fetch(`${BASE_URL}/saldo/twitch?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`);
+    const dataTwitch = await resTwitch.json();
+    balances = dataTwitch.balances || [];
+  } else {
+    console.warn('Wallet type unknown:', walletType);
+    return;
+  }
 
-  // Unisci e filtra bilanci univoci per simbolo
-  const combinedBalances = [...window.walletBalances, ...window.twitchWalletBalances];
-  const uniqueSymbols = new Map(); // usare Map per salvare anche l'importo
+  const uniqueSymbols = new Map();
 
-  combinedBalances.forEach(balance => {
+  balances.forEach(balance => {
     if (balance.symbol && !uniqueSymbols.has(balance.symbol)) {
       uniqueSymbols.set(balance.symbol, balance.amount || 0);
     }
@@ -6571,12 +6599,8 @@ async function populateTokenSymbols() {
     option.textContent = `${symbol} (available: ${amount})`;
     tokenSelect.appendChild(option);
   });
-
-  // Log di debug
 }
 
-
-// Funzione per popolare il dropdown dei Timeframes
 function populateTimeframes() {
   const timeframeSelect = document.getElementById('timeframe');
   const timeframes = [

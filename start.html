@@ -27,41 +27,25 @@
   <body class="app">
     <div id="auth-button-container" style="position:absolute; top:1rem; left:1rem; z-index:10;"></div>
     <header id="navbar" class="navbar">
-    <div class="w-full flex flex-row justify-between items-center px-4 py-6 gap-4">
+    <!-- Center Logo + Partners Row -->
+    <div class="flex flex-col items-center text-center w-full px-4 py-6">
+      <!-- Logo -->
+      <img src="logocc.png" alt="CryptoChips Logo"
+           class="max-w-[400px] w-full sm:w-auto h-auto mb-4 drop-shadow-xl" />
+      <p class="text-yellow-300 text-sm italic mb-4">
+        Built for Users, Powered by Blockchain
+      </p>
     
-      <!-- Left Partners con margine dal bordo sinistro -->
-      <div class="flex flex-col items-start w-[30%] ml-[10%]">
-        <h2 class="text-lg font-bold mb-2 text-fuchsia-400" style="
-          text-shadow: 0 0 6px #ff00ff, 0 0 12px #ff00ff;
-          animation: pulseGlow 2s infinite;
-        ">Partners:</h2>
-        <div class="flex flex-wrap gap-4">
-          <img src="partner1.png" alt="Welshdanft" class="max-w-[200px] w-full sm:w-auto h-auto" />
-          <img src="partner2.png" alt="SQJ" class="max-w-[200px] w-full sm:w-auto h-auto" />
-        </div>
+      <!-- Partners Row -->
+      <div class="flex flex-row flex-nowrap justify-center items-center gap-4 overflow-x-auto w-full">
+        <img src="partner1.png" alt="Partner 1" class="max-w-[200px] w-full h-auto object-contain" />
+        <img src="partner2.png" alt="Partner 2" class="max-w-[200px] w-full h-auto object-contain" />
+        <img src="partner3.png" alt="Partner 3" class="max-w-[200px] w-full h-auto object-contain" />
+        <img src="partner4.png" alt="Partner 4" class="max-w-[200px] w-full h-auto object-contain" />
+        <img src="partner5.png" alt="Partner 5" class="max-w-[200px] w-full h-auto object-contain" />
       </div>
-    
-      <!-- Center Logo -->
-      <div class="flex flex-col items-center w-[30%] text-center">
-        <img src="logocc.png" alt="CryptoChips Logo"
-             class="max-w-[300px] w-full sm:w-auto h-auto mb-2 drop-shadow-xl" />
-        <p class="text-yellow-300 text-sm italic">Built for Users, Powered by Blockchain</p>
-      </div>
-    
-      <!-- Right Partners con margine dal bordo destro -->
-      <div class="flex flex-col items-end w-[30%] mr-[10%]">
-        <h2 class="text-lg font-bold mb-2 text-fuchsia-400" style="
-          text-shadow: 0 0 6px #ff00ff, 0 0 12px #ff00ff;
-          animation: pulseGlow 2s infinite;
-        ">Partners:</h2>
-        <div class="flex flex-wrap gap-4 justify-end">
-          <img src="partner3.png" alt="Mortal Wombat" class="max-w-[200px] w-full sm:w-auto h-auto" />
-          <img src="partner4.png" alt="Mikygigi74" class="max-w-[200px] w-full sm:w-auto h-auto" />
-          <img src="partner5.png" alt="MasterOWLZ" class="max-w-[200px] w-full sm:w-auto h-auto" />
-        </div>
-      </div>
-    
     </div>
+
   <nav class="navbar-menu" role="navigation" aria-label="Main Navigation">
       <button class="menu-button" data-section="loadLatestNews">News & Guides</button>
       <button class="menu-button" data-section="wallet">Wallet</button>

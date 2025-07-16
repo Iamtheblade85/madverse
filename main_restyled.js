@@ -6543,6 +6543,12 @@ async function loadLogStormsGiveaways() {
 
     // Popola i token simbolo
     const paymentMethodSelect = document.getElementById('paymentMethod');
+    
+    // Carica i token iniziali alla selezione predefinita
+    const initialWalletType = paymentMethodSelect.value;
+    await populateTokenSymbols(initialWalletType);
+    
+    // Ricarica i token se l'utente cambia metodo
     paymentMethodSelect.addEventListener('change', () => {
       const walletType = paymentMethodSelect.value;
       populateTokenSymbols(walletType);

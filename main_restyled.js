@@ -3068,7 +3068,7 @@ async function renderDwarfsCave() {
           text-shadow: 1px 1px 2px #000, 0 0 10px #ffa500;
         ">
           🔥 Want to change your Goblin for another one with a different Ability?<br>
-          <strong>Great!</strong> The next evolution is <u>coming next week</u>! #RotationPower
+          <strong>Great!</strong> The next evolution is <u>coming THIS WEEK!!!</u>! #RotationPower
         </div>
     <div id="feedback-area" style="margin-bottom: 1rem; color: #0ff; font-family: Orbitron, sans-serif;"></div>
     <div id="dwarfs-menu" style="margin-bottom: 1.5rem;"><p class="subtitle2">Select your goblins and start the expedition!</p></div>

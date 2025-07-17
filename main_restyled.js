@@ -2941,16 +2941,11 @@ function initGoblinCanvasAnimation(canvas, expeditions) {
                     and <span style="color: #ffa500;">${nfts} NFTs</span> from <strong>${ch.from}</strong>!
                   `;
                 }
-              
                 feedbackArea.appendChild(div);
-              
-                // Dopo 10 sec → sposta in recent list
                 setTimeout(() => {
                   if (div.parentElement) div.remove();
                   appendBonusChestReward(reward, g.wax_account, ch.from);  // 👈 nuova funzione
                 }, 10000);
-
-                // Dopo 5 sec → rimuovi la chest
                 setTimeout(() => {
                   window.activeChests = window.activeChests.filter(c => c !== ch);
                 }, 1000);
@@ -3603,6 +3598,22 @@ async function renderDwarfsCave() {
           feedback(`⏳ Wait: ${result.seconds_remaining}s until next perk try.`);
         } else if (res.ok && result.perk_awarded) {
           feedback(`🎉 Perk "${result.perk_type.toUpperCase()}" dropped! Will it drop a Chest?`);
+          if (window.activeChests && Array.isArray(window.activeChests)) {
+            window.activeChests.push({
+              x: Math.floor(Math.random() * 480), // posizione casuale nel canvas
+              y: Math.floor(Math.random() * 280),
+              taken: false,
+              from: "perk",
+              wax_account: window.userData.wax_account,
+              type: result.perk_type // opzionale, se vuoi usare immagini diverse per tipo
+            });
+          
+            // ridisegna canvas
+            const canvas = document.getElementById("caveCanvas");
+            if (canvas) {
+              initGoblinCanvasAnimation(canvas, window.activeGoblins || []);
+            }
+          }
         } else {
           feedback("😢 No perk awarded.");
         }
@@ -6526,15 +6537,16 @@ async function populateMultiTokenSymbols(walletType) {
     const dataTwitch = await resTwitch.json();
     balances = dataTwitch.balances || [];
   }
-
   const uniqueSymbols = new Map();
   balances.forEach(balance => {
     if (balance.symbol && !uniqueSymbols.has(balance.symbol)) {
       uniqueSymbols.set(balance.symbol, balance.amount || 0);
     }
   });
-
+  
+  window.multiTokenBalances = {}; // ora va qui
   uniqueSymbols.forEach((amount, symbol) => {
+    window.multiTokenBalances[symbol] = amount;
     const option = document.createElement('option');
     option.value = symbol;
     option.textContent = `${symbol} (available: ${amount})`;
@@ -6578,6 +6590,49 @@ function showMultiStormFeedback(message, isError = false) {
   setTimeout(() => {
     feedback.style.display = 'none';
   }, 5000);
+}
+
+async function populateExtraChannels() {
+  const mainSelect = document.getElementById('multiChannel');
+  const extraSelect = document.getElementById('multiExtraChannels');
+
+  const res = await fetch(`${BASE_URL}/available_channels`);
+  const data = await res.json();
+
+  if (!data.channels || !Array.isArray(data.channels)) return;
+
+  extraSelect.innerHTML = '';
+  const selectedChannel = mainSelect.value;
+
+  data.channels.forEach(channel => {
+    if (channel !== selectedChannel) {
+      const opt = document.createElement('option');
+      opt.value = channel;
+      opt.textContent = channel;
+      extraSelect.appendChild(opt);
+    }
+  });
+}
+
+function updateMultiStormCostEstimation() {
+  const amount = parseFloat(document.getElementById('multiAmount').value || 0);
+  const count = parseInt(document.getElementById('multiCount').value || 0);
+  const token = document.getElementById('multiTokenSymbol').value;
+  const extraChannels = Array.from(document.getElementById('multiExtraChannels').selectedOptions).map(o => o.value);
+
+  if (!amount || !count || !token) return;
+
+  const stormsPerChannel = count;
+  const totalChannels = 1 + extraChannels.length;
+  const totalStorms = stormsPerChannel * totalChannels;
+
+  const totalCost = amount * totalStorms * 1.065;
+  const userBalances = window.multiTokenBalances || {}; // viene popolato sotto
+  const userBalance = userBalances[token] || 0;
+  const remaining = userBalance - totalCost;
+
+  document.getElementById('multiStormCost').textContent = `💰 Total Cost (incl. 6.5% fee): ${totalCost.toFixed(4)} ${token}`;
+  document.getElementById('multiStormRemaining').textContent = `💼 Remaining Balance: ${remaining.toFixed(4)} ${token}`;
 }
 
 async function loadLogStormsGiveaways() {
@@ -6788,12 +6843,24 @@ async function loadLogStormsGiveaways() {
                 <option value="">Select Token</option>
               </select>
             </div>
-        
+            <!-- Summary Costs -->
+            <div style="margin-top:12px; font-size: 0.95rem; color: #333;">
+              <div id="multiStormCost" style="margin-bottom:6px;">💰 Total Cost (incl. 6.5% fee): —</div>
+              <div id="multiStormRemaining" style="color:#444;">💼 Remaining Balance: —</div>
+            </div>
+
             <!-- Channel -->
             <div style="margin-bottom: 12px;">
               <label style="font-weight: 600;">Channel</label>
               <select id="multiChannel" class="input-field" style="width: 100%;">
                 <option value="">Select Channel</option>
+              </select>
+            </div>
+            <!-- Other Channels -->
+            <div style="margin-bottom: 12px;">
+              <label style="font-weight: 600;">Also apply these storms to:</label>
+              <select id="multiExtraChannels" multiple class="input-field" style="width: 100%; height: 80px;">
+                <!-- options dinamiche -->
               </select>
             </div>
         
@@ -6854,6 +6921,7 @@ async function loadLogStormsGiveaways() {
     // Popola anche i campi del form multiplo
     await populateMultiTokenSymbols(document.getElementById('multiPaymentMethod').value);
     await populateMultiChannels();
+    await populateExtraChannels();
 
     // Imposta i limiti per l'orario
     setScheduledTimeMinMax();
@@ -6868,7 +6936,12 @@ async function loadLogStormsGiveaways() {
   } catch (err) {
     container.innerHTML = `<div class="error-message">Error loading log storms and giveaways: ${err.message}</div>`;
   }
-  
+  document.getElementById('multiChannel').addEventListener('change', populateExtraChannels);
+
+  ['multiAmount', 'multiCount', 'multiTokenSymbol', 'multiExtraChannels'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateMultiStormCostEstimation);
+  });
+
   document.getElementById('submitMultiStorms').addEventListener('click', async () => {
     const startTime = document.getElementById('multiStartTime').value;
     const intervalValue = document.getElementById('multiInterval').value;
@@ -6899,21 +6972,24 @@ async function loadLogStormsGiveaways() {
     const storms = [];
     const baseTime = new Date(startTime);
     const intervalMs = intervalToMs(intervalValue);
-  
-    for (let i = 0; i < stormCount; i++) {
-      const scheduledDate = new Date(baseTime.getTime() + i * intervalMs);
-      const isoString = scheduledDate.toISOString().slice(0, 16); // 'YYYY-MM-DDTHH:mm'
-  
-      storms.push({
-        scheduled_time: isoString,
-        timeframe,
-        amount,
-        token_symbol: token,
-        channel_name: channel,
-        payment_method: paymentMethod
-      });
-    }
-  
+    
+    const channels = [channel, ...Array.from(document.getElementById('multiExtraChannels').selectedOptions).map(o => o.value)];
+    
+    channels.forEach(ch => {
+      for (let i = 0; i < stormCount; i++) {
+        const scheduledDate = new Date(baseTime.getTime() + i * intervalMs);
+        const isoString = scheduledDate.toISOString().slice(0, 16);
+        storms.push({
+          scheduled_time: isoString,
+          timeframe,
+          amount,
+          token_symbol: token,
+          channel_name: ch,
+          payment_method: paymentMethod
+        });
+      }
+    });
+ 
     console.log("Generated Storms:", storms);
 
     try {
@@ -6936,6 +7012,7 @@ async function loadLogStormsGiveaways() {
       if (result.success) {
         showMultiStormFeedback("✅ Multiple storms scheduled successfully!");
         loadScheduledStorms(); // Ricarica la tabella
+        updateMultiStormCostEstimation();
       } else {
         const errorMsg = result.error || result.message || "Unknown error";
         showMultiStormFeedback("❌ Error: " + errorMsg, true);

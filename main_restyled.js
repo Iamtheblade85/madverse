@@ -1520,19 +1520,19 @@ async function loadSection(section) {
         <h2 class="section-title text-center">C2E - Twitch</h2>
           <div class="c2e-menu">
             <button class="c2e-menu-btn" data-menu="log-reward-activity"
-              style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+              style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
               Log Reward Activity
             </button>
             <button class="c2e-menu-btn" data-menu="log-storms-giveaways"
-              style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+              style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
               Twitch Storms
             </button>
             <button class="c2e-menu-btn" data-menu="twitch-nfts-giveaways"
-              style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+              style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
               Twitch NFTs Giveaways(NEW!)
             </button>
             <button class="c2e-menu-btn" data-menu="twitch-game"
-              style="font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+              style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
               Twitch Game(!soon!)
             </button>
           </div>

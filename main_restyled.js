@@ -5385,58 +5385,60 @@ function renderChatRewards(telegram, twitch) {
           </tr>
         `;
     
-      return `
-        ${ch.name === 'sugarqueenjanice' ? `
-          <div style="
-            background: linear-gradient(to right, #ffccf9, #ffe0f0);
-            border: 2px solid #e91e63;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 20px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            font-family: 'Segoe UI', sans-serif;
-          ">
-            <h3 style="
-              color: #c2185b;
-              margin: 0;
-              font-size: 1.2em;
-              font-weight: 700;
-            ">
-              💖 SQJ ACTIVE PASS HOLDERS GET 50% MORE REWARDS PER MESSAGE!
-            </h3>
-            <p style="
-              color: #880e4f;
-              margin-top: 8px;
-              font-size: 1em;
-              font-weight: 500;
-            ">
-              Just by holding a valid pass, your messages are worth more! Enjoy boosted earnings while you chat 💬✨
-            </p>
-          </div>
-        ` : ''}
-        <details>
-          <summary style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-            <span style="
-              background-color: #d0e6ff;
-              color: #1e3a8a;
-              padding: 6px 12px;
-              border-radius: 6px;
-              font-weight: bold;
-              cursor: pointer;
-              transition: background-color 0.2s ease-in-out;
-            " onmouseover="this.style.backgroundColor='#bcdfff';"
-              onmouseout="this.style.backgroundColor='#d0e6ff';">
-              📣 ${ch.name}(Details)
-            </span>
-            ${passLabel}
-          </summary>
-          <table class="reward-table2 mt-2">
-            <thead>${headers}</thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </details>
-      `;
+        return `
+          <details>
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+              <span style="
+                background-color: #d0e6ff;
+                color: #1e3a8a;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: background-color 0.2s ease-in-out;
+              " onmouseover="this.style.backgroundColor='#bcdfff';"
+                onmouseout="this.style.backgroundColor='#d0e6ff';">
+                📣 ${ch.name}(Details)
+              </span>
+              ${passLabel}
+            </summary>
+        
+            ${ch.name === 'sugarqueenjanice' ? `
+              <div style="
+                background: linear-gradient(to right, #ffccf9, #ffe0f0);
+                border: 2px solid #e91e63;
+                border-radius: 12px;
+                padding: 16px;
+                margin: 20px 0;
+                text-align: center;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                font-family: 'Segoe UI', sans-serif;
+              ">
+                <h3 style="
+                  color: #c2185b;
+                  margin: 0;
+                  font-size: 1.2em;
+                  font-weight: 700;
+                ">
+                  💖 SQJ ACTIVE PASS HOLDERS GET 50% MORE REWARDS PER MESSAGE!
+                </h3>
+                <p style="
+                  color: #880e4f;
+                  margin-top: 8px;
+                  font-size: 1em;
+                  font-weight: 500;
+                ">
+                  Just by holding a valid pass, your messages are worth more! Enjoy boosted earnings while you chat 💬✨
+                </p>
+              </div>
+            ` : ''}
+        
+            <table class="reward-table2 mt-2">
+              <thead>${headers}</thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </details>
+        `;
     }).join('');
   return `
     <div class="card-glow">
@@ -6656,7 +6658,7 @@ async function loadLogStormsGiveaways() {
     
         <!-- FORM MULTIPLO -->
         <div id="multi-form" style="display:none;">
-          <div style="border: 2px dashed #6366f1; padding: 20px; border-radius: 10px; background-color: #f9fafb;">
+          <div style="border: 2px dashed #6366f1; padding: 20px; border-radius: 10px; background-color: transparent;">
             <p style="font-weight: bold; font-size: 16px; color: #4f46e5; margin-bottom: 10px;">🚀 Schedule Multiple Storms</p>
             <div id="multi-feedback" style="margin-bottom: 16px; padding: 10px; border-radius: 6px; display: none; font-weight: bold; font-size: 14px;"></div>
 
@@ -6686,7 +6688,39 @@ async function loadLogStormsGiveaways() {
               <label style="font-weight: 600;">Number of Storms</label>
               <input type="number" id="multiCount" min="1" class="input-field" style="width: 100%;">
             </div>
-        
+            
+            <!-- Timeframe della Storm -->
+            <div style="margin-bottom: 12px;">
+              <label style="font-weight: 600;">Storm Timeframe</label>
+              <select id="multiTimeframe" class="input-field" style="width: 100%;">
+                <option value="">Select Timeframe</option>
+                <option value="5m">5m</option>
+                <option value="10m">10m</option>
+                <option value="15m">15m</option>
+                <option value="20m">20m</option>
+                <option value="30m">30m</option>
+                <option value="1h">1h</option>
+                <option value="2h">2h</option>
+                <option value="3h">3h</option>
+                <option value="4h">4h</option>
+                <option value="5h">5h</option>
+                <option value="6h">6h</option>
+                <option value="12h">12h</option>
+                <option value="1d">1d</option>
+                <option value="2d">2d</option>
+                <option value="3d">3d</option>
+                <option value="4d">4d</option>
+                <option value="5d">5d</option>
+                <option value="6d">6d</option>
+                <option value="7d">7d</option>
+                <option value="15d">15d</option>
+                <option value="30d">30d</option>
+                <option value="90d">90d</option>
+                <option value="180d">180d</option>
+                <option value="1y">1y</option>
+              </select>
+            </div>
+
             <!-- Amount -->
             <div style="margin-bottom: 12px;">
               <label style="font-weight: 600;">Amount</label>
@@ -6798,12 +6832,17 @@ async function loadLogStormsGiveaways() {
     const token = document.getElementById('multiTokenSymbol').value;
     const channel = document.getElementById('multiChannel').value;
     const paymentMethod = document.getElementById('multiPaymentMethod').value;
-  
-    if (!startTime || !intervalValue || !stormCount || !amount || !token || !channel || !paymentMethod) {
-      alert("Please fill in all required fields.");
+    const timeframe = document.getElementById('multiTimeframe').value;
+
+    if (!startTime || !intervalValue || !stormCount || !amount || !token || !channel || !paymentMethod || !timeframe) {
+      showMultiStormFeedback("Please fill in all required fields.");
       return;
     }
-  
+    if (stormCount < 1) {
+      showMultiStormFeedback("Storm count must be at least 1.");
+      return;
+    }
+
     // Funzione per convertire '15m', '2h', '1d' in millisecondi
     function intervalToMs(interval) {
       const unit = interval.slice(-1);
@@ -6822,17 +6861,16 @@ async function loadLogStormsGiveaways() {
   
       storms.push({
         scheduled_time: isoString,
-        timeframe: intervalValue,
+        timeframe,
         amount,
         token_symbol: token,
-        channel,
+        channel_name: channel,
         payment_method: paymentMethod
       });
     }
   
     console.log("Generated Storms:", storms);
-  
-    // TODO: invio al backend, esempio:
+
     try {
       const res = await fetch(`${BASE_URL}/schedule_storms_batch`, {
         method: 'POST',
@@ -6842,20 +6880,23 @@ async function loadLogStormsGiveaways() {
         body: JSON.stringify({
           user_id: window.userData.userId,
           token: window.userData.usx_token,
-          storms
+          storms,
+          interval: intervalValue,
+          count: stormCount
         })
       });
-  
       const result = await res.json();
   
       if (result.success) {
         showMultiStormFeedback("✅ Multiple storms scheduled successfully!");
         loadScheduledStorms(); // Ricarica la tabella
       } else {
-        showMultiStormFeedback("❌ Error: " + (result.message || "Unknown error"));
+        const errorMsg = result.error || result.message || "Unknown error";
+        showMultiStormFeedback("❌ Error: " + errorMsg, true);
       }
     } catch (err) {
-      alert("❌ Request failed: " + err.message);
+      const errorMsg = result.error || result.message || "Unknown error";
+      showMultiStormFeedback("❌ Error: " + errorMsg, true);
     }
   });
   

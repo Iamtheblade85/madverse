@@ -3346,19 +3346,29 @@ async function renderDwarfsCave() {
         <button class="btn btn-glow" id="start-expedition-btn" style="margin-left:1rem;">🚀 Start Expedition</button>
       `;
       document.getElementById("start-expedition-btn").onclick = async () => {
+        const button = document.getElementById("start-expedition-btn");
+        button.disabled = true; // ⛔ Blocca subito
+        button.textContent = "⏳ Starting...";
+      
         if (selected.size === 0) {
           feedback("Select at least 1 goblin to start.");
+          button.disabled = false;
+          button.textContent = "🚀 Start Expedition";
           return;
         }
+      
         const assetIds = [...selected].filter(id => {
           const gob = goblins.find(g => g.asset_id === id);
           return gob && parseInt(gob.daily_power) >= 5;
         });
+      
         if (assetIds.length === 0) {
-          feedback("All selected goblins are too tired to go on an expedition.");
+          feedback("All selected goblins are too tired.");
+          button.disabled = false;
+          button.textContent = "🚀 Start Expedition";
           return;
         }
-
+      
         try {
           const startRes = await fetch(`${BASE_URL}/start_expedition`, {
             method: "POST",
@@ -3370,53 +3380,29 @@ async function renderDwarfsCave() {
               goblin_ids: assetIds
             })
           });
-  
+      
           const expeditionData = await startRes.json();
-          console.log("[START EXPEDITION] Response from server:", expeditionData);
-          console.log("[START EXPEDITION] duration_seconds =", expeditionData.duration_seconds);
-                   
+      
           if (startRes.status === 409) {
-            feedback(expeditionData.error || "You already have an active expedition.");
-          
-            // Prevenzione doppioni: non re-inizializzare se timer è già attivo
-            const wax_account = window.userData?.wax_account;
-            if (wax_account && !window.expeditionTimersRunning[wax_account]) {
-              window.expeditionTimersRunning[wax_account] = true;
-          
-              // Opzionale: puoi mostrare quanto manca
-              await renderUserCountdown(
-                expeditionData.expedition_id,
-                expeditionData.seconds_remaining,
-                [...selected]
-              );
-              
-              const canvas = document.getElementById("caveCanvas");
-              if (canvas && window.activeGoblins) {
-                initGoblinCanvasAnimation(canvas, window.activeGoblins);
-              }
-            } else {
-              feedback("⏱️ You have an Expedition already running.");
-            }
-            return;
-          } else {
-            feedback("Expedition started successfully!");
-            const wax_account = window.userData?.wax_account;
-            if (wax_account) {
-              window.expeditionTimersRunning[wax_account] = false;
-            }
-
+            feedback(expeditionData.error || "Already in expedition.");
+            // No reset del bottone perché c'è una spedizione attiva
+          } else if (startRes.ok) {
+            feedback("Expedition started!");
             await renderUserCountdown(expeditionData.expedition_id, expeditionData.duration_seconds, assetIds);
             await renderGlobalExpeditions();
-            const canvas = document.getElementById("caveCanvas");
-            if (canvas && window.activeGoblins) {
-              initGoblinCanvasAnimation(canvas, window.activeGoblins);
-            }            
+          } else {
+            feedback("Something went wrong.");
+            button.disabled = false;
+            button.textContent = "🚀 Start Expedition";
           }
-        } catch (error) {
-          console.error("[Expedition Start] Error:", error);
+        } catch (err) {
+          console.error("[Expedition] Error:", err);
           feedback("Failed to start expedition.");
+          button.disabled = false;
+          button.textContent = "🚀 Start Expedition";
         }
       };
+
     }
       
     // Render del risultato della expedition dell'utente con gestione completamento

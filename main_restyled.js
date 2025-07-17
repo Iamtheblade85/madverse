@@ -3376,11 +3376,28 @@ async function renderDwarfsCave() {
           console.log("[START EXPEDITION] duration_seconds =", expeditionData.duration_seconds);
                    
           if (startRes.status === 409) {
-            feedback("You already have an active expedition.");
-            const canvas = document.getElementById("caveCanvas");
-            if (canvas && window.activeGoblins) {
-              initGoblinCanvasAnimation(canvas, window.activeGoblins);
-            }            
+            feedback(expeditionData.error || "You already have an active expedition.");
+          
+            // Prevenzione doppioni: non re-inizializzare se timer è già attivo
+            const wax_account = window.userData?.wax_account;
+            if (wax_account && !window.expeditionTimersRunning[wax_account]) {
+              window.expeditionTimersRunning[wax_account] = true;
+          
+              // Opzionale: puoi mostrare quanto manca
+              await renderUserCountdown(
+                expeditionData.expedition_id,
+                expeditionData.seconds_remaining,
+                [...selected]
+              );
+              
+              const canvas = document.getElementById("caveCanvas");
+              if (canvas && window.activeGoblins) {
+                initGoblinCanvasAnimation(canvas, window.activeGoblins);
+              }
+            } else {
+              feedback("⏱️ You have an Expedition already running.");
+            }
+            return;
           } else {
             feedback("Expedition started successfully!");
             const wax_account = window.userData?.wax_account;
@@ -6587,9 +6604,9 @@ async function loadLogStormsGiveaways() {
                 <input type="datetime-local" id="scheduledTime" class="input-field">
               </div>
               <div style="flex: 0 0 20%;">
-                <label class="input-label">Timeframe</label>
+                <label class="input-label">Period</label>
                 <select id="timeframe" class="input-field">
-                  <option value="">Select Timeframe</option>
+                  <option value="">Select Period</option>
                   <option value="5m">5m</option>
                   <option value="10m">10m</option>
                   <option value="15m">15m</option>
@@ -6679,7 +6696,7 @@ async function loadLogStormsGiveaways() {
         
             <!-- Interval -->
             <div style="margin-bottom: 12px;">
-              <label style="font-weight: 600;">Interval Between Storms</label>
+              <label style="font-weight: 600;">Storms Frequency</label>
               <select id="multiInterval" class="input-field" style="width: 100%;">
                 <option value="">Select Interval</option>
                 <option value="5m">5 minutes</option>
@@ -6694,13 +6711,13 @@ async function loadLogStormsGiveaways() {
         
             <!-- Number of storms -->
             <div style="margin-bottom: 12px;">
-              <label style="font-weight: 600;">Number of Storms</label>
+              <label style="font-weight: 600;">Storms Quantity</label>
               <input type="number" id="multiCount" min="1" class="input-field" style="width: 100%;">
             </div>
             
             <!-- Timeframe della Storm -->
             <div style="margin-bottom: 12px;">
-              <label style="font-weight: 600;">Storm Timeframe</label>
+              <label style="font-weight: 600;">Storm Period</label>
               <select id="multiTimeframe" class="input-field" style="width: 100%;">
                 <option value="">Select Timeframe</option>
                 <option value="5m">5m</option>

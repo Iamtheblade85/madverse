@@ -6661,7 +6661,16 @@ async function loadLogStormsGiveaways() {
           <div style="border: 2px dashed #6366f1; padding: 20px; border-radius: 10px; background-color: transparent;">
             <p style="font-weight: bold; font-size: 16px; color: #4f46e5; margin-bottom: 10px;">🚀 Schedule Multiple Storms</p>
             <div id="multi-feedback" style="margin-bottom: 16px; padding: 10px; border-radius: 6px; display: none; font-weight: bold; font-size: 14px;"></div>
-
+        
+            <!-- Payment Method -->
+            <div style="margin-bottom: 12px;">
+              <label style="font-weight: 600;">Payment Method</label>
+              <select id="multiPaymentMethod" class="input-field" style="width: 100%;">
+                <option value="twitch">Twitch</option>
+                <option value="telegram">Telegram</option>
+              </select>
+            </div>
+            
             <!-- Start time -->
             <div style="margin-bottom: 12px;">
               <label style="font-weight: 600;">Start Time</label>
@@ -6740,15 +6749,6 @@ async function loadLogStormsGiveaways() {
               <label style="font-weight: 600;">Channel</label>
               <select id="multiChannel" class="input-field" style="width: 100%;">
                 <option value="">Select Channel</option>
-              </select>
-            </div>
-        
-            <!-- Payment Method -->
-            <div style="margin-bottom: 12px;">
-              <label style="font-weight: 600;">Payment Method</label>
-              <select id="multiPaymentMethod" class="input-field" style="width: 100%;">
-                <option value="twitch">Twitch</option>
-                <option value="telegram">Telegram</option>
               </select>
             </div>
         
@@ -6880,6 +6880,7 @@ async function loadLogStormsGiveaways() {
         body: JSON.stringify({
           user_id: window.userData.userId,
           token: window.userData.usx_token,
+          wax_account: window.userData.wax_account
           storms,
           interval: intervalValue,
           count: stormCount

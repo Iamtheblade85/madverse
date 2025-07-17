@@ -3036,6 +3036,7 @@ async function renderDwarfsCave() {
       <div style="flex: 1;">
         <h3 style='color:#ffe600;'>⛏️ Global Expeditions in Progress</h3>
         <div id="feedback-area"></div>
+        <div id="perk-onsite"></div>
         <div id="video-or-canvas" style="width: 100%;">
           <video id="expedition-video" src="expedition_run.mp4" autoplay muted style="width: 100%; max-width: 480px; border-radius: 12px; box-shadow: 0 0 10px #ffe600;"></video>
         </div>
@@ -3048,7 +3049,14 @@ async function renderDwarfsCave() {
         </div>
         <div id="bonus-chest-rewards" style="background:#101010; border-radius: 12px; padding: 1rem; color: #fff; box-shadow: 0 0 10px #0f0; font-size: 0.95rem; line-height: 1.5; margin-top: 1.5rem;">
           <h4 style="color:#0f0;">🎁 Chest Bonus Rewards (!chest @ Twitch)</h4>
-        </div>        
+        </div>
+        <div id="chest-perk-label" style="color:#ffe600; font-size:0.95rem; text-align:center; margin-bottom:0.5rem;">
+          Perk drop (1x / 10min each wax_account) – 50% chance of a chest drop in the cave.
+        </div>
+        <div style="text-align: center; margin-bottom: 1rem;">
+          <button id="chest-perk-btn" class="btn btn-glow">🎁 Try !chest Drop</button>
+        </div>
+        
       </div>
       </div>
         <div style="
@@ -3572,7 +3580,41 @@ async function renderDwarfsCave() {
       sortBy = e.target.value;
       renderList();
     });
-  
+
+    document.getElementById("chest-perk-btn").onclick = async () => {
+      const btn = document.getElementById("chest-perk-btn");
+      btn.disabled = true;
+      btn.textContent = "Checking...";
+      
+      try {
+        const res = await fetch(`${BASE_URL}/try_chest_perk`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            wax_account: window.userData.wax_account,
+            user_id: window.userData.userId,
+            usx_token: window.userData.usx_token
+          })
+        });
+    
+        const result = await res.json();
+        
+        if (res.status === 429) {
+          feedback(`⏳ Wait: ${result.seconds_remaining}s until next perk try.`);
+        } else if (res.ok && result.perk_awarded) {
+          feedback(`🎉 Perk "${result.perk_type.toUpperCase()}" dropped! Will it drop a Chest?`);
+        } else {
+          feedback("😢 No perk awarded.");
+        }
+      } catch (err) {
+        console.error("[!chest] Error:", err);
+        feedback("❌ Error trying chest drop.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "🎁 Try !chest Drop";
+      }
+    };
+
     renderList();
     updateSummary();
     await renderRecentExpeditionsList();

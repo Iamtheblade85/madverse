@@ -7025,13 +7025,25 @@ async function loadScheduledStorms() {
     tableContainer.innerHTML = `<div class="error-message">Error loading scheduled storms: ${err.message}</div>`;
   }
 }
-function renderStormsTable(data) {
+// Variabili globali univoche
+let stormPag_currentPage = 1;
+const stormPag_itemsPerPage = 100;
+let stormPag_data = [];
+
+function renderStormsTable(data, page = 1) {
+  stormPag_data = data; // memorizziamo i dati globalmente
+  stormPag_currentPage = page;
+
   const tableBody = document.querySelector('#table-container tbody');
   if (!tableBody) return;
 
+  const start = (page - 1) * stormPag_itemsPerPage;
+  const end = start + stormPag_itemsPerPage;
+  const currentData = data.slice(start, end);
+
   let rowsHTML = '';
 
-  data.forEach((storm) => {
+  currentData.forEach((storm) => {
     let winnersHTML = '';
     const winnersRaw = storm.winners_display?.trim();
 
@@ -7040,14 +7052,12 @@ function renderStormsTable(data) {
         const winnersArray = winnersRaw.split(' | ').map(w => w.trim().toUpperCase());
 
         winnersHTML += `<div class="winners-wrapper">`;
-
-        winnersArray.forEach((winner, i) => {
+        winnersArray.forEach((winner) => {
           winnersHTML += `
             <div class="winner-row">
               <span class="winner-name">${winner}</span>
             </div>`;
         });
-
         winnersHTML += `</div>`;
       } else {
         winnersHTML = `<span class="no-winners">No winners in the selected time interval :(</span>`;
@@ -7078,14 +7088,35 @@ function renderStormsTable(data) {
   tableBody.innerHTML = rowsHTML;
   addHoverEffectToRows();
 
-  // Effetto stella cadente al click
   document.querySelectorAll('.winner-row').forEach(row => {
     row.addEventListener('click', () => {
       row.classList.add('clicked');
       setTimeout(() => row.classList.remove('clicked'), 700);
     });
   });
+
+  renderStormsPaginationControls(data.length);
 }
+
+function renderStormsPaginationControls(totalItems) {
+  const container = document.querySelector('#storm-pagination');
+  if (!container) return;
+
+  const totalPages = Math.ceil(totalItems / stormPag_itemsPerPage);
+
+  container.innerHTML = `
+    <div style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 10px;">
+      <button ${stormPag_currentPage === 1 ? 'disabled' : ''} onclick="renderStormsTable(stormPag_data, ${stormPag_currentPage - 1})">
+        ◀ Previous
+      </button>
+      <span>Page ${stormPag_currentPage} of ${totalPages}</span>
+      <button ${stormPag_currentPage === totalPages ? 'disabled' : ''} onclick="renderStormsTable(stormPag_data, ${stormPag_currentPage + 1})">
+        Next ▶
+      </button>
+    </div>
+  `;
+}
+
 
 function sortStormsTable(key) {
   if (currentSort.key === key) {
@@ -7151,6 +7182,7 @@ function displayStormsData(data) {
         </thead>
         <tbody></tbody>
       </table>
+      <div id="storm-pagination"></div>
     </div>
   `;
   renderStormsTable(data);
@@ -7171,6 +7203,7 @@ function addHoverEffectToRows() {
     });
   });
 }
+
 function findNFTCardByAssetId(assetId) {
   const cards = document.querySelectorAll('.nft-card');
   for (const card of cards) {

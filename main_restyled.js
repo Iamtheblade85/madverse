@@ -6880,7 +6880,7 @@ async function loadLogStormsGiveaways() {
         body: JSON.stringify({
           user_id: window.userData.userId,
           token: window.userData.usx_token,
-          wax_account: window.userData.wax_account
+          wax_account: window.userData.wax_account,
           storms,
           interval: intervalValue,
           count: stormCount

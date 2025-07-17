@@ -6463,6 +6463,76 @@ async function addScheduledStorm() {
   }
 }
 
+async function populateMultiTokenSymbols(walletType) {
+  const tokenSelect = document.getElementById('multiTokenSymbol');
+  tokenSelect.innerHTML = '';
+
+  const { userId, usx_token, wax_account } = window.userData;
+  let balances = [];
+
+  if (walletType === 'telegram') {
+    const resTelegram = await fetch(`${BASE_URL}/saldo?user_id=${userId}&usx_token=${usx_token}`);
+    const dataTelegram = await resTelegram.json();
+    balances = dataTelegram.balances || [];
+  } else if (walletType === 'twitch') {
+    const resTwitch = await fetch(`${BASE_URL}/saldo/twitch?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`);
+    const dataTwitch = await resTwitch.json();
+    balances = dataTwitch.balances || [];
+  }
+
+  const uniqueSymbols = new Map();
+  balances.forEach(balance => {
+    if (balance.symbol && !uniqueSymbols.has(balance.symbol)) {
+      uniqueSymbols.set(balance.symbol, balance.amount || 0);
+    }
+  });
+
+  uniqueSymbols.forEach((amount, symbol) => {
+    const option = document.createElement('option');
+    option.value = symbol;
+    option.textContent = `${symbol} (available: ${amount})`;
+    tokenSelect.appendChild(option);
+  });
+}
+
+async function populateMultiChannels() {
+  const channelSelect = document.getElementById('multiChannel');
+  channelSelect.innerHTML = '';
+
+  try {
+    const res = await fetch(`${BASE_URL}/available_channels`);
+    const data = await res.json();
+    
+    if (data.channels && Array.isArray(data.channels)) {
+      data.channels.forEach(channel => {
+        const option = document.createElement('option');
+        option.value = channel;
+        option.textContent = channel;
+        channelSelect.appendChild(option);
+      });
+    } else {
+      channelSelect.innerHTML = '<option value="">No channels available</option>';
+    }
+  } catch (err) {
+    channelSelect.innerHTML = '<option value="">Error loading channels</option>';
+  }
+}
+
+function showMultiStormFeedback(message, isError = false) {
+  const feedback = document.getElementById('multi-feedback');
+  if (!feedback) return;
+
+  feedback.style.display = 'block';
+  feedback.style.backgroundColor = isError ? 'salmon' : 'lightgreen';
+  feedback.style.color = isError ? '#721c24' : '#155724';
+  feedback.style.border = isError ? '1px solid #f5c6cb' : '1px solid #c3e6cb';
+  feedback.textContent = message;
+
+  setTimeout(() => {
+    feedback.style.display = 'none';
+  }, 5000);
+}
+
 async function loadLogStormsGiveaways() {
   let container = document.getElementById('c2e-content');
 
@@ -6475,94 +6545,213 @@ async function loadLogStormsGiveaways() {
   try {
     // Visualizza il modulo per aggiungere una tempesta
     container.innerHTML = `
-      <div class="section-container" >
-        <h2 class="section-title" >Add New Scheduled Storm</h2>
-        <div id="add-storm-form" class="form-container" >
-
-          <!-- Scheduled Time and Timeframe -->
-          <div style="display: flex; gap: 16px; align-items: flex-start;">
-            <div style="flex: 0 0 20%;">
-              <label class="input-label">Scheduled Time</label>
-              <input type="datetime-local" id="scheduledTime" class="input-field">
-            </div>
-            <div style="flex: 0 0 20%;">
-              <label class="input-label">Timeframe</label>
-              <select id="timeframe" class="input-field">
-                <option value="">Select Timeframe</option>
-                <option value="5m">5m</option>
-                <option value="10m">10m</option>
-                <option value="15m">15m</option>
-                <option value="20m">20m</option>
-                <option value="30m">30m</option>
-                <option value="1h">1h</option>
-                <option value="2h">2h</option>
-                <option value="3h">3h</option>
-                <option value="4h">4h</option>
-                <option value="5h">5h</option>
-                <option value="6h">6h</option>
-                <option value="12h">12h</option>
-                <option value="1d">1d</option>
-                <option value="2d">2d</option>
-                <option value="3d">3d</option>
-                <option value="4d">4d</option>
-                <option value="5d">5d</option>
-                <option value="6d">6d</option>
-                <option value="7d">7d</option>
-                <option value="15d">15d</option>
-                <option value="30d">30d</option>
-                <option value="90d">90d</option>
-                <option value="180d">180d</option>
-                <option value="1y">1y</option>
-              </select>
-            </div>
+      <div class="section-container">
+        <h2 class="section-title">Add Scheduled Storm</h2>
+    
+        <!-- TOGGLER -->
+        <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+          <span style="font-weight: bold;">Mode:</span>
+          <div style="display: flex; border: 2px solid #4f46e5; border-radius: 30px; overflow: hidden;">
+            <button id="toggle-single" style="
+              background-color: #4f46e5;
+              color: white;
+              border: none;
+              padding: 8px 20px;
+              font-weight: bold;
+              cursor: pointer;
+              transition: background-color 0.3s ease;
+            ">Single</button>
+            <button id="toggle-multi" style="
+              background-color: #e0e7ff;
+              color: #1e40af;
+              border: none;
+              padding: 8px 20px;
+              font-weight: bold;
+              cursor: pointer;
+              transition: background-color 0.3s ease;
+            ">Multi</button>
           </div>
-
-          <!-- Amount and Token Symbol -->
-          <div >
-            <div >
-              <label class="input-label" >Payment Method</label>
-              <select id="paymentMethod" class="input-field" >
-                <option value="twitch">Twitch</option>
-                <option value="telegram">Telegram</option>
-              </select>
-            </div>          
-            <div >
-              <label class="input-label" >Amount</label>
-              <input type="number" id="amount" class="input-field" >
+        </div>
+    
+        <!-- FORM SINGOLO -->
+        <div id="single-form">
+          ${/* Tutto il contenuto originale di #add-storm-form (come già nel tuo codice) */''}
+          <div id="add-storm-form" class="form-container">
+    
+            <!-- Scheduled Time and Timeframe -->
+            <div style="display: flex; gap: 16px; align-items: flex-start;">
+              <div style="flex: 0 0 20%;">
+                <label class="input-label">Scheduled Time</label>
+                <input type="datetime-local" id="scheduledTime" class="input-field">
+              </div>
+              <div style="flex: 0 0 20%;">
+                <label class="input-label">Timeframe</label>
+                <select id="timeframe" class="input-field">
+                  <option value="">Select Timeframe</option>
+                  <option value="5m">5m</option>
+                  <option value="10m">10m</option>
+                  <option value="15m">15m</option>
+                  <option value="20m">20m</option>
+                  <option value="30m">30m</option>
+                  <option value="1h">1h</option>
+                  <option value="2h">2h</option>
+                  <option value="3h">3h</option>
+                  <option value="4h">4h</option>
+                  <option value="5h">5h</option>
+                  <option value="6h">6h</option>
+                  <option value="12h">12h</option>
+                  <option value="1d">1d</option>
+                  <option value="2d">2d</option>
+                  <option value="3d">3d</option>
+                  <option value="4d">4d</option>
+                  <option value="5d">5d</option>
+                  <option value="6d">6d</option>
+                  <option value="7d">7d</option>
+                  <option value="15d">15d</option>
+                  <option value="30d">30d</option>
+                  <option value="90d">90d</option>
+                  <option value="180d">180d</option>
+                  <option value="1y">1y</option>
+                </select>
+              </div>
             </div>
-            <div >
-              <label class="input-label" >Token Symbol</label>
-              <select id="tokenSymbol" class="input-field" >
+    
+            <!-- Amount and Token Symbol -->
+            <div>
+              <div>
+                <label class="input-label">Payment Method</label>
+                <select id="paymentMethod" class="input-field">
+                  <option value="twitch">Twitch</option>
+                  <option value="telegram">Telegram</option>
+                </select>
+              </div>
+              <div>
+                <label class="input-label">Amount</label>
+                <input type="number" id="amount" class="input-field">
+              </div>
+              <div>
+                <label class="input-label">Token Symbol</label>
+                <select id="tokenSymbol" class="input-field">
+                  <option value="">Select Token</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <div>
+                <label class="input-label">Channel</label>
+                <select id="channelName" class="input-field">
+                  <option value="">Select Channel</option>
+                </select>
+              </div>
+            </div>
+            <div style="height: 10px;"></div>
+    
+            <div id="storm-feedback" style="margin-bottom: 16px; padding: 10px; border-radius: 6px; display: none; font-weight: bold; font-size: 14px;"></div>
+    
+            <button id="submitStorm" class="btn-submit">
+              Add Storm
+            </button>
+          </div>
+        </div>
+    
+        <!-- FORM MULTIPLO -->
+        <div id="multi-form" style="display:none;">
+          <div style="border: 2px dashed #6366f1; padding: 20px; border-radius: 10px; background-color: #f9fafb;">
+            <p style="font-weight: bold; font-size: 16px; color: #4f46e5; margin-bottom: 10px;">🚀 Schedule Multiple Storms</p>
+            <div id="multi-feedback" style="margin-bottom: 16px; padding: 10px; border-radius: 6px; display: none; font-weight: bold; font-size: 14px;"></div>
+
+            <!-- Start time -->
+            <div style="margin-bottom: 12px;">
+              <label style="font-weight: 600;">Start Time</label>
+              <input type="datetime-local" id="multiStartTime" class="input-field" style="width: 100%;">
+            </div>
+        
+            <!-- Interval -->
+            <div style="margin-bottom: 12px;">
+              <label style="font-weight: 600;">Interval Between Storms</label>
+              <select id="multiInterval" class="input-field" style="width: 100%;">
+                <option value="">Select Interval</option>
+                <option value="5m">5 minutes</option>
+                <option value="10m">10 minutes</option>
+                <option value="15m">15 minutes</option>
+                <option value="30m">30 minutes</option>
+                <option value="1h">1 hour</option>
+                <option value="2h">2 hours</option>
+                <option value="1d">1 day</option>
+              </select>
+            </div>
+        
+            <!-- Number of storms -->
+            <div style="margin-bottom: 12px;">
+              <label style="font-weight: 600;">Number of Storms</label>
+              <input type="number" id="multiCount" min="1" class="input-field" style="width: 100%;">
+            </div>
+        
+            <!-- Amount -->
+            <div style="margin-bottom: 12px;">
+              <label style="font-weight: 600;">Amount</label>
+              <input type="number" id="multiAmount" class="input-field" style="width: 100%;">
+            </div>
+        
+            <!-- Token -->
+            <div style="margin-bottom: 12px;">
+              <label style="font-weight: 600;">Token Symbol</label>
+              <select id="multiTokenSymbol" class="input-field" style="width: 100%;">
                 <option value="">Select Token</option>
               </select>
             </div>
-          </div>
-          <div >
-            <div >
-              <label class="input-label" >Channel</label>
-              <select id="channelName" class="input-field" >
+        
+            <!-- Channel -->
+            <div style="margin-bottom: 12px;">
+              <label style="font-weight: 600;">Channel</label>
+              <select id="multiChannel" class="input-field" style="width: 100%;">
                 <option value="">Select Channel</option>
               </select>
             </div>
+        
+            <!-- Payment Method -->
+            <div style="margin-bottom: 12px;">
+              <label style="font-weight: 600;">Payment Method</label>
+              <select id="multiPaymentMethod" class="input-field" style="width: 100%;">
+                <option value="twitch">Twitch</option>
+                <option value="telegram">Telegram</option>
+              </select>
+            </div>
+        
+            <!-- Submit button -->
+            <button id="submitMultiStorms" class="btn-submit" style="margin-top: 10px;">Submit Multiple Storms</button>
           </div>
-          <div style="height: 10px;"></div>
-          
-          <!-- Feedback Backend -->
-          <div id="storm-feedback" style="margin-bottom: 16px; padding: 10px; border-radius: 6px; display: none; font-weight: bold; font-size: 14px;"></div>
-          
-          <!-- Add Storm Button -->
-          <button id="submitStorm" class="btn-submit">
-            Add Storm
-          </button>
         </div>
-
+    
         <h2 class="section-title mt-6">Scheduled Storms</h2>
         <div id="table-container" class="table-container">
           Loading Scheduled Storms...
         </div>
       </div>
     `;
-
+    const toggleSingle = document.getElementById('toggle-single');
+    const toggleMulti = document.getElementById('toggle-multi');
+    const singleForm = document.getElementById('single-form');
+    const multiForm = document.getElementById('multi-form');
+    
+    toggleSingle.addEventListener('click', () => {
+      singleForm.style.display = 'block';
+      multiForm.style.display = 'none';
+      toggleSingle.style.backgroundColor = '#4f46e5';
+      toggleSingle.style.color = 'white';
+      toggleMulti.style.backgroundColor = '#e0e7ff';
+      toggleMulti.style.color = '#1e40af';
+    });
+    
+    toggleMulti.addEventListener('click', () => {
+      singleForm.style.display = 'none';
+      multiForm.style.display = 'block';
+      toggleMulti.style.backgroundColor = '#4f46e5';
+      toggleMulti.style.color = 'white';
+      toggleSingle.style.backgroundColor = '#e0e7ff';
+      toggleSingle.style.color = '#1e40af';
+    });
+    
     // Aggiungi evento per inviare il form
     document.getElementById('submitStorm').addEventListener('click', addScheduledStorm);
 
@@ -6583,15 +6772,93 @@ async function loadLogStormsGiveaways() {
     populateTimeframes();
     // Popola i canali
     await populateChannels();
+    // Popola anche i campi del form multiplo
+    await populateMultiTokenSymbols(document.getElementById('multiPaymentMethod').value);
+    await populateMultiChannels();
 
     // Imposta i limiti per l'orario
     setScheduledTimeMinMax();
+    const multiPaymentSelect = document.getElementById('multiPaymentMethod');
+    multiPaymentSelect.addEventListener('change', () => {
+      const walletType = multiPaymentSelect.value;
+      populateMultiTokenSymbols(walletType);
+    });
 
     // Carica la tabella delle tempeste programmate
     loadScheduledStorms();
   } catch (err) {
     container.innerHTML = `<div class="error-message">Error loading log storms and giveaways: ${err.message}</div>`;
   }
+  
+  document.getElementById('submitMultiStorms').addEventListener('click', async () => {
+    const startTime = document.getElementById('multiStartTime').value;
+    const intervalValue = document.getElementById('multiInterval').value;
+    const stormCount = parseInt(document.getElementById('multiCount').value, 10);
+    const amount = parseFloat(document.getElementById('multiAmount').value);
+    const token = document.getElementById('multiTokenSymbol').value;
+    const channel = document.getElementById('multiChannel').value;
+    const paymentMethod = document.getElementById('multiPaymentMethod').value;
+  
+    if (!startTime || !intervalValue || !stormCount || !amount || !token || !channel || !paymentMethod) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+  
+    // Funzione per convertire '15m', '2h', '1d' in millisecondi
+    function intervalToMs(interval) {
+      const unit = interval.slice(-1);
+      const value = parseInt(interval.slice(0, -1), 10);
+      const multipliers = { m: 60000, h: 3600000, d: 86400000 };
+      return value * multipliers[unit] || 0;
+    }
+  
+    const storms = [];
+    const baseTime = new Date(startTime);
+    const intervalMs = intervalToMs(intervalValue);
+  
+    for (let i = 0; i < stormCount; i++) {
+      const scheduledDate = new Date(baseTime.getTime() + i * intervalMs);
+      const isoString = scheduledDate.toISOString().slice(0, 16); // 'YYYY-MM-DDTHH:mm'
+  
+      storms.push({
+        scheduled_time: isoString,
+        timeframe: intervalValue,
+        amount,
+        token_symbol: token,
+        channel,
+        payment_method: paymentMethod
+      });
+    }
+  
+    console.log("Generated Storms:", storms);
+  
+    // TODO: invio al backend, esempio:
+    try {
+      const res = await fetch(`${BASE_URL}/schedule_storms_batch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: window.userData.userId,
+          token: window.userData.usx_token,
+          storms
+        })
+      });
+  
+      const result = await res.json();
+  
+      if (result.success) {
+        showMultiStormFeedback("✅ Multiple storms scheduled successfully!");
+        loadScheduledStorms(); // Ricarica la tabella
+      } else {
+        showMultiStormFeedback("❌ Error: " + (result.message || "Unknown error"));
+      }
+    } catch (err) {
+      alert("❌ Request failed: " + err.message);
+    }
+  });
+  
 }
 
 async function populateTokenSymbols(walletType) {

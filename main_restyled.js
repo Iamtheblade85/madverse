@@ -1746,7 +1746,7 @@ async function loadSection(section) {
       </p>
 
         <div class="loading-message typing-loader">
-          <div class="typing-text">⌛ Loading blockchain data... please wait, I need only 5 seconds </div>
+          <div class="typing-text">⌛ Loading blockchain data... please wait. </div>
           <div class="spinner-bar"></div>
         </div>
   
@@ -5311,7 +5311,6 @@ function renderChatRewards(telegram, twitch) {
     `;
   }
 
-
   function renderPlatform(platform, icon) {
     const progress = Math.min((platform.xp / platform.xp_needed) * 100, 100).toFixed(1);
     const boostersHTML = `
@@ -5387,6 +5386,35 @@ function renderChatRewards(telegram, twitch) {
         `;
     
       return `
+        ${ch.name === 'sugarqueenjanice' ? `
+          <div style="
+            background: linear-gradient(to right, #ffccf9, #ffe0f0);
+            border: 2px solid #e91e63;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            font-family: 'Segoe UI', sans-serif;
+          ">
+            <h3 style="
+              color: #c2185b;
+              margin: 0;
+              font-size: 1.2em;
+              font-weight: 700;
+            ">
+              💖 SQJ ACTIVE PASS HOLDERS GET 50% MORE REWARDS PER MESSAGE!
+            </h3>
+            <p style="
+              color: #880e4f;
+              margin-top: 8px;
+              font-size: 1em;
+              font-weight: 500;
+            ">
+              Just by holding a valid pass, your messages are worth more! Enjoy boosted earnings while you chat 💬✨
+            </p>
+          </div>
+        ` : ''}
         <details>
           <summary style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
             <span style="
@@ -5410,9 +5438,6 @@ function renderChatRewards(telegram, twitch) {
         </details>
       `;
     }).join('');
-
-
-
   return `
     <div class="card-glow">
       <h2 class="glow-text">${icon} ${platform.platform || 'Platform'}</h2>

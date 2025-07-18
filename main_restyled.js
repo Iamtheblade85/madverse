@@ -3104,8 +3104,16 @@ async function renderDwarfsCave() {
         <p>📈 Goblins with higher <strong>level</strong> and dominant <strong>main attribute</strong> (accuracy, resistance, etc.) will earn you better rewards!</p>
         <p>🏆 Use the <strong>"Best 50 Goblins"</strong> button if you’re not sure who to send. We'll auto-pick your elite team!</p>
         <p>🎁 Don’t forget to open your <strong>Daily Chest</strong> for surprise bonuses, extra NFTs, and power boosts to fuel your next expedition.</p>
+      
+        <!-- EVIDENZIATA -->
+        <div style="background: #2a2a2a; border-left: 4px solid #ffe600; padding: 1rem; margin-top: 1rem; font-weight: bold; color: #ffd700;">
+          ⚠️ <strong>Important:</strong> After an expedition, goblins must head to the <strong>Tavern</strong> to have some drinks for <strong>5 minutes</strong>. <br>
+          After this cooldown, you can send them back into the cave for a new adventure! 🍻🕒
+        </div>
+      
         <p style="margin-top:1.5rem; font-style: italic; color: #aaa;">Tip: Check back often — treasure respawns, and goblins love digging daily!</p>
       </div>
+
     </div>
   `;
   const style = document.createElement("style");

@@ -7142,10 +7142,12 @@ async function loadScheduledStorms() {
       return;
     }
 
-    // Ordinamento: dal più recente al più vecchio
-    data.sort((a, b) => new Date(b.scheduled_time) - new Date(a.scheduled_time));
-
-    displayStormsData(data);
+    // Filtra solo i 'pending' e ordina dal più vecchio al più recente
+    const pendingOnly = data
+      .filter(item => item.status === 'pending')
+      .sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time));
+    
+    displayStormsData(pendingOnly);
   } catch (err) {
     tableContainer.innerHTML = `<div class="error-message">Error loading scheduled storms: ${err.message}</div>`;
   }

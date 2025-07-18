@@ -7226,13 +7226,10 @@ function renderStormsTable(data, page = 1) {
 }
 
 function renderStormsPaginationControls(totalItems) {
-  const container = document.querySelector('#storm-pagination');
-  if (!container) return;
-
   const totalPages = Math.ceil(totalItems / stormPag_itemsPerPage);
 
-  container.innerHTML = `
-    <div style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 10px;">
+  const paginationHTML = `
+    <div style="display: flex; justify-content: center; align-items: center; gap: 20px; margin: 10px 0;">
       <button ${stormPag_currentPage === 1 ? 'disabled' : ''} onclick="renderStormsTable(stormPag_data, ${stormPag_currentPage - 1})">
         ◀ Previous
       </button>
@@ -7242,8 +7239,13 @@ function renderStormsPaginationControls(totalItems) {
       </button>
     </div>
   `;
-}
 
+  const topContainer = document.querySelector('#storm-pagination-top');
+  const bottomContainer = document.querySelector('#storm-pagination-bottom');
+
+  if (topContainer) topContainer.innerHTML = paginationHTML;
+  if (bottomContainer) bottomContainer.innerHTML = paginationHTML;
+}
 
 function sortStormsTable(key) {
   if (currentSort.key === key) {
@@ -7303,6 +7305,7 @@ function displayStormsData(data) {
     </div>
 
     <div>
+      <div id="storm-pagination-top"></div>
       <table class="reward-table">
         <thead>
           <tr>
@@ -7319,7 +7322,7 @@ function displayStormsData(data) {
         </thead>
         <tbody></tbody>
       </table>
-      <div id="storm-pagination"></div>
+      <div id="storm-pagination-bottom"></div>
     </div>
   `;
   renderStormsTable(data);

@@ -65,13 +65,19 @@ function applyStormsFiltersAndSort() {
   const channelFilter = document.getElementById('filter-channel')?.value || '';
   const statusFilter = document.getElementById('filter-status')?.value || '';
   const offeredByFilter = document.getElementById('filter-offeredby')?.value || '';
+  const startDateInput = document.getElementById('filter-start-date')?.value || '';
+  const endDateInput = document.getElementById('filter-end-date')?.value || '';
 
   let filtered = originalStormsData.filter(record => {
-    return (
-      (!channelFilter || record.channel_name === channelFilter) &&
-      (!statusFilter || record.status === statusFilter) &&
-      (!offeredByFilter || record.offered_by === offeredByFilter)
-    );
+    const recordDate = new Date(record.scheduled_time);
+
+    const matchesChannel = !channelFilter || record.channel_name === channelFilter;
+    const matchesStatus = !statusFilter || record.status === statusFilter;
+    const matchesOfferedBy = !offeredByFilter || record.offered_by === offeredByFilter;
+    const matchesStartDate = !startDateInput || recordDate >= new Date(startDateInput);
+    const matchesEndDate = !endDateInput || recordDate <= new Date(endDateInput);
+
+    return matchesChannel && matchesStatus && matchesOfferedBy && matchesStartDate && matchesEndDate;
   });
 
   if (currentSort.key) {
@@ -7282,8 +7288,18 @@ function displayStormsData(data) {
         <label for="filter-offeredby">Offered By:</label>
         <select id="filter-offeredby" class="filter-select">${createOptions(offeredBys)}</select>
       </div>
+      <div class="filter-group" style="display: flex; flex-direction: column; gap: 4px;">
+        <strong>Scheduled Time Range:</strong>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <label for="filter-start-date">From:</label>
+          <input type="datetime-local" id="filter-start-date" />
+          <label for="filter-end-date">To:</label>
+          <input type="datetime-local" id="filter-end-date" />
+        </div>
+      </div>
       <button id="update-storms" class="btn btn-primary">Update Data</button>
     </div>
+
     <div>
       <table class="reward-table">
         <thead>
@@ -7310,6 +7326,8 @@ function displayStormsData(data) {
   document.getElementById('filter-status').addEventListener('change', applyStormsFiltersAndSort);
   document.getElementById('filter-offeredby').addEventListener('change', applyStormsFiltersAndSort);
   document.getElementById('update-storms').addEventListener('click', loadScheduledStorms);
+  document.getElementById('filter-start-date').addEventListener('change', applyStormsFiltersAndSort);
+  document.getElementById('filter-end-date').addEventListener('change', applyStormsFiltersAndSort);  
 }
 function addHoverEffectToRows() {
   const rows = document.querySelectorAll('.reward-table tbody tr');

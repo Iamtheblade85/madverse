@@ -7145,11 +7145,8 @@ async function loadScheduledStorms() {
     // Ordina tutti per scheduled_time (opzionale)
     allData.sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time));
 
-    // Filtra solo pending per visualizzazione iniziale
-    const pendingOnly = allData.filter(item => item.status === 'pending');
+    displayStormsData(allData);
 
-    // ✅ Passa entrambi
-    displayStormsData(pendingOnly, allData);
   } catch (err) {
     tableContainer.innerHTML = `<div class="error-message">Error loading scheduled storms: ${err.message}</div>`;
   }

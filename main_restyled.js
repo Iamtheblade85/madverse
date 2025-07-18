@@ -7135,23 +7135,26 @@ async function loadScheduledStorms() {
       throw new Error('Network response was not ok');
     }
 
-    const data = await res.json();
+    const allData = await res.json();
 
-    if (data.length === 0) {
+    if (allData.length === 0) {
       tableContainer.innerHTML = '<div>No scheduled storms found.</div>';
       return;
     }
 
-    // Filtra solo i 'pending' e ordina dal più vecchio al più recente
-    const pendingOnly = data
-      .filter(item => item.status === 'pending')
-      .sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time));
-    
-    displayStormsData(pendingOnly);
+    // Ordina tutti per scheduled_time (opzionale)
+    allData.sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time));
+
+    // Filtra solo pending per visualizzazione iniziale
+    const pendingOnly = allData.filter(item => item.status === 'pending');
+
+    // ✅ Passa entrambi
+    displayStormsData(pendingOnly, allData);
   } catch (err) {
     tableContainer.innerHTML = `<div class="error-message">Error loading scheduled storms: ${err.message}</div>`;
   }
 }
+
 // Variabili globali univoche
 let stormPag_currentPage = 1;
 const stormPag_itemsPerPage = 100;
@@ -7260,17 +7263,14 @@ function sortStormsTable(key) {
   applyStormsFiltersAndSort(); // Ricalcola tabella con nuovo ordinamento
 }
 
-function displayStormsData(data) {
+function displayStormsData(data, fullDataForFilters = data) {
   const tableContainer = document.getElementById('table-container');
   originalStormsData = data;
-
   const getUniqueValues = (data, key) => [...new Set(data.map(item => item[key]).filter(Boolean))].sort();
   const createOptions = (values) => `<option value="">All</option>` + values.map(v => `<option value="${v}">${v}</option>`).join('');
-
-  const channels = getUniqueValues(data, 'channel_name');
-  const statuses = getUniqueValues(data, 'status');
-  const offeredBys = getUniqueValues(data, 'offered_by');
-
+  const channels = getUniqueValues(fullDataForFilters, 'channel_name');
+  const statuses = getUniqueValues(fullDataForFilters, 'status');
+  const offeredBys = getUniqueValues(fullDataForFilters, 'offered_by');
   const sortArrow = (key) => {
     if (currentSort.key === key) {
       return currentSort.direction === 'asc' ? ' ↑' : ' ↓';

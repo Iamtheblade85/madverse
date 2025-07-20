@@ -6984,8 +6984,6 @@ async function loadLogStormsGiveaways() {
       return;
     }
 
-
-    }
     if (stormCount < 1) {
       showMultiStormFeedback("Storm count must be at least 1.");
       return;

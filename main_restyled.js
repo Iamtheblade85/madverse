@@ -6966,9 +6966,20 @@ async function loadLogStormsGiveaways() {
     const paymentMethod = document.getElementById('multiPaymentMethod').value;
     const timeframe = document.getElementById('multiTimeframe').value;
 
-    if (!startTime || !intervalValue || !stormCount || !amount || !token || !channel || !paymentMethod || !timeframe) {
+    if (
+      !startTime?.trim() ||
+      !intervalValue?.toString().trim() ||
+      !stormCount?.toString().trim() ||
+      !amount?.toString().trim() ||
+      !token?.trim() ||
+      !channel?.trim() ||
+      !paymentMethod?.trim() ||
+      !timeframe?.trim()
+    ) {
       showMultiStormFeedback("Please fill in all required fields.");
       return;
+    }
+
     }
     if (stormCount < 1) {
       showMultiStormFeedback("Storm count must be at least 1.");

@@ -2110,7 +2110,7 @@ async function renderGoblinInventory() {
     let sortBy = null;
     let sortAsc = true;
     let currentPage = 1;
-    let itemsPerPage = 12;
+    let itemsPerPage = 36;
 
     function paginate(data) {
       const start = (currentPage - 1) * itemsPerPage;

@@ -2400,7 +2400,7 @@ async function renderGoblinInventory() {
 
 async function renderDwarfsCave() {
   const app = document.getElementById("app");
-  app.innerHTML = 
+  app.innerHTML = `
     <div class="section-container">
       <h2 class="section-title">Dwarfs Gold Cave (Multiplayer Mode)</h2>
       <div id="dwarfs-cave-wrapper">
@@ -2413,7 +2413,7 @@ async function renderDwarfsCave() {
         <button id="start-expedition-btn" class="btn">🚀 Start Expedition</button>
       </div>
     </div>
-  ;
+  `;
 
   const user = window.userData;
   let syncInterval;

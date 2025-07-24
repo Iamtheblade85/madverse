@@ -2459,20 +2459,20 @@ async function renderDwarfsCave() {
 
   async function syncExpeditionsAndCanvas() {
     try {
-      const res = await fetch(${BASE_URL}/sync_expedition_state, {
+      const res = await fetch(`${BASE_URL}/sync_expedition_state`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ wax_account: user.wax_account })
       });
-
+  
       const syncData = await res.json();
-
+  
       currentExpeditions = syncData.expeditions || [];
       renderExpeditions(currentExpeditions);
       renderRecentResults(syncData.recent || []);
       renderChestRewards(syncData.bonuses || []);
       drawCave(syncData.canvas || {});
-
+  
     } catch (err) {
       console.error("[Sync Error]", err);
     }
@@ -2480,36 +2480,36 @@ async function renderDwarfsCave() {
 
   function renderExpeditions(expeditions) {
     const list = document.getElementById("global-expedition-list");
-    list.innerHTML = <h3>🌍 Active Expeditions</h3>;
+    list.innerHTML = `<h3>🌍 Active Expeditions</h3>`;
     expeditions.forEach(e => {
-      list.innerHTML += 
+      list.innerHTML += `
         <div>
           <strong>${e.wax_account}</strong>: ${e.total_goblins} goblins - Ends in ${e.seconds_remaining}s
-        </div>;
+        </div>`;
     });
   }
 
   function renderRecentResults(entries) {
     const container = document.getElementById("recent-expeditions-list");
-    container.innerHTML = <h3>🕒 Recent Results</h3>;
+    container.innerHTML = `<h3>🕒 Recent Results</h3>`;
     entries.forEach(item => {
-      container.innerHTML += 
-        <div><strong>${item.wax_account}</strong> won ${item.chips} CHIPS and ${item.nfts.length} NFTs</div>;
+      container.innerHTML += `
+        <div><strong>${item.wax_account}</strong> won ${item.chips} CHIPS and ${item.nfts.length} NFTs</div>`;
     });
   }
-
+  
   function renderChestRewards(entries) {
     const container = document.getElementById("bonus-chest-rewards");
-    container.innerHTML = <h3>🎁 Chest Wins</h3>;
+    container.innerHTML = `<h3>🎁 Chest Wins</h3>`;
     entries.forEach(r => {
-      container.innerHTML += 
-        <div><strong>${r.wax_account}</strong> got ${r.stats.tokens.CHIPS ?? 0} CHIPS and ${r.nfts?.length || 0} NFTs</div>;
+      container.innerHTML += `
+        <div><strong>${r.wax_account}</strong> got ${r.stats.tokens.CHIPS ?? 0} CHIPS and ${r.nfts?.length || 0} NFTs</div>`;
     });
   }
 
   async function loadUserGoblins() {
     try {
-      const res = await fetch(${BASE_URL}/user_nfts, {
+      const res = await fetch(`${BASE_URL}/user_nfts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2522,13 +2522,13 @@ async function renderDwarfsCave() {
       const goblins = (await res.json()).filter(n => n.type === "goblin");
       userGoblins = goblins;
       const list = document.getElementById("goblin-list");
-      list.innerHTML = goblins.map(g => 
+      list.innerHTML = goblins.map(g => `
         <div>
           <input type="checkbox" data-id="${g.asset_id}" ${selectedGoblins.has(g.asset_id) ? "checked" : ""}>
           ${g.name} - Lv.${g.level} (${g.daily_power} Power)
         </div>
-      ).join('');
-
+      `).join('');
+      
       document.querySelectorAll("#goblin-list input[type=checkbox]").forEach(cb => {
         cb.addEventListener("change", e => {
           const id = cb.getAttribute("data-id");
@@ -2545,7 +2545,7 @@ async function renderDwarfsCave() {
 
   function updateSelectionSummary() {
     const box = document.getElementById("selection-summary");
-    box.innerHTML = Selected: ${selectedGoblins.size} goblins;
+    box.innerHTML = `Selected: ${selectedGoblins.size} goblins`;
   }
 
   document.getElementById("start-expedition-btn").onclick = async () => {
@@ -2554,7 +2554,7 @@ async function renderDwarfsCave() {
     const assetIds = [...selectedGoblins];
 
     try {
-      const res = await fetch(${BASE_URL}/start_expedition, {
+      const res = await fetch(`${BASE_URL}/start_expedition`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

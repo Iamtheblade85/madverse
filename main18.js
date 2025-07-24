@@ -2398,1277 +2398,195 @@ async function renderGoblinInventory() {
   }
 }
 
-function appendBonusChestReward(reward, wax_account, source) {
-  const container = document.getElementById("bonus-chest-rewards");
-  if (!container) return;
-
-  const div = document.createElement("div");
-  div.style = "margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;";
-
-  const now = new Date();
-  const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-  const chips = reward?.stats?.tokens?.CHIPS ?? 0;
-  const nfts = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
-
-  div.innerHTML = `
-    <div><strong style="color: #0f0;">${wax_account}</strong> opened a chest from <strong>${source}</strong> at ${time}</div>
-    <div style="color: #0f0;">CHIPS: ${chips}</div>
-    <div style="color: #ffa500;">NFTs: ${nfts}</div>
-  `;
-
-  container.prepend(div);
-
-  // Mantieni max 6 bonus
-  while (container.children.length > 7) {
-    if (container.lastChild.tagName !== "H4") {
-      container.removeChild(container.lastChild);
-    } else break;
-  }
-}
-
-async function renderRecentExpeditionsList() {
-  try {
-    const res = await fetch(`${BASE_URL}/recent_expeditions`);
-    if (!res.ok) throw new Error("Failed to fetch recent expeditions");
-
-    const list = await res.json();
-    const container = document.getElementById("recent-expeditions-list");
-    if (!container) return;
-
-    // Mantieni solo il titolo
-    container.innerHTML = `<h4 style="color:#ffa500;">🕒 Recent Expedition Results</h4>`;
-
-    list.slice(0, 6).forEach(item => {
-      const div = document.createElement("div");
-      div.style = "margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;";
-
-      const dt = new Date(item.timestamp);
-      const formattedTime = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      div.innerHTML = `
-        <div><strong style="color: #ffe600;">${item.wax_account}</strong> at ${formattedTime}</div>
-        <div style="color: #0f0;">CHIPS: ${item.chips}</div>
-        <div style="color: #ffa500;">
-          NFTs:
-          ${
-            item.nfts.length > 0
-              ? `<ul style="margin: 0; padding-left: 1rem;">${item.nfts.map(nft =>
-                  `<li>${nft.schema} #${nft.template_id} × ${nft.quantity}</li>`
-                ).join('')}</ul>`
-              : 'None'
-          }
-        </div>
-
-      `;
-      container.appendChild(div);
-    });
-
-  } catch (err) {
-    console.error("[renderRecentExpeditionsList] Error:", err);
-  }
-}
-
-function updateRecentExpeditionsList(result, wax_account) {
-  const recentList = document.getElementById("recent-expeditions-list");
-  if (!recentList) return;
-
-  const now = new Date();
-  const minute = now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
-
-  const chips = result?.stats?.tokens?.CHIPS ?? 0;
-  const nfts = Array.isArray(result?.nfts) ? result.nfts.length : 0;
-
-  const key = `${wax_account}-${chips}-${nfts}-${minute}`;
-  if (window.recentExpeditionKeys.has(key)) {
-    console.log(`[SKIP] Duplicate expedition reward for ${wax_account}`);
-    return;
-  }
-  window.recentExpeditionKeys.add(key);
-
-  const formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-  const entry = document.createElement("div");
-  entry.style = "margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;";
-  entry.innerHTML = `
-    <div><strong style="color: #ffe600;">${wax_account}</strong> at ${formattedTime}</div>
-    <div style="color: #0f0;">CHIPS: ${chips}</div>
-    <div style="color: #ffa500;">NFTs: ${nfts}</div>
-  `;
-
-  recentList.prepend(entry);
-
-  while (recentList.children.length > 6) {
-    if (recentList.lastChild.tagName !== "H4") {
-      recentList.removeChild(recentList.lastChild);
-    } else break;
-  }
-}
-
-let commandPollingInterval = null;
-
-function startCommandPolling(canvas) {
-  if (window.perkPollingActive || commandPollingInterval !== null) {
-    console.log("⏳ Polling already active. Skipping start.");
-    return;
-  }
-
-  console.log("🚀 Starting command polling...");
-  window.perkPollingActive = true;
-  window.currentCanvas = canvas;
-
-  commandPollingInterval = setInterval(async () => {
-    if (!document.getElementById("caveCanvas")) {
-      console.warn("🛑 Canvas not found. Stopping polling.");
-      stopCommandPolling();
-      return;
-    }
-
-    try {
-      const res = await fetch(`${BASE_URL}/check_perk_command`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wax_account: window.userData.wax_account })
-      });
-
-      const text = await res.text();  
-      if (!text) {
-        return;
-      }
-      
-      let perk = null;
-      try {
-        perk = JSON.parse(text);  
-      } catch (err) {
-        return;
-      }
-
-
-      if (perk && perk.perk) {
-        triggerPerkAnimation(canvas, perk.perk, perk.wax_account);
-        // Feedback visuale
-        const perkInfo = {
-          dragon:    { label: "Dragon",    icon: "🐉" },
-          dwarf:     { label: "Dwarf",     icon: "⛏️" },
-          skeleton:  { label: "Skeleton",  icon: "💀" },
-          black_cat: { label: "Black Cat", icon: "🐈‍⬛" }
-        };
-
-        const info = perkInfo[perk.perk] || { label: perk.perk, icon: "✨" };
-
-        const feedbackArea = document.getElementById("feedback-area");
-        if (feedbackArea) {
-          const div = document.createElement("div");
-          div.style = `
-            margin: 0.5rem 0;
-            padding: 0.8rem;
-            background: #111;
-            border-left: 5px solid #0ff;
-            border-radius: 10px;
-            color: #fff;
-            font-family: Orbitron, sans-serif;
-            box-shadow: 0 0 10px #0ff;
-            animation: glow-pulse 1.5s ease-in-out infinite alternate;
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            font-size: 1rem;
-          `;
-          div.innerHTML = `
-            <span style="font-size: 1.5rem;">${info.icon}</span>
-            <span><strong>${perk.wax_account}</strong> triggered the <strong>${info.label}</strong> perk via <code>!chest</code></span>
-          `;
-          feedbackArea.appendChild(div);
-
-          setTimeout(() => {
-            if (div.parentElement) div.remove();
-          }, 10000);
-        }
-      } else {
-      }
-    } catch (err) {
-      console.warn("❌ Polling perk failed:", err);
-    }
-  }, 30000);
-}
-
-function stopCommandPolling() {
-  if (commandPollingInterval !== null) {
-    clearInterval(commandPollingInterval);
-    commandPollingInterval = null;
-    window.perkPollingActive = false;
-  }
-}
-
-// Funzione globale accanto a initGoblinCanvasAnimation
-function triggerPerkAnimation(_canvas, perkName, wax_account) {
-  const canvas = window.currentCanvas || _canvas;
-  if (!canvas) {
-    console.warn("❌ No canvas available for perk animation.");
-    return;
-  }
-
-  if (!window.activeChests) window.activeChests = [];
-
-  const ctx = canvas.getContext("2d");
-  const GRID_SIZE = 90;
-  const cellSize = canvas.width / GRID_SIZE;
-
-  const perkSprites = {
-    "dragon": { src: "perk_dragon.png", frames: 6 },
-    "dwarf": { src: "perk_dwarf.png", frames: 6 },
-    "skeletton": { src: "perk_skeleton.png", frames: 6 },
-    "black_cat": { src: "perk_blackcat.png", frames: 6 }
-  };
-  const perk = perkSprites[perkName] || perkSprites["dragon"];
-  const image = new Image();
-  image.src = perk.src;
-
-  const dir = Math.random() < 0.5 ? "left-to-right" : "right-to-left";
-  const minX = 5;
-  const maxX = GRID_SIZE - 5;
-  const startX = dir === "left-to-right" ? minX : maxX;
-
-  const y = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
-  const baseY = y;
-
-  const zigzagAmplitude = 3 + Math.random() * 4;
-  const zigzagFrequency = 0.15 + Math.random() * 0.15;
-  const waveY = (xPos) => baseY + Math.sin(xPos * zigzagFrequency) * zigzagAmplitude;
-
-  let x = startX;
-  const speed = 0.3 + Math.random() * 0.3;
-  const frameDelay = 8;
-  let frame = 0;
-  let tick = 0;
-  let dropped = false;
-  let perkDone = false;
-
-  image.onload = () => {
-    console.log(`✅ Image loaded: ${perk.src}`);
-  
-    const waveFunc = (xPos) => baseY + Math.sin(xPos * zigzagFrequency) * zigzagAmplitude;
-  
-    const perkObj = {
-      image,
-      frame: 0,
-      tick: 0,
-      x,
-      y: baseY,
-      dir,
-      perkName,
-      dropped: false,
-      waveY: waveFunc,
-      speed,
-      frames: perk.frames,
-      wax_account,
-      hasDropped: false
-    };
-  
-    if (!window.activePerks) window.activePerks = [];
-    window.activePerks.push(perkObj);
-    console.log(`🎯 Pushed new perk: ${perkName} by ${wax_account}`);
-  };
-  
-  image.onerror = () => {
-    console.error(`❌ Failed to load image: ${perk.src}`);
-  };
-
-}
-
-function getColorForAccount(i) {
-  const palette = ['#ffd700', '#00ffff', '#ff69b4', '#7fff00', '#ffa500', '#00ff7f', '#ff4500'];
-  return palette[i % palette.length];
-}
-
-function initGoblinCanvasAnimation(canvas, expeditions) {
-  const ctx = canvas.getContext("2d");
-  const GRID_SIZE = 90;
-  let cellSize = 10;
-  const goblinImage = new Image();
-  goblinImage.src = "goblin.png"; // Usa una sprite 64x64 o simile
-  const shovelSprite = new Image();
-  shovelSprite.src = "shovel_sprite.png"; // Sprite con frame orizzontali
-  const chestImage = new Image();
-  chestImage.src = "chest.png";
-  const goblins = expeditions.map((entry, i) => ({
-    x: Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1),
-    y: Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1),
-
-    wax_account: entry.wax_account,
-    path: [],
-    digging: false,
-    shovelFrame: 0,
-    frameTimer: 0,
-    color: getColorForAccount(i)
-  }));
-
-  function drawChests() {
-    if (!window.activeChests || !chestImage.complete) return;
-  
-    window.activeChests.forEach(ch => {
-      if (ch.taken) return;
-  
-      const cx = ch.x * cellSize;
-      const cy = ch.y * cellSize;
-  
-      // Riduci la chest a 1/4 della sua dimensione originale per lato
-      const scale = 0.15;
-      const scaledWidth = chestImage.width * scale;
-      const scaledHeight = chestImage.height * scale;
-  
-      ctx.drawImage(
-        chestImage,
-        cx - scaledWidth / 2,
-        cy - scaledHeight / 2,
-        scaledWidth,
-        scaledHeight
-      );
-    });
-  }
-
-
-
-  const bgImg = new Image();
-  bgImg.src = "cave-grid.png";
-
-  function resizeCanvas() {
-    if (!canvas || !canvas.parentElement) return;
-    const min = Math.min(canvas.parentElement.clientWidth, 900);
-    canvas.width = min;
-    canvas.height = min;
-    cellSize = canvas.width / GRID_SIZE;
-  }
-
-  function drawGrid() {
-    ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
-  }
-  
-  function drawPerks() {
-
-    if (!window.activePerks) return;
-    if (window.activePerks.length === 0) return;
-  
-    console.log(`🎨 Drawing ${window.activePerks.length} active perk(s)...`);
-  
-    for (let p of window.activePerks) {
-      if (!p.image || !p.image.complete) {
-        console.log(`⏳ Skipping "${p.perkName}" — image not loaded yet.`);
-        continue;
-      }
-    
-      console.log(`🎨 Drawing perk: ${p.perkName}, x=${p.x.toFixed(1)}, y=${p.y.toFixed(1)}, frame=${p.frame}`);
-
-      console.log(`➡️ Perk "${p.perkName}" from ${p.wax_account}`);
-      console.log(`   • pos = (${p.x.toFixed(2)}, ${p.y.toFixed(2)}), dir = ${p.dir}`);
-      console.log(`   • frame = ${p.frame}/${p.frames}, tick = ${p.tick}`);
-      console.log(`   • dropped = ${p.hasDropped}, done = ${p.done}`);
-  
-      p.tick++;
-      if (p.tick >= 8) {
-        p.tick = 0;
-        p.frame = (p.frame + 1) % p.frames;
-      }
-  
-      const px = p.x * cellSize;
-      const py = p.waveY(p.x) * cellSize;
-  
-      ctx.drawImage(
-        p.image,
-        p.frame * 128, 0, 128, 128,
-        px - 16, py - 16,
-        32, 32
-      );
-  
-      if (!p.hasDropped && Math.random() < 0.25) {
-        p.hasDropped = true;
-  
-        function getRandomSafeCoord() {
-          const margin = Math.floor(GRID_SIZE * 0.15);
-          return Math.floor(Math.random() * (GRID_SIZE - 2 * margin)) + margin;
-        }
-  
-        const chest = {
-          x: Math.round(p.x),
-          y: Math.round(p.y),
-          destX: getRandomSafeCoord(),
-          destY: getRandomSafeCoord(),
-          taken: false,
-          from: p.perkName,
-          wax_account: p.wax_account,
-          claimable: false
-        };
-  
-        console.log(`🎁 Spawning chest from "${p.perkName}" at (${chest.destX}, ${chest.destY})`);
-  
-        window.activeChests.push(chest);
-  
-        fetch(`${BASE_URL}/spawn_chest`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            wax_account: p.wax_account,
-            perk_type: p.perkName,
-            x: chest.destX,
-            y: chest.destY
-          })
-        })
-        .then(res => res.json())
-        .then(json => {
-          console.log("🧪 spawn_chest response:", json);
-          if (json.success && json.chest_id) {
-            chest.id = json.chest_id;
-            chest.claimable = true;
-            console.log(`✅ Chest spawned successfully with ID: ${chest.id}`);
-          } else {
-            console.warn("⚠️ Chest spawned without ID, possible duplication risk.");
-          }
-        })
-        .catch(err => {
-          console.warn("⚠️ Failed to report chest spawn:", err);
-        });
-      }
-  
-      p.x += p.dir === "left-to-right" ? p.speed : -p.speed;
-  
-      if ((p.dir === "left-to-right" && p.x > 95) || (p.dir === "right-to-left" && p.x < -5)) {
-        p.done = true;
-        console.log(`🛑 Perk "${p.perkName}" has exited the canvas.`);
-      }
-    }
-  
-    window.activePerks = window.activePerks.filter(p => !p.done);
-  }
-
-
-  function drawGoblin(g) {
-    const px = g.x * cellSize;
-    const py = g.y * cellSize;
-  
-    const goblinScale = 5;
-    const shovelScale = 3;
-    const goblinSize = cellSize * goblinScale;
-    const goblinOffset = (goblinSize - cellSize) / 2;
-  
-    // Goblin
-    ctx.drawImage(goblinImage, 0, 0, 128, 128, px - goblinOffset, py - goblinOffset, goblinSize, goblinSize);
-  
-    // Nome
-    ctx.font = `${cellSize * 2}px Orbitron`;
-    ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(0,0,0,0.6)";
-    ctx.fillRect(px - cellSize, py + cellSize * 1.2, cellSize * 2, cellSize * 0.7);
-    ctx.fillStyle = g.color;
-    ctx.fillText(g.wax_account, px, py + cellSize * 5);
-  
-    // Shovel animata
-    if (g.digging) {
-      const fx = g.shovelFrame * 128;
-      const shovelSize = cellSize * shovelScale;
-      ctx.drawImage(shovelSprite, fx, 0, 128, 128, px - (shovelSize - cellSize) / 2, py - shovelSize, shovelSize, shovelSize);
-    }
-  }
-
-  function moveGoblin(g) {
-    if (g.digging) return;
-
-    if (g.path.length === 0) {
-      const tx = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
-      const ty = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
-      g.path = generatePath(g.x, g.y, tx, ty);
-    }
-
-    if (g.path.length > 0) {
-      const [nx, ny] = g.path.shift();
-      g.x = nx;
-      g.y = ny;
-      // Controlla se il goblin è su una chest o vicino (9x9 celle)
-
-      if (window.activeChests) {
-        window.activeChests.forEach(ch => {
-          const dx = Math.abs(g.x - ch.x);
-          const dy = Math.abs(g.y - ch.y);
-          
-          if (dx <= 5 && dy <= 5 && !ch.taken && !ch.taken_by && !ch.claiming && ch.claimable) {
-            ch.claiming = true;
-            ch.taken = true;
-            ch.taken_by = g.wax_account;
-            console.log("🧪 Chest caught: ",ch.id);
-            (async () => {
-              try {
-                console.log("🧪 Chest reward payload:");
-                console.log("  wax_account:", g.wax_account);
-                console.log("  perk_type:", ch.from);
-                console.log("  chest_id:", ch.id ?? "(missing)");
-                console.log("  position:", ch.x, ch.y);
-                console.log("  taken:", ch.taken ?? false);
-                console.log("  claimable:", ch.claimable ?? false);
-
-              
-                const res = await fetch(`${BASE_URL}/chest_reward`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    wax_account: g.wax_account,
-                    perk_type: ch.from,
-                    chest_id: ch.id
-                  })
-                });
-
-                if (!res.ok) throw new Error("Reward fetch failed");
-              
-                const reward = await res.json();
-              
-                // 👇 LOG POST-RISPOSTA
-                const chips = reward?.stats?.tokens?.CHIPS ?? 0;
-                const nfts = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
-                            
-                const feedbackArea = document.getElementById("feedback-area");
-                const div = document.createElement("div");
-                div.style = `
-                  margin-top: 1rem;
-                  padding: 0.8rem;
-                  background: #111;
-                  border-left: 5px solid #0f0;
-                  border-radius: 10px;
-                  color: #fff;
-                  font-family: Orbitron, sans-serif;
-                  box-shadow: 0 0 10px #0f0;
-                `;
-              
-                if (chips === 0 && nfts === 0) {
-                  div.innerHTML = `
-                    🕳️ <strong>${g.wax_account}</strong> opened a chest from <strong>${ch.from}</strong>...<br>
-                    but it was completely empty!<br>
-                    The goblins are now racing rat-spiders instead of looting 🐀🕷️💨
-                  `;
-                } else {
-                  div.innerHTML = `
-                    🎁 <strong>${g.wax_account}</strong> won <span style="color: #0f0;">${chips} CHIPS</span>
-                    and <span style="color: #ffa500;">${nfts} NFTs</span> from <strong>${ch.from}</strong>!
-                  `;
-                }
-                feedbackArea.appendChild(div);
-                setTimeout(() => {
-                  if (div.parentElement) div.remove();
-                  appendBonusChestReward(reward, g.wax_account, ch.from);  // 👈 nuova funzione
-                }, 10000);
-                setTimeout(() => {
-                  window.activeChests = window.activeChests.filter(c => c !== ch);
-                }, 1000);
-                ch.claiming = false;
-              } catch (err) {
-                console.warn("⚠️ Failed to fetch reward:", err);
-                ch.claiming = false;
-              }
-            })();
-          }
-        });
-      }
-
-      if (g.path.length === 0) {
-        g.digging = true;
-        g.shovelFrame = 0;
-        g.frameTimer = 0;
-        setTimeout(() => { g.digging = false; }, 2000);
-      }
-    }
-  }
-
-  function generatePath(x1, y1, x2, y2) {
-    const path = [];
-    let cx = x1, cy = y1;
-    while (cx !== x2 || cy !== y2) {
-      if (cx !== x2) cx += x2 > cx ? 1 : -1;
-      else if (cy !== y2) cy += y2 > cy ? 1 : -1;
-      path.push([cx, cy]);
-    }
-    return path;
-  }
-
-  function updateAnimations(delta) {
-    goblins.forEach(g => {
-      if (g.digging) {
-        g.frameTimer += delta;
-        if (g.frameTimer >= 100) {
-          g.shovelFrame = (g.shovelFrame + 1) % 6; // 6 frame shovel
-          g.frameTimer = 0;
-        }
-      }
-    });
-  }
-
-  let last = performance.now();
-  function animate(now) {
-    const delta = now - last;
-    last = now;
-    resizeCanvas();
-    drawGrid();
-    drawPerks();
-    drawChests();
-    goblins.forEach(moveGoblin);
-    goblins.forEach(drawGoblin);
-    updateAnimations(delta);
-    requestAnimationFrame(animate);
-  }
-
-  Promise.all([
-    new Promise(res => (bgImg.onload = res)),
-    new Promise(res => (goblinImage.onload = res)),
-    new Promise(res => (shovelSprite.onload = res)),
-    new Promise(res => (chestImage.onload = res))
-  ]).then(() => {
-    resizeCanvas();           // ← una volta sola qui
-    animate(performance.now());
-  });
-  window.activeGoblins = goblins;
-}
-
-// Complete renderDwarfsCave function with full features
 async function renderDwarfsCave() {
-  const container = document.getElementById('goblin-content');
-  container.innerHTML = `
-    <div id="expedition-summary-block" style="margin-bottom: 2rem;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        gap: 2rem;
-        align-items: flex-start;
-        font-family: Orbitron, sans-serif;">
-      <div style="flex: 1;">
-        <h3 style='color:#ffe600;'>⛏️ Global Expeditions in Progress</h3>
-        <div id="feedback-area"></div>
-        <div id="perk-onsite"></div>
-        <div id="video-or-canvas" style="width: 100%;">
-          <video id="expedition-video" src="expedition_run.mp4" autoplay muted style="width: 100%; max-width: 480px; border-radius: 12px; box-shadow: 0 0 10px #ffe600;"></video>
-        </div>
-
+  const app = document.getElementById("app");
+  app.innerHTML = 
+    <div class="section-container">
+      <h2 class="section-title">Dwarfs Gold Cave (Multiplayer Mode)</h2>
+      <div id="dwarfs-cave-wrapper">
+        <div id="canvas-wrapper"></div>
+        <div id="global-expedition-list"></div>
+        <div id="recent-expeditions-list"></div>
+        <div id="bonus-chest-rewards"></div>
+        <div id="goblin-list"></div>
+        <div id="selection-summary"></div>
+        <button id="start-expedition-btn" class="btn">🚀 Start Expedition</button>
       </div>
-      <div style="flex: 1;">
-        <div id="global-expedition-list" style="background:#111; border-radius: 12px; padding: 1rem; color: #fff; box-shadow: 0 0 10px #0ff; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;"></div>
-        <div id="recent-expeditions-list" style="background:#0b0b0b; border-radius: 12px; padding: 1rem; color: #fff; box-shadow: 0 0 10px #ffa500; font-size: 0.95rem; line-height: 1.5;">
-          <h4 style="color:#ffa500;">🕒 Recent Expedition Results</h4>
-        </div>
-        <div id="bonus-chest-rewards" style="background:#101010; border-radius: 12px; padding: 1rem; color: #fff; box-shadow: 0 0 10px #0f0; font-size: 0.95rem; line-height: 1.5; margin-top: 1.5rem;">
-          <h4 style="color:#0f0;">🎁 Chest Bonus Rewards (!chest @ Twitch)</h4>
-        </div>
-        <div id="chest-perk-label" style="color:#ffe600; font-size:0.95rem; text-align:center; margin-bottom:0.5rem;">
-          Perk drop (1x / 10min each wax_account) – 50% chance of a chest drop in the cave.
-        </div>
-        <div style="text-align: center; margin-bottom: 1rem;">
-          <button id="chest-perk-btn" class="btn btn-glow">🎁 Try !chest Drop</button>
-        </div>
-        
-      </div>
-      </div>
-        <div style="
-          flex: 1;
-          background: linear-gradient(135deg, #3e1f05, #140b02);
-          border: 2px solid #ffd700;
-          border-radius: 16px;
-          padding: 1.5rem;
-          color: #ffeabf;
-          font-family: 'Papyrus', 'Fantasy', cursive;
-          font-size: 1.3rem;
-          line-height: 1.6;
-          box-shadow: 0 0 25px #ffb800, inset 0 0 12px #ffa500;
-          text-align: center;
-          animation: flickerGlow 2s infinite alternate;
-          letter-spacing: 1px;
-          text-shadow: 1px 1px 2px #000, 0 0 10px #ffa500;
-        ">
-          🔥 Want to change your Goblin for another one with a different Ability?<br>
-          <strong>Great!</strong> The next evolution is <u>coming THIS WEEK!!!</u>! #RotationPower
-        </div>
-    <div id="feedback-area" style="margin-bottom: 1rem; color: #0ff; font-family: Orbitron, sans-serif;"></div>
-    <div id="dwarfs-menu" style="margin-bottom: 1.5rem;"><p class="subtitle2">Select your goblins and start the expedition!</p></div>
-    <div style="display: flex; flex-wrap: wrap; gap: 2rem;">
-      <div style="flex: 1 1 60%; min-width: 300px;">
-        <div style="margin-bottom: 1rem; text-align: center; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;">
-          <button class="btn btn-glow" id="select-50">✅ Select First 50</button>
-          <button class="btn btn-glow" id="deselect-all">❌ Deselect All</button>
-          <button class="btn btn-glow" id="select-best">🏆 Best 50 Goblins</button>
-          <select id="sort-cave" class="btn btn-glow">
-            <option value="rarity">Sort by Rarity</option>
-            <option value="level">Sort by Level</option>
-            <option value="daily_power">Sort by Power</option>
-            <option value="loot_hungry">Sort by Loot-Hungry</option>
-          </select>
-        </div>
-        <div id="selection-summary" style="margin-top: 1.5rem; padding: 1rem; text-align: center; background: #111; border-radius: 12px; box-shadow: 0 0 10px #0ff; font-family: Orbitron, sans-serif; font-size: 1rem; color: #fff;"></div>
-        <div id="goblin-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
-      </div>
-      <div style="flex: 1 1 35%; min-width: 250px; background: #1c1c1c; border-radius: 12px; padding: 1.5rem; color: #eee; font-family: 'Orbitron', sans-serif; font-size: 0.95rem; line-height: 1.6; box-shadow: 0 0 10px #0ff;">
-        <h3 style="color:#ffe600; font-size:1.6rem; margin-bottom: 1rem;">📜 Welcome to the Dwarf’s Gold Cave</h3>
-        <p>💥 Ready to send your goblins into the depths? Choose up to <strong>50 warriors</strong> to explore the mysterious cave — the more, the merrier (and lootier)!</p>
-        <p>💰 Every expedition is <strong>free</strong> and rewards you with variable <strong>CHIPS tokens</strong> and even precious <strong>NFT treasures</strong> to help your goblin empire grow.</p>
-        <p>📈 Goblins with higher <strong>level</strong> and dominant <strong>main attribute</strong> (accuracy, resistance, etc.) will earn you better rewards!</p>
-        <p>🏆 Use the <strong>"Best 50 Goblins"</strong> button if you’re not sure who to send. We'll auto-pick your elite team!</p>
-        <p>🎁 Don’t forget to open your <strong>Daily Chest</strong> for surprise bonuses, extra NFTs, and power boosts to fuel your next expedition.</p>
-      
-        <!-- EVIDENZIATA -->
-        <div style="background: #2a2a2a; border-left: 4px solid #ffe600; padding: 1rem; margin-top: 1rem; font-weight: bold; color: #ffd700;">
-          ⚠️ <strong>Important:</strong> After an expedition, goblins must head to the <strong>Tavern</strong> to have some drinks for <strong>5 minutes</strong>. <br>
-          After this cooldown, you can send them back into the cave for a new adventure! 🍻🕒
-        </div>
-      
-        <p style="margin-top:1.5rem; font-style: italic; color: #aaa;">Tip: Check back often — treasure respawns, and goblins love digging daily!</p>
-      </div>
-
     </div>
-  `;
-  const style = document.createElement("style");
-  style.textContent = `
-  @keyframes flickerGlow {
-    0% { box-shadow: 0 0 15px #ffb800, inset 0 0 6px #ffa500; opacity: 0.95; }
-    100% { box-shadow: 0 0 35px #ffcc00, inset 0 0 14px #ffcc00; opacity: 1; }
-  }`;
-  document.head.appendChild(style);
-    
-  const video = document.getElementById("expedition-video");
-  let wrapper = document.getElementById("video-or-canvas");
-  
-  video.onended = () => {
-    // Rimuove il video
-    wrapper.innerHTML = '';
-  
-    // Crea e inserisce il canvas
-    const canvas = document.createElement("canvas");
-    canvas.id = "caveCanvas";
-    canvas.style = "width: 100%; height: auto; display: block;";
-    wrapper.appendChild(canvas);
-  
-    // Avvia la logica della caverna animata
-    initGoblinCanvasAnimation(canvas);
-  };
+  ;
 
-  const feedback = (msg) => {
-    document.getElementById('feedback-area').innerHTML = `<div style="padding: 0.5rem 1rem; background: #222; border-left: 5px solid #0ff; border-radius: 8px;">${msg}</div>`;
-  };
+  const user = window.userData;
+  let syncInterval;
 
-  let globalCountdownInterval;
-  
-  const renderGlobalExpeditions = async () => {
+  const canvasWrapper = document.getElementById("canvas-wrapper");
+  const canvas = document.createElement("canvas");
+  canvas.id = "caveCanvas";
+  canvas.width = 600;
+  canvas.height = 600;
+  canvas.style.width = "100%";
+  canvas.style.maxWidth = "600px";
+  canvasWrapper.appendChild(canvas);
+
+  let currentExpeditions = [];
+  let selectedGoblins = new Set();
+  let userGoblins = [];
+
+  function drawCave(data) {
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#111";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (data.goblins) {
+      data.goblins.forEach(g => {
+        ctx.fillStyle = "#0f0";
+        ctx.beginPath();
+        ctx.arc(g.x, g.y, 5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.font = "12px Orbitron";
+        ctx.fillText(g.wax_account, g.x + 6, g.y);
+      });
+    }
+
+    if (data.chests) {
+      data.chests.forEach(ch => {
+        ctx.fillStyle = ch.claimable ? "#ff0" : "#555";
+        ctx.fillRect(ch.x - 5, ch.y - 5, 10, 10);
+      });
+    }
+  }
+
+  async function syncExpeditionsAndCanvas() {
     try {
-      const res = await fetch(`${BASE_URL}/all_expeditions`, {
+      const res = await fetch(${BASE_URL}/sync_expedition_state, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wax_account: user.wax_account })
       });
-      const data = await res.json();
-      window.activeGoblins = data;
 
-      wrapper = document.getElementById("video-or-canvas");
-      const canvas = document.getElementById("caveCanvas");
-      const video = document.getElementById("expedition-video");
-  
-      const list = document.getElementById('global-expedition-list');
-      if (!list || !wrapper) {
-        console.warn("Missing container");
-        return;
-      }
-  
-      // Clear old list content
-      list.innerHTML = '';
-      list.style.display = "flex";
-      list.style.flexWrap = "wrap";
-      list.style.gap = "0.5rem";
-      // Clear previous countdowns
-      if (globalCountdownInterval) {
-        clearInterval(globalCountdownInterval);
-      }
-      
-      // Reset
-      window.activeChests = [];
-      
-      if (!Array.isArray(data) || data.length === 0) {
-        // 🔁 No expeditions → show video
-        wrapper.innerHTML = `
-          <video id="expedition-video" src="expedition_run.mp4" autoplay muted loop
-                 style="width: 100%; max-width: 480px; border-radius: 12px; box-shadow: 0 0 10px #ffe600;"></video>
-        `;
-        stopCommandPolling(); // ⛔ STOP qui!
-        list.innerHTML = `<p style='color: #888;'>No expeditions in progress.</p>`;
-        // Rimuovi tutte le chest se non ci sono spedizioni attive
-        if (window.activeChests) {
-          window.activeChests = [];
-        }     
-        return;
-      }
-       else {        
-        // Per ogni spedizione, aggiungi le chest
-        data.forEach(entry => {
-          if (Array.isArray(entry.chests)) {
-            entry.chests.forEach(ch => {
-              window.activeChests.push({
-                x: ch.x,
-                y: ch.y,
-                taken: false,
-                from: ch.from || "unknown",
-                wax_account: entry.wax_account
-              });
-            });
-          }
-        });
-         
-        // 🧱 Expeditions exist → show canvas
-        if (!canvas) {
-          wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
-          const activeCanvas = document.getElementById("caveCanvas");
-          initGoblinCanvasAnimation(activeCanvas, data);
-          startCommandPolling(activeCanvas); // ✅ START polling solo se canvas presente
-        }
-       }
-      // Render expeditions in the list
-      const expeditions = data.map((entry, i) => {
-        const endTime = Date.now() + (entry.seconds_remaining * 1000);
-        const timerId = `global-timer-${i}`;
-        const bg = i % 2 === 0 ? '#1a1a1a' : '#2a2a2a';
-        list.innerHTML += `
-          <div style="background: ${bg}; padding: 0.75rem; border-radius: 8px; width: 200px;">
-            <div><strong style="color: #ffe600;">${entry.wax_account}</strong></div>
-            <div style="color: #0ff;">Goblins: ${entry.total_goblins}</div>
-            <div id="${timerId}" style="color: #0f0;">⏳ calculating...</div>
-          </div>
-        `;
-        return { endTime, timerId };
-      });
-  
-      // Countdown
-      globalCountdownInterval = setInterval(() => {
-        const now = Date.now();
-        expeditions.forEach(({ endTime, timerId }) => {
-          const el = document.getElementById(timerId);
-          if (!el) return;
-  
-          const remaining = endTime - now;
-          if (remaining <= 0) {
-            el.textContent = "✅ Completed";
-          } else {
-            const mins = Math.floor(remaining / 60000);
-            const secs = Math.floor((remaining % 60000) / 1000);
-            el.textContent = `⏳ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-          }
-        });
-      }, 1000);
+      const syncData = await res.json();
+
+      currentExpeditions = syncData.expeditions || [];
+      renderExpeditions(currentExpeditions);
+      renderRecentResults(syncData.recent || []);
+      renderChestRewards(syncData.bonuses || []);
+      drawCave(syncData.canvas || {});
+
     } catch (err) {
-      console.error("[renderGlobalExpeditions] Error:", err);
+      console.error("[Sync Error]", err);
+    }
+  }
+
+  function renderExpeditions(expeditions) {
+    const list = document.getElementById("global-expedition-list");
+    list.innerHTML = <h3>🌍 Active Expeditions</h3>;
+    expeditions.forEach(e => {
+      list.innerHTML += 
+        <div>
+          <strong>${e.wax_account}</strong>: ${e.total_goblins} goblins - Ends in ${e.seconds_remaining}s
+        </div>;
+    });
+  }
+
+  function renderRecentResults(entries) {
+    const container = document.getElementById("recent-expeditions-list");
+    container.innerHTML = <h3>🕒 Recent Results</h3>;
+    entries.forEach(item => {
+      container.innerHTML += 
+        <div><strong>${item.wax_account}</strong> won ${item.chips} CHIPS and ${item.nfts.length} NFTs</div>;
+    });
+  }
+
+  function renderChestRewards(entries) {
+    const container = document.getElementById("bonus-chest-rewards");
+    container.innerHTML = <h3>🎁 Chest Wins</h3>;
+    entries.forEach(r => {
+      container.innerHTML += 
+        <div><strong>${r.wax_account}</strong> got ${r.stats.tokens.CHIPS ?? 0} CHIPS and ${r.nfts?.length || 0} NFTs</div>;
+    });
+  }
+
+  async function loadUserGoblins() {
+    try {
+      const res = await fetch(${BASE_URL}/user_nfts, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wax_account: user.wax_account,
+          user_id: user.userId,
+          usx_token: user.usx_token
+        })
+      });
+
+      const goblins = (await res.json()).filter(n => n.type === "goblin");
+      userGoblins = goblins;
+      const list = document.getElementById("goblin-list");
+      list.innerHTML = goblins.map(g => 
+        <div>
+          <input type="checkbox" data-id="${g.asset_id}" ${selectedGoblins.has(g.asset_id) ? "checked" : ""}>
+          ${g.name} - Lv.${g.level} (${g.daily_power} Power)
+        </div>
+      ).join('');
+
+      document.querySelectorAll("#goblin-list input[type=checkbox]").forEach(cb => {
+        cb.addEventListener("change", e => {
+          const id = cb.getAttribute("data-id");
+          if (cb.checked) selectedGoblins.add(id);
+          else selectedGoblins.delete(id);
+          updateSelectionSummary();
+        });
+      });
+
+    } catch (err) {
+      console.error("[Goblin Load Error]", err);
+    }
+  }
+
+  function updateSelectionSummary() {
+    const box = document.getElementById("selection-summary");
+    box.innerHTML = Selected: ${selectedGoblins.size} goblins;
+  }
+
+  document.getElementById("start-expedition-btn").onclick = async () => {
+    if (selectedGoblins.size === 0) return alert("Select goblins first!");
+
+    const assetIds = [...selectedGoblins];
+
+    try {
+      const res = await fetch(${BASE_URL}/start_expedition, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wax_account: user.wax_account,
+          user_id: user.userId,
+          usx_token: user.usx_token,
+          goblin_ids: assetIds
+        })
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        alert("Expedition started!");
+        selectedGoblins.clear();
+        await loadUserGoblins();
+        await syncExpeditionsAndCanvas();
+      } else {
+        alert(result.error || "Failed to start expedition");
+      }
+    } catch (err) {
+      console.error("[Start Expedition Error]", err);
     }
   };
 
-  await renderGlobalExpeditions();
-  
-  // 🔁 Aggiorna la mappa ogni 30 secondi per vedere nuove spedizioni degli altri
-  setInterval(async () => {
-    const canvas = document.getElementById("caveCanvas");
-    if (canvas) {
-      await renderGlobalExpeditions();
-      initGoblinCanvasAnimation(canvas, window.activeGoblins || []);
-    }
-  }, 20000); // ogni 30 secondi
+  await loadUserGoblins();
+  await syncExpeditionsAndCanvas();
+  updateSelectionSummary();
 
-  try {
-    const res = await fetch(`${BASE_URL}/user_nfts`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        wax_account: window.userData.wax_account,
-        user_id: window.userData.userId,
-        usx_token: window.userData.usx_token
-      })
-    });
-  
-    const goblins = (await res.json()).filter(nft => nft.type === "goblin");
-    if (goblins.length === 0) {
-      feedback("No goblins available for expedition.");
-      return;
-    }
-  
-    let selected = new Set();
-    let sortBy = "rarity";
-  
-    function getAttrValue(g, attr) {
-      return parseInt(g[attr] || 0);
-    }
-  
-    function highlightStyle(assetId) {
-      return selected.has(assetId) ? 'box-shadow: 0 0 10px #ffe600; background: rgba(255,255,0,0.05);' : '';
-    }
-  
-    function renderList(filteredList = goblins) {
-      const sorted = [...filteredList].sort((a, b) => getAttrValue(b, sortBy) - getAttrValue(a, sortBy));
-      document.getElementById('goblin-list').innerHTML = sorted.map(g => {
-        const isExhausted = parseInt(g.daily_power) < 5;
-      
-        return `
-          <div class="goblin-line" style="
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.6rem 1rem;
-            border-bottom: 1px solid #333;
-            border-radius: 10px;
-            position: relative;
-            ${highlightStyle(g.asset_id)}
-          ">
-            <div style="flex-basis: 15%; max-width: 15%; position: relative;">
-              <img src="${g.img}" style="width:50px; height:auto; border-radius:8px; ${isExhausted ? 'filter: grayscale(100%) brightness(0.7);' : ''}">
-              ${isExhausted ? `
-                <div style="
-                  position: absolute;
-                  top: -10px;
-                  left: -20px;
-                  transform: rotate(-20deg);
-                  background: rgba(255, 0, 0, 0.85);
-                  color: white;
-                  padding: 2px 8px;
-                  font-size: 0.65rem;
-                  font-weight: bold;
-                  border-radius: 6px;
-                  box-shadow: 0 0 6px red;
-                  font-family: Orbitron, sans-serif;
-                ">
-                  Exhausted
-                </div>
-              ` : ''}
-            </div>
-            <div style="flex-basis: 15%; max-width: 15%; font-size: 0.95rem; font-family: Orbitron, sans-serif; color: #fff;">
-              <div><strong style="color:#ffe600;">${g.name}</strong></div>
-              <div style="color:#ccc;">Rarity: <span>${g.rarity}</span></div>
-              <div style="color:#aaa;">Level: ${g.level} | Main: ${g.main_attr}</div>
-              <div style="color:#0ff;">Power: ${g["daily_power"]}</div>
-              ${isExhausted ? `<div style="color:#f44; font-size: 0.7rem; margin-top: 4px;">Needs rest until tomorrow</div>` : ''}
-            </div>
-            <input type="checkbox" class="select-goblin-checkbox" data-id="${g.asset_id}"
-              ${selected.has(g.asset_id) ? "checked" : ""}
-              ${isExhausted ? "disabled" : ""}
-              style="transform: scale(1.4); accent-color: #ffe600;">
-          </div>
-        `;
-      }).join("");
+  syncInterval = setInterval(syncExpeditionsAndCanvas, 10000);
 
-  
-      document.querySelectorAll('.select-goblin-checkbox').forEach(cb => {
-        cb.addEventListener('change', () => {
-          const id = cb.getAttribute('data-id');
-          cb.checked ? selected.add(id) : selected.delete(id);
-          updateSummary();
-          renderList();
-        });
-      });
-    }
-  
-    function updateSummary() {
-      const summary = document.getElementById("selection-summary");
-      summary.innerHTML = `
-        <span style="color:#ffe600;">Selected: ${selected.size} / 50</span>
-        <button class="btn btn-glow" id="start-expedition-btn" style="margin-left:1rem;">🚀 Start Expedition</button>
-      `;
-      document.getElementById("start-expedition-btn").onclick = async () => {
-        const button = document.getElementById("start-expedition-btn");
-        button.disabled = true; // ⛔ Blocca subito
-        button.textContent = "⏳ Starting...";
-      
-        if (selected.size === 0) {
-          feedback("Select at least 1 goblin to start.");
-          button.disabled = false;
-          button.textContent = "🚀 Start Expedition";
-          return;
-        }
-      
-        const assetIds = [...selected].filter(id => {
-          const gob = goblins.find(g => g.asset_id === id);
-          return gob && parseInt(gob.daily_power) >= 5;
-        });
-      
-        if (assetIds.length === 0) {
-          feedback("All selected goblins are too tired.");
-          button.disabled = false;
-          button.textContent = "🚀 Start Expedition";
-          return;
-        }
-      
-        try {
-          const startRes = await fetch(`${BASE_URL}/start_expedition`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              wax_account: window.userData.wax_account,
-              user_id: window.userData.userId,
-              usx_token: window.userData.usx_token,
-              goblin_ids: assetIds
-            })
-          });
-      
-          const expeditionData = await startRes.json();
-      
-          if (startRes.status === 409) {
-            feedback(expeditionData.error || "Already in expedition.");
-            // No reset del bottone perché c'è una spedizione attiva
-          } else if (startRes.ok) {
-            feedback("Expedition started!");
-            await renderUserCountdown(expeditionData.expedition_id, expeditionData.duration_seconds, assetIds);
-            await renderGlobalExpeditions();
-          } else {
-            feedback("Something went wrong.");
-            button.disabled = false;
-            button.textContent = "🚀 Start Expedition";
-          }
-        } catch (err) {
-          console.error("[Expedition] Error:", err);
-          feedback("Failed to start expedition.");
-          button.disabled = false;
-          button.textContent = "🚀 Start Expedition";
-        }
-      };
-
-    }
-      
-    // Render del risultato della expedition dell'utente con gestione completamento
-    async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
-      console.log("[TIMER DEBUG] seconds =", seconds, " → valid?", typeof seconds === "number" && !isNaN(seconds));
-
-      const summaryBlock = document.getElementById("expedition-summary-block");
-      if (!summaryBlock) return;
-    
-      const wax_account = window.userData?.wax_account;
-      if (!wax_account) return;
-    
-      // Inizializza mappa globale dei timer se non esiste
-      if (!window.expeditionTimersRunning) {
-        window.expeditionTimersRunning = {};
-      }
-    
-      // ⛔ Skip se già presente un timer per questo wax_account
-      if (window.expeditionTimersRunning[wax_account]) {
-        console.log(`[TIMER] Already running for ${wax_account}, skipping setup.`);
-        return;
-      }
-      window.expeditionTimersRunning[wax_account] = true;
-    
-      const existing = document.getElementById("user-expedition-countdown");
-      if (existing) existing.remove();
-    
-      const countdownDiv = document.createElement("div");
-      countdownDiv.id = "user-expedition-countdown";
-      countdownDiv.style = `
-        font-size: 1.2rem;
-        margin-top: 1rem;
-        color: #0ff;
-        font-family: Orbitron, sans-serif;
-        text-align: center;
-      `;
-      summaryBlock.appendChild(countdownDiv);
-    
-      let endTime = Date.now() + seconds * 1000;
-    
-      const timer = setInterval(async () => {
-        const remaining = endTime - Date.now();
-    
-        if (remaining <= 0) {
-          clearInterval(timer);
-          countdownDiv.textContent = "⏳ Expedition completed! Checking status...";
-    
-          try {
-            // 🔍 Controllo stato prima della chiamata a /end_expedition
-            const statusCheck = await fetch(`${BASE_URL}/expedition_status`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                wax_account,
-                user_id: window.userData.userId,
-                usx_token: window.userData.usx_token
-              })
-            });
-    
-            if (!statusCheck.ok) {
-              throw new Error(`Status check failed with ${statusCheck.status}`);
-            }
-    
-            const statusData = await statusCheck.json();
-    
-            // ⛏️ Chiama /end_expedition
-            const resultRes = await fetch(`${BASE_URL}/end_expedition`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                wax_account,
-                user_id: window.userData.userId,
-                usx_token: window.userData.usx_token,
-                expedition_id
-              })
-            });
-            
-            const result = await resultRes.json();
-
-            if (!resultRes.ok) {
-              console.error(`❌ /end_expedition failed for ${wax_account} — HTTP ${resultRes.status}`);
-              countdownDiv.textContent = "❌ Failed to retrieve expedition result.";
-              window.expeditionTimersRunning[wax_account] = false;
-              return;
-            }
-              
-            await renderRecentExpeditionsList();
-    
-            if (!result || !result.stats) {
-              countdownDiv.textContent = "⚠️ Malformed expedition result.";
-              console.warn("[⚠️] Malformed /end_expedition result", result);
-              window.expeditionTimersRunning[wax_account] = false;
-              return;
-            }
-    
-            // 🧠 Reset canvas
-            await renderGlobalExpeditions();
-            let wrapper = document.getElementById("video-or-canvas");
-            wrapper.innerHTML = `<canvas id="caveCanvas" style="width: 100%; height: auto; display: block;"></canvas>`;
-            let newCanvas = document.getElementById("caveCanvas");
-            initGoblinCanvasAnimation(newCanvas, window.activeGoblins || []);
-            startCommandPolling(newCanvas);
-    
-            // 🔄 Rimuovi dalla lista globale
-            const list = document.getElementById('global-expedition-list');
-            if (list) {
-              Array.from(list.children).forEach(div => {
-                if (div.innerHTML.includes(wax_account)) div.remove();
-              });
-            }
-    
-            updateRecentExpeditionsList(result, wax_account);
-            countdownDiv.textContent = "✅ Expedition complete!";
-            setTimeout(() => countdownDiv.remove(), 2000);
-    
-          } catch (err) {
-            console.error("🔥 Error during expedition result fetch:", err);
-            countdownDiv.textContent = "⚠️ Expedition fetch error.";
-          } finally {
-            window.expeditionTimersRunning[wax_account] = false;
-          }
-    
-        } else {
-          // ⏳ Countdown update
-          const mins = Math.floor(remaining / 60000);
-          const secs = Math.floor((remaining % 60000) / 1000);
-          countdownDiv.textContent = `⏳ Time Left: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-      }, 1000);
-    }
-
-
-    // Auto-select best 50 goblins
-    function autoSelectBestGoblins() {
-      selected.clear();
-      const scored = goblins
-        .filter(g => parseInt(g.daily_power) >= 5)
-        .map(g => ({
-          id: g.asset_id,
-          score: g.level + getAttrValue(g, g.main_attr)
-        }));
-
-      scored.sort((a, b) => b.score - a.score);
-      scored.slice(0, 50).forEach(g => selected.add(g.id));
-      renderList();
-      updateSummary();
-    }
-  
-    document.getElementById('select-50').onclick = () => {
-      selected.clear();
-      goblins.filter(g => parseInt(g.daily_power) >= 5).slice(0, 50).forEach(g => selected.add(g.asset_id));
-      renderList();
-      updateSummary();
-    };
-
-    document.getElementById('deselect-all').onclick = () => {
-      selected.clear();
-      renderList();
-      updateSummary();
-    };
-  
-    document.getElementById('select-best').onclick = () => {
-      autoSelectBestGoblins();
-    };
-  
-    document.getElementById('sort-cave').addEventListener('change', (e) => {
-      sortBy = e.target.value;
-      renderList();
-    });
-
-    document.getElementById("chest-perk-btn").onclick = async () => {
-      const btn = document.getElementById("chest-perk-btn");
-      btn.disabled = true;
-      btn.textContent = "Checking...";
-      
-      try {
-        const res = await fetch(`${BASE_URL}/try_chest_perk`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            wax_account: window.userData.wax_account,
-            user_id: window.userData.userId,
-            usx_token: window.userData.usx_token
-          })
-        });
-    
-        const result = await res.json();
-        
-        if (res.status === 429) {
-          feedback(`⏳ Wait: ${result.seconds_remaining}s until next perk try.`);
-        } else if (res.ok && result.perk_awarded) {
-          feedback(`🎉 Perk "${result.perk_type.toUpperCase()}" dropped! Will it drop a Chest?`);
-          if (window.activeChests && Array.isArray(window.activeChests)) {
-            window.activeChests.push({
-              x: Math.floor(Math.random() * 480), // posizione casuale nel canvas
-              y: Math.floor(Math.random() * 280),
-              taken: false,
-              from: "perk",
-              wax_account: window.userData.wax_account,
-              type: result.perk_type // opzionale, se vuoi usare immagini diverse per tipo
-            });
-          
-            // ridisegna canvas
-            const canvas = document.getElementById("caveCanvas");
-            if (canvas) {
-              initGoblinCanvasAnimation(canvas, window.activeGoblins || []);
-            }
-          }
-        } else {
-          feedback("😢 No perk awarded.");
-        }
-      } catch (err) {
-        console.error("[!chest] Error:", err);
-        feedback("❌ Error trying chest drop.");
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "🎁 Try !chest Drop";
-      }
-    };
-
-    renderList();
-    updateSummary();
-    await renderRecentExpeditionsList();
-
-    // Check for user's expedition in progress
-    const expeditionRes = await fetch(`${BASE_URL}/expedition_status`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        wax_account: window.userData.wax_account,
-        user_id: window.userData.userId,
-        usx_token: window.userData.usx_token
-      })
-    });
-  
-    if (expeditionRes.status === 200) {
-      const expeditionData = await expeditionRes.json();
-      const expedition_id = expeditionData.expedition_id;
-      const countdownSeconds = expeditionData.seconds_remaining;
-      const assetIds = expeditionData.goblin_ids || [];
-      selected = new Set(assetIds);
-      await renderUserCountdown(expedition_id, countdownSeconds, assetIds);
-    }  
-  } catch (err) {
-    console.error("[renderDwarfsCave] Error:", err);
-    feedback("Error loading goblin data or expedition info.");
-  }
+  window.onbeforeunload = () => clearInterval(syncInterval);
 }
-
 
 async function renderGoblinBlend() {
   const container = document.getElementById('goblin-content');

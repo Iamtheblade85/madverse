@@ -2426,35 +2426,58 @@ async function renderDwarfsCave() {
   canvas.style.width = "100%";
   canvas.style.maxWidth = "600px";
   canvasWrapper.appendChild(canvas);
+  const ctx = canvas.getContext("2d");
 
-  let currentExpeditions = [];
-  let selectedGoblins = new Set();
-  let userGoblins = [];
+  const perkSprites = {
+    "dragon": { src: "perk_dragon.png", frames: 6 },
+    "dwarf": { src: "perk_dwarf.png", frames: 6 },
+    "skeletton": { src: "perk_skeleton.png", frames: 6 },
+    "black_cat": { src: "perk_blackcat.png", frames: 6 }
+  };
 
-  function drawCave(data) {
-    const ctx = canvas.getContext("2d");
+  const loadedImages = {};
+  for (const key in perkSprites) {
+    const img = new Image();
+    img.src = perkSprites[key].src;
+    loadedImages[key] = img;
+  }
+
+  const goblinImage = new Image(); goblinImage.src = "goblin.png";
+  const shovelSprite = new Image(); shovelSprite.src = "shovel_sprite.png";
+  const chestImage = new Image(); chestImage.src = "chest.png";
+  const bgImg = new Image(); bgImg.src = "cave-grid.png";
+
+  let caveObjects = { goblins: [], perks: [], chests: [] };
+  let frameCount = 0;
+
+  function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = "#111";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    caveObjects.goblins.forEach(g => {
+      ctx.drawImage(goblinImage, g.x - 32, g.y - 32, 64, 64);
+    });
 
-    if (data.goblins) {
-      data.goblins.forEach(g => {
-        ctx.fillStyle = "#0f0";
-        ctx.beginPath();
-        ctx.arc(g.x, g.y, 5, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.font = "12px Orbitron";
-        ctx.fillText(g.wax_account, g.x + 6, g.y);
-      });
-    }
+    caveObjects.perks.forEach(p => {
+      const sprite = loadedImages[p.type];
+      const frame = Math.floor(frameCount / 5) % (perkSprites[p.type]?.frames || 1);
+      ctx.drawImage(sprite, frame * 64, 0, 64, 64, p.x - 32, p.y - 32, 64, 64);
+    });
 
-    if (data.chests) {
-      data.chests.forEach(ch => {
-        ctx.fillStyle = ch.claimable ? "#ff0" : "#555";
-        ctx.fillRect(ch.x - 5, ch.y - 5, 10, 10);
-      });
-    }
+    caveObjects.chests.forEach(ch => {
+      ctx.drawImage(chestImage, ch.x - 16, ch.y - 16, 32, 32);
+    });
+
+    frameCount++;
+    requestAnimationFrame(draw);
+  }
+
+  function updateCaveData(data) {
+    caveObjects = {
+      goblins: data.goblins || [],
+      perks: data.perks || [],
+      chests: data.chests || []
+    };
   }
 
   async function syncExpeditionsAndCanvas() {
@@ -2464,15 +2487,14 @@ async function renderDwarfsCave() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ wax_account: user.wax_account })
       });
-  
-      const syncData = await res.json();
-  
-      currentExpeditions = syncData.expeditions || [];
+
+      const data = await res.json();
+      currentExpeditions = data.expeditions || [];
       renderExpeditions(currentExpeditions);
-      renderRecentResults(syncData.recent || []);
-      renderChestRewards(syncData.bonuses || []);
-      drawCave(syncData.canvas || {});
-  
+      renderRecentResults(data.recent || []);
+      renderChestRewards(data.bonuses || []);
+      updateCaveData(data.canvas || {});
+
     } catch (err) {
       console.error("[Sync Error]", err);
     }
@@ -2497,7 +2519,7 @@ async function renderDwarfsCave() {
         <div><strong>${item.wax_account}</strong> won ${item.chips} CHIPS and ${item.nfts.length} NFTs</div>`;
     });
   }
-  
+
   function renderChestRewards(entries) {
     const container = document.getElementById("bonus-chest-rewards");
     container.innerHTML = `<h3>🎁 Chest Wins</h3>`;
@@ -2528,7 +2550,7 @@ async function renderDwarfsCave() {
           ${g.name} - Lv.${g.level} (${g.daily_power} Power)
         </div>
       `).join('');
-      
+
       document.querySelectorAll("#goblin-list input[type=checkbox]").forEach(cb => {
         cb.addEventListener("change", e => {
           const id = cb.getAttribute("data-id");
@@ -2550,7 +2572,6 @@ async function renderDwarfsCave() {
 
   document.getElementById("start-expedition-btn").onclick = async () => {
     if (selectedGoblins.size === 0) return alert("Select goblins first!");
-
     const assetIds = [...selectedGoblins];
 
     try {
@@ -2582,9 +2603,8 @@ async function renderDwarfsCave() {
   await loadUserGoblins();
   await syncExpeditionsAndCanvas();
   updateSelectionSummary();
-
+  draw();
   syncInterval = setInterval(syncExpeditionsAndCanvas, 10000);
-
   window.onbeforeunload = () => clearInterval(syncInterval);
 }
 

@@ -2487,25 +2487,47 @@ async function renderDwarfsCave() {
       }
     
       // 💡 Highlight goblins not owned by the current user
-      if (g.owner !== user.wax_account) {
+      if (g.aura) {
         ctx.save();
-        ctx.shadowColor = "yellow";
+        ctx.shadowColor = g.aura;
         ctx.shadowBlur = 20;
       }
-    
-      ctx.drawImage(goblinImage, g.x - 32, g.y - 32, 64, 64);
-    
+
+      const size = 32; // impostato come metà della dimensione originale
+      ctx.drawImage(goblinImage, g.x - size / 2, g.y - size / 2, size, size);
+      
       if (g.owner !== user.wax_account) {
         ctx.restore();
       }
-    
-      // ✏️ Optionally draw owner label
-      if (g.owner !== user.wax_account) {
-        ctx.font = "12px Arial";
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.fillText(g.owner, g.x, g.y - 38); // Above the goblin
+
+      // ✏️ Draw owner label for all goblins
+      const labelText = g.owner;
+      const labelX = g.x;
+      const labelY = g.y - 38;
+      
+      ctx.font = "12px Arial";
+      ctx.textAlign = "center";
+      
+      // Misura larghezza per disegnare rettangolo di sfondo
+      const textWidth = ctx.measureText(labelText).width;
+      const padding = 4;
+      const rectWidth = textWidth + padding * 2;
+      const rectHeight = 16;
+      
+      // Colore diverso per utente vs altri
+      if (g.owner === user.wax_account) {
+        ctx.fillStyle = "#333"; // sfondo scuro per sé
+      } else {
+        ctx.fillStyle = "#555"; // sfondo più chiaro per altri
       }
+      
+      // Disegna rettangolo sfondo
+      ctx.fillRect(labelX - rectWidth / 2, labelY - rectHeight + 4, rectWidth, rectHeight);
+      
+      // Scrivi testo sopra
+      ctx.fillStyle = "white";
+      ctx.fillText(labelText, labelX, labelY);
+
     });
     
       // Perks animati
@@ -2535,11 +2557,12 @@ async function renderDwarfsCave() {
         currentIndex: 0,
         x: g.path?.[0]?.x ?? g.x,
         y: g.path?.[0]?.y ?? g.y,
-        owner: g.owner,                   
+        owner: g.owner,
+        aura: g.aura || null,
         speed: 1 + (parseInt(g.asset_id.slice(-2), 16) % 10) / 10 
       };
     });
-  
+
     caveObjects = {
       goblins: newGoblins,
       perks: data.perks || [],

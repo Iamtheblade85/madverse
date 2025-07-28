@@ -2470,7 +2470,7 @@ async function renderDwarfsCave() {
     ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
   
     caveObjects.goblins.forEach(g => {
-      const speed = 1.5;
+      const speed = g.speed ?? 1.5;
       const next = g.path[g.currentIndex + 1];
       if (next) {
         const dx = next.x - g.x;
@@ -2527,7 +2527,6 @@ async function renderDwarfsCave() {
     requestAnimationFrame(draw);
   }
 
-
   function updateCaveData(data) {
     const newGoblins = (data.goblins || []).map(g => {
       return {
@@ -2535,7 +2534,9 @@ async function renderDwarfsCave() {
         path: g.path || [{ x: g.x, y: g.y }],
         currentIndex: 0,
         x: g.path?.[0]?.x ?? g.x,
-        y: g.path?.[0]?.y ?? g.y
+        y: g.path?.[0]?.y ?? g.y,
+        owner: g.owner,                   
+        speed: 1 + (parseInt(g.asset_id.slice(-2), 16) % 10) / 10 
       };
     });
   

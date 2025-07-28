@@ -2468,28 +2468,79 @@ async function renderDwarfsCave() {
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
-
+  
     caveObjects.goblins.forEach(g => {
+      const speed = 1.5;
+      const next = g.path[g.currentIndex + 1];
+      if (next) {
+        const dx = next.x - g.x;
+        const dy = next.y - g.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 1) {
+          g.x += dx / dist * speed;
+          g.y += dy / dist * speed;
+        } else {
+          g.x = next.x;
+          g.y = next.y;
+          g.currentIndex++;
+        }
+      }
+    
+      // 💡 Highlight goblins not owned by the current user
+      if (g.owner !== user.wax_account) {
+        ctx.save();
+        ctx.shadowColor = "yellow";
+        ctx.shadowBlur = 20;
+      }
+    
       ctx.drawImage(goblinImage, g.x - 32, g.y - 32, 64, 64);
+    
+      if (g.owner !== user.wax_account) {
+        ctx.restore();
+      }
+    
+      // ✏️ Optionally draw owner label
+      if (g.owner !== user.wax_account) {
+        ctx.font = "12px Arial";
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        ctx.fillText(g.owner, g.x, g.y - 38); // Above the goblin
+      }
     });
-
+    
+      // Perks animati
     caveObjects.perks.forEach(p => {
       const sprite = loadedImages[p.type];
-      const frame = Math.floor(frameCount / 5) % (perkSprites[p.type]?.frames || 1);
+      if (!sprite) return;
+      const frames = perkSprites[p.type]?.frames || 1;
+      const frame = Math.floor(frameCount / 5) % frames;
       ctx.drawImage(sprite, frame * 64, 0, 64, 64, p.x - 32, p.y - 32, 64, 64);
     });
-
+    
+    // Chest statiche
     caveObjects.chests.forEach(ch => {
       ctx.drawImage(chestImage, ch.x - 16, ch.y - 16, 32, 32);
     });
 
+    // draw perks and chests (come già fai)
     frameCount++;
     requestAnimationFrame(draw);
   }
 
+
   function updateCaveData(data) {
+    const newGoblins = (data.goblins || []).map(g => {
+      return {
+        asset_id: g.asset_id,
+        path: g.path || [{ x: g.x, y: g.y }],
+        currentIndex: 0,
+        x: g.path?.[0]?.x ?? g.x,
+        y: g.path?.[0]?.y ?? g.y
+      };
+    });
+  
     caveObjects = {
-      goblins: data.goblins || [],
+      goblins: newGoblins,
       perks: data.perks || [],
       chests: data.chests || []
     };

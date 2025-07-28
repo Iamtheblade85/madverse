@@ -2528,6 +2528,14 @@ async function renderDwarfsCave() {
 
   let caveObjects = { goblins: [], perks: [], chests: [] };
   let frameCount = 0;
+  
+  function constrainGoblinPosition(g) {
+    const marginX = canvas.width * 0.13;
+    const marginY = canvas.height * 0.13;
+  
+    g.x = Math.max(marginX, Math.min(canvas.width - marginX, g.x));
+    g.y = Math.max(marginY, Math.min(canvas.height - marginY, g.y));
+  }
 
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2548,6 +2556,7 @@ async function renderDwarfsCave() {
           g.y = next.y;
           g.currentIndex++;
         }
+        constrainGoblinPosition(g);
       }
     
       // 💡 Highlight goblins not owned by the current user
@@ -2649,10 +2658,18 @@ async function renderDwarfsCave() {
 
   async function syncExpeditionsAndCanvas() {
     try {
+      const goblinPositions = {};
+      for (const g of caveObjects.goblins) {
+        goblinPositions[g.asset_id] = { x: g.x, y: g.y, currentIndex: g.currentIndex };
+      }
+            
       const res = await fetch(`${BASE_URL}/sync_expedition_state`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wax_account: user.wax_account })
+        body: JSON.stringify({
+          wax_account: user.wax_account,
+          positions: goblinPositions
+        })
       });
 
       const data = await res.json();

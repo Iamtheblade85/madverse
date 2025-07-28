@@ -2400,6 +2400,70 @@ async function renderGoblinInventory() {
   }
 }
 
+function renderList(filteredList = userGoblins) {
+  const sorted = [...filteredList].sort((a, b) => b.daily_power - a.daily_power);
+  const selected = selectedGoblins;
+  const highlightStyle = (id) => selected.has(id) ? "background: rgba(255,255,0,0.1);" : "";
+
+  document.getElementById('goblin-list').innerHTML = sorted.map(g => {
+    const isExhausted = parseInt(g.daily_power) < 5;
+    return `
+      <div class="goblin-line" style="
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.6rem 1rem;
+        border-bottom: 1px solid #333;
+        border-radius: 10px;
+        position: relative;
+        ${highlightStyle(g.asset_id)}
+      ">
+        <div style="flex-basis: 15%; max-width: 15%; position: relative;">
+          <img src="${g.img}" style="width:50px; height:auto; border-radius:8px; ${isExhausted ? 'filter: grayscale(100%) brightness(0.7);' : ''}">
+          ${isExhausted ? `
+            <div style="
+              position: absolute;
+              top: -10px;
+              left: -20px;
+              transform: rotate(-20deg);
+              background: rgba(255, 0, 0, 0.85);
+              color: white;
+              padding: 2px 8px;
+              font-size: 0.65rem;
+              font-weight: bold;
+              border-radius: 6px;
+              box-shadow: 0 0 6px red;
+              font-family: Orbitron, sans-serif;
+            ">
+              Exhausted
+            </div>
+          ` : ''}
+        </div>
+        <div style="flex-grow:1; font-size: 0.95rem; font-family: Orbitron, sans-serif; color: #fff;">
+          <div><strong style="color:#ffe600;">${g.name}</strong></div>
+          <div style="color:#ccc;">Rarity: <span>${g.rarity}</span></div>
+          <div style="color:#aaa;">Level: ${g.level} | Main: ${g.main_attr}</div>
+          <div style="color:#0ff;">Power: ${g["daily_power"]}</div>
+          ${isExhausted ? `<div style="color:#f44; font-size: 0.7rem; margin-top: 4px;">Needs rest until tomorrow</div>` : ''}
+        </div>
+        <input type="checkbox" class="select-goblin-checkbox" data-id="${g.asset_id}"
+          ${selected.has(g.asset_id) ? "checked" : ""}
+          ${isExhausted ? "disabled" : ""}
+          style="transform: scale(1.4); accent-color: #ffe600;">
+      </div>
+    `;
+  }).join("");
+
+  document.querySelectorAll('.select-goblin-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const id = cb.getAttribute('data-id');
+      cb.checked ? selected.add(id) : selected.delete(id);
+      updateSelectionSummary();
+      renderList();
+    });
+  });
+}
+
 async function renderDwarfsCave() {
   const app = document.getElementById("app");
   app.innerHTML = `
@@ -2646,23 +2710,7 @@ async function renderDwarfsCave() {
 
       const goblins = (await res.json()).filter(n => n.type === "goblin");
       userGoblins = goblins;
-      const list = document.getElementById("goblin-list");
-      list.innerHTML = goblins.map(g => `
-        <div>
-          <input type="checkbox" data-id="${g.asset_id}" ${selectedGoblins.has(g.asset_id) ? "checked" : ""}>
-          ${g.name} - Lv.${g.level} (${g.daily_power} Power)
-        </div>
-      `).join('');
-
-      document.querySelectorAll("#goblin-list input[type=checkbox]").forEach(cb => {
-        cb.addEventListener("change", e => {
-          const id = cb.getAttribute("data-id");
-          if (cb.checked) selectedGoblins.add(id);
-          else selectedGoblins.delete(id);
-          updateSelectionSummary();
-        });
-      });
-
+      renderList();
     } catch (err) {
       console.error("[Goblin Load Error]", err);
     }

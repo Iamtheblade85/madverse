@@ -2550,25 +2550,38 @@ async function renderDwarfsCave() {
   }
 
   function updateCaveData(data) {
-    const newGoblins = (data.goblins || []).map(g => {
-      return {
-        asset_id: g.asset_id,
-        path: g.path || [{ x: g.x, y: g.y }],
-        currentIndex: 0,
-        x: g.path?.[0]?.x ?? g.x,
-        y: g.path?.[0]?.y ?? g.y,
-        owner: g.owner,
-        aura: g.aura || null,
-        speed: 1 + (parseInt(g.asset_id.slice(-2), 16) % 10) / 10 
-      };
+    const allGoblins = (data.goblins || []).map(g => ({
+      asset_id: g.asset_id,
+      path: g.path || [{ x: g.x, y: g.y }],
+      currentIndex: 0,
+      x: g.path?.[0]?.x ?? g.x,
+      y: g.path?.[0]?.y ?? g.y,
+      owner: g.owner,
+      aura: g.aura || null,
+      rarity: g.rarity || "common",
+      speed: 1 + (parseInt(g.asset_id.slice(-2), 16) % 10) / 10 
+    }));
+  
+    // Mappa owner → lista dei suoi goblin
+    const grouped = {};
+    for (const goblin of allGoblins) {
+      if (!grouped[goblin.owner]) grouped[goblin.owner] = [];
+      grouped[goblin.owner].push(goblin);
+    }
+  
+    // Ordina per rarity e prendi solo il più raro per owner
+    const rarityOrder = { mythic: 5, legendary: 4, epic: 3, rare: 2, common: 1 };
+    const filteredGoblins = Object.values(grouped).map(list => {
+      return list.sort((a, b) => (rarityOrder[b.rarity] ?? 0) - (rarityOrder[a.rarity] ?? 0))[0];
     });
-
+  
     caveObjects = {
-      goblins: newGoblins,
+      goblins: filteredGoblins,
       perks: data.perks || [],
       chests: data.chests || []
     };
   }
+
 
   async function syncExpeditionsAndCanvas() {
     try {

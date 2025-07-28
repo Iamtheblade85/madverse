@@ -3,12 +3,15 @@ window.userData = {};
 window.selectedNFTs = new Set();
 window.currentPage = 1;
 window.nftsPerPage = 24;
-window.activePerks = []; // Oggetti: { image, frame, x, y, tick, dir, etc }
+window.activePerks = []; 
 window.activeChests = [];
+window.selectedGoblins = new Set();
+window.userGoblins = []; 
 window.expeditionTimersRunning = window.expeditionTimersRunning || {};
+
 if (!window.recentExpeditionKeys) {
   window.recentExpeditionKeys = new Set();
-  setInterval(() => window.recentExpeditionKeys.clear(), 120000); // ogni 2 minuti reset
+  setInterval(() => window.recentExpeditionKeys.clear(), 120000); 
 }
 
 // === Modal Close Listener ===
@@ -23,7 +26,6 @@ document.addEventListener("click", (event) => {
   }
 });
 
-// Base URL reale
 const BASE_URL = "https://iamemanuele.pythonanywhere.com";
 let availableTokens = [];
 let originalData = [];
@@ -2410,6 +2412,8 @@ async function renderDwarfsCave() {
         <div id="bonus-chest-rewards"></div>
         <div id="goblin-list"></div>
         <div id="selection-summary"></div>
+        <button onclick="selectAllGoblins()">Select All</button>
+        <button onclick="selectBest50Goblins()">Select Best 50</button>
         <button id="start-expedition-btn" class="btn">🚀 Start Expedition</button>
       </div>
     </div>
@@ -2417,6 +2421,17 @@ async function renderDwarfsCave() {
 
   const user = window.userData;
   let syncInterval;
+  
+  function selectAllGoblins() {
+    selectedGoblins = new Set(userGoblins.map(g => g.asset_id));
+    loadUserGoblins();  // Ri-render con tutti selezionati
+  }
+  
+  function selectBest50Goblins() {
+    const top50 = userGoblins.slice(0, 50);  // Assumendo già ordinati
+    selectedGoblins = new Set(top50.map(g => g.asset_id));
+    loadUserGoblins();
+  }
 
   const canvasWrapper = document.getElementById("canvas-wrapper");
   const canvas = document.createElement("canvas");

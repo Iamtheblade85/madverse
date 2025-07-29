@@ -3530,7 +3530,9 @@ async function renderDwarfsCave() {
                 if (div.innerHTML.includes(wax_account)) div.remove();
               });
             }
-    
+            renderDwarfsCave();
+            document.querySelectorAll('.goblin-menu-btn').forEach(b => b.classList.remove('active-tab'));
+            document.querySelector('[data-menu="dwarf-cave"]')?.classList.add('active-tab');
             updateRecentExpeditionsList(result, wax_account);
             countdownDiv.textContent = "✅ Expedition complete!";
             setTimeout(() => countdownDiv.remove(), 2000);

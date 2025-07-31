@@ -7253,7 +7253,7 @@ function renderStormsPaginationControls(totalItems) {
   const totalPages = Math.ceil(totalItems / stormPag_itemsPerPage);
 
   const paginationHTML = `
-    <div style="display: flex; justify-content: center; align-items: center; gap: 20px; margin: 10px 0;">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 20px; margin: 10px 0; flex-wrap: wrap;">
       <button ${stormPag_currentPage === 1 ? 'disabled' : ''} onclick="renderStormsTable(stormPag_data, ${stormPag_currentPage - 1})">
         ◀ Previous
       </button>
@@ -7261,6 +7261,12 @@ function renderStormsPaginationControls(totalItems) {
       <button ${stormPag_currentPage === totalPages ? 'disabled' : ''} onclick="renderStormsTable(stormPag_data, ${stormPag_currentPage + 1})">
         Next ▶
       </button>
+      
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <label for="page-jump-input">Go to page:</label>
+        <input type="number" id="page-jump-input" min="1" max="${totalPages}" style="width: 60px;" />
+        <button id="page-jump-btn">Go</button>
+      </div>
     </div>
   `;
 
@@ -7269,6 +7275,26 @@ function renderStormsPaginationControls(totalItems) {
 
   if (topContainer) topContainer.innerHTML = paginationHTML;
   if (bottomContainer) bottomContainer.innerHTML = paginationHTML;
+
+  // Aggiungi listener al bottone "Go"
+  const addPageJumpHandler = (container) => {
+    const input = container.querySelector('#page-jump-input');
+    const btn = container.querySelector('#page-jump-btn');
+
+    if (btn && input) {
+      btn.addEventListener('click', () => {
+        const targetPage = parseInt(input.value, 10);
+        if (!isNaN(targetPage) && targetPage >= 1 && targetPage <= totalPages) {
+          renderStormsTable(stormPag_data, targetPage);
+        } else {
+          alert(`Please enter a page number between 1 and ${totalPages}`);
+        }
+      });
+    }
+  };
+
+  if (topContainer) addPageJumpHandler(topContainer);
+  if (bottomContainer) addPageJumpHandler(bottomContainer);
 }
 
 function sortStormsTable(key) {

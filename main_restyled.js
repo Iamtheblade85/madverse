@@ -6,10 +6,10 @@ window.nftsPerPage = 24;
 window.activePerks = []; // Oggetti: { image, frame, x, y, tick, dir, etc }
 window.activeChests = [];
 window.expeditionTimersRunning = window.expeditionTimersRunning || {};
-if (!window.recentExpeditionKeys) {
-  window.recentExpeditionKeys = new Set();
-  setInterval(() => window.recentExpeditionKeys.clear(), 120000); // ogni 2 minuti reset
-}
+//if (!window.recentExpeditionKeys) {
+  //window.recentExpeditionKeys = new Set();
+  //setInterval(() => window.recentExpeditionKeys.clear(), 120000); // ogni 2 minuti reset
+//}
 
 // === Modal Close Listener ===
 document.addEventListener("click", (event) => {
@@ -2473,20 +2473,12 @@ function updateRecentExpeditionsList(result, wax_account) {
   if (!recentList) return;
 
   const now = new Date();
-  const minute = now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
-
+  const formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   const chips = result?.stats?.tokens?.CHIPS ?? 0;
   const nfts = Array.isArray(result?.nfts) ? result.nfts.length : 0;
 
-  const key = `${wax_account}-${chips}-${nfts}-${minute}`;
-  if (window.recentExpeditionKeys.has(key)) {
-    console.log(`[SKIP] Duplicate expedition reward for ${wax_account}`);
-    return;
-  }
-  window.recentExpeditionKeys.add(key);
-
-  const formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
+  // ⛔ Nessun filtro duplicati!
+  
   const entry = document.createElement("div");
   entry.style = "margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;";
   entry.innerHTML = `

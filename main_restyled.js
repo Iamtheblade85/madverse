@@ -6693,7 +6693,6 @@ async function loadLogStormsGiveaways() {
     
         <!-- FORM SINGOLO -->
         <div id="single-form">
-          ${/* Tutto il contenuto originale di #add-storm-form (come già nel tuo codice) */''}
           <div id="add-storm-form" class="form-container">
     
             <!-- Scheduled Time and Timeframe -->

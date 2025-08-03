@@ -7049,42 +7049,7 @@ async function loadLogStormsGiveaways() {
       button.disabled = false;
       button.textContent = 'Submit Multiple Storms';
     }
-  });
-
- 
-    console.log("Generated Storms:", storms);
-
-    try {
-      const res = await fetch(`${BASE_URL}/schedule_storms_batch`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          user_id: window.userData.userId,
-          token: window.userData.usx_token,
-          wax_account: window.userData.wax_account,
-          storms,
-          interval: intervalValue,
-          count: stormCount
-        })
-      });
-      const result = await res.json();
-  
-      if (result.success) {
-        showMultiStormFeedback("✅ Multiple storms scheduled successfully!");
-        loadScheduledStorms(); // Ricarica la tabella
-        updateMultiStormCostEstimation();
-      } else {
-        const errorMsg = result.error || result.message || "Unknown error";
-        showMultiStormFeedback("❌ Error: " + errorMsg, true);
-      }
-    } catch (err) {
-      const errorMsg = result.error || result.message || "Unknown error";
-      showMultiStormFeedback("❌ Error: " + errorMsg, true);
-    }
-  });
-  
+  });  
 }
 
 async function populateTokenSymbols(walletType) {

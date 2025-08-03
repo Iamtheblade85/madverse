@@ -7722,7 +7722,7 @@ async function loadWallet() {
     const resTwitch = await fetch(`${BASE_URL}/saldo/twitch?user_id=${userId}&usx_token=${usx_token}&wax_account=${wax_account}`);
     const dataTwitch = await resTwitch.json();
     window.twitchWalletBalances = dataTwitch.balances || [];
-
+    console.log("Balances", window.twitchWalletBalances)
     const walletTable = document.getElementById('wallet-table');
     if (!walletTable) {
       console.warn("[⚠️] wallet-table non trovato nel DOM.");

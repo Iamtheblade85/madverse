@@ -6602,22 +6602,31 @@ function showMultiStormFeedback(message, isError = false) {
 
 async function populateExtraChannels() {
   const mainSelect = document.getElementById('multiChannel');
-  const extraSelect = document.getElementById('multiExtraChannels');
+  const container = document.getElementById('multiExtraChannels');
 
   const res = await fetch(`${BASE_URL}/available_channels`);
   const data = await res.json();
 
   if (!data.channels || !Array.isArray(data.channels)) return;
 
-  extraSelect.innerHTML = '';
+  container.innerHTML = '';
   const selectedChannel = mainSelect.value;
 
   data.channels.forEach(channel => {
     if (channel !== selectedChannel) {
-      const opt = document.createElement('option');
-      opt.value = channel;
-      opt.textContent = channel;
-      extraSelect.appendChild(opt);
+      const label = document.createElement('label');
+      label.style.display = 'block';
+      label.style.margin = '0.25rem 0';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = channel;
+      checkbox.name = 'extraChannel';
+      checkbox.classList.add('extra-channel-checkbox');
+
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(` ${channel}`));
+      container.appendChild(label);
     }
   });
 }
@@ -6626,8 +6635,7 @@ function updateMultiStormCostEstimation() {
   const amount = parseFloat(document.getElementById('multiAmount').value || 0);
   const count = parseInt(document.getElementById('multiCount').value || 0);
   const token = document.getElementById('multiTokenSymbol').value;
-  const extraChannels = Array.from(document.getElementById('multiExtraChannels').selectedOptions).map(o => o.value);
-
+  const extraChannels = Array.from(document.querySelectorAll('.extra-channel-checkbox:checked')).map(cb => cb.value);
   if (!amount || !count || !token) return;
 
   const stormsPerChannel = count;
@@ -6867,9 +6875,8 @@ async function loadLogStormsGiveaways() {
             <!-- Other Channels -->
             <div style="margin-bottom: 12px;">
               <label style="font-weight: 600;">Also apply these storms to:</label>
-              <select id="multiExtraChannels" multiple class="input-field" style="width: 100%; height: 80px;">
-                <!-- options dinamiche -->
-              </select>
+              <div id="multiExtraChannels" class="channel-checkbox-group"></div>
+
             </div>
         
             <!-- Submit button -->
@@ -6937,6 +6944,7 @@ async function loadLogStormsGiveaways() {
     multiPaymentSelect.addEventListener('change', () => {
       const walletType = multiPaymentSelect.value;
       populateMultiTokenSymbols(walletType);
+      updateMultiStormCostEstimation();
     });
 
     // Carica la tabella delle tempeste programmate
@@ -6951,6 +6959,10 @@ async function loadLogStormsGiveaways() {
   });
 
   document.getElementById('submitMultiStorms').addEventListener('click', async () => {
+    const button = document.getElementById('submitMultiStorms');
+    button.disabled = true;
+    button.textContent = 'Submitting...';
+  
     const startTime = document.getElementById('multiStartTime').value;
     const intervalValue = document.getElementById('multiInterval').value;
     const stormCount = parseInt(document.getElementById('multiCount').value, 10);
@@ -6959,31 +6971,24 @@ async function loadLogStormsGiveaways() {
     const channel = document.getElementById('multiChannel').value;
     const paymentMethod = document.getElementById('multiPaymentMethod').value;
     const timeframe = document.getElementById('multiTimeframe').value;
-
-    const requiredFields = [
-      startTime,
-      intervalValue,
-      stormCount,
-      amount,
-      token,
-      channel,
-      paymentMethod,
-      timeframe,
-    ];
-    
+  
+    const requiredFields = [startTime, intervalValue, stormCount, amount, token, channel, paymentMethod, timeframe];
     const hasEmptyField = requiredFields.some(f => !f || f.toString().trim() === "");
-    
+  
     if (hasEmptyField) {
       showMultiStormFeedback("Please fill in all required fields.");
+      button.disabled = false;
+      button.textContent = 'Submit Multiple Storms';
       return;
     }
-
+  
     if (stormCount < 1) {
       showMultiStormFeedback("Storm count must be at least 1.");
+      button.disabled = false;
+      button.textContent = 'Submit Multiple Storms';
       return;
     }
-
-    // Funzione per convertire '15m', '2h', '1d' in millisecondi
+  
     function intervalToMs(interval) {
       const unit = interval.slice(-1);
       const value = parseInt(interval.slice(0, -1), 10);
@@ -6991,12 +6996,12 @@ async function loadLogStormsGiveaways() {
       return value * multipliers[unit] || 0;
     }
   
-    const storms = [];
     const baseTime = new Date(startTime);
     const intervalMs = intervalToMs(intervalValue);
-    
-    const channels = [channel, ...Array.from(document.getElementById('multiExtraChannels').selectedOptions).map(o => o.value)];
-    
+    const extraChannels = Array.from(document.querySelectorAll('.extra-channel-checkbox:checked')).map(cb => cb.value);
+    const channels = [channel, ...extraChannels];
+  
+    const storms = [];
     channels.forEach(ch => {
       for (let i = 0; i < stormCount; i++) {
         const scheduledDate = new Date(baseTime.getTime() + i * intervalMs);
@@ -7011,6 +7016,41 @@ async function loadLogStormsGiveaways() {
         });
       }
     });
+  
+    try {
+      const res = await fetch(`${BASE_URL}/schedule_storms_batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: window.userData.userId,
+          token: window.userData.usx_token,
+          wax_account: window.userData.wax_account,
+          storms,
+          interval: intervalValue,
+          count: stormCount
+        })
+      });
+  
+      const result = await res.json();
+  
+      if (result.success) {
+        showMultiStormFeedback("✅ Multiple storms scheduled successfully!");
+        loadScheduledStorms();
+        updateMultiStormCostEstimation();
+      } else {
+        const errorMsg = result.error || result.message || "Unknown error";
+        showMultiStormFeedback("❌ Error: " + errorMsg, true);
+      }
+  
+    } catch (err) {
+      showMultiStormFeedback("❌ Error: " + err.message, true);
+  
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Submit Multiple Storms';
+    }
+  });
+
  
     console.log("Generated Storms:", storms);
 

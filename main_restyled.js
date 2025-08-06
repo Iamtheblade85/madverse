@@ -8533,19 +8533,45 @@ function showConfirmModal(message, onConfirm) {
     };
   }, 0);
 }
+
+function setButtonsEnabled(enabled) {
+  const buttons = document.querySelectorAll('button.action-button'); // seleziona i tuoi pulsanti specifici
+  buttons.forEach(btn => {
+    btn.disabled = !enabled;
+  });
+}
+
 async function executeAction(action, token, amount, tokenOut = null, contractOut = null, walletType = "telegram") {
-  let tokenOutput = null;
-  // Verifica se userId e wax_account sono presenti in window.userData
   if (!window.userData || !window.userData.userId || !window.userData.wax_account) {
     console.error("[❌] userId o wax_account non trovato in window.userData. Assicurati che i dati siano caricati prima di eseguire l'azione.");
-    return; // Interrompe l'esecuzione se userId o wax_account non sono presenti
+    setButtonsEnabled(true);
+    return;
+  }
+
+  setButtonsEnabled(false);
+
+  let interimFeedbackDiv = null;
+  if (action === "withdraw" || action === "swap") {
+    interimFeedbackDiv = document.createElement('div');
+    interimFeedbackDiv.id = 'interim-feedback';
+    interimFeedbackDiv.style = `
+      margin-top: 1rem;
+      padding: 1rem;
+      border-left: 4px solid #ffaa00;
+      background: rgba(255, 170, 0, 0.1);
+      color: #aa7700;
+      font-family: 'Courier New', monospace;
+      font-size: 0.92rem;
+      border-radius: 6px;
+    `;
+    interimFeedbackDiv.textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} in corso, si prega di attendere...`;
+    document.querySelector('#action-form').appendChild(interimFeedbackDiv);
   }
 
   const { userId, usx_token, wax_account } = window.userData;
   console.info(`User ID: ${userId} | USX Token: ${usx_token} | WAX Account: ${wax_account}`);
 
   let endpoint = "";
-
   if (action === "withdraw") {
     endpoint = `${BASE_URL}/withdraw`;
   } else if (action === "swap") {
@@ -8553,17 +8579,13 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
   } else if (action === "transfer") {
     endpoint = `${BASE_URL}/transfer`;
   } else if (action === "stake") {
-    endpoint = `${BASE_URL}/stake_add`;  // Usa /stake_add per l'azione "stake"
-  }
-  else if (action === "bridge_to") {
+    endpoint = `${BASE_URL}/stake_add`;
+  } else if (action === "bridge_to") {
     endpoint = `${BASE_URL}/bridge_token`;
   }
-  // Aggiungiamo user_id e usx_token all'URL
+
   const fullUrl = `${endpoint}?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
   console.info(`[📤] Eseguo azione ${action} chiamando: ${fullUrl}`);
-
-  let response;
-  let data;
 
   try {
     let bodyData = {
@@ -8584,34 +8606,19 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
     } else if (action === "transfer") {
       const receiverInput = document.getElementById('receiver');
       const receiver = receiverInput ? receiverInput.value.trim() : "";
-      if (!receiver) {
-        throw new Error("Recipient Wax Account is required for transfer.");
-      }
+      if (!receiver) throw new Error("Recipient Wax Account is required for transfer.");
       bodyData.receiver = receiver;
     } else if (action === "stake") {
-      // Assicurati che i dati delle pools siano caricati prima di eseguire l'azione
       if (!window.tokenPoolsData || window.tokenPoolsData.length === 0) {
         console.info("[🧰] Caricamento dati delle staking pools...");
-        await fetchAndRenderTokenPools(false); // False per evitare il rendering
-
-        // Dopo aver caricato i dati, verifica se è stato trovato il pool per il token
-        if (!window.tokenPoolsData || window.tokenPoolsData.length === 0) {
-          throw new Error("No staking pools data available after loading.");
-        }
+        await fetchAndRenderTokenPools(false);
+        if (!window.tokenPoolsData || window.tokenPoolsData.length === 0) throw new Error("No staking pools data available after loading.");
       }
-
-      // Recupera il pool_id dal token selezionato
       const poolData = window.tokenPoolsData.find(pool => pool.deposit_token.symbol.toLowerCase() === token.toLowerCase());
-      
-      if (!poolData) {
-        throw new Error(`No staking pool found for token ${token}`);
-      }
-
-      // Aggiungi il pool_id ai dati per la richiesta di staking
-      bodyData.pool_id = poolData.pool_id;  // Ottieni il pool_id dalla pool trovata
+      if (!poolData) throw new Error(`No staking pool found for token ${token}`);
+      bodyData.pool_id = poolData.pool_id;
       console.info(`[📤] Pool ID per ${token}: ${poolData.pool_id}`);
-    }
-    else if (action === "bridge_to") {
+    } else if (action === "bridge_to") {
       bodyData = {
         wax_account: wax_account,
         token_symbol: token,
@@ -8620,123 +8627,153 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
         to_wallet: walletType === "twitch" ? "telegram" : "twitch"
       };
     }
-    
+
     const body = JSON.stringify(bodyData);
-    response = await fetch(fullUrl, {
+    const response = await fetch(fullUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: body
     });
+
+    const data = await response.json();
+    console.info("[🔵] Risposta server:", data);
+
+    if (interimFeedbackDiv) interimFeedbackDiv.remove();
+
+    if (!response.ok) {
+      console.error(`[❌] Errore HTTP ${response.status}:`, data.error || "Unknown error");
+      throw new Error(data.error || `HTTP error ${response.status}`);
+    }
+    if (data.error) {
+      console.error(`[❌] API error:`, data.error);
+      throw new Error(data.error);
+    }
+
+    let feedbackText = "";
+
+    if (action === "withdraw") {
+      // Backend restituisce almeno { message, ... }
+      feedbackText = `
+        <div style="
+          margin-top: 1rem;
+          padding: 1rem;
+          border-left: 4px solid #ffaa00;
+          background: rgba(255, 170, 0, 0.1);
+          color: #aa7700;
+          font-family: 'Courier New', monospace;
+          font-size: 0.92rem;
+          border-radius: 6px;
+          box-shadow: 0 0 12px #ffaa0088;
+          animation: fadeIn 0.4s ease-in-out;
+        ">
+          <strong>Withdraw Completed Successfully</strong><br>
+          ${data.message}<br>
+          ${data.fee ? `Fee applied: ${data.fee} ${token}` : ''}
+        </div>
+      `;
+    } else if (action === "swap" && data.details) {
+      const details = data.details;
+      feedbackText = `
+        <div style="
+          margin-top: 1rem;
+          padding: 1rem;
+          border-left: 4px solid #00ffcc;
+          background: rgba(0, 255, 204, 0.05);
+          color: #00ffcc;
+          font-family: 'Courier New', monospace;
+          font-size: 0.92rem;
+          border-radius: 6px;
+          box-shadow: 0 0 12px #00ffcc88;
+          animation: fadeIn 0.4s ease-in-out;
+        ">
+          <strong>Swap Completed</strong><br>
+          ${details.amount} ${details.from_token} ➡️ ${details.received_amount.toFixed(4)} ${details.to_token}<br>
+          <em>Price:</em> ${details.execution_price}<br>
+          <em>Fee:</em> ${details.commission.toFixed(4)}
+        </div>
+      `;
+    } else if (action === "bridge_to" && data.net_amount && data.fee_applied !== undefined) {
+      feedbackText = `
+        <div style="
+          margin-top: 1rem;
+          padding: 1rem;
+          border-left: 4px solid #ff33cc;
+          background: rgba(255, 51, 204, 0.07);
+          color: #ff33cc;
+          font-family: 'Courier New', monospace;
+          font-size: 0.92rem;
+          border-radius: 6px;
+          box-shadow: 0 0 12px #ff33cc88;
+          animation: fadeIn 0.4s ease-in-out;
+        ">
+          <strong>Bridge Successful 🔁</strong><br>
+          From: <span style="color:#ff8800; font-weight:bold">${data.from_wallet.toUpperCase()}</span> →
+          To: <span style="color:#00bfff; font-weight:bold">${data.to_wallet.toUpperCase()}</span><br><br>
+          <em>Token:</em> <strong>${token}</strong><br>
+          <em>Amount Sent:</em> ${amount}<br>
+          <em>Fee (2%):</em> ${data.fee_applied.toFixed(4)}<br>
+          <em>Received:</em> ${data.net_amount.toFixed(4)}
+        </div>
+      `;
+    } else if (data.message) {
+      feedbackText = `
+        <div style="
+          margin-top: 1rem;
+          padding: 1rem;
+          border-left: 4px solid #aa66ff;
+          background: rgba(170, 102, 255, 0.07);
+          color: #aa66ff;
+          font-family: 'Courier New', monospace;
+          font-size: 0.92rem;
+          border-radius: 6px;
+          box-shadow: 0 0 12px #aa66ff88;
+          animation: fadeIn 0.4s ease-in-out;
+        ">
+          <strong>${action.charAt(0).toUpperCase() + action.slice(1)}:</strong> ${data.message}
+        </div>
+      `;
+    } else {
+      feedbackText = `
+        <div style="
+          margin-top: 1rem;
+          padding: 1rem;
+          border-left: 4px solid #33ff77;
+          background: rgba(51, 255, 119, 0.07);
+          color: #33ff77;
+          font-family: 'Courier New', monospace;
+          font-size: 0.92rem;
+          border-radius: 6px;
+          box-shadow: 0 0 12px #33ff7788;
+          animation: fadeIn 0.4s ease-in-out;
+        ">
+          <strong>${action} completed successfully.</strong>
+        </div>
+      `;
+    }
+
+    const feedbackDiv = document.createElement('div');
+    feedbackDiv.innerHTML = feedbackText;
+    document.querySelector('#action-form').appendChild(feedbackDiv);
+
   } catch (networkError) {
     console.error("[❌] Errore di rete:", networkError);
-    throw new Error("Network error or server unreachable.");
-  }
-
-  try {
-    data = await response.json();
-    console.info("[🔵] Risposta server:", data);
-  } catch (parseError) {
-    console.error("[❌] Errore parsing JSON:", parseError);
-    throw new Error("Server error: invalid response format.");
-  }
-
-  if (!response.ok) {
-    console.error(`[❌] Errore HTTP ${response.status}:`, data.error || "Unknown error");
-    throw new Error(data.error || `HTTP error ${response.status}`);
-  }
-
-  if (data.error) {
-    console.error(`[❌] API error:`, data.error);
-    throw new Error(data.error);
-  }
-
-  let feedbackText = "";
-  
-  if (action === "swap" && data.details) {
-    const details = data.details;
-    feedbackText = `
-      <div style="
-        margin-top: 1rem;
-        padding: 1rem;
-        border-left: 4px solid #00ffcc;
-        background: rgba(0, 255, 204, 0.05);
-        color: #00ffcc;
-        font-family: 'Courier New', monospace;
-        font-size: 0.92rem;
-        border-radius: 6px;
-        box-shadow: 0 0 12px #00ffcc88;
-        animation: fadeIn 0.4s ease-in-out;
-      ">
-        <strong>Swap Completed</strong><br>
-        ${details.amount} ${details.from_token} ➡️ ${details.received_amount.toFixed(4)} ${details.to_token}<br>
-        <em>Price:</em> ${details.execution_price}<br>
-        <em>Fee:</em> ${details.commission.toFixed(4)}
-      </div>
+    if (interimFeedbackDiv) interimFeedbackDiv.remove();
+    const errorDiv = document.createElement('div');
+    errorDiv.style = `
+      margin-top: 1rem;
+      padding: 1rem;
+      border-left: 4px solid #ff4444;
+      background: rgba(255, 68, 68, 0.1);
+      color: #ff4444;
+      font-family: 'Courier New', monospace;
+      font-size: 0.92rem;
+      border-radius: 6px;
     `;
-  } else if (action === "bridge_to" && data.net_amount && data.fee_applied !== undefined) {
-    feedbackText = `
-      <div style="
-        margin-top: 1rem;
-        padding: 1rem;
-        border-left: 4px solid #ff33cc;
-        background: rgba(255, 51, 204, 0.07);
-        color: #ff33cc;
-        font-family: 'Courier New', monospace;
-        font-size: 0.92rem;
-        border-radius: 6px;
-        box-shadow: 0 0 12px #ff33cc88;
-        animation: fadeIn 0.4s ease-in-out;
-      ">
-        <strong>Bridge Successful 🔁</strong><br>
-        From: <span style="color:#ff8800; font-weight:bold">${data.from_wallet.toUpperCase()}</span> →
-        To: <span style="color:#00bfff; font-weight:bold">${data.to_wallet.toUpperCase()}</span><br><br>
-        <em>Token:</em> <strong>${token}</strong><br>
-        <em>Amount Sent:</em> ${amount}<br>
-        <em>Fee (2%):</em> ${data.fee_applied.toFixed(4)}<br>
-        <em>Received:</em> ${data.net_amount.toFixed(4)}
-      </div>
-    `;
-  } else if (data.message) {
-    feedbackText = `
-      <div style="
-        margin-top: 1rem;
-        padding: 1rem;
-        border-left: 4px solid #aa66ff;
-        background: rgba(170, 102, 255, 0.07);
-        color: #aa66ff;
-        font-family: 'Courier New', monospace;
-        font-size: 0.92rem;
-        border-radius: 6px;
-        box-shadow: 0 0 12px #aa66ff88;
-        animation: fadeIn 0.4s ease-in-out;
-      ">
-        <strong>${action.charAt(0).toUpperCase() + action.slice(1)}:</strong> ${data.message}
-      </div>
-    `;
-  } else {
-    feedbackText = `
-      <div style="
-        margin-top: 1rem;
-        padding: 1rem;
-        border-left: 4px solid #33ff77;
-        background: rgba(51, 255, 119, 0.07);
-        color: #33ff77;
-        font-family: 'Courier New', monospace;
-        font-size: 0.92rem;
-        border-radius: 6px;
-        box-shadow: 0 0 12px #33ff7788;
-        animation: fadeIn 0.4s ease-in-out;
-      ">
-        <strong>${action} completed successfully.</strong>
-      </div>
-    `;
+    errorDiv.textContent = `Errore di rete: ${networkError.message || networkError}`;
+    document.querySelector('#action-form').appendChild(errorDiv);
+  } finally {
+    setButtonsEnabled(true);
   }
-  
-  const feedbackDiv = document.createElement('div');
-  feedbackDiv.innerHTML = feedbackText;
-  document.querySelector('#action-form').appendChild(feedbackDiv);
 }
 
 /* ─────────────────────────────

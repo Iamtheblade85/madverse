@@ -45,25 +45,26 @@
           <img src="partner4.png" alt="Partner 4" class="max-w-[200px] w-full h-auto object-contain" />
           <img src="partner5.png" alt="Partner 5" class="max-w-[200px] w-full h-auto object-contain" />
         </div>
-        <!-- Active Users Box (mobile-friendly, responsive) -->
-        <div id="local-online-users" class="hidden sm:flex flex-col items-end mt-4 pr-4"
-             style="position: absolute; top: 1.5rem; right: 1.5rem; z-index: 20;">
-        
-          <!-- Toggle Button -->
-          <button id="toggle-users-box"
-                  class="bg-black text-green-400 border border-green-500 rounded px-3 py-1 text-sm hover:bg-green-900 transition-all">
-            🟢 Show Active Users
-          </button>
-        
-          <!-- Users List Box -->
-          <div id="users-box"
-               class="mt-2 w-64 max-w-[90vw] bg-black bg-opacity-80 text-sm border border-green-500 rounded-lg shadow-lg p-3 hidden max-h-60 overflow-y-auto text-white">
-        
-            <strong class="block mb-2 text-green-400">🟢 Active Users</strong>
-            <ul id="local-users-list" class="space-y-1"></ul>
-        
+          <!-- Active Users Box (always visible, expandable with badge) -->
+          <div id="local-online-users" class="flex flex-col items-end fixed top-4 right-4 z-30">
+            <!-- Toggle Button with Badge -->
+            <button id="toggle-users-box"
+                    class="relative bg-black text-green-400 border border-green-500 rounded px-3 py-1 text-sm hover:bg-green-900 transition-all">
+              🟢 Active Users
+              <span id="user-count-badge"
+                    class="absolute -top-2 -right-2 bg-green-500 text-black font-bold text-xs rounded-full px-2 py-0.5 shadow-md hidden">
+                0
+              </span>
+            </button>
+          
+            <!-- User List Box -->
+            <div id="users-box"
+                 class="mt-2 w-64 max-w-[90vw] bg-black bg-opacity-90 text-sm border border-green-500 rounded-lg shadow-lg p-3 hidden max-h-60 overflow-y-auto text-white">
+              <strong class="block mb-2 text-green-400">Active Users</strong>
+              <ul id="local-users-list" class="space-y-1"></ul>
+            </div>
           </div>
-        </div>
+
     </div>
 
   <nav class="navbar-menu" role="navigation" aria-label="Main Navigation">
@@ -147,25 +148,28 @@
     
       for (const [wax, ts] of Object.entries(stored)) {
         const last = new Date(ts);
-        const diffMin = (now - last) / 60000; // millisecondi → minuti
+        const diffMin = (now - last) / 60000;
     
         if (diffMin < 10) {
           filtered[wax] = diffMin < 5 ? "green" : "yellow";
         }
       }
     
-      localStorage.setItem(ACTIVE_USERS_KEY, JSON.stringify(filtered)); // sovrascrive eliminando utenti inattivi
+      localStorage.setItem(ACTIVE_USERS_KEY, JSON.stringify(filtered));
       return filtered;
     }
     
     function renderLocalUsers() {
       const activeUsers = getActiveUsers();
       const list = document.getElementById("local-users-list");
-      list.innerHTML = "";
+      const badge = document.getElementById("user-count-badge");
     
+      list.innerHTML = "";
       const entries = Object.entries(activeUsers);
+    
       if (entries.length === 0) {
         list.innerHTML = "<li class='text-gray-400'>No users active</li>";
+        badge.classList.add("hidden");
         return;
       }
     
@@ -175,30 +179,30 @@
         li.textContent = `${color} ${wax}`;
         list.appendChild(li);
       });
+    
+      badge.textContent = entries.length;
+      badge.classList.remove("hidden");
     }
     
-    // Eventi che segnalano attività utente
-    ["click", "scroll", "keydown", "mousemove"].forEach(eventType => {
-      window.addEventListener(eventType, () => {
+    // ▶️ Tracciamento attività utente
+    ["click", "scroll", "keydown", "mousemove"].forEach(evt => {
+      window.addEventListener(evt, () => {
         if (window.userData?.wax_account) {
           updateLocalActivity(window.userData.wax_account);
         }
       });
     });
     
-    // Toggle visibilità box utenti
+    // 📦 Toggle visibilità utenti
     document.getElementById("toggle-users-box").addEventListener("click", () => {
       const box = document.getElementById("users-box");
-      const btn = document.getElementById("toggle-users-box");
-      const isHidden = box.classList.contains("hidden");
-    
       box.classList.toggle("hidden");
-      btn.textContent = isHidden ? "🟢 Hide Active Users" : "🟢 Show Active Users";
     });
     
-    // Primo render + aggiornamento periodico
+    // 🔁 Primo render + refresh ogni minuto
     renderLocalUsers();
-    setInterval(renderLocalUsers, 60000); // ogni minuto
+    setInterval(renderLocalUsers, 60000);
+
         
     document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
       toggle.addEventListener('click', () => {

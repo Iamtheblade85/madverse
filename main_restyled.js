@@ -5695,7 +5695,7 @@ async function loadTwitchNftsGiveaways() {
             <p>The number of winners will match the total number of NFTs selected. You can limit the number of winners by setting a <strong>maximum limit</strong>.</p>
           </div>
           <div id="giveaway-templates-wrapper"></div>
-          <button class="btn btn-secondary" id="add-template-btn">➕ Add another template</button>
+          <!-- <button class="btn btn-secondary" id="add-template-btn">➕ Add another template</button> -->
         </div>
         
         <label class="input-label">Draw Date & Time</label>

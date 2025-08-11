@@ -8564,13 +8564,11 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
       font-size: 0.92rem;
       border-radius: 6px;
     `;
-    interimFeedbackDiv.textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} in corso, si prega di attendere...`;
+    interimFeedbackDiv.textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} in progress, please wait...`;
     document.querySelector('#action-form').appendChild(interimFeedbackDiv);
   }
 
   const { userId, usx_token, wax_account } = window.userData;
-  console.info(`User ID: ${userId} | USX Token: ${usx_token} | WAX Account: ${wax_account}`);
-
   let endpoint = "";
   if (action === "withdraw") {
     endpoint = `${BASE_URL}/withdraw`;
@@ -8583,10 +8581,7 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
   } else if (action === "bridge_to") {
     endpoint = `${BASE_URL}/bridge_token`;
   }
-
   const fullUrl = `${endpoint}?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
-  console.info(`[📤] Eseguo azione ${action} chiamando: ${fullUrl}`);
-
   try {
     let bodyData = {
       wax_account: wax_account,

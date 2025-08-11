@@ -983,7 +983,7 @@ function renderCreatedFarmDetails(farm) {
   const templatesHTML = farm.templates.map(tpl => {
     const rewards = tpl.daily_rewards.map(r => `
       <div class="reward-detail">
-        ${r.token_symbol}: ${parseFloat(r.daily_reward_amount).toFixed(4)}/day
+        ${r.token_symbol}: ${parseFloat(r.daily_reward_amount).toFixed(8)}/day
       </div>
     `).join('');
 
@@ -1208,7 +1208,7 @@ function openDepositForm(farmId) {
         const selectedToken = select.value;
         currentBalance = parseFloat(wallet.find(t => t.symbol === selectedToken)?.amount || 0);
 
-        balanceText.innerHTML = `Available balance in your Wallet: <strong>${currentBalance.toFixed(4)} ${selectedToken}</strong>`;
+        balanceText.innerHTML = `Available balance in your Wallet: <strong>${currentBalance.toFixed(9)} ${selectedToken}</strong>`;
         balanceText.classList.remove('hidden');
 
         range.disabled = false;
@@ -1219,7 +1219,7 @@ function openDepositForm(farmId) {
 
       range.oninput = () => {
         const percent = parseFloat(range.value);
-        input.value = (currentBalance * percent / 100).toFixed(4);
+        input.value = (currentBalance * percent / 100).toFixed(9);
       };
 
       input.oninput = () => {
@@ -5376,7 +5376,7 @@ function renderChatRewards(telegram, twitch) {
   }
 
   function renderPlatform(platform, icon) {
-    const progress = Math.min((platform.xp / platform.xp_needed) * 100, 100).toFixed(1);
+    const progress = Math.min((platform.xp / platform.xp_needed) * 100, 100).toFixed(3);
     const boostersHTML = `
       ${renderXPBoosters(platform.boosters?.xp, "XP", "📈")}
       ${renderBoosters(platform.boosters?.reward, "Reward", "💰")}
@@ -8365,7 +8365,7 @@ async function openModal(action, token, walletType = 'telegram') {
   const input = document.getElementById('amount');
   range.addEventListener('input', () => {
     const percent = parseFloat(range.value);
-    input.value = (balance * percent / 100).toFixed(4);
+    input.value = (balance * percent / 100).toFixed(9);
   });
   input.addEventListener('input', () => {
     const val = parseFloat(input.value);
@@ -8457,7 +8457,7 @@ async function openModal(action, token, walletType = 'telegram') {
     
         const data = await response.json();   
         const minReceived = (data.minReceived || 0) * 0.9;
-        minReceivedSpan.textContent = minReceived.toFixed(4);
+        minReceivedSpan.textContent = minReceived.toFixed(9);
         priceImpactSpan.textContent = data.priceImpact || "-";
     
         loadingSpinner.classList.add('hidden');
@@ -8474,7 +8474,7 @@ async function openModal(action, token, walletType = 'telegram') {
   // Percentuale su amount
   percentRange.addEventListener('input', () => {
     const percent = parseFloat(percentRange.value);
-    amountInput.value = ((balance * percent) / 100).toFixed(4);
+    amountInput.value = ((balance * percent) / 100).toFixed(9);
   });
 
   amountInput.addEventListener('input', () => {
@@ -8682,9 +8682,9 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
           animation: fadeIn 0.4s ease-in-out;
         ">
           <strong>Swap Completed</strong><br>
-          ${details.amount} ${details.from_token} ➡️ ${details.received_amount.toFixed(4)} ${details.to_token}<br>
+          ${details.amount} ${details.from_token} ➡️ ${details.received_amount.toFixed(9)} ${details.to_token}<br>
           <em>Price:</em> ${details.execution_price}<br>
-          <em>Fee:</em> ${details.commission.toFixed(4)}
+          <em>Fee:</em> ${details.commission.toFixed(9)}
         </div>
       `;
     } else if (action === "bridge_to" && data.net_amount && data.fee_applied !== undefined) {
@@ -8706,8 +8706,8 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
           To: <span style="color:#00bfff; font-weight:bold">${data.to_wallet.toUpperCase()}</span><br><br>
           <em>Token:</em> <strong>${token}</strong><br>
           <em>Amount Sent:</em> ${amount}<br>
-          <em>Fee (2%):</em> ${data.fee_applied.toFixed(4)}<br>
-          <em>Received:</em> ${data.net_amount.toFixed(4)}
+          <em>Fee (2%):</em> ${data.fee_applied.toFixed(9)}<br>
+          <em>Received:</em> ${data.net_amount.toFixed(9)}
         </div>
       `;
     } else if (data.message) {

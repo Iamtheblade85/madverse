@@ -3568,19 +3568,73 @@ async function renderGoblinInventory() {
           </div>
         </div>
         <div style="flex:1 1 44%; min-width:280px;">
-          <div id="cv-global-list" class="cv-card" style="margin-bottom:1rem;"></div>
-          <div id="cv-recent-list" class="cv-card cv-card--amber">
-            <h4 style="color:#ffa500;">🕒 Recent Expedition Results</h4>
+          <!-- 🌍 LIVE EXPEDITIONS -->
+          <div id="cv-global-list" class="cv-card"
+               style="margin-bottom:1rem; padding:1rem; border:1px solid #2b2b2b;
+                      background:linear-gradient(180deg,#141414,#0d0d0d);
+                      border-radius:14px; box-shadow:0 0 14px rgba(0,0,0,.45), inset 0 0 16px rgba(0,255,255,.08);">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-bottom:.6rem;">
+              <h4 style="color:#00e6ff; margin:0; font-family:Orbitron,system-ui,sans-serif;">🌍 Live Expeditions (in progress)</h4>
+              <span title="Aggiornamento automatico"
+                    style="font-size:.72rem; background:#152024; color:#7ff6ff; border:1px solid #20444a;
+                           padding:.15rem .45rem; border-radius:999px;">auto refresh</span>
+            </div>
+            <!-- Le card delle spedizioni in corso vengono inserite via JS -->
           </div>
-          <div id="cv-bonus-list" class="cv-card cv-card--green" style="margin-top:1rem;">
-            <h4 style="color:#0f0;">🎁 Chest Bonus Rewards (!chest @ Twitch)</h4>
+        
+          <!-- ⛏️ RECENT RESULTS -->
+          <div id="cv-recent-list" class="cv-card cv-card--amber"
+               style="padding:1rem; border:1px solid #3a2e10; background:linear-gradient(180deg,#1a1405,#120d03); border-radius:14px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-bottom:.6rem;">
+              <h4 style="color:#ffcc66; margin:0; font-family:Orbitron,system-ui,sans-serif;">⛏️ Latest Expedition Results</h4>
+              <span style="font-size:.72rem; background:#2a2211; color:#ffcc66; border:1px solid #4a3a12; padding:.15rem .45rem; border-radius:999px;">last 10</span>
+            </div>
+            <div id="cv-recent-grid"
+                 style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:.75rem; align-items:stretch;"></div>
+            <div id="cv-recent-empty" style="display:none; margin-top:.5rem; color:#caa;">No results yet.</div>
           </div>
-          <div style="color:#ffe600; font-size:.95rem; text-align:center; margin:.75rem 0;">
-            Perk drop (1x / 10min each wax_account) – 50% chance of a chest drop in the cave.
+        
+          <!-- 🎁 BONUS REWARDS -->
+          <div id="cv-bonus-list" class="cv-card cv-card--green"
+               style="margin-top:1rem; padding:1rem; border:1px solid #124a12; background:linear-gradient(180deg,#0d180d,#0a130a); border-radius:14px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-bottom:.6rem;">
+              <h4 style="color:#78ff78; margin:0; font-family:Orbitron,system-ui,sans-serif;">🎁 Latest Chest Rewards</h4>
+              <span style="font-size:.72rem; background:#133113; color:#b7ffb7; border:1px solid #1f5220; padding:.15rem .45rem; border-radius:999px;">live</span>
+            </div>
+            <div id="cv-bonus-grid"
+                 style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:.75rem; align-items:stretch;"></div>
           </div>
+        
+          <!-- ℹ️ INFO + CTA -->
+          <div style="margin:.9rem 0 .2rem; text-align:center; color:#e9e3bf; font-size:.92rem;">
+            ⏱️ <strong>Perk attempt:</strong> 1 every <strong>10 min</strong> per WAX account ·
+            <span style="opacity:.9;">~50% chance to spawn a chest</span>
+          </div>
+        
           <div style="text-align:center; margin-bottom:1rem;">
-            <button id="cv-chest-btn" class="cv-btn">🎁 Try !chest Drop</button>
+            <button id="cv-chest-btn" class="cv-btn"
+                    aria-label="Try to trigger a perk and drop a chest"
+                    style="display:inline-flex; align-items:center; gap:.5rem; padding:.72rem 1.05rem; border-radius:12px;
+                           border:1px solid #665200; background:linear-gradient(180deg,#ffe066,#ffbf00);
+                           color:#1a1200; font-weight:800; letter-spacing:.2px;
+                           box-shadow:0 4px 14px rgba(255,200,0,.25), inset 0 0 8px rgba(255,255,255,.35);
+                           transition:transform .08s ease, box-shadow .2s ease; cursor:pointer;">
+              <span>🎁 Try a Perk Drop</span>
+            </button>
+            <div style="font-size:.82rem; color:#cdbb7a; margin-top:.35rem;">Cooldown applies automatically.</div>
           </div>
+        
+          <!-- micro-hover inline senza CSS globali -->
+          <script>
+            (function(){
+              const b = document.getElementById('cv-chest-btn');
+              if(!b) return;
+              b.addEventListener('mouseenter', ()=>{ b.style.transform='translateY(-1px)'; b.style.boxShadow='0 6px 20px rgba(255,200,0,.35), inset 0 0 10px rgba(255,255,255,.5)'; });
+              b.addEventListener('mouseleave', ()=>{ b.style.transform='translateY(0)';      b.style.boxShadow='0 4px 14px rgba(255,200,0,.25), inset 0 0 8px rgba(255,255,255,.35)'; });
+              b.addEventListener('mousedown',  ()=>{ b.style.transform='translateY(1px)';  });
+              b.addEventListener('mouseup',    ()=>{ b.style.transform='translateY(-1px)'; });
+            })();
+          </script>
         </div>
       </div>
 

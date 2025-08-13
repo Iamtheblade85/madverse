@@ -2424,10 +2424,10 @@ async function renderGoblinInventory() {
   const MAX_RECENT_EXPEDITIONS = 6;
   const MAX_BONUS_ROWS = 6;        // visible rows in bonus list (excluding header)
   const DEBUG = false;
-  // Trail (scia) goblin
-  const TRAIL_LEN = 12;        // numero massimo di punti in scia
-  const TRAIL_MIN_DIST = 0.4;  // distanza minima (in celle) per registrare un nuovo punto
-
+  // --- trail config ---
+  const TRAIL_LEN = 16;        // quanti segmenti massimo
+  const TRAIL_MIN_DIST = 0.6;  // distanza minima (in celle) per aggiungere un punto
+  
   // ========= STATE (single source of truth) =========
   const Cave = {
     canvas: null,
@@ -2525,10 +2525,6 @@ async function renderGoblinInventory() {
     `;
     document.head.appendChild(st);
   }
-
-  // --- trail config ---
-  const TRAIL_LEN = 16;        // quanti segmenti massimo
-  const TRAIL_MIN_DIST = 0.6;  // distanza minima (in celle) per aggiungere un punto
   
   function hexToRgba(hex, alpha = 1) {
     const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || "#ffe600");

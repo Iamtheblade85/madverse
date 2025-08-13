@@ -2400,381 +2400,1016 @@ async function renderGoblinInventory() {
   }
 }
 
-function renderList(filteredList = userGoblins) {
-  const sorted = [...filteredList].sort((a, b) => b.daily_power - a.daily_power);
-  const selected = selectedGoblins;
-  const highlightStyle = (id) => selected.has(id) ? "background: rgba(255,255,0,0.1);" : "";
+/* =========================================================
+   Dwarfs Cave — Full Rebuild (UX/UI/Perf tuned)
+   - Single RAF loop (no multiple initializations)
+   - Visibility-aware polling with cleanup
+   - Perk speed reduced by 50%
+   - Chest dedup + correct removal after claim
+   - Robust error handling & safe DOM updates
+   - Improved layout and proportions
+   - Recent lists with dedup & capped length
+   - No duplicate element IDs
+   ========================================================= */
 
-  document.getElementById('goblin-list').innerHTML = sorted.map(g => {
-    const isExhausted = parseInt(g.daily_power) < 5;
-    return `
-      <div class="goblin-line" style="
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 0.6rem 1rem;
-        border-bottom: 1px solid #333;
-        border-radius: 10px;
-        position: relative;
-        ${highlightStyle(g.asset_id)}
-      ">
-        <div style="flex-basis: 15%; max-width: 15%; position: relative;">
-          <img src="${g.img}" style="width:50px; height:auto; border-radius:8px; ${isExhausted ? 'filter: grayscale(100%) brightness(0.7);' : ''}">
-          ${isExhausted ? `
-            <div style="
-              position: absolute;
-              top: -10px;
-              left: -20px;
-              transform: rotate(-20deg);
-              background: rgba(255, 0, 0, 0.85);
-              color: white;
-              padding: 2px 8px;
-              font-size: 0.65rem;
-              font-weight: bold;
-              border-radius: 6px;
-              box-shadow: 0 0 6px red;
-              font-family: Orbitron, sans-serif;
-            ">
-              Exhausted
-            </div>
-          ` : ''}
+(() => {
+  "use strict";
+
+  // ========= CONFIG =========
+  if (!window.BASE_URL) window.BASE_URL = "https://iamemanuele.pythonanywhere.com";
+  const BASE_URL = window.BASE_URL;
+  const GRID_SIZE = 90;
+  const GLOBAL_REFRESH_MS = 30000; // 30s
+  const COMMAND_POLL_MS = 30000;   // 30s
+  const MAX_RECENT_EXPEDITIONS = 6;
+  const MAX_BONUS_ROWS = 6;        // visible rows in bonus list (excluding header)
+  const DEBUG = false;
+
+  // ========= STATE (single source of truth) =========
+  const Cave = {
+    canvas: null,
+    ctx: null,
+    rafId: null,
+    running: false,
+    dpr: Math.max(1, window.devicePixelRatio || 1),
+    cell: 10,
+
+    assets: {
+      loaded: false,
+      goblin: null,
+      shovel: null,
+      chest: null,
+      bg: null,
+      perks: { dragon: null, dwarf: null, skeleton: null, black_cat: null }
+    },
+
+    goblins: [],
+    perks: [],           // active perks on screen
+    chests: new Map(),   // key -> chest object
+
+    // timers/intervals
+    intervals: { global: null, globalCountdown: null, command: null },
+
+    // dedup sets
+    recentExpKeys: new Set(),
+    bonusKeys: new Set(),
+
+    // visibility
+    visible: !document.hidden,
+
+    // user context provided by the app
+    user: {
+      wax_account: window.userData?.wax_account || "",
+      user_id: window.userData?.userId || "",
+      usx_token: window.userData?.usx_token || ""
+    },
+
+    // UI elements cache
+    el: {
+      container: null,
+      toast: null,
+      videoOrCanvas: null,
+      globalList: null,
+      recentList: null,
+      bonusList: null,
+      selectionSummary: null,
+      goblinList: null,
+      chestPerkBtn: null,
+    }
+  };
+
+  // ========= UTILITIES =========
+  const log = (...a) => DEBUG && console.log("[CAVE]", ...a);
+  const qs = (s, r = document) => r.querySelector(s);
+  const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+  const safe = (v) => {
+    if (v == null) return "";
+    return String(v).replace(/[&<>"'`]/g, (m) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;"
+    }[m]));
+  };
+
+  const timeHM = (d = new Date()) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  function styleOnce() {
+    if (qs("#cave-rebuilt-style")) return;
+    const st = document.createElement("style");
+    st.id = "cave-rebuilt-style";
+    st.textContent = `
+      .cv-card { background:#111; border-radius:14px; padding:1rem; color:#fff; box-shadow:0 0 12px rgba(0,255,255,.35); }
+      .cv-card--amber { box-shadow:0 0 12px rgba(255,165,0,.35); }
+      .cv-card--green { box-shadow:0 0 12px rgba(0,255,0,.35); }
+      .cv-title { color:#ffe600; font-family: Orbitron, system-ui, sans-serif; margin:0 0 .5rem 0; }
+      .cv-btn { background:#1c1c1c; border:1px solid #444; color:#ffe600; padding:.5rem .75rem; border-radius:10px; cursor:pointer; }
+      .cv-btn:disabled { opacity:.6; cursor:not-allowed; }
+      .cv-toast { margin:.5rem 0; padding:.8rem; background:#222; border-left:5px solid #0ff; border-radius:8px; color:#fff; font-family:Orbitron, system-ui, sans-serif; }
+      .cv-toast.ok { border-left-color:#0f0; }
+      .cv-toast.warn { border-left-color:#ffa500; }
+      .cv-toast.err { border-left-color:#ff4d4d; }
+      .cv-list-row { margin-bottom: .9rem; border-bottom:1px solid #333; padding-bottom:.5rem; }
+      .cv-tag { display:inline-block; padding:.1rem .4rem; border-radius:6px; font-size:.72rem; margin-left:.4rem; background:#2b2b2b; color:#ccc; }
+      @keyframes flick {
+        0% { box-shadow:0 0 15px #ffb800, inset 0 0 6px #ffa500; opacity:0.95; }
+        100% { box-shadow:0 0 35px #ffcc00, inset 0 0 14px #ffcc00; opacity:1; }
+      }
+    `;
+    document.head.appendChild(st);
+  }
+
+  function toast(msg, type = "ok", ttl = 6000) {
+    const host = Cave.el.toast;
+    if (!host) return;
+    const div = document.createElement("div");
+    div.className = `cv-toast ${type}`;
+    div.textContent = msg;
+    host.appendChild(div);
+    setTimeout(() => div.remove(), ttl);
+  }
+
+  // fetch helpers with timeout
+  async function fetchJSON(url, opts = {}, timeout = 15000) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeout);
+    try {
+      const res = await fetch(url, { ...opts, signal: ctrl.signal });
+      const text = await res.text();
+      let data;
+      try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
+      return { ok: res.ok, status: res.status, data };
+    } finally { clearTimeout(t); }
+  }
+
+  const API = {
+    post: (path, body, t=15000) =>
+      fetchJSON(`${BASE_URL}${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body||{}) }, t),
+    get: (path, t=15000) =>
+      fetchJSON(`${BASE_URL}${path}`, {}, t),
+  };
+
+  // ========= ASSETS =========
+  function loadImg(src) {
+    return new Promise((resolve, reject) => { const i = new Image(); i.onload = () => resolve(i); i.onerror = reject; i.src = src; });
+  }
+  async function loadAssets() {
+    if (Cave.assets.loaded) return;
+    const [goblin, shovel, chest, bg, dragon, dwarf, skeleton, black_cat] = await Promise.all([
+      loadImg("goblin.png"),
+      loadImg("shovel_sprite.png"),
+      loadImg("chest.png"),
+      loadImg("cave-grid.png"),
+      loadImg("perk_dragon.png"),
+      loadImg("perk_dwarf.png"),
+      loadImg("perk_skeleton.png"),
+      loadImg("perk_blackcat.png")
+    ]);
+    Cave.assets.goblin = goblin;
+    Cave.assets.shovel = shovel;
+    Cave.assets.chest = chest;
+    Cave.assets.bg = bg;
+    Cave.assets.perks.dragon = dragon;
+    Cave.assets.perks.dwarf = dwarf;
+    Cave.assets.perks.skeleton = skeleton;
+    Cave.assets.perks.black_cat = black_cat;
+    Cave.assets.loaded = true;
+  }
+
+  // ========= CANVAS =========
+  function setupCanvas(c) {
+    Cave.canvas = c;
+    Cave.ctx = c.getContext("2d");
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas, { passive: true });
+  }
+  function teardownCanvas() {
+    window.removeEventListener("resize", resizeCanvas);
+    Cave.canvas = null;
+    Cave.ctx = null;
+  }
+  function resizeCanvas() {
+    const c = Cave.canvas;
+    if (!c || !c.parentElement) return;
+    const parentW = Math.min(c.parentElement.clientWidth, 900);
+    const css = parentW;
+    const dpr = Cave.dpr;
+
+    c.style.width = `${css}px`;
+    c.style.height = `${css}px`;
+    c.width = Math.floor(css * dpr);
+    c.height = Math.floor(css * dpr);
+    Cave.cell = (c.width / dpr) / GRID_SIZE;
+
+    const ctx = Cave.ctx;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function startRAF() {
+    if (Cave.running || !Cave.canvas) return;
+    Cave.running = true;
+    lastTS = performance.now();
+    Cave.rafId = requestAnimationFrame(tick);
+  }
+  function stopRAF() {
+    Cave.running = false;
+    if (Cave.rafId) cancelAnimationFrame(Cave.rafId);
+    Cave.rafId = null;
+  }
+
+  // ========= DRAWING =========
+  function drawBG() {
+    const { ctx, canvas, assets } = Cave;
+    if (!assets.bg?.complete) return;
+    ctx.drawImage(assets.bg, 0, 0, canvas.width / Cave.dpr, canvas.height / Cave.dpr);
+  }
+  function drawChests() {
+    const { ctx, assets, cell } = Cave;
+    if (!assets.chest?.complete) return;
+    Cave.chests.forEach(ch => {
+      if (ch.taken) return;
+      const cx = ch.x * cell, cy = ch.y * cell;
+      const scale = 0.15;
+      const w = assets.chest.width * scale;
+      const h = assets.chest.height * scale;
+      ctx.drawImage(assets.chest, cx - w/2, cy - h/2, w, h);
+    });
+  }
+  function drawGoblin(g) {
+    const { ctx, assets, cell } = Cave;
+    const px = g.x * cell, py = g.y * cell;
+    const gScale = 5, sScale = 3;
+    const gSize = cell * gScale;
+    const gOff = (gSize - cell) / 2;
+
+    ctx.drawImage(assets.goblin, 0,0,128,128, px - gOff, py - gOff, gSize, gSize);
+
+    ctx.font = `${cell * 2}px Orbitron, system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(0,0,0,0.6)";
+    ctx.fillRect(px - cell, py + cell * 1.2, cell * 2, cell * 0.7);
+    ctx.fillStyle = g.color;
+    ctx.fillText(g.wax_account, px, py + cell * 5);
+
+    if (g.digging) {
+      const fx = g.shovelFrame * 128;
+      const sSize = cell * sScale;
+      ctx.drawImage(assets.shovel, fx,0,128,128, px - (sSize - cell)/2, py - sSize, sSize, sSize);
+    }
+  }
+  function drawPerksAndAdvance() {
+    const { ctx, cell } = Cave;
+    if (!Cave.perks.length) return;
+
+    for (let p of Cave.perks) {
+      if (!p.image?.complete) continue;
+
+      // advance frame
+      p.tick++;
+      if (p.tick >= p.frameDelay) {
+        p.tick = 0;
+        p.frame = (p.frame + 1) % p.frames;
+      }
+
+      const px = p.x * cell;
+      const py = p.waveY(p.x) * cell;
+
+      // sprite 128x128 -> draw at 32x32
+      ctx.drawImage(p.image, p.frame*128, 0, 128,128, px-16, py-16, 32, 32);
+
+      // maybe drop chest once
+      if (!p.hasDropped && Math.random() < 0.25) {
+        p.hasDropped = true;
+        const margin = Math.floor(GRID_SIZE * 0.15);
+        const dx = Math.floor(Math.random() * (GRID_SIZE - 2*margin)) + margin;
+        const dy = Math.floor(Math.random() * (GRID_SIZE - 2*margin)) + margin;
+
+        const chest = {
+          id: null,
+          x: Math.round(p.x),
+          y: Math.round(p.y),
+          destX: dx,
+          destY: dy,
+          from: p.perkName,
+          wax_account: p.wax_account,
+          taken: false,
+          claimable: false,
+          pending: true
+        };
+
+        // ask backend to spawn → set id/claimable
+        API.post("/spawn_chest", {
+          wax_account: p.wax_account,
+          perk_type: p.perkName,
+          x: dx, y: dy
+        }, 12000).then(r => {
+          chest.id = String(r?.data?.chest_id || synthChestKey(chest));
+          chest.pending = false;
+          chest.claimable = true;
+          upsertChest(chest);
+        }).catch(() => {
+          chest.id = synthChestKey(chest);
+          chest.pending = false;
+          chest.claimable = true;
+          upsertChest(chest);
+        });
+      }
+
+      // move (50% slower already applied in speed)
+      p.x += p.dir === "left-to-right" ? p.speed : -p.speed;
+
+      // out of bounds
+      if ((p.dir === "left-to-right" && p.x > GRID_SIZE + 5) ||
+          (p.dir === "right-to-left" && p.x < -5)) {
+        p.done = true;
+      }
+    }
+
+    Cave.perks = Cave.perks.filter(p => !p.done);
+  }
+
+  // ========= GAME LOGIC =========
+  function colorByIndex(i) {
+    const palette = ['#ffd700','#00ffff','#ff69b4','#7fff00','#ffa500','#00ff7f','#ff4500'];
+    return palette[i % palette.length];
+  }
+  function genPath(x1,y1,x2,y2) {
+    const path = []; let cx=x1, cy=y1;
+    while (cx!==x2 || cy!==y2) {
+      if (cx!==x2) cx += x2 > cx ? 1 : -1;
+      else if (cy!==y2) cy += y2 > cy ? 1 : -1;
+      path.push([cx,cy]);
+    }
+    return path;
+  }
+  function moveGoblin(g) {
+    if (g.digging) return;
+    if (g.path.length === 0) {
+      const tx = Math.floor(Math.random()*(GRID_SIZE*0.8))+Math.floor(GRID_SIZE*0.1);
+      const ty = Math.floor(Math.random()*(GRID_SIZE*0.8))+Math.floor(GRID_SIZE*0.1);
+      g.path = genPath(g.x,g.y,tx,ty);
+    }
+    if (!g.path.length) return;
+    const [nx,ny] = g.path.shift();
+    g.x = nx; g.y = ny;
+
+    // chest claim proximity
+    Cave.chests.forEach((ch, key) => {
+      const dx = Math.abs(g.x - ch.x), dy = Math.abs(g.y - ch.y);
+      if (dx<=5 && dy<=5 && ch.claimable && !ch.taken && !ch.claiming) {
+        ch.claiming = true; ch.taken = true; ch.taken_by = g.wax_account;
+
+        (async () => {
+          try {
+            const rs = await API.post("/chest_reward", {
+              wax_account: g.wax_account,
+              perk_type: ch.from,
+              chest_id: ch.id
+            }, 15000);
+            if (!rs.ok) throw new Error(`HTTP ${rs.status}`);
+
+            const reward = rs.data;
+            const chips = reward?.stats?.tokens?.CHIPS ?? 0;
+            const nfts = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
+            if (chips===0 && nfts===0) toast(`${g.wax_account} opened a ${ch.from} chest… it was empty.`, "warn");
+            else toast(`${g.wax_account} won ${chips} CHIPS and ${nfts} NFTs from ${ch.from}!`, "ok");
+            appendBonusReward(reward, g.wax_account, ch.from);
+
+            // remove immediately from map (fix bug: lingering chest after claim)
+            Cave.chests.delete(key);
+          } catch (e) {
+            ch.taken = false; ch.claiming = false; // revert on error
+            toast(`Chest reward failed: ${e.message}`, "err");
+          }
+        })();
+      }
+    });
+
+    if (g.path.length === 0) {
+      g.digging = true; g.shovelFrame = 0; g.frameTimer = 0;
+      setTimeout(()=> g.digging=false, 2000);
+    }
+  }
+  function updateGoblinAnim(delta) {
+    Cave.goblins.forEach(g => {
+      if (!g.digging) return;
+      g.frameTimer += delta;
+      if (g.frameTimer >= 100) {
+        g.shovelFrame = (g.shovelFrame + 1) % 6;
+        g.frameTimer = 0;
+      }
+    });
+  }
+
+  // ========= CHESTS HELPERS =========
+  function synthChestKey(ch) {
+    return `${ch.wax_account}|${ch.from}|${ch.destX}|${ch.destY}`;
+  }
+  function upsertChest(ch) {
+    const key = ch.id ? String(ch.id) : synthChestKey(ch);
+    const ex = Cave.chests.get(key);
+    Cave.chests.set(key, ex ? { ...ex, ...ch } : ch);
+  }
+  function clearChests() { Cave.chests.clear(); }
+
+  // ========= PERKS =========
+  function triggerPerk(perkName, wax_account) {
+    if (!Cave.assets.loaded || !Cave.canvas) return;
+
+    const sprite = {
+      dragon: { img: Cave.assets.perks.dragon, frames:6 },
+      dwarf: { img: Cave.assets.perks.dwarf, frames:6 },
+      skeleton: { img: Cave.assets.perks.skeleton, frames:6 },
+      black_cat: { img: Cave.assets.perks.black_cat, frames:6 },
+    }[perkName] || { img: Cave.assets.perks.dragon, frames:6 };
+
+    if (!sprite.img?.complete) return;
+
+    const dir = Math.random() < 0.5 ? "left-to-right" : "right-to-left";
+    const startX = dir === "left-to-right" ? 5 : GRID_SIZE - 5;
+
+    const baseY = Math.floor(Math.random()*(GRID_SIZE*0.8))+Math.floor(GRID_SIZE*0.1);
+    const amp = 3 + Math.random()*4;
+    const freq = 0.15 + Math.random()*0.15;
+
+    // 50% slower than original (0.3–0.6)
+    const speed = (0.3 + Math.random()*0.3) * 0.5;
+
+    Cave.perks.push({
+      image: sprite.img,
+      frames: sprite.frames,
+      frame: 0, tick: 0, frameDelay: 8,
+      x: startX, y: baseY,
+      dir, speed,
+      waveY: (xPos) => baseY + Math.sin(xPos * freq) * amp,
+      perkName, wax_account,
+      hasDropped: false, done: false
+    });
+  }
+
+  // ========= LISTS / UI PANELS =========
+  function appendBonusReward(reward, wax_account, source) {
+    const c = Cave.el.bonusList; if (!c) return;
+    const chips = reward?.stats?.tokens?.CHIPS ?? 0;
+    const nfts = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
+    const key = `${wax_account}|${source}|${chips}|${nfts}|${new Date().getHours()}${new Date().getMinutes()}`;
+    if (Cave.bonusKeys.has(key)) return;
+    Cave.bonusKeys.add(key);
+    if (Cave.bonusKeys.size > 64) {
+      Cave.bonusKeys = new Set(Array.from(Cave.bonusKeys).slice(-32));
+    }
+
+    const row = document.createElement("div");
+    row.className = "cv-list-row";
+    row.innerHTML = `
+      <div><strong style="color:#0f0;">${safe(wax_account)}</strong> opened a chest from <strong>${safe(source)}</strong> at ${timeHM()}</div>
+      <div style="color:#0f0;">CHIPS: ${chips}</div>
+      <div style="color:#ffa500;">NFTs: ${nfts}</div>
+    `;
+    c.insertBefore(row, c.children[1] || null);
+
+    // cap rows
+    const rows = Array.from(c.children).filter(el => el.tagName !== "H4");
+    while (rows.length > MAX_BONUS_ROWS) {
+      rows.pop()?.remove();
+    }
+  }
+
+  async function renderRecentList() {
+    try {
+      const r = await API.get("/recent_expeditions", 15000);
+      if (!r.ok) return;
+      const list = Array.isArray(r.data) ? r.data : [];
+      const c = Cave.el.recentList;
+      if (!c) return;
+      c.innerHTML = `<h4 style="color:#ffa500;">🕒 Recent Expedition Results</h4>`;
+
+      const frag = document.createDocumentFragment();
+      list.slice(0, MAX_RECENT_EXPEDITIONS).forEach(item => {
+        const k = `${item.wax_account}|${item.timestamp}|${item.chips}|${(item.nfts||[]).length}`;
+        if (Cave.recentExpKeys.has(k)) return;
+        Cave.recentExpKeys.add(k);
+
+        const dt = new Date(item.timestamp);
+        const row = document.createElement("div");
+        row.className = "cv-list-row";
+        const nftList = Array.isArray(item.nfts) && item.nfts.length
+          ? `<ul style="margin:0; padding-left:1rem;">${item.nfts.map(n=>`<li>${safe(n.schema)} #${safe(n.template_id)} × ${safe(n.quantity)}</li>`).join("")}</ul>`
+          : "None";
+        row.innerHTML = `
+          <div><strong style="color:#ffe600;">${safe(item.wax_account)}</strong> at ${timeHM(dt)}</div>
+          <div style="color:#0f0;">CHIPS: ${safe(item.chips)}</div>
+          <div style="color:#ffa500;">NFTs: ${nftList}</div>
+        `;
+        frag.appendChild(row);
+      });
+      c.appendChild(frag);
+    } catch (e) {
+      console.warn("Recent list failed:", e);
+    }
+  }
+
+  function prependRecentFromResult(result, wax_account) {
+    const c = Cave.el.recentList; if (!c) return;
+    const chips = result?.stats?.tokens?.CHIPS ?? 0;
+    const nfts = Array.isArray(result?.nfts) ? result.nfts.length : 0;
+    const k = `${wax_account}|${new Date().getHours()}${new Date().getMinutes()}|${chips}|${nfts}`;
+    if (Cave.recentExpKeys.has(k)) return;
+    Cave.recentExpKeys.add(k);
+
+    const row = document.createElement("div");
+    row.className = "cv-list-row";
+    row.innerHTML = `
+      <div><strong style="color:#ffe600;">${safe(wax_account)}</strong> at ${timeHM()}</div>
+      <div style="color:#0f0;">CHIPS: ${chips}</div>
+      <div style="color:#ffa500;">NFTs: ${nfts}</div>
+    `;
+    c.insertBefore(row, c.children[1] || null);
+
+    const rows = Array.from(c.children).filter(el => el.tagName !== "H4");
+    while (rows.length > MAX_RECENT_EXPEDITIONS) {
+      rows.pop()?.remove();
+    }
+  }
+
+  // ========= GLOBAL EXPEDITIONS & CANVAS DATA =========
+  let globalFetchBusy = false;
+  async function renderGlobalExpeditions() {
+    if (globalFetchBusy) return;
+    globalFetchBusy = true;
+    try {
+      const r = await API.post("/all_expeditions", {}, 15000);
+      const data = Array.isArray(r.data) ? r.data : [];
+      const list = Cave.el.globalList;
+      const wrap = Cave.el.videoOrCanvas;
+
+      list.innerHTML = "";
+      list.style.display = "flex";
+      list.style.flexWrap = "wrap";
+      list.style.gap = ".5rem";
+
+      if (data.length === 0) {
+        stopRAF();
+        stopCommandPolling();
+        clearChests();
+        wrap.innerHTML = `
+          <video id="exp-video" src="expedition_run.mp4" autoplay muted loop
+                 style="width:100%; max-width:560px; border-radius:12px; box-shadow:0 0 10px #ffe600;"></video>
+        `;
+        teardownCanvas();
+        return;
+      }
+
+      if (!qs("#caveCanvas", wrap)) {
+        wrap.innerHTML = `<canvas id="caveCanvas" style="width:100%; height:auto; display:block;"></canvas>`;
+        setupCanvas(qs("#caveCanvas", wrap));
+        startRAF();
+        startCommandPolling();
+      }
+
+      Cave.goblins = data.map((e,i)=>({
+        x: Math.floor(Math.random()*(GRID_SIZE*0.8))+Math.floor(GRID_SIZE*0.1),
+        y: Math.floor(Math.random()*(GRID_SIZE*0.8))+Math.floor(GRID_SIZE*0.1),
+        wax_account: e.wax_account, path: [],
+        digging:false, shovelFrame:0, frameTimer:0, color: colorByIndex(i)
+      }));
+
+      // sync chests from server
+      data.forEach(e=>{
+        if (!Array.isArray(e.chests)) return;
+        e.chests.forEach(ch=>{
+          const id = ch.id ? String(ch.id) : `${e.wax_account}|${ch.x}|${ch.y}|${ch.from||"unknown"}`;
+          upsertChest({
+            id, x: ch.x, y: ch.y, from: ch.from || "unknown",
+            wax_account: e.wax_account, taken:false, claimable:true, pending:false
+          });
+        });
+      });
+
+      // cards & countdowns
+      const timers = data.map((e,i)=>{
+        const end = Date.now() + e.seconds_remaining * 1000;
+        const id = `cv-timer-${i}`;
+        const bg = i%2===0 ? "#1a1a1a" : "#2a2a2a";
+        const card = document.createElement("div");
+        card.style.cssText = `background:${bg}; padding:.75rem; border-radius:10px; width:210px;`;
+        card.innerHTML = `
+          <div><strong style="color:#ffe600;">${safe(e.wax_account)}</strong></div>
+          <div style="color:#0ff;">Goblins: ${safe(e.total_goblins)}</div>
+          <div id="${id}" style="color:#0f0;">⏳ calculating...</div>
+        `;
+        list.appendChild(card);
+        return { id, end };
+      });
+
+      if (Cave.intervals.globalCountdown) clearInterval(Cave.intervals.globalCountdown);
+      Cave.intervals.globalCountdown = setInterval(()=>{
+        const now = Date.now();
+        timers.forEach(t=>{
+          const el = document.getElementById(t.id);
+          if (!el) return;
+          const rem = t.end - now;
+          if (rem <= 0) el.textContent = "✅ Completed";
+          else {
+            const m = Math.floor(rem/60000);
+            const s = Math.floor((rem%60000)/1000);
+            el.textContent = `⏳ ${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+          }
+        });
+      }, 1000);
+
+    } catch (e) {
+      console.warn("Global expeditions failed:", e);
+    } finally {
+      globalFetchBusy = false;
+    }
+  }
+
+  // ========= USER COUNTDOWN =========
+  async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
+    const host = qs("#expedition-summary-block"); if (!host) return;
+    const wax = Cave.user.wax_account; if (!wax) return;
+
+    window.expeditionTimersRunning = window.expeditionTimersRunning || {};
+    if (window.expeditionTimersRunning[wax]) return;
+    window.expeditionTimersRunning[wax] = true;
+
+    const prev = qs("#user-exp-countdown"); prev?.remove();
+    const box = document.createElement("div");
+    box.id = "user-exp-countdown";
+    box.style.cssText = `font-size:1.2rem; margin-top:1rem; color:#0ff; font-family:Orbitron, system-ui, sans-serif; text-align:center;`;
+    host.appendChild(box);
+
+    let end = Date.now() + seconds*1000;
+    const t = setInterval(async ()=>{
+      const rem = end - Date.now();
+      if (rem <= 0) {
+        clearInterval(t);
+        box.textContent = "⏳ Expedition completed! Checking status...";
+        try {
+          const status = await API.post("/expedition_status", {
+            wax_account: wax, user_id: Cave.user.user_id, usx_token: Cave.user.usx_token
+          }, 12000);
+          if (!status.ok) throw new Error(`Status ${status.status}`);
+
+          const result = await API.post("/end_expedition", {
+            wax_account: wax, user_id: Cave.user.user_id, usx_token: Cave.user.usx_token, expedition_id
+          }, 15000);
+          if (!result.ok) { box.textContent = "❌ Failed to retrieve expedition result."; window.expeditionTimersRunning[wax]=false; return; }
+
+          await renderRecentList();
+          await renderGlobalExpeditions();
+          prependRecentFromResult(result.data, wax);
+
+          box.textContent = "✅ Expedition complete!";
+          setTimeout(()=> box.remove(), 2000);
+        } catch (e) {
+          box.textContent = "⚠️ Expedition fetch error.";
+          console.warn("end_expedition error:", e);
+        } finally {
+          window.expeditionTimersRunning[wax] = false;
+        }
+      } else {
+        const m = Math.floor(rem/60000);
+        const s = Math.floor((rem%60000)/1000);
+        box.textContent = `⏳ Time Left: ${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+      }
+    }, 1000);
+  }
+
+  // ========= POLLING (Perk commands) =========
+  function startCommandPolling() {
+    if (Cave.intervals.command) return;
+    Cave.intervals.command = setInterval(async ()=>{
+      if (!Cave.visible) return;
+      if (!Cave.canvas) return;
+      try {
+        const r = await API.post("/check_perk_command", { wax_account: Cave.user.wax_account }, 12000);
+        if (!r.ok) return;
+        const perk = r.data;
+        if (perk && perk.perk) {
+          triggerPerk(perk.perk, perk.wax_account);
+          toast(`${safe(perk.wax_account)} triggered ${perk.perk}`, "ok", 4000);
+        }
+      } catch (e) {
+        log("perk polling err", e);
+      }
+    }, COMMAND_POLL_MS);
+  }
+  function stopCommandPolling() {
+    if (Cave.intervals.command) {
+      clearInterval(Cave.intervals.command);
+      Cave.intervals.command = null;
+    }
+  }
+
+  // ========= RAF LOOP =========
+  let lastTS = performance.now();
+  function tick(ts) {
+    if (!Cave.running) return;
+    const dt = ts - lastTS; lastTS = ts;
+
+    drawBG();
+    drawPerksAndAdvance();
+    drawChests();
+    Cave.goblins.forEach(moveGoblin);
+    Cave.goblins.forEach(drawGoblin);
+    updateGoblinAnim(dt);
+
+    Cave.rafId = requestAnimationFrame(tick);
+  }
+
+  // ========= MAIN RENDER =========
+  async function renderDwarfsCave() {
+    styleOnce();
+
+    const container = document.getElementById("goblin-content");
+    if (!container) return;
+    Cave.el.container = container;
+
+    container.innerHTML = `
+      <div id="expedition-summary-block" style="margin-bottom:1.2rem; display:flex; gap:1.5rem; align-items:flex-start; flex-wrap:wrap;">
+        <div style="flex:1 1 56%; min-width:320px;">
+          <h3 class="cv-title">⛏️ Global Expeditions in Progress</h3>
+          <div id="cv-toast-host"></div>
+          <div id="cv-video-or-canvas" style="width:100%; margin-top:.5rem;">
+            <video id="cv-video" src="expedition_run.mp4" autoplay muted style="width:100%; max-width:560px; border-radius:12px; box-shadow:0 0 10px #ffe600;"></video>
+          </div>
         </div>
-        <div style="flex-grow:1; font-size: 0.95rem; font-family: Orbitron, sans-serif; color: #fff;">
-          <div><strong style="color:#ffe600;">${g.name}</strong></div>
-          <div style="color:#ccc;">Rarity: <span>${g.rarity}</span></div>
-          <div style="color:#aaa;">Level: ${g.level} | Main: ${g.main_attr}</div>
-          <div style="color:#0ff;">Power: ${g["daily_power"]}</div>
-          ${isExhausted ? `<div style="color:#f44; font-size: 0.7rem; margin-top: 4px;">Needs rest until tomorrow</div>` : ''}
+        <div style="flex:1 1 44%; min-width:280px;">
+          <div id="cv-global-list" class="cv-card" style="margin-bottom:1rem;"></div>
+          <div id="cv-recent-list" class="cv-card cv-card--amber">
+            <h4 style="color:#ffa500;">🕒 Recent Expedition Results</h4>
+          </div>
+          <div id="cv-bonus-list" class="cv-card cv-card--green" style="margin-top:1rem;">
+            <h4 style="color:#0f0;">🎁 Chest Bonus Rewards (!chest @ Twitch)</h4>
+          </div>
+          <div style="color:#ffe600; font-size:.95rem; text-align:center; margin:.75rem 0;">
+            Perk drop (1x / 10min each wax_account) – 50% chance of a chest drop in the cave.
+          </div>
+          <div style="text-align:center; margin-bottom:1rem;">
+            <button id="cv-chest-btn" class="cv-btn">🎁 Try !chest Drop</button>
+          </div>
         </div>
-        <input type="checkbox" class="select-goblin-checkbox" data-id="${g.asset_id}"
-          ${selected.has(g.asset_id) ? "checked" : ""}
-          ${isExhausted ? "disabled" : ""}
-          style="transform: scale(1.4); accent-color: #ffe600;">
+      </div>
+
+      <div class="cv-card" style="background:linear-gradient(135deg,#3e1f05,#140b02);
+           border:2px solid #ffd700; color:#ffeabf; font-family:'Papyrus','Fantasy',cursive;
+           font-size:1.05rem; line-height:1.6; box-shadow:0 0 25px #ffb800, inset 0 0 12px #ffa500;
+           text-align:center; animation:flick 2s infinite alternate; letter-spacing:1px; text-shadow:1px 1px 2px #000;">
+        🔥 Want to change your Goblin for another one with a different Ability?<br>
+        <strong>Great!</strong> The next evolution is <u>coming THIS WEEK!!!</u>! #RotationPower
+      </div>
+
+      <div style="margin:1.2rem 0;"><p class="subtitle2">Select your goblins and start the expedition!</p></div>
+
+      <div style="display:flex; flex-wrap:wrap; gap:1.5rem;">
+        <div style="flex:1 1 60%; min-width:320px;">
+          <div style="margin-bottom:1rem; text-align:center; display:flex; flex-wrap:wrap; gap:.5rem; justify-content:center;">
+            <button class="cv-btn" id="cv-select-50">✅ Select First 50</button>
+            <button class="cv-btn" id="cv-deselect">❌ Deselect All</button>
+            <button class="cv-btn" id="cv-select-best">🏆 Best 50 Goblins</button>
+            <select id="cv-sort" class="cv-btn">
+              <option value="rarity">Sort by Rarity</option>
+              <option value="level">Sort by Level</option>
+              <option value="daily_power">Sort by Power</option>
+              <option value="loot_hungry">Sort by Loot-Hungry</option>
+            </select>
+          </div>
+          <div id="cv-summary" class="cv-card" style="text-align:center;"></div>
+          <div id="cv-goblin-list" style="display:flex; flex-direction:column; gap:.5rem;"></div>
+        </div>
+
+        <div style="flex:1 1 36%; min-width:260px;" class="cv-card">
+          <h3 class="cv-title" style="font-size:1.25rem; margin-bottom:.6rem;">📜 Welcome to the Dwarf’s Gold Cave</h3>
+          <p>💥 Ready to send your goblins into the depths? Choose up to <strong>50 warriors</strong> to explore the mysterious cave — the more, the merrier (and lootier)!</p>
+          <p>💰 Every expedition is <strong>free</strong> and rewards you with variable <strong>CHIPS tokens</strong> and <strong>NFT treasures</strong>.</p>
+          <p>📈 Higher <strong>level</strong> and your goblin’s <strong>main attribute</strong> mean better rewards.</p>
+          <p>🏆 Not sure? Use <strong>“Best 50 Goblins”</strong> to auto-pick your elite team!</p>
+          <div style="background:#2a2a2a; border-left:4px solid #ffe600; padding:1rem; margin-top:1rem; font-weight:bold; color:#ffd700;">
+            ⚠️ <strong>Important:</strong> After an expedition, goblins must rest in the <strong>Tavern</strong> for <strong>5 minutes</strong> before the next run. 🍻🕒
+          </div>
+          <p style="margin-top:1rem; font-style:italic; color:#aaa;">Tip: Check back often — treasure respawns and goblins love digging daily!</p>
+        </div>
       </div>
     `;
-  }).join("");
 
-  document.querySelectorAll('.select-goblin-checkbox').forEach(cb => {
-    cb.addEventListener('change', () => {
-      const id = cb.getAttribute('data-id');
-      cb.checked ? selected.add(id) : selected.delete(id);
-      updateSelectionSummary();
-      renderList();
-    });
-  });
-}
+    // cache elements
+    Cave.el.toast = qs("#cv-toast-host", container);
+    Cave.el.videoOrCanvas = qs("#cv-video-or-canvas", container);
+    Cave.el.globalList = qs("#cv-global-list", container);
+    Cave.el.recentList = qs("#cv-recent-list", container);
+    Cave.el.bonusList = qs("#cv-bonus-list", container);
+    Cave.el.selectionSummary = qs("#cv-summary", container);
+    Cave.el.goblinList = qs("#cv-goblin-list", container);
+    Cave.el.chestPerkBtn = qs("#cv-chest-btn", container);
 
-async function renderDwarfsCave() {
-  const app = document.getElementById("app");
-  app.innerHTML = `
-    <div class="section-container">
-      <h2 class="section-title">Dwarfs Gold Cave (Multiplayer Mode)</h2>
-      <div id="dwarfs-cave-wrapper">
-        <div id="canvas-wrapper"></div>
-        <div id="global-expedition-list"></div>
-        <div id="recent-expeditions-list"></div>
-        <div id="bonus-chest-rewards"></div>
-        <div id="goblin-list"></div>
-        <div id="selection-summary"></div>
-        <button onclick="selectAllGoblins()">Select All</button>
-        <button onclick="selectBest50Goblins()">Select Best 50</button>
-        <button id="start-expedition-btn" class="btn">🚀 Start Expedition</button>
-      </div>
-    </div>
-  `;
+    // assets
+    await loadAssets();
 
-  const user = window.userData;
-  let syncInterval;
-  
-  function selectAllGoblins() {
-    selectedGoblins = new Set(userGoblins.map(g => g.asset_id));
-    loadUserGoblins();  // Ri-render con tutti selezionati
-  }
-  
-  function selectBest50Goblins() {
-    const top50 = userGoblins.slice(0, 50);  // Assumendo già ordinati
-    selectedGoblins = new Set(top50.map(g => g.asset_id));
-    loadUserGoblins();
-  }
-
-  const canvasWrapper = document.getElementById("canvas-wrapper");
-  const canvas = document.createElement("canvas");
-  canvas.id = "caveCanvas";
-  canvas.width = 600;
-  canvas.height = 600;
-  canvas.style.width = "100%";
-  canvas.style.maxWidth = "600px";
-  canvasWrapper.appendChild(canvas);
-  const ctx = canvas.getContext("2d");
-
-  const perkSprites = {
-    "dragon": { src: "perk_dragon.png", frames: 6 },
-    "dwarf": { src: "perk_dwarf.png", frames: 6 },
-    "skeletton": { src: "perk_skeleton.png", frames: 6 },
-    "black_cat": { src: "perk_blackcat.png", frames: 6 }
-  };
-
-  const loadedImages = {};
-  for (const key in perkSprites) {
-    const img = new Image();
-    img.src = perkSprites[key].src;
-    loadedImages[key] = img;
-  }
-
-  const goblinImage = new Image(); goblinImage.src = "goblin.png";
-  const shovelSprite = new Image(); shovelSprite.src = "shovel_sprite.png";
-  const chestImage = new Image(); chestImage.src = "chest.png";
-  const bgImg = new Image(); bgImg.src = "cave-grid.png";
-
-  let caveObjects = { goblins: [], perks: [], chests: [] };
-  let frameCount = 0;
-  
-  function constrainGoblinPosition(g) {
-    const marginX = canvas.width * 0.13;
-    const marginY = canvas.height * 0.13;
-  
-    g.x = Math.max(marginX, Math.min(canvas.width - marginX, g.x));
-    g.y = Math.max(marginY, Math.min(canvas.height - marginY, g.y));
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
-  
-    caveObjects.goblins.forEach(g => {
-      const speed = g.speed ?? 1.5;
-      const next = g.path[g.currentIndex + 1];
-      if (next) {
-        const dx = next.x - g.x;
-        const dy = next.y - g.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > 1) {
-          g.x += dx / dist * speed;
-          g.y += dy / dist * speed;
-        } else {
-          g.x = next.x;
-          g.y = next.y;
-          g.currentIndex++;
-        }
-        constrainGoblinPosition(g);
-      }
-    
-      // 💡 Highlight goblins not owned by the current user
-      if (g.aura) {
-        ctx.save();
-        ctx.shadowColor = g.aura;
-        ctx.shadowBlur = 20;
-      }
-
-      const size = 32; // impostato come metà della dimensione originale
-      ctx.drawImage(goblinImage, g.x - size / 2, g.y - size / 2, size, size);
-      
-      if (g.owner !== user.wax_account) {
-        ctx.restore();
-      }
-
-      // ✏️ Draw owner label for all goblins
-      const labelText = g.owner;
-      const labelX = g.x;
-      const labelY = g.y - 38;
-      
-      ctx.font = "12px Arial";
-      ctx.textAlign = "center";
-      
-      // Misura larghezza per disegnare rettangolo di sfondo
-      const textWidth = ctx.measureText(labelText).width;
-      const padding = 4;
-      const rectWidth = textWidth + padding * 2;
-      const rectHeight = 16;
-      
-      // Colore diverso per utente vs altri
-      if (g.owner === user.wax_account) {
-        ctx.fillStyle = "#333"; // sfondo scuro per sé
-      } else {
-        ctx.fillStyle = "#555"; // sfondo più chiaro per altri
-      }
-      
-      // Disegna rettangolo sfondo
-      ctx.fillRect(labelX - rectWidth / 2, labelY - rectHeight + 4, rectWidth, rectHeight);
-      
-      // Scrivi testo sopra
-      ctx.fillStyle = "white";
-      ctx.fillText(labelText, labelX, labelY);
-
-    });
-    
-      // Perks animati
-    caveObjects.perks.forEach(p => {
-      const sprite = loadedImages[p.type];
-      if (!sprite) return;
-      const frames = perkSprites[p.type]?.frames || 1;
-      const frame = Math.floor(frameCount / 5) % frames;
-      ctx.drawImage(sprite, frame * 64, 0, 64, 64, p.x - 32, p.y - 32, 64, 64);
-    });
-    
-    // Chest statiche
-    caveObjects.chests.forEach(ch => {
-      ctx.drawImage(chestImage, ch.x - 16, ch.y - 16, 32, 32);
-    });
-
-    // draw perks and chests (come già fai)
-    frameCount++;
-    requestAnimationFrame(draw);
-  }
-
-  function updateCaveData(data) {
-    const allGoblins = (data.goblins || []).map(g => ({
-      asset_id: g.asset_id,
-      path: g.path || [{ x: g.x, y: g.y }],
-      currentIndex: 0,
-      x: g.path?.[0]?.x ?? g.x,
-      y: g.path?.[0]?.y ?? g.y,
-      owner: g.owner,
-      aura: g.aura || null,
-      rarity: g.rarity || "common",
-      speed: 1 + (parseInt(g.asset_id.slice(-2), 16) % 10) / 10 
-    }));
-  
-    // Mappa owner → lista dei suoi goblin
-    const grouped = {};
-    for (const goblin of allGoblins) {
-      if (!grouped[goblin.owner]) grouped[goblin.owner] = [];
-      grouped[goblin.owner].push(goblin);
+    // video → canvas on ended
+    const v = qs("#cv-video", Cave.el.videoOrCanvas);
+    if (v) {
+      v.onended = () => {
+        Cave.el.videoOrCanvas.innerHTML = "";
+        const can = document.createElement("canvas");
+        can.id = "caveCanvas";
+        can.style.cssText = "width:100%; height:auto; display:block;";
+        Cave.el.videoOrCanvas.appendChild(can);
+        setupCanvas(can);
+        startRAF();
+      };
     }
-  
-    // Ordina per rarity e prendi solo il più raro per owner
-    const rarityOrder = { mythic: 5, legendary: 4, epic: 3, rare: 2, common: 1 };
-    const filteredGoblins = Object.values(grouped).map(list => {
-      return list.sort((a, b) => (rarityOrder[b.rarity] ?? 0) - (rarityOrder[a.rarity] ?? 0))[0];
-    });
-  
-    caveObjects = {
-      goblins: filteredGoblins,
-      perks: data.perks || [],
-      chests: data.chests || []
+
+    await renderGlobalExpeditions();
+    if (Cave.intervals.global) clearInterval(Cave.intervals.global);
+    Cave.intervals.global = setInterval(async ()=>{
+      if (!qs("#caveCanvas", Cave.el.videoOrCanvas)) return;
+      await renderGlobalExpeditions();
+    }, GLOBAL_REFRESH_MS);
+
+    await renderRecentList();
+
+    // Load user goblins
+    let goblins = [];
+    try {
+      const r = await API.post("/user_nfts", {
+        wax_account: Cave.user.wax_account,
+        user_id: Cave.user.user_id,
+        usx_token: Cave.user.usx_token
+      }, 20000);
+      goblins = (Array.isArray(r.data) ? r.data : []).filter(n => n.type === "goblin");
+      if (!goblins.length) {
+        Cave.el.selectionSummary.innerHTML = `<div class="cv-toast">No goblins available for expedition.</div>`;
+        return;
+      }
+    } catch (e) {
+      Cave.el.selectionSummary.innerHTML = `<div class="cv-toast err">Error loading goblin data.</div>`;
+      return;
+    }
+
+    // selection UI
+    let selected = new Set();
+    let sortBy = "rarity";
+    const num = (v) => Number(v ?? 0) || 0;
+    const highlight = (id) => selected.has(id) ? "box-shadow:0 0 10px #ffe600; background:rgba(255,255,0,.06);" : "";
+
+    function renderList(list = goblins) {
+      const sorted = [...list].sort((a,b) => num(b[sortBy]) - num(a[sortBy]));
+      const frag = document.createDocumentFragment();
+      sorted.forEach(g=>{
+        const tired = num(g.daily_power) < 5;
+        const wrap = document.createElement("div");
+        wrap.className = "cv-row";
+        wrap.style.cssText = `
+          display:flex; align-items:center; gap:1rem; padding:.6rem 1rem; border-bottom:1px solid #333; border-radius:10px;
+          ${highlight(g.asset_id)}
+        `;
+        wrap.innerHTML = `
+          <div style="flex-basis:15%; max-width:15%; position:relative;">
+            <img src="${safe(g.img)}" style="width:52px; height:auto; border-radius:8px; ${tired ? 'filter:grayscale(100%) brightness(.7);' : ''}">
+            ${tired ? `<div style="position:absolute; top:-10px; left:-20px; transform:rotate(-20deg); background:rgba(255,0,0,.85);
+                color:#fff; padding:2px 8px; font-size:.65rem; font-weight:bold; border-radius:6px; box-shadow:0 0 6px red; font-family:Orbitron, system-ui, sans-serif;">Exhausted</div>` : ""}
+          </div>
+          <div style="flex-basis:70%; max-width:70%; font-size:.95rem; font-family:Orbitron, system-ui, sans-serif; color:#fff;">
+            <div><strong style="color:#ffe600;">${safe(g.name)}</strong><span class="cv-tag">${safe(g.rarity)}</span></div>
+            <div style="color:#aaa;">Level: ${safe(g.level)} | Main: ${safe(g.main_attr)}</div>
+            <div style="color:#0ff;">Power: ${safe(g.daily_power)}</div>
+          </div>
+          <input type="checkbox" class="cv-sel" data-id="${safe(g.asset_id)}"
+            ${selected.has(g.asset_id) ? "checked" : ""} ${tired ? "disabled" : ""} style="transform:scale(1.3); accent-color:#ffe600;">
+        `;
+        frag.appendChild(wrap);
+      });
+      Cave.el.goblinList.innerHTML = "";
+      Cave.el.goblinList.appendChild(frag);
+
+      qsa(".cv-sel", Cave.el.goblinList).forEach(cb => {
+        cb.addEventListener("change", () => {
+          const id = cb.dataset.id;
+          cb.checked ? selected.add(id) : selected.delete(id);
+          renderList(); updateSummary();
+        });
+      });
+    }
+
+    function updateSummary() {
+      Cave.el.selectionSummary.innerHTML = `
+        <span style="color:#ffe600;">Selected: ${selected.size} / 50</span>
+        <button class="cv-btn" id="cv-start" style="margin-left:1rem;">🚀 Start Expedition</button>
+      `;
+      qs("#cv-start").onclick = async () => {
+        const btn = qs("#cv-start"); btn.disabled = true; btn.textContent = "⏳ Starting...";
+        if (!selected.size) { toast("Select at least 1 goblin to start.","warn"); btn.disabled=false; btn.textContent="🚀 Start Expedition"; return; }
+
+        const ids = [...selected].filter(id => {
+          const g = goblins.find(x => x.asset_id === id);
+          return g && num(g.daily_power) >= 5;
+        });
+        if (!ids.length) { toast("All selected goblins are too tired.","warn"); btn.disabled=false; btn.textContent="🚀 Start Expedition"; return; }
+
+        try {
+          const r = await API.post("/start_expedition", {
+            wax_account: Cave.user.wax_account,
+            user_id: Cave.user.user_id,
+            usx_token: Cave.user.usx_token,
+            goblin_ids: ids
+          }, 20000);
+
+          if (r.status === 409) toast(r.data?.error || "Already in expedition.", "warn");
+          else if (r.ok) {
+            toast("Expedition started!", "ok");
+            await renderUserCountdown(r.data.expedition_id, r.data.duration_seconds, ids);
+            await renderGlobalExpeditions();
+          } else toast("Something went wrong.", "err");
+        } catch (e) {
+          toast("Failed to start expedition.", "err");
+          console.error(e);
+        } finally { btn.disabled=false; btn.textContent="🚀 Start Expedition"; }
+      };
+    }
+
+    function autoBest() {
+      selected.clear();
+      const scored = goblins.filter(g=>num(g.daily_power)>=5)
+        .map(g=>({ id:g.asset_id, score: num(g.level) + num(g[g.main_attr]) }))
+        .sort((a,b)=>b.score-a.score)
+        .slice(0,50);
+      scored.forEach(s=>selected.add(s.id));
+      renderList(); updateSummary();
+    }
+
+    // toolbar binds
+    qs("#cv-select-50").onclick = () => {
+      selected.clear();
+      goblins.filter(g=>num(g.daily_power)>=5).slice(0,50).forEach(g=>selected.add(g.asset_id));
+      renderList(); updateSummary();
     };
-  }
+    qs("#cv-deselect").onclick = () => { selected.clear(); renderList(); updateSummary(); };
+    qs("#cv-select-best").onclick = () => autoBest();
+    qs("#cv-sort").addEventListener("change", e => { sortBy = e.target.value; renderList(); });
 
+    // chest perk button
+    Cave.el.chestPerkBtn.onclick = async () => {
+      const btn = Cave.el.chestPerkBtn; btn.disabled = true; btn.textContent = "Checking...";
+      try {
+        const r = await API.post("/try_chest_perk", {
+          wax_account: Cave.user.wax_account,
+          user_id: Cave.user.user_id,
+          usx_token: Cave.user.usx_token
+        }, 12000);
 
-  async function syncExpeditionsAndCanvas() {
+        if (r.status === 429) toast(`⏳ Wait: ${r.data?.seconds_remaining}s until next perk try.`,"warn");
+        else if (r.ok && r.data?.perk_awarded) {
+          toast(`🎉 Perk "${r.data.perk_type.toUpperCase()}" dropped!`,"ok");
+          triggerPerk(r.data.perk_type, Cave.user.wax_account);
+        } else toast("😢 No perk awarded.","warn");
+      } catch (e) {
+        toast("❌ Error trying chest drop.","err");
+      } finally { btn.disabled=false; btn.textContent="🎁 Try !chest Drop"; }
+    };
+
+    // initial lists
+    renderList(); updateSummary(); await renderRecentList();
+
+    // if user expedition in progress
     try {
-      const goblinPositions = {};
-      for (const g of caveObjects.goblins) {
-        goblinPositions[g.asset_id] = { x: g.x, y: g.y, currentIndex: g.currentIndex };
+      const s = await API.post("/expedition_status", {
+        wax_account: Cave.user.wax_account,
+        user_id: Cave.user.user_id,
+        usx_token: Cave.user.usx_token
+      }, 12000);
+      if (s.status === 200) {
+        await renderUserCountdown(s.data.expedition_id, s.data.seconds_remaining, s.data.goblin_ids || []);
       }
-            
-      const res = await fetch(`${BASE_URL}/sync_expedition_state`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          wax_account: user.wax_account,
-          positions: goblinPositions
-        })
-      });
+    } catch {}
 
-      const data = await res.json();
-      currentExpeditions = data.expeditions || [];
-      renderExpeditions(currentExpeditions);
-      renderRecentResults(data.recent || []);
-      renderChestRewards(data.bonuses || []);
-      updateCaveData(data.canvas || {});
-
-    } catch (err) {
-      console.error("[Sync Error]", err);
-    }
   }
 
-  function renderExpeditions(expeditions) {
-    const list = document.getElementById("global-expedition-list");
-    list.innerHTML = `<h3>🌍 Active Expeditions</h3>`;
-    expeditions.forEach(e => {
-      list.innerHTML += `
-        <div>
-          <strong>${e.wax_account}</strong>: ${e.total_goblins} goblins - Ends in ${e.seconds_remaining}s
-        </div>`;
-    });
+  // ========= VISIBILITY =========
+  document.addEventListener("visibilitychange", () => {
+    Cave.visible = !document.hidden;
+    if (Cave.visible) startCommandPolling();
+    else stopCommandPolling();
+  });
+
+  // ========= COMMAND POLLING CONTROL =========
+  function startCommandPolling() {
+    if (!qs("#caveCanvas", Cave.el.videoOrCanvas || document)) return; // only when canvas exists
+    if (!Cave.intervals.command) Cave.intervals.command = setInterval(async ()=>{
+      if (!Cave.visible) return;
+      try {
+        const r = await API.post("/check_perk_command", { wax_account: Cave.user.wax_account }, 12000);
+        if (r.ok && r.data?.perk) {
+          triggerPerk(r.data.perk, r.data.wax_account);
+          toast(`${safe(r.data.wax_account)} triggered ${r.data.perk}`, "ok", 4000);
+        }
+      } catch {}
+    }, COMMAND_POLL_MS);
   }
 
-  function renderRecentResults(entries) {
-    const container = document.getElementById("recent-expeditions-list");
-    container.innerHTML = `<h3>🕒 Recent Results</h3>`;
-    entries.forEach(item => {
-      container.innerHTML += `
-        <div><strong>${item.wax_account}</strong> won ${item.chips} CHIPS and ${item.nfts.length} NFTs</div>`;
-    });
-  }
+  // ========= EXPOSE =========
+  window.renderDwarfsCave = renderDwarfsCave;
 
-  function renderChestRewards(entries) {
-    const container = document.getElementById("bonus-chest-rewards");
-    container.innerHTML = `<h3>🎁 Chest Wins</h3>`;
-    entries.forEach(r => {
-      container.innerHTML += `
-        <div><strong>${r.wax_account}</strong> got ${r.stats.tokens.CHIPS ?? 0} CHIPS and ${r.nfts?.length || 0} NFTs</div>`;
-    });
-  }
-
-  async function loadUserGoblins() {
-    try {
-      const res = await fetch(`${BASE_URL}/user_nfts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          wax_account: user.wax_account,
-          user_id: user.userId,
-          usx_token: user.usx_token
-        })
-      });
-
-      const goblins = (await res.json()).filter(n => n.type === "goblin");
-      userGoblins = goblins;
-      renderList();
-    } catch (err) {
-      console.error("[Goblin Load Error]", err);
-    }
-  }
-
-  function updateSelectionSummary() {
-    const box = document.getElementById("selection-summary");
-    box.innerHTML = `Selected: ${selectedGoblins.size} goblins`;
-  }
-
-  document.getElementById("start-expedition-btn").onclick = async () => {
-    if (selectedGoblins.size === 0) return alert("Select goblins first!");
-    const assetIds = [...selectedGoblins];
-
-    try {
-      const res = await fetch(`${BASE_URL}/start_expedition`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          wax_account: user.wax_account,
-          user_id: user.userId,
-          usx_token: user.usx_token,
-          goblin_ids: assetIds
-        })
-      });
-
-      const result = await res.json();
-      if (res.ok) {
-        alert("Expedition started!");
-        selectedGoblins.clear();
-        await loadUserGoblins();
-        await syncExpeditionsAndCanvas();
-      } else {
-        alert(result.error || "Failed to start expedition");
-      }
-    } catch (err) {
-      console.error("[Start Expedition Error]", err);
-    }
-  };
-
-  await loadUserGoblins();
-  await syncExpeditionsAndCanvas();
-  updateSelectionSummary();
-  draw();
-  syncInterval = setInterval(syncExpeditionsAndCanvas, 10000);
-  window.onbeforeunload = () => clearInterval(syncInterval);
-}
+})();
 
 async function renderGoblinBlend() {
   const container = document.getElementById('goblin-content');

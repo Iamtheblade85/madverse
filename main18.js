@@ -2697,11 +2697,11 @@ async function renderGoblinInventory() {
   
     ctx.save();
     ctx.lineCap = "round";
-    ctx.lineWidth = Math.max(1, cell * 0.12); // spessore in proporzione
+    ctx.lineWidth = Math.max(1, cell * 0.20); // spessore in proporzione
   
     for (let i = 0; i < t.length - 1; i++) {
       const a = t[i], b = t[i + 1];
-      const alpha = (1 - i / t.length) * 0.55; // fade verso il passato
+      const alpha = (1 - i / t.length) * 0.80; // fade verso il passato
       ctx.strokeStyle = hexToRgba(g.color || "#ffe600", alpha);
       ctx.beginPath();
       ctx.moveTo(offsetX + a.x * cell, offsetY + a.y * cell);
@@ -2844,18 +2844,23 @@ async function renderGoblinInventory() {
     g.x = nx; 
     g.y = ny;
   
-    // --- trail recording ---
-    {
-      const lx = g._lastTrailX ?? g.x;
-      const ly = g._lastTrailY ?? g.y;
-      const dx = g.x - lx, dy = g.y - ly;
+    // --- trail recording (in celle) ---
+    if (g._lastTrailX == null || g._lastTrailY == null) {
+      // primo frame: fai partire la scia
+      g.trail = [{ x: g.x, y: g.y }];
+      g._lastTrailX = g.x;
+      g._lastTrailY = g.y;
+    } else {
+      const dx = g.x - g._lastTrailX;
+      const dy = g.y - g._lastTrailY;
       if ((dx * dx + dy * dy) >= (TRAIL_MIN_DIST * TRAIL_MIN_DIST)) {
         g.trail.unshift({ x: g.x, y: g.y });
-        g._lastTrailX = g.x; 
+        g._lastTrailX = g.x;
         g._lastTrailY = g.y;
         if (g.trail.length > TRAIL_LEN) g.trail.pop();
       }
     }
+
   
     // chest claim proximity
     Cave.chests.forEach((ch, key) => {
@@ -3089,19 +3094,23 @@ async function renderGoblinInventory() {
         startCommandPolling();
       }
 
-      Cave.goblins = data.map((e, i) => ({
-        x: Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1),
-        y: Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1),
-        wax_account: e.wax_account,
-        path: [],
-        trail: [],          // ✅ scia
-        _lastTrailX: null,  // (opzionale) memorizza ultimo punto per la scia
-        _lastTrailY: null,  // (opzionale)
-        digging: false,     // ✅ VIRGOLA corretta prima di digging
-        shovelFrame: 0,
-        frameTimer: 0,
-        color: colorByIndex(i)
-      }));
+      Cave.goblins = data.map((e, i) => {
+        const gx = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
+        const gy = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
+        return {
+          x: gx,
+          y: gy,
+          wax_account: e.wax_account,
+          path: [],
+          trail: [{ x: gx, y: gy }], // 👈 seed iniziale
+          _lastTrailX: gx,            // 👈 bootstrap “ultimo punto”
+          _lastTrailY: gy,
+          digging: false,
+          shovelFrame: 0,
+          frameTimer: 0,
+          color: colorByIndex(i)
+        };
+      });
 
       // sync chests from server
       data.forEach(e=>{

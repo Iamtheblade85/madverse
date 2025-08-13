@@ -220,31 +220,194 @@ function renderAuthButton(isLoggedIn) {
   };
 }
 
-function openLoginModal() {
+function sanitizeHandle(v) {
+  if (!v) return "";
+  return v.trim().replace(/^@+/, ""); // rimuove uno o più @ iniziali
+}
+
+function openResetPwdModal() {
   const modal = document.getElementById('modal');
   const body = document.getElementById('modal-body');
   const modalContent = modal.querySelector('.modal-content');
 
+  // stili inline per distinguere obbligatori vs opzionali
+  const reqInputStyle = 'border:1px solid gold; box-shadow:0 0 4px rgba(255,215,0,0.35);';
+  const optInputStyle = 'border:1px solid #444;';
+
+  body.innerHTML = `
+    <h3 class="modal-title">Reset Password</h3>
+
+    <label class="form-label">Email <span style="color: gold;">(obbligatoria)</span></label>
+    <input type="email" id="rp-email" class="form-input" placeholder="your@email.com" required style="${reqInputStyle}">
+
+    <label class="form-label">Wax Wallet <span style="color: gold;">(obbligatoria)</span></label>
+    <input type="text" id="rp-wax_account" class="form-input" placeholder="your wax wallet here" required style="${reqInputStyle}">
+
+    <label class="form-label">Telegram username (senza @)
+      <span style="color: gray;">(opzionale — è sufficiente Telegram o Twitch)</span>
+    </label>
+    <input type="text" id="rp-telegram" class="form-input" placeholder="es. mario_rossi" style="${optInputStyle}">
+
+    <label class="form-label">Twitch username (senza @)
+      <span style="color: gray;">(opzionale)</span>
+    </label>
+    <input type="text" id="rp-twitch" class="form-input" placeholder="es. mario_rossi_tv" style="${optInputStyle}">
+
+    <label class="form-label">Nuova password <span style="color: gold;">(obbligatoria)</span></label>
+    <input type="password" id="rp-password" class="form-input" placeholder="Nuova password" required style="${reqInputStyle}">
+
+    <label class="form-label">Conferma nuova password <span style="color: gold;">(obbligatoria)</span></label>
+    <input type="password" id="rp-password-confirm" class="form-input" placeholder="Ripeti nuova password" required style="${reqInputStyle}">
+
+    <div id="rp-feedback" style="margin-top: 0.75rem; font-size: 0.9rem;"></div>
+
+    <div style="display:flex; gap:0.5rem; margin-top: 1rem;">
+      <button class="btn btn-primary" id="rp-submit">Invia richiesta</button>
+      <button class="btn" id="rp-back" style="background:#2b2b2b; border:1px solid #444;">Torna al Login</button>
+    </div>
+  `;
+
+  modal.classList.remove('hidden');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
+
+  // Pre-compila wax/email se già note
+  if (window.userData?.wax_account) {
+    const waxEl = document.getElementById('rp-wax_account');
+    if (waxEl && !waxEl.value) waxEl.value = window.userData.wax_account;
+  }
+  if (window.userData?.email) {
+    const emailEl = document.getElementById('rp-email');
+    if (emailEl && !emailEl.value) emailEl.value = window.userData.email;
+  }
+
+  // pulsante back
+  document.getElementById('rp-back').onclick = () => openLoginModal();
+
+  // submit
+  document.getElementById('rp-submit').onclick = async () => {
+    const email = document.getElementById('rp-email').value.trim();
+    const wax = document.getElementById('rp-wax_account').value.trim();
+    const telegram = sanitizeHandle(document.getElementById('rp-telegram').value);
+    const twitch = sanitizeHandle(document.getElementById('rp-twitch').value);
+    const pwd = document.getElementById('rp-password').value;
+    const pwd2 = document.getElementById('rp-password-confirm').value;
+    const feedback = document.getElementById('rp-feedback');
+
+    // validazioni
+    if (!email) {
+      feedback.style.color = '#ffb3b3';
+      feedback.textContent = 'L’email è obbligatoria.';
+      return;
+    }
+    if (!wax) {
+      feedback.style.color = '#ffb3b3';
+      feedback.textContent = 'La Wax Wallet è obbligatoria per motivi di sicurezza.';
+      return;
+    }
+    if (!telegram && !twitch) {
+      feedback.style.color = '#ffb3b3';
+      feedback.textContent = 'Inserisci almeno uno tra Telegram o Twitch (senza @).';
+      return;
+    }
+    if (!pwd || !pwd2) {
+      feedback.style.color = '#ffb3b3';
+      feedback.textContent = 'Inserisci e conferma la nuova password.';
+      return;
+    }
+    if (pwd !== pwd2) {
+      feedback.style.color = '#ffb3b3';
+      feedback.textContent = 'Le password non coincidono.';
+      return;
+    }
+
+    // disabilita durante la richiesta
+    const btn = document.getElementById('rp-submit');
+    btn.disabled = true; btn.textContent = 'Invio...';
+
+    try {
+      const res = await fetch(`${BASE_URL}/reset_pwd`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          wax_account: wax,
+          telegram: telegram || null,
+          twitch: twitch || null,
+          new_password: pwd
+        })
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = (data && (data.error || data.message)) || `Errore ${res.status}`;
+        throw new Error(msg);
+      }
+
+      // successo
+      feedback.style.color = 'gold';
+      feedback.innerHTML = `✅ Password aggiornata correttamente. Adesso puoi effettuare il login.`;
+      document.getElementById('rp-back').focus();
+
+    } catch (err) {
+      feedback.style.color = '#ffb3b3';
+      feedback.textContent = `Errore nel reset: ${err.message}`;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Invia richiesta';
+    }
+  };
+
+  // Aggiungi pulsante chiusura se manca
+  if (!modalContent.querySelector('.modal-close')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2rem;
+      color: gold;
+      background: none;
+      border: none;
+      cursor: pointer;
+    `;
+    closeBtn.onclick = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    };
+    modalContent.prepend(closeBtn);
+  }
+}
+
+function openLoginModal() {
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+  const modalContent = modal.querySelector('.modal-content');
   body.innerHTML = `
     <h3 class="modal-title">Login</h3>
     <label class="form-label">Email</label>
     <input type="email" id="login-email" class="form-input" placeholder="Email" required>
-
+  
     <label class="form-label">Password</label>
     <input type="password" id="login-password" class="form-input" placeholder="Password" required>
-
+  
     <label style="margin-top: 1rem;">
       <input type="checkbox" id="remember-me"> Remember Me
     </label>
-
+  
     <button class="btn btn-primary" id="submit-login" style="margin-top: 1rem;">Login</button>
-
+  
+    <div style="margin-top: 0.5rem; font-size: 0.9rem;">
+      <button id="forgot-password" style="color: gold; background: none; border: none; cursor: pointer; padding:0;">Password dimenticata?</button>
+    </div>
+  
     <div style="margin-top: 1rem; font-size: 0.9rem;">
       You still haven’t an account? → 
       <button id="register-button" style="color: gold; background: none; border: none; cursor: pointer;">Register</button>
     </div>
   `;
-
 
   modal.classList.remove('hidden');
   modal.classList.add('active');
@@ -275,6 +438,7 @@ function openLoginModal() {
     }
   };
   document.getElementById('register-button').onclick = () => openRegisterModal();
+  document.getElementById('forgot-password').onclick = () => openResetPwdModal();
 
   // Aggiungi pulsante chiusura se non esiste
   if (!modalContent.querySelector('.modal-close')) {

@@ -2574,10 +2574,10 @@ async function renderGoblinInventory() {
   if (!window.BASE_URL) window.BASE_URL = "https://iamemanuele.pythonanywhere.com";
   const BASE_URL = window.BASE_URL;
   const GRID_SIZE = 90;
-  const GLOBAL_REFRESH_MS = 30000; // 30s
-  const COMMAND_POLL_MS = 30000;   // 30s
-  const MAX_RECENT_EXPEDITIONS = 6;
-  const MAX_BONUS_ROWS = 6;        // visible rows in bonus list (excluding header)
+  const GLOBAL_REFRESH_MS = 23000; // 23s
+  const COMMAND_POLL_MS = 31000;   // 31s
+  const MAX_RECENT_EXPEDITIONS = 10;
+  const MAX_BONUS_ROWS = 10;        // visible rows in bonus list (excluding header)
   const DEBUG = false;
   // --- trail config ---
   const TRAIL_LEN = 16;        // quanti segmenti massimo
@@ -3189,40 +3189,60 @@ async function renderGoblinInventory() {
       rows.pop()?.remove();
     }
   }
-
+  
   async function renderRecentList() {
     try {
       const r = await API.get("/recent_expeditions", 15000);
-      if (!r.ok) return;
-      const list = Array.isArray(r.data) ? r.data : [];
-      const c = Cave.el.recentList;
-      if (!c) return;
+      const c = Cave.el.recentList; if (!c) return;
       c.innerHTML = `<h4 style="color:#ffa500;">🕒 Recent Expedition Results</h4>`;
+      Cave.recentExpKeys.clear(); 
+  
+      if (!r.ok) {
+        c.insertAdjacentHTML("beforeend",
+          `<div class="cv-toast warn">Could not load recent expeditions (HTTP ${r.status}).</div>`);
+        return;
+      }
 
+      const arr = Array.isArray(r.data) ? r.data
+               : Array.isArray(r.data?.items) ? r.data.items
+               : Array.isArray(r.data?.results) ? r.data.results
+               : [];
+  
+      const list = arr.slice(0, 10); // oppure usa MAX_RECENT_EXPEDITIONS
+  
       const frag = document.createDocumentFragment();
-      list.slice(0, MAX_RECENT_EXPEDITIONS).forEach(item => {
-        const k = `${item.wax_account}|${item.timestamp}|${item.chips}|${(item.nfts||[]).length}`;
-        if (Cave.recentExpKeys.has(k)) return;
-        Cave.recentExpKeys.add(k);
-
-        const dt = new Date(item.timestamp);
-        const row = document.createElement("div");
-        row.className = "cv-list-row";
+      list.forEach(item => {
+        const ts = item.timestamp ?? item.created_at ?? item.time;
+        const dt = ts ? new Date(ts) : null;
+        const chips = item.chips ?? item.stats?.tokens?.CHIPS ?? 0;
+        const nftsCount = item.nfts_count ?? (Array.isArray(item.nfts) ? item.nfts.length : 0);
+  
+        const key = `${item.wax_account}|${ts}|${chips}|${nftsCount}`;
+        if (Cave.recentExpKeys.has(key)) return;
+        Cave.recentExpKeys.add(key);
+  
         const nftList = Array.isArray(item.nfts) && item.nfts.length
           ? `<ul style="margin:0; padding-left:1rem;">${item.nfts.map(n=>`<li>${safe(n.schema)} #${safe(n.template_id)} × ${safe(n.quantity)}</li>`).join("")}</ul>`
-          : "None";
+          : `NFTs: ${nftsCount}`;
+  
+        const row = document.createElement("div");
+        row.className = "cv-list-row";
         row.innerHTML = `
-          <div><strong style="color:#ffe600;">${safe(item.wax_account)}</strong> at ${timeHM(dt)}</div>
-          <div style="color:#0f0;">CHIPS: ${safe(item.chips)}</div>
-          <div style="color:#ffa500;">NFTs: ${nftList}</div>
+          <div><strong style="color:#ffe600;">${safe(item.wax_account)}</strong>${dt ? ` at ${timeHM(dt)}` : ""}</div>
+          <div style="color:#0f0;">CHIPS: ${safe(chips)}</div>
+          <div style="color:#ffa500;">${nftList}</div>
         `;
         frag.appendChild(row);
       });
       c.appendChild(frag);
     } catch (e) {
       console.warn("Recent list failed:", e);
+      const c = Cave.el.recentList;
+      if (c) c.insertAdjacentHTML("beforeend",
+        `<div class="cv-toast err">Error loading recent expeditions.</div>`);
     }
   }
+
 
   function prependRecentFromResult(result, wax_account) {
     const c = Cave.el.recentList; if (!c) return;

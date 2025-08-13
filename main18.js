@@ -2525,7 +2525,16 @@ async function renderGoblinInventory() {
     `;
     document.head.appendChild(st);
   }
-  
+
+  function clearCanvas() {
+    const { ctx, canvas } = Cave;
+    // azzera la trasformazione per pulire in pixel nativi
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore(); // ripristina la trasformazione HiDPI impostata in resizeCanvas()
+  }
+
   function hexToRgba(hex, alpha = 1) {
     const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || "#ffe600");
     const r = m ? parseInt(m[1], 16) : 255;
@@ -2743,24 +2752,36 @@ async function renderGoblinInventory() {
   }
 
   function drawPerksAndAdvance() {
-    const { ctx, cell } = Cave;
+    const { ctx } = Cave;
     if (!Cave.perks.length) return;
-
+  
     for (let p of Cave.perks) {
       if (!p.image?.complete) continue;
-
+  
       // advance frame
       p.tick++;
       if (p.tick >= p.frameDelay) {
         p.tick = 0;
         p.frame = (p.frame + 1) % p.frames;
       }
-
+  
       const px = Cave.offsetX + p.x * Cave.cell;
       const py = Cave.offsetY + p.waveY(p.x) * Cave.cell;
-
+  
+      // --- GRID bounds (non il canvas) ---
+      const half = 16; // metà del 32x32 disegnato
+      const left   = Cave.offsetX - half;
+      const right  = Cave.offsetX + Cave.gridW + half;
+      const top    = Cave.offsetY - half;
+      const bottom = Cave.offsetY + Cave.gridH + half;
+  
+      if (px < left || px > right || py < top || py > bottom) {
+        p.done = true;          // segna per la rimozione
+        continue;               // non disegnare frame fuori griglia
+      }
+  
       // sprite 128x128 -> draw at 32x32
-      ctx.drawImage(p.image, p.frame*128, 0, 128,128, px-16, py-16, 32, 32);
+      ctx.drawImage(p.image, p.frame*128, 0, 128, 128, px-16, py-16, 32, 32);
 
       // maybe drop chest once
       if (!p.hasDropped && Math.random() < 0.25) {
@@ -2808,17 +2829,10 @@ async function renderGoblinInventory() {
           console.warn("[spawn_chest] errore:", e);
         });
       }
-
-      // move (50% slower already applied in speed)
+      // move
       p.x += p.dir === "left-to-right" ? p.speed : -p.speed;
-
-      // out of bounds
-      if ((p.dir === "left-to-right" && p.x > GRID_SIZE + 5) ||
-          (p.dir === "right-to-left" && p.x < -5)) {
-        p.done = true;
-      }
     }
-
+    // rimuovi i perk “done”
     Cave.perks = Cave.perks.filter(p => !p.done);
   }
 
@@ -3276,14 +3290,15 @@ async function renderGoblinInventory() {
   function tick(ts) {
     if (!Cave.running) return;
     const dt = ts - lastTS; lastTS = ts;
-
+  
+    clearCanvas();      // <-- pulizia completa
     drawBG();
     drawPerksAndAdvance();
     drawChests();
     Cave.goblins.forEach(moveGoblin);
     Cave.goblins.forEach(drawGoblin);
     updateGoblinAnim(dt);
-
+  
     Cave.rafId = requestAnimationFrame(tick);
   }
 

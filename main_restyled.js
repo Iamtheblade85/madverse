@@ -2941,14 +2941,13 @@ async function renderGoblinInventory() {
       // maybe drop chest once
       if (!p.hasDropped && Math.random() < 0.25) {
         p.hasDropped = true;
-        const margin = Math.floor(GRID_SIZE * 0.15);
+        const margin = Math.floor(GRID_SIZE * 0.22);
         const dx = Math.floor(Math.random() * (GRID_SIZE - 2*margin)) + margin;
         const dy = Math.floor(Math.random() * (GRID_SIZE - 2*margin)) + margin;
-
         const chest = {
           id: null,
-          x: Math.round(p.x),
-          y: Math.round(p.y),
+          x: dx,           // 👈 disegna direttamente nel punto di drop
+          y: dy,           // 👈
           destX: dx,
           destY: dy,
           from: p.perkName,
@@ -3119,7 +3118,7 @@ async function renderGoblinInventory() {
 
   // ========= CHESTS HELPERS =========
   function synthChestKey(ch) {
-    return `${ch.wax_account}|${ch.from}|${ch.destX}|${ch.destY}`;
+    return `${ch.wax_account}|${ch.from}|${ch.x}|${ch.y}`;
   }
   function upsertChest(ch) {
     const key = ch.id ? String(ch.id) : synthChestKey(ch);

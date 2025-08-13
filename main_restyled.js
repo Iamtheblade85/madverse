@@ -208,7 +208,6 @@ function renderAuthButton(isLoggedIn) {
   }
 
   container.innerHTML = html;
-
   document.getElementById('auth-toggle-button').onclick = () => {
     if (isLoggedIn) {
       localStorage.removeItem('userData');
@@ -222,48 +221,46 @@ function renderAuthButton(isLoggedIn) {
 
 function sanitizeHandle(v) {
   if (!v) return "";
-  return v.trim().replace(/^@+/, ""); // rimuove uno o più @ iniziali
+  return v.trim().replace(/^@+/, ""); 
 }
 
 function openResetPwdModal() {
   const modal = document.getElementById('modal');
   const body = document.getElementById('modal-body');
   const modalContent = modal.querySelector('.modal-content');
-
-  // stili inline per distinguere obbligatori vs opzionali
   const reqInputStyle = 'border:1px solid gold; box-shadow:0 0 4px rgba(255,215,0,0.35);';
   const optInputStyle = 'border:1px solid #444;';
 
   body.innerHTML = `
     <h3 class="modal-title">Reset Password</h3>
 
-    <label class="form-label">Email <span style="color: gold;">(obbligatoria)</span></label>
+    <label class="form-label">Email <span style="color: gold;">(required)</span></label>
     <input type="email" id="rp-email" class="form-input" placeholder="your@email.com" required style="${reqInputStyle}">
 
-    <label class="form-label">Wax Wallet <span style="color: gold;">(obbligatoria)</span></label>
+    <label class="form-label">Wax Wallet <span style="color: gold;">(required)</span></label>
     <input type="text" id="rp-wax_account" class="form-input" placeholder="your wax wallet here" required style="${reqInputStyle}">
 
-    <label class="form-label">Telegram username (senza @)
-      <span style="color: gray;">(opzionale — è sufficiente Telegram o Twitch)</span>
+    <label class="form-label">Telegram username (without @)
+      <span style="color: gray;">(optional — at least Telegram or Twitch)</span>
     </label>
     <input type="text" id="rp-telegram" class="form-input" placeholder="es. mario_rossi" style="${optInputStyle}">
 
-    <label class="form-label">Twitch username (senza @)
-      <span style="color: gray;">(opzionale)</span>
+    <label class="form-label">Twitch username (without @)
+      <span style="color: gray;">(optional)</span>
     </label>
-    <input type="text" id="rp-twitch" class="form-input" placeholder="es. mario_rossi_tv" style="${optInputStyle}">
+    <input type="text" id="rp-twitch" class="form-input" placeholder="es. mary_beauty" style="${optInputStyle}">
 
-    <label class="form-label">Nuova password <span style="color: gold;">(obbligatoria)</span></label>
+    <label class="form-label">New password <span style="color: gold;">(required)</span></label>
     <input type="password" id="rp-password" class="form-input" placeholder="Nuova password" required style="${reqInputStyle}">
 
-    <label class="form-label">Conferma nuova password <span style="color: gold;">(obbligatoria)</span></label>
-    <input type="password" id="rp-password-confirm" class="form-input" placeholder="Ripeti nuova password" required style="${reqInputStyle}">
+    <label class="form-label">Confirm new password <span style="color: gold;">(required)</span></label>
+    <input type="password" id="rp-password-confirm" class="form-input" placeholder="Repeat new password" required style="${reqInputStyle}">
 
     <div id="rp-feedback" style="margin-top: 0.75rem; font-size: 0.9rem;"></div>
 
     <div style="display:flex; gap:0.5rem; margin-top: 1rem;">
-      <button class="btn btn-primary" id="rp-submit">Invia richiesta</button>
-      <button class="btn" id="rp-back" style="background:#2b2b2b; border:1px solid #444;">Torna al Login</button>
+      <button class="btn btn-primary" id="rp-submit">Send request</button>
+      <button class="btn" id="rp-back" style="background:#2b2b2b; border:1px solid #444;">Back to Login</button>
     </div>
   `;
 
@@ -281,10 +278,7 @@ function openResetPwdModal() {
     if (emailEl && !emailEl.value) emailEl.value = window.userData.email;
   }
 
-  // pulsante back
   document.getElementById('rp-back').onclick = () => openLoginModal();
-
-  // submit
   document.getElementById('rp-submit').onclick = async () => {
     const email = document.getElementById('rp-email').value.trim();
     const wax = document.getElementById('rp-wax_account').value.trim();
@@ -294,36 +288,34 @@ function openResetPwdModal() {
     const pwd2 = document.getElementById('rp-password-confirm').value;
     const feedback = document.getElementById('rp-feedback');
 
-    // validazioni
     if (!email) {
       feedback.style.color = '#ffb3b3';
-      feedback.textContent = 'L’email è obbligatoria.';
+      feedback.textContent = 'Email is required';
       return;
     }
     if (!wax) {
       feedback.style.color = '#ffb3b3';
-      feedback.textContent = 'La Wax Wallet è obbligatoria per motivi di sicurezza.';
+      feedback.textContent = 'Wax Wallet is required due to security reasons.';
       return;
     }
     if (!telegram && !twitch) {
       feedback.style.color = '#ffb3b3';
-      feedback.textContent = 'Inserisci almeno uno tra Telegram o Twitch (senza @).';
+      feedback.textContent = 'Insert at least one between Telegram or Twitch (without @).';
       return;
     }
     if (!pwd || !pwd2) {
       feedback.style.color = '#ffb3b3';
-      feedback.textContent = 'Inserisci e conferma la nuova password.';
+      feedback.textContent = 'Insert and confirm new password.';
       return;
     }
     if (pwd !== pwd2) {
       feedback.style.color = '#ffb3b3';
-      feedback.textContent = 'Le password non coincidono.';
+      feedback.textContent = 'Pssword doesn´t match. Please retype both fields again.';
       return;
     }
 
-    // disabilita durante la richiesta
     const btn = document.getElementById('rp-submit');
-    btn.disabled = true; btn.textContent = 'Invio...';
+    btn.disabled = true; btn.textContent = 'Sending...';
 
     try {
       const res = await fetch(`${BASE_URL}/reset_pwd`, {
@@ -340,24 +332,22 @@ function openResetPwdModal() {
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const msg = (data && (data.error || data.message)) || `Errore ${res.status}`;
+        const msg = (data && (data.error || data.message)) || `Error ${res.status}`;
         throw new Error(msg);
       }
 
-      // successo
       feedback.style.color = 'gold';
-      feedback.innerHTML = `✅ Password aggiornata correttamente. Adesso puoi effettuare il login.`;
+      feedback.innerHTML = `✅ Password updated successfully. You can now do login.`;
       document.getElementById('rp-back').focus();
 
     } catch (err) {
       feedback.style.color = '#ffb3b3';
-      feedback.textContent = `Errore nel reset: ${err.message}`;
+      feedback.textContent = `Error during password reset: ${err.message}`;
     } finally {
-      btn.disabled = false; btn.textContent = 'Invia richiesta';
+      btn.disabled = false; btn.textContent = 'Send request';
     }
   };
 
-  // Aggiungi pulsante chiusura se manca
   if (!modalContent.querySelector('.modal-close')) {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'modal-close';
@@ -393,14 +383,17 @@ function openLoginModal() {
     <label class="form-label">Password</label>
     <input type="password" id="login-password" class="form-input" placeholder="Password" required>
   
-    <label style="margin-top: 1rem;">
-      <input type="checkbox" id="remember-me"> Remember Me
-    </label>
-  
-    <button class="btn btn-primary" id="submit-login" style="margin-top: 1rem;">Login</button>
-  
+    <div style="display: flex; align-items: center; gap: 1rem; margin-top: 1rem;">
+      <label style="display: flex; align-items: center; gap: 0.4rem; margin: 0;">
+        <input type="checkbox" id="remember-me">
+        <span>Remember Me</span>
+      </label>
+    
+      <button class="btn btn-primary" id="submit-login">Login</button>
+    </div>
+
     <div style="margin-top: 0.5rem; font-size: 0.9rem;">
-      <button id="forgot-password" style="color: gold; background: none; border: none; cursor: pointer; padding:0;">Password dimenticata?</button>
+      <button id="forgot-password" style="color: gold; background: none; border: none; cursor: pointer; padding:0;">Forgot Password?</button>
     </div>
   
     <div style="margin-top: 1rem; font-size: 0.9rem;">

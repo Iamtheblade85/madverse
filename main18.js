@@ -2788,17 +2788,24 @@ async function renderGoblinInventory() {
         API.post("/spawn_chest", {
           wax_account: p.wax_account,
           perk_type: p.perkName,
-          x: dx, y: dy
+          x: dx, 
+          y: dy
         }, 12000).then(r => {
-          chest.id = String(r?.data?.chest_id || synthChestKey(chest));
+          if (r.ok && r?.data?.chest_id != null) {
+            chest.id = String(r.data.chest_id); // deve essere l'ID reale del DB
+            chest.pending = false;
+            chest.claimable = true;             // ✅ ora sì
+            upsertChest(chest);
+          } else {
+            // NON rendere claimable se lo spawn non è riuscito
+            chest.pending = false;
+            chest.claimable = false;
+            console.warn("[spawn_chest] risposta non valida:", r);
+          }
+        }).catch((e) => {
           chest.pending = false;
-          chest.claimable = true;
-          upsertChest(chest);
-        }).catch(() => {
-          chest.id = synthChestKey(chest);
-          chest.pending = false;
-          chest.claimable = true;
-          upsertChest(chest);
+          chest.claimable = false;
+          console.warn("[spawn_chest] errore:", e);
         });
       }
 
@@ -2875,11 +2882,20 @@ async function renderGoblinInventory() {
             syncUserInto(Cave.user);
             assertAuthOrThrow(Cave.user);
   
-            const rs = await API.post("/claim_chest", {
-              wax_account: g.wax_account,
-              chest_id: ch.id
-            }, 15000);
-  
+            // Validazione client-side
+            if (!ch.id || isNaN(Number(ch.id))) {
+              console.warn("[claim_chest] ID chest non valido, skip:", ch);
+              return;
+            }
+            if (!g.wax_account) {
+              console.warn("[claim_chest] wax_account mancante per il goblin:", g);
+              return;
+            }
+            
+            const payload = { wax_account: g.wax_account, chest_id: Number(ch.id) };
+            console.debug("[claim_chest] payload →", payload);
+            const rs = await API.post("/claim_chest", payload, 15000);
+
             if (!rs.ok) throw new Error(`HTTP ${rs.status}`);
   
             const reward = rs.data;
@@ -3113,13 +3129,23 @@ async function renderGoblinInventory() {
       });
 
       // sync chests from server
-      data.forEach(e=>{
+      data.forEach(e => {
         if (!Array.isArray(e.chests)) return;
-        e.chests.forEach(ch=>{
-          const id = ch.id ? String(ch.id) : `${e.wax_account}|${ch.x}|${ch.y}|${ch.from||"unknown"}`;
+        e.chests.forEach(ch => {
+          // accetta solo id numerici
+          const hasNumericId = ch.id != null && !isNaN(Number(ch.id));
+          if (!hasNumericId) return; // skip, non sarà claimabile lato backend
+      
+          const id = String(ch.id);
           upsertChest({
-            id, x: ch.x, y: ch.y, from: ch.from || "unknown",
-            wax_account: e.wax_account, taken:false, claimable:true, pending:false
+            id,
+            x: ch.x,
+            y: ch.y,
+            from: ch.from || "unknown",
+            wax_account: e.wax_account,
+            taken: false,
+            claimable: true,
+            pending: false
           });
         });
       });

@@ -2677,6 +2677,25 @@ async function renderGoblinInventory() {
         0% { box-shadow:0 0 15px #ffb800, inset 0 0 6px #ffa500; opacity:0.95; }
         100% { box-shadow:0 0 35px #ffcc00, inset 0 0 14px #ffcc00; opacity:1; }
       }
+      /* === GRIGLIA RESPONSIVE DI CARD === */
+      .cv-cards{
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+        gap:.75rem;
+        align-items:stretch;
+      }
+      .cv-item{
+        background:#1a1a1a;
+        border:1px solid #333;
+        border-radius:12px;
+        padding:.7rem .8rem;
+      }
+      .cv-item .cv-when{ opacity:.8; font-size:.9rem; }
+      .cv-item .cv-line{ margin-top:.35rem; }
+      #cv-recent-list > h4, #cv-bonus-list > h4 { margin-bottom:.6rem; }
+      @media (max-width:420px){
+        .cv-cards{ grid-template-columns:1fr; }
+      }      
     `;
     document.head.appendChild(st);
   }
@@ -3165,6 +3184,12 @@ async function renderGoblinInventory() {
   // ========= LISTS / UI PANELS =========
   function appendBonusReward(reward, wax_account, source) {
     const c = Cave.el.bonusList; if (!c) return;
+    let grid = qs("#cv-bonus-grid", c);
+    if (!grid) {
+      c.insertAdjacentHTML("beforeend", `<div id="cv-bonus-grid" class="cv-cards"></div>`);
+      grid = qs("#cv-bonus-grid", c);
+    }
+  
     const chips = reward?.stats?.tokens?.CHIPS ?? 0;
     const nfts = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
     const key = `${wax_account}|${source}|${chips}|${nfts}|${new Date().getHours()}${new Date().getMinutes()}`;
@@ -3173,20 +3198,23 @@ async function renderGoblinInventory() {
     if (Cave.bonusKeys.size > 64) {
       Cave.bonusKeys = new Set(Array.from(Cave.bonusKeys).slice(-32));
     }
-
-    const row = document.createElement("div");
-    row.className = "cv-list-row";
-    row.innerHTML = `
-      <div><strong style="color:#0f0;">${safe(wax_account)}</strong> opened a chest from <strong>${safe(source)}</strong> at ${timeHM()}</div>
-      <div style="color:#0f0;">CHIPS: ${chips}</div>
-      <div style="color:#ffa500;">NFTs: ${nfts}</div>
+  
+    const card = document.createElement("div");
+    card.className = "cv-item";
+    card.innerHTML = `
+      <div>
+        <strong style="color:#0f0;">${safe(wax_account)}</strong> ·
+        <span class="cv-when">${timeHM()}</span>
+      </div>
+      <div class="cv-line">from <strong>${safe(source)}</strong></div>
+      <div class="cv-line" style="color:#0f0;">CHIPS: ${chips}</div>
+      <div class="cv-line" style="color:#ffa500;">NFTs: ${nfts}</div>
     `;
-    c.insertBefore(row, c.children[1] || null);
-
-    // cap rows
-    const rows = Array.from(c.children).filter(el => el.tagName !== "H4");
-    while (rows.length > MAX_BONUS_ROWS) {
-      rows.pop()?.remove();
+    grid.prepend(card);
+  
+    // Cap a MAX_BONUS_ROWS
+    while (grid.children.length > MAX_BONUS_ROWS) {
+      grid.lastElementChild?.remove();
     }
   }
   
@@ -3194,23 +3222,29 @@ async function renderGoblinInventory() {
     try {
       const r = await API.get("/recent_expeditions", 15000);
       const c = Cave.el.recentList; if (!c) return;
-      c.innerHTML = `<h4 style="color:#ffa500;">🕒 Recent Expedition Results</h4>`;
-      Cave.recentExpKeys.clear(); 
+  
+      // Header + contenitore griglia
+      c.innerHTML = `
+        <h4 style="color:#ffa500;">🕒 Recent Expedition Results</h4>
+        <div id="cv-recent-grid" class="cv-cards"></div>
+      `;
+      Cave.recentExpKeys.clear();
   
       if (!r.ok) {
         c.insertAdjacentHTML("beforeend",
           `<div class="cv-toast warn">Could not load recent expeditions (HTTP ${r.status}).</div>`);
         return;
       }
-
+  
       const arr = Array.isArray(r.data) ? r.data
                : Array.isArray(r.data?.items) ? r.data.items
                : Array.isArray(r.data?.results) ? r.data.results
                : [];
   
-      const list = arr.slice(0, 10); // oppure usa MAX_RECENT_EXPEDITIONS
-  
+      const list = arr.slice(0, MAX_RECENT_EXPEDITIONS);
+      const grid = qs("#cv-recent-grid", c);
       const frag = document.createDocumentFragment();
+  
       list.forEach(item => {
         const ts = item.timestamp ?? item.created_at ?? item.time;
         const dt = ts ? new Date(ts) : null;
@@ -3222,19 +3256,23 @@ async function renderGoblinInventory() {
         Cave.recentExpKeys.add(key);
   
         const nftList = Array.isArray(item.nfts) && item.nfts.length
-          ? `<ul style="margin:0; padding-left:1rem;">${item.nfts.map(n=>`<li>${safe(n.schema)} #${safe(n.template_id)} × ${safe(n.quantity)}</li>`).join("")}</ul>`
+          ? `<ul style="margin:.25rem 0 0; padding-left:1rem;">
+               ${item.nfts.map(n=>`<li>${safe(n.schema)} #${safe(n.template_id)} × ${safe(n.quantity)}</li>`).join("")}
+             </ul>`
           : `NFTs: ${nftsCount}`;
   
-        const row = document.createElement("div");
-        row.className = "cv-list-row";
-        row.innerHTML = `
-          <div><strong style="color:#ffe600;">${safe(item.wax_account)}</strong>${dt ? ` at ${timeHM(dt)}` : ""}</div>
-          <div style="color:#0f0;">CHIPS: ${safe(chips)}</div>
-          <div style="color:#ffa500;">${nftList}</div>
+        const card = document.createElement("div");
+        card.className = "cv-item";
+        card.innerHTML = `
+          <div><strong style="color:#ffe600;">${safe(item.wax_account)}</strong>
+            ${dt ? `<span class="cv-when">· ${timeHM(dt)}</span>` : ""}</div>
+          <div class="cv-line" style="color:#0f0;">CHIPS: ${safe(chips)}</div>
+          <div class="cv-line" style="color:#ffa500;">${nftList}</div>
         `;
-        frag.appendChild(row);
+        frag.appendChild(card);
       });
-      c.appendChild(frag);
+  
+      grid.appendChild(frag);
     } catch (e) {
       console.warn("Recent list failed:", e);
       const c = Cave.el.recentList;
@@ -3243,54 +3281,60 @@ async function renderGoblinInventory() {
     }
   }
 
-
   function prependRecentFromResult(result, wax_account) {
     const c = Cave.el.recentList; if (!c) return;
+    const grid = qs("#cv-recent-grid", c) || c; // fallback
+  
     const chips = result?.stats?.tokens?.CHIPS ?? 0;
     const nfts = Array.isArray(result?.nfts) ? result.nfts.length : 0;
     const k = `${wax_account}|${new Date().getHours()}${new Date().getMinutes()}|${chips}|${nfts}`;
     if (Cave.recentExpKeys.has(k)) return;
     Cave.recentExpKeys.add(k);
-
-    const row = document.createElement("div");
-    row.className = "cv-list-row";
-    row.innerHTML = `
-      <div><strong style="color:#ffe600;">${safe(wax_account)}</strong> at ${timeHM()}</div>
-      <div style="color:#0f0;">CHIPS: ${chips}</div>
-      <div style="color:#ffa500;">NFTs: ${nfts}</div>
+  
+    const card = document.createElement("div");
+    card.className = "cv-item";
+    card.innerHTML = `
+      <div><strong style="color:#ffe600;">${safe(wax_account)}</strong>
+        <span class="cv-when">· ${timeHM()}</span></div>
+      <div class="cv-line" style="color:#0f0;">CHIPS: ${chips}</div>
+      <div class="cv-line" style="color:#ffa500;">NFTs: ${nfts}</div>
     `;
-    c.insertBefore(row, c.children[1] || null);
-
-    const rows = Array.from(c.children).filter(el => el.tagName !== "H4");
-    while (rows.length > MAX_RECENT_EXPEDITIONS) {
-      rows.pop()?.remove();
+    grid.prepend(card);
+  
+    // Cap a MAX_RECENT_EXPEDITIONS
+    while (grid.children.length > MAX_RECENT_EXPEDITIONS) {
+      grid.lastElementChild?.remove();
     }
   }
-  
+
   function renderBonusListFromBackend(winners = []) {
-    const c = Cave.el.bonusList; 
-    if (!c) return;
+    const c = Cave.el.bonusList; if (!c) return;
   
-    // Pulisci tutto tranne l’header <h4>
-    Array.from(c.children).forEach(el => { if (el.tagName !== "H4") el.remove(); });
+    // Header + contenitore griglia
+    c.innerHTML = `
+      <h4 style="color:#0f0;">🎁 Chest Bonus Rewards (!chest @ Twitch)</h4>
+      <div id="cv-bonus-grid" class="cv-cards"></div>
+    `;
+    const grid = qs("#cv-bonus-grid", c);
   
     const frag = document.createDocumentFragment();
     winners.forEach(w => {
-      const row = document.createElement("div");
-      row.className = "cv-list-row";
-      row.innerHTML = `
+      const card = document.createElement("div");
+      card.className = "cv-item";
+      card.innerHTML = `
         <div>
-          <strong style="color:#0f0;">${safe(w.wax_account)}</strong> opened a chest from 
-          <strong>${safe(w.perk_type)}</strong> at ${timeHM(new Date(w.created_at))}
+          <strong style="color:#0f0;">${safe(w.wax_account)}</strong> ·
+          <span class="cv-when">${timeHM(new Date(w.created_at))}</span>
         </div>
-        <div style="color:#0f0;">CHIPS: ${safe(w.chips)}</div>
-        <div style="color:#ffa500;">NFTs: ${safe(w.nfts_count)}</div>
+        <div class="cv-line">from <strong>${safe(w.perk_type)}</strong></div>
+        <div class="cv-line" style="color:#0f0;">CHIPS: ${safe(w.chips)}</div>
+        <div class="cv-line" style="color:#ffa500;">NFTs: ${safe(w.nfts_count)}</div>
       `;
-      frag.appendChild(row);
+      frag.appendChild(card);
     });
-    c.appendChild(frag);
+    grid.appendChild(frag);
   }
-
+  
   // ========= GLOBAL EXPEDITIONS & CANVAS DATA =========
   let globalFetchBusy = false;
   async function renderGlobalExpeditions() {

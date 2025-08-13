@@ -2654,6 +2654,28 @@ async function renderGoblinInventory() {
     }[m]));
   };
 
+  function rarityBg(r="") {
+    const k = String(r).toLowerCase();
+    return ({
+      common:"#202225", uncommon:"#15341d", rare:"#0d263a",
+      epic:"#2a0f33", legendary:"#332406", mythic:"#33170a"
+    }[k] || "#1a1a1a");
+  }
+  function rarityFg(r="") {
+    const k = String(r).toLowerCase();
+    return ({
+      common:"#c9d1d9", uncommon:"#4ade80", rare:"#60a5fa",
+      epic:"#c084fc", legendary:"#fbbf24", mythic:"#fb923c"
+    }[k] || "#e5e7eb");
+  }
+  function rarityBorder(r="") {
+    const k = String(r).toLowerCase();
+    return ({
+      common:"#2f3238", uncommon:"#2a5e39", rare:"#1f3e5f",
+      epic:"#4a1f59", legendary:"#5b4715", mythic:"#5a2b17"
+    }[k] || "#2a2a2a");
+  }
+  
   const timeHM = (d = new Date()) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   function styleOnce() {
@@ -3743,42 +3765,144 @@ async function renderGoblinInventory() {
 
     function renderList(list = goblins) {
       const sorted = [...list].sort((a,b) => num(b[sortBy]) - num(a[sortBy]));
-      const frag = document.createDocumentFragment();
-      sorted.forEach(g=>{
+    
+      // contenitore a griglia responsive
+      Cave.el.goblinList.style.cssText = `
+        display:grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap:12px;
+        align-items:stretch;
+      `;
+    
+      // normalizza la barra "Power" sul massimo visibile
+      const maxPower = Math.max(1, ...sorted.map(g => num(g.daily_power)));
+    
+      const html = sorted.map(g => {
         const tired = num(g.daily_power) < 5;
-        const wrap = document.createElement("div");
-        wrap.className = "cv-row";
-        wrap.style.cssText = `
-          display:flex; align-items:center; gap:1rem; padding:.6rem 1rem; border-bottom:1px solid #333; border-radius:10px;
-          ${highlight(g.asset_id)}
+        const sel = selected.has(g.asset_id);
+        const dp  = num(g.daily_power);
+        const pct = Math.max(6, Math.round(dp / maxPower * 100)); // min 6% per visibilità
+    
+        const baseCard = `
+          display:flex; flex-direction:column; gap:.6rem;
+          background:linear-gradient(180deg,#151515,#0f0f0f);
+          border:1px solid ${sel ? "rgba(255,230,0,.6)" : "#2a2a2a"};
+          box-shadow:${sel
+            ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset"
+            : "0 2px 12px rgba(0,0,0,.35)"};
+          border-radius:14px; padding:.75rem;
+          transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+          cursor:${tired ? "not-allowed" : "pointer"};
+          position:relative;
+          ${tired ? "opacity:.78; filter:grayscale(10%) brightness(.95);" : ""}
         `;
-        wrap.innerHTML = `
-          <div style="flex-basis:15%; max-width:15%; position:relative;">
-            <img src="${safe(g.img)}" style="width:52px; height:auto; border-radius:8px; ${tired ? 'filter:grayscale(100%) brightness(.7);' : ''}">
-            ${tired ? `<div style="position:absolute; top:-10px; left:-20px; transform:rotate(-20deg); background:rgba(255,0,0,.85);
-                color:#fff; padding:2px 8px; font-size:.65rem; font-weight:bold; border-radius:6px; box-shadow:0 0 6px red; font-family:Orbitron, system-ui, sans-serif;">Exhausted</div>` : ""}
+    
+        const ribbon = tired ? `
+          <div style="
+            position:absolute; top:10px; right:-24px; transform:rotate(35deg);
+            background:linear-gradient(135deg,#d32f2f,#b71c1c); color:#fff;
+            font-weight:700; font-size:.7rem; padding:.25rem .75rem; border-radius:8px;
+            box-shadow:0 0 8px rgba(255,0,0,.5); letter-spacing:.5px;">RESTING</div>` : "";
+    
+        return `
+          <div class="cv-gob-card" data-id="${safe(g.asset_id)}" data-disabled="${tired?1:0}" style="${baseCard}">
+            <div style="display:flex; align-items:center; gap:.75rem;">
+              <div style="position:relative; flex:0 0 auto;">
+                <img src="${safe(g.img)}" alt="" loading="lazy"
+                  style="width:64px; height:64px; border-radius:12px; object-fit:cover; outline:1px solid #2b2b2b;">
+                ${ribbon}
+              </div>
+    
+              <div style="flex:1 1 auto; min-width:0;">
+                <div style="display:flex; align-items:center; gap:.5rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  <strong style="color:#ffe600; font-family:Orbitron,system-ui,sans-serif; font-size:1rem; overflow:hidden; text-overflow:ellipsis;">
+                    ${safe(g.name)}
+                  </strong>
+                  <span style="
+                    font-size:.72rem; padding:.15rem .45rem; border-radius:999px;
+                    background:${rarityBg(g.rarity)};
+                    color:${rarityFg(g.rarity)};
+                    border:1px solid ${rarityBorder(g.rarity)};">
+                    ${safe(g.rarity)}
+                  </span>
+                </div>
+                <div style="color:#b6b6b6; font-size:.82rem;">
+                  Lvl <strong style="color:#fff">${safe(g.level)}</strong> • Ability: <strong style="color:#fff">${safe(g.main_attr)}</strong>
+                </div>
+              </div>
+    
+              <input type="checkbox" class="cv-sel"
+                ${sel ? "checked" : ""} ${tired ? "disabled" : ""}
+                style="transform:scale(1.2); accent-color:#ffe600; flex:0 0 auto;">
+            </div>
+    
+            <div style="display:flex; align-items:center; gap:.5rem;">
+              <div style="flex:1 1 auto; background:#1c1c1c; border:1px solid #2a2a2a; border-radius:999px; height:8px; overflow:hidden;">
+                <div style="width:${pct}%; height:100%;
+                  background:linear-gradient(90deg,#ffe600,#ff9d00);
+                  box-shadow:0 0 8px rgba(255,214,0,.5) inset;"></div>
+              </div>
+              <div style="min-width:52px; text-align:right; font-size:.8rem; color:#0ff;">${dp}</div>
+            </div>
+    
+            <div style="display:flex; justify-content:space-between; opacity:.85;">
+              <div style="font-size:.74rem; color:#9aa0a6;">ID: ${safe(g.asset_id)}</div>
+              <div style="font-size:.74rem; color:#9aa0a6;">Power</div>
+            </div>
           </div>
-          <div style="flex-basis:70%; max-width:70%; font-size:.95rem; font-family:Orbitron, system-ui, sans-serif; color:#fff;">
-            <div><strong style="color:#ffe600;">${safe(g.name)}</strong><span class="cv-tag">${safe(g.rarity)}</span></div>
-            <div style="color:#aaa;">Level: ${safe(g.level)} | Main: ${safe(g.main_attr)}</div>
-            <div style="color:#0ff;">Power: ${safe(g.daily_power)}</div>
-          </div>
-          <input type="checkbox" class="cv-sel" data-id="${safe(g.asset_id)}"
-            ${selected.has(g.asset_id) ? "checked" : ""} ${tired ? "disabled" : ""} style="transform:scale(1.3); accent-color:#ffe600;">
         `;
-        frag.appendChild(wrap);
-      });
-      Cave.el.goblinList.innerHTML = "";
-      Cave.el.goblinList.appendChild(frag);
-
-      qsa(".cv-sel", Cave.el.goblinList).forEach(cb => {
-        cb.addEventListener("change", () => {
-          const id = cb.dataset.id;
-          cb.checked ? selected.add(id) : selected.delete(id);
-          renderList(); updateSummary();
+      }).join("");
+    
+      Cave.el.goblinList.innerHTML = html;
+    
+      // Event delegation (una sola volta)
+      if (!Cave._goblinListDelegated) {
+        Cave._goblinListDelegated = true;
+    
+        Cave.el.goblinList.addEventListener("click", (e) => {
+          const card = e.target.closest(".cv-gob-card");
+          if (!card) return;
+    
+          // se clic su checkbox, usa quello; altrimenti toggle tutto
+          let checkbox = e.target.closest(".cv-sel");
+          if (card.dataset.disabled === "1") return;
+    
+          if (!checkbox) {
+            checkbox = card.querySelector(".cv-sel");
+            if (!checkbox) return;
+            checkbox.checked = !checkbox.checked;
+          }
+    
+          const id = card.dataset.id;
+          const checked = checkbox.checked;
+    
+          // aggiorna memoria selezione
+          if (checked) selected.add(id);
+          else selected.delete(id);
+    
+          // micro-aggiornamenti visuali (niente re-render)
+          card.style.border = checked ? "1px solid rgba(255,230,0,.6)" : "1px solid #2a2a2a";
+          card.style.boxShadow = checked
+            ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset"
+            : "0 2px 12px rgba(0,0,0,.35)";
+    
+          updateSummary();
         });
-      });
+    
+        // piccola animazione hover: solo quando non è resting
+        Cave.el.goblinList.addEventListener("mouseover", (e) => {
+          const card = e.target.closest(".cv-gob-card");
+          if (!card || card.dataset.disabled === "1") return;
+          card.style.transform = "translateY(-2px)";
+        });
+        Cave.el.goblinList.addEventListener("mouseout", (e) => {
+          const card = e.target.closest(".cv-gob-card");
+          if (!card || card.dataset.disabled === "1") return;
+          card.style.transform = "translateY(0)";
+        });
+      }
     }
+
 
     function updateSummary() {
       Cave.el.selectionSummary.innerHTML = `

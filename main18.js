@@ -2457,7 +2457,7 @@ async function renderGoblinInventory() {
     chests: new Map(),
 
     // timers/intervals
-    intervals: { global: null, globalCountdown: null, command: null },
+    intervals: { global: null, globalCountdown: null, command: null, winners: null },
 
     // dedup sets
     recentExpKeys: new Set(),
@@ -2922,8 +2922,14 @@ async function renderGoblinInventory() {
               toast(`${g.wax_account} won ${chips} CHIPS and ${nfts} NFTs from ${ch.from}!`, "ok");
             }
   
-            appendBonusReward(reward, g.wax_account, ch.from);
-  
+            if (Array.isArray(rs.data?.winners)) {
+              // allinea la lista globale alla verità del backend
+              renderBonusListFromBackend(rs.data.winners);
+            } else {
+              // fallback locale (se per qualche motivo il backend non manda la lista)
+              appendBonusReward(reward, g.wax_account, ch.from);
+            }
+
             // remove immediately from map (fix lingering chest)
             Cave.chests.delete(key);
           } catch (e) {
@@ -3085,6 +3091,30 @@ async function renderGoblinInventory() {
     while (rows.length > MAX_RECENT_EXPEDITIONS) {
       rows.pop()?.remove();
     }
+  }
+  
+  function renderBonusListFromBackend(winners = []) {
+    const c = Cave.el.bonusList; 
+    if (!c) return;
+  
+    // Pulisci tutto tranne l’header <h4>
+    Array.from(c.children).forEach(el => { if (el.tagName !== "H4") el.remove(); });
+  
+    const frag = document.createDocumentFragment();
+    winners.forEach(w => {
+      const row = document.createElement("div");
+      row.className = "cv-list-row";
+      row.innerHTML = `
+        <div>
+          <strong style="color:#0f0;">${safe(w.wax_account)}</strong> opened a chest from 
+          <strong>${safe(w.perk_type)}</strong> at ${timeHM(new Date(w.created_at))}
+        </div>
+        <div style="color:#0f0;">CHIPS: ${safe(w.chips)}</div>
+        <div style="color:#ffa500;">NFTs: ${safe(w.nfts_count)}</div>
+      `;
+      frag.appendChild(row);
+    });
+    c.appendChild(frag);
   }
 
   // ========= GLOBAL EXPEDITIONS & CANVAS DATA =========
@@ -3560,6 +3590,15 @@ async function renderGoblinInventory() {
 
     // initial lists
     renderList(); updateSummary(); await renderRecentList();
+    // Hydrate global winners (ultimi 10)
+    try {
+      const rw = await API.get("/recent_winners", 10000);
+      if (rw.ok && Array.isArray(rw.data)) {
+        renderBonusListFromBackend(rw.data);
+      }
+    } catch (e) {
+      console.warn("recent_winners failed:", e);
+    }
 
     // if user expedition in progress
     try {

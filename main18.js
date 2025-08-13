@@ -2526,10 +2526,15 @@ async function renderGoblinInventory() {
     document.head.appendChild(st);
   }
 
-  function hexToRgba(hex, alpha=1) {
-    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (!m) return `rgba(255,255,255,${alpha})`;
-    const r = parseInt(m[1],16), g = parseInt(m[2],16), b = parseInt(m[3],16);
+  // --- trail config ---
+  const TRAIL_LEN = 16;        // quanti segmenti massimo
+  const TRAIL_MIN_DIST = 0.6;  // distanza minima (in celle) per aggiungere un punto
+  
+  function hexToRgba(hex, alpha = 1) {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || "#ffe600");
+    const r = m ? parseInt(m[1], 16) : 255;
+    const g = m ? parseInt(m[2], 16) : 230;
+    const b = m ? parseInt(m[3], 16) : 0;
     return `rgba(${r},${g},${b},${alpha})`;
   }
 
@@ -3088,12 +3093,18 @@ async function renderGoblinInventory() {
         startCommandPolling();
       }
 
-      Cave.goblins = data.map((e,i)=>({
-        x: Math.floor(Math.random()*(GRID_SIZE*0.8))+Math.floor(GRID_SIZE*0.1),
-        y: Math.floor(Math.random()*(GRID_SIZE*0.8))+Math.floor(GRID_SIZE*0.1),
-        wax_account: e.wax_account, path: [],
-        trail: [], _lastTrailX: null, _lastTrailY: null 
-        digging:false, shovelFrame:0, frameTimer:0, color: colorByIndex(i)
+      Cave.goblins = data.map((e, i) => ({
+        x: Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1),
+        y: Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1),
+        wax_account: e.wax_account,
+        path: [],
+        trail: [],          // ✅ scia
+        _lastTrailX: null,  // (opzionale) memorizza ultimo punto per la scia
+        _lastTrailY: null,  // (opzionale)
+        digging: false,     // ✅ VIRGOLA corretta prima di digging
+        shovelFrame: 0,
+        frameTimer: 0,
+        color: colorByIndex(i)
       }));
 
       // sync chests from server

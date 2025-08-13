@@ -2424,6 +2424,9 @@ async function renderGoblinInventory() {
   const MAX_RECENT_EXPEDITIONS = 6;
   const MAX_BONUS_ROWS = 6;        // visible rows in bonus list (excluding header)
   const DEBUG = false;
+  // Trail (scia) goblin
+  const TRAIL_LEN = 12;        // numero massimo di punti in scia
+  const TRAIL_MIN_DIST = 0.4;  // distanza minima (in celle) per registrare un nuovo punto
 
   // ========= STATE (single source of truth) =========
   const Cave = {
@@ -2432,8 +2435,14 @@ async function renderGoblinInventory() {
     rafId: null,
     running: false,
     dpr: Math.max(1, window.devicePixelRatio || 1),
+  
+    // griglia
     cell: 10,
-
+    offsetX: 0,   // nuovo
+    offsetY: 0,   // nuovo
+    gridW: 0,     // nuovo
+    gridH: 0,     // nuovo
+  
     assets: {
       loaded: false,
       goblin: null,
@@ -2442,10 +2451,10 @@ async function renderGoblinInventory() {
       bg: null,
       perks: { dragon: null, dwarf: null, skeleton: null, black_cat: null }
     },
-
+  
     goblins: [],
-    perks: [],           // active perks on screen
-    chests: new Map(),   // key -> chest object
+    perks: [],
+    chests: new Map(),
 
     // timers/intervals
     intervals: { global: null, globalCountdown: null, command: null },
@@ -2517,6 +2526,13 @@ async function renderGoblinInventory() {
     document.head.appendChild(st);
   }
 
+  function hexToRgba(hex, alpha=1) {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!m) return `rgba(255,255,255,${alpha})`;
+    const r = parseInt(m[1],16), g = parseInt(m[2],16), b = parseInt(m[3],16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
   function toast(msg, type = "ok", ttl = 6000) {
     const host = Cave.el.toast;
     if (!host) return;
@@ -2525,6 +2541,19 @@ async function renderGoblinInventory() {
     div.textContent = msg;
     host.appendChild(div);
     setTimeout(() => div.remove(), ttl);
+  }
+  
+  function syncUserInto(caveUser) {
+    const mem = window.userData || JSON.parse(localStorage.getItem('userData') || '{}');
+    caveUser.wax_account = mem?.wax_account || "";
+    caveUser.user_id     = (mem?.user_id ?? mem?.userId) || "";  // accetta entrambe, preferisci userId
+    caveUser.usx_token   = mem?.usx_token || "";
+  }
+  
+  function assertAuthOrThrow(caveUser) {
+    if (!caveUser.wax_account || !caveUser.user_id || !caveUser.usx_token) {
+      throw new Error("Missing auth data. Please log in.");
+    }
   }
 
   // fetch helpers with timeout
@@ -2586,22 +2615,45 @@ async function renderGoblinInventory() {
     Cave.canvas = null;
     Cave.ctx = null;
   }
+  
   function resizeCanvas() {
     const c = Cave.canvas;
     if (!c || !c.parentElement) return;
-    const parentW = Math.min(c.parentElement.clientWidth, 900);
-    const css = parentW;
+  
+    // larghezza disponibile della colonna
+    const cssW = c.parentElement.clientWidth;
+    // altezza 16:9
+    const cssH = Math.floor(cssW * 9 / 16);
     const dpr = Cave.dpr;
-
-    c.style.width = `${css}px`;
-    c.style.height = `${css}px`;
-    c.width = Math.floor(css * dpr);
-    c.height = Math.floor(css * dpr);
-    Cave.cell = (c.width / dpr) / GRID_SIZE;
-
+  
+    // dimensioni CSS
+    c.style.width = `${cssW}px`;
+    c.style.height = `${cssH}px`;
+  
+    // dimensioni interne (pixel reali)
+    c.width  = Math.floor(cssW * dpr);
+    c.height = Math.floor(cssH * dpr);
+  
+    // reset trasformazione per HiDPI
     const ctx = Cave.ctx;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  
+    // ---- griglia “quadrata” centrata ----
+    // lato “utile” in CSS px (scegliamo il min per evitare distorsioni)
+    const usable = Math.min(cssW, cssH);
+  
+    // dimensione di UNA cella (in CSS px)
+    Cave.cell = usable / GRID_SIZE;
+  
+    // larghezza/altezza della griglia (in CSS px)
+    Cave.gridW = Cave.cell * GRID_SIZE; // = usable
+    Cave.gridH = Cave.cell * GRID_SIZE; // = usable
+  
+    // offset per centrare la griglia nel canvas 16:9
+    Cave.offsetX = (cssW - Cave.gridW) / 2;
+    Cave.offsetY = (cssH - Cave.gridH) / 2;
   }
+
 
   function startRAF() {
     if (Cave.running || !Cave.canvas) return;
@@ -2617,44 +2669,78 @@ async function renderGoblinInventory() {
 
   // ========= DRAWING =========
   function drawBG() {
-    const { ctx, canvas, assets } = Cave;
+    const { ctx, assets, gridW, gridH, offsetX, offsetY } = Cave;
     if (!assets.bg?.complete) return;
-    ctx.drawImage(assets.bg, 0, 0, canvas.width / Cave.dpr, canvas.height / Cave.dpr);
+    // Disegna lo sfondo scalato esattamente alla griglia centrata
+    ctx.drawImage(assets.bg, 0, 0, assets.bg.width, assets.bg.height, offsetX, offsetY, gridW, gridH);
   }
+
   function drawChests() {
     const { ctx, assets, cell } = Cave;
     if (!assets.chest?.complete) return;
     Cave.chests.forEach(ch => {
       if (ch.taken) return;
-      const cx = ch.x * cell, cy = ch.y * cell;
+      const cx = Cave.offsetX + ch.x * Cave.cell;
+      const cy = Cave.offsetY + ch.y * Cave.cell;
       const scale = 0.15;
       const w = assets.chest.width * scale;
       const h = assets.chest.height * scale;
       ctx.drawImage(assets.chest, cx - w/2, cy - h/2, w, h);
     });
   }
+  
+  function drawGoblinTrail(g) {
+    const { ctx, cell, offsetX, offsetY } = Cave;
+    const t = g.trail;
+    if (!t || t.length < 2) return;
+  
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineWidth = Math.max(1, cell * 0.12); // spessore in proporzione
+  
+    for (let i = 0; i < t.length - 1; i++) {
+      const a = t[i], b = t[i + 1];
+      const alpha = (1 - i / t.length) * 0.55; // fade verso il passato
+      ctx.strokeStyle = hexToRgba(g.color || "#ffe600", alpha);
+      ctx.beginPath();
+      ctx.moveTo(offsetX + a.x * cell, offsetY + a.y * cell);
+      ctx.lineTo(offsetX + b.x * cell, offsetY + b.y * cell);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  
   function drawGoblin(g) {
     const { ctx, assets, cell } = Cave;
-    const px = g.x * cell, py = g.y * cell;
+    const px = Cave.offsetX + g.x * Cave.cell;
+    const py = Cave.offsetY + g.y * Cave.cell;
+  
+    // --- disegna la scia prima dello sprite ---
+    drawGoblinTrail(g);
+  
     const gScale = 5, sScale = 3;
     const gSize = cell * gScale;
     const gOff = (gSize - cell) / 2;
-
-    ctx.drawImage(assets.goblin, 0,0,128,128, px - gOff, py - gOff, gSize, gSize);
-
+  
+    // sprite goblin
+    ctx.drawImage(assets.goblin, 0, 0, 128, 128, px - gOff, py - gOff, gSize, gSize);
+  
+    // label
     ctx.font = `${cell * 2}px Orbitron, system-ui, sans-serif`;
     ctx.textAlign = "center";
     ctx.fillStyle = "rgba(0,0,0,0.6)";
     ctx.fillRect(px - cell, py + cell * 1.2, cell * 2, cell * 0.7);
     ctx.fillStyle = g.color;
     ctx.fillText(g.wax_account, px, py + cell * 5);
-
+  
+    // shovel anim quando scava
     if (g.digging) {
       const fx = g.shovelFrame * 128;
       const sSize = cell * sScale;
-      ctx.drawImage(assets.shovel, fx,0,128,128, px - (sSize - cell)/2, py - sSize, sSize, sSize);
+      ctx.drawImage(assets.shovel, fx, 0, 128, 128, px - (sSize - cell) / 2, py - sSize, sSize, sSize);
     }
   }
+
   function drawPerksAndAdvance() {
     const { ctx, cell } = Cave;
     if (!Cave.perks.length) return;
@@ -2669,8 +2755,8 @@ async function renderGoblinInventory() {
         p.frame = (p.frame + 1) % p.frames;
       }
 
-      const px = p.x * cell;
-      const py = p.waveY(p.x) * cell;
+      const px = Cave.offsetX + p.x * Cave.cell;
+      const py = Cave.offsetY + p.waveY(p.x) * Cave.cell;
 
       // sprite 128x128 -> draw at 32x32
       ctx.drawImage(p.image, p.frame*128, 0, 128,128, px-16, py-16, 32, 32);
@@ -2696,6 +2782,8 @@ async function renderGoblinInventory() {
         };
 
         // ask backend to spawn → set id/claimable
+        syncUserInto(Cave.user);
+        assertAuthOrThrow(Cave.user);      
         API.post("/spawn_chest", {
           wax_account: p.wax_account,
           perk_type: p.perkName,
@@ -2742,52 +2830,85 @@ async function renderGoblinInventory() {
   }
   function moveGoblin(g) {
     if (g.digging) return;
+  
     if (g.path.length === 0) {
-      const tx = Math.floor(Math.random()*(GRID_SIZE*0.8))+Math.floor(GRID_SIZE*0.1);
-      const ty = Math.floor(Math.random()*(GRID_SIZE*0.8))+Math.floor(GRID_SIZE*0.1);
-      g.path = genPath(g.x,g.y,tx,ty);
+      const tx = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
+      const ty = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
+      g.path = genPath(g.x, g.y, tx, ty);
     }
+  
     if (!g.path.length) return;
-    const [nx,ny] = g.path.shift();
-    g.x = nx; g.y = ny;
-
+  
+    const [nx, ny] = g.path.shift();
+    g.x = nx; 
+    g.y = ny;
+  
+    // --- trail recording ---
+    {
+      const lx = g._lastTrailX ?? g.x;
+      const ly = g._lastTrailY ?? g.y;
+      const dx = g.x - lx, dy = g.y - ly;
+      if ((dx * dx + dy * dy) >= (TRAIL_MIN_DIST * TRAIL_MIN_DIST)) {
+        g.trail.unshift({ x: g.x, y: g.y });
+        g._lastTrailX = g.x; 
+        g._lastTrailY = g.y;
+        if (g.trail.length > TRAIL_LEN) g.trail.pop();
+      }
+    }
+  
     // chest claim proximity
     Cave.chests.forEach((ch, key) => {
       const dx = Math.abs(g.x - ch.x), dy = Math.abs(g.y - ch.y);
-      if (dx<=5 && dy<=5 && ch.claimable && !ch.taken && !ch.claiming) {
-        ch.claiming = true; ch.taken = true; ch.taken_by = g.wax_account;
-
+      if (dx <= 5 && dy <= 5 && ch.claimable && !ch.taken && !ch.claiming) {
+        ch.claiming = true; 
+        ch.taken = true; 
+        ch.taken_by = g.wax_account;
+  
         (async () => {
           try {
-            const rs = await API.post("/chest_reward", {
+            syncUserInto(Cave.user);
+            assertAuthOrThrow(Cave.user);
+  
+            const rs = await API.post("/claim_chest", {
               wax_account: g.wax_account,
-              perk_type: ch.from,
               chest_id: ch.id
             }, 15000);
+  
             if (!rs.ok) throw new Error(`HTTP ${rs.status}`);
-
+  
             const reward = rs.data;
             const chips = reward?.stats?.tokens?.CHIPS ?? 0;
             const nfts = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
-            if (chips===0 && nfts===0) toast(`${g.wax_account} opened a ${ch.from} chest… it was empty.`, "warn");
-            else toast(`${g.wax_account} won ${chips} CHIPS and ${nfts} NFTs from ${ch.from}!`, "ok");
+  
+            if (chips === 0 && nfts === 0) {
+              toast(`${g.wax_account} opened a ${ch.from} chest… it was empty.`, "warn");
+            } else {
+              toast(`${g.wax_account} won ${chips} CHIPS and ${nfts} NFTs from ${ch.from}!`, "ok");
+            }
+  
             appendBonusReward(reward, g.wax_account, ch.from);
-
-            // remove immediately from map (fix bug: lingering chest after claim)
+  
+            // remove immediately from map (fix lingering chest)
             Cave.chests.delete(key);
           } catch (e) {
-            ch.taken = false; ch.claiming = false; // revert on error
+            ch.taken = false; 
+            ch.claiming = false; // revert on error
             toast(`Chest reward failed: ${e.message}`, "err");
           }
         })();
       }
     });
-
+  
+    // se ha finito il path, entra in stato "scavo" e smorza un po' la scia
     if (g.path.length === 0) {
-      g.digging = true; g.shovelFrame = 0; g.frameTimer = 0;
-      setTimeout(()=> g.digging=false, 2000);
+      g.digging = true; 
+      g.shovelFrame = 0; 
+      g.frameTimer = 0;
+      g.trail = g.trail.slice(0, Math.ceil(TRAIL_LEN / 2)); // smorza scia quando si ferma
+      setTimeout(() => g.digging = false, 2000);
     }
   }
+
   function updateGoblinAnim(delta) {
     Cave.goblins.forEach(g => {
       if (!g.digging) return;
@@ -2936,6 +3057,8 @@ async function renderGoblinInventory() {
     if (globalFetchBusy) return;
     globalFetchBusy = true;
     try {
+      syncUserInto(Cave.user);
+      assertAuthOrThrow(Cave.user);        
       const r = await API.post("/all_expeditions", {}, 15000);
       const data = Array.isArray(r.data) ? r.data : [];
       const list = Cave.el.globalList;
@@ -2952,7 +3075,7 @@ async function renderGoblinInventory() {
         clearChests();
         wrap.innerHTML = `
           <video id="exp-video" src="expedition_run.mp4" autoplay muted loop
-                 style="width:100%; max-width:560px; border-radius:12px; box-shadow:0 0 10px #ffe600;"></video>
+                  style="width:100%; border-radius:12px; box-shadow:0 0 10px #ffe600;"></video>
         `;
         teardownCanvas();
         return;
@@ -2969,6 +3092,7 @@ async function renderGoblinInventory() {
         x: Math.floor(Math.random()*(GRID_SIZE*0.8))+Math.floor(GRID_SIZE*0.1),
         y: Math.floor(Math.random()*(GRID_SIZE*0.8))+Math.floor(GRID_SIZE*0.1),
         wax_account: e.wax_account, path: [],
+        trail: [], _lastTrailX: null, _lastTrailY: null 
         digging:false, shovelFrame:0, frameTimer:0, color: colorByIndex(i)
       }));
 
@@ -3045,6 +3169,8 @@ async function renderGoblinInventory() {
         clearInterval(t);
         box.textContent = "⏳ Expedition completed! Checking status...";
         try {
+          syncUserInto(Cave.user);
+          assertAuthOrThrow(Cave.user);  
           const status = await API.post("/expedition_status", {
             wax_account: wax, user_id: Cave.user.user_id, usx_token: Cave.user.usx_token
           }, 12000);
@@ -3082,6 +3208,8 @@ async function renderGoblinInventory() {
       if (!Cave.visible) return;
       if (!Cave.canvas) return;
       try {
+        syncUserInto(Cave.user);
+        assertAuthOrThrow(Cave.user);          
         const r = await API.post("/check_perk_command", { wax_account: Cave.user.wax_account }, 12000);
         if (!r.ok) return;
         const perk = r.data;
@@ -3131,7 +3259,7 @@ async function renderGoblinInventory() {
           <h3 class="cv-title">⛏️ Global Expeditions in Progress</h3>
           <div id="cv-toast-host"></div>
           <div id="cv-video-or-canvas" style="width:100%; margin-top:.5rem;">
-            <video id="cv-video" src="expedition_run.mp4" autoplay muted style="width:100%; max-width:560px; border-radius:12px; box-shadow:0 0 10px #ffe600;"></video>
+            <video id="cv-video" src="expedition_run.mp4" autoplay muted style="width:100%; border-radius:12px; box-shadow:0 0 10px #ffe600;"></video>
           </div>
         </div>
         <div style="flex:1 1 44%; min-width:280px;">
@@ -3231,6 +3359,8 @@ async function renderGoblinInventory() {
     // Load user goblins
     let goblins = [];
     try {
+      syncUserInto(Cave.user);
+      assertAuthOrThrow(Cave.user);   
       const r = await API.post("/user_nfts", {
         wax_account: Cave.user.wax_account,
         user_id: Cave.user.user_id,
@@ -3307,6 +3437,8 @@ async function renderGoblinInventory() {
         if (!ids.length) { toast("All selected goblins are too tired.","warn"); btn.disabled=false; btn.textContent="🚀 Start Expedition"; return; }
 
         try {
+          syncUserInto(Cave.user);
+          assertAuthOrThrow(Cave.user);            
           const r = await API.post("/start_expedition", {
             wax_account: Cave.user.wax_account,
             user_id: Cave.user.user_id,
@@ -3351,6 +3483,8 @@ async function renderGoblinInventory() {
     Cave.el.chestPerkBtn.onclick = async () => {
       const btn = Cave.el.chestPerkBtn; btn.disabled = true; btn.textContent = "Checking...";
       try {
+        syncUserInto(Cave.user);
+        assertAuthOrThrow(Cave.user);          
         const r = await API.post("/try_chest_perk", {
           wax_account: Cave.user.wax_account,
           user_id: Cave.user.user_id,
@@ -3372,6 +3506,8 @@ async function renderGoblinInventory() {
 
     // if user expedition in progress
     try {
+      syncUserInto(Cave.user);
+      assertAuthOrThrow(Cave.user);        
       const s = await API.post("/expedition_status", {
         wax_account: Cave.user.wax_account,
         user_id: Cave.user.user_id,
@@ -3381,34 +3517,24 @@ async function renderGoblinInventory() {
         await renderUserCountdown(s.data.expedition_id, s.data.seconds_remaining, s.data.goblin_ids || []);
       }
     } catch {}
-
   }
 
   // ========= VISIBILITY =========
   document.addEventListener("visibilitychange", () => {
     Cave.visible = !document.hidden;
-    if (Cave.visible) startCommandPolling();
-    else stopCommandPolling();
+    if (Cave.visible) {
+      startCommandPolling();
+    } else {
+      stopCommandPolling();
+      // opzionale: accorcia le scie per evitare burst al rientro
+      Cave.goblins.forEach(g => {
+        if (Array.isArray(g.trail)) g.trail = g.trail.slice(0, 4);
+      });
+    }
   });
-
-  // ========= COMMAND POLLING CONTROL =========
-  function startCommandPolling() {
-    if (!qs("#caveCanvas", Cave.el.videoOrCanvas || document)) return; // only when canvas exists
-    if (!Cave.intervals.command) Cave.intervals.command = setInterval(async ()=>{
-      if (!Cave.visible) return;
-      try {
-        const r = await API.post("/check_perk_command", { wax_account: Cave.user.wax_account }, 12000);
-        if (r.ok && r.data?.perk) {
-          triggerPerk(r.data.perk, r.data.wax_account);
-          toast(`${safe(r.data.wax_account)} triggered ${r.data.perk}`, "ok", 4000);
-        }
-      } catch {}
-    }, COMMAND_POLL_MS);
-  }
 
   // ========= EXPOSE =========
   window.renderDwarfsCave = renderDwarfsCave;
-
 })();
 
 async function renderGoblinBlend() {

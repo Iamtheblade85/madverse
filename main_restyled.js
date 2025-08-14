@@ -2684,42 +2684,74 @@ async function renderGoblinInventory() {
     const st = document.createElement("style");
     st.id = "cave-rebuilt-style";
     st.textContent = `
-      .cv-card { background:#111; border-radius:14px; padding:1rem; color:#fff; box-shadow:0 0 12px rgba(0,255,255,.35); }
-      .cv-card--amber { box-shadow:0 0 12px rgba(255,165,0,.35); }
-      .cv-card--green { box-shadow:0 0 12px rgba(0,255,0,.35); }
-      .cv-title { color:#ffe600; font-family: Orbitron, system-ui, sans-serif; margin:0 0 .5rem 0; }
-      .cv-btn { background:#1c1c1c; border:1px solid #444; color:#ffe600; padding:.5rem .75rem; border-radius:10px; cursor:pointer; }
-      .cv-btn:disabled { opacity:.6; cursor:not-allowed; }
-      .cv-toast { margin:.5rem 0; padding:.8rem; background:#222; border-left:5px solid #0ff; border-radius:8px; color:#fff; font-family:Orbitron, system-ui, sans-serif; }
-      .cv-toast.ok { border-left-color:#0f0; }
-      .cv-toast.warn { border-left-color:#ffa500; }
-      .cv-toast.err { border-left-color:#ff4d4d; }
-      .cv-list-row { margin-bottom: .9rem; border-bottom:1px solid #333; padding-bottom:.5rem; }
-      .cv-tag { display:inline-block; padding:.1rem .4rem; border-radius:6px; font-size:.72rem; margin-left:.4rem; background:#2b2b2b; color:#ccc; }
-      @keyframes flick {
-        0% { box-shadow:0 0 15px #ffb800, inset 0 0 6px #ffa500; opacity:0.95; }
-        100% { box-shadow:0 0 35px #ffcc00, inset 0 0 14px #ffcc00; opacity:1; }
+      :root{
+        --cv-bg:#111; --cv-elev:#1a1a1a; --cv-border:#2b2b2b; --cv-soft:#141414;
+        --cv-amber:#ffcc66; --cv-cyan:#7ff6ff; --cv-green:#78ff78; --cv-chip:#ffe600;
       }
-      /* === GRIGLIA RESPONSIVE DI CARD === */
-      .cv-cards{
-        display:grid;
-        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
-        gap:.75rem;
-        align-items:stretch;
-      }
-      .cv-item{
-        background:#1a1a1a;
-        border:1px solid #333;
-        border-radius:12px;
-        padding:.7rem .8rem;
-      }
+    
+      .cv-card{ background:var(--cv-bg); border-radius:14px; padding:1rem; color:#fff;
+                box-shadow:0 0 12px rgba(0,255,255,.24); border:1px solid var(--cv-border); }
+      .cv-card--amber{ box-shadow:0 0 12px rgba(255,165,0,.24); }
+      .cv-card--green{ box-shadow:0 0 12px rgba(0,255,0,.24); }
+      .cv-title{ color:var(--cv-chip); font-family: Orbitron, system-ui, sans-serif; margin:0 0 .5rem 0; }
+    
+      .cv-btn{ background:#1c1c1c; border:1px solid #444; color:var(--cv-chip);
+               padding:.5rem .75rem; border-radius:10px; cursor:pointer; }
+      .cv-btn:disabled{ opacity:.6; cursor:not-allowed; }
+    
+      .cv-toast{ margin:.5rem 0; padding:.8rem; background:#222; border-left:5px solid #0ff;
+                 border-radius:8px; color:#fff; font-family:Orbitron, system-ui, sans-serif; }
+      .cv-toast.ok{ border-left-color:#0f0; } .cv-toast.warn{ border-left-color:#ffa500; }
+      .cv-toast.err{ border-left-color:#ff4d4d; }
+    
+      /* Utilities */
+      .cv-row{ display:flex; align-items:center; justify-content:space-between; gap:.6rem; }
+      .cv-soft-sep{ height:1px; background:rgba(255,255,255,.06); margin:.45rem 0; }
+      .cv-badge{ display:inline-flex; align-items:center; gap:.35rem; font-size:.72rem;
+                 padding:.18rem .55rem; border-radius:999px; border:1px solid #2a7f2a;
+                 background:linear-gradient(180deg,#173e17,#0f2a0f); color:#9dff9d;
+                 box-shadow:0 0 10px rgba(0,255,0,.12); }
+      .cv-time{ font-size:.78rem; color:#b7ffb7; opacity:.85; }
+      .cv-chip-key{ font-size:.78rem; color:#9aa0a6; letter-spacing:.3px; }
+      .cv-chip-val{ font-weight:800; color:#eaeaea; }
+      .cv-pill{ flex:1 1 0; background:#131313; border:1px solid var(--cv-border);
+                border-radius:10px; padding:.35rem .55rem; }
+      .cv-meter{ flex:1 1 auto; background:#141414; border:1px solid var(--cv-border);
+                 border-radius:999px; height:9px; overflow:hidden; }
+      .cv-meter > div{ height:100%; background:linear-gradient(90deg,#ffe600,#ff9d00);
+                       box-shadow:inset 0 0 10px rgba(255,255,255,.25), 0 0 8px rgba(255,214,0,.35); }
+    
+      /* Grid helpers */
+      .cv-cards{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:.75rem; align-items:stretch; }
+      .cv-item{ background:var(--cv-elev); border:1px solid var(--cv-border); border-radius:12px; padding:.7rem .8rem; }
       .cv-item .cv-when{ opacity:.8; font-size:.9rem; }
       .cv-item .cv-line{ margin-top:.35rem; }
-      #cv-recent-list > h4, #cv-bonus-list > h4 { margin-bottom:.6rem; }
-      @media (max-width:420px){
-        .cv-cards{ grid-template-columns:1fr; }
-      }      
+    
+      /* Bonus grid: 30% più compatto rispetto a prima (230px -> ~160px) */
+      #cv-bonus-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+                      gap:.65rem; align-items:stretch; }
+    
+      /* Rarity tag */
+      .cv-rarity{ font-size:.72rem; padding:.16rem .55rem; border-radius:999px;
+                  border:1px solid #333; box-shadow:0 0 10px rgba(255,255,255,.05), inset 0 0 8px rgba(255,255,255,.06); }
+    
+      /* Compact card layout for “recent expeditions” */
+      .cv-compact{ display:flex; flex-direction:column; gap:.35rem; padding:.65rem .7rem; border-radius:12px;
+                   background:linear-gradient(180deg,#141414,#0f0f0f); border:1px solid var(--cv-border);
+                   box-shadow:0 2px 8px rgba(0,0,0,.35); }
+      .cv-compact .cv-head{ display:flex; align-items:center; justify-content:space-between; gap:.5rem; }
+      .cv-compact .cv-name{ color:var(--cv-chip); font-weight:700; font-size:.95rem; max-width:60%;
+                            white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .cv-kv{ display:flex; gap:.45rem; }
+      .cv-kv .kv{ flex:1 1 0; background:#0f0f0f; border:1px solid var(--cv-border); border-radius:10px; padding:.35rem .5rem; }
+      .kv .k{ font-size:.72rem; color:#9aa0a6; } .kv .v{ font-weight:800; font-size:1.02rem; }
+    
+      @keyframes flick {
+        0%{ box-shadow:0 0 15px #ffb800, inset 0 0 6px #ffa500; opacity:0.95; }
+        100%{ box-shadow:0 0 35px #ffcc00, inset 0 0 14px #ffcc00; opacity:1; }
+      }
     `;
+
     document.head.appendChild(st);
   }
 
@@ -3080,11 +3112,10 @@ async function renderGoblinInventory() {
 
     // chest claim ONLY while digging AND inside 2×2 area (not while walking)
     Cave.chests.forEach((ch, key) => {
-      // bounding box 2x2: celle [ch.x, ch.x+1] × [ch.y, ch.y+1]
-      const inside2x2 = (g.x >= ch.x && g.x <= ch.x + 2) && (g.y >= ch.y && g.y <= ch.y + 2);
+      // celle [ch.x, ch.x+1] × [ch.y, ch.y+1]
+      const inside2x2 = (g.x >= ch.x && g.x <= ch.x + 1) && (g.y >= ch.y && g.y <= ch.y + 1);
     
       if (g.digging && inside2x2 && ch.claimable && !ch.taken && !ch.claiming) {
-        // anti-rimbalzo locale per questo chest_id
         if (ch.id != null) {
           const cid = String(ch.id);
           if (inFlightClaims.has(cid)) return;
@@ -3106,18 +3137,15 @@ async function renderGoblinInventory() {
             const payload = { wax_account: g.wax_account, chest_id: Number(ch.id) };
             const rs = await API.post("/claim_chest", payload, 15000);
     
-            // già presa da altri
             if (rs.status === 409) {
               Cave.chests.delete(key);
               const by = rs.data?.claimed_by ? ` by ${safe(rs.data.claimed_by)}` : "";
               toast(`Chest #${safe(ch.id)} already claimed${by}.`, "warn");
               return;
             }
-    
             if (!rs.ok) throw new Error(`HTTP ${rs.status}`);
     
-            // successo
-            const reward = rs.data;
+            const reward  = rs.data;
             const chestId = reward?.chest_id ?? ch.id;
             const chips   = reward?.stats?.tokens?.CHIPS ?? 0;
             const nfts    = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
@@ -3128,15 +3156,10 @@ async function renderGoblinInventory() {
               toast(`${g.wax_account} won ${chips} CHIPS and ${nfts} NFTs from Chest #${safe(chestId)} (${ch.from})!`, "ok");
             }
     
-            if (Array.isArray(reward?.winners)) {
-              renderBonusListFromBackend(reward.winners);
-            } else {
-              appendBonusReward({ ...reward, chest_id: chestId }, g.wax_account, ch.from);
-            }
+            if (Array.isArray(reward?.winners)) renderBonusListFromBackend(reward.winners);
+            else appendBonusReward({ ...reward, chest_id: chestId }, g.wax_account, ch.from);
     
-            // rimuovi subito dal canvas
             Cave.chests.delete(key);
-    
           } catch (e) {
             ch.taken = false;
             ch.claiming = false;
@@ -3252,32 +3275,30 @@ async function renderGoblinInventory() {
       transition:transform .12s ease, box-shadow .12s ease;
     `;
     card.innerHTML = `
-      <div style="position:absolute; top:10px; right:10px;">
-        ${chestId ? `<span style="display:inline-block; font-size:.72rem; padding:.18rem .5rem; border-radius:999px;
-                              background:linear-gradient(180deg,#173e17,#0f2a0f); color:#9dff9d; border:1px solid #2a7f2a;
-                              box-shadow:0 0 10px rgba(0,255,0,.15);">Chest #${safe(chestId)}</span>` : ""}
+      <div class="cv-row" style="margin-bottom:.4rem;">
+        ${chestId ? `<span class="cv-badge">Chest #${safe(chestId)}</span>` : `<span></span>`}
+        <span class="cv-time">${timeHM()}</span>
       </div>
-  
-      <div style="display:flex; align-items:center; gap:.5rem;">
-        <strong style="color:#9dff9d; font-family:Orbitron,system-ui,sans-serif;">${safe(wax_account)}</strong>
-        <span style="font-size:.78rem; color:#b7ffb7; opacity:.85;">· ${timeHM()}</span>
+    
+      <div class="cv-row" style="gap:.5rem;">
+        <strong style="color:#9dff9d; font-family:Orbitron,system-ui,sans-serif; font-size:.95rem;">
+          ${safe(wax_account)}
+        </strong>
+        <span style="font-size:.8rem; color:#c9e7c9; opacity:.9;">opened a <strong style="color:#78ff78;">${safe(source)}</strong> chest</span>
       </div>
-  
-      <div style="margin-top:.35rem; color:#c9e7c9;">
-        opened a <strong style="color:#78ff78;">${safe(source)}</strong> chest
-      </div>
-  
-      <div style="display:flex; gap:.6rem; margin-top:.55rem;">
-        <div style="flex:1 1 50%; background:#0e1a0e; border:1px solid #1f4d1f; border-radius:10px; padding:.4rem .55rem;">
-          <div style="font-size:.8rem; color:#8dfc8d;">CHIPS</div>
-          <div style="font-weight:800; color:#78ff78; font-size:1.05rem;">${chips}</div>
+    
+      <div class="cv-kv" style="margin-top:.55rem;">
+        <div class="kv">
+          <div class="k">CHIPS</div>
+          <div class="v" style="color:#78ff78;">${chips}</div>
         </div>
-        <div style="flex:1 1 50%; background:#1a1509; border:1px solid #4d3a1f; border-radius:10px; padding:.4rem .55rem;">
-          <div style="font-size:.8rem; color:#ffcc80;">NFTs</div>
-          <div style="font-weight:800; color:#ffb74d; font-size:1.05rem;">${nfts}</div>
+        <div class="kv">
+          <div class="k">NFTs</div>
+          <div class="v" style="color:#ffb74d;">${nfts}</div>
         </div>
       </div>
     `;
+
     card.addEventListener("mouseover",()=> card.style.transform="translateY(-2px)");
     card.addEventListener("mouseout", ()=> card.style.transform="translateY(0)");
   
@@ -3329,18 +3350,29 @@ async function renderGoblinInventory() {
                ${item.nfts.map(n=>`<li>${safe(n.schema)} #${safe(n.template_id)} × ${safe(n.quantity)}</li>`).join("")}
              </ul>`
           : `NFTs: ${nftsCount}`;
-  
         const card = document.createElement("div");
-        card.className = "cv-item";
+        card.className = "cv-compact";
         card.innerHTML = `
-          <div><strong style="color:#ffe600;">${safe(item.wax_account)}</strong>
-            ${dt ? `<span class="cv-when">· ${timeHM(dt)}</span>` : ""}</div>
-          <div class="cv-line" style="color:#0f0;">CHIPS: ${safe(chips)}</div>
-          <div class="cv-line" style="color:#ffa500;">${nftList}</div>
+          <div class="cv-head">
+            <div class="cv-name">${safe(item.wax_account)}</div>
+            ${dt ? `<span class="cv-time">${timeHM(dt)}</span>` : ""}
+          </div>
+          <div style="font-size:.85rem; color:#ddd; opacity:.9;">
+            Expedition result
+          </div>
+          <div class="cv-kv">
+            <div class="kv">
+              <div class="k">CHIPS</div>
+              <div class="v" style="color:#78ff78;">${safe(chips)}</div>
+            </div>
+            <div class="kv">
+              <div class="k">NFTs</div>
+              <div class="v" style="color:#ffb74d;">${safe(nftsCount)}</div>
+            </div>
+          </div>
         `;
         frag.appendChild(card);
       });
-  
       grid.appendChild(frag);
     } catch (e) {
       console.warn("Recent list failed:", e);
@@ -3363,11 +3395,17 @@ async function renderGoblinInventory() {
     const card = document.createElement("div");
     card.className = "cv-item";
     card.innerHTML = `
-      <div><strong style="color:#ffe600;">${safe(wax_account)}</strong>
-        <span class="cv-when">· ${timeHM()}</span></div>
-      <div class="cv-line" style="color:#0f0;">CHIPS: ${chips}</div>
-      <div class="cv-line" style="color:#ffa500;">NFTs: ${nfts}</div>
+      <div class="cv-head">
+        <div class="cv-name">${safe(wax_account)}</div>
+        <span class="cv-time">${timeHM()}</span>
+      </div>
+      <div style="font-size:.85rem; color:#ddd; opacity:.9;">Expedition result</div>
+      <div class="cv-kv">
+        <div class="kv"><div class="k">CHIPS</div><div class="v" style="color:#78ff78;">${chips}</div></div>
+        <div class="kv"><div class="k">NFTs</div><div class="v" style="color:#ffb74d;">${nfts}</div></div>
+      </div>
     `;
+
     grid.prepend(card);
   
     // Cap a MAX_RECENT_EXPEDITIONS
@@ -3406,32 +3444,30 @@ async function renderGoblinInventory() {
         transition:transform .12s ease, box-shadow .12s ease;
       `;
       card.innerHTML = `
-        <div style="position:absolute; top:10px; right:10px;">
-          ${w.chest_id ? `<span style="display:inline-block; font-size:.72rem; padding:.18rem .5rem; border-radius:999px;
-                                  background:linear-gradient(180deg,#173e17,#0f2a0f); color:#9dff9d; border:1px solid #2a7f2a;
-                                  box-shadow:0 0 10px rgba(0,255,0,.15);">Chest #${safe(w.chest_id)}</span>` : ""}
+        <div class="cv-row" style="margin-bottom:.4rem;">
+          ${w.chest_id ? `<span class="cv-badge">Chest #${safe(w.chest_id)}</span>` : `<span></span>`}
+          <span class="cv-time">${timeHM(new Date(w.created_at))}</span>
         </div>
-  
-        <div style="display:flex; align-items:center; gap:.5rem;">
-          <strong style="color:#9dff9d; font-family:Orbitron,system-ui,sans-serif;">${safe(w.wax_account)}</strong>
-          <span style="font-size:.78rem; color:#b7ffb7; opacity:.85;">· ${timeHM(new Date(w.created_at))}</span>
+      
+        <div class="cv-row" style="gap:.5rem;">
+          <strong style="color:#9dff9d; font-family:Orbitron,system-ui,sans-serif; font-size:.95rem;">
+            ${safe(w.wax_account)}
+          </strong>
+          <span style="font-size:.8rem; color:#c9e7c9; opacity:.9;">opened a <strong style="color:#78ff78;">${safe(w.perk_type)}</strong> chest</span>
         </div>
-  
-        <div style="margin-top:.35rem; color:#c9e7c9;">
-          opened a <strong style="color:#78ff78;">${safe(w.perk_type)}</strong> chest
-        </div>
-  
-        <div style="display:flex; gap:.6rem; margin-top:.55rem;">
-          <div style="flex:1 1 50%; background:#0e1a0e; border:1px solid #1f4d1f; border-radius:10px; padding:.4rem .55rem;">
-            <div style="font-size:.8rem; color:#8dfc8d;">CHIPS</div>
-            <div style="font-weight:800; color:#78ff78; font-size:1.05rem;">${safe(w.chips)}</div>
+      
+        <div class="cv-kv" style="margin-top:.55rem;">
+          <div class="kv">
+            <div class="k">CHIPS</div>
+            <div class="v" style="color:#78ff78;">${safe(w.chips)}</div>
           </div>
-          <div style="flex:1 1 50%; background:#1a1509; border:1px solid #4d3a1f; border-radius:10px; padding:.4rem .55rem;">
-            <div style="font-size:.8rem; color:#ffcc80;">NFTs</div>
-            <div style="font-weight:800; color:#ffb74d; font-size:1.05rem;">${safe(w.nfts_count)}</div>
+          <div class="kv">
+            <div class="k">NFTs</div>
+            <div class="v" style="color:#ffb74d;">${safe(w.nfts_count)}</div>
           </div>
         </div>
       `;
+
       card.addEventListener("mouseover",()=> card.style.transform="translateY(-2px)");
       card.addEventListener("mouseout", ()=> card.style.transform="translateY(0)");
   
@@ -3523,7 +3559,12 @@ async function renderGoblinInventory() {
         const id = `cv-timer-${i}`;
         const bg = i%2===0 ? "#1a1a1a" : "#2a2a2a";
         const card = document.createElement("div");
-        card.style.cssText = `background:${bg}; padding:.75rem; border-radius:10px; width:210px;`;
+        card.style.cssText = `
+          background:linear-gradient(180deg,#141414,#0f0f0f);
+          padding:.75rem; border-radius:12px; width:150px; border:1px solid var(--cv-border);
+          box-shadow:0 2px 10px rgba(0,0,0,.35);
+        `;
+
         card.innerHTML = `
           <div><strong style="color:#ffe600;">${safe(e.wax_account)}</strong></div>
           <div style="color:#0ff;">Goblins: ${safe(e.total_goblins)}</div>
@@ -3695,7 +3736,7 @@ async function renderGoblinInventory() {
               <span style="font-size:.72rem; background:#2a2211; color:#ffcc66; border:1px solid #4a3a12; padding:.15rem .45rem; border-radius:999px;">last 10</span>
             </div>
             <div id="cv-recent-grid"
-                 style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:.75rem; align-items:stretch;"></div>
+                 style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:.75rem; align-items:stretch;"></div>
             <div id="cv-recent-empty" style="display:none; margin-top:.5rem; color:#caa;">No results yet.</div>
           </div>
         
@@ -3707,7 +3748,7 @@ async function renderGoblinInventory() {
               <span style="font-size:.72rem; background:#133113; color:#b7ffb7; border:1px solid #1f5220; padding:.15rem .45rem; border-radius:999px;">live</span>
             </div>
             <div id="cv-bonus-grid"
-                 style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:.75rem; align-items:stretch;"></div>
+                 style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:.75rem; align-items:stretch;"></div>
           </div>
         
           <!-- ℹ️ INFO + CTA -->
@@ -3755,17 +3796,33 @@ async function renderGoblinInventory() {
 
       <div style="display:flex; flex-wrap:wrap; gap:1.5rem;">
         <div style="flex:1 1 60%; min-width:320px;">
-          <div style="margin-bottom:1rem; text-align:center; display:flex; flex-wrap:wrap; gap:.5rem; justify-content:center;">
-            <button class="cv-btn" id="cv-select-50">✅ Select First 50</button>
-            <button class="cv-btn" id="cv-deselect">❌ Deselect All</button>
-            <button class="cv-btn" id="cv-select-best">🏆 Best 50 Goblins</button>
-            <select id="cv-sort" class="cv-btn">
-              <option value="rarity">Sort by Rarity</option>
-              <option value="level">Sort by Level</option>
-              <option value="daily_power">Sort by Power</option>
-              <option value="loot_hungry">Sort by Loot-Hungry</option>
+          <div style="margin-bottom:1rem; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; justify-content:center;">
+            <input id="cv-search" placeholder="Search name or ID…" 
+                   style="background:#151515; border:1px solid #333; color:#eee; padding:.55rem .7rem; border-radius:10px; width:220px;">
+          
+            <select id="cv-rarity" class="cv-btn" style="min-width:160px;">
+              <option value="">All Rarities</option>
+              <option>Common</option><option>Uncommon</option><option>Rare</option>
+              <option>Epic</option><option>Legendary</option><option>Mythic</option>
             </select>
+          
+            <div style="display:flex; align-items:center; gap:.45rem;">
+              <label for="cv-power" style="color:#ccc; font-size:.9rem;">Min Power</label>
+              <input id="cv-power" type="range" min="0" max="100" step="1" value="0">
+              <span id="cv-power-val" style="color:#0ff; font-size:.9rem;">0</span>
+            </div>
+          
+            <div id="cv-sort-segment" style="display:flex; background:#1a1a1a; border:1px solid #333; border-radius:10px; overflow:hidden;">
+              <button class="cv-btn" data-sort="rarity" style="border:none; border-right:1px solid #333;">Rarity</button>
+              <button class="cv-btn" data-sort="level"  style="border:none; border-right:1px solid #333;">Level</button>
+              <button class="cv-btn" data-sort="daily_power" style="border:none;">Power</button>
+            </div>
+          
+            <button class="cv-btn" id="cv-select-50">✅ First 50</button>
+            <button class="cv-btn" id="cv-select-best">🏆 Best 50</button>
+            <button class="cv-btn" id="cv-deselect">❌ Clear</button>
           </div>
+
           <div id="cv-summary" class="cv-card" style="text-align:center;"></div>
           <div id="cv-goblin-list" style="display:flex; flex-direction:column; gap:.5rem;"></div>
         </div>
@@ -3844,11 +3901,26 @@ async function renderGoblinInventory() {
     let selected = new Set();
     let sortBy = "rarity";
     const num = (v) => Number(v ?? 0) || 0;
+    let filterQuery = "";
+    let filterRarity = "";
+    let minPower = 0;
+    
+    function applyFilters(src){
+      const q = filterQuery.trim().toLowerCase();
+      return src.filter(g=>{
+        const okQuery = !q || `${g.name||""}`.toLowerCase().includes(q) || String(g.asset_id).includes(q);
+        const okRarity = !filterRarity || String(g.rarity||"").toLowerCase() === filterRarity.toLowerCase();
+        const okPower = num(g.daily_power) >= minPower;
+        return okQuery && okRarity && okPower;
+      });
+    }
+        
     const highlight = (id) => selected.has(id) ? "box-shadow:0 0 10px #ffe600; background:rgba(255,255,0,.06);" : "";
 
     function renderList(list = goblins) {
-      const sorted = [...list].sort((a,b) => num(b[sortBy]) - num(a[sortBy]));
-    
+      const filtered = applyFilters(list);
+      const sorted = [...filtered].sort((a,b) => num(b[sortBy]) - num(a[sortBy]));
+        
       // contenitore a griglia responsive
       Cave.el.goblinList.style.cssText = `
         display:grid;
@@ -3888,69 +3960,59 @@ async function renderGoblinInventory() {
             box-shadow:0 0 8px rgba(255,0,0,.5); letter-spacing:.5px;">RESTING</div>` : "";
     
         return `
-          <div class="cv-gob-card" data-id="${safe(g.asset_id)}" data-disabled="${tired?1:0}" style="${baseCard}">
-            <div style="display:flex; align-items:center; gap:.8rem;">
+          <div class="cv-gob-card" data-id="${safe(g.asset_id)}" data-disabled="${tired?1:0}" style="
+            display:flex; flex-direction:column; gap:.6rem;
+            background:linear-gradient(180deg,#151515,#0f0f0f);
+            border:1px solid ${sel ? "rgba(255,230,0,.6)" : "var(--cv-border)"};
+            box-shadow:${sel ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset" : "0 2px 12px rgba(0,0,0,.35)"};
+            border-radius:14px; padding:.75rem; transition:transform .12s, box-shadow .12s, border-color .12s;
+            cursor:${tired ? "not-allowed" : "pointer"}; position:relative; ${tired ? "opacity:.78; filter:grayscale(10%) brightness(.95);" : ""}
+          ">
+            <div style="display:flex; align-items:center; gap:.8rem; min-width:0;">
               <div style="position:relative; flex:0 0 auto;">
                 <img src="${safe(g.img)}" alt="" loading="lazy"
-                     style="width:68px; height:68px; border-radius:14px; object-fit:cover;
-                            outline:1px solid #2b2b2b; box-shadow:0 3px 10px rgba(0,0,0,.35);">
+                     style="width:68px; height:68px; border-radius:14px; object-fit:cover; outline:1px solid var(--cv-border); box-shadow:0 3px 10px rgba(0,0,0,.35);">
                 ${ribbon}
               </div>
         
               <div style="flex:1 1 auto; min-width:0;">
-                <div style="display:flex; align-items:center; gap:.5rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                  <strong style="color:#ffe600; font-family:Orbitron,system-ui,sans-serif; font-size:1rem; overflow:hidden; text-overflow:ellipsis;">
+                <div style="display:flex; align-items:center; gap:.5rem; white-space:nowrap; overflow:hidden;">
+                  <strong class="cv-name" style="color:var(--cv-chip); font-family:Orbitron,system-ui,sans-serif; font-size:1rem;">
                     ${safe(g.name)}
                   </strong>
-                  <span style="
-                    font-size:.72rem; padding:.16rem .55rem; border-radius:999px;
-                    background:linear-gradient(180deg, ${rarityBg(g.rarity)}, #0b0b0b);
-                    color:${rarityFg(g.rarity)};
-                    border:1px solid ${rarityBorder(g.rarity)};
-                    box-shadow:0 0 10px rgba(255,255,255,.05), inset 0 0 8px rgba(255,255,255,.06); letter-spacing:.2px;">
+                  <span class="cv-rarity" style="
+                    background:${rarityBg(g.rarity)}; color:${rarityFg(g.rarity)}; border-color:${rarityBorder(g.rarity)};">
                     ${safe(g.rarity)}
                   </span>
                 </div>
         
-                <!-- STAT PILLS -->
                 <div style="display:flex; gap:.45rem; margin-top:.45rem;">
-                  <div style="flex:1 1 0; background:#141414; border:1px solid #2a2a2a; border-radius:10px; padding:.35rem .5rem;">
-                    <div style="font-size:.72rem; color:#9aa0a6; letter-spacing:.3px;">LEVEL</div>
-                    <div style="font-weight:800; color:#eaeaea;">${safe(g.level)}</div>
+                  <div class="cv-pill"><div class="cv-chip-key">LEVEL</div><div class="cv-chip-val">${safe(g.level)}</div></div>
+                  <div class="cv-pill" style="min-width:0;">
+                    <div class="cv-chip-key">ABILITY</div>
+                    <div class="cv-chip-val" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safe(g.main_attr)}</div>
                   </div>
-                  <div style="flex:1 1 0; background:#141414; border:1px solid #2a2a2a; border-radius:10px; padding:.35rem .5rem;">
-                    <div style="font-size:.72rem; color:#9aa0a6; letter-spacing:.3px;">ABILITY</div>
-                    <div style="font-weight:800; color:#eaeaea;">${safe(g.main_attr)}</div>
-                  </div>
-                  <div style="flex:1 1 0; background:#101010; border:1px solid #2a2a2a; border-radius:10px; padding:.35rem .5rem;">
-                    <div style="font-size:.72rem; color:#9aa0a6; letter-spacing:.3px;">POWER</div>
-                    <div style="font-weight:900; color:#7efcff;">${dp}</div>
-                  </div>
+                  <div class="cv-pill"><div class="cv-chip-key">POWER</div><div class="cv-chip-val" style="color:#7efcff;">${dp}</div></div>
                 </div>
               </div>
         
-              <input type="checkbox" class="cv-sel"
-                ${sel ? "checked" : ""} ${tired ? "disabled" : ""}
-                style="transform:scale(1.25); accent-color:#ffe600; flex:0 0 auto;">
+              <input type="checkbox" class="cv-sel" ${sel ? "checked" : ""} ${tired ? "disabled" : ""}
+                     style="transform:scale(1.25); accent-color:#ffe600; flex:0 0 auto;">
             </div>
         
-            <!-- PROGRESS BAR -->
             <div style="display:flex; align-items:center; gap:.6rem; margin-top:.55rem;">
-              <div style="flex:1 1 auto; background:#141414; border:1px solid #2a2a2a; border-radius:999px; height:9px; overflow:hidden;">
-                <div style="width:${pct}%; height:100%;
-                  background:linear-gradient(90deg,#ffe600,#ff9d00);
-                  box-shadow:inset 0 0 10px rgba(255,255,255,.25), 0 0 8px rgba(255,214,0,.35);"></div>
-              </div>
+              <div class="cv-meter"><div style="width:${pct}%;"></div></div>
               <div style="min-width:56px; text-align:right; font-size:.82rem; font-weight:800; color:#7efcff;">${dp}</div>
             </div>
         
-            <div style="display:flex; justify-content:space-between; opacity:.85; margin-top:.25rem;">
-              <div style="font-size:.74rem; color:#9aa0a6;">ID: <span style="color:#cfcfcf; font-weight:600;">${safe(g.asset_id)}</span></div>
+            <div class="cv-row" style="opacity:.85; margin-top:.25rem;">
+              <div style="font-size:.74rem; color:#9aa0a6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ID: <span style="color:#cfcfcf; font-weight:600;">${safe(g.asset_id)}</span>
+              </div>
               <div style="font-size:.74rem; color:#9aa0a6;">Power</div>
             </div>
           </div>
         `;
-
       }).join("");
     
       Cave.el.goblinList.innerHTML = html;
@@ -4061,6 +4123,29 @@ async function renderGoblinInventory() {
     qs("#cv-deselect").onclick = () => { selected.clear(); renderList(); updateSummary(); };
     qs("#cv-select-best").onclick = () => autoBest();
     qs("#cv-sort").addEventListener("change", e => { sortBy = e.target.value; renderList(); });
+    // Nuovi filtri
+    qs("#cv-search").addEventListener("input", e => { filterQuery = e.target.value; renderList(); });
+    qs("#cv-rarity").addEventListener("change", e => { filterRarity = e.target.value; renderList(); });
+    
+    const powerRange = qs("#cv-power");
+    const powerVal = qs("#cv-power-val");
+    if (powerRange && powerVal){
+      powerRange.addEventListener("input", e => {
+        minPower = Number(e.target.value)||0;
+        powerVal.textContent = String(minPower);
+        renderList();
+      });
+    }
+    
+    // Segment sort
+    qsa("#cv-sort-segment .cv-btn").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        sortBy = btn.dataset.sort;
+        qsa("#cv-sort-segment .cv-btn").forEach(b=> b.style.background="#1a1a1a");
+        btn.style.background="#2a2a2a";
+        renderList();
+      });
+    });
 
     // chest perk button
     Cave.el.chestPerkBtn.onclick = async () => {

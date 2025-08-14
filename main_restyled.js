@@ -3141,28 +3141,26 @@ async function renderGoblinInventory() {
       const py = Cave.offsetY + p.waveY(p.x) * Cave.cellY;
 
       // --- GRID bounds (non il canvas) ---
-      const half = 16; // metà del 32x32 disegnato
-      const left   = Cave.offsetX - half;
-      const right  = Cave.offsetX + Cave.gridW + half;
-      const top    = Cave.offsetY - half;
-      const bottom = Cave.offsetY + Cave.gridH + half;
-  
-      if (px < left || px > right || py < top || py > bottom) {
-        p.done = true;          // segna per la rimozione
-        continue;               // non disegnare frame fuori griglia
+      const { minX, maxX, minY, maxY } = getBounds();
+      if (p.x < minX - 1 || p.x > maxX + 1) { // un leggero buffer
+        p.done = true;
+        continue;
       }
-  
+      const wy = p.waveY(p.x);
+      if (wy < minY - 1 || wy > maxY + 1) {
+        p.done = true;
+        continue;
+      }
+
       // sprite 128x128 -> draw at 32x32
       ctx.drawImage(p.image, p.frame*128, 0, 128, 128, px-16, py-16, 32, 32);
 
       // maybe drop chest once
       if (!p.hasDropped && Math.random() < 0.25) {
         p.hasDropped = true;
-        const marginX = Math.floor(GRID_COLS * 0.22);
-        const marginY = Math.floor(GRID_ROWS * 0.22);
-        const dx = Math.floor(Math.random() * (GRID_COLS - 2*marginX)) + marginX;
-        const dy = Math.floor(Math.random() * (GRID_ROWS - 2*marginY)) + marginY;
-
+        const { minX, maxX, minY, maxY } = getBounds();
+        const dx = randInt(minX, maxX);
+        const dy = randInt(minY, maxY);
         const chest = {
           id: null,
           x: dx,           // 👈 disegna direttamente nel punto di drop
@@ -3208,8 +3206,11 @@ async function renderGoblinInventory() {
           console.warn("[spawn_chest] errore:", e);
         });
       }
-      // move
+      // move entro la safe-area
       p.x += p.dir === "left-to-right" ? p.speed : -p.speed;
+      const { minX, maxX } = getBounds();
+      if (p.x < minX - 1 || p.x > maxX + 1) p.done = true;
+
     }
     // rimuovi i perk “done”
     Cave.perks = Cave.perks.filter(p => !p.done);
@@ -3373,11 +3374,15 @@ async function renderGoblinInventory() {
     if (!sprite.img?.complete) return;
 
     const dir = Math.random() < 0.5 ? "left-to-right" : "right-to-left";
-    const startX = dir === "left-to-right" ? 5 : GRID_SIZE - 5;
-
-    const baseY = Math.floor(Math.random()*(GRID_SIZE*0.8))+Math.floor(GRID_SIZE*0.1);
-    const amp = 3 + Math.random()*4;
+    const { minX, maxX, minY, maxY } = getBounds();
+    const amp  = 3 + Math.random()*4;
     const freq = 0.15 + Math.random()*0.15;
+    
+    // parti dal bordo interno della safe-area
+    const startX = dir === "left-to-right" ? minX : maxX;
+    
+    // baseY scelto in modo che baseY ± amp resti dentro i limiti
+    const baseY  = randInt(minY + Math.ceil(amp), maxY - Math.ceil(amp));
 
     // 50% slower than original (0.3–0.6)
     const speed = (0.3 + Math.random()*0.3) * 0.5;
@@ -3388,7 +3393,7 @@ async function renderGoblinInventory() {
       frame: 0, tick: 0, frameDelay: 8,
       x: startX, y: baseY,
       dir, speed,
-      waveY: (xPos) => baseY + Math.sin(xPos * freq) * amp,
+      waveY: (xPos) => clamp(baseY + Math.sin(xPos * freq) * amp, minY, maxY),
       perkName, wax_account,
       hasDropped: false, done: false
     });
@@ -3701,10 +3706,14 @@ async function renderGoblinInventory() {
           if (!hasNumericId) return; // skip, non sarà claimabile lato backend
       
           const id = String(ch.id);
+          const { minX, maxX, minY, maxY } = getBounds();
+          const cx = clamp(ch.x, minX, maxX);
+          const cy = clamp(ch.y, minY, maxY);
+          
           upsertChest({
             id,
-            x: ch.x,
-            y: ch.y,
+            x: cx,
+            y: cy,
             from: ch.from || "unknown",
             wax_account: e.wax_account,
             taken: false,

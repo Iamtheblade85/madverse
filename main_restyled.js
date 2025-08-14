@@ -2930,7 +2930,7 @@ async function renderGoblinInventory() {
     const io = new IntersectionObserver((entries)=>{
       entries.forEach(e=>{
         if (e.isIntersecting){ startRAF(); startCommandPolling(); }
-        else { stopRAF(); }
+        else { stopRAF(); stopCommandPolling(); }
       });
     }, { root: null, threshold: 0.01 });
     io.observe(Cave.canvas);
@@ -3076,10 +3076,13 @@ async function renderGoblinInventory() {
     // label
     ctx.font = `${cell * 2}px Orbitron, system-ui, sans-serif`;
     ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     ctx.fillStyle = "rgba(0,0,0,0.6)";
+    const labelY = py + cell * 1.55; // centrato nel rettangolo
     ctx.fillRect(px - cell, py + cell * 1.2, cell * 2, cell * 0.7);
     ctx.fillStyle = g.color;
-    ctx.fillText(g.wax_account, px, py + cell * 5);
+    ctx.fillText(g.wax_account, px, labelY);
+
   
     // shovel
     if (g.digging) {
@@ -3967,16 +3970,10 @@ async function renderGoblinInventory() {
     Cave.el.selectionSummary = qs("#cv-summary", container);
     Cave.el.goblinList = qs("#cv-goblin-list", container);
     Cave.el.chestPerkBtn = qs("#cv-chest-btn", container);
-    // ripristina eventuali filtri salvati
-    loadFilters();
-    
-    // evidenzia il bottone selezionato nel "segment sort"
-    qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background="#1a1a1a");
-    const activeSortBtn = qs(`#cv-sort-segment .cv-btn[data-sort="${sortBy}"]`);
-    if (activeSortBtn) activeSortBtn.style.background = "#2a2a2a";
     renderSkeletons("#cv-bonus-grid", 6, 72);
     // assets
     await loadAssets();
+
 
     // video → canvas on ended
     const v = qs("#cv-video", Cave.el.videoOrCanvas);
@@ -3995,12 +3992,12 @@ async function renderGoblinInventory() {
     await renderGlobalExpeditions();
     if (Cave.intervals.global) clearInterval(Cave.intervals.global);
     Cave.intervals.global = setInterval(async ()=>{
-      if (!qs("#caveCanvas", Cave.el.videoOrCanvas)) return;
       await renderGlobalExpeditions();
     }, GLOBAL_REFRESH_MS);
 
-    await renderRecentList();
 
+    await renderRecentList();
+    renderSkeletons("#cv-goblin-list", 8, 96);
     // Load user goblins
     let goblins = [];
     try {
@@ -4058,6 +4055,11 @@ async function renderGoblinInventory() {
     }
         
     const highlight = (id) => selected.has(id) ? "box-shadow:0 0 10px #ffe600; background:rgba(255,255,0,.06);" : "";
+    // ripristina filtri e evidenzia sort ORA che sortBy esiste
+    loadFilters();
+    qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background="#1a1a1a");
+    const activeSortBtn = qs(`#cv-sort-segment .cv-btn[data-sort="${sortBy}"]`);
+    if (activeSortBtn) activeSortBtn.style.background = "#2a2a2a";
 
     function renderList(list = goblins) {
       const filtered = applyFilters(list);
@@ -4325,7 +4327,7 @@ async function renderGoblinInventory() {
         } else toast("😢 No perk awarded.","warn");
       } catch (e) {
         toast("❌ Error trying chest drop.","err");
-      } finally { btn.disabled=false; btn.textContent="🎁 Try !chest Drop"; }
+      } finally { btn.disabled=false; btn.textContent="🎁 Try a Perk Drop"; }
     };
 
     // initial lists

@@ -2573,7 +2573,11 @@ async function renderGoblinInventory() {
   // ========= CONFIG =========
   if (!window.BASE_URL) window.BASE_URL = "https://iamemanuele.pythonanywhere.com";
   const BASE_URL = window.BASE_URL;
-  const GRID_SIZE = 90;
+  const GRID_COLS = 90;
+  const GRID_ROWS = Math.round(GRID_COLS * 9 / 16); // ~51
+  // Back-compat per codice che usa ancora GRID_SIZE:
+  const GRID_SIZE = GRID_COLS;
+
   const GLOBAL_REFRESH_MS = 23000; // 23s
   const COMMAND_POLL_MS = 31000;   // 31s
   const MAX_RECENT_EXPEDITIONS = 10;
@@ -2590,9 +2594,13 @@ async function renderGoblinInventory() {
     rafId: null,
     running: false,
     dpr: Math.max(1, window.devicePixelRatio || 1),
-  
+    bgCache: null,
+    bgCacheCtx: null,
+    observers: { io: null, ro: null },  
     // griglia
-    cell: 10,
+    cell: 10, 
+    cellX: 10, 
+    cellY: 10,
     offsetX: 0,   // nuovo
     offsetY: 0,   // nuovo
     gridW: 0,     // nuovo
@@ -2750,8 +2758,32 @@ async function renderGoblinInventory() {
         0%{ box-shadow:0 0 15px #ffb800, inset 0 0 6px #ffa500; opacity:0.95; }
         100%{ box-shadow:0 0 35px #ffcc00, inset 0 0 14px #ffcc00; opacity:1; }
       }
+      #cv-summary{
+        position: sticky; bottom: 12px; z-index: 40;
+        backdrop-filter: blur(6px);
+        background: linear-gradient(180deg, rgba(20,20,20,.9), rgba(12,12,12,.9));
+        border: 1px solid var(--cv-border);
+        box-shadow: 0 8px 24px rgba(0,0,0,.35);
+      }
+      .cv-skel{
+        position:relative; overflow:hidden;
+        background:#141414; border:1px solid var(--cv-border); border-radius:12px;
+      }
+      .cv-skel::after{
+        content:""; position:absolute; inset:0;
+        background:linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+        transform:translateX(-100%); animation:skel 1.2s infinite;
+      }
+      @keyframes skel{ to { transform:translateX(100%);} }
+      .cv-btn:focus-visible,
+      .cv-gob-card:focus-visible{
+        outline:2px solid var(--cv-chip); outline-offset:2px;
+      }
+      @media (prefers-reduced-motion: reduce){
+        *{ transition:none !important; animation:none !important; }
+      }
+            
     `;
-
     document.head.appendChild(st);
   }
 
@@ -2771,8 +2803,14 @@ async function renderGoblinInventory() {
     const b = m ? parseInt(m[3], 16) : 0;
     return `rgba(${r},${g},${b},${alpha})`;
   }
+  const toastCache = new Map(); // msg -> timestamp (per anti-flood)
 
   function toast(msg, type = "ok", ttl = 6000) {
+    const now = Date.now();
+    const last = toastCache.get(msg) || 0;
+    if (now - last < 1200) return; // evita flood dello stesso messaggio in <1.2s
+    toastCache.set(msg, now);
+  
     const host = Cave.el.toast;
     if (!host) return;
     const div = document.createElement("div");
@@ -2781,7 +2819,14 @@ async function renderGoblinInventory() {
     host.appendChild(div);
     setTimeout(() => div.remove(), ttl);
   }
+
   
+  function renderSkeletons(hostSel, count=6, height=74){
+    const host = qs(hostSel); if(!host) return;
+    host.innerHTML = Array.from({length:count})
+      .map(()=> `<div class="cv-skel" style="height:${height}px; margin-bottom:.6rem;"></div>`).join("");
+  }
+    
   function syncUserInto(caveUser) {
     const mem = window.userData || JSON.parse(localStorage.getItem('userData') || '{}');
     caveUser.wax_account = mem?.wax_account || "";
@@ -2840,6 +2885,25 @@ async function renderGoblinInventory() {
     Cave.assets.perks.skeleton = skeleton;
     Cave.assets.perks.black_cat = black_cat;
     Cave.assets.loaded = true;
+    // costruisci cache se il canvas è già pronto
+    buildBGCache();
+  }
+  
+  function buildBGCache(){
+    if (!Cave.canvas || !Cave.assets.bg?.complete) return;
+    const w = Math.max(1, Math.floor(Cave.gridW));
+    const h = Math.max(1, Math.floor(Cave.gridH));
+  
+    // usa OffscreenCanvas se disponibile
+    try{
+      const can = ('OffscreenCanvas' in window) ? new OffscreenCanvas(w, h) : document.createElement('canvas');
+      can.width = w; can.height = h;
+      const cx = can.getContext('2d');
+      cx.imageSmoothingEnabled = false;
+      cx.drawImage(Cave.assets.bg, 0, 0, Cave.assets.bg.width, Cave.assets.bg.height, 0, 0, w, h);
+      Cave.bgCache = can;
+      Cave.bgCacheCtx = cx;
+    }catch{ Cave.bgCache = null; Cave.bgCacheCtx = null; }
   }
 
   // ========= CANVAS =========
@@ -2847,51 +2911,94 @@ async function renderGoblinInventory() {
     Cave.canvas = c;
     Cave.ctx = c.getContext("2d");
     resizeCanvas();
+    observeCanvasVisibility();
+    observeContainerResize();
     window.addEventListener("resize", resizeCanvas, { passive: true });
   }
   function teardownCanvas() {
     window.removeEventListener("resize", resizeCanvas);
     Cave.canvas = null;
     Cave.ctx = null;
+    Cave.observers.io?.disconnect?.();
+    Cave.observers.ro?.disconnect?.();
+    Cave.observers.io = null;
+    Cave.observers.ro = null;
+  }
+  function observeCanvasVisibility(){
+    if (!('IntersectionObserver' in window) || !Cave.canvas) return;
+    Cave.observers.io?.disconnect?.();
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if (e.isIntersecting){ startRAF(); startCommandPolling(); }
+        else { stopRAF(); }
+      });
+    }, { root: null, threshold: 0.01 });
+    io.observe(Cave.canvas);
+    Cave.observers.io = io;
   }
   
+  function observeContainerResize(){
+    const host = Cave.canvas?.parentElement;
+    if (!('ResizeObserver' in window) || !host) return;
+    Cave.observers.ro?.disconnect?.();
+    const ro = new ResizeObserver(()=> resizeCanvas());
+    ro.observe(host);
+    Cave.observers.ro = ro;
+  }
+
+  function observeContainerRemoval(){
+    const mo = new MutationObserver(()=>{
+      if(!document.getElementById("goblin-content")){
+        stopRAF();
+        stopCommandPolling();
+        if (Cave.intervals.global){ clearInterval(Cave.intervals.global); Cave.intervals.global = null; }
+        if (Cave.intervals.globalCountdown){ clearInterval(Cave.intervals.globalCountdown); Cave.intervals.globalCountdown = null; }
+        teardownCanvas();
+        mo.disconnect();
+      }
+    });
+    mo.observe(document.body, {childList:true, subtree:true});
+  }
+    
   function resizeCanvas() {
     const c = Cave.canvas;
     if (!c || !c.parentElement) return;
   
-    // larghezza disponibile della colonna
     const cssW = c.parentElement.clientWidth;
-    // altezza 16:9
     const cssH = Math.floor(cssW * 9 / 16);
     const dpr = Cave.dpr;
   
     // dimensioni CSS
-    c.style.width = `${cssW}px`;
+    c.style.width  = `${cssW}px`;
     c.style.height = `${cssH}px`;
   
     // dimensioni interne (pixel reali)
     c.width  = Math.floor(cssW * dpr);
     c.height = Math.floor(cssH * dpr);
   
-    // reset trasformazione per HiDPI
+    // HiDPI + smoothing off
     const ctx = Cave.ctx;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingQuality = "low";
   
-    // ---- griglia “quadrata” centrata ----
-    // lato “utile” in CSS px (scegliamo il min per evitare distorsioni)
-    const usable = Math.min(cssW, cssH);
+    // la griglia ora riempie il canvas 16:9
+    Cave.gridW  = cssW;
+    Cave.gridH  = cssH;
+    Cave.offsetX = 0;
+    Cave.offsetY = 0;
   
-    // dimensione di UNA cella (in CSS px)
-    Cave.cell = usable / GRID_SIZE;
+    // celle non quadrate
+    Cave.cellX = Cave.gridW / GRID_COLS;
+    Cave.cellY = Cave.gridH / GRID_ROWS;
   
-    // larghezza/altezza della griglia (in CSS px)
-    Cave.gridW = Cave.cell * GRID_SIZE; // = usable
-    Cave.gridH = Cave.cell * GRID_SIZE; // = usable
+    // compat (usa il min per scale sprite/testi)
+    Cave.cell  = Math.min(Cave.cellX, Cave.cellY);
   
-    // offset per centrare la griglia nel canvas 16:9
-    Cave.offsetX = (cssW - Cave.gridW) / 2;
-    Cave.offsetY = (cssH - Cave.gridH) / 2;
+    // ricostruisci la cache dello sfondo (punto 2)
+    buildBGCache();
   }
+
 
 
   function startRAF() {
@@ -2908,10 +3015,12 @@ async function renderGoblinInventory() {
 
   // ========= DRAWING =========
   function drawBG() {
-    const { ctx, assets, gridW, gridH, offsetX, offsetY } = Cave;
-    if (!assets.bg?.complete) return;
-    // Disegna lo sfondo scalato esattamente alla griglia centrata
-    ctx.drawImage(assets.bg, 0, 0, assets.bg.width, assets.bg.height, offsetX, offsetY, gridW, gridH);
+    const { ctx, bgCache, assets, gridW, gridH, offsetX, offsetY } = Cave;
+    if (bgCache) {
+      ctx.drawImage(bgCache, offsetX, offsetY);
+    } else if (assets.bg?.complete) {
+      ctx.drawImage(assets.bg, 0, 0, assets.bg.width, assets.bg.height, offsetX, offsetY, gridW, gridH);
+    }
   }
 
   function drawChests() {
@@ -2919,8 +3028,8 @@ async function renderGoblinInventory() {
     if (!assets.chest?.complete) return;
     Cave.chests.forEach(ch => {
       if (ch.taken) return;
-      const cx = Cave.offsetX + ch.x * Cave.cell;
-      const cy = Cave.offsetY + ch.y * Cave.cell;
+      const cx = Cave.offsetX + ch.x * Cave.cellX;
+      const cy = Cave.offsetY + ch.y * Cave.cellY;
       const scale = 0.15;
       const w = assets.chest.width * scale;
       const h = assets.chest.height * scale;
@@ -2935,33 +3044,33 @@ async function renderGoblinInventory() {
   
     ctx.save();
     ctx.lineCap = "round";
-    ctx.lineWidth = Math.max(1, cell * 0.20); // spessore in proporzione
-  
+    const w = Math.max(1, Math.min(Cave.cellX, Cave.cellY) * 0.20);
+    ctx.lineWidth = w; 
     for (let i = 0; i < t.length - 1; i++) {
       const a = t[i], b = t[i + 1];
       const alpha = (1 - i / t.length) * 0.80; // fade verso il passato
       ctx.strokeStyle = hexToRgba(g.color || "#ffe600", alpha);
       ctx.beginPath();
-      ctx.moveTo(offsetX + a.x * cell, offsetY + a.y * cell);
-      ctx.lineTo(offsetX + b.x * cell, offsetY + b.y * cell);
+      ctx.moveTo(Cave.offsetX + a.x * Cave.cellX, Cave.offsetY + a.y * Cave.cellY);
+      ctx.lineTo(Cave.offsetX + b.x * Cave.cellX, Cave.offsetY + b.y * Cave.cellY);      
       ctx.stroke();
     }
     ctx.restore();
   }
   
   function drawGoblin(g) {
-    const { ctx, assets, cell } = Cave;
-    const px = Cave.offsetX + g.x * Cave.cell;
-    const py = Cave.offsetY + g.y * Cave.cell;
+    const { ctx, assets } = Cave;
+    const cell = Math.min(Cave.cellX, Cave.cellY);
+    const px = Cave.offsetX + g.x * Cave.cellX;
+    const py = Cave.offsetY + g.y * Cave.cellY;
   
-    // --- disegna la scia prima dello sprite ---
+    // scia prima
     drawGoblinTrail(g);
   
     const gScale = 5, sScale = 3;
     const gSize = cell * gScale;
-    const gOff = (gSize - cell) / 2;
+    const gOff  = (gSize - cell) / 2;
   
-    // sprite goblin
     ctx.drawImage(assets.goblin, 0, 0, 128, 128, px - gOff, py - gOff, gSize, gSize);
   
     // label
@@ -2972,13 +3081,14 @@ async function renderGoblinInventory() {
     ctx.fillStyle = g.color;
     ctx.fillText(g.wax_account, px, py + cell * 5);
   
-    // shovel anim quando scava
+    // shovel
     if (g.digging) {
       const fx = g.shovelFrame * 128;
       const sSize = cell * sScale;
       ctx.drawImage(assets.shovel, fx, 0, 128, 128, px - (sSize - cell) / 2, py - sSize, sSize, sSize);
     }
   }
+
 
   function drawPerksAndAdvance() {
     const { ctx } = Cave;
@@ -2994,9 +3104,9 @@ async function renderGoblinInventory() {
         p.frame = (p.frame + 1) % p.frames;
       }
   
-      const px = Cave.offsetX + p.x * Cave.cell;
-      const py = Cave.offsetY + p.waveY(p.x) * Cave.cell;
-  
+      const px = Cave.offsetX + p.x * Cave.cellX;
+      const py = Cave.offsetY + p.waveY(p.x) * Cave.cellY;
+
       // --- GRID bounds (non il canvas) ---
       const half = 16; // metà del 32x32 disegnato
       const left   = Cave.offsetX - half;
@@ -3015,9 +3125,11 @@ async function renderGoblinInventory() {
       // maybe drop chest once
       if (!p.hasDropped && Math.random() < 0.25) {
         p.hasDropped = true;
-        const margin = Math.floor(GRID_SIZE * 0.22);
-        const dx = Math.floor(Math.random() * (GRID_SIZE - 2*margin)) + margin;
-        const dy = Math.floor(Math.random() * (GRID_SIZE - 2*margin)) + margin;
+        const marginX = Math.floor(GRID_COLS * 0.22);
+        const marginY = Math.floor(GRID_ROWS * 0.22);
+        const dx = Math.floor(Math.random() * (GRID_COLS - 2*marginX)) + marginX;
+        const dy = Math.floor(Math.random() * (GRID_ROWS - 2*marginY)) + marginY;
+
         const chest = {
           id: null,
           x: dx,           // 👈 disegna direttamente nel punto di drop
@@ -3277,7 +3389,7 @@ async function renderGoblinInventory() {
     card.innerHTML = `
       <div class="cv-row" style="margin-bottom:.4rem;">
         ${chestId ? `<span class="cv-badge">Chest #${safe(chestId)}</span>` : `<span></span>`}
-        <span class="cv-time">${timeHM()}</span>
+        <span class="cv-time" title="${new Date().toLocaleString()}">${timeHM()}</span>
       </div>
     
       <div class="cv-row" style="gap:.5rem;">
@@ -3318,8 +3430,8 @@ async function renderGoblinInventory() {
         <h4 style="color:#ffa500;">🕒 Recent Expedition Results</h4>
         <div id="cv-recent-grid" class="cv-cards"></div>
       `;
+      renderSkeletons("#cv-recent-grid", 6, 72);
       Cave.recentExpKeys.clear();
-  
       if (!r.ok) {
         c.insertAdjacentHTML("beforeend",
           `<div class="cv-toast warn">Could not load recent expeditions (HTTP ${r.status}).</div>`);
@@ -3355,7 +3467,8 @@ async function renderGoblinInventory() {
         card.innerHTML = `
           <div class="cv-head">
             <div class="cv-name">${safe(item.wax_account)}</div>
-            ${dt ? `<span class="cv-time">${timeHM(dt)}</span>` : ""}
+            ${dt ? `<span class="cv-time" title="${new Date(ts).toLocaleString()}">${timeHM(dt)}</span>` : ""}
+
           </div>
           <div style="font-size:.85rem; color:#ddd; opacity:.9;">
             Expedition result
@@ -3373,7 +3486,9 @@ async function renderGoblinInventory() {
         `;
         frag.appendChild(card);
       });
+      grid.innerHTML = "";         // <-- rimuove gli skeleton
       grid.appendChild(frag);
+
     } catch (e) {
       console.warn("Recent list failed:", e);
       const c = Cave.el.recentList;
@@ -3397,7 +3512,7 @@ async function renderGoblinInventory() {
     card.innerHTML = `
       <div class="cv-head">
         <div class="cv-name">${safe(wax_account)}</div>
-        <span class="cv-time">${timeHM()}</span>
+        <span class="cv-time" title="${new Date().toLocaleString()}">${timeHM()}</span>
       </div>
       <div style="font-size:.85rem; color:#ddd; opacity:.9;">Expedition result</div>
       <div class="cv-kv">
@@ -3446,7 +3561,7 @@ async function renderGoblinInventory() {
       card.innerHTML = `
         <div class="cv-row" style="margin-bottom:.4rem;">
           ${w.chest_id ? `<span class="cv-badge">Chest #${safe(w.chest_id)}</span>` : `<span></span>`}
-          <span class="cv-time">${timeHM(new Date(w.created_at))}</span>
+          <span class="cv-time" title="${new Date(w.created_at).toLocaleString()}">${timeHM(new Date(w.created_at))}</span>
         </div>
       
         <div class="cv-row" style="gap:.5rem;">
@@ -3514,8 +3629,8 @@ async function renderGoblinInventory() {
       }
 
       Cave.goblins = data.map((e, i) => {
-        const gx = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
-        const gy = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
+        const gx = Math.floor(Math.random() * (GRID_COLS * 0.8)) + Math.floor(GRID_COLS * 0.1);
+        const gy = Math.floor(Math.random() * (GRID_ROWS * 0.8)) + Math.floor(GRID_ROWS * 0.1);
         return {
           x: gx,
           y: gy,
@@ -3708,7 +3823,7 @@ async function renderGoblinInventory() {
       <div id="expedition-summary-block" style="margin-bottom:1.2rem; display:flex; gap:1.5rem; align-items:flex-start; flex-wrap:wrap;">
         <div style="flex:1 1 56%; min-width:320px;">
           <h3 class="cv-title">⛏️ Global Expeditions in Progress</h3>
-          <div id="cv-toast-host"></div>
+          <div id="cv-toast-host" role="status" aria-live="polite"></div>
           <div id="cv-video-or-canvas" style="width:100%; margin-top:.5rem;">
             <video id="cv-video" src="expedition_run.mp4" autoplay muted style="width:100%; border-radius:12px; box-shadow:0 0 10px #ffe600;"></video>
           </div>
@@ -3823,8 +3938,10 @@ async function renderGoblinInventory() {
             <button class="cv-btn" id="cv-deselect">❌ Clear</button>
           </div>
 
-          <div id="cv-summary" class="cv-card" style="text-align:center;"></div>
-          <div id="cv-goblin-list" style="display:flex; flex-direction:column; gap:.5rem;"></div>
+        <div id="cv-summary" class="cv-card" style="text-align:center;"></div>
+        <div id="cv-active-filters" class="cv-row" style="justify-content:flex-start; flex-wrap:wrap; gap:.4rem; margin:.35rem 0;"></div>
+        <div id="cv-goblin-list" style="display:flex; flex-direction:column; gap:.5rem;"></div>
+
         </div>
 
         <div style="flex:1 1 36%; min-width:260px;" class="cv-card">
@@ -3850,7 +3967,14 @@ async function renderGoblinInventory() {
     Cave.el.selectionSummary = qs("#cv-summary", container);
     Cave.el.goblinList = qs("#cv-goblin-list", container);
     Cave.el.chestPerkBtn = qs("#cv-chest-btn", container);
-
+    // ripristina eventuali filtri salvati
+    loadFilters();
+    
+    // evidenzia il bottone selezionato nel "segment sort"
+    qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background="#1a1a1a");
+    const activeSortBtn = qs(`#cv-sort-segment .cv-btn[data-sort="${sortBy}"]`);
+    if (activeSortBtn) activeSortBtn.style.background = "#2a2a2a";
+    renderSkeletons("#cv-bonus-grid", 6, 72);
     // assets
     await loadAssets();
 
@@ -3904,7 +4028,25 @@ async function renderGoblinInventory() {
     let filterQuery = "";
     let filterRarity = "";
     let minPower = 0;
-    
+    function saveFilters(){
+      localStorage.setItem("caveFilters", JSON.stringify({ filterQuery, filterRarity, minPower, sortBy }));
+    }
+    function loadFilters(){
+      try{
+        const s = JSON.parse(localStorage.getItem("caveFilters") || "{}");
+        filterQuery   = s.filterQuery   || "";
+        filterRarity  = s.filterRarity  || "";
+        minPower      = Number(s.minPower || 0);
+        sortBy        = s.sortBy        || "rarity";
+        // Sync UI
+        const $q = qs("#cv-search"), $r = qs("#cv-rarity"), $p = qs("#cv-power"), $pv = qs("#cv-power-val");
+        if ($q)  $q.value         = filterQuery;
+        if ($r)  $r.value         = filterRarity;
+        if ($p)  $p.value         = String(minPower);
+        if ($pv) $pv.textContent  = String(minPower);
+      }catch{}
+    }
+        
     function applyFilters(src){
       const q = filterQuery.trim().toLowerCase();
       return src.filter(g=>{
@@ -3920,7 +4062,15 @@ async function renderGoblinInventory() {
     function renderList(list = goblins) {
       const filtered = applyFilters(list);
       const sorted = [...filtered].sort((a,b) => num(b[sortBy]) - num(a[sortBy]));
-        
+      const af = qs("#cv-active-filters");
+      if (af){
+        af.innerHTML = [
+          filterQuery   ? `<span class="cv-badge" style="border-color:#20444a;background:linear-gradient(180deg,#152024,#0f1a1c);color:#7ff6ff;">🔎 ${safe(filterQuery)}</span>` : "",
+          filterRarity  ? `<span class="cv-badge">${safe(filterRarity)}</span>` : "",
+          minPower > 0  ? `<span class="cv-badge" style="border-color:#665200;background:linear-gradient(180deg,#2a2211,#1c160a);color:#ffcc66;">⚡ ≥ ${minPower}</span>` : ""
+        ].filter(Boolean).join("");
+      }
+              
       // contenitore a griglia responsive
       Cave.el.goblinList.style.cssText = `
         display:grid;
@@ -3960,7 +4110,10 @@ async function renderGoblinInventory() {
             box-shadow:0 0 8px rgba(255,0,0,.5); letter-spacing:.5px;">RESTING</div>` : "";
     
         return `
-          <div class="cv-gob-card" data-id="${safe(g.asset_id)}" data-disabled="${tired?1:0}" style="
+          <div class="cv-gob-card" data-id="${safe(g.asset_id)}" data-disabled="${tired?1:0}"
+               role="checkbox" tabindex="0" aria-checked="${sel ? 'true':'false'}"
+               aria-label="Select goblin ${safe(g.name)}"
+               style="
             display:flex; flex-direction:column; gap:.6rem;
             background:linear-gradient(180deg,#151515,#0f0f0f);
             border:1px solid ${sel ? "rgba(255,230,0,.6)" : "var(--cv-border)"};
@@ -4062,9 +4215,25 @@ async function renderGoblinInventory() {
           if (!card || card.dataset.disabled === "1") return;
           card.style.transform = "translateY(0)";
         });
+         Cave.el.goblinList.addEventListener("keydown", (e) => {
+          const card = e.target.closest(".cv-gob-card");
+          if (!card || card.dataset.disabled === "1") return;
+          if (e.key === " " || e.key === "Enter"){
+            e.preventDefault();
+            const cb = card.querySelector(".cv-sel");
+            cb.checked = !cb.checked;
+            const id = card.dataset.id;
+            if (cb.checked) selected.add(id); else selected.delete(id);
+            card.setAttribute("aria-checked", cb.checked ? "true":"false");
+            card.style.border = cb.checked ? "1px solid rgba(255,230,0,.6)" : "1px solid #2a2a2a";
+            card.style.boxShadow = cb.checked
+              ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset"
+              : "0 2px 12px rgba(0,0,0,.35)";
+            updateSummary();
+          }
+        });
       }
     }
-
 
     function updateSummary() {
       Cave.el.selectionSummary.innerHTML = `
@@ -4122,30 +4291,20 @@ async function renderGoblinInventory() {
     };
     qs("#cv-deselect").onclick = () => { selected.clear(); renderList(); updateSummary(); };
     qs("#cv-select-best").onclick = () => autoBest();
-    qs("#cv-sort").addEventListener("change", e => { sortBy = e.target.value; renderList(); });
     // Nuovi filtri
-    qs("#cv-search").addEventListener("input", e => { filterQuery = e.target.value; renderList(); });
-    qs("#cv-rarity").addEventListener("change", e => { filterRarity = e.target.value; renderList(); });
-    
+    qs("#cv-search").addEventListener("input", e => { filterQuery = e.target.value; renderList(); saveFilters(); });
+    qs("#cv-rarity").addEventListener("change", e => { filterRarity = e.target.value; renderList(); saveFilters(); });    
+        
     const powerRange = qs("#cv-power");
     const powerVal = qs("#cv-power-val");
     if (powerRange && powerVal){
       powerRange.addEventListener("input", e => {
         minPower = Number(e.target.value)||0;
         powerVal.textContent = String(minPower);
-        renderList();
+        renderList(); saveFilters();
       });
     }
-    
-    // Segment sort
-    qsa("#cv-sort-segment .cv-btn").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        sortBy = btn.dataset.sort;
-        qsa("#cv-sort-segment .cv-btn").forEach(b=> b.style.background="#1a1a1a");
-        btn.style.background="#2a2a2a";
-        renderList();
-      });
-    });
+
 
     // chest perk button
     Cave.el.chestPerkBtn.onclick = async () => {
@@ -4194,6 +4353,7 @@ async function renderGoblinInventory() {
         await renderUserCountdown(s.data.expedition_id, s.data.seconds_remaining, s.data.goblin_ids || []);
       }
     } catch {}
+    observeContainerRemoval();
   }
 
   // ========= VISIBILITY =========

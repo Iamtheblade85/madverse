@@ -2641,7 +2641,8 @@ async function renderGoblinInventory() {
       chestPerkBtn: null,
     }
   };
-
+  const inFlightClaims = new Set(); // set di String(chest_id)
+  
   // ========= UTILITIES =========
   const log = (...a) => DEBUG && console.log("[CAVE]", ...a);
   const qs = (s, r = document) => r.querySelector(s);
@@ -3077,65 +3078,76 @@ async function renderGoblinInventory() {
       }
     }
 
-  
-    // chest claim proximity
+    // chest claim ONLY while digging AND inside 2×2 area (not while walking)
     Cave.chests.forEach((ch, key) => {
-      const dx = Math.abs(g.x - ch.x), dy = Math.abs(g.y - ch.y);
-      if (dx <= 5 && dy <= 5 && ch.claimable && !ch.taken && !ch.claiming) {
-        ch.claiming = true; 
-        ch.taken = true; 
+      // bounding box 2x2: celle [ch.x, ch.x+1] × [ch.y, ch.y+1]
+      const inside2x2 = (g.x >= ch.x && g.x <= ch.x + 2) && (g.y >= ch.y && g.y <= ch.y + 2);
+    
+      if (g.digging && inside2x2 && ch.claimable && !ch.taken && !ch.claiming) {
+        // anti-rimbalzo locale per questo chest_id
+        if (ch.id != null) {
+          const cid = String(ch.id);
+          if (inFlightClaims.has(cid)) return;
+          inFlightClaims.add(cid);
+        }
+    
+        ch.claiming = true;
+        ch.taken = true;
         ch.taken_by = g.wax_account;
-  
+    
         (async () => {
           try {
             syncUserInto(Cave.user);
             assertAuthOrThrow(Cave.user);
-  
-            // Validazione client-side
-            if (!ch.id || isNaN(Number(ch.id))) {
-              console.warn("[claim_chest] ID chest non valido, skip:", ch);
-              return;
-            }
-            if (!g.wax_account) {
-              console.warn("[claim_chest] wax_account mancante per il goblin:", g);
-              return;
-            }
-            
+    
+            if (!ch.id || isNaN(Number(ch.id))) { console.warn("[claim_chest] invalid id"); return; }
+            if (!g.wax_account) { console.warn("[claim_chest] missing wax_account"); return; }
+    
             const payload = { wax_account: g.wax_account, chest_id: Number(ch.id) };
-            console.debug("[claim_chest] payload →", payload);
             const rs = await API.post("/claim_chest", payload, 15000);
-
+    
+            // già presa da altri
+            if (rs.status === 409) {
+              Cave.chests.delete(key);
+              const by = rs.data?.claimed_by ? ` by ${safe(rs.data.claimed_by)}` : "";
+              toast(`Chest #${safe(ch.id)} already claimed${by}.`, "warn");
+              return;
+            }
+    
             if (!rs.ok) throw new Error(`HTTP ${rs.status}`);
-  
+    
+            // successo
             const reward = rs.data;
-            const chips = reward?.stats?.tokens?.CHIPS ?? 0;
-            const nfts = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
-  
+            const chestId = reward?.chest_id ?? ch.id;
+            const chips   = reward?.stats?.tokens?.CHIPS ?? 0;
+            const nfts    = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
+    
             if (chips === 0 && nfts === 0) {
-              toast(`${g.wax_account} opened a ${ch.from} chest… it was empty.`, "warn");
+              toast(`${g.wax_account} opened Chest #${safe(chestId)} from ${ch.from}… it was empty.`, "warn");
             } else {
-              toast(`${g.wax_account} won ${chips} CHIPS and ${nfts} NFTs from ${ch.from}!`, "ok");
+              toast(`${g.wax_account} won ${chips} CHIPS and ${nfts} NFTs from Chest #${safe(chestId)} (${ch.from})!`, "ok");
             }
-  
-            if (Array.isArray(rs.data?.winners)) {
-              // allinea la lista globale alla verità del backend
-              renderBonusListFromBackend(rs.data.winners);
+    
+            if (Array.isArray(reward?.winners)) {
+              renderBonusListFromBackend(reward.winners);
             } else {
-              // fallback locale (se per qualche motivo il backend non manda la lista)
-              appendBonusReward(reward, g.wax_account, ch.from);
+              appendBonusReward({ ...reward, chest_id: chestId }, g.wax_account, ch.from);
             }
-
-            // remove immediately from map (fix lingering chest)
+    
+            // rimuovi subito dal canvas
             Cave.chests.delete(key);
+    
           } catch (e) {
-            ch.taken = false; 
-            ch.claiming = false; // revert on error
+            ch.taken = false;
+            ch.claiming = false;
             toast(`Chest reward failed: ${e.message}`, "err");
+          } finally {
+            if (ch.id != null) inFlightClaims.delete(String(ch.id));
           }
         })();
       }
     });
-  
+      
     // se ha finito il path, entra in stato "scavo" e smorza un po' la scia
     if (g.path.length === 0) {
       g.digging = true; 
@@ -3206,40 +3218,75 @@ async function renderGoblinInventory() {
   // ========= LISTS / UI PANELS =========
   function appendBonusReward(reward, wax_account, source) {
     const c = Cave.el.bonusList; if (!c) return;
+  
     let grid = qs("#cv-bonus-grid", c);
     if (!grid) {
-      c.insertAdjacentHTML("beforeend", `<div id="cv-bonus-grid" class="cv-cards"></div>`);
+      c.insertAdjacentHTML("beforeend",
+        `<div id="cv-bonus-grid"
+              style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+                     gap:.75rem; align-items:stretch;"></div>`);
+
       grid = qs("#cv-bonus-grid", c);
     }
   
     const chips = reward?.stats?.tokens?.CHIPS ?? 0;
-    const nfts = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
-    const key = `${wax_account}|${source}|${chips}|${nfts}|${new Date().getHours()}${new Date().getMinutes()}`;
-    if (Cave.bonusKeys.has(key)) return;
-    Cave.bonusKeys.add(key);
+    const nfts  = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
+    const chestId = reward?.chest_id; // 👈 dal backend
+  
+    // dedup forte per chest_id; fallback soft con firma
+    const dedupKey = chestId ? `ch:${chestId}` :
+      `${wax_account}|${source}|${chips}|${nfts}|${new Date().getHours()}${new Date().getMinutes()}`;
+  
+    if (Cave.bonusKeys.has(dedupKey)) return;
+    Cave.bonusKeys.add(dedupKey);
     if (Cave.bonusKeys.size > 64) {
       Cave.bonusKeys = new Set(Array.from(Cave.bonusKeys).slice(-32));
     }
   
     const card = document.createElement("div");
     card.className = "cv-item";
-    card.innerHTML = `
-      <div>
-        <strong style="color:#0f0;">${safe(wax_account)}</strong> ·
-        <span class="cv-when">${timeHM()}</span>
-      </div>
-      <div class="cv-line">from <strong>${safe(source)}</strong></div>
-      <div class="cv-line" style="color:#0f0;">CHIPS: ${chips}</div>
-      <div class="cv-line" style="color:#ffa500;">NFTs: ${nfts}</div>
+    card.style.cssText = `
+      position:relative; background:linear-gradient(180deg,#0f150f,#0b110b);
+      border:1px solid #1f4d1f; border-radius:14px; padding:.8rem .9rem;
+      box-shadow:0 6px 16px rgba(0,0,0,.35), inset 0 0 12px rgba(0,255,0,.08);
+      transition:transform .12s ease, box-shadow .12s ease;
     `;
+    card.innerHTML = `
+      <div style="position:absolute; top:10px; right:10px;">
+        ${chestId ? `<span style="display:inline-block; font-size:.72rem; padding:.18rem .5rem; border-radius:999px;
+                              background:linear-gradient(180deg,#173e17,#0f2a0f); color:#9dff9d; border:1px solid #2a7f2a;
+                              box-shadow:0 0 10px rgba(0,255,0,.15);">Chest #${safe(chestId)}</span>` : ""}
+      </div>
+  
+      <div style="display:flex; align-items:center; gap:.5rem;">
+        <strong style="color:#9dff9d; font-family:Orbitron,system-ui,sans-serif;">${safe(wax_account)}</strong>
+        <span style="font-size:.78rem; color:#b7ffb7; opacity:.85;">· ${timeHM()}</span>
+      </div>
+  
+      <div style="margin-top:.35rem; color:#c9e7c9;">
+        opened a <strong style="color:#78ff78;">${safe(source)}</strong> chest
+      </div>
+  
+      <div style="display:flex; gap:.6rem; margin-top:.55rem;">
+        <div style="flex:1 1 50%; background:#0e1a0e; border:1px solid #1f4d1f; border-radius:10px; padding:.4rem .55rem;">
+          <div style="font-size:.8rem; color:#8dfc8d;">CHIPS</div>
+          <div style="font-weight:800; color:#78ff78; font-size:1.05rem;">${chips}</div>
+        </div>
+        <div style="flex:1 1 50%; background:#1a1509; border:1px solid #4d3a1f; border-radius:10px; padding:.4rem .55rem;">
+          <div style="font-size:.8rem; color:#ffcc80;">NFTs</div>
+          <div style="font-weight:800; color:#ffb74d; font-size:1.05rem;">${nfts}</div>
+        </div>
+      </div>
+    `;
+    card.addEventListener("mouseover",()=> card.style.transform="translateY(-2px)");
+    card.addEventListener("mouseout", ()=> card.style.transform="translateY(0)");
+  
     grid.prepend(card);
   
-    // Cap a MAX_BONUS_ROWS
-    while (grid.children.length > MAX_BONUS_ROWS) {
-      grid.lastElementChild?.remove();
-    }
+    // Cap visivo
+    while (grid.children.length > MAX_BONUS_ROWS) grid.lastElementChild?.remove();
   }
-  
+    
   async function renderRecentList() {
     try {
       const r = await API.get("/recent_expeditions", 15000);
@@ -3332,26 +3379,62 @@ async function renderGoblinInventory() {
   function renderBonusListFromBackend(winners = []) {
     const c = Cave.el.bonusList; if (!c) return;
   
-    // Header + contenitore griglia
     c.innerHTML = `
-      <h4 style="color:#0f0;">🎁 Chest Bonus Rewards (!chest @ Twitch)</h4>
-      <div id="cv-bonus-grid" class="cv-cards"></div>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-bottom:.6rem;">
+        <h4 style="color:#78ff78; margin:0; font-family:Orbitron,system-ui,sans-serif;">🎁 Latest Chest Rewards</h4>
+        <span style="font-size:.72rem; background:#133113; color:#b7ffb7; border:1px solid #1f5220; padding:.15rem .45rem; border-radius:999px;">live</span>
+      </div>
+      <div id="cv-bonus-grid"
+        style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:.75rem; align-items:stretch;"></div>
     `;
     const grid = qs("#cv-bonus-grid", c);
   
     const frag = document.createDocumentFragment();
     winners.forEach(w => {
+      // dedup per chest_id se disponibile
+      const dk = w.chest_id ? `ch:${w.chest_id}` :
+        `${w.wax_account}|${w.perk_type}|${w.chips}|${w.nfts_count}|${w.created_at}`;
+      if (Cave.bonusKeys.has(dk)) return;
+      Cave.bonusKeys.add(dk);
+  
       const card = document.createElement("div");
       card.className = "cv-item";
-      card.innerHTML = `
-        <div>
-          <strong style="color:#0f0;">${safe(w.wax_account)}</strong> ·
-          <span class="cv-when">${timeHM(new Date(w.created_at))}</span>
-        </div>
-        <div class="cv-line">from <strong>${safe(w.perk_type)}</strong></div>
-        <div class="cv-line" style="color:#0f0;">CHIPS: ${safe(w.chips)}</div>
-        <div class="cv-line" style="color:#ffa500;">NFTs: ${safe(w.nfts_count)}</div>
+      card.style.cssText = `
+        position:relative; background:linear-gradient(180deg,#0f150f,#0b110b);
+        border:1px solid #1f4d1f; border-radius:14px; padding:.8rem .9rem;
+        box-shadow:0 6px 16px rgba(0,0,0,.35), inset 0 0 12px rgba(0,255,0,.08);
+        transition:transform .12s ease, box-shadow .12s ease;
       `;
+      card.innerHTML = `
+        <div style="position:absolute; top:10px; right:10px;">
+          ${w.chest_id ? `<span style="display:inline-block; font-size:.72rem; padding:.18rem .5rem; border-radius:999px;
+                                  background:linear-gradient(180deg,#173e17,#0f2a0f); color:#9dff9d; border:1px solid #2a7f2a;
+                                  box-shadow:0 0 10px rgba(0,255,0,.15);">Chest #${safe(w.chest_id)}</span>` : ""}
+        </div>
+  
+        <div style="display:flex; align-items:center; gap:.5rem;">
+          <strong style="color:#9dff9d; font-family:Orbitron,system-ui,sans-serif;">${safe(w.wax_account)}</strong>
+          <span style="font-size:.78rem; color:#b7ffb7; opacity:.85;">· ${timeHM(new Date(w.created_at))}</span>
+        </div>
+  
+        <div style="margin-top:.35rem; color:#c9e7c9;">
+          opened a <strong style="color:#78ff78;">${safe(w.perk_type)}</strong> chest
+        </div>
+  
+        <div style="display:flex; gap:.6rem; margin-top:.55rem;">
+          <div style="flex:1 1 50%; background:#0e1a0e; border:1px solid #1f4d1f; border-radius:10px; padding:.4rem .55rem;">
+            <div style="font-size:.8rem; color:#8dfc8d;">CHIPS</div>
+            <div style="font-weight:800; color:#78ff78; font-size:1.05rem;">${safe(w.chips)}</div>
+          </div>
+          <div style="flex:1 1 50%; background:#1a1509; border:1px solid #4d3a1f; border-radius:10px; padding:.4rem .55rem;">
+            <div style="font-size:.8rem; color:#ffcc80;">NFTs</div>
+            <div style="font-weight:800; color:#ffb74d; font-size:1.05rem;">${safe(w.nfts_count)}</div>
+          </div>
+        </div>
+      `;
+      card.addEventListener("mouseover",()=> card.style.transform="translateY(-2px)");
+      card.addEventListener("mouseout", ()=> card.style.transform="translateY(0)");
+  
       frag.appendChild(card);
     });
     grid.appendChild(frag);
@@ -3806,51 +3889,68 @@ async function renderGoblinInventory() {
     
         return `
           <div class="cv-gob-card" data-id="${safe(g.asset_id)}" data-disabled="${tired?1:0}" style="${baseCard}">
-            <div style="display:flex; align-items:center; gap:.75rem;">
+            <div style="display:flex; align-items:center; gap:.8rem;">
               <div style="position:relative; flex:0 0 auto;">
                 <img src="${safe(g.img)}" alt="" loading="lazy"
-                  style="width:64px; height:64px; border-radius:12px; object-fit:cover; outline:1px solid #2b2b2b;">
+                     style="width:68px; height:68px; border-radius:14px; object-fit:cover;
+                            outline:1px solid #2b2b2b; box-shadow:0 3px 10px rgba(0,0,0,.35);">
                 ${ribbon}
               </div>
-    
+        
               <div style="flex:1 1 auto; min-width:0;">
                 <div style="display:flex; align-items:center; gap:.5rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                   <strong style="color:#ffe600; font-family:Orbitron,system-ui,sans-serif; font-size:1rem; overflow:hidden; text-overflow:ellipsis;">
                     ${safe(g.name)}
                   </strong>
                   <span style="
-                    font-size:.72rem; padding:.15rem .45rem; border-radius:999px;
-                    background:${rarityBg(g.rarity)};
+                    font-size:.72rem; padding:.16rem .55rem; border-radius:999px;
+                    background:linear-gradient(180deg, ${rarityBg(g.rarity)}, #0b0b0b);
                     color:${rarityFg(g.rarity)};
-                    border:1px solid ${rarityBorder(g.rarity)};">
+                    border:1px solid ${rarityBorder(g.rarity)};
+                    box-shadow:0 0 10px rgba(255,255,255,.05), inset 0 0 8px rgba(255,255,255,.06); letter-spacing:.2px;">
                     ${safe(g.rarity)}
                   </span>
                 </div>
-                <div style="color:#b6b6b6; font-size:.82rem;">
-                  Lvl <strong style="color:#fff">${safe(g.level)}</strong> • Ability: <strong style="color:#fff">${safe(g.main_attr)}</strong>
+        
+                <!-- STAT PILLS -->
+                <div style="display:flex; gap:.45rem; margin-top:.45rem;">
+                  <div style="flex:1 1 0; background:#141414; border:1px solid #2a2a2a; border-radius:10px; padding:.35rem .5rem;">
+                    <div style="font-size:.72rem; color:#9aa0a6; letter-spacing:.3px;">LEVEL</div>
+                    <div style="font-weight:800; color:#eaeaea;">${safe(g.level)}</div>
+                  </div>
+                  <div style="flex:1 1 0; background:#141414; border:1px solid #2a2a2a; border-radius:10px; padding:.35rem .5rem;">
+                    <div style="font-size:.72rem; color:#9aa0a6; letter-spacing:.3px;">ABILITY</div>
+                    <div style="font-weight:800; color:#eaeaea;">${safe(g.main_attr)}</div>
+                  </div>
+                  <div style="flex:1 1 0; background:#101010; border:1px solid #2a2a2a; border-radius:10px; padding:.35rem .5rem;">
+                    <div style="font-size:.72rem; color:#9aa0a6; letter-spacing:.3px;">POWER</div>
+                    <div style="font-weight:900; color:#7efcff;">${dp}</div>
+                  </div>
                 </div>
               </div>
-    
+        
               <input type="checkbox" class="cv-sel"
                 ${sel ? "checked" : ""} ${tired ? "disabled" : ""}
-                style="transform:scale(1.2); accent-color:#ffe600; flex:0 0 auto;">
+                style="transform:scale(1.25); accent-color:#ffe600; flex:0 0 auto;">
             </div>
-    
-            <div style="display:flex; align-items:center; gap:.5rem;">
-              <div style="flex:1 1 auto; background:#1c1c1c; border:1px solid #2a2a2a; border-radius:999px; height:8px; overflow:hidden;">
+        
+            <!-- PROGRESS BAR -->
+            <div style="display:flex; align-items:center; gap:.6rem; margin-top:.55rem;">
+              <div style="flex:1 1 auto; background:#141414; border:1px solid #2a2a2a; border-radius:999px; height:9px; overflow:hidden;">
                 <div style="width:${pct}%; height:100%;
                   background:linear-gradient(90deg,#ffe600,#ff9d00);
-                  box-shadow:0 0 8px rgba(255,214,0,.5) inset;"></div>
+                  box-shadow:inset 0 0 10px rgba(255,255,255,.25), 0 0 8px rgba(255,214,0,.35);"></div>
               </div>
-              <div style="min-width:52px; text-align:right; font-size:.8rem; color:#0ff;">${dp}</div>
+              <div style="min-width:56px; text-align:right; font-size:.82rem; font-weight:800; color:#7efcff;">${dp}</div>
             </div>
-    
-            <div style="display:flex; justify-content:space-between; opacity:.85;">
-              <div style="font-size:.74rem; color:#9aa0a6;">ID: ${safe(g.asset_id)}</div>
+        
+            <div style="display:flex; justify-content:space-between; opacity:.85; margin-top:.25rem;">
+              <div style="font-size:.74rem; color:#9aa0a6;">ID: <span style="color:#cfcfcf; font-weight:600;">${safe(g.asset_id)}</span></div>
               <div style="font-size:.74rem; color:#9aa0a6;">Power</div>
             </div>
           </div>
         `;
+
       }).join("");
     
       Cave.el.goblinList.innerHTML = html;

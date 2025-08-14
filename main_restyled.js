@@ -2937,6 +2937,34 @@ async function renderGoblinInventory() {
       Cave.bgCacheCtx = cx;
     }catch{ Cave.bgCache = null; Cave.bgCacheCtx = null; }
   }
+  
+  function initRealtime() {
+    if (Cave._es) return;
+    try {
+      const es = new EventSource(`${BASE_URL}/events`);
+      es.onmessage = (ev) => {
+        let msg; try { msg = JSON.parse(ev.data); } catch { return; }
+        if (msg.type === "chest_spawned") {
+          const { minX, maxX, minY, maxY } = getBounds();
+          upsertChest({
+            id: String(msg.chest_id),
+            x: clamp(msg.x, minX, maxX),
+            y: clamp(msg.y, minY, maxY),
+            from: msg.perk_type || "unknown",
+            wax_account: msg.wax_account || "",
+            taken: false, claimable: true, pending: false
+          });
+          toast(`Chest #${msg.chest_id} spawned by ${msg.wax_account}`, "ok");
+        }
+        if (msg.type === "chest_claimed") {
+          Cave.chests.delete(String(msg.chest_id));
+          toast(`Chest #${msg.chest_id} claimed by ${msg.claimed_by}`, "warn");
+        }
+      };
+      es.onerror = () => {};
+      Cave._es = es;
+    } catch {}
+  }
 
   // ========= CANVAS =========
   function setupCanvas(c) {
@@ -2985,6 +3013,8 @@ async function renderGoblinInventory() {
         stopCommandPolling();
         if (Cave.intervals.global){ clearInterval(Cave.intervals.global); Cave.intervals.global = null; }
         if (Cave.intervals.globalCountdown){ clearInterval(Cave.intervals.globalCountdown); Cave.intervals.globalCountdown = null; }
+        if (Cave._es) { try { Cave._es.close(); } catch {} Cave._es = null; }
+
         teardownCanvas();
         mo.disconnect();
       }
@@ -3694,18 +3724,21 @@ async function renderGoblinInventory() {
       });
 
       // sync chests from server
+      const liveIds = new Set();
+      
       data.forEach(e => {
         if (!Array.isArray(e.chests)) return;
         e.chests.forEach(ch => {
-          // accetta solo id numerici
           const hasNumericId = ch.id != null && !isNaN(Number(ch.id));
-          if (!hasNumericId) return; // skip, non sarà claimabile lato backend
+          if (!hasNumericId) return;
       
           const id = String(ch.id);
+          liveIds.add(id);
+      
           const { minX, maxX, minY, maxY } = getBounds();
           const cx = clamp(ch.x, minX, maxX);
           const cy = clamp(ch.y, minY, maxY);
-          
+      
           upsertChest({
             id,
             x: cx,
@@ -3718,6 +3751,14 @@ async function renderGoblinInventory() {
           });
         });
       });
+      
+      // ⛏️ rimuovi le chest non più riportate dal server (scadute)
+      Cave.chests.forEach((ch, key) => {
+        if (ch.id != null && !liveIds.has(String(ch.id))) {
+          Cave.chests.delete(key);
+        }
+      });
+
 
       // cards & countdowns
       const timers = data.map((e,i)=>{
@@ -4021,7 +4062,7 @@ async function renderGoblinInventory() {
     renderSkeletons("#cv-bonus-grid", 6, 72);
     // assets
     await loadAssets();
-
+    initRealtime();
 
     // video → canvas on ended
     const v = qs("#cv-video", Cave.el.videoOrCanvas);
@@ -4393,7 +4434,7 @@ async function renderGoblinInventory() {
     };
 
     // initial lists
-    renderList(); updateSummary(); await renderRecentList();
+    renderList(); updateSummary();
     // Hydrate global winners (ultimi 10)
     try {
       const rw = await API.get("/recent_winners", 10000);

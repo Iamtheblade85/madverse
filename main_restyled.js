@@ -2728,7 +2728,18 @@ async function renderGoblinInventory() {
                  border-radius:999px; height:9px; overflow:hidden; }
       .cv-meter > div{ height:100%; background:linear-gradient(90deg,#ffe600,#ff9d00);
                        box-shadow:inset 0 0 10px rgba(255,255,255,.25), 0 0 8px rgba(255,214,0,.35); }
-    
+                       
+      /* --- Goblin card: prevent overflow, allow wrapping --- */
+      .cv-gob-card,
+      .cv-gob-card * { box-sizing: border-box; }
+      
+      .cv-gob-card { overflow: hidden; } /* contiene ribbon e qualsiasi assoluto */
+      .cv-gob-card .cv-name { overflow-wrap: anywhere; word-break: break-word; }
+      
+      /* riga dei “pill” che può andare a capo senza uscire dalla card */
+      .cv-gob-pillrow { display:flex; flex-wrap:wrap; gap:.45rem; }
+      .cv-gob-pillrow .cv-pill { min-width:110px; flex:1 1 110px; }
+          
       /* Grid helpers */
       .cv-cards{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:.75rem; align-items:stretch; }
       .cv-item{ background:var(--cv-elev); border:1px solid var(--cv-border); border-radius:12px; padding:.7rem .8rem; }
@@ -3146,13 +3157,19 @@ async function renderGoblinInventory() {
           pending: true
         };
 
-        // ask backend to spawn → set id/claimable
-        syncUserInto(Cave.user);
-        assertAuthOrThrow(Cave.user);      
+        // ask backend to spawn → set id/claimable (safe se non loggato)
+        try {
+          syncUserInto(Cave.user);
+          assertAuthOrThrow(Cave.user);
+        } catch (e) {
+          console.warn("[spawn_chest] skipped: not authenticated");
+          continue; // passa al prossimo perk senza bloccare il frame
+        }
+        
         API.post("/spawn_chest", {
           wax_account: p.wax_account,
           perk_type: p.perkName,
-          x: dx, 
+          x: dx,
           y: dy
         }, 12000).then(r => {
           if (r.ok && r?.data?.chest_id != null) {
@@ -3193,9 +3210,72 @@ async function renderGoblinInventory() {
     }
     return path;
   }
-  function moveGoblin(g) {
-    if (g.digging) return;
+  function tryClaimNearby(g){
+    Cave.chests.forEach((ch, key) => {
+      const inside2x2 = (g.x >= ch.x && g.x <= ch.x + 1) && (g.y >= ch.y && g.y <= ch.y + 1);
   
+      if (g.digging && inside2x2 && ch.claimable && !ch.taken && !ch.claiming) {
+        if (ch.id != null) {
+          const cid = String(ch.id);
+          if (inFlightClaims.has(cid)) return;
+          inFlightClaims.add(cid);
+        }
+  
+        ch.claiming = true;
+        ch.taken = true;
+        ch.taken_by = g.wax_account;
+  
+        (async () => {
+          try {
+            syncUserInto(Cave.user);
+            assertAuthOrThrow(Cave.user);
+  
+            if (!ch.id || isNaN(Number(ch.id))) { console.warn("[claim_chest] invalid id"); return; }
+            if (!g.wax_account) { console.warn("[claim_chest] missing wax_account"); return; }
+  
+            const payload = { wax_account: g.wax_account, chest_id: Number(ch.id) };
+            const rs = await API.post("/claim_chest", payload, 15000);
+  
+            if (rs.status === 409) {
+              Cave.chests.delete(key);
+              const by = rs.data?.claimed_by ? ` by ${safe(rs.data.claimed_by)}` : "";
+              toast(`Chest #${safe(ch.id)} already claimed${by}.`, "warn");
+              return;
+            }
+            if (!rs.ok) throw new Error(`HTTP ${rs.status}`);
+  
+            const reward  = rs.data;
+            const chestId = reward?.chest_id ?? ch.id;
+            const chips   = reward?.stats?.tokens?.CHIPS ?? 0;
+            const nfts    = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
+  
+            if (chips === 0 && nfts === 0) {
+              toast(`${g.wax_account} opened Chest #${safe(chestId)} from ${ch.from}… it was empty.`, "warn");
+            } else {
+              toast(`${g.wax_account} won ${chips} CHIPS and ${nfts} NFTs from Chest #${safe(chestId)} (${ch.from})!`, "ok");
+            }
+  
+            if (Array.isArray(reward?.winners)) renderBonusListFromBackend(reward.winners);
+            else appendBonusReward({ ...reward, chest_id: chestId }, g.wax_account, ch.from);
+  
+            Cave.chests.delete(key);
+          } catch (e) {
+            ch.taken = false;
+            ch.claiming = false;
+            toast(`Chest reward failed: ${e.message}`, "err");
+          } finally {
+            if (ch.id != null) inFlightClaims.delete(String(ch.id));
+          }
+        })();
+      }
+    });
+  }
+  
+  function moveGoblin(g) {
+    // Se sta scavando, prova a reclamare eventuali chest vicini e poi esci
+    if (g.digging) { tryClaimNearby(g); return; }
+  
+    // Nuovo target se serve
     if (g.path.length === 0) {
       const tx = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
       const ty = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
@@ -3205,12 +3285,11 @@ async function renderGoblinInventory() {
     if (!g.path.length) return;
   
     const [nx, ny] = g.path.shift();
-    g.x = nx; 
+    g.x = nx;
     g.y = ny;
   
     // --- trail recording (in celle) ---
     if (g._lastTrailX == null || g._lastTrailY == null) {
-      // primo frame: fai partire la scia
       g.trail = [{ x: g.x, y: g.y }];
       g._lastTrailX = g.x;
       g._lastTrailY = g.y;
@@ -3224,74 +3303,14 @@ async function renderGoblinInventory() {
         if (g.trail.length > TRAIL_LEN) g.trail.pop();
       }
     }
-
-    // chest claim ONLY while digging AND inside 2×2 area (not while walking)
-    Cave.chests.forEach((ch, key) => {
-      // celle [ch.x, ch.x+1] × [ch.y, ch.y+1]
-      const inside2x2 = (g.x >= ch.x && g.x <= ch.x + 1) && (g.y >= ch.y && g.y <= ch.y + 1);
-    
-      if (g.digging && inside2x2 && ch.claimable && !ch.taken && !ch.claiming) {
-        if (ch.id != null) {
-          const cid = String(ch.id);
-          if (inFlightClaims.has(cid)) return;
-          inFlightClaims.add(cid);
-        }
-    
-        ch.claiming = true;
-        ch.taken = true;
-        ch.taken_by = g.wax_account;
-    
-        (async () => {
-          try {
-            syncUserInto(Cave.user);
-            assertAuthOrThrow(Cave.user);
-    
-            if (!ch.id || isNaN(Number(ch.id))) { console.warn("[claim_chest] invalid id"); return; }
-            if (!g.wax_account) { console.warn("[claim_chest] missing wax_account"); return; }
-    
-            const payload = { wax_account: g.wax_account, chest_id: Number(ch.id) };
-            const rs = await API.post("/claim_chest", payload, 15000);
-    
-            if (rs.status === 409) {
-              Cave.chests.delete(key);
-              const by = rs.data?.claimed_by ? ` by ${safe(rs.data.claimed_by)}` : "";
-              toast(`Chest #${safe(ch.id)} already claimed${by}.`, "warn");
-              return;
-            }
-            if (!rs.ok) throw new Error(`HTTP ${rs.status}`);
-    
-            const reward  = rs.data;
-            const chestId = reward?.chest_id ?? ch.id;
-            const chips   = reward?.stats?.tokens?.CHIPS ?? 0;
-            const nfts    = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
-    
-            if (chips === 0 && nfts === 0) {
-              toast(`${g.wax_account} opened Chest #${safe(chestId)} from ${ch.from}… it was empty.`, "warn");
-            } else {
-              toast(`${g.wax_account} won ${chips} CHIPS and ${nfts} NFTs from Chest #${safe(chestId)} (${ch.from})!`, "ok");
-            }
-    
-            if (Array.isArray(reward?.winners)) renderBonusListFromBackend(reward.winners);
-            else appendBonusReward({ ...reward, chest_id: chestId }, g.wax_account, ch.from);
-    
-            Cave.chests.delete(key);
-          } catch (e) {
-            ch.taken = false;
-            ch.claiming = false;
-            toast(`Chest reward failed: ${e.message}`, "err");
-          } finally {
-            if (ch.id != null) inFlightClaims.delete(String(ch.id));
-          }
-        })();
-      }
-    });
-      
-    // se ha finito il path, entra in stato "scavo" e smorza un po' la scia
+  
+    // Se ha finito il path, entra in "scavo" e prova subito il claim
     if (g.path.length === 0) {
-      g.digging = true; 
-      g.shovelFrame = 0; 
+      g.digging = true;
+      g.shovelFrame = 0;
       g.frameTimer = 0;
-      g.trail = g.trail.slice(0, Math.ceil(TRAIL_LEN / 2)); // smorza scia quando si ferma
+      g.trail = g.trail.slice(0, Math.ceil(TRAIL_LEN / 2));
+      tryClaimNearby(g);                 // 👈 tenta subito un claim nel frame corrente
       setTimeout(() => g.digging = false, 2000);
     }
   }
@@ -3913,7 +3932,7 @@ async function renderGoblinInventory() {
       <div style="margin:1.2rem 0;"><p class="subtitle2">Select your goblins and start the expedition!</p></div>
 
       <div style="display:flex; flex-wrap:wrap; gap:1.5rem;">
-        <div style="flex:1 1 60%; min-width:320px;">
+        <div style="flex:1 1 76%; min-width:320px;">
           <div style="margin-bottom:1rem; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; justify-content:center;">
             <input id="cv-search" placeholder="Search name or ID…" 
                    style="background:#151515; border:1px solid #333; color:#eee; padding:.55rem .7rem; border-radius:10px; width:220px;">
@@ -3947,7 +3966,7 @@ async function renderGoblinInventory() {
 
         </div>
 
-        <div style="flex:1 1 36%; min-width:260px;" class="cv-card">
+        <div style="flex:1 1 20%; min-width:80px;" class="cv-card">
           <h3 class="cv-title" style="font-size:1.25rem; margin-bottom:.6rem;">📜 Welcome to the Dwarf’s Gold Cave</h3>
           <p>💥 Ready to send your goblins into the depths? Choose up to <strong>50 warriors</strong> to explore the mysterious cave — the more, the merrier (and lootier)!</p>
           <p>💰 Every expedition is <strong>free</strong> and rewards you with variable <strong>CHIPS tokens</strong> and <strong>NFT treasures</strong>.</p>
@@ -4060,6 +4079,18 @@ async function renderGoblinInventory() {
     qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background="#1a1a1a");
     const activeSortBtn = qs(`#cv-sort-segment .cv-btn[data-sort="${sortBy}"]`);
     if (activeSortBtn) activeSortBtn.style.background = "#2a2a2a";
+    const sortSeg = qs("#cv-sort-segment");
+    if (sortSeg) {
+      sortSeg.addEventListener("click", (e)=>{
+        const btn = e.target.closest('.cv-btn[data-sort]');
+        if (!btn) return;
+        sortBy = btn.dataset.sort || "rarity";
+        qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background = "#1a1a1a");
+        btn.style.background = "#2a2a2a";
+        saveFilters();
+        renderList();
+      });
+    }
 
     function renderList(list = goblins) {
       const filtered = applyFilters(list);
@@ -4106,10 +4137,11 @@ async function renderGoblinInventory() {
     
         const ribbon = tired ? `
           <div style="
-            position:absolute; top:10px; right:-24px; transform:rotate(35deg);
+            position:absolute; top:8px; right:8px; transform:rotate(0deg);
             background:linear-gradient(135deg,#d32f2f,#b71c1c); color:#fff;
-            font-weight:700; font-size:.7rem; padding:.25rem .75rem; border-radius:8px;
+            font-weight:700; font-size:.7rem; padding:.25rem .5rem; border-radius:8px;
             box-shadow:0 0 8px rgba(255,0,0,.5); letter-spacing:.5px;">RESTING</div>` : "";
+
     
         return `
           <div class="cv-gob-card" data-id="${safe(g.asset_id)}" data-disabled="${tired?1:0}"
@@ -4121,7 +4153,7 @@ async function renderGoblinInventory() {
             border:1px solid ${sel ? "rgba(255,230,0,.6)" : "var(--cv-border)"};
             box-shadow:${sel ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset" : "0 2px 12px rgba(0,0,0,.35)"};
             border-radius:14px; padding:.75rem; transition:transform .12s, box-shadow .12s, border-color .12s;
-            cursor:${tired ? "not-allowed" : "pointer"}; position:relative; ${tired ? "opacity:.78; filter:grayscale(10%) brightness(.95);" : ""}
+            cursor:${tired ? "not-allowed" : "pointer"}; position:relative; overflow:hidden; ${tired ? "opacity:.78; filter:grayscale(10%) brightness(.95);" : ""}
           ">
             <div style="display:flex; align-items:center; gap:.8rem; min-width:0;">
               <div style="position:relative; flex:0 0 auto;">
@@ -4131,7 +4163,7 @@ async function renderGoblinInventory() {
               </div>
         
               <div style="flex:1 1 auto; min-width:0;">
-                <div style="display:flex; align-items:center; gap:.5rem; white-space:nowrap; overflow:hidden;">
+                <div style="display:flex; align-items:flex-start; gap:.5rem; flex-wrap:wrap; overflow-wrap:anywhere;">
                   <strong class="cv-name" style="color:var(--cv-chip); font-family:Orbitron,system-ui,sans-serif; font-size:1rem;">
                     ${safe(g.name)}
                   </strong>
@@ -4141,18 +4173,19 @@ async function renderGoblinInventory() {
                   </span>
                 </div>
         
-                <div style="display:flex; gap:.45rem; margin-top:.45rem;">
-                  <div class="cv-pill"><div class="cv-chip-key">LEVEL</div><div class="cv-chip-val">${safe(g.level)}</div></div>
-                  <div class="cv-pill" style="min-width:0;">
+                <div class="cv-gob-pillrow" style="display:flex; flex-wrap:wrap; gap:.45rem; margin-top:.45rem;">
+                  <div class="cv-pill" style="min-width:110px; flex:1 1 110px;"><div class="cv-chip-key">LEVEL</div><div class="cv-chip-val">${safe(g.level)}</div></div>
+                  <div class="cv-pill" style="min-width:110px; flex:1 1 110px;">
                     <div class="cv-chip-key">ABILITY</div>
-                    <div class="cv-chip-val" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safe(g.main_attr)}</div>
+                    <div class="cv-chip-val" style="white-space:normal; overflow-wrap:anywhere;">${safe(g.main_attr)}</div>
                   </div>
-                  <div class="cv-pill"><div class="cv-chip-key">POWER</div><div class="cv-chip-val" style="color:#7efcff;">${dp}</div></div>
+                  <div class="cv-pill" style="min-width:110px; flex:1 1 110px;"><div class="cv-chip-key">POWER</div><div class="cv-chip-val" style="color:#7efcff;">${dp}</div></div>
                 </div>
               </div>
         
-              <input type="checkbox" class="cv-sel" ${sel ? "checked" : ""} ${tired ? "disabled" : ""}
-                     style="transform:scale(1.25); accent-color:#ffe600; flex:0 0 auto;">
+            <input type="checkbox" class="cv-sel" ${sel ? "checked" : ""} ${tired ? "disabled" : ""}
+                   style="transform:scale(1.25); accent-color:#ffe600; flex:0 0 auto; align-self:flex-start;">
+
             </div>
         
             <div style="display:flex; align-items:center; gap:.6rem; margin-top:.55rem;">
@@ -4161,10 +4194,10 @@ async function renderGoblinInventory() {
             </div>
         
             <div class="cv-row" style="opacity:.85; margin-top:.25rem;">
-              <div style="font-size:.74rem; color:#9aa0a6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+              <div style="font-size:.74rem; color:#9aa0a6; white-space:normal; overflow-wrap:anywhere;">
                 ID: <span style="color:#cfcfcf; font-weight:600;">${safe(g.asset_id)}</span>
               </div>
-              <div style="font-size:.74rem; color:#9aa0a6;">Power</div>
+              <div style="font-size:.94rem; color:#9aa0a6;">Power</div>
             </div>
           </div>
         `;

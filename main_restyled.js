@@ -2745,7 +2745,16 @@ async function renderGoblinInventory() {
       .cv-item{ background:var(--cv-elev); border:1px solid var(--cv-border); border-radius:12px; padding:.7rem .8rem; }
       .cv-item .cv-when{ opacity:.8; font-size:.9rem; }
       .cv-item .cv-line{ margin-top:.35rem; }
-    
+      
+      /* --- Title row: keep name + rarity on one line --- */
+      .cv-gob-head{ display:flex; align-items:center; gap:.5rem; min-width:0; }
+      .cv-gob-head .cv-name{
+        flex:1 1 auto; min-width:0;
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+        overflow-wrap:normal; word-break:normal;   /* override del precedente */
+      }
+      .cv-gob-head .cv-rarity{ flex:0 0 auto; white-space:nowrap; }
+
       /* Bonus grid: 30% più compatto rispetto a prima (230px -> ~160px) */
       #cv-bonus-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
                       gap:.65rem; align-items:stretch; }
@@ -4163,7 +4172,7 @@ async function renderGoblinInventory() {
               </div>
         
               <div style="flex:1 1 auto; min-width:0;">
-                <div style="display:flex; align-items:flex-start; gap:.5rem; flex-wrap:wrap; overflow-wrap:anywhere;">
+                <div class="cv-gob-head" style="display:flex; align-items:center; gap:.5rem; min-width:0;">
                   <strong class="cv-name" style="color:var(--cv-chip); font-family:Orbitron,system-ui,sans-serif; font-size:1rem;">
                     ${safe(g.name)}
                   </strong>

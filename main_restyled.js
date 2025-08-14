@@ -2942,30 +2942,31 @@ async function renderGoblinInventory() {
     if (Cave._es) return;
     try {
       const es = new EventSource(`${BASE_URL}/events`);
+      es.onopen = () => log("SSE connected");
       es.onmessage = (ev) => {
         let msg; try { msg = JSON.parse(ev.data); } catch { return; }
-        if (msg.type === "chest_spawned") {
-          const { minX, maxX, minY, maxY } = getBounds();
-          upsertChest({
-            id: String(msg.chest_id),
-            x: clamp(msg.x, minX, maxX),
-            y: clamp(msg.y, minY, maxY),
-            from: msg.perk_type || "unknown",
-            wax_account: msg.wax_account || "",
-            taken: false, claimable: true, pending: false
-          });
-          toast(`Chest #${msg.chest_id} spawned by ${msg.wax_account}`, "ok");
-        }
-        if (msg.type === "chest_claimed") {
-          Cave.chests.delete(String(msg.chest_id));
-          toast(`Chest #${msg.chest_id} claimed by ${msg.claimed_by}`, "warn");
-        }
+          if (msg.type === "chest_spawned") {
+            const { minX, maxX, minY, maxY } = getBounds();
+            upsertChest({
+              id: String(msg.chest_id),
+              x: clamp(msg.x, minX, maxX),
+              y: clamp(msg.y, minY, maxY),
+              from: msg.perk_type || "unknown",
+              wax_account: msg.wax_account || "",
+              taken: false, claimable: true, pending: false
+            });
+            toast(`Chest #${msg.chest_id} spawned by ${msg.wax_account}`, "ok");
+          }
+          if (msg.type === "chest_claimed") {
+            Cave.chests.delete(String(msg.chest_id));
+            toast(`Chest #${msg.chest_id} claimed by ${msg.claimed_by}`, "warn");
+          }
       };
-      es.onerror = () => {};
+      es.onerror = (ev) => { log("SSE error/reconnect", ev); };
       Cave._es = es;
-    } catch {}
+      window.addEventListener("beforeunload", () => es.close(), { once: true });
+    } catch (e) { log("SSE init failed", e); }
   }
-
   // ========= CANVAS =========
   function setupCanvas(c) {
     Cave.canvas = c;

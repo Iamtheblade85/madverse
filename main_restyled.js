@@ -2586,7 +2586,17 @@ async function renderGoblinInventory() {
   // --- trail config ---
   const TRAIL_LEN = 16;        // quanti segmenti massimo
   const TRAIL_MIN_DIST = 0.6;  // distanza minima (in celle) per aggiungere un punto
-  
+  const MARGIN_PCT = 0.15; // 15% di distanza dai bordi
+
+  function getBounds(){
+    // coordinate in CELLE (non pixel)
+    const minX = Math.floor(GRID_COLS * MARGIN_PCT);
+    const maxX = Math.ceil(GRID_COLS * (1 - MARGIN_PCT)) - 1;
+    const minY = Math.floor(GRID_ROWS * MARGIN_PCT);
+    const maxY = Math.ceil(GRID_ROWS * (1 - MARGIN_PCT)) - 1;
+    return { minX, maxX, minY, maxY };
+  }
+
   // ========= STATE (single source of truth) =========
   const Cave = {
     canvas: null,
@@ -3286,16 +3296,19 @@ async function renderGoblinInventory() {
   
     // Nuovo target se serve
     if (g.path.length === 0) {
-      const tx = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
-      const ty = Math.floor(Math.random() * (GRID_SIZE * 0.8)) + Math.floor(GRID_SIZE * 0.1);
+      const { minX, maxX, minY, maxY } = getBounds();
+      const tx = Math.floor(Math.random() * (maxX - minX + 1)) + minX;
+      const ty = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
       g.path = genPath(g.x, g.y, tx, ty);
     }
   
     if (!g.path.length) return;
   
     const [nx, ny] = g.path.shift();
-    g.x = nx;
-    g.y = ny;
+    const { minX, maxX, minY, maxY } = getBounds();
+    g.x = Math.min(maxX, Math.max(minX, nx));
+    g.y = Math.min(maxY, Math.max(minY, ny));
+
   
     // --- trail recording (in celle) ---
     if (g._lastTrailX == null || g._lastTrailY == null) {
@@ -3660,8 +3673,10 @@ async function renderGoblinInventory() {
       }
 
       Cave.goblins = data.map((e, i) => {
-        const gx = Math.floor(Math.random() * (GRID_COLS * 0.8)) + Math.floor(GRID_COLS * 0.1);
-        const gy = Math.floor(Math.random() * (GRID_ROWS * 0.8)) + Math.floor(GRID_ROWS * 0.1);
+        const { minX, maxX, minY, maxY } = getBounds();
+        const gx = Math.floor(Math.random() * (maxX - minX + 1)) + minX;
+        const gy = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
+
         return {
           x: gx,
           y: gy,

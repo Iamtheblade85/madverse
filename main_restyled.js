@@ -2665,6 +2665,8 @@ async function renderGoblinInventory() {
   const log = (...a) => DEBUG && console.log("[CAVE]", ...a);
   const qs = (s, r = document) => r.querySelector(s);
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const clamp  = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const randInt = (lo, hi) => Math.floor(Math.random() * (hi - lo + 1)) + lo;
 
   const safe = (v) => {
     if (v == null) return "";
@@ -3122,7 +3124,6 @@ async function renderGoblinInventory() {
     }
   }
 
-
   function drawPerksAndAdvance() {
     const { ctx } = Cave;
     if (!Cave.perks.length) return;
@@ -3130,91 +3131,86 @@ async function renderGoblinInventory() {
     for (let p of Cave.perks) {
       if (!p.image?.complete) continue;
   
-      // advance frame
+      // frame advance
       p.tick++;
       if (p.tick >= p.frameDelay) {
         p.tick = 0;
         p.frame = (p.frame + 1) % p.frames;
       }
   
-      const px = Cave.offsetX + p.x * Cave.cellX;
-      const py = Cave.offsetY + p.waveY(p.x) * Cave.cellY;
-
-      // --- GRID bounds (non il canvas) ---
-      const { minX, maxX, minY, maxY } = getBounds();
-      if (p.x < minX - 1 || p.x > maxX + 1) { // un leggero buffer
-        p.done = true;
-        continue;
-      }
+      // === Bounds calcolati UNA volta per iterazione ===
+      const bounds = getBounds();
+      const { minX, maxX, minY, maxY } = bounds;
+  
       const wy = p.waveY(p.x);
-      if (wy < minY - 1 || wy > maxY + 1) {
+      const px = Cave.offsetX + p.x * Cave.cellX;
+      const py = Cave.offsetY + wy   * Cave.cellY;
+  
+      // fuori safe-area → stop
+      if (p.x < minX - 1 || p.x > maxX + 1 || wy < minY - 1 || wy > maxY + 1) {
         p.done = true;
         continue;
       }
-
-      // sprite 128x128 -> draw at 32x32
-      ctx.drawImage(p.image, p.frame*128, 0, 128, 128, px-16, py-16, 32, 32);
-
-      // maybe drop chest once
+  
+      // sprite 128x128 → 32x32
+      ctx.drawImage(p.image, p.frame * 128, 0, 128, 128, px - 16, py - 16, 32, 32);
+  
+      // drop chest una sola volta, dentro safe-area
       if (!p.hasDropped && Math.random() < 0.25) {
         p.hasDropped = true;
-        const { minX, maxX, minY, maxY } = getBounds();
+  
         const dx = randInt(minX, maxX);
         const dy = randInt(minY, maxY);
+  
         const chest = {
           id: null,
-          x: dx,           // 👈 disegna direttamente nel punto di drop
-          y: dy,           // 👈
-          destX: dx,
-          destY: dy,
+          x: dx, y: dy, destX: dx, destY: dy,
           from: p.perkName,
           wax_account: p.wax_account,
           taken: false,
           claimable: false,
           pending: true
         };
-
-        // ask backend to spawn → set id/claimable (safe se non loggato)
+  
+        // prova spawn su backend
         try {
           syncUserInto(Cave.user);
           assertAuthOrThrow(Cave.user);
-        } catch (e) {
+        } catch {
           console.warn("[spawn_chest] skipped: not authenticated");
-          continue; // passa al prossimo perk senza bloccare il frame
         }
-        
+  
         API.post("/spawn_chest", {
           wax_account: p.wax_account,
           perk_type: p.perkName,
-          x: dx,
-          y: dy
+          x: dx, y: dy
         }, 12000).then(r => {
           if (r.ok && r?.data?.chest_id != null) {
-            chest.id = String(r.data.chest_id); // deve essere l'ID reale del DB
+            chest.id = String(r.data.chest_id);
             chest.pending = false;
-            chest.claimable = true;             // ✅ ora sì
+            chest.claimable = true;
             upsertChest(chest);
           } else {
-            // NON rendere claimable se lo spawn non è riuscito
             chest.pending = false;
             chest.claimable = false;
             console.warn("[spawn_chest] risposta non valida:", r);
           }
-        }).catch((e) => {
+        }).catch(e => {
           chest.pending = false;
           chest.claimable = false;
           console.warn("[spawn_chest] errore:", e);
         });
       }
-      // move entro la safe-area
+  
+      // avanzamento entro safe-area (riusa i bounds sopra)
       p.x += p.dir === "left-to-right" ? p.speed : -p.speed;
-      const { minX, maxX } = getBounds();
       if (p.x < minX - 1 || p.x > maxX + 1) p.done = true;
-
     }
-    // rimuovi i perk “done”
+  
+    // pulizia
     Cave.perks = Cave.perks.filter(p => !p.done);
   }
+
 
   // ========= GAME LOGIC =========
   function colorByIndex(i) {

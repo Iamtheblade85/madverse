@@ -27,44 +27,47 @@
   <body class="app">
     <div id="auth-button-container" style="position:absolute; top:1rem; left:1rem; z-index:10;"></div>
     <header id="navbar" class="navbar">
-    <!-- Center Logo + Partners Row -->
-    <div class="flex flex-col items-center text-center w-full px-4 py-6">
-      <!-- Logo -->
-      <img src="logocc.png" alt="CryptoChips Logo"
-           class="max-w-[400px] w-full sm:w-auto h-auto mb-4 drop-shadow-xl" />
-      <p class="text-yellow-300 text-sm italic mb-4">
-        Built for Users, Powered by Blockchain
-      </p>
+    <!-- Center Logo + Partners Row (improved) -->
+    <div class="mx-auto w-full max-w-7xl px-4 py-6">
+      <!-- Grid: L (partners) | C (logo) | R (partners) -->
+      <div id="partners-grid"
+           class="grid w-full items-center gap-4
+                  grid-cols-1 md:[grid-template-columns:1fr_auto_1fr]">
     
-      <!-- Partners Row -->
-      <div>
-          <div class="flex flex-row flex-nowrap justify-center items-center gap-4 overflow-x-auto w-full">
-          <img src="partner1.png" alt="Partner 1" class="max-w-[200px] w-full h-auto object-contain" />
-          <img src="partner2.png" alt="Partner 2" class="max-w-[200px] w-full h-auto object-contain" />
-          <img src="partner3.png" alt="Partner 3" class="max-w-[200px] w-full h-auto object-contain" />
-          <img src="partner4.png" alt="Partner 4" class="max-w-[200px] w-full h-auto object-contain" />
-          <img src="partner5.png" alt="Partner 5" class="max-w-[200px] w-full h-auto object-contain" />
+        <!-- LEFT partners -->
+        <ul id="partners-left"
+            class="order-2 md:order-1
+                   flex md:justify-end items-center gap-4
+                   overflow-x-auto md:overflow-visible
+                   [scrollbar-width:none] [-ms-overflow-style:none]"
+            role="list" aria-label="Partners left">
+          <!-- Metà elenco -->
+          <li><img src="partner1.png" alt="Partner 1" class="partner-logo" loading="lazy" decoding="async"/></li>
+          <li><img src="partner2.png" alt="Partner 2" class="partner-logo" loading="lazy" decoding="async"/></li>
+          <li><img src="partner3.png" alt="Partner 3" class="partner-logo" loading="lazy" decoding="async"/></li>
+        </ul>
+    
+        <!-- LOGO al centro -->
+        <div class="order-1 md:order-2 flex flex-col items-center text-center">
+          <img src="logocc.png" alt="CryptoChips Logo"
+               class="h-auto w-[220px] sm:w-[280px] md:w-[340px] lg:w-[400px] drop-shadow-xl" />
+          <p class="text-yellow-300 text-sm italic mt-3">
+            Built for Users, Powered by Blockchain
+          </p>
         </div>
-          <!-- Active Users Box (always visible, expandable with badge) -->
-          <div id="local-online-users" class="flex flex-col items-end fixed top-4 right-4 z-30">
-            <!-- Toggle Button with Badge -->
-            <button id="toggle-users-box"
-                    class="relative bg-black text-green-400 border border-green-500 rounded px-3 py-1 text-sm hover:bg-green-900 transition-all">
-              🟢 Active Users
-              <span id="user-count-badge"
-                    class="absolute -top-2 -right-2 bg-green-500 text-black font-bold text-xs rounded-full px-2 py-0.5 shadow-md hidden">
-                0
-              </span>
-            </button>
-          
-            <!-- User List Box -->
-            <div id="users-box"
-                 class="mt-2 w-64 max-w-[90vw] bg-black bg-opacity-90 text-sm border border-green-500 rounded-lg shadow-lg p-3 hidden max-h-60 overflow-y-auto text-white">
-              <strong class="block mb-2 text-green-400">Active Users</strong>
-              <ul id="local-users-list" class="space-y-1"></ul>
-            </div>
-          </div>
-
+    
+        <!-- RIGHT partners -->
+        <ul id="partners-right"
+            class="order-3 md:order-3
+                   flex md:justify-start items-center gap-4
+                   overflow-x-auto md:overflow-visible
+                   [scrollbar-width:none] [-ms-overflow-style:none]"
+            role="list" aria-label="Partners right">
+          <!-- Altra metà elenco -->
+          <li><img src="partner4.png" alt="Partner 4" class="partner-logo" loading="lazy" decoding="async"/></li>
+          <li><img src="partner5.png" alt="Partner 5" class="partner-logo" loading="lazy" decoding="async"/></li>
+        </ul>
+      </div>
     </div>
 
   <nav class="navbar-menu" role="navigation" aria-label="Main Navigation">

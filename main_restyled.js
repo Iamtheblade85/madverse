@@ -1824,9 +1824,51 @@ async function loadSection(section) {
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title">NFT Staking</h2>
+  
+        <!-- Toolbar con inline CSS -->
+        <div id="farm-tools" style="
+          display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+          background:#0f172a; /* slate-900 */
+          border:1px solid rgba(255,255,255,0.08);
+          padding:12px;border-radius:10px;margin-bottom:14px;
+        ">
+          <button id="btn-earnings" style="
+            cursor:pointer;border:none;padding:10px 14px;border-radius:8px;
+            background:#1e293b;color:#e2e8f0;font-weight:600;
+            box-shadow:0 1px 1px rgba(0,0,0,0.15);
+          ">📜 Earning History</button>
+  
+          <!-- Container Admin visibile solo per agoscry4ever -->
+          <div id="admin-distribute-container" style="
+            display:none;align-items:center;gap:10px;margin-left:auto;
+            background:#0b1220;border:1px dashed rgba(255,255,255,0.12);
+            padding:10px;border-radius:8px;
+          ">
+            <label for="dryrun-toggle" style="color:#cbd5e1;font-size:13px;display:flex;align-items:center;gap:6px;">
+              <input id="dryrun-toggle" type="checkbox" checked
+                style="width:16px;height:16px;accent-color:#22c55e;cursor:pointer;">
+              Dry-run
+            </label>
+            <button id="btn-distribute" style="
+              cursor:pointer;border:none;padding:10px 14px;border-radius:8px;
+              background:#22c55e;color:#0b1220;font-weight:800;
+              letter-spacing:0.2px;
+              box-shadow:0 1px 1px rgba(0,0,0,0.25);
+            ">⚙️ Run Distribution</button>
+          </div>
+        </div>
+  
+        <!-- Feedback dinamico per la distribuzione -->
+        <div id="distribution-feedback" style="margin:-6px 0 16px 0;"></div>
+  
         <div id="nft-farms-container" class="vertical-list">Loading NFT farms...</div>
       </div>
     `;
+  
+    // Inizializza la toolbar (visibilità admin, listeners)
+    initFarmToolsControls();
+  
+    // Carica le farm
     loadNFTFarms();
   }
   
@@ -6991,7 +7033,7 @@ async function loadNFTFarms(defaultFarmName = null) {
     );
   }
 
-  // 🎯 Se non trovata o non specificata, fallback
+  // 🎯 Fallback
   if (!defaultFarm) {
     defaultFarm = data.farms.find(f =>
       f.farm_name.toLowerCase().includes('chips')
@@ -7000,6 +7042,7 @@ async function loadNFTFarms(defaultFarmName = null) {
 
   renderNFTFarms([defaultFarm]);
 }
+
 function renderNFTFarmButtons(farms) {
   const container = document.getElementById('nft-farms-container');
   container.innerHTML = `
@@ -7119,6 +7162,368 @@ function renderNFTFarms(farms) {
   });
 
   container.innerHTML = html;
+}
+
+function initFarmToolsControls() {
+  // Earning History
+  const btnEarnings = document.getElementById('btn-earnings');
+  btnEarnings?.addEventListener('click', () => {
+    showEarningsHistory(); // ricostruisce l’intera section-container
+  });
+
+  // Admin: Run Distribution
+  const adminBox = document.getElementById('admin-distribute-container');
+  const isAdmin = window?.userData?.wax_account === 'agoscry4ever';
+  if (isAdmin) {
+    adminBox.style.display = 'flex';
+    const btn = document.getElementById('btn-distribute');
+    btn?.addEventListener('click', runDistribution);
+  }
+}
+
+async function runDistribution() {
+  const feedback = document.getElementById('distribution-feedback');
+  const dryRun = !!document.getElementById('dryrun-toggle')?.checked;
+
+  // UI: loading
+  feedback.innerHTML = `
+    <div style="
+      background:#0b1220;border:1px solid rgba(255,255,255,0.08);
+      padding:10px 12px;border-radius:8px;color:#cbd5e1;
+    ">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="spinner" style="
+          width:16px;height:16px;border:2px solid rgba(255,255,255,0.2);
+          border-top-color:#22c55e;border-radius:50%;animation:spin 0.9s linear infinite;
+        "></div>
+        <div><strong>Running distribution</strong> ${dryRun ? '(dry-run)' : '(live)'}...</div>
+      </div>
+    </div>
+  `;
+
+  try {
+    const res = await fetch(`${BASE_URL}/farms/distribute`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ dry_run: dryRun })
+    });
+    const data = await res.json();
+
+    if (!res.ok || data.success === false) {
+      throw new Error(data.error || `HTTP ${res.status}`);
+    }
+
+    // Aggrega i totali per token
+    const totals = {};
+    (data.changes || []).forEach(ch => {
+      const sym = ch.token_symbol;
+      totals[sym] = (totals[sym] || 0) + Number(ch.reward_assigned || 0);
+    });
+
+    const totalsHTML = Object.keys(totals).length
+      ? `<div style="margin-top:8px;">
+           <div style="font-weight:700;margin-bottom:6px;color:#e2e8f0;">Totals by token</div>
+           ${Object.entries(totals).map(([k,v]) => `
+             <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed rgba(255,255,255,0.08);">
+               <span style="color:#94a3b8;">${k}</span>
+               <span style="color:#e2e8f0;font-weight:700;">${v.toFixed(6)}</span>
+             </div>
+           `).join('')}
+         </div>`
+      : `<div style="margin-top:8px;color:#94a3b8;">No rewards distributed.</div>`;
+
+    // Lista cambi (primi 25)
+    const top = (data.changes || []).slice(0, 25);
+    const listHTML = top.length
+      ? `<div style="margin-top:10px;">
+           <div style="font-weight:700;margin-bottom:6px;color:#e2e8f0;">Recent changes</div>
+           <div style="max-height:240px;overflow:auto;border:1px solid rgba(255,255,255,0.08);border-radius:8px;">
+             ${top.map(ch => `
+               <div style="display:flex;gap:8px;justify-content:space-between;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);">
+                 <div style="color:#a5b4fc;">
+                   <span style="color:#93c5fd;">${ch.wax_account}</span>
+                   <span style="color:#94a3b8;"> | farm #${ch.farm_id}</span>
+                 </div>
+                 <div style="color:#e2e8f0;">${ch.token_symbol}: +${Number(ch.reward_assigned).toFixed(6)}</div>
+                 <div style="color:#94a3b8;">(${Number(ch.before_balance).toFixed(3)} → ${Number(ch.after_balance).toFixed(3)})</div>
+                 <div style="color:#22c55e;font-weight:700;">${ch.storage}</div>
+               </div>
+             `).join('')}
+           </div>
+           ${data.changes && data.changes.length > 25
+              ? `<div style="margin-top:6px;color:#94a3b8;">and ${data.changes.length - 25} more…</div>`
+              : ''}
+         </div>`
+      : '';
+
+    feedback.innerHTML = `
+      <div style="
+        background:#0b1220;border:1px solid rgba(255,255,255,0.08);
+        padding:12px;border-radius:10px;color:#cbd5e1;
+      ">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:${dryRun ? '#22c55e' : '#f59e0b'};"></div>
+          <div><strong>Distribution completed</strong> ${dryRun ? '(dry-run)' : '(live)'}</div>
+        </div>
+        ${totalsHTML}
+        ${listHTML}
+      </div>
+      <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+    `;
+  } catch (err) {
+    feedback.innerHTML = `
+      <div style="background:#1f2937;border:1px solid #ef4444;padding:12px;border-radius:10px;color:#fecaca;">
+        <div style="font-weight:800;color:#fca5a5;">Error</div>
+        <div style="color:#fef2f2;">${String(err.message || err)}</div>
+      </div>
+    `;
+  }
+}
+
+
+// =========================
+// Earning History: ricostruzione totale della sezione
+// =========================
+
+async function showEarningsHistory() {
+  const sc = document.querySelector('.section-container');
+  if (!sc) return;
+
+  // Header + controlli range + contenitore risultati (inline CSS only)
+  sc.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <h2 style="margin:0;color:#e2e8f0;font-size:22px;letter-spacing:0.3px;">Earning History</h2>
+      <button onclick="loadSection('nfts-staking')" style="
+        cursor:pointer;border:none;padding:8px 12px;border-radius:8px;
+        background:#1e293b;color:#e2e8f0;font-weight:600;
+      ">⟵ Back to Farms</button>
+    </div>
+
+    <div id="eh-controls" style="
+      display:flex;gap:10px;align-items:end;flex-wrap:wrap;
+      background:#0f172a;border:1px solid rgba(255,255,255,0.08);
+      padding:12px;border-radius:10px;margin-bottom:12px;
+    ">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="color:#94a3b8;font-size:12px;">Start</label>
+        <input id="eh-start" type="date" style="
+          background:#0b1220;color:#e2e8f0;border:1px solid rgba(255,255,255,0.1);
+          padding:8px;border-radius:8px;
+        ">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="color:#94a3b8;font-size:12px;">End</label>
+        <input id="eh-end" type="date" style="
+          background:#0b1220;color:#e2e8f0;border:1px solid rgba(255,255,255,0.1);
+          padding:8px;border-radius:8px;
+        ">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="color:#0f172a;font-size:12px;">&nbsp;</label>
+        <button id="eh-apply" style="
+          cursor:pointer;border:none;padding:9px 12px;border-radius:8px;
+          background:#22c55e;color:#0b1220;font-weight:800;
+        ">Apply</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-left:auto;">
+        <button data-days="7"  class="eh-preset" style="${ehPresetStyle()}">7d</button>
+        <button data-days="30" class="eh-preset" style="${ehPresetStyle()}">30d</button>
+        <button data-days="90" class="eh-preset" style="${ehPresetStyle()}">90d</button>
+      </div>
+    </div>
+
+    <div id="eh-output"></div>
+  `;
+
+  // Eventi controlli
+  document.getElementById('eh-apply').addEventListener('click', () => {
+    const start = document.getElementById('eh-start').value;
+    const end   = document.getElementById('eh-end').value;
+    fetchAndRenderEarnings({ start, end });
+  });
+  document.querySelectorAll('.eh-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      fetchAndRenderEarnings({ days: Number(btn.getAttribute('data-days')) });
+    });
+  });
+
+  // Primo load: 7 giorni
+  fetchAndRenderEarnings({ days: 7 });
+}
+
+function ehPresetStyle() {
+  return `
+    cursor:pointer;border:none;padding:8px 10px;border-radius:8px;
+    background:#1e293b;color:#e2e8f0;font-weight:700;
+  `;
+}
+
+async function fetchAndRenderEarnings({ start, end, days } = {}) {
+  const out = document.getElementById('eh-output');
+  const wax = window?.userData?.wax_account;
+  if (!wax) {
+    out.innerHTML = `<div style="${ehCardWarn()}">Wax account not found in session.</div>`;
+    return;
+  }
+
+  // Loading
+  out.innerHTML = `
+    <div style="${ehCardBase()}">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.2);
+          border-top-color:#22c55e;border-radius:50%;animation:spin 0.9s linear infinite;"></div>
+        <div style="color:#cbd5e1;">Loading earnings…</div>
+      </div>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  `;
+
+  // Costruisci querystring
+  const params = new URLSearchParams({ wax_account: wax });
+  if (start) params.append('start', start);
+  if (end)   params.append('end', end);
+  if (!start && !end && days) params.append('days', String(days));
+
+  try {
+    const res = await fetch(`${BASE_URL}/farms/earnings?` + params.toString());
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+
+    renderEarningsView(out, data);
+  } catch (err) {
+    out.innerHTML = `
+      <div style="${ehCardError()}">
+        <div style="font-weight:800;color:#fca5a5;margin-bottom:6px;">Error</div>
+        <div style="color:#fef2f2;">${String(err.message || err)}</div>
+      </div>
+    `;
+  }
+}
+
+function renderEarningsView(container, payload) {
+  // Nessun record
+  if (!payload?.available || !payload?.days || payload.days.length === 0) {
+    container.innerHTML = `
+      <div style="${ehCardBase()}">
+        <div style="color:#e2e8f0;font-weight:700;margin-bottom:6px;">No earnings found</div>
+        <div style="color:#94a3b8;">Try expanding the date range.</div>
+      </div>
+    `;
+    return;
+  }
+
+  const hdr = `
+    <div style="${ehCardBase()}">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <div>
+          <div style="color:#94a3b8;font-size:12px;">Wax Account</div>
+          <div style="color:#e2e8f0;font-weight:800;">${payload.wax_account}</div>
+        </div>
+        <div>
+          <div style="color:#94a3b8;font-size:12px;">Range</div>
+          <div style="color:#e2e8f0;font-weight:700;">${payload.range.start} → ${payload.range.end}</div>
+        </div>
+        <div>
+          <div style="color:#94a3b8;font-size:12px;">Total Reward</div>
+          <div style="color:#22c55e;font-weight:900;">${Number(payload.summary?.total_reward || 0).toFixed(6)}</div>
+        </div>
+      </div>
+      ${renderTotalsByToken(payload.summary?.totals_by_token)}
+    </div>
+  `;
+
+  const daysHTML = payload.days.map(day => {
+    const farmsHTML = (day.farms || []).map(f => {
+      const tokens = f.tokens || {};
+      const tokensList = Object.keys(tokens).length
+        ? Object.entries(tokens).map(([sym, info]) => `
+            <div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,0.06);">
+              <div style="color:#a5b4fc;">${sym}</div>
+              <div style="color:#e2e8f0;font-weight:700;">+${Number(info.amount || 0).toFixed(6)}</div>
+              <div style="color:#94a3b8;">(${Number(info.before||0).toFixed(3)} → ${Number(info.after||0).toFixed(3)})</div>
+              <div style="color:#22c55e;font-weight:800;">${info.storage || '-'}</div>
+            </div>
+          `).join('')
+        : `<div style="color:#94a3b8;">No tokens</div>`;
+
+      const templates = f.templates || {};
+      const tmplList = Object.keys(templates).length
+        ? Object.entries(templates).map(([tpl, qty]) => `
+            <span style="
+              display:inline-block;background:#0b1220;border:1px solid rgba(255,255,255,0.08);
+              color:#cbd5e1;padding:4px 8px;border-radius:999px;font-size:12px;margin:3px;
+            ">Tpl ${tpl} × ${qty}</span>
+          `).join('')
+        : `<span style="color:#94a3b8;">No templates</span>`;
+
+      return `
+        <div style="
+          border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;background:#0a0f1a;
+        ">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="color:#e2e8f0;font-weight:800;">Farm #${f.farm_id} — ${escapeHTML(f.farm_name || '')}</div>
+            <div style="color:#94a3b8;">NFTs: <strong style="color:#cbd5e1;">${f.nft_count}</strong></div>
+          </div>
+          <div style="margin-bottom:8px;">${tmplList}</div>
+          <div>${tokensList}</div>
+          <div style="margin-top:10px;text-align:right;color:#cbd5e1;">
+            Day subtotal: <strong style="color:#22c55e;">${Number(f.total_reward||0).toFixed(6)}</strong>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div style="${ehCardBase()}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="color:#e2e8f0;font-weight:900;">${day.date}</div>
+          <div style="color:#94a3b8;">Total: <strong style="color:#22c55e;">${Number(day.total_reward||0).toFixed(6)}</strong></div>
+        </div>
+        ${renderTotalsByToken(day.totals_by_token)}
+        <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-top:10px;">
+          ${farmsHTML || `<div style="color:#94a3b8;">No farms for this day.</div>`}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = hdr + daysHTML;
+}
+
+function renderTotalsByToken(obj) {
+  if (!obj || Object.keys(obj).length === 0) return `
+    <div style="color:#94a3b8;">No token totals.</div>
+  `;
+  return `
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">
+      ${Object.entries(obj).map(([k,v]) => `
+        <div style="
+          background:#0b1220;border:1px solid rgba(255,255,255,0.08);
+          padding:8px 10px;border-radius:10px;min-width:150px;
+          display:flex;justify-content:space-between;gap:10px;
+        ">
+          <span style="color:#a5b4fc;">${k}</span>
+          <strong style="color:#e2e8f0;">${Number(v).toFixed(6)}</strong>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// Card styles inline helpers
+function ehCardBase() {
+  return "background:#0f172a;border:1px solid rgba(255,255,255,0.08);padding:12px;border-radius:10px;color:#cbd5e1;margin-bottom:12px;";
+}
+function ehCardWarn() {
+  return "background:#0b1220;border:1px solid #f59e0b;padding:12px;border-radius:10px;color:#fde68a;";
+}
+function ehCardError() {
+  return "background:#1f2937;border:1px solid #ef4444;padding:12px;border-radius:10px;color:#fecaca;";
 }
 
 function applyRewardFiltersAndSort() {

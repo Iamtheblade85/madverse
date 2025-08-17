@@ -1807,20 +1807,98 @@ async function loadSection(section) {
     `;
     loadNFTs();
   }
-  else if (section === 'token-staking') {
-    app.innerHTML = `
-      <div class="section-container">
-        <h2 class="section-title">Token Staking</h2>
-        <input type="text" id="search-pools" placeholder="Search token pool name" class="form-input search-token-pool">
-        <div id="pool-buttons" class="pool-buttons"></div>
-        <div id="selected-pool-details">
-          <div class="loading-message">Loading pool data...</div>
+else if (section === 'token-staking') {
+  app.innerHTML = `
+    <div class="section-container">
+      <h2 class="section-title">Token Staking</h2>
+
+      <!-- Toolbar: Tabs + Distribution -->
+      <div class="token-toolbar" style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; justify-content:space-between; margin-bottom:12px;">
+        <div class="tabs" role="tablist" aria-label="Token staking tabs" style="display:flex; gap:6px;">
+          <button id="tab-pools" class="tab active" role="tab" aria-selected="true" aria-controls="tab-pools-content">Pools</button>
+          <button id="tab-earnings" class="tab" role="tab" aria-selected="false" aria-controls="tab-earnings-content">Earning History</button>
+        </div>
+        
+        <div class="actions" id="dist-actions" style="display:none; align-items:center; gap:.5rem; margin: .5rem 0 1rem;">
+          <label style="display:flex; align-items:center; gap:.35rem; font-size:.95rem;">
+            <input type="checkbox" id="dist-dry" checked>
+            Dry run
+          </label>
+          <button id="btn-distribute" class="btn btn-primary">Run Distribution</button>
         </div>
       </div>
-    `;
-    loadStakingPools();
-  
-  } else if (section === 'nfts-staking') {
+
+      <!-- Tabs content -->
+      <div id="tab-content">
+        <!-- Pools tab -->
+        <div id="tab-pools-content" role="tabpanel" aria-labelledby="tab-pools">
+          <input type="text" id="search-pools" placeholder="Search token pool name" class="form-input search-token-pool" style="margin-bottom:10px;">
+          <div id="pool-buttons" class="pool-buttons"></div>
+          <div id="selected-pool-details">
+            <div class="loading-message">Loading pool data...</div>
+          </div>
+        </div>
+
+        <!-- Earnings tab -->
+        <div id="tab-earnings-content" role="tabpanel" aria-labelledby="tab-earnings" hidden>
+          <div class="card" style="margin-bottom:12px;">
+            <h3 class="card-title">Earning History</h3>
+            <div style="display:flex; gap:.5rem; align-items:flex-end; flex-wrap:wrap;">
+              <div>
+                <label class="label">From</label>
+                <input type="date" id="eh-start" class="form-input" />
+              </div>
+              <div>
+                <label class="label">To</label>
+                <input type="date" id="eh-end" class="form-input" />
+              </div>
+              <div>
+                <label class="label">Quick</label>
+                <select id="eh-quick" class="form-input">
+                  <option value="7">Last 7 days</option>
+                  <option value="14">Last 14 days</option>
+                  <option value="30">Last 30 days</option>
+                </select>
+              </div>
+              <button id="eh-refresh" class="btn btn-secondary">Refresh</button>
+            </div>
+          </div>
+
+          <div id="eh-summary" class="card" style="margin-bottom:12px;">
+            <h4 class="card-title">Summary</h4>
+            <div id="eh-summary-body" class="label">Select a range and click Refresh.</div>
+          </div>
+
+          <div id="eh-days"></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // init tabs
+  initTokenStakingTabs();
+
+  // 🔐 mostra il blocco solo se il wallet è quello autorizzato
+  try {
+    const allowedDist = (window.userData?.wax_account === 'agoscry4ever');
+    const distActions = document.getElementById('dist-actions');
+    if (distActions) distActions.style.display = allowedDist ? 'flex' : 'none';
+
+    // singolo hook sul click
+    const btn = document.getElementById('btn-distribute');
+    if (btn && allowedDist) {
+      btn.addEventListener('click', runTokenDistribution);
+    }
+  } catch (e) {
+    console.warn('dist-actions init error', e);
+  }
+
+  // load pools tab una sola volta
+  loadStakingPools();
+
+  // init earning history defaults
+  initEarningHistoryControls();
+} else if (section === 'nfts-staking') {
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title">NFT Staking</h2>
@@ -8744,35 +8822,123 @@ async function loadScheduleNFTGiveaway() {
     }
   }
 }
- async function loadStakingPools() {
-  const { userId, usx_token } = window.userData;
-  const res = await fetch(`${BASE_URL}/open_pools?user_id=${userId}&usx_token=${usx_token}`);
-  const data = await res.json();
 
-  if (!data.pools || data.pools.length === 0) {
-    document.getElementById('pool-buttons').innerHTML = `
-      <div class="error-message">No staking pools found.</div>`;
-    return;
-  }
+// ========== Helpers ==========
+function fmtNum(n, dp=6) {
+  const x = Number(n || 0);
+  return x.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: dp });
+}
+function todayISO() {
+  const d = new Date();
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function addDaysISO(baseISO, delta) {
+  const d = baseISO ? new Date(baseISO + 'T00:00:00Z') : new Date();
+  d.setUTCDate(d.getUTCDate() + delta);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
-  const pools = data.pools;
-  const poolButtonsContainer = document.getElementById('pool-buttons');
-  const searchInput = document.getElementById('search-pools');
+// ========== Tabs ==========
+function initTokenStakingTabs() {
+  const tabPools = document.getElementById('tab-pools');
+  const tabEarns = document.getElementById('tab-earnings');
+  const contentPools = document.getElementById('tab-pools-content');
+  const contentEarns = document.getElementById('tab-earnings-content');
 
-  window.stakingPools = pools;
+  const activate = (which) => {
+    const poolsActive = which === 'pools';
+    tabPools.classList.toggle('active', poolsActive);
+    tabPools.setAttribute('aria-selected', poolsActive ? 'true' : 'false');
+    tabEarns.classList.toggle('active', !poolsActive);
+    tabEarns.setAttribute('aria-selected', poolsActive ? 'false' : 'true');
 
-  renderPoolButtons(pools);
-  searchInput.addEventListener('input', () => {
-    const search = searchInput.value.toLowerCase();
-    const filtered = pools.filter(p =>
-      p.token_symbol.toLowerCase().includes(search)
-    );
-    renderPoolButtons(filtered);
+    contentPools.hidden = !poolsActive;
+    contentEarns.hidden = poolsActive;
+  };
+
+  tabPools.addEventListener('click', () => activate('pools'));
+  tabEarns.addEventListener('click', () => {
+    activate('earnings');
+    // auto-refresh if empty
+    const daysHost = document.getElementById('eh-days');
+    if (!daysHost.dataset.loaded) {
+      fetchTokenEarnings();
+    }
   });
 
-  const defaultPool = pools.find(p => p.pool_id === 1) || pools[0];
-  renderPoolDetails(defaultPool);
-} function renderPoolButtons(pools) {
+  // default: pools
+  activate('pools');
+}
+// ========== Distribution Runner ==========
+async function runTokenDistribution() {
+  const btn = document.getElementById('btn-distribute');
+  const dry = document.getElementById('dist-dry')?.checked ?? true;
+  const prev = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = dry ? 'Running (dry)...' : 'Running (live)...'; }
+
+  try {
+    const initiator = window.userData?.wax_account || '';
+    const res = await fetch(`${BASE_URL}/token_farms/distribute`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dry_run: !!dry,
+        initiator_wax: initiator   // ✅ mandato al backend per il controllo server-side
+      })
+    });
+    const data = await res.json();
+    if (!res.ok || data.success === false) {
+      throw new Error(data.error || `HTTP ${res.status}`);
+    }
+    alert(`Distribution completed (${data.dry_run ? 'DRY' : 'LIVE'})`);
+  } catch (e) {
+    console.error(e);
+    alert(`Distribution failed: ${e.message || e}`);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = prev; }
+  }
+}
+
+// ========== Pools (existing UX kept) ==========
+async function loadStakingPools() {
+  try {
+    const { userId, usx_token } = window.userData || {};
+    const res = await fetch(`${BASE_URL}/open_pools?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`);
+    const data = await res.json();
+
+    if (!data.pools || data.pools.length === 0) {
+      document.getElementById('pool-buttons').innerHTML = `<div class="error-message">No staking pools found.</div>`;
+      document.getElementById('selected-pool-details').innerHTML = '';
+      return;
+    }
+
+    const pools = data.pools;
+    window.stakingPools = pools;
+
+    renderPoolButtons(pools);
+
+    const searchInput = document.getElementById('search-pools');
+    searchInput.addEventListener('input', () => {
+      const search = (searchInput.value || '').toLowerCase();
+      const filtered = pools.filter(p => (p.token_symbol || '').toLowerCase().includes(search));
+      renderPoolButtons(filtered);
+    });
+
+    const defaultPool = pools.find(p => p.pool_id === 1) || pools[0];
+    renderPoolDetails(defaultPool);
+  } catch (e) {
+    console.error(e);
+    document.getElementById('selected-pool-details').innerHTML = `<div class="error-message">Failed to load pools.</div>`;
+  }
+}
+
+function renderPoolButtons(pools) {
   const container = document.getElementById('pool-buttons');
   container.innerHTML = '';
   pools.forEach(pool => {
@@ -8782,43 +8948,166 @@ async function loadScheduleNFTGiveaway() {
     btn.onclick = () => renderPoolDetails(pool);
     container.appendChild(btn);
   });
-} function renderPoolDetails(pool) {
+}
+function renderPoolDetails(pool) {
   const container = document.getElementById('selected-pool-details');
-  const rewards = pool.rewards_info;
-  const rewardsCount = rewards.length;
-
-  // Calcolo responsive grid
-  const gridClass = 'reward-grid';
+  const rewards = Array.isArray(pool.rewards_info) ? pool.rewards_info : [];
 
   const rewardsHTML = rewards.map(r => `
     <div class="reward-box">
       <div class="reward-title">${r.reward_token}</div>
-      <div><strong>Total:</strong> ${r.total_reward_deposit}</div>
-      <div><strong>Daily:</strong> ${r.daily_reward}</div>
-      <div><strong>APR:</strong> ${r.apr}%</div>
-      <div><strong>Days Left:</strong> ${r.days_remaining}</div>
-      <div class="reward-user-daily"><strong>Your Daily:</strong> ${r.user_daily_reward}</div>
+      <div><strong>Total:</strong> ${fmtNum(r.total_reward_deposit, 6)}</div>
+      <div><strong>Daily:</strong> ${fmtNum(r.daily_reward, 6)}</div>
+      <div><strong>APR:</strong> ${fmtNum(r.apr, 2)}%</div>
+      <div><strong>Days Left:</strong> ${fmtNum(r.days_remaining, 0)}</div>
+      <div class="reward-user-daily"><strong>Your Daily:</strong> ${fmtNum(r.user_daily_reward, 6)}</div>
     </div>
   `).join('');
 
   container.innerHTML = `
     <div class="card">
       <h3 class="card-title">Pool: ${pool.token_symbol}</h3>
-      <p class="label">Total Staked: <strong>${pool.total_staked}</strong></p>
-      <p class="label section-space">You Staked: <strong>${pool.user_staked}</strong></p>
+      <p class="label">Total Staked: <strong>${fmtNum(pool.total_staked, 6)}</strong></p>
+      <p class="label section-space">You Staked: <strong>${fmtNum(pool.user_staked, 6)}</strong></p>
 
       <div class="btn-group section-space">
         <button class="btn btn-secondary" onclick="openStakeModal('add', ${pool.pool_id}, '${pool.token_symbol}')">Add Tokens</button>
         <button class="btn btn-secondary" onclick="openStakeModal('remove', ${pool.pool_id}, '${pool.token_symbol}')">Remove Tokens</button>
-      </div>  
+      </div>
 
       <h2 class="subheading">Rewards</h2>
-      <div class="${gridClass}">
-        ${rewardsHTML}
+      <div class="reward-grid">
+        ${rewardsHTML || '<div class="label">No rewards configured.</div>'}
       </div>
     </div>
   `;
 }
+
+// ========== Earning History ==========
+function initEarningHistoryControls() {
+  const startEl = document.getElementById('eh-start');
+  const endEl   = document.getElementById('eh-end');
+  const quickEl = document.getElementById('eh-quick');
+  const refresh = document.getElementById('eh-refresh');
+
+  // default: last 7 days
+  const end = todayISO();
+  const start = addDaysISO(end, -6);
+  startEl.value = start;
+  endEl.value = end;
+  quickEl.value = '7';
+
+  quickEl.addEventListener('change', () => {
+    const days = parseInt(quickEl.value, 10) || 7;
+    const e = todayISO();
+    const s = addDaysISO(e, -(days - 1));
+    startEl.value = s;
+    endEl.value = e;
+  });
+
+  refresh.addEventListener('click', () => fetchTokenEarnings());
+}
+
+async function fetchTokenEarnings() {
+  const start = (document.getElementById('eh-start').value || '').trim();
+  const end   = (document.getElementById('eh-end').value   || '').trim();
+  const { wax_account } = window.userData || {};
+
+  const params = new URLSearchParams();
+  if (wax_account) params.set('wax_account', wax_account);
+  if (start) params.set('start', start);
+  if (end) params.set('end', end);
+
+  const hostDays = document.getElementById('eh-days');
+  const hostSum  = document.getElementById('eh-summary-body');
+  hostDays.dataset.loaded = '1';
+  hostDays.innerHTML = `<div class="loading-message">Loading earnings...</div>`;
+  hostSum.textContent = 'Loading…';
+
+  try {
+    const res = await fetch(`${BASE_URL}/token_farms/earnings?` + params.toString());
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    renderTokenEarnings(data);
+  } catch (e) {
+    console.error(e);
+    hostDays.innerHTML = `<div class="error-message">Failed to load earnings.</div>`;
+    hostSum.textContent = 'Error while loading.';
+  }
+}
+
+function renderTokenEarnings(payload) {
+  const hostDays = document.getElementById('eh-days');
+  const hostSum  = document.getElementById('eh-summary-body');
+
+  if (!payload || payload.available === false || !Array.isArray(payload.days) || payload.days.length === 0) {
+    hostDays.innerHTML = `<div class="label">No earnings in the selected range.</div>`;
+    hostSum.textContent = 'Total: 0';
+    return;
+  }
+
+  // Summary
+  const totals = payload.summary?.totals_by_token || {};
+  const totalNet = payload.summary?.total_net || 0;
+  const chips = Object.keys(totals)
+    .map(sym => `<div class="chip" style="display:inline-flex; gap:.35rem; align-items:center; padding:.25rem .5rem; border:1px solid #2b2b2b; border-radius:999px; margin:.2rem .2rem 0 0;">
+      <span style="font-weight:700;">${sym}</span>
+      <span>${fmtNum(totals[sym], 6)}</span>
+    </div>`).join('');
+  hostSum.innerHTML = `
+    <div><strong>Total net:</strong> ${fmtNum(totalNet, 6)}</div>
+    <div style="margin-top:6px;">${chips || ''}</div>
+  `;
+
+  // Per-day rendering
+  const days = payload.days;
+  hostDays.innerHTML = days.map(day => {
+    const totalsByToken = day.totals_by_token || {};
+    const badges = Object.keys(totalsByToken).map(sym => `
+      <div class="chip" style="display:inline-flex; gap:.35rem; align-items:center; padding:.2rem .5rem; border:1px solid #2b2b2b; border-radius:999px;">
+        <span style="font-weight:700;">${sym}</span>
+        <span>${fmtNum(totalsByToken[sym], 6)}</span>
+      </div>
+    `).join('');
+
+    const pools = (day.pools || []).map(p => {
+      const tokens = p.tokens || {};
+      const tokenLines = Object.keys(tokens).map(sym => {
+        const t = tokens[sym] || {};
+        return `
+          <div class="kv-line" style="display:flex; justify-content:space-between;">
+            <div><strong>${sym}</strong> <span style="opacity:.8;">(${t.storage})</span></div>
+            <div>+${fmtNum(t.net, 6)}</div>
+          </div>
+        `;
+      }).join('');
+      return `
+        <div class="card" style="padding:.75rem; border:1px solid #2b2b2b; border-radius:10px;">
+          <div class="label"><strong>${p.pool_name}</strong></div>
+          <div class="label" style="opacity:.85;">Stake: ${fmtNum(p.user_stake, 6)} / Total ${fmtNum(p.stakes_total, 6)}</div>
+          <div style="margin-top:.5rem; display:flex; flex-direction:column; gap:.25rem;">
+            ${tokenLines || '<div class="label">No tokens</div>'}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>${day.date}</span>
+          <span style="display:flex; gap:.35rem; flex-wrap:wrap;">${badges}</span>
+        </div>
+        <div class="pools-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:10px; margin-top:.5rem;">
+          ${pools || '<div class="label">No pools</div>'}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 function openStakeModal(type, poolId, tokenSymbol) {
   const { wax_account, userId, usx_token } = window.userData;
 

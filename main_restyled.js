@@ -3554,7 +3554,6 @@ async function renderGoblinInventory() {
     
       const r = await API.get("/recent_expeditions", 20000);
       if (r.aborted) return;
-      const c = Cave.el.recentList; if (!c) return;
   
       // Header + contenitore griglia
       c.innerHTML = `

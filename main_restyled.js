@@ -8877,31 +8877,110 @@ function initTokenStakingTabs() {
 }
 // ========== Distribution Runner ==========
 async function runTokenDistribution() {
-  const btn = document.getElementById('btn-distribute');
-  const dry = document.getElementById('dist-dry')?.checked ?? true;
-  const prev = btn ? btn.textContent : '';
-  if (btn) { btn.disabled = true; btn.textContent = dry ? 'Running (dry)...' : 'Running (live)...'; }
-
   try {
-    const initiator = window.userData?.wax_account || '';
+    const dry = document.getElementById('dist-dry')?.checked ?? true;
+    const adminWax = window.userData?.wax_account || "";
+
+    // safety client-side (comunque c'è il check server-side)
+    if (adminWax !== 'agoscry4ever') {
+      return Swal.fire('Forbidden', 'You are not allowed to run distribution.', 'error');
+    }
+
     const res = await fetch(`${BASE_URL}/token_farms/distribute`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        dry_run: !!dry,
-        initiator_wax: initiator   // ✅ mandato al backend per il controllo server-side
-      })
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ dry_run: dry, admin_wax: adminWax })
     });
+
     const data = await res.json();
-    if (!res.ok || data.success === false) {
-      throw new Error(data.error || `HTTP ${res.status}`);
+    if (!res.ok || !data.success) {
+      const msg = data?.error || 'Distribution failed';
+      return Swal.fire('Error', msg, 'error');
     }
-    alert(`Distribution completed (${data.dry_run ? 'DRY' : 'LIVE'})`);
-  } catch (e) {
-    console.error(e);
-    alert(`Distribution failed: ${e.message || e}`);
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = prev; }
+
+    const changes = Array.isArray(data.changes) ? data.changes : [];
+    if (!changes.length) {
+      return Swal.fire(
+        'Done',
+        `Distribution completed (${dry ? 'DRY-RUN' : 'LIVE'}). No per-user details returned.`,
+        'success'
+      );
+    }
+
+    // Build quick summary
+    const byToken = {};
+    const byPool  = {};
+    changes.forEach(ch => {
+      byToken[ch.token_symbol] = (byToken[ch.token_symbol] || 0) + Number(ch.net_assigned || 0);
+      const key = `${ch.pool_id}:${ch.pool_name}`;
+      byPool[key] = (byPool[key] || 0) + Number(ch.net_assigned || 0);
+    });
+
+    const tokenLines = Object.entries(byToken)
+      .sort(([a],[b]) => a.localeCompare(b))
+      .map(([sym, amt]) => `<li><code>${sym}</code>: <b>${amt.toFixed(6)}</b></li>`).join('');
+
+    const poolLines = Object.entries(byPool)
+      .map(([k, amt]) => {
+        const [pid, pname] = k.split(':');
+        return `<li>Pool <b>${pname}</b> (#${pid}): <b>${amt.toFixed(6)}</b></li>`;
+      }).join('');
+
+    // Table rows (first 200 for readability)
+    const rows = changes.slice(0, 200).map(ch => `
+      <tr>
+        <td>${ch.wax_account}</td>
+        <td>${ch.pool_name} (#${ch.pool_id})</td>
+        <td>${ch.token_symbol}</td>
+        <td>${Number(ch.net_assigned).toFixed(6)}</td>
+        <td>${Number(ch.fee_wallet || 0).toFixed(6)}</td>
+        <td>${Number(ch.before || 0).toFixed(6)} → ${Number(ch.after || 0).toFixed(6)}</td>
+        <td>${ch.storage}</td>
+      </tr>
+    `).join('');
+
+    const html = `
+      <div style="text-align:left">
+        <p><b>Mode:</b> ${dry ? 'DRY-RUN' : 'LIVE'}</p>
+        <p><b>Events:</b> ${changes.length}</p>
+
+        <h4>Totals by token</h4>
+        <ul>${tokenLines || '<li>-</li>'}</ul>
+
+        <h4>Totals by pool</h4>
+        <ul>${poolLines || '<li>-</li>'}</ul>
+
+        <h4>Details (first 200)</h4>
+        <div style="max-height:360px; overflow:auto; border:1px solid #333; border-radius:6px;">
+          <table class="table-basic" style="width:100%; font-size:.9rem;">
+            <thead>
+              <tr>
+                <th>Wax</th>
+                <th>Pool</th>
+                <th>Token</th>
+                <th>Net</th>
+                <th>Fee</th>
+                <th>Balance</th>
+                <th>Storage</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        ${changes.length > 200 ? `<p style="margin-top:8px;">…and ${changes.length - 200} more rows</p>` : ''}
+      </div>
+    `;
+
+    Swal.fire({
+      title: 'Token Farms Distribution',
+      html,
+      width: 900,
+      confirmButtonText: 'OK'
+    });
+
+  } catch (err) {
+    console.error(err);
+    Swal.fire('Error', 'Unexpected error while running distribution', 'error');
   }
 }
 

@@ -1824,9 +1824,20 @@ else if (section === 'token-staking') {
             <input type="checkbox" id="dist-dry" checked>
             Dry run
           </label>
-          <button id="btn-distribute" class="btn btn-primary">Run Distribution</button>
+          <button id="btn-distribute"
+                  class="btn btn-primary"
+                  style="display:inline-flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border:1px solid #2b2b2b;border-radius:8px;background:#0d6efd;color:#fff;font-weight:600;cursor:pointer;">
+            <span id="dist-spinner"
+                  class="spin"
+                  style="display:none;width:14px;height:14px;border:2px solid rgba(255,255,255,.6);border-top-color:#fff;border-radius:50%;"></span>
+            <span id="dist-label">Run Distribution</span>
+          </button>
         </div>
       </div>
+      <style>
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .spin { animation: spin .8s linear infinite; }
+      </style>
 
       <!-- Tabs content -->
       <div id="tab-content">
@@ -8877,14 +8888,23 @@ function initTokenStakingTabs() {
 }
 // ========== Distribution Runner ==========
 async function runTokenDistribution() {
+  const btn = document.getElementById('btn-distribute');
+  const spinner = document.getElementById('dist-spinner');
+  const label = document.getElementById('dist-label');
+
   try {
     const dry = document.getElementById('dist-dry')?.checked ?? true;
     const adminWax = window.userData?.wax_account || "";
 
-    // safety client-side (comunque c'è il check server-side)
+    // safety client-side (server farà comunque il check)
     if (adminWax !== 'agoscry4ever') {
       return Swal.fire('Forbidden', 'You are not allowed to run distribution.', 'error');
     }
+
+    // UI: loading on
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; }
+    if (spinner) spinner.style.display = 'inline-block';
+    if (label) label.textContent = dry ? 'Running (dry)…' : 'Running…';
 
     const res = await fetch(`${BASE_URL}/token_farms/distribute`, {
       method: 'POST',
@@ -8907,7 +8927,7 @@ async function runTokenDistribution() {
       );
     }
 
-    // Build quick summary
+    // —— build summary (come già facevi) ——
     const byToken = {};
     const byPool  = {};
     changes.forEach(ch => {
@@ -8926,7 +8946,6 @@ async function runTokenDistribution() {
         return `<li>Pool <b>${pname}</b> (#${pid}): <b>${amt.toFixed(6)}</b></li>`;
       }).join('');
 
-    // Table rows (first 200 for readability)
     const rows = changes.slice(0, 200).map(ch => `
       <tr>
         <td>${ch.wax_account}</td>
@@ -8981,6 +9000,14 @@ async function runTokenDistribution() {
   } catch (err) {
     console.error(err);
     Swal.fire('Error', 'Unexpected error while running distribution', 'error');
+  } finally {
+    // UI: loading off
+    const btn = document.getElementById('btn-distribute');
+    const spinner = document.getElementById('dist-spinner');
+    const label = document.getElementById('dist-label');
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+    if (spinner) spinner.style.display = 'none';
+    if (label) label.textContent = 'Run Distribution';
   }
 }
 

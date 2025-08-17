@@ -3728,16 +3728,18 @@ async function renderGoblinInventory() {
       list.style.gap = ".5rem";
 
       if (data.length === 0) {
-        stopRAF();
-        stopCommandPolling();
+        // Mantieni il canvas visibile; pulisci solo lo stato.
         clearChests();
-        wrap.innerHTML = `
-          <video id="exp-video" src="expedition_run.mp4" autoplay muted loop
-                  style="width:100%; border-radius:12px; box-shadow:0 0 10px #ffe600;"></video>
-        `;
-        teardownCanvas();
+        Cave.goblins = [];
+        if (!qs("#caveCanvas", wrap)) {
+          wrap.innerHTML = `<canvas id="caveCanvas" style="width:100%; height:auto; display:block;"></canvas>`;
+          setupCanvas(qs("#caveCanvas", wrap));
+        }
+        startRAF();
+        startCommandPolling();
         return;
       }
+
 
       if (!qs("#caveCanvas", wrap)) {
         wrap.innerHTML = `<canvas id="caveCanvas" style="width:100%; height:auto; display:block;"></canvas>`;
@@ -3960,7 +3962,7 @@ async function renderGoblinInventory() {
           <h3 class="cv-title">⛏️ Global Expeditions in Progress</h3>
           <div id="cv-toast-host" role="status" aria-live="polite"></div>
           <div id="cv-video-or-canvas" style="width:100%; margin-top:.5rem;">
-            <video id="cv-video" src="expedition_run.mp4" autoplay muted style="width:100%; border-radius:12px; box-shadow:0 0 10px #ffe600;"></video>
+            <canvas id="caveCanvas" style="width:80%; height:auto; display:block; border-radius:12px; box-shadow:0 0 10px #ffe600;"></canvas>
           </div>
         </div>
         <div style="flex:1 1 44%; min-width:280px;">
@@ -4106,19 +4108,11 @@ async function renderGoblinInventory() {
     // assets
     await loadAssets();
     initRealtime();
-
-    // video → canvas on ended
-    const v = qs("#cv-video", Cave.el.videoOrCanvas);
-    if (v) {
-      v.onended = () => {
-        Cave.el.videoOrCanvas.innerHTML = "";
-        const can = document.createElement("canvas");
-        can.id = "caveCanvas";
-        can.style.cssText = "width:100%; height:auto; display:block;";
-        Cave.el.videoOrCanvas.appendChild(can);
-        setupCanvas(can);
-        startRAF();
-      };
+    const initialCanvas = qs("#caveCanvas", Cave.el.videoOrCanvas);
+    if (initialCanvas) {
+      setupCanvas(initialCanvas);
+      startRAF();
+      startCommandPolling();
     }
 
     await renderGlobalExpeditions();

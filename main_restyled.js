@@ -2917,15 +2917,24 @@ async function renderGoblinInventory() {
   // fetch helpers with timeout
   async function fetchJSON(url, opts = {}, timeout = 15000) {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), timeout);
+    const t = setTimeout(() => ctrl.abort("timeout"), timeout); // 👈 reason
     try {
       const res = await fetch(url, { ...opts, signal: ctrl.signal });
       const text = await res.text();
       let data;
       try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
       return { ok: res.ok, status: res.status, data };
-    } finally { clearTimeout(t); }
+    } catch (err) {
+      if (err?.name === "AbortError") {
+        // risposta standardizzata per i caller
+        return { ok: false, status: 499, aborted: true, data: { error: "timeout" } };
+      }
+      throw err;
+    } finally {
+      clearTimeout(t);
+    }
   }
+
 
   const API = {
     post: (path, body, t=15000) =>
@@ -3540,7 +3549,11 @@ async function renderGoblinInventory() {
     
   async function renderRecentList() {
     try {
-      const r = await API.get("/recent_expeditions", 15000);
+      const c = Cave.el.recentList; 
+      if (!c || !Cave.visible) return; // 👈 niente fetch se non serve
+    
+      const r = await API.get("/recent_expeditions", 20000);
+      if (r.aborted) return;
       const c = Cave.el.recentList; if (!c) return;
   
       // Header + contenitore griglia
@@ -3551,11 +3564,11 @@ async function renderGoblinInventory() {
       renderSkeletons("#cv-recent-grid", 6, 72);
       Cave.recentExpKeys.clear();
       if (!r.ok) {
+        if (r.aborted) return;
         c.insertAdjacentHTML("beforeend",
           `<div class="cv-toast warn">Could not load recent expeditions (HTTP ${r.status}).</div>`);
         return;
       }
-  
       const arr = Array.isArray(r.data) ? r.data
                : Array.isArray(r.data?.items) ? r.data.items
                : Array.isArray(r.data?.results) ? r.data.results
@@ -3608,9 +3621,10 @@ async function renderGoblinInventory() {
       grid.appendChild(frag);
 
     } catch (e) {
+      if (e?.name === "AbortError") return;
       console.warn("Recent list failed:", e);
-      const c = Cave.el.recentList;
-      if (c) c.insertAdjacentHTML("beforeend",
+      const c2 = Cave.el.recentList;
+      if (c2) c2.insertAdjacentHTML("beforeend",
         `<div class="cv-toast err">Error loading recent expeditions.</div>`);
     }
   }
@@ -3714,10 +3728,17 @@ async function renderGoblinInventory() {
   async function renderGlobalExpeditions() {
     if (globalFetchBusy) return;
     globalFetchBusy = true;
+    // se non visibile o se la UI non esiste più, esci subito
+    if (!Cave.visible || !Cave.el.globalList || !Cave.el.videoOrCanvas) {
+      globalFetchBusy = false;
+      return;
+    }
+   
     try {
       syncUserInto(Cave.user);
       assertAuthOrThrow(Cave.user);        
-      const r = await API.post("/all_expeditions", {}, 15000);
+      const r = await API.post("/all_expeditions", {}, 20000);
+      if (r.aborted) { globalFetchBusy = false; return; } // 👈 soft-exit sui timeout
       const data = Array.isArray(r.data) ? r.data : [];
       const list = Cave.el.globalList;
       const wrap = Cave.el.videoOrCanvas;
@@ -3843,7 +3864,7 @@ async function renderGoblinInventory() {
       }, 1000);
 
     } catch (e) {
-      console.warn("Global expeditions failed:", e);
+      if (e?.name !== "AbortError") console.warn("Global expeditions failed:", e);
     } finally {
       globalFetchBusy = false;
     }

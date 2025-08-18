@@ -3088,13 +3088,15 @@ async function renderGoblinInventory() {
       shovel: null,
       chest: null,
       bg: null,
-      perks: { dragon: null, dwarf: null, skeleton: null, black_cat: null }
+      perks: { dragon: null, dwarf: null, skeleton: null, black_cat: null },
+      decor: { rock: null, skull: null, spider: null, bush: null },
+
     },
   
     goblins: [],
     perks: [],
     chests: new Map(),
-
+    decors: [],
     // timers/intervals
     intervals: { global: null, globalCountdown: null, command: null, winners: null },
 
@@ -3381,7 +3383,11 @@ async function renderGoblinInventory() {
       loadImg("perk_dragon.png"),
       loadImg("perk_dwarf.png"),
       loadImg("perk_skeleton.png"),
-      loadImg("perk_blackcat.png")
+      loadImg("perk_blackcat.png"),
+      loadImg("rock.png"),
+      loadImg("skull.png"),
+      loadImg("spider.png"),
+      loadImg("bush.png")      
     ]);
     Cave.assets.goblin = goblin;
     Cave.assets.shovel = shovel;
@@ -3391,6 +3397,7 @@ async function renderGoblinInventory() {
     Cave.assets.perks.dwarf = dwarf;
     Cave.assets.perks.skeleton = skeleton;
     Cave.assets.perks.black_cat = black_cat;
+    Cave.assets.decor = { rock, skull, spider, bush };
     Cave.assets.loaded = true;
     // costruisci cache se il canvas è già pronto
     buildBGCache();
@@ -3411,6 +3418,62 @@ async function renderGoblinInventory() {
       Cave.bgCache = can;
       Cave.bgCacheCtx = cx;
     }catch{ Cave.bgCache = null; Cave.bgCacheCtx = null; }
+  }
+
+    function initDecorations() {
+    Cave.decors = [];
+    const pack = Cave.assets.decor || {};
+    // prendi solo quelle effettivamente caricate
+    const entries = Object.entries(pack).filter(([_, img]) => img && img.complete);
+    if (!entries.length) return;
+  
+    const { minX, maxX, minY, maxY } = getBounds();
+  
+    const COUNT_PER_TYPE = 6;    // quante per tipo (regola a piacere)
+    const FRAME_DELAY    = 12;   // velocità animazione (tick)
+    for (const [type, image] of entries) {
+      for (let i = 0; i < COUNT_PER_TYPE; i++) {
+        const x = randInt(minX, maxX);
+        const y = randInt(minY, maxY);
+        Cave.decors.push({
+          type,
+          image,
+          frames: 4,
+          frame: 0,
+          tick: 0,
+          frameDelay: FRAME_DELAY,
+          x, y
+        });
+      }
+    }
+  }
+
+  function drawDecorations() {
+    if (!Cave.decors || !Cave.decors.length) return;
+  
+    const destSize = 16; // 16x16 pixel sul canvas
+    const { ctx } = Cave;
+  
+    for (const d of Cave.decors) {
+      if (!d.image?.complete) continue;
+  
+      // avanza frame
+      d.tick++;
+      if (d.tick >= d.frameDelay) {
+        d.tick = 0;
+        d.frame = (d.frame + 1) % d.frames;
+      }
+  
+      const srcW = d.image.width / d.frames; // 4 frame affiancati orizzontali
+      const srcH = d.image.height;           // atteso 16
+      const sx   = Math.floor(d.frame) * srcW;
+  
+      // posiziona al centro della cella (in px canvas)
+      const dx = Cave.offsetX + d.x * Cave.cellX - destSize / 2;
+      const dy = Cave.offsetY + d.y * Cave.cellY - destSize / 2;
+  
+      ctx.drawImage(d.image, sx, 0, srcW, srcH, dx, dy, destSize, destSize);
+    }
   }
   
   function initRealtime() {
@@ -3621,30 +3684,34 @@ async function renderGoblinInventory() {
     const labelH = cell * 0.8;
     const footY  = py + (gSize / 2);
     const margin = cell * 0.25;
-    
     let boxX = px - (labelW / 2);
     let boxY = footY + margin;
     
     // clamp per non uscire dal canvas
     boxX = Math.max(0, Math.min(boxX, Cave.gridW - labelW));
     boxY = Math.max(0, Math.min(boxY, Cave.gridH - labelH));
-    
     ctx.fillStyle = "rgba(0,0,0,0.65)";
-    ctx.fillRect(boxX, boxY, labelW, labelH);
-    
+    ctx.fillRect(boxX, boxY, labelW, labelH);    
     ctx.fillStyle = g.color || "#ffe600";
     ctx.fillText(g.wax_account, boxX + labelW / 2, boxY + labelH / 2);
-
-  
-    // shovel
+    // shovel: 8x8 px, sopra la testa (no overlap)
     if (g.digging) {
       const frames = 6;
       const fw = assets.shovel.width / frames;
       const fh = assets.shovel.height;
       const sx = g.shovelFrame * fw;
-      const sSize = cell * sScale;
-      ctx.drawImage(assets.shovel, sx, 0, fw, fh, px - (sSize - cell) / 2, py - sSize, sSize, sSize);
-
+    
+      const sSize  = 8;   // 8x8 pixel sul canvas
+      const margin = 2;   // distanzina dalla testa
+    
+      // top del goblin in px canvas
+      const goblinTop = py - (gSize / 2);
+    
+      // centra la pala orizzontalmente sul goblin e mettila sopra la testa
+      const dx = px - (sSize / 2);
+      const dy = goblinTop - margin - sSize;
+    
+      ctx.drawImage(assets.shovel, sx, 0, fw, fh, dx, dy, sSize, sSize);
     }
   }
 
@@ -4403,6 +4470,7 @@ async function renderGoblinInventory() {
   
     clearCanvas();      // <-- pulizia completa
     drawBG();
+    drawDecorations();
     drawPerksAndAdvance();
     drawChests();
     Cave.goblins.forEach(moveGoblin);
@@ -4571,6 +4639,7 @@ async function renderGoblinInventory() {
     renderSkeletons("#cv-bonus-grid", 6, 72);
     // assets
     await loadAssets();
+    initDecorations();
     initRealtime();
     const initialCanvas = qs("#caveCanvas", Cave.el.videoOrCanvas);
     if (initialCanvas) {

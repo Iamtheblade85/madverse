@@ -3383,12 +3383,12 @@ async function renderGoblinInventory() {
       loadImg("perk_dragon.png"),
       loadImg("perk_dwarf.png"),
       loadImg("perk_skeleton.png"),
-      loadImg("perk_blackcat.png"),
+      loadImg("perk_blackcat.png")
+    ]);
       //loadImg("rock.png"),
       //loadImg("skull.png"),
       //loadImg("spider.png"),
-      //loadImg("bush.png")      
-    ]);
+      //loadImg("bush.png")        
     Cave.assets.goblin = goblin;
     Cave.assets.shovel = shovel;
     Cave.assets.chest = chest;
@@ -3397,7 +3397,7 @@ async function renderGoblinInventory() {
     Cave.assets.perks.dwarf = dwarf;
     Cave.assets.perks.skeleton = skeleton;
     Cave.assets.perks.black_cat = black_cat;
-    Cave.assets.decor = { rock, skull, spider, bush };
+    // Cave.assets.decor = { rock, skull, spider, bush };
     Cave.assets.loaded = true;
     // costruisci cache se il canvas è già pronto
     buildBGCache();
@@ -4470,7 +4470,7 @@ async function renderGoblinInventory() {
   
     clearCanvas();      // <-- pulizia completa
     drawBG();
-    drawDecorations();
+    // drawDecorations();
     drawPerksAndAdvance();
     drawChests();
     Cave.goblins.forEach(moveGoblin);

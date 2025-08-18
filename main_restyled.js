@@ -9549,305 +9549,323 @@ function renderTokenEarnings(payload) {
   }).join('');
 }
 
+// 🔄 Carica e cache i bilanci se mancanti o se force=true.
+// Salva in: window.twitchWalletBalances, window.telegramWalletBalances
+async function ensureBalancesLoaded(force = false) {
+  const { userId, usx_token, wax_account } = window.userData || {};
+  if (!userId || !usx_token || !wax_account) {
+    console.warn("[wallet] userData incompleta.");
+    return { twitch: [], telegram: [] };
+  }
+
+  const needTwitch   = force || !Array.isArray(window.twitchWalletBalances);
+  const needTelegram = force || !Array.isArray(window.telegramWalletBalances);
+
+  const tasks = [];
+  if (needTelegram) {
+    tasks.push(
+      fetch(`${BASE_URL}/saldo?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`)
+        .then(r => r.json()).then(j => j?.balances || []).then(arr => (window.telegramWalletBalances = arr))
+        .catch(() => (window.telegramWalletBalances = []))
+    );
+  }
+  if (needTwitch) {
+    tasks.push(
+      fetch(`${BASE_URL}/saldo/twitch?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}&wax_account=${encodeURIComponent(wax_account)}`)
+        .then(r => r.json()).then(j => j?.balances || []).then(arr => (window.twitchWalletBalances = arr))
+        .catch(() => (window.twitchWalletBalances = []))
+    );
+  }
+  if (tasks.length) await Promise.all(tasks);
+
+  return {
+    twitch: window.twitchWalletBalances || [],
+    telegram: window.telegramWalletBalances || []
+  };
+}
+
 function openStakeModal(type, poolId, tokenSymbol) {
   const { wax_account, userId, usx_token } = window.userData || {};
-  const up = (s) => (s || '').toUpperCase();
-  const sym = up(tokenSymbol);
+  const sym = (tokenSymbol || '').toUpperCase();
+  let walletType = window.currentWalletTab || 'twitch'; // 'twitch'|'telegram'
 
-  // uso la tab corrente come default
-  let walletType = (window.currentWalletTab || 'twitch'); // 'twitch' | 'telegram'
-
-  // helpers
-  const toFix = (n, d = 6) => Number(n || 0).toFixed(d);
-  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-  const findBalance = (wallet) => {
-    const list = wallet === 'twitch' ? (window.twitchWalletBalances || []) : (window.walletBalances || []);
-    const row = list.find(t => (t.symbol || '').toUpperCase() === sym);
-    return parseFloat(row?.amount || 0);
-  };
-
-  // saldi iniziali
-  let balance = 0;
-  if (type === 'add') {
-    balance = findBalance(walletType);                 // saldo nel wallet scelto (source)
-  } else {
-    const pool = (window.stakingPools || []).find(p => p.pool_id === poolId);
-    balance = parseFloat(pool ? (pool.user_staked || 0) : 0); // saldo staked
-  }
-
-  const title = (type === 'add') ? `Add ${sym} to Farm` : `Remove ${sym} from Farm`;
-  const availableLabel = (type === 'add') ? 'Available' : 'Staked in Farm';
-  const actionUrl = (type === 'add') ? 'stake_add' : 'stake_remove';
-  const feePct = (type === 'remove') ? 0.0315 : 0.0;  // eventuale fee su withdraw
-
-  const body = `
-    <div style="
-      background:
-        radial-gradient(1200px 600px at 10% -10%, rgba(0,255,200,.08), transparent 40%),
-        radial-gradient(1000px 500px at 110% 110%, rgba(255,0,255,.08), transparent 40%),
-        linear-gradient(180deg, rgba(10,10,10,.95), rgba(12,12,16,.95));
-      border: 1px solid rgba(0,255,200,.25);
-      box-shadow: 0 0 30px rgba(0,255,200,.15), inset 0 0 20px rgba(255,0,255,.07);
-      border-radius: 14px;
-      padding: 16px;
-      color: #e7fffa;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    ">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <div style="font-weight:800; letter-spacing:.3px; color:#9afbd9; text-shadow:0 0 8px rgba(0,255,200,.35);">
-          ${availableLabel}: <span id="stake-available" style="color:#fff;">${toFix(balance, 6)}</span> <span style="opacity:.9">${sym}</span>
-        </div>
-        <div style="font-size:.85rem; opacity:.8;">Pool #${poolId}</div>
-      </div>
-
-      <!-- wallet selector (sempre richiesto) -->
-      <div style="display:flex; gap:6px; align-items:center; margin:10px 0 12px;">
-        <div style="font-size:.9rem; opacity:.85;">
-          ${type === 'add' ? 'Source wallet:' : 'Destination wallet:'}
-        </div>
-        <div style="
-          display:flex; gap:6px; padding:4px;
-          border:1px solid rgba(255,255,255,.12); border-radius:999px;
-          background: rgba(0,0,0,.35);
-          box-shadow: inset 0 0 12px rgba(0,255,200,.08), 0 0 10px rgba(255,0,255,.06);
-        ">
-          <button id="w-twitch" data-w="twitch" style="
-            cursor:pointer; border:none; outline:none;
-            padding:6px 12px; border-radius:999px;
-            color:#f6f; background:transparent; font-weight:700; letter-spacing:.2px;
-          ">🎮 Twitch</button>
-          <button id="w-telegram" data-w="telegram" style="
-            cursor:pointer; border:none; outline:none;
-            padding:6px 12px; border-radius:999px;
-            color:#0e0; background:transparent; font-weight:700; letter-spacing:.2px;
-          ">🤖 Telegram</button>
-        </div>
-      </div>
-
-      <!-- quick % -->
-      <div style="display:flex; gap:6px; flex-wrap:wrap; margin:4px 0 8px;">
-        ${[10,25,50,75,100].map(p => `
-          <button class="stake-quick" data-p="${p}" style="
-            border:1px solid rgba(255,255,255,.14); color:#e7fffa; background:transparent;
-            padding:6px 10px; border-radius:8px; cursor:pointer;
-            box-shadow: 0 0 8px rgba(0,255,200,.15);
-            font-weight:700; letter-spacing:.2px;
-          ">${p}%</button>`).join('')}
-      </div>
-
-      <!-- range -->
-      <div style="margin:8px 0 6px;">
-        <input id="stake-range" type="range" min="0" max="100" value="0" style="
-          width:100%;
-          accent-color:#00e6b8;
-          background:linear-gradient(90deg, rgba(0,255,200,.25), rgba(255,0,255,.25));
-        ">
-      </div>
-
-      <!-- amount -->
-      <div style="display:flex; gap:8px; align-items:center;">
-        <label for="stake-amount" style="font-size:.95rem; opacity:.9;">Amount</label>
-        <input id="stake-amount" type="number" step="0.000001" value="0" inputmode="decimal" style="
-          flex:1; padding:10px 12px; border-radius:10px;
-          border:1px solid rgba(255,255,255,.14);
-          background:rgba(0,0,0,.35); color:#fff;
-          box-shadow: inset 0 0 10px rgba(0,255,200,.08);
-        ">
-        <div style="opacity:.8">${sym}</div>
-      </div>
-
-      <!-- summary -->
-      <div id="stake-summary" style="
-        margin-top:10px; padding:10px; border-radius:10px;
-        border:1px dashed rgba(255,255,255,.16);
-        background:linear-gradient(180deg, rgba(0,255,200,.06), rgba(255,0,255,.05));
-        font-size:.95rem; line-height:1.35;
-      ">
-        <div>You will ${type === 'add' ? 'add' : 'remove'} <strong>0.000000</strong> ${sym}</div>
-        ${feePct > 0 ? `<div>Fee (~${(feePct*100).toFixed(2)}%): <strong>0.000000</strong> ${sym}</div>` : ''}
-        ${feePct > 0 ? `<div>Net received: <strong>0.000000</strong> ${sym}</div>` : ''}
-        <div style="margin-top:6px; font-size:.85rem; opacity:.75;">
-          ${type === 'add'
-            ? `Source: <strong id="sum-wallet">${walletType.toUpperCase()}</strong> wallet`
-            : `Destination: <strong id="sum-wallet">${walletType.toUpperCase()}</strong> wallet`}
-        </div>
-      </div>
-
-      <button id="stake-submit" style="
-        width:100%; margin-top:14px; padding:12px 14px; border-radius:12px;
-        border:1px solid rgba(0,255,200,.4);
-        color:#00150f; font-weight:900; letter-spacing:.3px;
-        background: conic-gradient(from 180deg at 50% 50%, #ffe600, #f39c12, #ff00ff, #00ffcc, #ffe600);
-        box-shadow: 0 0 18px rgba(0,255,200,.35), inset 0 0 30px rgba(255,0,255,.12);
-        cursor:pointer; transition: transform .08s ease-in-out;
-      ">
-        <span id="stake-submit-txt">Go!</span>
-        <span id="stake-submit-spin" style="display:none; margin-left:8px;">⏳</span>
-      </button>
-
-      <div style="margin-top:10px; font-size:.85rem; opacity:.75;">
-        Tip: usa i pulsanti percentuali per selezione veloce. Verifica sempre il wallet selezionato.
-      </div>
-    </div>
-  `;
-
+  // UI skeleton immediata (loader)
   showModal({
-    title: `<h3 class="modal-title" style="
-      margin:0 0 8px; color:#e7fffa; font-weight:900;
-      text-shadow: 0 0 10px rgba(0,255,200,.35), 0 0 10px rgba(255,0,255,.25);
-    ">${title}</h3>`,
-    body
-  });
-
-  // bind
-  const $ = (id) => document.getElementById(id);
-  const elAvail = $('stake-available');
-  const elRange = $('stake-range');
-  const elAmt   = $('stake-amount');
-  const elSum   = $('stake-summary');
-  const elBtn   = $('stake-submit');
-  const elTxt   = $('stake-submit-txt');
-  const elSpn   = $('stake-submit-spin');
-  const elSumWallet = document.getElementById('sum-wallet');
-
-  // attiva stile bottone wallet
-  function styleWalletButtons() {
-    const btTwi = $('w-twitch'), btTel = $('w-telegram');
-    if (!btTwi || !btTel) return;
-    if (walletType === 'twitch') {
-      btTwi.style.background = 'linear-gradient(135deg, rgba(255,0,255,.22), rgba(120,0,255,.14))';
-      btTwi.style.boxShadow  = '0 0 8px rgba(255,0,255,.25)';
-      btTwi.style.color      = '#f6f';
-      btTel.style.background = 'transparent';
-      btTel.style.boxShadow  = 'none';
-      btTel.style.color      = '#0e0';
-    } else {
-      btTel.style.background = 'linear-gradient(135deg, rgba(0,255,160,.25), rgba(0,255,200,.15))';
-      btTel.style.boxShadow  = '0 0 8px rgba(0,255,160,.25)';
-      btTel.style.color      = '#0e0';
-      btTwi.style.background = 'transparent';
-      btTwi.style.boxShadow  = 'none';
-      btTwi.style.color      = '#f6f';
-    }
-    if (elSumWallet) elSumWallet.textContent = walletType.toUpperCase();
-  }
-
-  // cambia wallet selezionato
-  function setWallet(w) {
-    walletType = w;
-    // ADD: il saldo dipende dal wallet (source)
-    if (type === 'add') {
-      balance = findBalance(walletType);
-      if (elAvail) elAvail.textContent = toFix(balance, 6);
-    }
-    // ricalcola amount/range
-    const v = clamp(parseFloat(elAmt.value || '0'), 0, balance);
-    elAmt.value = toFix(v, 6);
-    const pct = balance > 0 ? Math.round((v / balance) * 100) : 0;
-    elRange.value = String(clamp(pct, 0, 100));
-    renderSummary();
-    styleWalletButtons();
-  }
-
-  $('w-twitch')?.addEventListener('click', () => setWallet('twitch'));
-  $('w-telegram')?.addEventListener('click', () => setWallet('telegram'));
-  styleWalletButtons(); // iniziale
-
-  // quick %
-  document.querySelectorAll('.stake-quick').forEach(b => {
-    b.addEventListener('click', () => {
-      const p = Number(b.getAttribute('data-p') || 0);
-      const val = toFix((balance * p) / 100, 6);
-      elAmt.value = val;
-      elRange.value = String(clamp(p, 0, 100));
-      renderSummary();
-    });
-  });
-
-  // slider → amount
-  elRange.addEventListener('input', () => {
-    const p = Number(elRange.value || 0);
-    const val = clamp((balance * p) / 100, 0, balance);
-    elAmt.value = toFix(val, 6);
-    renderSummary();
-  });
-
-  // amount → slider
-  elAmt.addEventListener('input', () => {
-    let v = parseFloat(elAmt.value || '0');
-    if (Number.isNaN(v)) v = 0;
-    v = clamp(v, 0, balance);
-    elAmt.value = toFix(v, 6);
-    const pct = balance > 0 ? Math.round((v / balance) * 100) : 0;
-    elRange.value = String(clamp(pct, 0, 100));
-    renderSummary();
-  });
-
-  function renderSummary() {
-    const val = clamp(parseFloat(elAmt.value || '0'), 0, balance);
-    const fee = val * feePct;
-    const net = val - fee;
-
-    elSum.innerHTML = `
-      <div>You will ${type === 'add' ? 'add' : 'remove'} <strong>${toFix(val, 6)}</strong> ${sym}</div>
-      ${feePct > 0 ? `<div>Fee (~${(feePct*100).toFixed(2)}%): <strong>${toFix(fee, 6)}</strong> ${sym}</div>` : ''}
-      ${feePct > 0 ? `<div>Net received: <strong>${toFix(net, 6)}</strong> ${sym}</div>` : ''}
-      <div style="margin-top:6px; font-size:.85rem; opacity:.75;">
-        ${type === 'add' ? 'Source' : 'Destination'}: <strong>${walletType.toUpperCase()}</strong> wallet
+    title: `<h3 class="modal-title" style="margin:0 0 8px;color:#e7fffa;font-weight:900;text-shadow:0 0 10px rgba(0,255,200,.35),0 0 10px rgba(255,0,255,.25)">${type==='add'?'Add':'Remove'} ${sym}</h3>`,
+    body: `
+      <div style="display:flex;align-items:center;gap:10px;padding:14px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:linear-gradient(180deg,rgba(12,12,16,.92),rgba(10,10,12,.92));color:#9afbd9;">
+        <div class="spinner" style="width:18px;height:18px;border:3px solid rgba(0,255,200,.25);border-top-color:#00ffc8;border-radius:50%;animation:spin .8s linear infinite"></div>
+        <div>Loading balances…</div>
       </div>
-    `;
-    const disabled = (val <= 0) || (val > balance);
-    elBtn.style.opacity = disabled ? .6 : 1;
-    elBtn.style.cursor  = disabled ? 'not-allowed' : 'pointer';
-    elBtn.disabled = disabled;
-  }
-  renderSummary();
+      <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+    `
+  });
 
-  // submit
-  elBtn.addEventListener('click', async () => {
-    const amount = clamp(parseFloat(elAmt.value || '0'), 0, balance);
-    if (amount <= 0 || amount > balance) return;
-
-    elBtn.disabled = true;
-    elTxt.textContent = (type === 'add') ? 'Processing…' : 'Unstaking…';
-    elSpn.style.display = 'inline-block';
-
-    const payload = {
-      user_id: userId,
-      pool_id: poolId,
-      token_symbol: sym,
-      wax_account,
-      amount,
-      ...(type === 'add' ? { source_wallet: walletType } : { target_wallet: walletType })
+  // Assicura i balances prima di calcolare
+  ensureBalancesLoaded().then(() => {
+    const getBal = (w, token) => {
+      const list = (w === 'twitch' ? window.twitchWalletBalances : window.telegramWalletBalances) || [];
+      const row = list.find(r => (r.symbol || '').toUpperCase() === token.toUpperCase());
+      return parseFloat(row?.amount || 0);
     };
 
-    try {
-      const res = await fetch(`${BASE_URL}/${actionUrl}?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "Unknown error");
-
-      showModalMessage(
-        "✅ Operation completed successfully.<br><small>The window will close in 6 seconds.</small>",
-        "success"
-      );
-
-      // 🔁 ricarica preservando il TAB wallet corrente (default twitch)
-      setTimeout(() => {
-        closeModal();
-        loadWallet(window.currentWalletTab || 'twitch');
-        loadStakingPools?.();
-      }, 6000);
-    } catch (err) {
-      console.error(err);
-      showModalMessage(`❌ ${err.message || 'Unexpected error'}`, "error");
-      elBtn.disabled = false;
-      elTxt.textContent = 'Go!';
-      elSpn.style.display = 'none';
+    // balance mostrato nella testata (source per ADD, staked per REMOVE)
+    let headerBalance = 0;
+    if (type === 'add') {
+      headerBalance = getBal(walletType, sym);
+    } else {
+      const pool = (window.stakingPools || []).find(p => p.pool_id === poolId);
+      headerBalance = parseFloat(pool?.user_staked || 0);
     }
+
+    const feePct = (type === 'remove') ? 0.0315 : 0;
+    const toFix = (n, d=6) => Number(n || 0).toFixed(d);
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+    // corpo modale completo
+    const body = `
+      <div style="
+        background:
+          radial-gradient(1200px 600px at 10% -10%, rgba(0,255,200,.08), transparent 40%),
+          radial-gradient(1000px 500px at 110% 110%, rgba(255,0,255,.08), transparent 40%),
+          linear-gradient(180deg, rgba(10,10,10,.95), rgba(12,12,16,.95));
+        border: 1px solid rgba(0,255,200,.25);
+        box-shadow: 0 0 30px rgba(0,255,200,.15), inset 0 0 20px rgba(255,0,255,.07);
+        border-radius: 14px; padding: 16px; color: #e7fffa;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      ">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-weight:800; letter-spacing:.3px; color:#9afbd9; text-shadow:0 0 8px rgba(0,255,200,.35);">
+            ${type==='add'?'Available':'Staked in Farm'}:
+            <span id="stake-available" style="color:#fff;">${toFix(headerBalance)}</span> <span style="opacity:.9">${sym}</span>
+          </div>
+          <div style="font-size:.85rem;opacity:.8;">Pool #${poolId}</div>
+        </div>
+
+        <!-- segmented wallet switch -->
+        <div style="margin:8px 0 12px;">
+          <div role="tablist" aria-label="Wallet selector" style="
+            display:flex; gap:0; align-items:center; width:100%;
+            background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.18);
+            border-radius:999px; overflow:hidden; box-shadow:inset 0 0 12px rgba(0,255,200,.1);
+          ">
+            <button id="seg-twitch" role="tab" aria-selected="false" data-w="twitch" style="
+              flex:1; padding:10px 12px; border:none; cursor:pointer; font-weight:900; letter-spacing:.2px;
+              background:transparent; color:#e7fffa;
+            ">🎮 Twitch</button>
+            <button id="seg-telegram" role="tab" aria-selected="false" data-w="telegram" style="
+              flex:1; padding:10px 12px; border:none; cursor:pointer; font-weight:900; letter-spacing:.2px;
+              background:transparent; color:#e7fffa;
+            ">🤖 Telegram</button>
+          </div>
+          <div id="seg-sub" style="margin-top:6px; font-size:.85rem; opacity:.8;">
+            ${type==='add'?'Source':'Destination'} wallet: <strong id="seg-label">${walletType.toUpperCase()}</strong>
+          </div>
+        </div>
+
+        <!-- quick chips -->
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin:4px 0 8px;">
+          ${[10,25,50,75,100].map(p => `
+            <button class="stake-quick" data-p="${p}" style="
+              border:1px solid rgba(255,255,255,.14); color:#e7fffa; background:transparent;
+              padding:6px 10px; border-radius:8px; cursor:pointer;
+              box-shadow: 0 0 8px rgba(0,255,200,.15); font-weight:700; letter-spacing:.2px;
+            ">${p}%</button>`).join('')}
+        </div>
+
+        <!-- range -->
+        <div style="margin:8px 0 6px;">
+          <input id="stake-range" type="range" min="0" max="100" value="0" style="
+            width:100%; accent-color:#00e6b8;
+            background:linear-gradient(90deg, rgba(0,255,200,.25), rgba(255,0,255,.25));
+          ">
+        </div>
+
+        <!-- amount -->
+        <div style="display:flex; gap:8px; align-items:center;">
+          <label for="stake-amount" style="font-size:.95rem;opacity:.9;">Amount</label>
+          <input id="stake-amount" type="number" step="0.000001" value="0" inputmode="decimal" style="
+            flex:1; padding:10px 12px; border-radius:10px;
+            border:1px solid rgba(255,255,255,.14);
+            background:rgba(0,0,0,.35); color:#fff;
+            box-shadow: inset 0 0 10px rgba(0,255,200,.08);
+          ">
+          <div style="opacity:.8">${sym}</div>
+        </div>
+
+        <!-- summary -->
+        <div id="stake-summary" style="
+          margin-top:10px; padding:10px; border-radius:10px;
+          border:1px dashed rgba(255,255,255,.16);
+          background:linear-gradient(180deg, rgba(0,255,200,.06), rgba(255,0,255,.05));
+          font-size:.95rem; line-height:1.35;
+        ">
+          <div>You will ${type==='add'?'add':'remove'} <strong>0.000000</strong> ${sym}</div>
+          ${feePct>0?`<div>Fee (~${(feePct*100).toFixed(2)}%): <strong>0.000000</strong> ${sym}</div>`:''}
+          ${feePct>0?`<div>Net received: <strong>0.000000</strong> ${sym}</div>`:''}
+          <div style="margin-top:6px; font-size:.85rem; opacity:.75;">
+            ${type==='add'?'Source':'Destination'}: <strong id="sum-wallet">${walletType.toUpperCase()}</strong> wallet
+          </div>
+        </div>
+
+        <button id="stake-submit" style="
+          width:100%; margin-top:14px; padding:12px 14px; border-radius:12px;
+          border:1px solid rgba(0,255,200,.4); color:#00150f; font-weight:900; letter-spacing:.3px;
+          background: conic-gradient(from 180deg at 50% 50%, #ffe600, #f39c12, #ff00ff, #00ffcc, #ffe600);
+          box-shadow: 0 0 18px rgba(0,255,200,.35), inset 0 0 30px rgba(255,0,255,.12);
+          cursor:pointer; transition: transform .08s ease-in-out;
+        ">
+          <span id="stake-submit-txt">Go!</span>
+          <span id="stake-submit-spin" style="display:none; margin-left:8px;">⏳</span>
+        </button>
+      </div>
+    `;
+    showModal({ title: document.querySelector('#universal-modal .modal-title')?.outerHTML || '', body });
+
+    // refs
+    const $ = (id) => document.getElementById(id);
+    const elAvail = $('stake-available');
+    const elRange = $('stake-range');
+    const elAmt   = $('stake-amount');
+    const elSum   = $('stake-summary');
+    const elBtn   = $('stake-submit');
+    const elTxt   = $('stake-submit-txt');
+    const elSpn   = $('stake-submit-spin');
+    const elSegT  = $('seg-twitch');
+    const elSegG  = $('seg-telegram');
+    const elSegLb = $('seg-label');
+    const elSumW  = $('sum-wallet');
+
+    function setSegActive(which) {
+      [elSegT, elSegG].forEach(b=>{
+        const active = b?.dataset?.w === which;
+        b.style.background = active
+          ? (which==='twitch'
+              ? 'linear-gradient(135deg, rgba(255,0,255,.22), rgba(120,0,255,.14))'
+              : 'linear-gradient(135deg, rgba(0,255,160,.25), rgba(0,255,200,.15))')
+          : 'transparent';
+        b.setAttribute('aria-selected', active ? 'true' : 'false');
+        b.style.boxShadow = active ? '0 0 8px rgba(0,255,160,.25)' : 'none';
+      });
+      if (elSegLb) elSegLb.textContent = which.toUpperCase();
+      if (elSumW)  elSumW.textContent  = which.toUpperCase();
+    }
+    setSegActive(walletType);
+
+    function updateHeaderAvail() {
+      if (type === 'add') {
+        const v = getBal(walletType, sym);
+        elAvail.textContent = toFix(v);
+        return v;
+      }
+      return headerBalance;
+    }
+
+    function renderSummary() {
+      const avail = (type==='add') ? getBal(walletType, sym) : headerBalance;
+      let val = clamp(parseFloat(elAmt.value||'0'), 0, avail);
+      elAmt.value = toFix(val);
+      const fee = val * feePct;
+      const net = val - fee;
+      elSum.innerHTML = `
+        <div>You will ${type==='add'?'add':'remove'} <strong>${toFix(val)}</strong> ${sym}</div>
+        ${feePct>0?`<div>Fee (~${(feePct*100).toFixed(2)}%): <strong>${toFix(fee)}</strong> ${sym}</div>`:''}
+        ${feePct>0?`<div>Net received: <strong>${toFix(net)}</strong> ${sym}</div>`:''}
+        <div style="margin-top:6px; font-size:.85rem; opacity:.75;">
+          ${type==='add'?'Source':'Destination'}: <strong>${walletType.toUpperCase()}</strong> wallet
+        </div>
+      `;
+      const disabled = (val<=0 || val>avail);
+      elBtn.disabled = disabled;
+      elBtn.style.opacity = disabled?.6:1;
+      elBtn.style.cursor = disabled?'not-allowed':'pointer';
+    }
+
+    // bind switch
+    [elSegT, elSegG].forEach(btn => btn?.addEventListener('click', ()=>{
+      walletType = btn.dataset.w;
+      window.currentWalletTab = walletType; // memorizza preferenza
+      if (type==='add') updateHeaderAvail();
+      // riallinea slider all'importo attuale rispetto alla nuova availability
+      const avail = (type==='add') ? getBal(walletType, sym) : headerBalance;
+      const v = clamp(parseFloat(elAmt.value||'0'), 0, avail);
+      elAmt.value = toFix(v);
+      const pct = avail>0 ? Math.round((v/avail)*100) : 0;
+      elRange.value = String(clamp(pct,0,100));
+      setSegActive(walletType);
+      renderSummary();
+    }));
+
+    // quick chips
+    document.querySelectorAll('.stake-quick').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const pct = Number(b.dataset.p || 0);
+        const avail = (type==='add') ? getBal(walletType, sym) : headerBalance;
+        const val = toFix((avail * pct)/100);
+        elAmt.value = val;
+        elRange.value = String(clamp(pct,0,100));
+        renderSummary();
+      });
+    });
+
+    elRange.addEventListener('input', ()=>{
+      const pct = Number(elRange.value||0);
+      const avail = (type==='add') ? getBal(walletType, sym) : headerBalance;
+      const val = clamp((avail * pct)/100, 0, avail);
+      elAmt.value = toFix(val);
+      renderSummary();
+    });
+
+    elAmt.addEventListener('input', ()=>{
+      const avail = (type==='add') ? getBal(walletType, sym) : headerBalance;
+      let v = parseFloat(elAmt.value||'0'); if (Number.isNaN(v)) v=0;
+      v = clamp(v, 0, avail);
+      elAmt.value = toFix(v);
+      const pct = avail>0 ? Math.round((v/avail)*100) : 0;
+      elRange.value = String(clamp(pct,0,100));
+      renderSummary();
+    });
+
+    renderSummary();
+
+    // submit
+    elBtn.addEventListener('click', async ()=>{
+      const avail = (type==='add') ? getBal(walletType, sym) : headerBalance;
+      const amount = clamp(parseFloat(elAmt.value||'0'), 0, avail);
+      if (amount<=0 || amount>avail) return;
+
+      elBtn.disabled = true; elTxt.textContent = (type==='add')?'Processing…':'Unstaking…'; elSpn.style.display='inline-block';
+
+      const payload = {
+        user_id: userId,
+        pool_id: poolId,
+        token_symbol: sym,
+        wax_account,
+        amount,
+        ...(type==='add' ? { source_wallet: walletType } : { target_wallet: walletType })
+      };
+
+      try {
+        const res = await fetch(`${BASE_URL}/${type==='add'?'stake_add':'stake_remove'}?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`, {
+          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.error || 'Request failed');
+
+        showModalMessage("✅ Operation completed successfully. Closing in 5s…", "success");
+
+        setTimeout(async ()=>{
+          closeModal();
+          await ensureBalancesLoaded(true);               // refresh balances
+          await loadWallet(window.currentWalletTab||'twitch'); // resta sul tab attuale
+          if (typeof loadStakingPools==='function') loadStakingPools();
+        }, 5000);
+      } catch (e) {
+        console.error(e);
+        showModalMessage(`❌ ${e.message || 'Unexpected error'}`, 'error');
+        elBtn.disabled=false; elTxt.textContent='Go!'; elSpn.style.display='none';
+      }
+    });
   });
 }
 
@@ -9863,97 +9881,141 @@ function showModalMessage(message, type = 'info') {
 }
 
 async function loadWallet(preferredTab='twitch') {
-  try {
-    const { userId, usx_token, wax_account } = window.userData || {};
-    const preferred = preferredTab || window.currentWalletTab || 'twitch';
+  const desired = preferredTab || window.currentWalletTab || 'twitch';
+  await ensureBalancesLoaded(); // garantisce i dati
 
-    // Carica Telegram
-    const resTelegram = await fetch(`${BASE_URL}/saldo?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`);
-    const dataTelegram = await resTelegram.json();
-    window.walletBalances = dataTelegram.balances || [];
+  const walletHost = document.getElementById('wallet-table');
+  if (!walletHost) return;
 
-    // Carica Twitch
-    const resTwitch = await fetch(`${BASE_URL}/saldo/twitch?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}&wax_account=${encodeURIComponent(wax_account)}`);
-    const dataTwitch = await resTwitch.json();
-    window.twitchWalletBalances = dataTwitch.balances || [];
+  walletHost.innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;">
+      <!-- segmented switch -->
+      <div role="tablist" aria-label="Wallets" style="
+        display:flex; gap:0; background:rgba(0,0,0,.35);
+        border:1px solid rgba(255,255,255,.18); border-radius:999px; overflow:hidden;
+        box-shadow:inset 0 0 12px rgba(0,255,200,.1);
+      ">
+        <button class="wallet-tab" data-w="twitch" role="tab" aria-selected="false" style="
+          padding:8px 14px; border:none; cursor:pointer; font-weight:900; color:#e7fffa; background:transparent;
+        ">🎮 Twitch</button>
+        <button class="wallet-tab" data-w="telegram" role="tab" aria-selected="false" style="
+          padding:8px 14px; border:none; cursor:pointer; font-weight:900; color:#e7fffa; background:transparent;
+        ">🤖 Telegram</button>
+      </div>
 
-    const walletTable = document.getElementById('wallet-table');
-    if (!walletTable) {
-      console.warn("[⚠️] wallet-table non trovato nel DOM.");
+      <!-- search -->
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input id="wallet-search" placeholder="Search token…" style="
+          padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.14);
+          background:rgba(0,0,0,.35); color:#fff; min-width:220px;
+          box-shadow: inset 0 0 8px rgba(0,255,200,.08);
+        ">
+      </div>
+    </div>
+
+    <div id="wallet-content" style="margin-top:12px;"></div>
+  `;
+
+  const setActive = (w) => {
+    walletHost.querySelectorAll('.wallet-tab').forEach(b=>{
+      const active = b.dataset.w === w;
+      b.style.background = active
+        ? (w==='twitch'
+            ? 'linear-gradient(135deg, rgba(255,0,255,.22), rgba(120,0,255,.14))'
+            : 'linear-gradient(135deg, rgba(0,255,160,.25), rgba(0,255,200,.15))')
+        : 'transparent';
+      b.style.boxShadow = active ? '0 0 8px rgba(0,255,160,.25)' : 'none';
+      b.setAttribute('aria-selected', active ? 'true':'false');
+    });
+  };
+
+  walletHost.querySelectorAll('.wallet-tab').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const w = b.dataset.w;
+      window.currentWalletTab = w;
+      setActive(w);
+      renderWalletView(w);
+    });
+  });
+
+  window.currentWalletTab = desired;
+  setActive(desired);
+  renderWalletView(desired);
+}
+
+function renderWalletView(type) {
+  const container = document.getElementById('wallet-content');
+  const searchEl  = document.getElementById('wallet-search');
+  const raw = type==='twitch' ? (window.twitchWalletBalances||[]) : (window.telegramWalletBalances||[]);
+  const balances = [...raw].sort((a,b)=> (b.amount||0)-(a.amount||0));
+
+  const paint = (filter='')=>{
+    const q = (filter||'').trim().toLowerCase();
+    const rows = q ? balances.filter(t=> (t.symbol||'').toLowerCase().includes(q)) : balances;
+
+    if (!rows.length) {
+      container.innerHTML = `
+        <div style="
+          padding:18px; border:1px dashed rgba(255,255,255,.2); border-radius:12px;
+          background:linear-gradient(180deg, rgba(0,255,200,.06), rgba(255,0,255,.05));
+          color:#e7fffa; text-align:center;
+        ">No tokens in <strong>${type}</strong> wallet.</div>`;
       return;
     }
 
-    walletTable.innerHTML = `
-      <div class="wallet-switch-container" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-        <button class="wallet-switch twitch-btn" data-wallet="twitch" style="
-          font-weight:900; letter-spacing:.2px; padding:8px 12px; border-radius:10px;
-          border:1px solid rgba(255,255,255,.18); background:transparent; color:#e7fffa; cursor:pointer;
-          text-shadow: 0 0 6px #ff00ff88;
-        ">🎮 Twitch Wallet</button>
-        <button class="wallet-switch telegram-btn" data-wallet="telegram" style="
-          font-weight:900; letter-spacing:.2px; padding:8px 12px; border-radius:10px;
-          border:1px solid rgba(255,255,255,.18); background:transparent; color:#e7fffa; cursor:pointer;
-          text-shadow: 0 0 6px #00ffcc88;
-        ">🤖 Telegram Wallet</button>
+    container.innerHTML = `
+      <div style="
+        display:grid; gap:10px;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      ">
+        ${rows.map(t => `
+          <div style="
+            border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:12px;
+            background:
+              radial-gradient(600px 300px at 0% 100%, rgba(0,255,200,.07), transparent 55%),
+              radial-gradient(600px 300px at 100% 0%, rgba(255,0,255,.07), transparent 55%),
+              linear-gradient(180deg, rgba(10,10,12,.92), rgba(8,8,10,.92));
+            box-shadow: 0 0 18px rgba(0,255,200,.1), inset 0 0 14px rgba(255,0,255,.05);
+          ">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <div style="font-weight:900; color:#e7fffa; letter-spacing:.2px;">${t.symbol}</div>
+              <div style="font-size:.85rem; color:#9afbd9;">${Number(t.amount||0).toFixed(6)}</div>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button class="token-act" data-action="withdraw" data-token="${t.symbol}" data-wallet="${type}" style="
+                flex:1; padding:8px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
+                background:transparent; color:#e7fffa; cursor:pointer; font-weight:700;
+              ">Withdraw</button>
+              <button class="token-act" data-action="swap" data-token="${t.symbol}" data-wallet="${type}" style="
+                flex:1; padding:8px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
+                background:transparent; color:#e7fffa; cursor:pointer; font-weight:700;
+              ">Swap</button>
+              <button class="token-act" data-action="transfer" data-token="${t.symbol}" data-wallet="${type}" style="
+                flex:1; padding:8px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
+                background:transparent; color:#e7fffa; cursor:pointer; font-weight:700;
+              ">Transfer</button>
+              <button class="token-act" data-action="bridge_to" data-token="${t.symbol}" data-wallet="${type}" style="
+                width:100%; padding:8px; border-radius:10px; border:1px solid rgba(0,255,200,.35);
+                background:linear-gradient(135deg, rgba(0,255,200,.2), rgba(255,0,255,.14));
+                color:#00150f; font-weight:900; cursor:pointer; box-shadow:0 0 14px rgba(0,255,200,.25);
+              ">🔁 Move to ${type==='twitch'?'Telegram':'Twitch'}</button>
+            </div>
+          </div>
+        `).join('')}
       </div>
-
-      <div style="text-align: center;">
-        <div style="display: inline-block; text-align: left; margin-top: 1rem;">
-          <p style="font-family: 'Rock Salt', cursive; text-transform: uppercase; font-size: 1rem; color: #00f0ff; margin: .25rem 0; text-shadow: 0 0 6px #00f0ff;">
-            Stake your tokens to let them work for you — easy gains, zero stress.
-          </p>
-          <p style="font-family: 'Rock Salt', cursive; text-transform: uppercase; font-size: 1rem; color: #ff00ff; margin: .25rem 0; text-shadow: 0 0 6px #ff00ff;">
-            Withdraw your assets whenever you want. It's your crypto, your rules.
-          </p>
-          <p style="font-family: 'Rock Salt', cursive; text-transform: uppercase; font-size: 1rem; color: #00ff44; margin: .25rem 0; text-shadow: 0 0 6px #00ff44;">
-            Swap tokens like a pro — fast, fair, and frictionless.
-          </p>
-          <p style="font-family: 'Rock Salt', cursive; text-transform: uppercase; font-size: 1rem; color: #ffa500; margin: .25rem 0; text-shadow: 0 0 6px #ffa500;">
-            Transfer tokens to friends or alt accounts in a blink.
-          </p>
-          <p style="font-family: 'Rock Salt', cursive; text-transform: uppercase; font-size: 1rem; color: #ffe600; margin: .25rem 0; text-shadow: 0 0 6px #ffe600; position: relative; border-right: 2px solid #ffe600; white-space: nowrap; overflow: hidden; animation: typing 3.5s steps(50, end), blink 1s step-end infinite;">
-            Transfer tokens between your wallets using the built-in Bridge. It's seamless, secure, and slick.
-            <span style="position: absolute; left: 0; bottom: -4px; height: 2px; width: 0; background: #f39c12; animation: underlineSlide 2.5s ease-in-out 3s forwards;"></span>
-          </p>
-        </div>
-      </div>
-      <div id="wallet-content"></div>
     `;
 
-    function setWalletTabActive(type) {
-      const tb = walletTable.querySelector('.twitch-btn');
-      const gb = walletTable.querySelector('.telegram-btn');
-      if (type === 'twitch') {
-        tb.style.background = 'linear-gradient(135deg, rgba(255,0,255,.22), rgba(120,0,255,.14))';
-        tb.style.boxShadow  = '0 0 8px rgba(255,0,255,.25)';
-        gb.style.background = 'transparent';
-        gb.style.boxShadow  = 'none';
-      } else {
-        gb.style.background = 'linear-gradient(135deg, rgba(0,255,160,.25), rgba(0,255,200,.15))';
-        gb.style.boxShadow  = '0 0 8px rgba(0,255,160,.25)';
-        tb.style.background = 'transparent';
-        tb.style.boxShadow  = 'none';
-      }
-    }
-
-    // click tab
-    walletTable.querySelectorAll('.wallet-switch').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const type = btn.getAttribute('data-wallet');
-        window.currentWalletTab = type;
-        setWalletTabActive(type);
-        renderWalletTable(type);
-      });
+    // bind azioni
+    container.querySelectorAll('.token-act').forEach(btn=>{
+      const action = btn.getAttribute('data-action');
+      const token  = btn.getAttribute('data-token');
+      const wallet = btn.getAttribute('data-wallet');
+      btn.addEventListener('click', ()=> openModal(action, token, wallet));
     });
+  };
 
-    // default/preferred
-    window.currentWalletTab = preferred;
-    setWalletTabActive(preferred);
-    renderWalletTable(preferred);
-
-  } catch (error) {
-    console.error("[❌] Error loading wallets:", error);
-  }
+  paint();
+  searchEl?.addEventListener('input', ()=> paint(searchEl.value));
 }
 
 function renderWalletTable(type) {
@@ -10687,7 +10749,7 @@ async function openModal(action, token, walletType = 'telegram') {
       // Puoi ritardare la chiusura per far vedere il messaggio, se vuoi
       setTimeout(() => {
         closeModal();
-        loadWallet();
+        loadWallet('twitch');
       }, 5000);
   
     } catch (error) {

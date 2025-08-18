@@ -3609,24 +3609,42 @@ async function renderGoblinInventory() {
     const gSize = cell * gScale;
     const gOff  = (gSize - cell) / 2;
   
-    ctx.drawImage(assets.goblin, 0, 0, 128, 128, px - gOff, py - gOff, gSize, gSize);
-  
+    if (assets.goblin?.complete) {
+      ctx.drawImage(assets.goblin, px - gOff, py - gOff, gSize, gSize);
+    }
     // label
-    ctx.font = `${cell * 2}px Orbitron, system-ui, sans-serif`;
+    ctx.font = `${Math.max(10, cell * 0.9)}px Orbitron, system-ui, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillStyle = "rgba(0,0,0,0.6)";
-    const labelY = py + cell * 1.55; // centrato nel rettangolo
-    ctx.fillRect(px - cell, py + cell * 1.2, cell * 2, cell * 0.7);
-    ctx.fillStyle = g.color;
-    ctx.fillText(g.wax_account, px, labelY);
+    
+    const labelW = cell * 2.2;
+    const labelH = cell * 0.8;
+    const footY  = py + (gSize / 2);
+    const margin = cell * 0.25;
+    
+    let boxX = px - (labelW / 2);
+    let boxY = footY + margin;
+    
+    // clamp per non uscire dal canvas
+    boxX = Math.max(0, Math.min(boxX, Cave.gridW - labelW));
+    boxY = Math.max(0, Math.min(boxY, Cave.gridH - labelH));
+    
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
+    ctx.fillRect(boxX, boxY, labelW, labelH);
+    
+    ctx.fillStyle = g.color || "#ffe600";
+    ctx.fillText(g.wax_account, boxX + labelW / 2, boxY + labelH / 2);
 
   
     // shovel
     if (g.digging) {
-      const fx = g.shovelFrame * 128;
+      const frames = 6;
+      const fw = assets.shovel.width / frames;
+      const fh = assets.shovel.height;
+      const sx = g.shovelFrame * fw;
       const sSize = cell * sScale;
-      ctx.drawImage(assets.shovel, fx, 0, 128, 128, px - (sSize - cell) / 2, py - sSize, sSize, sSize);
+      ctx.drawImage(assets.shovel, sx, 0, fw, fh, px - (sSize - cell) / 2, py - sSize, sSize, sSize);
+
     }
   }
 
@@ -3657,9 +3675,11 @@ async function renderGoblinInventory() {
         p.done = true;
         continue;
       }
-  
-      // sprite 128x128 → 32x32
-      ctx.drawImage(p.image, p.frame * 128, 0, 128, 128, px - 16, py - 16, 32, 32);
+
+      const srcW = p.image.width / p.frames;
+      const srcH = p.image.height;
+      const sx = Math.floor(p.frame) * srcW;
+      ctx.drawImage(p.image, sx, 0, srcW, srcH, px - 16, py - 16, 32, 32);
   
       // drop chest una sola volta, dentro safe-area
       if (!p.hasDropped && Math.random() < 0.25) {

@@ -608,151 +608,245 @@ function openRegisterModal() {
 
 window.addEventListener("load", initApp);
 
+/* ===========================================================
+   TOKEN POOLS — CREATION & MANAGEMENT (NO EXTERNAL DEPENDENCIES)
+   - Rich UI (inline CSS), Modals, Toast, Spinner
+   - Works with existing endpoints (see comments)
+   =========================================================== */
+
+// ---------- Tiny UI helpers ----------
+(function ensureUIHelpers(){
+  if (!window.showToast) {
+    window.showToast = (msg, type='info') => {
+      const id = 'toast-'+Date.now();
+      const bg = type==='success' ? '#10b981' : type==='error' ? '#ef4444' : '#2563eb';
+      const el = document.createElement('div');
+      el.id = id;
+      el.style = `
+        position:fixed; right:16px; top:16px; z-index:99999;
+        background:${bg}; color:#fff; padding:10px 14px; border-radius:12px;
+        box-shadow:0 10px 30px rgba(0,0,0,.35); font:600 14px/1.25 system-ui,Segoe UI,Roboto;
+        max-width:380px; opacity:.98; transform:translateY(0); transition:.22s ease;
+      `;
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => { el.style.opacity='0'; el.style.transform='translateY(-6px)'; }, 2500);
+      setTimeout(() => el.remove(), 2900);
+    };
+  }
+  if (!window.showModal) {
+    window.showModal = ({title='', body=''}) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'modal-wrap';
+      wrap.style = `
+        position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:99998;
+        display:flex; align-items:center; justify-content:center; padding:18px;
+      `;
+      const card = document.createElement('div');
+      card.className = 'modal-card';
+      card.style = `
+        width:min(920px,95vw); background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937;
+        border-radius:16px; box-shadow:0 30px 120px rgba(0,0,0,.7); overflow:hidden;
+        font:400 14px/1.45 system-ui,Segoe UI,Roboto;
+      `;
+      card.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #1f2937;">
+          <div class="modal-title" style="font-weight:800; font-size:16px;">${title}</div>
+          <button onclick="closeModal()" style="border:0; background:#111827; color:#9ca3af; padding:6px 10px; border-radius:10px; cursor:pointer;">✖</button>
+        </div>
+        <div class="modal-body" style="padding:14px 16px;">${body}</div>
+      `;
+      wrap.appendChild(card);
+      document.body.appendChild(wrap);
+    };
+    window.closeModal = () => {
+      const wrap = document.querySelector('.modal-wrap');
+      if (wrap) wrap.remove();
+    };
+  }
+})();
+
+const spinnerHTML = `
+  <div style="display:flex; align-items:center; gap:10px; padding:14px; color:#9ca3af;">
+    <div style="width:16px; height:16px; border:2px solid #374151; border-top-color:#22d3ee; border-radius:50%; animation:spin 1s linear infinite;"></div>
+    Loading...
+  </div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+`;
+
+const fmt = (n, dp=6) => {
+  const x = Number(n || 0);
+  return x.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: dp });
+};
+
+function pct(part, total){
+  const p = Number(total) > 0 ? (Number(part)/Number(total))*100 : 0;
+  return isFinite(p) ? p : 0;
+}
+
+// ---------- Entrypoint ----------
 async function loadCreateTokenStaking() {
   const container = document.getElementById('create-token-pool-container');
   container.innerHTML = `
-    <input 
-      type="text" 
-      id="search-token-pool" 
-      placeholder="Search your token..." 
-      class="input-token-search"
-    >
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;">
+      <input id="search-token-pool" placeholder="Search your token..." 
+        style="flex:1; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:12px; padding:10px 12px; outline:none;">
+      <button id="create-new-token-pool-btn"
+        style="white-space:nowrap; background:linear-gradient(135deg,#22d3ee,#a78bfa); color:#0a0a0a; font-weight:900; border:0; border-radius:12px; padding:10px 14px; cursor:pointer; box-shadow:0 8px 30px rgba(34,211,238,.35);">
+        ➕ Create New Token Pool
+      </button>
+    </div>
 
-    <button 
-      id="create-new-token-pool-btn" 
-      class="btn btn-primary create-token-pool-btn"
-    >
-      ➕ Create New Token Pool
-    </button>
+    <div id="created-token-pools" 
+      style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;"></div>
 
-    <div id="created-token-pools" class="token-pool-list"></div>
-    <div id="token-pool-details"></div>
+    <div id="token-pool-details"
+      style="border:1px solid #1f2937; border-radius:16px; background:#0b0f14; padding:12px; min-height:160px;">
+      ${spinnerHTML}
+    </div>
   `;
 
-  document.getElementById('create-new-token-pool-btn').addEventListener('click', () => {
-    renderNewTokenPoolForm();
-  });
-
-  await fetchAndRenderTokenPools();
+  document.getElementById('create-new-token-pool-btn').addEventListener('click', renderNewTokenPoolForm);
+  await fetchAndRenderTokenPools(true);
 }
-
 window.loadCreateTokenStaking = loadCreateTokenStaking;
+
+// ---------- Fetch & cache ----------
 async function fetchAndRenderTokenPools(shouldRender = true) {
-  const { userId } = window.userData;
-  const container = document.getElementById('token-pool-details');
+  const { wax_account } = window.userData || {};
+  const details = document.getElementById('token-pool-details');
+  const list = document.getElementById('created-token-pools');
 
   try {
-    const res = await fetch(`${BASE_URL}/get_staking_pools?user_id=${userId}`);
+    if (details && shouldRender) details.innerHTML = spinnerHTML;
+    const res = await fetch(`${BASE_URL}/get_staking_pools?wax_account=${encodeURIComponent(wax_account)}`);
     const data = await res.json();
-    if (!container) {
-      window.tokenPoolsData = data.pools;
+
+    if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+
+    window.tokenPoolsData = data?.pools || [];
+    window.walletBalances = (data?.balance || []).map(b => ({ symbol: b.token_symbol, amount: Number(b.amount||0) }));
+    window.depositTokens = data?.tokens || [];
+
+    if (!shouldRender) return;
+
+    if (!data.pools || !data.pools.length) {
+      if (list) list.innerHTML = '';
+      if (details) details.innerHTML = `<div style="padding:12px; color:#9ca3af;">No token staking pools found.</div>`;
       return;
     }
 
-    if (shouldRender) {
-      if (!res.ok || !data.pools) {
-        container.innerHTML = `<div class="empty-message">No token staking pools found.</div>`;
-        return;
-      }
-
-      window.tokenPoolsData = data.pools;
-      renderCreatedTokenPoolButtons(data.pools);
-      renderTokenPoolDetails(data.pools[0]);
-    }
-  } catch (err) {
-    if (container && shouldRender) {
-      container.innerHTML = `<div class="error-message">Error loading token pools.</div>`;
-    }
-    console.error("[❌] Error loading pools:", err);
+    renderCreatedTokenPoolButtons(data.pools);
+    renderTokenPoolDetails(data.pools[0]);
+  } catch (e) {
+    console.error("[❌] Error loading pools:", e);
+    if (details && shouldRender) details.innerHTML = `<div style="padding:12px; color:#ef4444;">Error loading token pools.</div>`;
   }
 }
 
+// ---------- Create Form ----------
 function renderNewTokenPoolForm() {
   const container = document.getElementById('token-pool-details');
+  const depositOptions = (window.depositTokens||[])
+    .map(t => `<option value="${t.symbol}">${t.symbol}</option>`)
+    .join('');
+
   container.innerHTML = `
-    <div class="form-card" id="create-pool-form">
-      <div id="step-1" class="form-step active-step">
-        <h3 class="form-title">Step 1: Deposit Token</h3>
-        <label class="form-label">Deposit Token Symbol</label>
-        <input id="new-token-symbol" type="text" class="form-input" placeholder="e.g. CHIPS">
-        <button class="btn btn-primary" id="go-to-step-2">Next ➡️</button>
+    <div style="display:grid; gap:14px;">
+      <div style="border:1px solid #1f2937; border-radius:12px; padding:12px; background:#0b0f14;">
+        <h3 style="margin:0 0 8px; font:800 18px/1.2 system-ui; color:#e5e7eb;">Create Token Pool</h3>
+        <div style="display:grid; gap:8px; grid-template-columns:1fr 1fr;">
+          <div>
+            <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Deposit Token (immutable)</label>
+            <input id="new-token-symbol" list="deposit-tokens" placeholder="e.g. CHIPS"
+              style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+            <datalist id="deposit-tokens">${depositOptions}</datalist>
+            <div style="color:#9ca3af; font-size:12px; margin-top:4px;">Il token di deposito e il nome farm <b>non si potranno modificare</b>.</div>
+          </div>
+          <div>
+            <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Pool Name (optional, immutable)</label>
+            <input id="new-pool-name" placeholder="Your Pool Name"
+              style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+          </div>
+        </div>
       </div>
-  
-      <div id="step-2" class="form-step" style="display: none;">
-        <h3 class="form-title">Step 2: Reward Tokens</h3>
-        <div id="reward-token-entries" class="reward-token-grid"></div>
-  
-        <button class="btn btn-secondary add-reward-btn" id="add-reward-token">➕ Add Reward Token</button>
-        <div class="step-buttons">
-          <button class="btn btn-secondary" id="back-to-step-1">⬅️ Back</button>
-          <button class="btn btn-primary submit-pool-btn" id="submit-new-token-pool">✅ Create Pool</button>
+
+      <div style="border:1px solid #1f2937; border-radius:12px; padding:12px; background:#0b0f14;">
+        <h3 style="margin:0 0 8px; font:800 16px/1.2 system-ui; color:#e5e7eb;">Reward Tokens</h3>
+        <div id="reward-token-entries" style="display:grid; gap:10px;"></div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:space-between; margin-top:10px;">
+          <button id="add-reward-token"
+            style="background:#111827; color:#e5e7eb; border:1px solid #374151; border-radius:10px; padding:8px 12px; cursor:pointer;">
+            ➕ Add Reward Token
+          </button>
+          <button id="submit-new-token-pool"
+            style="background:linear-gradient(135deg,#22d3ee,#a78bfa); color:#0a0a0a; font-weight:900; border:0; border-radius:10px; padding:10px 14px; cursor:pointer;">
+            ✅ Create Pool
+          </button>
         </div>
       </div>
     </div>
   `;
-  // Step navigation
-  document.getElementById('go-to-step-2').addEventListener('click', () => {
-    document.getElementById('step-1').style.display = 'none';
-    document.getElementById('step-2').style.display = 'block';
-  });
-  
-  document.getElementById('back-to-step-1').addEventListener('click', () => {
-    document.getElementById('step-2').style.display = 'none';
-    document.getElementById('step-1').style.display = 'block';
-  });
 
-  let rewardIndex = 0;
   function addRewardTokenEntry() {
-    const wrapper = document.getElementById('reward-token-entries');
-    const html = `
-      <div class="reward-token-entry">
-        <label class="form-label">Reward Token Symbol</label>
-        <input type="text" class="form-input reward-symbol" placeholder="e.g. WAX">
-
-        <label class="form-label">Total Reward Amount</label>
-        <input type="number" class="form-input reward-total" placeholder="e.g. 1000">
-
-        <label class="form-label">Daily Reward</label>
-        <input type="number" class="form-input reward-daily" placeholder="e.g. 10">
-      </div>`;
-    wrapper.insertAdjacentHTML('beforeend', html);
-    rewardIndex++;
+    const wrap = document.getElementById('reward-token-entries');
+    wrap.insertAdjacentHTML('beforeend', `
+      <div style="display:grid; gap:6px; grid-template-columns: 1fr 1fr 1fr; align-items:end;">
+        <div>
+          <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Reward Token</label>
+          <input type="text" class="reward-symbol" placeholder="e.g. WAX"
+            style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+        </div>
+        <div>
+          <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Total Reward</label>
+          <input type="number" class="reward-total" placeholder="e.g. 1000"
+            style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+        </div>
+        <div>
+          <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Daily Reward</label>
+          <input type="number" class="reward-daily" placeholder="e.g. 10"
+            style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+        </div>
+      </div>
+    `);
   }
-
-  document.getElementById('add-reward-token').addEventListener('click', addRewardTokenEntry);
+  document.getElementById('add-reward-token').onclick = addRewardTokenEntry;
   addRewardTokenEntry();
 
-  document.getElementById('submit-new-token-pool').addEventListener('click', async () => {
+  document.getElementById('submit-new-token-pool').onclick = async () => {
     const symbol = document.getElementById('new-token-symbol').value.trim().toUpperCase();
-    const { userId, usx_token, wax_account } = window.userData;
+    const pool_name = (document.getElementById('new-pool-name').value || '').trim() || null;
+    const { userId, usx_token, wax_account } = window.userData || {};
 
-    const rewardTokens = Array.from(document.querySelectorAll('.reward-token-entry')).map(entry => {
-      return {
-        token_symbol: entry.querySelector('.reward-symbol').value.trim().toUpperCase(),
-        total_reward: parseFloat(entry.querySelector('.reward-total').value),
-        daily_reward: parseFloat(entry.querySelector('.reward-daily').value)
-      };
-    });
+    const rows = Array.from(document.querySelectorAll('#reward-token-entries > div'));
+    const rewardTokens = rows.map(row => ({
+      token_symbol: row.querySelector('.reward-symbol').value.trim().toUpperCase(),
+      total_reward: parseFloat(row.querySelector('.reward-total').value),
+      daily_reward: parseFloat(row.querySelector('.reward-daily').value),
+    }));
 
-    if (!symbol || rewardTokens.some(r => !r.token_symbol || isNaN(r.total_reward) || isNaN(r.daily_reward))) {
-      showToast("Please fill all fields with valid values.", "error");
-      return;
+    if (!symbol || rewardTokens.some(r => !r.token_symbol || isNaN(r.total_reward) || r.total_reward<=0 || isNaN(r.daily_reward) || r.daily_reward<=0)) {
+      return showToast("Please fill all fields with valid positive values.", "error");
     }
 
     try {
-      const createRes = await fetch(`${BASE_URL}/create_staking_pool?user_id=${userId}&usx_token=${usx_token}`, {
+      // crea pool (user_id/usx_token opzionali; wax_account è sempre nel body)
+      const qs = new URLSearchParams();
+      if (userId) qs.set('user_id', userId);
+      if (usx_token) qs.set('usx_token', usx_token);
+      const resCreate = await fetch(`${BASE_URL}/create_staking_pool?${qs.toString()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deposit_token_symbol: symbol })
+        body: JSON.stringify({ deposit_token_symbol: symbol, pool_name, wax_account })
       });
+      const dataCreate = await resCreate.json();
+      if (!resCreate.ok) throw new Error(dataCreate?.error || "Failed to create pool");
 
-      const createData = await createRes.json();
-      if (!createRes.ok) throw new Error(createData.error || "Failed to create pool");
+      const poolId = dataCreate.pool_id;
 
-      const poolId = createData.pool_id;
-
-      for (let reward of rewardTokens) {
-        const rewardRes = await fetch(`${BASE_URL}/add_pool_reward`, {
+      // aggiungi reward tokens (e set daily)
+      for (const reward of rewardTokens) {
+        const resRw = await fetch(`${BASE_URL}/add_pool_reward`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -760,24 +854,24 @@ function renderNewTokenPoolForm() {
             token_symbol: reward.token_symbol,
             total_reward: reward.total_reward,
             daily_reward: reward.daily_reward,
-            wax_account: wax_account
+            wax_account
           })
         });
-
-        const rewardData = await rewardRes.json();
-        if (!rewardRes.ok) throw new Error(rewardData.error || "Failed to add reward token");
+        const dataRw = await resRw.json();
+        if (!resRw.ok) throw new Error(dataRw?.error || "Failed to add reward token");
       }
 
       showToast("Token pool created with rewards!", "success");
-      await fetchAndRenderTokenPools();
+      await fetchAndRenderTokenPools(true);
 
-    } catch (err) {
-      console.error("[❌] Error creating token pool:", err);
-      showToast(err.message, "error");
+    } catch (e) {
+      console.error(e);
+      showToast(e.message, "error");
     }
-  });
+  };
 }
 
+// ---------- Pools list ----------
 function renderCreatedTokenPoolButtons(pools) {
   const container = document.getElementById('created-token-pools');
   const searchInput = document.getElementById('search-token-pool');
@@ -786,8 +880,11 @@ function renderCreatedTokenPoolButtons(pools) {
     container.innerHTML = '';
     list.forEach(pool => {
       const btn = document.createElement('button');
-      btn.className = 'token-pool-btn';
       btn.textContent = pool.deposit_token?.symbol || 'Unknown';
+      btn.style = `
+        background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:12px;
+        padding:8px 12px; cursor:pointer; font-weight:800; letter-spacing:.2px;
+      `;
       btn.onclick = () => renderTokenPoolDetails(pool);
       container.appendChild(btn);
     });
@@ -795,255 +892,493 @@ function renderCreatedTokenPoolButtons(pools) {
 
   renderButtons(pools);
 
-  searchInput.addEventListener('input', () => {
-    const search = searchInput.value.toLowerCase();
-    const filtered = pools.filter(p => p.deposit_token?.symbol?.toLowerCase().includes(search));
+  searchInput.oninput = () => {
+    const q = (searchInput.value || '').toLowerCase();
+    const filtered = pools.filter(p => (p.deposit_token?.symbol || '').toLowerCase().includes(q));
     renderButtons(filtered);
-  });
+  };
 }
 
-
-function renderTokenPoolDetails(pool) {
+// ---------- Details with tabs ----------
+async function renderTokenPoolDetails(pool) {
   const container = document.getElementById('token-pool-details');
-  const rewardsHTML = pool.rewards.map(reward => {
-    const daysLeft = reward.daily_reward > 0
-      ? Math.floor(reward.total_reward_deposit / reward.daily_reward)
-      : '∞';
-
-    return `
-      <div class="reward-item">
-        <p class="reward-text"><strong>🎯 Token:</strong> ${reward.token_symbol}</p>
-        <p class="reward-text">💰 Total Deposited: <strong>${reward.total_reward_deposit}</strong></p>
-        <p class="reward-text">📅 Daily Reward: <strong>${reward.daily_reward}</strong></p>
-        <p class="reward-text">⏳ Days Remaining: <strong>${daysLeft}</strong></p>
-        <button 
-          class="btn btn-warning reward-edit-btn" 
-          onclick="openEditDailyReward(${pool.pool_id}, '${reward.token_symbol}', ${reward.daily_reward}, '${pool.deposit_token.symbol}')">
-          ✏️ Edit Daily Reward
-        </button>
+  container.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <div>
+        <h3 style="margin:0; font:800 18px/1.2 system-ui; color:#e5e7eb;">${pool.deposit_token?.symbol || 'Unknown'} Pool</h3>
+        <div style="color:#9ca3af; font-size:12px; margin-top:4px;">
+          <b>Status:</b> ${pool.status} • <b>Created:</b> ${pool.created_at}
+          ${pool.pool_name ? ` • <b>Name:</b> ${pool.pool_name}` : ''}
+        </div>
       </div>
+      <button
+        style="background:#111827; color:#e5e7eb; border:1px solid #374151; border-radius:10px; padding:8px 10px; cursor:pointer;"
+        onclick="openPoolStatusModal(${pool.pool_id}, '${pool.status||'settings'}')">
+        🔄 Change Status
+      </button>
+    </div>
+
+    <div style="display:flex; gap:8px; border-bottom:1px solid #1f2937; margin-bottom:10px;">
+      <button class="tp-tab tp-tab-active" data-tab="overview"
+        style="padding:8px 12px; background:#0b0f14; color:#e5e7eb; border:0; border-bottom:2px solid #22d3ee; cursor:pointer; font-weight:800;">
+        Overview
+      </button>
+      <button class="tp-tab" data-tab="rewards"
+        style="padding:8px 12px; background:#0b0f14; color:#9ca3af; border:0; border-bottom:2px solid transparent; cursor:pointer; font-weight:700;">
+        Rewards
+      </button>
+      <button class="tp-tab" data-tab="stakers"
+        style="padding:8px 12px; background:#0b0f14; color:#9ca3af; border:0; border-bottom:2px solid transparent; cursor:pointer; font-weight:700;">
+        Stakers
+      </button>
+      <button class="tp-tab" data-tab="activity"
+        style="padding:8px 12px; background:#0b0f14; color:#9ca3af; border:0; border-bottom:2px solid transparent; cursor:pointer; font-weight:700;">
+        Activity
+      </button>
+    </div>
+
+    <div id="tp-tabcontent-overview">${spinnerHTML}</div>
+    <div id="tp-tabcontent-rewards" style="display:none;"></div>
+    <div id="tp-tabcontent-stakers" style="display:none;"></div>
+    <div id="tp-tabcontent-activity" style="display:none;"></div>
+  `;
+
+  // tabs
+  container.querySelectorAll('.tp-tab').forEach(btn => {
+    btn.onclick = (e) => {
+      const tab = e.currentTarget.dataset.tab;
+      container.querySelectorAll('.tp-tab').forEach(b => {
+        b.classList.toggle('tp-tab-active', b.dataset.tab===tab);
+        b.style.color = b.dataset.tab===tab ? '#e5e7eb' : '#9ca3af';
+        b.style.borderBottomColor = b.dataset.tab===tab ? '#22d3ee' : 'transparent';
+      });
+      container.querySelectorAll('[id^="tp-tabcontent-"]').forEach(div => div.style.display='none');
+      document.getElementById(`tp-tabcontent-${tab}`).style.display = '';
+    };
+  });
+
+  // render each tab
+  renderOverviewTab(pool);
+  renderRewardsTab(pool);
+  await renderStakersTab(pool);
+  renderActivityTab(pool);
+}
+
+// ---------- Overview ----------
+function renderOverviewTab(pool){
+  const host = document.getElementById('tp-tabcontent-overview');
+  const rewards = pool.rewards || [];
+  const totalDaily = rewards.reduce((s,r)=> s + Number(r.daily_reward||0), 0);
+  const chips = rewards.map(r => `
+    <div style="display:inline-flex; gap:.35rem; align-items:center; padding:.25rem .55rem; border:1px solid #243042; border-radius:999px; margin:.2rem .2rem 0 0;">
+      <span style="font-weight:800;">${r.token_symbol}</span>
+      <span>${fmt(r.daily_reward,6)}/day</span>
+    </div>`).join('');
+
+  const rows = rewards.map(r => {
+    const daysLeft = Number(r.daily_reward)>0 ? Math.floor(Number(r.total_reward_deposit||0)/Number(r.daily_reward||1)) : '∞';
+    return `
+      <tr>
+        <td style="padding:8px; border-bottom:1px solid #111827;">${r.token_symbol}</td>
+        <td style="padding:8px; border-bottom:1px solid #111827; text-align:right;">${fmt(r.total_reward_deposit,6)}</td>
+        <td style="padding:8px; border-bottom:1px solid #111827; text-align:right;">${fmt(r.daily_reward,6)}</td>
+        <td style="padding:8px; border-bottom:1px solid #111827; text-align:right;">${daysLeft}</td>
+      </tr>
     `;
   }).join('');
 
-  container.innerHTML = `
-    <div class="token-pool-card">
-      <h3 class="token-pool-title">${pool.deposit_token?.symbol || 'Unknown'} Pool</h3>
-      <p class="pool-detail"><strong>Status:</strong> ${pool.status}</p>
-      <p class="pool-detail"><strong>Created:</strong> ${pool.created_at}</p>
-      ${rewardsHTML || '<p class="no-rewards-message">No rewards configured.</p>'}
-      <button 
-        class="btn btn-warning pool-status-btn" 
-        onclick="openPoolStatusModal(${pool.pool_id}, '${pool.status || 'open'}')">
-        🔄 Change Pool Status
-      </button>
+  host.innerHTML = `
+    <div style="display:grid; gap:12px;">
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:240px; border:1px solid #1f2937; border-radius:12px; background:#0d131a; padding:12px;">
+          <div style="color:#9ca3af; font-size:12px;">Total reward tokens/day</div>
+          <div style="font-weight:900; font-size:20px; color:#e5e7eb;">${fmt(totalDaily,6)}</div>
+          <div style="margin-top:8px;">${chips}</div>
+        </div>
+        <div style="flex:1; min-width:240px; border:1px solid #1f2937; border-radius:12px; background:#0d131a; padding:12px;">
+          <div style="color:#9ca3af; font-size:12px;">Rewards configured</div>
+          <div style="font-weight:900; font-size:20px; color:#e5e7eb;">${rewards.length}</div>
+          <div style="margin-top:8px; color:#9ca3af; font-size:12px;">Immutable: deposit token & name</div>
+        </div>
+      </div>
+
+      <div style="border:1px solid #1f2937; border-radius:12px; background:#0d131a;">
+        <div style="padding:10px 12px; border-bottom:1px solid #1f2937; font-weight:800;">Rewards summary</div>
+        <div style="max-width:100%; overflow:auto;">
+          <table style="width:100%; border-collapse:collapse; font-size:14px;">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #111827; color:#9ca3af; font-weight:600;">Token</th>
+                <th style="text-align:right; padding:8px; border-bottom:1px solid #111827; color:#9ca3af; font-weight:600;">Total deposit</th>
+                <th style="text-align:right; padding:8px; border-bottom:1px solid #111827; color:#9ca3af; font-weight:600;">Daily</th>
+                <th style="text-align:right; padding:8px; border-bottom:1px solid #111827; color:#9ca3af; font-weight:600;">Days left</th>
+              </tr>
+            </thead>
+            <tbody>${rows || '<tr><td colspan="4" style="padding:10px; color:#9ca3af;">No rewards.</td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>
     </div>
   `;
 }
 
-function openEditDailyReward(poolId, tokenSymbol, currentReward, depositTokenSymbol) {
-  const body = `
-    <label class="form-label">New Daily Reward</label>
-    <input 
-      id="new-daily-reward" 
-      type="number" 
-      value="${currentReward}" 
-      class="form-input"
-    >
-    <button id="submit-daily-reward" class="btn btn-action full-width" style="
-      margin-top: 1rem;
-      background: linear-gradient(135deg, #ffe600, #f39c12, #ff00ff);
-      box-shadow: 0 0 5px #00ffcc, 0 0 20px #ff00ff;
-      color: #000;
-      font-weight: bold;
-      border-radius: 8px;
-    ">
-      Update Reward
-    </button>
+// ---------- Rewards (manage) ----------
+function renderRewardsTab(pool){
+  const host = document.getElementById('tp-tabcontent-rewards');
+  const rewards = pool.rewards || [];
 
-    <button class="btn btn-secondary mt-medium" onclick="openDepositToPool(${poolId}, '${tokenSymbol}')">
-      💰 Deposit More Tokens
-    </button>
+  const items = rewards.map(r => {
+    const daysLeft = Number(r.daily_reward)>0 ? Math.floor(Number(r.total_reward_deposit||0)/Number(r.daily_reward||1)) : '∞';
+    return `
+      <div style="border:1px solid #1f2937; border-radius:12px; padding:10px; background:#0d131a;">
+        <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
+          <div>
+            <div style="font-weight:900; color:#e5e7eb; letter-spacing:.2px;">🎯 ${r.token_symbol}</div>
+            <div style="color:#9ca3af; font-size:12px;">Total: <b>${fmt(r.total_reward_deposit,6)}</b> • Daily: <b>${fmt(r.daily_reward,6)}</b> • Days left: <b>${daysLeft}</b></div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button
+              style="background:#111827; color:#e5e7eb; border:1px solid #374151; border-radius:10px; padding:8px 10px; cursor:pointer;"
+              onclick="openDepositToPool(${pool.pool_id}, '${r.token_symbol}', ${Number(r.daily_reward)||0})">
+              💰 Top-up
+            </button>
+            <button
+              style="background:linear-gradient(135deg,#ffe600,#f39c12,#ff00ff); color:#0a0a0a; font-weight:900; border:0; border-radius:10px; padding:8px 10px; cursor:pointer; box-shadow:0 0 5px #00ffcc, 0 0 20px #ff00ff;"
+              onclick="openEditDailyReward(${pool.pool_id}, '${r.token_symbol}', ${Number(r.daily_reward)||0})">
+              ✏️ Edit Daily
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const addNewHTML = `
+    <div style="border:1px dashed #243042; border-radius:12px; padding:12px; background:#0b0f14;">
+      <div style="font-weight:800; margin-bottom:8px;">Add new reward token</div>
+      <div style="display:grid; gap:8px; grid-template-columns: 1fr 1fr 1fr; align-items:end;">
+        <div>
+          <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Token symbol</label>
+          <input id="add-rw-symbol" placeholder="e.g. WAX"
+            style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+        </div>
+        <div>
+          <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Total deposit</label>
+          <input id="add-rw-total" type="number" placeholder="e.g. 1000"
+            style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+        </div>
+        <div>
+          <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Daily reward</label>
+          <input id="add-rw-daily" type="number" placeholder="e.g. 10"
+            style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+        </div>
+      </div>
+      <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+        <button id="add-rw-submit"
+          style="background:#22d3ee; color:#0a0a0a; font-weight:900; border:0; border-radius:10px; padding:10px 12px; cursor:pointer;">
+          ➕ Add reward token
+        </button>
+      </div>
+    </div>
   `;
 
-  showModal({
-    title: `<h3 class="modal-title">Edit Daily Reward for ${tokenSymbol}</h3>`,
-    body
-  });
+  host.innerHTML = `
+    <div style="display:grid; gap:10px;">
+      ${items || '<div style="padding:10px; color:#9ca3af;">No rewards configured.</div>'}
+      ${addNewHTML}
+    </div>
+  `;
+
+  document.getElementById('add-rw-submit').onclick = async () => {
+    const sym = document.getElementById('add-rw-symbol').value.trim().toUpperCase();
+    const tot = parseFloat(document.getElementById('add-rw-total').value);
+    const day = parseFloat(document.getElementById('add-rw-daily').value);
+    if (!sym || !isFinite(tot) || tot<=0 || !isFinite(day) || day<=0) {
+      return showToast('Insert valid values', 'error');
+    }
+    try {
+      const { wax_account } = window.userData || {};
+      const res = await fetch(`${BASE_URL}/add_pool_reward`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ pool_id: pool.pool_id, token_symbol: sym, total_reward: tot, daily_reward: day, wax_account })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Failed to add reward');
+      showToast('Reward token added','success');
+      fetchAndRenderTokenPools(true);
+    } catch (e) {
+      console.error(e);
+      showToast(e.message,'error');
+    }
+  };
+}
+
+// ---------- Stakers (stats) ----------
+async function renderStakersTab(pool){
+  const host = document.getElementById('tp-tabcontent-stakers');
+  host.innerHTML = spinnerHTML;
+
+  try {
+    // Se il backend espone questo endpoint, mostriamo dati reali.
+    const res = await fetch(`${BASE_URL}/get_pool_stakers?pool_id=${pool.pool_id}`);
+    if (res.ok) {
+      const data = await res.json();
+      const stakers = data?.stakers || [];
+      const totalStaked = Number(data?.total_staked || stakers.reduce((s,x)=> s + Number(x.amount_staked||0), 0));
+      const rows = stakers.map(s => `
+        <tr>
+          <td style="padding:8px; border-bottom:1px solid #111827;">${s.wax_account}</td>
+          <td style="padding:8px; border-bottom:1px solid #111827; text-align:right;">${fmt(s.amount_staked,6)}</td>
+          <td style="padding:8px; border-bottom:1px solid #111827; text-align:right;">${fmt(pct(s.amount_staked,totalStaked),2)}%</td>
+        </tr>
+      `).join('');
+      host.innerHTML = `
+        <div style="display:grid; gap:12px;">
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:220px; border:1px solid #1f2937; border-radius:12px; background:#0d131a; padding:12px;">
+              <div style="color:#9ca3af; font-size:12px;">Total staked</div>
+              <div style="font-weight:900; font-size:20px; color:#e5e7eb;">${fmt(totalStaked,6)}</div>
+            </div>
+            <div style="flex:1; min-width:220px; border:1px solid #1f2937; border-radius:12px; background:#0d131a; padding:12px;">
+              <div style="color:#9ca3af; font-size:12px;">Stakers</div>
+              <div style="font-weight:900; font-size:20px; color:#e5e7eb;">${stakers.length}</div>
+            </div>
+          </div>
+          <div style="border:1px solid #1f2937; border-radius:12px; background:#0d131a;">
+            <div style="padding:10px 12px; border-bottom:1px solid #1f2937; font-weight:800;">Top stakers</div>
+            <div style="max-width:100%; overflow:auto;">
+              <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                <thead>
+                  <tr>
+                    <th style="text-align:left; padding:8px; border-bottom:1px solid #111827; color:#9ca3af; font-weight:600;">Wax</th>
+                    <th style="text-align:right; padding:8px; border-bottom:1px solid #111827; color:#9ca3af; font-weight:600;">Staked</th>
+                    <th style="text-align:right; padding:8px; border-bottom:1px solid #111827; color:#9ca3af; font-weight:600;">Share</th>
+                  </tr>
+                </thead>
+                <tbody>${rows || '<tr><td colspan="3" style="padding:10px; color:#9ca3af;">No data.</td></tr>'}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+    // Fallback se endpoint non c’è: info sintetiche non disponibili
+    host.innerHTML = `
+      <div style="padding:12px; color:#9ca3af;">
+        Detailed stakers statistics are not available on this server.  
+        <div style="margin-top:6px;">(Optional endpoint: <code>/get_pool_stakers?pool_id=${pool.pool_id}</code>)</div>
+      </div>
+    `;
+  } catch (e) {
+    console.error(e);
+    host.innerHTML = `<div style="padding:12px; color:#ef4444;">Error loading stakers.</div>`;
+  }
+}
+
+// ---------- Activity (stats/log) ----------
+function renderActivityTab(pool){
+  const host = document.getElementById('tp-tabcontent-activity');
+  host.innerHTML = `
+    <div style="display:grid; gap:12px;">
+      <div id="tp-activity-cards" style="display:flex; gap:12px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:220px; border:1px solid #1f2937; border-radius:12px; background:#0d131a; padding:12px;">
+          <div style="color:#9ca3af; font-size:12px;">Rewards configured</div>
+          <div style="font-weight:900; font-size:20px; color:#e5e7eb;">${(pool.rewards||[]).length}</div>
+        </div>
+        <div id="tp-activity-extra" style="flex:1; min-width:220px; border:1px solid #1f2937; border-radius:12px; background:#0d131a; padding:12px;">
+          <div style="color:#9ca3af; font-size:12px;">Last reward time</div>
+          <div style="font-weight:900; font-size:16px; color:#e5e7eb;">—</div>
+        </div>
+      </div>
+      <div id="tp-activity-note" style="color:#9ca3af; font-size:12px;">
+        If the backend provides <code>/get_pool_stats?pool_id=</code>, we’ll show more insights here.
+      </div>
+    </div>
+  `;
+
+  // Prova a ottenere statistiche aggiuntive (facoltative)
+  (async ()=>{
+    try {
+      const res = await fetch(`${BASE_URL}/get_pool_stats?pool_id=${pool.pool_id}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const last = data?.last_reward_time || '—';
+      const stakers = Number(data?.stakers || 0);
+      const total = Number(data?.total_staked || 0);
+      const box = document.getElementById('tp-activity-extra');
+      box.innerHTML = `
+        <div style="color:#9ca3af; font-size:12px;">Last reward time</div>
+        <div style="font-weight:900; font-size:16px; color:#e5e7eb;">${last}</div>
+        <div style="color:#9ca3af; font-size:12px; margin-top:8px;">Stakers: <b>${stakers}</b> • Total staked: <b>${fmt(total,6)}</b></div>
+      `;
+      document.getElementById('tp-activity-note').remove();
+    } catch {}
+  })();
+}
+
+// ---------- Actions: Edit Daily ----------
+function openEditDailyReward(poolId, tokenSymbol, currentReward=0) {
+  const body = `
+    <div style="display:grid; gap:8px;">
+      <div>
+        <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">New Daily Reward</label>
+        <input id="new-daily-reward" type="number" value="${currentReward||0}" 
+          style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+      </div>
+      <div>
+        <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Extra deposit (optional)</label>
+        <input id="extra-deposit" type="number" placeholder="0 to keep" 
+          style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+        <div style="color:#9ca3af; font-size:12px; margin-top:4px;">
+          Se desideri solo aggiornare il daily e il backend richiede un importo &gt; 0,
+          imposterò automaticamente 0.000001.
+        </div>
+      </div>
+      <button id="submit-daily-reward"
+        style="margin-top:6px; background:linear-gradient(135deg,#ffe600,#f39c12,#ff00ff); box-shadow:0 0 5px #00ffcc, 0 0 20px #ff00ff;
+        color:#000; font-weight:900; border-radius:10px; padding:10px 12px; border:0; cursor:pointer;">
+        Update Reward
+      </button>
+    </div>
+  `;
+  showModal({ title:`Edit Daily Reward • ${tokenSymbol}`, body });
 
   setTimeout(() => {
     document.getElementById('submit-daily-reward').onclick = async () => {
-      const newReward = parseFloat(document.getElementById('new-daily-reward').value);
-      if (isNaN(newReward) || newReward <= 0) {
-        showToast("Please enter a valid reward value", "error");
-        return;
-      }
+      const daily = parseFloat(document.getElementById('new-daily-reward').value);
+      let extra = parseFloat(document.getElementById('extra-deposit').value);
+      if (isNaN(daily) || daily <= 0) return showToast("Please enter a valid daily reward","error");
+      if (isNaN(extra) || extra < 0) extra = 0;
+      if (extra === 0) extra = 0.000001; // compat con backend attuale
 
       try {
-        const { userId, usx_token } = window.userData;
-        const res = await fetch(`${BASE_URL}/update_pool_daily_reward?user_id=${userId}&usx_token=${usx_token}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            pool_id: poolId,
-            reward_token_symbol: tokenSymbol,
-            new_daily_reward: newReward
-          })
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to update reward");
-
-        showToast("Daily reward updated", "success");
-        closeModal();
-        fetchAndRenderTokenPools();
-      } catch (err) {
-        console.error("[❌] Failed to update reward:", err);
-        showToast(err.message, "error");
-      }
-    };
-  }, 0); // ⏱ attende il render completo del DOM prima di bindare gli eventi
-}
-
-window.openEditDailyReward = openEditDailyReward;
-function openDepositToPool(poolId, tokenSymbol) {
-  const tokenBalance = window.walletBalances?.find(t => t.symbol === tokenSymbol);
-  const balance = tokenBalance?.amount || 0;
-  const body = `
-    <p class="wallet-info">Available in Wallet: <strong>${balance}</strong></p>
-
-    <label class="form-label">Amount</label>
-    <input 
-      type="number" 
-      id="deposit-amount" 
-      class="form-input" 
-      placeholder="e.g. 100"
-    >
-
-    <button 
-      id="submit-deposit" 
-      class="btn btn-primary full-width"
-    >
-      Deposit Tokens
-    </button>
-  `;
-
-  showModal({
-    title: `<h3 class="modal-title">Deposit More ${tokenSymbol} into Pool</h3>`,
-    body
-  });
-
-  setTimeout(() => {
-    document.getElementById('submit-deposit').onclick = async () => {
-      const amount = parseFloat(document.getElementById('deposit-amount').value);
-
-      if (!amount || amount <= 0 || amount > balance) {
-        showToast("Invalid amount", "error");
-        return;
-      }
-
-      try {
-        const { userId, usx_token, wax_account } = window.userData;
-
-        const res = await fetch(`${BASE_URL}/add_token_to_staking_pool?user_id=${userId}&usx_token=${usx_token}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const { wax_account } = window.userData || {};
+        const res = await fetch(`${BASE_URL}/add_pool_reward`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
           body: JSON.stringify({
             pool_id: poolId,
             token_symbol: tokenSymbol,
-            amount,
+            total_reward: extra,
+            daily_reward: daily,
             wax_account
           })
         });
-
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Deposit failed");
-
-        showToast("Tokens deposited successfully", "success");
+        if (!res.ok) throw new Error(data?.error || 'Failed to update reward');
+        showToast('Daily reward updated','success');
         closeModal();
-        loadWallet();
-        fetchAndRenderTokenPools();
-      } catch (err) {
-        console.error("[❌] Error depositing tokens:", err);
-        showToast(err.message, "error");
+        fetchAndRenderTokenPools(true);
+      } catch (e) {
+        console.error(e);
+        showToast(e.message,'error');
       }
     };
-  }, 0); // per attendere il render completo del DOM
+  }, 0);
+}
+window.openEditDailyReward = openEditDailyReward;
+
+// ---------- Actions: Top-up ----------
+function openDepositToPool(poolId, tokenSymbol, currentDaily=0) {
+  const bal = (window.walletBalances||[]).find(t => t.symbol===tokenSymbol)?.amount || 0;
+  const body = `
+    <div style="display:grid; gap:8px;">
+      <div style="color:#9ca3af;">Available in Wallet: <b>${fmt(bal,6)} ${tokenSymbol}</b></div>
+      <div>
+        <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Amount to deposit</label>
+        <input id="deposit-amount" type="number" placeholder="e.g. 100"
+          style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+      </div>
+      <div>
+        <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Daily reward (keep same if empty)</label>
+        <input id="deposit-daily" type="number" placeholder="${currentDaily||0}"
+          style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+      </div>
+      <button id="submit-deposit"
+        style="background:#22d3ee; color:#0a0a0a; font-weight:900; border:0; border-radius:10px; padding:10px 12px; cursor:pointer;">
+        Deposit Tokens
+      </button>
+    </div>
+  `;
+  showModal({ title:`Deposit ${tokenSymbol}`, body });
+
+  setTimeout(() => {
+    document.getElementById('submit-deposit').onclick = async () => {
+      const amt = parseFloat(document.getElementById('deposit-amount').value);
+      const daily = parseFloat(document.getElementById('deposit-daily').value);
+      const newDaily = isNaN(daily) || daily <= 0 ? (currentDaily||0) : daily;
+
+      if (!amt || amt <= 0 || amt > bal) return showToast("Invalid amount", "error");
+
+      try {
+        const { wax_account } = window.userData || {};
+        const res = await fetch(`${BASE_URL}/add_pool_reward`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            pool_id: poolId,
+            token_symbol: tokenSymbol,
+            total_reward: amt,
+            daily_reward: newDaily,
+            wax_account
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || 'Deposit failed');
+        showToast('Tokens deposited successfully','success');
+        closeModal();
+        fetchAndRenderTokenPools(true);
+      } catch (e) {
+        console.error(e);
+        showToast(e.message,'error');
+      }
+    };
+  }, 0);
 }
 window.openDepositToPool = openDepositToPool;
-function openPoolStatusModal(poolId, currentStatus) {
-  const body = `
-    <label class="form-label">Select new status</label>
-    <select id="pool-status-select" class="form-select">
-      <option value="open" ${currentStatus === 'open' ? 'selected' : ''}>Open</option>
-      <option value="closed" ${currentStatus === 'closed' ? 'selected' : ''}>Closed</option>
-      <option value="maintenance" ${currentStatus === 'maintenance' ? 'selected' : ''}>Maintenance</option>
-    </select>
-    <button id="submit-pool-status" class="btn btn-warning full-width" style="margin-top: 1rem;">
-      Update Status
-    </button>
-  `;
 
-  showModal({
-    title: `<h3 class="modal-title">Change Pool Status</h3>`,
-    body
-  });
+// ---------- Actions: Change Status ----------
+function openPoolStatusModal(poolId, currentStatus='settings') {
+  const body = `
+    <div style="display:grid; gap:8px;">
+      <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Select new status</label>
+      <select id="pool-status-select"
+        style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+        ${['settings','active','closed'].map(s => `<option value="${s}" ${s===currentStatus?'selected':''}>${s}</option>`).join('')}
+      </select>
+      <button id="submit-pool-status"
+        style="background:linear-gradient(135deg,#22d3ee,#a78bfa); color:#0a0a0a; font-weight:900; border:0; border-radius:10px; padding:10px 12px; cursor:pointer; margin-top:6px;">
+        Update Status
+      </button>
+    </div>
+  `;
+  showModal({ title:`Change Pool Status`, body });
 
   setTimeout(() => {
     document.getElementById('submit-pool-status').onclick = async () => {
       const newStatus = document.getElementById('pool-status-select').value;
-      const { userId, usx_token } = window.userData;
-    
       try {
-        const res = await fetch(`${BASE_URL}/update_token_pool_status?user_id=${userId}&usx_token=${usx_token}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pool_id: poolId, new_status: newStatus })
+        const res = await fetch(`${BASE_URL}/update_pool_status`, {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ pool_id: poolId, status: newStatus })
         });
-    
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to update status");
-    
-        const modalBody = document.querySelector('.modal-body');
-    
-        const feedbackBox = document.createElement('div');
-        feedbackBox.innerHTML = `
-          <p style="
-            font-family: Papyrus, 'Courier New', cursive;
-            font-size: 1.1rem;
-            background-color: #111;
-            border: 1px solid #00ffcc;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 1rem;
-            color: #39ff14;
-            text-shadow: 0 0 1px #f39c12;
-            box-shadow: 0 0 12px #00ffcc;
-            text-align: center;
-          ">
-            ✅ Status updated successfully.<br>
-            🔄 This window will close in <strong>5 seconds</strong>.<br>
-            <button onclick="closeModal()" style="
-              margin-top: 0.75rem;
-              font-size: 0.9rem;
-              background-color: transparent;
-              border: 1px solid #f39c12;
-              color: #ffe600;
-              padding: 0.4rem 1rem;
-              border-radius: 6px;
-              cursor: pointer;
-              transition: all 0.2s ease-in-out;
-            ">Close Now</button>
-          </p>
-        `;
-        modalBody.appendChild(feedbackBox);
-    
-        setTimeout(() => {
-          closeModal();
-          fetchAndRenderTokenPools();
-        }, 5000);
-      } catch (err) {
-        console.error("[❌] Errore durante l'aggiornamento dello stato della pool:", err);
-        showToast("Error: " + err.message, "error");
+        if (!res.ok) throw new Error(data?.error || 'Failed to update status');
+
+        const bodyEl = document.querySelector('.modal-body');
+        const box = document.createElement('div');
+        box.innerHTML = `
+          <div style="margin-top:10px; padding:10px; border:1px solid #22d3ee; border-radius:10px; background:#0d131a; color:#e5e7eb; text-align:center;">
+            ✅ Status updated to <b>${newStatus}</b>. Closing…
+          </div>`;
+        bodyEl.appendChild(box);
+        setTimeout(() => { closeModal(); fetchAndRenderTokenPools(true); }, 900);
+      } catch (e) {
+        console.error(e);
+        showToast("Error: "+e.message, "error");
       }
     };
   }, 0);

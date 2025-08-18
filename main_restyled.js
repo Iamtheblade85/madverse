@@ -3089,7 +3089,7 @@ async function renderGoblinInventory() {
       chest: null,
       bg: null,
       perks: { dragon: null, dwarf: null, skeleton: null, black_cat: null },
-      decor: { rock: null, skull: null, spider: null, bush: null },
+      //decor: { rock: null, skull: null, spider: null, bush: null },
 
     },
   
@@ -3384,10 +3384,10 @@ async function renderGoblinInventory() {
       loadImg("perk_dwarf.png"),
       loadImg("perk_skeleton.png"),
       loadImg("perk_blackcat.png"),
-      loadImg("rock.png"),
-      loadImg("skull.png"),
-      loadImg("spider.png"),
-      loadImg("bush.png")      
+      //loadImg("rock.png"),
+      //loadImg("skull.png"),
+      //loadImg("spider.png"),
+      //loadImg("bush.png")      
     ]);
     Cave.assets.goblin = goblin;
     Cave.assets.shovel = shovel;
@@ -4639,7 +4639,7 @@ async function renderGoblinInventory() {
     renderSkeletons("#cv-bonus-grid", 6, 72);
     // assets
     await loadAssets();
-    initDecorations();
+    //initDecorations();
     initRealtime();
     const initialCanvas = qs("#caveCanvas", Cave.el.videoOrCanvas);
     if (initialCanvas) {

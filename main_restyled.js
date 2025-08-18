@@ -9393,6 +9393,7 @@ function renderPoolButtons(pools) {
 function renderPoolDetails(pool) {
   const container = document.getElementById('selected-pool-details');
   const rewards = Array.isArray(pool.rewards_info) ? pool.rewards_info : [];
+  const depSym = (pool.token_symbol || pool.deposit_token?.symbol || 'UNKNOWN').toUpperCase();
 
   const rewardsHTML = rewards.map(r => `
     <div class="reward-box">
@@ -9406,19 +9407,259 @@ function renderPoolDetails(pool) {
   `).join('');
 
   container.innerHTML = `
-    <div class="card">
-      <h3 class="card-title">Pool: ${pool.token_symbol}</h3>
-      <p class="label">Total Staked: <strong>${fmtNum(pool.total_staked, 6)}</strong></p>
-      <p class="label section-space">You Staked: <strong>${fmtNum(pool.user_staked, 6)}</strong></p>
-
-      <div class="btn-group section-space">
-        <button class="btn btn-secondary" onclick="openStakeModal('add', ${pool.pool_id}, '${pool.token_symbol}')">Add Tokens</button>
-        <button class="btn btn-secondary" onclick="openStakeModal('remove', ${pool.pool_id}, '${pool.token_symbol}')">Remove Tokens</button>
+    <div
+      role="region"
+      aria-label="Staking Pool Details"
+      style="
+        margin-top:12px;
+        padding:16px;
+        border-radius:14px;
+        background:
+          radial-gradient(1200px 600px at 0% 100%, rgba(0,255,200,.08), transparent 45%),
+          radial-gradient(1200px 600px at 100% 0%, rgba(255,0,255,.08), transparent 45%),
+          linear-gradient(180deg, rgba(12,12,16,.96), rgba(9,9,12,.96));
+        border:1px solid rgba(255,255,255,.12);
+        box-shadow: 0 0 26px rgba(0,255,200,.12), inset 0 0 20px rgba(255,0,255,.06);
+        color:#e7fffa;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      "
+    >
+      <!-- Header -->
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <h3
+          class="card-title"
+          style="
+            margin:0;
+            font-size:1.15rem;
+            font-weight:900;
+            letter-spacing:.3px;
+            color:#9afbd9;
+            text-shadow: 0 0 8px rgba(0,255,200,.35), 0 0 10px rgba(255,0,255,.18);
+            line-height:1.2;
+          "
+        >
+          Pool: ${depSym}
+        </h3>
+    
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <div
+            title="Pool ID"
+            style="
+              padding:4px 8px;
+              border:1px solid rgba(255,255,255,.16);
+              border-radius:999px;
+              font-weight:800;
+              font-size:.85rem;
+              color:#e7fffa;
+              background:linear-gradient(135deg, rgba(0,255,200,.14), rgba(255,0,255,.10));
+              box-shadow: inset 0 0 10px rgba(0,255,200,.10);
+            "
+          >#${pool.pool_id}</div>
+    
+          <div
+            title="Status"
+            style="
+              padding:4px 10px;
+              border:1px solid rgba(0,255,160,.35);
+              border-radius:999px;
+              font-weight:900;
+              font-size:.80rem;
+              color:#00150f;
+              background:linear-gradient(135deg, rgba(0,255,160,.25), rgba(0,255,200,.18));
+              box-shadow: 0 0 10px rgba(0,255,160,.20);
+              text-transform:uppercase;
+              letter-spacing:.4px;
+            "
+          ">${(pool.status||'active')}</div>
+        </div>
       </div>
-
-      <h2 class="subheading">Rewards</h2>
-      <div class="reward-grid">
-        ${rewardsHTML || '<div class="label">No rewards configured.</div>'}
+    
+      <!-- Stats -->
+      <div
+        style="
+          display:grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap:10px;
+          margin-top:12px;
+        "
+      >
+        <div
+          style="
+            padding:12px;
+            border-radius:12px;
+            border:1px solid rgba(255,255,255,.14);
+            background:linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.25));
+            box-shadow: inset 0 0 12px rgba(0,255,200,.08);
+          "
+        >
+          <div style="font-size:.85rem; opacity:.85; margin-bottom:2px;">
+            Total Staked
+          </div>
+          <div style="font-weight:900; font-size:1.05rem; color:#fff;">
+            <span id="total-staked-${pool.pool_id}">
+              ${fmtNum(pool.total_staked, 6)}
+            </span>
+            <span style="opacity:.9; font-weight:800;">${depSym}</span>
+          </div>
+        </div>
+        <div
+          style="
+            padding:12px;
+            border-radius:12px;
+            border:1px solid rgba(255,255,255,.14);
+            background:linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.25));
+            box-shadow: inset 0 0 12px rgba(0,255,200,.08);
+            margin-top:10px;
+          "
+        >
+          <div style="font-size:.85rem; opacity:.85; margin-bottom:2px;">
+            You Staked
+          </div>
+          <div style="font-weight:900; font-size:1.05rem; color:#fff;">
+            <span id="you-staked-${pool.pool_id}">
+              ${fmtNum(pool.user_staked, 6)}
+            </span>
+            <span style="opacity:.9; font-weight:800;">${depSym}</span>
+          </div>
+        </div>
+      </div>
+    
+      <!-- Actions -->
+      <div
+        class="btn-group"
+        style="
+          display:flex;
+          gap:10px;
+          flex-wrap:wrap;
+          margin-top:14px;
+        "
+      >
+        <button
+          type="button"
+          onclick="openStakeModal('add', ${pool.pool_id}, '${depSym}')"
+          aria-label="Add tokens to pool ${depSym}"
+          style="
+            padding:10px 14px;
+            border-radius:12px;
+            border:1px solid rgba(0,255,200,.35);
+            background:linear-gradient(135deg, rgba(0,255,200,.18), rgba(255,0,255,.12));
+            color:#00150f;
+            font-weight:900;
+            letter-spacing:.2px;
+            cursor:pointer;
+            box-shadow: 0 0 14px rgba(0,255,200,.25);
+            transition: transform .08s ease-in-out, box-shadow .12s ease-in-out;
+          "
+          onmouseover="this.style.boxShadow='0 0 18px rgba(0,255,200,.35)'; this.style.transform='translateY(-1px)';"
+          onmouseout="this.style.boxShadow='0 0 14px rgba(0,255,200,.25)'; this.style.transform='translateY(0)';"
+        >➕ Add Tokens</button>
+    
+        <button
+          type="button"
+          onclick="openStakeModal('remove', ${pool.pool_id}, '${depSym}')"
+          aria-label="Remove tokens from pool ${depSym}"
+          style="
+            padding:10px 14px;
+            border-radius:12px;
+            border:1px solid rgba(255,0,120,.35);
+            background:linear-gradient(135deg, rgba(255,0,120,.18), rgba(255,160,0,.12));
+            color:#1a0a0e;
+            font-weight:900;
+            letter-spacing:.2px;
+            cursor:pointer;
+            box-shadow: 0 0 14px rgba(255,0,120,.25);
+            transition: transform .08s ease-in-out, box-shadow .12s ease-in-out;
+          "
+          onmouseover="this.style.boxShadow='0 0 18px rgba(255,0,120,.35)'; this.style.transform='translateY(-1px)';"
+          onmouseout="this.style.boxShadow='0 0 14px rgba(255,0,120,.25)'; this.style.transform='translateY(0)';"
+        >➖ Remove Tokens</button>
+      </div>
+    
+      <!-- Rewards -->
+      <h2
+        class="subheading"
+        style="
+          margin:16px 0 8px;
+          font-size:1rem;
+          font-weight:900;
+          color:#9afbd9;
+          letter-spacing:.3px;
+          text-shadow:0 0 8px rgba(0,255,200,.25);
+        "
+      >Rewards</h2>
+    
+      <div
+        class="reward-grid"
+        style="
+          display:grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap:10px;
+        "
+      >
+        ${
+          rewards.length
+            ? rewards.map(r => `
+              <div
+                style="
+                  padding:12px;
+                  border-radius:12px;
+                  border:1px solid rgba(255,255,255,.12);
+                  background:
+                    linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.25));
+                  box-shadow: inset 0 0 12px rgba(0,255,200,.06);
+                "
+                title="${r.reward_token} reward details"
+              >
+                <div
+                  style="
+                    font-weight:900; color:#e7fffa; margin-bottom:6px;
+                    display:flex; align-items:center; justify-content:space-between;
+                  "
+                >
+                  <span style="letter-spacing:.2px;">${r.reward_token}</span>
+                  <span style="
+                    font-size:.75rem; padding:2px 8px; border-radius:999px;
+                    border:1px solid rgba(255,255,255,.14);
+                    color:#9afbd9; background:rgba(0,255,200,.08);
+                  ">
+                    APR ${fmtNum(r.apr, 2)}%
+                  </span>
+                </div>
+    
+                <div style="display:flex; justify-content:space-between; font-size:.9rem; margin:4px 0;">
+                  <span style="opacity:.85;">Total</span>
+                  <strong style="color:#fff;">${fmtNum(r.total_reward_deposit, 6)}</strong>
+                </div>
+    
+                <div style="display:flex; justify-content:space-between; font-size:.9rem; margin:4px 0;">
+                  <span style="opacity:.85;">Daily</span>
+                  <strong style="color:#fff;">${fmtNum(r.daily_reward, 6)}</strong>
+                </div>
+    
+                <div style="display:flex; justify-content:space-between; font-size:.9rem; margin:4px 0;">
+                  <span style="opacity:.85;">Days Left</span>
+                  <strong style="color:#fff;">${fmtNum(r.days_remaining, 0)}</strong>
+                </div>
+    
+                <div style="
+                  margin-top:6px; padding:8px; border-radius:10px;
+                  border:1px dashed rgba(255,255,255,.16);
+                  background:linear-gradient(180deg, rgba(0,255,200,.06), rgba(255,0,255,.05));
+                  font-size:.9rem;
+                ">
+                  <span style="opacity:.85;">Your Daily</span>
+                  <span style="float:right; font-weight:900; color:#fff;">${fmtNum(r.user_daily_reward, 6)}</span>
+                </div>
+              </div>
+            `).join('')
+            : `<div style="
+                 padding:14px; border:1px dashed rgba(255,255,255,.18);
+                 border-radius:12px; color:#e7fffa; text-align:center;
+                 background:linear-gradient(180deg, rgba(0,255,200,.05), rgba(255,0,255,.05));
+               ">
+                 No rewards configured.
+               </div>`
+        }
       </div>
     </div>
   `;
@@ -9851,6 +10092,21 @@ function openStakeModal(type, poolId, tokenSymbol) {
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json?.error || 'Request failed');
+        if (json && json.new_user_staked != null) {
+          const el = document.getElementById(`you-staked-${poolId}`);
+          if (el) el.textContent = fmtNum(json.new_user_staked, 6);
+        }
+        if (json && json.new_pool_total_staked != null) {
+          const totEl = document.getElementById(`total-staked-${poolId}`);
+          if (totEl) totEl.textContent = fmtNum(json.new_pool_total_staked, 6);
+        }
+        
+        const pools = window.stakingPools || [];
+        const i = pools.findIndex(p => p.pool_id === poolId);
+        if (i > -1) {
+          if (json.new_user_staked != null) pools[i].user_staked = json.new_user_staked;
+          if (json.new_pool_total_staked != null) pools[i].total_staked = json.new_pool_total_staked;
+        }
 
         showModalMessage("✅ Operation completed successfully. Closing in 5s…", "success");
 

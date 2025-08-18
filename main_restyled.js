@@ -3438,7 +3438,7 @@ async function renderGoblinInventory() {
         Cave.decors.push({
           type,
           image,
-          frames: 4,
+          frames: 2,
           frame: 0,
           tick: 0,
           frameDelay: FRAME_DELAY,

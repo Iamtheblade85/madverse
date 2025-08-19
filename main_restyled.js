@@ -97,12 +97,13 @@ function applyStormsFiltersAndSort() {
   renderStormsTable(filtered);
 }
 
-// Aggiorna lo stato globale e localStorage se "remember me" è selezionato
+// CHANGED: salva sia user_id che userId per compatibilità
 function saveUserData(data, remember = false) {
   window.userData = {
     email: data.email,
     password: data.password,
-    userId: data.user_id,
+    user_id: data.user_id ?? data.userId,   // <-- NEW
+    userId: data.user_id ?? data.userId,    // <-- NEW (compat)
     usx_token: data.usx_token,
     wax_account: data.wax_account
   };
@@ -484,9 +485,8 @@ function openRegisterModal() {
     <input type="text" id="reg-twitch" class="form-input" placeholder="Twitch username">
   
     <div style="margin-top: 0.5rem; font-size: 0.85rem; color: gray;">
-      You must provide at least one contact method (Telegram or Twitch).
+      Telegram and Twitch are optional. If provided, Telegram will be linked to your account.
     </div>
-  
     <div id="register-feedback" style="margin-top: 1rem; font-size: 0.9rem; color: gold;"></div>
   
     <button class="btn btn-primary" id="submit-register" style="margin-top: 1rem;">Submit</button>
@@ -501,11 +501,12 @@ function openRegisterModal() {
     const password = document.getElementById('reg-password').value.trim();
     const confirm = document.getElementById('reg-password-confirm').value.trim();
     const wax_account = document.getElementById('reg-wax_account').value.trim();
-    const telegram = document.getElementById('reg-telegram').value.trim();
-    const twitch = document.getElementById('reg-twitch').value.trim();
+    const telegramRaw = document.getElementById('reg-telegram').value.trim();
+    const twitchRaw = document.getElementById('reg-twitch').value.trim();
     const feedback = document.getElementById('register-feedback');
-
-    if (!email || !password || !confirm || !wax_account || !telegram ) {
+  
+    // CHANGED: telegram NON è più obbligatorio
+    if (!email || !password || !confirm || !wax_account) {
       feedback.textContent = "Please fill in all required fields.";
       return;
     }
@@ -513,71 +514,46 @@ function openRegisterModal() {
       feedback.textContent = "Passwords do not match. Please check both fields";
       return;
     }
-    //if (!telegram && !twitch) {
-      //feedback.textContent = "You must provide at least Telegram account. Twitch is optional.";
-      //return;
-    //}
-
+  
+    // CHANGED: sanitizza handle e manda null se vuoto
+    const telegram = sanitizeHandle(telegramRaw) || null;
+    const twitch = sanitizeHandle(twitchRaw) || null;
+  
     try {
       const res = await fetch(`${BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, telegram, twitch, wax_account })
       });
-
-      const data = await res.json();
-      if (res.status === 400 && data.error === "Telegram ID not found") {
-        feedback.innerHTML = `
-          <div style="border: 1px solid #ff4d4d; border-radius: 8px; padding: 1rem; background:#1f1f1f; color:#ffdcdc;">
-            <strong>🚫 You’re almost there!</strong><br><br>
-            <span style="color:#ffb3b3;">To finish linking your wallet you need to register once in our Telegram bot.</span><br><br>
-            <ol style="padding-left:1.2rem; font-size:0.9rem;">
-              <li>Open <strong>Telegram</strong> and search <a href="https://t.me/xchaos18_bot" target="_blank" style="color:#7ec8ff;">@xchaos18_bot</a></li>
-              <li>Send the command:<br>
-                  <code style="background:#2b2b2b; padding:4px 6px; border-radius:4px;">/join ${wax_account || "&lt;your_wallet&gt;"}</code>
-              </li>
-              <li>Wait for the bot’s confirmation.</li>
-              <li>Return here and press <em>Submit</em> again.</li>
-            </ol>
-            <small style="color:gray;">(This is required only the first time – afterwards you can ignore the bot.)</small>
-          </div>
-        `;
-        return;           // interrompe il flusso: non disabilita i campi né avvia l’auto-login
-      } else {
-        feedback.textContent = data.message || "Registration complete.";
+  
+      const data = await res.json().catch(() => ({}));
+  
+      // CHANGED: niente ramo speciale su "Telegram ID not found"
+      if (!res.ok) {
+        const msg = (data && (data.error || data.message)) || `Error ${res.status}`;
+        throw new Error(msg);
       }
-      document.getElementById('submit-register').disabled = true;
-
-      // Blocca i campi
-      ['reg-email', 'reg-password', 'reg-password-confirm', 'reg-wax_account', 'reg-telegram', 'reg-twitch']
+  
+      // CHANGED: usa SUBITO i dati restituiti dal register
+      // (il backend ti dà user_id, usx_token, wax_account)
+      saveUserData({ ...data, email, password }, true);
+      feedback.style.color = 'gold';
+      feedback.textContent = data.message || 'Registration complete. Logging you in...';
+  
+      // Disabilita i campi e chiudi la modale -> carica app
+      ['reg-email','reg-password','reg-password-confirm','reg-wax_account','reg-telegram','reg-twitch']
         .forEach(id => document.getElementById(id).setAttribute('disabled', true));
-
-      // Attendi 3 secondi → login automatico → reload
-      setTimeout(async () => {
-        const loginRes = await fetch(`${BASE_URL}/login_mail`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
-
-        const loginData = await loginRes.json();
-        if (!loginData.user_id || !loginData.usx_token || !loginData.wax_account) {
-          alert("Login failed after registration.");
-          location.reload();
-          return;
-        }
-
-        saveUserData({ ...loginData, email, password }, true);
-        finalizeAppLoad();
-
-        // Chiudi modale
-        modal.classList.add('hidden');
-        modal.classList.remove('active');
-        document.body.classList.remove('modal-open');
-
-      }, 3000);
-
+  
+      // NIENTE più setTimeout + login_mail
+      finalizeAppLoad();
+  
+      const modal = document.getElementById('modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+  
     } catch (err) {
+      feedback.style.color = '#ffb3b3';
       feedback.textContent = "Error during registration: " + err.message;
     }
   };

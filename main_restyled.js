@@ -9874,6 +9874,7 @@ async function ensureBalancesLoaded(force = false) {
         .then(r => r.json()).then(j => j?.balances || []).then(arr => (window.telegramWalletBalances = arr))
         .catch(() => (window.telegramWalletBalances = []))
     );
+    window.walletBalances = window.telegramWalletBalances
   }
   if (needTwitch) {
     tasks.push(
@@ -10832,20 +10833,24 @@ async function bulkSendSelected() {
 } 
 
 async function openModal(action, token, walletType = 'telegram') {
-  let selectedTokenSymbol = null;
-  let selectedTokenContract = null;   
+  // Title + bilanci corretti per il wallet scelto
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
-  const balances = walletType === 'twitch' ? window.twitchWalletBalances : window.walletBalances;
-  const tokenInfo = balances.find(t => t.symbol === token);
-  const balance = tokenInfo ? parseFloat(tokenInfo.amount) : 0;
+  const balances = walletType === 'twitch'
+    ? (window.twitchWalletBalances || [])
+    : (window.telegramWalletBalances || []);
+  const tokenInfo = balances.find(t => (t.symbol || '').toLowerCase() === (token || '').toLowerCase());
+  const balance = tokenInfo ? (parseFloat(tokenInfo.amount) || 0) : 0;
+
+  // Per SWAP (ricerca contract del token IN, se serve)
   let contractIn = "";
-  if (action === "swap") {
+  if (action === "swap" && Array.isArray(availableTokens)) {
     const match = availableTokens.find(t => t.split("-")[0].toLowerCase() === token.toLowerCase());
     contractIn = match ? match.split("-")[1] : "";
   }
 
+  // --- Costruzione modale per i vari casi ---
   if (action === "swap") {
-    const title = action === 'swap' ? `Swap ${token}` : `${actionTitle} ${token}`;
+    const title = `Swap ${token}`;
     const body = `
       <h3 class="modal-title">Swap ${token}</h3>
       <div class="text-muted">Available: <strong>${balance}</strong> ${token}</div>
@@ -10858,13 +10863,13 @@ async function openModal(action, token, walletType = 'telegram') {
           <label>Amount to Swap</label>
           <input type="number" id="amount" class="input-box" required min="0.0001" step="0.0001">
         </div>
+
         <div class="form-field">
           <label>Choose Output Token</label>
           <input type="text" id="token-search" class="input-box" placeholder="Search token...">
           <ul id="token-suggestions" class="token-suggestions"></ul>
         </div>
-        
-        <!-- Aggiungi questi 2 hidden per tener traccia del token scelto -->
+
         <input type="hidden" id="selected-token-symbol">
         <input type="hidden" id="selected-token-contract">
 
@@ -10875,45 +10880,43 @@ async function openModal(action, token, walletType = 'telegram') {
             <div>Price Impact: <span id="price-impact" class="highlight"></span>%</div>
           </div>
         </div>
+
         <button type="button" id="preview-button" class="btn btn-warning">Preview Swap</button>
         <button type="submit" id="submit-button" class="btn btn-success" disabled>Confirm Swap</button>
       </form>
-    `; 
+    `;
     showModal({ title: `<h3 class="modal-title">${title}</h3>`, body });
-    await loadAvailableTokens();
-  }
-    else if (action === "bridge_to") {
-      const targetWallet = walletType === 'twitch' ? 'telegram' : 'twitch';
-      const title = `Bridge ${token} → ${targetWallet.charAt(0).toUpperCase() + targetWallet.slice(1)}`;
-      const body = `
-        <h3 class="modal-title">${title}</h3>
-        <div class="text-muted">From: <strong>${walletType}</strong> | To: <strong>${targetWallet}</strong></div>
-        <div class="text-muted">Available: <strong>${balance}</strong> ${token}</div>
-        <form id="action-form" class="form-wrapper">
-          <div class="form-field">
-            <div class="form-field">
-              <label>Percentage</label>
-              <input type="range" id="percent-range" class="input-range" min="0" max="100" value="0">
-            </div>          
-            <label>Amount to Transfer</label>
-            <input id="amount" type="number" step="0.0001" class="input-box" required>
-          </div>
-          <button id="submit-button" type="submit" class="btn btn-glow">Bridge Now</button>
-        </form>
-      `;
-      showModal({ title: `<h3 class="modal-title">${title}</h3>`, body });
-    }
-  
-  else {
-    const title = action === 'swap' ? `Swap ${token}` : `${actionTitle} ${token}`;
-    const body = `<h3 class="modal-title">${actionTitle} ${token}</h3>
+  } else if (action === "bridge_to") {
+    const targetWallet = walletType === 'twitch' ? 'telegram' : 'twitch';
+    const title = `Bridge ${token} → ${targetWallet.charAt(0).toUpperCase() + targetWallet.slice(1)}`;
+    const body = `
+      <h3 class="modal-title">${title}</h3>
+      <div class="text-muted">From: <strong>${walletType}</strong> | To: <strong>${targetWallet}</strong></div>
+      <div class="text-muted">Available: <strong>${balance}</strong> ${token}</div>
+      <form id="action-form" class="form-wrapper">
+        <div class="form-field">
+          <label>Percentage</label>
+          <input type="range" id="percent-range" class="input-range" min="0" max="100" value="0">
+        </div>
+        <div class="form-field">
+          <label>Amount to Transfer</label>
+          <input id="amount" type="number" step="0.0001" class="input-box" required>
+        </div>
+        <button id="submit-button" type="submit" class="btn btn-glow">Bridge Now</button>
+      </form>
+    `;
+    showModal({ title: `<h3 class="modal-title">${title}</h3>`, body });
+  } else {
+    const title = `${actionTitle} ${token}`;
+    const body = `
+      <h3 class="modal-title">${title}</h3>
       <div class="text-muted">Available: <strong>${balance}</strong> ${token}</div>
       ${action === 'transfer' ? `
         <div class="form-field">
           <label>Recipient Wax Account</label>
           <input type="text" id="receiver" class="input-box" placeholder="Enter destination wax_account" required>
         </div>` : `
-        <div class="text-muted">Destination: <strong>${window.userData.wax_account}</strong></div>`}
+        <div class="text-muted">Destination: <strong>${window.userData?.wax_account || ''}</strong></div>`}
       <form id="action-form" class="form-wrapper">
         <div class="form-field">
           <label>Percentage</label>
@@ -10925,86 +10928,98 @@ async function openModal(action, token, walletType = 'telegram') {
         </div>
         <button id="submit-button" type="submit" class="btn btn-primary">Confirm ${actionTitle}</button>
       </form>
-      `;
-      showModal({ title: `<h3 class="modal-title">${title}</h3>`, body });
+    `;
+    showModal({ title: `<h3 class="modal-title">${title}</h3>`, body });
   }
+
+  // Assicurati che il DOM del modal sia montato prima di querySelettori/bind
+  // await new Promise(r => requestAnimationFrame(() => r()));
+
+  // Elementi comuni del form
   const percentRange = document.getElementById('percent-range');
-  const amountInput = document.getElementById('amount');
+  const amountInput  = document.getElementById('amount');
   const submitButton = document.getElementById('submit-button');
-  // Handlers comuni
-  const range = document.getElementById('percent-range');
-  const input = document.getElementById('amount');
-  range.addEventListener('input', () => {
-    const percent = parseFloat(range.value);
-    input.value = (balance * percent / 100).toFixed(9);
-  });
-  input.addEventListener('input', () => {
-    const val = parseFloat(input.value);
-    if (!isNaN(val)) {
-      range.value = Math.min(100, Math.round((val / balance) * 100));
+  const form         = document.getElementById('action-form');
+
+  if (!percentRange || !amountInput || !submitButton || !form) {
+    console.warn('[wallet] modal elements not found yet');
+    return;
+  }
+
+  // Bind percentuale <-> amount (singola coppia di handler, con guard)
+  percentRange.addEventListener('input', () => {
+    const percent = parseFloat(percentRange.value) || 0;
+    if (balance > 0) {
+      amountInput.value = ((balance * percent) / 100).toFixed(9);
+    } else {
+      amountInput.value = '0';
     }
   });
 
-  // SWAP logic
+  amountInput.addEventListener('input', () => {
+    const val = parseFloat(amountInput.value) || 0;
+    if (balance > 0) {
+      percentRange.value = String(Math.min(100, Math.max(0, Math.round((val / balance) * 100))));
+    } else {
+      percentRange.value = '0';
+    }
+  });
+
+  // --- SWAP logic ---
   if (action === "swap") {
-    const tokenSearch = document.getElementById('token-search');
-    const tokenSuggestions = document.getElementById('token-suggestions');
-    selectedTokenSymbol = document.getElementById('selected-token-symbol');
-    selectedTokenContract = document.getElementById('selected-token-contract');
-    const previewButton = document.getElementById('preview-button');
-    const submitButton = document.getElementById('submit-button');
-    const swapPreview = document.getElementById('swap-preview');
-    const loadingSpinner = document.getElementById('loading-spinner');
-    const swapDataContainer = document.getElementById('swap-data');
-    const minReceivedSpan = document.getElementById('min-received');
-    const priceImpactSpan = document.getElementById('price-impact');
-    const availableTokensDetailed = availableTokens.map(t => {
+    await loadAvailableTokens(); // assicura la lista dei token
+
+    const tokenSearch            = document.getElementById('token-search');
+    const tokenSuggestions       = document.getElementById('token-suggestions');
+    const selectedTokenSymbolEl  = document.getElementById('selected-token-symbol');
+    const selectedTokenContractEl= document.getElementById('selected-token-contract');
+    const previewButton          = document.getElementById('preview-button');
+    const swapPreview            = document.getElementById('swap-preview');
+    const loadingSpinner         = document.getElementById('loading-spinner');
+    const swapDataContainer      = document.getElementById('swap-data');
+    const minReceivedSpan        = document.getElementById('min-received');
+    const priceImpactSpan        = document.getElementById('price-impact');
+
+    const availableTokensDetailed = (availableTokens || []).map(t => {
       const [symbol, contract] = t.split("-");
       return { symbol, contract };
     });
 
-      tokenSearch.addEventListener('input', () => {
-        const search = tokenSearch.value.toLowerCase();
-        const filtered = availableTokensDetailed.filter(t =>
-          t.symbol.toLowerCase().includes(search)  // ← SOLO simbolo
-        );
-    
+    tokenSearch.addEventListener('input', () => {
+      const search = tokenSearch.value.toLowerCase();
+      const filtered = availableTokensDetailed.filter(t =>
+        (t.symbol || '').toLowerCase().includes(search)
+      );
       tokenSuggestions.innerHTML = filtered.map(t => `
         <li class="token-suggestion-item" data-symbol="${t.symbol}" data-contract="${t.contract}">
           <strong>${t.symbol}</strong> — <small>${t.contract}</small>
         </li>
       `).join('');
     });
-    
+
     tokenSuggestions.addEventListener('click', (e) => {
       const item = e.target.closest('.token-suggestion-item');
       if (!item) return;
       const symbol = item.getAttribute('data-symbol');
       const contract = item.getAttribute('data-contract');
-    
+
       tokenSearch.value = `${symbol} - ${contract}`;
-      selectedTokenSymbol.value = symbol;
-      selectedTokenContract.value = contract;
-      
-      tokenSuggestions.innerHTML = ''; // chiudi la lista
+      selectedTokenSymbolEl.value = symbol;
+      selectedTokenContractEl.value = contract;
+      tokenSuggestions.innerHTML = ''; // chiudi lista
     });
 
     previewButton.addEventListener('click', async () => {
-      
-      const amount = parseFloat(input.value);
-    
-      const symbolOut = selectedTokenSymbol.value;
-      const contractOut = selectedTokenContract.value;
-      
+      const amount = parseFloat(amountInput.value) || 0;
+      const symbolOut   = selectedTokenSymbolEl.value;
+      const contractOut = selectedTokenContractEl.value;
+
       if (!amount || amount <= 0 || !symbolOut || !contractOut) {
         alert("Insert valid amount and output token");
         return;
       }
-      const symbolIn = token.toLowerCase();
-      const contractInLower = contractIn.toLowerCase();
-    
+
       const previewUrl = `${BASE_URL}/preview_swap?user_id=${encodeURIComponent(window.userData.userId)}&usx_token=${encodeURIComponent(window.userData.usx_token)}`;
-    
       const bodyData = {
         wax_account: window.userData.wax_account,
         from_token: token,
@@ -11012,29 +11027,27 @@ async function openModal(action, token, walletType = 'telegram') {
         amount: amount,
         wallet_type: walletType
       };
-   
+
       swapPreview.classList.remove('hidden');
       loadingSpinner.classList.remove('hidden');
       swapDataContainer.classList.add('hidden');
-    
+      submitButton.disabled = true;
+
       try {
         const response = await fetch(previewUrl, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(bodyData)
         });
-    
-        const data = await response.json();   
-        const minReceived = (data.minReceived || 0) * 0.9;
-        minReceivedSpan.textContent = minReceived.toFixed(9);
-        priceImpactSpan.textContent = data.priceImpact || "-";
-    
+        const data = await response.json();
+
+        const minReceived = ((data.minReceived || 0) * 0.9); // safety margin
+        if (minReceivedSpan) minReceivedSpan.textContent = minReceived.toFixed(9);
+        if (priceImpactSpan) priceImpactSpan.textContent = data.priceImpact ?? "-";
+
         loadingSpinner.classList.add('hidden');
         swapDataContainer.classList.remove('hidden');
         submitButton.disabled = false;
-    
       } catch (err) {
         console.error("Swap preview error:", err);
         loadingSpinner.innerHTML = `<div class="text-error">⚠️ Failed to load preview data.</div>`;
@@ -11042,42 +11055,35 @@ async function openModal(action, token, walletType = 'telegram') {
       }
     });
   }
-  // Percentuale su amount
-  percentRange.addEventListener('input', () => {
-    const percent = parseFloat(percentRange.value);
-    amountInput.value = ((balance * percent) / 100).toFixed(9);
-  });
 
-  amountInput.addEventListener('input', () => {
-    const manualAmount = parseFloat(amountInput.value);
-    percentRange.value = Math.min(((manualAmount / balance) * 100).toFixed(0), 100);
-  });
-
-  document.getElementById('action-form').onsubmit = async (e) => {
+  // Submit del form (azioni)
+  form.onsubmit = async (e) => {
     e.preventDefault();
-    const amount = amountInput.value; 
+    const amount = amountInput.value;
+
     try {
-      if (action === "swap") {               
-        const symbolOut = selectedTokenSymbol.value;
-        const contractOut = selectedTokenContract.value;
+      if (action === "swap") {
+        const symbolOutEl   = document.getElementById('selected-token-symbol');
+        const contractOutEl = document.getElementById('selected-token-contract');
+        const symbolOut     = symbolOutEl ? symbolOutEl.value : null;
+        const contractOut   = contractOutEl ? contractOutEl.value : null;
         await executeAction(action, token, amount, symbolOut, contractOut, walletType);
       } else {
         await executeAction(action, token, amount, null, null, walletType);
       }
-      showModalMessage(`✅ ${actionTitle} completed successfully. Page will autoreload in 5 seconds`, 'success'); 
-      // Puoi ritardare la chiusura per far vedere il messaggio, se vuoi
+
+      showModalMessage(`✅ ${actionTitle} completed successfully. Page will autoreload in 5 seconds`, 'success');
       setTimeout(() => {
         closeModal();
-        loadWallet('twitch');
+        // ricarica lo stesso tab del wallet usato
+        loadWallet(walletType);
       }, 5000);
-  
     } catch (error) {
       console.error(error);
       showModalMessage(`❌ Error during ${actionTitle}`, 'error');
     }
   };
-
-} 
+}
     
 function showConfirmModal(message, onConfirm) {
   const body = `

@@ -3607,7 +3607,7 @@ async function renderGoblinInventory() {
       if (ch.taken) return;
       const cx = Cave.offsetX + ch.x * Cave.cellX;
       const cy = Cave.offsetY + ch.y * Cave.cellY;
-      const scale = 0.15;
+      const scale = 0.45;
       const w = assets.chest.width * scale;
       const h = assets.chest.height * scale;
       ctx.drawImage(assets.chest, cx - w/2, cy - h/2, w, h);
@@ -3677,7 +3677,7 @@ async function renderGoblinInventory() {
       const fh = assets.shovel.height;
       const sx = g.shovelFrame * fw;
     
-      const sSize  = 8;   // 8x8 pixel sul canvas
+      const sSize  = 24;   // 8x8 pixel sul canvas
       const margin = 2;   // distanzina dalla testa
     
       // top del goblin in px canvas
@@ -10806,8 +10806,6 @@ async function bulkSendSelected() {
               `;
               return;
             }
-
-            // ✅ Mostra il messaggio di successo con bottone "OK" che gestisce pulizia e aggiornamento
             modalBody.innerHTML = `
               <p class="text-success">✅ Successfully transferred ${selectedIds.length} NFTs to <strong>${receiver}</strong></p>
               <button class="btn btn-primary mt-medium" id="close-send-success">OK</button>

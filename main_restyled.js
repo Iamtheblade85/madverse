@@ -6,10 +6,118 @@ window.nftsPerPage = 24;
 window.activePerks = []; // Oggetti: { image, frame, x, y, tick, dir, etc }
 window.activeChests = [];
 window.expeditionTimersRunning = window.expeditionTimersRunning || {};
-//if (!window.recentExpeditionKeys) {
-  //window.recentExpeditionKeys = new Set();
-  //setInterval(() => window.recentExpeditionKeys.clear(), 120000); // ogni 2 minuti reset
-//}
+
+// === Precision helpers (global) ===
+function getTokenDecimals(symbol) {
+  const sym = (symbol || '').toUpperCase();
+
+  // 1) cerca nei token disponibili (preferito)
+  const list = window.availableTokensDetailed || [];
+  const official = (window.OFFICIAL_TOKENS || []).find(o => o.symbol === sym);
+  if (official) {
+    const m = list.find(t => (t.symbol || '').toUpperCase() === sym && (t.contract || '') === official.contract);
+    if (m && Number.isInteger(m.precision)) return m.precision;
+  }
+  const m2 = list.find(t => (t.symbol || '').toUpperCase() === sym && Number.isInteger(t.precision));
+  if (m2) return m2.precision;
+
+  // 2) fallback: staking pools (se presente)
+  const p = (window.stakingPools || []).find(p => (p.deposit_token?.symbol || '').toUpperCase() === sym);
+  if (p && Number.isInteger(p.deposit_token?.decimals)) return p.deposit_token.decimals;
+
+  // 3) default ragionevole
+  return 8;
+}
+
+function stepFromDecimals(dec) {
+  return dec > 0 ? '0.' + '0'.repeat(dec - 1) + '1' : '1';
+}
+
+function truncToDecimals(value, dec) {
+  const factor = Math.pow(10, dec);
+  return Math.trunc((Number(value) || 0) * factor) / factor;
+}
+
+function fmtAmount(value, dec) {
+  return truncToDecimals(value, dec).toFixed(dec);
+}
+
+/**
+ * Calibra amount+slider secondo i decimali del token e tronca per difetto.
+ * - maxAmount = floor(balance, dec) - 1 step (se possibile)
+ * - step = 10^-dec
+ * - sincronizza range<->amount
+ */
+async function calibrateAmountControls({ symbol, balance, amountInputId = 'amount', rangeId = 'percent-range' }) {
+  if (!window.availableTokensDetailed || !window.availableTokensDetailed.length) {
+    try { await loadAvailableTokens(); } catch (_) {}
+  }
+  const decimals = getTokenDecimals(symbol);
+  const amountEl = document.getElementById(amountInputId);
+  const rangeEl  = document.getElementById(rangeId);
+  if (!amountEl || !rangeEl) {
+    return { decimals, step: stepFromDecimals(decimals), get maxAmount(){ return 0; }, setBalance(){}, setAmount(){} };
+  }
+
+  const stepStr = stepFromDecimals(decimals);
+  const computeMax = (bal) => {
+    const stepVal = Math.pow(10, -decimals);
+    const floored = truncToDecimals(bal, decimals);
+    const max = floored - stepVal;                    // <= massimo selezionabile: un "tick" sotto il balance
+    return max > 0 ? truncToDecimals(max, decimals) : 0;
+  };
+
+  let maxAmount = computeMax(balance);
+
+  amountEl.setAttribute('step', stepStr);
+  amountEl.setAttribute('inputmode', 'decimal');
+  amountEl.setAttribute('autocomplete', 'off');
+  amountEl.value = '0';
+  amountEl.setAttribute('max', maxAmount.toFixed(decimals));
+
+  const updateFromPercent = () => {
+    const pct = parseFloat(rangeEl.value) || 0;
+    const raw = (balance * pct) / 100;
+    let val = truncToDecimals(raw, decimals);
+    if (val >= maxAmount) val = maxAmount;
+    if (val < 0) val = 0;
+    amountEl.value = val.toFixed(decimals);
+  };
+
+  const updateFromAmount = () => {
+    let val = Number(amountEl.value) || 0;
+    val = truncToDecimals(val, decimals);
+    if (val > maxAmount) val = maxAmount;
+    if (val < 0) val = 0;
+    amountEl.value = val.toFixed(decimals);
+    const pct = balance > 0 ? Math.floor((val / balance) * 100) : 0;
+    rangeEl.value = String(Math.max(0, Math.min(100, pct)));
+  };
+
+  // Evita doppie bind in caso di ricalibrazioni
+  if (rangeEl.__calHandler) rangeEl.removeEventListener('input', rangeEl.__calHandler);
+  if (amountEl.__calHandler) amountEl.removeEventListener('input', amountEl.__calHandler);
+  rangeEl.__calHandler = updateFromPercent;
+  amountEl.__calHandler = updateFromAmount;
+  rangeEl.addEventListener('input', updateFromPercent);
+  amountEl.addEventListener('input', updateFromAmount);
+
+  return {
+    decimals,
+    step: stepStr,
+    get maxAmount() { return maxAmount; },
+    setBalance(newBal) {
+      balance = Number(newBal) || 0;
+      maxAmount = computeMax(balance);
+      amountEl.setAttribute('max', maxAmount.toFixed(decimals));
+      updateFromAmount();
+    },
+    setAmount(v) {
+      amountEl.value = String(v);
+      updateFromAmount();
+    }
+  };
+}
 
 // === Modal Close Listener ===
 document.addEventListener("click", (event) => {
@@ -10338,6 +10446,16 @@ function openStakeModal(type, poolId, tokenSymbol) {
     const elSegLb = $('seg-label');
     const elSumW  = $('sum-wallet');
 
+    // Calibra precisione/step per il token della pool
+    const initialAvail = (type === 'add') ? headerBalance : headerBalance;
+    const stakeCal = await calibrateAmountControls({
+      symbol: sym,
+      balance: initialAvail,
+      amountInputId: 'stake-amount',
+      rangeId: 'stake-range'
+    });
+    const DEC = stakeCal.decimals;
+
     function setSegActive(which) {
       [elSegT, elSegG].forEach(b=>{
         const active = b?.dataset?.w === which;
@@ -10357,79 +10475,66 @@ function openStakeModal(type, poolId, tokenSymbol) {
     function updateHeaderAvail() {
       if (type === 'add') {
         const v = getBal(walletType, sym);
-        elAvail.textContent = toFix(v);
+        if (elAvail) elAvail.textContent = fmtAmount(v, DEC);
         return v;
       }
+      if (elAvail) elAvail.textContent = fmtAmount(headerBalance, DEC);
       return headerBalance;
     }
 
     function renderSummary() {
       const avail = (type==='add') ? getBal(walletType, sym) : headerBalance;
-      let val = clamp(parseFloat(elAmt.value||'0'), 0, avail);
-      elAmt.value = toFix(val);
+      stakeCal.setBalance(avail); // aggiorna massimo selezionabile secondo i decimali
+
+      const val = Number(elAmt.value) || 0;
       const fee = val * feePct;
       const net = val - fee;
+
       elSum.innerHTML = `
-        <div>You will ${type==='add'?'add':'remove'} <strong>${toFix(val)}</strong> ${sym}</div>
-        ${feePct>0?`<div>Fee (~${(feePct*100).toFixed(2)}%): <strong>${toFix(fee)}</strong> ${sym}</div>`:''}
-        ${feePct>0?`<div>Net received: <strong>${toFix(net)}</strong> ${sym}</div>`:''}
+        <div>You will ${type==='add'?'add':'remove'} <strong>${fmtAmount(val, DEC)}</strong> ${sym}</div>
+        ${feePct>0?`<div>Fee (~${(feePct*100).toFixed(2)}%): <strong>${fmtAmount(fee, DEC)}</strong> ${sym}</div>`:''}
+        ${feePct>0?`<div>Net received: <strong>${fmtAmount(net, DEC)}</strong> ${sym}</div>`:''}
         <div style="margin-top:6px; font-size:.85rem; opacity:.75;">
           ${type==='add'?'Source':'Destination'}: <strong>${walletType.toUpperCase()}</strong> wallet
         </div>
       `;
-      const disabled = (val<=0 || val>avail);
+
+      const disabled = (val <= 0 || val > stakeCal.maxAmount);
       elBtn.disabled = disabled;
-      elBtn.style.opacity = disabled?.6:1;
-      elBtn.style.cursor = disabled?'not-allowed':'pointer';
+      elBtn.style.opacity = disabled ? 0.6 : 1;
+      elBtn.style.cursor  = disabled ? 'not-allowed' : 'pointer';
     }
 
-    // bind switch
+    // switch tra wallet
     [elSegT, elSegG].forEach(btn => btn?.addEventListener('click', ()=>{
       walletType = btn.dataset.w;
-      window.currentWalletTab = walletType; // memorizza preferenza
-      if (type==='add') updateHeaderAvail();
-      // riallinea slider all'importo attuale rispetto alla nuova availability
-      const avail = (type==='add') ? getBal(walletType, sym) : headerBalance;
-      const v = clamp(parseFloat(elAmt.value||'0'), 0, avail);
-      elAmt.value = toFix(v);
-      const pct = avail>0 ? Math.round((v/avail)*100) : 0;
-      elRange.value = String(clamp(pct,0,100));
+      window.currentWalletTab = walletType;
+      if (type === 'add') {
+        const v = updateHeaderAvail();
+        stakeCal.setBalance(v);
+      }
       setSegActive(walletType);
       renderSummary();
     }));
 
-    // quick chips
+    // quick chips (10/25/50/75/100)
     document.querySelectorAll('.stake-quick').forEach(b=>{
       b.addEventListener('click', ()=>{
         const pct = Number(b.dataset.p || 0);
         const avail = (type==='add') ? getBal(walletType, sym) : headerBalance;
-        const val = toFix((avail * pct)/100);
-        elAmt.value = val;
-        elRange.value = String(clamp(pct,0,100));
+        const raw = (avail * pct) / 100;
+        stakeCal.setAmount(raw);     // tronca e sincronizza slider
         renderSummary();
       });
     });
 
-    elRange.addEventListener('input', ()=>{
-      const pct = Number(elRange.value||0);
-      const avail = (type==='add') ? getBal(walletType, sym) : headerBalance;
-      const val = clamp((avail * pct)/100, 0, avail);
-      elAmt.value = toFix(val);
-      renderSummary();
-    });
+    // ricalcola summary quando cambia slider/amount
+    elRange.addEventListener('input', renderSummary);
+    elAmt.addEventListener('input', renderSummary);
 
-    elAmt.addEventListener('input', ()=>{
-      const avail = (type==='add') ? getBal(walletType, sym) : headerBalance;
-      let v = parseFloat(elAmt.value||'0'); if (Number.isNaN(v)) v=0;
-      v = clamp(v, 0, avail);
-      elAmt.value = toFix(v);
-      const pct = avail>0 ? Math.round((v/avail)*100) : 0;
-      elRange.value = String(clamp(pct,0,100));
-      renderSummary();
-    });
-
+    // init
+    updateHeaderAvail();
     renderSummary();
-    // submit
     elBtn.addEventListener('click', async ()=>{
       const avail = (type==='add') ? getBal(walletType, sym) : headerBalance;
       const amount = clamp(parseFloat(elAmt.value||'0'), 0, avail);
@@ -11295,7 +11400,7 @@ async function openModal(action, token, walletType = 'telegram') {
   // Assicurati che il DOM del modal sia montato prima di querySelettori/bind
   // await new Promise(r => requestAnimationFrame(() => r()));
 
-  // Elementi comuni del form
+  // Elementi comuni del form + calibrazione precisione/step su base token
   const percentRange = document.getElementById('percent-range');
   const amountInput  = document.getElementById('amount');
   const submitButton = document.getElementById('submit-button');
@@ -11306,29 +11411,35 @@ async function openModal(action, token, walletType = 'telegram') {
     return;
   }
 
-  // Bind percentuale <-> amount (singola coppia di handler, con guard)
-  percentRange.addEventListener('input', () => {
-    const percent = parseFloat(percentRange.value) || 0;
-    if (balance > 0) {
-      amountInput.value = ((balance * percent) / 100).toFixed(9);
-    } else {
-      amountInput.value = '0';
-    }
+  // Calibra controls in base ai decimali del token di ORIGINE
+  const calibrator = await calibrateAmountControls({
+    symbol: token,
+    balance: balance,
+    amountInputId: 'amount',
+    rangeId: 'percent-range'
   });
 
-  amountInput.addEventListener('input', () => {
-    const val = parseFloat(amountInput.value) || 0;
-    if (balance > 0) {
-      percentRange.value = String(Math.min(100, Math.max(0, Math.round((val / balance) * 100))));
-    } else {
-      percentRange.value = '0';
-    }
-  });
+  // Suggerimento step visibile (facoltativo)
+  amountInput.placeholder = `step ${calibrator.step}`;
 
-  // --- SWAP logic ---
   // --- SWAP logic ---
   if (action === "swap") {
     await loadAvailableTokens(); // assicura la lista dei token
+
+    // ===== Official tokens registry (EDITA SOLO I CONTRACTS SE NECESSARIO) =====
+    const OFFICIAL_TOKENS = (window.OFFICIAL_TOKENS && window.OFFICIAL_TOKENS.length)
+      ? window.OFFICIAL_TOKENS
+      : [
+          { symbol: 'WAX',   contract: 'eosio.token' },
+          { symbol: 'CHIPS', contract: 'xcryptochips' }, // ⬅️ TODO
+          { symbol: 'LUX',   contract: 'xcryptochips' }    // ⬅️ TODO
+        ];
+    const OFFICIAL_SYMBOLS = new Set(OFFICIAL_TOKENS.map(t => t.symbol));
+
+    const isOfficial = (t) =>
+      OFFICIAL_TOKENS.some(o => o.symbol === t.symbol && o.contract === t.contract);
+
+    // ==========================================================================
 
     // Refs
     const tokenSearch            = document.getElementById('token-search');
@@ -11354,18 +11465,18 @@ async function openModal(action, token, walletType = 'telegram') {
 
     // Helper
     const n = (s) => (s || '').toString().toLowerCase();
-    const isOfficialWax = (t) => t.symbol === 'WAX' && t.contract === 'eosio.token';
 
-    // Ranking: priorità a official WAX, poi match esatto, poi inizia con, poi include.
+    // Ranking: official >>> match esatto >>> inizia con >>> include >>> contract hit
     const scoreToken = (t, q) => {
-      if (!q) return isOfficialWax(t) ? 1000 : 0;
-      if (isOfficialWax(t)) return 2000;
-      if (n(t.symbol) === q) return 1000;
-      if (n(t.symbol).startsWith(q)) return 750;
-      if (n(t.name || '').startsWith(q)) return 500;
-      if (n(t.symbol).includes(q)) return 300;
-      if ((t.contract || '').toLowerCase().includes(q)) return 100;
-      return 0;
+      const officialBoost = isOfficial(t) ? 2000 : 0;
+      if (!q) return officialBoost; // senza query, mostra prima gli official
+      let s = officialBoost;
+      if (n(t.symbol) === q) s += 1000;
+      else if (n(t.symbol).startsWith(q)) s += 750;
+      else if (n(t.name || '').startsWith(q)) s += 500;
+      else if (n(t.symbol).includes(q)) s += 300;
+      if ((t.contract || '').toLowerCase().includes(q)) s += 100;
+      return s;
     };
 
     const MAX_RENDER = 80;
@@ -11375,7 +11486,7 @@ async function openModal(action, token, walletType = 'telegram') {
     const renderList = (items, totalCount, q) => {
       currentItems = items;
       tokenListbox.innerHTML = items.map((t, i) => {
-        const officialBadge = isOfficialWax(t)
+        const officialBadge = isOfficial(t)
           ? `<span style="margin-left:8px; padding:2px 6px; border-radius:999px; font-size:.75rem; font-weight:800; color:#00150f;
                background:linear-gradient(135deg, rgba(0,255,200,.9), rgba(0,160,255,.9)); box-shadow:0 0 8px rgba(0,255,200,.35);">OFFICIAL</span>`
           : '';
@@ -11391,12 +11502,11 @@ async function openModal(action, token, walletType = 'telegram') {
               </div>
               ${t.name ? `<div style="font-size:.85rem; opacity:.8;">${t.name}</div>` : ''}
             </div>
-            <div style="font-size:.75rem; opacity:.65;">${scoreToken(t, n(q)) || ''}</div>
+            <div style="font-size:.75rem; opacity:.65;"></div>
           </div>
         `;
       }).join('');
 
-      // Footer info
       if (totalCount > items.length) {
         tokenListbox.insertAdjacentHTML('beforeend', `
           <div style="padding:8px 12px; font-size:.85rem; opacity:.75;">Showing ${items.length} of ${totalCount} results. Keep typing to narrow down.</div>
@@ -11412,31 +11522,28 @@ async function openModal(action, token, walletType = 'telegram') {
       const q = n(qRaw).trim();
       const scored = allTokens.map(t => ({ ...t, __score: scoreToken(t, q) }));
       const filtered = scored
-        .filter(t => t.__score > 0 || !q) // se query vuota mostra top (OFFICIAL + alcuni best)
+        .filter(t => t.__score > 0 || !q)
         .sort((a, b) => b.__score - a.__score || a.symbol.localeCompare(b.symbol));
 
-      // pinna l'OFFICIAL WAX in cima se query richiama "wax"
-      let final = filtered;
-      if (q.includes('wax')) {
-        const idx = final.findIndex(isOfficialWax);
+      // Se la query contiene un simbolo ufficiale (wax/chips/lux), pinna quel token ufficiale in cima
+      const targetSym = Array.from(OFFICIAL_SYMBOLS).find(sym => q.includes(sym.toLowerCase()));
+      if (targetSym) {
+        const idx = filtered.findIndex(t => t.symbol === targetSym && isOfficial(t));
         if (idx > 0) {
-          const [w] = final.splice(idx, 1);
-          final.unshift(w);
+          const [pinned] = filtered.splice(idx, 1);
+          filtered.unshift(pinned);
         }
       }
 
-      // Limita render e mostra pannello
-      const slice = final.slice(0, Math.max(10, Math.min(MAX_RENDER, final.length)));
+      const slice = filtered.slice(0, Math.max(10, Math.min(MAX_RENDER, filtered.length)));
       activeIndex = -1;
-      renderList(slice, final.length, qRaw);
+      renderList(slice, filtered.length, qRaw);
       tokenHint.textContent = slice.length ? '' : 'No results. Try another query.';
     };
 
     // Debounce semplice
     let tId;
-    const debounce = (fn, ms=180) => (...args) => {
-      clearTimeout(tId); tId = setTimeout(()=>fn(...args), ms);
-    };
+    const debounce = (fn, ms=180) => (...args) => { clearTimeout(tId); tId = setTimeout(()=>fn(...args), ms); };
 
     // Select handler
     const selectToken = (symbol, contract) => {
@@ -11447,25 +11554,21 @@ async function openModal(action, token, walletType = 'telegram') {
       const combo = document.getElementById('token-combobox');
       if (combo) combo.setAttribute('aria-expanded', 'false');
 
-      // Migliora la UX: abilita preview quando amount > 0
       const amt = parseFloat(amountInput.value) || 0;
       submitButton.disabled = !(symbol && contract && amt > 0);
       previewButton.disabled = !(symbol && contract && amt > 0);
     };
 
-    // Input typing
+    // Input typing (live filter)
     tokenSearch.addEventListener('input', debounce((e) => {
-      const q = e.target.value;
-      filterAndRender(q);
+      filterAndRender(e.target.value);
     }, 120));
 
     // Clic su item
     tokenListbox.addEventListener('click', (ev) => {
       const item = ev.target.closest('.token-option');
       if (!item) return;
-      const symbol = item.getAttribute('data-symbol');
-      const contract = item.getAttribute('data-contract');
-      selectToken(symbol, contract);
+      selectToken(item.getAttribute('data-symbol'), item.getAttribute('data-contract'));
     });
 
     // Tastiera: frecce + Enter
@@ -11487,7 +11590,7 @@ async function openModal(action, token, walletType = 'telegram') {
         }
         return;
       } else {
-        return; // altre key: lascia passare
+        return;
       }
 
       items.forEach((it, i) => {
@@ -11495,11 +11598,7 @@ async function openModal(action, token, walletType = 'telegram') {
         it.setAttribute('aria-selected', sel ? 'true' : 'false');
         it.style.background = sel ? 'rgba(0,255,200,.10)' : 'transparent';
       });
-
-      // scroll into view
-      if (items[activeIndex]) {
-        items[activeIndex].scrollIntoView({ block:'nearest' });
-      }
+      if (items[activeIndex]) items[activeIndex].scrollIntoView({ block:'nearest' });
     });
 
     // Clear
@@ -11516,11 +11615,11 @@ async function openModal(action, token, walletType = 'telegram') {
       tokenSearch.focus();
     });
 
-    // Primo render: mostra top (OFFICIAL WAX in cima)
-    filterAndRender('wax'); // hint iniziale utile per distinguere l'official
+    // Primo render: query vuota (gli OFFICIAL risulteranno in top per via del boost)
+    filterAndRender('');
     tokenSearch.select();
 
-    // Preview click (immutato, ma validazione più severa)
+    // Preview click (immutato, ma validazione severa)
     previewButton.addEventListener('click', async () => {
       const amount = parseFloat(amountInput.value) || 0;
       const symbolOut   = selectedTokenSymbolEl.value;
@@ -11553,13 +11652,12 @@ async function openModal(action, token, walletType = 'telegram') {
         });
         const data = await response.json();
 
-        const minReceived = ((data.minReceived || 0) * 0.9); // safety margin
+        const minReceived = ((data.minReceived || 0) * 0.9);
         if (minReceivedSpan) minReceivedSpan.textContent = minReceived.toFixed(9);
         if (priceImpactSpan) priceImpactSpan.textContent = data.priceImpact ?? "-";
 
         loadingSpinner.classList.add('hidden');
         swapDataContainer.classList.remove('hidden');
-        // riabilita submit solo se abbiamo token selezionato e amount valido
         submitButton.disabled = !(symbolOut && contractOut && amount > 0);
       } catch (err) {
         console.error("Swap preview error:", err);

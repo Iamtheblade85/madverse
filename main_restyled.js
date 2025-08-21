@@ -10413,14 +10413,17 @@ function openStakeModal(type, poolId, tokenSymbol) {
     });
 
     renderSummary();
-
     // submit
     elBtn.addEventListener('click', async ()=>{
       const avail = (type==='add') ? getBal(walletType, sym) : headerBalance;
       const amount = clamp(parseFloat(elAmt.value||'0'), 0, avail);
       if (amount<=0 || amount>avail) return;
 
-      elBtn.disabled = true; elTxt.textContent = (type==='add')?'Processing…':'Unstaking…'; elSpn.style.display='inline-block';
+      // disabilita globalmente le azioni e il pulsante specifico
+      setButtonsEnabled(false);
+      elBtn.disabled = true; 
+      elTxt.textContent = (type==='add')?'Processing…':'Unstaking…'; 
+      elSpn.style.display='inline-block';
 
       const payload = {
         user_id: userId,
@@ -10437,6 +10440,7 @@ function openStakeModal(type, poolId, tokenSymbol) {
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json?.error || 'Request failed');
+
         if (json && json.new_user_staked != null) {
           const el = document.getElementById(`you-staked-${poolId}`);
           if (el) el.textContent = fmtNum(json.new_user_staked, 6);
@@ -10445,7 +10449,7 @@ function openStakeModal(type, poolId, tokenSymbol) {
           const totEl = document.getElementById(`total-staked-${poolId}`);
           if (totEl) totEl.textContent = fmtNum(json.new_pool_total_staked, 6);
         }
-        
+
         const pools = window.stakingPools || [];
         const i = pools.findIndex(p => p.pool_id === poolId);
         if (i > -1) {
@@ -10457,14 +10461,19 @@ function openStakeModal(type, poolId, tokenSymbol) {
 
         setTimeout(async ()=>{
           closeModal();
-          await ensureBalancesLoaded(true);               // refresh balances
-          await loadWallet(window.currentWalletTab||'twitch'); // resta sul tab attuale
+          await ensureBalancesLoaded(true);                   // refresh balances
+          await loadWallet(window.currentWalletTab||'twitch', true); // resta sul tab attuale
           if (typeof loadStakingPools==='function') loadStakingPools();
         }, 5000);
       } catch (e) {
         console.error(e);
         showModalMessage(`❌ ${e.message || 'Unexpected error'}`, 'error');
-        elBtn.disabled=false; elTxt.textContent='Go!'; elSpn.style.display='none';
+
+        // riabilita SOLO in errore
+        setButtonsEnabled(true);
+        elBtn.disabled=false; 
+        elTxt.textContent='Go!'; 
+        elSpn.style.display='none';
       }
     });
   });
@@ -10481,9 +10490,9 @@ function showModalMessage(message, type = 'info') {
   `;
 }
 
-async function loadWallet(preferredTab='twitch') {
+async function loadWallet(preferredTab = 'twitch', force = false) {
   const desired = preferredTab || window.currentWalletTab || 'twitch';
-  await ensureBalancesLoaded(); // garantisce i dati
+  await ensureBalancesLoaded(force); // permette il refresh forzato dal backend
 
   const walletHost = document.getElementById('wallet-table');
   if (!walletHost) return;
@@ -10502,6 +10511,9 @@ async function loadWallet(preferredTab='twitch') {
         <button class="wallet-tab" data-w="telegram" role="tab" aria-selected="false" style="
           padding:8px 14px; border:none; cursor:pointer; font-weight:900; color:#e7fffa; background:transparent;
         ">🤖 Telegram</button>
+        <button class="wallet-tab" data-w="history" role="tab" aria-selected="false" style="
+          padding:8px 14px; border:none; cursor:pointer; font-weight:900; color:#e7fffa; background:transparent;
+        ">📜 Transactions History</button>        
       </div>
 
       <!-- search -->
@@ -10517,18 +10529,21 @@ async function loadWallet(preferredTab='twitch') {
     <div id="wallet-content" style="margin-top:12px;"></div>
   `;
 
-  const setActive = (w) => {
-    walletHost.querySelectorAll('.wallet-tab').forEach(b=>{
-      const active = b.dataset.w === w;
+   const setActive = (w) => {
+     walletHost.querySelectorAll('.wallet-tab').forEach(b=>{
+       const active = b.dataset.w === w;
       b.style.background = active
         ? (w==='twitch'
             ? 'linear-gradient(135deg, rgba(255,0,255,.22), rgba(120,0,255,.14))'
-            : 'linear-gradient(135deg, rgba(0,255,160,.25), rgba(0,255,200,.15))')
+            : w==='telegram'
+              ? 'linear-gradient(135deg, rgba(0,255,160,.25), rgba(0,255,200,.15))'
+              : 'linear-gradient(135deg, rgba(0,160,255,.25), rgba(0,200,255,.15))')
         : 'transparent';
-      b.style.boxShadow = active ? '0 0 8px rgba(0,255,160,.25)' : 'none';
-      b.setAttribute('aria-selected', active ? 'true':'false');
-    });
-  };
+       b.style.boxShadow = active ? '0 0 8px rgba(0,255,160,.25)' : 'none';
+       b.setAttribute('aria-selected', active ? 'true':'false');
+     });
+   };
+
 
   walletHost.querySelectorAll('.wallet-tab').forEach(b=>{
     b.addEventListener('click', ()=>{
@@ -10547,6 +10562,23 @@ async function loadWallet(preferredTab='twitch') {
 function renderWalletView(type) {
   const container = document.getElementById('wallet-content');
   const searchEl  = document.getElementById('wallet-search');
+  if (searchEl && searchEl.parentElement) {
+    searchEl.parentElement.style.display = (type === 'history') ? 'none' : 'flex';
+  }
+
+  // Stub "Transactions Historie" (implementerai in seguito)
+  if (type === 'history') {
+    container.innerHTML = `
+      <div style="
+        padding:18px; border:1px dashed rgba(255,255,255,.2); border-radius:12px;
+        background:linear-gradient(180deg, rgba(0,160,255,.10), rgba(0,200,255,.06));
+        color:#e7fffa;">
+        <div style="font-weight:900; letter-spacing:.2px; margin-bottom:6px;">Transactions Historie</div>
+        <div style="opacity:.85">This tab is under construction. Soon available.</div>
+      </div>
+    `;
+    return;
+  }  
   const raw = type==='twitch' ? (window.twitchWalletBalances||[]) : (window.telegramWalletBalances||[]);
   const balances = [...raw].sort((a,b)=> (b.amount||0)-(a.amount||0));
 
@@ -11340,6 +11372,12 @@ async function openModal(action, token, walletType = 'telegram') {
     e.preventDefault();
     const amount = amountInput.value;
 
+    // disabilita subito TUTTE le azioni per evitare doppi submit
+    setButtonsEnabled(false);
+    submitButton.disabled = true;
+    const previewBtn = document.getElementById('preview-button');
+    if (previewBtn) previewBtn.disabled = true;
+
     try {
       if (action === "swap") {
         const symbolOutEl   = document.getElementById('selected-token-symbol');
@@ -11351,17 +11389,23 @@ async function openModal(action, token, walletType = 'telegram') {
         await executeAction(action, token, amount, null, null, walletType);
       }
 
-      showModalMessage(`✅ ${actionTitle} completed successfully. Page will autoreload in 5 seconds`, 'success');
-      setTimeout(() => {
+      showModalMessage(`✅ ${actionTitle} completed successfully. Refresh in 5 seconds…`, 'success');
+      setTimeout(async () => {
         closeModal();
-        // ricarica lo stesso tab del wallet usato
-        loadWallet(walletType);
+        // forza il fetch dal backend e ricarica la tab attuale (se l’utente l’ha cambiata nel mentre)
+        await loadWallet(window.currentWalletTab || walletType, true);
       }, 5000);
     } catch (error) {
       console.error(error);
       showModalMessage(`❌ Error during ${actionTitle}`, 'error');
+
+      // riabilita i pulsanti solo in caso di errore
+      setButtonsEnabled(true);
+      submitButton.disabled = false;
+      if (previewBtn) previewBtn.disabled = false;
     }
   };
+
 }
     
 function showConfirmModal(message, onConfirm) {
@@ -11391,9 +11435,24 @@ function showConfirmModal(message, onConfirm) {
 }
 
 function setButtonsEnabled(enabled) {
-  const buttons = document.querySelectorAll('button.action-button'); // seleziona i tuoi pulsanti specifici
+  // Tutti i pulsanti d’azione che vogliamo (de)abilitare globalmente
+  const selectors = [
+    '.token-act',       // card grid actions
+    '.btn-action',      // table actions
+    '#submit-button',   // submit modale generico
+    '#preview-button',  // preview swap
+    '#stake-submit',    // stake modale
+    '#bulk-withdraw',   // bulk actions
+    '#bulk-send'
+  ];
+
+  const buttons = document.querySelectorAll(selectors.join(','));
   buttons.forEach(btn => {
+    if (!btn) return;
     btn.disabled = !enabled;
+    btn.setAttribute('aria-disabled', String(!enabled));
+    btn.style.pointerEvents = enabled ? '' : 'none';
+    btn.style.opacity = enabled ? '' : '0.65';
   });
 }
 
@@ -11404,6 +11463,11 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
     return;
   }
 
+  // Invalida cache locale per evitare riusi di dati obsoleti
+  window.twitchWalletBalances = undefined;
+  window.telegramWalletBalances = undefined;
+
+  // Disabilita subito tutte le azioni (verrà riabilitato SOLO in errore)
   setButtonsEnabled(false);
 
   let interimFeedbackDiv = null;
@@ -11438,6 +11502,7 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
     endpoint = `${BASE_URL}/bridge_token`;
   }
   const fullUrl = `${endpoint}?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
+
   try {
     let bodyData = {
       wax_account: wax_account,
@@ -11503,7 +11568,6 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
     let feedbackText = "";
 
     if (action === "withdraw") {
-      // Backend restituisce almeno { message, ... }
       feedbackText = `
         <div style="
           margin-top: 1rem;
@@ -11622,8 +11686,11 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
     `;
     errorDiv.textContent = `Errore di rete: ${networkError.message || networkError}`;
     document.querySelector('#action-form').appendChild(errorDiv);
-  } finally {
+
+    // Riabilita i pulsanti SOLO in caso di errore
     setButtonsEnabled(true);
+  } finally {
+    // Non riabilitiamo qui: in caso di successo restano disabilitati fino al reload
   }
 }
 

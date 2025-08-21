@@ -10312,7 +10312,7 @@ function openStakeModal(type, poolId, tokenSymbol) {
   });
 
   // Assicura i balances prima di calcolare
-  ensureBalancesLoaded().then(() => {
+  ensureBalancesLoaded().then(async () => {
     const getBal = (w, token) => {
       const list = (w === 'twitch' ? window.twitchWalletBalances : window.telegramWalletBalances) || [];
       const row = list.find(r => (r.symbol || '').toUpperCase() === token.toUpperCase());

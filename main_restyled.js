@@ -1266,7 +1266,6 @@ function openDepositToPool(poolId, tokenSymbol, currentDaily = 0) {
     return Number(list.find(t => t.symbol === symbol)?.amount || 0);
   };
 
-  // Create (if needed) and return the top-level feedback container
   function ensureFeedTopUp() {
     let el = document.getElementById('feedTopUp');
     if (!el) {
@@ -1287,7 +1286,6 @@ function openDepositToPool(poolId, tokenSymbol, currentDaily = 0) {
     return el;
   }
 
-  // Render a detailed feedback message in #feedTopUp
   function renderFeedTopUp(type, title, details = []) {
     const el = ensureFeedTopUp();
     const palette = {
@@ -1295,10 +1293,8 @@ function openDepositToPool(poolId, tokenSymbol, currentDaily = 0) {
       success: { bg: '#0f1a12', bd: '#16a34a', hd: '#34d399' },
       error:   { bg: '#1a0f0f', bd: '#b91c1c', hd: '#fda4af' }
     }[type || 'info'];
-
     el.style.background = palette.bg;
     el.style.borderColor = palette.bd;
-
     const list = details.map(li => `<li style="margin-left:1rem; list-style:disc;">${li}</li>`).join('');
     el.innerHTML = `
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
@@ -1312,59 +1308,59 @@ function openDepositToPool(poolId, tokenSymbol, currentDaily = 0) {
   }
   // --------------------------------------------------------------------------
 
-  // Default wallet (Telegram). (Only change vs original: add selectable wallet source)
+  // Default wallet + balance
   let selectedWallet = 'telegram';
   let bal = getWalletBalance(selectedWallet, tokenSymbol);
 
-  // Build the modal body (no feedback inside the modal)
-  const body = document.createElement('div');
-  body.style.display = 'grid';
-  body.style.gap = '8px';
-  body.innerHTML = `
-    <div>
-      <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Wallet</label>
-      <select id="wallet-source"
-        style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
-        <option value="telegram" selected>Telegram</option>
-        <option value="twitch">Twitch</option>
-      </select>
-    </div>
+  // ❗ Use string HTML (NOT a DOM node) for showModal
+  const uid = 'dep-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const bodyHTML = `
+    <div id="deposit-form-${uid}" style="display:grid; gap:8px;">
+      <div>
+        <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Wallet</label>
+        <select id="wallet-source-${uid}"
+          style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+          <option value="telegram" selected>Telegram</option>
+          <option value="twitch">Twitch</option>
+        </select>
+      </div>
 
-    <div style="color:#9ca3af;">
-      Available in <b id="wallet-name">Telegram</b> Wallet:
-      <b id="wallet-balance">${fmt(bal, 6)} ${tokenSymbol}</b>
-    </div>
+      <div style="color:#9ca3af;">
+        Available in <b id="wallet-name-${uid}">Telegram</b> Wallet:
+        <b id="wallet-balance-${uid}">${fmt(bal, 6)} ${tokenSymbol}</b>
+      </div>
 
-    <div>
-      <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Amount to deposit</label>
-      <input id="deposit-amount" type="number" placeholder="e.g. 100"
-        style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
-    </div>
+      <div>
+        <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Amount to deposit</label>
+        <input id="deposit-amount-${uid}" type="number" placeholder="e.g. 100"
+          style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+      </div>
 
-    <div>
-      <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Daily reward (keep same if empty)</label>
-      <input id="deposit-daily" type="number" placeholder="${currentDaily || 0}"
-        style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
-    </div>
+      <div>
+        <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Daily reward (keep same if empty)</label>
+        <input id="deposit-daily-${uid}" type="number" placeholder="${currentDaily || 0}"
+          style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+      </div>
 
-    <button id="submit-deposit"
-      style="background:#22d3ee; color:#0a0a0a; font-weight:900; border:0; border-radius:10px; padding:10px 12px; cursor:pointer;">
-      Deposit Tokens
-    </button>
+      <button id="submit-deposit-${uid}"
+        style="background:#22d3ee; color:#0a0a0a; font-weight:900; border:0; border-radius:10px; padding:10px 12px; cursor:pointer;">
+        Deposit Tokens
+      </button>
+    </div>
   `;
 
-  // Show modal
-  showModal({ title: `Deposit ${tokenSymbol}`, body });
+  // Show modal (string HTML only)
+  showModal({ title: `Deposit ${tokenSymbol}`, body: bodyHTML });
 
-  // Modal refs
-  const $wallet  = body.querySelector('#wallet-source');
-  const $wName   = body.querySelector('#wallet-name');
-  const $wBal    = body.querySelector('#wallet-balance');
-  const $amount  = body.querySelector('#deposit-amount');
-  const $daily   = body.querySelector('#deposit-daily');
-  const $submit  = body.querySelector('#submit-deposit');
+  // Grab refs from the DOM now that the modal has rendered the HTML string
+  const $wallet  = document.getElementById(`wallet-source-${uid}`);
+  const $wName   = document.getElementById(`wallet-name-${uid}`);
+  const $wBal    = document.getElementById(`wallet-balance-${uid}`);
+  const $amount  = document.getElementById(`deposit-amount-${uid}`);
+  const $daily   = document.getElementById(`deposit-daily-${uid}`);
+  const $submit  = document.getElementById(`submit-deposit-${uid}`);
 
-  // Keep the "Available" line in sync with selected wallet
+  // Sync "Available" line with selected wallet
   const refreshBalance = () => {
     bal = getWalletBalance(selectedWallet, tokenSymbol);
     $wName.textContent = selectedWallet.charAt(0).toUpperCase() + selectedWallet.slice(1);
@@ -1376,13 +1372,12 @@ function openDepositToPool(poolId, tokenSymbol, currentDaily = 0) {
     refreshBalance();
   });
 
-  // Submit handler (feedback goes to #feedTopUp, not inside the modal)
+  // Submit handler (feedback in #feedTopUp)
   $submit.onclick = async () => {
     const amt = parseFloat($amount.value);
     const daily = parseFloat($daily.value);
     const newDaily = (isNaN(daily) || daily <= 0) ? (currentDaily || 0) : daily;
 
-    // Validate against the selected wallet balance
     if (!amt || amt <= 0 || amt > bal) {
       return renderFeedTopUp(
         'error',
@@ -1395,7 +1390,6 @@ function openDepositToPool(poolId, tokenSymbol, currentDaily = 0) {
       );
     }
 
-    // Informational feedback before sending
     renderFeedTopUp(
       'info',
       'Submitting deposit…',
@@ -1419,13 +1413,12 @@ function openDepositToPool(poolId, tokenSymbol, currentDaily = 0) {
           total_reward: amt,
           daily_reward: newDaily,
           wax_account,
-          wallet: selectedWallet // <-- (telegram | twitch)
+          wallet: selectedWallet // 'telegram' | 'twitch'
         })
       });
 
       let data = {};
       try { data = await res.json(); } catch (_) {}
-
       if (!res.ok) throw new Error(data?.error || 'Deposit failed');
 
       renderFeedTopUp(
@@ -1439,7 +1432,6 @@ function openDepositToPool(poolId, tokenSymbol, currentDaily = 0) {
         ]
       );
 
-      // Close modal & refresh pools (same behavior as original)
       closeModal();
       fetchAndRenderTokenPools(true);
     } catch (e) {

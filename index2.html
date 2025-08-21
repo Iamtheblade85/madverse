@@ -1,81 +1,118 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>CryptoChaos Portal</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- NUOVO STILE TEMATIZZATO -->
-  <link rel="stylesheet" href="styles5.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dwarfs Cave</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles_goblin_game.css" />
+  <script>
+    /* opzionale: imposta BASE_URL prima di app.js se diverso dal default */
+    window.BASE_URL = window.BASE_URL || "https://iamemanuele.pythonanywhere.com";
+    /* opzionale: memorizza userData (wax_account, userId, usx_token) in localStorage o window.userData */
+  </script>
 </head>
+<body>
+  <main id="goblin-content" class="cv-wrap" aria-live="polite">
+    <section id="expedition-summary-block" class="cv-row-wrap">
+      <div class="cv-col-left">
+        <h3 class="cv-title">⛏️ Global Expeditions in Progress</h3>
+        <div id="cv-toast-host" class="cv-toast-host" role="status" aria-live="polite"></div>
+        <div id="cv-video-or-canvas" class="cv-canvas-wrap">
+          <canvas id="caveCanvas" class="cv-canvas" aria-label="Cave canvas"></canvas>
+        </div>
+      </div>
 
-<body class="theme-body">
-  <!-- Navbar -->
-  <nav class="theme-navbar">
-    <div class="theme-navbar-title">
-      <h1 class="title-animated">ChipsWallet</h1>
-      <div class="theme-spacer-sm"></div>
-      <p class="theme-subtitle">Built for Users, Powered by Blockchain</p>
-    </div>
-
-    <div id="menu" class="theme-menu">
-      <button class="menu-btn" data-section="wallet">Wallet</button>
-      <button class="menu-btn" data-section="nfts">NFTs Wallet</button>
-
-      <!-- Dropdown Earn -->
-      <div class="theme-dropdown">
-        <button class="menu-btn">Earn ▾</button>
-        <div class="theme-dropdown-content">
-          <button class="menu-btn" data-section="token-staking">Token Staking</button>
-          <button class="menu-btn" data-section="nfts-staking">NFTs Staking</button>
-          <div class="theme-dropdown-divider"></div>
-          <div class="theme-dropdown-group">
-            <button class="menu-btn" data-section="c2e-telegram">C2E - Telegram</button>
-            <button class="menu-btn" data-section="c2e-twitch">C2E - Twitch</button>
+      <div class="cv-col-right">
+        <!-- LIVE EXPEDITIONS -->
+        <div id="cv-global-list" class="cv-card">
+          <div class="cv-card-head">
+            <h4 class="cv-card-title cyan">🌍 Live Expeditions (in progress)</h4>
+            <span class="cv-chip cyan-outline" title="Aggiornamento automatico">auto refresh</span>
           </div>
+          <div id="cv-global-cards" class="cv-cards"></div>
+        </div>
+
+        <!-- RECENT RESULTS -->
+        <div id="cv-recent-list" class="cv-card amber">
+          <div class="cv-card-head">
+            <h4 class="cv-card-title amber">⛏️ Latest Expedition Results</h4>
+            <span class="cv-chip amber-outline">last 10</span>
+          </div>
+          <div id="cv-recent-grid" class="cv-cards"></div>
+          <div id="cv-recent-empty" class="cv-empty" hidden>Nessun risultato.</div>
+        </div>
+
+        <!-- BONUS CHESTS -->
+        <div id="cv-bonus-list" class="cv-card green">
+          <div class="cv-card-head">
+            <h4 class="cv-card-title green">🎁 Latest Chest Rewards</h4>
+            <span class="cv-chip green-outline">live</span>
+          </div>
+          <div id="cv-bonus-grid" class="cv-bonus-grid"></div>
+        </div>
+
+        <!-- TRY PERK DROP -->
+        <div class="cv-cta">
+          <p class="cv-cta-note">⏱️ <strong>Perk attempt:</strong> 1 ogni <strong>10 min</strong> per WAX account · <span class="muted">chance ~50% di spawn</span></p>
+          <button id="cv-chest-btn" class="cv-btn cv-btn-perk" aria-label="Try to trigger a perk and drop a chest">
+            🎁 Try a Perk Drop
+          </button>
+          <div class="cv-cta-hint">Cooldown gestito dal server.</div>
         </div>
       </div>
+    </section>
 
-      <!-- Dropdown Creators Tools -->
-      <div class="theme-dropdown">
-        <button class="menu-btn">Creators Tools ▾</button>
-        <div class="theme-dropdown-content">
-          <button class="menu-btn" data-section="create-token-pool">Create Token Staking Pool</button>
-          <button class="menu-btn" data-section="create-nfts-farm">Create NFTs Staking Pool</button>
+    <!-- SELEZIONE GOBLIN -->
+    <section class="cv-section">
+      <h3 class="cv-title">🎒 Seleziona i tuoi goblin e prepara la spedizione</h3>
+
+      <!-- Toolbar filtri -->
+      <div class="cv-toolbar">
+        <input id="cv-search" class="cv-input" placeholder="Search name or ID…" />
+        <select id="cv-rarity" class="cv-select">
+          <option value="">All Rarities</option>
+          <option>Common</option><option>Uncommon</option><option>Rare</option>
+          <option>Epic</option><option>Legendary</option><option>Mythic</option>
+        </select>
+        <div class="cv-range">
+          <label for="cv-power">Min Power</label>
+          <input id="cv-power" type="range" min="0" max="100" step="1" value="0" />
+          <span id="cv-power-val" class="cv-range-val">0</span>
         </div>
+
+        <div id="cv-sort-segment" class="cv-segment" role="tablist" aria-label="Sort">
+          <button class="cv-seg-btn" data-sort="rarity" role="tab" aria-selected="true">Rarity</button>
+          <button class="cv-seg-btn" data-sort="level" role="tab">Level</button>
+          <button class="cv-seg-btn" data-sort="daily_power" role="tab">Power</button>
+        </div>
+
+        <div id="cv-duration-segment" class="cv-segment" role="tablist" aria-label="Duration">
+          <button class="cv-seg-btn" data-dur="10m" role="tab">10m <small>2.0×</small></button>
+          <button class="cv-seg-btn" data-dur="30m" role="tab">30m <small>1.3×</small></button>
+          <button class="cv-seg-btn is-active" data-dur="1h" role="tab" aria-selected="true">1h <small>1.0×</small></button>
+          <button class="cv-seg-btn" data-dur="6h" role="tab">6h <small>0.7×</small></button>
+          <button class="cv-seg-btn" data-dur="24h" role="tab">24h <small>0.4×</small></button>
+        </div>
+
+        <button class="cv-btn" id="cv-select-50">✅ First 50</button>
+        <button class="cv-btn" id="cv-select-best">🏆 Best 50</button>
+        <button class="cv-btn" id="cv-deselect">❌ Clear</button>
       </div>
-    </div>
-  </nav>
 
-  <!-- Contenuto dinamico principale -->
-  <main id="app" class="theme-main"></main>
+      <div id="cv-summary" class="cv-card sticky"></div>
+      <div id="cv-active-filters" class="cv-active-filters"></div>
 
-  <!-- Modale dinamica -->
-  <div id="modal" class="theme-modal hidden">
-    <div id="modal-content" class="theme-modal-content">
-      <button id="close-modal" class="theme-modal-close">&times;</button>
-      <div id="modal-body" class="theme-modal-body">
-        <!-- Contenuto dinamico della modale -->
-      </div>
-    </div>
-  </div>
+      <div id="cv-goblin-list" class="cv-goblin-grid"></div>
+    </section>
+  </main>
 
-  <!-- Modale di conferma -->
-  <div id="confirm-modal" class="theme-modal hidden">
-    <div class="theme-modal-confirm">
-      <h2 class="theme-title">Confirm Deletion</h2>
-      <p id="confirm-message" class="theme-confirm-message">Are you sure you want to remove this item?</p>
-      <div class="theme-button-group">
-        <button id="confirm-cancel" class="theme-button theme-button-secondary">Cancel</button>
-        <button id="confirm-yes" class="theme-button theme-button-danger">Yes, Remove</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast notifications -->
-  <div id="toast-container" class="theme-toast-container"></div>
-
-  <!-- Script principale -->
-  <script src="main.js"></script>
+  <script src="./app_game.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if (typeof window.renderDwarfsCave === "function") window.renderDwarfsCave();
+    });
+  </script>
 </body>
 </html>

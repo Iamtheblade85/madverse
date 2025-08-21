@@ -1257,61 +1257,196 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward=0) {
 window.openEditDailyReward = openEditDailyReward;
 
 // ---------- Actions: Top-up ----------
-function openDepositToPool(poolId, tokenSymbol, currentDaily=0) {
-  const bal = (window.walletBalances||[]).find(t => t.symbol===tokenSymbol)?.amount || 0;
-  const body = `
-    <div style="display:grid; gap:8px;">
-      <div style="color:#9ca3af;">Available in Wallet: <b>${fmt(bal,6)} ${tokenSymbol}</b></div>
+async function openDepositToPool(poolId, tokenSymbol, currentDaily = 0) {
+  // Ensure balances are loaded (no popups)
+  try { await ensureBalancesLoaded(false); } catch (_) {}
+
+  // Helpers
+  const uid = 'dep-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const qid = (name) => `#${name}-${uid}`;
+  const getAmt = (arr = [], sym) => Number(arr.find(t => t.symbol === sym)?.amount || 0);
+  const prettyNum = (n, maxFrac = 6) =>
+    (typeof fmt === "function" ? fmt(n, maxFrac) : Number(n).toLocaleString(undefined, { maximumFractionDigits: maxFrac }));
+
+  // Grab balances from both wallets
+  const telegramBal = getAmt(window.telegramWalletBalances, tokenSymbol);
+  const twitchBal   = getAmt(window.twitchWalletBalances, tokenSymbol);
+
+  // Default wallet: the one that has balance > 0, else Telegram
+  let selected = telegramBal > 0 ? "telegram" : (twitchBal > 0 ? "twitch" : "telegram");
+  const balances = { telegram: telegramBal, twitch: twitchBal };
+
+  // Build modal body
+  const body = document.createElement("div");
+  body.style.display = "grid";
+  body.style.gap = "8px";
+  body.innerHTML = `
+    <div id="container-${uid}" style="display:grid; gap:8px;">
+      <div>
+        <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Wallet</label>
+        <select id="wallet-source-${uid}"
+          style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+          <option value="telegram"${selected==="telegram" ? " selected" : ""}>Telegram</option>
+          <option value="twitch"${selected==="twitch" ? " selected" : ""}>Twitch</option>
+        </select>
+      </div>
+
+      <div style="color:#9ca3af;">
+        Available in <b id="wallet-name-${uid}"></b> wallet:
+        <b id="wallet-balance-${uid}"></b>
+      </div>
+
       <div>
         <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Amount to deposit</label>
-        <input id="deposit-amount" type="number" placeholder="e.g. 100"
-          style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+        <div style="display:flex; gap:8px;">
+          <input id="deposit-amount-${uid}" type="number" inputmode="decimal" min="0" step="any"
+            placeholder="e.g. 100"
+            style="flex:1; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
+          <button id="max-btn-${uid}" type="button"
+            style="background:#111827; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px; cursor:pointer;">
+            MAX
+          </button>
+        </div>
       </div>
+
       <div>
-        <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Daily reward (keep same if empty)</label>
-        <input id="deposit-daily" type="number" placeholder="${currentDaily||0}"
+        <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Daily reward (leave empty to keep)</label>
+        <input id="deposit-daily-${uid}" type="number" inputmode="decimal" min="0" step="any"
+          placeholder="${currentDaily || 0}"
           style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
       </div>
-      <button id="submit-deposit"
+
+      <!-- Dynamic in-container feedback (unique name/id) -->
+      <div id="deposit-feedback-${uid}" aria-live="polite"
+        style="display:none; padding:10px 12px; border-radius:10px; border:1px solid #374151; background:#111827; color:#e5e7eb;"></div>
+
+      <button id="submit-deposit-${uid}" type="button"
         style="background:#22d3ee; color:#0a0a0a; font-weight:900; border:0; border-radius:10px; padding:10px 12px; cursor:pointer;">
         Deposit Tokens
       </button>
     </div>
   `;
-  showModal({ title:`Deposit ${tokenSymbol}`, body });
 
-  setTimeout(() => {
-    document.getElementById('submit-deposit').onclick = async () => {
-      const amt = parseFloat(document.getElementById('deposit-amount').value);
-      const daily = parseFloat(document.getElementById('deposit-daily').value);
-      const newDaily = isNaN(daily) || daily <= 0 ? (currentDaily||0) : daily;
+  // Show modal (no alerts/toasts)
+  showModal({ title: `Deposit ${tokenSymbol}`, body });
 
-      if (!amt || amt <= 0 || amt > bal) return showToast("Invalid amount", "error");
+  // Element refs
+  const $select = body.querySelector(qid('wallet-source'));
+  const $name   = body.querySelector(qid('wallet-name'));
+  const $balEl  = body.querySelector(qid('wallet-balance'));
+  const $amount = body.querySelector(qid('deposit-amount'));
+  const $daily  = body.querySelector(qid('deposit-daily'));
+  const $maxBtn = body.querySelector(qid('max-btn'));
+  const $submit = body.querySelector(qid('submit-deposit'));
+  const $feed   = body.querySelector(qid('deposit-feedback'));
 
-      try {
-        const { wax_account } = window.userData || {};
-        const res = await fetch(`${BASE_URL}/add_pool_reward`, {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            pool_id: poolId,
-            token_symbol: tokenSymbol,
-            total_reward: amt,
-            daily_reward: newDaily,
-            wax_account
-          })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.error || 'Deposit failed');
-        showToast('Tokens deposited successfully','success');
-        closeModal();
-        fetchAndRenderTokenPools(true);
-      } catch (e) {
-        console.error(e);
-        showToast(e.message,'error');
+  const setFeedback = (type, message) => {
+    if (!$feed) return;
+    $feed.style.display = message ? 'block' : 'none';
+    $feed.textContent = message || '';
+    // Simple color coding
+    const styles = {
+      info:    { bg:'#111827', bd:'#374151' },
+      error:   { bg:'#4b1d1d', bd:'#b91c1c' },
+      success: { bg:'#16341d', bd:'#16a34a' }
+    }[type || 'info'];
+    $feed.style.background = styles.bg;
+    $feed.style.border = `1px solid ${styles.bd}`;
+  };
+
+  const refreshBalanceLine = () => {
+    const bal = balances[selected] || 0;
+    $name.textContent  = selected.charAt(0).toUpperCase() + selected.slice(1);
+    $balEl.textContent = `${prettyNum(bal, 6)} ${tokenSymbol}`;
+  };
+
+  // Init UI
+  refreshBalanceLine();
+
+  // Listeners
+  $select.addEventListener('change', () => {
+    selected = $select.value;
+    refreshBalanceLine();
+    setFeedback('info', ''); // clear feedback when switching wallet
+  });
+
+  $maxBtn.addEventListener('click', () => {
+    const bal = Number(balances[selected] || 0);
+    $amount.value = bal > 0 ? String(bal) : '';
+    setFeedback('info', bal > 0 ? 'Filled amount with available balance.' : 'No available balance.');
+  });
+
+  const submitHandler = async () => {
+    setFeedback('info', '');
+    const available = Number(balances[selected] || 0);
+    const amt   = parseFloat($amount.value);
+    const daily = parseFloat($daily.value);
+    const newDaily = (isNaN(daily) || daily <= 0) ? (currentDaily || 0) : daily;
+
+    if (!amt || amt <= 0) {
+      return setFeedback('error', 'Invalid amount. Please enter a positive number.');
+    }
+    if (amt > available) {
+      return setFeedback('error', 'Amount exceeds available balance for the selected wallet.');
+    }
+
+    try {
+      const { wax_account } = window.userData || {};
+      if (!wax_account) throw new Error('Missing wax_account.');
+
+      const prevLabel = $submit.textContent;
+      $submit.disabled = true;
+      $submit.textContent = 'Processing…';
+
+      const res = await fetch(`${BASE_URL}/add_pool_reward`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pool_id: poolId,
+          token_symbol: tokenSymbol,
+          total_reward: amt,
+          daily_reward: newDaily,
+          wax_account,
+          wallet: selected // 'telegram' | 'twitch'
+        })
+      });
+
+      let data = {};
+      try { data = await res.json(); } catch (_) {}
+
+      if (!res.ok) throw new Error(data?.error || 'Deposit failed.');
+
+      // Optimistic local balance update
+      const list = selected === 'telegram' ? (window.telegramWalletBalances || []) : (window.twitchWalletBalances || []);
+      const i = list.findIndex(t => t.symbol === tokenSymbol);
+      if (i >= 0) {
+        list[i].amount = Math.max(0, Number(list[i].amount || 0) - amt);
+        balances[selected] = list[i].amount;
       }
-    };
-  }, 0);
+      refreshBalanceLine();
+
+      setFeedback('success', 'Tokens deposited successfully.');
+      // Refresh pools UI
+      try { fetchAndRenderTokenPools(true); } catch (_) {}
+
+      // Optional: close after a brief pause so the user sees the success message
+      setTimeout(() => { try { closeModal(); } catch (_) {} }, 1000);
+    } catch (err) {
+      setFeedback('error', err?.message || 'An error occurred while depositing.');
+    } finally {
+      $submit.disabled = false;
+      $submit.textContent = 'Deposit Tokens';
+    }
+  };
+
+  $submit.addEventListener('click', submitHandler);
+
+  // Enter key submits
+  [$amount, $daily].forEach(el => {
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitHandler();
+    });
+  });
 }
 window.openDepositToPool = openDepositToPool;
 

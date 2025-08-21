@@ -1,118 +1,291 @@
 <!doctype html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dwarfs Cave</title>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles_goblin_game.css" />
+  <title>Dwarfs Cave — Goblin Expeditions</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Dwarfs Cave: send your Goblins on expeditions, open chests, equip items, use consumables, and progress the Season Pass." />
+  <meta name="theme-color" content="#111111" />
+
+  <!-- Preconnects & Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles_goblin_game.css" />
+
+  <!-- Minimal inline helpers for overlay mode (rest of styling lives in styles_goblin_game.css) -->
+  <style>
+    html, body { background:#0b0b0b; color:#e7e7e7; }
+    /* Hide “non-overlay” blocks when embedded for streaming */
+    body.embed-overlay .hide-when-embed { display: none !important; }
+    body.embed-overlay .only-when-embed { display: block !important; }
+    .only-when-embed { display: none; }
+
+    /* Ensure canvas container expands cleanly in overlays */
+    .overlay-canvas-frame { position: relative; width: 100%; max-width: 1400px; margin: 0 auto; }
+    .overlay-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .75rem; }
+    /* Visually separate content regions */
+    .cv-section { margin: 1.25rem 0; }
+  </style>
+
+  <!-- Base URL (optional): override per environment by setting window.BASE_URL before app.js -->
   <script>
-    /* opzionale: imposta BASE_URL prima di app.js se diverso dal default */
-    window.BASE_URL = window.BASE_URL || "https://iamemanuele.pythonanywhere.com";
-    /* opzionale: memorizza userData (wax_account, userId, usx_token) in localStorage o window.userData */
+    // Example: window.BASE_URL = "https://iamemanuele.pythonanywhere.com";
+    // If you want to pre-inject user auth from your app shell, set window.userData before app.js loads:
+    // window.userData = { wax_account: "name.wam", userId: "123", usx_token: "..." };
+
+    // Overlay detection for streaming
+    (function(){
+      const p = new URLSearchParams(location.search);
+      if (p.get("overlay")==="1" || p.get("embed")==="1") {
+        document.documentElement.classList.add("overlay");
+        document.body.classList.add("embed-overlay");
+      }
+    })();
   </script>
 </head>
 <body>
-  <main id="goblin-content" class="cv-wrap" aria-live="polite">
-    <section id="expedition-summary-block" class="cv-row-wrap">
-      <div class="cv-col-left">
-        <h3 class="cv-title">⛏️ Global Expeditions in Progress</h3>
-        <div id="cv-toast-host" class="cv-toast-host" role="status" aria-live="polite"></div>
-        <div id="cv-video-or-canvas" class="cv-canvas-wrap">
-          <canvas id="caveCanvas" class="cv-canvas" aria-label="Cave canvas"></canvas>
+  <noscript>
+    <div style="padding:12px; background:#4a0000; color:#fff; text-align:center;">
+      JavaScript is required to run Dwarfs Cave. Please enable it and reload.
+    </div>
+  </noscript>
+
+  <!-- App Shell -->
+  <div id="app" class="app-root">
+    <!-- Top Bar -->
+    <header class="app-header hide-when-embed" role="banner">
+      <div class="header-inner">
+        <div class="brand">
+          <span class="brand-mark">⛏️</span>
+          <span class="brand-text">Dwarfs Cave</span>
+        </div>
+        <nav class="nav-tabs" aria-label="Primary">
+          <button class="tab-btn is-active" data-tab="cave" id="tab-btn-cave" aria-controls="tab-cave" aria-selected="true" role="tab">Cave</button>
+          <button class="tab-btn" data-tab="season" id="tab-btn-season" aria-controls="tab-season" aria-selected="false" role="tab">Season Pass</button>
+        </nav>
+        <div class="header-actions">
+          <!-- Placeholder for future auth/controls -->
+          <span class="hdr-chip">Live</span>
         </div>
       </div>
+    </header>
 
-      <div class="cv-col-right">
-        <!-- LIVE EXPEDITIONS -->
-        <div id="cv-global-list" class="cv-card">
-          <div class="cv-card-head">
-            <h4 class="cv-card-title cyan">🌍 Live Expeditions (in progress)</h4>
-            <span class="cv-chip cyan-outline" title="Aggiornamento automatico">auto refresh</span>
+    <!-- Main Content -->
+    <main class="app-main" role="main">
+      <!-- ===================== CAVE PAGE ===================== -->
+      <section id="tab-cave" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-cave">
+        <div id="goblin-content" class="cave-wrap">
+          <!-- Toasts (live messages) -->
+          <div id="cv-toast-host" role="status" aria-live="polite"></div>
+
+          <!-- ======== Top Summary Block: Canvas + Live Boards ======== -->
+          <div id="expedition-summary-block" class="cv-section">
+            <div class="summary-grid">
+              <!-- Left: Canvas (overlay-friendly) -->
+              <div class="summary-left">
+                <h2 class="cv-title hide-when-embed">Global Expeditions</h2>
+                <div id="cv-video-or-canvas" class="overlay-canvas-frame">
+                  <canvas id="caveCanvas" class="overlay-canvas" aria-label="Goblin expedition cave scene"></canvas>
+                </div>
+                <!-- Duration segmented control -->
+                <div class="segmented hide-when-embed" id="cv-duration-segment" role="tablist" aria-label="Expedition Duration">
+                  <button class="cv-seg-btn" data-dur="10m" role="tab" aria-selected="false" title="2.0× multiplier">10m</button>
+                  <button class="cv-seg-btn" data-dur="30m" role="tab" aria-selected="false" title="1.3× multiplier">30m</button>
+                  <button class="cv-seg-btn is-active" data-dur="1h" role="tab" aria-selected="true" title="1.0× multiplier">1h</button>
+                  <button class="cv-seg-btn" data-dur="6h" role="tab" aria-selected="false" title="0.7× multiplier">6h</button>
+                  <button class="cv-seg-btn" data-dur="24h" role="tab" aria-selected="false" title="0.4× multiplier">24h</button>
+                </div>
+              </div>
+
+              <!-- Right: Live Boards & Controls -->
+              <aside class="summary-right">
+                <!-- Live expeditions in progress -->
+                <div class="cv-card" aria-labelledby="liveexp-title">
+                  <div class="cv-card-head">
+                    <h3 id="liveexp-title" class="cv-card-title cyan">🌍 Live Expeditions</h3>
+                    <span class="cv-chip cyan-outline" title="Auto refresh">auto</span>
+                  </div>
+                  <div id="cv-global-cards" class="overlay-stats-grid" aria-live="polite"></div>
+                </div>
+
+                <!-- Recent expedition results -->
+                <div class="cv-card cv-card--amber hide-when-embed" aria-labelledby="recentexp-title">
+                  <div class="cv-card-head">
+                    <h3 id="recentexp-title" class="cv-card-title amber">⛏️ Latest Expedition Results</h3>
+                    <span class="cv-chip amber-outline">last 10</span>
+                  </div>
+                  <div id="cv-recent-grid" class="cv-cards"></div>
+                  <div id="cv-recent-empty" class="cv-empty" hidden>No results yet.</div>
+                </div>
+
+                <!-- Chest winners (live) -->
+                <div class="cv-card cv-card--green" aria-labelledby="bonus-title">
+                  <div class="cv-card-head">
+                    <h3 id="bonus-title" class="cv-card-title green">🎁 Latest Chest Rewards</h3>
+                    <span class="cv-chip green-outline">live</span>
+                  </div>
+                  <div id="cv-bonus-grid" class="cv-cards"></div>
+                </div>
+
+                <!-- Perk trigger -->
+                <div class="cv-cta-box hide-when-embed">
+                  <button id="cv-chest-btn" class="cv-btn cv-btn-primary" aria-label="Try to trigger a perk drop (cooldown applies)">🎁 Try a Perk Drop</button>
+                  <div class="cv-note">Cooldown enforced automatically. Perks may spawn a chest on the canvas.</div>
+                </div>
+              </aside>
+            </div>
           </div>
-          <div id="cv-global-cards" class="cv-cards"></div>
-        </div>
 
-        <!-- RECENT RESULTS -->
-        <div id="cv-recent-list" class="cv-card amber">
-          <div class="cv-card-head">
-            <h4 class="cv-card-title amber">⛏️ Latest Expedition Results</h4>
-            <span class="cv-chip amber-outline">last 10</span>
+          <!-- ======== Expedition Consumables (run-wide) ======== -->
+          <div class="cv-section hide-when-embed">
+            <div id="cv-exp-consumables" class="cv-card"></div>
           </div>
-          <div id="cv-recent-grid" class="cv-cards"></div>
-          <div id="cv-recent-empty" class="cv-empty" hidden>Nessun risultato.</div>
-        </div>
 
-        <!-- BONUS CHESTS -->
-        <div id="cv-bonus-list" class="cv-card green">
-          <div class="cv-card-head">
-            <h4 class="cv-card-title green">🎁 Latest Chest Rewards</h4>
-            <span class="cv-chip green-outline">live</span>
+          <!-- ======== Team Builder: Filters/Tools ======== -->
+          <div class="cv-section hide-when-embed">
+            <div class="toolbar">
+              <!-- Search -->
+              <input id="cv-search" class="cv-input" inputmode="search" placeholder="Search name or ID…" aria-label="Search goblins by name or asset ID" />
+
+              <!-- Rarity -->
+              <label for="cv-rarity" class="cv-label">Rarity</label>
+              <select id="cv-rarity" class="cv-select" aria-label="Filter by rarity">
+                <option value="">All</option>
+                <option>Common</option>
+                <option>Uncommon</option>
+                <option>Rare</option>
+                <option>Epic</option>
+                <option>Legendary</option>
+                <option>Mythic</option>
+              </select>
+
+              <!-- Power -->
+              <label for="cv-power" class="cv-label">Min Power</label>
+              <input id="cv-power" type="range" min="0" max="100" step="1" value="0" aria-label="Minimum daily power filter" />
+              <span id="cv-power-val" class="cv-meter-val">0</span>
+
+              <!-- Sorting -->
+              <div class="segmented" id="cv-sort-segment" role="tablist" aria-label="Sort Goblins">
+                <button class="cv-seg-btn is-active" data-sort="rarity" role="tab" aria-selected="true">Rarity</button>
+                <button class="cv-seg-btn" data-sort="level" role="tab" aria-selected="false">Level</button>
+                <button class="cv-seg-btn" data-sort="daily_power" role="tab" aria-selected="false">Power</button>
+              </div>
+
+              <!-- Quick select -->
+              <div class="tool-actions">
+                <button class="cv-btn" id="cv-select-50" title="Select first 50 available">✅ First 50</button>
+                <button class="cv-btn" id="cv-select-best" title="Auto-pick the best 50 by stats">🏆 Best 50</button>
+                <button class="cv-btn" id="cv-deselect" title="Clear selection">❌ Clear</button>
+              </div>
+            </div>
+
+            <!-- Active filter badges -->
+            <div id="cv-active-filters" class="filter-badges" aria-live="polite"></div>
+
+            <!-- Sticky selection summary -->
+            <div id="cv-summary" class="cv-card cv-summary"></div>
           </div>
-          <div id="cv-bonus-grid" class="cv-bonus-grid"></div>
-        </div>
 
-        <!-- TRY PERK DROP -->
-        <div class="cv-cta">
-          <p class="cv-cta-note">⏱️ <strong>Perk attempt:</strong> 1 ogni <strong>10 min</strong> per WAX account · <span class="muted">chance ~50% di spawn</span></p>
-          <button id="cv-chest-btn" class="cv-btn cv-btn-perk" aria-label="Try to trigger a perk and drop a chest">
-            🎁 Try a Perk Drop
-          </button>
-          <div class="cv-cta-hint">Cooldown gestito dal server.</div>
+          <!-- ======== Goblin Grid ======== -->
+          <div class="cv-section hide-when-embed">
+            <div id="cv-goblin-list" class="goblin-grid" aria-live="polite" aria-label="Your Goblins"></div>
+          </div>
+
+          <!-- ======== Info Panel ======== -->
+          <div class="cv-section hide-when-embed">
+            <div class="cv-card info-card">
+              <h3 class="cv-title">📜 How it works</h3>
+              <ul class="cv-note-list">
+                <li>Choose up to <strong>50 goblins</strong> and pick an <strong>expedition duration</strong> (10m / 30m / 1h / 6h / 24h). Shorter runs have higher multipliers.</li>
+                <li>Rewards include <strong>dynamic tokens</strong> (whatever the server sends: CHIPS, SQJ, WOMBAT, WAX, etc.), <strong>NFTs</strong>, and <strong>consumables</strong>.</li>
+                <li>Each goblin has <strong>8 equipment slots</strong>. Identical templates (same schema + template) cannot be used on multiple slots of the same goblin.</li>
+                <li>Consumables can be used per expedition (up to 3) and per goblin (1 each), and can also be <strong>won</strong> from chests or expeditions.</li>
+              </ul>
+            </div>
+          </div>
         </div>
+      </section>
+
+      <!-- ===================== SEASON PASS PAGE ===================== -->
+      <section id="tab-season" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-season" hidden>
+        <div class="cv-section">
+          <div id="season-pass-root" class="season-wrap" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer hide-when-embed" role="contentinfo">
+      <div class="footer-inner">
+        <span>© <span id="year"></span> Dwarfs Cave</span>
+        <span class="sep">•</span>
+        <span>Built for explorers, streamers & mobile.</span>
       </div>
-    </section>
+    </footer>
+  </div>
 
-    <!-- SELEZIONE GOBLIN -->
-    <section class="cv-section">
-      <h3 class="cv-title">🎒 Seleziona i tuoi goblin e prepara la spedizione</h3>
-
-      <!-- Toolbar filtri -->
-      <div class="cv-toolbar">
-        <input id="cv-search" class="cv-input" placeholder="Search name or ID…" />
-        <select id="cv-rarity" class="cv-select">
-          <option value="">All Rarities</option>
-          <option>Common</option><option>Uncommon</option><option>Rare</option>
-          <option>Epic</option><option>Legendary</option><option>Mythic</option>
-        </select>
-        <div class="cv-range">
-          <label for="cv-power">Min Power</label>
-          <input id="cv-power" type="range" min="0" max="100" step="1" value="0" />
-          <span id="cv-power-val" class="cv-range-val">0</span>
-        </div>
-
-        <div id="cv-sort-segment" class="cv-segment" role="tablist" aria-label="Sort">
-          <button class="cv-seg-btn" data-sort="rarity" role="tab" aria-selected="true">Rarity</button>
-          <button class="cv-seg-btn" data-sort="level" role="tab">Level</button>
-          <button class="cv-seg-btn" data-sort="daily_power" role="tab">Power</button>
-        </div>
-
-        <div id="cv-duration-segment" class="cv-segment" role="tablist" aria-label="Duration">
-          <button class="cv-seg-btn" data-dur="10m" role="tab">10m <small>2.0×</small></button>
-          <button class="cv-seg-btn" data-dur="30m" role="tab">30m <small>1.3×</small></button>
-          <button class="cv-seg-btn is-active" data-dur="1h" role="tab" aria-selected="true">1h <small>1.0×</small></button>
-          <button class="cv-seg-btn" data-dur="6h" role="tab">6h <small>0.7×</small></button>
-          <button class="cv-seg-btn" data-dur="24h" role="tab">24h <small>0.4×</small></button>
-        </div>
-
-        <button class="cv-btn" id="cv-select-50">✅ First 50</button>
-        <button class="cv-btn" id="cv-select-best">🏆 Best 50</button>
-        <button class="cv-btn" id="cv-deselect">❌ Clear</button>
-      </div>
-
-      <div id="cv-summary" class="cv-card sticky"></div>
-      <div id="cv-active-filters" class="cv-active-filters"></div>
-
-      <div id="cv-goblin-list" class="cv-goblin-grid"></div>
-    </section>
-  </main>
-
-  <script src="./app_game.js" defer></script>
+  <!-- Scripts -->
+  <script defer src="app.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      if (typeof window.renderDwarfsCave === "function") window.renderDwarfsCave();
-    });
+    // Lightweight boot script: tabs + initializers + overlay polish
+    (function(){
+      const $ = (s, r=document)=>r.querySelector(s);
+      const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+
+      // Footer year
+      $("#year").textContent = new Date().getFullYear();
+
+      // Tab wiring
+      const tabs = {
+        cave: { btn: $("#tab-btn-cave"), panel: $("#tab-cave"), init: () => window.renderDwarfsCave && window.renderDwarfsCave() },
+        season: { btn: $("#tab-btn-season"), panel: $("#tab-season"), init: () => window.renderSeasonPass && window.renderSeasonPass() }
+      };
+
+      function activate(tabKey){
+        Object.entries(tabs).forEach(([k,o])=>{
+          if (!o.btn || !o.panel) return;
+          const active = (k === tabKey);
+          o.btn.classList.toggle("is-active", active);
+          o.btn.setAttribute("aria-selected", active ? "true":"false");
+          o.panel.hidden = !active;
+        });
+        // Init on first view
+        const t = tabs[tabKey];
+        if (t && !t.panel.dataset.inited){
+          t.panel.dataset.inited = "1";
+          try { t.init(); } catch(e){ console.warn("Init error:", e); }
+        }
+        // Reflect hash
+        history.replaceState(null, "", `#${tabKey}`);
+      }
+
+      // Click handlers
+      Object.entries(tabs).forEach(([k,o])=>{
+        o.btn && o.btn.addEventListener("click", ()=> activate(k));
+      });
+
+      // Auto-activate based on hash or default
+      const initial = (location.hash || "").replace("#","") || "cave";
+      activate(tabs[initial] ? initial : "cave");
+
+      // Sync Duration segmented control with saved value
+      const saved = (JSON.parse(localStorage.getItem("caveDuration") || "{}").key) || "1h";
+      $$("#cv-duration-segment .cv-seg-btn").forEach(b=>{
+        const on = (b.dataset.dur === saved);
+        b.classList.toggle("is-active", on);
+        b.setAttribute("aria-selected", on ? "true":"false");
+      });
+
+      // If overlay mode, you can optionally make the canvas full-bleed height
+      if (document.body.classList.contains("embed-overlay")) {
+        // Optional tweak: expand canvas section a bit
+        const wrap = $("#cv-video-or-canvas");
+        if (wrap) wrap.style.marginTop = "0";
+      }
+    })();
   </script>
 </body>
 </html>

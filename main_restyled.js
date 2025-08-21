@@ -206,6 +206,7 @@ function renderAuthButton(isLoggedIn) {
         Welcome ${window.userData.wax_account}
       </div>
     `;
+    ensureBalancesLoaded()
   }
 
   container.innerHTML = html;
@@ -1257,8 +1258,14 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward=0) {
 window.openEditDailyReward = openEditDailyReward;
 
 // ---------- Actions: Top-up ----------
+// ---------- Actions: Top-up (fixed) ----------
 function openDepositToPool(poolId, tokenSymbol, currentDaily = 0) {
   // ---- helpers -------------------------------------------------------------
+  const safeFmt = (n, d = 6) => {
+    try { return typeof fmt === 'function' ? fmt(Number(n || 0), d) : Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: d }); }
+    catch { return String(n || 0); }
+  };
+
   const getWalletBalance = (wallet, symbol) => {
     const list = wallet === 'twitch'
       ? (window.twitchWalletBalances || [])
@@ -1266,54 +1273,22 @@ function openDepositToPool(poolId, tokenSymbol, currentDaily = 0) {
     return Number(list.find(t => t.symbol === symbol)?.amount || 0);
   };
 
-  function ensureFeedTopUp() {
-    let el = document.getElementById('feedTopUp');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'feedTopUp';
-      el.setAttribute('role', 'status');
-      el.setAttribute('aria-live', 'polite');
-      el.style.maxWidth = '900px';
-      el.style.margin = '12px auto';
-      el.style.padding = '12px 14px';
-      el.style.border = '1px solid #374151';
-      el.style.borderRadius = '12px';
-      el.style.background = '#0b0f14';
-      el.style.color = '#e5e7eb';
-      el.style.fontFamily = 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto';
-      document.body.prepend(el);
-    }
-    return el;
-  }
+  const chooseDefaultWallet = (symbol) => {
+    const tg = getWalletBalance('telegram', symbol);
+    const tw = getWalletBalance('twitch', symbol);
+    // pick the wallet with the higher positive balance; fallback telegram
+    if (tw > tg && tw > 0) return 'twitch';
+    if (tg > 0) return 'telegram';
+    return 'telegram';
+  };
 
-  function renderFeedTopUp(type, title, details = []) {
-    const el = ensureFeedTopUp();
-    const palette = {
-      info:    { bg: '#0b0f14', bd: '#374151', hd: '#93c5fd' },
-      success: { bg: '#0f1a12', bd: '#16a34a', hd: '#34d399' },
-      error:   { bg: '#1a0f0f', bd: '#b91c1c', hd: '#fda4af' }
-    }[type || 'info'];
-    el.style.background = palette.bg;
-    el.style.borderColor = palette.bd;
-    const list = details.map(li => `<li style="margin-left:1rem; list-style:disc;">${li}</li>`).join('');
-    el.innerHTML = `
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-        <strong style="font-weight:800; color:${palette.hd}; text-transform:uppercase; letter-spacing:0.02em;">
-          ${title}
-        </strong>
-        <span style="opacity:.7; font-size:.9em;">(${new Date().toLocaleString()})</span>
-      </div>
-      ${list ? `<ul style="padding-left:0; margin:0;">${list}</ul>` : ''}
-    `;
-  }
-  // --------------------------------------------------------------------------
+  const uid = 'dep-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-  // Default wallet + balance
+  // Initial (may be 0 before balances load)
   let selectedWallet = 'telegram';
   let bal = getWalletBalance(selectedWallet, tokenSymbol);
 
-  // ❗ Use string HTML (NOT a DOM node) for showModal
-  const uid = 'dep-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  // ---------- Build HTML as STRING (showModal requires strings) ----------
   const bodyHTML = `
     <div id="deposit-form-${uid}" style="display:grid; gap:8px;">
       <div>
@@ -1325,82 +1300,112 @@ function openDepositToPool(poolId, tokenSymbol, currentDaily = 0) {
         </select>
       </div>
 
-      <div style="color:#9ca3af;">
-        Available in <b id="wallet-name-${uid}">Telegram</b> Wallet:
-        <b id="wallet-balance-${uid}">${fmt(bal, 6)} ${tokenSymbol}</b>
+      <div id="available-line-${uid}" style="color:#9ca3af;">
+        Available in <b id="wallet-name-${uid}">Telegram</b> wallet:
+        <b id="wallet-balance-${uid}">${safeFmt(bal, 6)} ${tokenSymbol}</b>
       </div>
 
       <div>
         <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Amount to deposit</label>
-        <input id="deposit-amount-${uid}" type="number" placeholder="e.g. 100"
+        <input id="deposit-amount-${uid}" type="number" inputmode="decimal" min="0" step="any" placeholder="e.g. 100"
           style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
       </div>
 
       <div>
         <label style="display:block; color:#9ca3af; font-weight:600; margin-bottom:6px;">Daily reward (keep same if empty)</label>
-        <input id="deposit-daily-${uid}" type="number" placeholder="${currentDaily || 0}"
+        <input id="deposit-daily-${uid}" type="number" inputmode="decimal" min="0" step="any" placeholder="${currentDaily || 0}"
           style="width:100%; background:#0b0f14; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px; padding:10px 12px;">
       </div>
 
-      <button id="submit-deposit-${uid}"
+      <!-- Feedback INSIDE the modal -->
+      <div id="deposit-feedback-${uid}" aria-live="polite"
+        style="display:none; padding:10px 12px; border-radius:10px; border:1px solid #374151; background:#111827; color:#e5e7eb;"></div>
+
+      <button id="submit-deposit-${uid}" type="button"
         style="background:#22d3ee; color:#0a0a0a; font-weight:900; border:0; border-radius:10px; padding:10px 12px; cursor:pointer;">
         Deposit Tokens
       </button>
     </div>
   `;
 
-  // Show modal (string HTML only)
+  // Show modal (title and body MUST be strings)
   showModal({ title: `Deposit ${tokenSymbol}`, body: bodyHTML });
 
-  // Grab refs from the DOM now that the modal has rendered the HTML string
-  const $wallet  = document.getElementById(`wallet-source-${uid}`);
-  const $wName   = document.getElementById(`wallet-name-${uid}`);
-  const $wBal    = document.getElementById(`wallet-balance-${uid}`);
-  const $amount  = document.getElementById(`deposit-amount-${uid}`);
-  const $daily   = document.getElementById(`deposit-daily-${uid}`);
-  const $submit  = document.getElementById(`submit-deposit-${uid}`);
+  // Grab refs now that modal content is in DOM
+  const $wallet = document.getElementById(`wallet-source-${uid}`);
+  const $wName  = document.getElementById(`wallet-name-${uid}`);
+  const $wBal   = document.getElementById(`wallet-balance-${uid}`);
+  const $amount = document.getElementById(`deposit-amount-${uid}`);
+  const $daily  = document.getElementById(`deposit-daily-${uid}`);
+  const $submit = document.getElementById(`submit-deposit-${uid}`);
+  const $feed   = document.getElementById(`deposit-feedback-${uid}`);
 
-  // Sync "Available" line with selected wallet
+  // In-modal feedback (no global feedTopUp)
+  const setFeedback = (type, lines) => {
+    if (!$feed) return;
+    const palette = {
+      info:    { bg:'#111827', bd:'#374151' },
+      error:   { bg:'#4b1d1d', bd:'#b91c1c' },
+      success: { bg:'#16341d', bd:'#16a34a' }
+    }[type || 'info'];
+    $feed.style.display = lines && lines.length ? 'block' : 'none';
+    $feed.style.background = palette.bg;
+    $feed.style.border = `1px solid ${palette.bd}`;
+    $feed.innerHTML = (lines || []).map(l => `<div>${l}</div>`).join('');
+  };
+
+  // Keep the "Available" line in sync
   const refreshBalance = () => {
     bal = getWalletBalance(selectedWallet, tokenSymbol);
     $wName.textContent = selectedWallet.charAt(0).toUpperCase() + selectedWallet.slice(1);
-    $wBal.textContent  = `${fmt(bal, 6)} ${tokenSymbol}`;
+    $wBal.textContent  = `${safeFmt(bal, 6)} ${tokenSymbol}`;
   };
 
+  // Load/refresh balances first, then set default wallet based on real balances
+  Promise.resolve(typeof ensureBalancesLoaded === 'function' ? ensureBalancesLoaded(false) : null)
+    .then(() => {
+      // choose best default wallet and sync the UI
+      selectedWallet = chooseDefaultWallet(tokenSymbol);
+      if ($wallet) $wallet.value = selectedWallet;
+      refreshBalance();
+    })
+    .catch(() => {
+      // even if load fails, keep UI usable
+      refreshBalance();
+    });
+
+  // Wallet change -> update balance line immediately
   $wallet.addEventListener('change', () => {
     selectedWallet = $wallet.value;
     refreshBalance();
+    setFeedback('', []); // clear any previous feedback
   });
 
-  // Submit handler (feedback in #feedTopUp)
+  // Submit
   $submit.onclick = async () => {
+    setFeedback('', []);
     const amt = parseFloat($amount.value);
-    const daily = parseFloat($daily.value);
-    const newDaily = (isNaN(daily) || daily <= 0) ? (currentDaily || 0) : daily;
+    const dailyVal = parseFloat($daily.value);
+    const newDaily = (isNaN(dailyVal) || dailyVal <= 0) ? (currentDaily || 0) : dailyVal;
 
     if (!amt || amt <= 0 || amt > bal) {
-      return renderFeedTopUp(
-        'error',
-        'Invalid deposit amount',
-        [
-          `Requested: <b>${amt || 0}</b> ${tokenSymbol}`,
-          `Available in ${selectedWallet} wallet: <b>${fmt(bal, 6)}</b> ${tokenSymbol}`,
-          `Tip: deposit must be > 0 and ≤ available balance.`
-        ]
-      );
+      return setFeedback('error', [
+        `Invalid amount: <b>${safeFmt(amt, 6)}</b> ${tokenSymbol}.`,
+        `Available in <b>${selectedWallet}</b> wallet: <b>${safeFmt(bal, 6)}</b> ${tokenSymbol}.`,
+        `Tip: amount must be > 0 and ≤ available balance.`
+      ]);
     }
 
-    renderFeedTopUp(
-      'info',
-      'Submitting deposit…',
-      [
-        `Pool ID: <b>${poolId}</b>`,
-        `Token: <b>${tokenSymbol}</b>`,
-        `Amount: <b>${amt}</b>`,
-        `Daily reward to apply: <b>${newDaily}</b>`,
-        `From wallet: <b>${selectedWallet}</b>`
-      ]
-    );
+    const prev = $submit.textContent;
+    $submit.disabled = true;
+    $submit.textContent = 'Processing…';
+    setFeedback('info', [
+      `Pool: <b>${poolId}</b>`,
+      `Token: <b>${tokenSymbol}</b>`,
+      `Amount: <b>${safeFmt(amt, 6)}</b>`,
+      `Daily reward to apply: <b>${safeFmt(newDaily, 6)}</b>`,
+      `From wallet: <b>${selectedWallet}</b>`
+    ]);
 
     try {
       const { wax_account } = window.userData || {};
@@ -1419,31 +1424,34 @@ function openDepositToPool(poolId, tokenSymbol, currentDaily = 0) {
 
       let data = {};
       try { data = await res.json(); } catch (_) {}
+
       if (!res.ok) throw new Error(data?.error || 'Deposit failed');
 
-      renderFeedTopUp(
-        'success',
-        'Deposit completed',
-        [
-          `Deposited <b>${amt}</b> ${tokenSymbol} from <b>${selectedWallet}</b> wallet.`,
-          `Daily reward ${isNaN(daily) || daily <= 0 ? 'left unchanged' : `set to <b>${newDaily}</b>`}.`,
-          data?.txid ? `Transaction ID: <b>${data.txid}</b>` : 'Transaction processed.',
-          'Refreshing pools list…'
-        ]
-      );
+      // Optimistic local balance update so the line reflects the new available
+      const list = selectedWallet === 'telegram' ? (window.telegramWalletBalances || []) : (window.twitchWalletBalances || []);
+      const i = list.findIndex(t => t.symbol === tokenSymbol);
+      if (i >= 0) list[i].amount = Math.max(0, Number(list[i].amount || 0) - amt);
+      refreshBalance();
 
-      closeModal();
-      fetchAndRenderTokenPools(true);
+      setFeedback('success', [
+        `Deposited <b>${safeFmt(amt, 6)}</b> ${tokenSymbol} from <b>${selectedWallet}</b> wallet.`,
+        `Daily reward ${isNaN(dailyVal) || dailyVal <= 0 ? 'left unchanged' : `set to <b>${safeFmt(newDaily, 6)}</b>`}.`,
+        data?.txid ? `Transaction ID: <b>${data.txid}</b>` : 'Transaction processed.',
+        'Refreshing pools list…'
+      ]);
+
+      try { fetchAndRenderTokenPools(true); } catch (_) {}
+      // keep modal open to let user read success (or close here if prefer)
+      // closeModal();
     } catch (e) {
       console.error(e);
-      renderFeedTopUp(
-        'error',
-        'Deposit failed',
-        [
-          e?.message ? `Reason: <b>${e.message}</b>` : 'Unknown error.',
-          `Pool: <b>${poolId}</b> — Token: <b>${tokenSymbol}</b> — Wallet: <b>${selectedWallet}</b>`
-        ]
-      );
+      setFeedback('error', [
+        e?.message ? `Error: <b>${e.message}</b>` : 'Unknown error.',
+        `Pool: <b>${poolId}</b> — Token: <b>${tokenSymbol}</b> — Wallet: <b>${selectedWallet}</b>`
+      ]);
+    } finally {
+      $submit.disabled = false;
+      $submit.textContent = prev;
     }
   };
 }

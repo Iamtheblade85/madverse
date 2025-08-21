@@ -10900,7 +10900,7 @@ window.nftsPerPage   = window.nftsPerPage || 24;
 window.currentPage   = window.currentPage || 1;
 
 /* ---------- Utilities ---------- */
-function fmt(num, d = 0) {
+function fmt_slider(num, d = 0) {
   const n = Number(num || 0);
   return n.toLocaleString(undefined, { maximumFractionDigits: d });
 }
@@ -11049,7 +11049,7 @@ function updateCounts(filtered) {
 
   const countEl = el('nfts-count');
   if (countEl) {
-    countEl.textContent = `${fmt(filtered.length)} of ${fmt(total)} • Selected ${fmt(sel)} • Staked ${fmt(stakedCount)} • Stakable ${fmt(stakableCount)}`;
+    countEl.textContent = `${fmt_slider(filtered.length)} of ${fmt_slider(total)} • Selected ${fmt_slider(sel)} • Staked ${fmt_slider(stakedCount)} • Stakable ${fmt_slider(stakableCount)}`;
   }
 
   // badge sui bulk-actions
@@ -11069,7 +11069,7 @@ function updateCounts(filtered) {
       badge.style.fontWeight = '800';
       bulk.appendChild(badge);
     }
-    badge.textContent = `Selected: ${fmt(sel)}`;
+    badge.textContent = `Selected: ${fmt_slider(sel)}`;
   }
 }
 

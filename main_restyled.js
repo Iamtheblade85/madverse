@@ -48,11 +48,27 @@ function getUrlParams() {
 
 async function loadAvailableTokens() {
   try {
-    const response = await fetch('https://alcor.exchange/api/v2/tokens');
-    const tokens = await response.json();
-    availableTokens = tokens.map(t => `${t.symbol}-${t.contract}`);
+    const url = `${BASE_URL}/find_all_tokens`;
+    const response = await fetch(url, { headers: { "Accept": "application/json" } });
+    const payload = await response.json();
+
+    // Il backend può rispondere come { tokens: [...] } o direttamente [...]
+    const list = Array.isArray(payload?.tokens) ? payload.tokens : (Array.isArray(payload) ? payload : []);
+
+    // Normalizziamo e salviamo sia forma "dettagliata" che stringhe legacy
+    window.availableTokensDetailed = list.map(t => ({
+      symbol: (t.symbol || t.token_symbol || '').toUpperCase(),
+      contract: t.contract || t.account || t.contract_account || '',
+      name: t.name || t.token_name || t.fullname || t.symbol || '',
+      precision: t.precision ?? t.decimals ?? null
+    })).filter(t => t.symbol && t.contract);
+
+    // Back-compat con vecchio codice che consumava "SYMBOL-CONTRACT"
+    window.availableTokens = window.availableTokensDetailed.map(t => `${t.symbol}-${t.contract}`);
   } catch (error) {
     console.error("[❌] Errore caricando tokens:", error);
+    window.availableTokensDetailed = window.availableTokensDetailed || [];
+    window.availableTokens = window.availableTokens || [];
   }
 }
 
@@ -11160,31 +11176,62 @@ async function openModal(action, token, walletType = 'telegram') {
   }
 
   // --- Costruzione modale per i vari casi ---
-  if (action === "swap") {
+   if (action === "swap") {
     const title = `Swap ${token}`;
     const body = `
       <h3 class="modal-title">Swap ${token}</h3>
       <div class="text-muted">Available: <strong>${balance}</strong> ${token}</div>
+
       <form id="action-form" class="form-wrapper">
+        <!-- Percentage -->
         <div class="form-field">
           <label>Percentage</label>
           <input type="range" id="percent-range" class="input-range" min="0" max="100" value="0">
         </div>
+
+        <!-- Amount -->
         <div class="form-field">
           <label>Amount to Swap</label>
           <input type="number" id="amount" class="input-box" required min="0.0001" step="0.0001">
         </div>
 
-        <div class="form-field">
-          <label>Choose Output Token</label>
-          <input type="text" id="token-search" class="input-box" placeholder="Search token...">
-          <ul id="token-suggestions" class="token-suggestions"></ul>
+        <!-- Output Token (nuovo combobox) -->
+        <div class="form-field" style="position:relative;">
+          <label>Output Token</label>
+          <div id="token-combobox" role="combobox" aria-haspopup="listbox" aria-owns="token-listbox" aria-expanded="false" style="
+              display:flex; gap:8px; align-items:center;">
+            <input
+              type="text"
+              id="token-search"
+              class="input-box"
+              placeholder="Type to search (e.g. WAX)…"
+              autocomplete="off"
+              aria-autocomplete="list"
+              aria-controls="token-listbox"
+              style="flex:1;"
+            >
+            <button type="button" id="token-clear" class="btn" title="Clear" style="
+              border:1px solid rgba(255,255,255,.18); background:transparent; color:#e7fffa; border-radius:8px; padding:6px 10px; cursor:pointer;">
+              ✖
+            </button>
+          </div>
+
+          <div id="token-hint" style="font-size:.85rem; opacity:.75; margin-top:6px;">
+            Start typing to search. Results update as you type.
+          </div>
+
+          <div id="token-listbox" role="listbox" tabindex="-1" style="
+              margin-top:8px; max-height:260px; overflow:auto;
+              border:1px solid rgba(255,255,255,.14); border-radius:10px;
+              background:rgba(0,0,0,.35); display:none; ">
+          </div>
+
+          <input type="hidden" id="selected-token-symbol">
+          <input type="hidden" id="selected-token-contract">
         </div>
 
-        <input type="hidden" id="selected-token-symbol">
-        <input type="hidden" id="selected-token-contract">
-
-        <div id="swap-preview" class="swap-preview hidden">
+        <!-- Preview -->
+        <div id="swap-preview" class="swap-preview hidden" style="margin-top:8px;">
           <div id="loading-spinner">🔄 Getting blockchain data...</div>
           <div id="swap-data" class="hidden">
             <div>Min Received: <span id="min-received" class="highlight"></span></div>
@@ -11192,8 +11239,10 @@ async function openModal(action, token, walletType = 'telegram') {
           </div>
         </div>
 
-        <button type="button" id="preview-button" class="btn btn-warning">Preview Swap</button>
-        <button type="submit" id="submit-button" class="btn btn-success" disabled>Confirm Swap</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+          <button type="button" id="preview-button" class="btn btn-warning">Preview Swap</button>
+          <button type="submit" id="submit-button" class="btn btn-success" disabled>Confirm Swap</button>
+        </div>
       </form>
     `;
     showModal({ title: `<h3 class="modal-title">${title}</h3>`, body });
@@ -11277,11 +11326,15 @@ async function openModal(action, token, walletType = 'telegram') {
   });
 
   // --- SWAP logic ---
+  // --- SWAP logic ---
   if (action === "swap") {
     await loadAvailableTokens(); // assicura la lista dei token
 
+    // Refs
     const tokenSearch            = document.getElementById('token-search');
-    const tokenSuggestions       = document.getElementById('token-suggestions');
+    const tokenListbox           = document.getElementById('token-listbox');
+    const tokenHint              = document.getElementById('token-hint');
+    const tokenClear             = document.getElementById('token-clear');
     const selectedTokenSymbolEl  = document.getElementById('selected-token-symbol');
     const selectedTokenContractEl= document.getElementById('selected-token-contract');
     const previewButton          = document.getElementById('preview-button');
@@ -11290,36 +11343,184 @@ async function openModal(action, token, walletType = 'telegram') {
     const swapDataContainer      = document.getElementById('swap-data');
     const minReceivedSpan        = document.getElementById('min-received');
     const priceImpactSpan        = document.getElementById('price-impact');
+    const submitButton           = document.getElementById('submit-button');
 
-    const availableTokensDetailed = (availableTokens || []).map(t => {
-      const [symbol, contract] = t.split("-");
-      return { symbol, contract };
-    });
+    // Dati
+    const allTokens = (window.availableTokensDetailed && window.availableTokensDetailed.length)
+      ? window.availableTokensDetailed
+      : (Array.isArray(window.availableTokens) ? window.availableTokens.map(s=>{
+          const [symbol, contract] = s.split('-'); return { symbol, contract, name: symbol };
+        }) : []);
 
-    tokenSearch.addEventListener('input', () => {
-      const search = tokenSearch.value.toLowerCase();
-      const filtered = availableTokensDetailed.filter(t =>
-        (t.symbol || '').toLowerCase().includes(search)
-      );
-      tokenSuggestions.innerHTML = filtered.map(t => `
-        <li class="token-suggestion-item" data-symbol="${t.symbol}" data-contract="${t.contract}">
-          <strong>${t.symbol}</strong> — <small>${t.contract}</small>
-        </li>
-      `).join('');
-    });
+    // Helper
+    const n = (s) => (s || '').toString().toLowerCase();
+    const isOfficialWax = (t) => t.symbol === 'WAX' && t.contract === 'eosio.token';
 
-    tokenSuggestions.addEventListener('click', (e) => {
-      const item = e.target.closest('.token-suggestion-item');
+    // Ranking: priorità a official WAX, poi match esatto, poi inizia con, poi include.
+    const scoreToken = (t, q) => {
+      if (!q) return isOfficialWax(t) ? 1000 : 0;
+      if (isOfficialWax(t)) return 2000;
+      if (n(t.symbol) === q) return 1000;
+      if (n(t.symbol).startsWith(q)) return 750;
+      if (n(t.name || '').startsWith(q)) return 500;
+      if (n(t.symbol).includes(q)) return 300;
+      if ((t.contract || '').toLowerCase().includes(q)) return 100;
+      return 0;
+    };
+
+    const MAX_RENDER = 80;
+    let activeIndex = -1;
+    let currentItems = [];
+
+    const renderList = (items, totalCount, q) => {
+      currentItems = items;
+      tokenListbox.innerHTML = items.map((t, i) => {
+        const officialBadge = isOfficialWax(t)
+          ? `<span style="margin-left:8px; padding:2px 6px; border-radius:999px; font-size:.75rem; font-weight:800; color:#00150f;
+               background:linear-gradient(135deg, rgba(0,255,200,.9), rgba(0,160,255,.9)); box-shadow:0 0 8px rgba(0,255,200,.35);">OFFICIAL</span>`
+          : '';
+
+        return `
+          <div class="token-option" role="option" aria-selected="false"
+               data-symbol="${t.symbol}" data-contract="${t.contract}"
+               style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px;
+                      border-bottom:1px solid rgba(255,255,255,.08); cursor:pointer;">
+            <div>
+              <div style="font-weight:900; color:#e7fffa;">
+                ${t.symbol} <small style="opacity:.8">— ${t.contract}</small> ${officialBadge}
+              </div>
+              ${t.name ? `<div style="font-size:.85rem; opacity:.8;">${t.name}</div>` : ''}
+            </div>
+            <div style="font-size:.75rem; opacity:.65;">${scoreToken(t, n(q)) || ''}</div>
+          </div>
+        `;
+      }).join('');
+
+      // Footer info
+      if (totalCount > items.length) {
+        tokenListbox.insertAdjacentHTML('beforeend', `
+          <div style="padding:8px 12px; font-size:.85rem; opacity:.75;">Showing ${items.length} of ${totalCount} results. Keep typing to narrow down.</div>
+        `);
+      }
+
+      tokenListbox.style.display = items.length ? 'block' : 'none';
+      const combo = document.getElementById('token-combobox');
+      if (combo) combo.setAttribute('aria-expanded', items.length ? 'true' : 'false');
+    };
+
+    const filterAndRender = (qRaw) => {
+      const q = n(qRaw).trim();
+      const scored = allTokens.map(t => ({ ...t, __score: scoreToken(t, q) }));
+      const filtered = scored
+        .filter(t => t.__score > 0 || !q) // se query vuota mostra top (OFFICIAL + alcuni best)
+        .sort((a, b) => b.__score - a.__score || a.symbol.localeCompare(b.symbol));
+
+      // pinna l'OFFICIAL WAX in cima se query richiama "wax"
+      let final = filtered;
+      if (q.includes('wax')) {
+        const idx = final.findIndex(isOfficialWax);
+        if (idx > 0) {
+          const [w] = final.splice(idx, 1);
+          final.unshift(w);
+        }
+      }
+
+      // Limita render e mostra pannello
+      const slice = final.slice(0, Math.max(10, Math.min(MAX_RENDER, final.length)));
+      activeIndex = -1;
+      renderList(slice, final.length, qRaw);
+      tokenHint.textContent = slice.length ? '' : 'No results. Try another query.';
+    };
+
+    // Debounce semplice
+    let tId;
+    const debounce = (fn, ms=180) => (...args) => {
+      clearTimeout(tId); tId = setTimeout(()=>fn(...args), ms);
+    };
+
+    // Select handler
+    const selectToken = (symbol, contract) => {
+      selectedTokenSymbolEl.value = symbol;
+      selectedTokenContractEl.value = contract;
+      tokenSearch.value = `${symbol} — ${contract}`;
+      tokenListbox.style.display = 'none';
+      const combo = document.getElementById('token-combobox');
+      if (combo) combo.setAttribute('aria-expanded', 'false');
+
+      // Migliora la UX: abilita preview quando amount > 0
+      const amt = parseFloat(amountInput.value) || 0;
+      submitButton.disabled = !(symbol && contract && amt > 0);
+      previewButton.disabled = !(symbol && contract && amt > 0);
+    };
+
+    // Input typing
+    tokenSearch.addEventListener('input', debounce((e) => {
+      const q = e.target.value;
+      filterAndRender(q);
+    }, 120));
+
+    // Clic su item
+    tokenListbox.addEventListener('click', (ev) => {
+      const item = ev.target.closest('.token-option');
       if (!item) return;
       const symbol = item.getAttribute('data-symbol');
       const contract = item.getAttribute('data-contract');
-
-      tokenSearch.value = `${symbol} - ${contract}`;
-      selectedTokenSymbolEl.value = symbol;
-      selectedTokenContractEl.value = contract;
-      tokenSuggestions.innerHTML = ''; // chiudi lista
+      selectToken(symbol, contract);
     });
 
+    // Tastiera: frecce + Enter
+    tokenSearch.addEventListener('keydown', (ev) => {
+      const items = Array.from(tokenListbox.querySelectorAll('.token-option'));
+      if (!items.length) return;
+
+      if (ev.key === 'ArrowDown') {
+        ev.preventDefault();
+        activeIndex = Math.min(items.length - 1, activeIndex + 1);
+      } else if (ev.key === 'ArrowUp') {
+        ev.preventDefault();
+        activeIndex = Math.max(0, activeIndex - 1);
+      } else if (ev.key === 'Enter') {
+        ev.preventDefault();
+        if (activeIndex >= 0 && items[activeIndex]) {
+          const el = items[activeIndex];
+          selectToken(el.getAttribute('data-symbol'), el.getAttribute('data-contract'));
+        }
+        return;
+      } else {
+        return; // altre key: lascia passare
+      }
+
+      items.forEach((it, i) => {
+        const sel = i === activeIndex;
+        it.setAttribute('aria-selected', sel ? 'true' : 'false');
+        it.style.background = sel ? 'rgba(0,255,200,.10)' : 'transparent';
+      });
+
+      // scroll into view
+      if (items[activeIndex]) {
+        items[activeIndex].scrollIntoView({ block:'nearest' });
+      }
+    });
+
+    // Clear
+    tokenClear.addEventListener('click', () => {
+      tokenSearch.value = '';
+      selectedTokenSymbolEl.value = '';
+      selectedTokenContractEl.value = '';
+      tokenListbox.style.display = 'none';
+      const combo = document.getElementById('token-combobox');
+      if (combo) combo.setAttribute('aria-expanded', 'false');
+      tokenHint.textContent = 'Start typing to search. Results update as you type.';
+      submitButton.disabled = true;
+      previewButton.disabled = true;
+      tokenSearch.focus();
+    });
+
+    // Primo render: mostra top (OFFICIAL WAX in cima)
+    filterAndRender('wax'); // hint iniziale utile per distinguere l'official
+    tokenSearch.select();
+
+    // Preview click (immutato, ma validazione più severa)
     previewButton.addEventListener('click', async () => {
       const amount = parseFloat(amountInput.value) || 0;
       const symbolOut   = selectedTokenSymbolEl.value;
@@ -11358,12 +11559,20 @@ async function openModal(action, token, walletType = 'telegram') {
 
         loadingSpinner.classList.add('hidden');
         swapDataContainer.classList.remove('hidden');
-        submitButton.disabled = false;
+        // riabilita submit solo se abbiamo token selezionato e amount valido
+        submitButton.disabled = !(symbolOut && contractOut && amount > 0);
       } catch (err) {
         console.error("Swap preview error:", err);
         loadingSpinner.innerHTML = `<div class="text-error">⚠️ Failed to load preview data.</div>`;
         submitButton.disabled = true;
       }
+    });
+
+    // Abilita/disabilita submit dinamicamente quando cambia l'importo
+    amountInput.addEventListener('input', () => {
+      const amount = parseFloat(amountInput.value) || 0;
+      submitButton.disabled = !(amount > 0 && selectedTokenSymbolEl.value && selectedTokenContractEl.value);
+      previewButton.disabled = !(amount > 0 && selectedTokenSymbolEl.value && selectedTokenContractEl.value);
     });
   }
 

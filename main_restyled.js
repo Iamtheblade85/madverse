@@ -1766,52 +1766,9 @@ function openAddTemplateForm(farmId) {
   }, 0);
 }
 
-// ✅ Deposit Rewards
+// ✅ Deposit Rewards (feedback lives inside the modal)
 function openDepositForm(farmId) {
   // ---- helpers -------------------------------------------------------------
-  const ensureFeedTopUp = () => {
-    let el = document.getElementById('feedTopUp');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'feedTopUp';
-      el.setAttribute('role', 'status');
-      el.setAttribute('aria-live', 'polite');
-      el.style.maxWidth = '900px';
-      el.style.margin = '12px auto';
-      el.style.padding = '12px 14px';
-      el.style.border = '1px solid #374151';
-      el.style.borderRadius = '12px';
-      el.style.background = '#0b0f14';
-      el.style.color = '#e5e7eb';
-      el.style.fontFamily = 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto';
-      document.body.prepend(el);
-    }
-    return el;
-  };
-
-  const renderFeedTopUp = (type, title, details = []) => {
-    const el = ensureFeedTopUp();
-    const palette = {
-      info:    { bg: '#0b0f14', bd: '#374151', hd: '#93c5fd' },
-      success: { bg: '#0f1a12', bd: '#16a34a', hd: '#34d399' },
-      error:   { bg: '#1a0f0f', bd: '#b91c1c', hd: '#fda4af' }
-    }[type || 'info'];
-
-    el.style.background = palette.bg;
-    el.style.borderColor = palette.bd;
-
-    const list = details.map(li => `<li style="margin-left:1rem; list-style:disc;">${li}</li>`).join('');
-    el.innerHTML = `
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-        <strong style="font-weight:800; color:${palette.hd}; text-transform:uppercase; letter-spacing:0.02em;">
-          ${title}
-        </strong>
-        <span style="opacity:.7; font-size:.9em;">(${new Date().toLocaleString()})</span>
-      </div>
-      ${list ? `<ul style="padding-left:0; margin:0;">${list}</ul>` : ''}
-    `;
-  };
-
   const getBalance = (wallet, symbol) => {
     const list = wallet === 'twitch'
       ? (window.twitchWalletBalances || [])
@@ -1833,13 +1790,19 @@ function openDepositForm(farmId) {
   const symbolSet = new Set([...tg.map(t => t.symbol), ...tw.map(t => t.symbol)]);
   const tokenSymbols = Array.from(symbolSet).sort();
 
-  // ---- modal body (unchanged structure, no feedback inside) ----------------
+  // ---- modal body (feedback IS inside) ------------------------------------
   const body = `
     <div id="rewards-deposit-container"></div>
     <button id="add-more-reward" class="link-add-reward">➕ Add another token</button>
+
     <button id="submit-deposit" class="btn btn-success full-width" style="margin-top: 1rem;">
       Deposit All
     </button>
+
+    <!-- Feedback INSIDE the modal, under the submit -->
+    <div id="rewards-feedback" aria-live="polite"
+      style="display:none; margin-top:.75rem; padding:10px 12px; border-radius:10px;
+             border:1px solid #374151; background:#111827; color:#e5e7eb;"></div>
   `;
 
   showModal({
@@ -1848,12 +1811,40 @@ function openDepositForm(farmId) {
   });
 
   setTimeout(() => {
-    const container = document.getElementById('rewards-deposit-container');
-    const addBtn = document.getElementById('add-more-reward');
+    const container   = document.getElementById('rewards-deposit-container');
+    const addBtn      = document.getElementById('add-more-reward');
+    const submitBtn   = document.getElementById('submit-deposit');
+    const feedbackEl  = document.getElementById('rewards-feedback');
+
+    // In-modal feedback
+    const setFeedback = (type, title, details = []) => {
+      if (!feedbackEl) return;
+      const palette = {
+        info:    { bg:'#111827', bd:'#374151' },
+        success: { bg:'#16341d', bd:'#16a34a' },
+        error:   { bg:'#4b1d1d', bd:'#b91c1c' }
+      }[type || 'info'];
+      feedbackEl.style.display   = 'block';
+      feedbackEl.style.background = palette.bg;
+      feedbackEl.style.border     = `1px solid ${palette.bd}`;
+      const list = details.map(li => `<li style="margin-left:1rem; list-style:disc;">${li}</li>`).join('');
+      feedbackEl.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+          <strong style="font-weight:800;">${title}</strong>
+          <span style="opacity:.7; font-size:.9em;">(${new Date().toLocaleString()})</span>
+        </div>
+        ${list ? `<ul style="padding-left:0; margin:0;">${list}</ul>` : ''}
+      `;
+      // make sure it’s visible inside the modal
+      requestAnimationFrame(() => {
+        try { feedbackEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch(_) {}
+      });
+    };
 
     function renderRewardRow() {
       const div = document.createElement('div');
       div.className = 'reward-row';
+      div.style.marginBottom = '10px';
       div.innerHTML = `
         <label class="form-label">Choose Token</label>
         <select class="form-input token-symbol">
@@ -1899,14 +1890,12 @@ function openDepositForm(farmId) {
           range.disabled = true;
           input.disabled = true;
         }
-        // Reset sliders/inputs when changing context
         range.value = '0';
         input.value = '';
       };
 
       selectToken.onchange = () => {
         currentSymbol = selectToken.value;
-        // Auto-pick the wallet that actually has balance for the chosen token
         const tgBal = getBalance('telegram', currentSymbol);
         const twBal = getBalance('twitch', currentSymbol);
         currentWallet = tgBal > 0 ? 'telegram' : (twBal > 0 ? 'twitch' : 'telegram');
@@ -1939,7 +1928,7 @@ function openDepositForm(farmId) {
     renderRewardRow();
     addBtn.onclick = () => renderRewardRow();
 
-    document.getElementById('submit-deposit').onclick = async () => {
+    submitBtn.onclick = async () => {
       const rows = document.querySelectorAll('.reward-row');
       const rewards = [];
       const issues = [];
@@ -1969,23 +1958,24 @@ function openDepositForm(farmId) {
           return;
         }
 
-        // include wallet to indicate the correct source for the deposit
         rewards.push({ token_symbol: symbol.toUpperCase(), amount, wallet });
       });
 
       if (rewards.length === 0) {
-        return renderFeedTopUp('error', 'No valid rewards to deposit', [
+        return setFeedback('error', 'No valid rewards to deposit', [
           'Please add at least one row with a token, a source wallet and a positive amount.',
           ...(issues.length ? issues : [])
         ]);
       }
 
       if (issues.length) {
-        // Proceed but warn about skipped rows
-        renderFeedTopUp('info', 'Some rows were skipped', issues);
+        setFeedback('info', 'Some rows were skipped', issues);
       }
 
-      renderFeedTopUp('info', 'Submitting deposit…', [
+      submitBtn.disabled = true;
+      const prevLabel = submitBtn.textContent;
+      submitBtn.textContent = 'Processing…';
+      setFeedback('info', 'Submitting deposit…', [
         `Farm ID: <b>${farmId}</b>`,
         `Rewards count: <b>${rewards.length}</b>`,
         ...rewards.map(r => `• <b>${r.amount}</b> ${r.token_symbol} from <b>${r.wallet}</b> wallet`)
@@ -2006,21 +1996,27 @@ function openDepositForm(farmId) {
 
         if (!res.ok) throw new Error(data?.error || "Unknown error");
 
-        renderFeedTopUp('success', 'Rewards deposited successfully', [
+        setFeedback('success', 'Rewards deposited successfully', [
           data?.message ? data.message : 'Operation completed.',
           `Farm: <b>${farmId}</b>`,
           ...rewards.map(r => `• <b>${r.amount}</b> ${r.token_symbol} from <b>${r.wallet}</b> wallet`)
         ]);
 
-        closeModal();
-        fetchAndRenderUserFarms();
+        // Small delay so the user sees the success inside the modal
+        setTimeout(() => {
+          try { closeModal(); } catch(_) {}
+          try { fetchAndRenderUserFarms(); } catch(_) {}
+        }, 1000);
       } catch (err) {
         console.error("[Error depositing rewards]", err);
-        renderFeedTopUp('error', 'Deposit failed', [
+        setFeedback('error', 'Deposit failed', [
           err?.message ? `Reason: <b>${err.message}</b>` : 'Unknown error.',
           `Farm: <b>${farmId}</b>`,
-          ...rewards.map(r => `• Attempted: <b>${r.amount}</b> ${r.token_symbol} from <b>${r.wallet}</b> wallet`)
+          ...reards.map(r => `• Attempted: <b>${r.amount}</b> ${r.token_symbol} from <b>${r.wallet}</b> wallet`)
         ]);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = prevLabel;
       }
     };
   }, 0);

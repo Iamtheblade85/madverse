@@ -1257,7 +1257,6 @@ function openEditDailyReward(poolId, tokenSymbol, currentReward=0) {
 }
 window.openEditDailyReward = openEditDailyReward;
 
-// ---------- Actions: Top-up ----------
 // ---------- Actions: Top-up (fixed) ----------
 function openDepositToPool(poolId, tokenSymbol, currentDaily = 0) {
   // ---- helpers -------------------------------------------------------------
@@ -1993,12 +1992,13 @@ function openDepositForm(farmId) {
       ]);
 
       try {
+        const { userId, usx_token, wax_account } = window.userData;
         const url = `${BASE_URL}/add_token_to_farm_v2?user_id=${encodeURIComponent(userId || '')}&usx_token=${encodeURIComponent(usx_token || '')}`;
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           // NOTE: adds "wallet" per reward so the backend knows which wallet to debit
-          body: JSON.stringify({ farm_id: farmId, rewards })
+          body: JSON.stringify({ farm_id: farmId, rewards, wax_account: wax_account })
         });
 
         let data = {};

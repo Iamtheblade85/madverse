@@ -4437,31 +4437,39 @@ async function renderGoblinInventory() {
     while (grid.children.length > MAX_BONUS_ROWS) grid.lastElementChild?.remove();
   }
     
-  async function renderRecentList() {
+  async function renderRecentList(preloadedData = null) {
     try {
       const c = Cave.el.recentList; 
-      if (!c || !Cave.visible) return; // 👈 niente fetch se non serve
-    
-      const r = await API.get("/recent_expeditions", 20000);
-      if (r.aborted) return;
+      if (!c || !Cave.visible) return;
   
-      // Header + contenitore griglia
+      // Header + contenitore griglia + skeleton
       c.innerHTML = `
         <h4 style="color:#ffa500;">🕒 Recent Expedition Results</h4>
         <div id="cv-recent-grid" class="cv-cards"></div>
       `;
       renderSkeletons("#cv-recent-grid", 6, 72);
       Cave.recentExpKeys.clear();
-      if (!r.ok) {
+  
+      // ── ottieni i dati ──
+      let arr = [];
+      if (preloadedData) {
+        arr = Array.isArray(preloadedData) ? preloadedData
+            : Array.isArray(preloadedData?.items) ? preloadedData.items
+            : Array.isArray(preloadedData?.results) ? preloadedData.results
+            : [];
+      } else {
+        const r = await API.get("/recent_expeditions", 12000);
         if (r.aborted) return;
-        c.insertAdjacentHTML("beforeend",
-          `<div class="cv-toast warn">Could not load recent expeditions (HTTP ${r.status}).</div>`);
-        return;
+        if (!r.ok) {
+          c.insertAdjacentHTML("beforeend",
+            `<div class="cv-toast warn">Could not load recent expeditions (HTTP ${r.status}).</div>`);
+          return;
+        }
+        arr = Array.isArray(r.data) ? r.data
+            : Array.isArray(r.data?.items) ? r.data.items
+            : Array.isArray(r.data?.results) ? r.data.results
+            : [];
       }
-      const arr = Array.isArray(r.data) ? r.data
-               : Array.isArray(r.data?.items) ? r.data.items
-               : Array.isArray(r.data?.results) ? r.data.results
-               : [];
   
       const list = arr.slice(0, MAX_RECENT_EXPEDITIONS);
       const grid = qs("#cv-recent-grid", c);
@@ -4472,27 +4480,18 @@ async function renderGoblinInventory() {
         const dt = ts ? new Date(ts) : null;
         const chips = item.chips ?? item.stats?.tokens?.CHIPS ?? 0;
         const nftsCount = item.nfts_count ?? (Array.isArray(item.nfts) ? item.nfts.length : 0);
-  
         const key = `${item.wax_account}|${ts}|${chips}|${nftsCount}`;
         if (Cave.recentExpKeys.has(key)) return;
         Cave.recentExpKeys.add(key);
   
-        const nftList = Array.isArray(item.nfts) && item.nfts.length
-          ? `<ul style="margin:.25rem 0 0; padding-left:1rem;">
-               ${item.nfts.map(n=>`<li>${safe(n.schema)} #${safe(n.template_id)} × ${safe(n.quantity)}</li>`).join("")}
-             </ul>`
-          : `NFTs: ${nftsCount}`;
         const card = document.createElement("div");
         card.className = "cv-compact";
         card.innerHTML = `
           <div class="cv-head">
             <div class="cv-name">${safe(item.wax_account)}</div>
             ${dt ? `<span class="cv-time" title="${new Date(ts).toLocaleString()}">${timeHM(dt)}</span>` : ""}
-
           </div>
-          <div style="font-size:.85rem; color:#ddd; opacity:.9;">
-            Expedition result
-          </div>
+          <div style="font-size:.85rem; color:#ddd; opacity:.9;">Expedition result</div>
           <div class="cv-kv">
             <div class="kv">
               <div class="k">CHIPS</div>
@@ -4506,9 +4505,10 @@ async function renderGoblinInventory() {
         `;
         frag.appendChild(card);
       });
+  
       grid.innerHTML = "";         // <-- rimuove gli skeleton
       grid.appendChild(frag);
-
+  
     } catch (e) {
       if (e?.name === "AbortError") return;
       console.warn("Recent list failed:", e);
@@ -4611,65 +4611,71 @@ async function renderGoblinInventory() {
     });
     grid.appendChild(frag);
   }
-  
+
   // ========= GLOBAL EXPEDITIONS & CANVAS DATA =========
   let globalFetchBusy = false;
-  async function renderGlobalExpeditions() {
-    if (globalFetchBusy) return;
-    globalFetchBusy = true;
-    // se non visibile o se la UI non esiste più, esci subito
+  
+  async function renderGlobalExpeditions(preloadedData = null) {
+    // se ho dati pre-caricati, NON attivo il lock; altrimenti comportati come prima
+    if (!preloadedData) {
+      if (globalFetchBusy) return;
+      globalFetchBusy = true;
+    }
+  
+    // se non visibile o non c’è la UI, esci
     if (!Cave.visible || !Cave.el.globalList || !Cave.el.videoOrCanvas) {
-      globalFetchBusy = false;
+      if (!preloadedData) globalFetchBusy = false;
       return;
     }
-   
+  
     try {
-      syncUserInto(Cave.user);
-      assertAuthOrThrow(Cave.user);        
-      const r = await API.post("/all_expeditions", {}, 20000);
-      if (r.aborted) { globalFetchBusy = false; return; } // 👈 soft-exit sui timeout
-      const data = Array.isArray(r.data) ? r.data : [];
       const list = Cave.el.globalList;
       const wrap = Cave.el.videoOrCanvas;
-
+  
+      // ── ottieni i dati ──
+      let data;
+      if (preloadedData) {
+        data = Array.isArray(preloadedData) ? preloadedData : [];
+      } else {
+        syncUserInto(Cave.user);
+        assertAuthOrThrow(Cave.user);
+        const r = await API.post("/all_expeditions", {}, 12000);
+        if (r.aborted || !r.ok) { if (!preloadedData) globalFetchBusy = false; return; }
+        data = Array.isArray(r.data) ? r.data : [];
+      }
+  
+      // prepara contenitore
       list.innerHTML = "";
       list.style.display = "flex";
       list.style.flexWrap = "wrap";
       list.style.gap = ".5rem";
-
-      if (data.length === 0) {
-        // Mantieni il canvas visibile; pulisci solo lo stato.
-        clearChests();
-        Cave.goblins = [];
-        if (!qs("#caveCanvas", wrap)) {
-          wrap.innerHTML = `<canvas id="caveCanvas" style="width:100%; height:auto; display:block;"></canvas>`;
-          setupCanvas(qs("#caveCanvas", wrap));
-        }
-        startRAF();
-        startCommandPolling();
-        return;
-      }
-
-
+  
+      // canvas pronto in ogni caso
       if (!qs("#caveCanvas", wrap)) {
         wrap.innerHTML = `<canvas id="caveCanvas" style="width:100%; height:auto; display:block;"></canvas>`;
         setupCanvas(qs("#caveCanvas", wrap));
         startRAF();
         startCommandPolling();
       }
-
+  
+      if (data.length === 0) {
+        // Mantieni il canvas visibile; pulisci solo lo stato.
+        clearChests();
+        Cave.goblins = [];
+        return;
+      }
+  
+      // goblin seed
       Cave.goblins = data.map((e, i) => {
         const { minX, maxX, minY, maxY } = getBounds();
         const gx = Math.floor(Math.random() * (maxX - minX + 1)) + minX;
         const gy = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
-
         return {
-          x: gx,
-          y: gy,
+          x: gx, y: gy,
           wax_account: e.wax_account,
           path: [],
-          trail: [{ x: gx, y: gy }], // 👈 seed iniziale
-          _lastTrailX: gx,            // 👈 bootstrap “ultimo punto”
+          trail: [{ x: gx, y: gy }],
+          _lastTrailX: gx,
           _lastTrailY: gy,
           digging: false,
           shovelFrame: 0,
@@ -4677,56 +4683,42 @@ async function renderGoblinInventory() {
           color: colorByIndex(i)
         };
       });
-
-      // sync chests from server
+  
+      // sync chests
       const liveIds = new Set();
-      
       data.forEach(e => {
         if (!Array.isArray(e.chests)) return;
         e.chests.forEach(ch => {
           const hasNumericId = ch.id != null && !isNaN(Number(ch.id));
           if (!hasNumericId) return;
-      
           const id = String(ch.id);
           liveIds.add(id);
-      
           const { minX, maxX, minY, maxY } = getBounds();
           const cx = clamp(ch.x, minX, maxX);
           const cy = clamp(ch.y, minY, maxY);
-      
           upsertChest({
-            id,
-            x: cx,
-            y: cy,
+            id, x: cx, y: cy,
             from: ch.from || "unknown",
             wax_account: e.wax_account,
-            taken: false,
-            claimable: true,
-            pending: false
+            taken: false, claimable: true, pending: false
           });
         });
       });
-      
-      // ⛏️ rimuovi le chest non più riportate dal server (scadute)
+      // rimuovi chest scadute
       Cave.chests.forEach((ch, key) => {
-        if (ch.id != null && !liveIds.has(String(ch.id))) {
-          Cave.chests.delete(key);
-        }
+        if (ch.id != null && !liveIds.has(String(ch.id))) Cave.chests.delete(key);
       });
-
-
+  
       // cards & countdowns
       const timers = data.map((e,i)=>{
         const end = Date.now() + e.seconds_remaining * 1000;
         const id = `cv-timer-${i}`;
-        const bg = i%2===0 ? "#1a1a1a" : "#2a2a2a";
         const card = document.createElement("div");
         card.style.cssText = `
           background:linear-gradient(180deg,#141414,#0f0f0f);
           padding:.75rem; border-radius:12px; width:150px; border:1px solid var(--cv-border);
           box-shadow:0 2px 10px rgba(0,0,0,.35);
         `;
-
         card.innerHTML = `
           <div><strong style="color:#ffe600;">${safe(e.wax_account)}</strong></div>
           <div style="color:#0ff;">Goblins: ${safe(e.total_goblins)}</div>
@@ -4735,7 +4727,7 @@ async function renderGoblinInventory() {
         list.appendChild(card);
         return { id, end };
       });
-
+  
       if (Cave.intervals.globalCountdown) clearInterval(Cave.intervals.globalCountdown);
       Cave.intervals.globalCountdown = setInterval(()=>{
         const now = Date.now();
@@ -4751,11 +4743,11 @@ async function renderGoblinInventory() {
           }
         });
       }, 1000);
-
+  
     } catch (e) {
       if (e?.name !== "AbortError") console.warn("Global expeditions failed:", e);
     } finally {
-      globalFetchBusy = false;
+      if (!preloadedData) globalFetchBusy = false;
     }
   }
 
@@ -5019,7 +5011,8 @@ async function renderGoblinInventory() {
     // assets
     await loadAssets();
     //initDecorations();
-    initRealtime();
+    requestAnimationFrame(() => { initRealtime(); });
+    
     const initialCanvas = qs("#caveCanvas", Cave.el.videoOrCanvas);
     if (initialCanvas) {
       setupCanvas(initialCanvas);
@@ -5027,32 +5020,65 @@ async function renderGoblinInventory() {
       startCommandPolling();
     }
 
-    await renderGlobalExpeditions();
+    // ── BOOTSTRAP: fetch in parallelo, no blocchi tra loro ──
+    const payload = {
+      wax_account: Cave.user.wax_account,
+      user_id: Cave.user.user_id,
+      usx_token: Cave.user.usx_token
+    };
+    
+    const pAll    = API.post("/all_expeditions", {}, 10000);  // timeout più corto
+    const pRecent = API.get("/recent_expeditions", 10000);
+    const pNFTs   = API.post("/user_nfts", payload, 15000);
+    
+    // placeholder UI subito
+    renderSkeletons("#cv-goblin-list", 8, 96);
+    
+    // risolvi senza bloccare la pagina se uno scade
+    const [rAll, rRecent, rNFTs] = await Promise.allSettled([pAll, pRecent, pNFTs]);
+    
+    // 1) Live expeditions
+    if (rAll.status === "fulfilled" && rAll.value?.ok) {
+      await renderGlobalExpeditions(rAll.value.data); // <-- passiamo dati pre-caricati
+    } else {
+      // fallback: crea canvas e avvia loop comunque
+      if (!qs("#caveCanvas", Cave.el.videoOrCanvas)) {
+        Cave.el.videoOrCanvas.innerHTML = `<canvas id="caveCanvas" style="width:80%; height:auto; display:block; border-radius:12px; box-shadow:0 0 10px #ffe600;"></canvas>`;
+        setupCanvas(qs("#caveCanvas", Cave.el.videoOrCanvas));
+        startRAF();
+        startCommandPolling();
+      }
+    }
+    
+    // avvia refresh periodico (fetch “normale” come prima)
     if (Cave.intervals.global) clearInterval(Cave.intervals.global);
     Cave.intervals.global = setInterval(async ()=>{
-      await renderGlobalExpeditions();
+      await renderGlobalExpeditions(); // userà il proprio fetch
     }, GLOBAL_REFRESH_MS);
-
-
-    await renderRecentList();
-    renderSkeletons("#cv-goblin-list", 8, 96);
-    // Load user goblins
+    
+    // 2) Recent expeditions
+    if (rRecent.status === "fulfilled" && rRecent.value?.ok) {
+      await renderRecentList(rRecent.value.data); // <-- passiamo dati pre-caricati
+    } else {
+      await renderRecentList(); // farà il proprio fetch con timeout ridotto
+    }
+    
+    // 3) Goblin dell’utente
     let goblins = [];
-    try {
-      syncUserInto(Cave.user);
-      assertAuthOrThrow(Cave.user);   
-      const r = await API.post("/user_nfts", {
-        wax_account: Cave.user.wax_account,
-        user_id: Cave.user.user_id,
-        usx_token: Cave.user.usx_token
-      }, 20000);
-      goblins = (Array.isArray(r.data) ? r.data : []).filter(n => n.type === "goblin");
-      if (!goblins.length) {
-        Cave.el.selectionSummary.innerHTML = `<div class="cv-toast">No goblins available for expedition.</div>`;
+    if (rNFTs.status === "fulfilled" && Array.isArray(rNFTs.value?.data)) {
+      goblins = rNFTs.value.data.filter(n => n.type === "goblin");
+    } else {
+      try {
+        const r = await API.post("/user_nfts", payload, 15000);
+        goblins = (Array.isArray(r.data) ? r.data : []).filter(n => n.type === "goblin");
+      } catch (e) {
+        Cave.el.selectionSummary.innerHTML = `<div class="cv-toast err">Error loading goblin data.</div>`;
         return;
       }
-    } catch (e) {
-      Cave.el.selectionSummary.innerHTML = `<div class="cv-toast err">Error loading goblin data.</div>`;
+    }
+    
+    if (!goblins.length) {
+      Cave.el.selectionSummary.innerHTML = `<div class="cv-toast">No goblins available for expedition.</div>`;
       return;
     }
 

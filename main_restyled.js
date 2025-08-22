@@ -5911,7 +5911,8 @@ async function renderGoblinBlend() {
                   border:1px solid var(--cv-border); border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,.35);">
         <div style="display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; justify-content:center;">
           <input id="f-name" placeholder="🔎 Search name…" aria-label="Search by name"
-                 style="background:#151515; border:1px solid #333; color:#eee; padding:.5rem .7rem; border-radius:10px; width:240px;">
+                           style="background:#151515; border:1px solid #333; color:#eee; padding:.5rem .7rem; border-radius:10px; width:min(240px,100%); max-width:100%;">
+
           <select id="f-rarity" class="btn btn-glow" style="min-width:160px;" aria-label="Filter by rarity">
             <option value="">All Rarities</option>
             <option>Common</option><option>Rare</option><option>Epic</option><option>Legendary</option><option>Mythic</option>
@@ -5947,9 +5948,9 @@ async function renderGoblinBlend() {
       </div>
 
       <div id="blend-summary" style="color:#9aa0a6; margin:.2rem 0 .8rem;"></div>
-
       <div id="blend-results"
-           style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; padding-bottom:2rem;"></div>
+                 style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:1rem; padding-bottom:2rem; width:100%; box-sizing:border-box;"></div>
+
 
       <div id="blend-pagination" style="display:flex; gap:.4rem; justify-content:center; margin-top:.6rem;"></div>
     `;
@@ -6121,12 +6122,12 @@ async function renderGoblinBlend() {
       const color = done ? "#8cff8c" : (own > 0 ? "#ffcc66" : "#ff7b7b");
       const ids = Array.isArray(ing.asset_ids) && ing.asset_ids.length ? ing.asset_ids.join(", ") : "";
       const copyBtn = ids ? `<button class="btn btn-glow" data-copy="${esc(ids)}"
-                                style="padding:.25rem .45rem; font-size:.8rem;">Copy IDs</button>` : "";
+                                style="padding:.25rem .45rem; font-size:.8rem; flex:0 0 auto;">Copy IDs</button>` : "";
       return `
-        <li style="display:flex; align-items:center; gap:.45rem; margin:.25rem 0; color:${color}; font-size:.9rem;">
+        <li style="display:flex; flex-wrap:wrap; align-items:center; gap:.45rem; margin:.25rem 0; color:${color}; font-size:.9rem; width:100%; box-sizing:border-box;">
           <span style="min-width:72px; text-align:right;">${own}/${need}</span>
           <span style="opacity:.85;">(schema: ${esc(ing.schema_name)}, tpl: ${esc(ing.template_id)})</span>
-          ${ids ? `<span style="color:#9aa0a6; font-size:.85rem;">• IDs: ${esc(ids)}</span>` : ""}
+          ${ids ? `<span style="color:#9aa0a6; font-size:.85rem; display:block; max-width:100%; white-space:normal; word-break:break-word; overflow-wrap:anywhere;">• IDs: ${esc(ids)}</span>` : ""}
           ${copyBtn}
         </li>
       `;
@@ -6149,7 +6150,8 @@ async function renderGoblinBlend() {
 
       return `
         <div class="cv-card" style="padding:.9rem; border-radius:16px; background:linear-gradient(180deg,#0f0f0f,#161616);
-                                     border:1px solid var(--cv-border); box-shadow:0 8px 22px rgba(0,0,0,.35);">
+                                             border:1px solid var(--cv-border); box-shadow:0 8px 22px rgba(0,0,0,.35);
+                                             max-width:100%; width:100%; overflow:hidden; box-sizing:border-box;">
           <div style="display:flex; gap:.8rem;">
             <img src="${esc(blend.img)}" alt="${esc(blend.name)}" loading="lazy"
                  style="width:86px; height:86px; border-radius:12px; object-fit:cover;
@@ -6181,7 +6183,7 @@ async function renderGoblinBlend() {
 
           <div style="margin-top:.6rem;">
             <strong style="color:#ffe600;">🔹 Ingredients</strong>
-            <ul style="list-style:none; padding-left:0; margin:.45rem 0 0;">
+            <ul style="list-style:none; padding-left:0; margin:.45rem 0 0; word-break:break-word; overflow-wrap:anywhere;">
               ${ingredients}
             </ul>
           </div>
@@ -6273,7 +6275,7 @@ async function renderGoblinBlend() {
         </div>
       </div>
 
-      <div id="rot-body" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:1rem;"></div>
+      <div id="rot-body" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:1rem; width:100%; box-sizing:border-box;"></div>
       <div id="rot-fallback" style="margin-top:1rem;"></div>
     `;
 
@@ -6313,9 +6315,9 @@ async function renderGoblinBlend() {
 
           return `
             <div class="cv-card" style="padding:1rem; border-radius:16px; background:linear-gradient(180deg,#0f0f0f,#161616);
-                                         border:1px solid var(--cv-border);">
+                                                     border:1px solid var(--cv-border); max-width:100%; width:100%; overflow:hidden; box-sizing:border-box;">
               <div style="display:flex; gap:.8rem; align-items:center; justify-content:space-between;">
-                <strong style="color:#7ff6ff;">${esc(from)} ➜ ${esc(to)}</strong>
+                <strong style="color:#7ff6ff; overflow-wrap:anywhere; word-break:break-word; max-width:100%; display:block;">${esc(from)} ➜ ${esc(to)}</strong>
               </div>
               ${reqList ? `
                 <div style="margin-top:.5rem;">

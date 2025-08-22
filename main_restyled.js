@@ -11491,16 +11491,41 @@ function renderWalletView(type) {
     //  - prefer tx_id
     //  - else compose from (reference_type, reference_id, channel, from/to) + minute bucket
     function txKeyFor(it) {
-      const txid = it.tx_id || it.metadata?.tx_id;
+      const et  = String(it.event_type||'').toLowerCase();
+      const rt  = String(it.reference_type||'').toLowerCase();
+      const id  = it.id && String(it.id);
+      const txid= it.tx_id || it.metadata?.tx_id;
+    
       if (txid) return `tx::${txid}`;
-      const rt = (it.reference_type || '').toLowerCase();
-      const rid = it.reference_id || '';
-      const ch = (it.channel || '').toLowerCase();
-      const from = it.from_account || '';
-      const to = it.to_account || '';
-      const ts = it.created_at ? it.created_at.slice(0,16) : ''; // YYYY-MM-DDTHH:MM
-      return `grp::${rt}|${rid}|${ch}|${from}|${to}|${ts}`;
+    
+      // 🔒 NON aggregare transfer/bridge (mostra ogni riga separata)
+      if (rt === 'internal_transfer' || et.startsWith('transfer') || et.startsWith('bridge')) {
+        return `row::${id || crypto?.randomUUID?.() || Math.random()}`;
+      }
+    
+      // 🏧 Withdraw: gruppo "initiated + send" per simbolo+destinatario su bucket 20'
+      if (rt === 'withdraw' || et.startsWith('withdraw') || et === 'send') {
+        const sym = (it.symbol||'').toUpperCase();
+        const to  = (it.to_account||'').toLowerCase();
+        const tms = it.created_at ? new Date(it.created_at).getTime() : Date.now();
+        const bucket = Math.floor(tms / (20*60*1000)); // 20 minuti
+        return `wd::${sym}|${to}|${bucket}`;
+      }
+    
+      // 🔄 Swap: raggruppa per pair + canale + importo input su bucket 5'
+      if (rt === 'swap' || et.startsWith('swap')) {
+        const ref = String(it.reference_id||'').toUpperCase(); // es: FROM->TO
+        const ch  = String(it.channel||'').toLowerCase();
+        const ain = (it.amount!=null) ? Number(it.amount).toFixed(6) : '0';
+        const tms = it.created_at ? new Date(it.created_at).getTime() : Date.now();
+        const bucket = Math.floor(tms / (5*60*1000));
+        return `sw::${ref}|${ch}|${ain}|${bucket}`;
+      }
+    
+      // fallback: non aggregare
+      return `row::${id || crypto?.randomUUID?.() || Math.random()}`;
     }
+
 
     function upsertTx(it) {
       const et = String(it.event_type||'').toLowerCase();
@@ -11573,15 +11598,9 @@ function renderWalletView(type) {
 
         // ---------- SWAP ----------
         case 'swap': {
-          // main summary row for swap; success flag in metadata
           cur.type = 'swap';
-          if (it.metadata?.success === false) {
-            if (cur.status !== 'success') cur.status = 'failed';
-          } else {
-            // don't force success here; credit event will
-            if (cur.status === 'pending') cur.status = 'pending';
-          }
-          // parse FROM->TO
+        
+          // pair FROM->TO
           const ref = it.reference_id || '';
           const parts = ref.split('->');
           if (parts.length === 2) {
@@ -11589,8 +11608,29 @@ function renderWalletView(type) {
             if (!cur.symbol_in)  cur.symbol_in  = parts[0].toUpperCase();
             if (!cur.symbol_out) cur.symbol_out = parts[1].toUpperCase();
           }
+        
+          // input: amount + symbol dal record principale
+          if (it.amount != null)  cur.amount_in  = Number(it.amount);
+          if (it.symbol)          cur.symbol_in  = it.symbol.toUpperCase();
+        
+          // output netto: ricavalo dalle metadata (real_output_before_fees - commission_dynamic)
+          const md = it.metadata || {};
+          const outNet = (md.real_output_before_fees!=null && md.commission_dynamic!=null)
+            ? (Number(md.real_output_before_fees) - Number(md.commission_dynamic))
+            : (md.quoted_output!=null && md.commission_total!=null)
+              ? (Number(md.quoted_output) - Number(md.commission_total))
+              : null;
+          if (outNet != null) {
+            cur.amount_out = outNet;
+            if (!cur.symbol_out && parts.length === 2) cur.symbol_out = parts[1].toUpperCase();
+          }
+        
+          // stato: usa il flag success nelle metadata, altrimenti resta pending; 'swap_failed' lo imposterà a failed
+          if (md.success === true) cur.status = 'success';
+          else if (md.success === false && cur.status !== 'success') cur.status = 'failed';
           break;
         }
+
         case 'debit': { // from_token spent
           cur.type = 'swap';
           cur.amount_in = Number(it.amount || cur.amount_in || 0);
@@ -11773,7 +11813,8 @@ function renderWalletView(type) {
       }
 
       el.list.innerHTML = rows.map((r,i)=>{
-        const txUrl = r.tx_id ? `https://waxblock.io/transaction/${esc(r.tx_id)}` : '';
+        const waxLike = r.tx_id && /^[a-f0-9]{64}$/i.test(r.tx_id);
+        const txUrl = waxLike ? `https://waxblock.io/transaction/${esc(r.tx_id)}` : '';
         const subtitle = [
           r.type ? r.type.toUpperCase() : 'TX',
           r.pair ? `• ${r.pair}` : (r.symbol_out || r.symbol_in ? `• ${esc(r.symbol_out||r.symbol_in)}`:''),
@@ -11844,6 +11885,7 @@ ${r.memo||''}`.trim();
     async function initialLoad() {
       th.loading = true;
       el.loadMore.disabled = true;
+      th.txMap = new Map();
       el.loadMore.textContent = 'Loading…';
       const { items, next_cursor } = await fetchAuditPage(null);
       th.items = items || [];

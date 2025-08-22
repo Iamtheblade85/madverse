@@ -5211,3 +5211,7 @@ select:focus, input[type="number"]:focus {
   white-space: pre-wrap;
   line-height: 1.5;
 }
+.cv-badge { border-width:1px; border-style:solid; padding:.15rem .45rem; border-radius:999px; font-weight:700; font-size:.82rem; }
+.cv-btn { border:1px solid rgba(255,255,255,.16); background:#121416; color:#e7fffa; border-radius:10px; }
+.cv-card { transition: transform .08s ease, box-shadow .12s ease; }
+.cv-card:hover { transform: translateY(-1px); }

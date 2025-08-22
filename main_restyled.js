@@ -3045,7 +3045,11 @@ function loadGoblinDex() {
   renderGoblinInventory();
 }
 
-// Rarity → classi CSS (testate: common, rare, epic, legendary, mythic)
+/* =========================
+   Inventory helpers (readable, English)
+   ========================= */
+
+// Rarity → CSS classes (must match your existing CSS)
 const RARITY_COLOR_CLASS = Object.freeze({
   common:    "neon-green",
   rare:      "neon-blue",
@@ -3062,34 +3066,28 @@ const RARITY_BORDER_CLASS = Object.freeze({
   mythic:    "border-glow-red",
 });
 
-// Breakpoint per colore livello (dal più alto al più basso)
+// Level color thresholds (descending priority)
 const LEVEL_COLOR_BREAKPOINTS = Object.freeze([
-  { min: 10, cls: "neon-red"   },
-  { min:  7, cls: "neon-gold"  },
-  { min:  4, cls: "neon-purple"},
-  { min:  2, cls: "neon-blue"  },
+  { min: 10, cls: "neon-red"    },
+  { min:  7, cls: "neon-gold"   },
+  { min:  4, cls: "neon-purple" },
+  { min:  2, cls: "neon-blue"   },
   { min: -Infinity, cls: "neon-green" },
 ]);
 
-// Tavolozza per etichette/legend
+// Accent palette for small labels/legends
 const ACCENT_COLORS = Object.freeze(["#0ff", "#ff66cc", "#ffcc00", "#00ff99", "#66b2ff"]);
 
-// Helpers di normalizzazione
 const _safeLower = (v) => (typeof v === "string" ? v.trim().toLowerCase() : "");
 
-/** Ritorna la classe colore per la rarity (fallback: 'neon-white'). */
 function getRarityColorClass(rarity) {
   const key = _safeLower(rarity);
   return RARITY_COLOR_CLASS[key] || "neon-white";
 }
-
-/** Ritorna la classe bordo glow per la rarity (fallback: ''). */
 function getRarityBorderClass(rarity) {
   const key = _safeLower(rarity);
   return RARITY_BORDER_CLASS[key] || "";
 }
-
-/** Ritorna la classe colore in base al livello (soglie in LEVEL_COLOR_BREAKPOINTS). */
 function getLevelColorClass(level) {
   const n = Number(level) || 0;
   for (const bp of LEVEL_COLOR_BREAKPOINTS) {
@@ -3097,62 +3095,83 @@ function getLevelColorClass(level) {
   }
   return "neon-green";
 }
-
-/** Ritorna un colore d’accento deterministico dato un indice. */
 function getLabelColor(index) {
   const i = Math.abs(Number(index) || 0) % ACCENT_COLORS.length;
   return ACCENT_COLORS[i];
 }
 
+/* =========================
+   Goblin Inventory (tabs: Goblins / Materials)
+   ========================= */
+
 async function renderGoblinInventory() {
-  const container = document.getElementById('goblin-content');
+  const container = document.getElementById("goblin-content");
   if (!container) return;
 
-  // --- utils locali ---
-  const esc = (v) => String(v ?? '').replace(/[&<>"'`]/g, m => (
-    { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;' }[m]
+  // Local utils
+  const esc = (v) => String(v ?? "").replace(/[&<>"'`]/g, m => (
+    { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;", "`":"&#96;" }[m]
   ));
-  const debounce = (fn, ms=200) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; };
+  const debounce = (fn, ms = 200) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
   const rarityOrder = { common:1, uncommon:2, rare:3, epic:4, legendary:5, mythic:6 };
 
-  // Meta materiali (in base ai template del backend)
+  // Materials metadata (based on your backend templates)
   const MATERIAL_META = {
     893711: {
-      type: 'magic_stone',
-      prettyType: 'Level Upgrader',
-      name: 'Upgrader',
-      description: 'Use it to promote your Goblin to the next level. You can use it for all rarities.'
+      type: "magic_stone",
+      prettyType: "Level Upgrader",
+      name: "Upgrader",
+      description: "Use it to promote your Goblin to the next level. Works for all rarities."
     },
     893710: {
-      type: 'rotation_stone',
-      prettyType: 'Slot Rotator',
-      name: 'Rotator',
-      description: 'Use it to move your Goblin to the next ability.'
+      type: "rotation_stone",
+      prettyType: "Slot Rotator",
+      name: "Rotator",
+      description: "Use it to move your Goblin to the next ability."
     }
   };
 
-  // skeleton iniziale
+  // Initial skeleton
   container.innerHTML = `
-    <div style="display:flex; gap:.5rem; margin-bottom:1rem;">
-      <div class="cv-skel" style="height:38px; width:160px; border-radius:10px;"></div>
-      <div class="cv-skel" style="height:38px; width:260px; border-radius:10px;"></div>
+    <div role="status" aria-live="polite" style="display:flex; gap:.5rem; margin-bottom:1rem;">
+      <div class="cv-skel" style="height:42px; width:220px; border-radius:12px;"></div>
+      <div class="cv-skel" style="height:42px; width:260px; border-radius:12px;"></div>
     </div>
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
-      ${Array.from({length:8}).map(()=>`<div class="cv-skel" style="height:210px; border-radius:14px;"></div>`).join('')}
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+      ${Array.from({length:9}).map(()=>`<div class="cv-skel" style="height:220px; border-radius:14px;"></div>`).join("")}
     </div>
   `;
 
-  // --- fetch /user_nfts (API.post se c'è, fallback fetch) con 1 solo retry in caso di errore ---
+  // Lightweight session cache (per user)
+  const cacheKey = (() => {
+    const wax = window.userData?.wax_account || "";
+    const uid = window.userData?.userId || window.userData?.user_id || "";
+    return `inv:${wax}:${uid}`;
+  })();
+  const getCache = () => {
+    try { return JSON.parse(sessionStorage.getItem(cacheKey) || "null"); } catch { return null; }
+  };
+  const setCache = (data) => {
+    try { sessionStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), data })); } catch {}
+  };
+
+  // Fetch /user_nfts with a single retry (and cache)
   let retried = false;
   async function fetchUserNFTs() {
+    // short-lived cache (60s)
+    const cached = getCache();
+    if (cached && Date.now() - cached.t < 60_000) return cached.data;
+
     try {
-      if (typeof API !== 'undefined' && API.post) {
+      if (typeof API !== "undefined" && API.post) {
         const wax_account = window.userData?.wax_account;
         const user_id     = window.userData?.userId || window.userData?.user_id;
         const usx_token   = window.userData?.usx_token;
-        const r = await API.post('/user_nfts', { wax_account, user_id, usx_token }, 15000);
+        const r = await API.post("/user_nfts", { wax_account, user_id, usx_token }, 15000);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return Array.isArray(r.data) ? r.data : [];
+        const arr = Array.isArray(r.data) ? r.data : [];
+        setCache(arr);
+        return arr;
       }
       const res = await fetch(`${BASE_URL}/user_nfts`, {
         method: "POST",
@@ -3164,78 +3183,159 @@ async function renderGoblinInventory() {
         })
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return Array.isArray(data) ? data : [];
+      const arr = await res.json();
+      const data = Array.isArray(arr) ? arr : [];
+      setCache(data);
+      return data;
     } catch (e) {
       if (!retried) {
         retried = true;
-        await new Promise(r => setTimeout(r, 10000));
+        await new Promise(r => setTimeout(r, 10_000));
         return fetchUserNFTs();
       }
-      console.warn('[renderGoblinInventory] /user_nfts error:', e);
+      console.warn("[renderGoblinInventory] /user_nfts error:", e);
       return [];
     }
   }
 
   const all = await fetchUserNFTs();
 
-  // normalizza chiavi legacy
+  // Normalize legacy keys
   all.forEach(nft => {
-    if (nft.daily_power !== undefined) nft['daily-power'] = nft.daily_power;
-    if (nft['loot-hungry'] === undefined && nft.loot_hungry !== undefined) nft['loot-hungry'] = nft.loot_hungry;
+    if (nft.daily_power !== undefined) nft["daily-power"] = nft.daily_power;
+    if (nft["loot-hungry"] === undefined && nft.loot_hungry !== undefined) nft["loot-hungry"] = nft.loot_hungry;
+    if (typeof nft.img === "string") {
+      if (nft.img.startsWith("https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/")) {
+        nft.img = nft.img.replace("https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/", "https://ipfs.io/ipfs/");
+      } else if (nft.img.startsWith("Q") || nft.img.startsWith("bafy")) {
+        nft.img = `https://ipfs.io/ipfs/${nft.img}`;
+      }
+    }
   });
 
-  // split
-  const goblinsAll = (Array.isArray(all) ? all : []).filter(n => n.type === 'goblin');
+  // Split into goblins and materials
+  const goblinsAll = (Array.isArray(all) ? all : []).filter(n => n.type === "goblin");
   const materialsRaw = (Array.isArray(all) ? all : []).filter(n => {
-    const t = String(n.type||'').toLowerCase();
-    return t === 'magic_stone' || t === 'rotation_stone';
+    const t = String(n.type || "").toLowerCase();
+    return t === "magic_stone" || t === "rotation_stone";
   });
 
-  // aggrega materials per template_id (conteggio + metadati)
+  // Aggregate materials by template_id (quantity + metadata)
   const byTpl = new Map();
   for (const m of materialsRaw) {
     const tpl = Number(m.template_id || 0);
     const cur = byTpl.get(tpl) || { ...m, quantity: 0 };
     cur.quantity += 1;
-    // arricchisci con meta ufficiali se disponibili
     if (MATERIAL_META[tpl]) {
       cur.prettyType  = MATERIAL_META[tpl].prettyType;
       cur.name        = MATERIAL_META[tpl].name;
       cur.description = MATERIAL_META[tpl].description;
-      cur.type        = MATERIAL_META[tpl].type; // allinea
+      cur.type        = MATERIAL_META[tpl].type;
     }
-    // normalizza immagine IPFS
-    if (typeof cur.img === 'string') {
-      if (cur.img.startsWith('Q') || cur.img.startsWith('bafy')) cur.img = `https://ipfs.io/ipfs/${cur.img}`;
+    if (typeof cur.img === "string") {
+      if (cur.img.startsWith("Q") || cur.img.startsWith("bafy")) cur.img = `https://ipfs.io/ipfs/${cur.img}`;
     }
     byTpl.set(tpl, cur);
   }
   const materialsAgg = Array.from(byTpl.values());
 
-  // shell con TAB
+  // ======= Tab header (armored, accessible, inline-styled beauty) =======
+  const tabBtnBase = `
+    font-family: Orbitron, system-ui, sans-serif;
+    display:inline-flex; align-items:center; gap:.55rem;
+    border:1px solid rgba(255,255,255,.18);
+    padding:.65rem 1.05rem;
+    border-radius:14px; cursor:pointer;
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    color:#eaeaea; letter-spacing:.15px; font-weight:800; font-size:.95rem;
+    box-shadow:0 6px 18px rgba(0,0,0,.3), inset 0 0 0 rgba(255,255,255,0);
+    transition:transform .12s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease, color .2s ease;
+    backdrop-filter: blur(6px);
+  `;
+  const tabBtnActive = `
+    background:linear-gradient(180deg, #171717, #0f0f0f);
+    border-color: rgba(255, 230, 0, .55);
+    color:#ffe600;
+    box-shadow:0 8px 28px rgba(255,230,0,.22), inset 0 0 14px rgba(255,230,0,.18);
+    transform: translateY(-1px);
+  `;
+  const tabBtnHover = `this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 24px rgba(255,230,0,.18)';`;
+  const tabBtnOut   = `this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 18px rgba(0,0,0,.3)';`;
+
+  // Render tabs shell
   container.innerHTML = `
-    <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin-bottom:.8rem;">
-      <button id="inv-tab-goblins" class="cv-btn" style="background:#2a2a2a;">🧌 Goblins (${goblinsAll.length})</button>
-      <button id="inv-tab-mats" class="cv-btn">🧪 Blending / Crafting material (${materialsAgg.length})</button>
-      <span style="margin-left:auto; color:#9aa0a6; font-size:.9rem;">Your tavern</span>
+    <div role="tablist" aria-label="Inventory Tabs" style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin-bottom:.8rem;">
+      <button id="inv-tab-goblins"
+              role="tab" aria-selected="true" tabindex="0"
+              class="cv-btn"
+              style="${tabBtnBase}${tabBtnActive}"
+              onmouseenter="${tabBtnHover}"
+              onmouseleave="${tabBtnOut}">
+        🧌 <span>Goblins</span>
+        <span class="cv-badge" style="border-color:#20444a;background:linear-gradient(180deg,#152024,#0f1a1c);color:#7ff6ff;">${goblinsAll.length}</span>
+      </button>
+
+      <button id="inv-tab-mats"
+              role="tab" aria-selected="false" tabindex="-1"
+              class="cv-btn"
+              style="${tabBtnBase}"
+              onmouseenter="${tabBtnHover}"
+              onmouseleave="${tabBtnOut}">
+        🧪 <span>Blending / Crafting Material</span>
+        <span class="cv-badge" style="border-color:#20444a;background:linear-gradient(180deg,#152024,#0f1a1c);color:#7ff6ff;">${materialsAgg.length}</span>
+      </button>
+
+      <span style="margin-left:auto; color:#9aa0a6; font-size:.9rem;">Your Tavern</span>
     </div>
     <div id="inv-body"></div>
   `;
 
-  const tabG = container.querySelector('#inv-tab-goblins');
-  const tabM = container.querySelector('#inv-tab-mats');
-  const body = container.querySelector('#inv-body');
+  const tabG = container.querySelector("#inv-tab-goblins");
+  const tabM = container.querySelector("#inv-tab-mats");
+  const body = container.querySelector("#inv-body");
 
-  // =========================
-  // TAB: GOBLINS
-  // =========================
+  function setActiveTabStyles(active) {
+    const set = (btn, isActive) => {
+      btn.setAttribute("aria-selected", isActive ? "true" : "false");
+      btn.tabIndex = isActive ? 0 : -1;
+      btn.style.cssText = tabBtnBase + (isActive ? tabBtnActive : "");
+    };
+    set(tabG, active === "goblins");
+    set(tabM, active === "materials");
+  }
+
+  // Keyboard navigation (Left/Right, Home/End)
+  container.querySelector('[role="tablist"]').addEventListener("keydown", (e) => {
+    const tabs = [tabG, tabM];
+    const idx = tabs.findIndex(t => t.getAttribute("aria-selected") === "true");
+    if (idx < 0) return;
+
+    let next = idx;
+    if (e.key === "ArrowRight") next = (idx + 1) % tabs.length;
+    else if (e.key === "ArrowLeft") next = (idx - 1 + tabs.length) % tabs.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = tabs.length - 1;
+    else return;
+
+    e.preventDefault();
+    tabs[next].click();
+    tabs[next].focus();
+  });
+
+  /* =========================
+     GOBLINS TAB
+     ========================= */
   function renderGoblinTab() {
     body.innerHTML = `
-      <div id="goblin-filters" class="cv-card" style="margin-bottom:1rem; padding:.8rem;">
+      <div id="goblin-filters" class="cv-card"
+           style="position:sticky; top:8px; z-index:20; margin-bottom:1rem; padding:.8rem;
+                  backdrop-filter: blur(6px);
+                  background:linear-gradient(180deg, rgba(20,20,20,.92), rgba(12,12,12,.92));
+                  border:1px solid var(--cv-border); box-shadow:0 8px 20px rgba(0,0,0,.35);">
         <div style="display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; justify-content:center;">
-          <input id="g-name" placeholder="🔎 Search name or ID…" style="background:#151515; border:1px solid #333; color:#eee; padding:.5rem .7rem; border-radius:10px; width:220px;">
-          <select id="g-rarity" class="cv-btn" style="min-width:160px;">
+          <input id="g-name" placeholder="🔎 Search name or ID…" aria-label="Search goblins by name or asset ID"
+                 style="background:#151515; border:1px solid #333; color:#eee; padding:.5rem .7rem; border-radius:10px; width:240px;">
+          <select id="g-rarity" class="cv-btn" style="min-width:160px;" aria-label="Filter by rarity">
             <option value="">All Rarities</option>
             <option>Common</option><option>Uncommon</option><option>Rare</option>
             <option>Epic</option><option>Legendary</option><option>Mythic</option>
@@ -3250,73 +3350,84 @@ async function renderGoblinInventory() {
             <button class="cv-btn g-sort" data-k="daily-power" style="border:none; border-right:1px solid #333;">Power</button>
             <button class="cv-btn g-sort" data-k="rarity" style="border:none;">Rarity</button>
           </div>
-          <select id="g-page-size" class="cv-btn" title="Items per page">
+          <select id="g-page-size" class="cv-btn" title="Items per page" aria-label="Items per page">
             <option value="12">12 / page</option>
             <option value="24">24 / page</option>
             <option value="48">48 / page</option>
           </select>
+          <button id="g-reset" class="cv-btn" title="Clear filters">🔄 Reset</button>
         </div>
       </div>
 
-      <div id="goblin-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px;"></div>
+      <div id="goblin-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px;"></div>
       <div id="goblin-pagination" style="display:flex; gap:.4rem; justify-content:center; margin-top:.8rem;"></div>
     `;
 
     const state = {
-      q: '', rarity: '', minPower: 0,
-      sortKey: 'rarity', sortAsc: false,
+      q: "", rarity: "", minPower: 0,
+      sortKey: "rarity", sortAsc: false,
       page: 1, pageSize: 12
     };
 
     const el = {
-      q: body.querySelector('#g-name'),
-      rarity: body.querySelector('#g-rarity'),
-      power: body.querySelector('#g-power'),
-      powerVal: body.querySelector('#g-power-val'),
-      size: body.querySelector('#g-page-size'),
-      grid: body.querySelector('#goblin-grid'),
-      pager: body.querySelector('#goblin-pagination')
+      q: body.querySelector("#g-name"),
+      rarity: body.querySelector("#g-rarity"),
+      power: body.querySelector("#g-power"),
+      powerVal: body.querySelector("#g-power-val"),
+      size: body.querySelector("#g-page-size"),
+      reset: body.querySelector("#g-reset"),
+      grid: body.querySelector("#goblin-grid"),
+      pager: body.querySelector("#goblin-pagination"),
     };
 
     const apply = debounce(() => { state.page = 1; render(); }, 150);
 
-    el.q.addEventListener('input', () => { state.q = el.q.value.trim().toLowerCase(); apply(); });
-    el.rarity.addEventListener('change', () => { state.rarity = el.rarity.value; apply(); });
-    el.power.addEventListener('input', () => {
-      state.minPower = Number(el.power.value)||0;
+    el.q.addEventListener("input", () => { state.q = el.q.value.trim().toLowerCase(); apply(); });
+    el.q.addEventListener("keydown", (e) => { if (e.key === "Enter") apply(); });
+    el.rarity.addEventListener("change", () => { state.rarity = el.rarity.value; apply(); });
+    el.power.addEventListener("input", () => {
+      state.minPower = Number(el.power.value) || 0;
       el.powerVal.textContent = String(state.minPower);
       apply();
     });
-    el.size.addEventListener('change', () => { state.pageSize = Number(el.size.value)||12; render(); });
-    body.querySelectorAll('.g-sort').forEach(b=>{
-      b.addEventListener('click', ()=>{
+    el.size.addEventListener("change", () => { state.pageSize = Number(el.size.value) || 12; render(); });
+    el.reset.addEventListener("click", () => {
+      state.q = ""; el.q.value = "";
+      state.rarity = ""; el.rarity.value = "";
+      state.minPower = 0; el.power.value = 0; el.powerVal.textContent = "0";
+      state.sortKey = "rarity"; state.sortAsc = false;
+      state.page = 1; state.pageSize = 12;
+      render();
+    });
+    body.querySelectorAll(".g-sort").forEach(b => {
+      b.addEventListener("click", () => {
         const k = b.dataset.k;
         if (state.sortKey === k) state.sortAsc = !state.sortAsc;
-        else { state.sortKey = k; state.sortAsc = (k === 'rarity'); }
+        else { state.sortKey = k; state.sortAsc = (k === "rarity"); }
         render();
       });
     });
 
     function filt(list) {
       const q = state.q;
-      const rar = state.rarity.toLowerCase();
-      return list.filter(g=>{
-        const okQ = !q || String(g.name||'').toLowerCase().includes(q) || String(g.asset_id||'').includes(q);
-        const okR = !rar || String(g.rarity||'').toLowerCase() === rar;
-        const dp  = Number(g['daily-power'] ?? g.daily_power ?? 0) || 0;
+      const rar = (state.rarity || "").toLowerCase();
+      return list.filter(g => {
+        const okQ = !q || String(g.name || "").toLowerCase().includes(q) || String(g.asset_id || "").includes(q);
+        const okR = !rar || String(g.rarity || "").toLowerCase() === rar;
+        const dp = Number(g["daily-power"] ?? g.daily_power ?? 0) || 0;
         return okQ && okR && dp >= state.minPower;
       });
     }
     function sort(list) {
       const sk = state.sortKey, asc = state.sortAsc;
-      return list.slice().sort((a,b)=>{
+      return list.slice().sort((a, b) => {
         let av, bv;
-        if (sk === 'rarity') {
-          av = rarityOrder[String(a.rarity||'').toLowerCase()] || 0;
-          bv = rarityOrder[String(b.rarity||'').toLowerCase()] || 0;
+        if (sk === "rarity") {
+          av = rarityOrder[String(a.rarity || "").toLowerCase()] || 0;
+          bv = rarityOrder[String(b.rarity || "").toLowerCase()] || 0;
         } else {
-          av = Number(a[sk]) || Number(a[sk.replace('-', '_')]) || 0;
-          bv = Number(b[sk]) || Number(b[sk.replace('-', '_')]) || 0;
+          av = Number(a[sk]) || Number(a[sk?.replace("-", "_")]) || 0;
+          bv = Number(b[sk]) || Number(b[sk?.replace("-", "_")]) || 0;
         }
         return asc ? (av - bv) : (bv - av);
       });
@@ -3327,19 +3438,20 @@ async function renderGoblinInventory() {
     }
     function renderGrid(list) {
       const cards = list.map(nft => {
-        const dp = Number(nft['daily-power'] ?? nft.daily_power ?? 0) || 0;
-        const lvl = Number(nft.level||0);
-        const levelClass = getLevelColorClass(lvl);
+        const dp  = Number(nft["daily-power"] ?? nft.daily_power ?? 0) || 0;
+        const lvl = Number(nft.level || 0);
+        const tip = `Lvl ${lvl} • ${nft.rarity} • Power ${dp}\nACC ${nft.accuracy ?? 0} | RES ${nft.resistance ?? 0} | LOOT ${nft["loot-hungry"] ?? 0} | SPD ${nft.speed ?? 0}`;
+
         const rCl = getRarityBorderClass(nft.rarity);
+        const levelClass = getLevelColorClass(lvl);
         const meterPct = Math.min(100, Math.max(6, Math.round(dp)));
-        const tip = `Lvl ${lvl} • ${nft.rarity} • Power ${dp}\n` +
-                    `ACC ${nft.accuracy ?? 0} | RES ${nft.resistance ?? 0} | LOOT ${nft['loot-hungry'] ?? 0} | SPD ${nft.speed ?? 0}`;
+
         return `
-          <div class="cv-card ${rCl}" style="padding:.7rem; border-radius:14px;" title="${esc(tip)}">
-            <div style="display:flex; gap:.7rem;">
+          <div class="cv-card ${rCl}" style="padding:.8rem; border-radius:14px;" title="${esc(tip)}">
+            <div style="display:flex; gap:.8rem;">
               <div style="position:relative; flex:0 0 auto;">
-                <img src="${esc(nft.img)}" alt="" loading="lazy"
-                     style="width:76px; height:76px; border-radius:12px; object-fit:cover; outline:1px solid var(--cv-border);">
+                <img src="${esc(nft.img)}" alt="Goblin artwork" loading="lazy"
+                     style="width:82px; height:82px; border-radius:12px; object-fit:cover; outline:1px solid var(--cv-border); box-shadow:0 3px 10px rgba(0,0,0,.35);">
               </div>
               <div style="flex:1 1 auto; min-width:0;">
                 <div style="display:flex; align-items:center; gap:.5rem;">
@@ -3348,35 +3460,40 @@ async function renderGoblinInventory() {
                   </strong>
                   <span class="cv-rarity" style="background:#1a1a1a; border-color:#333;">${esc(nft.rarity)}</span>
                 </div>
-                <div style="display:flex; gap:.45rem; flex-wrap:wrap; margin:.35rem 0;">
+                <div style="display:flex; gap:.45rem; flex-wrap:wrap; margin:.4rem 0;">
                   <span class="cv-badge">Lvl <span class="${levelClass}" style="color:#fff;">${esc(lvl)}</span></span>
                   <span class="cv-badge">ID ${esc(nft.asset_id)}</span>
                 </div>
                 <div class="cv-meter"><div style="width:${meterPct}%;"></div></div>
-                <div style="display:flex; gap:.6rem; margin-top:.35rem; color:#9aa0a6; font-size:.85rem;">
-                  <span>⚡ ${dp}</span>
-                  <span>🎯 ${esc(nft.accuracy ?? 0)}</span>
-                  <span>🛡 ${esc(nft.resistance ?? 0)}</span>
-                  <span>💰 ${esc(nft['loot-hungry'] ?? 0)}</span>
-                  <span>🏃 ${esc(nft.speed ?? 0)}</span>
+                <div style="display:flex; gap:.6rem; margin-top:.4rem; color:#9aa0a6; font-size:.86rem;">
+                  <span title="Daily Power">⚡ ${dp}</span>
+                  <span title="Accuracy">🎯 ${esc(nft.accuracy ?? 0)}</span>
+                  <span title="Resistance">🛡 ${esc(nft.resistance ?? 0)}</span>
+                  <span title="Loot-Hungry">💰 ${esc(nft["loot-hungry"] ?? 0)}</span>
+                  <span title="Speed">🏃 ${esc(nft.speed ?? 0)}</span>
                 </div>
               </div>
             </div>
           </div>
         `;
-      }).join('');
-      el.grid.innerHTML = cards || `<div class="cv-toast">No results.</div>`;
+      }).join("");
+      el.grid.innerHTML = cards || `<div class="cv-toast">No goblins found.</div>`;
     }
     function renderPager(total) {
       const pages = Math.max(1, Math.ceil(total / state.pageSize));
       state.page = Math.min(state.page, pages);
-      el.pager.innerHTML = Array.from({length: pages}).map((_,i)=>{
-        const p = i+1;
-        const on = p===state.page ? 'background:#2a2a2a; color:#ffe600;' : '';
-        return `<button data-p="${p}" class="cv-btn" style="padding:.3rem .6rem; ${on}">${p}</button>`;
-      }).join('');
-      el.pager.querySelectorAll('button').forEach(b=>{
-        b.addEventListener('click', ()=>{ state.page = Number(b.dataset.p)||1; render(); });
+      el.pager.innerHTML = Array.from({ length: pages }).map((_, i) => {
+        const p = i + 1;
+        const on = p === state.page ? "background:#2a2a2a; color:#ffe600;" : "";
+        return `<button data-p="${p}" class="cv-btn" style="padding:.35rem .7rem; ${on}">${p}</button>`;
+      }).join("");
+      el.pager.querySelectorAll("button").forEach(b => {
+        b.addEventListener("click", () => {
+          state.page = Number(b.dataset.p) || 1;
+          render();
+          // small QoL: scroll to top of grid
+          el.grid.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
       });
     }
     function render() {
@@ -3388,16 +3505,21 @@ async function renderGoblinInventory() {
     render();
   }
 
-  // =========================
-  // TAB: MATERIALS
-  // =========================
+  /* =========================
+     MATERIALS TAB
+     ========================= */
   function renderMaterialsTab() {
     body.innerHTML = `
-      <div class="cv-card" style="margin-bottom:1rem; padding:.8rem;">
+      <div class="cv-card"
+           style="position:sticky; top:8px; z-index:20; margin-bottom:1rem; padding:.8rem;
+                  backdrop-filter: blur(6px);
+                  background:linear-gradient(180deg, rgba(20,20,20,.92), rgba(12,12,12,.92));
+                  border:1px solid var(--cv-border); box-shadow:0 8px 20px rgba(0,0,0,.35);">
         <div style="display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; justify-content:space-between;">
           <div style="display:flex; flex-wrap:wrap; gap:.6rem; align-items:center;">
-            <input id="m-name" placeholder="🔎 Search name…" style="background:#151515; border:1px solid #333; color:#eee; padding:.5rem .7rem; border-radius:10px; width:220px;">
-            <select id="m-type" class="cv-btn" style="min-width:200px;">
+            <input id="m-name" placeholder="🔎 Search material…" aria-label="Search materials by name"
+                   style="background:#151515; border:1px solid #333; color:#eee; padding:.5rem .7rem; border-radius:10px; width:240px;">
+            <select id="m-type" class="cv-btn" style="min-width:200px;" aria-label="Filter by material type">
               <option value="">All Materials</option>
               <option value="magic_stone">Level Upgrader</option>
               <option value="rotation_stone">Slot Rotator</option>
@@ -3407,33 +3529,34 @@ async function renderGoblinInventory() {
               <button class="cv-btn m-sort" data-k="quantity" style="border:none; border-right:1px solid #333;">Qty</button>
               <button class="cv-btn m-sort" data-k="type" style="border:none;">Type</button>
             </div>
-            <select id="m-page-size" class="cv-btn" title="Items per page">
+            <select id="m-page-size" class="cv-btn" title="Items per page" aria-label="Items per page">
               <option value="12">12 / page</option>
               <option value="24">24 / page</option>
               <option value="48">48 / page</option>
             </select>
+            <button id="m-reset" class="cv-btn" title="Clear filters">🔄 Reset</button>
           </div>
           <div style="display:flex; gap:.5rem;">
-            <button id="open-level" class="cv-btn" title="Open the Level Up blends">🧪 Open Level Upgrades</button>
-            <button id="open-rotation" class="cv-btn" title="Open the Slot Rotation blends">🌀 Open Slot Rotation</button>
+            <button id="open-level" class="cv-btn" title="Open Level Up blends">🧪 Level Upgrades</button>
+            <button id="open-rotation" class="cv-btn" title="Open Slot Rotation blends">🌀 Slot Rotation</button>
           </div>
         </div>
       </div>
 
-      <div class="cv-card" style="margin-bottom:1rem; padding:.8rem; background:linear-gradient(180deg,#111,#0c0c0c);">
+      <div class="cv-card" style="margin-bottom:1rem; padding:.9rem; background:linear-gradient(180deg,#111,#0c0c0c);">
         <div style="display:flex; gap:1rem; flex-wrap:wrap;">
-          <div class="cv-item" style="flex:1 1 260px; min-width:260px;">
+          <div class="cv-item" style="flex:1 1 280px; min-width:280px;">
             <h4 style="margin:.2rem 0; color:#ffcc66;">🔺 Level Upgrader</h4>
-            <p style="margin:.3rem 0 .2rem; color:#cfcfcf;">
-              Use it to promote your Goblin to the next level.<br>
-              <strong>Rule:</strong> si usa su goblin della <em>stessa rarity</em> e con la <em>stessa main speciality</em>.
+            <p style="margin:.35rem 0 .2rem; color:#cfcfcf;">
+              Use to elevate a Goblin to the <strong>next level</strong>.<br>
+              <strong>Rule:</strong> must match the Goblin's <em>rarity</em> and <em>main specialty</em>.
             </p>
           </div>
-          <div class="cv-item" style="flex:1 1 260px; min-width:260px;">
+          <div class="cv-item" style="flex:1 1 280px; min-width:280px;">
             <h4 style="margin:.2rem 0; color:#7ff6ff;">🌀 Slot Rotator</h4>
-            <p style="margin:.3rem 0 .2rem; color:#cfcfcf;">
-              Use it to move your Goblin to the next ability (specialità successiva nella rotazione).<br>
-              Gli ingredienti richiesti e le combinazioni sono mostrati nella sezione <em>Slot Rotation</em> dei blends.
+            <p style="margin:.35rem 0 .2rem; color:#cfcfcf;">
+              Use to switch the Goblin to the <strong>next ability</strong> in the rotation.<br>
+              Required ingredients and combinations are shown in the <em>Slot Rotation</em> blends section.
             </p>
           </div>
         </div>
@@ -3443,63 +3566,75 @@ async function renderGoblinInventory() {
       <div id="mat-pagination" style="display:flex; gap:.4rem; justify-content:center; margin-top:.8rem;"></div>
     `;
 
-    // CTA: apre la tua UI di blending se definita
+    // CTA hooks to your blending UI (if present)
     const openBlend = (tab) => {
-      if (typeof window.renderGoblinBlend === 'function') {
+      if (typeof window.renderGoblinBlend === "function") {
         window.renderGoblinBlend();
-        // piccolo defer per permettere il render e poi selezionare la tab desiderata
-        setTimeout(()=>{
-          if (tab === 'level')  document.getElementById('tab-level')?.click();
-          if (tab === 'rotation') document.getElementById('tab-rotation')?.click();
+        setTimeout(() => {
+          if (tab === "level") document.getElementById("tab-level")?.click();
+          if (tab === "rotation") document.getElementById("tab-rotation")?.click();
         }, 50);
       }
     };
-    document.getElementById('open-level').addEventListener('click', ()=> openBlend('level'));
-    document.getElementById('open-rotation').addEventListener('click', ()=> openBlend('rotation'));
+    document.getElementById("open-level").addEventListener("click", () => openBlend("level"));
+    document.getElementById("open-rotation").addEventListener("click", () => openBlend("rotation"));
 
-    const state = { q:'', type:'', sortKey:'name', sortAsc:true, page:1, pageSize:12 };
+    const state = { q: "", type: "", sortKey: "name", sortAsc: true, page: 1, pageSize: 12 };
     const el = {
-      q: body.querySelector('#m-name'),
-      type: body.querySelector('#m-type'),
-      size: body.querySelector('#m-page-size'),
-      grid: body.querySelector('#mat-grid'),
-      pager: body.querySelector('#mat-pagination')
+      q: body.querySelector("#m-name"),
+      type: body.querySelector("#m-type"),
+      size: body.querySelector("#m-page-size"),
+      reset: body.querySelector("#m-reset"),
+      grid: body.querySelector("#mat-grid"),
+      pager: body.querySelector("#mat-pagination"),
     };
 
-    const apply = debounce(()=>{ state.page=1; render(); }, 150);
+    const apply = debounce(() => { state.page = 1; render(); }, 150);
 
-    el.q.addEventListener('input', ()=>{ state.q = el.q.value.trim().toLowerCase(); apply(); });
-    el.type.addEventListener('change', ()=>{ state.type = el.type.value; apply(); });
-    el.size.addEventListener('change', ()=>{ state.pageSize = Number(el.size.value)||12; render(); });
-    body.querySelectorAll('.m-sort').forEach(b=>{
-      b.addEventListener('click', ()=>{
+    el.q.addEventListener("input", () => { state.q = el.q.value.trim().toLowerCase(); apply(); });
+    el.q.addEventListener("keydown", (e) => { if (e.key === "Enter") apply(); });
+    el.type.addEventListener("change", () => { state.type = el.type.value; apply(); });
+    el.size.addEventListener("change", () => { state.pageSize = Number(el.size.value) || 12; render(); });
+    el.reset.addEventListener("click", () => {
+      state.q = ""; el.q.value = "";
+      state.type = ""; el.type.value = "";
+      state.sortKey = "name"; state.sortAsc = true;
+      state.page = 1; state.pageSize = 12;
+      render();
+    });
+    body.querySelectorAll(".m-sort").forEach(b => {
+      b.addEventListener("click", () => {
         const k = b.dataset.k;
         if (state.sortKey === k) state.sortAsc = !state.sortAsc;
-        else { state.sortKey = k; state.sortAsc = (k !== 'quantity'); }
+        else { state.sortKey = k; state.sortAsc = (k !== "quantity"); }
         render();
       });
     });
 
     function filt(list) {
       const q = state.q;
-      const t = state.type.toLowerCase();
-      return list.filter(m=>{
-        const okQ = !q || String(m.name||'').toLowerCase().includes(q);
-        const okT = !t || String(m.type||'').toLowerCase() === t;
+      const t = (state.type || "").toLowerCase();
+      return list.filter(m => {
+        const okQ = !q || String(m.name || "").toLowerCase().includes(q) || String(m.prettyType || "").toLowerCase().includes(q);
+        const okT = !t || String(m.type || "").toLowerCase() === t;
         return okQ && okT;
       });
     }
     function sort(list) {
       const sk = state.sortKey, asc = state.sortAsc;
-      return list.slice().sort((a,b)=>{
-        if (sk === 'name') return asc
-          ? String(a.name||'').localeCompare(String(b.name||''))
-          : String(b.name||'').localeCompare(String(a.name||''));
-        if (sk === 'quantity') return asc ? (Number(a.quantity||0)-Number(b.quantity||0))
-                                           : (Number(b.quantity||0)-Number(a.quantity||0));
-        if (sk === 'type') {
-          const ta = String(a.prettyType||a.type||''); const tb = String(b.prettyType||b.type||'');
-          return asc ? ta.localeCompare(tb) : tb.localeCompare(ta);
+      return list.slice().sort((a, b) => {
+        if (sk === "name") {
+          const av = String(a.name || a.prettyType || "").toLowerCase();
+          const bv = String(b.name || b.prettyType || "").toLowerCase();
+          return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+        }
+        if (sk === "quantity") {
+          const av = Number(a.quantity || 0), bv = Number(b.quantity || 0);
+          return asc ? (av - bv) : (bv - av);
+        }
+        if (sk === "type") {
+          const av = String(a.prettyType || a.type || ""), bv = String(b.prettyType || b.type || "");
+          return asc ? av.localeCompare(bv) : bv.localeCompare(av);
         }
         return 0;
       });
@@ -3510,41 +3645,48 @@ async function renderGoblinInventory() {
     }
     function card(m) {
       const qty = Number(m.quantity || 1);
-      const tip = `${m.prettyType || m.type} • Qty ${qty}\n${m.description || ''}`;
+      const tip = `${m.prettyType || m.type} • Qty ${qty}\n${m.description || ""}`;
       return `
-        <div class="cv-card ${getRarityBorderClass(m.rarity)}" style="padding:.75rem; border-radius:14px; display:flex; gap:.7rem; align-items:flex-start;" title="${esc(tip)}">
-          <img src="${esc(m.img)}" alt="" loading="lazy" style="width:72px; height:72px; border-radius:12px; object-fit:cover; outline:1px solid var(--cv-border);">
+        <div class="cv-card ${getRarityBorderClass(m.rarity)}"
+             style="padding:.85rem; border-radius:14px; display:flex; gap:.8rem; align-items:flex-start;"
+             title="${esc(tip)}">
+          <img src="${esc(m.img)}" alt="Material artwork" loading="lazy"
+               style="width:82px; height:82px; border-radius:12px; object-fit:cover; outline:1px solid var(--cv-border); box-shadow:0 3px 10px rgba(0,0,0,.35);">
           <div style="flex:1 1 auto; min-width:0;">
             <div style="display:flex; align-items:center; gap:.5rem;">
               <strong style="color:#ffcc66; font-family:Orbitron,system-ui,sans-serif; font-size:1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                ${esc(m.name || (m.prettyType || 'Material'))}
+                ${esc(m.name || (m.prettyType || "Material"))}
               </strong>
               <span class="cv-badge" style="border-color:#20444a;background:linear-gradient(180deg,#152024,#0f1a1c);color:#7ff6ff;">
                 ${esc(m.prettyType || m.type)}
               </span>
             </div>
-            <div style="display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.35rem;">
+            <div style="display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.4rem;">
               <span class="cv-badge">Qty: ${qty}</span>
               ${m.template_id ? `<span class="cv-badge">Template #${esc(m.template_id)}</span>` : ``}
             </div>
-            ${m.description ? `<div style="color:#c9c9c9; font-size:.88rem; margin-top:.45rem; opacity:.9;">${esc(m.description)}</div>` : ``}
+            ${m.description ? `<div style="color:#c9c9c9; font-size:.9rem; margin-top:.5rem; opacity:.9;">${esc(m.description)}</div>` : ``}
           </div>
         </div>
       `;
     }
     function renderGrid(list) {
-      el.grid.innerHTML = list.map(card).join('') || `<div class="cv-toast">No materials found.</div>`;
+      el.grid.innerHTML = list.map(card).join("") || `<div class="cv-toast">No materials found.</div>`;
     }
     function renderPager(total) {
       const pages = Math.max(1, Math.ceil(total / state.pageSize));
       state.page = Math.min(state.page, pages);
-      el.pager.innerHTML = Array.from({length: pages}).map((_,i)=>{
-        const p = i+1;
-        const on = p===state.page ? 'background:#2a2a2a; color:#ffe600;' : '';
-        return `<button data-p="${p}" class="cv-btn" style="padding:.3rem .6rem; ${on}">${p}</button>`;
-      }).join('');
-      el.pager.querySelectorAll('button').forEach(b=>{
-        b.addEventListener('click', ()=>{ state.page = Number(b.dataset.p)||1; render(); });
+      el.pager.innerHTML = Array.from({ length: pages }).map((_, i) => {
+        const p = i + 1;
+        const on = p === state.page ? "background:#2a2a2a; color:#ffe600;" : "";
+        return `<button data-p="${p}" class="cv-btn" style="padding:.35rem .7rem; ${on}">${p}</button>`;
+      }).join("");
+      el.pager.querySelectorAll("button").forEach(b => {
+        b.addEventListener("click", () => {
+          state.page = Number(b.dataset.p) || 1;
+          render();
+          el.grid.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
       });
     }
     function render() {
@@ -3556,23 +3698,21 @@ async function renderGoblinInventory() {
     render();
   }
 
-  // tab switching
+  // Tab switching
   function selectTab(which) {
-    if (which === 'goblins') {
-      tabG.style.background = '#2a2a2a';
-      tabM.style.background = '';
+    if (which === "goblins") {
+      setActiveTabStyles("goblins");
       renderGoblinTab();
     } else {
-      tabM.style.background = '#2a2a2a';
-      tabG.style.background = '';
+      setActiveTabStyles("materials");
       renderMaterialsTab();
     }
   }
-  tabG.addEventListener('click', ()=> selectTab('goblins'));
-  tabM.addEventListener('click', ()=> selectTab('materials'));
+  tabG.addEventListener("click", () => selectTab("goblins"));
+  tabM.addEventListener("click", () => selectTab("materials"));
 
-  // default: goblins
-  selectTab('goblins');
+  // Default tab
+  selectTab("goblins");
 }
 
 /* =========================================================
@@ -5644,247 +5784,572 @@ async function renderGoblinInventory() {
 })();
 
 async function renderGoblinBlend() {
-  const container = document.getElementById('goblin-content');
+  const container = document.getElementById("goblin-content");
+  if (!container) return;
+
+  // --- small utils ---
+  const esc = (v) => String(v ?? "").replace(/[&<>"'`]/g, m => (
+    { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;", "`":"&#96;" }[m]
+  ));
+  const debounce = (fn, ms = 200) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+  const rarityOrder = { common:0, rare:1, epic:2, legendary:3, mythic:4 };
+
+  // --- polished tab buttons (keep classes, add inline styles) ---
+  const tabBase = `
+    font-family: Orbitron, system-ui, sans-serif;
+    display:inline-flex; align-items:center; gap:.55rem;
+    border:1px solid rgba(255,255,255,.18);
+    padding:.6rem 1.0rem; border-radius:14px; cursor:pointer;
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    color:#eaeaea; letter-spacing:.15px; font-weight:800; font-size:.95rem;
+    box-shadow:0 6px 18px rgba(0,0,0,.3), inset 0 0 0 rgba(255,255,255,0);
+    transition:transform .12s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease, color .2s ease;
+    backdrop-filter: blur(6px);
+  `;
+  const tabActive = `
+    background:linear-gradient(180deg, #171717, #0f0f0f);
+    border-color: rgba(255, 230, 0, .55);
+    color:#ffe600;
+    box-shadow:0 8px 28px rgba(255,230,0,.22), inset 0 0 14px rgba(255,230,0,.18);
+    transform: translateY(-1px);
+  `;
+
   container.innerHTML = `
-    <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem;">
-      <button id="tab-level" class="btn btn-glow active-tab">Level Upgrades</button>
-      <button id="tab-rotation" class="btn btn-glow">Slot Rotation</button>
+    <div role="tablist" aria-label="Blend Tabs"
+         style="display:flex; justify-content:center; gap:.8rem; margin-bottom:1rem; flex-wrap:wrap;">
+      <button id="tab-level" class="btn btn-glow active-tab" role="tab" aria-selected="true" tabindex="0"
+              style="${tabBase}${tabActive}"
+              onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 24px rgba(255,230,0,.18)';"
+              onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 18px rgba(0,0,0,.3)';">
+        🔺 Level Upgrades
+      </button>
+      <button id="tab-rotation" class="btn btn-glow" role="tab" aria-selected="false" tabindex="-1"
+              style="${tabBase}"
+              onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 24px rgba(255,230,0,.18)';"
+              onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 18px rgba(0,0,0,.3)';">
+        🌀 Slot Rotation
+      </button>
     </div>
 
-    <div id="tab-content">
-      <p style="color: #0ff;">Loading...</p>
+    <div id="tab-content" aria-live="polite">
+      <div class="cv-skel" style="height:180px; border-radius:16px;"></div>
     </div>
   `;
 
-  const tabContent = document.getElementById("tab-content");
-  const levelBtn = document.getElementById("tab-level");
-  const rotationBtn = document.getElementById("tab-rotation");
+  const tabContent   = document.getElementById("tab-content");
+  const levelBtn     = document.getElementById("tab-level");
+  const rotationBtn  = document.getElementById("tab-rotation");
 
-  levelBtn.addEventListener("click", () => {
-    setActiveTab("level");
-  });
-
-  rotationBtn.addEventListener("click", () => {
-    setActiveTab("rotation");
-  });
-
-  async function setActiveTab(tabName) {
-    // Aggiorna stile tab
-    [levelBtn, rotationBtn].forEach(btn => btn.classList.remove("active-tab"));
-    if (tabName === "level") levelBtn.classList.add("active-tab");
-    else rotationBtn.classList.add("active-tab");
-
-    // Mostra contenuto
-    tabContent.innerHTML = `<p style="color: #0ff;">Loading...</p>`;
-
-    if (tabName === "level") {
-      await renderLevelUpgrades();
-    } else {
-      await renderSlotRotation();
-    }
+  function setActiveTabStyles(activeId) {
+    const set = (btn, isActive) => {
+      btn.setAttribute("aria-selected", isActive ? "true" : "false");
+      btn.tabIndex = isActive ? 0 : -1;
+      btn.style.cssText = (isActive ? (tabBase + tabActive) : tabBase);
+      // keep original classes intact: btn btn-glow (+ active-tab toggle)
+      btn.classList.toggle("active-tab", isActive);
+    };
+    set(levelBtn, activeId === "tab-level");
+    set(rotationBtn, activeId === "tab-rotation");
   }
 
-  // Attiva tab iniziale
-await setActiveTab("level");
+  // keyboard nav within tablist
+  container.querySelector('[role="tablist"]').addEventListener("keydown", (e) => {
+    const tabs = [levelBtn, rotationBtn];
+    const idx = tabs.findIndex(t => t.getAttribute("aria-selected") === "true");
+    if (idx < 0) return;
+    let next = idx;
+    if (e.key === "ArrowRight") next = (idx + 1) % tabs.length;
+    else if (e.key === "ArrowLeft") next = (idx - 1 + tabs.length) % tabs.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = tabs.length - 1;
+    else return;
+    e.preventDefault();
+    tabs[next].click();
+    tabs[next].focus();
+  });
 
-  
-  
+  levelBtn.addEventListener("click", () => setActiveTab("level"));
+  rotationBtn.addEventListener("click", () => setActiveTab("rotation"));
+
+  async function setActiveTab(tabName) {
+    setActiveTabStyles(tabName === "level" ? "tab-level" : "tab-rotation");
+    tabContent.innerHTML = `
+      <div class="cv-skel" style="height:180px; border-radius:16px;"></div>
+    `;
+    if (tabName === "level") await renderLevelUpgrades();
+    else await renderSlotRotation();
+  }
+
+  // Activate initial tab
+  await setActiveTab("level");
+
+  // =========================
+  // LEVEL UPGRADES
+  // =========================
   async function renderLevelUpgrades() {
     tabContent.innerHTML = `
-      <div style="display: flex; justify-content: space-around; align-items: center; margin-bottom: 2rem;">
-        <img src="https://example.com/levels.jpg" alt="Levels" style="height: 120px; border-radius: 12px; box-shadow: 0 0 15px #00f0ff;">
-        <img src="https://example.com/rotation.jpg" alt="Rotation Cycle" style="height: 120px; border-radius: 12px; box-shadow: 0 0 15px #00f0ff;">
+      <div class="cv-card"
+           style="margin-bottom:1rem; padding:.9rem; background:linear-gradient(180deg,#101010,#0b0b0b);
+                  border:1px solid var(--cv-border); border-radius:16px;">
+        <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+          <div style="color:#d7d7d7; max-width:820px; line-height:1.4;">
+            <strong style="color:#ffe600;">How it works:</strong>
+            Upgraders can be used to level up a Goblin of the <em>same rarity</em> and <em>same main specialty</em>.
+            Filters below help you find craftable upgrades quickly.
+          </div>
+          <div style="display:flex; gap:.6rem;">
+            <button id="blend-refresh" class="btn btn-glow" title="Reload blends">🔄 Refresh</button>
+            <button id="blend-force" class="btn btn-glow" title="Force rebuild cache">⟳ Update</button>
+          </div>
+        </div>
       </div>
 
-      <div style="margin-bottom: 2rem; padding: 1rem; background: #111; border-radius: 12px; box-shadow: 0 0 10px #0ff; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: center;">
-        <button id="refresh-blends" class="btn btn-glow" style="padding: 0.6rem 1.2rem;">🔄 Refresh Data</button>
-        <input id="filter-name" type="text" placeholder="Search name..." style="padding: 0.6rem; border-radius: 8px;">
-        <select id="filter-rarity" style="padding: 0.6rem; border-radius: 8px;">
-          <option value="">All Rarities</option>
-          <option value="common">Common</option>
-          <option value="rare">Rare</option>
-          <option value="epic">Epic</option>
-          <option value="legendary">Legendary</option>
-          <option value="mythic">Mythic</option>
-        </select>
-        <input id="filter-edition" type="number" min="1" placeholder="Edition" style="width: 120px; padding: 0.6rem; border-radius: 8px;">
-        <input id="filter-level" type="number" min="1" max="5" placeholder="Level" style="width: 100px; padding: 0.6rem; border-radius: 8px;">
-        <select id="filter-attr" style="padding: 0.6rem; border-radius: 8px;">
-          <option value="">Any Attribute</option>
-          <option value="accuracy">Accuracy</option>
-          <option value="resistance">Resistance</option>
-          <option value="speed">Speed</option>
-          <option value="loot-hungry">Loot-Hungry</option>
-        </select>
+      <div id="blend-toolbar" class="cv-card"
+           style="position:sticky; top:8px; z-index:30; margin-bottom:1rem; padding:.8rem;
+                  backdrop-filter: blur(6px);
+                  background:linear-gradient(180deg, rgba(20,20,20,.92), rgba(12,12,12,.92));
+                  border:1px solid var(--cv-border); border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,.35);">
+        <div style="display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; justify-content:center;">
+          <input id="f-name" placeholder="🔎 Search name…" aria-label="Search by name"
+                 style="background:#151515; border:1px solid #333; color:#eee; padding:.5rem .7rem; border-radius:10px; width:240px;">
+          <select id="f-rarity" class="btn btn-glow" style="min-width:160px;" aria-label="Filter by rarity">
+            <option value="">All Rarities</option>
+            <option>Common</option><option>Rare</option><option>Epic</option><option>Legendary</option><option>Mythic</option>
+          </select>
+          <select id="f-attr" class="btn btn-glow" style="min-width:170px;" aria-label="Filter by main attribute">
+            <option value="">Any Attribute</option>
+            <option value="accuracy">Accuracy</option>
+            <option value="resistance">Resistance</option>
+            <option value="speed">Speed</option>
+            <option value="loot-hungry">Loot-Hungry</option>
+          </select>
+          <input id="f-edition" type="number" min="1" placeholder="Edition"
+                 style="width:120px; padding:.5rem .7rem; border-radius:10px; background:#151515; border:1px solid #333; color:#eee;">
+          <input id="f-level" type="number" min="2" max="20" placeholder="Target Level"
+                 style="width:130px; padding:.5rem .7rem; border-radius:10px; background:#151515; border:1px solid #333; color:#eee;">
+          <label style="display:inline-flex; align-items:center; gap:.45rem; color:#ddd; user-select:none;">
+            <input id="f-craftable" type="checkbox"> Only craftable
+          </label>
 
+          <div style="display:flex; background:#1a1a1a; border:1px solid #333; border-radius:10px; overflow:hidden;">
+            <button class="btn btn-glow f-sort" data-k="progress" style="border:none; border-right:1px solid #333;">Progress</button>
+            <button class="btn btn-glow f-sort" data-k="rarity" style="border:none; border-right:1px solid #333;">Rarity</button>
+            <button class="btn btn-glow f-sort" data-k="level" style="border:none;">Level</button>
+          </div>
+
+          <select id="f-page" class="btn btn-glow" title="Items per page" aria-label="Items per page">
+            <option value="12">12 / page</option>
+            <option value="24">24 / page</option>
+            <option value="48">48 / page</option>
+          </select>
+          <button id="f-reset" class="btn btn-glow" title="Clear filters">🔄 Reset</button>
+        </div>
       </div>
-      <button id="refresh-blends" class="btn btn-glow">🔄 Refresh</button>
-      <button id="force-update" class="btn btn-glow">⟳ Update</button>
 
-      <div id="blend-results" style="
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        padding-bottom: 3rem;
-      "></div>
+      <div id="blend-summary" style="color:#9aa0a6; margin:.2rem 0 .8rem;"></div>
+
+      <div id="blend-results"
+           style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; padding-bottom:2rem;"></div>
+
+      <div id="blend-pagination" style="display:flex; gap:.4rem; justify-content:center; margin-top:.6rem;"></div>
     `;
 
-    const blendResults = document.getElementById("blend-results");
+    const els = {
+      refresh:  document.getElementById("blend-refresh"),
+      force:    document.getElementById("blend-force"),
+      name:     document.getElementById("f-name"),
+      rarity:   document.getElementById("f-rarity"),
+      attr:     document.getElementById("f-attr"),
+      edition:  document.getElementById("f-edition"),
+      level:    document.getElementById("f-level"),
+      craft:    document.getElementById("f-craftable"),
+      sortBtns: Array.from(tabContent.querySelectorAll(".f-sort")),
+      pageSel:  document.getElementById("f-page"),
+      reset:    document.getElementById("f-reset"),
+      summary:  document.getElementById("blend-summary"),
+      grid:     document.getElementById("blend-results"),
+      pager:    document.getElementById("blend-pagination"),
+    };
 
-    function applyFilters(blends) {
-      const rarity = document.getElementById('filter-rarity').value.toLowerCase();
-      const edition = +document.getElementById('filter-edition').value || null;
-      const attr = document.getElementById('filter-attr')?.value.toLowerCase();
-      const name = document.getElementById('filter-name')?.value.toLowerCase();
-    
-      return blends.filter(b => {
-        if (rarity && b.rarity.toLowerCase() !== rarity) return false;
-        if (edition && +b.edition !== edition) return false;
-        if (name && !b.name.toLowerCase().includes(name)) return false;
-    
+    const state = {
+      q: "", rarity: "", attr: "", edition: null, level: null, onlyCraft: false,
+      sortKey: "progress", sortAsc: false, page: 1, pageSize: 12,
+      data: []
+    };
+
+    // Data fetchers
+    async function fetchBlendData(force = false) {
+      const payload = {
+        wax_account: window.userData?.wax_account,
+        user_id:     window.userData?.userId,
+        usx_token:   window.userData?.usx_token,
+        ...(force ? { force_update: true } : {})
+      };
+      const res = await fetch(`${BASE_URL}/get_blend_data`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    }
+
+    // Filter + sort helpers
+    const apply = debounce(() => { state.page = 1; render(); }, 150);
+
+    els.name.addEventListener("input", () => { state.q = els.name.value.trim().toLowerCase(); apply(); });
+    els.rarity.addEventListener("change", () => { state.rarity = els.rarity.value; apply(); });
+    els.attr.addEventListener("change", () => { state.attr = els.attr.value; apply(); });
+    els.edition.addEventListener("input", () => { state.edition = Number(els.edition.value) || null; apply(); });
+    els.level.addEventListener("input", () => { state.level = Number(els.level.value) || null; apply(); });
+    els.craft.addEventListener("change", () => { state.onlyCraft = !!els.craft.checked; apply(); });
+    els.pageSel.addEventListener("change", () => { state.pageSize = Number(els.pageSel.value) || 12; render(); });
+
+    els.reset.addEventListener("click", () => {
+      state.q = ""; els.name.value = "";
+      state.rarity = ""; els.rarity.value = "";
+      state.attr = ""; els.attr.value = "";
+      state.edition = null; els.edition.value = "";
+      state.level = null; els.level.value = "";
+      state.onlyCraft = false; els.craft.checked = false;
+      state.sortKey = "progress"; state.sortAsc = false;
+      state.page = 1; state.pageSize = 12;
+      render();
+    });
+
+    els.sortBtns.forEach(b => {
+      b.addEventListener("click", () => {
+        const k = b.dataset.k;
+        if (state.sortKey === k) state.sortAsc = !state.sortAsc;
+        else { state.sortKey = k; state.sortAsc = (k !== "progress"); }
+        render();
+      });
+    });
+
+    els.refresh.addEventListener("click", async () => {
+      try {
+        els.refresh.disabled = true;
+        const data = await fetchBlendData(false);
+        state.data = Array.isArray(data) ? data : [];
+        render();
+      } catch (e) {
+        toastError("Failed to load blends data.");
+      } finally {
+        els.refresh.disabled = false;
+      }
+    });
+
+    els.force.addEventListener("click", async () => {
+      els.grid.innerHTML = `<p style="color:#0ff;">Updating...</p>`;
+      try {
+        const data = await fetchBlendData(true);
+        state.data = Array.isArray(data) ? data : [];
+        render();
+      } catch (e) {
+        toastError("❌ Failed to update.");
+      }
+    });
+
+    function toastError(msg) {
+      els.grid.innerHTML = `<div class="cv-card" style="padding:.9rem; border-radius:14px; color:#ff7b7b;">${esc(msg)}</div>`;
+    }
+
+    // logic helpers
+    function coverageOf(blend) {
+      // min( owned/needed ) across ingredients; returns [ratio 0..1, ownedSum, needSum]
+      if (!Array.isArray(blend?.ingredients) || blend.ingredients.length === 0) return [0,0,0];
+      let minRatio = 1, ownedSum = 0, needSum = 0;
+      for (const ing of blend.ingredients) {
+        const need = Number(ing.needed || ing.quantity || 0);
+        const own  = Number(ing.owned || 0);
+        needSum += need; ownedSum += Math.min(own, need);
+        const r = need ? (own / need) : 1;
+        minRatio = Math.min(minRatio, r);
+      }
+      return [Math.max(0, Math.min(1, minRatio)), ownedSum, needSum];
+    }
+
+    function filt(list) {
+      const q = state.q;
+      const rar = (state.rarity || "").toLowerCase();
+      const attr = (state.attr || "").toLowerCase();
+      const ed = state.edition;
+      const lvl = state.level;
+
+      return list.filter(b => {
+        if (q && !String(b.name || "").toLowerCase().includes(q)) return false;
+        if (rar && String(b.rarity || "").toLowerCase() !== rar) return false;
         if (attr) {
-          const mainAttr = b.ingredients[0]?.filters?.main_attr?.toLowerCase();
-          if (mainAttr !== attr) return false;
+          const m = String(b.main_attr || "").toLowerCase();
+          if (m !== attr) return false;
         }
-    
+        if (ed && Number(b.edition || 0) !== ed) return false;
+        if (lvl && Number(b.level || 0) !== lvl) return false;
+        if (state.onlyCraft && !b.can_blend) return false;
         return true;
       });
     }
 
-    async function fetchBlendData() {
+    function sortList(list) {
+      const sk = state.sortKey, asc = state.sortAsc;
+      return list.slice().sort((a, b) => {
+        if (sk === "progress") {
+          const [ra] = coverageOf(a), [rb] = coverageOf(b);
+          return asc ? (ra - rb) : (rb - ra);
+        }
+        if (sk === "rarity") {
+          const av = rarityOrder[String(a.rarity || "").toLowerCase()] ?? 99;
+          const bv = rarityOrder[String(b.rarity || "").toLowerCase()] ?? 99;
+          return asc ? (av - bv) : (bv - av);
+        }
+        if (sk === "level") {
+          const av = Number(a.level || 0), bv = Number(b.level || 0);
+          return asc ? (av - bv) : (bv - av);
+        }
+        return 0;
+      });
+    }
+
+    function paginate(list) {
+      const start = (state.page - 1) * state.pageSize;
+      return list.slice(start, start + state.pageSize);
+    }
+
+    function ingredientRow(ing) {
+      const need = Number(ing.needed || ing.quantity || 0);
+      const own  = Number(ing.owned  || 0);
+      const done = own >= need;
+      const color = done ? "#8cff8c" : (own > 0 ? "#ffcc66" : "#ff7b7b");
+      const ids = Array.isArray(ing.asset_ids) && ing.asset_ids.length ? ing.asset_ids.join(", ") : "";
+      const copyBtn = ids ? `<button class="btn btn-glow" data-copy="${esc(ids)}"
+                                style="padding:.25rem .45rem; font-size:.8rem;">Copy IDs</button>` : "";
+      return `
+        <li style="display:flex; align-items:center; gap:.45rem; margin:.25rem 0; color:${color}; font-size:.9rem;">
+          <span style="min-width:72px; text-align:right;">${own}/${need}</span>
+          <span style="opacity:.85;">(schema: ${esc(ing.schema_name)}, tpl: ${esc(ing.template_id)})</span>
+          ${ids ? `<span style="color:#9aa0a6; font-size:.85rem;">• IDs: ${esc(ids)}</span>` : ""}
+          ${copyBtn}
+        </li>
+      `;
+    }
+
+    function card(blend) {
+      const [ratio, ownedSum, needSum] = coverageOf(blend); // 0..1
+      const pct = Math.round(ratio * 100);
+      const can = !!blend.can_blend;
+      const barColor = can ? "linear-gradient(90deg,#25ff8a,#00e0a4)" : "linear-gradient(90deg,#ffb347,#ffcc66)";
+      const status = can ? "Ready to blend" : (pct > 0 ? "Partially ready" : "Missing ingredients");
+
+      const disabled = can ? "" : "opacity:.6; pointer-events:none;";
+      const title = can ? "Open on NeftyBlocks" : "You don't have all required ingredients yet";
+
+      const headTip = `Rarity: ${blend.rarity} • Level: ${blend.level}` + (blend.edition ? ` • Edition: ${blend.edition}` : "");
+      const attrTip = blend.main_attr ? `Main attribute: ${blend.main_attr}` : "";
+
+      const ingredients = Array.isArray(blend.ingredients) ? blend.ingredients.map(ingredientRow).join("") : "";
+
+      return `
+        <div class="cv-card" style="padding:.9rem; border-radius:16px; background:linear-gradient(180deg,#0f0f0f,#161616);
+                                     border:1px solid var(--cv-border); box-shadow:0 8px 22px rgba(0,0,0,.35);">
+          <div style="display:flex; gap:.8rem;">
+            <img src="${esc(blend.img)}" alt="${esc(blend.name)}" loading="lazy"
+                 style="width:86px; height:86px; border-radius:12px; object-fit:cover;
+                        outline:1px solid var(--cv-border); box-shadow:0 3px 10px rgba(0,0,0,.35);">
+            <div style="flex:1 1 auto; min-width:0;">
+              <div title="${esc(headTip)}"
+                   style="display:flex; align-items:center; justify-content:space-between; gap:.6rem;">
+                <strong style="color:#ffe600; font-family:Orbitron,system-ui,sans-serif; font-size:1.05rem;
+                               white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                  ${esc(blend.name)}
+                </strong>
+                ${blend.main_attr ? `<span class="cv-badge" title="${esc(attrTip)}">${esc(blend.main_attr)}</span>` : ""}
+              </div>
+
+              <div style="display:flex; gap:.55rem; flex-wrap:wrap; margin:.35rem 0; color:#cfcfcf; font-size:.9rem;">
+                <span class="cv-badge">Rarity: ${esc(blend.rarity)}</span>
+                <span class="cv-badge">Level: ${esc(blend.level)}</span>
+                ${blend.edition ? `<span class="cv-badge">Edition: ${esc(blend.edition)}</span>` : ""}
+              </div>
+
+              <div class="cv-meter" title="${pct}% • ${ownedSum}/${needSum} items">
+                <div style="width:${pct}%; background:${barColor};"></div>
+              </div>
+              <div style="margin-top:.35rem; font-size:.88rem; color:${can ? '#8cff8c' : (pct>0 ? '#ffcc66' : '#ff7b7b')};">
+                ${esc(status)} • ${ownedSum}/${needSum} ingredients
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:.6rem;">
+            <strong style="color:#ffe600;">🔹 Ingredients</strong>
+            <ul style="list-style:none; padding-left:0; margin:.45rem 0 0;">
+              ${ingredients}
+            </ul>
+          </div>
+
+          <div style="display:flex; gap:.6rem; justify-content:flex-end; margin-top:.8rem;">
+            <a href="${esc(blend.blend_link)}" target="_blank" rel="noopener"
+               class="btn btn-glow" title="${esc(title)}"
+               style="padding:.45rem 1rem; font-size:.95rem; ${disabled}">🧪 Blend @NeftyBlocks</a>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPager(total) {
+      const pages = Math.max(1, Math.ceil(total / state.pageSize));
+      state.page = Math.min(state.page, pages);
+      els.pager.innerHTML = Array.from({ length: pages }).map((_, i) => {
+        const p = i + 1;
+        const on = p === state.page ? "background:#2a2a2a; color:#ffe600;" : "";
+        return `<button data-p="${p}" class="btn btn-glow" style="padding:.35rem .7rem; ${on}">${p}</button>`;
+      }).join("");
+      els.pager.querySelectorAll("button").forEach(b => {
+        b.addEventListener("click", () => {
+          state.page = Number(b.dataset.p) || 1;
+          render();
+          els.grid.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+    }
+
+    function hydrateCopyButtons(scope) {
+      scope.querySelectorAll("[data-copy]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(btn.dataset.copy);
+            btn.textContent = "Copied!";
+            setTimeout(() => (btn.textContent = "Copy IDs"), 900);
+          } catch {
+            btn.textContent = "Copy failed";
+            setTimeout(() => (btn.textContent = "Copy IDs"), 900);
+          }
+        });
+      });
+    }
+
+    function renderSummary(raw, filtered) {
+      const total = raw.length;
+      const shown = filtered.length;
+      const craftable = filtered.filter(b => b.can_blend).length;
+      els.summary.innerHTML = `
+        <span style="margin-right:.8rem;">Results: <strong>${shown}</strong> / ${total}</span>
+        <span>Craftable now: <strong style="color:#8cff8c;">${craftable}</strong></span>
+      `;
+    }
+
+    function render() {
+      const f = filt(state.data);
+      const s = sortList(f);
+      renderSummary(state.data, s);
+      renderPager(s.length);
+      const page = paginate(s);
+      els.grid.innerHTML = page.map(card).join("") || `<div class="cv-card" style="padding:.9rem;">No results.</div>`;
+      hydrateCopyButtons(els.grid);
+    }
+
+    // initial load
+    try {
+      state.data = await fetchBlendData(false);
+      render();
+    } catch (err) {
+      els.grid.innerHTML = `<div style="color:#ff7b7b;">Failed to load blends data.</div>`;
+    }
+  }
+
+  // =========================
+  // SLOT ROTATION
+  // =========================
+  async function renderSlotRotation() {
+    tabContent.innerHTML = `
+      <div class="cv-card" style="margin-bottom:1rem; padding:.9rem; border-radius:16px;
+                                  background:linear-gradient(180deg,#101010,#0b0b0b); border:1px solid var(--cv-border);">
+        <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+          <div style="color:#d7d7d7; max-width:820px; line-height:1.4;">
+            <strong style="color:#7ff6ff;">Rotation basics:</strong>
+            Rotators allow you to switch a Goblin to the <em>next ability</em> in its cycle.
+            The exact recipes and required items are listed below when available.
+          </div>
+          <button id="rot-refresh" class="btn btn-glow" title="Reload rotation data">🔄 Refresh</button>
+        </div>
+      </div>
+
+      <div id="rot-body" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:1rem;"></div>
+      <div id="rot-fallback" style="margin-top:1rem;"></div>
+    `;
+
+    const rotBody = document.getElementById("rot-body");
+    const rotFallback = document.getElementById("rot-fallback");
+    const rotRefresh = document.getElementById("rot-refresh");
+
+    async function fetchRotationData() {
       const payload = {
-        wax_account: window.userData.wax_account,
-        user_id: window.userData.userId,
-        usx_token: window.userData.usx_token
+        wax_account: window.userData?.wax_account,
+        user_id:     window.userData?.userId,
+        usx_token:   window.userData?.usx_token
       };
-      const res = await fetch(`${BASE_URL}/get_blend_data`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch(`${BASE_URL}/get_rotations_data`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     }
 
-  function renderBlendResults(blends) {
-    blendResults.innerHTML = blends.map(item => {
-      const ingredientList = item.ingredients.map(ing => {
-        const ownedCount = ing.owned || 0;
-        const neededCount = ing.needed || ing.quantity || 0;
-        const ratio = `${ownedCount}/${neededCount}`;
-  
-        let color = "#0f0"; // green (complete)
-        if (ownedCount === 0) color = "#f00"; // red (none)
-        else if (ownedCount < neededCount) color = "#ffa500"; // orange (partial)
-  
-        const assetIds = ing.asset_ids?.length > 0
-          ? `<br><span style="color:#888;font-size:0.95rem;">Assets: ${ing.asset_ids.join(', ')}</span>`
-          : "";
-  
-        return `
-          <li style="color: ${color}; font-size: 0.8rem;">
-            ${ratio} × (schema: ${ing.schema_name}, id: ${ing.template_id})${assetIds}
-          </li>`;
-      }).join('');
-  
-      return `
-        <div style="
-          background: linear-gradient(to bottom, #0f0f0f, #1a1a1a);
-          border-radius: 16px;
-          padding: 1rem;
-          text-align: center;
-          box-shadow: 0 0 12px #00f0ff;
-          font-family: 'Orbitron', sans-serif;
-          transition: transform 0.2s ease;
-          color: #fff;
-        " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-          <img src="${item.img}" alt="${item.name}" style="width: 80%; border-radius: 12px; margin-bottom: 0.75rem;">
-          <div style="font-size: 1.25rem; font-weight: bold; margin-bottom: 0.4rem; color: #ffe600;">${item.name}</div>
-          <div style="font-size: 1rem; color: #aaa;">Level: <span style="color: #fff;">${item.level}</span></div>
-          <div style="font-size: 1rem; color: #aaa;">Rarity: <span style="color: #fff;">${item.rarity}</span></div>
-          <div style="font-size: 1rem; color: #aaa;">Edition: <span style="color: #fff;">${item.edition}</span></div>
-  
-          <div style="margin-top: 1rem; text-align: left;">
-            <strong style="color: #ffe600;">🔹 Ingredients:</strong>
-            <ul style="list-style-type: none; padding-left: 0; margin-top: 0.5rem;">
-              ${ingredientList}
-            </ul>
+    function renderFromData(data) {
+      rotBody.innerHTML = "";
+      rotFallback.innerHTML = "";
+
+      // Try to render common shapes; otherwise show formatted JSON as fallback
+      if (Array.isArray(data) && data.length) {
+        rotBody.innerHTML = data.map((row, i) => {
+          const from = row.from || row.source || row.current || "";
+          const to   = row.to   || row.target || row.next    || "";
+          const need = Array.isArray(row.ingredients || row.requirements) ? (row.ingredients || row.requirements) : [];
+          const reqList = need.map(n => {
+            const qty = Number(n.quantity || n.needed || 1);
+            const nm  = n.name || n.template_id || "Item";
+            return `<li style="margin:.25rem 0; color:#cfcfcf;">${qty} × ${esc(nm)}</li>`;
+          }).join("");
+
+          return `
+            <div class="cv-card" style="padding:1rem; border-radius:16px; background:linear-gradient(180deg,#0f0f0f,#161616);
+                                         border:1px solid var(--cv-border);">
+              <div style="display:flex; gap:.8rem; align-items:center; justify-content:space-between;">
+                <strong style="color:#7ff6ff;">${esc(from)} ➜ ${esc(to)}</strong>
+              </div>
+              ${reqList ? `
+                <div style="margin-top:.5rem;">
+                  <strong style="color:#ffe600;">Ingredients</strong>
+                  <ul style="list-style:none; padding-left:0; margin:.35rem 0 0;">${reqList}</ul>
+                </div>
+              ` : ``}
+            </div>
+          `;
+        }).join("");
+      } else {
+        rotFallback.innerHTML = `
+          <div class="cv-card" style="padding:.9rem; border-radius:16px;">
+            <h3 style="margin:0 0 .6rem 0;">Raw rotation data</h3>
+            <pre style="white-space:pre-wrap; color:#ddd; background:#0f0f0f; padding:.7rem; border-radius:12px; border:1px solid #222;">
+${esc(JSON.stringify(data, null, 2))}
+            </pre>
           </div>
-          <div style="margin-top: 1rem;">
-            <a href="${item.blend_link}" target="_blank" class="btn btn-glow" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">🧪Blend @NeftyBlock</a>
-          </div>              
-        </div>
-      `;
-    }).join('');
-  }
-
-
-    let blendData;
-    try {
-      blendData = await fetchBlendData();
-      renderBlendResults(blendData);
-    } catch (err) {
-      blendResults.innerHTML = "<p style='color:red'>Failed to load blends data.</p>";
-    }
-
-    document.getElementById("refresh-blends").addEventListener("click", async () => {
-      blendData = await fetchBlendData();
-      renderBlendResults(applyFilters(blendData));
-    });
-
-    document.getElementById("force-update").addEventListener("click", async () => {
-      blendResults.innerHTML = "<p style='color: #0ff;'>Updating...</p>";
-      try {
-        const res = await fetch(`${BASE_URL}/get_blend_data`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            wax_account: window.userData.wax_account,
-            user_id: window.userData.userId,
-            usx_token: window.userData.usx_token,
-            force_update: true
-          })
-        });
-        blendData = await res.json();
-        renderBlendResults(applyFilters(blendData));
-      } catch (e) {
-        blendResults.innerHTML = "<p style='color:red;'>❌ Failed to update.</p>";
+        `;
       }
-    });
-    
-    ['filter-name', 'filter-rarity', 'filter-edition', 'filter-level', 'filter-attr'].forEach(id => {
-      document.getElementById(id).addEventListener("input", () => {
-        renderBlendResults(applyFilters(blendData));
-      });
-    });
-
-  }
-
-  async function renderSlotRotation() {
-    try {
-      const payload = {
-        wax_account: window.userData.wax_account,
-        user_id: window.userData.userId,
-        usx_token: window.userData.usx_token
-      };
-
-      const res = await fetch(`${BASE_URL}/get_rotations_data`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-
-      tabContent.innerHTML = `
-        <div style="padding: 1rem; background: #111; color: #fff; border-radius: 12px;">
-          <h2 style="text-align:center; margin-bottom:1rem;">🌀 Slot Rotation Info</h2>
-          <pre style="white-space: pre-wrap;">${JSON.stringify(data, null, 2)}</pre>
-        </div>
-      `;
-    } catch (err) {
-      console.error("Error fetching rotation data:", err);
-      tabContent.innerHTML = `<p style="color:red">❌ Failed to load slot rotation data.</p>`;
     }
+
+    async function load() {
+      rotBody.innerHTML = `<div class="cv-skel" style="height:140px; border-radius:16px;"></div>`;
+      try {
+        const data = await fetchRotationData();
+        renderFromData(data);
+      } catch (err) {
+        rotBody.innerHTML = `<div style="color:#ff7b7b;">❌ Failed to load slot rotation data.</div>`;
+      }
+    }
+
+    rotRefresh.addEventListener("click", load);
+    await load();
   }
 }
 

@@ -3422,6 +3422,14 @@ async function renderGoblinInventory() {
   const GRID_ROWS = Math.round(GRID_COLS * 9 / 16); // ~51
   // Back-compat per codice che usa ancora GRID_SIZE:
   const GRID_SIZE = GRID_COLS;
+  // === Retry state for /user_nfts ===
+  let userNFTsLoaded = false;          // diventa true al primo successo
+  let userNFTsRetryScheduled = false;  // garantisce UN SOLO retry per sessione/sezione
+  
+  function sectionIsStillMounted() {
+    // evita update se l’utente è uscito dalla sezione
+    return !!document.getElementById("goblin-content");
+  }
 
   const GLOBAL_REFRESH_MS = 23000; // 23s
   const COMMAND_POLL_MS = 31000;   // 31s
@@ -3747,6 +3755,48 @@ async function renderGoblinInventory() {
     get: (path, t=15000) =>
       fetchJSON(`${BASE_URL}${path}`, {}, t),
   };
+  async function fetchUserNFTsOnce(timeoutMs = 15000) {
+    syncUserInto(Cave.user);
+    assertAuthOrThrow(Cave.user);
+    const payload = {
+      wax_account: Cave.user.wax_account,
+      user_id: Cave.user.user_id,
+      usx_token: Cave.user.usx_token
+    };
+    return API.post("/user_nfts", payload, timeoutMs);
+  }
+  
+  // Chiama /user_nfts; se fallisce, schedula UN SOLO retry tra 10s.
+  // Al successo, chiama hydrateGoblinUI(data) e blocca altri retry finché la sezione non viene ricaricata.
+  async function loadUserNFTsWithSingleRetry() {
+    try {
+      const r = await fetchUserNFTsOnce(15000);
+      if (!r.ok || !Array.isArray(r.data)) throw new Error(`HTTP ${r.status}`);
+      if (!sectionIsStillMounted()) return;
+      userNFTsLoaded = true;
+      hydrateGoblinUI(r.data);
+    } catch (err) {
+      if (!userNFTsRetryScheduled) {
+        userNFTsRetryScheduled = true;
+        toast("⚠️ Goblins non caricati, ritento tra 10s…", "warn", 4000);
+        setTimeout(async () => {
+          if (userNFTsLoaded || !sectionIsStillMounted()) return;
+          try {
+            const r2 = await fetchUserNFTsOnce(20000);
+            if (r2.ok && Array.isArray(r2.data) && sectionIsStillMounted()) {
+              userNFTsLoaded = true;
+              hydrateGoblinUI(r2.data);
+              toast("✅ Goblins caricati al secondo tentativo.", "ok", 2500);
+            } else {
+              toast("❌ Goblins non disponibili (retry fallito).", "err", 4000);
+            }
+          } catch (e2) {
+            if (sectionIsStillMounted()) toast("❌ Goblins non disponibili (retry fallito).", "err", 4000);
+          }
+        }, 10000);
+      }
+    }
+  }
 
   // ========= ASSETS =========
   function loadImg(src) {
@@ -3932,7 +3982,8 @@ async function renderGoblinInventory() {
         if (Cave.intervals.global){ clearInterval(Cave.intervals.global); Cave.intervals.global = null; }
         if (Cave.intervals.globalCountdown){ clearInterval(Cave.intervals.globalCountdown); Cave.intervals.globalCountdown = null; }
         if (Cave._es) { try { Cave._es.close(); } catch {} Cave._es = null; }
-
+        userNFTsLoaded = false;
+        userNFTsRetryScheduled = false;
         teardownCanvas();
         mo.disconnect();
       }
@@ -4851,6 +4902,291 @@ async function renderGoblinInventory() {
     Cave.rafId = requestAnimationFrame(tick);
   }
 
+  function hydrateGoblinUI(allNfts) {
+    // 1) filtra i goblin dall’array completo /user_nfts
+    const goblins = (Array.isArray(allNfts) ? allNfts : []).filter(n => n.type === "goblin");
+  
+    if (!goblins.length) {
+      if (Cave.el.selectionSummary) {
+        Cave.el.selectionSummary.innerHTML = `<div class="cv-toast">No goblins available for expedition.</div>`;
+      }
+      return;
+    }
+  
+    // ====== selection UI (copiata dalla tua renderDwarfsCave) ======
+    let selected = new Set();
+    let sortBy = "rarity";
+    const num = (v) => Number(v ?? 0) || 0;
+    let filterQuery = "";
+    let filterRarity = "";
+    let minPower = 0;
+  
+    function saveFilters(){
+      localStorage.setItem("caveFilters", JSON.stringify({ filterQuery, filterRarity, minPower, sortBy }));
+    }
+    function loadFilters(){
+      try{
+        const s = JSON.parse(localStorage.getItem("caveFilters") || "{}");
+        filterQuery   = s.filterQuery   || "";
+        filterRarity  = s.filterRarity  || "";
+        minPower      = Number(s.minPower || 0);
+        sortBy        = s.sortBy        || "rarity";
+        // Sync UI
+        const $q = qs("#cv-search"), $r = qs("#cv-rarity"), $p = qs("#cv-power"), $pv = qs("#cv-power-val");
+        if ($q)  $q.value         = filterQuery;
+        if ($r)  $r.value         = filterRarity;
+        if ($p)  $p.value         = String(minPower);
+        if ($pv) $pv.textContent  = String(minPower);
+      }catch{}
+    }
+    function applyFilters(src){
+      const q = filterQuery.trim().toLowerCase();
+      return src.filter(g=>{
+        const okQuery  = !q || `${g.name||""}`.toLowerCase().includes(q) || String(g.asset_id).includes(q);
+        const okRarity = !filterRarity || String(g.rarity||"").toLowerCase() === filterRarity.toLowerCase();
+        const okPower  = num(g.daily_power) >= minPower;
+        return okQuery && okRarity && okPower;
+      });
+    }
+  
+    // ripristina filtri e evidenzia sort
+    loadFilters();
+    qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background="#1a1a1a");
+    const activeSortBtn = qs(`#cv-sort-segment .cv-btn[data-sort="${sortBy}"]`);
+    if (activeSortBtn) activeSortBtn.style.background = "#2a2a2a";
+    const sortSeg = qs("#cv-sort-segment");
+    if (sortSeg) {
+      sortSeg.addEventListener("click", (e)=>{
+        const btn = e.target.closest('.cv-btn[data-sort]');
+        if (!btn) return;
+        sortBy = btn.dataset.sort || "rarity";
+        qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background = "#1a1a1a");
+        btn.style.background = "#2a2a2a";
+        saveFilters();
+        renderList();
+      });
+    }
+  
+    function renderList(list = goblins) {
+      const filtered = applyFilters(list);
+      const sorted = [...filtered].sort((a,b) => num(b[sortBy]) - num(a[sortBy]));
+      const af = qs("#cv-active-filters");
+      if (af){
+        af.innerHTML = [
+          filterQuery   ? `<span class="cv-badge" style="border-color:#20444a;background:linear-gradient(180deg,#152024,#0f1a1c);color:#7ff6ff;">🔎 ${safe(filterQuery)}</span>` : "",
+          filterRarity  ? `<span class="cv-badge">${safe(filterRarity)}</span>` : "",
+          minPower > 0  ? `<span class="cv-badge" style="border-color:#665200;background:linear-gradient(180deg,#2a2211,#1c160a);color:#ffcc66;">⚡ ≥ ${minPower}</span>` : ""
+        ].filter(Boolean).join("");
+      }
+  
+      Cave.el.goblinList.style.cssText = `
+        display:grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap:12px;
+        align-items:stretch;
+      `;
+  
+      const maxPower = Math.max(1, ...sorted.map(g => num(g.daily_power)));
+      const html = sorted.map(g => {
+        const tired = num(g.daily_power) < 5;
+        const sel = selected.has(g.asset_id);
+        const dp  = num(g.daily_power);
+        const pct = Math.max(6, Math.round(dp / maxPower * 100)); // min 6% per visibilità
+  
+        const ribbon = tired ? `
+          <div style="
+            position:absolute; top:8px; right:8px; transform:rotate(0deg);
+            background:linear-gradient(135deg,#d32f2f,#b71c1c); color:#fff;
+            font-weight:700; font-size:.7rem; padding:.25rem .5rem; border-radius:8px;
+            box-shadow:0 0 8px rgba(255,0,0,.5); letter-spacing:.5px;">RESTING</div>` : "";
+  
+        return `
+          <div class="cv-gob-card" data-id="${safe(g.asset_id)}" data-disabled="${tired?1:0}"
+               role="checkbox" tabindex="0" aria-checked="${sel ? 'true':'false'}"
+               aria-label="Select goblin ${safe(g.name)}"
+               style="
+            display:flex; flex-direction:column; gap:.6rem;
+            background:linear-gradient(180deg,#151515,#0f0f0f);
+            border:1px solid ${sel ? "rgba(255,230,0,.6)" : "var(--cv-border)"};
+            box-shadow:${sel ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset" : "0 2px 12px rgba(0,0,0,.35)"};
+            border-radius:14px; padding:.75rem; transition:transform .12s, box-shadow .12s, border-color .12s;
+            cursor:${tired ? "not-allowed" : "pointer"}; position:relative; overflow:hidden; ${tired ? "opacity:.78; filter:grayscale(10%) brightness(.95);" : ""}
+          ">
+            <div style="display:flex; align-items:center; gap:.8rem; min-width:0;">
+              <div style="position:relative; flex:0 0 auto;">
+                <img src="${safe(g.img)}" alt="" loading="lazy"
+                     style="width:68px; height:68px; border-radius:14px; object-fit:cover; outline:1px solid var(--cv-border); box-shadow:0 3px 10px rgba(0,0,0,.35);">
+                ${ribbon}
+              </div>
+  
+              <div style="flex:1 1 auto; min-width:0;">
+                <div class="cv-gob-head" style="display:flex; align-items:center; gap:.5rem; min-width:0;">
+                  <strong class="cv-name" style="color:var(--cv-chip); font-family:Orbitron,system-ui,sans-serif; font-size:1rem;">
+                    ${safe(g.name)}
+                  </strong>
+                  <span class="cv-rarity" style="
+                    background:${rarityBg(g.rarity)}; color:${rarityFg(g.rarity)}; border-color:${rarityBorder(g.rarity)};">
+                    ${safe(g.rarity)}
+                  </span>
+                </div>
+  
+                <div class="cv-gob-pillrow" style="display:flex; flex-wrap:wrap; gap:.45rem; margin-top:.45rem;">
+                  <div class="cv-pill"><div class="cv-chip-key">LEVEL</div><div class="cv-chip-val">${safe(g.level)}</div></div>
+                  <div class="cv-pill">
+                    <div class="cv-chip-key">ABILITY</div>
+                    <div class="cv-chip-val" style="white-space:normal; overflow-wrap:anywhere;">${safe(g.main_attr)}</div>
+                  </div>
+                  <div class="cv-pill"><div class="cv-chip-key">POWER</div><div class="cv-chip-val" style="color:#7efcff;">${dp}</div></div>
+                </div>
+              </div>
+  
+            <input type="checkbox" class="cv-sel" ${sel ? "checked" : ""} ${tired ? "disabled" : ""}
+                   style="transform:scale(1.25); accent-color:#ffe600; flex:0 0 auto; align-self:flex-start;">
+            </div>
+  
+            <div style="display:flex; align-items:center; gap:.6rem; margin-top:.55rem;">
+              <div class="cv-meter"><div style="width:${pct}%;"></div></div>
+              <div style="min-width:56px; text-align:right; font-size:.82rem; font-weight:800; color:#7efcff;">${dp}</div>
+            </div>
+  
+            <div class="cv-row" style="opacity:.85; margin-top:.25rem;">
+              <div style="font-size:.74rem; color:#9aa0a6; white-space:normal; overflow-wrap:anywhere;">
+                ID: <span style="color:#cfcfcf; font-weight:600;">${safe(g.asset_id)}</span>
+              </div>
+              <div style="font-size:.94rem; color:#9aa0a6;">Power</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+  
+      Cave.el.goblinList.innerHTML = html;
+  
+      // Delegation una sola volta
+      if (!Cave._goblinListDelegated) {
+        Cave._goblinListDelegated = true;
+  
+        Cave.el.goblinList.addEventListener("click", (e) => {
+          const card = e.target.closest(".cv-gob-card");
+          if (!card) return;
+          let checkbox = e.target.closest(".cv-sel");
+          if (card.dataset.disabled === "1") return;
+          if (!checkbox) {
+            checkbox = card.querySelector(".cv-sel");
+            if (!checkbox) return;
+            checkbox.checked = !checkbox.checked;
+          }
+          const id = card.dataset.id;
+          const checked = checkbox.checked;
+          if (checked) selected.add(id); else selected.delete(id);
+          card.style.border = checked ? "1px solid rgba(255,230,0,.6)" : "1px solid #2a2a2a";
+          card.style.boxShadow = checked
+            ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset"
+            : "0 2px 12px rgba(0,0,0,.35)";
+          updateSummary();
+        });
+  
+        Cave.el.goblinList.addEventListener("mouseover", (e) => {
+          const card = e.target.closest(".cv-gob-card");
+          if (!card || card.dataset.disabled === "1") return;
+          card.style.transform = "translateY(-2px)";
+        });
+        Cave.el.goblinList.addEventListener("mouseout", (e) => {
+          const card = e.target.closest(".cv-gob-card");
+          if (!card || card.dataset.disabled === "1") return;
+          card.style.transform = "translateY(0)";
+        });
+        Cave.el.goblinList.addEventListener("keydown", (e) => {
+          const card = e.target.closest(".cv-gob-card");
+          if (!card || card.dataset.disabled === "1") return;
+          if (e.key === " " || e.key === "Enter"){
+            e.preventDefault();
+            const cb = card.querySelector(".cv-sel");
+            cb.checked = !cb.checked;
+            const id = card.dataset.id;
+            if (cb.checked) selected.add(id); else selected.delete(id);
+            card.setAttribute("aria-checked", cb.checked ? "true":"false");
+            card.style.border = cb.checked ? "1px solid rgba(255,230,0,.6)" : "1px solid #2a2a2a";
+            card.style.boxShadow = cb.checked
+              ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset"
+              : "0 2px 12px rgba(0,0,0,.35)";
+            updateSummary();
+          }
+        });
+      }
+    }
+  
+    function updateSummary() {
+      Cave.el.selectionSummary.innerHTML = `
+        <span style="color:#ffe600;">Selected: ${selected.size} / 50</span>
+        <button class="cv-btn" id="cv-start" style="margin-left:1rem;">🚀 Start Expedition</button>
+      `;
+      qs("#cv-start").onclick = async () => {
+        const btn = qs("#cv-start"); btn.disabled = true; btn.textContent = "⏳ Starting...";
+        if (!selected.size) { toast("Select at least 1 goblin to start.","warn"); btn.disabled=false; btn.textContent="🚀 Start Expedition"; return; }
+  
+        const ids = [...selected].filter(id => {
+          const g = goblins.find(x => x.asset_id === id);
+          return g && num(g.daily_power) >= 5;
+        });
+        if (!ids.length) { toast("All selected goblins are too tired.","warn"); btn.disabled=false; btn.textContent="🚀 Start Expedition"; return; }
+  
+        try {
+          syncUserInto(Cave.user);
+          assertAuthOrThrow(Cave.user);
+          const r = await API.post("/start_expedition", {
+            wax_account: Cave.user.wax_account,
+            user_id: Cave.user.user_id,
+            usx_token: Cave.user.usx_token,
+            goblin_ids: ids
+          }, 20000);
+  
+          if (r.status === 409) toast(r.data?.error || "Already in expedition.", "warn");
+          else if (r.ok) {
+            toast("Expedition started!", "ok");
+            await renderUserCountdown(r.data.expedition_id, r.data.duration_seconds, ids);
+            await renderGlobalExpeditions();
+          } else toast("Something went wrong.", "err");
+        } catch (e) {
+          toast("Failed to start expedition.", "err");
+          console.error(e);
+        } finally { btn.disabled=false; btn.textContent="🚀 Start Expedition"; }
+      };
+    }
+  
+    function autoBest() {
+      selected.clear();
+      const scored = goblins.filter(g=>num(g.daily_power)>=5)
+        .map(g=>({ id:g.asset_id, score: num(g.level) + num(g[g.main_attr]) }))
+        .sort((a,b)=>b.score-a.score)
+        .slice(0,50);
+      scored.forEach(s=>selected.add(s.id));
+      renderList(); updateSummary();
+    }
+  
+    // toolbar binds
+    qs("#cv-select-50").onclick = () => {
+      selected.clear();
+      goblins.filter(g=>num(g.daily_power)>=5).slice(0,50).forEach(g=>selected.add(g.asset_id));
+      renderList(); updateSummary();
+    };
+    qs("#cv-deselect").onclick = () => { selected.clear(); renderList(); updateSummary(); };
+    qs("#cv-select-best").onclick = () => autoBest();
+    qs("#cv-search").addEventListener("input", e => { filterQuery = e.target.value; renderList(); saveFilters(); });
+    qs("#cv-rarity").addEventListener("change", e => { filterRarity = e.target.value; renderList(); saveFilters(); });
+    const powerRange = qs("#cv-power");
+    const powerVal = qs("#cv-power-val");
+    if (powerRange && powerVal){
+      powerRange.addEventListener("input", e => {
+        minPower = Number(e.target.value)||0;
+        powerVal.textContent = String(minPower);
+        renderList(); saveFilters();
+      });
+    }
+  
+    // render iniziale
+    renderList(); updateSummary();
+  }
+  
   // ========= MAIN RENDER =========
   async function renderDwarfsCave() {
     styleOnce();
@@ -5062,329 +5398,9 @@ async function renderGoblinInventory() {
     } else {
       await renderRecentList(); // farà il proprio fetch con timeout ridotto
     }
-    
-    // 3) Goblin dell’utente
-    let goblins = [];
-    if (rNFTs.status === "fulfilled" && Array.isArray(rNFTs.value?.data)) {
-      goblins = rNFTs.value.data.filter(n => n.type === "goblin");
-    } else {
-      try {
-        const r = await API.post("/user_nfts", payload, 15000);
-        goblins = (Array.isArray(r.data) ? r.data : []).filter(n => n.type === "goblin");
-      } catch (e) {
-        Cave.el.selectionSummary.innerHTML = `<div class="cv-toast err">Error loading goblin data.</div>`;
-        return;
-      }
-    }
-    
-    if (!goblins.length) {
-      Cave.el.selectionSummary.innerHTML = `<div class="cv-toast">No goblins available for expedition.</div>`;
-      return;
-    }
 
-    // selection UI
-    let selected = new Set();
-    let sortBy = "rarity";
-    const num = (v) => Number(v ?? 0) || 0;
-    let filterQuery = "";
-    let filterRarity = "";
-    let minPower = 0;
-    function saveFilters(){
-      localStorage.setItem("caveFilters", JSON.stringify({ filterQuery, filterRarity, minPower, sortBy }));
-    }
-    function loadFilters(){
-      try{
-        const s = JSON.parse(localStorage.getItem("caveFilters") || "{}");
-        filterQuery   = s.filterQuery   || "";
-        filterRarity  = s.filterRarity  || "";
-        minPower      = Number(s.minPower || 0);
-        sortBy        = s.sortBy        || "rarity";
-        // Sync UI
-        const $q = qs("#cv-search"), $r = qs("#cv-rarity"), $p = qs("#cv-power"), $pv = qs("#cv-power-val");
-        if ($q)  $q.value         = filterQuery;
-        if ($r)  $r.value         = filterRarity;
-        if ($p)  $p.value         = String(minPower);
-        if ($pv) $pv.textContent  = String(minPower);
-      }catch{}
-    }
-        
-    function applyFilters(src){
-      const q = filterQuery.trim().toLowerCase();
-      return src.filter(g=>{
-        const okQuery = !q || `${g.name||""}`.toLowerCase().includes(q) || String(g.asset_id).includes(q);
-        const okRarity = !filterRarity || String(g.rarity||"").toLowerCase() === filterRarity.toLowerCase();
-        const okPower = num(g.daily_power) >= minPower;
-        return okQuery && okRarity && okPower;
-      });
-    }
-        
-    const highlight = (id) => selected.has(id) ? "box-shadow:0 0 10px #ffe600; background:rgba(255,255,0,.06);" : "";
-    // ripristina filtri e evidenzia sort ORA che sortBy esiste
-    loadFilters();
-    qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background="#1a1a1a");
-    const activeSortBtn = qs(`#cv-sort-segment .cv-btn[data-sort="${sortBy}"]`);
-    if (activeSortBtn) activeSortBtn.style.background = "#2a2a2a";
-    const sortSeg = qs("#cv-sort-segment");
-    if (sortSeg) {
-      sortSeg.addEventListener("click", (e)=>{
-        const btn = e.target.closest('.cv-btn[data-sort]');
-        if (!btn) return;
-        sortBy = btn.dataset.sort || "rarity";
-        qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background = "#1a1a1a");
-        btn.style.background = "#2a2a2a";
-        saveFilters();
-        renderList();
-      });
-    }
-
-    function renderList(list = goblins) {
-      const filtered = applyFilters(list);
-      const sorted = [...filtered].sort((a,b) => num(b[sortBy]) - num(a[sortBy]));
-      const af = qs("#cv-active-filters");
-      if (af){
-        af.innerHTML = [
-          filterQuery   ? `<span class="cv-badge" style="border-color:#20444a;background:linear-gradient(180deg,#152024,#0f1a1c);color:#7ff6ff;">🔎 ${safe(filterQuery)}</span>` : "",
-          filterRarity  ? `<span class="cv-badge">${safe(filterRarity)}</span>` : "",
-          minPower > 0  ? `<span class="cv-badge" style="border-color:#665200;background:linear-gradient(180deg,#2a2211,#1c160a);color:#ffcc66;">⚡ ≥ ${minPower}</span>` : ""
-        ].filter(Boolean).join("");
-      }
-              
-      // contenitore a griglia responsive
-      Cave.el.goblinList.style.cssText = `
-        display:grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap:12px;
-        align-items:stretch;
-      `;
-    
-      // normalizza la barra "Power" sul massimo visibile
-      const maxPower = Math.max(1, ...sorted.map(g => num(g.daily_power)));
-    
-      const html = sorted.map(g => {
-        const tired = num(g.daily_power) < 5;
-        const sel = selected.has(g.asset_id);
-        const dp  = num(g.daily_power);
-        const pct = Math.max(6, Math.round(dp / maxPower * 100)); // min 6% per visibilità
-    
-        const baseCard = `
-          display:flex; flex-direction:column; gap:.6rem;
-          background:linear-gradient(180deg,#151515,#0f0f0f);
-          border:1px solid ${sel ? "rgba(255,230,0,.6)" : "#2a2a2a"};
-          box-shadow:${sel
-            ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset"
-            : "0 2px 12px rgba(0,0,0,.35)"};
-          border-radius:14px; padding:.75rem;
-          transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-          cursor:${tired ? "not-allowed" : "pointer"};
-          position:relative;
-          ${tired ? "opacity:.78; filter:grayscale(10%) brightness(.95);" : ""}
-        `;
-    
-        const ribbon = tired ? `
-          <div style="
-            position:absolute; top:8px; right:8px; transform:rotate(0deg);
-            background:linear-gradient(135deg,#d32f2f,#b71c1c); color:#fff;
-            font-weight:700; font-size:.7rem; padding:.25rem .5rem; border-radius:8px;
-            box-shadow:0 0 8px rgba(255,0,0,.5); letter-spacing:.5px;">RESTING</div>` : "";
-
-    
-        return `
-          <div class="cv-gob-card" data-id="${safe(g.asset_id)}" data-disabled="${tired?1:0}"
-               role="checkbox" tabindex="0" aria-checked="${sel ? 'true':'false'}"
-               aria-label="Select goblin ${safe(g.name)}"
-               style="
-            display:flex; flex-direction:column; gap:.6rem;
-            background:linear-gradient(180deg,#151515,#0f0f0f);
-            border:1px solid ${sel ? "rgba(255,230,0,.6)" : "var(--cv-border)"};
-            box-shadow:${sel ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset" : "0 2px 12px rgba(0,0,0,.35)"};
-            border-radius:14px; padding:.75rem; transition:transform .12s, box-shadow .12s, border-color .12s;
-            cursor:${tired ? "not-allowed" : "pointer"}; position:relative; overflow:hidden; ${tired ? "opacity:.78; filter:grayscale(10%) brightness(.95);" : ""}
-          ">
-            <div style="display:flex; align-items:center; gap:.8rem; min-width:0;">
-              <div style="position:relative; flex:0 0 auto;">
-                <img src="${safe(g.img)}" alt="" loading="lazy"
-                     style="width:68px; height:68px; border-radius:14px; object-fit:cover; outline:1px solid var(--cv-border); box-shadow:0 3px 10px rgba(0,0,0,.35);">
-                ${ribbon}
-              </div>
-        
-              <div style="flex:1 1 auto; min-width:0;">
-                <div class="cv-gob-head" style="display:flex; align-items:center; gap:.5rem; min-width:0;">
-                  <strong class="cv-name" style="color:var(--cv-chip); font-family:Orbitron,system-ui,sans-serif; font-size:1rem;">
-                    ${safe(g.name)}
-                  </strong>
-                  <span class="cv-rarity" style="
-                    background:${rarityBg(g.rarity)}; color:${rarityFg(g.rarity)}; border-color:${rarityBorder(g.rarity)};">
-                    ${safe(g.rarity)}
-                  </span>
-                </div>
-        
-                <div class="cv-gob-pillrow" style="display:flex; flex-wrap:wrap; gap:.45rem; margin-top:.45rem;">
-                  <div class="cv-pill" style="min-width:110px; flex:1 1 110px;"><div class="cv-chip-key">LEVEL</div><div class="cv-chip-val">${safe(g.level)}</div></div>
-                  <div class="cv-pill" style="min-width:110px; flex:1 1 110px;">
-                    <div class="cv-chip-key">ABILITY</div>
-                    <div class="cv-chip-val" style="white-space:normal; overflow-wrap:anywhere;">${safe(g.main_attr)}</div>
-                  </div>
-                  <div class="cv-pill" style="min-width:110px; flex:1 1 110px;"><div class="cv-chip-key">POWER</div><div class="cv-chip-val" style="color:#7efcff;">${dp}</div></div>
-                </div>
-              </div>
-        
-            <input type="checkbox" class="cv-sel" ${sel ? "checked" : ""} ${tired ? "disabled" : ""}
-                   style="transform:scale(1.25); accent-color:#ffe600; flex:0 0 auto; align-self:flex-start;">
-
-            </div>
-        
-            <div style="display:flex; align-items:center; gap:.6rem; margin-top:.55rem;">
-              <div class="cv-meter"><div style="width:${pct}%;"></div></div>
-              <div style="min-width:56px; text-align:right; font-size:.82rem; font-weight:800; color:#7efcff;">${dp}</div>
-            </div>
-        
-            <div class="cv-row" style="opacity:.85; margin-top:.25rem;">
-              <div style="font-size:.74rem; color:#9aa0a6; white-space:normal; overflow-wrap:anywhere;">
-                ID: <span style="color:#cfcfcf; font-weight:600;">${safe(g.asset_id)}</span>
-              </div>
-              <div style="font-size:.94rem; color:#9aa0a6;">Power</div>
-            </div>
-          </div>
-        `;
-      }).join("");
-    
-      Cave.el.goblinList.innerHTML = html;
-    
-      // Event delegation (una sola volta)
-      if (!Cave._goblinListDelegated) {
-        Cave._goblinListDelegated = true;
-    
-        Cave.el.goblinList.addEventListener("click", (e) => {
-          const card = e.target.closest(".cv-gob-card");
-          if (!card) return;
-    
-          // se clic su checkbox, usa quello; altrimenti toggle tutto
-          let checkbox = e.target.closest(".cv-sel");
-          if (card.dataset.disabled === "1") return;
-    
-          if (!checkbox) {
-            checkbox = card.querySelector(".cv-sel");
-            if (!checkbox) return;
-            checkbox.checked = !checkbox.checked;
-          }
-    
-          const id = card.dataset.id;
-          const checked = checkbox.checked;
-    
-          // aggiorna memoria selezione
-          if (checked) selected.add(id);
-          else selected.delete(id);
-    
-          // micro-aggiornamenti visuali (niente re-render)
-          card.style.border = checked ? "1px solid rgba(255,230,0,.6)" : "1px solid #2a2a2a";
-          card.style.boxShadow = checked
-            ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset"
-            : "0 2px 12px rgba(0,0,0,.35)";
-    
-          updateSummary();
-        });
-    
-        // piccola animazione hover: solo quando non è resting
-        Cave.el.goblinList.addEventListener("mouseover", (e) => {
-          const card = e.target.closest(".cv-gob-card");
-          if (!card || card.dataset.disabled === "1") return;
-          card.style.transform = "translateY(-2px)";
-        });
-        Cave.el.goblinList.addEventListener("mouseout", (e) => {
-          const card = e.target.closest(".cv-gob-card");
-          if (!card || card.dataset.disabled === "1") return;
-          card.style.transform = "translateY(0)";
-        });
-         Cave.el.goblinList.addEventListener("keydown", (e) => {
-          const card = e.target.closest(".cv-gob-card");
-          if (!card || card.dataset.disabled === "1") return;
-          if (e.key === " " || e.key === "Enter"){
-            e.preventDefault();
-            const cb = card.querySelector(".cv-sel");
-            cb.checked = !cb.checked;
-            const id = card.dataset.id;
-            if (cb.checked) selected.add(id); else selected.delete(id);
-            card.setAttribute("aria-checked", cb.checked ? "true":"false");
-            card.style.border = cb.checked ? "1px solid rgba(255,230,0,.6)" : "1px solid #2a2a2a";
-            card.style.boxShadow = cb.checked
-              ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset"
-              : "0 2px 12px rgba(0,0,0,.35)";
-            updateSummary();
-          }
-        });
-      }
-    }
-
-    function updateSummary() {
-      Cave.el.selectionSummary.innerHTML = `
-        <span style="color:#ffe600;">Selected: ${selected.size} / 50</span>
-        <button class="cv-btn" id="cv-start" style="margin-left:1rem;">🚀 Start Expedition</button>
-      `;
-      qs("#cv-start").onclick = async () => {
-        const btn = qs("#cv-start"); btn.disabled = true; btn.textContent = "⏳ Starting...";
-        if (!selected.size) { toast("Select at least 1 goblin to start.","warn"); btn.disabled=false; btn.textContent="🚀 Start Expedition"; return; }
-
-        const ids = [...selected].filter(id => {
-          const g = goblins.find(x => x.asset_id === id);
-          return g && num(g.daily_power) >= 5;
-        });
-        if (!ids.length) { toast("All selected goblins are too tired.","warn"); btn.disabled=false; btn.textContent="🚀 Start Expedition"; return; }
-
-        try {
-          syncUserInto(Cave.user);
-          assertAuthOrThrow(Cave.user);            
-          const r = await API.post("/start_expedition", {
-            wax_account: Cave.user.wax_account,
-            user_id: Cave.user.user_id,
-            usx_token: Cave.user.usx_token,
-            goblin_ids: ids
-          }, 20000);
-
-          if (r.status === 409) toast(r.data?.error || "Already in expedition.", "warn");
-          else if (r.ok) {
-            toast("Expedition started!", "ok");
-            await renderUserCountdown(r.data.expedition_id, r.data.duration_seconds, ids);
-            await renderGlobalExpeditions();
-          } else toast("Something went wrong.", "err");
-        } catch (e) {
-          toast("Failed to start expedition.", "err");
-          console.error(e);
-        } finally { btn.disabled=false; btn.textContent="🚀 Start Expedition"; }
-      };
-    }
-
-    function autoBest() {
-      selected.clear();
-      const scored = goblins.filter(g=>num(g.daily_power)>=5)
-        .map(g=>({ id:g.asset_id, score: num(g.level) + num(g[g.main_attr]) }))
-        .sort((a,b)=>b.score-a.score)
-        .slice(0,50);
-      scored.forEach(s=>selected.add(s.id));
-      renderList(); updateSummary();
-    }
-
-    // toolbar binds
-    qs("#cv-select-50").onclick = () => {
-      selected.clear();
-      goblins.filter(g=>num(g.daily_power)>=5).slice(0,50).forEach(g=>selected.add(g.asset_id));
-      renderList(); updateSummary();
-    };
-    qs("#cv-deselect").onclick = () => { selected.clear(); renderList(); updateSummary(); };
-    qs("#cv-select-best").onclick = () => autoBest();
-    // Nuovi filtri
-    qs("#cv-search").addEventListener("input", e => { filterQuery = e.target.value; renderList(); saveFilters(); });
-    qs("#cv-rarity").addEventListener("change", e => { filterRarity = e.target.value; renderList(); saveFilters(); });    
-        
-    const powerRange = qs("#cv-power");
-    const powerVal = qs("#cv-power-val");
-    if (powerRange && powerVal){
-      powerRange.addEventListener("input", e => {
-        minPower = Number(e.target.value)||0;
-        powerVal.textContent = String(minPower);
-        renderList(); saveFilters();
-      });
-    }
-
+    // 3) Goblin dell’utente (con retry singolo su /user_nfts)
+    await loadUserNFTsWithSingleRetry();
 
     // chest perk button
     Cave.el.chestPerkBtn.onclick = async () => {
@@ -5408,8 +5424,6 @@ async function renderGoblinInventory() {
       } finally { btn.disabled=false; btn.textContent="🎁 Try a Perk Drop"; }
     };
 
-    // initial lists
-    renderList(); updateSummary();
     // Hydrate global winners (ultimi 10)
     try {
       const rw = await API.get("/recent_winners", 10000);

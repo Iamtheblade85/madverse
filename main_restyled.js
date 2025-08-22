@@ -11409,7 +11409,6 @@ function renderWalletView(type) {
           </div>
           <div style="display:flex; gap:.5rem; align-items:center;">
             <button id="th-refresh" class="cv-btn" title="Refresh">⟳ Refresh</button>
-            <button id="th-export" class="cv-btn" title="Export CSV">⬇ Export</button>
           </div>
         </div>
       </div>
@@ -11436,7 +11435,7 @@ function renderWalletView(type) {
       list: document.getElementById('th-list'),
       loadMore: document.getElementById('th-loadmore'),
       refresh: document.getElementById('th-refresh'),
-      export: document.getElementById('th-export'),
+      export: null,
       search: document.getElementById('th-search'),
       type: document.getElementById('th-type'),
       status: document.getElementById('th-status'),
@@ -11903,7 +11902,7 @@ ${r.memo||''}`.trim();
     // ---------- Bindings ----------
     el.loadMore.addEventListener('click', loadMore);
     el.refresh .addEventListener('click', initialLoad);
-    el.export  .addEventListener('click', exportCSV);
+    //el.export  .addEventListener('click', exportCSV);
 
     const applyFilters = debounce(()=>{
       th.filters.q = el.search?.value || '';

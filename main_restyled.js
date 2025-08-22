@@ -11800,6 +11800,49 @@ function renderWalletView(type) {
       if (r.type==='bridge' && r.meta?.net_amount != null) lines.push(`<div><strong>Net bridged</strong>: ${fmtAmt(r.meta.net_amount)} ${esc(r.symbol_out||'')}</div>`);
       return lines.join('') || `<div style="opacity:.8;">No extra details.</div>`;
     }
+    
+    function toneFor(r){
+      const t=(r.type||'').toLowerCase();
+      const s=r.status;
+      const T={
+        withdraw:{grad:'linear-gradient(135deg, rgba(255,0,180,.12), rgba(120,0,255,.10))'},
+        swap    :{grad:'linear-gradient(135deg, rgba(0,180,255,.12), rgba(0,255,200,.10))'},
+        transfer:{grad:'linear-gradient(135deg, rgba(255,180,0,.12), rgba(255,80,0,.10))'},
+        bridge  :{grad:'linear-gradient(135deg, rgba(160,255,0,.12), rgba(0,200,120,.10))'}
+      }[t] || {grad:'linear-gradient(135deg, rgba(200,200,200,.08), rgba(150,150,150,.06))'};
+      const S={
+        success:{border:'1px solid rgba(0,255,160,.28)', shadow:'0 0 18px rgba(0,255,160,.14)'},
+        failed :{border:'1px solid rgba(255,80,80,.28)', shadow:'0 0 18px rgba(255,80,80,.12)'},
+        pending:{border:'1px solid rgba(255,200,0,.22)', shadow:'0 0 18px rgba(255,200,0,.10)'}
+      }[s] || {border:'1px solid rgba(255,255,255,.12)', shadow:'0 0 12px rgba(0,0,0,.2)'};
+      return { ...T, ...S };
+    }
+    
+    function typePill(t){
+      t=String(t||'TX').toLowerCase();
+      const M={
+        withdraw:{bg:'rgba(255,0,180,.18)', br:'#7a2a6e'}, 
+        swap    :{bg:'rgba(0,180,255,.18)', br:'#1e4663'},
+        transfer:{bg:'rgba(255,180,0,.18)', br:'#6a4a14'},
+        bridge  :{bg:'rgba(160,255,0,.18)', br:'#275a1e'}
+      }[t] || {bg:'rgba(180,180,180,.14)', br:'#444'};
+      const ico = typeIcon(t);
+      return `<span class="cv-badge" style="background:${M.bg}; border-color:${M.br};">${ico} ${t.toUpperCase()}</span>`;
+    }
+    
+    function statusChip(s){
+      const m={
+        success:{bg:'rgba(0,255,160,.16)', br:'#1e634d', fg:'#83ffd6', ico:'✔'},
+        failed :{bg:'rgba(255,60,60,.16)',  br:'#6d1e1e', fg:'#ffb3b3', ico:'✖'},
+        pending:{bg:'rgba(255,200,0,.14)',  br:'#6a5514', fg:'#ffe28a', ico:'…'}
+      }[String(s||'').toLowerCase()] || {bg:'rgba(180,180,180,.14)', br:'#424242', fg:'#e7e7e7', ico:'•'};
+      return `<span class="cv-badge" style="background:${m.bg}; border-color:${m.br}; color:${m.fg};">${m.ico} ${String(s||'').toUpperCase()}</span>`;
+    }
+    
+    function amountHTML(r){
+      const col = r.status==='failed' ? '#ff9a9a' : r.status==='pending' ? '#ffe28a' : '#9afbd9';
+      return `<div style="font-weight:900; color:${col};">${rightValue(r)}</div>`;
+    }
 
     function renderRows() {
       const rows = applyClientFilters();
@@ -11822,27 +11865,27 @@ function renderWalletView(type) {
           `• ${fmtDate(r.created_at)}`
         ].join(' ');
         const tip = `${(r.type||'TX').toUpperCase()} • ${r.status.toUpperCase()}
-${r.pair||''}
-From: ${r.from_account||'-'}
-To:   ${r.to_account||'-'}
-${r.memo||''}`.trim();
+        ${r.pair||''}
+        From: ${r.from_account||'-'}
+        To:   ${r.to_account||'-'}
+        ${r.memo||''}`.trim();
 
+        const tone = toneFor(r);
         return `
           <div class="cv-card" title="${esc(tip)}" style="
             border-radius:14px; padding:10px;
             display:grid; grid-template-columns: 48px 1fr auto;
-            gap:12px; align-items:center; overflow:hidden;">
+            gap:12px; align-items:center; overflow:hidden;
+            background:${tone.grad}; border:${tone.border}; box-shadow:${tone.shadow};
+          ">
             <div style="
               width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center;
-              background:linear-gradient(135deg, rgba(0,255,200,.15), rgba(120,0,255,.12));
-              box-shadow: inset 0 0 12px rgba(0,255,200,.15);
+              background:rgba(255,255,255,.03); outline:2px solid rgba(255,255,255,.06);
               font-size:1.2rem;">${typeIcon(r.type)}</div>
-
+        
             <div style="min-width:0;">
               <div style="display:flex; gap:.6rem; align-items:center; flex-wrap:wrap;">
-                <strong style="color:#e7fffa; font-family:Orbitron,system-ui,sans-serif; font-size:1rem;">
-                  ${esc((r.type||'TX').toUpperCase())}
-                </strong>
+                ${typePill(r.type)}
                 ${statusChip(r.status)}
                 ${channelChip(r.channel)}
                 ${r.symbol_out ? `<span class="cv-badge">${esc(r.symbol_out)}</span>` : (r.symbol_in ? `<span class="cv-badge">${esc(r.symbol_in)}</span>`:'')}
@@ -11856,9 +11899,9 @@ ${r.memo||''}`.trim();
                 ${rowDetails(r)}
               </div>
             </div>
-
-            <div style="text-align:right; min-width:180px;">
-              <div style="font-weight:900; color:#9afbd9;">${rightValue(r)}</div>
+        
+            <div style="text-align:right; min-width:200px;">
+              ${amountHTML(r)}
               <div style="margin-top:.35rem; display:flex; gap:.4rem; justify-content:flex-end; flex-wrap:wrap;">
                 ${txUrl ? `<a href="${txUrl}" target="_blank" class="cv-btn" style="padding:.25rem .5rem;">View TX</a>` : `<span style="opacity:.7; padding:.25rem .5rem;">No TX yet</span>`}
                 <button class="cv-btn th-toggle" data-i="${i}" style="padding:.25rem .5rem;">Details</button>
@@ -11866,6 +11909,7 @@ ${r.memo||''}`.trim();
             </div>
           </div>
         `;
+
       }).join('');
 
       // bind details toggles

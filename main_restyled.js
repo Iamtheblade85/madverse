@@ -3045,359 +3045,475 @@ function loadGoblinDex() {
   renderGoblinInventory();
 }
 
-function getRarityColorClass(rarity) {
-  if (typeof rarity !== 'string') return 'neon-white';
-  switch (rarity.toLowerCase()) {
-    case 'common': return 'neon-green';
-    case 'rare': return 'neon-blue';
-    case 'epic': return 'neon-purple';
-    case 'legendary': return 'neon-gold';
-    case 'mythic': return 'neon-red';
-    default: return 'neon-white';
-  }
-}
-
-function getLevelColorClass(level) {
-  if (level >= 10) return 'neon-red';
-  if (level >= 7) return 'neon-gold';
-  if (level >= 4) return 'neon-purple';
-  if (level >= 2) return 'neon-blue';
-  return 'neon-green';
-}
-
-function getRarityBorderClass(rarity) {
-  if (typeof rarity !== 'string') return '';
-  const map = {
-    common: 'border-glow-green',
-    rare: 'border-glow-blue',
-    epic: 'border-glow-purple',
-    legendary: 'border-glow-gold',
-    mythic: 'border-glow-red'
-  };
-  return map[rarity.toLowerCase()] || '';
-}
-
-function getLabelColor(index) {
-  const colors = ['#0ff', '#ff66cc', '#ffcc00', '#00ff99', '#66b2ff'];
-  return colors[index % colors.length];
-}
-
 async function renderGoblinInventory() {
   const container = document.getElementById('goblin-content');
-  container.innerHTML = `<p class="subtitle2">Fetching your goblins...</p>`;
+  if (!container) return;
 
-  try {
-    const res = await fetch(`${BASE_URL}/user_nfts`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        wax_account: window.userData.wax_account,
-        user_id: window.userData.userId,
-        usx_token: window.userData.usx_token
-      })
-    });
+  // --- utils locali ---
+  const esc = (v) => String(v ?? '').replace(/[&<>"'`]/g, m => (
+    { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;' }[m]
+  ));
+  const debounce = (fn, ms=200) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; };
+  const rarityOrder = { common:1, uncommon:2, rare:3, epic:4, legendary:5, mythic:6 };
 
-    const nfts = await res.json();
-    // Mappa daily_power → daily-power
-    nfts.forEach(nft => {
-      if (nft.daily_power !== undefined) {
-        nft["daily-power"] = nft.daily_power;
-      }
-    });    
-    if (!Array.isArray(nfts) || nfts.length === 0) {
-      container.innerHTML = `<p>No goblins found in your inventory.</p>`;
-      return;
+  // Meta materiali (in base ai template del backend)
+  const MATERIAL_META = {
+    893711: {
+      type: 'magic_stone',
+      prettyType: 'Level Upgrader',
+      name: 'Upgrader',
+      description: 'Use it to promote your Goblin to the next level. You can use it for all rarities.'
+    },
+    893710: {
+      type: 'rotation_stone',
+      prettyType: 'Slot Rotator',
+      name: 'Rotator',
+      description: 'Use it to move your Goblin to the next ability.'
     }
+  };
 
-    let sortBy = null;
-    let sortAsc = true;
-    let currentPage = 1;
-    let itemsPerPage = 36;
+  // skeleton iniziale
+  container.innerHTML = `
+    <div style="display:flex; gap:.5rem; margin-bottom:1rem;">
+      <div class="cv-skel" style="height:38px; width:160px; border-radius:10px;"></div>
+      <div class="cv-skel" style="height:38px; width:260px; border-radius:10px;"></div>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+      ${Array.from({length:8}).map(()=>`<div class="cv-skel" style="height:210px; border-radius:14px;"></div>`).join('')}
+    </div>
+  `;
 
-    function paginate(data) {
-      const start = (currentPage - 1) * itemsPerPage;
-      return data.slice(start, start + itemsPerPage);
-    }
-
-    function renderPagination(totalItems) {
-      const totalPages = Math.ceil(totalItems / itemsPerPage);
-      const pagination = document.getElementById('pagination-controls');
-      pagination.innerHTML = '';
-      for (let i = 1; i <= totalPages; i++) {
-        pagination.innerHTML += `<button class="page-btn ${i === currentPage ? 'active-tab' : ''}" data-page="${i}">${i}</button>`;
+  // --- fetch /user_nfts (API.post se c'è, fallback fetch) con 1 solo retry in caso di errore ---
+  let retried = false;
+  async function fetchUserNFTs() {
+    try {
+      if (typeof API !== 'undefined' && API.post) {
+        const wax_account = window.userData?.wax_account;
+        const user_id     = window.userData?.userId || window.userData?.user_id;
+        const usx_token   = window.userData?.usx_token;
+        const r = await API.post('/user_nfts', { wax_account, user_id, usx_token }, 15000);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return Array.isArray(r.data) ? r.data : [];
       }
-      document.querySelectorAll('.page-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          currentPage = parseInt(btn.getAttribute('data-page'));
-          applyFiltersAndSort();
-        });
+      const res = await fetch(`${BASE_URL}/user_nfts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wax_account: window.userData?.wax_account,
+          user_id: window.userData?.userId,
+          usx_token: window.userData?.usx_token
+        })
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch (e) {
+      if (!retried) {
+        retried = true;
+        await new Promise(r => setTimeout(r, 10000));
+        return fetchUserNFTs();
+      }
+      console.warn('[renderGoblinInventory] /user_nfts error:', e);
+      return [];
     }
+  }
 
-    container.innerHTML = `
-      <div class="goblin-filters" id="goblin-filters" style="
-        margin-bottom: 2rem;
-        padding: 1.5rem;
-        background: linear-gradient(to right, #111, #1a1a1a);
-        border-radius: 16px;
-        box-shadow: 0 0 12px #0ff;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        justify-content: center;
-        font-family: 'Orbitron', sans-serif;
-      ">
-        <input id="filter-name" placeholder="🔍 Search name..." style="
-          padding: 0.6rem;
-          width: 180px;
-          border-radius: 8px;
-          border: none;
-          outline: none;
-          background: #222;
-          color: #0ff;
-          font-size: 1rem;
-          box-shadow: 0 0 5px #0ff;
-        ">
-    
-        <select id="filter-rarity" style="
-          padding: 0.6rem;
-          border-radius: 8px;
-          background: #222;
-          color: #fff;
-          font-size: 1rem;
-          box-shadow: 0 0 5px #0ff;
-        ">
-          <option value="">All Rarities</option>
-          <option value="common">Common</option>
-          <option value="rare">Rare</option>
-          <option value="epic">Epic</option>
-          <option value="legendary">Legendary</option>
-          <option value="mythic">Mythic</option>
-        </select>
-    
-        <input id="filter-edition" type="number" min="1" placeholder="Edition #" style="
-          width: 100px;
-          padding: 0.6rem;
-          border-radius: 8px;
-          background: #222;
-          color: #0ff;
-          font-size: 1rem;
-          box-shadow: 0 0 5px #0ff;
-        ">
-    
-        ${['level', 'loot-hungry', 'speed', 'resistance', 'accuracy', 'daily-power'].map(attr => `
-          <input id="filter-${attr}" type="number" min="0" placeholder="${attr}" style="
-            width: 100px;
-            padding: 0.6rem;
-            border-radius: 8px;
-            background: #222;
-            color: #0ff;
-            font-size: 1rem;
-            box-shadow: 0 0 5px #0ff;
-          ">
-        `).join('')}
-    
-        <select id="items-per-page" style="
-          padding: 0.6rem;
-          border-radius: 8px;
-          background: #222;
-          color: #0ff;
-          font-size: 1rem;
-          box-shadow: 0 0 5px #0ff;
-        ">
-          <option value="6">6</option>
-          <option value="12" selected>12</option>
-          <option value="24">24</option>
-        </select>
-    
-        <button id="reset-filters" class="btn btn-glow" style="
-          padding: 0.6rem 1.2rem;
-          background: #c00;
-          color: #fff;
-          border-radius: 8px;
-          box-shadow: 0 0 8px #f00;
-          font-weight: bold;
-        ">🔄 Reset</button>
+  const all = await fetchUserNFTs();
+
+  // normalizza chiavi legacy
+  all.forEach(nft => {
+    if (nft.daily_power !== undefined) nft['daily-power'] = nft.daily_power;
+    if (nft['loot-hungry'] === undefined && nft.loot_hungry !== undefined) nft['loot-hungry'] = nft.loot_hungry;
+  });
+
+  // split
+  const goblinsAll = (Array.isArray(all) ? all : []).filter(n => n.type === 'goblin');
+  const materialsRaw = (Array.isArray(all) ? all : []).filter(n => {
+    const t = String(n.type||'').toLowerCase();
+    return t === 'magic_stone' || t === 'rotation_stone';
+  });
+
+  // aggrega materials per template_id (conteggio + metadati)
+  const byTpl = new Map();
+  for (const m of materialsRaw) {
+    const tpl = Number(m.template_id || 0);
+    const cur = byTpl.get(tpl) || { ...m, quantity: 0 };
+    cur.quantity += 1;
+    // arricchisci con meta ufficiali se disponibili
+    if (MATERIAL_META[tpl]) {
+      cur.prettyType  = MATERIAL_META[tpl].prettyType;
+      cur.name        = MATERIAL_META[tpl].name;
+      cur.description = MATERIAL_META[tpl].description;
+      cur.type        = MATERIAL_META[tpl].type; // allinea
+    }
+    // normalizza immagine IPFS
+    if (typeof cur.img === 'string') {
+      if (cur.img.startsWith('Q') || cur.img.startsWith('bafy')) cur.img = `https://ipfs.io/ipfs/${cur.img}`;
+    }
+    byTpl.set(tpl, cur);
+  }
+  const materialsAgg = Array.from(byTpl.values());
+
+  // shell con TAB
+  container.innerHTML = `
+    <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin-bottom:.8rem;">
+      <button id="inv-tab-goblins" class="cv-btn" style="background:#2a2a2a;">🧌 Goblins (${goblinsAll.length})</button>
+      <button id="inv-tab-mats" class="cv-btn">🧪 Blending / Crafting material (${materialsAgg.length})</button>
+      <span style="margin-left:auto; color:#9aa0a6; font-size:.9rem;">Your tavern</span>
+    </div>
+    <div id="inv-body"></div>
+  `;
+
+  const tabG = container.querySelector('#inv-tab-goblins');
+  const tabM = container.querySelector('#inv-tab-mats');
+  const body = container.querySelector('#inv-body');
+
+  // =========================
+  // TAB: GOBLINS
+  // =========================
+  function renderGoblinTab() {
+    body.innerHTML = `
+      <div id="goblin-filters" class="cv-card" style="margin-bottom:1rem; padding:.8rem;">
+        <div style="display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; justify-content:center;">
+          <input id="g-name" placeholder="🔎 Search name or ID…" style="background:#151515; border:1px solid #333; color:#eee; padding:.5rem .7rem; border-radius:10px; width:220px;">
+          <select id="g-rarity" class="cv-btn" style="min-width:160px;">
+            <option value="">All Rarities</option>
+            <option>Common</option><option>Uncommon</option><option>Rare</option>
+            <option>Epic</option><option>Legendary</option><option>Mythic</option>
+          </select>
+          <div style="display:flex; align-items:center; gap:.45rem;">
+            <label for="g-power" style="color:#ccc; font-size:.9rem;">Min Power</label>
+            <input id="g-power" type="range" min="0" max="100" step="1" value="0">
+            <span id="g-power-val" style="color:#0ff; font-size:.9rem;">0</span>
+          </div>
+          <div style="display:flex; background:#1a1a1a; border:1px solid #333; border-radius:10px; overflow:hidden;">
+            <button class="cv-btn g-sort" data-k="level" style="border:none; border-right:1px solid #333;">Level</button>
+            <button class="cv-btn g-sort" data-k="daily-power" style="border:none; border-right:1px solid #333;">Power</button>
+            <button class="cv-btn g-sort" data-k="rarity" style="border:none;">Rarity</button>
+          </div>
+          <select id="g-page-size" class="cv-btn" title="Items per page">
+            <option value="12">12 / page</option>
+            <option value="24">24 / page</option>
+            <option value="48">48 / page</option>
+          </select>
+        </div>
       </div>
-    
-      <div id="sort-buttons" style="
-        margin-bottom: 1.5rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        justify-content: center;
-      ">
-        ${['level', 'loot-hungry', 'speed', 'resistance', 'accuracy', 'daily-power'].map(attr => `
-          <button class="btn btn-glow sort-btn" data-sort="${attr}" style="
-            padding: 0.5rem 1rem;
-            background: #222;
-            color: #0ff;
-            border-radius: 8px;
-            font-size: 1rem;
-            box-shadow: 0 0 6px #0ff;
-            transition: all 0.2s ease;
-          ">
-            ⬍ Sort: ${attr}
-          </button>
-        `).join('')}
-      </div>
-    
-      <div id="goblin-grid" class="goblin-inventory-grid" style="
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(170px, 200px));
-        justify-content: center;
-        gap: 2rem;
-        padding: 1rem 1rem 0 1rem;
-      "></div>
-    
-      <div id="pagination-controls" class="pagination-controls" style="
-        margin-top: 2rem;
-        text-align: center;
-      "></div>
+
+      <div id="goblin-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px;"></div>
+      <div id="goblin-pagination" style="display:flex; gap:.4rem; justify-content:center; margin-top:.8rem;"></div>
     `;
 
-    const gridContainer = document.getElementById('goblin-grid');
+    const state = {
+      q: '', rarity: '', minPower: 0,
+      sortKey: 'rarity', sortAsc: false,
+      page: 1, pageSize: 12
+    };
 
-    function renderGrid(data) {
-      const paginated = paginate(data);
-    
-      gridContainer.innerHTML = paginated.map(nft => `
-        <div class="goblin-card ${getRarityBorderClass(nft.rarity)}" style="
-          width: 100%;
-          max-width: 200px;
-          min-width: 170px;
-          background: linear-gradient(to bottom, #0d0d0d, #1a1a1a);
-          padding: 1.2rem;
-          border-radius: 18px;
-          text-align: center;
-          font-family: 'Orbitron', sans-serif;
-          color: #fff;
-          position: relative;
-          transition: transform 0.2s ease;
-        " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-    
-          <img src="${nft.img}" alt="${nft.name}" style="
-            width: 100%;
-            border-radius: 12px;
-            margin-bottom: 0.75rem;
-            box-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
-          ">
-    
-          <div style="font-size: 1.25rem; font-weight: bold; margin-bottom: 0.3rem; color: #ffe600;">
-            ${nft.name}
-          </div>
-    
-          <div style="font-size: 1rem; margin-bottom: 0.2rem;">
-            <span style="color: #888;">Rarity:</span> 
-            <span class="${getRarityColorClass(nft.rarity)}">${nft.rarity}</span>
-          </div>
-    
-          <div style="font-size: 1rem; margin-bottom: 0.2rem;">
-            <span style="color: #888;">Edition:</span> <span style="color:#fff;">${nft.edition}</span>
-          </div>
-          <div style="font-size: 1rem;">
-            <span style="color: #888;">Asset ID:</span> <span style="color:#ccc;">${nft.asset_id}</span>
-          </div>
-          <div style="font-size: 1rem; margin-bottom: 0.4rem;">
-            <span style="color: #888;">Mint #:</span> <span style="color:#ccc;">${nft.template_mint}</span>
-          </div>
-    
-          <div style="margin: 0.5rem 0; font-size: 1rem; color: #aaa; min-height: 30px; font-style: italic;">
-            “${nft.description}”
-          </div>
-    
-          <div class="goblin-attributes" style="
-            font-size: 1rem;
-            color: #0ff;
-            text-align: left;
-            margin: 0.75rem 0;
-            background: rgba(0,255,255,0.05);
-            padding: 0.5rem;
-            border-radius: 10px;
-          ">
-            <div style="margin-bottom: 0.25rem;">
-              <span style="color:#ffa500;">⚔ Level:</span> 
-              <strong class="${getLevelColorClass(nft.level)}" style="margin-left: 4px;">${nft.level}</strong>
+    const el = {
+      q: body.querySelector('#g-name'),
+      rarity: body.querySelector('#g-rarity'),
+      power: body.querySelector('#g-power'),
+      powerVal: body.querySelector('#g-power-val'),
+      size: body.querySelector('#g-page-size'),
+      grid: body.querySelector('#goblin-grid'),
+      pager: body.querySelector('#goblin-pagination')
+    };
+
+    const apply = debounce(() => { state.page = 1; render(); }, 150);
+
+    el.q.addEventListener('input', () => { state.q = el.q.value.trim().toLowerCase(); apply(); });
+    el.rarity.addEventListener('change', () => { state.rarity = el.rarity.value; apply(); });
+    el.power.addEventListener('input', () => {
+      state.minPower = Number(el.power.value)||0;
+      el.powerVal.textContent = String(state.minPower);
+      apply();
+    });
+    el.size.addEventListener('change', () => { state.pageSize = Number(el.size.value)||12; render(); });
+    body.querySelectorAll('.g-sort').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const k = b.dataset.k;
+        if (state.sortKey === k) state.sortAsc = !state.sortAsc;
+        else { state.sortKey = k; state.sortAsc = (k === 'rarity'); }
+        render();
+      });
+    });
+
+    function filt(list) {
+      const q = state.q;
+      const rar = state.rarity.toLowerCase();
+      return list.filter(g=>{
+        const okQ = !q || String(g.name||'').toLowerCase().includes(q) || String(g.asset_id||'').includes(q);
+        const okR = !rar || String(g.rarity||'').toLowerCase() === rar;
+        const dp  = Number(g['daily-power'] ?? g.daily_power ?? 0) || 0;
+        return okQ && okR && dp >= state.minPower;
+      });
+    }
+    function sort(list) {
+      const sk = state.sortKey, asc = state.sortAsc;
+      return list.slice().sort((a,b)=>{
+        let av, bv;
+        if (sk === 'rarity') {
+          av = rarityOrder[String(a.rarity||'').toLowerCase()] || 0;
+          bv = rarityOrder[String(b.rarity||'').toLowerCase()] || 0;
+        } else {
+          av = Number(a[sk]) || Number(a[sk.replace('-', '_')]) || 0;
+          bv = Number(b[sk]) || Number(b[sk.replace('-', '_')]) || 0;
+        }
+        return asc ? (av - bv) : (bv - av);
+      });
+    }
+    function paginate(list) {
+      const start = (state.page - 1) * state.pageSize;
+      return list.slice(start, start + state.pageSize);
+    }
+    function renderGrid(list) {
+      const cards = list.map(nft => {
+        const dp = Number(nft['daily-power'] ?? nft.daily_power ?? 0) || 0;
+        const lvl = Number(nft.level||0);
+        const levelClass = getLevelColorClass(lvl);
+        const rCl = getRarityBorderClass(nft.rarity);
+        const meterPct = Math.min(100, Math.max(6, Math.round(dp)));
+        const tip = `Lvl ${lvl} • ${nft.rarity} • Power ${dp}\n` +
+                    `ACC ${nft.accuracy ?? 0} | RES ${nft.resistance ?? 0} | LOOT ${nft['loot-hungry'] ?? 0} | SPD ${nft.speed ?? 0}`;
+        return `
+          <div class="cv-card ${rCl}" style="padding:.7rem; border-radius:14px;" title="${esc(tip)}">
+            <div style="display:flex; gap:.7rem;">
+              <div style="position:relative; flex:0 0 auto;">
+                <img src="${esc(nft.img)}" alt="" loading="lazy"
+                     style="width:76px; height:76px; border-radius:12px; object-fit:cover; outline:1px solid var(--cv-border);">
+              </div>
+              <div style="flex:1 1 auto; min-width:0;">
+                <div style="display:flex; align-items:center; gap:.5rem;">
+                  <strong style="color:#ffe600; font-family:Orbitron,system-ui,sans-serif; font-size:1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    ${esc(nft.name)}
+                  </strong>
+                  <span class="cv-rarity" style="background:#1a1a1a; border-color:#333;">${esc(nft.rarity)}</span>
+                </div>
+                <div style="display:flex; gap:.45rem; flex-wrap:wrap; margin:.35rem 0;">
+                  <span class="cv-badge">Lvl <span class="${levelClass}" style="color:#fff;">${esc(lvl)}</span></span>
+                  <span class="cv-badge">ID ${esc(nft.asset_id)}</span>
+                </div>
+                <div class="cv-meter"><div style="width:${meterPct}%;"></div></div>
+                <div style="display:flex; gap:.6rem; margin-top:.35rem; color:#9aa0a6; font-size:.85rem;">
+                  <span>⚡ ${dp}</span>
+                  <span>🎯 ${esc(nft.accuracy ?? 0)}</span>
+                  <span>🛡 ${esc(nft.resistance ?? 0)}</span>
+                  <span>💰 ${esc(nft['loot-hungry'] ?? 0)}</span>
+                  <span>🏃 ${esc(nft.speed ?? 0)}</span>
+                </div>
+              </div>
             </div>
-            ${['resistance','accuracy','loot-hungry','speed','daily-power']
-              .map((key, i) => `
-                <div style="margin-bottom: 0.25rem;">
-                  <span style="color:${getLabelColor(i)};">${key.replace('-', ' ')}:</span>
-                  <strong style="color:#fff; margin-left: 4px;">${nft[key]}</strong>
-                </div>`).join('')}
+          </div>
+        `;
+      }).join('');
+      el.grid.innerHTML = cards || `<div class="cv-toast">No results.</div>`;
+    }
+    function renderPager(total) {
+      const pages = Math.max(1, Math.ceil(total / state.pageSize));
+      state.page = Math.min(state.page, pages);
+      el.pager.innerHTML = Array.from({length: pages}).map((_,i)=>{
+        const p = i+1;
+        const on = p===state.page ? 'background:#2a2a2a; color:#ffe600;' : '';
+        return `<button data-p="${p}" class="cv-btn" style="padding:.3rem .6rem; ${on}">${p}</button>`;
+      }).join('');
+      el.pager.querySelectorAll('button').forEach(b=>{
+        b.addEventListener('click', ()=>{ state.page = Number(b.dataset.p)||1; render(); });
+      });
+    }
+    function render() {
+      const f = filt(goblinsAll);
+      const s = sort(f);
+      renderPager(s.length);
+      renderGrid(paginate(s));
+    }
+    render();
+  }
+
+  // =========================
+  // TAB: MATERIALS
+  // =========================
+  function renderMaterialsTab() {
+    body.innerHTML = `
+      <div class="cv-card" style="margin-bottom:1rem; padding:.8rem;">
+        <div style="display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; justify-content:space-between;">
+          <div style="display:flex; flex-wrap:wrap; gap:.6rem; align-items:center;">
+            <input id="m-name" placeholder="🔎 Search name…" style="background:#151515; border:1px solid #333; color:#eee; padding:.5rem .7rem; border-radius:10px; width:220px;">
+            <select id="m-type" class="cv-btn" style="min-width:200px;">
+              <option value="">All Materials</option>
+              <option value="magic_stone">Level Upgrader</option>
+              <option value="rotation_stone">Slot Rotator</option>
+            </select>
+            <div style="display:flex; background:#1a1a1a; border:1px solid #333; border-radius:10px; overflow:hidden;">
+              <button class="cv-btn m-sort" data-k="name" style="border:none; border-right:1px solid #333;">Name</button>
+              <button class="cv-btn m-sort" data-k="quantity" style="border:none; border-right:1px solid #333;">Qty</button>
+              <button class="cv-btn m-sort" data-k="type" style="border:none;">Type</button>
+            </div>
+            <select id="m-page-size" class="cv-btn" title="Items per page">
+              <option value="12">12 / page</option>
+              <option value="24">24 / page</option>
+              <option value="48">48 / page</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:.5rem;">
+            <button id="open-level" class="cv-btn" title="Open the Level Up blends">🧪 Open Level Upgrades</button>
+            <button id="open-rotation" class="cv-btn" title="Open the Slot Rotation blends">🌀 Open Slot Rotation</button>
           </div>
         </div>
-      `).join('');
-    }
+      </div>
 
-    function applyFiltersAndSort() {
-      const name = document.getElementById("filter-name").value.toLowerCase();
-      const rarity = document.getElementById("filter-rarity").value.toLowerCase();
-      const edition = document.getElementById("filter-edition").value;
-      itemsPerPage = parseInt(document.getElementById("items-per-page").value) || 12;
+      <div class="cv-card" style="margin-bottom:1rem; padding:.8rem; background:linear-gradient(180deg,#111,#0c0c0c);">
+        <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+          <div class="cv-item" style="flex:1 1 260px; min-width:260px;">
+            <h4 style="margin:.2rem 0; color:#ffcc66;">🔺 Level Upgrader</h4>
+            <p style="margin:.3rem 0 .2rem; color:#cfcfcf;">
+              Use it to promote your Goblin to the next level.<br>
+              <strong>Rule:</strong> si usa su goblin della <em>stessa rarity</em> e con la <em>stessa main speciality</em>.
+            </p>
+          </div>
+          <div class="cv-item" style="flex:1 1 260px; min-width:260px;">
+            <h4 style="margin:.2rem 0; color:#7ff6ff;">🌀 Slot Rotator</h4>
+            <p style="margin:.3rem 0 .2rem; color:#cfcfcf;">
+              Use it to move your Goblin to the next ability (specialità successiva nella rotazione).<br>
+              Gli ingredienti richiesti e le combinazioni sono mostrati nella sezione <em>Slot Rotation</em> dei blends.
+            </p>
+          </div>
+        </div>
+      </div>
 
-      const attrFilters = {
-        "level": +document.getElementById("filter-level").value || null,
-        "loot-hungry": +document.getElementById("filter-loot-hungry").value || null,
-        "speed": +document.getElementById("filter-speed").value || null,
-        "resistance": +document.getElementById("filter-resistance").value || null,
-        "accuracy": +document.getElementById("filter-accuracy").value || null,
-        "daily-power": +document.getElementById("filter-daily-power").value || null,
-      };
+      <div id="mat-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:12px;"></div>
+      <div id="mat-pagination" style="display:flex; gap:.4rem; justify-content:center; margin-top:.8rem;"></div>
+    `;
 
-      let filtered = nfts.filter(nft => {
-        if (name && !nft.name.toLowerCase().includes(name)) return false;
-        if (rarity && nft.rarity.toLowerCase() !== rarity) return false;
-        if (edition && nft.edition != edition) return false;
-        for (const key in attrFilters) {
-          if (attrFilters[key] !== null && (+nft[key] || 0) < attrFilters[key]) return false;
-        }
-        return true;
-      });
-
-      if (sortBy) {
-        filtered = filtered.sort((a, b) => {
-          const aVal = +a[sortBy] || 0;
-          const bVal = +b[sortBy] || 0;
-          return sortAsc ? aVal - bVal : bVal - aVal;
-        });
+    // CTA: apre la tua UI di blending se definita
+    const openBlend = (tab) => {
+      if (typeof window.renderGoblinBlend === 'function') {
+        window.renderGoblinBlend();
+        // piccolo defer per permettere il render e poi selezionare la tab desiderata
+        setTimeout(()=>{
+          if (tab === 'level')  document.getElementById('tab-level')?.click();
+          if (tab === 'rotation') document.getElementById('tab-rotation')?.click();
+        }, 50);
       }
+    };
+    document.getElementById('open-level').addEventListener('click', ()=> openBlend('level'));
+    document.getElementById('open-rotation').addEventListener('click', ()=> openBlend('rotation'));
 
-      renderGrid(filtered);
-      renderPagination(filtered.length);
-    }
+    const state = { q:'', type:'', sortKey:'name', sortAsc:true, page:1, pageSize:12 };
+    const el = {
+      q: body.querySelector('#m-name'),
+      type: body.querySelector('#m-type'),
+      size: body.querySelector('#m-page-size'),
+      grid: body.querySelector('#mat-grid'),
+      pager: body.querySelector('#mat-pagination')
+    };
 
-    document.querySelectorAll('#goblin-filters input, #goblin-filters select').forEach(el => {
-      el.addEventListener('input', applyFiltersAndSort);
-    });
+    const apply = debounce(()=>{ state.page=1; render(); }, 150);
 
-    document.getElementById("reset-filters").addEventListener("click", () => {
-      document.querySelectorAll('#goblin-filters input, #goblin-filters select').forEach(el => el.value = '');
-      sortBy = null;
-      sortAsc = true;
-      currentPage = 1;
-      applyFiltersAndSort();
-    });
-
-    document.querySelectorAll(".sort-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const field = btn.getAttribute("data-sort");
-        if (sortBy === field) {
-          sortAsc = !sortAsc;
-        } else {
-          sortBy = field;
-          sortAsc = true;
-        }
-        applyFiltersAndSort();
+    el.q.addEventListener('input', ()=>{ state.q = el.q.value.trim().toLowerCase(); apply(); });
+    el.type.addEventListener('change', ()=>{ state.type = el.type.value; apply(); });
+    el.size.addEventListener('change', ()=>{ state.pageSize = Number(el.size.value)||12; render(); });
+    body.querySelectorAll('.m-sort').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const k = b.dataset.k;
+        if (state.sortKey === k) state.sortAsc = !state.sortAsc;
+        else { state.sortKey = k; state.sortAsc = (k !== 'quantity'); }
+        render();
       });
     });
 
-    applyFiltersAndSort();
-
-  } catch (err) {
-    console.error("[renderGoblinInventory] Error:", err);
-    container.innerHTML = `<p>Error loading inventory.</p>`;
+    function filt(list) {
+      const q = state.q;
+      const t = state.type.toLowerCase();
+      return list.filter(m=>{
+        const okQ = !q || String(m.name||'').toLowerCase().includes(q);
+        const okT = !t || String(m.type||'').toLowerCase() === t;
+        return okQ && okT;
+      });
+    }
+    function sort(list) {
+      const sk = state.sortKey, asc = state.sortAsc;
+      return list.slice().sort((a,b)=>{
+        if (sk === 'name') return asc
+          ? String(a.name||'').localeCompare(String(b.name||''))
+          : String(b.name||'').localeCompare(String(a.name||''));
+        if (sk === 'quantity') return asc ? (Number(a.quantity||0)-Number(b.quantity||0))
+                                           : (Number(b.quantity||0)-Number(a.quantity||0));
+        if (sk === 'type') {
+          const ta = String(a.prettyType||a.type||''); const tb = String(b.prettyType||b.type||'');
+          return asc ? ta.localeCompare(tb) : tb.localeCompare(ta);
+        }
+        return 0;
+      });
+    }
+    function paginate(list) {
+      const start = (state.page - 1) * state.pageSize;
+      return list.slice(start, start + state.pageSize);
+    }
+    function card(m) {
+      const qty = Number(m.quantity || 1);
+      const tip = `${m.prettyType || m.type} • Qty ${qty}\n${m.description || ''}`;
+      return `
+        <div class="cv-card ${getRarityBorderClass(m.rarity)}" style="padding:.75rem; border-radius:14px; display:flex; gap:.7rem; align-items:flex-start;" title="${esc(tip)}">
+          <img src="${esc(m.img)}" alt="" loading="lazy" style="width:72px; height:72px; border-radius:12px; object-fit:cover; outline:1px solid var(--cv-border);">
+          <div style="flex:1 1 auto; min-width:0;">
+            <div style="display:flex; align-items:center; gap:.5rem;">
+              <strong style="color:#ffcc66; font-family:Orbitron,system-ui,sans-serif; font-size:1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${esc(m.name || (m.prettyType || 'Material'))}
+              </strong>
+              <span class="cv-badge" style="border-color:#20444a;background:linear-gradient(180deg,#152024,#0f1a1c);color:#7ff6ff;">
+                ${esc(m.prettyType || m.type)}
+              </span>
+            </div>
+            <div style="display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.35rem;">
+              <span class="cv-badge">Qty: ${qty}</span>
+              ${m.template_id ? `<span class="cv-badge">Template #${esc(m.template_id)}</span>` : ``}
+            </div>
+            ${m.description ? `<div style="color:#c9c9c9; font-size:.88rem; margin-top:.45rem; opacity:.9;">${esc(m.description)}</div>` : ``}
+          </div>
+        </div>
+      `;
+    }
+    function renderGrid(list) {
+      el.grid.innerHTML = list.map(card).join('') || `<div class="cv-toast">No materials found.</div>`;
+    }
+    function renderPager(total) {
+      const pages = Math.max(1, Math.ceil(total / state.pageSize));
+      state.page = Math.min(state.page, pages);
+      el.pager.innerHTML = Array.from({length: pages}).map((_,i)=>{
+        const p = i+1;
+        const on = p===state.page ? 'background:#2a2a2a; color:#ffe600;' : '';
+        return `<button data-p="${p}" class="cv-btn" style="padding:.3rem .6rem; ${on}">${p}</button>`;
+      }).join('');
+      el.pager.querySelectorAll('button').forEach(b=>{
+        b.addEventListener('click', ()=>{ state.page = Number(b.dataset.p)||1; render(); });
+      });
+    }
+    function render() {
+      const f = filt(materialsAgg);
+      const s = sort(f);
+      renderPager(s.length);
+      renderGrid(paginate(s));
+    }
+    render();
   }
+
+  // tab switching
+  function selectTab(which) {
+    if (which === 'goblins') {
+      tabG.style.background = '#2a2a2a';
+      tabM.style.background = '';
+      renderGoblinTab();
+    } else {
+      tabM.style.background = '#2a2a2a';
+      tabG.style.background = '';
+      renderMaterialsTab();
+    }
+  }
+  tabG.addEventListener('click', ()=> selectTab('goblins'));
+  tabM.addEventListener('click', ()=> selectTab('materials'));
+
+  // default: goblins
+  selectTab('goblins');
 }
 
 /* =========================================================
@@ -3778,7 +3894,7 @@ async function renderGoblinInventory() {
     } catch (err) {
       if (!userNFTsRetryScheduled) {
         userNFTsRetryScheduled = true;
-        toast("⚠️ Goblins non caricati, ritento tra 10s…", "warn", 4000);
+        toast("⚠️ Goblins not loaded, i will retry again in 10s…", "warn", 4000);
         setTimeout(async () => {
           if (userNFTsLoaded || !sectionIsStillMounted()) return;
           try {
@@ -3786,12 +3902,12 @@ async function renderGoblinInventory() {
             if (r2.ok && Array.isArray(r2.data) && sectionIsStillMounted()) {
               userNFTsLoaded = true;
               hydrateGoblinUI(r2.data);
-              toast("✅ Goblins caricati al secondo tentativo.", "ok", 2500);
+              toast("✅ Goblins loaded", "ok", 2500);
             } else {
-              toast("❌ Goblins non disponibili (retry fallito).", "err", 4000);
+              toast("❌ Goblins not available at the moment. Please reload the page.", "err", 4000);
             }
           } catch (e2) {
-            if (sectionIsStillMounted()) toast("❌ Goblins non disponibili (retry fallito).", "err", 4000);
+            if (sectionIsStillMounted()) toast("❌ Goblins not available at the moment.", "err", 4000);
           }
         }, 10000);
       }

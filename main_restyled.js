@@ -11372,16 +11372,561 @@ function renderWalletView(type) {
   // Stub "Transactions Historie" (implementerai in seguito)
   if (type === 'history') {
     container.innerHTML = `
-      <div style="
-        padding:18px; border:1px dashed rgba(255,255,255,.2); border-radius:12px;
-        background:linear-gradient(180deg, rgba(0,160,255,.10), rgba(0,200,255,.06));
-        color:#e7fffa;">
-        <div style="font-weight:900; letter-spacing:.2px; margin-bottom:6px;">Transactions Historie</div>
-        <div style="opacity:.85">This tab is under construction. Soon available.</div>
+      <div class="cv-card" style="padding:12px; border-radius:14px; margin-bottom:10px;">
+        <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+          <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
+            <input id="th-search" placeholder="Search (tx, memo, from, to…)" style="
+              background:#151515; border:1px solid #333; color:#eee; padding:.55rem .7rem; border-radius:10px; width:260px;">
+            <select id="th-type" class="cv-btn" title="Type" style="min-width:150px;">
+              <option value="">All Types</option>
+              <option value="withdraw">Withdraw</option>
+              <option value="swap">Swap</option>
+              <option value="transfer">Transfer</option>
+              <option value="bridge">Bridge</option>
+            </select>
+            <select id="th-status" class="cv-btn" title="Status" style="min-width:150px;">
+              <option value="">All Status</option>
+              <option value="success">Success</option>
+              <option value="failed">Failed</option>
+              <option value="pending">Pending</option>
+            </select>
+            <select id="th-channel" class="cv-btn" title="Channel" style="min-width:150px;">
+              <option value="">All Channels</option>
+              <option value="twitch">Twitch</option>
+              <option value="telegram">Telegram</option>
+              <option value="wax">On-chain</option>
+              <option value="internal">Internal</option>
+            </select>
+            <select id="th-symbol" class="cv-btn" title="Token" style="min-width:140px;">
+              <option value="">All Tokens</option>
+            </select>
+            <select id="th-range" class="cv-btn" title="Time range" style="min-width:140px;">
+              <option value="">All time</option>
+              <option value="24h">Last 24h</option>
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:.5rem; align-items:center;">
+            <button id="th-refresh" class="cv-btn" title="Refresh">⟳ Refresh</button>
+            <button id="th-export" class="cv-btn" title="Export CSV">⬇ Export</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="th-list" style="display:grid; gap:10px;"></div>
+
+      <div id="th-footer" style="display:flex; justify-content:center; margin-top:10px;">
+        <button id="th-loadmore" class="btn btn-glow" style="min-width:220px;">Load more</button>
       </div>
     `;
+
+    // ---------- State ----------
+    const th = {
+      items: [],            // raw audit rows
+      txMap: new Map(),     // key -> aggregated tx
+      rows: [],             // aggregated list (render)
+      nextCursor: null,
+      loading: false,
+      pageSize: 100,
+      filters: { q:'', type:'', status:'', channel:'', symbol:'', range:'' }
+    };
+
+    const el = {
+      list: document.getElementById('th-list'),
+      loadMore: document.getElementById('th-loadmore'),
+      refresh: document.getElementById('th-refresh'),
+      export: document.getElementById('th-export'),
+      search: document.getElementById('th-search'),
+      type: document.getElementById('th-type'),
+      status: document.getElementById('th-status'),
+      channel: document.getElementById('th-channel'),
+      symbol: document.getElementById('th-symbol'),
+      range: document.getElementById('th-range'),
+      footer: document.getElementById('th-footer')
+    };
+
+    // ---------- Utils ----------
+    const esc = v => String(v ?? '').replace(/[&<>"'`]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[m]));
+    const fmtAmt = (n, d=6) => (Number(n||0) || 0).toFixed(d);
+    const fmtDate = iso => { try { return new Date(iso).toLocaleString(); } catch { return iso||''; } };
+    const debounce = (fn, ms=160) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; };
+
+    // ---------- Fetch (≤100 per call) ----------
+    async function fetchAuditPage(cursor=null) {
+      const payload = {
+        user_id: window.userData?.userId,
+        usx_token: window.userData?.usx_token,
+        wax_account: window.userData?.wax_account,
+        limit: th.pageSize,
+        cursor,
+        filters: { // the backend may ignore; client will still filter
+          type: th.filters.type,
+          status: th.filters.status,
+          channel: th.filters.channel,
+          symbol: th.filters.symbol,
+          q: th.filters.q,
+          range: th.filters.range
+        }
+      };
+      try {
+        if (typeof API !== 'undefined' && API.post) {
+          const r = await API.post('/audit_history', payload, 15000);
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.data?.items ? r.data : { items: Array.isArray(r.data) ? r.data : [], next_cursor: null };
+        }
+        const res = await fetch(`${BASE_URL}/audit_history`, {
+          method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        return data?.items ? data : { items: Array.isArray(data) ? data : [], next_cursor: null };
+      } catch(e) {
+        console.warn('[history] fetch failed:', e);
+        return { items: [], next_cursor: null };
+      }
+    }
+
+    // ---------- Aggregation helpers ----------
+    // Build grouping key:
+    //  - prefer tx_id
+    //  - else compose from (reference_type, reference_id, channel, from/to) + minute bucket
+    function txKeyFor(it) {
+      const txid = it.tx_id || it.metadata?.tx_id;
+      if (txid) return `tx::${txid}`;
+      const rt = (it.reference_type || '').toLowerCase();
+      const rid = it.reference_id || '';
+      const ch = (it.channel || '').toLowerCase();
+      const from = it.from_account || '';
+      const to = it.to_account || '';
+      const ts = it.created_at ? it.created_at.slice(0,16) : ''; // YYYY-MM-DDTHH:MM
+      return `grp::${rt}|${rid}|${ch}|${from}|${to}|${ts}`;
+    }
+
+    function upsertTx(it) {
+      const et = String(it.event_type||'').toLowerCase();
+      if (et === 'network_fee' || et === 'fee_collected') return; // hide fees always
+
+      // Infer primary type for UI
+      const primaryType = (() => {
+        const rt = String(it.reference_type||'').toLowerCase();
+        if (rt === 'swap') return 'swap';
+        if (rt === 'internal_transfer') return 'transfer';
+        if (rt === 'bridge') return 'bridge';
+        // withdraw flow tags:
+        if (['withdraw_initiated','withdraw_completed','withdraw_failed','send'].includes(et)) return 'withdraw';
+        return rt || (it.object_type || 'tx');
+      })();
+
+      const key = txKeyFor(it);
+      const cur = th.txMap.get(key) || {
+        key,
+        type: primaryType,                 // withdraw|swap|transfer|bridge
+        status: 'pending',                 // pending|success|failed
+        created_at: it.created_at || null,
+        updated_at: it.created_at || null,
+        channel: (it.channel || '').toLowerCase(),
+        from_account: it.from_account || '',
+        to_account: it.to_account || '',
+        tx_id: it.tx_id || it.metadata?.tx_id || null,
+        memo: it.memo || '',
+        // amounts (we show net / received and/or spent)
+        amount_in: null,   // e.g., swap debit / withdraw requested
+        symbol_in: null,
+        amount_out: null,  // e.g., swap credit / withdraw sent / transfer net / bridge net
+        symbol_out: null,
+        // swap pair parsing (FROM->TO)
+        pair: null,
+        meta: it.metadata || {}
+      };
+
+      // time bounds
+      if (it.created_at) {
+        if (!cur.created_at || new Date(it.created_at) < new Date(cur.created_at)) cur.created_at = it.created_at;
+        if (!cur.updated_at || new Date(it.created_at) > new Date(cur.updated_at)) cur.updated_at = it.created_at;
+      }
+      // memo (keep the latest meaningful)
+      if (it.memo && (!cur.memo || it.memo.length > cur.memo.length)) cur.memo = it.memo;
+
+      // Populate amounts/status by event type
+      switch (et) {
+        // ---------- WITHDRAW ----------
+        case 'withdraw_initiated': {
+          // tentative net (if provided via metadata), but keep pending
+          cur.status = (cur.status === 'success' || cur.status === 'failed') ? cur.status : 'pending';
+          if (cur.amount_out == null) cur.amount_out = Number(it.metadata?.net_on_chain || it.amount || 0);
+          if (!cur.symbol_out) cur.symbol_out = it.symbol || cur.symbol_out;
+          break;
+        }
+        case 'send':
+        case 'withdraw_completed': {
+          cur.status = 'success';
+          cur.amount_out = Number(it.amount || cur.amount_out || 0); // show net sent
+          cur.symbol_out = it.symbol || cur.symbol_out;
+          if (!cur.tx_id && it.tx_id) cur.tx_id = it.tx_id;
+          if (it.to_account) cur.to_account = it.to_account;
+          break;
+        }
+        case 'withdraw_failed': {
+          if (cur.status !== 'success') cur.status = 'failed';
+          break;
+        }
+
+        // ---------- SWAP ----------
+        case 'swap': {
+          // main summary row for swap; success flag in metadata
+          cur.type = 'swap';
+          if (it.metadata?.success === false) {
+            if (cur.status !== 'success') cur.status = 'failed';
+          } else {
+            // don't force success here; credit event will
+            if (cur.status === 'pending') cur.status = 'pending';
+          }
+          // parse FROM->TO
+          const ref = it.reference_id || '';
+          const parts = ref.split('->');
+          if (parts.length === 2) {
+            cur.pair = `${parts[0].toUpperCase()}→${parts[1].toUpperCase()}`;
+            if (!cur.symbol_in)  cur.symbol_in  = parts[0].toUpperCase();
+            if (!cur.symbol_out) cur.symbol_out = parts[1].toUpperCase();
+          }
+          break;
+        }
+        case 'debit': { // from_token spent
+          cur.type = 'swap';
+          cur.amount_in = Number(it.amount || cur.amount_in || 0);
+          cur.symbol_in = it.symbol || cur.symbol_in;
+          break;
+        }
+        case 'credit': { // to_token received (net!)
+          cur.type = 'swap';
+          cur.status = 'success';
+          cur.amount_out = Number(it.amount || cur.amount_out || 0);
+          cur.symbol_out = it.symbol || cur.symbol_out;
+          break;
+        }
+        case 'swap_failed': {
+          if (cur.status !== 'success') cur.status = 'failed';
+          break;
+        }
+
+        // ---------- TRANSFER ----------
+        case 'transfer': { // success; amount already net of fee
+          cur.type = 'transfer';
+          cur.status = 'success';
+          cur.amount_out = Number(it.amount || cur.amount_out || 0);
+          cur.symbol_out = it.symbol || cur.symbol_out;
+          break;
+        }
+        case 'transfer_denied':
+        case 'transfer_failed': {
+          cur.type = 'transfer';
+          if (cur.status !== 'success') cur.status = 'failed';
+          if (cur.amount_out == null && it.amount != null) {
+            cur.amount_out = Number(it.amount); cur.symbol_out = it.symbol || cur.symbol_out;
+          }
+          break;
+        }
+
+        // ---------- BRIDGE ----------
+        case 'bridge_success': {
+          cur.type = 'bridge';
+          cur.status = 'success';
+          // amount: gross; net amount in metadata.net_amount (prefer net display)
+          if (it.metadata?.net_amount != null) {
+            cur.amount_out = Number(it.metadata.net_amount);
+            cur.symbol_out = it.symbol || cur.symbol_out;
+          } else {
+            cur.amount_out = Number(it.amount || cur.amount_out || 0);
+            cur.symbol_out = it.symbol || cur.symbol_out;
+          }
+          break;
+        }
+        case 'bridge_failed':
+        case 'bridge_denied': {
+          cur.type = 'bridge';
+          if (cur.status !== 'success') cur.status = 'failed';
+          if (cur.amount_out == null && it.amount != null) {
+            cur.amount_out = Number(it.amount); cur.symbol_out = it.symbol || cur.symbol_out;
+          }
+          break;
+        }
+
+        default: {
+          // fallback: keep whatever; do not expose fees
+          break;
+        }
+      }
+
+      // keep channel/from/to if provided later
+      if (it.channel && !cur.channel) cur.channel = String(it.channel||'').toLowerCase();
+      if (it.from_account && !cur.from_account) cur.from_account = it.from_account;
+      if (it.to_account && !cur.to_account) cur.to_account = it.to_account;
+
+      th.txMap.set(key, cur);
+    }
+
+    function aggregateItems(items) {
+      for (const it of items) upsertTx(it);
+      th.rows = Array.from(th.txMap.values())
+        .sort((a,b)=> new Date(b.created_at||0) - new Date(a.created_at||0));
+    }
+
+    // ---------- Filters ----------
+    function inRange(createdAt, rangeKey) {
+      if (!rangeKey) return true;
+      const ts = createdAt ? new Date(createdAt).getTime() : 0;
+      const now = Date.now();
+      if (!ts) return false;
+      if (rangeKey==='24h')  return (now - ts) <= 24*3600*1000;
+      if (rangeKey==='7d')   return (now - ts) <= 7*24*3600*1000;
+      if (rangeKey==='30d')  return (now - ts) <= 30*24*3600*1000;
+      return true;
+    }
+
+    function applyClientFilters() {
+      const q = (th.filters.q||'').trim().toLowerCase();
+      const { type, status, channel, symbol, range } = th.filters;
+
+      return th.rows.filter(r=>{
+        const okT   = !type   || (r.type||'').toLowerCase() === type;
+        const okS   = !status || r.status === status;
+        const okC   = !channel|| (r.channel||'').toLowerCase() === channel;
+        const okSym = !symbol || (r.symbol_in||'').toLowerCase() === symbol.toLowerCase()
+                               || (r.symbol_out||'').toLowerCase() === symbol.toLowerCase();
+        const okR   = inRange(r.created_at, range);
+        const text  = [
+          r.tx_id, r.memo, r.from_account, r.to_account, r.symbol_in, r.symbol_out, r.type, r.channel, r.pair
+        ].map(v=>String(v||'').toLowerCase()).join(' ');
+        const okQ   = !q || text.includes(q);
+        return okT && okS && okC && okSym && okR && okQ;
+      });
+    }
+
+    function buildSymbolOptions() {
+      const set = new Set();
+      th.rows.forEach(r=>{
+        if (r.symbol_in)  set.add(r.symbol_in);
+        if (r.symbol_out) set.add(r.symbol_out);
+      });
+      el.symbol.innerHTML = `<option value="">All Tokens</option>${
+        [...set].sort().map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('')
+      }`;
+    }
+
+    // ---------- UI bits ----------
+    function statusChip(s) {
+      if (s==='success') return `<span class="cv-badge" style="background:rgba(0,255,160,.16); border-color:#1e634d; color:#83ffd6;">SUCCESS</span>`;
+      if (s==='failed')  return `<span class="cv-badge" style="background:rgba(255,60,60,.16); border-color:#6d1e1e; color:#ffb3b3;">FAILED</span>`;
+      return `<span class="cv-badge" style="background:rgba(255,200,0,.14); border-color:#6a5514; color:#ffe28a;">PENDING</span>`;
+    }
+    function typeIcon(t) {
+      t = String(t||'').toLowerCase();
+      if (t==='withdraw') return '⬇';
+      if (t==='swap')     return '🔄';
+      if (t==='transfer') return '🔁';
+      if (t==='bridge')   return '🔀';
+      return '⧉';
+    }
+    function channelChip(c) {
+      c = String(c||'').toLowerCase();
+      if (c==='twitch')   return `<span class="cv-badge" style="background:rgba(255,0,255,.10); border-color:#5a2a6e; color:#ffc7ff;">Twitch</span>`;
+      if (c==='telegram') return `<span class="cv-badge" style="background:rgba(0,255,200,.10); border-color:#1e5d57; color:#a7fff0;">Telegram</span>`;
+      if (c==='wax')      return `<span class="cv-badge" style="background:rgba(0,160,255,.10); border-color:#1e4663; color:#aee3ff;">On-chain</span>`;
+      return `<span class="cv-badge" style="background:rgba(180,180,180,.10); border-color:#424242; color:#e7e7e7;">Internal</span>`;
+    }
+
+    function rightValue(r){
+      if (r.type==='swap') {
+        const left  = r.amount_in != null ? `${fmtAmt(r.amount_in)} ${esc(r.symbol_in||'')}` : '';
+        const right = r.amount_out!= null ? `${fmtAmt(r.amount_out)} ${esc(r.symbol_out||'')}`: '';
+        if (left && right) return `${left} → ${right}`;
+        if (right) return right;
+        return left || '-';
+      }
+      // withdraw / transfer / bridge
+      if (r.amount_out != null && r.symbol_out) return `${fmtAmt(r.amount_out)} ${esc(r.symbol_out)}`;
+      return '-';
+    }
+
+    function rowDetails(r){
+      // No fees shown; only helpful info
+      const lines = [];
+      if (r.pair) lines.push(`<div><strong>Pair</strong>: ${esc(r.pair)}</div>`);
+      if (r.memo) lines.push(`<div><strong>Note</strong>: ${esc(r.memo)}</div>`);
+      if (r.from_account) lines.push(`<div><strong>From</strong>: ${esc(r.from_account)}</div>`);
+      if (r.to_account)   lines.push(`<div><strong>To</strong>: ${esc(r.to_account)}</div>`);
+      if (r.meta?.execution_price != null) lines.push(`<div><strong>Execution price</strong>: ${esc(r.meta.execution_price)}</div>`);
+      if (r.meta?.quoted_output != null)   lines.push(`<div><strong>Quoted output</strong>: ${esc(r.meta.quoted_output)}</div>`);
+      if (r.type==='bridge' && r.meta?.net_amount != null) lines.push(`<div><strong>Net bridged</strong>: ${fmtAmt(r.meta.net_amount)} ${esc(r.symbol_out||'')}</div>`);
+      return lines.join('') || `<div style="opacity:.8;">No extra details.</div>`;
+    }
+
+    function renderRows() {
+      const rows = applyClientFilters();
+      if (!rows.length) {
+        el.list.innerHTML = `
+          <div class="cv-card" style="padding:14px; text-align:center;">
+            <div style="font-weight:800; color:#e7fffa; margin-bottom:4px;">No transactions match your filters.</div>
+            <div style="opacity:.8;">Try clearing filters or loading more.</div>
+          </div>`;
+        return;
+      }
+
+      el.list.innerHTML = rows.map((r,i)=>{
+        const txUrl = r.tx_id ? `https://waxblock.io/transaction/${esc(r.tx_id)}` : '';
+        const subtitle = [
+          r.type ? r.type.toUpperCase() : 'TX',
+          r.pair ? `• ${r.pair}` : (r.symbol_out || r.symbol_in ? `• ${esc(r.symbol_out||r.symbol_in)}`:''),
+          r.channel ? `• ${r.channel}` : '',
+          `• ${fmtDate(r.created_at)}`
+        ].join(' ');
+        const tip = `${(r.type||'TX').toUpperCase()} • ${r.status.toUpperCase()}
+${r.pair||''}
+From: ${r.from_account||'-'}
+To:   ${r.to_account||'-'}
+${r.memo||''}`.trim();
+
+        return `
+          <div class="cv-card" title="${esc(tip)}" style="
+            border-radius:14px; padding:10px;
+            display:grid; grid-template-columns: 48px 1fr auto;
+            gap:12px; align-items:center; overflow:hidden;">
+            <div style="
+              width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+              background:linear-gradient(135deg, rgba(0,255,200,.15), rgba(120,0,255,.12));
+              box-shadow: inset 0 0 12px rgba(0,255,200,.15);
+              font-size:1.2rem;">${typeIcon(r.type)}</div>
+
+            <div style="min-width:0;">
+              <div style="display:flex; gap:.6rem; align-items:center; flex-wrap:wrap;">
+                <strong style="color:#e7fffa; font-family:Orbitron,system-ui,sans-serif; font-size:1rem;">
+                  ${esc((r.type||'TX').toUpperCase())}
+                </strong>
+                ${statusChip(r.status)}
+                ${channelChip(r.channel)}
+                ${r.symbol_out ? `<span class="cv-badge">${esc(r.symbol_out)}</span>` : (r.symbol_in ? `<span class="cv-badge">${esc(r.symbol_in)}</span>`:'')}
+                ${r.to_account ? `<span class="cv-badge">→ ${esc(r.to_account)}</span>`:''}
+              </div>
+              <div style="color:#9aa0a6; font-size:.9rem; margin-top:.25rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${esc(subtitle)}
+              </div>
+              <div class="th-details" style="display:none; margin-top:.55rem; padding:.6rem; border:1px solid rgba(255,255,255,.12); border-radius:10px;
+                    background:linear-gradient(180deg, rgba(12,14,16,.92), rgba(10,10,12,.92)); color:#dbecee;">
+                ${rowDetails(r)}
+              </div>
+            </div>
+
+            <div style="text-align:right; min-width:180px;">
+              <div style="font-weight:900; color:#9afbd9;">${rightValue(r)}</div>
+              <div style="margin-top:.35rem; display:flex; gap:.4rem; justify-content:flex-end; flex-wrap:wrap;">
+                ${txUrl ? `<a href="${txUrl}" target="_blank" class="cv-btn" style="padding:.25rem .5rem;">View TX</a>` : `<span style="opacity:.7; padding:.25rem .5rem;">No TX yet</span>`}
+                <button class="cv-btn th-toggle" data-i="${i}" style="padding:.25rem .5rem;">Details</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // bind details toggles
+      el.list.querySelectorAll('.th-toggle').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const card = btn.closest('.cv-card');
+          const det  = card?.querySelector('.th-details');
+          if (!det) return;
+          const shown = det.style.display !== 'none';
+          det.style.display = shown ? 'none' : 'block';
+          btn.textContent = shown ? 'Details' : 'Hide';
+        });
+      });
+    }
+
+    // ---------- Load / More / Refresh ----------
+    async function initialLoad() {
+      th.loading = true;
+      el.loadMore.disabled = true;
+      el.loadMore.textContent = 'Loading…';
+      const { items, next_cursor } = await fetchAuditPage(null);
+      th.items = items || [];
+      th.nextCursor = next_cursor || null;
+      aggregateItems(th.items);
+      buildSymbolOptions();
+      renderRows();
+      th.loading = false;
+      el.loadMore.disabled = !th.nextCursor;
+      el.loadMore.textContent = th.nextCursor ? 'Load more' : 'No more';
+    }
+
+    async function loadMore() {
+      if (!th.nextCursor || th.loading) return;
+      th.loading = true;
+      el.loadMore.disabled = true;
+      el.loadMore.textContent = 'Loading…';
+      const { items, next_cursor } = await fetchAuditPage(th.nextCursor);
+      (items||[]).forEach(i=> th.items.push(i));
+      th.nextCursor = next_cursor || null;
+      aggregateItems(items||[]);
+      buildSymbolOptions();
+      renderRows();
+      th.loading = false;
+      el.loadMore.disabled = !th.nextCursor;
+      el.loadMore.textContent = th.nextCursor ? 'Load more' : 'No more';
+    }
+
+    // ---------- CSV Export (current filtered rows) ----------
+    function exportCSV() {
+      const rows = applyClientFilters();
+      const head = ['date','status','type','channel','from','to','symbol_in','amount_in','symbol_out','amount_out','pair','tx_id','memo'];
+      const lines = [head.join(',')].concat(rows.map(r => ([
+        `"${(fmtDate(r.created_at)).replace(/"/g,'""')}"`,
+        `"${(r.status||'').toUpperCase()}"`,
+        `"${(r.type||'').toUpperCase()}"`,
+        `"${r.channel||''}"`,
+        `"${(r.from_account||'').replace(/"/g,'""')}"`,
+        `"${(r.to_account||'').replace(/"/g,'""')}"`,
+        `"${r.symbol_in||''}"`,
+        `"${r.amount_in!=null ? fmtAmt(r.amount_in) : ''}"`,
+        `"${r.symbol_out||''}"`,
+        `"${r.amount_out!=null ? fmtAmt(r.amount_out) : ''}"`,
+        `"${r.pair||''}"`,
+        `"${r.tx_id||''}"`,
+        `"${(r.memo||'').replace(/"/g,'""')}"`
+      ].join(','))));
+      const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `transactions_${Date.now()}.csv`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=> URL.revokeObjectURL(url), 1500);
+    }
+
+    // ---------- Bindings ----------
+    el.loadMore.addEventListener('click', loadMore);
+    el.refresh .addEventListener('click', initialLoad);
+    el.export  .addEventListener('click', exportCSV);
+
+    const applyFilters = debounce(()=>{
+      th.filters.q = el.search?.value || '';
+      th.filters.type = (el.type?.value || '').toLowerCase();
+      th.filters.status = (el.status?.value || '').toLowerCase();
+      th.filters.channel = (el.channel?.value || '').toLowerCase();
+      th.filters.symbol = el.symbol?.value || '';
+      th.filters.range  = el.range?.value || '';
+      renderRows();
+    }, 140);
+
+    el.search.addEventListener('input', applyFilters);
+    el.type  .addEventListener('change', applyFilters);
+    el.status.addEventListener('change', applyFilters);
+    el.channel.addEventListener('change', applyFilters);
+    el.symbol.addEventListener('change', applyFilters);
+    el.range .addEventListener('change', applyFilters);
+
+    // Kick-off
+    initialLoad();
     return;
-  }  
+  }
+
   const raw = type==='twitch' ? (window.twitchWalletBalances||[]) : (window.telegramWalletBalances||[]);
   const balances = [...raw].sort((a,b)=> (b.amount||0)-(a.amount||0));
 

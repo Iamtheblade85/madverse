@@ -3045,6 +3045,65 @@ function loadGoblinDex() {
   renderGoblinInventory();
 }
 
+// Rarity → classi CSS (testate: common, rare, epic, legendary, mythic)
+const RARITY_COLOR_CLASS = Object.freeze({
+  common:    "neon-green",
+  rare:      "neon-blue",
+  epic:      "neon-purple",
+  legendary: "neon-gold",
+  mythic:    "neon-red",
+});
+
+const RARITY_BORDER_CLASS = Object.freeze({
+  common:    "border-glow-green",
+  rare:      "border-glow-blue",
+  epic:      "border-glow-purple",
+  legendary: "border-glow-gold",
+  mythic:    "border-glow-red",
+});
+
+// Breakpoint per colore livello (dal più alto al più basso)
+const LEVEL_COLOR_BREAKPOINTS = Object.freeze([
+  { min: 10, cls: "neon-red"   },
+  { min:  7, cls: "neon-gold"  },
+  { min:  4, cls: "neon-purple"},
+  { min:  2, cls: "neon-blue"  },
+  { min: -Infinity, cls: "neon-green" },
+]);
+
+// Tavolozza per etichette/legend
+const ACCENT_COLORS = Object.freeze(["#0ff", "#ff66cc", "#ffcc00", "#00ff99", "#66b2ff"]);
+
+// Helpers di normalizzazione
+const _safeLower = (v) => (typeof v === "string" ? v.trim().toLowerCase() : "");
+
+/** Ritorna la classe colore per la rarity (fallback: 'neon-white'). */
+function getRarityColorClass(rarity) {
+  const key = _safeLower(rarity);
+  return RARITY_COLOR_CLASS[key] || "neon-white";
+}
+
+/** Ritorna la classe bordo glow per la rarity (fallback: ''). */
+function getRarityBorderClass(rarity) {
+  const key = _safeLower(rarity);
+  return RARITY_BORDER_CLASS[key] || "";
+}
+
+/** Ritorna la classe colore in base al livello (soglie in LEVEL_COLOR_BREAKPOINTS). */
+function getLevelColorClass(level) {
+  const n = Number(level) || 0;
+  for (const bp of LEVEL_COLOR_BREAKPOINTS) {
+    if (n >= bp.min) return bp.cls;
+  }
+  return "neon-green";
+}
+
+/** Ritorna un colore d’accento deterministico dato un indice. */
+function getLabelColor(index) {
+  const i = Math.abs(Number(index) || 0) % ACCENT_COLORS.length;
+  return ACCENT_COLORS[i];
+}
+
 async function renderGoblinInventory() {
   const container = document.getElementById('goblin-content');
   if (!container) return;

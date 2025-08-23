@@ -47,6 +47,18 @@
   </script>
 </head>
 <body>
+  <!-- ============ TOP TABS NAV ============ -->
+  <nav id="cv-tabs" class="cv-tabs">
+    <button class="cv-tab is-active" data-tab="tab-cave">Cave</button>
+    <button class="cv-tab" data-tab="tab-nfts">NFTs</button>
+    <button class="cv-tab" data-tab="tab-equipment">Equipment</button>
+    <button class="cv-tab" data-tab="tab-consumables">Consumables</button>
+    <button class="cv-tab" data-tab="tab-season">Season Pass</button>
+    <button class="cv-tab" data-tab="tab-leaderboard">Leaderboard</button>
+    <button class="cv-tab" data-tab="tab-admin" data-role-required="admin">Admin</button>
+    <button class="cv-tab" data-tab="tab-moderation" data-role-required="moderator">Moderation</button>
+  </nav>
+  
   <noscript>
     <div style="padding:12px; background:#4a0000; color:#fff; text-align:center;">
       JavaScript is required to run Dwarfs Cave. Please enable it and reload.
@@ -74,148 +86,224 @@
     </header>
 
     <!-- Main Content -->
-    <main class="app-main" role="main">
-      <!-- ===================== CAVE PAGE ===================== -->
-      <section id="tab-cave" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-cave">
-        <div id="goblin-content" class="cave-wrap">
-          <!-- Toasts (live messages) -->
-          <div id="cv-toast-host" role="status" aria-live="polite"></div>
-
-          <!-- ======== Top Summary Block: Canvas + Live Boards ======== -->
-          <div id="expedition-summary-block" class="cv-section">
-            <div class="summary-grid">
-              <!-- Left: Canvas (overlay-friendly) -->
-              <div class="summary-left">
-                <h2 class="cv-title hide-when-embed">Global Expeditions</h2>
-                <div id="cv-video-or-canvas" class="overlay-canvas-frame">
-                  <canvas id="caveCanvas" class="overlay-canvas" aria-label="Goblin expedition cave scene"></canvas>
-                </div>
-                <!-- Duration segmented control -->
-                <div class="segmented hide-when-embed" id="cv-duration-segment" role="tablist" aria-label="Expedition Duration">
-                  <button class="cv-seg-btn" data-dur="10m" role="tab" aria-selected="false" title="2.0× multiplier">10m</button>
-                  <button class="cv-seg-btn" data-dur="30m" role="tab" aria-selected="false" title="1.3× multiplier">30m</button>
-                  <button class="cv-seg-btn is-active" data-dur="1h" role="tab" aria-selected="true" title="1.0× multiplier">1h</button>
-                  <button class="cv-seg-btn" data-dur="6h" role="tab" aria-selected="false" title="0.7× multiplier">6h</button>
-                  <button class="cv-seg-btn" data-dur="24h" role="tab" aria-selected="false" title="0.4× multiplier">24h</button>
-                </div>
-              </div>
-
-              <!-- Right: Live Boards & Controls -->
-              <aside class="summary-right">
-                <!-- Live expeditions in progress -->
-                <div class="cv-card" aria-labelledby="liveexp-title">
-                  <div class="cv-card-head">
-                    <h3 id="liveexp-title" class="cv-card-title cyan">🌍 Live Expeditions</h3>
-                    <span class="cv-chip cyan-outline" title="Auto refresh">auto</span>
-                  </div>
-                  <div id="cv-global-cards" class="overlay-stats-grid" aria-live="polite"></div>
-                </div>
-
-                <!-- Recent expedition results -->
-                <div class="cv-card cv-card--amber hide-when-embed" aria-labelledby="recentexp-title">
-                  <div class="cv-card-head">
-                    <h3 id="recentexp-title" class="cv-card-title amber">⛏️ Latest Expedition Results</h3>
-                    <span class="cv-chip amber-outline">last 10</span>
-                  </div>
-                  <div id="cv-recent-grid" class="cv-cards"></div>
-                  <div id="cv-recent-empty" class="cv-empty" hidden>No results yet.</div>
-                </div>
-
-                <!-- Chest winners (live) -->
-                <div class="cv-card cv-card--green" aria-labelledby="bonus-title">
-                  <div class="cv-card-head">
-                    <h3 id="bonus-title" class="cv-card-title green">🎁 Latest Chest Rewards</h3>
-                    <span class="cv-chip green-outline">live</span>
-                  </div>
-                  <div id="cv-bonus-grid" class="cv-cards"></div>
-                </div>
-
-                <!-- Perk trigger -->
-                <div class="cv-cta-box hide-when-embed">
-                  <button id="cv-chest-btn" class="cv-btn cv-btn-primary" aria-label="Try to trigger a perk drop (cooldown applies)">🎁 Try a Perk Drop</button>
-                  <div class="cv-note">Cooldown enforced automatically. Perks may spawn a chest on the canvas.</div>
-                </div>
-              </aside>
-            </div>
-          </div>
-
-          <!-- ======== Expedition Consumables (run-wide) ======== -->
-          <div class="cv-section hide-when-embed">
-            <div id="cv-exp-consumables" class="cv-card"></div>
-          </div>
-
-          <!-- ======== Team Builder: Filters/Tools ======== -->
-          <div class="cv-section hide-when-embed">
-            <div class="toolbar">
-              <!-- Search -->
-              <input id="cv-search" class="cv-input" inputmode="search" placeholder="Search name or ID…" aria-label="Search goblins by name or asset ID" />
-
-              <!-- Rarity -->
-              <label for="cv-rarity" class="cv-label">Rarity</label>
-              <select id="cv-rarity" class="cv-select" aria-label="Filter by rarity">
-                <option value="">All</option>
-                <option>Common</option>
-                <option>Uncommon</option>
-                <option>Rare</option>
-                <option>Epic</option>
-                <option>Legendary</option>
-                <option>Mythic</option>
+    <!-- ============ TABS CONTAINERS ============ -->
+    <main id="cv-tabs-host">
+    
+      <!-- —— TAB: CAVE (gioco) —— -->
+      <section id="tab-cave" class="cv-tabpanel is-visible" role="tabpanel" aria-labelledby="Cave">
+        <!-- Lascia invariata tutta la tua attuale struttura “Dwarfs Cave” qui dentro -->
+        <div id="goblin-content">
+    
+          <!-- TOAST host -->
+          <div id="cv-toast-host" class="cv-toast-host" aria-live="polite"></div>
+    
+          <!-- top header + toolbar (già esistente) -->
+          <header class="cv-header">
+            <div class="cv-title">Dwarfs Cave</div>
+            <div class="cv-subtitle">Live overlay-ready (Twitch compatible)</div>
+          </header>
+    
+          <!-- video/canvas -->
+          <section id="cv-video-or-canvas" class="cv-canvas-wrap">
+            <canvas id="caveCanvas" width="1280" height="720" aria-label="Cave scene"></canvas>
+          </section>
+    
+          <!-- action toolbar -->
+          <section class="cv-toolbar">
+            <div class="left">
+              <input id="cv-search" class="cv-input" placeholder="Search goblins by name or ID" />
+              <select id="cv-rarity" class="cv-select">
+                <option value="">All rarities</option>
+                <option>Common</option><option>Rare</option><option>Epic</option><option>Legendary</option><option>Mythic</option>
               </select>
-
-              <!-- Power -->
-              <label for="cv-power" class="cv-label">Min Power</label>
-              <input id="cv-power" type="range" min="0" max="100" step="1" value="0" aria-label="Minimum daily power filter" />
-              <span id="cv-power-val" class="cv-meter-val">0</span>
-
-              <!-- Sorting -->
-              <div class="segmented" id="cv-sort-segment" role="tablist" aria-label="Sort Goblins">
-                <button class="cv-seg-btn is-active" data-sort="rarity" role="tab" aria-selected="true">Rarity</button>
-                <button class="cv-seg-btn" data-sort="level" role="tab" aria-selected="false">Level</button>
-                <button class="cv-seg-btn" data-sort="daily_power" role="tab" aria-selected="false">Power</button>
-              </div>
-
-              <!-- Quick select -->
-              <div class="tool-actions">
-                <button class="cv-btn" id="cv-select-100" title="Select first 100 available">First 100</button>
-                <button class="cv-btn" id="cv-select-best" title="Auto-pick the best 100 by stats">🏆 Best 100</button>
-                <button class="cv-btn" id="cv-deselect" title="Clear selection">❌ Clear</button>
+              <div class="cv-range">
+                <label>Min Power <span id="cv-power-val">0</span></label>
+                <input id="cv-power" type="range" min="0" max="500" step="5" value="0" />
               </div>
             </div>
-
-            <!-- Active filter badges -->
-            <div id="cv-active-filters" class="filter-badges" aria-live="polite"></div>
-
-            <!-- Sticky selection summary -->
-            <div id="cv-summary" class="cv-card cv-summary"></div>
-          </div>
-
-          <!-- ======== Goblin Grid ======== -->
-          <div class="cv-section hide-when-embed">
-            <div id="cv-goblin-list" class="goblin-grid" aria-live="polite" aria-label="Your Goblins"></div>
-          </div>
-
-          <!-- ======== Info Panel ======== -->
-          <div class="cv-section hide-when-embed">
-            <div class="cv-card info-card">
-              <h3 class="cv-title">📜 How it works</h3>
-              <ul class="cv-note-list">
-                <li>Choose up to <strong>100 goblins</strong> and pick an <strong>expedition duration</strong> (10m / 30m / 1h / 6h / 24h). Shorter runs have higher multipliers.</li>
-                <li>Rewards include <strong>dynamic tokens</strong> (whatever the server sends: CHIPS, SQJ, WOMBAT, WAX, etc.), <strong>NFTs</strong>, and <strong>consumables</strong>.</li>
-                <li>Each goblin has <strong>8 equipment slots</strong>. Identical templates (same schema + template) cannot be used on multiple slots of the same goblin.</li>
-                <li>Consumables(up to 3 per run) can be used (1 per goblin), and can also be <strong>won</strong> from chests or expeditions or official Packs.</li>
-              </ul>
+            <div class="right">
+              <div id="cv-sort-segment" class="cv-segment">
+                <button class="cv-seg-btn is-active" data-sort="rarity">Rarity</button>
+                <button class="cv-seg-btn" data-sort="level">Level</button>
+                <button class="cv-seg-btn" data-sort="daily_power">Power</button>
+              </div>
+              <div id="cv-duration-segment" class="cv-segment">
+                <button class="cv-seg-btn is-active" data-dur="1h">1h</button>
+                <button class="cv-seg-btn" data-dur="10m">10m</button>
+                <button class="cv-seg-btn" data-dur="30m">30m</button>
+                <button class="cv-seg-btn" data-dur="6h">6h</button>
+                <button class="cv-seg-btn" data-dur="24h">24h</button>
+              </div>
+              <button class="cv-btn" id="cv-select-100" title="Select first 100 available">First 100</button>
+              <button class="cv-btn" id="cv-select-best" title="Auto-pick best 100 by level+main attribute">Best 100</button>
+              <button class="cv-btn ghost" id="cv-deselect">Clear</button>
+            </div>
+          </section>
+    
+          <!-- selection summary -->
+          <section id="cv-summary" class="cv-summary"></section>
+          <section id="cv-active-filters" class="cv-badges"></section>
+    
+          <!-- twin columns: goblins + side panels  -->
+          <section class="cv-grid">
+            <div class="col main">
+              <div id="cv-goblin-list" class="cv-cards"></div>
+            </div>
+            <aside class="col side">
+              <div class="cv-card">
+                <div class="cv-card-title">Global expeditions</div>
+                <div id="cv-global-cards" class="cv-cards-grid"></div>
+              </div>
+    
+              <div class="cv-card">
+                <div class="cv-card-title">Recent expeditions</div>
+                <div id="cv-recent-grid" class="cv-cards"></div>
+              </div>
+    
+              <div class="cv-card">
+                <div class="cv-card-title">Bonus chests & winners</div>
+                <div id="cv-bonus-grid" class="cv-cards"></div>
+                <button id="cv-chest-btn" class="cv-btn" title="Try a perk drop (!chest on Twitch)">Try perk</button>
+              </div>
+    
+              <div id="cv-exp-consumables" class="cv-card"></div>
+            </aside>
+          </section>
+    
+          <section id="expedition-summary-block" class="cv-summary-block"></section>
+        </div>
+      </section>
+    
+      <!-- —— TAB: NFTs —— -->
+      <section id="tab-nfts" class="cv-tabpanel" role="tabpanel" aria-labelledby="NFTs">
+        <header class="cv-header">
+          <div class="cv-title">Your NFTs</div>
+          <div class="cv-subtitle">Goblins, Equipment (on-chain), snapshots & history</div>
+        </header>
+        <div class="cv-grid">
+          <div class="col main">
+            <div class="cv-card">
+              <div class="cv-card-title">Goblins</div>
+              <div id="nfts-goblins-list" class="cv-cards"></div>
+            </div>
+            <div class="cv-card">
+              <div class="cv-card-title">Equipment</div>
+              <div id="nfts-equipment-list" class="cv-cards"></div>
             </div>
           </div>
+          <aside class="col side">
+            <div class="cv-card">
+              <div class="cv-card-title">Ownership history</div>
+              <div id="nfts-history" class="cv-cards"></div>
+            </div>
+          </aside>
         </div>
       </section>
-
-      <!-- ===================== SEASON PASS PAGE ===================== -->
-      <section id="tab-season" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-season" hidden>
-        <div class="cv-section">
-          <div id="season-pass-root" class="season-wrap" aria-live="polite"></div>
+    
+      <!-- —— TAB: Equipment global management —— -->
+      <section id="tab-equipment" class="cv-tabpanel" role="tabpanel" aria-labelledby="Equipment">
+        <header class="cv-header">
+          <div class="cv-title">Equipment Manager</div>
+          <div class="cv-subtitle">Assign, move, or remove items across goblins</div>
+        </header>
+        <div class="cv-grid">
+          <div class="col main">
+            <div id="equip-manager" class="cv-card"></div>
+          </div>
+          <aside class="col side">
+            <div class="cv-card">
+              <div class="cv-card-title">Quick actions</div>
+              <div id="equip-quick-actions"></div>
+            </div>
+          </aside>
         </div>
       </section>
+    
+      <!-- —— TAB: Consumables —— -->
+      <section id="tab-consumables" class="cv-tabpanel" role="tabpanel" aria-labelledby="Consumables">
+        <header class="cv-header">
+          <div class="cv-title">Consumables</div>
+          <div class="cv-subtitle">Inventory, usage logs, crafting (if enabled)</div>
+        </header>
+        <div class="cv-grid">
+          <div class="col main">
+            <div class="cv-card">
+              <div class="cv-card-title">Inventory</div>
+              <div id="cons-list" class="cv-cards"></div>
+            </div>
+            <div class="cv-card">
+              <div class="cv-card-title">Usage history</div>
+              <div id="cons-usage" class="cv-cards"></div>
+            </div>
+          </div>
+          <aside class="col side">
+            <div class="cv-card">
+              <div class="cv-card-title">Info</div>
+              <div class="cv-note">Max 3 per expedition (run-wide), and max 1 per goblin.</div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    
+      <!-- —— TAB: Season Pass —— -->
+      <section id="tab-season" class="cv-tabpanel" role="tabpanel" aria-labelledby="Season Pass">
+        <header class="cv-header">
+          <div class="cv-title">Season Pass</div>
+          <div class="cv-subtitle">Progress, dual track rewards (Standard & Elite), claims</div>
+        </header>
+        <div id="season-root" class="cv-card"></div>
+      </section>
+    
+      <!-- —— TAB: Leaderboard —— -->
+      <section id="tab-leaderboard" class="cv-tabpanel" role="tabpanel" aria-labelledby="Leaderboard">
+        <header class="cv-header">
+          <div class="cv-title">Leaderboard</div>
+          <div class="cv-subtitle">Top players for the active season</div>
+        </header>
+        <div id="lb-root" class="cv-card"></div>
+      </section>
+    
+      <!-- —— TAB: Admin (solo admin) —— -->
+      <section id="tab-admin" class="cv-tabpanel" data-role-required="admin" role="tabpanel" aria-labelledby="Admin">
+        <header class="cv-header">
+          <div class="cv-title">Admin Center</div>
+          <div class="cv-subtitle">Seasons, tiers, expeditions, rewards, Twitch & perks</div>
+        </header>
+        <div class="cv-grid">
+          <div class="col main">
+            <div class="cv-card">
+              <div class="cv-card-title">Expeditions (all users)</div>
+              <div id="admin-exp-list" class="cv-cards"></div>
+            </div>
+            <div class="cv-card">
+              <div class="cv-card-title">Seasons & tiers</div>
+              <div id="admin-seasons" class="cv-cards"></div>
+            </div>
+            <div class="cv-card">
+              <div class="cv-card-title">Spawn chest / Perks</div>
+              <div id="admin-perks" class="cv-cards"></div>
+            </div>
+          </div>
+          <aside class="col side">
+            <div class="cv-card">
+              <div class="cv-card-title">VIP & Roles</div>
+              <div id="admin-roles" class="cv-cards"></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    
+      <!-- —— TAB: Moderation (solo moderator) —— -->
+      <section id="tab-moderation" class="cv-tabpanel" data-role-required="moderator" role="tabpanel" aria-labelledby="Moderation">
+        <header class="cv-header">
+          <div class="cv-title">Moderation</div>
+          <div class="cv-subtitle">View all expeditions, spawn perks (rate-limited), review logs</div>
+        </header>
+        <div id="mod-root" class="cv-card"></div>
+      </section>
+    
     </main>
+
 
     <!-- Footer -->
     <footer class="app-footer hide-when-embed" role="contentinfo">

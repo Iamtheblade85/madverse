@@ -1423,7 +1423,7 @@
     const totalExpCons = Array.from(Cave.expConsumables.values()).reduce((a,b)=>a+b,0);
     sum.innerHTML = `
       <div class="cv-summary-row">
-        <span>Selected: <strong>${Cave.selectedGoblinIds.size}</strong> / 50</span>
+        <span>Selected: <strong>${Cave.selectedGoblinIds.size}</strong> / 100</span>
         <span>Duration: <strong>${Cave.selectedDurationKey}</strong> (<strong>${dur.multiplier.toFixed(2)}×</strong>)</span>
         <span>Consumables (Run): <strong>${totalExpCons}</strong> / ${CONSUMABLE_LIMIT_EXPEDITION}</span>
       </div>
@@ -1555,15 +1555,15 @@
         Cave.el.selectionSummary.innerHTML=`<div class="cv-toast">No goblins available.</div>`; return;
       }
     }catch{
-      Cave.el.selectionSummary.innerHTML=`<div class="cv-toast err">Failed to load your NFTs.</div>`; return;
+      Cave.el.selectionSummary.innerHTML=`<div class="cv-toast err">Failed to load your NFTs. Please reload the page.</div>`; return;
     }
 
     // Toolbar bindings
     loadFilters();
 
-    qs("#cv-select-50")?.addEventListener("click", ()=>{
+    qs("#cv-select-100")?.addEventListener("click", ()=>{
       Cave.selectedGoblinIds.clear();
-      goblins.filter(g=>Number(g.daily_power||0)>=5).slice(0,50).forEach(g=>Cave.selectedGoblinIds.add(g.asset_id));
+      goblins.filter(g=>Number(g.daily_power||0)>=1).slice(0,100).forEach(g=>Cave.selectedGoblinIds.add(g.asset_id));
       renderGoblinList(goblins); updateSummary();
     });
     qs("#cv-deselect")?.addEventListener("click", ()=>{
@@ -1572,9 +1572,9 @@
     });
     qs("#cv-select-best")?.addEventListener("click", ()=>{
       Cave.selectedGoblinIds.clear();
-      const scored=goblins.filter(g=>Number(g.daily_power||0)>=5)
+      const scored=goblins.filter(g=>Number(g.daily_power||0)>=1)
         .map(g=>({id:g.asset_id, score:Number(g.level||0)+Number(g[g.main_attr]||0)}))
-        .sort((a,b)=>b.score-a.score).slice(0,50);
+        .sort((a,b)=>b.score-a.score).slice(0,100);
       scored.forEach(s=>Cave.selectedGoblinIds.add(s.id));
       renderGoblinList(goblins); updateSummary();
     });

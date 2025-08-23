@@ -32,7 +32,7 @@
 
   <!-- Base URL (optional): override per environment by setting window.BASE_URL before app.js -->
   <script>
-    // Example: window.BASE_URL = "https://iamemanuele.pythonanywhere.com";
+    window.BASE_URL = "https://iamemanuele.pythonanywhere.com";
     // If you want to pre-inject user auth from your app shell, set window.userData before app.js loads:
     // window.userData = { wax_account: "name.wam", userId: "123", usx_token: "..." };
 
@@ -176,8 +176,8 @@
 
               <!-- Quick select -->
               <div class="tool-actions">
-                <button class="cv-btn" id="cv-select-50" title="Select first 50 available">✅ First 50</button>
-                <button class="cv-btn" id="cv-select-best" title="Auto-pick the best 50 by stats">🏆 Best 50</button>
+                <button class="cv-btn" id="cv-select-100" title="Select first 100 available">First 100</button>
+                <button class="cv-btn" id="cv-select-best" title="Auto-pick the best 100 by stats">🏆 Best 100</button>
                 <button class="cv-btn" id="cv-deselect" title="Clear selection">❌ Clear</button>
               </div>
             </div>
@@ -199,10 +199,10 @@
             <div class="cv-card info-card">
               <h3 class="cv-title">📜 How it works</h3>
               <ul class="cv-note-list">
-                <li>Choose up to <strong>50 goblins</strong> and pick an <strong>expedition duration</strong> (10m / 30m / 1h / 6h / 24h). Shorter runs have higher multipliers.</li>
+                <li>Choose up to <strong>100 goblins</strong> and pick an <strong>expedition duration</strong> (10m / 30m / 1h / 6h / 24h). Shorter runs have higher multipliers.</li>
                 <li>Rewards include <strong>dynamic tokens</strong> (whatever the server sends: CHIPS, SQJ, WOMBAT, WAX, etc.), <strong>NFTs</strong>, and <strong>consumables</strong>.</li>
                 <li>Each goblin has <strong>8 equipment slots</strong>. Identical templates (same schema + template) cannot be used on multiple slots of the same goblin.</li>
-                <li>Consumables can be used per expedition (up to 3) and per goblin (1 each), and can also be <strong>won</strong> from chests or expeditions.</li>
+                <li>Consumables(up to 3 per run) can be used (1 per goblin), and can also be <strong>won</strong> from chests or expeditions or official Packs.</li>
               </ul>
             </div>
           </div>

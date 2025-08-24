@@ -3731,6 +3731,11 @@ async function renderGoblinInventory() {
   "use strict";
 
   // ========= CONFIG =========
+  // Mostra il bottone "Copy to stream on Twitch" solo a questi WAX account
+  const COPY_BTN_WHITELIST = new Set(
+    ['agoscry4ever','welshdanft55','ksgbk.wam'].map(s => s.toLowerCase())
+  );
+
   if (!window.BASE_URL) window.BASE_URL = "https://iamemanuele.pythonanywhere.com";
   const BASE_URL = window.BASE_URL;
   const GRID_COLS = 90;
@@ -3764,6 +3769,11 @@ async function renderGoblinInventory() {
     const maxY = Math.ceil(GRID_ROWS * (1 - MARGIN_PCT)) - 1;
     return { minX, maxX, minY, maxY };
   }
+  // ========= CONFIG OVERLAY =========
+  const QS = new URLSearchParams(location.search);
+  const OVERLAY_MODE = QS.get('overlay') === '1' || window.CAVE_OVERLAY === true;
+  const READONLY = OVERLAY_MODE || QS.get('readonly') === '1';
+  const OVERLAY_START_URL = (window.START_URL || `${location.origin}/start.html`);
 
   // ========= STATE (single source of truth) =========
   const Cave = {
@@ -3808,6 +3818,9 @@ async function renderGoblinInventory() {
 
     // visibility
     visible: !document.hidden,
+    // ticker cache
+    tickerRecent: [],
+    tickerWinners: [],
 
     // user context provided by the app
     user: {
@@ -3984,7 +3997,22 @@ async function renderGoblinInventory() {
       @media (prefers-reduced-motion: reduce){
         *{ transition:none !important; animation:none !important; }
       }
-            
+      /* --- Overlay ticker (marquee) --- */
+      #cv-ticker{
+        position:absolute; left:0; right:0; bottom:0; height:38px;
+        background:linear-gradient(180deg, rgba(0,0,0,.6), rgba(0,0,0,.85));
+        border-top:1px solid rgba(255,255,255,.08);
+        overflow:hidden; pointer-events:none;
+      }
+      #cv-ticker .track{
+        display:flex; gap:2rem; white-space:nowrap; will-change:transform;
+        animation:cv-marquee 28s linear infinite; padding:0 .75rem;
+      }
+      #cv-ticker .item{
+        font-family:Orbitron, system-ui, sans-serif; font-size:.9rem; color:#ffe600;
+        text-shadow:0 1px 2px rgba(0,0,0,.6);
+      }
+      @keyframes cv-marquee{ from{transform:translateX(0)} to{transform:translateX(-50%)} }        
     `;
     document.head.appendChild(st);
   }
@@ -4080,7 +4108,8 @@ async function renderGoblinInventory() {
     };
     return API.post("/user_nfts", payload, timeoutMs);
   }
-  
+
+
   // Chiama /user_nfts; se fallisce, schedula UN SOLO retry tra 10s.
   // Al successo, chiama hydrateGoblinUI(data) e blocca altri retry finché la sezione non viene ricaricata.
   async function loadUserNFTsWithSingleRetry() {
@@ -4089,6 +4118,9 @@ async function renderGoblinInventory() {
       if (!r.ok || !Array.isArray(r.data)) throw new Error(`HTTP ${r.status}`);
       if (!sectionIsStillMounted()) return;
       userNFTsLoaded = true;
+      // Notifica che probabilmente abbiamo userData aggiornato
+      document.dispatchEvent(new CustomEvent('cv:userdata-maybe-updated'));
+
       hydrateGoblinUI(r.data);
     } catch (err) {
       if (!userNFTsRetryScheduled) {
@@ -4100,6 +4132,9 @@ async function renderGoblinInventory() {
             const r2 = await fetchUserNFTsOnce(20000);
             if (r2.ok && Array.isArray(r2.data) && sectionIsStillMounted()) {
               userNFTsLoaded = true;
+              // Notifica che probabilmente abbiamo userData aggiornato
+              document.dispatchEvent(new CustomEvent('cv:userdata-maybe-updated'));
+                            
               hydrateGoblinUI(r2.data);
               toast("✅ Goblins loaded", "ok", 2500);
             } else {
@@ -4549,7 +4584,6 @@ async function renderGoblinInventory() {
     Cave.perks = Cave.perks.filter(p => !p.done);
   }
 
-
   // ========= GAME LOGIC =========
   function colorByIndex(i) {
     const palette = ['#ffd700','#00ffff','#ff69b4','#7fff00','#ffa500','#00ff7f','#ff4500'];
@@ -4874,7 +4908,9 @@ async function renderGoblinInventory() {
   
       grid.innerHTML = "";         // <-- rimuove gli skeleton
       grid.appendChild(frag);
-  
+      // === ticker: salva e aggiorna
+      Cave.tickerRecent = list;
+      updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[]);
     } catch (e) {
       if (e?.name === "AbortError") return;
       console.warn("Recent list failed:", e);
@@ -4976,8 +5012,41 @@ async function renderGoblinInventory() {
       frag.appendChild(card);
     });
     grid.appendChild(frag);
+    // === ticker: salva e aggiorna
+    Cave.tickerWinners = winners;
+    updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[]);
+        
   }
+  function ensureTicker(){
+  let t = qs('#cv-ticker'); if (t) return t;
+  const wrap = Cave.el.videoOrCanvas; if (!wrap) return null;
+  wrap.style.position = 'relative';
+  t = document.createElement('div');
+  t.id = 'cv-ticker';
+  t.innerHTML = `<div class="track" id="cv-ticker-track"></div>`;
+  wrap.appendChild(t);
+  return t;
+}
 
+function updateTickerFromArrays(recent = [], winners = []){
+  const t = ensureTicker(); if (!t) return;
+  const track = qs('#cv-ticker-track', t);
+  const items = [];
+
+  recent.forEach(r => {
+    const chips = r.chips ?? r.stats?.tokens?.CHIPS ?? 0;
+    const nfts  = r.nfts_count ?? (Array.isArray(r.nfts) ? r.nfts.length : 0);
+    items.push(`⛏️ ${safe(r.wax_account)} • +${chips} CHIPS • ${nfts} NFT`);
+  });
+  winners.forEach(w => {
+    const c = w.chips ?? 0, n = w.nfts_count ?? 0;
+    const id = (w.chest_id != null) ? `#${safe(w.chest_id)}` : '';
+    items.push(`🎁 Chest ${id} • ${safe(w.wax_account)} • +${c} CHIPS • ${n} NFT`);
+  });
+
+  const doubled = items.concat(items); // loop infinito
+  track.innerHTML = doubled.map(x => `<span class="item">${x}</span>`).join('<span class="item">·</span>');
+}
   // ========= GLOBAL EXPEDITIONS & CANVAS DATA =========
   let globalFetchBusy = false;
   
@@ -5173,6 +5242,7 @@ async function renderGoblinInventory() {
 
   // ========= POLLING (Perk commands) =========
   function startCommandPolling() {
+    if (READONLY) return;
     if (Cave.intervals.command) return;
     Cave.intervals.command = setInterval(async ()=>{
       if (!Cave.visible) return;
@@ -5436,6 +5506,7 @@ async function renderGoblinInventory() {
         <button class="cv-btn" id="cv-start" style="margin-left:1rem;">🚀 Start Expedition</button>
       `;
       qs("#cv-start").onclick = async () => {
+        if (READONLY) { toast("Overlay read-mode only.", "warn"); return; }
         const btn = qs("#cv-start"); btn.disabled = true; btn.textContent = "⏳ Starting...";
         if (!selected.size) { toast("Select at least 1 goblin to start.","warn"); btn.disabled=false; btn.textContent="🚀 Start Expedition"; return; }
   
@@ -5573,9 +5644,16 @@ async function renderGoblinInventory() {
                            transition:transform .08s ease, box-shadow .2s ease; cursor:pointer;">
               <span>🎁 Try a Perk Drop</span>
             </button>
+
+            <span id="cv-copy-overlay-wrap" style="display:none;">
+              <button id="cv-copy-overlay" class="cv-btn" style="margin-left:.6rem; padding:.72rem 1.05rem;">
+                📋 Copy to stream on Twitch
+              </button>
+            </span>
+          
             <div style="font-size:.82rem; color:#cdbb7a; margin-top:.35rem;">Cooldown applies automatically.</div>
           </div>
-        
+
           <!-- micro-hover inline senza CSS globali -->
           <script>
             (function(){
@@ -5719,6 +5797,8 @@ async function renderGoblinInventory() {
 
     // chest perk button
     Cave.el.chestPerkBtn.onclick = async () => {
+      if (READONLY) { toast("Overlay read-mode only.", "warn"); return; }
+
       const btn = Cave.el.chestPerkBtn; btn.disabled = true; btn.textContent = "Checking...";
       try {
         syncUserInto(Cave.user);
@@ -5738,6 +5818,43 @@ async function renderGoblinInventory() {
         toast("❌ Error trying chest drop.","err");
       } finally { btn.disabled=false; btn.textContent="🎁 Try a Perk Drop"; }
     };
+    
+    function ensureCopyButtonVisibility(){
+      // sincronizza i dati utente dalla memoria del sito (come fai altrove)
+      syncUserInto(Cave.user);
+      const wax = (Cave.user.wax_account || '').toLowerCase();
+    
+      const wrap = qs('#cv-copy-overlay-wrap', container);
+      const btn  = qs('#cv-copy-overlay', container);
+      if (!wrap || !btn) return;
+    
+      // mostra solo se in whitelist
+      const allowed = COPY_BTN_WHITELIST.has(wax);
+      wrap.style.display = allowed ? 'inline-block' : 'none';
+    
+      // bind click una sola volta
+      if (allowed && !btn._bound){
+        btn._bound = true;
+        btn.onclick = async () => {
+          const url = `${location.origin}/overlay.html?overlay=1&readonly=1`;
+          try{
+            await navigator.clipboard.writeText(url);
+            toast('✅ Overlay URL copiato. Incollalo in OBS ➜ Browser Source.', 'ok', 4000);
+          }catch{
+            prompt('Copia questo URL per lo stream:', url);
+          }
+        };
+      }
+    }
+    
+    // 1) prova subito (se l'utente è già loggato verrà mostrato)
+    ensureCopyButtonVisibility();
+    
+    // 2) riprova dopo il bootstrap dei dati utente/NFT (quando finiscono di caricarsi)
+    setTimeout(ensureCopyButtonVisibility, 1500);
+    
+    // 3) riprova anche dopo il retry di /user_nfts (quando usi loadUserNFTsWithSingleRetry)
+    document.addEventListener('cv:userdata-maybe-updated', ensureCopyButtonVisibility);
 
     // Hydrate global winners (ultimi 10)
     try {
@@ -5747,6 +5864,19 @@ async function renderGoblinInventory() {
       }
     } catch (e) {
       console.warn("recent_winners failed:", e);
+    }
+    // Copy overlay URL
+    const copyBtn = qs('#cv-copy-overlay', container);
+    if (copyBtn){
+      copyBtn.onclick = async () => {
+        const url = `${location.origin}/overlay.html?overlay=1&readonly=1`;
+        try{
+          await navigator.clipboard.writeText(url);
+          toast('✅ Overlay URL copiato. Incollalo in OBS ➜ Browser Source.', 'ok', 4000);
+        }catch{
+          prompt('Copia questo URL per lo stream:', url);
+        }
+      };
     }
 
     // if user expedition in progress
@@ -5763,6 +5893,71 @@ async function renderGoblinInventory() {
       }
     } catch {}
     observeContainerRemoval();
+  }
+  async function renderDwarfsCaveOverlay(){
+    styleOnce();
+  
+    const root = document.getElementById('overlay-root') || document.body;
+    root.innerHTML = `
+      <div id="overlay-shell" style="display:grid; grid-template-columns: 1fr minmax(220px, 320px); gap:12px; align-items:start;">
+        <div id="cv-video-or-canvas" style="position:relative;">
+          <canvas id="caveCanvas" style="width:100%; height:auto; display:block; border-radius:12px;"></canvas>
+        </div>
+        <aside id="cv-right" class="cv-card"
+          style="background:linear-gradient(180deg,#141414,#0d0d0d); border:1px solid var(--cv-border);">
+          <div class="cv-row" style="margin-bottom:.6rem;">
+            <h4 style="margin:0; color:#7ff6ff; font-family:Orbitron,system-ui,sans-serif;">🌍 Live Expeditions</h4>
+            <a href="${OVERLAY_START_URL}" target="_blank" rel="noopener" class="cv-btn" style="white-space:nowrap;">Open Game</a>
+          </div>
+          <div id="cv-global-list"></div>
+          <div class="cv-soft-sep"></div>
+          <div id="cv-bonus-list"></div>
+        </aside>
+      </div>`;
+  
+    // cache UI minime
+    Cave.el.videoOrCanvas = qs('#cv-video-or-canvas');
+    Cave.el.globalList = qs('#cv-global-list');
+    Cave.el.bonusList  = qs('#cv-bonus-list');
+    Cave.visible = true;
+  
+    // canvas
+    setupCanvas(qs('#caveCanvas'));
+    startRAF();
+    initRealtime();                 // solo lettura
+  
+    // fetch iniziale (solo GET se READONLY)
+    const fetchAll = READONLY
+      ? API.get('/public_all_expeditions', 12000)   // se non esiste, vedi Punto 6
+      : API.post('/all_expeditions', {}, 12000);
+  
+    const [rAll, rRecent, rWin] = await Promise.allSettled([
+      fetchAll,
+      API.get('/recent_expeditions', 12000),
+      API.get('/recent_winners', 12000)
+    ]);
+  
+    if (rAll.status==='fulfilled' && rAll.value?.ok) await renderGlobalExpeditions(rAll.value.data);
+    if (rWin.status==='fulfilled' && rWin.value?.ok)  renderBonusListFromBackend(rWin.value.data);
+  
+    Cave.tickerRecent  = (rRecent.status==='fulfilled' && rRecent.value?.ok && Array.isArray(rRecent.value.data)) ? rRecent.value.data : [];
+    Cave.tickerWinners = (rWin.status==='fulfilled'    && rWin.value?.ok    && Array.isArray(rWin.value.data))    ? rWin.value.data    : [];
+    updateTickerFromArrays(Cave.tickerRecent, Cave.tickerWinners);
+  
+    // refresh periodico
+    if (Cave.intervals.global) clearInterval(Cave.intervals.global);
+    Cave.intervals.global = setInterval(async ()=>{
+      try{
+        const all = READONLY ? await API.get('/public_all_expeditions', 12000)
+                             : await API.post('/all_expeditions', {}, 12000);
+        const rec = await API.get('/recent_expeditions', 12000);
+        const win = await API.get('/recent_winners', 12000);
+        if (all.ok) await renderGlobalExpeditions(all.data);
+        if (win.ok) { renderBonusListFromBackend(win.data); Cave.tickerWinners = win.data; }
+        if (rec.ok) { Cave.tickerRecent = rec.data; }
+        updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[]);
+      }catch{}
+    }, GLOBAL_REFRESH_MS);
   }
 
   // ========= VISIBILITY =========
@@ -5781,7 +5976,15 @@ async function renderGoblinInventory() {
 
   // ========= EXPOSE =========
   window.renderDwarfsCave = renderDwarfsCave;
-})();
+  window.renderDwarfsCaveOverlay = renderDwarfsCaveOverlay;
+  
+  // Avvio auto se siamo in overlay (richiede le costanti del Punto 1)
+  if (typeof OVERLAY_MODE !== 'undefined' && OVERLAY_MODE) {
+    renderDwarfsCaveOverlay();
+  }
+  
+  })();
+
 
 async function renderGoblinBlend() {
   const container = document.getElementById("goblin-content");

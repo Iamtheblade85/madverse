@@ -3788,6 +3788,7 @@ async function renderGoblinInventory() {
   const READONLY = OVERLAY_MODE || QS.get('readonly') === '1';
   const OVERLAY_START_URL = (window.START_URL || `${location.origin}/madverse/start.html`);
 
+
   // ========= STATE (single source of truth) =========
   const Cave = {
     canvas: null,
@@ -5518,243 +5519,237 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     return t;
   }
 
-
-// velocità: più grande è il contenuto, più lungo è il giro (ma non oltre i 26s)
-const TICKER_MIN_S = 12, TICKER_MAX_S = 26, TICKER_PX_PER_SEC = 160;
-
-function updateTickerFromArrays(recent = [], winners = [], live = []) {
-  const t = ensureTicker(); if (!t) return;
-  const top = qs('#cv-ticker-top', t);
-  const bottom = qs('#cv-ticker-bottom', t);
-
-  const userHTML = (name) => {
-    const h = hueFromString(name||'');
-    // colore per-utente via HSL
-    return `<span class="tk-user" style="color:hsl(${h},78%,62%)">${safe(name)}</span>`;
-  };
-
-  // Riga TOP = recent
-  const topHTML = recent.map(r => {
-    const chips = r.chips ?? r.stats?.tokens?.CHIPS ?? 0;
-    const nfts  = r.nfts_count ?? (Array.isArray(r.nfts) ? r.nfts.length : 0);
-    return (
-      `<span class="item">` +
-      `⛏️ ${userHTML(r.wax_account)}` +
-      ` <span class="tk-chips">+${safe(chips)} CHIPS</span>` +
-      ` <span class="tk-nfts">${safe(nfts)} NFT</span>` +
-      `</span>`
-    );
-  });
-
-  // Riga BOTTOM = live
-  const bottomHTML = live.map(e => {
-    const goblins = e.total_goblins ?? (Array.isArray(e.goblins) ? e.goblins.length : 0);
-    const mm = Math.max(0, Math.floor((e.seconds_remaining ?? 0)/60));
-    const ss = Math.max(0, Math.floor((e.seconds_remaining ?? 0)%60));
-    const tots = totalsFromExpeditionItem(e);
-    return (
-      `<span class="item">` +
-      `🚶 ${userHTML(e.wax_account)}` +
-      ` <span class="tk-goblins">${safe(goblins)} goblins</span>` +
-      ` <span class="tk-timer">${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}</span>` +
-      ` <span class="tk-R">R:${fmtNumCompact(tots.res)}</span>` +
-      ` <span class="tk-L">L:${fmtNumCompact(tots.loot)}</span>` +
-      ` <span class="tk-S">S:${fmtNumCompact(tots.spd)}</span>` +
-      ` <span class="tk-A">A:${fmtNumCompact(tots.acc)}</span>` +
-      `</span>`
-    );
-  });
-
-  function fillTrackHTML(trackEl, htmlArr, delay = '0s'){
-    const doubled = htmlArr.length ? htmlArr.concat(htmlArr) : [];
-    trackEl.innerHTML = doubled.join('<span class="dot">·</span>');
-    requestAnimationFrame(()=>{
-      const contentW = Math.max(1, trackEl.scrollWidth / 2); // metà = una sequenza
-      const seconds = clamp(contentW / TICKER_PX_PER_SEC, TICKER_MIN_S, TICKER_MAX_S);
-      trackEl.style.animationDuration = `${seconds}s`;
-      trackEl.style.animationDelay = delay;
-    });
-  }
-
-  fillTrackHTML(top,    topHTML,    '0s');
-  fillTrackHTML(bottom, bottomHTML, '-2s');
-}
-
-
-  // ========= GLOBAL EXPEDITIONS & CANVAS DATA =========
-  let globalFetchBusy = false;
+  // velocità: più grande è il contenuto, più lungo è il giro (ma non oltre i 26s)
+  const TICKER_MIN_S = 12, TICKER_MAX_S = 26, TICKER_PX_PER_SEC = 160;
   
-  async function renderGlobalExpeditions(preloadedData = null) {
-    // se ho dati pre-caricati, NON attivo il lock; altrimenti comportati come prima
-    if (!preloadedData) {
-      if (globalFetchBusy) return;
-      globalFetchBusy = true;
+  function updateTickerFromArrays(recent = [], winners = [], live = []) {
+    const t = ensureTicker(); if (!t) return;
+    const top = qs('#cv-ticker-top', t);
+    const bottom = qs('#cv-ticker-bottom', t);
+  
+    const userHTML = (name) => {
+      const h = hueFromString(name||'');
+      // colore per-utente via HSL
+      return `<span class="tk-user" style="color:hsl(${h},78%,62%)">${safe(name)}</span>`;
+    };
+  
+    // Riga TOP = recent
+    const topHTML = recent.map(r => {
+      const chips = r.chips ?? r.stats?.tokens?.CHIPS ?? 0;
+      const nfts  = r.nfts_count ?? (Array.isArray(r.nfts) ? r.nfts.length : 0);
+      return (
+        `<span class="item">` +
+        `⛏️ ${userHTML(r.wax_account)}` +
+        ` <span class="tk-chips">+${safe(chips)} CHIPS</span>` +
+        ` <span class="tk-nfts">${safe(nfts)} NFT</span>` +
+        `</span>`
+      );
+    });
+  
+    // Riga BOTTOM = live
+    const bottomHTML = live.map(e => {
+      const goblins = e.total_goblins ?? (Array.isArray(e.goblins) ? e.goblins.length : 0);
+      const mm = Math.max(0, Math.floor((e.seconds_remaining ?? 0)/60));
+      const ss = Math.max(0, Math.floor((e.seconds_remaining ?? 0)%60));
+      const tots = totalsFromExpeditionItem(e);
+      return (
+        `<span class="item">` +
+        `🚶 ${userHTML(e.wax_account)}` +
+        ` <span class="tk-goblins">${safe(goblins)} goblins</span>` +
+        ` <span class="tk-timer">${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}</span>` +
+        ` <span class="tk-R">R:${fmtNumCompact(tots.res)}</span>` +
+        ` <span class="tk-L">L:${fmtNumCompact(tots.loot)}</span>` +
+        ` <span class="tk-S">S:${fmtNumCompact(tots.spd)}</span>` +
+        ` <span class="tk-A">A:${fmtNumCompact(tots.acc)}</span>` +
+        `</span>`
+      );
+    });
+  
+    function fillTrackHTML(trackEl, htmlArr, delay = '0s'){
+      const doubled = htmlArr.length ? htmlArr.concat(htmlArr) : [];
+      trackEl.innerHTML = doubled.join('<span class="dot">·</span>');
+      requestAnimationFrame(()=>{
+        const contentW = Math.max(1, trackEl.scrollWidth / 2); // metà = una sequenza
+        const seconds = clamp(contentW / TICKER_PX_PER_SEC, TICKER_MIN_S, TICKER_MAX_S);
+        trackEl.style.animationDuration = `${seconds}s`;
+        trackEl.style.animationDelay = delay;
+      });
     }
   
-    // se non visibile o non c’è la UI, esci
+    fillTrackHTML(top,    topHTML,    '0s');
+    fillTrackHTML(bottom, bottomHTML, '-2s');
+  }
+
+  function renderOverlayGeneralStats(data = []){
+    const host = document.getElementById('cv-general-stats'); if (!host) return;
+    const totalExp = data.length;
+    let totalGobs = 0, tot = { res:0, loot:0, spd:0, acc:0 }, sumSec = 0;
+  
+    data.forEach(e=>{
+      totalGobs += e.total_goblins ?? (Array.isArray(e.goblins) ? e.goblins.length :
+                   Array.isArray(e.goblin_ids) ? e.goblin_ids.length : 0);
+      const s = totalsFromExpeditionItem(e);
+      tot.res  += s.res; tot.loot += s.loot; tot.spd  += s.spd; tot.acc  += s.acc;
+      sumSec   += Number(e.seconds_remaining)||0;
+    });
+  
+    const avgSec = totalExp ? Math.round(sumSec / totalExp) : 0;
+    const mm = String(Math.floor(avgSec/60)).padStart(2,'0');
+    const ss = String(Math.floor(avgSec%60)).padStart(2,'0');
+  
+    host.innerHTML = `
+      <div class="cv-row" style="gap:.8rem; flex-wrap:wrap;">
+        <div class="cv-item" style="flex:1 1 110px;"><div>Expeditions</div><div style="font-family:Orbitron,system-ui,sans-serif; font-weight:900; font-size:1.1rem;">${totalExp}</div></div>
+        <div class="cv-item" style="flex:1 1 110px;"><div>Goblins</div><div style="font-family:Orbitron,system-ui,sans-serif; font-weight:900; font-size:1.1rem;">${totalGobs}</div></div>
+        <div class="cv-item" style="flex:1 1 110px;"><div>⏳ Avg time</div><div style="font-family:Orbitron,system-ui,sans-serif; font-weight:900; font-size:1.1rem;">${mm}:${ss}</div></div>
+      </div>
+      <div class="cv-row" style="gap:.4rem; margin-top:.45rem; flex-wrap:wrap;">
+        <div class="cv-pill attr-R"><div class="cv-chip-key">R</div><div class="cv-chip-val">${fmtNumCompact(tot.res)}</div></div>
+        <div class="cv-pill attr-L"><div class="cv-chip-key">L</div><div class="cv-chip-val">${fmtNumCompact(tot.loot)}</div></div>
+        <div class="cv-pill attr-S"><div class="cv-chip-key">S</div><div class="cv-chip-val">${fmtNumCompact(tot.spd)}</div></div>
+        <div class="cv-pill attr-A"><div class="cv-chip-key">A</div><div class="cv-chip-val">${fmtNumCompact(tot.acc)}</div></div>
+      </div>
+    `;
+  }
+
+  // ========= GLOBAL EXPEDITIONS & CANVAS DATA ========= 
+  let globalFetchBusy = false;
+  Cave._liveUsersPrev = new Set();
+  
+  async function renderGlobalExpeditions(preloadedData = null) {
+    if (!preloadedData) { if (globalFetchBusy) return; globalFetchBusy = true; }
+  
     if (!Cave.visible || !Cave.el.globalList || !Cave.el.videoOrCanvas) {
       if (!preloadedData) globalFetchBusy = false;
       return;
     }
   
     try {
-      const list = Cave.el.globalList;
-      const wrap = Cave.el.videoOrCanvas;
-  
-      // ── ottieni i dati ──
+      // ===== dati =====
       let data;
       if (preloadedData) {
         data = Array.isArray(preloadedData) ? preloadedData : [];
       } else {
-        syncUserInto(Cave.user);
-        assertAuthOrThrow(Cave.user);
-        const r = await API.post("/all_expeditions", {}, 12000);
+        const r = READONLY ? await API.get('/public_all_expeditions', 12000)
+                           : await API.post('/all_expeditions', {}, 12000);
         if (r.aborted || !r.ok) { if (!preloadedData) globalFetchBusy = false; return; }
         data = Array.isArray(r.data) ? r.data : [];
       }
   
-      // prepara contenitore
-      list.innerHTML = "";
-      list.style.display = "flex";
-      list.style.flexWrap = "wrap";
-      list.style.gap = ".5rem";
-  
-      // canvas pronto in ogni caso
-      if (!qs("#caveCanvas", wrap)) {
-        wrap.innerHTML = `<canvas id="caveCanvas" style="width:100%; height:auto; display:block;"></canvas>`;
-        setupCanvas(qs("#caveCanvas", wrap));
+      // ===== canvas seed + chest sync (come tua versione) =====
+      Cave.el.globalList.innerHTML = "";
+      if (!qs("#caveCanvas", Cave.el.videoOrCanvas)) {
+        Cave.el.videoOrCanvas.innerHTML = `<canvas id="caveCanvas"></canvas>`;
+        setupCanvas(qs("#caveCanvas", Cave.el.videoOrCanvas));
         startRAF();
-        startCommandPolling();
       }
   
       if (data.length === 0) {
-        // Mantieni il canvas visibile; pulisci solo lo stato.
-        clearChests();
-        Cave.goblins = [];
+        clearChests(); Cave.goblins = [];
+        Cave.lastAllExpeditions = [];
+        qs('#cv-general-stats').innerHTML = `
+          <div class="cv-row">
+            <div><strong>Expeditions:</strong> 0</div>
+            <div><strong>Goblins:</strong> 0</div>
+          </div>`;
+        updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[], []);
         return;
       }
   
       // goblin seed
+      const { minX, maxX, minY, maxY } = getBounds();
       Cave.goblins = data.map((e, i) => {
-        const { minX, maxX, minY, maxY } = getBounds();
         const gx = Math.floor(Math.random() * (maxX - minX + 1)) + minX;
         const gy = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
-        return {
-          x: gx, y: gy,
-          wax_account: e.wax_account,
-          path: [],
-          trail: [{ x: gx, y: gy }],
-          _lastTrailX: gx,
-          _lastTrailY: gy,
-          digging: false,
-          shovelFrame: 0,
-          frameTimer: 0,
-          color: colorByIndex(i)
-        };
+        return { x: gx, y: gy, wax_account: e.wax_account, path: [], trail:[{x:gx,y:gy}], _lastTrailX:gx, _lastTrailY:gy, digging:false, shovelFrame:0, frameTimer:0, color: colorByIndex(i) };
       });
   
-      // sync chests
+      // chests live
       const liveIds = new Set();
       data.forEach(e => {
         if (!Array.isArray(e.chests)) return;
         e.chests.forEach(ch => {
-          const hasNumericId = ch.id != null && !isNaN(Number(ch.id));
-          if (!hasNumericId) return;
-          const id = String(ch.id);
-          liveIds.add(id);
-          const { minX, maxX, minY, maxY } = getBounds();
-          const cx = clamp(ch.x, minX, maxX);
-          const cy = clamp(ch.y, minY, maxY);
-          upsertChest({
-            id, x: cx, y: cy,
-            from: ch.from || "unknown",
-            wax_account: e.wax_account,
-            taken: false, claimable: true, pending: false
-          });
+          const hasId = ch.id != null && !isNaN(Number(ch.id));
+          if (!hasId) return;
+          const id = String(ch.id); liveIds.add(id);
+          const cx = clamp(ch.x, minX, maxX), cy = clamp(ch.y, minY, maxY);
+          upsertChest({ id, x:cx, y:cy, from: ch.from || "unknown", wax_account: e.wax_account, taken:false, claimable:true, pending:false });
         });
       });
-      // rimuovi chest scadute
       Cave.chests.forEach((ch, key) => {
         if (ch.id != null && !liveIds.has(String(ch.id))) Cave.chests.delete(key);
       });
   
-      // salva per il ticker a due righe
+      // salva per ticker e general stats
       Cave.lastAllExpeditions = data;
-      
-      // cards & countdowns con totali attributi
-      const COMPACT = OVERLAY_MODE; // su overlay mostriamo una card più stretta
+      renderOverlayGeneralStats(data);
+  
+      // ===== feedback start/end (diff) =====
+      const nowUsers = new Set(data.map(e => e.wax_account));
+      // new -> started
+      nowUsers.forEach(u => { if (!Cave._liveUsersPrev.has(u)) toast(`${u} started an expedition — good hunt, goblins!`, "ok", 3500); });
+      // ended -> missing
+      Cave._liveUsersPrev.forEach(u => { if (!nowUsers.has(u)) toast(`${u}'s expedition ended.`, "warn", 3000); });
+      Cave._liveUsersPrev = nowUsers;
+  
+      // ===== cards list (compact, con attributi R/L/S/A) =====
+      const list = Cave.el.globalList;
+      list.style.display = "grid";
+      list.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
+      list.style.gap = ".6rem";
+  
       const timers = [];
-      
       data.forEach((e,i)=>{
         const end = Date.now() + (Number(e.seconds_remaining)||0) * 1000;
         const id = `cv-timer-${i}`;
-      
-        // totali robusti su vari formati
         const sums = totalsFromExpeditionItem(e);
         const gobCount =
           e.total_goblins ??
           (Array.isArray(e.goblins) ? e.goblins.length :
            Array.isArray(e.goblin_ids) ? e.goblin_ids.length : 0);
-
+  
         const card = document.createElement("div");
-        card.style.cssText = `
-          background:linear-gradient(180deg,#141414,#0f0f0f);
-          padding:${COMPACT ? '.55rem' : '.75rem'};
-          border-radius:12px; width:${COMPACT ? '210px' : '180px'};
-          border:1px solid var(--cv-border);
-          box-shadow:0 2px 10px rgba(0,0,0,.35);
-          font-size:${COMPACT ? '.9rem' : '1rem'};
-        `;
+        card.className = "cv-compact";
         card.innerHTML = `
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:.4rem;">
-            <strong style="color:#ffe600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;">${safe(e.wax_account)}</strong>
+          <div class="cv-row">
+            <strong style="color:var(--cv-chip); font-family:Orbitron,system-ui,sans-serif; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:62%;">${safe(e.wax_account)}</strong>
             <span id="${id}" style="color:#0f0; font-family:Orbitron,system-ui,sans-serif;">⏳ --:--</span>
           </div>
-          <div style="margin-top:.35rem; color:#7ff6ff;">Goblins: <strong>${gobCount}</strong></div>
-          <div class="cv-attr-grid" style="display:flex; flex-wrap:wrap; gap:.25rem; margin-top:.4rem;">
-            <div class="cv-pill attr-R" style="flex:1 1 48%; min-width:100px;">
-              <div class="cv-chip-key">R</div><div class="cv-chip-val">${fmtNumCompact(sums.res)}</div>
-            </div>
-            <div class="cv-pill attr-L" style="flex:1 1 48%; min-width:100px;">
-              <div class="cv-chip-key">L</div><div class="cv-chip-val">${fmtNumCompact(sums.loot)}</div>
-            </div>
-            <div class="cv-pill attr-S" style="flex:1 1 48%; min-width:100px;">
-              <div class="cv-chip-key">S</div><div class="cv-chip-val">${fmtNumCompact(sums.spd)}</div>
-            </div>
-            <div class="cv-pill attr-A" style="flex:1 1 48%; min-width:100px;">
-              <div class="cv-chip-key">A</div><div class="cv-chip-val">${fmtNumCompact(sums.acc)}</div>
-            </div>
+          <div style="font-size:.85rem; color:#7ff6ff;">Goblins: <strong>${gobCount}</strong></div>
+          <div style="display:flex; flex-wrap:wrap; gap:.25rem; margin-top:.3rem;">
+            <div class="cv-pill attr-R"><div class="cv-chip-key">R</div><div class="cv-chip-val">${fmtNumCompact(sums.res)}</div></div>
+            <div class="cv-pill attr-L"><div class="cv-chip-key">L</div><div class="cv-chip-val">${fmtNumCompact(sums.loot)}</div></div>
+            <div class="cv-pill attr-S"><div class="cv-chip-key">S</div><div class="cv-chip-val">${fmtNumCompact(sums.spd)}</div></div>
+            <div class="cv-pill attr-A"><div class="cv-chip-key">A</div><div class="cv-chip-val">${fmtNumCompact(sums.acc)}</div></div>
           </div>
         `;
         list.appendChild(card);
         timers.push({ id, end });
       });
-      
-      // countdown
+  
       if (Cave.intervals.globalCountdown) clearInterval(Cave.intervals.globalCountdown);
       Cave.intervals.globalCountdown = setInterval(()=>{
         const now = Date.now();
         timers.forEach(t=>{
-          const el = document.getElementById(t.id);
-          if (!el) return;
+          const el = document.getElementById(t.id); if (!el) return;
           const rem = t.end - now;
-          if (rem <= 0) el.textContent = "✅ Completed";
+          if (rem <= 0) el.textContent = "✅ Done";
           else {
-            const m = Math.floor(rem/60000);
-            const s = Math.floor((rem%60000)/1000);
+            const m = Math.floor(rem/60000), s = Math.floor((rem%60000)/1000);
             el.textContent = `⏳ ${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
           }
         });
       }, 1000);
-      
-      // aggiorna il ticker 2 righe (riga top = recent, riga bottom = live)
-      updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[], data);  
+  
+      // ticker: top = recent, bottom = live
+      updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[], data);
     } catch (e) {
       if (e?.name !== "AbortError") console.warn("Global expeditions failed:", e);
     } finally {
       if (!preloadedData) globalFetchBusy = false;
     }
   }
+
 
   // ========= USER COUNTDOWN =========
   async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
@@ -6514,48 +6509,68 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
     } catch {}
     observeContainerRemoval();
   }
+  
   async function renderDwarfsCaveOverlay(){
     styleOnce();
   
     const root = document.getElementById('overlay-root') || document.body;
     root.innerHTML = `
-      <div id="overlay-shell" style="display:grid; grid-template-columns: 1fr minmax(220px, 320px); gap:12px; align-items:start;">
-        <div id="cv-logo-wrap" class="cv-logo-wrap">
-          <canvas id="cv-logo-canvas"></canvas>
-          <div id="cv-logo-toast" class="cv-logo-toast"></div>
-        </div>   
-        <div id="cv-video-or-canvas" style="position:relative;">
-          <canvas id="caveCanvas" style="width:100%; height:auto; display:block; border-radius:12px;"></canvas>
-        </div>
-        <aside id="cv-right" class="cv-card"
-          style="background:linear-gradient(180deg,#141414,#0d0d0d); border:1px solid var(--cv-border);">
-          <div class="cv-row" style="margin-bottom:.6rem;">
-            <h4 style="margin:0; color:#7ff6ff; font-family:Orbitron,system-ui,sans-serif;">🌍 Live Expeditions</h4>
-            <a href="${OVERLAY_START_URL}" target="_blank" rel="noopener" class="cv-btn" style="white-space:nowrap;">Open Game Website</a>
+      <div id="overlay-shell">
+        <div style="grid-column:1 / -1;">
+          <div id="cv-logo-wrap" class="cv-logo-wrap">
+            <canvas id="cv-logo-canvas"></canvas>
+            <div id="cv-logo-toast" class="cv-logo-toast"></div>
           </div>
-          <div id="cv-global-list"></div>
+        </div>
+  
+        <div id="cv-video-or-canvas" class="cv-card" style="position:relative;">
+          <div id="cv-toast-host" role="status" aria-live="polite"></div>
+          <canvas id="caveCanvas"></canvas>
+        </div>
+  
+        <aside id="cv-right" class="cv-card">
+          <h4 class="cv-title" style="margin-top:0;">🌍 Live Overview</h4>
+          <div id="cv-general-stats" class="cv-item" style="margin-bottom:.6rem;"></div>
+  
           <div class="cv-soft-sep"></div>
+          <div id="cv-global-list"></div>
+  
+          <div class="cv-soft-sep"></div>
+          <h4 class="cv-title" style="color:#ffcc66;">⛏️ Latest Expedition Results</h4>
+          <div id="cv-recent-list">
+            <div id="cv-recent-grid" class="cv-cards"></div>
+          </div>
+  
+          <div class="cv-soft-sep"></div>
+          <h4 class="cv-title" style="color:#78ff78;">🎁 Latest Chest Rewards</h4>
           <div id="cv-bonus-list"></div>
+  
+          <a class="cv-cta" href="${OVERLAY_START_URL}" target="_blank" rel="noopener">
+            Visit CryptoChips Portal to send your own expedition on Goblin DeX
+          </a>
         </aside>
-      </div>`;
+      </div>
+    `;
   
     // cache UI minime
-    Cave.el.videoOrCanvas = qs('#cv-video-or-canvas');
-    const logoCanvas = qs('#cv-logo-canvas');
+    Cave.el.toast        = qs('#cv-toast-host');
+    Cave.el.videoOrCanvas= qs('#cv-video-or-canvas');
+    const logoCanvas     = qs('#cv-logo-canvas');
     if (logoCanvas) setupLogoCanvas(logoCanvas);
-    Cave.el.globalList = qs('#cv-global-list');
-    Cave.el.bonusList  = qs('#cv-bonus-list');
+    Cave.el.globalList   = qs('#cv-global-list');
+    Cave.el.bonusList    = qs('#cv-bonus-list');
+    Cave.el.recentList   = qs('#cv-recent-list');
     Cave.visible = true;
   
     // canvas
     setupCanvas(qs('#caveCanvas'));
-    await loadAssets(); 
+    await loadAssets();
     startRAF();
-    initRealtime();                 // solo lettura
+    initRealtime(); // overlay è read-only ma riceve SSE (spawn/claim)
   
-    // fetch iniziale (solo GET se READONLY)
+    // primo fetch (overlay usa public se disponibile)
     const fetchAll = READONLY
-      ? API.get('/public_all_expeditions', 12000)   // se non esiste, vedi Punto 6
+      ? API.get('/public_all_expeditions', 12000)
       : API.post('/all_expeditions', {}, 12000);
   
     const [rAll, rRecent, rWin] = await Promise.allSettled([
@@ -6566,11 +6581,13 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
   
     if (rAll.status==='fulfilled' && rAll.value?.ok) await renderGlobalExpeditions(rAll.value.data);
     if (rWin.status==='fulfilled' && rWin.value?.ok)  renderBonusListFromBackend(rWin.value.data);
+    if (rRecent.status==='fulfilled' && rRecent.value?.ok) await renderRecentList(rRecent.value.data);
   
+    // aggiorna ticker righe
     Cave.tickerRecent  = (rRecent.status==='fulfilled' && rRecent.value?.ok && Array.isArray(rRecent.value.data)) ? rRecent.value.data : [];
     Cave.tickerWinners = (rWin.status==='fulfilled'    && rWin.value?.ok    && Array.isArray(rWin.value.data))    ? rWin.value.data    : [];
     updateTickerFromArrays(Cave.tickerRecent, Cave.tickerWinners, Cave.lastAllExpeditions||[]);
- 
+  
     // refresh periodico
     if (Cave.intervals.global) clearInterval(Cave.intervals.global);
     Cave.intervals.global = setInterval(async ()=>{
@@ -6581,11 +6598,12 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
         const win = await API.get('/recent_winners', 12000);
         if (all.ok) await renderGlobalExpeditions(all.data);
         if (win.ok) { renderBonusListFromBackend(win.data); Cave.tickerWinners = win.data; }
-        if (rec.ok) { Cave.tickerRecent = rec.data; }
+        if (rec.ok) { await renderRecentList(rec.data); Cave.tickerRecent = rec.data; }
         updateTickerFromArrays(Cave.tickerRecent, Cave.tickerWinners, Cave.lastAllExpeditions||[]);
       }catch{}
     }, GLOBAL_REFRESH_MS);
   }
+
 
   // ========= VISIBILITY =========
   document.addEventListener("visibilitychange", () => {

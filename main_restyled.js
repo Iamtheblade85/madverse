@@ -3771,13 +3771,19 @@ async function renderGoblinInventory() {
   }
   // ========= CONFIG OVERLAY =========
   const QS = new URLSearchParams(location.search);
-  const OVERLAY_MODE = QS.get('overlay') === '1' || window.CAVE_OVERLAY === true;
+  // overlay solo se (a) sei in overlay.html, (b) c'è ?overlay=1, oppure (c) <body data-overlay="1">
+  const OVERLAY_MODE =
+    /\/overlay\.html$/i.test(location.pathname)
+    || QS.get('overlay') === '1'
+    || (document.body && document.body.getAttribute('data-overlay') === '1');
+  
   const READONLY = OVERLAY_MODE || QS.get('readonly') === '1';
   const OVERLAY_START_URL = (window.START_URL || `${location.origin}/start.html`);
 
   // ========= STATE (single source of truth) =========
   const Cave = {
     canvas: null,
+    lastAllExpeditions: [],
     ctx: null,
     rafId: null,
     running: false,
@@ -3999,20 +4005,28 @@ async function renderGoblinInventory() {
       }
       /* --- Overlay ticker (marquee) --- */
       #cv-ticker{
-        position:absolute; left:0; right:0; bottom:0; height:38px;
+        position:absolute; left:0; right:0; bottom:0; height:60px;
         background:linear-gradient(180deg, rgba(0,0,0,.6), rgba(0,0,0,.85));
         border-top:1px solid rgba(255,255,255,.08);
         overflow:hidden; pointer-events:none;
+        display:flex; flex-direction:column; gap:2px; padding:2px 0;
+      }
+      #cv-ticker .row{
+        flex:1 1 0; overflow:hidden;
       }
       #cv-ticker .track{
         display:flex; gap:2rem; white-space:nowrap; will-change:transform;
-        animation:cv-marquee 28s linear infinite; padding:0 .75rem;
+        animation:cv-marquee linear infinite;
+        padding:0 .75rem;
       }
       #cv-ticker .item{
         font-family:Orbitron, system-ui, sans-serif; font-size:.9rem; color:#ffe600;
         text-shadow:0 1px 2px rgba(0,0,0,.6);
       }
-      @keyframes cv-marquee{ from{transform:translateX(0)} to{transform:translateX(-50%)} }        
+      @keyframes cv-marquee{
+        from{ transform:translateX(0) }
+        to  { transform:translateX(-50%) }
+      }
     `;
     document.head.appendChild(st);
   }
@@ -4910,7 +4924,7 @@ async function renderGoblinInventory() {
       grid.appendChild(frag);
       // === ticker: salva e aggiorna
       Cave.tickerRecent = list;
-      updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[]);
+      updateTickerFromArrays(Cave.tickerRecent, Cave.tickerWinners, Cave.lastAllExpeditions||[]);
     } catch (e) {
       if (e?.name === "AbortError") return;
       console.warn("Recent list failed:", e);
@@ -5014,39 +5028,76 @@ async function renderGoblinInventory() {
     grid.appendChild(frag);
     // === ticker: salva e aggiorna
     Cave.tickerWinners = winners;
-    updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[]);
-        
+    updateTickerFromArrays(Cave.tickerRecent, Cave.tickerWinners, Cave.lastAllExpeditions||[]);       
   }
+  
   function ensureTicker(){
-  let t = qs('#cv-ticker'); if (t) return t;
-  const wrap = Cave.el.videoOrCanvas; if (!wrap) return null;
-  wrap.style.position = 'relative';
-  t = document.createElement('div');
-  t.id = 'cv-ticker';
-  t.innerHTML = `<div class="track" id="cv-ticker-track"></div>`;
-  wrap.appendChild(t);
-  return t;
-}
+    let t = qs('#cv-ticker'); if (t) return t;
+    const wrap = Cave.el.videoOrCanvas; if (!wrap) return null;
+    wrap.style.position = 'relative';
+    t = document.createElement('div');
+    t.id = 'cv-ticker';
+    t.innerHTML = `
+      <div class="row"><div class="track" id="cv-ticker-top"></div></div>
+      <div class="row"><div class="track" id="cv-ticker-bottom"></div></div>
+    `;
+    wrap.appendChild(t);
+    return t;
+  }
 
-function updateTickerFromArrays(recent = [], winners = []){
+
+// velocità: più grande è il contenuto, più lungo è il giro (ma non oltre i 26s)
+const TICKER_MIN_S = 12, TICKER_MAX_S = 26, TICKER_PX_PER_SEC = 160;
+
+function updateTickerFromArrays(recent = [], winners = [], live = []) {
   const t = ensureTicker(); if (!t) return;
-  const track = qs('#cv-ticker-track', t);
-  const items = [];
+  const top = qs('#cv-ticker-top', t);
+  const bottom = qs('#cv-ticker-bottom', t);
 
+  // Riga TOP = recent expedition results (come prima)
+  const topItems = [];
   recent.forEach(r => {
     const chips = r.chips ?? r.stats?.tokens?.CHIPS ?? 0;
     const nfts  = r.nfts_count ?? (Array.isArray(r.nfts) ? r.nfts.length : 0);
-    items.push(`⛏️ ${safe(r.wax_account)} • +${chips} CHIPS • ${nfts} NFT`);
-  });
-  winners.forEach(w => {
-    const c = w.chips ?? 0, n = w.nfts_count ?? 0;
-    const id = (w.chest_id != null) ? `#${safe(w.chest_id)}` : '';
-    items.push(`🎁 Chest ${id} • ${safe(w.wax_account)} • +${c} CHIPS • ${n} NFT`);
+    topItems.push(`⛏️ ${safe(r.wax_account)} • +${chips} CHIPS • ${nfts} NFT`);
   });
 
-  const doubled = items.concat(items); // loop infinito
-  track.innerHTML = doubled.map(x => `<span class="item">${x}</span>`).join('<span class="item">·</span>');
+  // Riga BOTTOM = live expeditions compattate
+  const bottomItems = [];
+  live.forEach(e => {
+    const goblins = e.total_goblins ?? e.goblins?.length ?? 0;
+    const mm = Math.max(0, Math.floor((e.seconds_remaining ?? 0)/60));
+    const ss = Math.max(0, Math.floor((e.seconds_remaining ?? 0)%60));
+    // totali (robusta su vari schemi dati)
+    const tots = (Array.isArray(e.goblins) ? e.goblins : []).reduce((a,g)=>{
+      const A = g.attributes || g.attr || g.stats || g;
+      a.res  += Number(A?.resistance    ?? A?.res ?? 0);
+      a.loot += Number(A?.loot_hungry   ?? A?.lootHungry ?? A?.loot ?? 0);
+      a.spd  += Number(A?.speed         ?? 0);
+      a.acc  += Number(A?.accuracy      ?? 0);
+      return a;
+    }, {res:0, loot:0, spd:0, acc:0});
+    bottomItems.push(`🚶 ${safe(e.wax_account)} • ${goblins} goblins • ${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')} • R:${tots.res} L:${tots.loot} S:${tots.spd} A:${tots.acc}`);
+  });
+
+  // Popola e duplica per il loop infinito
+  function fillTrack(trackEl, arr, delay = '0s'){
+    const doubled = arr.length ? arr.concat(arr) : [];
+    trackEl.innerHTML = doubled.map(x => `<span class="item">${safe(x)}</span>`).join('<span class="item">·</span>');
+    // durata dinamica proporzionale alla larghezza
+    // NB: per misurare bene serve che gli elementi siano in DOM
+    requestAnimationFrame(()=>{
+      const contentW = Math.max(1, trackEl.scrollWidth / 2); // metà = una sequenza
+      const seconds = clamp(contentW / TICKER_PX_PER_SEC, TICKER_MIN_S, TICKER_MAX_S);
+      trackEl.style.animationDuration = `${seconds}s`;
+      trackEl.style.animationDelay = delay;
+    });
+  }
+
+  fillTrack(top,    topItems,    '0s');
+  fillTrack(bottom, bottomItems, '-2s'); // sfasato un filo per varietà
 }
+
   // ========= GLOBAL EXPEDITIONS & CANVAS DATA =========
   let globalFetchBusy = false;
   
@@ -5144,24 +5195,76 @@ function updateTickerFromArrays(recent = [], winners = []){
         if (ch.id != null && !liveIds.has(String(ch.id))) Cave.chests.delete(key);
       });
   
-      // cards & countdowns
-      const timers = data.map((e,i)=>{
-        const end = Date.now() + e.seconds_remaining * 1000;
+      // salva per il ticker a due righe
+      Cave.lastAllExpeditions = data;
+      
+      // cards & countdowns con totali attributi
+      const COMPACT = OVERLAY_MODE; // su overlay mostriamo una card più stretta
+      const timers = [];
+      
+      data.forEach((e,i)=>{
+        const end = Date.now() + (Number(e.seconds_remaining)||0) * 1000;
         const id = `cv-timer-${i}`;
+      
+        // totali robusti su vari formati
+        const gs = Array.isArray(e.goblins) ? e.goblins : [];
+        const sums = gs.reduce((a,g)=>{
+          const A = g.attributes || g.attr || g.stats || g;
+          a.res  += Number(A?.resistance    ?? A?.res ?? 0);
+          a.loot += Number(A?.loot_hungry   ?? A?.lootHungry ?? A?.loot ?? 0);
+          a.spd  += Number(A?.speed         ?? 0);
+          a.acc  += Number(A?.accuracy      ?? 0);
+          return a;
+        }, {res:0, loot:0, spd:0, acc:0});
+      
+        const gobCount = e.total_goblins ?? gs.length ?? 0;
+      
         const card = document.createElement("div");
         card.style.cssText = `
           background:linear-gradient(180deg,#141414,#0f0f0f);
-          padding:.75rem; border-radius:12px; width:150px; border:1px solid var(--cv-border);
+          padding:${COMPACT ? '.55rem' : '.75rem'};
+          border-radius:12px; width:${COMPACT ? '210px' : '180px'};
+          border:1px solid var(--cv-border);
           box-shadow:0 2px 10px rgba(0,0,0,.35);
+          font-size:${COMPACT ? '.9rem' : '1rem'};
         `;
         card.innerHTML = `
-          <div><strong style="color:#ffe600;">${safe(e.wax_account)}</strong></div>
-          <div style="color:#0ff;">Goblins: ${safe(e.total_goblins)}</div>
-          <div id="${id}" style="color:#0f0;">⏳ calculating...</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:.4rem;">
+            <strong style="color:#ffe600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;">${safe(e.wax_account)}</strong>
+            <span id="${id}" style="color:#0f0; font-family:Orbitron,system-ui,sans-serif;">⏳ --:--</span>
+          </div>
+          <div style="margin-top:.35rem; color:#7ff6ff;">Goblins: <strong>${gobCount}</strong></div>
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:.25rem; margin-top:.4rem;">
+            <div class="cv-pill"><div class="cv-chip-key">R</div><div class="cv-chip-val">${sums.res}</div></div>
+            <div class="cv-pill"><div class="cv-chip-key">L</div><div class="cv-chip-val">${sums.loot}</div></div>
+            <div class="cv-pill"><div class="cv-chip-key">S</div><div class="cv-chip-val">${sums.spd}</div></div>
+            <div class="cv-pill"><div class="cv-chip-key">A</div><div class="cv-chip-val">${sums.acc}</div></div>
+          </div>
         `;
         list.appendChild(card);
-        return { id, end };
+        timers.push({ id, end });
       });
+      
+      // countdown
+      if (Cave.intervals.globalCountdown) clearInterval(Cave.intervals.globalCountdown);
+      Cave.intervals.globalCountdown = setInterval(()=>{
+        const now = Date.now();
+        timers.forEach(t=>{
+          const el = document.getElementById(t.id);
+          if (!el) return;
+          const rem = t.end - now;
+          if (rem <= 0) el.textContent = "✅ Done";
+          else {
+            const m = Math.floor(rem/60000);
+            const s = Math.floor((rem%60000)/1000);
+            el.textContent = `⏳ ${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+          }
+        });
+      }, 1000);
+      
+      // aggiorna il ticker 2 righe (riga top = recent, riga bottom = live)
+      updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[], data);
+
   
       if (Cave.intervals.globalCountdown) clearInterval(Cave.intervals.globalCountdown);
       Cave.intervals.globalCountdown = setInterval(()=>{
@@ -5836,12 +5939,12 @@ function updateTickerFromArrays(recent = [], winners = []){
       if (allowed && !btn._bound){
         btn._bound = true;
         btn.onclick = async () => {
-          const url = `${location.origin}/overlay.html?overlay=1&readonly=1`;
+          const url = `${location.origin}/madverse/goblin_dex.html?overlay=1&readonly=1`;
           try{
             await navigator.clipboard.writeText(url);
-            toast('✅ Overlay URL copiato. Incollalo in OBS ➜ Browser Source.', 'ok', 4000);
+            toast('✅ Overlay URL copied. Paste it in OBS StreamLab ➜ Browser Source.', 'ok', 4000);
           }catch{
-            prompt('Copia questo URL per lo stream:', url);
+            prompt('Copy this URL to your StreamLab Overlay:', url);
           }
         };
       }
@@ -5872,9 +5975,9 @@ function updateTickerFromArrays(recent = [], winners = []){
         const url = `${location.origin}/overlay.html?overlay=1&readonly=1`;
         try{
           await navigator.clipboard.writeText(url);
-          toast('✅ Overlay URL copiato. Incollalo in OBS ➜ Browser Source.', 'ok', 4000);
+          toast('✅ Overlay URL copied. Paste it in OBS StreamLab ➜ Browser Source.', 'ok', 4000);
         }catch{
-          prompt('Copia questo URL per lo stream:', url);
+          prompt('Copy this URL to your StreamLab Overlay:', url);
         }
       };
     }
@@ -5942,8 +6045,8 @@ function updateTickerFromArrays(recent = [], winners = []){
   
     Cave.tickerRecent  = (rRecent.status==='fulfilled' && rRecent.value?.ok && Array.isArray(rRecent.value.data)) ? rRecent.value.data : [];
     Cave.tickerWinners = (rWin.status==='fulfilled'    && rWin.value?.ok    && Array.isArray(rWin.value.data))    ? rWin.value.data    : [];
-    updateTickerFromArrays(Cave.tickerRecent, Cave.tickerWinners);
-  
+    updateTickerFromArrays(Cave.tickerRecent, Cave.tickerWinners, Cave.lastAllExpeditions||[]);
+ 
     // refresh periodico
     if (Cave.intervals.global) clearInterval(Cave.intervals.global);
     Cave.intervals.global = setInterval(async ()=>{
@@ -5955,7 +6058,7 @@ function updateTickerFromArrays(recent = [], winners = []){
         if (all.ok) await renderGlobalExpeditions(all.data);
         if (win.ok) { renderBonusListFromBackend(win.data); Cave.tickerWinners = win.data; }
         if (rec.ok) { Cave.tickerRecent = rec.data; }
-        updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[]);
+        updateTickerFromArrays(Cave.tickerRecent, Cave.tickerWinners, Cave.lastAllExpeditions||[]);
       }catch{}
     }, GLOBAL_REFRESH_MS);
   }
@@ -5979,11 +6082,13 @@ function updateTickerFromArrays(recent = [], winners = []){
   window.renderDwarfsCaveOverlay = renderDwarfsCaveOverlay;
   
   // Avvio auto se siamo in overlay (richiede le costanti del Punto 1)
-  if (typeof OVERLAY_MODE !== 'undefined' && OVERLAY_MODE) {
+  if (OVERLAY_MODE) {
     renderDwarfsCaveOverlay();
+  } else {
+    renderDwarfsCave();
   }
-  
-  })();
+
+})();
 
 
 async function renderGoblinBlend() {

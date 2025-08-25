@@ -714,9 +714,30 @@ function openRegisterModal() {
     /\/goblin_dex\.html$/i.test(location.pathname) && (qs.get('overlay') === '1' || document.body?.getAttribute('data-overlay') === '1');
 
   if (!isOverlay) {
-    window.addEventListener('load', initApp);
+    window.addEventListener('load', initApp);    
   }
 })();
+
+function closeModal() {
+  const modal = document.getElementById('universal-modal');
+  modal.classList.add('hidden');
+  modal.classList.remove('active');
+  document.body.classList.remove('modal-open');
+  modal.querySelector('.modal-header').innerHTML = '';
+  modal.querySelector('.modal-body').innerHTML = '';
+  modal.querySelector('.modal-message').innerHTML = '';
+  modal.querySelector('.modal-footer').innerHTML = '';
+  modal.style.top = ''; // pulizia!
+}
+
+const qs_modal = new URLSearchParams(location.search);
+const isOverlay =
+    /\/overlay\.html$/i.test(location.pathname) ||
+    /\/goblin_dex\.html$/i.test(location.pathname) && (qs_modal.get('overlay') === '1' || document.body?.getAttribute('data-overlay') === '1');
+
+if (!isOverlay) {
+  document.querySelector('#universal-modal .modal-close').addEventListener('click', closeModal);
+}
 
 /* ===========================================================
    TOKEN POOLS — CREATION & MANAGEMENT (NO EXTERNAL DEPENDENCIES)
@@ -14634,19 +14655,6 @@ function showModal({ title = '', body = '', footer = '' }) {
     modal.style.top = `${Math.max(top, 40)}px`;
   }, 0);
 }
-
-function closeModal() {
-  const modal = document.getElementById('universal-modal');
-  modal.classList.add('hidden');
-  modal.classList.remove('active');
-  document.body.classList.remove('modal-open');
-  modal.querySelector('.modal-header').innerHTML = '';
-  modal.querySelector('.modal-body').innerHTML = '';
-  modal.querySelector('.modal-message').innerHTML = '';
-  modal.querySelector('.modal-footer').innerHTML = '';
-  modal.style.top = ''; // pulizia!
-}
-document.querySelector('#universal-modal .modal-close').addEventListener('click', closeModal);
 
 
 

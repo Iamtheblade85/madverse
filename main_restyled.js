@@ -5088,7 +5088,7 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
           } catch (e) {
             ch.taken = false;
             ch.claiming = false;
-            toast(`Chest reward failed: ${e.message}`, "err");
+            //toast(`Chest reward failed: ${e.message}`, "err");
           } finally {
             if (ch.id != null) inFlightClaims.delete(String(ch.id));
           }

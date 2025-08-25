@@ -4142,9 +4142,39 @@ function sumExpeditionStats(assetIds = []){
         padding:0 .75rem;
       }
       #cv-ticker .item{
-        font-family:Orbitron, system-ui, sans-serif; font-size:.9rem; color:#ffe600;
+        font-family:Orbitron, system-ui, sans-serif;
+        font-size:.9rem;
+        color:#ffe600; /* fallback */
         text-shadow:0 1px 2px rgba(0,0,0,.6);
+        display:inline-flex; align-items:center; gap:.35rem;
       }
+      #cv-ticker .dot{ opacity:.4; margin:0 .65rem; }
+      
+      /* palette tokenizzata per elementi */
+      #cv-ticker .tk-user{ font-weight:900; filter:drop-shadow(0 0 6px rgba(255,255,255,.08)); }
+      #cv-ticker .tk-chips{ color:#78ff78; font-weight:800; }
+      #cv-ticker .tk-nfts{ color:#ffb74d; font-weight:800; }
+      #cv-ticker .tk-goblins{ color:#7dd3fc; }
+      #cv-ticker .tk-timer{ color:#a7f3d0; }
+      
+      /* attributi */
+      #cv-ticker .tk-R{ color:#f87171; }
+      #cv-ticker .tk-L{ color:#fde047; }
+      #cv-ticker .tk-S{ color:#60a5fa; }
+      #cv-ticker .tk-A{ color:#c084fc; }
+      /* pill dei totali attributi: colori e wrapping */
+      .cv-attr-grid .cv-chip-val{ white-space:normal; } /* consenti capo riga in card strette */
+      
+      .cv-pill.attr-R{ border-color:#4c1e1e; background:linear-gradient(180deg,#1b0d0d,#130909); }
+      .cv-pill.attr-L{ border-color:#4a3a12; background:linear-gradient(180deg,#2a2211,#1c160a); }
+      .cv-pill.attr-S{ border-color:#0f3a4a; background:linear-gradient(180deg,#0f1a1c,#0a1214); }
+      .cv-pill.attr-A{ border-color:#3a124a; background:linear-gradient(180deg,#1a0f1c,#120a14); }
+      
+      .cv-pill.attr-R .cv-chip-key{ color:#fca5a5; }
+      .cv-pill.attr-L .cv-chip-key{ color:#fde68a; }
+      .cv-pill.attr-S .cv-chip-key{ color:#7dd3fc; }
+      .cv-pill.attr-A .cv-chip-key{ color:#d8b4fe; }
+
       @keyframes cv-marquee{
         from{ transform:translateX(0) }
         to  { transform:translateX(-50%) }
@@ -4756,7 +4786,7 @@ function showLogoToast(msg){
 }
 
 function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al logo
-  const { minX, maxX, minY } = getBounds();
+  const { minX, maxX, minY, maxY } = getBounds();
   const gx = clamp(Math.round(minX + xNorm * (maxX - minX)), minX, maxX);
   const gy = minY + 1;
   const color = colorByIndex(Math.abs(hashCode(wax||'')));
@@ -4764,10 +4794,16 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     x: gx, y: gy, wax_account: wax || 'guest',
     path: [], trail: [], _lastTrailX: gx, _lastTrailY: gy,
     digging:false, shovelFrame:0, frameTimer:0, color,
-    speed: 0.9, turnRate: 2.0, heading: Math.random()*Math.PI*2 // seed, poi moveGoblin farà il resto
+    // seed minimi per il movimento
+    speed: 0.9, turnRate: 2.0, heading: Math.random()*Math.PI*2,
+    // 👇 evita il crash: crea subito un target valido
+    target: { x: randInt(minX, maxX), y: randInt(minY, maxY) },
+    pauseTil: 0, speedBoostUntil: 0, walkPhase: Math.random()*Math.PI*2, walkBob: 0
   });
 }
-function hashCode(str=''){ let h=0; for(let i=0;i<str.length;i++){ h=((h<<5)-h)+str.charCodeAt(i); h|=0; } return h; }
+
+  function hashCode(str=''){ let h=0; for(let i=0;i<str.length;i++){ h=((h<<5)-h)+str.charCodeAt(i); h|=0; } return h; }
+  function hueFromString(str=''){ const h = Math.abs(hashCode(str)); return h % 360; }
 
   // ========= DRAWING =========
   function drawBG() {
@@ -5040,7 +5076,7 @@ function hashCode(str=''){ let h=0; for(let i=0;i<str.length;i++){ h=((h<<5)-h)+
     if (g.digging) { tryClaimNearby(g); return; }
   
     const { minX, maxX, minY, maxY } = getBounds();
-  
+    if (!g.target) g.target = { x: randInt(minX, maxX), y: randInt(minY, maxY) };
     // seed on first run (retrocompat)
     if (g.speed == null) {
       g.speed    = 3.6 + Math.random()*0.6;     // celle/sec
@@ -5491,34 +5527,47 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
   const top = qs('#cv-ticker-top', t);
   const bottom = qs('#cv-ticker-bottom', t);
 
-  // Riga TOP = recent expedition results (come prima)
-  const topItems = [];
-  recent.forEach(r => {
+  const userHTML = (name) => {
+    const h = hueFromString(name||'');
+    // colore per-utente via HSL
+    return `<span class="tk-user" style="color:hsl(${h},78%,62%)">${safe(name)}</span>`;
+  };
+
+  // Riga TOP = recent
+  const topHTML = recent.map(r => {
     const chips = r.chips ?? r.stats?.tokens?.CHIPS ?? 0;
     const nfts  = r.nfts_count ?? (Array.isArray(r.nfts) ? r.nfts.length : 0);
-    topItems.push(`⛏️ ${safe(r.wax_account)} • +${chips} CHIPS • ${nfts} NFT`);
-  });
-
-  // Riga BOTTOM = live expeditions compattate
-  const bottomItems = [];
-  live.forEach(e => {
-    const goblins = e.total_goblins ?? e.goblins?.length ?? 0;
-    const mm = Math.max(0, Math.floor((e.seconds_remaining ?? 0)/60));
-    const ss = Math.max(0, Math.floor((e.seconds_remaining ?? 0)%60));
-    // totali (robusta su vari schemi dati)
-    const tots = totalsFromExpeditionItem(e);
-    bottomItems.push(
-      `🚶 ${safe(e.wax_account)} • ${goblins} goblins • ${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')} • ` +
-      `R:${fmtNumCompact(tots.res)} L:${fmtNumCompact(tots.loot)} S:${fmtNumCompact(tots.spd)} A:${fmtNumCompact(tots.acc)}`
+    return (
+      `<span class="item">` +
+      `⛏️ ${userHTML(r.wax_account)}` +
+      ` <span class="tk-chips">+${safe(chips)} CHIPS</span>` +
+      ` <span class="tk-nfts">${safe(nfts)} NFT</span>` +
+      `</span>`
     );
   });
 
-  // Popola e duplica per il loop infinito
-  function fillTrack(trackEl, arr, delay = '0s'){
-    const doubled = arr.length ? arr.concat(arr) : [];
-    trackEl.innerHTML = doubled.map(x => `<span class="item">${safe(x)}</span>`).join('<span class="item">·</span>');
-    // durata dinamica proporzionale alla larghezza
-    // NB: per misurare bene serve che gli elementi siano in DOM
+  // Riga BOTTOM = live
+  const bottomHTML = live.map(e => {
+    const goblins = e.total_goblins ?? (Array.isArray(e.goblins) ? e.goblins.length : 0);
+    const mm = Math.max(0, Math.floor((e.seconds_remaining ?? 0)/60));
+    const ss = Math.max(0, Math.floor((e.seconds_remaining ?? 0)%60));
+    const tots = totalsFromExpeditionItem(e);
+    return (
+      `<span class="item">` +
+      `🚶 ${userHTML(e.wax_account)}` +
+      ` <span class="tk-goblins">${safe(goblins)} goblins</span>` +
+      ` <span class="tk-timer">${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}</span>` +
+      ` <span class="tk-R">R:${fmtNumCompact(tots.res)}</span>` +
+      ` <span class="tk-L">L:${fmtNumCompact(tots.loot)}</span>` +
+      ` <span class="tk-S">S:${fmtNumCompact(tots.spd)}</span>` +
+      ` <span class="tk-A">A:${fmtNumCompact(tots.acc)}</span>` +
+      `</span>`
+    );
+  });
+
+  function fillTrackHTML(trackEl, htmlArr, delay = '0s'){
+    const doubled = htmlArr.length ? htmlArr.concat(htmlArr) : [];
+    trackEl.innerHTML = doubled.join('<span class="dot">·</span>');
     requestAnimationFrame(()=>{
       const contentW = Math.max(1, trackEl.scrollWidth / 2); // metà = una sequenza
       const seconds = clamp(contentW / TICKER_PX_PER_SEC, TICKER_MIN_S, TICKER_MAX_S);
@@ -5527,9 +5576,10 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
     });
   }
 
-  fillTrack(top,    topItems,    '0s');
-  fillTrack(bottom, bottomItems, '-2s'); // sfasato un filo per varietà
+  fillTrackHTML(top,    topHTML,    '0s');
+  fillTrackHTML(bottom, bottomHTML, '-2s');
 }
+
 
   // ========= GLOBAL EXPEDITIONS & CANVAS DATA =========
   let globalFetchBusy = false;
@@ -5661,11 +5711,19 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
             <span id="${id}" style="color:#0f0; font-family:Orbitron,system-ui,sans-serif;">⏳ --:--</span>
           </div>
           <div style="margin-top:.35rem; color:#7ff6ff;">Goblins: <strong>${gobCount}</strong></div>
-          <div style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:.25rem; margin-top:.4rem;">
-            <div class="cv-pill"><div class="cv-chip-key">R</div><div class="cv-chip-val">${fmtNumCompact(sums.res)}</div></div>
-            <div class="cv-pill"><div class="cv-chip-key">L</div><div class="cv-chip-val">${fmtNumCompact(sums.loot)}</div></div>
-            <div class="cv-pill"><div class="cv-chip-key">S</div><div class="cv-chip-val">${fmtNumCompact(sums.spd)}</div></div>
-            <div class="cv-pill"><div class="cv-chip-key">A</div><div class="cv-chip-val">${fmtNumCompact(sums.acc)}</div></div>
+          <div class="cv-attr-grid" style="display:flex; flex-wrap:wrap; gap:.25rem; margin-top:.4rem;">
+            <div class="cv-pill attr-R" style="flex:1 1 48%; min-width:100px;">
+              <div class="cv-chip-key">R</div><div class="cv-chip-val">${fmtNumCompact(sums.res)}</div>
+            </div>
+            <div class="cv-pill attr-L" style="flex:1 1 48%; min-width:100px;">
+              <div class="cv-chip-key">L</div><div class="cv-chip-val">${fmtNumCompact(sums.loot)}</div>
+            </div>
+            <div class="cv-pill attr-S" style="flex:1 1 48%; min-width:100px;">
+              <div class="cv-chip-key">S</div><div class="cv-chip-val">${fmtNumCompact(sums.spd)}</div>
+            </div>
+            <div class="cv-pill attr-A" style="flex:1 1 48%; min-width:100px;">
+              <div class="cv-chip-key">A</div><div class="cv-chip-val">${fmtNumCompact(sums.acc)}</div>
+            </div>
           </div>
         `;
         list.appendChild(card);

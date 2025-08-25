@@ -5591,19 +5591,27 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     });
   
     function fillTrackHTML(trackEl, htmlArr, delay = '0s'){
-      // reset pulito (niente accumulo)
+      // reset pulito
       trackEl.style.animation = 'none';
       trackEl.innerHTML = '';
     
-      const doubled = htmlArr.length ? htmlArr.concat(htmlArr) : [];
-      trackEl.innerHTML = doubled.join('<span class="dot">·</span>');
+      // un solo HTML e due gruppi identici per un loop senza accumuli
+      const inner = htmlArr.join('<span class="dot">·</span>');
+      trackEl.innerHTML =
+        `<div class="group">${inner}</div><div class="group" aria-hidden="true">${inner}</div>`;
     
-      // forza un reflow e poi riattiva l’animazione con durata calcolata
-      // NB: non modifica larghezza del layout grazie a #cv-ticker { contain: ... }
-      void trackEl.offsetWidth;
-      const contentW = Math.max(1, trackEl.scrollWidth / 2);
+      // misura SOLO il primo gruppo (larghezza reale del contenuto)
+      void trackEl.offsetWidth; // reflow
+      const g = trackEl.querySelector('.group');
+      const contentW = Math.max(1, g ? g.scrollWidth : Math.floor(trackEl.scrollWidth/2));
+    
+      // congela la larghezza della track (2x per i due gruppi)
+      trackEl.style.width = (contentW * 2) + 'px';
+    
+      // durata coerente con i pixel da percorrere, clamped
       const seconds = clamp(contentW / TICKER_PX_PER_SEC, TICKER_MIN_S, TICKER_MAX_S);
-      trackEl.style.animation = `cv-marquee ${seconds}s linear infinite`;
+      trackEl.style.setProperty('--tkd', `${seconds}s`);
+      trackEl.style.animation = `cv-marquee var(--tkd) linear infinite`;
       trackEl.style.animationDelay = delay;
     }
     fillTrackHTML(top,    topHTML,    '0s');
@@ -14664,6 +14672,3 @@ function showModal({ title = '', body = '', footer = '' }) {
     modal.style.top = `${Math.max(top, 40)}px`;
   }, 0);
 }
-
-
-

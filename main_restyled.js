@@ -3855,6 +3855,37 @@ async function renderGoblinInventory() {
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
   const clamp  = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const randInt = (lo, hi) => Math.floor(Math.random() * (hi - lo + 1)) + lo;
+function totalsFromExpeditionItem(e){
+  // 1) lato BE (opzionale): { attr_totals: { resistance, loot_hungry, speed, accuracy } }
+  if (e?.attr_totals){
+    return {
+      res:  Number(e.attr_totals.resistance  ?? e.attr_totals.R ?? 0),
+      loot: Number(e.attr_totals.loot_hungry ?? e.attr_totals.L ?? 0),
+      spd:  Number(e.attr_totals.speed       ?? e.attr_totals.S ?? 0),
+      acc:  Number(e.attr_totals.accuracy    ?? e.attr_totals.A ?? 0),
+    };
+  }
+
+  // 2) payload verboso: e.goblins = [{attributes:{...}}]
+  if (Array.isArray(e?.goblins) && e.goblins.length){
+    return e.goblins.reduce((a,g)=>{
+      const A = g.attributes || g.attr || g.stats || g;
+      a.res  += Number(A?.resistance  ?? A?.res ?? 0);
+      a.loot += Number(A?.loot_hungry ?? A?.lootHungry ?? A?.loot ?? 0);
+      a.spd  += Number(A?.speed       ?? 0);
+      a.acc  += Number(A?.accuracy    ?? 0);
+      return a;
+    }, {res:0, loot:0, spd:0, acc:0});
+  }
+
+  // 3) payload leggero (attuale): calcola coi tuoi NFT in cache
+  if (Array.isArray(e?.goblin_ids) && e.goblin_ids.length){
+    const t = sumExpeditionStats(e.goblin_ids);
+    return { res:t.resistance, loot:t.loot_hungry, spd:t.speed, acc:t.accuracy };
+  }
+
+  return {res:0, loot:0, spd:0, acc:0};
+}
 
   const safe = (v) => {
     if (v == null) return "";
@@ -5130,14 +5161,7 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
     const mm = Math.max(0, Math.floor((e.seconds_remaining ?? 0)/60));
     const ss = Math.max(0, Math.floor((e.seconds_remaining ?? 0)%60));
     // totali (robusta su vari schemi dati)
-    const tots = (Array.isArray(e.goblins) ? e.goblins : []).reduce((a,g)=>{
-      const A = g.attributes || g.attr || g.stats || g;
-      a.res  += Number(A?.resistance    ?? A?.res ?? 0);
-      a.loot += Number(A?.loot_hungry   ?? A?.lootHungry ?? A?.loot ?? 0);
-      a.spd  += Number(A?.speed         ?? 0);
-      a.acc  += Number(A?.accuracy      ?? 0);
-      return a;
-    }, {res:0, loot:0, spd:0, acc:0});
+    const tots = totalsFromExpeditionItem(e);
     bottomItems.push(`🚶 ${safe(e.wax_account)} • ${goblins} goblins • ${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')} • R:${tots.res} L:${tots.loot} S:${tots.spd} A:${tots.acc}`);
   });
 
@@ -5268,18 +5292,8 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
         const id = `cv-timer-${i}`;
       
         // totali robusti su vari formati
-        const gs = Array.isArray(e.goblins) ? e.goblins : [];
-        const sums = gs.reduce((a,g)=>{
-          const A = g.attributes || g.attr || g.stats || g;
-          a.res  += Number(A?.resistance    ?? A?.res ?? 0);
-          a.loot += Number(A?.loot_hungry   ?? A?.lootHungry ?? A?.loot ?? 0);
-          a.spd  += Number(A?.speed         ?? 0);
-          a.acc  += Number(A?.accuracy      ?? 0);
-          return a;
-        }, {res:0, loot:0, spd:0, acc:0});
-      
+        const sums = totalsFromExpeditionItem(e);
         const gobCount = e.total_goblins ?? gs.length ?? 0;
-      
         const card = document.createElement("div");
         card.style.cssText = `
           background:linear-gradient(180deg,#141414,#0f0f0f);
@@ -6046,6 +6060,20 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
     
     // 3) riprova anche dopo il retry di /user_nfts (quando usi loadUserNFTsWithSingleRetry)
     document.addEventListener('cv:userdata-maybe-updated', ensureCopyButtonVisibility);
+    // Quando /user_nfts popola Cave.nftIndex, rifaccio le cards live
+    document.addEventListener('cv:userdata-maybe-updated', () => {
+      try {
+        if (Array.isArray(Cave.lastAllExpeditions) && Cave.lastAllExpeditions.length) {
+          // Rerender immediato senza aspettare un nuovo fetch
+          renderGlobalExpeditions(Cave.lastAllExpeditions);
+        } else {
+          // Se non ho cache locale, faccio il fetch normale
+          renderGlobalExpeditions();
+        }
+      } catch (e) {
+        console.warn('[cv:userdata-maybe-updated] rerender failed:', e);
+      }
+    });
 
     // Hydrate global winners (ultimi 10)
     try {

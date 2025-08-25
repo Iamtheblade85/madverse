@@ -4834,6 +4834,10 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
       ctx.drawImage(bgCache, offsetX, offsetY);
     } else if (assets.bg?.complete) {
       ctx.drawImage(assets.bg, 0, 0, assets.bg.width, assets.bg.height, offsetX, offsetY, gridW, gridH);
+    } else {
+      // Fallback anti-nero
+      ctx.fillStyle = '#0b0b0b';
+      ctx.fillRect(offsetX, offsetY, gridW, gridH);
     }
   }
 
@@ -5101,8 +5105,8 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     if (!g.target) g.target = { x: randInt(minX, maxX), y: randInt(minY, maxY) };
     // seed on first run (retrocompat)
     if (g.speed == null) {
-      g.speed    = 3.6 + Math.random()*0.6;     // celle/sec
-      g.turnRate = 4.9 + Math.random()*0.9;     // rad/sec
+      g.speed    = 7.6 + Math.random()*0.6;     // celle/sec
+      g.turnRate = 9.9 + Math.random()*0.9;     // rad/sec
       g.heading  = Math.random() * Math.PI * 2; // rad
       g.target   = { x: randInt(minX, maxX), y: randInt(minY, maxY) };
       g.walkPhase = Math.random() * Math.PI * 2;
@@ -5587,16 +5591,21 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     });
   
     function fillTrackHTML(trackEl, htmlArr, delay = '0s'){
+      // reset pulito (niente accumulo)
+      trackEl.style.animation = 'none';
+      trackEl.innerHTML = '';
+    
       const doubled = htmlArr.length ? htmlArr.concat(htmlArr) : [];
       trackEl.innerHTML = doubled.join('<span class="dot">·</span>');
-      requestAnimationFrame(()=>{
-        const contentW = Math.max(1, trackEl.scrollWidth / 2); // metà = una sequenza
-        const seconds = clamp(contentW / TICKER_PX_PER_SEC, TICKER_MIN_S, TICKER_MAX_S);
-        trackEl.style.animationDuration = `${seconds}s`;
-        trackEl.style.animationDelay = delay;
-      });
+    
+      // forza un reflow e poi riattiva l’animazione con durata calcolata
+      // NB: non modifica larghezza del layout grazie a #cv-ticker { contain: ... }
+      void trackEl.offsetWidth;
+      const contentW = Math.max(1, trackEl.scrollWidth / 2);
+      const seconds = clamp(contentW / TICKER_PX_PER_SEC, TICKER_MIN_S, TICKER_MAX_S);
+      trackEl.style.animation = `cv-marquee ${seconds}s linear infinite`;
+      trackEl.style.animationDelay = delay;
     }
-  
     fillTrackHTML(top,    topHTML,    '0s');
     fillTrackHTML(bottom, bottomHTML, '-2s');
   }

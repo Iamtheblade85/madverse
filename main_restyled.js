@@ -3960,24 +3960,45 @@ function sumExpeditionStats(assetIds = []){
   
   // estrai i totali dal payload di all_expeditions (fallback su goblins[])
   function totalsFromExpeditionItem(e){
-    const T = e?.stats_totals || {};
-    if (T && (T.resistance!=null || T.loot_hungry!=null || T.speed!=null || T.accuracy!=null)){
+    // helper: legge il primo campo disponibile tra i nomi indicati (case-insensitive)
+    const pick = (obj, names) => {
+      if (!obj) return 0;
+      for (const n of names){
+        if (obj[n] != null) return toNumber(obj[n]);
+        const kk = Object.keys(obj).find(k => k.toLowerCase() === String(n).toLowerCase());
+        if (kk && obj[kk] != null) return toNumber(obj[kk]);
+      }
+      return 0;
+    };
+  
+    // 1) preferisci i totali già calcolati dal backend (supporta alias)
+    const src = e?.stats_totals || e?.attr_totals || e?.totals || e?.stats || null;
+    if (src){
       return {
-        res:  Number(T.resistance||0),
-        loot: Number(T.loot_hungry||0),
-        spd:  Number(T.speed||0),
-        acc:  Number(T.accuracy||0),
+        res:  pick(src, ['resistance','res','R']),
+        loot: pick(src, ['loot_hungry','loothungry','loot','L']),
+        spd:  pick(src, ['speed','spd','S']),
+        acc:  pick(src, ['accuracy','acc','A']),
       };
     }
-    const arr = Array.isArray(e?.goblins) ? e.goblins : [];
-    return arr.reduce((a,g)=>{
-      a.res  += Number(g?.resistance||0);
-      a.loot += Number(g?.loot_hungry||0);
-      a.spd  += Number(g?.speed||0);
-      a.acc  += Number(g?.accuracy||0);
-      return a;
-    }, {res:0, loot:0, spd:0, acc:0});
+  
+    // 2) fallback: somma da e.goblins (senza MAI usare user_nfts)
+    const gl = Array.isArray(e?.goblins) ? e.goblins : [];
+    if (gl.length){
+      return gl.reduce((a,g)=>{
+        const A = g?.attributes || g?.attr || g?.stats || g || {};
+        a.res  += pick(A, ['resistance','res','R']);
+        a.loot += pick(A, ['loot_hungry','loothungry','loot','L']);
+        a.spd  += pick(A, ['speed','spd','S']);
+        a.acc  += pick(A, ['accuracy','acc','A']);
+        return a;
+      }, {res:0, loot:0, spd:0, acc:0});
+    }
+  
+    // 3) niente dati → zeri
+    return {res:0, loot:0, spd:0, acc:0};
   }
+
 
 
   function styleOnce() {

@@ -123,7 +123,7 @@ html, body, #overlay-root, #overlay-shell {
 #cv-ticker { 
   position: absolute; 
   left: 0; right: 0; bottom: 0; 
-  width: 100%;
+  width: 90%;
   overflow: hidden;
   contain: layout paint size;     /* <— importante per evitare side-effects */
 }
@@ -132,3 +132,8 @@ html, body, #overlay-root, #overlay-shell {
   white-space: nowrap;
   will-change: transform;
 }
+/* Qualsiasi cosa nel canvas-wrap non deve superare il contenitore */
+#cv-video-or-canvas, #cv-video-or-canvas * { max-width: 90%; }
+
+/* Le card e la colonna destra non devono “spingere” il grid */
+#cv-right, .cv-card, .cv-item, .cv-compact { max-width: 90%; }

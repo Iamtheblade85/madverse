@@ -3855,38 +3855,6 @@ async function renderGoblinInventory() {
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
   const clamp  = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const randInt = (lo, hi) => Math.floor(Math.random() * (hi - lo + 1)) + lo;
-function totalsFromExpeditionItem(e){
-  // 1) lato BE (opzionale): { attr_totals: { resistance, loot_hungry, speed, accuracy } }
-  if (e?.attr_totals){
-    return {
-      res:  Number(e.attr_totals.resistance  ?? e.attr_totals.R ?? 0),
-      loot: Number(e.attr_totals.loot_hungry ?? e.attr_totals.L ?? 0),
-      spd:  Number(e.attr_totals.speed       ?? e.attr_totals.S ?? 0),
-      acc:  Number(e.attr_totals.accuracy    ?? e.attr_totals.A ?? 0),
-    };
-  }
-
-  // 2) payload verboso: e.goblins = [{attributes:{...}}]
-  if (Array.isArray(e?.goblins) && e.goblins.length){
-    return e.goblins.reduce((a,g)=>{
-      const A = g.attributes || g.attr || g.stats || g;
-      a.res  += Number(A?.resistance  ?? A?.res ?? 0);
-      a.loot += Number(A?.loot_hungry ?? A?.lootHungry ?? A?.loot ?? 0);
-      a.spd  += Number(A?.speed       ?? 0);
-      a.acc  += Number(A?.accuracy    ?? 0);
-      return a;
-    }, {res:0, loot:0, spd:0, acc:0});
-  }
-
-  // 3) payload leggero (attuale): calcola coi tuoi NFT in cache
-  if (Array.isArray(e?.goblin_ids) && e.goblin_ids.length){
-    const t = sumExpeditionStats(e.goblin_ids);
-    return { res:t.resistance, loot:t.loot_hungry, spd:t.speed, acc:t.accuracy };
-  }
-
-  return {res:0, loot:0, spd:0, acc:0};
-}
-
   const safe = (v) => {
     if (v == null) return "";
     return String(v).replace(/[&<>"'`]/g, (m) => ({
@@ -3979,6 +3947,38 @@ function sumExpeditionStats(assetIds = []){
   }
   
   const timeHM = (d = new Date()) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  // numeri compatti: 12500 -> 12.5k, 1000000 -> 1.0M
+  function fmtNumCompact(n){
+    n = Number(n||0);
+    if (n < 1000) return String(n);
+    if (n < 10000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+    if (n < 1000000) return Math.round(n/1000) + 'k';
+    if (n < 10000000) return (n/1e6).toFixed(1).replace(/\.0$/,'') + 'M';
+    return Math.round(n/1e6) + 'M';
+  }
+  
+  // estrai i totali dal payload di all_expeditions (fallback su goblins[])
+  function totalsFromExpeditionItem(e){
+    const T = e?.stats_totals || {};
+    if (T && (T.resistance!=null || T.loot_hungry!=null || T.speed!=null || T.accuracy!=null)){
+      return {
+        res:  Number(T.resistance||0),
+        loot: Number(T.loot_hungry||0),
+        spd:  Number(T.speed||0),
+        acc:  Number(T.accuracy||0),
+      };
+    }
+    const arr = Array.isArray(e?.goblins) ? e.goblins : [];
+    return arr.reduce((a,g)=>{
+      a.res  += Number(g?.resistance||0);
+      a.loot += Number(g?.loot_hungry||0);
+      a.spd  += Number(g?.speed||0);
+      a.acc  += Number(g?.accuracy||0);
+      return a;
+    }, {res:0, loot:0, spd:0, acc:0});
+  }
+
 
   function styleOnce() {
     if (qs("#cave-rebuilt-style")) return;
@@ -4118,6 +4118,12 @@ function sumExpeditionStats(assetIds = []){
       @keyframes cv-marquee{
         from{ transform:translateX(0) }
         to  { transform:translateX(-50%) }
+      }
+      .cv-pill{ min-width:0; }
+      .cv-chip-val{
+        font-weight:800; color:#eaeaea;
+        overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+        font-size: clamp(.78rem, 2.1vw, .95rem); /* evita di “uscire a destra” */
       }
     `;
     document.head.appendChild(st);
@@ -5162,7 +5168,10 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
     const ss = Math.max(0, Math.floor((e.seconds_remaining ?? 0)%60));
     // totali (robusta su vari schemi dati)
     const tots = totalsFromExpeditionItem(e);
-    bottomItems.push(`🚶 ${safe(e.wax_account)} • ${goblins} goblins • ${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')} • R:${tots.res} L:${tots.loot} S:${tots.spd} A:${tots.acc}`);
+    bottomItems.push(
+      `🚶 ${safe(e.wax_account)} • ${goblins} goblins • ${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')} • ` +
+      `R:${fmtNumCompact(tots.res)} L:${fmtNumCompact(tots.loot)} S:${fmtNumCompact(tots.spd)} A:${fmtNumCompact(tots.acc)}`
+    );
   });
 
   // Popola e duplica per il loop infinito
@@ -5293,7 +5302,11 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
       
         // totali robusti su vari formati
         const sums = totalsFromExpeditionItem(e);
-        const gobCount = e.total_goblins ?? gs.length ?? 0;
+        const gobCount =
+          e.total_goblins ??
+          (Array.isArray(e.goblins) ? e.goblins.length :
+           Array.isArray(e.goblin_ids) ? e.goblin_ids.length : 0);
+
         const card = document.createElement("div");
         card.style.cssText = `
           background:linear-gradient(180deg,#141414,#0f0f0f);
@@ -5309,11 +5322,11 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
             <span id="${id}" style="color:#0f0; font-family:Orbitron,system-ui,sans-serif;">⏳ --:--</span>
           </div>
           <div style="margin-top:.35rem; color:#7ff6ff;">Goblins: <strong>${gobCount}</strong></div>
-          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:.25rem; margin-top:.4rem;">
-            <div class="cv-pill"><div class="cv-chip-key">R</div><div class="cv-chip-val">${sums.res}</div></div>
-            <div class="cv-pill"><div class="cv-chip-key">L</div><div class="cv-chip-val">${sums.loot}</div></div>
-            <div class="cv-pill"><div class="cv-chip-key">S</div><div class="cv-chip-val">${sums.spd}</div></div>
-            <div class="cv-pill"><div class="cv-chip-key">A</div><div class="cv-chip-val">${sums.acc}</div></div>
+          <div style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:.25rem; margin-top:.4rem;">
+            <div class="cv-pill"><div class="cv-chip-key">R</div><div class="cv-chip-val">${fmtNumCompact(sums.res)}</div></div>
+            <div class="cv-pill"><div class="cv-chip-key">L</div><div class="cv-chip-val">${fmtNumCompact(sums.loot)}</div></div>
+            <div class="cv-pill"><div class="cv-chip-key">S</div><div class="cv-chip-val">${fmtNumCompact(sums.spd)}</div></div>
+            <div class="cv-pill"><div class="cv-chip-key">A</div><div class="cv-chip-val">${fmtNumCompact(sums.acc)}</div></div>
           </div>
         `;
         list.appendChild(card);
@@ -5321,26 +5334,6 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
       });
       
       // countdown
-      if (Cave.intervals.globalCountdown) clearInterval(Cave.intervals.globalCountdown);
-      Cave.intervals.globalCountdown = setInterval(()=>{
-        const now = Date.now();
-        timers.forEach(t=>{
-          const el = document.getElementById(t.id);
-          if (!el) return;
-          const rem = t.end - now;
-          if (rem <= 0) el.textContent = "✅ Done";
-          else {
-            const m = Math.floor(rem/60000);
-            const s = Math.floor((rem%60000)/1000);
-            el.textContent = `⏳ ${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
-          }
-        });
-      }, 1000);
-      
-      // aggiorna il ticker 2 righe (riga top = recent, riga bottom = live)
-      updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[], data);
-
-  
       if (Cave.intervals.globalCountdown) clearInterval(Cave.intervals.globalCountdown);
       Cave.intervals.globalCountdown = setInterval(()=>{
         const now = Date.now();
@@ -5356,7 +5349,9 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
           }
         });
       }, 1000);
-  
+      
+      // aggiorna il ticker 2 righe (riga top = recent, riga bottom = live)
+      updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[], data);  
     } catch (e) {
       if (e?.name !== "AbortError") console.warn("Global expeditions failed:", e);
     } finally {

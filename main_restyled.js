@@ -5068,7 +5068,10 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
               toast(`Chest #${safe(ch.id)} already claimed${by}.`, "warn");
               return;
             }
-            if (!rs.ok) throw new Error(`HTTP ${rs.status}`);
+            if (!rs.ok) {
+              return
+            }
+            //if (!rs.ok) throw new Error(`HTTP ${rs.status}`);
   
             const reward  = rs.data;
             const chestId = reward?.chest_id ?? ch.id;

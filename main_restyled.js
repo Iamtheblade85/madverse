@@ -4810,8 +4810,8 @@ function sumExpeditionStats(assetIds = []){
   
     // seed on first run (retrocompat)
     if (g.speed == null) {
-      g.speed    = 0.6 + Math.random()*0.7;     // celle/sec
-      g.turnRate = 1.5 + Math.random()*0.9;     // rad/sec
+      g.speed    = 1.6 + Math.random()*0.8;     // celle/sec
+      g.turnRate = 1.9 + Math.random()*0.8;     // rad/sec
       g.heading  = Math.random() * Math.PI * 2; // rad
       g.target   = { x: randInt(minX, maxX), y: randInt(minY, maxY) };
       g.walkPhase = Math.random() * Math.PI * 2;

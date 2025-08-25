@@ -4386,7 +4386,7 @@ function sumExpeditionStats(assetIds = []){
       loadImg("goblin.png"),
       loadImg("shovel_sprite.png"),
       loadImg("chest.png"),
-      loadImg("cave-grid.png"),
+      loadImg("cave-grid.gif"),
       loadImg("perk_dragon.png"),
       loadImg("perk_dwarf.png"),
       loadImg("perk_skeleton.png"),

@@ -3771,14 +3771,13 @@ async function renderGoblinInventory() {
   }
   // ========= CONFIG OVERLAY =========
   const QS = new URLSearchParams(location.search);
-  // overlay solo se (a) sei in overlay.html, (b) c'è ?overlay=1, oppure (c) <body data-overlay="1">
   const OVERLAY_MODE =
     /\/overlay\.html$/i.test(location.pathname)
     || QS.get('overlay') === '1'
     || (document.body && document.body.getAttribute('data-overlay') === '1');
   
   const READONLY = OVERLAY_MODE || QS.get('readonly') === '1';
-  const OVERLAY_START_URL = (window.START_URL || `${location.origin}/start.html`);
+  const OVERLAY_START_URL = (window.START_URL || `${location.origin}/madverse/start.html`);
 
   // ========= STATE (single source of truth) =========
   const Cave = {
@@ -3863,6 +3862,68 @@ async function renderGoblinInventory() {
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;"
     }[m]));
   };
+
+  // === Index NFT e normalizzazione attributi ===
+Cave.nftIndex = new Map();   // asset_id (string) -> NFT intero
+
+function toNumber(x){
+  if (x == null) return 0;
+  if (typeof x === 'number' && Number.isFinite(x)) return x;
+  // estrae la prima cifra dal testo (gestisce "12", "12.5", "12%", " +12 ")
+  const m = String(x).match(/-?\d+(\.\d+)?/);
+  return m ? Number(m[0]) : 0;
+}
+
+/** Ritorna un attributo numerico provando vari percorsi/casi.
+ *  Esempi chiave: 'resistance', 'loot_hungry' (o 'loothungry'), 'speed', 'accuracy'
+ */
+function getStat(nft, key){
+  if (!nft) return 0;
+
+  const tryKeys = [key];
+  // alias comuni
+  if (key === 'loot_hungry') tryKeys.push('loothungry','lootHungry','loot-hungry');
+  if (key === 'resistance') tryKeys.push('resist','stamina');
+
+  // 1) livello piatto
+  for (const k of tryKeys){
+    if (nft[k] != null) return toNumber(nft[k]);
+  }
+
+  // 2) oggetti annidati tipici
+  const buckets = [nft.attributes, nft.attrs, nft.stats, nft.data, nft.mutable_data, nft.immutable_data];
+  for (const b of buckets){
+    if (!b) continue;
+    // a) come mappa
+    for (const k of tryKeys){
+      if (b && typeof b === 'object' && !Array.isArray(b) && b[k] != null) return toNumber(b[k]);
+    }
+    // b) come array [{trait_type,value}] (AtomicAssets-like)
+    if (Array.isArray(b)){
+      for (const ent of b){
+        const trait = String(ent.trait_type || ent.trait || ent.key || '').toLowerCase();
+        if (tryKeys.some(k => k.toLowerCase() === trait)){
+          return toNumber(ent.value ?? ent.val);
+        }
+      }
+    }
+  }
+  return 0;
+}
+
+/** Somma attributi per una lista di asset_id */
+function sumExpeditionStats(assetIds = []){
+  const sums = { resistance:0, loot_hungry:0, speed:0, accuracy:0 };
+  assetIds.forEach(id => {
+    const nft = Cave.nftIndex.get(String(id));
+    if (!nft) return;
+    sums.resistance  += getStat(nft, 'resistance');
+    sums.loot_hungry += getStat(nft, 'loot_hungry');
+    sums.speed       += getStat(nft, 'speed');
+    sums.accuracy    += getStat(nft, 'accuracy');
+  });
+  return sums;
+}
 
   function rarityBg(r="") {
     const k = String(r).toLowerCase();
@@ -5303,6 +5364,30 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
     box.id = "user-exp-countdown";
     box.style.cssText = `font-size:1.2rem; margin-top:1rem; color:#0ff; font-family:Orbitron, system-ui, sans-serif; text-align:center;`;
     host.appendChild(box);
+    // --- Riquadro totali attributi per questa spedizione utente ---
+    const totalsHostId = 'cv-exp-totals';
+    document.getElementById(totalsHostId)?.remove();
+    const totalsHost = document.createElement('div');
+    totalsHost.id = totalsHostId;
+    totalsHost.style.cssText = 'margin-top:.6rem; font-family:Orbitron,system-ui,sans-serif;';
+    host.appendChild(totalsHost);
+    
+    function renderTotals(ids){
+      const t = sumExpeditionStats(ids);
+      totalsHost.innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(2, minmax(140px,1fr)); gap:.5rem;">
+          <div class="cv-pill"><div class="cv-chip-key">RESISTANCE</div><div class="cv-chip-val">${t.resistance}</div></div>
+          <div class="cv-pill"><div class="cv-chip-key">LOOT-HUNGRY</div><div class="cv-chip-val">${t.loot_hungry}</div></div>
+          <div class="cv-pill"><div class="cv-chip-key">SPEED</div><div class="cv-chip-val">${t.speed}</div></div>
+          <div class="cv-pill"><div class="cv-chip-key">ACCURACY</div><div class="cv-chip-val">${t.accuracy}</div></div>
+        </div>
+      `;
+    }
+    
+    // 1) se ho già gli ID dai parametri (da start_expedition) renderizzo subito
+    if (Array.isArray(assetIds) && assetIds.length){
+      renderTotals(assetIds);
+    }
 
     let end = Date.now() + seconds*1000;
     const t = setInterval(async ()=>{
@@ -5393,7 +5478,10 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
   function hydrateGoblinUI(allNfts) {
     // 1) filtra i goblin dall’array completo /user_nfts
     const goblins = (Array.isArray(allNfts) ? allNfts : []).filter(n => n.type === "goblin");
-  
+    // indicizza per asset_id (sempre stringa!)
+    Cave.nftIndex.clear();
+    goblins.forEach(n => Cave.nftIndex.set(String(n.asset_id), n));
+     
     if (!goblins.length) {
       if (Cave.el.selectionSummary) {
         Cave.el.selectionSummary.innerHTML = `<div class="cv-toast">No goblins available for expedition.</div>`;
@@ -5972,7 +6060,7 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
     const copyBtn = qs('#cv-copy-overlay', container);
     if (copyBtn){
       copyBtn.onclick = async () => {
-        const url = `${location.origin}/overlay.html?overlay=1&readonly=1`;
+        const url = `${location.origin}/madverse/goblin_dex.html?overlay=1&readonly=1`;
         try{
           await navigator.clipboard.writeText(url);
           toast('✅ Overlay URL copied. Paste it in OBS StreamLab ➜ Browser Source.', 'ok', 4000);
@@ -6010,7 +6098,7 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
           style="background:linear-gradient(180deg,#141414,#0d0d0d); border:1px solid var(--cv-border);">
           <div class="cv-row" style="margin-bottom:.6rem;">
             <h4 style="margin:0; color:#7ff6ff; font-family:Orbitron,system-ui,sans-serif;">🌍 Live Expeditions</h4>
-            <a href="${OVERLAY_START_URL}" target="_blank" rel="noopener" class="cv-btn" style="white-space:nowrap;">Open Game</a>
+            <a href="${OVERLAY_START_URL}" target="_blank" rel="noopener" class="cv-btn" style="white-space:nowrap;">Open Game Website</a>
           </div>
           <div id="cv-global-list"></div>
           <div class="cv-soft-sep"></div>

@@ -707,7 +707,16 @@ function openRegisterModal() {
   }
 }
 
-window.addEventListener("load", initApp);
+(function () {
+  const qs = new URLSearchParams(location.search);
+  const isOverlay =
+    /\/overlay\.html$/i.test(location.pathname) ||
+    /\/goblin_dex\.html$/i.test(location.pathname) && (qs.get('overlay') === '1' || document.body?.getAttribute('data-overlay') === '1');
+
+  if (!isOverlay) {
+    window.addEventListener('load', initApp);
+  }
+})();
 
 /* ===========================================================
    TOKEN POOLS — CREATION & MANAGEMENT (NO EXTERNAL DEPENDENCIES)
@@ -4576,7 +4585,8 @@ function sumExpeditionStats(assetIds = []){
     const { ctx, assets } = Cave;
     const cell = Math.min(Cave.cellX, Cave.cellY);
     const px = Cave.offsetX + g.x * Cave.cellX;
-    const py = Cave.offsetY + g.y * Cave.cellY;
+    const bobPx = (g.walkBob || 0) * Math.min(Cave.cellX, Cave.cellY);
+    const py = Cave.offsetY + g.y * Cave.cellY + bobPx;
   
     // scia prima
     drawGoblinTrail(g);
@@ -4608,7 +4618,7 @@ function sumExpeditionStats(assetIds = []){
     ctx.fillStyle = g.color || "#ffe600";
     ctx.fillText(g.wax_account, boxX + labelW / 2, boxY + labelH / 2);
     // shovel: 8x8 px, sopra la testa (no overlap)
-    if (g.digging) {
+    if (g.digging && assets.shovel?.complete) {
       const frames = 6;
       const fw = assets.shovel.width / frames;
       const fh = assets.shovel.height;
@@ -4792,52 +4802,112 @@ function sumExpeditionStats(assetIds = []){
     });
   }
   
-  function moveGoblin(g) {
-    // Se sta scavando, prova a reclamare eventuali chest vicini e poi esci
+  function moveGoblin(g, dt) {
+    const dtSec = Math.min(0.05, Math.max(0.001, dt/1000)); // 1–50 ms
     if (g.digging) { tryClaimNearby(g); return; }
   
-    // Nuovo target se serve
-    if (g.path.length === 0) {
-      const { minX, maxX, minY, maxY } = getBounds();
-      const tx = Math.floor(Math.random() * (maxX - minX + 1)) + minX;
-      const ty = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
-      g.path = genPath(g.x, g.y, tx, ty);
+    const { minX, maxX, minY, maxY } = getBounds();
+  
+    // seed on first run (retrocompat)
+    if (g.speed == null) {
+      g.speed    = 0.6 + Math.random()*0.7;     // celle/sec
+      g.turnRate = 1.5 + Math.random()*0.9;     // rad/sec
+      g.heading  = Math.random() * Math.PI * 2; // rad
+      g.target   = { x: randInt(minX, maxX), y: randInt(minY, maxY) };
+      g.walkPhase = Math.random() * Math.PI * 2;
+      g.walkBob   = 0;
+      g.pauseTil  = 0;
     }
   
-    if (!g.path.length) return;
+    // micro-pause casuale
+    if (performance.now() < g.pauseTil) { g.walkBob *= 0.9; return; }
   
-    const [nx, ny] = g.path.shift();
-    const { minX, maxX, minY, maxY } = getBounds();
-    g.x = Math.min(maxX, Math.max(minX, nx));
-    g.y = Math.min(maxY, Math.max(minY, ny));
-
+    // nuovo waypoint ogni tanto o quando arrivato
+    const distToTarget = Math.hypot(g.target.x - g.x, g.target.y - g.y);
+    if (distToTarget < 1.0 || Math.random() < 0.002) {
+      g.target.x = randInt(minX, maxX);
+      g.target.y = randInt(minY, maxY);
+      if (Math.random() < 0.15) g.pauseTil = performance.now() + (400 + Math.random()*800);
+    }
   
-    // --- trail recording (in celle) ---
-    if (g._lastTrailX == null || g._lastTrailY == null) {
+    // vira verso il target, con un po' di wander noise
+    const desired = Math.atan2(g.target.y - g.y, g.target.x - g.x);
+    let delta = ((desired - g.heading + Math.PI*3) % (Math.PI*2)) - Math.PI;
+    const maxTurn = g.turnRate * dtSec;
+    if (delta >  maxTurn) delta =  maxTurn;
+    if (delta < -maxTurn) delta = -maxTurn;
+    g.heading += delta;
+    g.heading += (Math.random() - 0.5) * 0.2 * dtSec; // wander
+  
+    // separazione (anti-ammasso)
+    let sepX = 0, sepY = 0, seen = 0;
+    const SEP_RADIUS = 1.6; // celle
+    for (const o of Cave.goblins) {
+      if (o === g) continue;
+      const dx = g.x - o.x, dy = g.y - o.y;
+      const d2 = dx*dx + dy*dy;
+      if (d2 > SEP_RADIUS*SEP_RADIUS || d2 === 0) continue;
+      const d = Math.sqrt(d2);
+      const push = (SEP_RADIUS - d) / SEP_RADIUS;
+      sepX += dx / (d || 0.0001) * push;
+      sepY += dy / (d || 0.0001) * push;
+      seen++;
+    }
+    if (seen) {
+      const ang = Math.atan2(sepY, sepX);
+      g.heading = g.heading * 0.8 + ang * 0.2;  // blend lontano dal gruppo
+    }
+  
+    // steering per restare in safe-area
+    if (g.x < minX+0.5 || g.x > maxX-0.5 || g.y < minY+0.5 || g.y > maxY-0.5) {
+      const back = Math.atan2(
+        clamp(g.y, minY+1, maxY-1) - g.y,
+        clamp(g.x, minX+1, maxX-1) - g.x
+      );
+      g.heading = g.heading * 0.6 + back * 0.4;
+    }
+  
+    // avanza
+    const vx = Math.cos(g.heading) * g.speed;
+    const vy = Math.sin(g.heading) * g.speed;
+    g.x = clamp(g.x + vx * dtSec, minX, maxX);
+    g.y = clamp(g.y + vy * dtSec, minY, maxY);
+  
+    // trail
+    if (!g.trail || !g.trail.length) {
       g.trail = [{ x: g.x, y: g.y }];
-      g._lastTrailX = g.x;
-      g._lastTrailY = g.y;
+      g._lastTrailX = g.x; g._lastTrailY = g.y;
     } else {
-      const dx = g.x - g._lastTrailX;
-      const dy = g.y - g._lastTrailY;
-      if ((dx * dx + dy * dy) >= (TRAIL_MIN_DIST * TRAIL_MIN_DIST)) {
+      const dxT = g.x - g._lastTrailX, dyT = g.y - g._lastTrailY;
+      if ((dxT*dxT + dyT*dyT) >= (TRAIL_MIN_DIST*TRAIL_MIN_DIST)) {
         g.trail.unshift({ x: g.x, y: g.y });
-        g._lastTrailX = g.x;
-        g._lastTrailY = g.y;
+        g._lastTrailX = g.x; g._lastTrailY = g.y;
         if (g.trail.length > TRAIL_LEN) g.trail.pop();
       }
     }
   
-    // Se ha finito il path, entra in "scavo" e prova subito il claim
-    if (g.path.length === 0) {
+    // bobbing di camminata (effetto “passi”)
+    const stepHz = clamp(g.speed * 0.8, 0.4, 1.6); // 0.4–1.6 passi/sec
+    g.walkPhase += stepHz * dtSec * Math.PI * 2;
+    g.walkBob = Math.sin(g.walkPhase) * 0.12; // in "celle"
+  
+    // se una chest è molto vicina → scava
+    let nearest = null, bestD2 = 99;
+    Cave.chests.forEach(ch => {
+      if (ch.taken || !ch.claimable) return;
+      const dx = g.x - ch.x, dy = g.y - ch.y;
+      const d2 = dx*dx + dy*dy;
+      if (d2 < bestD2) { bestD2 = d2; nearest = ch; }
+    });
+    if (nearest && bestD2 < 0.8*0.8 && !g.digging) {
       g.digging = true;
-      g.shovelFrame = 0;
-      g.frameTimer = 0;
-      g.trail = g.trail.slice(0, Math.ceil(TRAIL_LEN / 2));
-      tryClaimNearby(g);                 // 👈 tenta subito un claim nel frame corrente
-      setTimeout(() => g.digging = false, 2000);
+      g.shovelFrame = 0; g.frameTimer = 0;
+      g.trail = g.trail.slice(0, Math.ceil(TRAIL_LEN/2));
+      tryClaimNearby(g);
+      setTimeout(() => g.digging = false, 1800 + Math.random()*800);
     }
   }
+
 
   function updateGoblinAnim(delta) {
     Cave.goblins.forEach(g => {
@@ -5498,7 +5568,7 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
     // drawDecorations();
     drawPerksAndAdvance();
     drawChests();
-    Cave.goblins.forEach(moveGoblin);
+    Cave.goblins.forEach(g => moveGoblin(g, dt));
     Cave.goblins.forEach(drawGoblin);
     updateGoblinAnim(dt);
   
@@ -6158,6 +6228,7 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
   
     // canvas
     setupCanvas(qs('#caveCanvas'));
+    await loadAssets(); 
     startRAF();
     initRealtime();                 // solo lettura
   

@@ -1,32 +1,28 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dwarfs Cave — Goblin DeX</title>
-  <style>
-    html,body{height:100%; margin:0; background:transparent;}
-    #overlay-shell{
-      display:grid !important;
-      grid-template-columns: 1fr !important;      /* una sola colonna */
-      gap:12px !important;
-    }
-    #cv-logo-wrap{ grid-column: 1 / -1 !important; }
-    #cv-video-or-canvas{ grid-column: 1 / -1 !important; }   /* canvas full-width */
-    #cv-right{ grid-column: 1 / -1 !important; }             /* pannello dati sotto il canvas */
-    #caveCanvas{ width:100% !important; height:auto !important; display:block; }
-  </style>
+  <title>Dwarfs Cave — Goblin DeX (Overlay)</title>
+
+  <!-- Font + CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles_goblin.css">
+  <style>html,body{height:100%; margin:0; background:transparent;}</style>
 </head>
 <body data-overlay="1">
   <div id="overlay-root"></div>
+
   <script>
-    window.BASE_URL = "https://iamemanuele.pythonanywhere.com";
-    window.CAVE_OVERLAY = true; // forza overlay
-    // window.START_URL = "https://domain.xyz/start.html";
+    /* Config base */
+    window.BASE_URL   = window.BASE_URL   || "https://iamemanuele.pythonanywhere.com";
+    window.START_URL  = window.START_URL  || "https://chaosx18.live/madverse/start";  /* CTA */
+    window.CAVE_OVERLAY = true;  /* forza overlay read-only */
+    window.__DEX_BUILD__ = "overlay-2025-08-25";
   </script>
+
   <script src="main_restyled.js"></script>
 </body>
 </html>

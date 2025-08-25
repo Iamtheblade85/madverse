@@ -118,22 +118,46 @@ html, body, #overlay-root, #overlay-shell {
   box-sizing: border-box; 
 }
 
-/* il ticker è isolato: non “spinge” il layout */
-#cv-video-or-canvas { position: relative; }
-#cv-ticker { 
-  position: absolute; 
-  left: 0; right: 0; bottom: 0; 
-  width: 90%;
-  overflow: hidden;
-  contain: layout paint size;     /* <— importante per evitare side-effects */
-}
-#cv-ticker .track{
-  display: flex;
-  white-space: nowrap;
-  will-change: transform;
-}
-/* Qualsiasi cosa nel canvas-wrap non deve superare il contenitore */
-#cv-video-or-canvas, #cv-video-or-canvas * { max-width: 90%; }
+/* ====== Ticker: isolato e senza overflow nel layout ====== */
+body[data-overlay="1"] { overflow-x: clip; } /* kill-switch orizzontale solo in overlay */
 
-/* Le card e la colonna destra non devono “spingere” il grid */
-#cv-right, .cv-card, .cv-item, .cv-compact { max-width: 90%; }
+#cv-video-or-canvas { position: relative; isolation: isolate; }
+
+/* NON usare width:90% qui: lasciamolo piena larghezza del contenitore */
+#cv-ticker{
+  position:absolute; left:0; right:0; bottom:0; height:60px;
+  width:100%;
+  background:linear-gradient(180deg, rgba(0,0,0,.6), rgba(0,0,0,.85));
+  border-top:1px solid rgba(255,255,255,.08);
+  overflow:clip;               /* evita che dipinga fuori */
+  contain: layout paint style; /* isola completamente */
+  pointer-events:none;
+  display:flex; flex-direction:column; gap:2px; padding:2px 0;
+}
+
+/* ogni riga è il viewport del nastro */
+#cv-ticker .row{ position:relative; flex:1 1 0; overflow:hidden; }
+
+/* la track è assoluta e fuori dal flusso, così non “spinge” mai */
+#cv-ticker .track{
+  position:absolute; inset:0 auto 0 0;
+  display:inline-flex;
+  gap:2rem;
+  white-space:nowrap;
+  will-change:transform;
+  animation:cv-marquee var(--tkd, 18s) linear infinite;
+}
+
+/* due gruppi identici per il loop continuo */
+#cv-ticker .track > .group{
+  display:inline-flex;
+  gap:2rem;
+}
+
+/* keyframes invariati */
+@keyframes cv-marquee{ from{ transform:translateX(0) } to{ transform:translateX(-50%) } }
+
+/* RIMUOVI o porta a 100% questi clamp altrimenti riappara overflow altrove */
+#cv-video-or-canvas, #cv-video-or-canvas * { max-width: 100%; }
+#cv-right, .cv-card, .cv-item, .cv-compact { max-width: 100%; }
+

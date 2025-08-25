@@ -3817,7 +3817,7 @@ async function renderGoblinInventory() {
     ctx: null,
     rafId: null,
     running: false,
-    dpr: Math.max(1, window.devicePixelRatio || 1),
+    dpr: 1,
     bgCache: null,
     bgCacheCtx: null,
     observers: { io: null, ro: null },  
@@ -6380,7 +6380,7 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     Cave.el.chestPerkBtn = qs("#cv-chest-btn", container);
     renderSkeletons("#cv-bonus-grid", 6, 72);
     // assets
-    await loadAssets();
+    loadAssets();
     //initDecorations();
     requestAnimationFrame(() => { initRealtime(); });
     
@@ -6605,7 +6605,7 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
   
     // canvas
     setupCanvas(qs('#caveCanvas'));
-    await loadAssets();
+    loadAssets();
     startRAF();
     initRealtime(); // overlay è read-only ma riceve SSE (spawn/claim)
   

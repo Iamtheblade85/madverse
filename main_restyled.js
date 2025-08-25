@@ -4155,6 +4155,40 @@ function sumExpeditionStats(assetIds = []){
         overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
         font-size: clamp(.78rem, 2.1vw, .95rem); /* evita di “uscire a destra” */
       }
+      
+      /* === Goblin DeX — Canvas Logo (top bar) === */
+      .cv-logo-wrap{
+        position:relative; margin:-.25rem 0 .5rem 0; height:120px;
+        display:flex; align-items:flex-end; justify-content:center; overflow:visible;
+      }
+      #cv-logo-canvas{
+        width:100%; height:100%; display:block;
+        filter:drop-shadow(0 8px 18px rgba(0,0,0,.45));
+        animation:logoDrop .9s cubic-bezier(.25,1.25,.35,1) 1 both;
+      }
+      .cv-logo-toast{
+        position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
+        pointer-events:none; color:#fff; font-family:Orbitron,system-ui,sans-serif; font-weight:900;
+        text-shadow:0 2px 10px rgba(0,0,0,.8), 0 0 18px rgba(255,230,0,.55);
+        white-space:nowrap; opacity:0; font-size: clamp(.9rem, 2.2vw, 1.2rem);
+      }
+      .cv-logo-toast.show{
+        animation:popIn .25s ease-out forwards, messageGlow 1.8s ease-in-out 3 alternate;
+      }
+      @keyframes logoDrop{
+        0%{ transform:translateY(-140px) scale(1.04) rotate(-2deg); opacity:.0 }
+        70%{ transform:translateY(8px) scale(1.0) rotate(0deg); opacity:1 }
+        100%{ transform:translateY(0) }
+      }
+      @keyframes popIn{
+        from{ transform:translate(-50%,15px) scale(.85); opacity:0 }
+        to  { transform:translate(-50%,0)   scale(1);    opacity:1 }
+      }
+      @keyframes messageGlow{
+        0%  { text-shadow:0 2px 10px rgba(0,0,0,.8), 0 0 8px rgba(255,230,0,.35) }
+        100%{ text-shadow:0 2px 10px rgba(0,0,0,.8), 0 0 24px rgba(0,255,170,.75), 0 0 40px rgba(0,160,255,.45) }
+      }
+      
     `;
     document.head.appendChild(st);
   }
@@ -4522,8 +4556,6 @@ function sumExpeditionStats(assetIds = []){
     buildBGCache();
   }
 
-
-
   function startRAF() {
     if (Cave.running || !Cave.canvas) return;
     Cave.running = true;
@@ -4535,6 +4567,207 @@ function sumExpeditionStats(assetIds = []){
     if (Cave.rafId) cancelAnimationFrame(Cave.rafId);
     Cave.rafId = null;
   }
+
+  // ========= LOGO CANVAS (title "Goblin DeX") =========
+Cave.logo = {
+  canvas: null, ctx: null, dpr: Math.max(1, window.devicePixelRatio||1),
+  rafId: null, running: false, w: 0, h: 0, baseY: 0,
+  title: 'GOblin DeX',
+  eyes: { next: performance.now() + 1000 + Math.random()*2000, t:0, closing:false },
+  eyes2:{ next: performance.now() +  800 + Math.random()*2200, t:0, closing:false },
+  goblins: []
+};
+
+function setupLogoCanvas(c){
+  Cave.logo.canvas = c;
+  Cave.logo.ctx = c.getContext('2d');
+  resizeLogoCanvas();
+  window.addEventListener('resize', resizeLogoCanvas, { passive:true });
+  startLogoRAF();
+}
+function resizeLogoCanvas(){
+  const c = Cave.logo.canvas; if(!c || !c.parentElement) return;
+  const cssW = c.parentElement.clientWidth, cssH = 120;
+  const dpr = Cave.logo.dpr = Math.max(1, window.devicePixelRatio||1);
+  c.style.width = cssW+'px'; c.style.height = cssH+'px';
+  c.width = Math.floor(cssW*dpr); c.height = Math.floor(cssH*dpr);
+  const ctx = Cave.logo.ctx; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.imageSmoothingEnabled = false;
+  Cave.logo.w = cssW; Cave.logo.h = cssH; Cave.logo.baseY = Math.round(cssH * 0.68);
+}
+function startLogoRAF(){ if (Cave.logo.running) return; Cave.logo.running = true; logoLast = performance.now(); requestAnimationFrame(logoTick); }
+function stopLogoRAF(){ Cave.logo.running = false; if (Cave.logo.rafId) cancelAnimationFrame(Cave.logo.rafId); Cave.logo.rafId = null; }
+
+let logoLast = performance.now();
+function logoTick(ts){
+  if (!Cave.logo.running) return;
+  const dt = ts - logoLast; logoLast = ts;
+  drawLogo(dt);
+  Cave.logo.rafId = requestAnimationFrame(logoTick);
+}
+
+function drawLogo(dt){
+  const { ctx } = Cave.logo; if(!ctx) return;
+  const w=Cave.logo.w, h=Cave.logo.h; ctx.clearRect(0,0,w,h);
+
+  // sottile fascia luminosa di sfondo
+  const gbg = ctx.createLinearGradient(0,0,0,h);
+  gbg.addColorStop(0,'rgba(255,255,255,.02)'); gbg.addColorStop(1,'rgba(0,0,0,.0)');
+  ctx.fillStyle = gbg; ctx.fillRect(0,0,w,h);
+
+  // Titolo stilizzato
+  const title = Cave.logo.title;
+  ctx.save();
+  ctx.font = '900 64px Orbitron, system-ui, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  const centerX = w/2, baseY = Cave.logo.baseY;
+
+  const grad = ctx.createLinearGradient(0, baseY-50, 0, baseY+18);
+  grad.addColorStop(0, '#fff2a8'); grad.addColorStop(.35,'#ffd34d'); grad.addColorStop(.7,'#c58a0a'); grad.addColorStop(1,'#6b4700');
+  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.65)';
+  ctx.fillStyle  = grad;
+  ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 6;
+  ctx.fillText(title, centerX, baseY);
+  ctx.shadowColor = 'transparent';
+  ctx.strokeText(title, centerX, baseY);
+
+  // Occhi nell' "O" (se non presente, usa la "o")
+  const idxO = title.indexOf('O') >= 0 ? title.indexOf('O') : title.indexOf('o');
+  const pre  = title.slice(0, Math.max(0, idxO));
+  const wFull = ctx.measureText(title).width;
+  const wPre  = ctx.measureText(pre).width;
+  const wCh   = ctx.measureText(title[idxO] || 'o').width;
+  const oCx   = centerX - wFull/2 + wPre + wCh/2;
+  const oCy   = baseY - 34;
+  const oR    = Math.max(14, wCh*0.42);
+  drawBlinkingEyes(ctx, oCx, oCy, oR, dt);
+
+  ctx.restore();
+
+  // Goblin che attraversano il logo
+  drawLogoGoblins(dt);
+}
+
+function drawBlinkingEyes(ctx, cx, cy, r, dt){
+  // aggiorna stato blink per i due occhi (intervallo 1–3s, indipendenti)
+  [Cave.logo.eyes, Cave.logo.eyes2].forEach(st=>{
+    st.next ??= performance.now()+1000+Math.random()*2000;
+    if (performance.now() >= st.next && !st.closing) st.closing = true;
+    const spd = 0.008; // velocità chiusura/apertura
+    if (st.closing){ st.t += dt*spd; if (st.t>=1){ st.t=1; st.closing=false; st.next = performance.now()+1000+Math.random()*2000; } }
+    else if (st.t>0){ st.t -= dt*spd; if (st.t<0) st.t=0; }
+  });
+
+  const t = Cave.logo.eyes.t || 0; // uso lo stesso per la resa (ammiccamenti sfalsati restano, ma resa coerente)
+  const eyeOffset = r*0.32, eyeR = r*0.22;
+
+  function paintOne(x){
+    ctx.save();
+    // bulbo
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(x, cy, eyeR, 0, Math.PI*2); ctx.fill();
+    // pupilla (si “stringe” quando t → 1)
+    const pupilR = eyeR*0.55*(1 - 0.85*t);
+    ctx.fillStyle = '#00ffd5';
+    ctx.beginPath(); ctx.arc(x, cy, Math.max(0,pupilR), 0, Math.PI*2); ctx.fill();
+    // palpebre
+    const lidH = eyeR*2*t; ctx.fillStyle = '#553a00';
+    ctx.fillRect(x - eyeR - 1, cy - eyeR, eyeR*2 + 2, lidH);
+    ctx.restore();
+  }
+  paintOne(cx - eyeOffset);
+  paintOne(cx + eyeOffset);
+}
+
+function drawLogoGoblins(dt){
+  const list = Cave.logo.goblins; if (!list.length) return;
+  const ctx = Cave.logo.ctx, img = Cave.assets.goblin;
+  for (const g of list){
+    if (!g.diving){
+      g.t += dt * g.speed;
+      const p = followPath(g.path, g.t);
+      g.x = p.x; g.y = p.y;
+      if (p.done){ g.diving = true; g.vx = 0; g.vy = 0.15; g.xd = g.x; g.yd = g.y; }
+    } else {
+      g.vy += dt * 0.0006;        // gravità
+      g.xd += dt * 0.02;          // lieve drift in avanti
+      g.yd += g.vy * dt;
+      g.x = g.xd; g.y = g.yd;
+      if (g.y > Cave.logo.h + 12){ // è uscito dal logo → entra nel canvas di gioco
+        spawnGoblinIntoCaveFromLogo(g.wax, g.x / Cave.logo.w);
+        g.done = true;
+      }
+    }
+    if (img?.complete){
+      const s = 64 * 0.45, off = s * .5;
+      ctx.drawImage(img, g.x - off, g.y - off, s, s);
+    } else {
+      ctx.fillStyle = '#ffe600'; ctx.beginPath(); ctx.arc(g.x, g.y, 8, 0, Math.PI*2); ctx.fill();
+    }
+  }
+  for (let i=list.length-1;i>=0;i--) if (list[i].done) list.splice(i,1);
+}
+
+function followPath(pts, t){
+  if (!pts || pts.length<2) return {x:0,y:0,done:true};
+  const seg = Math.min(pts.length-1, Math.floor(t));
+  const f   = t - seg;
+  const a = pts[seg], b = pts[Math.min(seg+1, pts.length-1)];
+  return { x: a.x + (b.x-a.x)*f, y: a.y + (b.y-a.y)*f, done: seg >= pts.length-2 && f>=1 };
+}
+
+function computeLogoPath(){
+  const ctx = Cave.logo.ctx, w=Cave.logo.w, baseY=Cave.logo.baseY;
+  ctx.save(); ctx.font='900 64px Orbitron, system-ui, sans-serif'; ctx.textBaseline='alphabetic'; ctx.textAlign='left';
+  const text = Cave.logo.title;
+  const fullW = ctx.measureText(text).width;
+  const left  = (w - fullW)/2;
+
+  const way = [];
+  let y = baseY - 6;          // linea di cammino bassa
+  way.push({ x: -80, y });    // entra da sinistra
+
+  // “scalata” stilizzata: bordo sinistro su / giù per ogni lettera
+  let cursor = left;
+  for (const ch of text){
+    const cw = ctx.measureText(ch).width;
+    const topY = baseY - 56;
+    way.push({ x: cursor + cw*0.15, y });       // avvicinati al bordo lettera
+    way.push({ x: cursor + cw*0.15, y: topY }); // arrampica
+    way.push({ x: cursor + cw*0.85, y: topY }); // cammina sul tetto
+    way.push({ x: cursor + cw*0.95, y: topY+6 });// scendi un filo tra lettere
+    cursor += cw;
+  }
+  way.push({ x: left + fullW + 20, y: baseY - 10 }); // zona tuffo
+  ctx.restore();
+  return way;
+}
+
+function triggerLogoGoblin(wax){
+  const path = computeLogoPath();
+  Cave.logo.goblins.push({ t:0, speed: 0.002 + Math.random()*0.001, path, wax, diving:false });
+}
+
+function showLogoToast(msg){
+  const host = document.getElementById('cv-logo-toast'); if (!host) return;
+  host.textContent = msg;
+  host.classList.remove('show'); void host.offsetWidth; // reset anim
+  host.classList.add('show');
+  setTimeout(()=> host.classList.remove('show'), 3200);
+}
+
+function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al logo
+  const { minX, maxX, minY } = getBounds();
+  const gx = clamp(Math.round(minX + xNorm * (maxX - minX)), minX, maxX);
+  const gy = minY + 1;
+  const color = colorByIndex(Math.abs(hashCode(wax||'')));
+  Cave.goblins.push({
+    x: gx, y: gy, wax_account: wax || 'guest',
+    path: [], trail: [], _lastTrailX: gx, _lastTrailY: gy,
+    digging:false, shovelFrame:0, frameTimer:0, color,
+    speed: 0.9, turnRate: 2.0, heading: Math.random()*Math.PI*2 // seed, poi moveGoblin farà il resto
+  });
+}
+function hashCode(str=''){ let h=0; for(let i=0;i<str.length;i++){ h=((h<<5)-h)+str.charCodeAt(i); h|=0; } return h; }
 
   // ========= DRAWING =========
   function drawBG() {
@@ -4810,13 +5043,14 @@ function sumExpeditionStats(assetIds = []){
   
     // seed on first run (retrocompat)
     if (g.speed == null) {
-      g.speed    = 5.6 + Math.random()*0.6;     // celle/sec
-      g.turnRate = 7.9 + Math.random()*0.9;     // rad/sec
+      g.speed    = 3.6 + Math.random()*0.6;     // celle/sec
+      g.turnRate = 4.9 + Math.random()*0.9;     // rad/sec
       g.heading  = Math.random() * Math.PI * 2; // rad
       g.target   = { x: randInt(minX, maxX), y: randInt(minY, maxY) };
       g.walkPhase = Math.random() * Math.PI * 2;
       g.walkBob   = 0;
       g.pauseTil  = 0;
+      g.speedBoostUntil = 0;
     }
   
     // micro-pause casuale
@@ -4827,12 +5061,26 @@ function sumExpeditionStats(assetIds = []){
     if (distToTarget < 1.0 || Math.random() < 0.002) {
       g.target.x = randInt(minX, maxX);
       g.target.y = randInt(minY, maxY);
-      if (Math.random() < 0.15) g.pauseTil = performance.now() + (400 + Math.random()*800);
+      if (Math.random() < 0.02) g.pauseTil = performance.now() + (100 + Math.random()*200);
     }
-  
+    // cerca chest più vicina per bias della direzione
+    let seek = null, seekD2 = 999;
+    Cave.chests.forEach(ch => {
+      if (ch.taken || !ch.claimable) return;
+      const dx = g.x - ch.x, dy = g.y - ch.y;
+      const d2 = dx*dx + dy*dy;
+      if (d2 < seekD2) { seekD2 = d2; seek = ch; }
+    });
+
     // vira verso il target, con un po' di wander noise
-    const desired = Math.atan2(g.target.y - g.y, g.target.x - g.x);
-    let delta = ((desired - g.heading + Math.PI*3) % (Math.PI*2)) - Math.PI;
+    let desired_path = Math.atan2(g.target.y - g.y, g.target.x - g.x);
+    const CHEST_SEEK_R = 3.0; // celle
+    if (seek && seekD2 < CHEST_SEEK_R*CHEST_SEEK_R) {
+      const toChest = Math.atan2(seek.y - g.y, seek.x - g.x);
+      desired_path = desired_path*0.65 + toChest*0.35;          // piega la rotta verso la chest
+      if (seekD2 < 1.8*1.8) g.speedBoostUntil = performance.now() + 1200; // sprint 1.2s
+    }
+    let delta = ((desired_path - g.heading + Math.PI*3) % (Math.PI*2)) - Math.PI;
     const maxTurn = g.turnRate * dtSec;
     if (delta >  maxTurn) delta =  maxTurn;
     if (delta < -maxTurn) delta = -maxTurn;
@@ -4868,8 +5116,9 @@ function sumExpeditionStats(assetIds = []){
     }
   
     // avanza
-    const vx = Math.cos(g.heading) * g.speed;
-    const vy = Math.sin(g.heading) * g.speed;
+    const boost = (g.speedBoostUntil && performance.now() < g.speedBoostUntil) ? 1.35 : 1.0;
+    const vx = Math.cos(g.heading) * g.speed * boost;
+    const vy = Math.sin(g.heading) * g.speed * boost;
     g.x = clamp(g.x + vx * dtSec, minX, maxX);
     g.y = clamp(g.y + vy * dtSec, minY, maxY);
   
@@ -4899,7 +5148,7 @@ function sumExpeditionStats(assetIds = []){
       const d2 = dx*dx + dy*dy;
       if (d2 < bestD2) { bestD2 = d2; nearest = ch; }
     });
-    if (nearest && bestD2 < 0.8*0.8 && !g.digging) {
+    if (nearest && bestD2 < 1.2*1.2 && !g.digging) {
       g.digging = true;
       g.shovelFrame = 0; g.frameTimer = 0;
       g.trail = g.trail.slice(0, Math.ceil(TRAIL_LEN/2));
@@ -4907,7 +5156,6 @@ function sumExpeditionStats(assetIds = []){
       setTimeout(() => g.digging = false, 1800 + Math.random()*800);
     }
   }
-
 
   function updateGoblinAnim(delta) {
     Cave.goblins.forEach(g => {
@@ -5820,6 +6068,8 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
           if (r.status === 409) toast(r.data?.error || "Already in expedition.", "warn");
           else if (r.ok) {
             toast("Expedition started!", "ok");
+            try { triggerLogoGoblin(Cave.user.wax_account || 'guest'); } catch {}
+            try { showLogoToast(`${safe(Cave.user.wax_account)} just joined the band! Good hunting!`); } catch {}
             await renderUserCountdown(r.data.expedition_id, r.data.duration_seconds, ids);
             await renderGlobalExpeditions();
           } else toast("Something went wrong.", "err");
@@ -5877,6 +6127,11 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
         <div style="flex:1 1 56%; min-width:320px;">
           <h3 class="cv-title">⛏️ Global Expeditions in Progress</h3>
           <div id="cv-toast-host" role="status" aria-live="polite"></div>
+          <!-- 🔰 Canvas-Logo -->
+          <div id="cv-logo-wrap" class="cv-logo-wrap">
+            <canvas id="cv-logo-canvas"></canvas>
+            <div id="cv-logo-toast" class="cv-logo-toast"></div>
+          </div>
           <div id="cv-video-or-canvas" style="width:100%; margin-top:.5rem;">
             <canvas id="caveCanvas" style="width:80%; height:auto; display:block; border-radius:12px; box-shadow:0 0 10px #ffe600;"></canvas>
           </div>
@@ -6021,6 +6276,8 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
     // cache elements
     Cave.el.toast = qs("#cv-toast-host", container);
     Cave.el.videoOrCanvas = qs("#cv-video-or-canvas", container);
+    Cave.el.logoCanvas = qs("#cv-logo-canvas", container);
+    if (Cave.el.logoCanvas) setupLogoCanvas(Cave.el.logoCanvas);
     Cave.el.globalList = qs("#cv-global-list", container);
     Cave.el.recentList = qs("#cv-recent-list", container);
     Cave.el.bonusList = qs("#cv-bonus-list", container);
@@ -6205,6 +6462,10 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
     const root = document.getElementById('overlay-root') || document.body;
     root.innerHTML = `
       <div id="overlay-shell" style="display:grid; grid-template-columns: 1fr minmax(220px, 320px); gap:12px; align-items:start;">
+        <div id="cv-logo-wrap" class="cv-logo-wrap">
+          <canvas id="cv-logo-canvas"></canvas>
+          <div id="cv-logo-toast" class="cv-logo-toast"></div>
+        </div>   
         <div id="cv-video-or-canvas" style="position:relative;">
           <canvas id="caveCanvas" style="width:100%; height:auto; display:block; border-radius:12px;"></canvas>
         </div>
@@ -6222,6 +6483,8 @@ function updateTickerFromArrays(recent = [], winners = [], live = []) {
   
     // cache UI minime
     Cave.el.videoOrCanvas = qs('#cv-video-or-canvas');
+    const logoCanvas = qs('#cv-logo-canvas');
+    if (logoCanvas) setupLogoCanvas(logoCanvas);
     Cave.el.globalList = qs('#cv-global-list');
     Cave.el.bonusList  = qs('#cv-bonus-list');
     Cave.visible = true;

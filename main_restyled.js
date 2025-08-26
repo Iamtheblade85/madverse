@@ -5047,9 +5047,8 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
           inFlightClaims.add(cid);
         }
   
-        ch.claiming = true;
-        ch.taken = true;
-        ch.taken_by = g.wax_account;
+        ch.claiming = true;           // mostra spinner logico, ma non nascondere la chest
+        // NON impostare taken/taken_by finché non ho conferma
   
         (async () => {
           try {
@@ -5068,16 +5067,15 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
               toast(`Chest #${safe(ch.id)} already claimed${by}.`, "warn");
               return;
             }
-            if (!rs.ok) {
-              return
-            }
-            //if (!rs.ok) throw new Error(`HTTP ${rs.status}`);
+            if (!rs.ok) return;  // fallimento silenzioso
   
             const reward  = rs.data;
             const chestId = reward?.chest_id ?? ch.id;
             const chips   = reward?.stats?.tokens?.CHIPS ?? 0;
             const nfts    = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
-  
+            ch.taken = true;         
+            ch.taken_by = g.wax_account;
+            
             if (chips === 0 && nfts === 0) {
               toast(`${g.wax_account} opened Chest #${safe(chestId)} from ${ch.from}… it was empty.`, "warn");
             } else {
@@ -5089,9 +5087,7 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
   
             Cave.chests.delete(key);
           } catch (e) {
-            ch.taken = false;
             ch.claiming = false;
-            //toast(`Chest reward failed: ${e.message}`, "err");
           } finally {
             if (ch.id != null) inFlightClaims.delete(String(ch.id));
           }
@@ -6471,7 +6467,10 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
       if (!btn._bound){ //allowed && !btn._bound
         btn._bound = true;
         btn.onclick = async () => {
-          const url = `${location.origin}/madverse/goblin_dex.html?overlay=1&readonly=1`;
+          syncUserInto(Cave.user);
+          const ud={wax_account:Cave.user.wax_account,user_id:Cave.user.user_id,usx_token:Cave.user.usx_token};
+          const ud64=btoa(unescape(encodeURIComponent(JSON.stringify(ud))));
+          const url=`${location.origin}/madverse/goblin_dex.html?overlay=1&readonly=1&ud=${ud64}`;
           try{
             await navigator.clipboard.writeText(url);
             toast('✅ Overlay URL copied. Paste it in OBS StreamLab ➜ Browser Source.', 'ok', 4000);
@@ -6518,7 +6517,10 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     const copyBtn = qs('#cv-copy-overlay', container);
     if (copyBtn){
       copyBtn.onclick = async () => {
-        const url = `${location.origin}/madverse/goblin_dex.html?overlay=1&readonly=1`;
+        syncUserInto(Cave.user);
+        const ud={wax_account:Cave.user.wax_account,user_id:Cave.user.user_id,usx_token:Cave.user.usx_token};
+        const ud64=btoa(unescape(encodeURIComponent(JSON.stringify(ud))));
+        const url=`${location.origin}/madverse/goblin_dex.html?overlay=1&readonly=1&ud=${ud64}`;
         try{
           await navigator.clipboard.writeText(url);
           toast('✅ Overlay URL copied. Paste it in OBS StreamLab ➜ Browser Source.', 'ok', 4000);
@@ -6546,7 +6548,26 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
   
   async function renderDwarfsCaveOverlay(){
     styleOnce();
-  
+    (function(){
+      try{
+        const qs=new URLSearchParams(location.search);
+        const ud64=qs.get('ud');
+        if(!ud64) return;
+        const ud=JSON.parse(decodeURIComponent(escape(atob(ud64))));
+        if(ud&&ud.wax_account&&ud.user_id&&ud.usx_token){
+          window.userData=ud;
+          localStorage.setItem('userData',JSON.stringify(ud));
+          document.dispatchEvent(new CustomEvent('cv:userdata-ready'));
+        }
+      }catch{}
+    })();
+
+    if(OVERLAY_MODE){
+      const fix=document.createElement('style');
+      fix.textContent='#cv-ticker .track{animation:cv-marquee var(--tkd) linear infinite !important;}';
+      document.head.appendChild(fix);
+    }
+
     const root = document.getElementById('overlay-root') || document.body;
     root.innerHTML = `
       <div id="overlay-shell">

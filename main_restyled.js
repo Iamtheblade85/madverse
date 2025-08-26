@@ -5596,19 +5596,17 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     
       // un solo HTML e due gruppi identici per un loop senza accumuli
       const inner = htmlArr.join('<span class="dot">·</span>');
+      const spacer = '<span class="spacer" style="display:inline-block;width:48px"></span>';
+      const innerWithSpacer = inner + spacer;      
       trackEl.innerHTML =
-        `<div class="group">${inner}</div><div class="group" aria-hidden="true">${inner}</div>`;
+        `<div class="group">${innerWithSpacer}</div><div class="group" aria-hidden="true">${innerWithSpacer}</div>`;
     
       // misura SOLO il primo gruppo (larghezza reale del contenuto)
       void trackEl.offsetWidth; // reflow
       const g = trackEl.querySelector('.group');
-      const contentW = Math.max(1, g ? g.scrollWidth : Math.floor(trackEl.scrollWidth/2));
-    
-      // congela la larghezza della track (2x per i due gruppi)
+      const contentW = Math.ceil(g ? g.scrollWidth : trackEl.scrollWidth/2);   
       trackEl.style.width = (contentW * 2) + 'px';
-    
-      // durata coerente con i pixel da percorrere, clamped
-      const seconds = clamp(contentW / TICKER_PX_PER_SEC, TICKER_MIN_S, TICKER_MAX_S);
+      const seconds = Math.max(12, Math.min(26, contentW / 160));
       trackEl.style.setProperty('--tkd', `${seconds}s`);
       trackEl.style.animation = `cv-marquee var(--tkd) linear infinite`;
       trackEl.style.animationDelay = delay;
@@ -6621,6 +6619,7 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
   
     // canvas
     setupCanvas(qs('#caveCanvas'));
+    if (window.GoblinCrash) GoblinCrash.init(Cave);
     loadAssets();
     startRAF();
     initRealtime(); // overlay è read-only ma riceve SSE (spawn/claim)

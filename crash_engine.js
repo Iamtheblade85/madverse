@@ -1,7 +1,7 @@
 (()=>{"use strict";
 const Crash={
   Cave:null,events:[],grid:new Map(),now:()=>performance.now(),
-  MIN_DIST:0.8,RESOLVE_PUSH:0.55,PAUSE_MS:[220,420],LIFETIME_MS:20000,STAR_COUNT:9,STAR_SPREAD:0.6,STAR_RATE:0.015,
+  MIN_DIST:3,RESOLVE_PUSH:0.95,PAUSE_MS:[220,420],LIFETIME_MS:20000,STAR_COUNT:9,STAR_SPREAD:0.6,STAR_RATE:0.015,
   init(CaveRef){
     this.Cave=CaveRef;
     const st=document.createElement("style");
@@ -64,26 +64,40 @@ const Crash={
     if(!this.Cave||!Array.isArray(this.Cave.goblins)||!this.Cave.goblins.length) return;
     this._buildGrid();
     const checked=new Set();
+  
+    // helper per vicini (8-neighborhood)
+    const neigh = [[0,0],[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+  
     for(const [k,arr] of this.grid){
-      for(let i=0;i<arr.length;i++){
-        const g=arr[i];
-        for(let j=i+1;j<arr.length;j++){
-          const h=arr[j];
-          const pid=g===h?null:(g.x<=h.x?g:h);
-          const qid=g===h?null:(g.x<=h.x?h:g);
-          if(pid&&qid){
-            const mark=pid===g?this._pairId(pid,qid):this._pairId(qid,pid);
-            if(checked.has(mark)) continue;
-            checked.add(mark);
-          }
-          if(this._resolve(g,h)){
-            const ev=this._ensureEvent(g,h);
-            ev.until=this.now()+this.LIFETIME_MS;
-            this._spawnStars(ev);
+      const [cx,cy] = k.split(':').map(Number);
+      // confronta con la stessa cella e le 8 adiacenti
+      for(const [dx,dy] of neigh){
+        const nb = this.grid.get((cx+dx)+":"+(cy+dy));
+        if(!nb) continue;
+  
+        for(let i=0;i<arr.length;i++){
+          const g = arr[i];
+          // evita doppioni se stai guardando la stessa cella
+          const jStart = (dx===0 && dy===0) ? i+1 : 0;
+          for(let j=jStart;j<nb.length;j++){
+            const h = nb[j];
+            if(g===h) continue;
+  
+            // dedup coppie
+            const id = g.x<=h.x ? this._pairId(g,h) : this._pairId(h,g);
+            if(checked.has(id)) continue;
+            checked.add(id);
+  
+            if(this._resolve(g,h)){
+              const ev=this._ensureEvent(g,h);
+              ev.until=this.now()+this.LIFETIME_MS;
+              this._spawnStars(ev);
+            }
           }
         }
       }
     }
+  
     const t=this.now();
     this.events=this.events.filter(e=>t<=e.until);
   },

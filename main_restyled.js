@@ -6392,21 +6392,14 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     }
 
     // ── BOOTSTRAP: fetch in parallelo, no blocchi tra loro ──
-    const payload = {
-      wax_account: Cave.user.wax_account,
-      user_id: Cave.user.user_id,
-      usx_token: Cave.user.usx_token
-    };
-    
     const pAll    = API.post("/all_expeditions", {}, 10000);  // timeout più corto
     const pRecent = API.get("/recent_expeditions", 10000);
-    const pNFTs   = API.post("/user_nfts", payload, 15000);
-    
+
     // placeholder UI subito
     renderSkeletons("#cv-goblin-list", 8, 96);
     
     // risolvi senza bloccare la pagina se uno scade
-    const [rAll, rRecent, rNFTs] = await Promise.allSettled([pAll, pRecent, pNFTs]);
+    const [rAll, rRecent] = await Promise.allSettled([pAll, pRecent]);
     
     // 1) Live expeditions
     if (rAll.status === "fulfilled" && rAll.value?.ok) {
@@ -6672,7 +6665,6 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
   }
 
 })();
-
 
 async function renderGoblinBlend() {
   const container = document.getElementById("goblin-content");

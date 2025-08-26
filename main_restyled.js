@@ -5901,14 +5901,15 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     if (!Cave.running) return;
     const dt = ts - lastTS; lastTS = ts;
   
-    clearCanvas();      // <-- pulizia completa
+    clearCanvas();
     drawBG();
-    // drawDecorations();
     drawPerksAndAdvance();
     drawChests();
     Cave.goblins.forEach(g => moveGoblin(g, dt));
+    if (window.GoblinCrash) GoblinCrash.onAfterMove();
     Cave.goblins.forEach(drawGoblin);
     updateGoblinAnim(dt);
+    if (window.GoblinCrash) GoblinCrash.draw(Cave.ctx);
   
     Cave.rafId = requestAnimationFrame(tick);
   }
@@ -6385,6 +6386,7 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
       setupCanvas(initialCanvas);
       startRAF();
       startCommandPolling();
+      if (window.GoblinCrash) GoblinCrash.init(Cave);
     }
 
     // ── BOOTSTRAP: fetch in parallelo, no blocchi tra loro ──

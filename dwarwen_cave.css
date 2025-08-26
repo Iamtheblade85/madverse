@@ -113,6 +113,31 @@
 .cv-hero{ font-weight:800; letter-spacing:.8px; text-transform:uppercase;
           animation: messageGlow 1.2s ease-in-out infinite alternate; }
 
+/* overlay layout helpers */
+#overlay-shell > div:first-child {
+  grid-column: 1 / -1;
+}
+
+#cv-video-or-canvas {
+  position: relative;
+}
+
+#cv-right .cv-title {
+  margin-top: 0;
+}
+
+#cv-general-stats {
+  margin-bottom: .6rem;
+}
+
+#cv-right .cv-title--amber {
+  color: #ffcc66;
+}
+
+#cv-right .cv-title--green {
+  color: #78ff78;
+}
+
 @media (max-width: 920px){
   .cv-col-8{ grid-column:span 12 }
   .cv-col-4{ grid-column:span 12 }

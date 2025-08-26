@@ -6472,10 +6472,10 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     
       // mostra solo se in whitelist
       const allowed = COPY_BTN_WHITELIST.has(wax);
-      wrap.style.display = allowed ? 'inline-block' : 'none';
+      wrap.style.display = 'inline-block'; //allowed ? 'inline-block' : 'none';
     
       // bind click una sola volta
-      if (allowed && !btn._bound){
+      if (!btn._bound){ //allowed && !btn._bound
         btn._bound = true;
         btn.onclick = async () => {
           const url = `${location.origin}/madverse/goblin_dex.html?overlay=1&readonly=1`;

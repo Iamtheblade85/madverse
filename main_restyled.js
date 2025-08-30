@@ -6610,7 +6610,7 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
         syncUserInto(Cave.user);
         const ud={wax_account:Cave.user.wax_account,user_id:Cave.user.user_id,usx_token:Cave.user.usx_token};
         const ud64=btoa(unescape(encodeURIComponent(JSON.stringify(ud))));
-        const url=`${location.origin}/madverse/goblin_dex.html?overlay=1&readonly=1&ud=${ud64}`;
+        const url=`${location.origin}/madverse/goblin_dex.html?overlay=1&readonly=1&obs=1&noticker=1&rot=12&ud=${ud64}`;
         try{
           await navigator.clipboard.writeText(url);
           toast('✅ Overlay URL copied. Paste it in OBS StreamLab ➜ Browser Source.', 'ok', 4000);

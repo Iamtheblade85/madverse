@@ -17,12 +17,13 @@
 
   <script>
     /* Config base */
-    window.BASE_URL   = window.BASE_URL   || "https://iamemanuele.pythonanywhere.com";
-    window.START_URL  = window.START_URL  || "https://chaosx18.live/madverse/start";  /* CTA */
-    window.CAVE_OVERLAY = true;  /* forza overlay read-only */
-    window.__DEX_BUILD__ = "overlay-2025-08-25";
+    window.BASE_URL      = window.BASE_URL      || "https://iamemanuele.pythonanywhere.com";
+    window.START_URL     = window.START_URL     || "https://chaosx18.live/madverse/start";
+    window.CAVE_OVERLAY  = true;
+    window.__DEX_BUILD__ = "overlay-2025-08-30";         /* <== bump ogni release */
+    window.__APP_BUILD__ = window.__DEX_BUILD__;         /* <== allinea col guard JS */
   </script>
-  <script src="crash_engine.js"></script>
-  <script src="main_restyled.js"></script>
+  <script src="crash_engine.js?v=overlay-2025-08-30" defer></script>
+  <script src="main_restyled.js?v=overlay-2025-08-30" defer></script>
 </body>
 </html>

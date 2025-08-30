@@ -3839,6 +3839,10 @@ async function renderGoblinInventory() {
   const READONLY = OVERLAY_MODE || QS.get('readonly') === '1';
   const OVERLAY_START_URL = (window.START_URL || `${location.origin}/madverse/start.html`);
 
+  // === OBS/ROTATION/NON-TICKER ===
+  const OBS_MODE  = QS.get('obs') === '1';
+  const ROT_SECS  = Math.max(5, Number(QS.get('rot') || 12)); // default 12s
+  const NOTICKER  = OBS_MODE || OVERLAY_MODE || QS.get('noticker') === '1';
 
   // ========= STATE (single source of truth) =========
   const Cave = {
@@ -4271,6 +4275,8 @@ function sumExpeditionStats(assetIds = []){
         100%{ text-shadow:0 2px 10px rgba(0,0,0,.8), 0 0 24px rgba(0,255,170,.75), 0 0 40px rgba(0,160,255,.45) }
       }
       
+      #cv-right { min-height: 420px; }
+      #cv-rotator .cv-rot-panel { will-change: opacity; }
     `;
     document.head.appendChild(st);
   }
@@ -5611,6 +5617,7 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
   }
   
   function ensureTicker(){
+    if (typeof NOTICKER !== 'undefined' && NOTICKER) return null;
     let t = qs('#cv-ticker'); if (t) return t;
     const wrap = Cave.el.videoOrCanvas; if (!wrap) return null;
     wrap.style.position = 'relative';
@@ -5628,6 +5635,7 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
   const TICKER_MIN_S = 12, TICKER_MAX_S = 26, TICKER_PX_PER_SEC = 160;
   
   function updateTickerFromArrays(recent = [], winners = [], live = []) {
+    if (typeof NOTICKER !== 'undefined' && NOTICKER) return;
     const t = ensureTicker(); if (!t) return;
     const top = qs('#cv-ticker-top', t);
     const bottom = qs('#cv-ticker-bottom', t);
@@ -6552,7 +6560,7 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
           syncUserInto(Cave.user);
           const ud={wax_account:Cave.user.wax_account,user_id:Cave.user.user_id,usx_token:Cave.user.usx_token};
           const ud64=btoa(unescape(encodeURIComponent(JSON.stringify(ud))));
-          const url=`${location.origin}/madverse/goblin_dex.html?overlay=1&readonly=1&ud=${ud64}`;
+          const url = `${location.origin}/madverse/goblin_dex.html?overlay=1&readonly=1&obs=1&noticker=1&rot=12&ud=${ud64}`;
           try{
             await navigator.clipboard.writeText(url);
             toast('✅ Overlay URL copied. Paste it in OBS StreamLab ➜ Browser Source.', 'ok', 4000);
@@ -6644,12 +6652,6 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
       }catch{}
     })();
 
-    if(OVERLAY_MODE){
-      const fix=document.createElement('style');
-      fix.textContent='#cv-ticker .track{animation:cv-marquee var(--tkd) linear infinite !important;}';
-      document.head.appendChild(fix);
-    }
-
     const root = document.getElementById('overlay-root') || document.body;
     root.innerHTML = `
       <div id="overlay-shell">
@@ -6659,36 +6661,35 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
             <div id="cv-logo-toast" class="cv-logo-toast"></div>
           </div>
         </div>
-  
+    
         <div id="cv-video-or-canvas" class="cv-card" style="position:relative;">
           <div id="cv-toast-host" role="status" aria-live="polite"></div>
           <canvas id="caveCanvas"></canvas>
         </div>
-  
+    
         <aside id="cv-right" class="cv-card">
-          <h4 class="cv-title" style="margin-top:0;">🌍 Live Overview</h4>
-          <div id="cv-general-stats" class="cv-item" style="margin-bottom:.6rem;"></div>
-  
-          <div class="cv-soft-sep"></div>
-          <div id="cv-global-list"></div>
-  
-          <div class="cv-soft-sep"></div>
-          <h4 class="cv-title" style="color:#ffcc66;">⛏️ Latest Expedition Results</h4>
-          <div id="cv-recent-list">
-            <div id="cv-recent-grid" class="cv-cards"></div>
+          <div id="cv-rotator">
+            <section id="cv-panel-live" class="cv-rot-panel">
+              <h4 class="cv-title" style="margin-top:0;">🌍 Live Expeditions</h4>
+              <div id="cv-global-list"></div>
+            </section>
+    
+            <section id="cv-panel-recent" class="cv-rot-panel" hidden>
+              <h4 class="cv-title" style="color:#ffcc66;">⛏️ Latest Expedition Results</h4>
+              <div id="cv-recent-list">
+                <div id="cv-recent-grid" class="cv-cards"></div>
+              </div>
+            </section>
+    
+            <section id="cv-panel-bonus" class="cv-rot-panel" hidden>
+              <h4 class="cv-title" style="color:#78ff78;">🎁 Latest Chest Rewards</h4>
+              <div id="cv-bonus-list"></div>
+            </section>
           </div>
-  
-          <div class="cv-soft-sep"></div>
-          <h4 class="cv-title" style="color:#78ff78;">🎁 Latest Chest Rewards</h4>
-          <div id="cv-bonus-list"></div>
-  
-          <a class="cv-cta" href="${OVERLAY_START_URL}" target="_blank" rel="noopener">
-            Visit CryptoChips Portal to send your own expedition on Goblin DeX
-          </a>
         </aside>
       </div>
     `;
-  
+
     // cache UI minime
     Cave.el.toast        = qs('#cv-toast-host');
     Cave.el.videoOrCanvas= qs('#cv-video-or-canvas');
@@ -6698,14 +6699,14 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     Cave.el.bonusList    = qs('#cv-bonus-list');
     Cave.el.recentList   = qs('#cv-recent-list');
     Cave.visible = true;
-  
+
     // canvas
     setupCanvas(qs('#caveCanvas'));
     if (window.GoblinCrash) GoblinCrash.init(Cave);
     loadAssets();
     startRAF();
     bootRealtime()
-  
+    startRightPanelRotator();
     // primo fetch (overlay usa public se disponibile)
     const fetchAll = READONLY
       ? API.get('/public_all_expeditions', 12000)

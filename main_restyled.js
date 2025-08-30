@@ -6727,14 +6727,12 @@ function stopRightPanelRotator() {
             </section>
     
             <section id="cv-panel-recent" class="cv-rot-panel" hidden>
-              <h4 class="cv-title" style="color:#ffcc66;">⛏️ Latest Expedition Results</h4>
               <div id="cv-recent-list">
                 <div id="cv-recent-grid" class="cv-cards"></div>
               </div>
             </section>
     
             <section id="cv-panel-bonus" class="cv-rot-panel" hidden>
-              <h4 class="cv-title" style="color:#78ff78;">🎁 Latest Chest Rewards</h4>
               <div id="cv-bonus-list"></div>
             </section>
           </div>

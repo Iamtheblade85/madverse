@@ -5615,7 +5615,59 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     Cave.tickerWinners = winners;
     updateTickerFromArrays(Cave.tickerRecent, Cave.tickerWinners, Cave.lastAllExpeditions||[]);       
   }
-  
+
+  // --- Rotatore pannelli destri (OBS) ---
+function startRightPanelRotator(options = {}) {
+  // seconds: da ?rot=.. oppure ROT_SECS globale oppure 12
+  const rotSec = Math.max(5, Math.min(60, Number(options.seconds || (typeof ROT_SECS !== 'undefined' ? ROT_SECS : 12))));
+  const panels = [
+    document.getElementById('cv-panel-live'),
+    document.getElementById('cv-panel-recent'),
+    document.getElementById('cv-panel-bonus'),
+  ].filter(Boolean);
+
+  if (!panels.length) return;
+
+  // setup iniziale (mostra solo il primo)
+  panels.forEach((p, i) => {
+    p.hidden = i !== 0;
+    p.style.opacity = i === 0 ? '1' : '0';
+    p.style.transition = 'opacity .35s ease';
+  });
+
+  // namespace per gli interval del progetto
+  window.Cave = window.Cave || {};
+  Cave.intervals = Cave.intervals || {};
+  if (Cave.intervals.panelRot) clearInterval(Cave.intervals.panelRot);
+
+  // indice corrente (persistito su Cave per poterlo rileggere al refresh dati)
+  Cave._activePanelIndex = Cave._activePanelIndex ?? 0;
+  Cave._activePanelIndex = Cave._activePanelIndex % panels.length;
+
+  // avvio rotazione
+  Cave.intervals.panelRot = setInterval(() => {
+    const cur = panels[Cave._activePanelIndex % panels.length];
+    Cave._activePanelIndex = (Cave._activePanelIndex + 1) % panels.length;
+    const nxt = panels[Cave._activePanelIndex];
+
+    if (cur) {
+      cur.style.opacity = '0';
+      setTimeout(() => { cur.hidden = true; }, 350);
+    }
+    if (nxt) {
+      nxt.hidden = false;
+      requestAnimationFrame(() => { nxt.style.opacity = '1'; });
+    }
+  }, rotSec * 1000);
+}
+
+function stopRightPanelRotator() {
+  if (window.Cave?.intervals?.panelRot) {
+    clearInterval(Cave.intervals.panelRot);
+    Cave.intervals.panelRot = null;
+  }
+}
+
   function ensureTicker(){
     if (typeof NOTICKER !== 'undefined' && NOTICKER) return null;
     let t = qs('#cv-ticker'); if (t) return t;

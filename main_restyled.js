@@ -1,3 +1,33 @@
+// ===== Version & Fetch Guard (anti-cache, reload coerente) =====
+(() => {
+  const FRONT_BUILD = window.__APP_BUILD__ || window.__DEX_BUILD__ || "dev";
+  const BASE = (window.BASE_URL || "").replace(/\/+$/,"");
+
+  const _origFetch = window.fetch.bind(window);
+  window.fetch = async (input, init = {}) => {
+    const url = typeof input === "string" ? input : (input?.url || "");
+    const sameBackend = BASE && (url.startsWith(BASE) || url.startsWith("/"));
+    const headers = new Headers(init.headers || {});
+    headers.set("X-Client-Version", FRONT_BUILD);
+
+    const res = await _origFetch(input, { ...init, cache: "no-store", headers });
+    try {
+      if (sameBackend) {
+        const sv = res.headers.get("x-app-version");
+        if (sv && sv !== FRONT_BUILD && !sessionStorage.getItem("__ver_mismatch")) {
+          sessionStorage.setItem("__ver_mismatch", "1");
+          // ricarica “forte” mantenendo path/query/hash
+          location.replace(location.pathname + location.search + (location.hash || ""));
+        }
+      }
+    } catch (_) {}
+    return res;
+  };
+
+  // esponi per altri moduli
+  window.__FRONT_BUILD__ = FRONT_BUILD;
+})();
+
 // Globals
 window.userData = {};
 window.selectedNFTs = new Set();
@@ -4483,35 +4513,80 @@ function sumExpeditionStats(assetIds = []){
     }
   }
   
-  function initRealtime() {
+  function handleRealtimeMessage(msg){
+    if (!msg || typeof msg !== "object") return;
+    if (msg.type === "chest_spawned") {
+      const { minX, maxX, minY, maxY } = getBounds();
+      upsertChest({
+        id: String(msg.chest_id),
+        x: clamp(msg.x, minX, maxX),
+        y: clamp(msg.y, minY, maxY),
+        from: msg.perk_type || "unknown",
+        wax_account: msg.wax_account || "",
+        taken: false, claimable: true, pending: false
+      });
+      toast(`Chest #${msg.chest_id} spawned by ${msg.wax_account}`, "ok");
+    }
+    if (msg.type === "chest_claimed") {
+      Cave.chests.delete(String(msg.chest_id));
+      toast(`Chest #${msg.chest_id} claimed by ${msg.claimed_by}`, "warn");
+    }
+  }
+  
+  let _pollTimer = null, _lastEventId = 0;
+  
+  function startRealtimePolling(){
+    if (_pollTimer) return;
+    const FRONT_BUILD = window.__FRONT_BUILD__ || "dev";
+    const poll = async () => {
+      try {
+        const r = await fetch(`${BASE_URL}/events/poll?since=${_lastEventId}`, { method:"GET" });
+        const j = await r.json();
+        if (Array.isArray(j.events)) {
+          for (const e of j.events) handleRealtimeMessage(e);
+        }
+        _lastEventId = j.next_id || _lastEventId;
+      } catch(_) {}
+      _pollTimer = setTimeout(poll, 4000);
+    };
+    _pollTimer = setTimeout(poll, 0);
+  }
+  
+  function stopRealtimePolling(){
+    if (_pollTimer) { clearTimeout(_pollTimer); _pollTimer = null; }
+  }
+  
+  function initRealtimeSSE(){
     if (Cave._es) return;
     try {
-      const es = new EventSource(`${BASE_URL}/events`);
+      const FRONT_BUILD = window.__FRONT_BUILD__ || "dev";
+      const es = new EventSource(`${BASE_URL}/events?cv=${encodeURIComponent(FRONT_BUILD)}`);
       es.onopen = () => log("SSE connected");
       es.onmessage = (ev) => {
         let msg; try { msg = JSON.parse(ev.data); } catch { return; }
-          if (msg.type === "chest_spawned") {
-            const { minX, maxX, minY, maxY } = getBounds();
-            upsertChest({
-              id: String(msg.chest_id),
-              x: clamp(msg.x, minX, maxX),
-              y: clamp(msg.y, minY, maxY),
-              from: msg.perk_type || "unknown",
-              wax_account: msg.wax_account || "",
-              taken: false, claimable: true, pending: false
-            });
-            toast(`Chest #${msg.chest_id} spawned by ${msg.wax_account}`, "ok");
-          }
-          if (msg.type === "chest_claimed") {
-            Cave.chests.delete(String(msg.chest_id));
-            toast(`Chest #${msg.chest_id} claimed by ${msg.claimed_by}`, "warn");
-          }
+        handleRealtimeMessage(msg);
       };
       es.onerror = (ev) => { log("SSE error/reconnect", ev); };
       Cave._es = es;
       window.addEventListener("beforeunload", () => es.close(), { once: true });
     } catch (e) { log("SSE init failed", e); }
   }
+  
+  function closeRealtimeSSE(){
+    if (Cave._es) { try { Cave._es.close(); } catch {} Cave._es = null; }
+  }
+  
+  function bootRealtime(){
+    const isOverlay = !!(window.CAVE_OVERLAY || document.body?.getAttribute('data-overlay') === '1');
+    if (isOverlay || document.hidden) {
+      closeRealtimeSSE();
+      startRealtimePolling();
+    } else {
+      stopRealtimePolling();
+      initRealtimeSSE();
+    }
+  }
+
   // ========= CANVAS =========
   function setupCanvas(c) {
     Cave.canvas = c;
@@ -4535,8 +4610,14 @@ function sumExpeditionStats(assetIds = []){
     Cave.observers.io?.disconnect?.();
     const io = new IntersectionObserver((entries)=>{
       entries.forEach(e=>{
-        if (e.isIntersecting){ startRAF(); startCommandPolling(); }
-        else { stopRAF(); stopCommandPolling(); }
+       if (e.isIntersecting){
+         startRAF(); startCommandPolling(); bootRealtime();
+       } else {
+         stopRAF(); stopCommandPolling();
+         // chiudi canale realtime se esce dal viewport
+         stopRealtimePolling?.();   // se hai implementato il polling
+         closeRealtimeSSE?.();      // se l’SSE è attivo
+       }
       });
     }, { root: null, threshold: 0.01 });
     io.observe(Cave.canvas);
@@ -6377,7 +6458,7 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     // assets
     loadAssets();
     //initDecorations();
-    requestAnimationFrame(() => { initRealtime(); });
+    requestAnimationFrame(() => { bootRealtime(); });
     
     const initialCanvas = qs("#caveCanvas", Cave.el.videoOrCanvas);
     if (initialCanvas) {
@@ -6407,6 +6488,7 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
         setupCanvas(qs("#caveCanvas", Cave.el.videoOrCanvas));
         startRAF();
         startCommandPolling();
+        bootRealtime();
       }
     }
     
@@ -6622,7 +6704,7 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     if (window.GoblinCrash) GoblinCrash.init(Cave);
     loadAssets();
     startRAF();
-    initRealtime(); // overlay è read-only ma riceve SSE (spawn/claim)
+    bootRealtime()
   
     // primo fetch (overlay usa public se disponibile)
     const fetchAll = READONLY
@@ -6666,13 +6748,20 @@ function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al log
     Cave.visible = !document.hidden;
     if (Cave.visible) {
       startCommandPolling();
+      bootRealtime();
     } else {
       stopCommandPolling();
+      stopRealtimePolling?.();     // ferma polling se presente
+      closeRealtimeSSE?.();      
       // opzionale: accorcia le scie per evitare burst al rientro
       Cave.goblins.forEach(g => {
         if (Array.isArray(g.trail)) g.trail = g.trail.slice(0, 4);
       });
     }
+  });
+  
+  document.addEventListener("visibilitychange", () => {
+    bootRealtime();
   });
 
   // ========= EXPOSE =========

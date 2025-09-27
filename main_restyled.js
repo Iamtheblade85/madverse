@@ -6276,38 +6276,68 @@ function stopRightPanelRotator() {
       `;
       qs("#cv-start").onclick = async () => {
         if (READONLY) { toast("Overlay read-mode only.", "warn"); return; }
-        const btn = qs("#cv-start"); btn.disabled = true; btn.textContent = "⏳ Starting...";
-        if (!selected.size) { toast("Select at least 1 goblin to start.","warn"); btn.disabled=false; btn.textContent="🚀 Start Expedition"; return; }
-  
-        const ids = [...selected].filter(id => {
-          const g = goblins.find(x => x.asset_id === id);
-          return g && num(g.daily_power) >= 5;
-        });
-        if (!ids.length) { toast("All selected goblins are too tired.","warn"); btn.disabled=false; btn.textContent="🚀 Start Expedition"; return; }
-  
+      
+        const btn = qs("#cv-start");
+        btn.disabled = true;
+        btn.textContent = "⏳ Starting...";
+      
+        if (!selected.size) {
+          toast("Select at least 1 goblin to start.", "warn");
+          btn.disabled = false; btn.textContent = "🚀 Start Expedition";
+          return;
+        }
+      
+        // ✅ CAP efficiente a 50 mantenendo l'ordine di selezione
+        const MAX = 50;
+        const ids = [];
+        for (const id of selected) {
+          const g = Cave.nftIndex.get(String(id)); // O(1)
+          if (g && num(g.daily_power) >= 5) {
+            ids.push(String(id));
+            if (ids.length === MAX) break;  // cap duro a 50
+          }
+        }
+      
+        if (!ids.length) {
+          toast("All selected goblins are too tired.", "warn");
+          btn.disabled = false; btn.textContent = "🚀 Start Expedition";
+          return;
+        }
+        if (selected.size > MAX) {
+          toast(`Selected ${selected.size} goblins — sending only the first ${MAX}.`, "warn");
+        }
+      
         try {
           syncUserInto(Cave.user);
           assertAuthOrThrow(Cave.user);
+      
           const r = await API.post("/start_expedition", {
             wax_account: Cave.user.wax_account,
-            user_id: Cave.user.user_id,
-            usx_token: Cave.user.usx_token,
-            goblin_ids: ids
+            user_id:     Cave.user.user_id,
+            usx_token:   Cave.user.usx_token,
+            goblin_ids:  ids  // 👈 sempre ≤ 50
           }, 20000);
-  
-          if (r.status === 409) toast(r.data?.error || "Already in expedition.", "warn");
-          else if (r.ok) {
+      
+          if (r.status === 409) {
+            toast(r.data?.error || "Already in expedition.", "warn");
+          } else if (r.ok) {
             toast("Expedition started!", "ok");
             try { triggerLogoGoblin(Cave.user.wax_account || 'guest'); } catch {}
             try { showLogoToast(`${safe(Cave.user.wax_account)} just joined the band! Good hunting!`); } catch {}
             await renderUserCountdown(r.data.expedition_id, r.data.duration_seconds, ids);
             await renderGlobalExpeditions();
-          } else toast("Something went wrong.", "err");
+          } else {
+            toast("Something went wrong.", "err");
+          }
         } catch (e) {
           toast("Failed to start expedition.", "err");
           console.error(e);
-        } finally { btn.disabled=false; btn.textContent="🚀 Start Expedition"; }
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "🚀 Start Expedition";
+        }
       };
+
     }
   
     function autoBest() {

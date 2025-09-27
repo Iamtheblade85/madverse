@@ -16,7 +16,6 @@
         const sv = res.headers.get("x-app-version");
         if (sv && sv !== FRONT_BUILD && !sessionStorage.getItem("__ver_mismatch")) {
           sessionStorage.setItem("__ver_mismatch", "1");
-          // ricarica “forte” mantenendo path/query/hash
           location.replace(location.pathname + location.search + (location.hash || ""));
         }
       }

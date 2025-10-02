@@ -575,14 +575,14 @@ function openLoginModal() {
 
       const data = await res.json();
       if (!data.user_id || !data.usx_token || !data.wax_account) {
-        throw new Error("Credenziali non valide");
+        throw new Error("Credential not valid.");
       }
 
       saveUserData({ ...data, email, password }, remember);
       location.reload();
 
     } catch (err) {
-      alert("Errore nel login: " + err.message);
+      alert("Login error: " + err.message);
     }
   };
   document.getElementById('register-button').onclick = () => openRegisterModal();

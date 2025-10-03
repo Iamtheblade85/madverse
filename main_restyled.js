@@ -3786,6 +3786,46 @@ async function renderGoblinInventory() {
    - No duplicate element IDs
    ========================================================= */
 
+// Reinforcement limit: +5 per each 900338 owned
+const BASE_LIMIT = 50;
+const MAX_LIMIT = 250;
+const REINFORCEMENT_TEMPLATE_ID = "900338"; // <- align with backend
+let reinforcementCount = 0;
+let CURRENT_LIMIT = BASE_LIMIT;
+
+// Helper: fetch count from backend (recommended)
+async function fetchReinforcementCount(wax) {
+  if (!wax) return 0;
+  try {
+    const r = await API.post("/reinforcement_count", { wax_account: wax }, 10000);
+    // backend deve rispondere: { ok:true, count:<numero> }
+    if (r?.ok && typeof r.data?.count === "number") return r.data.count;
+  } catch (e) {
+    console.warn("[reinforcement] backend count failed:", e);
+  }
+  return 0; // safe default
+}
+
+async function refreshCurrentLimit() {
+  try {
+    const wax = Cave?.user?.wax_account;
+    if (!wax) return;
+    reinforcementCount = await fetchReinforcementCount(wax);
+    CURRENT_LIMIT = Math.min(MAX_LIMIT, BASE_LIMIT + (reinforcementCount * 5));
+
+    // Reflect on UI
+    const btnFirst = document.querySelector("#cv-select-50");
+    const btnBest  = document.querySelector("#cv-select-best");
+    if (btnFirst) btnFirst.textContent = `✅ First ${CURRENT_LIMIT}`;
+    if (btnBest)  btnBest.textContent  = `🏆 Best ${CURRENT_LIMIT}`;
+
+    // If you print a “Selected: x / limit” anywhere, update it too
+    if (typeof updateSummary === "function") updateSummary();
+  } catch (e) {
+    console.warn("[reinforcement] unable to refresh limit", e);
+  }
+}
+
 (() => {
   "use strict";
 
@@ -4441,6 +4481,7 @@ function sumExpeditionStats(assetIds = []){
     Cave.assets.perks.black_cat = black_cat;
     // Cave.assets.decor = { rock, skull, spider, bush };
     Cave.assets.loaded = true;
+
     // costruisci cache se il canvas è già pronto
     buildBGCache();
   }
@@ -5957,6 +5998,19 @@ function stopRightPanelRotator() {
           <div class="cv-pill"><div class="cv-chip-key">SPEED</div><div class="cv-chip-val">${t.speed}</div></div>
           <div class="cv-pill"><div class="cv-chip-key">ACCURACY</div><div class="cv-chip-val">${t.accuracy}</div></div>
         </div>
+		<div style="flex:1 1 20%; min-width:80px;" class="cv-card">
+		  <h3 class="cv-title" style="font-size:1.25rem; margin-bottom:.6rem;">📜 Welcome to the Dwarf’s Gold Cave</h3>
+		  <p>💥 Ready to send your goblins into the depths? Choose up to <strong>50 warriors</strong> to explore the mysterious cave — the more, the merrier (and lootier)!</p>
+		  <p>🪖 Each <strong>Troops Reinforcement NFT</strong> you own increases your expedition size by <strong>+5 goblins</strong>, up to a maximum of <strong>250</strong>. Build a bigger horde and multiply your loot!</p>
+		  <p>⏳ You can now <strong>choose the duration</strong> of your expedition — from quick 5-minute raids to 24-hour deep digs. Plan your missions for maximum reward potential.</p>
+		  <p>💰 Every expedition is <strong>free</strong> and rewards you with variable <strong>CHIPS tokens</strong> and <strong>NFT treasures</strong>.</p>
+		  <p>📈 Higher <strong>level</strong> and your goblin’s <strong>main attribute</strong> mean better rewards.</p>
+		  <p>🏆 Not sure? Use <strong>“Best Goblins”</strong> to auto-pick your elite team!</p>
+		  <div style="background:#2a2a2a; border-left:4px solid #ffe600; padding:1rem; margin-top:1rem; font-weight:bold; color:#ffd700;">
+			⚠️ <strong>Important:</strong> After an expedition, goblins must rest in the <strong>Tavern</strong> for <strong>5 minutes</strong> before the next run. 🍻🕒
+		  </div>
+		  <p style="margin-top:1rem; font-style:italic; color:#aaa;">Tip: Check back often — treasure respawns and goblins love digging daily!</p>
+		</div>		
       `;
     }
     
@@ -6065,7 +6119,19 @@ function stopRightPanelRotator() {
       }
       return;
     }
-  
+
+    const specialCount = (Array.isArray(allNfts) ? allNfts : [])
+      .filter(n => String(n.template_id) === '905202')
+      .length;
+    
+    const BASE_LIMIT = 50;
+    const EXTRA_PER_ASSET = 5;      
+    const HARD_CAP = 250;
+    const DYN_LIMIT = Math.min(HARD_CAP, BASE_LIMIT + specialCount * EXTRA_PER_ASSET);
+    
+    // esponi in scope locale della selection UI
+    let CURRENT_LIMIT = DYN_LIMIT;
+
     // ====== selection UI (copiata dalla tua renderDwarfsCave) ======
     let selected = new Set();
     let sortBy = "rarity";
@@ -6265,64 +6331,101 @@ function stopRightPanelRotator() {
             updateSummary();
           }
         });
+		// Duration select → keep current value in memory
+		Cave.ui = Cave.ui || {};
+		Cave.ui.getDurationSeconds = function(){
+		  const el = qs("#cv-duration-select", container);
+		  const sec = Number(el?.value || 3600);
+		  // clamp lato UI (il backend clampa comunque 5m..24h)
+		  return Math.max(300, Math.min(86400, sec));
+		};
       }
     }
   
     function updateSummary() {
+      // Explicit limit + mandatory duration select next to Start
       Cave.el.selectionSummary.innerHTML = `
-        <span style="color:#ffe600;">Selected: ${selected.size} / 50</span>
-        <button class="cv-btn" id="cv-start" style="margin-left:1rem;">🚀 Start Expedition</button>
+        <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; justify-content:center;">
+          <span style="color:#ffe600;">
+            Selected: ${selected.size} / ${CURRENT_LIMIT}
+          </span>
+    
+          <label for="cv-duration" style="color:#cfcfcf; font-size:.9rem;">Duration</label>
+          <select id="cv-duration" required
+            style="background:#1a1a1a; color:#fff; border:1px solid #444; border-radius:8px; padding:.35rem .5rem;">
+            <option value="">-- choose --</option>
+            <option value="300">5 min</option>
+            <option value="1800">30 min</option>
+            <option value="3600">60 min</option>
+            <option value="7200">2 hours</option>
+            <option value="21600">6 hours</option>
+            <option value="86400">24 hours</option>            
+          </select>
+    
+          <button class="cv-btn" id="cv-start" style="margin-left:.25rem;">🚀 Start Expedition</button>
+        </div>
       `;
+    
       qs("#cv-start").onclick = async () => {
         if (READONLY) { toast("Overlay read-mode only.", "warn"); return; }
-      
+    
         const btn = qs("#cv-start");
+        const durSel = qs("#cv-duration");
+        const durSec = Number(durSel?.value || 0);
+    
         btn.disabled = true;
         btn.textContent = "⏳ Starting...";
-      
+    
         if (!selected.size) {
           toast("Select at least 1 goblin to start.", "warn");
           btn.disabled = false; btn.textContent = "🚀 Start Expedition";
           return;
         }
-      
-        // ✅ CAP efficiente a 50 mantenendo l'ordine di selezione
-        const MAX = 50;
+        if (!durSec) {
+          toast("Please choose a duration.", "warn");
+          btn.disabled = false; btn.textContent = "🚀 Start Expedition";
+          return;
+        }
+    
+        // Enforce CURRENT_LIMIT while preserving selection order; only POWER≥5
         const ids = [];
         for (const id of selected) {
-          const g = Cave.nftIndex.get(String(id)); // O(1)
+          const g = Cave.nftIndex.get(String(id));
           if (g && num(g.daily_power) >= 5) {
             ids.push(String(id));
-            if (ids.length === MAX) break;  // cap duro a 50
+            if (ids.length === CURRENT_LIMIT) break;
           }
         }
-      
         if (!ids.length) {
           toast("All selected goblins are too tired.", "warn");
           btn.disabled = false; btn.textContent = "🚀 Start Expedition";
           return;
         }
-        if (selected.size > MAX) {
-          toast(`Selected ${selected.size} goblins — sending only the first ${MAX}.`, "warn");
+        if (selected.size > CURRENT_LIMIT) {
+          toast(`Selected ${selected.size} goblins — sending only the first ${CURRENT_LIMIT}.`, "warn");
         }
-      
+    
         try {
           syncUserInto(Cave.user);
           assertAuthOrThrow(Cave.user);
-      
+    
+          // Send duration_seconds to the backend along with goblin_ids
           const r = await API.post("/start_expedition", {
             wax_account: Cave.user.wax_account,
             user_id:     Cave.user.user_id,
             usx_token:   Cave.user.usx_token,
-            goblin_ids:  ids  // 👈 sempre ≤ 50
+            goblin_ids:  ids,
+            duration_seconds: durSec
           }, 20000);
-      
+    
           if (r.status === 409) {
             toast(r.data?.error || "Already in expedition.", "warn");
           } else if (r.ok) {
             toast("Expedition started!", "ok");
             try { triggerLogoGoblin(Cave.user.wax_account || 'guest'); } catch {}
             try { showLogoToast(`${safe(Cave.user.wax_account)} just joined the band! Good hunting!`); } catch {}
+    
+            // Always use the duration returned by the backend
             await renderUserCountdown(r.data.expedition_id, r.data.duration_seconds, ids);
             await renderGlobalExpeditions();
           } else {
@@ -6336,29 +6439,35 @@ function stopRightPanelRotator() {
           btn.textContent = "🚀 Start Expedition";
         }
       };
-
     }
   
     function autoBest() {
       selected.clear();
-      const scored = goblins.filter(g=>num(g.daily_power)>=5)
-        .map(g=>({ id:g.asset_id, score: num(g.level) + num(g[g.main_attr]) }))
-        .sort((a,b)=>b.score-a.score)
-        .slice(0,50);
-      scored.forEach(s=>selected.add(s.id));
+      const scored = goblins.filter(g => num(g.daily_power) >= 5)
+        .map(g => ({ id: g.asset_id, score: num(g.level) + num(g[g.main_attr]) }))
+        .sort((a,b) => b.score - a.score)
+        .slice(0, CURRENT_LIMIT);
+      scored.forEach(s => selected.add(s.id));
       renderList(); updateSummary();
     }
-  
+
     // toolbar binds
     qs("#cv-select-50").onclick = () => {
       selected.clear();
-      goblins.filter(g=>num(g.daily_power)>=5).slice(0,50).forEach(g=>selected.add(g.asset_id));
+      goblins.filter(g => num(g.daily_power) >= 5)
+        .slice(0, CURRENT_LIMIT)
+        .forEach(g => selected.add(g.asset_id));
       renderList(); updateSummary();
     };
     qs("#cv-deselect").onclick = () => { selected.clear(); renderList(); updateSummary(); };
     qs("#cv-select-best").onclick = () => autoBest();
     qs("#cv-search").addEventListener("input", e => { filterQuery = e.target.value; renderList(); saveFilters(); });
     qs("#cv-rarity").addEventListener("change", e => { filterRarity = e.target.value; renderList(); saveFilters(); });
+
+    const btnFirst = qs("#cv-select-50");
+    const btnBest  = qs("#cv-select-best");
+    if (btnFirst) btnFirst.textContent = `✅ First ${CURRENT_LIMIT}`;
+    if (btnBest)  btnBest.textContent  = `🏆 Best ${CURRENT_LIMIT}`;
     const powerRange = qs("#cv-power");
     const powerVal = qs("#cv-power-val");
     if (powerRange && powerVal){
@@ -6485,49 +6594,59 @@ function stopRightPanelRotator() {
 
       <div style="display:flex; flex-wrap:wrap; gap:1.5rem;">
         <div style="flex:1 1 76%; min-width:320px;">
-          <div style="margin-bottom:1rem; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; justify-content:center;">
-            <input id="cv-search" placeholder="Search name or ID…" 
-                   style="background:#151515; border:1px solid #333; color:#eee; padding:.55rem .7rem; border-radius:10px; width:220px;">
-          
-            <select id="cv-rarity" class="cv-btn" style="min-width:160px;">
-              <option value="">All Rarities</option>
-              <option>Common</option><option>Uncommon</option><option>Rare</option>
-              <option>Epic</option><option>Legendary</option><option>Mythic</option>
-            </select>
-          
-            <div style="display:flex; align-items:center; gap:.45rem;">
-              <label for="cv-power" style="color:#ccc; font-size:.9rem;">Min Power</label>
-              <input id="cv-power" type="range" min="0" max="100" step="1" value="0">
-              <span id="cv-power-val" style="color:#0ff; font-size:.9rem;">0</span>
-            </div>
-          
-            <div id="cv-sort-segment" style="display:flex; background:#1a1a1a; border:1px solid #333; border-radius:10px; overflow:hidden;">
-              <button class="cv-btn" data-sort="rarity" style="border:none; border-right:1px solid #333;">Rarity</button>
-              <button class="cv-btn" data-sort="level"  style="border:none; border-right:1px solid #333;">Level</button>
-              <button class="cv-btn" data-sort="daily_power" style="border:none;">Power</button>
-            </div>
-          
-            <button class="cv-btn" id="cv-select-50">✅ First 50</button>
-            <button class="cv-btn" id="cv-select-best">🏆 Best 50</button>
-            <button class="cv-btn" id="cv-deselect">❌ Clear</button>
-          </div>
+		<div style="margin-bottom:1rem; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; justify-content:center;">
+
+		  <input id="cv-search" placeholder="Search name or ID…" 
+				 style="background:#151515; border:1px solid #333; color:#eee; padding:.55rem .7rem; border-radius:10px; width:220px;">
+
+		  <select id="cv-rarity" class="cv-btn" style="min-width:160px;">
+			<option value="">All Rarities</option>
+			<option>Common</option><option>Uncommon</option><option>Rare</option>
+			<option>Epic</option><option>Legendary</option><option>Mythic</option>
+		  </select>
+
+		  <div style="display:flex; align-items:center; gap:.45rem;">
+			<label for="cv-power" style="color:#ccc; font-size:.9rem;">Min Power</label>
+			<input id="cv-power" type="range" min="0" max="100" step="1" value="0">
+			<span id="cv-power-val" style="color:#0ff; font-size:.9rem;">0</span>
+		  </div>
+
+		  <div id="cv-sort-segment" style="display:flex; background:#1a1a1a; border:1px solid #333; border-radius:10px; overflow:hidden;">
+			<button class="cv-btn" data-sort="rarity" style="border:none; border-right:1px solid #333;">Rarity</button>
+			<button class="cv-btn" data-sort="level"  style="border:none; border-right:1px solid #333;">Level</button>
+			<button class="cv-btn" data-sort="daily_power" style="border:none;">Power</button>
+		  </div>
+
+		  <!-- ⏳ NEW: Duration selector (5m → 24h) -->
+		  <div id="cv-duration-wrap" style="display:flex; align-items:center; gap:.45rem; background:#151515; border:1px solid #333; border-radius:10px; padding:.35rem .5rem;">
+			<label for="cv-duration-select" style="color:#ccc; font-size:.9rem;">Duration</label>
+			<select id="cv-duration-select" class="cv-btn" style="min-width:160px;">
+			  <option value="300">5 minutes</option>
+			  <option value="600">10 minutes</option>
+			  <option value="900">15 minutes</option>
+			  <option value="1800">30 minutes</option>
+			  <option value="3600" selected>1 hour</option>
+			  <option value="7200">2 hours</option>
+			  <option value="14400">4 hours</option>
+			  <option value="28800">8 hours</option>
+			  <option value="43200">12 hours</option>
+			  <option value="86400">24 hours</option>
+			</select>
+		  </div>
+
+		  <button class="cv-btn" id="cv-select-50">✅ First ${CURRENT_LIMIT}</button>
+		  <button class="cv-btn" id="cv-select-best">🏆 Best ${CURRENT_LIMIT}</button>
+		  <button class="cv-btn" id="cv-deselect">❌ Clear</button>
+
+		  <!-- ℹ️ NEW: dynamic limit hint -->
+		  <div id="cv-limit-hint" style="width:100%; text-align:center; margin-top:.35rem; color:#cdbb7a; font-size:.9rem;">
+			Limit: <b>50</b> goblins per expedition. Each Reinforcement NFT adds <b>+5</b>, up to <b>250 Goblins for each expedition</b>.
+		  </div>
+		</div>
 
         <div id="cv-summary" class="cv-card" style="text-align:center;"></div>
         <div id="cv-active-filters" class="cv-row" style="justify-content:flex-start; flex-wrap:wrap; gap:.4rem; margin:.35rem 0;"></div>
         <div id="cv-goblin-list" style="display:flex; flex-direction:column; gap:.5rem;"></div>
-
-        </div>
-
-        <div style="flex:1 1 20%; min-width:80px;" class="cv-card">
-          <h3 class="cv-title" style="font-size:1.25rem; margin-bottom:.6rem;">📜 Welcome to the Dwarf’s Gold Cave</h3>
-          <p>💥 Ready to send your goblins into the depths? Choose up to <strong>50 warriors</strong> to explore the mysterious cave — the more, the merrier (and lootier)!</p>
-          <p>💰 Every expedition is <strong>free</strong> and rewards you with variable <strong>CHIPS tokens</strong> and <strong>NFT treasures</strong>.</p>
-          <p>📈 Higher <strong>level</strong> and your goblin’s <strong>main attribute</strong> mean better rewards.</p>
-          <p>🏆 Not sure? Use <strong>“Best 50 Goblins”</strong> to auto-pick your elite team!</p>
-          <div style="background:#2a2a2a; border-left:4px solid #ffe600; padding:1rem; margin-top:1rem; font-weight:bold; color:#ffd700;">
-            ⚠️ <strong>Important:</strong> After an expedition, goblins must rest in the <strong>Tavern</strong> for <strong>5 minutes</strong> before the next run. 🍻🕒
-          </div>
-          <p style="margin-top:1rem; font-style:italic; color:#aaa;">Tip: Check back often — treasure respawns and goblins love digging daily!</p>
         </div>
       </div>
     `;
@@ -6596,6 +6715,7 @@ function stopRightPanelRotator() {
 
     // 3) Goblin dell’utente (con retry singolo su /user_nfts)
     await loadUserNFTsWithSingleRetry();
+	await refreshCurrentLimit();
 
     // chest perk button
     Cave.el.chestPerkBtn.onclick = async () => {
@@ -6711,6 +6831,7 @@ function stopRightPanelRotator() {
         usx_token: Cave.user.usx_token
       }, 12000);
       if (s.status === 200) {
+		refreshCurrentLimit();
         await renderUserCountdown(s.data.expedition_id, s.data.seconds_remaining, s.data.goblin_ids || []);
       }
     } catch {}
@@ -6856,6 +6977,11 @@ function stopRightPanelRotator() {
   }
 
 })();
+
+
+
+
+
 
 async function renderGoblinBlend() {
   const container = document.getElementById("goblin-content");

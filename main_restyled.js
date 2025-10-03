@@ -3803,7 +3803,7 @@ async function fetchReinforcementCount(wax) {
   } catch (e) {
     console.warn("[reinforcement] backend count failed:", e);
   }
-  return 0;
+  return 0; // safe default
 }
 
 async function refreshCurrentLimit() {
@@ -5966,19 +5966,29 @@ function stopRightPanelRotator() {
     }
   }
 
+
+  // ========= USER COUNTDOWN =========
 // ========= USER COUNTDOWN (timer + instructions) =========
 async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
   const host = qs("#expedition-summary-block"); if (!host) return;
   const wax = Cave.user.wax_account; if (!wax) return;
+
+  // evita doppio timer per lo stesso utente
   window.expeditionTimersRunning = window.expeditionTimersRunning || {};
   if (window.expeditionTimersRunning[wax]) return;
   window.expeditionTimersRunning[wax] = true;
+
+  // rimuovi eventuale countdown precedente
   const prev = qs("#user-exp-countdown");
   if (prev) prev.remove();
+
+  // crea il contenitore countdown
   const box = document.createElement("div");
   box.id = "user-exp-countdown";
   box.style.cssText = "margin-top:1rem; font-family:Orbitron,system-ui,sans-serif; color:#e8f6ff;";
   host.appendChild(box);
+
+  // struttura: TIMER (in alto) + INSTRUCTIONS (sotto, con wrapping forzato)
   box.innerHTML = `
     <div id="cv-countdown-timer"
          style="font-size:1.2rem; color:#00e6ff; text-align:center; margin-bottom:.5rem;">
@@ -6012,7 +6022,10 @@ async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
       </div>
     </div>
   `;
+
   const timerEl = qs("#cv-countdown-timer", box);
+
+  // countdown loop (aggiorna solo il timer, non tocca le instructions)
   let end = Date.now() + seconds * 1000;
   const t = setInterval(async () => {
     const rem = end - Date.now();
@@ -6047,6 +6060,7 @@ async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
         prependRecentFromResult(result.data, wax);
 
         timerEl.textContent = "✅ Expedition complete!";
+        // (non rimuovo il box: le instructions restano visibili)
       } catch (e) {
         timerEl.textContent = "⚠️ Expedition fetch error.";
         console.warn("end_expedition error:", e);
@@ -6621,24 +6635,7 @@ async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
 			<button class="cv-btn" data-sort="daily_power" style="border:none;">Power</button>
 		  </div>
 
-		  <!-- ⏳ NEW: Duration selector (5m → 24h) -->
-		  <div id="cv-duration-wrap" style="display:flex; align-items:center; gap:.45rem; background:#151515; border:1px solid #333; border-radius:10px; padding:.35rem .5rem;">
-			<label for="cv-duration-select" style="color:#ccc; font-size:.9rem;">Duration</label>
-			<select id="cv-duration-select" class="cv-btn" style="min-width:160px;">
-			  <option value="300">5 minutes</option>
-			  <option value="600">10 minutes</option>
-			  <option value="900">15 minutes</option>
-			  <option value="1800">30 minutes</option>
-			  <option value="3600" selected>1 hour</option>
-			  <option value="7200">2 hours</option>
-			  <option value="14400">4 hours</option>
-			  <option value="28800">8 hours</option>
-			  <option value="43200">12 hours</option>
-			  <option value="86400">24 hours</option>
-			</select>
-		  </div>
-
-		  <button class="cv-btn" id="cv-select-50">✅ First ${CURRENT_LIMIT}</button>
+		  <!-- ⏳ NEW: Duration selector (5m → 24h) --><button class="cv-btn" id="cv-select-50">✅ First ${CURRENT_LIMIT}</button>
 		  <button class="cv-btn" id="cv-select-best">🏆 Best ${CURRENT_LIMIT}</button>
 		  <button class="cv-btn" id="cv-deselect">❌ Clear</button>
 

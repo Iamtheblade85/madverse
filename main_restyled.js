@@ -3803,7 +3803,7 @@ async function fetchReinforcementCount(wax) {
   } catch (e) {
     console.warn("[reinforcement] backend count failed:", e);
   }
-  return 0; // safe default
+  return 0;
 }
 
 async function refreshCurrentLimit() {
@@ -5966,97 +5966,101 @@ function stopRightPanelRotator() {
     }
   }
 
+// ========= USER COUNTDOWN (timer + instructions) =========
+async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
+  const host = qs("#expedition-summary-block"); if (!host) return;
+  const wax = Cave.user.wax_account; if (!wax) return;
+  window.expeditionTimersRunning = window.expeditionTimersRunning || {};
+  if (window.expeditionTimersRunning[wax]) return;
+  window.expeditionTimersRunning[wax] = true;
+  const prev = qs("#user-exp-countdown");
+  if (prev) prev.remove();
+  const box = document.createElement("div");
+  box.id = "user-exp-countdown";
+  box.style.cssText = "margin-top:1rem; font-family:Orbitron,system-ui,sans-serif; color:#e8f6ff;";
+  host.appendChild(box);
+  box.innerHTML = `
+    <div id="cv-countdown-timer"
+         style="font-size:1.2rem; color:#00e6ff; text-align:center; margin-bottom:.5rem;">
+      ⏳ Time Left: --:--
+    </div>
 
-  // ========= USER COUNTDOWN =========
-  async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
-    const host = qs("#expedition-summary-block"); if (!host) return;
-    const wax = Cave.user.wax_account; if (!wax) return;
+    <div id="cv-instructions" class="cv-card"
+         style="margin-top:.4rem; padding:1rem; border:1px solid #2b2b2b;
+                background:linear-gradient(180deg,#141414,#0d0d0d);
+                border-radius:14px; box-shadow:0 0 14px rgba(0,0,0,.45), inset 0 0 16px rgba(0,255,255,.08);
+                white-space:normal; overflow-wrap:anywhere; word-break:break-word;
+                max-width:100%; overflow:hidden;">
+      <h3 class="cv-title" style="font-size:1.05rem; margin:0 0 .5rem;">📜 Welcome to the Dwarf’s Gold Cave</h3>
+      <p style="margin:.35rem 0;">
+        💥 Choose up to <strong>50 goblins</strong> to raid the cave.
+        Each <strong>Troops Reinforcement NFT</strong> you own adds <strong>+5 slots</strong>,
+        up to a maximum of <strong>250</strong>.
+      </p>
+      <p style="margin:.35rem 0;">
+        ⏳ You can now <strong>choose the duration</strong> of your expedition — from quick
+        <strong>5 minutes</strong> to <strong>24 hours</strong>. Faster teams reduce the final time.
+      </p>
+      <p style="margin:.35rem 0;">
+        💰 Earn variable <strong>CHIPS</strong> and <strong>NFT</strong> rewards.
+        Your squad’s <strong>accuracy</strong> increases the chance to find NFTs.
+      </p>
+      <p style="margin:.35rem 0;">🏆 Use <strong>Best Goblins</strong> to auto-pick your elite team!</p>
+      <div style="background:#2a2a2a; border-left:4px solid #ffe600; padding:.7rem; margin-top:.6rem;
+                  font-weight:bold; color:#ffd700;">
+        ⚠️ After an expedition, goblins must rest in the <strong>Tavern</strong> for <strong>5 minutes</strong>.
+      </div>
+    </div>
+  `;
+  const timerEl = qs("#cv-countdown-timer", box);
+  let end = Date.now() + seconds * 1000;
+  const t = setInterval(async () => {
+    const rem = end - Date.now();
+    if (rem <= 0) {
+      clearInterval(t);
+      timerEl.textContent = "⏳ Expedition completed! Checking status...";
+      try {
+        syncUserInto(Cave.user);
+        assertAuthOrThrow(Cave.user);
 
-    window.expeditionTimersRunning = window.expeditionTimersRunning || {};
-    if (window.expeditionTimersRunning[wax]) return;
-    window.expeditionTimersRunning[wax] = true;
+        const status = await API.post("/expedition_status", {
+          wax_account: wax,
+          user_id: Cave.user.user_id,
+          usx_token: Cave.user.usx_token
+        }, 12000);
+        if (!status.ok) throw new Error(`Status ${status.status}`);
 
-    const prev = qs("#user-exp-countdown"); prev?.remove();
-    const box = document.createElement("div");
-    box.id = "user-exp-countdown";
-    box.style.cssText = `font-size:1.2rem; margin-top:1rem; color:#0ff; font-family:Orbitron, system-ui, sans-serif; text-align:center;`;
-    host.appendChild(box);
-    // --- Riquadro totali attributi per questa spedizione utente ---
-    const totalsHostId = 'cv-exp-totals';
-    document.getElementById(totalsHostId)?.remove();
-    const totalsHost = document.createElement('div');
-    totalsHost.id = totalsHostId;
-    totalsHost.style.cssText = 'margin-top:.6rem; font-family:Orbitron,system-ui,sans-serif;';
-    host.appendChild(totalsHost);
-    
-    function renderTotals(ids){
-      const t = sumExpeditionStats(ids);
-      totalsHost.innerHTML = `
-        <div style="display:grid; grid-template-columns:repeat(2, minmax(140px,1fr)); gap:.5rem;">
-          <div class="cv-pill"><div class="cv-chip-key">RESISTANCE</div><div class="cv-chip-val">${t.resistance}</div></div>
-          <div class="cv-pill"><div class="cv-chip-key">LOOT-HUNGRY</div><div class="cv-chip-val">${t.loot_hungry}</div></div>
-          <div class="cv-pill"><div class="cv-chip-key">SPEED</div><div class="cv-chip-val">${t.speed}</div></div>
-          <div class="cv-pill"><div class="cv-chip-key">ACCURACY</div><div class="cv-chip-val">${t.accuracy}</div></div>
-        </div>
-		<div style="flex:1 1 20%; min-width:80px;" class="cv-card">
-		  <h3 class="cv-title" style="font-size:1.25rem; margin-bottom:.6rem;">📜 Welcome to the Dwarf’s Gold Cave</h3>
-		  <p>💥 Ready to send your goblins into the depths? Choose up to <strong>50 warriors</strong> to explore the mysterious cave — the more, the merrier (and lootier)!</p>
-		  <p>🪖 Each <strong>Troops Reinforcement NFT</strong> you own increases your expedition size by <strong>+5 goblins</strong>, up to a maximum of <strong>250</strong>. Build a bigger horde and multiply your loot!</p>
-		  <p>⏳ You can now <strong>choose the duration</strong> of your expedition — from quick 5-minute raids to 24-hour deep digs. Plan your missions for maximum reward potential.</p>
-		  <p>💰 Every expedition is <strong>free</strong> and rewards you with variable <strong>CHIPS tokens</strong> and <strong>NFT treasures</strong>.</p>
-		  <p>📈 Higher <strong>level</strong> and your goblin’s <strong>main attribute</strong> mean better rewards.</p>
-		  <p>🏆 Not sure? Use <strong>“Best Goblins”</strong> to auto-pick your elite team!</p>
-		  <div style="background:#2a2a2a; border-left:4px solid #ffe600; padding:1rem; margin-top:1rem; font-weight:bold; color:#ffd700;">
-			⚠️ <strong>Important:</strong> After an expedition, goblins must rest in the <strong>Tavern</strong> for <strong>5 minutes</strong> before the next run. 🍻🕒
-		  </div>
-		  <p style="margin-top:1rem; font-style:italic; color:#aaa;">Tip: Check back often — treasure respawns and goblins love digging daily!</p>
-		</div>		
-      `;
-    }
-    
-    // 1) se ho già gli ID dai parametri (da start_expedition) renderizzo subito
-    if (Array.isArray(assetIds) && assetIds.length){
-      renderTotals(assetIds);
-    }
-
-    let end = Date.now() + seconds*1000;
-    const t = setInterval(async ()=>{
-      const rem = end - Date.now();
-      if (rem <= 0) {
-        clearInterval(t);
-        box.textContent = "⏳ Expedition completed! Checking status...";
-        try {
-          syncUserInto(Cave.user);
-          assertAuthOrThrow(Cave.user);  
-          const status = await API.post("/expedition_status", {
-            wax_account: wax, user_id: Cave.user.user_id, usx_token: Cave.user.usx_token
-          }, 12000);
-          if (!status.ok) throw new Error(`Status ${status.status}`);
-
-          const result = await API.post("/end_expedition", {
-            wax_account: wax, user_id: Cave.user.user_id, usx_token: Cave.user.usx_token, expedition_id
-          }, 15000);
-          if (!result.ok) { box.textContent = "❌ Failed to retrieve expedition result."; window.expeditionTimersRunning[wax]=false; return; }
-
-          await renderRecentList();
-          await renderGlobalExpeditions();
-          prependRecentFromResult(result.data, wax);
-
-          box.textContent = "✅ Expedition complete!";
-          setTimeout(()=> box.remove(), 2000);
-        } catch (e) {
-          box.textContent = "⚠️ Expedition fetch error.";
-          console.warn("end_expedition error:", e);
-        } finally {
+        const result = await API.post("/end_expedition", {
+          wax_account: wax,
+          user_id: Cave.user.user_id,
+          usx_token: Cave.user.usx_token,
+          expedition_id
+        }, 15000);
+        if (!result.ok) {
+          timerEl.textContent = "❌ Failed to retrieve expedition result.";
           window.expeditionTimersRunning[wax] = false;
+          return;
         }
-      } else {
-        const m = Math.floor(rem/60000);
-        const s = Math.floor((rem%60000)/1000);
-        box.textContent = `⏳ Time Left: ${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+
+        await renderRecentList();
+        await renderGlobalExpeditions();
+        prependRecentFromResult(result.data, wax);
+
+        timerEl.textContent = "✅ Expedition complete!";
+      } catch (e) {
+        timerEl.textContent = "⚠️ Expedition fetch error.";
+        console.warn("end_expedition error:", e);
+      } finally {
+        window.expeditionTimersRunning[wax] = false;
       }
-    }, 1000);
-  }
+    } else {
+      const m = Math.floor(rem / 60000);
+      const s = Math.floor((rem % 60000) / 1000);
+      timerEl.textContent = `⏳ Time Left: ${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+    }
+  }, 1000);
+}
+
 
   // ========= POLLING (Perk commands) =========
   function startCommandPolling() {

@@ -6355,104 +6355,193 @@ async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
       }
     }
   
-    function updateSummary() {
-      // Explicit limit + mandatory duration select next to Start
-      Cave.el.selectionSummary.innerHTML = `
-        <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; justify-content:center;">
-          <span style="color:#ffe600;">
-            Selected: ${selected.size} / ${CURRENT_LIMIT}
-          </span>
-    
-          <label for="cv-duration" style="color:#cfcfcf; font-size:.9rem;">Duration</label>
-          <select id="cv-duration" required
-            style="background:#1a1a1a; color:#fff; border:1px solid #444; border-radius:8px; padding:.35rem .5rem;">
-            <option value="">-- choose --</option>
-            <option value="300">5 min</option>
-            <option value="1800">30 min</option>
-            <option value="3600">60 min</option>
-            <option value="7200">2 hours</option>
-            <option value="21600">6 hours</option>
-            <option value="86400">24 hours</option>            
-          </select>
-    
-          <button class="cv-btn" id="cv-start" style="margin-left:.25rem;">🚀 Start Expedition</button>
-        </div>
-      `;
-    
-      qs("#cv-start").onclick = async () => {
-        if (READONLY) { toast("Overlay read-mode only.", "warn"); return; }
-    
-        const btn = qs("#cv-start");
-        const durSel = qs("#cv-duration");
-        const durSec = Number(durSel?.value || 0);
-    
-        btn.disabled = true;
-        btn.textContent = "⏳ Starting...";
-    
-        if (!selected.size) {
-          toast("Select at least 1 goblin to start.", "warn");
-          btn.disabled = false; btn.textContent = "🚀 Start Expedition";
-          return;
-        }
-        if (!durSec) {
-          toast("Please choose a duration.", "warn");
-          btn.disabled = false; btn.textContent = "🚀 Start Expedition";
-          return;
-        }
-    
-        // Enforce CURRENT_LIMIT while preserving selection order; only POWER≥5
-        const ids = [];
-        for (const id of selected) {
-          const g = Cave.nftIndex.get(String(id));
-          if (g && num(g.daily_power) >= 5) {
-            ids.push(String(id));
-            if (ids.length === CURRENT_LIMIT) break;
-          }
-        }
-        if (!ids.length) {
-          toast("All selected goblins are too tired.", "warn");
-          btn.disabled = false; btn.textContent = "🚀 Start Expedition";
-          return;
-        }
-        if (selected.size > CURRENT_LIMIT) {
-          toast(`Selected ${selected.size} goblins — sending only the first ${CURRENT_LIMIT}.`, "warn");
-        }
-    
-        try {
-          syncUserInto(Cave.user);
-          assertAuthOrThrow(Cave.user);
-    
-          // Send duration_seconds to the backend along with goblin_ids
-          const r = await API.post("/start_expedition", {
-            wax_account: Cave.user.wax_account,
-            user_id:     Cave.user.user_id,
-            usx_token:   Cave.user.usx_token,
-            goblin_ids:  ids,
-            duration_seconds: durSec
-          }, 20000);
-    
-          if (r.status === 409) {
-            toast(r.data?.error || "Already in expedition.", "warn");
-          } else if (r.ok) {
-            toast("Expedition started!", "ok");
-            try { triggerLogoGoblin(Cave.user.wax_account || 'guest'); } catch {}
-            try { showLogoToast(`${safe(Cave.user.wax_account)} just joined the band! Good hunting!`); } catch {}
-    
-            // Always use the duration returned by the backend
-            await renderUserCountdown(r.data.expedition_id, r.data.duration_seconds, ids);
-            await renderGlobalExpeditions();
-          } else {
-            toast("Something went wrong.", "err");
-          }
-        } catch (e) {
-          toast("Failed to start expedition.", "err");
-          console.error(e);
-        } finally {
-          btn.disabled = false;
-          btn.textContent = "🚀 Start Expedition";
-        }
-      };
-    }
+	// Shows a structured, inline-styled info card about Troops Reinforcement
+	// and keeps the existing summary + duration + start flow.
+	// Brief, youthful, goblin-themed copy in EN, minimal emojis.
+	async function updateSummary() {
+	  const wax = Cave?.user?.wax_account;
+	  if (!wax || !Cave?.el?.selectionSummary) return;
+	
+	  // 1) Fetch Troops Reinforcement ownership (fallback safe)
+	  let ownedReinforcements = 0;
+	  try {
+	    ownedReinforcements = Number(await fetchReinforcementCount(wax)) || 0;
+	  } catch (_) {
+	    ownedReinforcements = 0;
+	  }
+	  // make it visible globally if the rest of the app expects it
+	  try { window.reinforcementCount = ownedReinforcements; } catch {}
+	
+	  // 2) Compute limits
+	  const MAX_REINFORCEMENTS_USABLE = 40;       // you can use up to 40
+	  const HARD_CAP                     = 250;   // 50 base + 40*5 = 250
+	  const baseLimit                    = Number(typeof BASE_LIMIT !== "undefined" ? BASE_LIMIT : 50) || 50;
+	  const maxLimit                     = Number(typeof MAX_LIMIT  !== "undefined" ? MAX_LIMIT  : HARD_CAP) || HARD_CAP;
+	
+	  const appliedReinforcements = Math.min(ownedReinforcements, MAX_REINFORCEMENTS_USABLE);
+	  const computedLimit = Math.min(maxLimit, baseLimit + appliedReinforcements * 5);
+	
+	  try { window.CURRENT_LIMIT = computedLimit; } catch {}
+	
+	  // 3) Build the inline “designed” message (always shown; displays 0 if none)
+	  const boosted = computedLimit > baseLimit;
+	
+	  const infoCardHTML = `
+	    <div style="
+	      width:100%; max-width:980px; margin:.5rem auto 0;
+	      background: linear-gradient(180deg, #1c1c1c 0%, #121212 100%);
+	      border: 1px solid ${boosted ? '#3ce281' : '#2a2a2a'};
+	      border-radius: 14px; padding: 12px 14px;
+	      color:#eaeaea; box-shadow: 0 6px 18px rgba(0,0,0,.35);
+	      display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+	    ">
+	      <div style="display:flex; gap:10px; align-items:flex-start;">
+	        <div style="
+	          width:38px; height:38px; flex:0 0 38px;
+	          border-radius:10px; display:flex; align-items:center; justify-content:center;
+	          background:${boosted ? '#183622' : '#222'}; border:1px solid ${boosted ? '#2c7a4b' : '#333'};
+	          font-size:20px;">🗡️</div>
+	        <div>
+	          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+	            <strong style="font-size:1rem; letter-spacing:.2px;">Troops Reinforcement</strong>
+	            <span style="
+	              font-size:.75rem; padding:2px 8px; border-radius:999px;
+	              border:1px solid ${boosted ? '#3ce281' : '#525252'};
+	              background:${boosted ? 'rgba(60,226,129,.10)' : 'rgba(82,82,82,.10)'}; color:${boosted ? '#9ff7c0' : '#bdbdbd'};
+	            ">
+	              ${boosted ? 'Boost Active' : 'No Boost'}
+	            </span>
+	          </div>
+	
+	          <div style="margin-top:4px; font-size:.92rem; line-height:1.35;">
+	            <div style="opacity:.95;">
+	              You own <b>${ownedReinforcements}</b> Troops Reinforcement NFT${ownedReinforcements===1?'':'s'}.
+	              Each NFT adds <b>+5 goblins</b> per expedition.
+	            </div>
+	            <div style="opacity:.9;">
+	              You can use up to <b>${MAX_REINFORCEMENTS_USABLE}</b> (that’s <b>+200</b> max) — raising the cap to <b>${HARD_CAP}</b> goblins per expedition.
+	            </div>
+	          </div>
+	        </div>
+	      </div>
+	
+	      <div style="text-align:right; min-width:180px;">
+	        <div style="font-size:.8rem; color:#b5b5b5; margin-bottom:2px;">Current sending cap</div>
+	        <div style="
+	          font-size:1.1rem; font-weight:700; letter-spacing:.3px;
+	          color:${boosted ? '#a6f3c9' : '#e6e6e6'};
+	        ">
+	          ${computedLimit} / ${HARD_CAP}
+	        </div>
+	        <div style="font-size:.78rem; color:#9c9c9c; margin-top:6px;">
+	          Base: ${baseLimit} • Applied NFTs: ${appliedReinforcements}/${MAX_REINFORCEMENTS_USABLE}
+	        </div>
+	      </div>
+	    </div>
+	  `;
+	
+	  // 4) Build the selector row (unchanged behavior)
+	  const selectorRowHTML = `
+	    <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; justify-content:center; margin-top:.6rem;">
+	      <span style="color:#ffe600;">
+	        Selected: ${selected.size} / ${computedLimit}
+	      </span>
+	
+	      <label for="cv-duration" style="color:#cfcfcf; font-size:.9rem;">Duration</label>
+	      <select id="cv-duration" required
+	        style="background:#1a1a1a; color:#fff; border:1px solid #444; border-radius:8px; padding:.35rem .5rem;">
+	        <option value="">-- choose --</option>
+	        <option value="300">5 min</option>
+	        <option value="1800">30 min</option>
+	        <option value="3600">60 min</option>
+	        <option value="7200">2 hours</option>
+	        <option value="21600">6 hours</option>
+	        <option value="86400">24 hours</option>
+	      </select>
+	
+	      <button class="cv-btn" id="cv-start" style="margin-left:.25rem;">🚀 Start Expedition</button>
+	    </div>
+	  `;
+	
+	  // 5) Render
+	  Cave.el.selectionSummary.innerHTML = infoCardHTML + selectorRowHTML;
+	
+	  // 6) Bind start action (kept identical in logic, with limit computed here)
+	  qs("#cv-start").onclick = async () => {
+	    if (READONLY) { toast("Overlay read-mode only.", "warn"); return; }
+	
+	    const btn = qs("#cv-start");
+	    const durSel = qs("#cv-duration");
+	    const durSec = Number(durSel?.value || 0);
+	
+	    btn.disabled = true;
+	    btn.textContent = "⏳ Starting...";
+	
+	    if (!selected.size) {
+	      toast("Select at least 1 goblin to start.", "warn");
+	      btn.disabled = false; btn.textContent = "🚀 Start Expedition";
+	      return;
+	    }
+	    if (!durSec) {
+	      toast("Please choose a duration.", "warn");
+	      btn.disabled = false; btn.textContent = "🚀 Start Expedition";
+	      return;
+	    }
+	
+	    // Enforce computedLimit while preserving selection order; only POWER≥5
+	    const ids = [];
+	    for (const id of selected) {
+	      const g = Cave.nftIndex.get(String(id));
+	      if (g && num(g.daily_power) >= 5) {
+	        ids.push(String(id));
+	        if (ids.length === computedLimit) break;
+	      }
+	    }
+	    if (!ids.length) {
+	      toast("All selected goblins are too tired.", "warn");
+	      btn.disabled = false; btn.textContent = "🚀 Start Expedition";
+	      return;
+	    }
+	    if (selected.size > computedLimit) {
+	      toast(`Selected ${selected.size} goblins — sending only the first ${computedLimit}.`, "warn");
+	    }
+	
+	    try {
+	      syncUserInto(Cave.user);
+	      assertAuthOrThrow(Cave.user);
+	
+	      // Send duration_seconds to the backend along with goblin_ids
+	      const r = await API.post("/start_expedition", {
+	        wax_account: Cave.user.wax_account,
+	        user_id:     Cave.user.user_id,
+	        usx_token:   Cave.user.usx_token,
+	        goblin_ids:  ids,
+	        duration_seconds: durSec
+	      }, 20000);
+	
+	      if (r.status === 409) {
+	        toast(r.data?.error || "Already in expedition.", "warn");
+	      } else if (r.ok) {
+	        toast("Expedition started!", "ok");
+	        try { triggerLogoGoblin(Cave.user.wax_account || 'guest'); } catch {}
+	        try { showLogoToast(`${safe(Cave.user.wax_account)} just joined the band! Good hunting!`); } catch {}
+	
+	        // Always use the duration returned by the backend
+	        await renderUserCountdown(r.data.expedition_id, r.data.duration_seconds, ids);
+	        await renderGlobalExpeditions();
+	      } else {
+	        toast("Something went wrong.", "err");
+	      }
+	    } catch (e) {
+	      toast("Failed to start expedition.", "err");
+	      console.error(e);
+	    } finally {
+	      btn.disabled = false;
+	      btn.textContent = "🚀 Start Expedition";
+	    }
+	  };
+	}
+
   
     function autoBest() {
       selected.clear();

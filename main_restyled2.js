@@ -3956,44 +3956,76 @@ Cave.layers = {
 };
 
 function ensureLayersFromSingleCanvas(single) {
-  // single = canvas attuale (diventa il layer DYN)
+  // single = canvas attuale (diventerà il layer DYN)
+  if (!single || !single.parentElement) {
+    console.warn("[ensureLayersFromSingleCanvas] canvas mancante o non nel DOM");
+    return;
+  }
+
+  // Evita di creare doppi wrapper
+  if (Cave?.layers?.wrap && Cave.layers.dyn === single) {
+    return; // già inizializzato
+  }
+
   const parent = single.parentElement;
+
+  // Crea un wrapper posizionato
   const wrap = document.createElement('div');
   wrap.style.position = 'relative';
   wrap.style.width = single.style.width || '100%';
-  wrap.style.height = single.style.height || 'auto'; // verrà forzata da resize
-  wrap.style.aspectRatio = '16/9'; // coerenza con il tuo 16:9
+  wrap.style.height = single.style.height || 'auto';
+  wrap.style.aspectRatio = '16/9';
 
+  // Inserisci il wrapper PRIMA del canvas esistente
   parent.insertBefore(wrap, single);
-  // Crea BG e TRAILS sotto
+
+  // Crea i nuovi canvas per i layer
   const bg = document.createElement('canvas');
   const trails = document.createElement('canvas');
-  const dyn = single; // riusiamo il tuo canvas esistente
+  const dyn = single; // riutilizziamo il canvas esistente
   const ui = document.createElement('canvas');
 
-  [bg, trails, dyn, ui].forEach((c, i) => {
+  // Stili comuni ai 3 nuovi layer
+  [bg, trails, ui].forEach((c) => {
     c.style.position = 'absolute';
-    c.style.left = '0'; c.style.top = '0';
-    c.style.width = '100%'; c.style.height = '100%';
+    c.style.left = '0';
+    c.style.top = '0';
+    c.style.width = '100%';
+    c.style.height = '100%';
     c.style.display = 'block';
-    c.style.zIndex = String(i); // BG=0, TRAILS=1, DYN=2, UI=3
-    wrap.appendChild(c === dyn ? null : c);
   });
-  wrap.appendChild(dyn); // assicura ordine corretto (zIndex 2)
-  wrap.appendChild(ui);  // top
 
-  Cave.layers.wrap = wrap;
-  Cave.layers.bg = bg;
-  Cave.layers.trails = trails;
-  Cave.layers.dyn = dyn;
-  Cave.layers.ui = ui;
+  // Prepara anche il canvas esistente (dyn)
+  dyn.style.position = 'absolute';
+  dyn.style.left = '0';
+  dyn.style.top = '0';
+  dyn.style.width = '100%';
+  dyn.style.height = '100%';
+  dyn.style.display = 'block';
 
-  Cave.layers.ctxBg = bg.getContext('2d');
-  Cave.layers.ctxTrails = trails.getContext('2d');
-  Cave.layers.ctxDyn = dyn.getContext('2d');
-  Cave.layers.ctxUi = ui.getContext('2d');
+  // z-index espliciti: BG=0, TRAILS=1, DYN=2, UI=3
+  bg.style.zIndex = '0';
+  trails.style.zIndex = '1';
+  dyn.style.zIndex = '2';
+  ui.style.zIndex = '3';
 
-  // Compat: manteniamo Cave.canvas/Cave.ctx puntati al DYN (così il resto del codice continua a funzionare)
+  // Appendi SOLO nodi validi (nessun null)
+  wrap.appendChild(bg);
+  wrap.appendChild(trails);
+  wrap.appendChild(dyn);
+  wrap.appendChild(ui);
+
+  // Salva i riferimenti
+  Cave.layers = {
+    wrap,
+    bg, trails, dyn, ui,
+    ctxBg: bg.getContext('2d', { alpha: false }),
+    ctxTrails: trails.getContext('2d'),
+    ctxDyn: dyn.getContext('2d'),
+    ctxUi: ui.getContext('2d'),
+  };
+
+  // Compat: mantieni Cave.canvas/Cave.ctx puntati al DYN
   Cave.canvas = dyn;
   Cave.ctx = Cave.layers.ctxDyn;
 }

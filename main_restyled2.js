@@ -4138,6 +4138,13 @@ function clearTrailSegment(a, b){
   const rw = Math.abs(x2-x1)+pad*2, rh = Math.abs(y2-y1)+pad*2;
   Cave.layers.ctxTrails.clearRect(rx, ry, rw, rh);
 }
+	
+function clearGoblinTrail(g){
+  if (!g?.trail || g.trail.length < 2) return;
+  for (let i = 0; i < g.trail.length - 1; i++) {
+    clearTrailSegment(g.trail[i], g.trail[i+1]);
+  }
+}
 
 function chestBBox(ch){
   // usi scale ~0.45 della sprite chest :contentReference[oaicite:6]{index=6}
@@ -5486,19 +5493,8 @@ function drawPerksAndAdvance() {
     g.x = clamp(g.x + vx * dtSec, minX, maxX);
     g.y = clamp(g.y + vy * dtSec, minY, maxY);
   
-    // trail
-    if (!g.trail || !g.trail.length) {
-      g.trail = [{ x: g.x, y: g.y }];
-      g._lastTrailX = g.x; g._lastTrailY = g.y;
-    } else {
-      const dxT = g.x - g._lastTrailX, dyT = g.y - g._lastTrailY;
-      if ((dxT*dxT + dyT*dyT) >= (TRAIL_MIN_DIST*TRAIL_MIN_DIST)) {
-        g.trail.unshift({ x: g.x, y: g.y });
-        g._lastTrailX = g.x; g._lastTrailY = g.y;
-        if (g.trail.length > TRAIL_LEN) g.trail.pop();
-      }
-    }
-    // aggiorna trail incrementale
+
+  // aggiorna trail incrementale
   if (!g.trail) g.trail = [];
   const last = g.trail[g.trail.length-1] || { x: prevPos.x, y: prevPos.y };
   const dist = Math.hypot(g.x-last.x, g.y-last.y);
@@ -6067,25 +6063,75 @@ function stopRightPanelRotator() {
         startRAF();
       }
   
-      if (data.length === 0) {
-        clearChests(); Cave.goblins = [];
-        Cave.lastAllExpeditions = [];
-        qs('#cv-general-stats').innerHTML = `
-          <div class="cv-row">
-            <div><strong>Expeditions:</strong> 0</div>
-            <div><strong>Goblins:</strong> 0</div>
-          </div>`;
-        updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[], []);
-        return;
-      }
+		if (data.length === 0) {
+		  // sporca e pulisci correttamente i layer prima di svuotare gli array
+		  for (const g of Cave.goblins) {
+		    Dirty.addBBox(goblinBBox(g)); // pulizia dinamica del goblin su DYN
+		    if (g.trail && g.trail.length > 1) {
+		      for (let i = 0; i < g.trail.length - 1; i++) {
+		        clearTrailSegment(g.trail[i], g.trail[i+1]); // pulizia TRAILS
+		      }
+		    }
+		  }
+		  clearChests();
+		  Cave.goblins = [];
+		
+		  Cave.lastAllExpeditions = [];
+		  qs('#cv-general-stats').innerHTML = `
+		    <div class="cv-row">
+		      <div><strong>Expeditions:</strong> 0</div>
+		      <div><strong>Goblins:</strong> 0</div>
+		    </div>`;
+		  updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[], []);
+		  return;
+		}
+
   
-      // goblin seed
-      const { minX, maxX, minY, maxY } = getBounds();
-      Cave.goblins = data.map((e, i) => {
-        const gx = Math.floor(Math.random() * (maxX - minX + 1)) + minX;
-        const gy = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
-        return { x: gx, y: gy, wax_account: e.wax_account, path: [], trail:[{x:gx,y:gy}], _lastTrailX:gx, _lastTrailY:gy, digging:false, shovelFrame:0, frameTimer:0, color: colorByIndex(i) };
-      });
+	// goblin reconcile (no reset: add/remove only)
+	const { minX, maxX, minY, maxY } = getBounds();
+	
+	// 1) set degli utenti “live” dal backend
+	const liveUsers = new Set(data.map(e => e.wax_account));
+	
+	// 2) rimuovi goblin non più live (e pulisci le loro aree/scie)
+	const removed = [];
+	Cave.goblins = Cave.goblins.filter(g => {
+	  const keep = liveUsers.has(g.wax_account);
+	  if (!keep) removed.push(g);
+	  return keep;
+	});
+	for (const g of removed) {
+	  // sporca l’ultimo bbox sul layer DYN così si ripulisce
+	  const b = goblinBBox(g);
+	  Dirty.addBBox(b);
+	  // pulisci la scia di quel goblin dal layer TRAILS
+	  if (g.trail && g.trail.length > 1) {
+	    for (let i = 0; i < g.trail.length - 1; i++) {
+	      clearTrailSegment(g.trail[i], g.trail[i+1]);
+	    }
+	  }
+	}
+	
+	// 3) aggiungi nuovi goblin per gli utenti arrivati ora
+	const present = new Set(Cave.goblins.map(g => g.wax_account));
+	data.forEach((e, i) => {
+	  if (present.has(e.wax_account)) return;
+	  const gx = Math.floor(Math.random() * (maxX - minX + 1)) + minX;
+	  const gy = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
+	  Cave.goblins.push({
+	    x: gx, y: gy, wax_account: e.wax_account,
+	    path: [],
+	    trail: [{ x: gx, y: gy }],
+	    _lastTrailX: gx, _lastTrailY: gy,
+	    digging: false, shovelFrame: 0, frameTimer: 0,
+	    color: colorByIndex(i),
+	    // parametri di movimento coerenti con il resto del file
+	    speed: 0.9, turnRate: 2.0, heading: Math.random()*Math.PI*2,
+	    target: { x: gx, y: gy },
+	    pauseTil: 0, speedBoostUntil: 0, walkPhase: Math.random()*Math.PI*2, walkBob: 0
+	  });
+	});
+
   
       // chests live
       const liveIds = new Set();

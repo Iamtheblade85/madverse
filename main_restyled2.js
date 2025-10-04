@@ -5198,95 +5198,98 @@ function drawBGOnce() {
     }
   }
 
-  function drawPerksAndAdvance() {
-    const { ctx } = Cave;
-    if (!Cave.perks.length) return;
-  
-    for (let p of Cave.perks) {
-      const prev = perkBBox(p);
-      // frame advance
-      p.tick++; if (p.tick >= p.frameDelay){ p.tick = 0; p.frame = (p.frame + 1) % p.frames; }
-  
-  
-      const wy = p.waveY(p.x);
-      const px = Cave.offsetX + p.x * Cave.cellX;
-      const py = Cave.offsetY + wy   * Cave.cellY;
-  
-      // fuori safe-area → stop
-      if (p.x < minX - 1 || p.x > maxX + 1 || wy < minY - 1 || wy > maxY + 1) {
-        p.done = true;
-        continue;
+// Avanza lo stato dei perks e marca i dirty-rect.
+// NON disegna: il rendering avviene in paintDirtyNow().
+function drawPerksAndAdvance() {
+  if (!Cave.perks || Cave.perks.length === 0) return;
+
+  const { minX, maxX, minY, maxY } = getBounds(); // bounds della safe-area
+
+  for (const p of Cave.perks) {
+    if (!p?.image?.complete) continue;
+
+    // BBox prima dell'update (per dirty-rect)
+    const prev = perkBBox(p);
+
+    // ---- Avanzamento animazione sprite ----
+    p.tick = (p.tick || 0) + 1;
+    const frameDelay = p.frameDelay ?? 8;
+    const totalFrames = p.frames ?? 1;
+    if (p.tick >= frameDelay) {
+      p.tick = 0;
+      p.frame = ((p.frame || 0) + 1) % totalFrames;
+    }
+
+    // ---- Avanzamento posizione ----
+    const speed = p.speed ?? 0.3; // unità "celle" per frame
+    p.x += (p.dir === "left-to-right" ? +speed : -speed);
+
+    // y "ondulata" lungo la traiettoria
+    const wy = p.waveY(p.x);
+
+    // ---- Drop chest una sola volta dentro la safe-area ----
+    if (!p.hasDropped && p.x > minX && p.x < maxX && wy > minY && wy < maxY && Math.random() < 0.25) {
+      p.hasDropped = true;
+
+      const dx = randInt(minX, maxX);
+      const dy = randInt(minY, maxY);
+
+      const chest = {
+        id: null,
+        x: dx, y: dy, destX: dx, destY: dy,
+        from: p.perkName,
+        wax_account: p.wax_account,
+        taken: false,
+        claimable: false,
+        pending: true
+      };
+
+      // prova lo spawn sul backend; se ok, inserisce la chest e sporca l'area
+      try {
+        syncUserInto(Cave.user);
+        assertAuthOrThrow(Cave.user);
+      } catch {
+        // non autenticato: semplicemente salta lo spawn remoto
+        console.warn("[spawn_chest] skipped: not authenticated");
       }
 
-      const srcW = p.image.width / p.frames;
-      const srcH = p.image.height;
-      const sx = Math.floor(p.frame) * srcW;
-      ctx.drawImage(p.image, sx, 0, srcW, srcH, px - 16, py - 16, 32, 32);
-  
-      // drop chest una sola volta, dentro safe-area
-      if (!p.hasDropped && Math.random() < 0.25) {
-        p.hasDropped = true;
-  
-        const dx = randInt(minX, maxX);
-        const dy = randInt(minY, maxY);
-  
-        const chest = {
-          id: null,
-          x: dx, y: dy, destX: dx, destY: dy,
-          from: p.perkName,
-          wax_account: p.wax_account,
-          taken: false,
-          claimable: false,
-          pending: true
-        };
-  
-        // prova spawn su backend
-        try {
-          syncUserInto(Cave.user);
-          assertAuthOrThrow(Cave.user);
-        } catch {
-          console.warn("[spawn_chest] skipped: not authenticated");
-        }
-  
-        API.post("/spawn_chest", {
-          wax_account: p.wax_account,
-          perk_type: p.perkName,
-          x: dx, y: dy
-        }, 12000).then(r => {
-          if (r.ok && r?.data?.chest_id != null) {
-            chest.id = String(r.data.chest_id);
-            chest.pending = false;
-            chest.claimable = true;
-            upsertChest(chest);
-          } else {
-            chest.pending = false;
-            chest.claimable = false;
-            console.warn("[spawn_chest] risposta non valida:", r);
-          }
-        }).catch(e => {
+      API.post("/spawn_chest", {
+        wax_account: p.wax_account,
+        perk_type: p.perkName,
+        x: dx, y: dy
+      }, 12000).then(r => {
+        if (r.ok && r?.data?.chest_id != null) {
+          chest.id = String(r.data.chest_id);
+          chest.pending = false;
+          chest.claimable = true;
+          upsertChest(chest);            // upsert marca anche la zona dirty
+        } else {
           chest.pending = false;
           chest.claimable = false;
-          console.warn("[spawn_chest] errore:", e);
-        });
-      }
-  
-    // avanzamento lungo x dentro safe-area
-    const bounds = getBounds();
-    p.x += p.dir === "left-to-right" ? p.speed : -p.speed;
-    const wy = p.waveY(p.x);
-    if (p.x < bounds.minX - 1 || p.x > bounds.maxX + 1 || wy < bounds.minY - 1 || wy > bounds.maxY + 1) {
+          console.warn("[spawn_chest] risposta non valida:", r);
+        }
+      }).catch(e => {
+        chest.pending = false;
+        chest.claimable = false;
+        console.warn("[spawn_chest] errore:", e);
+      });
+    }
+
+    // ---- Uscita dai limiti → marca come finito ----
+    if (p.x < minX - 1 || p.x > maxX + 1 || wy < minY - 1 || wy > maxY + 1) {
       p.done = true;
     }
 
+    // BBox dopo l'update (per dirty-rect)
     const next = perkBBox(p);
-    Dirty.addBBox(prev); Dirty.addBBox(next);
+    Dirty.addBBox(prev);
+    Dirty.addBBox(next);
   }
+
+  // Rimuovi i perk terminati
   Cave.perks = Cave.perks.filter(p => !p.done);
-    }
-  
-    // pulizia
-    Cave.perks = Cave.perks.filter(p => !p.done);
-  }
+}
+
 
   // ========= GAME LOGIC =========
   function colorByIndex(i) {
@@ -6281,129 +6284,108 @@ async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
 let lastTS = performance.now();
 function tick(ts) {
   if (!Cave.running) return;
-  const dt = ts - lastTS; lastTS = ts;
-
+  const dt = ts - lastTS; 
+  lastTS = ts;
   // 1) avanza solo lo stato e marca le aree sporche
-  advancePerksAndDirty();
+  drawPerksAndAdvance();
   Cave.goblins.forEach(g => moveGoblin(g, dt));
-  if (window.GoblinCrash) GoblinCrash.onAfterMove?.();
+  if (window.GoblinCrash?.onAfterMove) GoblinCrash.onAfterMove();
   updateGoblinAnim(dt);
-
   // 2) ridisegna SOLO i rettangoli sporchi sul layer dinamico
   paintDirtyNow();
-
   // 3) overlay UI su layer separato
-  if (window.GoblinCrash) {
+  if (window.GoblinCrash?.draw) {
     const u = Cave.layers.ctxUi;
-    u.clearRect(0,0,Cave.gridW,Cave.gridH);
+    u.clearRect(0, 0, Cave.gridW, Cave.gridH);
     GoblinCrash.draw(u);
   }
   Cave.rafId = requestAnimationFrame(tick);
 }
 
-function advancePerksAndDirty(){
-  const { minX, maxX, minY, maxY } = getBounds();
-
-  for (const p of Cave.perks) {
-    if (!p.image?.complete) continue;
-
-    const prev = perkBBox(p);
-    p.tick = (p.tick || 0) + 1;
-    if (p.tick >= (p.frameDelay || 8)) {
-      p.tick = 0;
-      p.frame = ((p.frame || 0) + 1) % (p.frames || 1);
-    }
-
-    // spawn chest una sola volta durante la corsa
-    if (!p.hasDropped && Math.random() < 0.25) {
-      p.hasDropped = true;
-      const dx = randInt(minX, maxX), dy = randInt(minY, maxY);
-      const chest = {
-        id: null, x: dx, y: dy, destX: dx, destY: dy,
-        from: p.perkName, wax_account: p.wax_account,
-        taken: false, claimable: false, pending: true
-      };
-      try { syncUserInto(Cave.user); assertAuthOrThrow(Cave.user); } catch {}
-      API.post("/spawn_chest", { wax_account: p.wax_account, perk_type: p.perkName, x: dx, y: dy }, 12000)
-        .then(r => {
-          if (r.ok && r?.data?.chest_id != null) {
-            chest.id = String(r.data.chest_id);
-            chest.pending = false; chest.claimable = true;
-            upsertChest(chest);
-          } else { chest.pending=false; chest.claimable=false; }
-        }).catch(()=> { chest.pending=false; chest.claimable=false; });
-    }
-
-    // avanzamento entro safe-area + fine corsa
-    p.x += p.dir === "left-to-right" ? p.speed : -p.speed;
-    const wy = p.waveY(p.x);
-    if (p.x < minX - 1 || p.x > maxX + 1 || wy < minY - 1 || wy > maxY + 1) p.done = true;
-
-    const next = perkBBox(p);
-    Dirty.addBBox(prev); Dirty.addBBox(next);
-  }
-
-  Cave.perks = Cave.perks.filter(p => !p.done);
-}
-
-function paintDirtyNow(){
+function paintDirtyNow() {
   const rects = Dirty.merged();
   if (!rects.length) return;
 
   const ctx = Cave.layers.ctxDyn;
-  for (const r of rects){
-    // Pulisci solo la regione su DYN: sotto BG/TRAils restano
+
+  for (const r of rects) {
+    // Pulisci solo la regione su DYN: sotto BG/TRAILS restano
     ctx.clearRect(r.x, r.y, r.w, r.h);
 
-    // Per ordine z: perks -> chests -> goblins (coerente con il vecchio ordine) :contentReference[oaicite:10]{index=10}
-    // Per ciascuno, disegna SOLO se bbox intersects(r)
-    for (const p of Cave.perks){
-      const b = perkBBox(p); if (b && rectsIntersect(r,b) && p.image?.complete){
-        const srcW = p.image.width / p.frames, srcH = p.image.height;
-        const sx = Math.floor(p.frame) * srcW;
-        const px = Cave.offsetX + p.x * Cave.cellX;
-        const py = Cave.offsetY + p.waveY(p.x) * Cave.cellY;
-        ctx.drawImage(p.image, sx, 0, srcW, srcH, px - 16, py - 16, 32, 32);
-      }
+    // Z-order: perks -> chests -> goblins
+    // Per ciascuno, disegna SOLO se bbox intersect(r)
+
+    // PERKS
+    for (const p of Cave.perks) {
+      const b = perkBBox(p);
+      if (!b || !rectsIntersect(r, b) || !p.image?.complete) continue;
+
+      const frames = p.frames || 1;
+      const frame  = (p.frame || 0) % frames;
+      const srcW   = p.image.width / frames;
+      const srcH   = p.image.height;
+      const sx     = frame * srcW;
+
+      const px = Cave.offsetX + p.x * Cave.cellX;
+      const py = Cave.offsetY + p.waveY(p.x) * Cave.cellY;
+
+      ctx.drawImage(p.image, sx, 0, srcW, srcH, px - 16, py - 16, 32, 32);
     }
 
+    // CHESTS
     Cave.chests.forEach(ch => {
+      if (ch.taken) return;
       const b = chestBBox(ch);
-      if (!ch.taken && b && rectsIntersect(r,b) && Cave.assets.chest?.complete){
-        ctx.drawImage(Cave.assets.chest, b.x, b.y, b.w, b.h);
-      }
+      if (!b || !rectsIntersect(r, b) || !Cave.assets.chest?.complete) return;
+      ctx.drawImage(Cave.assets.chest, b.x, b.y, b.w, b.h);
     });
 
-    for (const g of Cave.goblins){
+    // GOBLINS
+    for (const g of Cave.goblins) {
       const b = goblinBBox(g);
-      if (!b || !rectsIntersect(r,b)) continue;
-      // === drawGoblin “in-place”, ma SENZA trail (trail sta sul layer TRAILS)
-      const cell = Math.min(Cave.cellX, Cave.cellY);
-      const px = Cave.offsetX + g.x * Cave.cellX;
-      const py = Cave.offsetY + g.y * Cave.cellY + (g.walkBob||0)*cell;
-      const gSize = cell * 5, gOff  = (gSize - cell) / 2;
+      if (!b || !rectsIntersect(r, b)) continue;
 
-      if (Cave.assets.goblin?.complete) ctx.drawImage(Cave.assets.goblin, px - gOff, py - gOff, gSize, gSize);
+      // drawGoblin "inline", SENZA trail (trail è su layer TRAILS)
+      const cell  = Math.min(Cave.cellX, Cave.cellY);
+      const px    = Cave.offsetX + g.x * Cave.cellX;
+      const py    = Cave.offsetY + g.y * Cave.cellY + (g.walkBob || 0) * cell;
+      const gSize = cell * 5;
+      const gOff  = (gSize - cell) / 2;
+
+      if (Cave.assets.goblin?.complete) {
+        ctx.drawImage(Cave.assets.goblin, px - gOff, py - gOff, gSize, gSize);
+      }
 
       // label
       ctx.font = `${Math.max(10, cell * 0.9)}px Orbitron, system-ui, sans-serif`;
-      ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      const labelW = cell * 2.2, labelH = cell * 0.8, footY = py + gSize/2, margin = cell * 0.25;
-      let boxX = Math.max(0, Math.min(px - labelW/2, Cave.gridW - labelW));
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const labelW = cell * 2.2;
+      const labelH = cell * 0.8;
+      const footY  = py + gSize / 2;
+      const margin = cell * 0.25;
+      let boxX = Math.max(0, Math.min(px - labelW / 2, Cave.gridW - labelW));
       let boxY = Math.max(0, Math.min(footY + margin, Cave.gridH - labelH));
-      ctx.fillStyle = "rgba(0,0,0,0.65)"; ctx.fillRect(boxX, boxY, labelW, labelH);
-      ctx.fillStyle = g.color || "#ffe600"; ctx.fillText(g.wax_account, boxX + labelW/2, boxY + labelH/2);
+      ctx.fillStyle = "rgba(0,0,0,0.65)";
+      ctx.fillRect(boxX, boxY, labelW, labelH);
+      ctx.fillStyle = g.color || "#ffe600";
+      ctx.fillText(g.wax_account, boxX + labelW / 2, boxY + labelH / 2);
 
-      // pala (se digging) — identico alla tua logica
-      if (g.digging && Cave.assets.shovel?.complete){
-        const frames = 6, fw = Cave.assets.shovel.width / frames, fh = Cave.assets.shovel.height;
-        const sx = g.shovelFrame * fw, sSize = 24;
-        const goblinTop = py - (gSize / 2);
-        const dx = px - (sSize / 2), dy = goblinTop - 2 - sSize;
+      // pala (se digging)
+      if (g.digging && Cave.assets.shovel?.complete) {
+        const frames = 6;
+        const fw = Cave.assets.shovel.width / frames;
+        const fh = Cave.assets.shovel.height;
+        const sx = (g.shovelFrame || 0) * fw;
+        const sSize = 24;
+        const goblinTop = py - gSize / 2;
+        const dx = px - sSize / 2;
+        const dy = goblinTop - 2 - sSize;
         ctx.drawImage(Cave.assets.shovel, sx, 0, fw, fh, dx, dy, sSize, sSize);
       }
     }
   }
+
   Dirty.clear();
 }
 

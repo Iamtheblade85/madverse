@@ -3848,6 +3848,13 @@ const MAX_LIMIT = 250;
 const REINFORCEMENT_TEMPLATE_ID = "900338"; // <- align with backend
 let reinforcementCount = 0;
 let CURRENT_LIMIT = BASE_LIMIT;
+// helper unico per leggere il cap corrente in modo sicuro
+function getSendCap(){
+  return Math.min(
+    MAX_LIMIT,
+    Number((window && window.CURRENT_LIMIT) || CURRENT_LIMIT || BASE_LIMIT) || BASE_LIMIT
+  );
+}
 
 async function fetchReinforcementCount(wax) {
   if (!wax) return 0;
@@ -6127,489 +6134,518 @@ async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
     Cave.rafId = requestAnimationFrame(tick);
   }
 
-	function hydrateGoblinUI(allNfts) {
-	  // normalizza forma e chiavi legacy
-	  const all = Array.isArray(allNfts) ? allNfts : [];
-	  all.forEach(nft => {
-	    if (!nft || typeof nft !== "object") return;
-	    // daily-power ↔ daily_power
-	    if (nft.daily_power === undefined && nft["daily-power"] !== undefined) {
-	      nft.daily_power = nft["daily-power"];
-	    }
-	    // loot-hungry ↔ loot_hungry
-	    if (nft.loot_hungry === undefined && nft["loot-hungry"] !== undefined) {
-	      nft.loot_hungry = nft["loot-hungry"];
-	    }
-	    // pinata → ipfs.io (hardening)
-	    if (typeof nft.img === "string" &&
-	        nft.img.startsWith("https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/")) {
-	      nft.img = nft.img.replace(
-	        "https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/",
-	        "https://ipfs.io/ipfs/"
-	      );
-	    }
-	  });
-	
-	  // filtra i goblin (case-insensitive, per massima compatibilità)
-	  const goblins = all.filter(n => String(n?.type || "").toLowerCase() === "goblin");
-	
-	  // indicizza per asset_id (sempre stringa)
-	  Cave.nftIndex.clear();
-	  goblins.forEach(n => Cave.nftIndex.set(String(n.asset_id), n));
-	
-	  if (!goblins.length) {
-	    if (Cave.el.selectionSummary) {
-	      Cave.el.selectionSummary.innerHTML = `<div class="cv-toast">No goblins available for expedition.</div>`;
-	    }
-	    return;
-	  }
+function hydrateGoblinUI(allNfts) {
+  // --- normalizza forma e chiavi legacy ---
+  const all = Array.isArray(allNfts) ? allNfts : [];
+  all.forEach(nft => {
+    if (!nft || typeof nft !== "object") return;
+    // daily-power ↔ daily_power
+    if (nft.daily_power === undefined && nft["daily-power"] !== undefined) {
+      nft.daily_power = nft["daily-power"];
+    }
+    // loot-hungry ↔ loot_hungry
+    if (nft.loot_hungry === undefined && nft["loot-hungry"] !== undefined) {
+      nft.loot_hungry = nft["loot-hungry"];
+    }
+    // pinata → ipfs.io (hardening)
+    if (typeof nft.img === "string" &&
+        nft.img.startsWith("https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/")) {
+      nft.img = nft.img.replace(
+        "https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/",
+        "https://ipfs.io/ipfs/"
+      );
+    }
+  });
 
-    const specialCount = (Array.isArray(allNfts) ? allNfts : [])
-	  .filter(n => String(n.template_id) === '900338')
-      .length;
-    
-    const BASE_LIMIT = 50;
-    const EXTRA_PER_ASSET = 5;      
-    const HARD_CAP = 250;
-    const DYN_LIMIT = Math.min(HARD_CAP, BASE_LIMIT + specialCount * EXTRA_PER_ASSET);
-    // ====== selection UI (copiata dalla tua renderDwarfsCave) ======
-    let selected = new Set();
-    let sortBy = "rarity";
-    const num = (v) => Number(v ?? 0) || 0;
-    let filterQuery = "";
-    let filterRarity = "";
-    let minPower = 0;
-  
-    function saveFilters(){
-      localStorage.setItem("caveFilters", JSON.stringify({ filterQuery, filterRarity, minPower, sortBy }));
+  // --- filtra i goblin (case-insensitive, per massima compatibilità) ---
+  const goblins = all.filter(n => String(n?.type || "").toLowerCase() === "goblin");
+
+  // --- indicizza per asset_id (sempre stringa) ---
+  Cave.nftIndex.clear();
+  goblins.forEach(n => Cave.nftIndex.set(String(n.asset_id), n));
+
+  if (!goblins.length) {
+    if (Cave.el.selectionSummary) {
+      Cave.el.selectionSummary.innerHTML = `<div class="cv-toast">No goblins available for expedition.</div>`;
     }
-    function loadFilters(){
-      try{
-        const s = JSON.parse(localStorage.getItem("caveFilters") || "{}");
-        filterQuery   = s.filterQuery   || "";
-        filterRarity  = s.filterRarity  || "";
-        minPower      = Number(s.minPower || 0);
-        sortBy        = s.sortBy        || "rarity";
-        // Sync UI
-        const $q = qs("#cv-search"), $r = qs("#cv-rarity"), $p = qs("#cv-power"), $pv = qs("#cv-power-val");
-        if ($q)  $q.value         = filterQuery;
-        if ($r)  $r.value         = filterRarity;
-        if ($p)  $p.value         = String(minPower);
-        if ($pv) $pv.textContent  = String(minPower);
-      }catch{}
+    return;
+  }
+
+  // --- calcolo cap iniziale dai Reinforcement presenti nel payload /user_nfts ---
+  const specialCount = (Array.isArray(allNfts) ? allNfts : [])
+    .filter(n => String(n.template_id) === "900338")
+    .length;
+
+  const BASE_LIMIT = 50;
+  const EXTRA_PER_ASSET = 5;
+  const HARD_CAP = 250;
+  // fallback "statico" basato sugli NFT ricevuti ora
+  const DYN_LIMIT = Math.min(HARD_CAP, BASE_LIMIT + specialCount * EXTRA_PER_ASSET);
+
+  // helper numerico
+  const num = (v) => Number(v ?? 0) || 0;
+
+  // --- stato UI selezione/filtri/sort ---
+  let selected = new Set();
+  let sortBy = "rarity";
+  let filterQuery = "";
+  let filterRarity = "";
+  let minPower = 0;
+
+  // --- helper cap: usa quello calcolato dinamicamente da updateSummary se già disponibile; altrimenti DYN_LIMIT ---
+  function getSendCap() {
+    // window.CURRENT_LIMIT viene impostato in updateSummary() quando arrivano i rinforzi dal backend
+    const fromWin = (typeof window !== "undefined") ? Number(window.CURRENT_LIMIT || 0) || 0 : 0;
+    const cap = fromWin > 0 ? fromWin : DYN_LIMIT;
+    return Math.max(1, Math.min(HARD_CAP, cap));
+  }
+
+  function saveFilters(){
+    localStorage.setItem("caveFilters", JSON.stringify({
+      filterQuery, filterRarity, minPower, sortBy
+    }));
+  }
+  function loadFilters(){
+    try{
+      const s = JSON.parse(localStorage.getItem("caveFilters") || "{}");
+      filterQuery   = s.filterQuery   || "";
+      filterRarity  = s.filterRarity  || "";
+      minPower      = Number(s.minPower || 0);
+      sortBy        = s.sortBy        || "rarity";
+      // Sync UI
+      const $q = qs("#cv-search"), $r = qs("#cv-rarity"), $p = qs("#cv-power"), $pv = qs("#cv-power-val");
+      if ($q)  $q.value         = filterQuery;
+      if ($r)  $r.value         = filterRarity;
+      if ($p)  $p.value         = String(minPower);
+      if ($pv) $pv.textContent  = String(minPower);
+    }catch{}
+  }
+  function applyFilters(src){
+    const q = filterQuery.trim().toLowerCase();
+    return src.filter(g=>{
+      const okQuery  = !q || `${g.name||""}`.toLowerCase().includes(q) || String(g.asset_id).includes(q);
+      const okRarity = !filterRarity || String(g.rarity||"").toLowerCase() === filterRarity.toLowerCase();
+      const okPower  = num(g.daily_power) >= minPower;
+      return okQuery && okRarity && okPower;
+    });
+  }
+
+  // ripristina filtri e evidenzia sort
+  loadFilters();
+  qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background="#1a1a1a");
+  const activeSortBtn = qs(`#cv-sort-segment .cv-btn[data-sort="${sortBy}"]`);
+  if (activeSortBtn) activeSortBtn.style.background = "#2a2a2a";
+  const sortSeg = qs("#cv-sort-segment");
+  if (sortSeg) {
+    sortSeg.addEventListener("click", (e)=>{
+      const btn = e.target.closest('.cv-btn[data-sort]');
+      if (!btn) return;
+      sortBy = btn.dataset.sort || "rarity";
+      qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background = "#1a1a1a");
+      btn.style.background = "#2a2a2a";
+      saveFilters();
+      renderList();
+    });
+  }
+
+  function renderList(list = goblins) {
+    const filtered = applyFilters(list);
+    const sorted = [...filtered].sort((a,b) => num(b[sortBy]) - num(a[sortBy]));
+    const af = qs("#cv-active-filters");
+    if (af){
+      af.innerHTML = [
+        filterQuery   ? `<span class="cv-badge" style="border-color:#20444a;background:linear-gradient(180deg,#152024,#0f1a1c);color:#7ff6ff;">🔎 ${safe(filterQuery)}</span>` : "",
+        filterRarity  ? `<span class="cv-badge">${safe(filterRarity)}</span>` : "",
+        minPower > 0  ? `<span class="cv-badge" style="border-color:#665200;background:linear-gradient(180deg,#2a2211,#1c160a);color:#ffcc66;">⚡ ≥ ${minPower}</span>` : ""
+      ].filter(Boolean).join("");
     }
-    function applyFilters(src){
-      const q = filterQuery.trim().toLowerCase();
-      return src.filter(g=>{
-        const okQuery  = !q || `${g.name||""}`.toLowerCase().includes(q) || String(g.asset_id).includes(q);
-        const okRarity = !filterRarity || String(g.rarity||"").toLowerCase() === filterRarity.toLowerCase();
-        const okPower  = num(g.daily_power) >= minPower;
-        return okQuery && okRarity && okPower;
-      });
-    }
-  
-    // ripristina filtri e evidenzia sort
-    loadFilters();
-    qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background="#1a1a1a");
-    const activeSortBtn = qs(`#cv-sort-segment .cv-btn[data-sort="${sortBy}"]`);
-    if (activeSortBtn) activeSortBtn.style.background = "#2a2a2a";
-    const sortSeg = qs("#cv-sort-segment");
-    if (sortSeg) {
-      sortSeg.addEventListener("click", (e)=>{
-        const btn = e.target.closest('.cv-btn[data-sort]');
-        if (!btn) return;
-        sortBy = btn.dataset.sort || "rarity";
-        qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background = "#1a1a1a");
-        btn.style.background = "#2a2a2a";
-        saveFilters();
-        renderList();
-      });
-    }
-  
-    function renderList(list = goblins) {
-      const filtered = applyFilters(list);
-      const sorted = [...filtered].sort((a,b) => num(b[sortBy]) - num(a[sortBy]));
-      const af = qs("#cv-active-filters");
-      if (af){
-        af.innerHTML = [
-          filterQuery   ? `<span class="cv-badge" style="border-color:#20444a;background:linear-gradient(180deg,#152024,#0f1a1c);color:#7ff6ff;">🔎 ${safe(filterQuery)}</span>` : "",
-          filterRarity  ? `<span class="cv-badge">${safe(filterRarity)}</span>` : "",
-          minPower > 0  ? `<span class="cv-badge" style="border-color:#665200;background:linear-gradient(180deg,#2a2211,#1c160a);color:#ffcc66;">⚡ ≥ ${minPower}</span>` : ""
-        ].filter(Boolean).join("");
-      }
-  
-      Cave.el.goblinList.style.cssText = `
-        display:grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap:12px;
-        align-items:stretch;
-      `;
-  
-      const maxPower = Math.max(1, ...sorted.map(g => num(g.daily_power)));
-      const html = sorted.map(g => {
-        const tired = num(g.daily_power) < 5;
-        const sel = selected.has(g.asset_id);
-        const dp  = num(g.daily_power);
-        const pct = Math.max(6, Math.round(dp / maxPower * 100)); // min 6% per visibilità
-  
-        const ribbon = tired ? `
-          <div style="
-            position:absolute; top:8px; right:8px; transform:rotate(0deg);
-            background:linear-gradient(135deg,#d32f2f,#b71c1c); color:#fff;
-            font-weight:700; font-size:.7rem; padding:.25rem .5rem; border-radius:8px;
-            box-shadow:0 0 8px rgba(255,0,0,.5); letter-spacing:.5px;">RESTING</div>` : "";
-  
-        return `
-          <div class="cv-gob-card" data-id="${safe(g.asset_id)}" data-disabled="${tired?1:0}"
-               role="checkbox" tabindex="0" aria-checked="${sel ? 'true':'false'}"
-               aria-label="Select goblin ${safe(g.name)}"
-               style="
-            display:flex; flex-direction:column; gap:.6rem;
-            background:linear-gradient(180deg,#151515,#0f0f0f);
-            border:1px solid ${sel ? "rgba(255,230,0,.6)" : "var(--cv-border)"};
-            box-shadow:${sel ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset" : "0 2px 12px rgba(0,0,0,.35)"};
-            border-radius:14px; padding:.75rem; transition:transform .12s, box-shadow .12s, border-color .12s;
-            cursor:${tired ? "not-allowed" : "pointer"}; position:relative; overflow:hidden; ${tired ? "opacity:.78; filter:grayscale(10%) brightness(.95);" : ""}
-          ">
-            <div style="display:flex; align-items:center; gap:.8rem; min-width:0;">
-              <div style="position:relative; flex:0 0 auto;">
-                <img src="${safe(g.img)}" alt="" loading="lazy"
-                     style="width:68px; height:68px; border-radius:14px; object-fit:cover; outline:1px solid var(--cv-border); box-shadow:0 3px 10px rgba(0,0,0,.35);">
-                ${ribbon}
+
+    Cave.el.goblinList.style.cssText = `
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap:12px;
+      align-items:stretch;
+    `;
+
+    const maxPower = Math.max(1, ...sorted.map(g => num(g.daily_power)));
+    const html = sorted.map(g => {
+      const tired = num(g.daily_power) < 5;
+      const sel = selected.has(g.asset_id);
+      const dp  = num(g.daily_power);
+      const pct = Math.max(6, Math.round(dp / maxPower * 100)); // min 6% per visibilità
+
+      const ribbon = tired ? `
+        <div style="
+          position:absolute; top:8px; right:8px; transform:rotate(0deg);
+          background:linear-gradient(135deg,#d32f2f,#b71c1c); color:#fff;
+          font-weight:700; font-size:.7rem; padding:.25rem .5rem; border-radius:8px;
+          box-shadow:0 0 8px rgba(255,0,0,.5); letter-spacing:.5px;">RESTING</div>` : "";
+
+      return `
+        <div class="cv-gob-card" data-id="${safe(g.asset_id)}" data-disabled="${tired?1:0}"
+             role="checkbox" tabindex="0" aria-checked="${sel ? 'true':'false'}"
+             aria-label="Select goblin ${safe(g.name)}"
+             style="
+          display:flex; flex-direction:column; gap:.6rem;
+          background:linear-gradient(180deg,#151515,#0f0f0f);
+          border:1px solid ${sel ? "rgba(255,230,0,.6)" : "var(--cv-border)"};
+          box-shadow:${sel ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset" : "0 2px 12px rgba(0,0,0,.35)"};
+          border-radius:14px; padding:.75rem; transition:transform .12s, box-shadow .12s, border-color .12s;
+          cursor:${tired ? "not-allowed" : "pointer"}; position:relative; overflow:hidden; ${tired ? "opacity:.78; filter:grayscale(10%) brightness(.95);" : ""}
+        ">
+          <div style="display:flex; align-items:center; gap:.8rem; min-width:0;">
+            <div style="position:relative; flex:0 0 auto;">
+              <img src="${safe(g.img)}" alt="" loading="lazy"
+                   style="width:68px; height:68px; border-radius:14px; object-fit:cover; outline:1px solid var(--cv-border); box-shadow:0 3px 10px rgba(0,0,0,.35);">
+              ${ribbon}
+            </div>
+
+            <div style="flex:1 1 auto; min-width:0;">
+              <div class="cv-gob-head" style="display:flex; align-items:center; gap:.5rem; min-width:0;">
+                <strong class="cv-name" style="color:var(--cv-chip); font-family:Orbitron,system-ui,sans-serif; font-size:1rem;">
+                  ${safe(g.name)}
+                </strong>
+                <span class="cv-rarity" style="
+                  background:${rarityBg(g.rarity)}; color:${rarityFg(g.rarity)}; border-color:${rarityBorder(g.rarity)};">
+                  ${safe(g.rarity)}
+                </span>
               </div>
-  
-              <div style="flex:1 1 auto; min-width:0;">
-                <div class="cv-gob-head" style="display:flex; align-items:center; gap:.5rem; min-width:0;">
-                  <strong class="cv-name" style="color:var(--cv-chip); font-family:Orbitron,system-ui,sans-serif; font-size:1rem;">
-                    ${safe(g.name)}
-                  </strong>
-                  <span class="cv-rarity" style="
-                    background:${rarityBg(g.rarity)}; color:${rarityFg(g.rarity)}; border-color:${rarityBorder(g.rarity)};">
-                    ${safe(g.rarity)}
-                  </span>
+
+              <div class="cv-gob-pillrow" style="display:flex; flex-wrap:wrap; gap:.45rem; margin-top:.45rem;">
+                <div class="cv-pill"><div class="cv-chip-key">LEVEL</div><div class="cv-chip-val">${safe(g.level)}</div></div>
+                <div class="cv-pill">
+                  <div class="cv-chip-key">ABILITY</div>
+                  <div class="cv-chip-val" style="white-space:normal; overflow-wrap:anywhere;">${safe(g.main_attr)}</div>
                 </div>
-  
-                <div class="cv-gob-pillrow" style="display:flex; flex-wrap:wrap; gap:.45rem; margin-top:.45rem;">
-                  <div class="cv-pill"><div class="cv-chip-key">LEVEL</div><div class="cv-chip-val">${safe(g.level)}</div></div>
-                  <div class="cv-pill">
-                    <div class="cv-chip-key">ABILITY</div>
-                    <div class="cv-chip-val" style="white-space:normal; overflow-wrap:anywhere;">${safe(g.main_attr)}</div>
-                  </div>
-                  <div class="cv-pill"><div class="cv-chip-key">POWER</div><div class="cv-chip-val" style="color:#7efcff;">${dp}</div></div>
-                </div>
+                <div class="cv-pill"><div class="cv-chip-key">POWER</div><div class="cv-chip-val" style="color:#7efcff;">${dp}</div></div>
               </div>
-  
-            <input type="checkbox" class="cv-sel" ${sel ? "checked" : ""} ${tired ? "disabled" : ""}
-                   style="transform:scale(1.25); accent-color:#ffe600; flex:0 0 auto; align-self:flex-start;">
             </div>
-  
-            <div style="display:flex; align-items:center; gap:.6rem; margin-top:.55rem;">
-              <div class="cv-meter"><div style="width:${pct}%;"></div></div>
-              <div style="min-width:56px; text-align:right; font-size:.82rem; font-weight:800; color:#7efcff;">${dp}</div>
-            </div>
-  
-            <div class="cv-row" style="opacity:.85; margin-top:.25rem;">
-              <div style="font-size:.74rem; color:#9aa0a6; white-space:normal; overflow-wrap:anywhere;">
-                ID: <span style="color:#cfcfcf; font-weight:600;">${safe(g.asset_id)}</span>
-              </div>
-              <div style="font-size:.94rem; color:#9aa0a6;">Power</div>
-            </div>
+
+          <input type="checkbox" class="cv-sel" ${sel ? "checked" : ""} ${tired ? "disabled" : ""}
+                 style="transform:scale(1.25); accent-color:#ffe600; flex:0 0 auto; align-self:flex-start;">
           </div>
-        `;
-      }).join("");
-  
-      Cave.el.goblinList.innerHTML = html;
-  
-      // Delegation una sola volta
-      if (!Cave._goblinListDelegated) {
-        Cave._goblinListDelegated = true;
-  
-        Cave.el.goblinList.addEventListener("click", (e) => {
-          const card = e.target.closest(".cv-gob-card");
-          if (!card) return;
-          let checkbox = e.target.closest(".cv-sel");
-          if (card.dataset.disabled === "1") return;
-          if (!checkbox) {
-            checkbox = card.querySelector(".cv-sel");
-            if (!checkbox) return;
-            checkbox.checked = !checkbox.checked;
-          }
+
+          <div style="display:flex; align-items:center; gap:.6rem; margin-top:.55rem;">
+            <div class="cv-meter"><div style="width:${pct}%;"></div></div>
+            <div style="min-width:56px; text-align:right; font-size:.82rem; font-weight:800; color:#7efcff;">${dp}</div>
+          </div>
+
+          <div class="cv-row" style="opacity:.85; margin-top:.25rem;">
+            <div style="font-size:.74rem; color:#9aa0a6; white-space:normal; overflow-wrap:anywhere;">
+              ID: <span style="color:#cfcfcf; font-weight:600;">${safe(g.asset_id)}</span>
+            </div>
+            <div style="font-size:.94rem; color:#9aa0a6;">Power</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    Cave.el.goblinList.innerHTML = html;
+
+    // Delegation una sola volta
+    if (!Cave._goblinListDelegated) {
+      Cave._goblinListDelegated = true;
+
+      Cave.el.goblinList.addEventListener("click", (e) => {
+        const card = e.target.closest(".cv-gob-card");
+        if (!card) return;
+        let checkbox = e.target.closest(".cv-sel");
+        if (card.dataset.disabled === "1") return;
+        if (!checkbox) {
+          checkbox = card.querySelector(".cv-sel");
+          if (!checkbox) return;
+          checkbox.checked = !checkbox.checked;
+        }
+        const id = card.dataset.id;
+        const checked = checkbox.checked;
+        if (checked) selected.add(id); else selected.delete(id);
+        card.style.border = checked ? "1px solid rgba(255,230,0,.6)" : "1px solid #2a2a2a";
+        card.style.boxShadow = checked
+          ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset"
+          : "0 2px 12px rgba(0,0,0,.35)";
+        updateSummary();
+      });
+
+      Cave.el.goblinList.addEventListener("mouseover", (e) => {
+        const card = e.target.closest(".cv-gob-card");
+        if (!card || card.dataset.disabled === "1") return;
+        card.style.transform = "translateY(-2px)";
+      });
+      Cave.el.goblinList.addEventListener("mouseout", (e) => {
+        const card = e.target.closest(".cv-gob-card");
+        if (!card || card.dataset.disabled === "1") return;
+        card.style.transform = "translateY(0)";
+      });
+      Cave.el.goblinList.addEventListener("keydown", (e) => {
+        const card = e.target.closest(".cv-gob-card");
+        if (!card || card.dataset.disabled === "1") return;
+        if (e.key === " " || e.key === "Enter"){
+          e.preventDefault();
+          const cb = card.querySelector(".cv-sel");
+          cb.checked = !cb.checked;
           const id = card.dataset.id;
-          const checked = checkbox.checked;
-          if (checked) selected.add(id); else selected.delete(id);
-          card.style.border = checked ? "1px solid rgba(255,230,0,.6)" : "1px solid #2a2a2a";
-          card.style.boxShadow = checked
+          if (cb.checked) selected.add(id); else selected.delete(id);
+          card.setAttribute("aria-checked", cb.checked ? "true":"false");
+          card.style.border = cb.checked ? "1px solid rgba(255,230,0,.6)" : "1px solid #2a2a2a";
+          card.style.boxShadow = cb.checked
             ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset"
             : "0 2px 12px rgba(0,0,0,.35)";
           updateSummary();
-        });
-  
-        Cave.el.goblinList.addEventListener("mouseover", (e) => {
-          const card = e.target.closest(".cv-gob-card");
-          if (!card || card.dataset.disabled === "1") return;
-          card.style.transform = "translateY(-2px)";
-        });
-        Cave.el.goblinList.addEventListener("mouseout", (e) => {
-          const card = e.target.closest(".cv-gob-card");
-          if (!card || card.dataset.disabled === "1") return;
-          card.style.transform = "translateY(0)";
-        });
-        Cave.el.goblinList.addEventListener("keydown", (e) => {
-          const card = e.target.closest(".cv-gob-card");
-          if (!card || card.dataset.disabled === "1") return;
-          if (e.key === " " || e.key === "Enter"){
-            e.preventDefault();
-            const cb = card.querySelector(".cv-sel");
-            cb.checked = !cb.checked;
-            const id = card.dataset.id;
-            if (cb.checked) selected.add(id); else selected.delete(id);
-            card.setAttribute("aria-checked", cb.checked ? "true":"false");
-            card.style.border = cb.checked ? "1px solid rgba(255,230,0,.6)" : "1px solid #2a2a2a";
-            card.style.boxShadow = cb.checked
-              ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset"
-              : "0 2px 12px rgba(0,0,0,.35)";
-            updateSummary();
-          }
-        });
-		// Duration select → keep current value in memory
-		Cave.ui = Cave.ui || {};
-		Cave.ui.getDurationSeconds = function(){
-		  const el = qs("#cv-duration-select", container);
-		  const sec = Number(el?.value || 3600);
-		  // clamp lato UI (il backend clampa comunque 5m..24h)
-		  return Math.max(300, Math.min(86400, sec));
-		};
+        }
+      });
+
+      // Duration select → keep current value in memory (ID e scope corretti)
+      Cave.ui = Cave.ui || {};
+      Cave.ui.getDurationSeconds = function(){
+        const el = document.querySelector("#cv-duration");
+        const sec = Number(el?.value || 3600);
+        return Math.max(300, Math.min(86400, sec)); // 5m..24h (il backend clampa comunque)
+      };
+    }
+  }
+
+  // Mostra scheda info Reinforcement e mantiene il flusso esistente (summary + duration + start)
+  async function updateSummary() {
+    const wax = Cave?.user?.wax_account;
+    if (!wax || !Cave?.el?.selectionSummary) return;
+
+    // 1) Fetch Troops Reinforcement ownership (fallback safe)
+    let ownedReinforcements = 0;
+    try {
+      ownedReinforcements = Number(await fetchReinforcementCount(wax)) || 0;
+    } catch (_) {
+      ownedReinforcements = 0;
+    }
+    try { window.reinforcementCount = ownedReinforcements; } catch {}
+
+    // 2) Compute limits
+    const MAX_REINFORCEMENTS_USABLE = 40;       // puoi usarne fino a 40
+    const HARD_CAP_LOCAL            = 250;      // 50 base + 40*5 = 250
+    const baseLimit                 = Number(typeof BASE_LIMIT !== "undefined" ? BASE_LIMIT : 50) || 50;
+    const maxLimit                  = Number(typeof HARD_CAP   !== "undefined" ? HARD_CAP   : HARD_CAP_LOCAL) || HARD_CAP_LOCAL;
+
+    const appliedReinforcements = Math.min(ownedReinforcements, MAX_REINFORCEMENTS_USABLE);
+    const computedLimit = Math.min(maxLimit, baseLimit + appliedReinforcements * 5);
+
+    try { window.CURRENT_LIMIT = computedLimit; } catch {}
+
+    // 3) Build info card
+    const boosted = computedLimit > baseLimit;
+    const infoCardHTML = `
+      <div style="
+        width:100%; max-width:980px; margin:.5rem auto 0;
+        background: linear-gradient(180deg, #1c1c1c 0%, #121212 100%);
+        border: 1px solid ${boosted ? '#3ce281' : '#2a2a2a'};
+        border-radius: 14px; padding: 12px 14px;
+        color:#eaeaea; box-shadow: 0 6px 18px rgba(0,0,0,.35);
+        display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+      ">
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <div style="
+            width:38px; height:38px; flex:0 0 38px;
+            border-radius:10px; display:flex; align-items:center; justify-content:center;
+            background:${boosted ? '#183622' : '#222'}; border:1px solid ${boosted ? '#2c7a4b' : '#333'};
+            font-size:20px;">🗡️</div>
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <strong style="font-size:1rem; letter-spacing:.2px;">Troops Reinforcement</strong>
+              <span style="
+                font-size:.75rem; padding:2px 8px; border-radius:999px;
+                border:1px solid ${boosted ? '#3ce281' : '#525252'};
+                background:${boosted ? 'rgba(60,226,129,.10)' : 'rgba(82,82,82,.10)'}; color:${boosted ? '#9ff7c0' : '#bdbdbd'};
+              ">
+                ${boosted ? 'Boost Active' : 'No Boost'}
+              </span>
+            </div>
+
+            <div style="margin-top:4px; font-size:.92rem; line-height:1.35;">
+              <div style="opacity:.95;">
+                You own <b>${ownedReinforcements}</b> Troops Reinforcement NFT${ownedReinforcements===1?'':'s'}.
+                Each NFT adds <b>+5 goblins</b> per expedition.
+              </div>
+              <div style="opacity:.9;">
+                You can use up to <b>${MAX_REINFORCEMENTS_USABLE}</b> (that’s <b>+200</b> max) — raising the cap to <b>${HARD_CAP_LOCAL}</b> goblins per expedition.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:right; min-width:180px;">
+          <div style="font-size:.8rem; color:#b5b5b5; margin-bottom:2px;">Current sending cap</div>
+          <div style="
+            font-size:1.1rem; font-weight:700; letter-spacing:.3px;
+            color:${boosted ? '#a6f3c9' : '#e6e6e6'};
+          ">
+            ${computedLimit} / ${HARD_CAP_LOCAL}
+          </div>
+          <div style="font-size:.78rem; color:#9c9c9c; margin-top:6px;">
+            Base: ${baseLimit} • Applied NFTs: ${appliedReinforcements}/${MAX_REINFORCEMENTS_USABLE}
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 4) Build selector row
+    const selectorRowHTML = `
+      <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; justify-content:center; margin-top:.6rem;">
+        <span style="color:#ffe600;">
+          Selected: ${selected.size} / ${computedLimit}
+        </span>
+
+        <label for="cv-duration" style="color:#cfcfcf; font-size:.9rem;">Duration</label>
+        <select id="cv-duration" required
+          style="background:#1a1a1a; color:#fff; border:1px solid #444; border-radius:8px; padding:.35rem .5rem;">
+          <option value="">-- choose --</option>
+          <option value="300">5 min</option>
+          <option value="1800">30 min</option>
+          <option value="3600">60 min</option>
+          <option value="7200">2 hours</option>
+          <option value="21600">6 hours</option>
+          <option value="86400">24 hours</option>
+        </select>
+
+        <button class="cv-btn" id="cv-start" style="margin-left:.25rem;">🚀 Start Expedition</button>
+      </div>
+    `;
+
+    // 5) Render
+    Cave.el.selectionSummary.innerHTML = infoCardHTML + selectorRowHTML;
+
+    // 6) Bind start action (limite gestito QUI, non fuori)
+    qs("#cv-start").onclick = async () => {
+      if (READONLY) { toast("Overlay read-mode only.", "warn"); return; }
+
+      const btn = qs("#cv-start");
+      const durSel = qs("#cv-duration");
+      const durSec = Number(durSel?.value || 0);
+
+      btn.disabled = true;
+      btn.textContent = "⏳ Starting...";
+
+      if (!selected.size) {
+        toast("Select at least 1 goblin to start.", "warn");
+        btn.disabled = false; btn.textContent = "🚀 Start Expedition";
+        return;
       }
-    }
-  
-	// Shows a structured, inline-styled info card about Troops Reinforcement
-	// and keeps the existing summary + duration + start flow.
-	// Brief, youthful, goblin-themed copy in EN, minimal emojis.
-	async function updateSummary() {
-	  const wax = Cave?.user?.wax_account;
-	  if (!wax || !Cave?.el?.selectionSummary) return;
-	
-	  // 1) Fetch Troops Reinforcement ownership (fallback safe)
-	  let ownedReinforcements = 0;
-	  try {
-	    ownedReinforcements = Number(await fetchReinforcementCount(wax)) || 0;
-	  } catch (_) {
-	    ownedReinforcements = 0;
-	  }
-	  // make it visible globally if the rest of the app expects it
-	  try { window.reinforcementCount = ownedReinforcements; } catch {}
-	
-	  // 2) Compute limits
-	  const MAX_REINFORCEMENTS_USABLE = 40;       // you can use up to 40
-	  const HARD_CAP                     = 250;   // 50 base + 40*5 = 250
-	  const baseLimit                    = Number(typeof BASE_LIMIT !== "undefined" ? BASE_LIMIT : 50) || 50;
-	  const maxLimit                     = Number(typeof MAX_LIMIT  !== "undefined" ? MAX_LIMIT  : HARD_CAP) || HARD_CAP;
-	
-	  const appliedReinforcements = Math.min(ownedReinforcements, MAX_REINFORCEMENTS_USABLE);
-	  const computedLimit = Math.min(maxLimit, baseLimit + appliedReinforcements * 5);
-	
-	  try { window.CURRENT_LIMIT = computedLimit; } catch {}
-	
-	  // 3) Build the inline “designed” message (always shown; displays 0 if none)
-	  const boosted = computedLimit > baseLimit;
-	
-	  const infoCardHTML = `
-	    <div style="
-	      width:100%; max-width:980px; margin:.5rem auto 0;
-	      background: linear-gradient(180deg, #1c1c1c 0%, #121212 100%);
-	      border: 1px solid ${boosted ? '#3ce281' : '#2a2a2a'};
-	      border-radius: 14px; padding: 12px 14px;
-	      color:#eaeaea; box-shadow: 0 6px 18px rgba(0,0,0,.35);
-	      display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
-	    ">
-	      <div style="display:flex; gap:10px; align-items:flex-start;">
-	        <div style="
-	          width:38px; height:38px; flex:0 0 38px;
-	          border-radius:10px; display:flex; align-items:center; justify-content:center;
-	          background:${boosted ? '#183622' : '#222'}; border:1px solid ${boosted ? '#2c7a4b' : '#333'};
-	          font-size:20px;">🗡️</div>
-	        <div>
-	          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-	            <strong style="font-size:1rem; letter-spacing:.2px;">Troops Reinforcement</strong>
-	            <span style="
-	              font-size:.75rem; padding:2px 8px; border-radius:999px;
-	              border:1px solid ${boosted ? '#3ce281' : '#525252'};
-	              background:${boosted ? 'rgba(60,226,129,.10)' : 'rgba(82,82,82,.10)'}; color:${boosted ? '#9ff7c0' : '#bdbdbd'};
-	            ">
-	              ${boosted ? 'Boost Active' : 'No Boost'}
-	            </span>
-	          </div>
-	
-	          <div style="margin-top:4px; font-size:.92rem; line-height:1.35;">
-	            <div style="opacity:.95;">
-	              You own <b>${ownedReinforcements}</b> Troops Reinforcement NFT${ownedReinforcements===1?'':'s'}.
-	              Each NFT adds <b>+5 goblins</b> per expedition.
-	            </div>
-	            <div style="opacity:.9;">
-	              You can use up to <b>${MAX_REINFORCEMENTS_USABLE}</b> (that’s <b>+200</b> max) — raising the cap to <b>${HARD_CAP}</b> goblins per expedition.
-	            </div>
-	          </div>
-	        </div>
-	      </div>
-	
-	      <div style="text-align:right; min-width:180px;">
-	        <div style="font-size:.8rem; color:#b5b5b5; margin-bottom:2px;">Current sending cap</div>
-	        <div style="
-	          font-size:1.1rem; font-weight:700; letter-spacing:.3px;
-	          color:${boosted ? '#a6f3c9' : '#e6e6e6'};
-	        ">
-	          ${computedLimit} / ${HARD_CAP}
-	        </div>
-	        <div style="font-size:.78rem; color:#9c9c9c; margin-top:6px;">
-	          Base: ${baseLimit} • Applied NFTs: ${appliedReinforcements}/${MAX_REINFORCEMENTS_USABLE}
-	        </div>
-	      </div>
-	    </div>
-	  `;
-	
-	  // 4) Build the selector row (unchanged behavior)
-	  const selectorRowHTML = `
-	    <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; justify-content:center; margin-top:.6rem;">
-	      <span style="color:#ffe600;">
-	        Selected: ${selected.size} / ${computedLimit}
-	      </span>
-	
-	      <label for="cv-duration" style="color:#cfcfcf; font-size:.9rem;">Duration</label>
-	      <select id="cv-duration" required
-	        style="background:#1a1a1a; color:#fff; border:1px solid #444; border-radius:8px; padding:.35rem .5rem;">
-	        <option value="">-- choose --</option>
-	        <option value="300">5 min</option>
-	        <option value="1800">30 min</option>
-	        <option value="3600">60 min</option>
-	        <option value="7200">2 hours</option>
-	        <option value="21600">6 hours</option>
-	        <option value="86400">24 hours</option>
-	      </select>
-	
-	      <button class="cv-btn" id="cv-start" style="margin-left:.25rem;">🚀 Start Expedition</button>
-	    </div>
-	  `;
-	
-	  // 5) Render
-	  Cave.el.selectionSummary.innerHTML = infoCardHTML + selectorRowHTML;
-	
-	  // 6) Bind start action (kept identical in logic, with limit computed here)
-	  qs("#cv-start").onclick = async () => {
-	    if (READONLY) { toast("Overlay read-mode only.", "warn"); return; }
-	
-	    const btn = qs("#cv-start");
-	    const durSel = qs("#cv-duration");
-	    const durSec = Number(durSel?.value || 0);
-	
-	    btn.disabled = true;
-	    btn.textContent = "⏳ Starting...";
-	
-	    if (!selected.size) {
-	      toast("Select at least 1 goblin to start.", "warn");
-	      btn.disabled = false; btn.textContent = "🚀 Start Expedition";
-	      return;
-	    }
-	    if (!durSec) {
-	      toast("Please choose a duration.", "warn");
-	      btn.disabled = false; btn.textContent = "🚀 Start Expedition";
-	      return;
-	    }
-	
-	    // Enforce computedLimit while preserving selection order; only POWER≥5
-	    const ids = [];
-	    for (const id of selected) {
-	      const g = Cave.nftIndex.get(String(id));
-	      if (g && num(g.daily_power) >= 5) {
-	        ids.push(String(id));
-	        if (ids.length === computedLimit) break;
-	      }
-	    }
-	    if (!ids.length) {
-	      toast("All selected goblins are too tired.", "warn");
-	      btn.disabled = false; btn.textContent = "🚀 Start Expedition";
-	      return;
-	    }
-	    if (selected.size > computedLimit) {
-	      toast(`Selected ${selected.size} goblins — sending only the first ${computedLimit}.`, "warn");
-	    }
-	
-	    try {
-	      syncUserInto(Cave.user);
-	      assertAuthOrThrow(Cave.user);
-	
-	      // Send duration_seconds to the backend along with goblin_ids
-	      const r = await API.post("/start_expedition", {
-	        wax_account: Cave.user.wax_account,
-	        user_id:     Cave.user.user_id,
-	        usx_token:   Cave.user.usx_token,
-	        goblin_ids:  ids,
-	        duration_seconds: durSec
-	      }, 20000);
-	
-	      if (r.status === 409) {
-	        toast(r.data?.error || "Already in expedition.", "warn");
-	      } else if (r.ok) {
-	        toast("Expedition started!", "ok");
-	        try { triggerLogoGoblin(Cave.user.wax_account || 'guest'); } catch {}
-	        try { showLogoToast(`${safe(Cave.user.wax_account)} just joined the band! Good hunting!`); } catch {}
-	
-	        // Always use the duration returned by the backend
-	        await renderUserCountdown(r.data.expedition_id, r.data.duration_seconds, ids);
-	        await renderGlobalExpeditions();
-	      } else {
-	        toast("Something went wrong.", "err");
-	      }
-	    } catch (e) {
-	      toast("Failed to start expedition.", "err");
-	      console.error(e);
-	    } finally {
-	      btn.disabled = false;
-	      btn.textContent = "🚀 Start Expedition";
-	    }
-	  };
-	}
+      if (!durSec) {
+        toast("Please choose a duration.", "warn");
+        btn.disabled = false; btn.textContent = "🚀 Start Expedition";
+        return;
+      }
 
-  
-    function autoBest() {
-      selected.clear();
-      const scored = goblins.filter(g => num(g.daily_power) >= 5)
-        .map(g => ({ id: g.asset_id, score: num(g.level) + num(g[g.main_attr]) }))
-        .sort((a,b) => b.score - a.score)
-        .slice(0, computedLimit)
-      scored.forEach(s => selected.add(s.id));
-      renderList(); updateSummary();
-    }
+      // Enforce computedLimit mentre preserviamo l'ordine; solo POWER≥5
+      const ids = [];
+      for (const id of selected) {
+        const g = Cave.nftIndex.get(String(id));
+        if (g && num(g.daily_power) >= 5) {
+          ids.push(String(id));
+          if (ids.length === computedLimit) break;
+        }
+      }
+      if (!ids.length) {
+        toast("All selected goblins are too tired.", "warn");
+        btn.disabled = false; btn.textContent = "🚀 Start Expedition";
+        return;
+      }
+      if (selected.size > computedLimit) {
+        toast(`Selected ${selected.size} goblins — sending only the first ${computedLimit}.`, "warn");
+      }
 
-    // toolbar binds
-    qs("#cv-select-50").onclick = () => {
+      try {
+        syncUserInto(Cave.user);
+        assertAuthOrThrow(Cave.user);
+
+        // invia anche duration_seconds
+        const r = await API.post("/start_expedition", {
+          wax_account: Cave.user.wax_account,
+          user_id:     Cave.user.user_id,
+          usx_token:   Cave.user.usx_token,
+          goblin_ids:  ids,
+          duration_seconds: durSec
+        }, 20000);
+
+        if (r.status === 409) {
+          toast(r.data?.error || "Already in expedition.", "warn");
+        } else if (r.ok) {
+          toast("Expedition started!", "ok");
+          try { triggerLogoGoblin(Cave.user.wax_account || 'guest'); } catch {}
+          try { showLogoToast(`${safe(Cave.user.wax_account)} just joined the band! Good hunting!`); } catch {}
+
+          // usa la durata restituita dal backend
+          await renderUserCountdown(r.data.expedition_id, r.data.duration_seconds, ids);
+          await renderGlobalExpeditions();
+        } else {
+          toast("Something went wrong.", "err");
+        }
+      } catch (e) {
+        toast("Failed to start expedition.", "err");
+        console.error(e);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "🚀 Start Expedition";
+      }
+    };
+  }
+
+  // --- selezione automatica "Best" con cap sicuro ---
+  function autoBest() {
+    selected.clear();
+    const scored = goblins
+      .filter(g => num(g.daily_power) >= 5)
+      .map(g => ({ id: g.asset_id, score: num(g.level) + num(g[g.main_attr]) }))
+      .sort((a,b) => b.score - a.score)
+      .slice(0, getSendCap());
+    scored.forEach(s => selected.add(s.id));
+    renderList(); updateSummary();
+  }
+
+  // --- toolbar binds ---
+  const btnFirstSel = qs("#cv-select-50");
+  const btnDeselect = qs("#cv-deselect");
+  const btnBestSel  = qs("#cv-select-best");
+
+  if (btnFirstSel) {
+    btnFirstSel.onclick = () => {
       selected.clear();
       goblins.filter(g => num(g.daily_power) >= 5)
-        .slice(0, computedLimit)
+        .slice(0, getSendCap())
         .forEach(g => selected.add(g.asset_id));
       renderList(); updateSummary();
     };
-    qs("#cv-deselect").onclick = () => { selected.clear(); renderList(); updateSummary(); };
-    qs("#cv-select-best").onclick = () => autoBest();
-    qs("#cv-search").addEventListener("input", e => { filterQuery = e.target.value; renderList(); saveFilters(); });
-    qs("#cv-rarity").addEventListener("change", e => { filterRarity = e.target.value; renderList(); saveFilters(); });
-
-    const btnFirst = qs("#cv-select-50");
-    const btnBest  = qs("#cv-select-best");
-    if (btnFirst) btnFirst.textContent = `✅ First ${computedLimit}`;
-    if (btnBest)  btnBest.textContent  = `🏆 Best ${computedLimit}`;
-    const powerRange = qs("#cv-power");
-    const powerVal = qs("#cv-power-val");
-    if (powerRange && powerVal){
-      powerRange.addEventListener("input", e => {
-        minPower = Number(e.target.value)||0;
-        powerVal.textContent = String(minPower);
-        renderList(); saveFilters();
-      });
-    }
-  
-    // render iniziale
-    renderList(); updateSummary();
   }
+  if (btnDeselect) {
+    btnDeselect.onclick = () => { selected.clear(); renderList(); updateSummary(); };
+  }
+  if (btnBestSel) {
+    btnBestSel.onclick = () => autoBest();
+  }
+
+  const $search = qs("#cv-search");
+  if ($search) $search.addEventListener("input", e => { filterQuery = e.target.value; renderList(); saveFilters(); });
+
+  const $rarity = qs("#cv-rarity");
+  if ($rarity) $rarity.addEventListener("change", e => { filterRarity = e.target.value; renderList(); saveFilters(); });
+
+  const powerRange = qs("#cv-power");
+  const powerVal = qs("#cv-power-val");
+  if (powerRange && powerVal){
+    powerRange.addEventListener("input", e => {
+      minPower = Number(e.target.value)||0;
+      powerVal.textContent = String(minPower);
+      renderList(); saveFilters();
+    });
+  }
+
+  // --- render iniziale + summary ---
+  renderList();
+  updateSummary();
+
+  // --- aggiorna label pulsanti in base al cap corrente/fallback ---
+  const btnFirst = qs("#cv-select-50");
+  const btnBest  = qs("#cv-select-best");
+  if (btnFirst) btnFirst.textContent = `✅ First ${getSendCap()}`;
+  if (btnBest)  btnBest.textContent  = `🏆 Best ${getSendCap()}`;
+}
   
   // ========= MAIN RENDER =========
   async function renderDwarfsCave() {

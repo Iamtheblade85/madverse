@@ -3949,7 +3949,8 @@ async function refreshCurrentLimit() {
   const inFlightClaims = new Set(); // set di String(chest_id)
   
   // ========= UTILITIES =========
-  const log = (...a) => DEBUG && console.log("[CAVE]", ...a);
+	const log = (...a) => { if (DEBUG) console.log("[CAVE]", ...a); };
+
   const qs = (s, r = document) => r.querySelector(s);
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
   const clamp  = (v, lo, hi) => Math.max(lo, Math.min(hi, v));

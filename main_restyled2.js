@@ -6695,7 +6695,7 @@ function paintDirtyNow() {
 		// Duration select → keep current value in memory
 		Cave.ui = Cave.ui || {};
 		Cave.ui.getDurationSeconds = function(){
-		  const el = qs("#cv-duration-select", container);
+		  const el = qs("#cv-duration", container);
 		  const sec = Number(el?.value || 3600);
 		  // clamp lato UI (il backend clampa comunque 5m..24h)
 		  return Math.max(300, Math.min(86400, sec));
@@ -6796,24 +6796,133 @@ function paintDirtyNow() {
 	      </span>
 	
 	      <label for="cv-duration" style="color:#cfcfcf; font-size:.9rem;">Duration</label>
-	      <select id="cv-duration" required
-	        style="background:#1a1a1a; color:#fff; border:1px solid #444; border-radius:8px; padding:.35rem .5rem;">
-	        <option value="">-- choose --</option>
-	        <option value="300">5 min</option>
-	        <option value="1800">30 min</option>
-	        <option value="3600">60 min</option>
-	        <option value="7200">2 hours</option>
-	        <option value="21600">6 hours</option>
-	        <option value="86400">24 hours</option>
-	      </select>
-	
-	      <button class="cv-btn" id="cv-start" style="margin-left:.25rem;">🚀 Start Expedition</button>
+		<select id="cv-duration" required
+		  style="background:#1a1a1a; color:#fff; border:1px solid #444; border-radius:8px; padding:.35rem .5rem;">
+		  <option value="">-- choose --</option>
+		  <option value="300">5 min</option>
+		  <option value="1800">30 min</option>
+		  <option value="3600">60 min</option>
+		  <option value="7200">2 hours</option>
+		  <option value="21600">6 hours</option>
+		  <option value="86400">24 hours</option>
+		</select>
+		
+		<span id="cv-duration-hint" style="color:#9ad1ff; font-size:.85rem; margin-left:.25rem;"></span>
+		
+		<button class="cv-btn" id="cv-start" style="margin-left:.25rem;">🚀 Start Expedition</button>
+		
+		<!-- avviso contestuale (si popola via JS) -->
+		<div id="cv-start-hint"
+		     style="width:100%; text-align:center; color:#ffb74d; font-size:.9rem; margin-top:.35rem; display:none;">
+		</div>
+
 	    </div>
 	  `;
 	
 	  // 5) Render
 	  Cave.el.selectionSummary.innerHTML = infoCardHTML + selectorRowHTML;
+	// === REGOLE COSTO POWER PER DURATA (UI) ===
+	// valori base per goblin, arrotondati a 2 decimali
+	const DURATION_COST = {
+	  300:   0.52,   // 5m
+	  1800:  2.50,   // 30m (baseline)
+	  3600:  4.80,   // 60m
+	  7200:  9.20,   // 120m
+	  21600: 26.50,  // 360m (6h)
+	  86400: 100.00  // 1440m (24h)
+	};
 	
+	// ammorbidimento con resistenza (max 35% di sconto a res=100)
+	// se 'resistance' fosse 0..8, il getStat restituirà 0..8: normalizziamo a 0..100.
+	function effectiveCostFor(goblin, sec){
+	  const base = Number(DURATION_COST[sec] || DURATION_COST[3600]); // default 60m
+	  let res = Number(getStat(goblin, 'resistance') || 0);
+	  // normalizza: se piccolo (0..8), scala a 0..100
+	  if (res <= 8) res = (res / 8) * 100;
+	  const cap = 0.35; // 35%
+	  const reduction = Math.max(0, Math.min(cap, (res/100) * cap));
+	  const eff = base * (1 - reduction);
+	  return Math.round(eff * 100) / 100; // max 2 decimali
+	}
+	
+	function fmt2(n){ return (Math.round(Number(n)*100)/100).toFixed(2); }
+	
+	const durSel   = qs("#cv-duration");
+	const hintEl   = qs("#cv-duration-hint");
+	const warnEl   = qs("#cv-start-hint");
+	
+	// riesegue il controllo eleggibilità; se applyFilter=true, deseleziona i non idonei
+	function recomputeEligibility(applyFilter = true){
+	  const sec = Number(durSel?.value || 0);
+	  if (!sec){
+	    if (hintEl){ hintEl.textContent = ""; }
+	    if (warnEl){ warnEl.style.display = "none"; warnEl.textContent = ""; }
+	    return;
+	  }
+	
+	  // calcola costi effettivi per i selezionati
+	  let excluded = 0, kept = 0;
+	  let minEff = Infinity, maxEff = 0;
+	
+	  // Copia per iterare in modo stabile
+	  const selIds = Array.from(selected);
+	
+	  for (const id of selIds){
+	    const g = Cave.nftIndex.get(String(id));
+	    if (!g) continue;
+	    const eff = effectiveCostFor(g, sec);
+	    minEff = Math.min(minEff, eff);
+	    maxEff = Math.max(maxEff, eff);
+	    const dp = Number(g.daily_power || 0);
+	
+	    const ok = dp >= eff;
+	    if (!ok){
+	      excluded++;
+	      if (applyFilter){
+	        // rimuove dalla Set
+	        selected.delete(id);
+	        // aggiorna UI card (checkbox + stile)
+	        const card = document.querySelector(`.cv-gob-card[data-id="${CSS.escape(String(id))}"]`);
+	        if (card){
+	          const cb = card.querySelector(".cv-sel");
+	          if (cb) cb.checked = false;
+	          card.style.border = "1px solid #2a2a2a";
+	          card.style.boxShadow = "0 2px 12px rgba(0,0,0,.35)";
+	        }
+	      }
+	    } else {
+	      kept++;
+	    }
+	  }
+	
+	  // hint: costo base + range effettivo sui selezionati
+	  if (hintEl){
+	    const base = DURATION_COST[sec];
+	    const range = (minEff !== Infinity) ? ` • eff: ${fmt2(minEff)}–${fmt2(maxEff)}` : "";
+	    hintEl.textContent = `Cost per goblin: ${fmt2(base)}${range}`;
+	  }
+	
+	  // avviso: chi è stato escluso e quanti ne restano
+	  if (warnEl){
+	    if (excluded > 0){
+	      warnEl.style.display = "";
+	      warnEl.textContent = `⚠️ ${excluded} goblin esclusi: power insufficiente per la durata scelta (considerando resistance). Rimasti: ${kept}.`;
+	    } else {
+	      warnEl.style.display = "none";
+	      warnEl.textContent = "";
+	    }
+	  }
+	
+	  // se abbiamo modificato la selezione, ridisegna il riepilogo (aggiorna contatore "Selected:")
+	  if (applyFilter && excluded > 0){
+	    updateSummary(); // safe: viene richiamato solo quando abbiamo cambiato 'selected'
+	  }
+	}
+	
+	// trigger iniziale (solo hint) e su cambio durata (con filtro attivo)
+	recomputeEligibility(false);
+	durSel?.addEventListener("change", () => recomputeEligibility(true));
+
 	  // 6) Bind start action (kept identical in logic, with limit computed here)
 	  qs("#cv-start").onclick = async () => {
 	    if (READONLY) { toast("Overlay read-mode only.", "warn"); return; }
@@ -6836,23 +6945,40 @@ function paintDirtyNow() {
 	      return;
 	    }
 	
-	    // Enforce computedLimit while preserving selection order; only POWER≥5
-	    const ids = [];
-	    for (const id of selected) {
-	      const g = Cave.nftIndex.get(String(id));
-	      if (g && num(g.daily_power) >= 5) {
-	        ids.push(String(id));
-	        if (ids.length === computedLimit) break;
-	      }
-	    }
-	    if (!ids.length) {
-	      toast("All selected goblins are too tired.", "warn");
-	      btn.disabled = false; btn.textContent = "🚀 Start Expedition";
-	      return;
-	    }
-	    if (selected.size > computedLimit) {
-	      toast(`Selected ${selected.size} goblins — sending only the first ${computedLimit}.`, "warn");
-	    }
+		// Eleggibilità per durata + rispetto del computedLimit
+		const ids = [];
+		let excludedNow = 0;
+		const sec = Number(durSel?.value || 0);
+		
+		for (const id of selected) {
+		  const g = Cave.nftIndex.get(String(id));
+		  if (!g) continue;
+		  const eff = (typeof effectiveCostFor === "function") ? effectiveCostFor(g, sec) : 9999;
+		  if (num(g.daily_power) >= eff) {
+		    ids.push(String(id));
+		    if (ids.length === computedLimit) break;
+		  } else {
+		    excludedNow++;
+		  }
+		}
+		
+		if (excludedNow > 0) {
+		  const warnEl = qs("#cv-start-hint");
+		  if (warnEl){
+		    warnEl.style.display = "";
+		    warnEl.textContent = `⚠️ ${excludedNow} goblin esclusi al momento dello start per power insufficiente.`;
+		  }
+		}
+		
+		if (!ids.length) {
+		  toast("No eligible goblins for the selected duration.", "warn");
+		  btn.disabled = false; btn.textContent = "🚀 Start Expedition";
+		  return;
+		}
+		if (selected.size > computedLimit) {
+		  toast(`Selected ${selected.size} goblins — sending only the first ${computedLimit}.`, "warn");
+		}
+
 	
 	    try {
 	      syncUserInto(Cave.user);
@@ -6890,25 +7016,33 @@ function paintDirtyNow() {
 	  };
 	}
 
-  
-    function autoBest() {
-      selected.clear();
-      const scored = goblins.filter(g => num(g.daily_power) >= 5)
-        .map(g => ({ id: g.asset_id, score: num(g.level) + num(g[g.main_attr]) }))
-        .sort((a,b) => b.score - a.score)
-        .slice(0, CURRENT_LIMIT);
-      scored.forEach(s => selected.add(s.id));
-      renderList(); updateSummary();
-    }
+	function isEligibleForDuration(g){
+	  const sec = Number(qs("#cv-duration")?.value || 0) || 3600;
+	  if (!sec) return num(g.daily_power) >= 5; // fallback
+	  const eff = (typeof effectiveCostFor === "function") ? effectiveCostFor(g, sec) : 9999;
+	  return num(g.daily_power) >= eff;
+	}
+	
+	function autoBest() {
+	  selected.clear();
+	  const scored = goblins
+	    .filter(g => isEligibleForDuration(g))
+	    .map(g => ({ id: g.asset_id, score: num(g.level) + num(g[g.main_attr]) }))
+	    .sort((a,b) => b.score - a.score)
+	    .slice(0, CURRENT_LIMIT);
+	  scored.forEach(s => selected.add(s.id));
+	  renderList(); updateSummary();
+	}
+	
+	qs("#cv-select-50").onclick = () => {
+	  selected.clear();
+	  goblins
+	    .filter(g => isEligibleForDuration(g))
+	    .slice(0, CURRENT_LIMIT)
+	    .forEach(g => selected.add(g.asset_id));
+	  renderList(); updateSummary();
+	};
 
-    // toolbar binds
-    qs("#cv-select-50").onclick = () => {
-      selected.clear();
-      goblins.filter(g => num(g.daily_power) >= 5)
-        .slice(0, CURRENT_LIMIT)
-        .forEach(g => selected.add(g.asset_id));
-      renderList(); updateSummary();
-    };
     qs("#cv-deselect").onclick = () => { selected.clear(); renderList(); updateSummary(); };
     qs("#cv-select-best").onclick = () => autoBest();
     qs("#cv-search").addEventListener("input", e => { filterQuery = e.target.value; renderList(); saveFilters(); });

@@ -4440,8 +4440,10 @@ function sumExpeditionStats(assetIds = []){
               toast("❌ Goblins not available at the moment. Please reload the page.", "err", 4000);
             }
           } catch (e2) {
-            if (sectionIsStillMounted()) toast("❌ Goblins not available at the moment.", "err", 4000);
-          }
+			  if (sectionIsStillMounted()) {
+			    toast("❌ Goblins not available at the moment.", "err", 4000);
+			  }
+			}
         }, 10000);
       }
     }
@@ -4692,44 +4694,45 @@ function sumExpeditionStats(assetIds = []){
     mo.observe(document.body, {childList:true, subtree:true});
   }
     
-  function resizeCanvas() {
-    const c = Cave.canvas;
-    if (!c || !c.parentElement) return;
-  
-    const cssW = c.parentElement.clientWidth;
-    const cssH = Math.floor(cssW * 9 / 16);
-    const dpr = Cave.dpr;
-  
-    // dimensioni CSS
-    c.style.width  = `${cssW}px`;
-    c.style.height = `${cssH}px`;
-  
-    // dimensioni interne (pixel reali)
-    c.width  = Math.floor(cssW * dpr);
-    c.height = Math.floor(cssH * dpr);
-  
-    // HiDPI + smoothing off
-    const ctx = Cave.ctx;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.imageSmoothingEnabled = false;
-    ctx.imageSmoothingQuality = "low";
-  
-    // la griglia ora riempie il canvas 16:9
-    Cave.gridW  = cssW;
-    Cave.gridH  = cssH;
-    Cave.offsetX = 0;
-    Cave.offsetY = 0;
-  
-    // celle non quadrate
-    Cave.cellX = Cave.gridW / GRID_COLS;
-    Cave.cellY = Cave.gridH / GRID_ROWS;
-  
-    // compat (usa il min per scale sprite/testi)
-    Cave.cell  = Math.min(Cave.cellX, Cave.cellY);
-  
-    // ricostruisci la cache dello sfondo (punto 2)
-    buildBGCache();
-  }
+function resizeCanvas() {
+  const c = Cave.canvas;
+  if (!c || !c.parentElement) return;
+
+  const cssW = c.parentElement.clientWidth;
+  const cssH = Math.floor(cssW * 9 / 16);
+  const dpr  = Cave.dpr;
+
+  // dimensioni CSS
+  c.style.width  = `${cssW}px`;
+  c.style.height = `${cssH}px`;
+
+  // dimensioni interne (pixel reali)
+  c.width  = Math.floor(cssW * dpr);
+  c.height = Math.floor(cssH * dpr);
+
+  // HiDPI + smoothing off
+  const ctx = Cave.ctx;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingQuality = "low";
+
+  // la griglia ora riempie il canvas 16:9
+  Cave.gridW  = cssW;
+  Cave.gridH  = cssH;
+  Cave.offsetX = 0;
+  Cave.offsetY = 0;
+
+  // celle non quadrate
+  Cave.cellX = Cave.gridW / GRID_COLS;
+  Cave.cellY = Cave.gridH / GRID_ROWS;
+
+  // compat (usa il min per scale sprite/testi)
+  Cave.cell  = Math.min(Cave.cellX, Cave.cellY);
+
+  // ricostruisci la cache dello sfondo
+  buildBGCache();
+}
+
 
   function startRAF() {
     if (Cave.running || !Cave.canvas) return;

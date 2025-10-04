@@ -5207,9 +5207,6 @@ function drawBGOnce() {
       // frame advance
       p.tick++; if (p.tick >= p.frameDelay){ p.tick = 0; p.frame = (p.frame + 1) % p.frames; }
   
-      // === Bounds calcolati UNA volta per iterazione ===
-      const bounds = getBounds();
-      const { minX, maxX, minY, maxY } = bounds;
   
       const wy = p.waveY(p.x);
       const px = Cave.offsetX + p.x * Cave.cellX;

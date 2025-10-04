@@ -3786,46 +3786,6 @@ async function renderGoblinInventory() {
    - No duplicate element IDs
    ========================================================= */
 
-// Reinforcement limit: +5 per each 900338 owned
-const BASE_LIMIT = 50;
-const MAX_LIMIT = 250;
-const REINFORCEMENT_TEMPLATE_ID = "900338"; // <- align with backend
-let reinforcementCount = 0;
-let CURRENT_LIMIT = BASE_LIMIT;
-
-// Helper: fetch count from backend (recommended)
-async function fetchReinforcementCount(wax) {
-  if (!wax) return 0;
-  try {
-    const r = await API.post("/reinforcement_count", { wax_account: wax }, 10000);
-    // backend deve rispondere: { ok:true, count:<numero> }
-    if (r?.ok && typeof r.data?.count === "number") return r.data.count;
-  } catch (e) {
-    console.warn("[reinforcement] backend count failed:", e);
-  }
-  return 0; // safe default
-}
-
-async function refreshCurrentLimit() {
-  try {
-    const wax = Cave?.user?.wax_account;
-    if (!wax) return;
-    reinforcementCount = await fetchReinforcementCount(wax);
-    CURRENT_LIMIT = Math.min(MAX_LIMIT, BASE_LIMIT + (reinforcementCount * 5));
-
-    // Reflect on UI
-    const btnFirst = document.querySelector("#cv-select-50");
-    const btnBest  = document.querySelector("#cv-select-best");
-    if (btnFirst) btnFirst.textContent = `✅ First ${CURRENT_LIMIT}`;
-    if (btnBest)  btnBest.textContent  = `🏆 Best ${CURRENT_LIMIT}`;
-
-    // If you print a “Selected: x / limit” anywhere, update it too
-    if (typeof updateSummary === "function") updateSummary();
-  } catch (e) {
-    console.warn("[reinforcement] unable to refresh limit", e);
-  }
-}
-
 (() => {
   "use strict";
 
@@ -3882,7 +3842,42 @@ async function refreshCurrentLimit() {
   const OBS_MODE  = QS.get('obs') === '1';
   const ROT_SECS  = Math.max(5, Number(QS.get('rot') || 12)); // default 12s
   const NOTICKER  = OBS_MODE || OVERLAY_MODE || QS.get('noticker') === '1';
+// Reinforcement limit: +5 per each 900338 owned
+const BASE_LIMIT = 50;
+const MAX_LIMIT = 250;
+const REINFORCEMENT_TEMPLATE_ID = "900338"; // <- align with backend
+let reinforcementCount = 0;
+let CURRENT_LIMIT = BASE_LIMIT;
 
+async function fetchReinforcementCount(wax) {
+  if (!wax) return 0;
+  try {
+    const r = await API.post("/reinforcement_count", { wax_account: wax }, 10000);
+    if (r?.ok && typeof r.data?.count === "number") return r.data.count;
+  } catch (e) {
+    console.warn("[reinforcement] backend count failed:", e);
+  }
+  return 0; // safe default
+}
+
+async function refreshCurrentLimit() {
+  try {
+    const wax = Cave?.user?.wax_account;
+    if (!wax) return;
+    reinforcementCount = await fetchReinforcementCount(wax);
+    CURRENT_LIMIT = Math.min(MAX_LIMIT, BASE_LIMIT + (reinforcementCount * 5));
+
+    // Reflect on UI
+    const btnFirst = document.querySelector("#cv-select-50");
+    const btnBest  = document.querySelector("#cv-select-best");
+    if (btnFirst) btnFirst.textContent = `✅ First ${CURRENT_LIMIT}`;
+    if (btnBest)  btnBest.textContent  = `🏆 Best ${CURRENT_LIMIT}`;
+    // If you print a “Selected: x / limit” anywhere, update it too
+    if (typeof updateSummary === "function") updateSummary();
+  } catch (e) {
+    console.warn("[reinforcement] unable to refresh limit", e);
+  }
+}
   // ========= STATE (single source of truth) =========
   const Cave = {
     canvas: null,

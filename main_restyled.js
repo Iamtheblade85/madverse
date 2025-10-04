@@ -6134,17 +6134,13 @@ async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
     }
 
     const specialCount = (Array.isArray(allNfts) ? allNfts : [])
-      .filter(n => String(n.template_id) === '905202')
+	  .filter(n => String(n.template_id) === '900338')
       .length;
     
     const BASE_LIMIT = 50;
     const EXTRA_PER_ASSET = 5;      
     const HARD_CAP = 250;
     const DYN_LIMIT = Math.min(HARD_CAP, BASE_LIMIT + specialCount * EXTRA_PER_ASSET);
-    
-    // esponi in scope locale della selection UI
-    let CURRENT_LIMIT = DYN_LIMIT;
-
     // ====== selection UI (copiata dalla tua renderDwarfsCave) ======
     let selected = new Set();
     let sortBy = "rarity";
@@ -6548,7 +6544,7 @@ async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
       const scored = goblins.filter(g => num(g.daily_power) >= 5)
         .map(g => ({ id: g.asset_id, score: num(g.level) + num(g[g.main_attr]) }))
         .sort((a,b) => b.score - a.score)
-        .slice(0, CURRENT_LIMIT);
+        .slice(0, computedLimit)
       scored.forEach(s => selected.add(s.id));
       renderList(); updateSummary();
     }
@@ -6557,7 +6553,7 @@ async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
     qs("#cv-select-50").onclick = () => {
       selected.clear();
       goblins.filter(g => num(g.daily_power) >= 5)
-        .slice(0, CURRENT_LIMIT)
+        .slice(0, computedLimit)
         .forEach(g => selected.add(g.asset_id));
       renderList(); updateSummary();
     };
@@ -6568,8 +6564,8 @@ async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
 
     const btnFirst = qs("#cv-select-50");
     const btnBest  = qs("#cv-select-best");
-    if (btnFirst) btnFirst.textContent = `✅ First ${CURRENT_LIMIT}`;
-    if (btnBest)  btnBest.textContent  = `🏆 Best ${CURRENT_LIMIT}`;
+    if (btnFirst) btnFirst.textContent = `✅ First ${computedLimit}`;
+    if (btnBest)  btnBest.textContent  = `🏆 Best ${computedLimit}`;
     const powerRange = qs("#cv-power");
     const powerVal = qs("#cv-power-val");
     if (powerRange && powerVal){

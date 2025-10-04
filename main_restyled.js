@@ -4411,43 +4411,47 @@ function sumExpeditionStats(assetIds = []){
 
   // Chiama /user_nfts; se fallisce, schedula UN SOLO retry tra 10s.
   // Al successo, chiama hydrateGoblinUI(data) e blocca altri retry finché la sezione non viene ricaricata.
-  async function loadUserNFTsWithSingleRetry() {
-    try {
-      const r = await fetchUserNFTsOnce(15000);
-      if (!r.ok || !Array.isArray(r.data)) throw new Error(`HTTP ${r.status}`);
-      if (!sectionIsStillMounted()) return;
-      userNFTsLoaded = true;
-      // Notifica che probabilmente abbiamo userData aggiornato
-      document.dispatchEvent(new CustomEvent('cv:userdata-maybe-updated'));
+async function loadUserNFTsWithSingleRetry() {
+  try {
+    const r = await fetchUserNFTsOnce(15000);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
 
-      hydrateGoblinUI(r.data);
-    } catch (err) {
-      if (!userNFTsRetryScheduled) {
-        userNFTsRetryScheduled = true;
-        toast("⚠️ Goblins not loaded, i will retry again in 10s…", "warn", 4000);
-        setTimeout(async () => {
-          if (userNFTsLoaded || !sectionIsStillMounted()) return;
-          try {
-            const r2 = await fetchUserNFTsOnce(20000);
-            if (r2.ok && Array.isArray(r2.data) && sectionIsStillMounted()) {
-              userNFTsLoaded = true;
-              // Notifica che probabilmente abbiamo userData aggiornato
-              document.dispatchEvent(new CustomEvent('cv:userdata-maybe-updated'));
-                            
-              hydrateGoblinUI(r2.data);
-              toast("✅ Goblins loaded", "ok", 2500);
-            } else {
-              toast("❌ Goblins not available at the moment. Please reload the page.", "err", 4000);
-            }
-          } catch (e2) {
-			  if (sectionIsStillMounted()) {
-			    toast("❌ Goblins not available at the moment.", "err", 4000);
-			  }
-			}
-        }, 10000);
-      }
+    // accetta sia array puro sia eventuali wrappaggi futuri { nfts:[...] }
+    const data = Array.isArray(r.data) ? r.data : (Array.isArray(r.data?.nfts) ? r.data.nfts : []);
+    if (!sectionIsStillMounted()) return;
+
+    userNFTsLoaded = true;
+    document.dispatchEvent(new CustomEvent('cv:userdata-maybe-updated'));
+    hydrateGoblinUI(data);
+  } catch (err) {
+    if (!userNFTsRetryScheduled) {
+      userNFTsRetryScheduled = true;
+      toast("⚠️ Goblins not loaded, i will retry again in 10s…", "warn", 4000);
+      setTimeout(async () => {
+        if (userNFTsLoaded || !sectionIsStillMounted()) return;
+        try {
+          const r2 = await fetchUserNFTsOnce(20000);
+          // stesso trattamento shape-agnostic del primo tentativo
+          const ok = !!r2?.ok;
+          const data2 = ok
+            ? (Array.isArray(r2.data) ? r2.data : (Array.isArray(r2.data?.nfts) ? r2.data.nfts : []))
+            : [];
+          if (ok && Array.isArray(data2) && sectionIsStillMounted()) {
+            userNFTsLoaded = true;
+            document.dispatchEvent(new CustomEvent('cv:userdata-maybe-updated'));
+            hydrateGoblinUI(data2);
+            toast("✅ Goblins loaded", "ok", 2500);
+          } else {
+            toast("❌ Goblins not available at the moment. Please reload the page.", "err", 4000);
+          }
+        } catch (e2) {
+          if (sectionIsStillMounted()) toast("❌ Goblins not available at the moment.", "err", 4000);
+        }
+      }, 10000);
     }
   }
+}
+
 
   // ========= ASSETS =========
   function loadImg(src) {
@@ -6123,19 +6127,42 @@ async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
     Cave.rafId = requestAnimationFrame(tick);
   }
 
-  function hydrateGoblinUI(allNfts) {
-    // 1) filtra i goblin dall’array completo /user_nfts
-    const goblins = (Array.isArray(allNfts) ? allNfts : []).filter(n => n.type === "goblin");
-    // indicizza per asset_id (sempre stringa!)
-    Cave.nftIndex.clear();
-    goblins.forEach(n => Cave.nftIndex.set(String(n.asset_id), n));
-     
-    if (!goblins.length) {
-      if (Cave.el.selectionSummary) {
-        Cave.el.selectionSummary.innerHTML = `<div class="cv-toast">No goblins available for expedition.</div>`;
-      }
-      return;
-    }
+	function hydrateGoblinUI(allNfts) {
+	  // normalizza forma e chiavi legacy
+	  const all = Array.isArray(allNfts) ? allNfts : [];
+	  all.forEach(nft => {
+	    if (!nft || typeof nft !== "object") return;
+	    // daily-power ↔ daily_power
+	    if (nft.daily_power === undefined && nft["daily-power"] !== undefined) {
+	      nft.daily_power = nft["daily-power"];
+	    }
+	    // loot-hungry ↔ loot_hungry
+	    if (nft.loot_hungry === undefined && nft["loot-hungry"] !== undefined) {
+	      nft.loot_hungry = nft["loot-hungry"];
+	    }
+	    // pinata → ipfs.io (hardening)
+	    if (typeof nft.img === "string" &&
+	        nft.img.startsWith("https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/")) {
+	      nft.img = nft.img.replace(
+	        "https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/",
+	        "https://ipfs.io/ipfs/"
+	      );
+	    }
+	  });
+	
+	  // filtra i goblin (case-insensitive, per massima compatibilità)
+	  const goblins = all.filter(n => String(n?.type || "").toLowerCase() === "goblin");
+	
+	  // indicizza per asset_id (sempre stringa)
+	  Cave.nftIndex.clear();
+	  goblins.forEach(n => Cave.nftIndex.set(String(n.asset_id), n));
+	
+	  if (!goblins.length) {
+	    if (Cave.el.selectionSummary) {
+	      Cave.el.selectionSummary.innerHTML = `<div class="cv-toast">No goblins available for expedition.</div>`;
+	    }
+	    return;
+	  }
 
     const specialCount = (Array.isArray(allNfts) ? allNfts : [])
 	  .filter(n => String(n.template_id) === '900338')

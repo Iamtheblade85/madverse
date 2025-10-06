@@ -7,7 +7,8 @@
     storageKeySel: "nftFarm.selection.v1",
     storageKeyTokens: "nftFarm.tokens.v1",
     storageKeyRewardsPerToken: "nftFarm.rewardsPerToken.v1",
-    storageKeyExpiry: "nftFarm.expiry.v1"
+    storageKeyExpiry: "nftFarm.expiry.v1",
+    defaultCollection: "" // optional: you can pass this via initManageNFTsFarm({ defaultCollection: "cryptochaos1" })
   };
 
   const $ = (sel, parent = document) => parent.querySelector(sel);
@@ -117,8 +118,7 @@
 
         <div class="nftf-bar">
           <div class="row">
-            <input id="nftf-api" class="form-input" placeholder="API base (e.g. https://api.example.com)" style="max-width:360px;">
-            <input id="nftf-collection" class="form-input" placeholder="collection_name (e.g. cryptochaos1)" style="max-width:240px;">
+            <input id="nftf-collection" class="form-input" placeholder="collection_name (e.g. cryptochaos1)" style="max-width:280px;">
             <button id="nftf-load" class="btn btn-primary">Load</button>
           </div>
           <div class="row">
@@ -214,7 +214,6 @@
   };
 
   const schemaSectionId = (schema) => `nftf-sec-${schema.replace(/[^a-z0-9]+/gi, "-")}`;
-
   const thSortable = (label, key) => `<th class="sortable" data-key="${key}" aria-sort="none"><span>${label}</span></th>`;
 
   const rowHtml = (schemaName, t, state) => {
@@ -269,7 +268,7 @@
   };
 
   const renderSections = (sectionsEl, data, state) => {
-    const { collection, schemas = [] } = data || {};
+    const { schemas = [] } = data || {};
     const search = state.search.trim().toLowerCase();
     const filterSchema = state.schemaFilter || "";
 
@@ -298,7 +297,7 @@
     }
 
     sectionsEl.innerHTML = filteredSchemas.map(s => sectionHtml(s, state)).join("");
-    filteredSchemas.forEach(s => bindSectionInteractions(s, state, collection));
+    filteredSchemas.forEach(s => bindSectionInteractions(s, state, state.collection));
   };
 
   const sortTable = (table, key) => {
@@ -341,14 +340,8 @@
     const btnSelAll = $(".nftf-sec-select-all", section);
     const btnClear = $(".nftf-sec-clear", section);
 
-    $$("thead th.sortable", table).forEach(th => {
-      th.addEventListener("click", () => sortTable(table, th.dataset.key));
-    });
-
-    $$("#" + sid + " .nftf-id-btn").forEach(btn => {
-      btn.addEventListener("click", () => copyToClipboard(btn.textContent.trim()));
-    });
-
+    $$("thead th.sortable", table).forEach(th => th.addEventListener("click", () => sortTable(table, th.dataset.key)));
+    $$("#" + sid + " .nftf-id-btn").forEach(btn => btn.addEventListener("click", () => copyToClipboard(btn.textContent.trim())));
     $$("#" + sid + " .nftf-row-check").forEach(chk => {
       chk.addEventListener("change", (e) => {
         const tr = e.target.closest("tr");
@@ -495,7 +488,7 @@
               <button class="btn nftf-extend-7">+7 days</button>
               <button class="btn nftf-extend-30">+30 days</button>
             </div>
-            <div class="meta">This is the <strong>maximum duration</strong> (extendable, <u>not reducible</u>) to consider asset IDs of this template for hourly distributions, provided a remaining reward balance exists.</div>
+            <div class="meta">This is the <strong>maximum window</strong> (extendable, <u>not reducible</u>) to consider asset IDs of this template for hourly distributions, provided a remaining reward balance exists.</div>
           </div>
 
           <div class="row" style="flex-direction:column; align-items:flex-start; gap:6px;">
@@ -580,7 +573,7 @@
         const tokenId = chip.dataset.token;
         chip.classList.toggle("active");
         const active = chip.classList.contains("active");
-        state.rewardsPerToken[key] = state.rewardsPerToken[key] || {};
+        state.rewardsPerToken[key] = state.reardsPerToken?.[key] || state.rewardsPerToken[key] || {};
         if (active) {
           if (state.rewardsPerToken[key][tokenId] === undefined) state.rewardsPerToken[key][tokenId] = "";
         } else {
@@ -696,7 +689,7 @@
     injectStyles();
     const root = createRoot(cfg.containerId);
 
-    const elApi = $("#nftf-api");
+    const API_BASE = (cfg.apiBaseUrl || window.BASE_URL || window.API_BASE || location.origin).replace(/\/+$/,'');
     const elCollection = $("#nftf-collection");
     const elLoad = $("#nftf-load");
     const elSections = $("#nftf-sections");
@@ -723,7 +716,7 @@
     const tokClose = $("#tok-close");
 
     const state = {
-      apiBaseUrl: cfg.apiBaseUrl || location.origin,
+      apiBaseUrl: API_BASE,
       collection: "",
       raw: null,
       search: "",
@@ -735,13 +728,9 @@
       expiry: loadExpiry()
     };
 
-    elApi.value = state.apiBaseUrl;
-
     const doLoad = async () => {
-      const apiBaseUrl = elApi.value.trim();
       const collection = elCollection.value.trim();
-      if (!apiBaseUrl || !collection) { toast("Fill API base and collection_name"); return; }
-      state.apiBaseUrl = apiBaseUrl;
+      if (!collection) { toast("Enter a collection_name"); return; }
       state.collection = collection;
       state.search = "";
       state.schemaFilter = "";
@@ -851,14 +840,10 @@
     });
 
     const qp = new URLSearchParams(location.search);
-    const qsApi = qp.get("api");
     const qsCol = qp.get("collection");
-    if (qsApi) elApi.value = qsApi;
+    if (cfg.defaultCollection) elCollection.value = cfg.defaultCollection;
     if (qsCol) elCollection.value = qsCol;
-    if ((qsApi || state.apiBaseUrl) && qsCol) {
-      if (!qsApi) elApi.value = state.apiBaseUrl;
-      doLoad();
-    }
+    if (elCollection.value.trim()) doLoad();
   }
 
   window.initManageNFTsFarm = initManageNFTsFarm;

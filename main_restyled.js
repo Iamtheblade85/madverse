@@ -71,6 +71,43 @@ function fmtAmount(value, dec) {
   return truncToDecimals(value, dec).toFixed(dec);
 }
 
+// pagina pronta?
+function onDomReady(fn) {
+  if (document.readyState === "complete" || document.readyState === "interactive") fn();
+  else document.addEventListener("DOMContentLoaded", fn);
+}
+
+// utente loggato? (adatta la condizione alla tua app)
+function isLoggedIn() {
+  const { userId, usx_token, wax_account } = window.userData || {};
+  return !!(userId && usx_token && wax_account);
+}
+
+// carica lo script solo quando serve
+function ensureNCFarmsLoaded(cb) {
+  if (typeof window.initManageNFTsFarm === "function") return cb();         // già caricato
+  if (window.__NCFARMS_LOADING__) {                                         // evita doppio load
+    window.addEventListener("__ncfarms_ready__", cb, { once: true });
+    return;
+  }
+  window.__NFTF_AUTO_DISABLED__ = true; // extra safety
+  window.__NCFARMS_LOADING__ = true;
+
+  const s = document.createElement("script");
+  s.src = "/js/noncustodial_farms.js?v=prod-2025-10-04"; // <--- percorso reale
+  s.defer = true;
+  s.onload = () => {
+    window.__NCFARMS_LOADING__ = false;
+    window.dispatchEvent(new Event("__ncfarms_ready__"));
+    cb();
+  };
+  s.onerror = () => {
+    window.__NCFARMS_LOADING__ = false;
+    console.error("Caricamento noncustodial_farms.js fallito");
+  };
+  document.head.appendChild(s);
+}
+
 /**
  * Calibra amount+slider secondo i decimali del token e tronca per difetto.
  * - maxAmount = floor(balance, dec) - 1 step (se possibile)
@@ -2493,42 +2530,54 @@ async function loadSection(section) {
       });
     });
   }   if (section === 'noncustodialfarms') {
-	  // 1) Disegna la sezione e il container
-	  app.innerHTML = `
-	    <div class="section-container">
-	      <h2 class="section-title text-center">Manage not-custodial NFTs Farm</h2>
-	      <div id="manage-nft-farm-page"></div>
-	    </div>
-	  `;
-	
-	  // 2) Config API
-	  const API_BASE = BASE_URL;
-	  // 3) Monta il componente (main_restyled.js deve essere stato caricato prima)
-	  if (typeof window.initManageNFTsFarm !== "function") {
-	    console.error("initManageNFTsFarm not available: noncustodial_farms.js still not loaded?");
-	    return;
-	  }
-	  window.initManageNFTsFarm({
-	    apiBaseUrl: API_BASE,
-	    containerId: "manage-nft-farm-page",
-	  });
-	
-	  // 4) Listener del draft — aggiungilo una sola volta
-	  if (!window.__NFTF_REWARD_LISTENER__) {
-	    window.addEventListener("nftFarm:rewardsDraft", (e) => {
-	      const draft = e.detail;
-	      console.log("Rewards draft received:", draft);
-	
-	      // Esempio POST:
-	      // fetch(`${API_BASE}/api/farm/rewards/draft`, {
-	      //   method: "POST",
-	      //   headers: { "Content-Type": "application/json" },
-	      //   body: JSON.stringify(draft),
-	      // }).then(r => r.ok ? console.log("Draft salvato") : console.error("Errore salvataggio"));
-	    });
-	    window.__NFTF_REWARD_LISTENER__ = true;
-	  }
-  } else if (section === 'wallet') {
+  onDomReady(() => {
+    if (!isLoggedIn()) {
+      // opzionale: chiedi login con SweetAlert2
+      if (window.Swal) Swal.fire("Login richiesto", "Effettua il login per accedere a Non Custodial NFTs Farms", "info");
+      return;
+    }
+    // opzionale: accesso solo al wallet specifico
+    if (window.userData?.wax_account !== "agoscry4ever") {
+      if (window.Swal) Swal.fire("Accesso negato", "Questa sezione è riservata.", "warning");
+      return;
+    }
+
+    // prepara il container
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title text-center">Manage not-custodial NFTs Farm</h2>
+        <div id="manage-nft-farm-page"></div>
+      </div>
+    `;
+
+    // carica lo script e poi inizializza
+    ensureNCFarmsLoaded(() => {
+      if (window.__NFTF_MOUNTED__) return; // no doppio mount
+      const API_BASE = BASE_URL; // la tua base (già usata altrove)
+      window.initManageNFTsFarm({
+        apiBaseUrl: API_BASE,
+        containerId: "manage-nft-farm-page",
+      });
+      window.__NFTF_MOUNTED__ = true;
+
+      // una sola volta: ascolta l’evento di draft
+      if (!window.__NFTF_REWARD_LISTENER__) {
+        window.addEventListener("nftFarm:rewardsDraft", (e) => {
+          const draft = e.detail;
+          console.log("Rewards draft:", draft);
+          // Esempio invio:
+          // fetch(`${API_BASE}/api/farm/rewards/draft`, {
+          //   method: "POST",
+          //   headers: { "Content-Type": "application/json" },
+          //   body: JSON.stringify(draft),
+          // });
+        }, { once: false });
+        window.__NFTF_REWARD_LISTENER__ = true;
+      }
+    });
+  });
+} else if (section === 'wallet') {
       app.innerHTML = `
         <div class="section-container">
           <h2 class="section-title">Wallet</h2>

@@ -19,7 +19,7 @@
       tokens: "ncf.tokens.v2",
       wizard: "ncf.wizard.v1",
       selection: "ncf.selection.v2",
-      rewardsPerToken: "ncf.rewardsPerToken.v2",
+      rewardsPerToken: "ncf.rewardsPerToken.daily.v1",
       expiry: "ncf.expiry.v2",
       autoMonitor: "ncf.autoMonitor.v2"
     }
@@ -174,8 +174,8 @@
               </div>
 
               <div class="step" id="ncf-step-d">
-                <h3 style="margin:.2rem 0;">Step 4 — Configure rewards (per asset, per hour)</h3>
-                <div class="help" style="margin:0 0 8px;">Choose tokens and set the hourly amount per asset_id for each selected template. Expiration can only be extended.</div>
+                <h3 style="margin:.2rem 0;">Step 4 — Configure rewards (per asset, daily)</h3>
+                <div class="help" style="margin:0 0 8px;">Choose tokens and set the daily amount per asset_id for each selected template. Expiration can only be extended.</div>
                 <div id="ncf-rp-body" class="grid" style="gap:10px;">
                   <div class="soft" style="padding:12px; text-align:center;">No templates selected yet.</div>
                 </div>
@@ -525,7 +525,7 @@
       
         return `<div class="row ncf-reward-row" data-key="${esc(k)}" data-token="${esc(id)}" style="${show}">
           <span class="muted" style="min-width:160px;"><strong>${esc(t.symbol)}</strong> <small>@${esc(t.contract)}</small></span>
-          <input type="number" class="input ncf-reward-input" step="0.0001" min="0" placeholder="Reward / asset / hour" value="${String(v)}" style="width:220px;">
+          <input type="number" class="input ncf-reward-input" step="0.0001" min="0" placeholder="Reward per asset(NFT) each day" value="${String(v)}" style="width:220px;">
         </div>`;
       }).join("");
       return `<div class="soft" style="padding:10px;" data-item="${esc(k)}">
@@ -604,26 +604,53 @@
     }));
   }
 
-  function buildDraftPayload(state, perHour=true){
-    const items=Object.values(state.selection).filter(x=>x.collection===state.collection).map(x=>{
-      const k=selectionKey(x.collection,x.schema_name,x.template_id);
-      const expiry=state.expiry[k]||null; const rewards=[]; const per=state.rewardsPerToken[k]||{};
-      Object.entries(per).forEach(([id,v])=>{
-        if(v===""||Number(v)<=0) return; const [contract,symbol]=id.split(":");
-        const meta=state.tokens.find(t=>t.contract===contract && t.symbol===symbol)||{}; const qh=Number(v); const qd=qh*24;
-        rewards.push({token_contract:contract, token_symbol:symbol, decimals:meta.decimals??null, reward_per_asset_per_hour:qh, reward_per_asset_per_day:qd});
+  function buildDraftPayload(state, perHour=false){
+    const items = Object.values(state.selection)
+      .filter(x => x.collection === state.collection)
+      .map(x => {
+        const k = `${x.collection}::${x.schema_name}::${x.template_id}`;
+        const expiry = state.expiry[k] || null;
+        const per = state.rewardsPerToken[k] || {};
+        const rewards = [];
+  
+        Object.entries(per).forEach(([id, v]) => {
+          const amount = Number(v);
+          if (!isFinite(amount) || amount <= 0) return;
+          const [contract, symbol] = id.split(":");
+          const meta = state.tokens.find(t => t.contract === contract && t.symbol === symbol) || {};
+          rewards.push({
+            token_contract: contract,
+            token_symbol: symbol,
+            decimals: meta.decimals ?? null,
+            // SOLO per-day verso il backend:
+            reward_per_asset_per_day: amount
+          });
+        });
+  
+        return { schema_name: x.schema_name, template_id: Number(x.template_id), expiry, rewards };
       });
-      return {schema_name:x.schema_name, template_id:Number(x.template_id), expiry, rewards};
-    });
-    return { collection: state.collection, creator_wax_account:getWax()||null, policy:{ distribution: perHour?"hourly":"daily", semantics: perHour?"Rewards are per asset_id per hour. Expiration can only be extended.":"Rewards are per asset_id per day. Expiration can only be extended.", deposit_required:"Payouts require a positive Farm-Wallet balance." }, tokens_catalog: state.tokens, total_selected: items.length, items };
+  
+    return {
+      collection: state.collection,
+      creator_wax_account: getWax() || null,
+      policy: {
+        distribution: "daily",
+        semantics: "Rewards are per asset_id per day. Expiration can only be extended.",
+        deposit_required: "Payouts require a positive Farm-Wallet balance."
+      },
+      tokens_catalog: state.tokens,
+      total_selected: items.length,
+      items
+    };
   }
+
 
   async function saveDraft(state,cfg){
     const url=buildUrl(apiBase(cfg),DEFAULTS.endpoints.saveRewards);
     const sel=Object.values(state.selection).filter(x=>x.collection===state.collection);
     if(!sel.length){ toast("Select at least one template.","error"); return false; }
     const any=sel.some(x=>{ const k=selectionKey(x.collection,x.schema_name,x.template_id); const m=state.rewardsPerToken[k]||{}; return Object.values(m).some(v=>String(v).trim()!=="" && Number(v)>0); });
-    if(!any){ toast("Add at least one token with a positive hourly reward.","error"); return false; }
+    if(!any){ toast("Add at least one token with a positive daily reward.","error"); return false; }
     try{ const res=await postJson(url, buildDraftPayload(state,true)); if(!(res && (res.ok===true||res.status==="ok"))) throw new Error("Draft failed"); sel.forEach(t=>toast(`Draft saved for T${t.template_id}`)); return true; } catch(e){ toast(String(e.message||e),"error"); return false; }
   }
 
@@ -633,7 +660,7 @@
     const rows=Object.values(state.selection).filter(x=>x.collection===state.collection).map(x=>{
       const k=selectionKey(x.collection,x.schema_name,x.template_id);
       const per=state.rewardsPerToken[k]||{}; const exp=state.expiry[k]?new Date(state.expiry[k]).toLocaleString():"—";
-      const rr=Object.entries(per).filter(([,v])=>Number(v)>0).map(([id,v])=>{ const [,s]=id.split(":"); return `${esc(s)}: ${v}/h`; }).join(", ") || "—";
+      const rr=Object.entries(per).filter(([,v])=>Number(v)>0).map(([id,v])=>{ const [,s]=id.split(":"); return `${esc(s)}: ${v}/day`; }).join(", ") || "—";
       const meta=enrichFromTable(x.schema_name,x.template_id);
       return `<tr><td>${esc(x.schema_name)} <small class="muted">ID ${x.template_id} — ${esc(meta.template_name||"—")}</small></td><td>${rr}</td><td>${esc(exp)}</td></tr>`;
     }).join("");
@@ -642,7 +669,7 @@
       <div class="row"><strong>Collection:</strong> <span>${esc(state.collection)}</span></div>
       <div class="row"><strong>Creator:</strong> <span>${esc(getWax()||"—")}</span></div>
       <div class="soft" style="padding:8px;"><div class="muted">Farm-Wallet overview</div><ul class="help" style="margin:.3rem 0 0 1rem;">${fwRows}</ul></div>
-      <div class="soft" style="padding:8px;"><table style="width:100%"><thead><tr><th>Template</th><th>Rewards (per hour)</th><th>Expiry</th></tr></thead><tbody>${rows||`<tr><td colspan="3">No templates</td></tr>`}</tbody></table></div>
+      <div class="soft" style="padding:8px;"><table style="width:100%"><thead><tr><th>Template</th><th>Rewards (per day)</th><th>Expiry</th></tr></thead><tbody>${rows||`<tr><td colspan="3">No templates</td></tr>`}</tbody></table></div>
     </div>`;
   }
 
@@ -654,7 +681,7 @@
       const per=state.rewardsPerToken[k]||{}; const exp=state.expiry[k]?new Date(state.expiry[k]).toLocaleString():"—";
       const tokenRows=Object.entries(per).filter(([,v])=>Number(v)>0).map(([id,v])=>{
         const [c,s]=id.split(":"); const bal=num(state.farmBalances.get(s),0); const st=bal>0?"OK":(ids.has(id)?"Low/0":"—");
-        return `<div class="row" style="gap:.5rem;"><span class="badge">${esc(s)}</span><small class="muted">@${esc(c)}</small><span class="muted">reward: ${v}/h</span><span class="muted">FW: ${fmt(bal)}</span><span class="badge ${bal>0?"ok":"err"}">${st}</span></div>`;
+        return `<div class="row" style="gap:.5rem;"><span class="badge">${esc(s)}</span><small class="muted">@${esc(c)}</small><span class="muted">reward: ${v}/day</span><span class="muted">FW: ${fmt(bal)}</span><span class="badge ${bal>0?"ok":"err"}">${st}</span></div>`;
       }).join("") || "<div class='muted'>—</div>";
       const meta=enrichFromTable(x.schema_name,x.template_id);
       return `<tr><td><strong>${esc(x.schema_name)}</strong> <small class="muted">ID ${x.template_id} — ${esc(meta.template_name||"—")}</small></td><td>${tokenRows}</td><td>${esc(exp)}</td></tr>`;

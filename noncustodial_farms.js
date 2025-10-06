@@ -952,7 +952,8 @@
     const host = cfg.containerId ? document.getElementById(cfg.containerId) : (()=>{const d=document.createElement("div"); d.id="ncf-root-auto"; document.body.appendChild(d); return d;})();
     createLayout(host,cfg);
     bindTabs(state, cfg);
-    const state={
+    let state;
+    state={
       apiBaseUrl: apiBase(cfg),
       collection: rLS(DEFAULTS.ls.lastCollection,""),
       raw:null,

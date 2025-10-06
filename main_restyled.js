@@ -40,7 +40,6 @@ window.expeditionTimersRunning = window.expeditionTimersRunning || {};
 function getTokenDecimals(symbol) {
   const sym = (symbol || '').toUpperCase();
 
-  // 1) cerca nei token disponibili (preferito)
   const list = window.availableTokensDetailed || [];
   const official = (window.OFFICIAL_TOKENS || []).find(o => o.symbol === sym);
   if (official) {
@@ -50,11 +49,9 @@ function getTokenDecimals(symbol) {
   const m2 = list.find(t => (t.symbol || '').toUpperCase() === sym && Number.isInteger(t.precision));
   if (m2) return m2.precision;
 
-  // 2) fallback: staking pools (se presente)
   const p = (window.stakingPools || []).find(p => (p.deposit_token?.symbol || '').toUpperCase() === sym);
   if (p && Number.isInteger(p.deposit_token?.decimals)) return p.deposit_token.decimals;
 
-  // 3) default ragionevole
   return 8;
 }
 
@@ -71,22 +68,19 @@ function fmtAmount(value, dec) {
   return truncToDecimals(value, dec).toFixed(dec);
 }
 
-// pagina pronta?
 function onDomReady(fn) {
   if (document.readyState === "complete" || document.readyState === "interactive") fn();
   else document.addEventListener("DOMContentLoaded", fn);
 }
 
-// utente loggato? (adatta la condizione alla tua app)
 function isLoggedIn() {
   const { userId, usx_token, wax_account } = window.userData || {};
   return !!(userId && usx_token && wax_account);
 }
 
-// carica lo script solo quando serve
 function ensureNCFarmsLoaded(cb) {
-  if (typeof window.initManageNFTsFarm === "function") return cb();         // già caricato
-  if (window.__NCFARMS_LOADING__) {                                         // evita doppio load
+  if (typeof window.initManageNFTsFarm === "function") return cb();
+  if (window.__NCFARMS_LOADING__) {
     window.addEventListener("__ncfarms_ready__", cb, { once: true });
     return;
   }
@@ -94,7 +88,7 @@ function ensureNCFarmsLoaded(cb) {
   window.__NCFARMS_LOADING__ = true;
 
   const s = document.createElement("script");
-  s.src = "/js/noncustodial_farms.js?v=prod-2025-10-04"; // <--- percorso reale
+  s.src = "noncustodial_farms.js?v=prod-2025-10-04";
   s.defer = true;
   s.onload = () => {
     window.__NCFARMS_LOADING__ = false;

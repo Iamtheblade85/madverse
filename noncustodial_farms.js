@@ -218,45 +218,43 @@
             <h3 style="margin:.2rem 0;">Current Farm</h3>
             <div id="ncf-farm-table"></div>
           </section>
-        </section>
-
-        <!-- TAB: STATS -->
-        <section id="ncf-tabpane-stats" class="cy-card" style="padding:16px; display:none;">
-          <div class="row" style="justify-content:space-between; align-items:center;">
-            <h2 style="margin:0;">Farm Stats</h2>
-            <div class="row">
-              <select id="ncf-farm-picker" class="select" style="min-width:260px;"><option value="">All farms (this creator)</option></select>
-              <button id="ncf-refresh-stats" class="btn btn-ghost">Refresh</button>
-            </div>
-          </div>
-
-          <div class="soft" style="padding:10px; margin-top:10px;">
-            <div class="row" style="gap:10px; flex-wrap:wrap;">
-              <div class="badge" id="ncf-stats-head-farms">Farms: 0</div>
-              <div class="badge" id="ncf-stats-head-owners">Unique owners: 0</div>
-              <div class="badge" id="ncf-stats-head-assets">Staked assets: 0</div>
-              <div class="badge" id="ncf-stats-head-lastdist">Last distribution: —</div>
-            </div>
-          </div>
-
-          <div class="grid" style="gap:12px; margin-top:10px;">
-            <div class="soft" style="padding:10px;">
-              <h4 style="margin:.2rem 0;">Rewards (grouped)</h4>
-              <div class="help" style="margin:.2rem 0;">Grouped by <strong>Owner</strong> → <strong>Schema</strong> → <strong>Template</strong> → <strong>Token</strong>. Click a row to expand subtotals.</div>
-              <div id="ncf-stats-grouped" style="overflow:auto; max-height:46vh;">
-                <div class="help">No data yet.</div>
+          <!-- TAB: STATS -->
+          <section id="ncf-tabpane-stats" class="cy-card" style="padding:16px; display:none;">
+            <div class="row" style="justify-content:space-between; align-items:center;">
+              <h2 style="margin:0;">Farm Stats</h2>
+              <div class="row">
+                <select id="ncf-farm-picker" class="select" style="min-width:260px;"><option value="">All farms (this creator)</option></select>
+                <button id="ncf-refresh-stats" class="btn btn-ghost">Refresh</button>
               </div>
             </div>
-
-            <div class="soft" style="padding:10px;">
-              <h4 style="margin:.2rem 0;">Distributions history</h4>
-              <div id="ncf-stats-history" style="overflow:auto; max-height:38vh;">
-                <div class="help">No history yet.</div>
+  
+            <div class="soft" style="padding:10px; margin-top:10px;">
+              <div class="row" style="gap:10px; flex-wrap:wrap;">
+                <div class="badge" id="ncf-stats-head-farms">Farms: 0</div>
+                <div class="badge" id="ncf-stats-head-owners">Unique owners: 0</div>
+                <div class="badge" id="ncf-stats-head-assets">Staked assets: 0</div>
+                <div class="badge" id="ncf-stats-head-lastdist">Last distribution: —</div>
               </div>
             </div>
-          </div>
-        </section>
-      </div>
+  
+            <div class="grid" style="gap:12px; margin-top:10px;">
+              <div class="soft" style="padding:10px;">
+                <h4 style="margin:.2rem 0;">Rewards (grouped)</h4>
+                <div class="help" style="margin:.2rem 0;">Grouped by <strong>Owner</strong> → <strong>Schema</strong> → <strong>Template</strong> → <strong>Token</strong>. Click a row to expand subtotals.</div>
+                <div id="ncf-stats-grouped" style="overflow:auto; max-height:46vh;">
+                  <div class="help">No data yet.</div>
+                </div>
+              </div>
+  
+              <div class="soft" style="padding:10px;">
+                <h4 style="margin:.2rem 0;">Distributions history</h4>
+                <div id="ncf-stats-history" style="overflow:auto; max-height:38vh;">
+                  <div class="help">No history yet.</div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
         <aside id="ncf-rightpanel" class="grid" style="gap:14px;">
           <section class="cy-card" style="padding:14px;">
             <h3 style="margin:.1rem 0 .5rem;">Tokens Library</h3>
@@ -951,7 +949,6 @@
     const cfg={...DEFAULTS,...opts};
     const host = cfg.containerId ? document.getElementById(cfg.containerId) : (()=>{const d=document.createElement("div"); d.id="ncf-root-auto"; document.body.appendChild(d); return d;})();
     createLayout(host,cfg);
-    bindTabs(state, cfg);
     let state;
     state={
       apiBaseUrl: apiBase(cfg),
@@ -969,7 +966,7 @@
       monitorId:null,
       wizard: rLS(DEFAULTS.ls.wizard,{step:"#ncf-step-a"})
     };
-
+    bindTabs(state, cfg);
     $("#ncf-collection").value=state.collection||"";
     $("#ncf-auto").checked=!!rLS(DEFAULTS.ls.autoMonitor,false);
 

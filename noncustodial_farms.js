@@ -1155,9 +1155,4 @@
   // Expose globally
   window.initManageNFTsFarm = initManageNFTsFarm;
 
-  document.addEventListener("DOMContentLoaded", () => {
-    if (!window.__NFTF_AUTO_DISABLED__) {
-      initManageNFTsFarm({ apiBaseUrl: DEFAULTS.apiBaseUrl });
-    }
-  });
 })();

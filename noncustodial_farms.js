@@ -1,15 +1,15 @@
 /* noncustodial_farms.js
- * Manage not-custodial NFTs Farm — Frontend single-file (HTML+CSS+JS)
- * Aggiunte: scadenza per template (estendibile, non accorciabile),
- * gestione multi-token deposito e reward per token.
+ * Manage non-custodial NFTs Farm — Frontend single-file (HTML+CSS+JS)
+ * Additions: per-template expiry (extend-only, not reducible),
+ * multi-token deposit management and per-token reward.
  */
 
 (function () {
   const DEFAULTS = {
-    apiBaseUrl: "",         // es: "http://localhost:8080"
+    apiBaseUrl: "",         // e.g. "http://localhost:8080"
     endpointPath: "/api/templates-by-schema",
     containerId: null,
-    appTitle: "Manage not-custodial NFTs Farm",
+    appTitle: "Manage non-custodial NFTs Farm",
     storageKeySel: "nftFarm.selection.v1",
     storageKeyTokens: "nftFarm.tokens.v1",
     storageKeyRewardsPerToken: "nftFarm.rewardsPerToken.v1",
@@ -38,7 +38,7 @@
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(String(text));
-      toast("Copiato negli appunti");
+      toast("Copied to clipboard");
     } catch {
       const ta = document.createElement("textarea");
       ta.value = String(text);
@@ -46,7 +46,7 @@
       ta.select();
       document.execCommand("copy");
       document.body.removeChild(ta);
-      toast("Copiato negli appunti");
+      toast("Copied to clipboard");
     }
   };
 
@@ -77,7 +77,7 @@
     return `${y}-${M}-${D}T${h}:${m}`;
   };
   const parseDatetimeLocal = (v) => {
-    // v come "2025-10-06T12:00"
+    // v like "2025-10-06T12:00"
     const d = new Date(v);
     return isNaN(d.getTime()) ? null : d;
   };
@@ -258,7 +258,7 @@
       }
       @keyframes nftf-s { 0%{background-position:-120px 0}100%{background-position:120px 0} }
 
-      /* Modal tokens */
+      /* Modal */
       .nftf-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 9998; }
       .nftf-modal.open { display: flex; }
       .nftf-modal .backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
@@ -316,25 +316,25 @@
           <div class="nftf-header">
             <div class="nftf-title">${DEFAULTS.appTitle}</div>
             <div class="nftf-sub">
-              Le distribuzioni avvengono <strong>automaticamente ogni ora</strong> e solo se esiste un <strong>saldo reward residuo</strong> depositato dal creatore della farm.
+              Distributions run <strong>automatically every hour</strong> and only if a <strong>remaining reward balance</strong> exists deposited by the farm creator.
             </div>
           </div>
           <div class="nftf-controls">
             <div class="nftf-row">
-              <input id="nftf-api" class="nftf-input" placeholder="API base (es. http://localhost:8080)" />
-              <input id="nftf-collection" class="nftf-input" placeholder="collection_name (es. cryptochaos1)" />
-              <button id="nftf-load" class="nftf-btn primary">Carica</button>
+              <input id="nftf-api" class="nftf-input" placeholder="API base (e.g. http://localhost:8080)" />
+              <input id="nftf-collection" class="nftf-input" placeholder="collection_name (e.g. cryptochaos1)" />
+              <button id="nftf-load" class="nftf-btn primary">Load</button>
             </div>
             <div class="nftf-row">
-              <input id="nftf-search" class="nftf-input" placeholder="Cerca per ID o Nome template..." />
-              <select id="nftf-schema-filter" class="nftf-select"><option value="">Tutti gli schemi</option></select>
-              <button id="nftf-expand" class="nftf-btn ghost" title="Espandi/Comprimi">Espandi tutti</button>
-              <button id="nftf-tokens" class="nftf-btn ghost" title="Gestisci token deposito">Gestisci token deposito</button>
+              <input id="nftf-search" class="nftf-input" placeholder="Search by ID or Template name..." />
+              <select id="nftf-schema-filter" class="nftf-select"><option value="">All schemas</option></select>
+              <button id="nftf-expand" class="nftf-btn ghost" title="Expand/Collapse">Expand all</button>
+              <button id="nftf-tokens" class="nftf-btn ghost" title="Manage deposit tokens">Manage deposit tokens</button>
             </div>
             <div class="nftf-row">
-              <button id="nftf-select-all" class="nftf-btn ghost">Seleziona tutti</button>
-              <button id="nftf-clear" class="nftf-btn ghost">Pulisci selezione</button>
-              <span id="nftf-meta" class="nftf-badge dim">In attesa...</span>
+              <button id="nftf-select-all" class="nftf-btn ghost">Select all</button>
+              <button id="nftf-clear" class="nftf-btn ghost">Clear selection</button>
+              <span id="nftf-meta" class="nftf-badge dim">Idle...</span>
             </div>
           </div>
 
@@ -342,46 +342,46 @@
             <div id="nftf-status"></div>
             <div id="nftf-sections" class="nftf-sections"></div>
             <div class="nftf-summary">
-              <span class="nftf-badge" id="nftf-count-schemas">Schemi: 0</span>
-              <span class="nftf-badge" id="nftf-count-templates">Template: 0</span>
-              <span class="nftf-badge good" id="nftf-count-selected">Selezionati: 0</span>
+              <span class="nftf-badge" id="nftf-count-schemas">Schemas: 0</span>
+              <span class="nftf-badge" id="nftf-count-templates">Templates: 0</span>
+              <span class="nftf-badge good" id="nftf-count-selected">Selected: 0</span>
             </div>
           </div>
         </section>
       </div>
 
-      <aside id="nftf-rightpanel" class="nftf-rightpanel" aria-label="Selezione per rewards">
+      <aside id="nftf-rightpanel" class="nftf-rightpanel" aria-label="Selection for rewards">
         <header>
-          <h3>Rewards — Selezione</h3>
+          <h3>Rewards — Selection</h3>
           <span id="nftf-rp-count" class="nftf-badge dim" style="margin-left:auto;">0</span>
-          <button id="nftf-rp-close" class="nftf-btn ghost" title="Chiudi">Chiudi</button>
+          <button id="nftf-rp-close" class="nftf-btn ghost" title="Close">Close</button>
         </header>
         <div id="nftf-rp-body" class="nftf-rp-body">
-          <div class="nftf-empty">Nessun template selezionato.</div>
+          <div class="nftf-empty">No template selected.</div>
         </div>
         <div class="nftf-rp-footer">
-          <button id="nftf-rp-copy" class="nftf-btn">Copia JSON negli appunti</button>
-          <button id="nftf-rp-download" class="nftf-btn">Scarica JSON</button>
-          <button id="nftf-rp-emit" class="nftf-btn primary">Prosegui (emetti evento)</button>
+          <button id="nftf-rp-copy" class="nftf-btn">Copy JSON to clipboard</button>
+          <button id="nftf-rp-download" class="nftf-btn">Download JSON</button>
+          <button id="nftf-rp-emit" class="nftf-btn primary">Proceed (emit event)</button>
         </div>
       </aside>
 
-      <!-- Modal gestione token deposito -->
+      <!-- Deposit tokens modal -->
       <div id="nftf-modal" class="nftf-modal" aria-hidden="true">
         <div class="backdrop"></div>
         <div class="dialog">
-          <header>Token deposito disponibili</header>
+          <header>Available deposit tokens</header>
           <div class="body">
             <div class="nftf-token-row">
-              <input id="tok-contract" class="nftf-input" placeholder="Contratto token (es. eosio.token)" />
-              <input id="tok-symbol" class="nftf-input" placeholder="Simbolo (es. WAX)" />
-              <input id="tok-dec" class="nftf-input" type="number" min="0" max="18" step="1" placeholder="Decimali" />
-              <button id="tok-add" class="nftf-btn small">Aggiungi</button>
+              <input id="tok-contract" class="nftf-input" placeholder="Token contract (e.g. eosio.token)" />
+              <input id="tok-symbol" class="nftf-input" placeholder="Symbol (e.g. WAX)" />
+              <input id="tok-dec" class="nftf-input" type="number" min="0" max="18" step="1" placeholder="Decimals" />
+              <button id="tok-add" class="nftf-btn small">Add</button>
             </div>
             <div id="tok-list" class="nftf-token-list"></div>
           </div>
           <div class="footer">
-            <button id="tok-close" class="nftf-btn">Chiudi</button>
+            <button id="tok-close" class="nftf-btn">Close</button>
           </div>
         </div>
       </div>
@@ -450,11 +450,11 @@
     const totalSchemas = filteredSchemas.length;
     const totalTemplates = filteredSchemas.reduce((acc, s) => acc + s.templates.length, 0);
 
-    $("#nftf-count-schemas").textContent = `Schemi: ${totalSchemas}`;
-    $("#nftf-count-templates").textContent = `Template: ${totalTemplates}`;
+    $("#nftf-count-schemas").textContent = `Schemas: ${totalSchemas}`;
+    $("#nftf-count-templates").textContent = `Templates: ${totalTemplates}`;
 
     if (totalTemplates === 0) {
-      sectionsEl.innerHTML = `<div class="nftf-empty">Nessun risultato. Prova a cambiare filtro o ricerca.</div>`;
+      sectionsEl.innerHTML = `<div class="nftf-empty">No results. Try changing filter or search.</div>`;
       return;
     }
 
@@ -471,17 +471,17 @@
           <span>${escapeHtml(schemaObj.schema_name)}</span>
           <span class="nftf-badge dim">${schemaObj.templates.length}</span>
           <div class="nftf-section-actions">
-            <button class="nftf-btn ghost nftf-sec-select-all">Seleziona schema</button>
-            <button class="nftf-btn ghost nftf-sec-clear">Pulisci</button>
+            <button class="nftf-btn ghost nftf-sec-select-all">Select schema</button>
+            <button class="nftf-btn ghost nftf-sec-clear">Clear</button>
           </div>
         </summary>
         <div class="nftf-table-wrap">
           <table class="nftf-table" data-schema="${escapeHtml(schemaObj.schema_name)}">
             <thead>
               <tr>
-                <th style="width:42px;"><input type="checkbox" class="nftf-head-check" title="Seleziona visibili" /></th>
+                <th style="width:42px;"><input type="checkbox" class="nftf-head-check" title="Select visible" /></th>
                 ${thSortable("ID", "template_id")}
-                ${thSortable("Nome", "template_name")}
+                ${thSortable("Name", "template_name")}
                 ${thSortable("Circulating", "circulating_supply")}
                 ${thSortable("Max", "max_supply")}
                 ${thSortable("% Mint", "pct")}
@@ -510,7 +510,7 @@
       <tr data-tid="${t.template_id}">
         <td><input type="checkbox" class="nftf-row-check" ${isChecked ? "checked" : ""} /></td>
         <td class="nftf-cell-id">
-          <button class="nftf-id-btn" title="Copia ID">${t.template_id}</button>
+          <button class="nftf-id-btn" title="Copy ID">${t.template_id}</button>
         </td>
         <td>${escapeHtml(t.template_name || "—")}</td>
         <td>${Number.isFinite(+t.circulating_supply) ? Number(t.circulating_supply).toLocaleString() : "0"}</td>
@@ -655,18 +655,17 @@
   // ===== Right panel (selection details) =====
   const updateSelectionUI = (state) => {
     const selected = Object.values(state.selection).filter(x => x.collection === state.collection);
-    $("#nftf-count-selected").textContent = `Selezionati: ${selected.length}`;
+    $("#nftf-count-selected").textContent = `Selected: ${selected.length}`;
     $("#nftf-rp-count").textContent = selected.length.toString();
 
     const panel = $("#nftf-rightpanel");
     const body = $("#nftf-rp-body");
     if (selected.length === 0) {
-      body.innerHTML = `<div class="nftf-empty">Nessun template selezionato.</div>`;
+      body.innerHTML = `<div class="nftf-empty">No template selected.</div>`;
       panel.classList.remove("open");
       return;
     }
 
-    // Helper per arricchimento dal DOM
     const enrich = (sName, tid) => {
       const sid = schemaSectionId(sName);
       const row = $(`#${sid} tr[data-tid="${tid}"]`);
@@ -691,7 +690,6 @@
         const prevISO = state.expiry[key] || "";
         const minISO = toDatetimeLocal(nowPlusMinutes(5));
 
-        // Chips token
         const tokenChips = tokens.map(t => {
           const id = `${t.contract}:${t.symbol}`;
           const active = !!(state.rewardsPerToken[key] && state.rewardsPerToken[key][id] !== undefined);
@@ -702,7 +700,6 @@
             </label>`;
         }).join("");
 
-        // Riga inputs reward per token (solo per token attivi)
         const rewardsRows = tokens.map(t => {
           const id = `${t.contract}:${t.symbol}`;
           const val = (state.rewardsPerToken[key] && state.rewardsPerToken[key][id] !== undefined)
@@ -724,32 +721,31 @@
             </div>
             <div class="row">
               <div class="meta" title="${escapeHtml(template_name || "—")}">${escapeHtml(template_name || "—")}</div>
-              <button class="nftf-btn ghost nftf-rp-remove">Rimuovi</button>
+              <button class="nftf-btn ghost nftf-rp-remove">Remove</button>
             </div>
             <div class="row">
               <span class="meta">Circ: ${Number(circulating_supply).toLocaleString()} — Max: ${max_supply == null ? "—" : Number(max_supply).toLocaleString()}</span>
             </div>
 
             <div class="row" style="flex-direction:column; align-items:flex-start; gap:8px;">
-              <label class="meta"><strong>Scadenza (validità massima)</strong></label>
+              <label class="meta"><strong>Expiry (maximum validity)</strong></label>
               <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                 <input type="datetime-local" class="dt-input nftf-expiry" min="${minISO}" value="${prevISO ? toDatetimeLocal(new Date(prevISO)) : ""}" />
-                <button class="nftf-btn small nftf-extend-7">+7 giorni</button>
-                <button class="nftf-btn small nftf-extend-30">+30 giorni</button>
+                <button class="nftf-btn small nftf-extend-7">+7 days</button>
+                <button class="nftf-btn small nftf-extend-30">+30 days</button>
               </div>
-              <div class="meta">Questa è la <strong>durata massima</strong> (estendibile, <u>non accorciabile</u>) entro cui verranno considerati gli asset ID di questo template per le distribuzioni orarie, a condizione che esista saldo reward residuo depositato.</div>
+              <div class="meta">This is the <strong>maximum duration</strong> (extend-only, <u>not reducible</u>) during which asset IDs from this template will be considered for hourly distributions, provided that a remaining deposited reward balance exists.</div>
             </div>
 
             <div class="row" style="flex-direction:column; align-items:flex-start; gap:6px;">
-              <label class="meta"><strong>Token per reward</strong> — i creatori possono depositare più token e decidere quali usare su questo template.</label>
-              <div class="nftf-token-chips">${tokenChips || '<div class="meta">Nessun token configurato. Aggiungi token da "Gestisci token deposito".</div>'}</div>
+              <label class="meta"><strong>Reward tokens</strong> — creators can deposit multiple tokens and choose which to use on this template.</label>
+              <div class="nftf-token-chips">${tokenChips || '<div class="meta">No tokens configured. Add tokens from "Manage deposit tokens".</div>'}</div>
               <div class="nftf-token-inputs" style="width:100%;">${rewardsRows}</div>
             </div>
           </div>
         `;
       }).join("");
 
-    // Bind: copy/remove
     $$("#nftf-rp-body .nftf-id-btn").forEach(b => {
       b.addEventListener("click", () => copyToClipboard(b.textContent.trim()));
     });
@@ -775,7 +771,6 @@
       });
     });
 
-    // Bind: expiry (max-only logic)
     $$("#nftf-rp-body .nftf-expiry").forEach(inp => {
       inp.addEventListener("change", (e) => {
         const item = e.target.closest(".nftf-rp-item");
@@ -788,16 +783,15 @@
         }
         const prev = state.expiry[key] ? new Date(state.expiry[key]) : null;
         if (prev && newDate < prev) {
-          // Non accorciabile: ripristina vecchio valore
           e.target.value = toDatetimeLocal(prev);
-          toast("La scadenza può solo essere estesa, non ridotta.");
+          toast("Expiry can only be extended, not reduced.");
           return;
         }
         state.expiry[key] = newDate.toISOString();
         saveExpiry(state.expiry);
       });
     });
-    // Quick-extend buttons
+
     $$("#nftf-rp-body .nftf-extend-7").forEach(btn => {
       btn.addEventListener("click", (e) => {
         const item = e.target.closest(".nftf-rp-item");
@@ -825,7 +819,6 @@
       });
     });
 
-    // Bind: token chips + reward inputs
     $$("#nftf-rp-body .nftf-token-chips .nftf-chip").forEach(chip => {
       chip.addEventListener("click", (e) => {
         const item = e.target.closest(".nftf-rp-item");
@@ -836,7 +829,6 @@
 
         state.rewardsPerToken[key] = state.rewardsPerToken[key] || {};
         if (active) {
-          // Se attivato e non esiste un valore, inizializza a vuoto
           if (state.rewardsPerToken[key][tokenId] === undefined) {
             state.rewardsPerToken[key][tokenId] = "";
           }
@@ -845,7 +837,6 @@
         }
         saveRewardsPerToken(state.rewardsPerToken);
 
-        // toggle riga input associata
         const row = $(`.nftf-reward-row[data-token="${CSS.escape(tokenId)}"]`, item);
         if (row) row.style.display = active ? "" : "none";
       });
@@ -866,7 +857,6 @@
   };
 
   const buildRewardsDraft = (state, data) => {
-    // Arricchimento: schema_name -> Map(template_id -> templateObject)
     const enrichMap = new Map();
     (data.schemas || []).forEach(s => {
       const m = new Map();
@@ -901,8 +891,8 @@
         template_name: tpl.template_name || null,
         circulating_supply: Number(tpl.circulating_supply || 0),
         max_supply: (tpl.max_supply === undefined ? null : tpl.max_supply),
-        expiry, // ISO 8601 o null
-        rewards, // array per-token
+        expiry,
+        rewards,
       };
     });
 
@@ -910,8 +900,8 @@
       collection: state.collection,
       policy: {
         distribution: "hourly",
-        expiry_semantics: "expiry è una durata massima: può essere estesa ma non ridotta",
-        deposit_required: "le distribuzioni avvengono solo se esiste saldo reward residuo",
+        expiry_semantics: "expiry is a maximum duration: can be extended but not reduced",
+        deposit_required: "distributions run only if a remaining reward balance exists",
       },
       tokens_catalog: state.tokens,
       total_selected: items.length,
@@ -926,7 +916,7 @@
   const renderTokensList = (state) => {
     const list = $("#tok-list");
     if (!state.tokens.length) {
-      list.innerHTML = `<div class="nftf-empty">Nessun token configurato.</div>`;
+      list.innerHTML = `<div class="nftf-empty">No tokens configured.</div>`;
       return;
     }
     list.innerHTML = state.tokens.map(t => `
@@ -934,7 +924,7 @@
         <strong>${escapeHtml(t.symbol)}</strong>
         <span class="nftf-dim">@${escapeHtml(t.contract)}</span>
         <span class="nftf-dim">dec:${t.decimals ?? "—"}</span>
-        <button class="nftf-btn small ghost nftf-token-del">Rimuovi</button>
+        <button class="nftf-btn small ghost nftf-token-del">Remove</button>
       </div>
     `).join("");
 
@@ -942,10 +932,8 @@
       btn.addEventListener("click", (e) => {
         const pill = e.target.closest(".nftf-token-pill");
         const [contract, symbol] = pill.dataset.id.split(":");
-        // rimuovi token
         state.tokens = state.tokens.filter(x => !(x.contract === contract && x.symbol === symbol));
         saveTokens(state.tokens);
-        // rimuovi eventuali riferimenti nelle selezioni
         Object.keys(state.rewardsPerToken).forEach(k => {
           if (state.rewardsPerToken[k]) delete state.rewardsPerToken[k][`${contract}:${symbol}`];
         });
@@ -1011,7 +999,7 @@
       const apiBaseUrl = elApi.value.trim();
       const collection = elCollection.value.trim();
       if (!apiBaseUrl || !collection) {
-        toast("Compila API base e collection_name");
+        toast("Fill API base and collection_name");
         return;
       }
       state.apiBaseUrl = apiBaseUrl;
@@ -1021,28 +1009,26 @@
       state.expandAll = true;
 
       renderStatus(elStatus, "loading");
-      elMeta.textContent = "Caricamento...";
+      elMeta.textContent = "Loading...";
       elSections.innerHTML = "";
 
       try {
         const data = await fetchTemplatesBySchema(state.apiBaseUrl, collection);
         state.raw = data;
 
-        // Populate schema filter
         const options = (data.schemas || []).map(s => `<option value="${escapeHtml(s.schema_name)}">${escapeHtml(s.schema_name)}</option>`).join("");
-        elSchemaFilter.innerHTML = `<option value="">Tutti gli schemi</option>${options}`;
+        elSchemaFilter.innerHTML = `<option value="">All schemas</option>${options}`;
 
-        // Meta
         const totalSchemas = (data.schemas || []).length;
         const totalTemplates = (data.schemas || []).reduce((acc, s) => acc + (s.templates?.length || 0), 0);
-        elMeta.textContent = `Collezione: ${data.collection} — Schemi ${totalSchemas} — Template ${totalTemplates}`;
+        elMeta.textContent = `Collection: ${data.collection} — Schemas ${totalSchemas} — Templates ${totalTemplates}`;
 
         renderStatus(elStatus, "ready");
         renderSections(elSections, data, state);
         updateSelectionUI(state);
       } catch (err) {
         renderStatus(elStatus, "error", String(err.message || err));
-        elMeta.textContent = "Errore";
+        elMeta.textContent = "Error";
       }
     };
 
@@ -1061,7 +1047,7 @@
 
     elExpand.addEventListener("click", () => {
       state.expandAll = !state.expandAll;
-      elExpand.textContent = state.expandAll ? "Comprimi tutti" : "Espandi tutti";
+      elExpand.textContent = state.expandAll ? "Collapse all" : "Expand all";
       if (state.raw) renderSections(elSections, state.raw, state);
     });
 
@@ -1106,7 +1092,7 @@
       if (!state.raw) return;
       const draft = buildRewardsDraft(state, state.raw);
       window.dispatchEvent(new CustomEvent("nftFarm:rewardsDraft", { detail: draft }));
-      toast("Evento emesso: nftFarm:rewardsDraft");
+      toast("Event emitted: nftFarm:rewardsDraft");
     });
 
     // Tokens modal
@@ -1122,22 +1108,21 @@
       const symbol = tokSymbol.value.trim().toUpperCase();
       const decimals = tokDec.value === "" ? null : Number(tokDec.value);
       if (!contract || !symbol) {
-        toast("Inserisci contratto e simbolo");
+        toast("Enter contract and symbol");
         return;
       }
-      // dedup
       if (state.tokens.some(t => t.contract === contract && t.symbol === symbol)) {
-        toast("Token già presente");
+        toast("Token already exists");
         return;
       }
       state.tokens.push({ contract, symbol, decimals });
       saveTokens(state.tokens);
       tokContract.value = ""; tokSymbol.value = ""; tokDec.value = "";
       renderTokensList(state);
-      updateSelectionUI(state); // per aggiornare le chips
+      updateSelectionUI(state);
     });
 
-    // Auto-mount with defaults if present in URL
+    // Auto-mount via query params (optional)
     const qp = new URLSearchParams(location.search);
     const qsApi = qp.get("api");
     const qsCol = qp.get("collection");

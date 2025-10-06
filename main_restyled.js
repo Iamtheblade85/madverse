@@ -358,12 +358,9 @@ async function initApp() {
 async function finalizeAppLoad() {
   renderAuthButton(true);
   await loadAvailableTokens();
-
-  // Caricamento iniziale sezione principale
+  window.dispatchEvent(new CustomEvent('user:loggedin', { detail: window.userData }));
   loadSection('loadLatestNews');
-
-  // Collega pulsanti menu
-  document.querySelectorAll('.menu-btn').forEach(btn => {
+  document.querySelectorAll('.menu-button, .menu-btn').forEach(btn => { // <-- accetta entrambe le classi
     btn.addEventListener('click', (e) => {
       const section = e.target.getAttribute('data-section');
       loadSection(section);

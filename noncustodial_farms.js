@@ -136,7 +136,6 @@
         }
       }
       * { box-sizing: border-box; }
-      body.nftf-mounted { margin: 0; background: var(--nftf-bg); color: var(--nftf-text); font-family: var(--nftf-font); }
       #nftf-root { max-width: 1200px; margin: 30px auto; padding: 0 16px; }
 
       .nftf-card {
@@ -310,7 +309,6 @@
       root.id = "nft-farm-root";
       document.body.appendChild(root);
     }
-    document.body.classList.add("nftf-mounted");
 
     root.innerHTML = `
       <div id="nftf-root">

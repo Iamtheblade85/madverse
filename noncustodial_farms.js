@@ -459,13 +459,22 @@
     try{
       const wax = getWax();
       const qs = wax ? `?creator=${encodeURIComponent(wax)}` : "";
-      const data = await fetchJson(url + qs);
+      const raw = await fetchJson(url + qs);
+  
+      // ⚠️ Alcuni backend rispondono con una STRINGA JSON; normalizziamo.
+      let data = raw;
+      if (typeof data === "string") {
+        try { data = JSON.parse(data); } catch { data = []; }
+      }
+      if (!Array.isArray(data)) data = [];
+  
       const m = new Map();
-      (Array.isArray(data) ? data : []).forEach(x => {
+      data.forEach(x => {
         const sym = (x.symbol || x.token_symbol || "").toUpperCase();
         if (!sym) return;
         m.set(sym, num(x.amount, 0));
       });
+  
       state.farmBalances = m;
       state.farmBalancesTS = Date.now();
       renderFarmBalances(state);
@@ -473,6 +482,7 @@
       toast(String(e.message||e), "error");
     }
   }
+
 
   function startAuto(state,cfg){ stopAuto(state); state.monitorId=setInterval(()=>refreshFarmWalletBalances(state,cfg),DEFAULTS.autoMonitorEverySec*1000); }
   function stopAuto(state){ if(state.monitorId){ clearInterval(state.monitorId); state.monitorId=null; } }
@@ -507,10 +517,12 @@
         const on=!!(state.rewardsPerToken[k]&&state.rewardsPerToken[k][id]!==undefined);
         return `<label class="chip ${on?"active":""}" data-key="${esc(k)}" data-token="${esc(id)}"><input type="checkbox" style="display:none"${on?" checked":""}/><strong>${esc(t.symbol)}</strong><small class="muted">@${esc(t.contract)}</small></label>`;
       }).join("") || `<div class="help">Add tokens in the right panel.</div>`;
-      const inputs=tokens.map(t=>{
-        const id=`${t.contract}:${t.symbol}`;
-        const v=(state.rewardsPerToken[k]&&state.rewardsPerToken[k][id]!==undefined)?state.rewardsPerToken[k][id]:"";
-        const show=v!==""?"":"display:none;";
+      const inputs = tokens.map(t => {
+        const id = `${t.contract}:${t.symbol}`;
+        const on = !!(state.rewardsPerToken[k] && state.rewardsPerToken[k][id] !== undefined);
+        const v  = on ? (state.rewardsPerToken[k][id] ?? "") : "";
+        const show = on ? "" : "display:none;";  // <- se attivo ma v==="", mostra comunque
+      
         return `<div class="row ncf-reward-row" data-key="${esc(k)}" data-token="${esc(id)}" style="${show}">
           <span class="muted" style="min-width:160px;"><strong>${esc(t.symbol)}</strong> <small>@${esc(t.contract)}</small></span>
           <input type="number" class="input ncf-reward-input" step="0.0001" min="0" placeholder="Reward / asset / hour" value="${String(v)}" style="width:220px;">
@@ -551,12 +563,41 @@
       const base=state.expiry[k]?new Date(state.expiry[k]):nowPlusMin(5); const d=new Date(base); d.setDate(d.getDate()+30);
       state.expiry[k]=d.toISOString(); saveExp(state.expiry); inp.value=toLoc(d);
     }));
-    $$("#ncf-rp-body .ncf-token-chips .chip").forEach(chip=>chip.addEventListener("click",()=>{
-      chip.classList.toggle("active"); const k=chip.dataset.key; const id=chip.dataset.token; const on=chip.classList.contains("active");
-      state.rewardsPerToken[k]=state.rewardsPerToken[k]||{}; if(on){ if(state.rewardsPerToken[k][id]===undefined) state.rewardsPerToken[k][id]=""; } else { delete state.rewardsPerToken[k][id]; }
-      saveRPT(state.rewardsPerToken);
-      const row=$(`.ncf-reward-row[data-key="${CSS.escape(k)}"][data-token="${CSS.escape(id)}"]`,body); if(row) row.style.display=on?"":"none";
-    }));
+    // Delegation per i chip (attivo sempre, anche dopo re-render)
+    const cssEscape = (window.CSS && CSS.escape) ? CSS.escape : (s)=>String(s).replace(/"/g,'\\"');
+    
+    if (!state._chipDelegationBound) {
+      document.getElementById("ncf-rp-body").addEventListener("click", (e) => {
+        const chip = e.target.closest(".ncf-token-chips .chip");
+        if (!chip) return;
+    
+        e.preventDefault();
+        // toggle UI
+        chip.classList.toggle("active");
+    
+        const k  = chip.dataset.key;
+        const id = chip.dataset.token;
+        const on = chip.classList.contains("active");
+    
+        // stato logico
+        state.rewardsPerToken[k] = state.rewardsPerToken[k] || {};
+        if (on) {
+          if (state.rewardsPerToken[k][id] === undefined) state.rewardsPerToken[k][id] = "";
+        } else {
+          delete state.rewardsPerToken[k][id];
+        }
+        saveRPT(state.rewardsPerToken);
+    
+        // mostra/nascondi la riga input corrispondente
+        const row = document.querySelector(
+          `.ncf-reward-row[data-key="${cssEscape(k)}"][data-token="${cssEscape(id)}"]`
+        );
+        if (row) row.style.display = on ? "" : "none";
+      });
+    
+      state._chipDelegationBound = true;
+    }
+
     $$("#ncf-rp-body .ncf-reward-input").forEach(inp=>inp.addEventListener("input",e=>{
       const row=e.target.closest(".ncf-reward-row"); const k=row.dataset.key; const id=row.dataset.token;
       state.rewardsPerToken[k]=state.rewardsPerToken[k]||{}; state.rewardsPerToken[k][id]=e.target.value; saveRPT(state.rewardsPerToken);

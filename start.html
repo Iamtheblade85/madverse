@@ -4,43 +4,24 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CryptoChips Portal</title>
-
-  <!-- Libs -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <link href="https://fonts.googleapis.com/css2?family=Rock+Salt&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- in <head> -->
   <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-  
-  <!-- subito PRIMA dello script del tuo bundle -->
   <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-  <!-- Tema esistente -->
   <link id="theme-style" rel="stylesheet" href="styles6_cybertriba_glow.css"/>
   <style>
-    /* forza visibilità su ≥768px anche se il tema nasconde i <ul> nella navbar */
     @media (min-width:768px){
       #partners-left, #partners-right { display:flex !important; }
     }
-  
-    /* Micro-utility e rifiniture */
-    /* nasconde scrollbar per strip orizzontali */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  
-    /* riduce shift su immagini (stabilità layout) */
     img { image-rendering:auto; }
-  
-    /* micro feedback hover sui loghi partner */
     .partner-wrap { transition: transform .12s ease, background-color .12s ease, filter .12s ease; }
     .partner-wrap:hover { transform: translateY(-2px); background-color: rgba(255,255,255,.08); filter: saturate(1.05); }
-  
-    /* assicura che le liste partner non abbiano bullet/spazi */
     .partner-list { list-style: none; margin: 0; padding: 0; }
-  
-    /* glow testuale opzionale */
     @keyframes pulseGlow {
       0% { text-shadow: 0 0 6px #ff00ff, 0 0 12px #ff00ff; }
       50% { text-shadow: 0 0 12px #ff00ff, 0 0 24px #ff00ff; }
@@ -51,14 +32,10 @@
 </head>
 
 <body class="app">
-  <!-- auth button container (non toccare) -->
   <div id="auth-button-container" style="position:absolute; top:1rem; left:1rem; z-index:10;"></div>
-
   <header id="navbar" class="navbar">
     <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-      <!-- usa 3 colonne standard -->
       <div class="grid items-center gap-4 md:gap-8 md:grid-cols-3">
-        <!-- LEFT partners -->
         <ul id="partners-left"
             class="partner-list hidden md:!flex justify-end items-center gap-4 lg:gap-6 min-h-[3.5rem]">
           <li class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1">
@@ -80,8 +57,6 @@
                  onerror="this.src='partner-fallback.svg'; this.onerror=null;">
           </li>
         </ul>
-  
-        <!-- Logo centrale -->
         <div class="flex flex-col items-center text-center justify-self-center">
           <img src="logocc1.png" alt="CryptoChips Logo"
                class="w-[220px] sm:w-[300px] md:w-[360px] lg:w-[420px] h-auto mb-3 md:mb-4 drop-shadow-xl"
@@ -91,8 +66,6 @@
             Built for Users, Powered by Blockchain
           </p>
         </div>
-  
-        <!-- RIGHT partners -->
         <ul id="partners-right"
             class="partner-list hidden md:!flex justify-start items-center gap-4 lg:gap-6 min-h-[3.5rem]">
           <li class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1">
@@ -121,8 +94,6 @@
           </li>             
         </ul>
       </div>
-  
-      <!-- Mobile strip -->
       <div id="partners-mobile"
            class="md:hidden mt-4 flex flex-row items-center gap-3 overflow-x-auto no-scrollbar py-1"
            aria-label="Partners">
@@ -152,8 +123,6 @@
                onerror="this.src='partner-fallback.svg'; this.onerror=null;">
         </div>
       </div>
-
-      <!-- Menu (ID/class invariati) -->
       <nav class="navbar-menu mt-6" role="navigation" aria-label="Main Navigation">
         <div class="flex flex-wrap gap-2 md:gap-3">
           <button class="menu-button" data-section="loadLatestNews">News & Guides</button>
@@ -178,7 +147,7 @@
 
           <div class="dropdown">
             <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">Creators Tools ▾</button>
-            <div class="dropdown-menu hidden" role="menu">
+            <div class="dropdown-menu hidden" role="menu" id="creators-tools-menu">
               <button class="dropdown-item" data-section="create-token-pool">Create Token Staking Pool</button>
               <button class="dropdown-item" data-section="create-nfts-farm">Create NFTs Staking Pool</button>
             </div>
@@ -187,16 +156,10 @@
       </nav>
     </div>
   </header>
-
-  <!-- MAIN (ID invariato) -->
   <main id="app" class="main-content" role="main"
         style="display:flex; justify-content:center; align-items:flex-start; width:100%; min-height:100vh; margin:0 auto; padding:2rem; box-sizing:border-box;">
-    <!-- Se vuoi contenuti più “larghi ma controllati”, puoi opzionalmente racchiudere in:
     <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"></div>
-    senza cambiare l’ID root (#app) usato dal tuo JS. -->
   </main>
-
-  <!-- Modale primaria (ID invariato) -->
   <div id="modal" class="modal-dirty hidden" role="dialog" aria-modal="true"
        style="position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%);
               z-index: 9999; background-color: rgba(0, 0, 0, 0.85); padding: 2rem;
@@ -207,8 +170,6 @@
       <div id="modal-body" class="modal-body"></div>
     </div>
   </div>
-
-  <!-- Modale universale (ID invariato) -->
   <div id="universal-modal" class="modal hidden">
     <div class="modal-content">
       <button class="modal-close">×</button>
@@ -218,8 +179,6 @@
       <div class="modal-footer"></div>
     </div>
   </div>
-
-  <!-- Modale conferma (ID invariato) -->
   <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true"
        style="position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%);
               z-index: 9999; background-color: rgba(0, 0, 0, 0.9); padding: 2rem;
@@ -235,83 +194,80 @@
       </div>
     </div>
   </div>
-
   <aside id="toast-container" class="toast-container" role="status" aria-live="polite"></aside>
-
   <script>
     window.__APP_BUILD__ = "prod-2025-10-04";  /* <== bump ad ogni deploy */
   </script>
+  <script>window.__NFTF_AUTO_DISABLED__ = true;</script>
+  <script src="/js/noncustodial_farms.js" defer></script>
   <script src="main_restyled.js?v=prod-2025-10-04" defer></script>
-  <script>
-    document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-      toggle.addEventListener('click', () => {
-        document.querySelectorAll('.dropdown-menu').forEach(menu => {
-          if (menu !== toggle.nextElementSibling) menu.classList.add('hidden');
-        });
-        toggle.nextElementSibling.classList.toggle('hidden');
+<script>
+  document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      document.querySelectorAll('.dropdown-menu').forEach(menu => {
+        if (menu !== toggle.nextElementSibling) menu.classList.add('hidden');
       });
+      toggle.nextElementSibling.classList.toggle('hidden');
     });
+  });
 
-    document.querySelectorAll('.dropdown-item').forEach(item => {
-      item.addEventListener('click', event => {
-        const section = event.target.dataset.section;
-        if (typeof loadSection === 'function') loadSection(section);
-        document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.add('hidden'));
-      });
+  function addNCFarmButtonIfAllowed() {
+    const wax = window.userData?.wax_account;
+    if (wax !== "agoscry4ever") return true;
+    const menu = document.getElementById("creators-tools-menu");
+    if (!menu) return false;
+    if (!menu.querySelector('[data-section="noncustodialfarms"]')) {
+      const btn = document.createElement("button");
+      btn.className = "dropdown-item";
+      btn.setAttribute("data-section", "noncustodialfarms");
+      btn.textContent = "Non Custodial NFTsFarms";
+      menu.appendChild(btn);
+    }
+    return true;
+  }
+
+  (function retryInject() {
+    let tries = 0, max = 10;
+    const ok = addNCFarmButtonIfAllowed();
+    if (ok) return;
+    const iv = setInterval(() => {
+      tries++;
+      if (addNCFarmButtonIfAllowed() || tries >= max) clearInterval(iv);
+    }, 300);
+  })();
+
+  document.addEventListener('click', (event) => {
+    const item = event.target.closest('.dropdown-item');
+    if (!item) return;
+    const section = item.dataset.section;
+    if (typeof loadSection === 'function') loadSection(section);
+    document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.add('hidden'));
+  });
+
+  const closeModalBtn = document.getElementById('close-modal');
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+      document.getElementById('modal').classList.add('hidden');
     });
-    const closeModalBtn = document.getElementById('close-modal');
-    if (closeModalBtn) {
-      closeModalBtn.addEventListener('click', () => {
-        document.getElementById('modal').classList.add('hidden');
-      });
-    }
-    const confirmCancel = document.getElementById('confirm-cancel');
-    if (confirmCancel) {
-      confirmCancel.addEventListener('click', () => {
-        document.getElementById('confirm-modal').classList.add('hidden');
-      });
-    }
-
-    // (OPZIONALE) Auto-split partner se vuoi gestirli da un array unico:
-    // Lascia commentato se non serve adesso.
-    /*
-    const PARTNERS = ["partner1.png","partner2.png","partner3.png","partner4.png","partner5.png"];
-    (function renderPartnersDynamic(){
-      const L = document.getElementById('partners-left');
-      const R = document.getElementById('partners-right');
-      const M = document.getElementById('partners-mobile');
-      if (!L || !R || !M) return;
-      const half = Math.ceil(PARTNERS.length/2);
-      const toLi = src => (
-        '<li class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1">' +
-        `<img src="${src}" alt="Partner" class="block h-12 lg:h-14 w-auto object-contain" width="160" height="56" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">` +
-        '</li>'
-      );
-      L.innerHTML = PARTNERS.slice(0,half).map(toLi).join('');
-      R.innerHTML = PARTNERS.slice(half).map(toLi).join('');
-      M.innerHTML = PARTNERS.map(src =>
-        `<div class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1 flex-none">
-           <img src="${src}" alt="Partner" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
-         </div>`
-      ).join('');
-    })();
-    */
-  </script>
-
-  <!-- Footer (invariato) -->
+  }
+  const confirmCancel = document.getElementById('confirm-cancel');
+  if (confirmCancel) {
+    confirmCancel.addEventListener('click', () => {
+      document.getElementById('confirm-modal').classList.add('hidden');
+    });
+  }
+</script>
   <footer class="footer-cybertribal">
     <div class="footer-inner">
       <p class="footer-text">
         🚀 Powered by <strong>CryptoChips</strong> — Built on WAX Blockchain 🧿<br/>
         <span class="footer-sub">All rights reserved © 2025 — ChipsWallet</span>
       </p>
-
       <div class="footer-links">
         <a href="https://neftyblocks.com/collection/cryptochaos1" target="_blank">NFT Store</a>
         <a href="https://x.com/ooc_nfts" target="_blank">Twitter Official</a>
         <a href="https://wax.bloks.io/account/xcryptochips" target="_blank">Smart Contract</a>
       </div>
-
       <div class="footer-telegram">
         <p class="footer-sub">
           💬 Join the community to chat, ask questions or get support:

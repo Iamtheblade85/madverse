@@ -173,7 +173,7 @@
     function injectButton() {
       const menu = document.getElementById(MENU_ID);
       if (!menu) return false;
-      if (!hasAccess()) return true;
+      if (!hasAccess()) return false;
       if (menu.querySelector(BTN_SELECTOR)) return true;
       const btn = document.createElement("button");
       btn.className = "dropdown-item";

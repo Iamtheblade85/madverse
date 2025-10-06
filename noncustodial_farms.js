@@ -6,7 +6,11 @@
       templatesBySchema: "/api/templates-by-schema",
       saveRewards: "/api/farm/rewards/draft",
       farmBalances: "/api/farm/deposit/balances",
-      depositToFarm: "/api/farm/deposit"
+      depositToFarm: "/api/farm/deposit",
+      farmsByCreator: "/api/farm/list",                 // GET ?creator=<wax>
+      farmStats: "/api/farm/stats",                     // GET ?farm_id=... oppure ?creator=...
+      farmDistributions: "/api/farm/distributions",     // GET ?farm_id=...&limit=100
+      farmKick: "/api/farm/kick"                        // POST {farm_id, wax_account, reason}      
     },
     containerId: null,
     appTitle: "Manage Non-Custodial NFTs Farm",
@@ -81,7 +85,15 @@
     root.innerHTML=`
       <div id="ncf-root" class="grid" style="grid-template-columns: 1fr minmax(340px,420px); gap:18px;">
         <div id="ncf-main" class="grid" style="gap:14px;">
-          <section class="cy-card" style="padding:16px;">
+          <section class="cy-card" style="padding:12px;">
+            <div class="row" role="tablist" aria-label="Farm tabs">
+              <button id="ncf-tab-edit"  role="tab" aria-selected="true"  class="btn btn-ghost">Create / Edit</button>
+              <button id="ncf-tab-stats" role="tab" aria-selected="false" class="btn btn-ghost">View Farm Stats</button>
+            </div>
+          </section>
+  
+          <!-- TAB: CREATE / EDIT -->
+          <section id="ncf-tabpane-edit"  class="cy-card" style="padding:16px;">
             <h2 style="margin:0 0 .25rem 0;">${esc(DEFAULTS.appTitle)}</h2>
             <div id="ncf-wizard" class="grid" style="gap:12px;">
               <div class="step" id="ncf-step-a">
@@ -195,19 +207,56 @@
             </div>
           </section>
 
-          <section id="ncf-collapsed" class="cy-card" style="padding:12px; display:none;">
+          <section id="ncf-collapsed" class="cy-card" style="padding:12px; display:none; margin-top:12px;">
             <div class="row" style="justify-content:space-between;align-items:center;">
               <strong>Farm configuration saved</strong>
               <span class="badge ok">Saved</span>
             </div>
           </section>
 
-          <section id="ncf-summary-table" class="cy-card" style="padding:14px; display:none;">
+          <section id="ncf-summary-table" class="cy-card" style="padding:14px; display:none; margin-top:12px;">
             <h3 style="margin:.2rem 0;">Current Farm</h3>
             <div id="ncf-farm-table"></div>
           </section>
-        </div>
+        </section>
 
+        <!-- TAB: STATS -->
+        <section id="ncf-tabpane-stats" class="cy-card" style="padding:16px; display:none;">
+          <div class="row" style="justify-content:space-between; align-items:center;">
+            <h2 style="margin:0;">Farm Stats</h2>
+            <div class="row">
+              <select id="ncf-farm-picker" class="select" style="min-width:260px;"><option value="">All farms (this creator)</option></select>
+              <button id="ncf-refresh-stats" class="btn btn-ghost">Refresh</button>
+            </div>
+          </div>
+
+          <div class="soft" style="padding:10px; margin-top:10px;">
+            <div class="row" style="gap:10px; flex-wrap:wrap;">
+              <div class="badge" id="ncf-stats-head-farms">Farms: 0</div>
+              <div class="badge" id="ncf-stats-head-owners">Unique owners: 0</div>
+              <div class="badge" id="ncf-stats-head-assets">Staked assets: 0</div>
+              <div class="badge" id="ncf-stats-head-lastdist">Last distribution: —</div>
+            </div>
+          </div>
+
+          <div class="grid" style="gap:12px; margin-top:10px;">
+            <div class="soft" style="padding:10px;">
+              <h4 style="margin:.2rem 0;">Rewards (grouped)</h4>
+              <div class="help" style="margin:.2rem 0;">Grouped by <strong>Owner</strong> → <strong>Schema</strong> → <strong>Template</strong> → <strong>Token</strong>. Click a row to expand subtotals.</div>
+              <div id="ncf-stats-grouped" style="overflow:auto; max-height:46vh;">
+                <div class="help">No data yet.</div>
+              </div>
+            </div>
+
+            <div class="soft" style="padding:10px;">
+              <h4 style="margin:.2rem 0;">Distributions history</h4>
+              <div id="ncf-stats-history" style="overflow:auto; max-height:38vh;">
+                <div class="help">No history yet.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
         <aside id="ncf-rightpanel" class="grid" style="gap:14px;">
           <section class="cy-card" style="padding:14px;">
             <h3 style="margin:.1rem 0 .5rem;">Tokens Library</h3>
@@ -226,6 +275,26 @@
       </div>
       <div id="ncf-toast"></div>
     `;
+  }
+
+  function bindTabs(state, cfg){
+    const tabEdit  = $("#ncf-tab-edit");
+    const tabStats = $("#ncf-tab-stats");
+    const paneEdit  = $("#ncf-tabpane-edit");
+    const paneStats = $("#ncf-tabpane-stats");
+  
+    const show = (which) => {
+      const isEdit = which === "edit";
+      tabEdit.setAttribute("aria-selected", isEdit ? "true" : "false");
+      tabStats.setAttribute("aria-selected", !isEdit ? "true" : "false");
+      paneEdit.style.display  = isEdit ? "" : "none";
+      paneStats.style.display = !isEdit ? "" : "none";
+      if (!isEdit) ensureStatsLoaded(state, cfg);
+    };
+  
+    tabEdit.addEventListener("click", () => show("edit"));
+    tabStats.addEventListener("click", () => show("stats"));
+    // default: resta su Edit alla prima apertura
   }
 
   function renderSkeleton(el){ el.innerHTML=`<div class="soft" style="padding:1rem; text-align:center;"><div style="height:12px; width:240px; margin:.35rem auto; background:rgba(255,255,255,.06); border-radius:8px;"></div><div style="height:12px; width:320px; margin:.35rem auto; background:rgba(255,255,255,.06); border-radius:8px;"></div></div>`; }
@@ -483,6 +552,174 @@
     }
   }
 
+  async function fetchFarmsForCreator(cfg){
+    const wax = getWax();
+    if(!wax) return [];
+    const url = buildUrl(apiBase(cfg), DEFAULTS.endpoints.farmsByCreator) + `?creator=${encodeURIComponent(wax)}`;
+    let data = await fetchJson(url);
+    if (typeof data === "string") { try{ data = JSON.parse(data);} catch{ data = []; } }
+    return Array.isArray(data) ? data : [];
+  }
+  
+  async function fetchFarmStats(cfg, {farm_id=null} = {}){
+    let qs = farm_id ? `?farm_id=${encodeURIComponent(farm_id)}` : `?creator=${encodeURIComponent(getWax()||"")}`;
+    const url = buildUrl(apiBase(cfg), DEFAULTS.endpoints.farmStats) + qs;
+    let data = await fetchJson(url);
+    if (typeof data === "string") { try{ data = JSON.parse(data);} catch{ data = {}; } }
+    return data || {};
+  }
+  
+  async function fetchDistributions(cfg, {farm_id=null, limit=100} = {}){
+    if(!farm_id) return [];
+    const url = buildUrl(apiBase(cfg), DEFAULTS.endpoints.farmDistributions) + `?farm_id=${encodeURIComponent(farm_id)}&limit=${limit}`;
+    let data = await fetchJson(url);
+    if (typeof data === "string") { try{ data = JSON.parse(data);} catch{ data = []; } }
+    return Array.isArray(data) ? data : [];
+  }
+  
+  async function postKick(cfg, body){
+    const url = buildUrl(apiBase(cfg), DEFAULTS.endpoints.farmKick);
+    return postJson(url, body);
+  }
+  
+  function renderFarmPicker(state, farms){
+    const sel = $("#ncf-farm-picker");
+    const cur = sel.value;
+    const opts = [`<option value="">All farms (this creator)</option>`]
+      .concat(farms.map(f => `<option value="${esc(String(f.farm_id))}">#${esc(String(f.farm_id))} — ${esc(f.collection||"")}</option>`));
+    sel.innerHTML = opts.join("");
+    if (farms.some(f => String(f.farm_id) === cur)) sel.value = cur;
+  }
+  
+  function groupStatsView(stats){
+    // stats.expected shape: { owners: [{owner, assets, last_rewarded_at, tokens:[{symbol, amount, token_contract}], trees:[{schema_name, template_id, token_symbol, amount}], ...}], summary:{owners, assets, last_distribution_at} }
+    const owners = Array.isArray(stats.owners) ? stats.owners : [];
+    const head = stats.summary || {};
+    $("#ncf-stats-head-owners").textContent = `Unique owners: ${head.owners ?? owners.length}`;
+    $("#ncf-stats-head-assets").textContent = `Staked assets: ${head.assets ?? 0}`;
+    $("#ncf-stats-head-lastdist").textContent = `Last distribution: ${head.last_distribution_at ? new Date(head.last_distribution_at).toLocaleString() : "—"}`;
+  
+    if (!owners.length) {
+      $("#ncf-stats-grouped").innerHTML = `<div class="help">No stakers yet.</div>`;
+      return;
+    }
+  
+    const html = owners.map(o=>{
+      const owner = o.owner || "—";
+      const tokens = (o.tokens||[]).map(t=>`${esc(t.symbol)}: ${fmt(t.amount)}`).join(", ") || "—";
+      const last   = o.last_rewarded_at ? new Date(o.last_rewarded_at).toLocaleString() : "—";
+  
+      // nested: schema → template → token
+      const trees = Array.isArray(o.trees) ? o.trees : [];
+      const bySchema = new Map();
+      trees.forEach(r=>{
+        const key = r.schema_name || "—";
+        if(!bySchema.has(key)) bySchema.set(key, []);
+        bySchema.get(key).push(r);
+      });
+  
+      const schemaBlocks = Array.from(bySchema.entries()).map(([schema, arr])=>{
+        const byTemplate = new Map();
+        arr.forEach(x=>{
+          const k = String(x.template_id);
+          if(!byTemplate.has(k)) byTemplate.set(k, []);
+          byTemplate.get(k).push(x);
+        });
+        const templatesHtml = Array.from(byTemplate.entries()).map(([tid, rows])=>{
+          const inner = rows.map(r=>`<div class="row" style="gap:.5rem;">
+            <span class="badge">${esc(r.token_symbol)}</span>
+            <small class="muted">@${esc(r.token_contract||"")}</small>
+            <span class="muted">last paid: ${fmt(r.amount||0)}</span>
+          </div>`).join("");
+          return `<details><summary class="row" style="gap:.5rem;"><strong>Template</strong> <span class="badge">ID ${esc(tid)}</span></summary>${inner}</details>`;
+        }).join("");
+  
+        const subtotal = arr.reduce((a,b)=>a+Number(b.amount||0),0);
+        return `<details>
+          <summary class="row" style="gap:.5rem;"><strong>Schema</strong> <span class="badge">${esc(schema)}</span> <span class="badge ok">Subtotal: ${fmt(subtotal)}</span></summary>
+          <div class="grid" style="gap:6px;">${templatesHtml}</div>
+        </details>`;
+      }).join("");
+  
+      const ownerSubtotal = (o.tokens||[]).reduce((a,b)=>a+Number(b.amount||0),0);
+  
+      return `<details class="soft" style="padding:8px;">
+        <summary class="row" style="gap:.6rem;">
+          <strong>${esc(owner)}</strong>
+          <span class="badge">Assets: ${fmt(o.assets||0)}</span>
+          <span class="badge ok">Subtotal: ${fmt(ownerSubtotal)}</span>
+          <span class="badge">Last: ${esc(last)}</span>
+        </summary>
+        <div class="grid" style="gap:8px; margin-top:6px;">
+          <div class="help">Tokens subtotal: ${esc(tokens)}</div>
+          <div>${schemaBlocks || "<div class='help'>No details</div>"}</div>
+          <div class="row" style="gap:.5rem; margin-top:6px;">
+            <button class="btn btn-danger ncf-kick" data-owner="${esc(owner)}">Kick from staking</button>
+          </div>
+        </div>
+      </details>`;
+    }).join("");
+  
+    $("#ncf-stats-grouped").innerHTML = html;
+  
+    // kick events
+    $$("#ncf-stats-grouped .ncf-kick").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        const farmId = $("#ncf-farm-picker").value || null;
+        const owner = btn.dataset.owner;
+        const reason = "manual kick (UI)";
+        if(!farmId){ toast("Pick a specific farm to kick.", "error"); return; }
+        try{
+          await postKick({apiBaseUrl: apiBase({})}, { farm_id: farmId, wax_account: owner, reason });
+          toast(`Kick requested for ${owner}.`);
+        }catch(e){ toast(String(e.message||e), "error"); }
+      });
+    });
+  }
+  
+  function renderDistributionsHistory(list){
+    if (!Array.isArray(list) || !list.length) {
+      $("#ncf-stats-history").innerHTML = `<div class="help">No history yet.</div>`;
+      return;
+    }
+    const rows = list.map(x=>`<tr>
+      <td>${new Date(x.ts).toLocaleString()}</td>
+      <td>${esc(x.token_symbol)}</td>
+      <td>${fmt(x.total_amount)}</td>
+      <td>${fmt(x.unique_owners)}</td>
+      <td>${esc(x.schema_name || "—")}</td>
+      <td>${esc(String(x.template_id || "—"))}</td>
+    </tr>`).join("");
+  
+    $("#ncf-stats-history").innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Time</th><th>Token</th><th>Total paid</th><th>Owners</th><th>Schema</th><th>Template</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+  
+  async function ensureStatsLoaded(state, cfg){
+    try{
+      // 1) farms list
+      const farms = await fetchFarmsForCreator(cfg);
+      $("#ncf-stats-head-farms").textContent = `Farms: ${farms.length}`;
+      renderFarmPicker(state, farms);
+  
+      // 2) carica stats per farm selezionata o per creator
+      const farmId = $("#ncf-farm-picker").value || null;
+      const stats = await fetchFarmStats(cfg, { farm_id: farmId || null });
+      groupStatsView(stats);
+  
+      // 3) history se farm selezionata
+      const history = farmId ? (await fetchDistributions(cfg, {farm_id: farmId, limit: 200})) : [];
+      renderDistributionsHistory(history);
+  
+    }catch(e){
+      toast(String(e.message||e), "error");
+    }
+  }
 
   function startAuto(state,cfg){ stopAuto(state); state.monitorId=setInterval(()=>refreshFarmWalletBalances(state,cfg),DEFAULTS.autoMonitorEverySec*1000); }
   function stopAuto(state){ if(state.monitorId){ clearInterval(state.monitorId); state.monitorId=null; } }
@@ -714,7 +951,7 @@
     const cfg={...DEFAULTS,...opts};
     const host = cfg.containerId ? document.getElementById(cfg.containerId) : (()=>{const d=document.createElement("div"); d.id="ncf-root-auto"; document.body.appendChild(d); return d;})();
     createLayout(host,cfg);
-
+    bindTabs(state, cfg);
     const state={
       apiBaseUrl: apiBase(cfg),
       collection: rLS(DEFAULTS.ls.lastCollection,""),
@@ -755,6 +992,8 @@
     $("#ncf-clear").addEventListener("click",()=>{ if(!state.raw) return; Object.keys(state.selection).forEach(k=>{ if(k.startsWith(`${state.collection}::`)){ delete state.selection[k]; delete state.rewardsPerToken[k]; delete state.expiry[k]; }}); saveSel(state.selection); saveRPT(state.rewardsPerToken); saveExp(state.expiry); $$(".ncf-row-check").forEach(c=>c.checked=false); updateRewardsPanel(state); });
 
     $("#ncf-tok-add").addEventListener("click",()=>{ const c=$("#ncf-tok-contract").value.trim(); const s=$("#ncf-tok-symbol").value.trim().toUpperCase(); const d=$("#ncf-tok-dec").value===""?null:Number($("#ncf-tok-dec").value); if(!c||!s){ toast("Provide contract and symbol.","error"); return; } if(state.tokens.some(t=>t.contract===c&&t.symbol===s)){ toast("Token already present."); return; } state.tokens.push({contract:c,symbol:s,decimals:d}); saveTokens(state.tokens); $("#ncf-tok-contract").value=""; $("#ncf-tok-symbol").value=""; $("#ncf-tok-dec").value=""; renderTokenLibrary(state); updateRewardsPanel(state); });
+    $("#ncf-farm-picker").addEventListener("change", ()=> ensureStatsLoaded(state, cfg));
+    $("#ncf-refresh-stats").addEventListener("click", ()=> ensureStatsLoaded(state, cfg));
 
     $("#ncf-next-b").addEventListener("click",()=>{
       const ok = true; if(!ok){ toast("Complete this step first.","error"); return; }

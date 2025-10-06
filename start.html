@@ -285,3 +285,55 @@
   </footer>
 </body>
 </html>
+<script>
+(function () {
+  const TARGET_WAX = "agoscry4ever";
+  const MENU_ID = "creators-tools-menu";
+  const BTN_SELECTOR = '[data-section="noncustodialfarms"]';
+
+  const onReady = (fn) =>
+    (document.readyState === "complete" || document.readyState === "interactive")
+      ? fn() : document.addEventListener("DOMContentLoaded", fn);
+
+  const hasAccess = () => {
+    const wax = (window.userData?.wax_account || "").trim().toLowerCase();
+    return wax === TARGET_WAX;
+  };
+
+  function injectButton() {
+    const menu = document.getElementById(MENU_ID);
+    if (!menu) return false;
+    if (!hasAccess()) return true;
+    if (menu.querySelector(BTN_SELECTOR)) return true;
+
+    const btn = document.createElement("button");
+    btn.className = "dropdown-item";
+    btn.dataset.section = "noncustodialfarms";
+    btn.textContent = "Non Custodial NFTsFarms";
+    menu.appendChild(btn);
+    return true;
+  }
+
+  onReady(() => {
+    if (injectButton()) return;
+    let tries = 0, max = 40;
+    const iv = setInterval(() => {
+      tries++;
+      if (injectButton() || tries >= max) clearInterval(iv);
+    }, 250);
+    const nav = document.getElementById(MENU_ID);
+    if (nav) {
+      new MutationObserver(() => injectButton())
+        .observe(nav, { childList: true });
+    }
+    window.addEventListener("user:loggedin", injectButton);
+  });
+  document.addEventListener('click', (e) => {
+    const item = e.target.closest('.dropdown-item');
+    if (!item) return;
+    const section = item.dataset.section;
+    if (typeof loadSection === 'function') loadSection(section);
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+  });
+})();
+</script>

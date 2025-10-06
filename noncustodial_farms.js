@@ -385,33 +385,95 @@
   }
 
   function renderFarmBalances(state){
-    const tb=$("#ncf-farm-balances");
-    const last=state.farmBalancesTS?new Date(state.farmBalancesTS):null;
-    const ts=last?last.toLocaleString():"—";
-    const ids=activeTokenIds(state);
-    if(!ids.size){ tb.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:10px;">No active tokens.</td></tr>`; $("#ncf-farm-alert").style.display="none"; return; }
-    let anyZero=false; const rows=[];
-    ids.forEach(id=>{
-      const [c,s]=id.split(":"); const bal=num(state.farmBalances.get(s),0); const st=bal>0?`<span class="badge ok">OK</span>`:`<span class="badge err">0</span>`;
-      if(bal<=0) anyZero=true;
-      rows.push(`<tr><td><strong>${esc(s)}</strong> <small class="muted">@${esc(c)}</small></td><td>${fmt(bal)}</td><td>${ts}</td><td>${st}</td></tr>`);
-    });
-    tb.innerHTML=rows.join("");
-    $("#ncf-farm-alert").style.display=anyZero?"":"none";
-    const holdings=sumHoldingsFromDom(); const hints=[];
-    ids.forEach(id=>{ const [,s]=id.split(":"); const have=num(holdings.get(s),0); if(have>0) hints.push(`You hold <strong>${fmt(have)} ${esc(s)}</strong> across Twitch/Telegram wallets.`); });
-    $("#ncf-user-hints").innerHTML=hints.length?`<p class="help" style="margin:0;">${hints.join(" ")}</p>`:`<p class="help" style="margin:0;">No local balances detected for your active tokens.</p>`;
+    const tb = $("#ncf-farm-balances");
+    const last = state.farmBalancesTS ? new Date(state.farmBalancesTS) : null;
+    const ts = last ? last.toLocaleString() : "—";
+  
+    const ids = activeTokenIds(state); // Set("contract:symbol")
+    const rows = [];
+    let anyZero = false;
+  
+    if (ids.size) {
+      ids.forEach(id => {
+        const [c,s] = id.split(":");
+        const bal = num(state.farmBalances.get(s), 0);
+        const st = bal > 0 ? `<span class="badge ok">OK</span>` : `<span class="badge err">0</span>`;
+        if (bal <= 0) anyZero = true;
+        rows.push(
+          `<tr>
+             <td><strong>${esc(s)}</strong> <small class="muted">@${esc(c)}</small></td>
+             <td>${fmt(bal)}</td>
+             <td>${ts}</td>
+             <td>${st}</td>
+           </tr>`
+        );
+      });
+    } else {
+      // Nessun token "attivo" nelle regole ⇒ mostra tutti i saldi del Farm-Wallet
+      if (state.farmBalances && state.farmBalances.size) {
+        Array.from(state.farmBalances.entries())
+          .sort((a,b)=>b[1]-a[1]) // saldo desc
+          .forEach(([symbol, bal]) => {
+            const st = bal > 0 ? `<span class="badge ok">OK</span>` : `<span class="badge err">0</span>`;
+            if (bal <= 0) anyZero = true;
+            rows.push(
+              `<tr>
+                 <td><strong>${esc(symbol)}</strong></td>
+                 <td>${fmt(bal)}</td>
+                 <td>${ts}</td>
+                 <td>${st}</td>
+               </tr>`
+            );
+          });
+      }
+    }
+  
+    tb.innerHTML = rows.length
+      ? rows.join("")
+      : `<tr><td colspan="4" style="text-align:center;padding:10px;">No balances</td></tr>`;
+  
+    // Avviso solo se ci sono token attivi e almeno uno ha saldo 0.
+    $("#ncf-farm-alert").style.display = (ids.size && anyZero) ? "" : "none";
+  
+    // Hint: se non ci sono token attivi, niente messaggi confusivi
+    if (!ids.size) {
+      $("#ncf-user-hints").innerHTML =
+        `<p class="help" style="margin:0;">Tip: aggiungi un token nelle regole (Step 4) per evidenziarlo qui come “attivo”.</p>`;
+    } else {
+      // Mostra “hai X in TW/TG” per i token attivi
+      const holdings = sumHoldingsFromDom();
+      const hints = [];
+      ids.forEach(id => {
+        const [, symbol] = id.split(":");
+        const have = num(holdings.get(symbol), 0);
+        if (have > 0) hints.push(`You hold <strong>${fmt(have)} ${esc(symbol)}</strong> across Twitch/Telegram wallets.`);
+      });
+      $("#ncf-user-hints").innerHTML = hints.length
+        ? `<p class="help" style="margin:0;">${hints.join(" ")}</p>`
+        : `<p class="help" style="margin:0;">No local balances detected for your active tokens.</p>`;
+    }
   }
 
-  async function refreshFarmWalletBalances(state,cfg){
-    const url=buildUrl(apiBase(cfg),DEFAULTS.endpoints.farmBalances);
+  async function refreshFarmWalletBalances(state, cfg){
+    const url = buildUrl(apiBase(cfg), DEFAULTS.endpoints.farmBalances);
     try{
-      const qs=getWax()?`?creator=${encodeURIComponent(getWax())}`:"";
-      const data=await fetchJson(url+qs);
-      const m=new Map(); (Array.isArray(data)?data:[]).forEach(x=>{ const sym=x.symbol||x.token_symbol; if(!sym) return; m.set(sym, num(x.amount,0));});
-      state.farmBalances=m; state.farmBalancesTS=Date.now(); renderFarmBalances(state);
-    }catch(e){ toast(String(e.message||e),"error"); }
+      const wax = getWax();
+      const qs = wax ? `?creator=${encodeURIComponent(wax)}` : "";
+      const data = await fetchJson(url + qs);
+      const m = new Map();
+      (Array.isArray(data) ? data : []).forEach(x => {
+        const sym = (x.symbol || x.token_symbol || "").toUpperCase();
+        if (!sym) return;
+        m.set(sym, num(x.amount, 0));
+      });
+      state.farmBalances = m;
+      state.farmBalancesTS = Date.now();
+      renderFarmBalances(state);
+    }catch(e){
+      toast(String(e.message||e), "error");
+    }
   }
+
   function startAuto(state,cfg){ stopAuto(state); state.monitorId=setInterval(()=>refreshFarmWalletBalances(state,cfg),DEFAULTS.autoMonitorEverySec*1000); }
   function stopAuto(state){ if(state.monitorId){ clearInterval(state.monitorId); state.monitorId=null; } }
 

@@ -589,91 +589,186 @@
     if (farms.some(f => String(f.farm_id) === cur)) sel.value = cur;
   }
   
-  function groupStatsView(stats){
-    // stats.expected shape: { owners: [{owner, assets, last_rewarded_at, tokens:[{symbol, amount, token_contract}], trees:[{schema_name, template_id, token_symbol, amount}], ...}], summary:{owners, assets, last_distribution_at} }
-    const owners = Array.isArray(stats.owners) ? stats.owners : [];
-    const head = stats.summary || {};
-    $("#ncf-stats-head-owners").textContent = `Unique owners: ${head.owners ?? owners.length}`;
-    $("#ncf-stats-head-assets").textContent = `Staked assets: ${head.assets ?? 0}`;
-    $("#ncf-stats-head-lastdist").textContent = `Last distribution: ${head.last_distribution_at ? new Date(head.last_distribution_at).toLocaleString() : "—"}`;
-  
-    if (!owners.length) {
-      $("#ncf-stats-grouped").innerHTML = `<div class="help">No stakers yet.</div>`;
-      return;
-    }
-  
-    const html = owners.map(o=>{
-      const owner = o.owner || "—";
-      const tokens = (o.tokens||[]).map(t=>`${esc(t.symbol)}: ${fmt(t.amount)}`).join(", ") || "—";
-      const last   = o.last_rewarded_at ? new Date(o.last_rewarded_at).toLocaleString() : "—";
-  
-      // nested: schema → template → token
-      const trees = Array.isArray(o.trees) ? o.trees : [];
-      const bySchema = new Map();
-      trees.forEach(r=>{
-        const key = r.schema_name || "—";
-        if(!bySchema.has(key)) bySchema.set(key, []);
-        bySchema.get(key).push(r);
+function groupStatsView(stats){
+  // shape attesa:
+  // {
+  //   summary: {
+  //     owners, assets, last_distribution_at,
+  //     per_token_last_cycle: { [SYMBOL]: totalPaid },
+  //     active_tokens_last_cycle, active_templates_last_cycle,
+  //     templates_configured_with_rewards
+  //   },
+  //   owners: [
+  //     {
+  //       owner, assets, last_rewarded_at,
+  //       tokens: [{symbol, amount, token_contract}],
+  //       trees: [{schema_name, template_id, token_contract, token_symbol, amount}]
+  //     }, ...
+  //   ]
+  // }
+  const owners = Array.isArray(stats?.owners) ? stats.owners : [];
+  const head   = stats?.summary || {};
+
+  // Header badges (già presenti nel layout)
+  $("#ncf-stats-head-owners").textContent = `Unique owners: ${head.owners ?? owners.length}`;
+  $("#ncf-stats-head-assets").textContent = `Staked assets: ${head.assets ?? 0}`;
+  $("#ncf-stats-head-lastdist").textContent = `Last distribution: ${head.last_distribution_at ? new Date(head.last_distribution_at).toLocaleString() : "—"}`;
+
+  // Pannello riepilogo extra (inserito in cima all'area grouped)
+  const perToken = head.per_token_last_cycle && typeof head.per_token_last_cycle === "object"
+    ? Object.entries(head.per_token_last_cycle).map(([sym, tot]) => [String(sym).toUpperCase(), Number(tot) || 0])
+    : [];
+  perToken.sort((a,b)=>b[1]-a[1]);
+
+  const kpiCards = `
+    <div class="grid" style="gap:10px; margin-bottom:10px;">
+      <div class="row" style="gap:10px; flex-wrap:wrap;">
+        <div class="badge" title="Number of tokens that actually paid something in the last completed cycle.">
+          Active tokens (last cycle): ${head.active_tokens_last_cycle ?? perToken.length}
+        </div>
+        <div class="badge" title="Templates that produced any payout in the last completed cycle.">
+          Active templates (last cycle): ${head.active_templates_last_cycle ?? 0}
+        </div>
+        <div class="badge" title="Templates configured with at least one active reward (configuration, not payout).">
+          Templates with rewards (configured): ${head.templates_configured_with_rewards ?? 0}
+        </div>
+      </div>
+      ${
+        perToken.length
+          ? `
+            <div class="soft" style="padding:8px;">
+              <div class="row" style="justify-content:space-between; align-items:center;">
+                <h4 style="margin:.2rem 0;">Per-token totals (last cycle)</h4>
+                <small class="help" title="Total amount distributed per token in the last completed payout cycle (typically daily).">What is this?</small>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th title="Token symbol">Token</th>
+                    <th title="Total amount distributed in the last completed cycle">Total paid (last cycle)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${perToken.map(([sym,tot])=>`
+                    <tr>
+                      <td><strong>${esc(sym)}</strong></td>
+                      <td>${fmt(tot)}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>`
+          : `<div class="soft" style="padding:8px;">
+               <div class="help">No token payouts recorded for the last cycle yet.</div>
+             </div>`
+      }
+    </div>
+  `;
+
+  if (!owners.length) {
+    $("#ncf-stats-grouped").innerHTML = kpiCards + `<div class="help">No stakers yet.</div>`;
+    return;
+  }
+
+  // Calcolo subtotale per owner (per ordinamento e visual)
+  const ownersWithSubtotal = owners.map(o=>{
+    const subtotal = (Array.isArray(o.tokens) ? o.tokens : []).reduce((a,b)=>a+Number(b.amount||0),0);
+    return {...o, _subtotal: subtotal};
+  }).sort((a,b)=> b._subtotal - a._subtotal || (b.assets||0) - (a.assets||0));
+
+  const htmlOwners = ownersWithSubtotal.map(o=>{
+    const owner = o.owner || "—";
+    const last  = o.last_rewarded_at ? new Date(o.last_rewarded_at).toLocaleString() : "—";
+    const tokensLine = (o.tokens||[]).map(t=>`${esc(t.symbol)}: ${fmt(t.amount)}`).join(", ") || "—";
+
+    // nested: schema → template → token
+    const trees = Array.isArray(o.trees) ? o.trees : [];
+    const bySchema = new Map();
+    trees.forEach(r=>{
+      const key = r.schema_name || "—";
+      if(!bySchema.has(key)) bySchema.set(key, []);
+      bySchema.get(key).push(r);
+    });
+
+    const schemaBlocks = Array.from(bySchema.entries()).map(([schema, arr])=>{
+      const byTemplate = new Map();
+      arr.forEach(x=>{
+        const k = String(x.template_id);
+        if(!byTemplate.has(k)) byTemplate.set(k, []);
+        byTemplate.get(k).push(x);
       });
-  
-      const schemaBlocks = Array.from(bySchema.entries()).map(([schema, arr])=>{
-        const byTemplate = new Map();
-        arr.forEach(x=>{
-          const k = String(x.template_id);
-          if(!byTemplate.has(k)) byTemplate.set(k, []);
-          byTemplate.get(k).push(x);
-        });
-        const templatesHtml = Array.from(byTemplate.entries()).map(([tid, rows])=>{
-          const inner = rows.map(r=>`<div class="row" style="gap:.5rem;">
-            <span class="badge">${esc(r.token_symbol)}</span>
-            <small class="muted">@${esc(r.token_contract||"")}</small>
-            <span class="muted">last paid: ${fmt(r.amount||0)}</span>
-          </div>`).join("");
-          return `<details><summary class="row" style="gap:.5rem;"><strong>Template</strong> <span class="badge">ID ${esc(tid)}</span></summary>${inner}</details>`;
-        }).join("");
-  
-        const subtotal = arr.reduce((a,b)=>a+Number(b.amount||0),0);
-        return `<details>
-          <summary class="row" style="gap:.5rem;"><strong>Schema</strong> <span class="badge">${esc(schema)}</span> <span class="badge ok">Subtotal: ${fmt(subtotal)}</span></summary>
+
+      const templatesHtml = Array.from(byTemplate.entries()).map(([tid, rows])=>{
+        const inner = rows.map(r=>`
+          <div class="row" style="gap:.5rem;" title="Amount paid for this token on the last completed cycle for this template.">
+            <span class="badge" title="Token symbol">${esc(r.token_symbol)}</span>
+            <small class="muted" title="Token contract">@${esc(r.token_contract||"")}</small>
+            <span class="muted">last cycle: <strong>${fmt(r.amount||0)}</strong></span>
+          </div>
+        `).join("");
+
+        return `
+          <details>
+            <summary class="row" style="gap:.5rem;" title="Click to see token subtotals for this template.">
+              <strong>Template</strong> <span class="badge">ID ${esc(tid)}</span>
+            </summary>
+            ${inner}
+          </details>`;
+      }).join("");
+
+      const subtotal = arr.reduce((a,b)=>a+Number(b.amount||0),0);
+      return `
+        <details>
+          <summary class="row" style="gap:.5rem;" title="Click to expand this schema details.">
+            <strong>Schema</strong> <span class="badge">${esc(schema)}</span>
+            <span class="badge ok" title="Sum of all token payouts for this schema (last cycle).">Subtotal: ${fmt(subtotal)}</span>
+          </summary>
           <div class="grid" style="gap:6px;">${templatesHtml}</div>
         </details>`;
-      }).join("");
-  
-      const ownerSubtotal = (o.tokens||[]).reduce((a,b)=>a+Number(b.amount||0),0);
-  
-      return `<details class="soft" style="padding:8px;">
+    }).join("");
+
+    return `
+      <details class="soft" style="padding:8px;">
         <summary class="row" style="gap:.6rem;">
-          <strong>${esc(owner)}</strong>
-          <span class="badge">Assets: ${fmt(o.assets||0)}</span>
-          <span class="badge ok">Subtotal: ${fmt(ownerSubtotal)}</span>
-          <span class="badge">Last: ${esc(last)}</span>
+          <strong title="Staker wallet">${esc(owner)}</strong>
+          <span class="badge" title="How many NFTs this staker currently has staked in this farm.">Assets: ${fmt(o.assets||0)}</span>
+          <span class="badge ok" title="Sum of all rewards (all tokens) this staker received in the last completed cycle.">
+            Subtotal: ${fmt(o._subtotal)}
+          </span>
+          <span class="badge" title="When this staker last received a payout.">Last: ${esc(last)}</span>
         </summary>
         <div class="grid" style="gap:8px; margin-top:6px;">
-          <div class="help">Tokens subtotal: ${esc(tokens)}</div>
+          <div class="help" title="Per-token subtotal for the last completed cycle.">
+            Tokens subtotal: ${esc(tokensLine)}
+          </div>
           <div>${schemaBlocks || "<div class='help'>No details</div>"}</div>
           <div class="row" style="gap:.5rem; margin-top:6px;">
-            <button class="btn btn-danger ncf-kick" data-owner="${esc(owner)}">Kick from staking</button>
+            <button class="btn btn-danger ncf-kick" data-owner="${esc(owner)}"
+              title="Remove this staker from the farm (their assets will stop earning).">
+              Kick from staking
+            </button>
           </div>
         </div>
       </details>`;
-    }).join("");
-  
-    $("#ncf-stats-grouped").innerHTML = html;
-  
-    // kick events
-    $$("#ncf-stats-grouped .ncf-kick").forEach(btn=>{
-      btn.addEventListener("click", async ()=>{
-        const farmId = $("#ncf-farm-picker").value || null;
-        const owner = btn.dataset.owner;
-        const reason = "manual kick (UI)";
-        if(!farmId){ toast("Pick a specific farm to kick.", "error"); return; }
-        try{
-          await postKick({apiBaseUrl: apiBase({})}, { farm_id: farmId, wax_account: owner, reason });
-          toast(`Kick requested for ${owner}.`);
-        }catch(e){ toast(String(e.message||e), "error"); }
-      });
+  }).join("");
+
+  $("#ncf-stats-grouped").innerHTML = kpiCards + htmlOwners;
+
+  // Bind pulsanti "Kick"
+  $$("#ncf-stats-grouped .ncf-kick").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const farmId = $("#ncf-farm-picker").value || null;
+      const owner = btn.dataset.owner;
+      const reason = "manual kick (UI)";
+      if(!farmId){ toast("Pick a specific farm to kick.", "error"); return; }
+      try{
+        await postKick({apiBaseUrl: apiBase({})}, { farm_id: farmId, wax_account: owner, reason });
+        toast(`Kick requested for ${owner}.`);
+      }catch(e){ toast(String(e.message||e), "error"); }
     });
-  }
+  });
+}
+
   
   function renderDistributionsHistory(list){
     if (!Array.isArray(list) || !list.length) {

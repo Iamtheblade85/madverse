@@ -505,7 +505,7 @@
     // Hint: se non ci sono token attivi, niente messaggi confusivi
     if (!ids.size) {
       $("#ncf-user-hints").innerHTML =
-        `<p class="help" style="margin:0;">Tip: aggiungi un token nelle regole (Step 4) per evidenziarlo qui come “attivo”.</p>`;
+        `<p class="help" style="margin:0;">Tip: add a token on the Right Library (Step 4) to mark it as “active” (available as reward in your farm).</p>`;
     } else {
       // Mostra “hai X in TW/TG” per i token attivi
       const holdings = sumHoldingsFromDom();

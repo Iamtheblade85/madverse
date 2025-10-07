@@ -506,7 +506,7 @@
   }
   
   // ASSUME BACKEND: stats.summary.valid_templates_total, stats.summary.remaining_by_token
-  function renderActiveFarmsList(state, farms){
+  function renderActiveFarmsList(state, farms, cfg){
     const box = $("#ncf-active-list");
     if (!farms.length){
       box.innerHTML = `<div class="help">No active farms found.</div>`;
@@ -549,7 +549,7 @@
     try{
       const farms = await fetchActiveFarms(cfg);
       state._activeFarms = farms || [];
-      renderActiveFarmsList(state, state._activeFarms);
+      renderActiveFarmsList(state, state._activeFarms, cfg);
     }catch(e){
       list.innerHTML = `<div class="help">${esc(String(e.message||e))}</div>`;
     }

@@ -10,7 +10,9 @@
       farmsByCreator: "/api/farm/list",                 // GET ?creator=<wax>
       farmStats: "/api/farm/stats",                     // GET ?farm_id=... oppure ?creator=...
       farmDistributions: "/api/farm/distributions",     // GET ?farm_id=...&limit=100
-      farmKick: "/api/farm/kick"                        // POST {farm_id, wax_account, reason}      
+      farmKick: "/api/farm/kick",                        // POST {farm_id, wax_account, reason}
+      activeFarms: "/api/farm/list",                     // GET ?status=active (riuso) 
+      userHistory: "/api/farm/user-history"               // GET ?farm_id=...&owner=...&limit=200      
     },
     containerId: null,
     appTitle: "Manage Non-Custodial NFTs Farm",
@@ -89,6 +91,7 @@
             <div class="row" role="tablist" aria-label="Farm tabs">
               <button id="ncf-tab-edit"  role="tab" aria-selected="true"  class="btn btn-ghost">Create / Edit</button>
               <button id="ncf-tab-stats" role="tab" aria-selected="false" class="btn btn-ghost">View Farm Stats</button>
+              <button id="ncf-tab-active" role="tab" aria-selected="false" class="btn btn-ghost">Active Farms</button>
             </div>
           </section>
   
@@ -269,6 +272,38 @@
               </div>
             </div>
           </section>
+          <section id="ncf-tabpane-active" class="cy-card" style="padding:16px; display:none;">
+            <div class="row" style="justify-content:space-between; align-items:center;">
+              <h2 style="margin:0;">Active Farms</h2>
+              <button id="ncf-refresh-active" class="btn btn-ghost">Refresh</button>
+            </div>
+          
+            <div id="ncf-active-list" class="grid" style="gap:10px; margin-top:10px;">
+              <div class="help">Loading…</div>
+            </div>
+          
+            <div id="ncf-active-detail" class="soft" style="padding:10px; margin-top:12px; display:none;">
+              <div class="row" style="justify-content:space-between; align-items:center;">
+                <h3 style="margin:.2rem 0;">Farm Detail</h3>
+                <button id="ncf-active-back" class="btn btn-ghost">Back to list</button>
+              </div>
+              <div id="ncf-active-overview" class="grid" style="gap:10px;"></div>
+              <div class="grid" style="gap:12px; margin-top:8px;">
+                <div class="soft" style="padding:10px;">
+                  <h4 style="margin:.2rem 0;">Rewarded Templates</h4>
+                  <div class="help" style="margin:.2rem 0;">Template → Token (per-day) → Expiry. Tokens are never aggregated across symbols.</div>
+                  <div id="ncf-active-config"></div>
+                </div>
+                <div class="soft" style="padding:10px;">
+                  <h4 style="margin:.2rem 0;">Your Distribution History</h4>
+                  <div id="ncf-active-history">
+                    <div class="help">Sign in to see your personal history, or you may not have assets staked here.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          
         </div>
         <aside id="ncf-rightpanel" class="grid" style="gap:14px;">
           <section class="cy-card" style="padding:14px;">
@@ -295,21 +330,231 @@
     const tabStats = $("#ncf-tab-stats");
     const paneEdit  = $("#ncf-tabpane-edit");
     const paneStats = $("#ncf-tabpane-stats");
-  
+    const tabActive = $("#ncf-tab-active");
+    const paneActive = $("#ncf-tabpane-active");
+    
     const show = (which) => {
-      const isEdit = which === "edit";
+      const isEdit   = which === "edit";
+      const isStats  = which === "stats";
+      const isActive = which === "active";
       tabEdit.setAttribute("aria-selected", isEdit ? "true" : "false");
-      tabStats.setAttribute("aria-selected", !isEdit ? "true" : "false");
-      paneEdit.style.display  = isEdit ? "" : "none";
-      paneStats.style.display = !isEdit ? "" : "none";
-      if (!isEdit) ensureStatsLoaded(state, cfg);
+      tabStats.setAttribute("aria-selected", isStats ? "true" : "false");
+      tabActive.setAttribute("aria-selected", isActive ? "true" : "false");
+      paneEdit.style.display   = isEdit ? "" : "none";
+      paneStats.style.display  = isStats ? "" : "none";
+      paneActive.style.display = isActive ? "" : "none";
+      if (isStats)  ensureStatsLoaded(state, cfg);
+      if (isActive) ensureActiveFarmsLoaded(state, cfg);
     };
-  
+    
+    tabActive.addEventListener("click", () => show("active"));
     tabEdit.addEventListener("click", () => show("edit"));
     tabStats.addEventListener("click", () => show("stats"));
-    // default: resta su Edit alla prima apertura
   }
-
+  
+  async function openFarmDetail(state, cfg, farmId){
+    const list = $("#ncf-active-list");
+    const detail = $("#ncf-active-detail");
+    const overview = $("#ncf-active-overview");
+    const configBox = $("#ncf-active-config");
+    const historyBox = $("#ncf-active-history");
+  
+    list.style.display = "none";
+    detail.style.display = "";
+    overview.innerHTML = `<div class="help">Loading…</div>`;
+    configBox.innerHTML = "";
+    historyBox.innerHTML = `<div class="help">Loading…</div>`;
+  
+    try{
+      // 1) Statistiche e configurazione
+      const stats = await fetchFarmStats(cfg, {farm_id: farmId});
+      const head  = stats?.summary || {};
+      const items = Array.isArray(stats?.config?.items) ? stats.config.items : []; // ASSUME BACKEND
+  
+      // Overview: creator, collection, valid templates, remaining_by_token, last dist
+      const remaining = head.remaining_by_token && typeof head.remaining_by_token === "object"
+        ? Object.entries(head.remaining_by_token).map(([sym,amt])=>({symbol:String(sym).toUpperCase(), amount:Number(amt)||0}))
+        : [];
+      remaining.sort((a,b)=>b.amount-a.amount);
+  
+      overview.innerHTML = `
+        <div class="grid" style="gap:8px;">
+          <div class="row" style="gap:10px; flex-wrap:wrap;">
+            <span class="badge">Farm #${esc(String(stats.farm_id || farmId))}</span>
+            <span class="badge">Collection: ${esc(stats.collection || "—")}</span>
+            <span class="badge">Creator: ${esc(stats.creator || stats.creator_wax_account || "—")}</span>
+            <span class="badge">Valid templates: ${fmt(head.valid_templates_total ?? items.length ?? 0)}</span>
+            <span class="badge">Last distribution: ${head.last_distribution_at ? new Date(head.last_distribution_at).toLocaleString() : "—"}</span>
+          </div>
+          <div class="soft" style="padding:8px;">
+            <h4 style="margin:.2rem 0;">Remaining rewards by token</h4>
+            ${
+              remaining.length
+                ? `<table><thead><tr><th>Token</th><th>Remaining</th></tr></thead><tbody>${
+                    remaining.map(r=>`<tr><td><strong>${esc(r.symbol)}</strong></td><td>${fmt(r.amount)}</td></tr>`).join("")
+                  }</tbody></table>`
+                : `<div class="help">No remaining budget reported by the farm.</div>`
+            }
+          </div>
+        </div>
+      `;
+  
+      // 2) Config templates (mai sommare token diversi)
+      if(!items.length){
+        configBox.innerHTML = `<div class="help">No rewarded templates configured.</div>`;
+      } else {
+        const rows = items.map(it=>{
+          const rewards = Array.isArray(it.rewards) ? it.rewards : [];
+          const tokensHtml = rewards
+            .map(r=>`<div class="row" style="gap:.4rem;">
+              <span class="badge">${esc(r.token_symbol)}</span>
+              <small class="muted">@${esc(r.token_contract||"")}</small>
+              <span class="muted">${fmt(r.reward_per_asset_per_day||0)}/day</span>
+            </div>`).join("") || `<div class="muted">—</div>`;
+          const exp = it.expiry ? new Date(it.expiry).toLocaleString() : "—";
+          return `<tr>
+            <td><strong>${esc(it.schema_name||"—")}</strong> <small class="muted">ID ${esc(String(it.template_id))}</small></td>
+            <td>${tokensHtml}</td>
+            <td>${esc(exp)}</td>
+          </tr>`;
+        }).join("");
+  
+        configBox.innerHTML = `
+          <table>
+            <thead><tr><th>Template</th><th>Tokens (per day)</th><th>Expiry</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+      }
+  
+      // 3) Storico personale utente (se loggato)
+      const me = getWax();
+      if(!me){
+        historyBox.innerHTML = `<div class="help">Sign in to view your personal history for this farm.</div>`;
+      } else {
+        try{
+          const histUrl = buildUrl(apiBase(cfg), DEFAULTS.endpoints.userHistory)
+            + `?farm_id=${encodeURIComponent(farmId)}&owner=${encodeURIComponent(me)}&limit=200`;
+          let hist = await fetchJson(histUrl); // ASSUME BACKEND SHAPE
+          if (typeof hist === "string") { try { hist = JSON.parse(hist); } catch { hist = []; } }
+          const arr = Array.isArray(hist) ? hist : [];
+  
+          if(!arr.length){
+            // caso “nessun asset” o mai ricevuto
+            historyBox.innerHTML = `<div class="help">You don’t have assets staked in this farm, or you have not received any distributions yet.</div>`;
+          } else {
+            // Mai sommare token diversi: subtotal per-symbol separati
+            const bySym = new Map();
+            arr.forEach(ev=>{
+              const sym = String(ev.token_symbol || "").toUpperCase();
+              const amt = Number(ev.amount || 0);
+              if(!bySym.has(sym)) bySym.set(sym, 0);
+              bySym.set(sym, bySym.get(sym) + (isFinite(amt) ? amt : 0));
+            });
+            const totals = Array.from(bySym.entries()).map(([sym,sum])=>({symbol:sym, amount:sum}))
+                               .sort((a,b)=>a.symbol.localeCompare(b.symbol));
+  
+            const rows = arr.map(ev=>`
+              <tr>
+                <td>${new Date(ev.ts).toLocaleString()}</td>
+                <td><strong>${esc(String(ev.token_symbol||"").toUpperCase())}</strong></td>
+                <td>${fmt(ev.amount||0)}</td>
+                <td>${esc(ev.schema_name||"—")} / ID ${esc(String(ev.template_id||"—"))}</td>
+                <td>${esc(ev.note||"—")}</td>
+              </tr>`).join("");
+  
+            const totalsRows = totals.map(t=>`
+              <tr>
+                <td><strong>${esc(t.symbol)}</strong></td>
+                <td>${fmt(t.amount)}</td>
+              </tr>`).join("");
+  
+            historyBox.innerHTML = `
+              <div class="grid" style="gap:8px;">
+                <div class="soft" style="padding:8px;">
+                  <h5 style="margin:.2rem 0;">Per-token totals (never aggregated across different symbols)</h5>
+                  <table>
+                    <thead><tr><th>Token</th><th>Total received</th></tr></thead>
+                    <tbody>${totalsRows}</tbody>
+                  </table>
+                </div>
+                <div class="soft" style="padding:8px;">
+                  <h5 style="margin:.2rem 0;">Event log</h5>
+                  <table>
+                    <thead><tr><th>Time</th><th>Token</th><th>Amount</th><th>Template</th><th>Note</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                  </table>
+                </div>
+              </div>
+            `;
+          }
+        }catch(e){
+          historyBox.innerHTML = `<div class="help">Unable to load your history: ${esc(String(e.message||e))}</div>`;
+        }
+      }
+    }catch(e){
+      overview.innerHTML = `<div class="help">${esc(String(e.message||e))}</div>`;
+      historyBox.innerHTML = "";
+    }
+  }
+    
+  async function fetchActiveFarms(cfg){
+    // Riuso /list con filtro; fallback se il backend ignora il filtro
+    const url = buildUrl(apiBase(cfg), DEFAULTS.endpoints.activeFarms) + `?status=active`;
+    let data = await fetchJson(url);
+    if (typeof data === "string") { try { data = JSON.parse(data); } catch { data = []; } }
+    return Array.isArray(data) ? data : [];
+  }
+  
+  // ASSUME BACKEND: stats.summary.valid_templates_total, stats.summary.remaining_by_token
+  function renderActiveFarmsList(state, farms){
+    const box = $("#ncf-active-list");
+    if (!farms.length){
+      box.innerHTML = `<div class="help">No active farms found.</div>`;
+      return;
+    }
+    box.innerHTML = farms.map(f=>{
+      const id = String(f.farm_id ?? "—");
+      const col = esc(f.collection || "");
+      const creator = esc(f.creator || f.creator_wax_account || "—");
+      // small stub: numbers may be filled after click (from farmStats)
+      return `
+        <div class="soft" style="padding:10px; display:flex; justify-content:space-between; gap:10px;" data-farm="${id}">
+          <div class="col">
+            <div class="row" style="gap:.5rem;">
+              <strong>Farm #${id}</strong>
+              <span class="muted">${col}</span>
+            </div>
+            <small class="muted">Creator: ${creator}</small>
+          </div>
+          <div class="row">
+            <button class="btn btn-ghost ncf-open-farm">Open</button>
+          </div>
+        </div>`;
+    }).join("");
+  
+    $$("#ncf-active-list .ncf-open-farm").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const card = btn.closest("[data-farm]");
+        openFarmDetail(state, cfg, card?.dataset.farm);
+      });
+    });
+  }
+  
+  async function ensureActiveFarmsLoaded(state, cfg){
+    const list = $("#ncf-active-list");
+    const detail = $("#ncf-active-detail");
+    list.style.display = "";
+    detail.style.display = "none";
+    list.innerHTML = `<div class="help">Loading…</div>`;
+    try{
+      const farms = await fetchActiveFarms(cfg);
+      state._activeFarms = farms || [];
+      renderActiveFarmsList(state, state._activeFarms);
+    }catch(e){
+      list.innerHTML = `<div class="help">${esc(String(e.message||e))}</div>`;
+    }
+  }
+  
   function renderSkeleton(el){ el.innerHTML=`<div class="soft" style="padding:1rem; text-align:center;"><div style="height:12px; width:240px; margin:.35rem auto; background:rgba(255,255,255,.06); border-radius:8px;"></div><div style="height:12px; width:320px; margin:.35rem auto; background:rgba(255,255,255,.06); border-radius:8px;"></div></div>`; }
 
   function wizardGo(state, id){
@@ -1085,7 +1330,7 @@ function groupStatsView(stats){
       const meta=enrichFromTable(x.schema_name,x.template_id);
       return `<tr><td><strong>${esc(x.schema_name)}</strong> <small class="muted">ID ${x.template_id} — ${esc(meta.template_name||"—")}</small></td><td>${tokenRows}</td><td>${esc(exp)}</td></tr>`;
     }).join("");
-    root.innerHTML=`<table><thead><tr><th>Template</th><th>Token → reward/h → FW balance</th><th>Expiry</th></tr></thead><tbody>${rows||`<tr><td colspan="3">No data</td></tr>`}</tbody></table>`;
+    root.innerHTML=`<table><thead><tr><th>Template</th><th>Token → reward/day → Farm-Wallet balance</th><th>Expiry</th></tr></thead><tbody>${rows||`<tr><td colspan="3">No data</td></tr>`}</tbody></table>`;
   }
 
   async function performTopUp(state,cfg){
@@ -1153,7 +1398,11 @@ function groupStatsView(stats){
     $("#ncf-expand").addEventListener("click",()=>{ state.expandAll=!state.expandAll; $("#ncf-expand").textContent=state.expandAll?"Collapse all":"Expand all"; if(state.raw) renderSections($("#ncf-sections"), state.raw, state); });
     $("#ncf-select-all").addEventListener("click",()=>{ if(!state.raw) return; (state.raw.schemas||[]).forEach(s=>(s.templates||[]).forEach(t=>setSelected(state,state.collection,s.schema_name,Number(t.template_id),true))); $$(".ncf-row-check").forEach(c=>c.checked=true); updateRewardsPanel(state); });
     $("#ncf-clear").addEventListener("click",()=>{ if(!state.raw) return; Object.keys(state.selection).forEach(k=>{ if(k.startsWith(`${state.collection}::`)){ delete state.selection[k]; delete state.rewardsPerToken[k]; delete state.expiry[k]; }}); saveSel(state.selection); saveRPT(state.rewardsPerToken); saveExp(state.expiry); $$(".ncf-row-check").forEach(c=>c.checked=false); updateRewardsPanel(state); });
-
+    $("#ncf-refresh-active")?.addEventListener("click", ()=> ensureActiveFarmsLoaded(state, cfg));
+    $("#ncf-active-back")?.addEventListener("click", ()=>{
+      $("#ncf-active-detail").style.display = "none";
+      $("#ncf-active-list").style.display = "";
+    });
     $("#ncf-tok-add").addEventListener("click",()=>{ const c=$("#ncf-tok-contract").value.trim(); const s=$("#ncf-tok-symbol").value.trim().toUpperCase(); const d=$("#ncf-tok-dec").value===""?null:Number($("#ncf-tok-dec").value); if(!c||!s){ toast("Provide contract and symbol.","error"); return; } if(state.tokens.some(t=>t.contract===c&&t.symbol===s)){ toast("Token already present."); return; } state.tokens.push({contract:c,symbol:s,decimals:d}); saveTokens(state.tokens); $("#ncf-tok-contract").value=""; $("#ncf-tok-symbol").value=""; $("#ncf-tok-dec").value=""; renderTokenLibrary(state); updateRewardsPanel(state); });
     $("#ncf-farm-picker").addEventListener("change", ()=> ensureStatsLoaded(state, cfg));
     $("#ncf-refresh-stats").addEventListener("click", ()=> ensureStatsLoaded(state, cfg));

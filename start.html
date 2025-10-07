@@ -153,12 +153,37 @@
   <script>window.__NFTF_AUTO_DISABLED__ = true;</script>
   <script src="main_restyled.js?v=prod-2025-10-04" defer></script>
 
-  <script>
+<script>
   (function () {
-    const TARGET_WAX = "agoscry4ever";
+    // ❑ 1) ELENCO WALLET AUTORIZZATI (minuscoli)
+    const ALLOWED_WALLETS = [
+      "agoscry4ever",
+      "li2ty.wam",
+      "welshdanft55",
+      "mpvee.wam",
+      "vicventura21",
+      "valkyriaswax",
+      "1wolfatheina",      
+      "ldyu4.wam",
+      "ksgbk.wam",
+      "qev4o.c.wam",
+      "patrickwax11"
+    ].map(w => w.toLowerCase());
+
+    // opzionale: consenti override via window (es. impostato dal backend)
+    if (Array.isArray(window.NCF_ALLOWED_WALLETS)) {
+      ALLOWED_WALLETS.splice(0, ALLOWED_WALLETS.length, ...window.NCF_ALLOWED_WALLETS.map(w => String(w).toLowerCase()));
+    }
+
+    const ALLOWED_SET = new Set(ALLOWED_WALLETS);
     const MENU_ID = "creators-tools-menu";
     const BTN_SELECTOR = '[data-section="noncustodialfarms"]';
 
+    // helper
+    const getWax = () => (window.userData?.wax_account || "").trim().toLowerCase();
+    const hasAccess = () => ALLOWED_SET.has(getWax());
+
+    // dropdown behavior (come prima)
     document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
       toggle.addEventListener('click', () => {
         document.querySelectorAll('.dropdown-menu').forEach(m => {
@@ -168,13 +193,12 @@
       });
     });
 
-    const hasAccess = () => (window.userData?.wax_account || "").trim().toLowerCase() === TARGET_WAX;
-
     function injectButton() {
       const menu = document.getElementById(MENU_ID);
       if (!menu) return false;
       if (!hasAccess()) return false;
       if (menu.querySelector(BTN_SELECTOR)) return true;
+
       const btn = document.createElement("button");
       btn.className = "dropdown-item";
       btn.dataset.section = "noncustodialfarms";
@@ -202,6 +226,7 @@
       document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
     });
 
+    // modali (come prima)
     const closeModalBtn = document.getElementById('close-modal');
     if (closeModalBtn) {
       closeModalBtn.addEventListener('click', () => {
@@ -215,7 +240,8 @@
       });
     }
   })();
-  </script>
+</script>
+
 
   <footer class="footer-cybertribal">
     <div class="footer-inner">

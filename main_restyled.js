@@ -2540,10 +2540,10 @@ async function loadSection(section) {
 	  } else if (section === 'noncustodialfarms') {
 	  const app = document.getElementById('app');
 	
-	  if (!isLoggedIn?.() || (window.userData?.wax_account !== "agoscry4ever")) {
-	    if (window.Swal) Swal.fire("Accesso negato", "Sezione riservata.", "warning");
-	    return;
-	  }
+	  //if (!isLoggedIn?.() || (window.userData?.wax_account !== "agoscry4ever")) {
+	    //if (window.Swal) Swal.fire("Accesso negato", "Sezione riservata.", "warning");
+	    //return;
+	  //}
 	
 	  app.innerHTML = `
 	    <div class="section-container">

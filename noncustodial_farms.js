@@ -106,7 +106,21 @@
                   <button id="ncf-load" class="btn btn-primary">Load</button>
                   <div class="badge" id="ncf-meta">Ready</div>
                 </div>
-                <div id="ncf-a-hint" class="help" style="margin-top:.5rem;">AtomicAssets collection name. Example: <code>cryptochaos1</code>.</div>
+                <div id="ncf-a-hint" class="help" style="margin-top:.5rem;">
+                  AtomicAssets collection name. Example: <code>cryptochaos1</code>.
+                </div>
+                <div class="soft" id="ncf-farms-box" style="padding:10px; margin-top:10px;">
+                  <div class="row" style="justify-content:space-between; align-items:center;">
+                    <h4 style="margin:0;">Your farms (this creator)</h4>
+                    <button id="ncf-refresh-farms" class="btn btn-ghost">Refresh</button>
+                  </div>
+                  <div id="ncf-farms-list" class="grid" style="gap:8px; margin-top:6px;">
+                    <div class="help">No farms yet or not signed in.</div>
+                  </div>
+                  <div class="help" style="margin-top:6px;">
+                    Tip: <strong>one collection = one farm</strong>. To create another farm, enter a different collection above and click <em>Load</em>.
+                  </div>
+                </div>
               </div>
 
               <div class="step" id="ncf-step-b">
@@ -589,6 +603,60 @@
     sel.innerHTML = opts.join("");
     if (farms.some(f => String(f.farm_id) === cur)) sel.value = cur;
   }
+function renderFarmsStep1(state, farms, cfg){
+  const list = $("#ncf-farms-list");
+  if (!Array.isArray(farms) || !farms.length){
+    list.innerHTML = `<div class="help">No farms yet for this creator.</div>`;
+    return;
+  }
+  list.innerHTML = farms.map(f => {
+    const col = f.collection || "";
+    const id  = String(f.farm_id ?? "—");
+    return `
+      <div class="soft" style="padding:8px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <div class="row">
+          <strong>${esc(col)}</strong>
+          <small class="muted">#${esc(id)}</small>
+        </div>
+        <div class="row">
+          <button class="btn btn-ghost ncf-farm-edit"  data-col="${esc(col)}">Edit</button>
+          <button class="btn btn-ghost ncf-farm-stats" data-id="${esc(id)}">Stats</button>
+        </div>
+      </div>`;
+  }).join("");
+
+  // Edit: carica la collezione selezionata e passa allo Step 2
+  $$("#ncf-farms-list .ncf-farm-edit").forEach(b=>{
+    b.addEventListener("click", () => {
+      const col = b.dataset.col || "";
+      $("#ncf-collection").value = col;
+      doLoad(state, cfg);               // carica schemas/templates + bal FW
+      wizardGo(state, "#ncf-step-b");   // vai allo Step 2
+    });
+  });
+
+  // Stats: passa alla tab Stats con la farm selezionata
+  $$("#ncf-farms-list .ncf-farm-stats").forEach(b=>{
+    b.addEventListener("click", () => {
+      const id = b.dataset.id;
+      $("#ncf-farm-picker").value = String(id);
+      $("#ncf-tab-stats").click();      // cambia tab → Stats
+    });
+  });
+}
+
+// Carica l’elenco delle farm del creator e popola lo Step 1
+async function loadCreatorFarmsIntoStep1(state, cfg){
+  const box = $("#ncf-farms-list");
+  try{
+    box.innerHTML = `<div class="help">Loading…</div>`;
+    const farms = await fetchFarmsForCreator(cfg);
+    state._creatorFarms = farms || [];
+    renderFarmsStep1(state, state._creatorFarms, cfg);
+  }catch(e){
+    box.innerHTML = `<div class="help">${esc(String(e.message||e))}</div>`;
+  }
+}
   
 function groupStatsView(stats){
   // shape attesa:
@@ -1065,10 +1133,11 @@ function groupStatsView(stats){
     bindTabs(state, cfg);
     $("#ncf-collection").value=state.collection||"";
     $("#ncf-auto").checked=!!rLS(DEFAULTS.ls.autoMonitor,false);
-
+    // Carica l'elenco delle farm del creator nello Step 1
+    loadCreatorFarmsIntoStep1(state, cfg);
     $("#ncf-load").addEventListener("click",()=>doLoad(state,cfg));
     $("#ncf-collection").addEventListener("keydown",(e)=>{ if(e.key==="Enter") doLoad(state,cfg); });
-
+    $("#ncf-refresh-farms").addEventListener("click", ()=> loadCreatorFarmsIntoStep1(state, cfg));
     $("#ncf-src").addEventListener("change",()=>updateTopupPanel(state,cfg));
     $("#ncf-token").addEventListener("change",()=>updateTopupPanel(state,cfg));
     $("#ncf-max").addEventListener("click",()=>{ const src=$("#ncf-src").value||"twitch"; const sym=($("#ncf-token").value||"").toUpperCase(); if(!sym) return; const bal=buildTokenOptionsFromSource(src).find(o=>o.symbol===sym)?.amount||0; $("#ncf-amount").value=String(bal);});
@@ -1132,12 +1201,19 @@ function groupStatsView(stats){
       const opts=(data.schemas||[]).map(s=>`<option value="${esc(s.schema_name)}">${esc(s.schema_name)}</option>`).join("");
       $("#ncf-schema").innerHTML=`<option value="">All schemas</option>${opts}`;
       const ts=(data.schemas||[]).length, tt=(data.schemas||[]).reduce((a,s)=>a+(s.templates?.length||0),0);
-      $("#ncf-meta").textContent=`Collection: ${data.collection} — Schemas ${ts} — Templates ${tt}`;
+     // Se la collezione coincide con una farm già esistente per il creator, mostriamo "Existing"
+     const farms = Array.isArray(state._creatorFarms) ? state._creatorFarms : [];
+     const exists = farms.some(f => (f.collection || "").toLowerCase() === String(data.collection||"").toLowerCase());
+     $("#ncf-meta").innerHTML =
+       `Collection: ${esc(data.collection)} — Schemas ${ts} — Templates ${tt}
+        ${ exists ? '<span class="badge ok" style="margin-left:.5rem;">Existing</span>'
+                  : '<span class="badge warn" style="margin-left:.5rem;">New</span>' }`;
       $("#ncf-status").innerHTML=""; renderSections($("#ncf-sections"),data,state); updateRewardsPanel(state);
       wizardGo(state,"#ncf-step-b");
       await refreshFarmWalletBalances(state,cfg);
       updateTopupPanel(state,cfg);
       if($("#ncf-auto").checked) startAuto(state,cfg);
+      loadCreatorFarmsIntoStep1(state, cfg);
     }catch(e){
       $("#ncf-status").innerHTML=`<div class="soft" style="padding:14px; text-align:center;">${esc(String(e.message||e))}</div>`;
       $("#ncf-meta").textContent="Error";

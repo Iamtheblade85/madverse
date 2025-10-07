@@ -159,6 +159,7 @@
                     <div class="badge err">Some active reward tokens have zero Farm-Wallet balance</div>
                   </div>
                 </div>
+                <button id="ncf-change-col" class="btn btn-ghost">Change collection</button>
                 <div class="row" style="margin-top:10px;"><button id="ncf-next-b" class="btn btn-primary">Continue</button></div>
               </div>
 
@@ -1087,6 +1088,12 @@ function groupStatsView(stats){
     $("#ncf-tok-add").addEventListener("click",()=>{ const c=$("#ncf-tok-contract").value.trim(); const s=$("#ncf-tok-symbol").value.trim().toUpperCase(); const d=$("#ncf-tok-dec").value===""?null:Number($("#ncf-tok-dec").value); if(!c||!s){ toast("Provide contract and symbol.","error"); return; } if(state.tokens.some(t=>t.contract===c&&t.symbol===s)){ toast("Token already present."); return; } state.tokens.push({contract:c,symbol:s,decimals:d}); saveTokens(state.tokens); $("#ncf-tok-contract").value=""; $("#ncf-tok-symbol").value=""; $("#ncf-tok-dec").value=""; renderTokenLibrary(state); updateRewardsPanel(state); });
     $("#ncf-farm-picker").addEventListener("change", ()=> ensureStatsLoaded(state, cfg));
     $("#ncf-refresh-stats").addEventListener("click", ()=> ensureStatsLoaded(state, cfg));
+    $("#ncf-change-col")?.addEventListener("click", () => {
+      state.collection = "";
+      wLS(DEFAULTS.ls.lastCollection, "");   // pulisci la collezione salvata
+      $("#ncf-collection").value = "";
+      wizardGo(state, "#ncf-step-a");        // torna allo Step 1
+    });
 
     $("#ncf-next-b").addEventListener("click",()=>{
       const ok = true; if(!ok){ toast("Complete this step first.","error"); return; }

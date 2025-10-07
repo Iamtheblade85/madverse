@@ -1110,7 +1110,8 @@ function groupStatsView(stats){
     document.addEventListener("visibilitychange",()=>{ if(document.hidden) stopAuto(state); });
 
     renderTokenLibrary(state);
-    wizardGo(state, state.collection ? "#ncf-step-b" : "#ncf-step-a");
+    // Mostra sempre Step 1; se c'è una collezione salvata, solo precompila il campo.
+    wizardGo(state, "#ncf-step-a");
     if(state.collection) doLoad(state,cfg); else updateTopupPanel(state,cfg);
   }
 

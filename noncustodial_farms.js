@@ -116,8 +116,8 @@
           <section id="ncf-tabpane-edit" class="cy-card" style="padding:16px;">
             <h2 style="margin:0 0 .25rem 0;">${esc(DEFAULTS.appTitle)}</h2>
             <div class="help" style="margin:.25rem 0 .75rem;">
-              Crea o modifica la tua farm per una <strong>singola collection</strong>. 
-              Le ricompense sono <strong>per asset_id al giorno</strong> e le scadenze possono solo essere estese.
+            Create or edit your farm for a <strong>single collection</strong>. 
+                          Rewards are <strong>per asset_id per day</strong> and expirations can only be extended.
             </div>
   
             <div id="ncf-wizard" class="grid" style="gap:12px;">
@@ -133,7 +133,7 @@
                   <div class="badge" id="ncf-meta">Ready</div>
                 </div>
                 <div id="ncf-a-hint" class="help" style="margin-top:.5rem;">
-                  Nome collection AtomicAssets. Esempio: <code>cryptochaos1</code>.
+                  AtomicAssets collection name. Example: <code>cryptochaos1</code>.
                 </div>
   
                 <div class="soft" id="ncf-farms-box" style="padding:10px; margin-top:10px;">
@@ -145,7 +145,7 @@
                     <div class="help">No farms yet or not signed in.</div>
                   </div>
                   <div class="help" style="margin-top:6px;">
-                    Tip: <strong>one collection = one farm</strong>. Per crearne un'altra inserisci una collection diversa e premi <em>Load</em>.
+                    Tip: <strong>one collection = one farm</strong>. To create another one, enter a different collection and press <em>Load</em>.
                   </div>
                 </div>
               </div>
@@ -170,7 +170,7 @@
   
                   <div id="ncf-empty" class="soft" style="display:none; padding:10px;">
                     <div class="badge warn">No available balance on this wallet</div>
-                    <p class="help" style="margin:.4rem 0 0;">Ricarica il wallet interno per avere disponibilità:</p>
+                    <p class="help" style="margin:.4rem 0 0;">Top up the internal wallet to have available balance:</p>
                     <ul class="help" style="margin:.2rem 0 0 1rem;">
                       <li><strong>Twitch Wallet</strong> memo: <code>${esc(cfg.memoTwitch)}</code></li>
                       <li><strong>Telegram Wallet</strong> memo: <code>${esc(cfg.memoTelegram)}</code></li>
@@ -188,7 +188,7 @@
                     <h4 style="margin:0;">Farm-Wallet balances</h4>
                     <div class="row">
                       <button id="ncf-refresh-farm" class="btn btn-ghost">Refresh</button>
-                      <label class="chip" style="user-select:none;" title="Aggiorna automaticamente i bilanci del Farm-Wallet">
+                      <label class="chip" style="user-select:none;" title="Automatically refresh Farm-Wallet balances">
                         <input id="ncf-auto" type="checkbox" style="position:absolute;opacity:0;pointer-events:none;"/>
                         Auto-monitor
                       </label>
@@ -246,8 +246,8 @@
                 </div>
   
                 <div class="help" style="margin:0 0 8px;">
-                  Scegli i token e imposta l'<strong>importo giornaliero per asset_id</strong> per ogni template selezionato.
-                  La scadenza può solo essere estesa.
+                  Choose the tokens and set the <strong>daily amount per asset_id</strong> for each selected template.
+                  The expiration can only be extended.
                 </div>
                 <div id="ncf-rp-body" class="grid" style="gap:10px;">
                   <div class="soft" style="padding:12px; text-align:center;">No templates selected yet.</div>
@@ -261,7 +261,7 @@
               <!-- STEP E -->
               <div class="step" id="ncf-step-e">
                 <h3 style="margin:.2rem 0;">Step 5 — Summary & Save</h3>
-                <div class="help" style="margin:0 0 8px;">Riepilogo della configurazione corrente della farm e controllo saldi del Farm-Wallet per i token attivi.</div>
+                <div class="help" style="margin:0 0 8px;">Summary of the current farm configuration and Farm-Wallet balance check for the active tokens.</div>
                 <div id="ncf-summary" class="soft" style="padding:10px;"></div>
                 <div class="row" style="margin-top:10px;">
                   <button id="ncf-confirm" class="btn btn-primary">Confirm & Save</button>
@@ -288,15 +288,20 @@
             <div class="row" style="justify-content:space-between; align-items:center;">
               <h2 style="margin:0;">Farm Stats</h2>
               <div class="row">
-                <select id="ncf-farm-picker" class="select" style="min-width:260px;"><option value="">All farms (this creator)</option></select>
+                <select id="ncf-farm-picker" class="select" style="min-width:260px;">
+                  <option value="">All farms (this creator)</option>
+                </select>
                 <button id="ncf-refresh-stats" class="btn btn-ghost">Refresh</button>
+                <!-- 👇 nuovi controlli per apertura rapida per ID -->
+                <input id="ncf-farm-quick-id" class="input" placeholder="Farm ID…" style="width:140px;"/>
+                <button id="ncf-open-farmid" class="btn btn-ghost">Open</button>
               </div>
             </div>
-  
+          
             <div class="help" style="margin:.25rem 0 .75rem;">
-              Vista <strong>read-only</strong> per le metriche della farm. Se sei il creator, potrai effettuare azioni di moderazione (es. <em>Kick</em>).
+              A <strong>read-only</strong> view of farm metrics. If you are the creator, you can perform moderation actions (e.g., <em>Kick</em>).
             </div>
-  
+          
             <div class="soft" style="padding:10px; margin-top:10px;">
               <div class="row" style="gap:10px; flex-wrap:wrap;">
                 <div class="badge" id="ncf-stats-head-farms">Farms: 0</div>
@@ -305,16 +310,16 @@
                 <div class="badge" id="ncf-stats-head-lastdist">Last distribution: —</div>
               </div>
             </div>
-  
+          
             <div class="grid" style="gap:12px; margin-top:10px;">
               <div class="soft" style="padding:10px;">
                 <h4 style="margin:.2rem 0;">Rewards (grouped)</h4>
-                <div class="help" style="margin:.2rem 0;">Raggruppato per <strong>Owner</strong> → <strong>Schema</strong> → <strong>Template</strong> → <strong>Token</strong>. Clicca per espandere i subtotali.</div>
+                <div class="help" style="margin:.2rem 0;">Grouped by <strong>Owner</strong> → <strong>Schema</strong> → <strong>Template</strong> → <strong>Token</strong>. Click to expand subtotals.</div>
                 <div id="ncf-stats-grouped" style="overflow:auto; max-height:46vh;">
                   <div class="help">No data yet.</div>
                 </div>
               </div>
-  
+          
               <div class="soft" style="padding:10px;">
                 <h4 style="margin:.2rem 0;">Distributions history</h4>
                 <div id="ncf-stats-history" style="overflow:auto; max-height:38vh;">
@@ -323,6 +328,7 @@
               </div>
             </div>
           </section>
+
   
           <!-- TAB: ACTIVE FARMS -->
           <section id="ncf-tabpane-active" class="cy-card" style="padding:16px; display:none;">
@@ -332,8 +338,8 @@
             </div>
   
             <div class="help" style="margin:.25rem 0 .75rem;">
-              Elenco di tutte le farm <strong>attive e valide</strong>, indipendentemente dal creator. 
-              Apri una farm per vedere configurazione ricompense e (se hai asset staked) la tua storia di distribuzioni.
+              A list of all <strong>active and valid</strong> farms, regardless of the creator.
+              Open a farm to view its reward configuration and, if you have assets staked, your distribution history.
             </div>
   
             <div id="ncf-active-list" class="grid" style="gap:10px; margin-top:10px;">
@@ -349,7 +355,7 @@
               <div class="grid" style="gap:12px; margin-top:8px;">
                 <div class="soft" style="padding:10px;">
                   <h4 style="margin:.2rem 0;">Rewarded Templates</h4>
-                  <div class="help" style="margin:.2rem 0;">Template → Token (per-day) → Expiry. I token non vengono mai aggregati tra simboli diversi.</div>
+                  <div class="help" style="margin:.2rem 0;">Template → Token (per day) → Expiry. Tokens are never aggregated across different symbols.</div>
                   <div id="ncf-active-config"></div>
                 </div>
                 <div class="soft" style="padding:10px;">
@@ -368,7 +374,7 @@
           <section class="cy-card" style="padding:14px;">
             <h3 style="margin:.1rem 0 .5rem;">Tokens Library</h3>
             <div class="help" style="margin-bottom:.5rem;">
-              Aggiungi i token che intendi usare come ricompense. L’ordinamento favorisce i token che possiedi nei wallet interni.
+              Add the tokens you intend to use as rewards. Sorting prioritizes tokens you currently hold in your internal wallets.
             </div>
             <div class="grid" style="gap:10px;">
               <div class="row">
@@ -1022,7 +1028,7 @@ async function loadCreatorFarmsIntoStep1(state, cfg){
   }
 }
   
-function groupStatsView(stats){
+function groupStatsView(stats,cfg){
   // shape attesa:
   // {
   //   summary: {
@@ -1205,7 +1211,7 @@ function groupStatsView(stats){
       const reason = "manual kick (UI)";
       if(!farmId){ toast("Pick a specific farm to kick.", "error"); return; }
       try{
-        await postKick({apiBaseUrl: apiBase({})}, { farm_id: farmId, wax_account: owner, reason });
+        await postKick(cfg, { farm_id: farmId, wax_account: owner, reason });
         toast(`Kick requested for ${owner}.`);
       }catch(e){ toast(String(e.message||e), "error"); }
     });
@@ -1256,7 +1262,7 @@ function groupStatsView(stats){
       }
   
       const stats = await fetchFarmStats(cfg, { farm_id: farmIdSel || null });
-      groupStatsView(stats);
+      groupStatsView(stats, cfg);
   
       const history = farmIdSel ? (await fetchDistributions(cfg, {farm_id: farmIdSel, limit: 200})) : [];
       renderDistributionsHistory(history);

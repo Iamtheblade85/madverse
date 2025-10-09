@@ -225,14 +225,14 @@
   }
 
   function renderActiveFarmsList(state, farms) {
-    const box = $("#ncf-active-list");
+    const box = $("#ncf-list-view");
     if (!farms.length) {
       box.innerHTML = `<div class="help muted">No active farms found.</div>`;
       return;
     }
     box.innerHTML = farms.map(renderFarmCard).join("");
 
-    $$("#ncf-active-list .ncf-view-farm").forEach((btn) => {
+    $$("#ncf-list-view .ncf-view-farm").forEach((btn) => {
       btn.addEventListener("click", () => {
         const card = btn.closest("[data-farm]");
         const farmId = card?.dataset.farm;

@@ -40,7 +40,21 @@
   const esc = (s) => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
   const rLS = (k, f) => { try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch { return f; } };
   const wLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
-  const toast = (() => { let tmr=null; return (m,k="info")=>{ let t=$("#ncf-toast"); if(!t){t=document.createElement("div");t.id="ncf-toast";t.setAttribute("role","status");document.body.appendChild(t);} t.textContent=m; t.dataset.kind=k; t.classList.add("show"); clearTimeout(tmr); tmr=setTimeout(()=>t.classList.remove("show"),2400); }; })();
+  const toast = (() => {
+    let tmr=null;
+    return (m,k="info")=>{
+      let t=$("#ncf-toast");
+      if(!t){
+        t=document.createElement("div");
+        t.id="ncf-toast";
+        t.setAttribute("role","status");
+        t.setAttribute("aria-live","polite");
+        document.body.appendChild(t);
+      }
+      t.textContent=m; t.dataset.kind=k; t.classList.add("show");
+      clearTimeout(tmr); tmr=setTimeout(()=>t.classList.remove("show"),2400);
+    };
+  })();
   const apiBase = (cfg) => cfg.apiBaseUrl || window.BASE_URL || window.API_BASE || location.origin;
   const buildUrl = (b,p) => `${String(b).replace(/\/+$/,"")}${p}`;
   const getWax = () => (window.userData?.wax_account || "").trim();
@@ -71,7 +85,10 @@
 #ncf-root small,#ncf-root .help{color:rgba(230,238,248,.75)}#ncf-wizard .step{display:none}#ncf-wizard .step.active{display:block}
 #ncf-summary-table table{width:100%;border-collapse:separate;border-spacing:0}#ncf-summary-table th,#ncf-summary-table td{padding:.5rem;border-bottom:1px dashed rgba(255,255,255,.08);text-align:left}
 #ncf-root table{width:100%;border-collapse:separate;border-spacing:0;font-size:.95rem}#ncf-root thead th{position:sticky;top:0;padding:.6rem .8rem;text-align:left;background:rgba(10,14,18,.95);border-bottom:1px solid rgba(255,255,255,.08);user-select:none;cursor:pointer}
-#ncf-root tbody td{padding:.6rem .8rem;border-bottom:1px dashed rgba(255,255,255,.08)}#ncf-root tbody tr:hover{background:rgba(255,255,255,.03)}`
+#ncf-root tbody td{padding:.6rem .8rem;border-bottom:1px dashed rgba(255,255,255,.08)}#ncf-root tbody tr:hover{background:rgba(255,255,255,.03)}
+#ncf-root details > summary { cursor: pointer; }
+#ncf-root table { min-width: 520px; }
+#ncf-root .help code { background: rgba(255,255,255,.06); padding: 0 .25rem; border-radius: 6px; }`
     const s=document.createElement("style"); s.id="ncf-styles"; s.textContent=css; document.head.appendChild(s);
   });
 
@@ -84,34 +101,41 @@
   const selectionKey = (collection, schema, tid) => `${collection}::${schema}::${tid}`;
 
   function createLayout(root, cfg) {
-    root.innerHTML=`
+    root.innerHTML = `
       <div id="ncf-root" class="grid" style="grid-template-columns: 1fr minmax(340px,420px); gap:18px;">
         <div id="ncf-main" class="grid" style="gap:14px;">
           <section class="cy-card" style="padding:12px;">
             <div class="row" role="tablist" aria-label="Farm tabs">
-              <button id="ncf-tab-edit"  role="tab" aria-selected="true"  class="btn btn-ghost">Create / Edit</button>
-              <button id="ncf-tab-stats" role="tab" aria-selected="false" class="btn btn-ghost">View Farm Stats</button>
-              <button id="ncf-tab-active" role="tab" aria-selected="false" class="btn btn-ghost">Active Farms</button>
+              <button id="ncf-tab-edit"  role="tab" aria-selected="true"  class="btn btn-ghost" aria-controls="ncf-tabpane-edit">Create / Edit</button>
+              <button id="ncf-tab-stats" role="tab" aria-selected="false" class="btn btn-ghost" aria-controls="ncf-tabpane-stats">View Farm Stats</button>
+              <button id="ncf-tab-active" role="tab" aria-selected="false" class="btn btn-ghost" aria-controls="ncf-tabpane-active">Active Farms</button>
             </div>
           </section>
   
           <!-- TAB: CREATE / EDIT -->
-          <section id="ncf-tabpane-edit"  class="cy-card" style="padding:16px;">
+          <section id="ncf-tabpane-edit" class="cy-card" style="padding:16px;">
             <h2 style="margin:0 0 .25rem 0;">${esc(DEFAULTS.appTitle)}</h2>
+            <div class="help" style="margin:.25rem 0 .75rem;">
+              Crea o modifica la tua farm per una <strong>singola collection</strong>. 
+              Le ricompense sono <strong>per asset_id al giorno</strong> e le scadenze possono solo essere estese.
+            </div>
+  
             <div id="ncf-wizard" class="grid" style="gap:12px;">
+              <!-- STEP A -->
               <div class="step" id="ncf-step-a">
                 <h3 style="margin:.2rem 0;">Step 1 — Collection</h3>
                 <div class="row">
                   <div class="col" style="min-width:260px;">
                     <label class="muted"><small>Collection name</small></label>
-                    <input id="ncf-collection" class="input" placeholder="e.g. cryptochaos1"/>
+                    <input id="ncf-collection" class="input" placeholder="e.g. cryptochaos1" aria-label="Collection name"/>
                   </div>
                   <button id="ncf-load" class="btn btn-primary">Load</button>
                   <div class="badge" id="ncf-meta">Ready</div>
                 </div>
                 <div id="ncf-a-hint" class="help" style="margin-top:.5rem;">
-                  AtomicAssets collection name. Example: <code>cryptochaos1</code>.
+                  Nome collection AtomicAssets. Esempio: <code>cryptochaos1</code>.
                 </div>
+  
                 <div class="soft" id="ncf-farms-box" style="padding:10px; margin-top:10px;">
                   <div class="row" style="justify-content:space-between; align-items:center;">
                     <h4 style="margin:0;">Your farms (this creator)</h4>
@@ -121,30 +145,32 @@
                     <div class="help">No farms yet or not signed in.</div>
                   </div>
                   <div class="help" style="margin-top:6px;">
-                    Tip: <strong>one collection = one farm</strong>. To create another farm, enter a different collection above and click <em>Load</em>.
+                    Tip: <strong>one collection = one farm</strong>. Per crearne un'altra inserisci una collection diversa e premi <em>Load</em>.
                   </div>
                 </div>
               </div>
-
+  
+              <!-- STEP B -->
               <div class="step" id="ncf-step-b">
                 <h3 style="margin:.2rem 0;">Step 2 — Funds & Deposit</h3>
                 <div class="soft" style="padding:10px; display:grid; gap:10px;">
                   <div class="row">
-                    <select id="ncf-src" class="select" style="min-width:180px;">
+                    <select id="ncf-src" class="select" style="min-width:180px;" aria-label="Source wallet">
                       <option value="twitch">From Twitch Wallet</option>
                       <option value="telegram">From Telegram Wallet</option>
                     </select>
-                    <select id="ncf-token" class="select" style="min-width:160px;"><option value="">Select token…</option></select>
+                    <select id="ncf-token" class="select" style="min-width:160px;" aria-label="Token symbol"><option value="">Select token…</option></select>
                     <div class="row">
-                      <input id="ncf-amount" class="input" type="number" step="0.0001" min="0" placeholder="Amount" style="width:140px;"/>
-                      <button id="ncf-max" class="btn btn-ghost">MAX</button>
+                      <input id="ncf-amount" class="input" type="number" step="0.0001" min="0" placeholder="Amount" style="width:140px;" aria-label="Amount"/>
+                      <button id="ncf-max" class="btn btn-ghost" title="Use full balance">MAX</button>
                     </div>
                     <button id="ncf-deposit" class="btn">Deposit to Farm-Wallet</button>
                   </div>
                   <div id="ncf-bal-hint" class="muted">Balance: —</div>
+  
                   <div id="ncf-empty" class="soft" style="display:none; padding:10px;">
                     <div class="badge warn">No available balance on this wallet</div>
-                    <p class="help" style="margin:.4rem 0 0;">Send tokens to your internal wallet to get balance:</p>
+                    <p class="help" style="margin:.4rem 0 0;">Ricarica il wallet interno per avere disponibilità:</p>
                     <ul class="help" style="margin:.2rem 0 0 1rem;">
                       <li><strong>Twitch Wallet</strong> memo: <code>${esc(cfg.memoTwitch)}</code></li>
                       <li><strong>Telegram Wallet</strong> memo: <code>${esc(cfg.memoTelegram)}</code></li>
@@ -156,12 +182,13 @@
                     </div>
                   </div>
                 </div>
+  
                 <div class="soft" style="padding:10px; margin-top:10px;">
                   <div class="row" style="justify-content:space-between;">
                     <h4 style="margin:0;">Farm-Wallet balances</h4>
                     <div class="row">
                       <button id="ncf-refresh-farm" class="btn btn-ghost">Refresh</button>
-                      <label class="chip" style="user-select:none;">
+                      <label class="chip" style="user-select:none;" title="Aggiorna automaticamente i bilanci del Farm-Wallet">
                         <input id="ncf-auto" type="checkbox" style="position:absolute;opacity:0;pointer-events:none;"/>
                         Auto-monitor
                       </label>
@@ -176,16 +203,18 @@
                     <div class="badge err">Some active reward tokens have zero Farm-Wallet balance</div>
                   </div>
                 </div>
-                <button id="ncf-change-col" class="btn btn-ghost">Change collection</button>
+  
+                <button id="ncf-change-col" class="btn btn-ghost" title="Change current collection">Change collection</button>
                 <div class="row" style="margin-top:10px;"><button id="ncf-next-b" class="btn btn-primary">Continue</button></div>
               </div>
-
+  
+              <!-- STEP C -->
               <div class="step" id="ncf-step-c">
                 <h3 style="margin:.2rem 0;">Step 3 — Pick templates</h3>
                 <div class="row" style="margin-bottom:8px;">
-                  <input id="ncf-search" class="input w-100" placeholder="Search by Template ID or Name…"/>
-                  <select id="ncf-schema" class="select"><option value="">All schemas</option></select>
-                  <button id="ncf-expand" class="btn btn-ghost">Expand all</button>
+                  <input id="ncf-search" class="input w-100" placeholder="Search by Template ID or Name…" aria-label="Search templates"/>
+                  <select id="ncf-schema" class="select" aria-label="Filter by schema"><option value="">All schemas</option></select>
+                  <button id="ncf-expand" class="btn btn-ghost" title="Expand or collapse all schemas">Expand all</button>
                 </div>
                 <div id="ncf-table-wrap" style="overflow:auto; max-height:44vh;">
                   <div id="ncf-status" style="padding:8px;"></div>
@@ -196,16 +225,30 @@
                   <span class="badge" id="ncf-count-templates">Templates: 0</span>
                   <span class="badge ok" id="ncf-count-selected">Selected: 0</span>
                   <div style="margin-left:auto;">
-                    <button id="ncf-select-all" class="btn btn-ghost">Select all</button>
-                    <button id="ncf-clear" class="btn btn-ghost">Clear</button>
+                    <button id="ncf-select-all" class="btn btn-ghost" title="Select all visible">Select all</button>
+                    <button id="ncf-clear" class="btn btn-ghost" title="Clear selection">Clear</button>
                     <button id="ncf-next-c" class="btn btn-primary">Continue</button>
                   </div>
                 </div>
               </div>
-
+  
+              <!-- STEP D -->
               <div class="step" id="ncf-step-d">
                 <h3 style="margin:.2rem 0;">Step 4 — Configure rewards (per asset, daily)</h3>
-                <div class="help" style="margin:0 0 8px;">Choose tokens and set the daily amount per asset_id for each selected template. Expiration can only be extended.</div>
+  
+                <!-- Sticky KPI for Step D (nuovo) -->
+                <div id="ncf-stepd-summary" class="soft" style="padding:8px; position:sticky; top:0; z-index:5; margin-bottom:8px;">
+                  <div class="row" style="gap:10px; flex-wrap:wrap;">
+                    <span class="badge" id="ncf-sel-count">Selected: 0</span>
+                    <span class="badge" id="ncf-active-tokens">Active tokens: 0</span>
+                    <span class="badge ok" id="ncf-daily-cost" title="Somma delle ricompense giornaliere per token e template selezionati (stima visual)">Est. daily payout: —</span>
+                  </div>
+                </div>
+  
+                <div class="help" style="margin:0 0 8px;">
+                  Scegli i token e imposta l'<strong>importo giornaliero per asset_id</strong> per ogni template selezionato.
+                  La scadenza può solo essere estesa.
+                </div>
                 <div id="ncf-rp-body" class="grid" style="gap:10px;">
                   <div class="soft" style="padding:12px; text-align:center;">No templates selected yet.</div>
                 </div>
@@ -214,9 +257,11 @@
                   <button id="ncf-next-d" class="btn btn-primary">Continue</button>
                 </div>
               </div>
-
+  
+              <!-- STEP E -->
               <div class="step" id="ncf-step-e">
                 <h3 style="margin:.2rem 0;">Step 5 — Summary & Save</h3>
+                <div class="help" style="margin:0 0 8px;">Riepilogo della configurazione corrente della farm e controllo saldi del Farm-Wallet per i token attivi.</div>
                 <div id="ncf-summary" class="soft" style="padding:10px;"></div>
                 <div class="row" style="margin-top:10px;">
                   <button id="ncf-confirm" class="btn btn-primary">Confirm & Save</button>
@@ -224,18 +269,20 @@
               </div>
             </div>
           </section>
-
+  
+          <!-- Collapsed/Summary after save -->
           <section id="ncf-collapsed" class="cy-card" style="padding:12px; display:none; margin-top:12px;">
             <div class="row" style="justify-content:space-between;align-items:center;">
               <strong>Farm configuration saved</strong>
               <span class="badge ok">Saved</span>
             </div>
           </section>
-
+  
           <section id="ncf-summary-table" class="cy-card" style="padding:14px; display:none; margin-top:12px;">
             <h3 style="margin:.2rem 0;">Current Farm</h3>
             <div id="ncf-farm-table"></div>
           </section>
+  
           <!-- TAB: STATS -->
           <section id="ncf-tabpane-stats" class="cy-card" style="padding:16px; display:none;">
             <div class="row" style="justify-content:space-between; align-items:center;">
@@ -244,6 +291,10 @@
                 <select id="ncf-farm-picker" class="select" style="min-width:260px;"><option value="">All farms (this creator)</option></select>
                 <button id="ncf-refresh-stats" class="btn btn-ghost">Refresh</button>
               </div>
+            </div>
+  
+            <div class="help" style="margin:.25rem 0 .75rem;">
+              Vista <strong>read-only</strong> per le metriche della farm. Se sei il creator, potrai effettuare azioni di moderazione (es. <em>Kick</em>).
             </div>
   
             <div class="soft" style="padding:10px; margin-top:10px;">
@@ -258,7 +309,7 @@
             <div class="grid" style="gap:12px; margin-top:10px;">
               <div class="soft" style="padding:10px;">
                 <h4 style="margin:.2rem 0;">Rewards (grouped)</h4>
-                <div class="help" style="margin:.2rem 0;">Grouped by <strong>Owner</strong> → <strong>Schema</strong> → <strong>Template</strong> → <strong>Token</strong>. Click a row to expand subtotals.</div>
+                <div class="help" style="margin:.2rem 0;">Raggruppato per <strong>Owner</strong> → <strong>Schema</strong> → <strong>Template</strong> → <strong>Token</strong>. Clicca per espandere i subtotali.</div>
                 <div id="ncf-stats-grouped" style="overflow:auto; max-height:46vh;">
                   <div class="help">No data yet.</div>
                 </div>
@@ -272,16 +323,23 @@
               </div>
             </div>
           </section>
+  
+          <!-- TAB: ACTIVE FARMS -->
           <section id="ncf-tabpane-active" class="cy-card" style="padding:16px; display:none;">
             <div class="row" style="justify-content:space-between; align-items:center;">
               <h2 style="margin:0;">Active Farms</h2>
               <button id="ncf-refresh-active" class="btn btn-ghost">Refresh</button>
             </div>
-          
+  
+            <div class="help" style="margin:.25rem 0 .75rem;">
+              Elenco di tutte le farm <strong>attive e valide</strong>, indipendentemente dal creator. 
+              Apri una farm per vedere configurazione ricompense e (se hai asset staked) la tua storia di distribuzioni.
+            </div>
+  
             <div id="ncf-active-list" class="grid" style="gap:10px; margin-top:10px;">
               <div class="help">Loading…</div>
             </div>
-          
+  
             <div id="ncf-active-detail" class="soft" style="padding:10px; margin-top:12px; display:none;">
               <div class="row" style="justify-content:space-between; align-items:center;">
                 <h3 style="margin:.2rem 0;">Farm Detail</h3>
@@ -291,7 +349,7 @@
               <div class="grid" style="gap:12px; margin-top:8px;">
                 <div class="soft" style="padding:10px;">
                   <h4 style="margin:.2rem 0;">Rewarded Templates</h4>
-                  <div class="help" style="margin:.2rem 0;">Template → Token (per-day) → Expiry. Tokens are never aggregated across symbols.</div>
+                  <div class="help" style="margin:.2rem 0;">Template → Token (per-day) → Expiry. I token non vengono mai aggregati tra simboli diversi.</div>
                   <div id="ncf-active-config"></div>
                 </div>
                 <div class="soft" style="padding:10px;">
@@ -303,11 +361,15 @@
               </div>
             </div>
           </section>
-          
         </div>
+  
+        <!-- RIGHT PANEL (visibile solo in Create/Edit via bindTabs) -->
         <aside id="ncf-rightpanel" class="grid" style="gap:14px;">
           <section class="cy-card" style="padding:14px;">
             <h3 style="margin:.1rem 0 .5rem;">Tokens Library</h3>
+            <div class="help" style="margin-bottom:.5rem;">
+              Aggiungi i token che intendi usare come ricompense. L’ordinamento favorisce i token che possiedi nei wallet interni.
+            </div>
             <div class="grid" style="gap:10px;">
               <div class="row">
                 <input id="ncf-tok-contract" class="input" placeholder="Token contract (e.g. eosio.token)" style="min-width:220px;"/>
@@ -326,13 +388,14 @@
   }
 
   function bindTabs(state, cfg){
-    const tabEdit  = $("#ncf-tab-edit");
-    const tabStats = $("#ncf-tab-stats");
-    const paneEdit  = $("#ncf-tabpane-edit");
-    const paneStats = $("#ncf-tabpane-stats");
+    const tabEdit   = $("#ncf-tab-edit");
+    const tabStats  = $("#ncf-tab-stats");
     const tabActive = $("#ncf-tab-active");
+    const paneEdit   = $("#ncf-tabpane-edit");
+    const paneStats  = $("#ncf-tabpane-stats");
     const paneActive = $("#ncf-tabpane-active");
-    
+    const right      = $("#ncf-rightpanel"); // <= aside Token Library
+  
     const show = (which) => {
       const isEdit   = which === "edit";
       const isStats  = which === "stats";
@@ -343,14 +406,20 @@
       paneEdit.style.display   = isEdit ? "" : "none";
       paneStats.style.display  = isStats ? "" : "none";
       paneActive.style.display = isActive ? "" : "none";
+      // 👉 Token Library visibile solo in Create/Edit
+      if (right) right.style.display = isEdit ? "" : "none";
       if (isStats)  ensureStatsLoaded(state, cfg);
       if (isActive) ensureActiveFarmsLoaded(state, cfg);
     };
-    
+  
     tabActive.addEventListener("click", () => show("active"));
     tabEdit.addEventListener("click", () => show("edit"));
     tabStats.addEventListener("click", () => show("stats"));
+  
+    // opzionale: assicurati che all’avvio sia coerente
+    show("edit");
   }
+
   
   async function openFarmDetail(state, cfg, farmId){
     const list = $("#ncf-active-list");
@@ -689,10 +758,60 @@
     if(on) state.selection[k]={collection,schema_name:schema,template_id:tid};
     else { delete state.selection[k]; delete state.rewardsPerToken[k]; delete state.expiry[k]; }
     saveSel(state.selection); saveRPT(state.rewardsPerToken); saveExp(state.expiry); updateSelectedCount(state);
+    updateCTAState(state);
+    refreshStep4Summary(state);
   }
   function updateSelectedCount(state){
     const c=Object.values(state.selection).filter(x=>x.collection===state.collection).length;
     $("#ncf-count-selected").textContent=`Selected: ${c}`;
+    updateCTAState(state);
+    refreshStep4Summary(state);
+  }
+  
+  function updateCTAState(state){
+    const selOfThis = Object.values(state.selection).filter(x => x.collection === state.collection);
+    const hasSel = selOfThis.length > 0;
+  
+    // c'è almeno 1 token attivo con valore > 0?
+    const hasAnyPositive = selOfThis.some(x => {
+      const k = `${x.collection}::${x.schema_name}::${x.template_id}`;
+      const m = state.rewardsPerToken[k] || {};
+      return Object.values(m).some(v => String(v).trim() !== "" && Number(v) > 0);
+    });
+  
+    const set = (id, on) => { const el = document.getElementById(id); if(el) el.toggleAttribute("disabled", !on); };
+  
+    set("ncf-next-b", hasSel);                 // step 2 -> step 3
+    set("ncf-next-c", hasSel);                 // step 3 -> step 4
+    set("ncf-save-draft", hasSel && hasAnyPositive);
+    set("ncf-next-d",    hasSel && hasAnyPositive);
+    set("ncf-confirm",   hasSel && hasAnyPositive);
+  }
+  
+  function refreshStep4Summary(state){
+    const sel = Object.values(state.selection).filter(x => x.collection === state.collection);
+    const badgeSel = document.getElementById("ncf-sel-count");
+    const badgeTok = document.getElementById("ncf-active-tokens");
+    const badgePay = document.getElementById("ncf-daily-cost");
+    if(!badgeSel || !badgeTok || !badgePay) return;
+  
+    badgeSel.textContent = `Selected: ${sel.length}`;
+  
+    // somma per simbolo, MAI tra simboli diversi
+    const perToken = new Map();
+    sel.forEach(x => {
+      const k = `${x.collection}::${x.schema_name}::${x.template_id}`;
+      const rewards = state.rewardsPerToken[k] || {};
+      Object.entries(rewards).forEach(([id,v]) => {
+        const [, sym] = id.split(":");
+        const daily = Number(v) || 0;
+        if (daily > 0) perToken.set(sym, (perToken.get(sym)||0) + daily);
+      });
+    });
+  
+    badgeTok.textContent = `Active tokens: ${perToken.size}`;
+    const parts = Array.from(perToken.entries()).map(([s,a]) => `${s}: ${a}/day`);
+    badgePay.textContent = parts.length ? `Est. daily payout: ${parts.join(" · ")}` : "Est. daily payout: —";
   }
 
   function enrichFromTable(schemaName, tid){
@@ -923,6 +1042,12 @@ function groupStatsView(stats){
   const owners = Array.isArray(stats?.owners) ? stats.owners : [];
   const head   = stats?.summary || {};
 
+  // 👇 sei il creator di questa farm?
+  const creatorWax =
+    (stats && (stats.creator_wax_account || stats.creator)) ? String(stats.creator_wax_account || stats.creator) : "";
+  const me = String(getWax() || "");
+  const isCreator = me && creatorWax && me.trim() === creatorWax.trim();
+
   // Header badges (già presenti nel layout)
   $("#ncf-stats-head-owners").textContent = `Unique owners: ${head.owners ?? owners.length}`;
   $("#ncf-stats-head-assets").textContent = `Staked assets: ${head.assets ?? 0}`;
@@ -1041,6 +1166,15 @@ function groupStatsView(stats){
         </details>`;
     }).join("");
 
+    // bottone Kick solo se isCreator === true
+    const kickHtml = isCreator ? `
+      <div class="row" style="gap:.5rem; margin-top:6px;">
+        <button class="btn btn-danger ncf-kick" data-owner="${esc(owner)}"
+          title="Remove this staker from the farm (their assets will stop earning).">
+          Kick from staking
+        </button>
+      </div>` : ``;
+
     return `
       <details class="soft" style="padding:8px;">
         <summary class="row" style="gap:.6rem;">
@@ -1056,19 +1190,14 @@ function groupStatsView(stats){
             Tokens subtotal: ${esc(tokensLine)}
           </div>
           <div>${schemaBlocks || "<div class='help'>No details</div>"}</div>
-          <div class="row" style="gap:.5rem; margin-top:6px;">
-            <button class="btn btn-danger ncf-kick" data-owner="${esc(owner)}"
-              title="Remove this staker from the farm (their assets will stop earning).">
-              Kick from staking
-            </button>
-          </div>
+          ${kickHtml}
         </div>
       </details>`;
   }).join("");
 
   $("#ncf-stats-grouped").innerHTML = kpiCards + htmlOwners;
 
-  // Bind pulsanti "Kick"
+  // Bind pulsanti "Kick" (se presenti)
   $$("#ncf-stats-grouped .ncf-kick").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
       const farmId = $("#ncf-farm-picker").value || null;
@@ -1083,7 +1212,6 @@ function groupStatsView(stats){
   });
 }
 
-  
   function renderDistributionsHistory(list){
     if (!Array.isArray(list) || !list.length) {
       $("#ncf-stats-history").innerHTML = `<div class="help">No history yet.</div>`;
@@ -1107,20 +1235,30 @@ function groupStatsView(stats){
       </table>`;
   }
   
-  async function ensureStatsLoaded(state, cfg){
+  async function ensureStatsLoaded(state, cfg, directFarmId=null){
     try{
-      // 1) farms list
       const farms = await fetchFarmsForCreator(cfg);
       $("#ncf-stats-head-farms").textContent = `Farms: ${farms.length}`;
       renderFarmPicker(state, farms);
   
-      // 2) carica stats per farm selezionata o per creator
-      const farmId = $("#ncf-farm-picker").value || null;
-      const stats = await fetchFarmStats(cfg, { farm_id: farmId || null });
+      const farmIdSel = directFarmId || $("#ncf-farm-picker").value || null;
+  
+      if (!farmIdSel && (!Array.isArray(farms) || farms.length === 0)) {
+        // utente non-creatore: guida
+        $("#ncf-stats-grouped").innerHTML =
+          `<div class="soft" style="padding:10px;">
+             <div class="help">
+               You have no farms as a creator. Paste a <strong>Farm ID</strong> above, or switch to the <em>Active Farms</em> tab to browse public farms.
+             </div>
+           </div>`;
+        $("#ncf-stats-history").innerHTML = `<div class="help">No farm selected.</div>`;
+        return;
+      }
+  
+      const stats = await fetchFarmStats(cfg, { farm_id: farmIdSel || null });
       groupStatsView(stats);
   
-      // 3) history se farm selezionata
-      const history = farmId ? (await fetchDistributions(cfg, {farm_id: farmId, limit: 200})) : [];
+      const history = farmIdSel ? (await fetchDistributions(cfg, {farm_id: farmIdSel, limit: 200})) : [];
       renderDistributionsHistory(history);
   
     }catch(e){
@@ -1246,6 +1384,8 @@ function groupStatsView(stats){
       const row=e.target.closest(".ncf-reward-row"); const k=row.dataset.key; const id=row.dataset.token;
       state.rewardsPerToken[k]=state.rewardsPerToken[k]||{}; state.rewardsPerToken[k][id]=e.target.value; saveRPT(state.rewardsPerToken);
     }));
+    updateCTAState(state);
+    refreshStep4Summary(state);
   }
 
   function buildDraftPayload(state, perHour=false){
@@ -1431,10 +1571,21 @@ function groupStatsView(stats){
       const ok=await saveDraft(state,cfg); if(!ok) return;
       toast("Configuration saved."); $("#ncf-wizard").style.display="none"; $("#ncf-collapsed").style.display=""; $("#ncf-summary-table").style.display=""; renderFinalTable(state);
     });
+    
+    $("#ncf-open-farmid").addEventListener("click", ()=>{
+      const fid = ($("#ncf-farm-quick-id").value || "").trim();
+      if(!fid){ toast("Enter a Farm ID.", "error"); return; }
+      $("#ncf-farm-picker").value = "";   // forza modalità “by id”
+      ensureStatsLoaded(state, cfg, fid);
+    });
+    $("#ncf-farm-quick-id").addEventListener("keydown", (e)=>{
+      if(e.key === "Enter") $("#ncf-open-farmid").click();
+    });
 
     document.addEventListener("visibilitychange",()=>{ if(document.hidden) stopAuto(state); });
 
     renderTokenLibrary(state);
+    updateCTAState(state);
     // Mostra sempre Step 1; se c'è una collezione salvata, solo precompila il campo.
     wizardGo(state, "#ncf-step-a");
     if(state.collection) doLoad(state,cfg); else updateTopupPanel(state,cfg);

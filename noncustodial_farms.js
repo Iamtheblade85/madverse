@@ -224,23 +224,31 @@
     `;
   }
 
-  function renderActiveFarmsList(state, farms) {
-    const box = $("#ncf-list-view");
-    if (!farms.length) {
-      box.innerHTML = `<div class="help muted">No active farms found.</div>`;
-      return;
-    }
-    box.innerHTML = farms.map(renderFarmCard).join("");
-
-    $$("#ncf-list-view .ncf-view-farm").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const card = btn.closest("[data-farm]");
-        const farmId = card?.dataset.farm;
-        if (!farmId) return;
-        openFarmDetail(state, farmId);
-      });
-    });
-  }
+	function renderActiveFarmsList(state, farms) {
+	  // usa l'id corretto, con fallback per compat vecchi
+	  const box = document.querySelector("#ncf-list-view") || document.querySelector("#ncf-active-list");
+	  if (!box) {
+	    console.warn("NCF: missing list container (#ncf-list-view).");
+	    return;
+	  }
+	
+	  if (!farms.length) {
+	    box.innerHTML = `<div class="help muted">No active farms found.</div>`;
+	    return;
+	  }
+	
+	  box.innerHTML = farms.map(renderFarmCard).join("");
+	
+	  // aggiorna i binding sul contenitore corretto
+	  (box.querySelectorAll(".ncf-view-farm") || []).forEach((btn) => {
+	    btn.addEventListener("click", () => {
+	      const card = btn.closest("[data-farm]");
+	      const farmId = card?.dataset.farm;
+	      if (!farmId) return;
+	      openFarmDetail(state, farmId);
+	    });
+	  });
+	}
 
   function renderRemainingByToken(head) {
     const remaining = head?.remaining_by_token && typeof head.remaining_by_token === "object"
@@ -833,10 +841,12 @@
                   </div>
                 </div>
 
-                <div class="row" style="margin-top:10px;">
-                  <button id="ncf-change-col" class="btn btn-ghost">Change collection</button>
-                  <button id="ncf-next-b" class="btn btn-primary" disabled>Continue</button>
-                </div>
+				<div class="row" style="margin-top:10px;">
+				  <button id="ncf-prev-b" class="btn btn-ghost">Back</button>
+				  <button id="ncf-cancel-b" class="btn btn-ghost">Cancel</button>
+				  <button id="ncf-next-b" class="btn btn-primary" disabled>Continue</button>
+				</div>
+
               </div>
 
               <!-- STEP C -->
@@ -851,16 +861,18 @@
                   <div id="ncf-status" style="padding:8px;"></div>
                   <div id="ncf-sections"></div>
                 </div>
-                <div class="row" style="margin-top:8px;align-items:center;">
-                  <span class="badge" id="ncf-count-schemas">Schemas: 0</span>
-                  <span class="badge" id="ncf-count-templates">Templates: 0</span>
-                  <span class="badge ok" id="ncf-count-selected">Selected: 0</span>
-                  <div style="margin-left:auto;">
-                    <button id="ncf-select-all" class="btn btn-ghost" title="Select all visible">Select all</button>
-                    <button id="ncf-clear" class="btn btn-ghost" title="Clear selection">Clear</button>
-                    <button id="ncf-next-c" class="btn btn-primary" disabled>Continue</button>
-                  </div>
-                </div>
+				<div class="row" style="margin-top:8px;align-items:center;">
+				  <span class="badge" id="ncf-count-schemas">Schemas: 0</span>
+				  <span class="badge" id="ncf-count-templates">Templates: 0</span>
+				  <span class="badge ok" id="ncf-count-selected">Selected: 0</span>
+				  <div style="margin-left:auto;">
+				    <button id="ncf-prev-c" class="btn btn-ghost">Back</button>
+				    <button id="ncf-cancel-c" class="btn btn-ghost">Cancel</button>
+				    <button id="ncf-select-all" class="btn btn-ghost" title="Select all visible">Select all</button>
+				    <button id="ncf-clear" class="btn btn-ghost" title="Clear selection">Clear</button>
+				    <button id="ncf-next-c" class="btn btn-primary" disabled>Continue</button>
+				  </div>
+				</div>
               </div>
 
               <!-- STEP D -->
@@ -880,10 +892,13 @@
                 <div id="ncf-rp-body" class="grid" style="gap:10px;">
                   <div class="soft" style="padding:12px; text-align:center;">No templates selected yet.</div>
                 </div>
-                <div class="row" style="margin-top:10px;">
-                  <button id="ncf-save-draft" class="btn" disabled>Save Draft</button>
-                  <button id="ncf-next-d" class="btn btn-primary" disabled>Continue</button>
-                </div>
+				<div class="row" style="margin-top:10px;">
+				  <button id="ncf-prev-d" class="btn btn-ghost">Back</button>
+				  <button id="ncf-cancel-d" class="btn btn-ghost">Cancel</button>
+				  <button id="ncf-save-draft" class="btn" disabled>Save Draft</button>
+				  <button id="ncf-next-d" class="btn btn-primary" disabled>Continue</button>
+				</div>
+
               </div>
 
               <!-- STEP E -->
@@ -893,9 +908,11 @@
                   Summary of the configuration and Farm-Wallet balance check for the active tokens.
                 </div>
                 <div id="ncf-summary" class="soft" style="padding:10px;"></div>
-                <div class="row" style="margin-top:10px;">
-                  <button id="ncf-confirm" class="btn btn-primary" disabled>Confirm & Save</button>
-                </div>
+				<div class="row" style="margin-top:10px;">
+				  <button id="ncf-prev-e" class="btn btn-ghost">Back</button>
+				  <button id="ncf-cancel-e" class="btn btn-ghost">Cancel</button>
+				  <button id="ncf-confirm" class="btn btn-primary" disabled>Confirm & Save</button>
+				</div>
               </div>
             </div>
           </section>
@@ -1615,6 +1632,30 @@
 
     // Tokens Library add
     $("#ncf-tok-add")?.addEventListener("click",()=>{ const c=$("#ncf-tok-contract").value.trim(); const s=$("#ncf-tok-symbol").value.trim().toUpperCase(); const d=$("#ncf-tok-dec").value===""?null:Number($("#ncf-tok-dec").value); if(!c||!s){ toast("Provide contract and symbol.","error"); return; } if(state.creator.tokens.some(t=>t.contract===c&&t.symbol===s)){ toast("Token already present."); return; } state.creator.tokens.push({contract:c,symbol:s,decimals:d}); wLS(LS.tokens,state.creator.tokens); $("#ncf-tok-contract").value=""; $("#ncf-tok-symbol").value=""; $("#ncf-tok-dec").value=""; renderTokenLibrary(state); updateRewardsPanel(state); });
+	// helper di navigazione
+	function goHomeCreator() { wizardGo(state, "#ncf-step-a"); }
+	const backTo = {
+	  b: () => wizardGo(state, "#ncf-step-a"),
+	  c: () => wizardGo(state, "#ncf-step-b"),
+	  d: () => wizardGo(state, "#ncf-step-c"),
+	  e: () => wizardGo(state, "#ncf-step-d"),
+	};
+	
+	// STEP B
+	document.getElementById("ncf-prev-b")?.addEventListener("click", backTo.b);
+	document.getElementById("ncf-cancel-b")?.addEventListener("click", goHomeCreator);
+	
+	// STEP C
+	document.getElementById("ncf-prev-c")?.addEventListener("click", backTo.c);
+	document.getElementById("ncf-cancel-c")?.addEventListener("click", goHomeCreator);
+	
+	// STEP D
+	document.getElementById("ncf-prev-d")?.addEventListener("click", backTo.d);
+	document.getElementById("ncf-cancel-d")?.addEventListener("click", goHomeCreator);
+	
+	// STEP E
+	document.getElementById("ncf-prev-e")?.addEventListener("click", backTo.e);
+	document.getElementById("ncf-cancel-e")?.addEventListener("click", goHomeCreator);
 
     // visibility pause auto
     document.addEventListener("visibilitychange",()=>{ if(document.hidden) stopAutoBalances(state); });

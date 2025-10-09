@@ -1,179 +1,809 @@
-/* noncustodial_farms.js */
+/* noncustodial_farms.js — PART 1/2 (Simple User UX + Base Framework)
+   Paste PART 1 first. When you paste PART 2, they become one single file.
+   UI language: EN only.
+*/
 (function () {
+  "use strict";
+
+  // ---------- CONFIG & CONSTANTS ----------
   const DEFAULTS = {
-    apiBaseUrl: "",
+    apiBaseUrl: "", // falls back to window.BASE_URL || location.origin
+    appTitle: "Non-Custodial NFT Farms",
+    // Payout schedule requirement (explicit for users)
+    payoutSchedule: "Distributions occur daily at 14:00 CET.",
+    // Public endpoints (keep identical to backend contract you shared)
     endpoints: {
+      // browsing / reading
+      activeFarms: "/api/farm/list",                   // GET ?status=active
+      farmStats: "/api/farm/stats",                    // GET ?farm_id=... OR ?creator=...
+      farmDistributions: "/api/farm/distributions",    // GET ?farm_id=...&limit=100
+      userHistory: "/api/farm/user-history",           // GET ?farm_id=...&owner=...&limit=200
+      // (Creator endpoints are hooked in PART 2)
       templatesBySchema: "/api/templates-by-schema",
       saveRewards: "/api/farm/rewards/draft",
       farmBalances: "/api/farm/deposit/balances",
       depositToFarm: "/api/farm/deposit",
-      farmsByCreator: "/api/farm/list",                 // GET ?creator=<wax>
-      farmStats: "/api/farm/stats",                     // GET ?farm_id=... oppure ?creator=...
-      farmDistributions: "/api/farm/distributions",     // GET ?farm_id=...&limit=100
-      farmKick: "/api/farm/kick",                        // POST {farm_id, wax_account, reason}
-      activeFarms: "/api/farm/list",                     // GET ?status=active (riuso) 
-      userHistory: "/api/farm/user-history"               // GET ?farm_id=...&owner=...&limit=200      
+      farmsByCreator: "/api/farm/list",
+      farmKick: "/api/farm/kick"
     },
-    containerId: null,
-    appTitle: "Manage Non-Custodial NFTs Farm",
+    // Optional display values used elsewhere (kept for PART 2 compat)
     farmWalletAccount: "xcryptochips",
     memoTelegram: "deposit token",
     memoTwitch: "deposit twitch",
-    autoMonitorEverySec: 120,
+    containerId: null,
     ls: {
-      lastCollection: "ncf.lastCollection.v2",
-      tokens: "ncf.tokens.v2",
-      wizard: "ncf.wizard.v1",
-      selection: "ncf.selection.v2",
-      rewardsPerToken: "ncf.rewardsPerToken.daily.v1",
-      expiry: "ncf.expiry.v2",
       autoMonitor: "ncf.autoMonitor.v2"
     }
   };
 
+  // ---------- LIGHT UTILITIES ----------
   const $ = (s, p = document) => p.querySelector(s);
   const $$ = (s, p = document) => Array.from(p.querySelectorAll(s));
   const once = (fn) => { let r; return (...a) => (r ??= fn(...a)); };
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const num = (v, d = 0) => (v === null || v === undefined || v === "" || isNaN(+v) ? d : +v);
+  const num = (v, d = 0) => (v == null || v === "" || isNaN(+v) ? d : +v);
   const fmt = (n) => Number(n || 0).toLocaleString();
-  const esc = (s) => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
-  const rLS = (k, f) => { try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch { return f; } };
-  const wLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+  const esc = (s) =>
+    String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  const getWax = () => (window.userData?.wax_account || "").trim();
+  const apiBase = (cfg) => cfg.apiBaseUrl || window.BASE_URL || window.API_BASE || location.origin;
+  const buildUrl = (b, p) => `${String(b).replace(/\/+$/, "")}${p}`;
+  const toDateTime = (v) => (v ? new Date(v) : null);
+
+  const fetchJson = async (u, init) => {
+    const r = await fetch(u, init);
+    if (!r.ok) {
+      const tx = await r.text().catch(() => "");
+      throw new Error(`HTTP ${r.status} — ${tx || r.statusText}`);
+    }
+    const raw = await r.text();
+    try {
+      return JSON.parse(raw);
+    } catch {
+      // backend might already return JSON; if not parseable, pass through
+      return raw;
+    }
+  };
+  const getJson = (u) => fetchJson(u);
+  const postJson = (u, body) =>
+    fetchJson(u, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
   const toast = (() => {
-    let tmr=null;
-    return (m,k="info")=>{
-      let t=$("#ncf-toast");
-      if(!t){
-        t=document.createElement("div");
-        t.id="ncf-toast";
-        t.setAttribute("role","status");
-        t.setAttribute("aria-live","polite");
+    let tmr = null;
+    return (m, kind = "info") => {
+      let t = $("#ncf-toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "ncf-toast";
+        t.setAttribute("role", "status");
+        t.setAttribute("aria-live", "polite");
         document.body.appendChild(t);
       }
-      t.textContent=m; t.dataset.kind=k; t.classList.add("show");
-      clearTimeout(tmr); tmr=setTimeout(()=>t.classList.remove("show"),2400);
+      t.textContent = m;
+      t.dataset.kind = kind;
+      t.classList.add("show");
+      clearTimeout(tmr);
+      tmr = setTimeout(() => t.classList.remove("show"), 2600);
     };
   })();
-  const apiBase = (cfg) => cfg.apiBaseUrl || window.BASE_URL || window.API_BASE || location.origin;
-  const buildUrl = (b,p) => `${String(b).replace(/\/+$/,"")}${p}`;
-  const getWax = () => (window.userData?.wax_account || "").trim();
+
+  const injectStyles = once(() => {
+    const css = `
+:root { --card-bg: rgba(12,16,22,.66); --line: rgba(255,255,255,.08); --glow: rgba(0,255,200,.15); }
+#ncf-root { color:#e6eef8; }
+#ncf-root .cy-card{background:var(--card-bg);border:1px solid rgba(0,255,200,.18);border-radius:14px;box-shadow:0 0 22px var(--glow),inset 0 0 0 1px rgba(255,255,255,.03)}
+#ncf-root .grid{display:grid;gap:12px} .row{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}
+#ncf-root .muted{color:rgba(230,238,248,.75)} .soft{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px}
+#ncf-root .btn{cursor:pointer;border-radius:999px;padding:.6rem 1rem;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(20,28,36,.9),rgba(10,14,18,.9));color:#e6eef8}
+#ncf-root .btn:focus{outline:none;box-shadow:0 0 0 2px rgba(0,255,200,.35)} .btn[disabled]{opacity:.6;cursor:not-allowed}
+#ncf-root .btn-primary{border-color:transparent;background:linear-gradient(180deg,rgba(0,255,200,.9),rgba(0,196,255,.9));color:#001418;font-weight:800}
+#ncf-root .btn-ghost{background:transparent}
+#ncf-root .badge{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .6rem;border-radius:999px;font-size:.85rem;border:1px solid var(--line)}
+#ncf-root .badge.ok{color:#22e4b6;background:rgba(34,228,182,.12)} .badge.warn{color:#f8c555;background:rgba(248,197,85,.12)} .badge.err{color:#ff7b7b;background:rgba(255,123,123,.12)}
+#ncf-root table{width:100%;border-collapse:separate;border-spacing:0;font-size:.95rem;min-width:540px}
+#ncf-root thead th{position:sticky;top:0;padding:.6rem .8rem;text-align:left;background:rgba(10,14,18,.95);border-bottom:1px solid var(--line)}
+#ncf-root tbody td{padding:.6rem .8rem;border-bottom:1px dashed var(--line)}
+#ncf-root details > summary {cursor:pointer;user-select:none}
+#ncf-root .tabbar button[aria-selected="true"]{box-shadow:0 0 0 2px rgba(0,255,200,.35)}
+#ncf-root .kpi{display:flex;gap:.5rem;flex-wrap:wrap}
+#ncf-toast{position:fixed;bottom:18px;left:50%;transform:translate(-50%,18px);opacity:0;background:rgba(12,16,22,.92);border:1px solid rgba(0,255,200,.25);color:#e6eef8;padding:.55rem .9rem;border-radius:12px;box-shadow:0 0 18px var(--glow);z-index:9999;transition:all .18s ease}
+#ncf-toast.show{opacity:1;transform:translate(-50%,0)}
+    `.trim();
+    const s = document.createElement("style");
+    s.id = "ncf-styles";
+    s.textContent = css;
+    document.head.appendChild(s);
+  });
+
+  // ---------- DATA FETCHERS (READ-ONLY FLOW) ----------
+  async function fetchActiveFarms(cfg) {
+    const url = buildUrl(apiBase(cfg), cfg.endpoints.activeFarms) + `?status=active`;
+    let data = await getJson(url);
+    if (typeof data === "string") {
+      try { data = JSON.parse(data); } catch { data = []; }
+    }
+    return Array.isArray(data) ? data : [];
+  }
+
+  async function fetchFarmStats(cfg, farm_id) {
+    const url = buildUrl(apiBase(cfg), cfg.endpoints.farmStats) + `?farm_id=${encodeURIComponent(farm_id)}`;
+    let data = await getJson(url);
+    if (typeof data === "string") {
+      try { data = JSON.parse(data); } catch { data = {}; }
+    }
+    return data || {};
+  }
+
+  async function fetchFarmDistributions(cfg, farm_id, limit = 100) {
+    const url = buildUrl(apiBase(cfg), cfg.endpoints.farmDistributions) + `?farm_id=${encodeURIComponent(farm_id)}&limit=${limit}`;
+    let data = await getJson(url);
+    if (typeof data === "string") {
+      try { data = JSON.parse(data); } catch { data = []; }
+    }
+    return Array.isArray(data) ? data : [];
+  }
+
+  async function fetchUserHistory(cfg, farm_id, owner, limit = 200) {
+    const url = buildUrl(apiBase(cfg), cfg.endpoints.userHistory) + `?farm_id=${encodeURIComponent(farm_id)}&owner=${encodeURIComponent(owner)}&limit=${limit}`;
+    let data = await getJson(url);
+    if (typeof data === "string") {
+      try { data = JSON.parse(data); } catch { data = []; }
+    }
+    return Array.isArray(data) ? data : [];
+  }
+
+  // ---------- RENDER HELPERS ----------
+  function skeleton(lines = 2) {
+    const rows = Array.from({ length: lines })
+      .map(() => `<div style="height:12px; width:${Math.round(220 + Math.random() * 160)}px; margin:.35rem 0; background:rgba(255,255,255,.06); border-radius:8px;"></div>`)
+      .join("");
+    return `<div class="soft" style="padding:1rem;">${rows}</div>`;
+  }
+
+  function renderHowItWorks(cfg) {
+    return `
+      <section class="cy-card" style="padding:16px;">
+        <h2 style="margin:0 0 .5rem;">How it works</h2>
+        <div class="grid">
+          <div class="soft" style="padding:10px;">
+            <h3 style="margin:.2rem 0;">Non-custodial by design</h3>
+            <p class="muted" style="margin:.4rem 0;">
+              You never send NFTs to anyone. To be rewarded, simply hold the required NFTs
+              in your own wallet (e.g., AtomicHub, NFTHive, NeftyBlocks, etc.).
+              If your NFTs match a farm’s valid <em>template_id</em>, you are eligible.
+            </p>
+            <p class="badge ok" title="Payout cadence">${esc(cfg.payoutSchedule)}</p>
+          </div>
+
+          <div class="soft" style="padding:10px;">
+            <h3 style="margin:.2rem 0;">Rewards model</h3>
+            <ul class="muted" style="margin:.4rem 0 .2rem 1.2rem;">
+              <li>Rewards are <strong>per asset_id per day</strong>, configured per template.</li>
+              <li>Tokens are never aggregated across different symbols.</li>
+              <li>Distributions are sent directly to eligible owners’ wallets.</li>
+            </ul>
+          </div>
+
+          <div class="soft" style="padding:10px;">
+            <h3 style="margin:.2rem 0;">Who is this for?</h3>
+            <ul class="muted" style="margin:.4rem 0 .2rem 1.2rem;">
+              <li><strong>Collectors/Players:</strong> Browse active farms, open details, and see your history (when signed in).</li>
+              <li><strong>Creators:</strong> Create/edit farms and see aggregate stats (Creator modules load in Part 2).</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
+  function renderFarmCard(f) {
+    const id = esc(String(f.farm_id ?? "—"));
+    const collection = esc(f.collection || "—");
+    const creator = esc(f.creator || f.creator_wax_account || "—");
+    return `
+      <div class="soft" data-farm="${id}" style="padding:12px; display:flex; justify-content:space-between; gap:10px;">
+        <div class="col">
+          <div class="row" style="gap:.5rem;">
+            <strong>Farm #${id}</strong>
+            <span class="muted">${collection}</span>
+          </div>
+          <small class="muted">Creator: ${creator}</small>
+        </div>
+        <div class="row">
+          <button class="btn btn-ghost ncf-view-farm">View</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderActiveFarmsList(state, farms) {
+    const box = $("#ncf-active-list");
+    if (!farms.length) {
+      box.innerHTML = `<div class="help muted">No active farms found.</div>`;
+      return;
+    }
+    box.innerHTML = farms.map(renderFarmCard).join("");
+
+    $$("#ncf-active-list .ncf-view-farm").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const card = btn.closest("[data-farm]");
+        const farmId = card?.dataset.farm;
+        if (!farmId) return;
+        openFarmDetail(state, farmId);
+      });
+    });
+  }
+
+  function renderRemainingByToken(head) {
+    const remaining = head?.remaining_by_token && typeof head.remaining_by_token === "object"
+      ? Object.entries(head.remaining_by_token).map(([sym, amt]) => ({ symbol: String(sym).toUpperCase(), amount: Number(amt) || 0 }))
+      : [];
+    remaining.sort((a, b) => b.amount - a.amount);
+
+    return remaining.length
+      ? `
+        <table>
+          <thead><tr><th>Token</th><th>Remaining</th></tr></thead>
+          <tbody>${remaining.map(r => `<tr><td><strong>${esc(r.symbol)}</strong></td><td>${fmt(r.amount)}</td></tr>`).join("")}</tbody>
+        </table>`
+      : `<div class="muted">No remaining budget reported.</div>`;
+  }
+
+  function renderConfigItemsTable(items) {
+    if (!Array.isArray(items) || !items.length) {
+      return `<div class="muted">No rewarded templates configured.</div>`;
+    }
+    const rows = items.map((it) => {
+      const tokensHtml = (Array.isArray(it.rewards) ? it.rewards : [])
+        .map((r) => `
+          <div class="row" style="gap:.35rem;">
+            <span class="badge">${esc(r.token_symbol)}</span>
+            <small class="muted">@${esc(r.token_contract || "")}</small>
+            <span class="muted">${fmt(r.reward_per_asset_per_day || 0)}/day</span>
+          </div>
+        `).join("") || `<div class="muted">—</div>`;
+      const exp = it.expiry ? new Date(it.expiry).toLocaleString() : "—";
+      return `
+        <tr>
+          <td><strong>${esc(it.schema_name || "—")}</strong> <small class="muted">ID ${esc(String(it.template_id))}</small></td>
+          <td>${tokensHtml}</td>
+          <td>${esc(exp)}</td>
+        </tr>
+      `;
+    }).join("");
+
+    return `
+      <table>
+        <thead><tr><th>Template</th><th>Tokens (per day)</th><th>Expiry</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function renderUserHistoryTable(evts) {
+    if (!Array.isArray(evts) || !evts.length) {
+      return `<div class="muted">No distributions for your wallet yet, or you do not hold eligible NFTs here.</div>`;
+    }
+
+    // per-symbol totals (never aggregate across symbols)
+    const bySym = new Map();
+    evts.forEach((ev) => {
+      const sym = String(ev.token_symbol || "").toUpperCase();
+      const amt = Number(ev.amount || 0);
+      bySym.set(sym, (bySym.get(sym) || 0) + (isFinite(amt) ? amt : 0));
+    });
+    const totalsRows = Array.from(bySym.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([s, a]) => `<tr><td><strong>${esc(s)}</strong></td><td>${fmt(a)}</td></tr>`)
+      .join("");
+
+    const logRows = evts.map((ev) => `
+      <tr>
+        <td>${new Date(ev.ts).toLocaleString()}</td>
+        <td><strong>${esc(String(ev.token_symbol || "").toUpperCase())}</strong></td>
+        <td>${fmt(ev.amount || 0)}</td>
+        <td>${esc(ev.schema_name || "—")} / ID ${esc(String(ev.template_id || "—"))}</td>
+        <td>${esc(ev.note || "—")}</td>
+      </tr>
+    `).join("");
+
+    return `
+      <div class="grid" style="gap:10px;">
+        <div class="soft" style="padding:8px;">
+          <h4 style="margin:.2rem 0;">Per-token totals</h4>
+          <table>
+            <thead><tr><th>Token</th><th>Total received</th></tr></thead>
+            <tbody>${totalsRows}</tbody>
+          </table>
+        </div>
+        <div class="soft" style="padding:8px;">
+          <h4 style="margin:.2rem 0;">Event log</h4>
+          <table>
+            <thead><tr><th>Time</th><th>Token</th><th>Amount</th><th>Template</th><th>Note</th></tr></thead>
+            <tbody>${logRows}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  // ---------- MAIN UI LAYOUT ----------
+  function createLayout(root, cfg) {
+    root.innerHTML = `
+      <div id="ncf-root" class="grid" style="grid-template-columns: 1fr; gap:18px;">
+        <section class="cy-card" style="padding:14px;">
+          <div class="row" style="justify-content:space-between; align-items:center;">
+            <h1 style="margin:0;">${esc(cfg.appTitle)}</h1>
+            <div class="row tabbar" role="tablist" aria-label="Main tabs">
+              <button id="ncf-tab-browse"  role="tab" aria-selected="true"  class="btn btn-ghost" aria-controls="ncf-pane-browse">Farms</button>
+              <button id="ncf-tab-creator" role="tab" aria-selected="false" class="btn btn-ghost" aria-controls="ncf-pane-creator">Creator Dashboard</button>
+              <button id="ncf-tab-stats"   role="tab" aria-selected="false" class="btn btn-ghost" aria-controls="ncf-pane-stats">Farm Stats</button>
+              <button id="ncf-tab-help"    role="tab" aria-selected="false" class="btn btn-ghost" aria-controls="ncf-pane-help">How it works</button>
+            </div>
+          </div>
+          <div class="soft" style="padding:8px; margin-top:8px;">
+            <div class="row kpi">
+              <span class="badge ok">Non-custodial</span>
+              <span class="badge" title="Payout cadence">${esc(cfg.payoutSchedule)}</span>
+              <span class="badge">Signed-in wallet: <strong>${esc(getWax() || "—")}</strong></span>
+            </div>
+            <p class="muted" style="margin:.4rem 0 0;">
+              Hold eligible NFTs in your own wallet. You do not need to send NFTs to anyone to be rewarded.
+            </p>
+          </div>
+        </section>
+
+        <!-- BROWSE FARMS -->
+        <section id="ncf-pane-browse" class="cy-card" style="padding:14px;">
+          <div class="row" style="justify-content:space-between; align-items:center;">
+            <h2 style="margin:0;">Active Farms</h2>
+            <div class="row">
+              <input id="ncf-search" class="input" placeholder="Search by collection, creator, or farm id…" style="height:40px;padding:0 .8rem;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(10,14,18,.8);color:#e6eef8;min-width:280px;">
+              <button id="ncf-refresh" class="btn btn-ghost">Refresh</button>
+            </div>
+          </div>
+
+          <div id="ncf-list-view" class="grid" style="gap:10px; margin-top:10px;">
+            <div class="muted">${skeleton(3)}</div>
+            <div class="muted">${skeleton(3)}</div>
+          </div>
+
+          <div id="ncf-detail-view" class="grid" style="gap:12px; display:none; margin-top:8px;">
+            <div class="row" style="justify-content:space-between; align-items:center;">
+              <h3 style="margin:.2rem 0;">Farm Detail</h3>
+              <button id="ncf-back-list" class="btn btn-ghost">Back to list</button>
+            </div>
+
+            <div id="ncf-detail-overview" class="grid" style="gap:10px;">
+              ${skeleton(3)}
+            </div>
+
+            <div class="grid" style="gap:12px; margin-top:8px;">
+              <div class="soft" style="padding:10px;">
+                <h4 style="margin:.2rem 0;">Rewarded Templates</h4>
+                <div id="ncf-detail-config">${skeleton(3)}</div>
+              </div>
+
+              <div class="soft" style="padding:10px;">
+                <h4 style="margin:.2rem 0;">Your Distribution History</h4>
+                <div id="ncf-detail-history">${skeleton(2)}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CREATOR DASHBOARD (mounted in PART 2) -->
+        <section id="ncf-pane-creator" class="cy-card" style="padding:14px; display:none;">
+          <h2 style="margin:0;">Creator Dashboard</h2>
+          <div class="soft" style="padding:10px;">
+            <div class="muted">This module will load when Part 2 is added.</div>
+          </div>
+        </section>
+
+        <!-- FARM STATS (mounted in PART 2) -->
+        <section id="ncf-pane-stats" class="cy-card" style="padding:14px; display:none;">
+          <h2 style="margin:0;">Farm Stats</h2>
+          <div class="soft" style="padding:10px;">
+            <div class="muted">This module will load when Part 2 is added.</div>
+          </div>
+        </section>
+
+        <!-- HELP -->
+        <section id="ncf-pane-help" class="cy-card" style="padding:14px; display:none;">
+          ${renderHowItWorks(cfg)}
+        </section>
+      </div>
+      <div id="ncf-toast"></div>
+    `;
+  }
+
+  // ---------- DETAIL RENDERERS (BROWSE FLOW) ----------
+  function renderDetailOverview(stats, cfg) {
+    const head = stats?.summary || {};
+    const farmId = esc(String(stats.farm_id ?? "—"));
+    const collection = esc(stats.collection || "—");
+    const creator = esc(stats.creator || stats.creator_wax_account || "—");
+    const validTemplates = head.valid_templates_total ?? (stats?.config?.items?.length ?? 0);
+    const lastDist = head.last_distribution_at ? new Date(head.last_distribution_at).toLocaleString() : "—";
+
+    return `
+      <div class="soft" style="padding:10px;">
+        <div class="row" style="gap:.5rem; flex-wrap:wrap;">
+          <span class="badge">Farm #${farmId}</span>
+          <span class="badge">Collection: ${collection}</span>
+          <span class="badge">Creator: ${creator}</span>
+          <span class="badge">Valid templates: ${fmt(validTemplates)}</span>
+          <span class="badge" title="Payout cadence">${esc(cfg.payoutSchedule)}</span>
+          <span class="badge">Last distribution: ${lastDist}</span>
+        </div>
+      </div>
+
+      <div class="soft" style="padding:10px;">
+        <h4 style="margin:.2rem 0;">Remaining rewards by token</h4>
+        ${renderRemainingByToken(head)}
+      </div>
+    `;
+  }
+
+  // Open a farm and show detail view
+  async function openFarmDetail(state, farmId) {
+    const list = $("#ncf-list-view");
+    const detail = $("#ncf-detail-view");
+    const overview = $("#ncf-detail-overview");
+    const configBox = $("#ncf-detail-config");
+    const historyBox = $("#ncf-detail-history");
+
+    state.currentFarmId = farmId;
+    list.style.display = "none";
+    detail.style.display = "";
+    overview.innerHTML = skeleton(3);
+    configBox.innerHTML = skeleton(3);
+    historyBox.innerHTML = skeleton(2);
+
+    try {
+      const stats = await fetchFarmStats(state.cfg, farmId);
+
+      // Overview + remaining_by_token
+      overview.innerHTML = renderDetailOverview(stats, state.cfg);
+
+      // Rewarded templates (config)
+      const items = Array.isArray(stats?.config?.items) ? stats.config.items : [];
+      configBox.innerHTML = renderConfigItemsTable(items);
+
+      // Personal history (if signed in)
+      const me = getWax();
+      if (!me) {
+        historyBox.innerHTML = `<div class="muted">Sign in to view your personal distribution history for this farm.</div>`;
+      } else {
+        try {
+          const evts = await fetchUserHistory(state.cfg, farmId, me, 200);
+          historyBox.innerHTML = renderUserHistoryTable(evts);
+        } catch (e) {
+          historyBox.innerHTML = `<div class="muted">Unable to load your history: ${esc(String(e.message || e))}</div>`;
+        }
+      }
+    } catch (e) {
+      overview.innerHTML = `<div class="soft" style="padding:10px;">${esc(String(e.message || e))}</div>`;
+      configBox.innerHTML = "";
+      historyBox.innerHTML = "";
+    }
+  }
+
+  // ---------- LIST LOADING & SEARCH ----------
+  function filterFarms(raw, q) {
+    if (!q) return raw.slice();
+    const s = q.trim().toLowerCase();
+    return raw.filter((f) => {
+      const id = String(f.farm_id ?? "").toLowerCase();
+      const collection = String(f.collection || "").toLowerCase();
+      const creator = String(f.creator || f.creator_wax_account || "").toLowerCase();
+      return id.includes(s) || collection.includes(s) || creator.includes(s);
+    });
+  }
+
+  async function loadActiveFarms(state) {
+    const box = $("#ncf-list-view");
+    box.innerHTML = `<div class="muted">${skeleton(3)}</div>`;
+    try {
+      const farms = await fetchActiveFarms(state.cfg);
+      state.farms = Array.isArray(farms) ? farms : [];
+      const q = $("#ncf-search").value || "";
+      state.filtered = filterFarms(state.farms, q);
+      renderActiveFarmsList(state, state.filtered);
+    } catch (e) {
+      box.innerHTML = `<div class="soft" style="padding:10px;">${esc(String(e.message || e))}</div>`;
+    }
+  }
+
+  // ---------- TAB HANDLING ----------
+  function showTab(which) {
+    const tabs = [
+      { btn: "#ncf-tab-browse",  pane: "#ncf-pane-browse"  },
+      { btn: "#ncf-tab-creator", pane: "#ncf-pane-creator" },
+      { btn: "#ncf-tab-stats",   pane: "#ncf-pane-stats"   },
+      { btn: "#ncf-tab-help",    pane: "#ncf-pane-help"    }
+    ];
+    tabs.forEach(({ btn, pane }) => {
+      const b = $(btn);
+      const p = $(pane);
+      const on = pane === `#ncf-pane-${which}`;
+      if (b) b.setAttribute("aria-selected", on ? "true" : "false");
+      if (p) p.style.display = on ? "" : "none";
+    });
+  }
+
+  function bindBrowseEvents(state) {
+    $("#ncf-refresh")?.addEventListener("click", () => loadActiveFarms(state));
+    $("#ncf-search")?.addEventListener("input", (e) => {
+      const q = e.target.value || "";
+      state.filtered = filterFarms(state.farms || [], q);
+      renderActiveFarmsList(state, state.filtered);
+    });
+    $("#ncf-back-list")?.addEventListener("click", () => {
+      $("#ncf-detail-view").style.display = "none";
+      $("#ncf-list-view").style.display = "";
+    });
+  }
+
+  function bindTabsRoot(state) {
+    $("#ncf-tab-browse")?.addEventListener("click", () => showTab("browse"));
+    $("#ncf-tab-creator")?.addEventListener("click", () => showTab("creator"));
+    $("#ncf-tab-stats")?.addEventListener("click", () => showTab("stats"));
+    $("#ncf-tab-help")?.addEventListener("click", () => showTab("help"));
+  }
+
+  // ---------- PUBLIC INIT ----------
+  function initNonCustodialFarms(opts = {}) {
+    injectStyles();
+    const cfg = { ...DEFAULTS, ...opts, endpoints: { ...DEFAULTS.endpoints, ...(opts.endpoints || {}) } };
+
+    const host = cfg.containerId
+      ? document.getElementById(cfg.containerId)
+      : (() => {
+          const d = document.createElement("div");
+          d.id = "ncf-root-auto";
+          document.body.appendChild(d);
+          return d;
+        })();
+
+    createLayout(host, cfg);
+
+    const state = {
+      cfg,
+      farms: [],
+      filtered: [],
+      currentFarmId: null
+    };
+
+    bindTabsRoot(state);
+    bindBrowseEvents(state);
+    showTab("browse");
+    loadActiveFarms(state);
+
+    // expose for debugging / future extensions (Part 2 hooks into same state)
+    window.__NCF_STATE__ = state;
+  }
+
+  // Back-compat export name (old code called this):
+  window.initNonCustodialFarms = initNonCustodialFarms;
+  window.initManageNFTsFarm = initNonCustodialFarms;
+})();
+
+/* noncustodial_farms.js — PART 2/2 (Creator Dashboard + Stats)
+   Paste this *after* PART 1. Together they are one single JS.
+*/
+(function () {
+  "use strict";
+
+  // ---------- Tiny helpers (scoped; no conflicts with PART 1) ----------
+  const $  = (s, p = document) => p.querySelector(s);
+  const $$ = (s, p = document) => Array.from(p.querySelectorAll(s));
+  const num = (v, d = 0) => (v == null || v === "" || isNaN(+v) ? d : +v);
+  const fmt = (n) => Number(n || 0).toLocaleString();
+  const esc = (s) => String(s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const nowPlusMin = (m)=>{const d=new Date(); d.setMinutes(d.getMinutes()+m); return d;};
   const toLoc = (d)=>{const p=(n)=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;};
   const parseLoc = (v)=>{const d=new Date(v); return isNaN(d.getTime())?null:d;};
-  const fetchJson = async (u,i)=>{const r=await fetch(u,i); if(!r.ok){const tx=await r.text().catch(()=> ""); throw new Error(`HTTP ${r.status} — ${tx||r.statusText}`);} return r.json();};
+  const selectionKey = (collection, schema, tid) => `${collection}::${schema}::${tid}`;
+  const getWax = () => (window.userData?.wax_account || "").trim();
+  const apiBase = (cfg) => cfg.apiBaseUrl || window.BASE_URL || window.API_BASE || location.origin;
+  const buildUrl = (b, p) => `${String(b).replace(/\/+$/,"")}${p}`;
+  const fetchJson = async (u,i)=>{const r=await fetch(u,i); if(!r.ok){const tx=await r.text().catch(()=> ""); throw new Error(`HTTP ${r.status} — ${tx||r.statusText}`);} const raw=await r.text(); try{return JSON.parse(raw);}catch{return raw;}};
   const postJson = (u,b)=>fetchJson(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
+
+  // a second small toast (reuses same #ncf-toast node created by PART 1)
+  const toast = (() => {
+    let tmr = null;
+    return (m, kind="info") => {
+      let t = $("#ncf-toast");
+      if(!t){
+        t = document.createElement("div");
+        t.id = "ncf-toast";
+        document.body.appendChild(t);
+      }
+      t.textContent = m;
+      t.dataset.kind = kind;
+      t.classList.add("show");
+      clearTimeout(tmr);
+      tmr = setTimeout(()=>t.classList.remove("show"), 2600);
+    };
+  })();
+
+  // ---------- Local storage (scoped keys; does not depend on PART 1 DEFAULTS) ----------
+  const LS = {
+    lastCollection: "ncf.lastCollection.v2",
+    tokens: "ncf.tokens.v2",
+    wizard: "ncf.wizard.v2",
+    selection: "ncf.selection.v2",
+    rewardsPerToken: "ncf.rewardsPerToken.daily.v1",
+    expiry: "ncf.expiry.v2",
+    autoMonitor: "ncf.autoMonitor.v2"
+  };
+  const rLS = (k, f) => { try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(f)); } catch { return f; } };
+  const wLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+
+  // ---------- Data accessors (Creator / Stats) ----------
+  async function fetchFarmsForCreator(state){
+    const wax = getWax();
+    if(!wax) return [];
+    const url = buildUrl(apiBase(state.cfg), state.cfg.endpoints.farmsByCreator) + `?creator=${encodeURIComponent(wax)}`;
+    let data = await fetchJson(url);
+    if (typeof data === "string") { try{ data = JSON.parse(data);} catch{ data = []; } }
+    return Array.isArray(data) ? data : [];
+  }
+  async function fetchTemplatesBySchema(state, collection){
+    const url = buildUrl(apiBase(state.cfg), state.cfg.endpoints.templatesBySchema);
+    let data = await postJson(url, { collection_name: collection });
+    if (typeof data === "string") { try{ data = JSON.parse(data);} catch{ data = {}; } }
+    return data || {};
+  }
+  async function fetchFarmBalances(state){
+    const url = buildUrl(apiBase(state.cfg), state.cfg.endpoints.farmBalances);
+    const wax = getWax();
+    const qs = wax ? `?creator=${encodeURIComponent(wax)}` : "";
+    let data = await fetchJson(url + qs);
+    if (typeof data === "string") { try { data = JSON.parse(data); } catch { data = []; } }
+    const m = new Map();
+    (Array.isArray(data) ? data : []).forEach(x=>{
+      const sym = (x.symbol || x.token_symbol || "").toUpperCase();
+      if(!sym) return;
+      m.set(sym, num(x.amount, 0));
+    });
+    return { map: m, ts: Date.now() };
+  }
+  async function fetchFarmStatsById(state, farmId){
+    const url = buildUrl(apiBase(state.cfg), state.cfg.endpoints.farmStats) + `?farm_id=${encodeURIComponent(farmId)}`;
+    let data = await fetchJson(url);
+    if (typeof data === "string") { try{ data = JSON.parse(data);} catch{ data = {}; } }
+    return data || {};
+  }
+  async function fetchDistributions(state, farmId, limit=200){
+    const url = buildUrl(apiBase(state.cfg), state.cfg.endpoints.farmDistributions) + `?farm_id=${encodeURIComponent(farmId)}&limit=${limit}`;
+    let data = await fetchJson(url);
+    if (typeof data === "string") { try{ data = JSON.parse(data);} catch{ data = []; } }
+    return Array.isArray(data) ? data : [];
+  }
+  async function fetchUserHistory(state, farmId, owner, limit=200){
+    const url = buildUrl(apiBase(state.cfg), state.cfg.endpoints.userHistory) + `?farm_id=${encodeURIComponent(farmId)}&owner=${encodeURIComponent(owner)}&limit=${limit}`;
+    let data = await fetchJson(url);
+    if (typeof data === "string") { try{ data = JSON.parse(data);} catch{ data = []; } }
+    return Array.isArray(data) ? data : [];
+  }
+  async function postKick(state, body){
+    const url = buildUrl(apiBase(state.cfg), state.cfg.endpoints.farmKick);
+    return postJson(url, body);
+  }
+
+  // ---------- Wallet holdings helpers (for Twitch/Telegram internal wallets) ----------
   const twitchBalances = () => Array.isArray(window.twitchWalletBalances) ? window.twitchWalletBalances : [];
   const telegramBalances = () => Array.isArray(window.telegramWalletBalances) ? window.telegramWalletBalances : [];
-  const percent = (i,m)=>{i=num(i,0);m=num(m,0); if(!isFinite(i)||!isFinite(m)||m<=0) return "—"; return `${clamp((i/m)*100,0,100).toFixed(1)}%`;};
-  const injectStyles = once(()=>{
-    const css=`#ncf-root .cy-card{background:rgba(12,16,22,.66);border:1px solid rgba(0,255,200,.18);border-radius:14px;box-shadow:0 0 22px rgba(0,255,200,.08),inset 0 0 0 1px rgba(255,255,255,.03);color:#e6eef8}
-#ncf-root .muted{color:rgba(230,238,248,.75)}#ncf-root .soft{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px}
-#ncf-root .row{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}#ncf-root .col{display:grid;gap:.5rem}#ncf-root .grid{display:grid;gap:12px}
-#ncf-root .w-100{width:100%}#ncf-root .badge{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .6rem;border-radius:999px;font-size:.85rem;border:1px solid rgba(255,255,255,.08)}
-#ncf-root .badge.ok{color:#22e4b6;background:rgba(34,228,182,.12)}#ncf-root .badge.warn{color:#f8c555;background:rgba(248,197,85,.12)}#ncf-root .badge.err{color:#ff7b7b;background:rgba(255,123,123,.12)}
-#ncf-root .btn{cursor:pointer;border-radius:999px;padding:.6rem 1rem;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(20,28,36,.9),rgba(10,14,18,.9));color:#e6eef8}
-#ncf-root .btn:focus{outline:none;box-shadow:0 0 0 2px rgba(0,255,200,.35)}#ncf-root .btn[disabled]{opacity:.6;cursor:not-allowed}
-#ncf-root .btn-primary{border-color:transparent;background:linear-gradient(180deg,rgba(0,255,200,.9),rgba(0,196,255,.9));color:#001418;font-weight:800}
-#ncf-root .btn-ghost{background:transparent}#ncf-root .btn-danger{border-color:rgba(255,0,90,.4);background:linear-gradient(180deg,rgba(255,0,90,.12),rgba(255,0,90,.08));color:#ffc4d8}
-#ncf-root .chip{display:inline-flex;gap:.5rem;align-items:center;padding:.45rem .7rem;border-radius:999px;border:1px dashed rgba(255,255,255,.14);cursor:pointer}
-#ncf-root .chip.active{border-color:rgba(0,255,200,.5);box-shadow:0 0 14px rgba(0,255,200,.15);color:#a7ffeb}
-#ncf-root .input,#ncf-root .select{height:40px;padding:0 .8rem;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(10,14,18,.8);color:#e6eef8}
-#ncf-toast{position:fixed;bottom:18px;left:50%;transform:translate(-50%,18px);opacity:0;background:rgba(12,16,22,.92);border:1px solid rgba(0,255,200,.25);color:#e6eef8;padding:.55rem .9rem;border-radius:12px;box-shadow:0 0 18px rgba(0,255,200,.15);z-index:9999;transition:all .18s ease}
-#ncf-toast.show{opacity:1;transform:translate(-50%,0)}#ncf-toast[data-kind=error]{border-color:rgba(255,0,90,.35);box-shadow:0 0 18px rgba(255,0,90,.18)}
-#ncf-rightpanel{position:sticky;top:1rem;align-self:flex-start;min-width:340px;max-width:420px}#ncf-root h2,#ncf-root h3,#ncf-root h4{color:#f2fbff;text-shadow:0 0 6px rgba(0,255,200,.12)}
-#ncf-root small,#ncf-root .help{color:rgba(230,238,248,.75)}#ncf-wizard .step{display:none}#ncf-wizard .step.active{display:block}
-#ncf-summary-table table{width:100%;border-collapse:separate;border-spacing:0}#ncf-summary-table th,#ncf-summary-table td{padding:.5rem;border-bottom:1px dashed rgba(255,255,255,.08);text-align:left}
-#ncf-root table{width:100%;border-collapse:separate;border-spacing:0;font-size:.95rem}#ncf-root thead th{position:sticky;top:0;padding:.6rem .8rem;text-align:left;background:rgba(10,14,18,.95);border-bottom:1px solid rgba(255,255,255,.08);user-select:none;cursor:pointer}
-#ncf-root tbody td{padding:.6rem .8rem;border-bottom:1px dashed rgba(255,255,255,.08)}#ncf-root tbody tr:hover{background:rgba(255,255,255,.03)}
-#ncf-root details > summary { cursor: pointer; }
-#ncf-root table { min-width: 520px; }
-#ncf-root .help code { background: rgba(255,255,255,.06); padding: 0 .25rem; border-radius: 6px; }`
-    const s=document.createElement("style"); s.id="ncf-styles"; s.textContent=css; document.head.appendChild(s);
-  });
-
-  const sumHoldingsFromDom = () => {
+  const sumHoldings = () => {
     const a=twitchBalances(), b=telegramBalances(), m=new Map();
     const add=(arr)=>arr.forEach(({symbol,amount})=>{ if(!symbol) return; const v=num(amount,0); m.set(symbol, num(m.get(symbol),0)+v); });
     add(a); add(b); return m;
   };
+  const tokenOptsFromSource = (source) => {
+    const list = source==="telegram" ? telegramBalances() : twitchBalances();
+    const m = new Map();
+    list.forEach(x=>{ const s=(x.symbol||"").toUpperCase(); if(!s) return; m.set(s, num(m.get(s),0)+num(x.amount,0)); });
+    return Array.from(m.entries()).sort((a,b)=>b[1]-a[1]).map(([symbol,amount])=>({symbol,amount}));
+  };
 
-  const selectionKey = (collection, schema, tid) => `${collection}::${schema}::${tid}`;
+  // ---------- Creator state bootstrap ----------
+  function ensureCreatorState(state){
+    if(!state.creator){
+      state.creator = {
+        collection: rLS(LS.lastCollection, ""),
+        raw: null,
+        search: "",
+        schemaFilter: "",
+        expandAll: true,
+        selection: rLS(LS.selection, {}),
+        tokens: rLS(LS.tokens, []),
+        rewardsPerToken: rLS(LS.rewardsPerToken, {}),
+        expiry: rLS(LS.expiry, {}),
+        farmBalances: new Map(),
+        farmBalancesTS: null,
+        monitorId: null,
+        wizard: rLS(LS.wizard, { step:"#ncf-step-a" }),
+        _creatorFarms: []
+      };
+    }
+  }
 
-  function createLayout(root, cfg) {
-    root.innerHTML = `
-      <div id="ncf-root" class="grid" style="grid-template-columns: 1fr minmax(340px,420px); gap:18px;">
-        <div id="ncf-main" class="grid" style="gap:14px;">
-          <section class="cy-card" style="padding:12px;">
-            <div class="row" role="tablist" aria-label="Farm tabs">
-              <button id="ncf-tab-edit"  role="tab" aria-selected="true"  class="btn btn-ghost" aria-controls="ncf-tabpane-edit">Create / Edit</button>
-              <button id="ncf-tab-stats" role="tab" aria-selected="false" class="btn btn-ghost" aria-controls="ncf-tabpane-stats">View Farm Stats</button>
-              <button id="ncf-tab-active" role="tab" aria-selected="false" class="btn btn-ghost" aria-controls="ncf-tabpane-active">Active Farms</button>
+  // ---------- Creator UI (layout) ----------
+  function mountCreatorDashboard(state){
+    ensureCreatorState(state);
+    const host = $("#ncf-pane-creator");
+    if(!host) return;
+
+    host.innerHTML = `
+      <div class="grid" style="grid-template-columns: 1fr minmax(320px,420px); gap:18px;">
+        <div id="ncf-creator-main" class="grid" style="gap:14px;">
+          <section class="soft" style="padding:10px;">
+            <div class="row" role="tablist" aria-label="Creator tabs">
+              <span class="badge ok">Non-custodial</span>
+              <span class="badge" title="Payout cadence">${esc(state.cfg.payoutSchedule)}</span>
+              <span class="badge">Signed-in: <strong>${esc(getWax() || "—")}</strong></span>
             </div>
           </section>
-  
-          <!-- TAB: CREATE / EDIT -->
-          <section id="ncf-tabpane-edit" class="cy-card" style="padding:16px;">
-            <h2 style="margin:0 0 .25rem 0;">${esc(DEFAULTS.appTitle)}</h2>
-            <div class="help" style="margin:.25rem 0 .75rem;">
-            Create or edit your farm for a <strong>single collection</strong>. 
-                          Rewards are <strong>per asset_id per day</strong> and expirations can only be extended.
-            </div>
-  
+
+          <section class="cy-card" style="padding:16px;">
+            <h2 style="margin:0 0 .25rem 0;">Create / Edit Farm</h2>
             <div id="ncf-wizard" class="grid" style="gap:12px;">
               <!-- STEP A -->
               <div class="step" id="ncf-step-a">
                 <h3 style="margin:.2rem 0;">Step 1 — Collection</h3>
                 <div class="row">
-                  <div class="col" style="min-width:260px;">
-                    <label class="muted"><small>Collection name</small></label>
-                    <input id="ncf-collection" class="input" placeholder="e.g. cryptochaos1" aria-label="Collection name"/>
-                  </div>
+                  <input id="ncf-collection" class="input" placeholder="AtomicAssets collection name (e.g. cryptochaos1)" style="min-width:280px;">
                   <button id="ncf-load" class="btn btn-primary">Load</button>
                   <div class="badge" id="ncf-meta">Ready</div>
+                  <button id="ncf-refresh-farms" class="btn btn-ghost" title="Refresh your farms">My farms</button>
                 </div>
-                <div id="ncf-a-hint" class="help" style="margin-top:.5rem;">
-                  AtomicAssets collection name. Example: <code>cryptochaos1</code>.
-                </div>
-  
-                <div class="soft" id="ncf-farms-box" style="padding:10px; margin-top:10px;">
-                  <div class="row" style="justify-content:space-between; align-items:center;">
+                <div id="ncf-farms-box" class="soft" style="padding:10px; margin-top:8px;">
+                  <div class="row" style="justify-content:space-between;">
                     <h4 style="margin:0;">Your farms (this creator)</h4>
-                    <button id="ncf-refresh-farms" class="btn btn-ghost">Refresh</button>
+                    <button id="ncf-reload-farms" class="btn btn-ghost">Refresh</button>
                   </div>
                   <div id="ncf-farms-list" class="grid" style="gap:8px; margin-top:6px;">
-                    <div class="help">No farms yet or not signed in.</div>
-                  </div>
-                  <div class="help" style="margin-top:6px;">
-                    Tip: <strong>one collection = one farm</strong>. To create another one, enter a different collection and press <em>Load</em>.
+                    <div class="muted">No farms yet or not signed in.</div>
                   </div>
                 </div>
               </div>
-  
+
               <!-- STEP B -->
               <div class="step" id="ncf-step-b">
                 <h3 style="margin:.2rem 0;">Step 2 — Funds & Deposit</h3>
                 <div class="soft" style="padding:10px; display:grid; gap:10px;">
                   <div class="row">
-                    <select id="ncf-src" class="select" style="min-width:180px;" aria-label="Source wallet">
+                    <select id="ncf-src" class="input" style="min-width:180px;">
                       <option value="twitch">From Twitch Wallet</option>
                       <option value="telegram">From Telegram Wallet</option>
                     </select>
-                    <select id="ncf-token" class="select" style="min-width:160px;" aria-label="Token symbol"><option value="">Select token…</option></select>
-                    <div class="row">
-                      <input id="ncf-amount" class="input" type="number" step="0.0001" min="0" placeholder="Amount" style="width:140px;" aria-label="Amount"/>
-                      <button id="ncf-max" class="btn btn-ghost" title="Use full balance">MAX</button>
-                    </div>
+                    <select id="ncf-token" class="input" style="min-width:160px;"><option value="">Select token…</option></select>
+                    <input id="ncf-amount" class="input" type="number" step="0.0001" min="0" placeholder="Amount" style="width:140px;">
+                    <button id="ncf-max" class="btn btn-ghost">MAX</button>
                     <button id="ncf-deposit" class="btn">Deposit to Farm-Wallet</button>
                   </div>
                   <div id="ncf-bal-hint" class="muted">Balance: —</div>
-  
+
                   <div id="ncf-empty" class="soft" style="display:none; padding:10px;">
                     <div class="badge warn">No available balance on this wallet</div>
-                    <p class="help" style="margin:.4rem 0 0;">Top up the internal wallet to have available balance:</p>
-                    <ul class="help" style="margin:.2rem 0 0 1rem;">
-                      <li><strong>Twitch Wallet</strong> memo: <code>${esc(cfg.memoTwitch)}</code></li>
-                      <li><strong>Telegram Wallet</strong> memo: <code>${esc(cfg.memoTelegram)}</code></li>
+                    <p class="muted" style="margin:.4rem 0 0;">Top up the internal wallet (memo shown below):</p>
+                    <ul class="muted" style="margin:.2rem 0 0 1rem;">
+						<li><strong>Twitch Wallet</strong> memo: <code>${esc(state.cfg.memoTwitch)}</code></li>
+						<li><strong>Telegram Wallet</strong> memo: <code>${esc(state.cfg.memoTelegram)}</code></li>
                     </ul>
                     <div class="row" style="margin-top:8px;">
                       <button id="ncf-copy-account" class="btn btn-ghost">Copy account</button>
@@ -182,15 +812,14 @@
                     </div>
                   </div>
                 </div>
-  
+
                 <div class="soft" style="padding:10px; margin-top:10px;">
                   <div class="row" style="justify-content:space-between;">
                     <h4 style="margin:0;">Farm-Wallet balances</h4>
                     <div class="row">
                       <button id="ncf-refresh-farm" class="btn btn-ghost">Refresh</button>
-                      <label class="chip" style="user-select:none;" title="Automatically refresh Farm-Wallet balances">
-                        <input id="ncf-auto" type="checkbox" style="position:absolute;opacity:0;pointer-events:none;"/>
-                        Auto-monitor
+                      <label class="badge" style="cursor:pointer;">
+                        <input id="ncf-auto" type="checkbox" style="margin-right:.5rem;"> Auto-monitor
                       </label>
                     </div>
                   </div>
@@ -198,23 +827,25 @@
                     <thead><tr><th>Token</th><th>Balance</th><th>Updated</th><th>Status</th></tr></thead>
                     <tbody id="ncf-farm-balances"><tr><td colspan="4" style="text-align:center;padding:10px;">No data</td></tr></tbody>
                   </table>
-                  <div class="help" id="ncf-user-hints" style="margin-top:8px;"></div>
+                  <div class="muted" id="ncf-user-hints" style="margin-top:8px;"></div>
                   <div id="ncf-farm-alert" class="soft" style="display:none; padding:8px; margin-top:8px;">
                     <div class="badge err">Some active reward tokens have zero Farm-Wallet balance</div>
                   </div>
                 </div>
-  
-                <button id="ncf-change-col" class="btn btn-ghost" title="Change current collection">Change collection</button>
-                <div class="row" style="margin-top:10px;"><button id="ncf-next-b" class="btn btn-primary">Continue</button></div>
+
+                <div class="row" style="margin-top:10px;">
+                  <button id="ncf-change-col" class="btn btn-ghost">Change collection</button>
+                  <button id="ncf-next-b" class="btn btn-primary" disabled>Continue</button>
+                </div>
               </div>
-  
+
               <!-- STEP C -->
               <div class="step" id="ncf-step-c">
                 <h3 style="margin:.2rem 0;">Step 3 — Pick templates</h3>
                 <div class="row" style="margin-bottom:8px;">
-                  <input id="ncf-search" class="input w-100" placeholder="Search by Template ID or Name…" aria-label="Search templates"/>
-                  <select id="ncf-schema" class="select" aria-label="Filter by schema"><option value="">All schemas</option></select>
-                  <button id="ncf-expand" class="btn btn-ghost" title="Expand or collapse all schemas">Expand all</button>
+                  <input id="ncf-search-templates" class="input" placeholder="Search by Template ID or Name…" style="flex:1;min-width:240px;">
+                  <select id="ncf-schema" class="input" style="min-width:180px;"><option value="">All schemas</option></select>
+                  <button id="ncf-expand" class="btn btn-ghost" title="Expand or collapse all schemas">Collapse all</button>
                 </div>
                 <div id="ncf-table-wrap" style="overflow:auto; max-height:44vh;">
                   <div id="ncf-status" style="padding:8px;"></div>
@@ -227,430 +858,106 @@
                   <div style="margin-left:auto;">
                     <button id="ncf-select-all" class="btn btn-ghost" title="Select all visible">Select all</button>
                     <button id="ncf-clear" class="btn btn-ghost" title="Clear selection">Clear</button>
-                    <button id="ncf-next-c" class="btn btn-primary">Continue</button>
+                    <button id="ncf-next-c" class="btn btn-primary" disabled>Continue</button>
                   </div>
                 </div>
               </div>
-  
+
               <!-- STEP D -->
               <div class="step" id="ncf-step-d">
                 <h3 style="margin:.2rem 0;">Step 4 — Configure rewards (per asset, daily)</h3>
-  
-                <!-- Sticky KPI for Step D (nuovo) -->
                 <div id="ncf-stepd-summary" class="soft" style="padding:8px; position:sticky; top:0; z-index:5; margin-bottom:8px;">
                   <div class="row" style="gap:10px; flex-wrap:wrap;">
                     <span class="badge" id="ncf-sel-count">Selected: 0</span>
                     <span class="badge" id="ncf-active-tokens">Active tokens: 0</span>
-                    <span class="badge ok" id="ncf-daily-cost" title="Somma delle ricompense giornaliere per token e template selezionati (stima visual)">Est. daily payout: —</span>
+                    <span class="badge ok" id="ncf-daily-cost" title="Estimated daily payout by token">Est. daily payout: —</span>
                   </div>
                 </div>
-  
-                <div class="help" style="margin:0 0 8px;">
-                  Choose the tokens and set the <strong>daily amount per asset_id</strong> for each selected template.
-                  The expiration can only be extended.
+                <div class="muted" style="margin:0 0 8px;">
+                  Choose tokens and set the <strong>daily amount per asset_id</strong> for each selected template.
+                  Expiration can only be extended. Tokens are <em>never</em> aggregated across symbols.
                 </div>
                 <div id="ncf-rp-body" class="grid" style="gap:10px;">
                   <div class="soft" style="padding:12px; text-align:center;">No templates selected yet.</div>
                 </div>
                 <div class="row" style="margin-top:10px;">
-                  <button id="ncf-save-draft" class="btn">Save Draft</button>
-                  <button id="ncf-next-d" class="btn btn-primary">Continue</button>
+                  <button id="ncf-save-draft" class="btn" disabled>Save Draft</button>
+                  <button id="ncf-next-d" class="btn btn-primary" disabled>Continue</button>
                 </div>
               </div>
-  
+
               <!-- STEP E -->
               <div class="step" id="ncf-step-e">
                 <h3 style="margin:.2rem 0;">Step 5 — Summary & Save</h3>
-                <div class="help" style="margin:0 0 8px;">Summary of the current farm configuration and Farm-Wallet balance check for the active tokens.</div>
+                <div class="muted" style="margin:0 0 8px;">
+                  Summary of the configuration and Farm-Wallet balance check for the active tokens.
+                </div>
                 <div id="ncf-summary" class="soft" style="padding:10px;"></div>
                 <div class="row" style="margin-top:10px;">
-                  <button id="ncf-confirm" class="btn btn-primary">Confirm & Save</button>
+                  <button id="ncf-confirm" class="btn btn-primary" disabled>Confirm & Save</button>
                 </div>
               </div>
             </div>
           </section>
-  
-          <!-- Collapsed/Summary after save -->
-          <section id="ncf-collapsed" class="cy-card" style="padding:12px; display:none; margin-top:12px;">
+
+          <section id="ncf-collapsed" class="cy-card" style="padding:12px; display:none;">
             <div class="row" style="justify-content:space-between;align-items:center;">
               <strong>Farm configuration saved</strong>
               <span class="badge ok">Saved</span>
             </div>
           </section>
-  
-          <section id="ncf-summary-table" class="cy-card" style="padding:14px; display:none; margin-top:12px;">
+
+          <section id="ncf-summary-table" class="cy-card" style="padding:14px; display:none;">
             <h3 style="margin:.2rem 0;">Current Farm</h3>
             <div id="ncf-farm-table"></div>
           </section>
-  
-          <!-- TAB: STATS -->
-          <section id="ncf-tabpane-stats" class="cy-card" style="padding:16px; display:none;">
-            <div class="row" style="justify-content:space-between; align-items:center;">
-              <h2 style="margin:0;">Farm Stats</h2>
-              <div class="row">
-                <select id="ncf-farm-picker" class="select" style="min-width:260px;">
-                  <option value="">All farms (this creator)</option>
-                </select>
-                <button id="ncf-refresh-stats" class="btn btn-ghost">Refresh</button>
-                <!-- 👇 nuovi controlli per apertura rapida per ID -->
-                <input id="ncf-farm-quick-id" class="input" placeholder="Farm ID…" style="width:140px;"/>
-                <button id="ncf-open-farmid" class="btn btn-ghost">Open</button>
-              </div>
-            </div>
-          
-            <div class="help" style="margin:.25rem 0 .75rem;">
-              A <strong>read-only</strong> view of farm metrics. If you are the creator, you can perform moderation actions (e.g., <em>Kick</em>).
-            </div>
-          
-            <div class="soft" style="padding:10px; margin-top:10px;">
-              <div class="row" style="gap:10px; flex-wrap:wrap;">
-                <div class="badge" id="ncf-stats-head-farms">Farms: 0</div>
-                <div class="badge" id="ncf-stats-head-owners">Unique owners: 0</div>
-                <div class="badge" id="ncf-stats-head-assets">Staked assets: 0</div>
-                <div class="badge" id="ncf-stats-head-lastdist">Last distribution: —</div>
-              </div>
-            </div>
-          
-            <div class="grid" style="gap:12px; margin-top:10px;">
-              <div class="soft" style="padding:10px;">
-                <h4 style="margin:.2rem 0;">Rewards (grouped)</h4>
-                <div class="help" style="margin:.2rem 0;">Grouped by <strong>Owner</strong> → <strong>Schema</strong> → <strong>Template</strong> → <strong>Token</strong>. Click to expand subtotals.</div>
-                <div id="ncf-stats-grouped" style="overflow:auto; max-height:46vh;">
-                  <div class="help">No data yet.</div>
-                </div>
-              </div>
-          
-              <div class="soft" style="padding:10px;">
-                <h4 style="margin:.2rem 0;">Distributions history</h4>
-                <div id="ncf-stats-history" style="overflow:auto; max-height:38vh;">
-                  <div class="help">No history yet.</div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-  
-          <!-- TAB: ACTIVE FARMS -->
-          <section id="ncf-tabpane-active" class="cy-card" style="padding:16px; display:none;">
-            <div class="row" style="justify-content:space-between; align-items:center;">
-              <h2 style="margin:0;">Active Farms</h2>
-              <button id="ncf-refresh-active" class="btn btn-ghost">Refresh</button>
-            </div>
-  
-            <div class="help" style="margin:.25rem 0 .75rem;">
-              A list of all <strong>active and valid</strong> farms, regardless of the creator.
-              Open a farm to view its reward configuration and, if you have assets staked, your distribution history.
-            </div>
-  
-            <div id="ncf-active-list" class="grid" style="gap:10px; margin-top:10px;">
-              <div class="help">Loading…</div>
-            </div>
-  
-            <div id="ncf-active-detail" class="soft" style="padding:10px; margin-top:12px; display:none;">
-              <div class="row" style="justify-content:space-between; align-items:center;">
-                <h3 style="margin:.2rem 0;">Farm Detail</h3>
-                <button id="ncf-active-back" class="btn btn-ghost">Back to list</button>
-              </div>
-              <div id="ncf-active-overview" class="grid" style="gap:10px;"></div>
-              <div class="grid" style="gap:12px; margin-top:8px;">
-                <div class="soft" style="padding:10px;">
-                  <h4 style="margin:.2rem 0;">Rewarded Templates</h4>
-                  <div class="help" style="margin:.2rem 0;">Template → Token (per day) → Expiry. Tokens are never aggregated across different symbols.</div>
-                  <div id="ncf-active-config"></div>
-                </div>
-                <div class="soft" style="padding:10px;">
-                  <h4 style="margin:.2rem 0;">Your Distribution History</h4>
-                  <div id="ncf-active-history">
-                    <div class="help">Sign in to see your personal history, or you may not have assets staked here.</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
         </div>
-  
-        <!-- RIGHT PANEL (visibile solo in Create/Edit via bindTabs) -->
+
+        <!-- RIGHT: Tokens Library -->
         <aside id="ncf-rightpanel" class="grid" style="gap:14px;">
           <section class="cy-card" style="padding:14px;">
             <h3 style="margin:.1rem 0 .5rem;">Tokens Library</h3>
-            <div class="help" style="margin-bottom:.5rem;">
-              Add the tokens you intend to use as rewards. Sorting prioritizes tokens you currently hold in your internal wallets.
+            <div class="muted" style="margin-bottom:.5rem;">
+              Add tokens you intend to use as rewards. Sorting prioritizes tokens you hold in internal wallets.
             </div>
             <div class="grid" style="gap:10px;">
               <div class="row">
-                <input id="ncf-tok-contract" class="input" placeholder="Token contract (e.g. eosio.token)" style="min-width:220px;"/>
-                <input id="ncf-tok-symbol" class="input" placeholder="Symbol (e.g. WAX)" style="width:140px;"/>
-                <input id="ncf-tok-dec" class="input" type="number" min="0" max="18" step="1" placeholder="Decimals" style="width:120px;"/>
+                <input id="ncf-tok-contract" class="input" placeholder="Token contract (e.g. eosio.token)" style="min-width:220px;">
+                <input id="ncf-tok-symbol" class="input" placeholder="Symbol (e.g. WAX)" style="width:120px;">
+                <input id="ncf-tok-dec" class="input" type="number" min="0" max="18" step="1" placeholder="Decimals" style="width:120px;">
                 <button id="ncf-tok-add" class="btn">Add</button>
               </div>
               <div id="ncf-token-list" class="row" style="flex-wrap:wrap;"></div>
-              <div class="help">Tokens are sorted by what you currently hold across Twitch/Telegram wallets.</div>
+              <div class="muted">Tokens are sorted by what you currently hold across Twitch/Telegram wallets.</div>
             </div>
           </section>
         </aside>
       </div>
-      <div id="ncf-toast"></div>
     `;
-  }
 
-  function bindTabs(state, cfg){
-    const tabEdit   = $("#ncf-tab-edit");
-    const tabStats  = $("#ncf-tab-stats");
-    const tabActive = $("#ncf-tab-active");
-    const paneEdit   = $("#ncf-tabpane-edit");
-    const paneStats  = $("#ncf-tabpane-stats");
-    const paneActive = $("#ncf-tabpane-active");
-    const right      = $("#ncf-rightpanel"); // <= aside Token Library
-  
-    const show = (which) => {
-      const isEdit   = which === "edit";
-      const isStats  = which === "stats";
-      const isActive = which === "active";
-      tabEdit.setAttribute("aria-selected", isEdit ? "true" : "false");
-      tabStats.setAttribute("aria-selected", isStats ? "true" : "false");
-      tabActive.setAttribute("aria-selected", isActive ? "true" : "false");
-      paneEdit.style.display   = isEdit ? "" : "none";
-      paneStats.style.display  = isStats ? "" : "none";
-      paneActive.style.display = isActive ? "" : "none";
-      // 👉 Token Library visibile solo in Create/Edit
-      if (right) right.style.display = isEdit ? "" : "none";
-      if (isStats)  ensureStatsLoaded(state, cfg);
-      if (isActive) ensureActiveFarmsLoaded(state, cfg);
-    };
-  
-    tabActive.addEventListener("click", () => show("active"));
-    tabEdit.addEventListener("click", () => show("edit"));
-    tabStats.addEventListener("click", () => show("stats"));
-  
-    // opzionale: assicurati che all’avvio sia coerente
-    show("edit");
-  }
+    // preload field(s)
+    $("#ncf-collection").value = state.creator.collection || "";
 
-  
-  async function openFarmDetail(state, cfg, farmId){
-    const list = $("#ncf-active-list");
-    const detail = $("#ncf-active-detail");
-    const overview = $("#ncf-active-overview");
-    const configBox = $("#ncf-active-config");
-    const historyBox = $("#ncf-active-history");
-  
-    list.style.display = "none";
-    detail.style.display = "";
-    overview.innerHTML = `<div class="help">Loading…</div>`;
-    configBox.innerHTML = "";
-    historyBox.innerHTML = `<div class="help">Loading…</div>`;
-  
-    try{
-      // 1) Statistiche e configurazione
-      const stats = await fetchFarmStats(cfg, {farm_id: farmId});
-      const head  = stats?.summary || {};
-      const items = Array.isArray(stats?.config?.items) ? stats.config.items : []; // ASSUME BACKEND
-  
-      // Overview: creator, collection, valid templates, remaining_by_token, last dist
-      const remaining = head.remaining_by_token && typeof head.remaining_by_token === "object"
-        ? Object.entries(head.remaining_by_token).map(([sym,amt])=>({symbol:String(sym).toUpperCase(), amount:Number(amt)||0}))
-        : [];
-      remaining.sort((a,b)=>b.amount-a.amount);
-  
-      overview.innerHTML = `
-        <div class="grid" style="gap:8px;">
-          <div class="row" style="gap:10px; flex-wrap:wrap;">
-            <span class="badge">Farm #${esc(String(stats.farm_id || farmId))}</span>
-            <span class="badge">Collection: ${esc(stats.collection || "—")}</span>
-            <span class="badge">Creator: ${esc(stats.creator || stats.creator_wax_account || "—")}</span>
-            <span class="badge">Valid templates: ${fmt(head.valid_templates_total ?? items.length ?? 0)}</span>
-            <span class="badge">Last distribution: ${head.last_distribution_at ? new Date(head.last_distribution_at).toLocaleString() : "—"}</span>
-          </div>
-          <div class="soft" style="padding:8px;">
-            <h4 style="margin:.2rem 0;">Remaining rewards by token</h4>
-            ${
-              remaining.length
-                ? `<table><thead><tr><th>Token</th><th>Remaining</th></tr></thead><tbody>${
-                    remaining.map(r=>`<tr><td><strong>${esc(r.symbol)}</strong></td><td>${fmt(r.amount)}</td></tr>`).join("")
-                  }</tbody></table>`
-                : `<div class="help">No remaining budget reported by the farm.</div>`
-            }
-          </div>
-        </div>
-      `;
-  
-      // 2) Config templates (mai sommare token diversi)
-      if(!items.length){
-        configBox.innerHTML = `<div class="help">No rewarded templates configured.</div>`;
-      } else {
-        const rows = items.map(it=>{
-          const rewards = Array.isArray(it.rewards) ? it.rewards : [];
-          const tokensHtml = rewards
-            .map(r=>`<div class="row" style="gap:.4rem;">
-              <span class="badge">${esc(r.token_symbol)}</span>
-              <small class="muted">@${esc(r.token_contract||"")}</small>
-              <span class="muted">${fmt(r.reward_per_asset_per_day||0)}/day</span>
-            </div>`).join("") || `<div class="muted">—</div>`;
-          const exp = it.expiry ? new Date(it.expiry).toLocaleString() : "—";
-          return `<tr>
-            <td><strong>${esc(it.schema_name||"—")}</strong> <small class="muted">ID ${esc(String(it.template_id))}</small></td>
-            <td>${tokensHtml}</td>
-            <td>${esc(exp)}</td>
-          </tr>`;
-        }).join("");
-  
-        configBox.innerHTML = `
-          <table>
-            <thead><tr><th>Template</th><th>Tokens (per day)</th><th>Expiry</th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>`;
-      }
-  
-      // 3) Storico personale utente (se loggato)
-      const me = getWax();
-      if(!me){
-        historyBox.innerHTML = `<div class="help">Sign in to view your personal history for this farm.</div>`;
-      } else {
-        try{
-          const histUrl = buildUrl(apiBase(cfg), DEFAULTS.endpoints.userHistory)
-            + `?farm_id=${encodeURIComponent(farmId)}&owner=${encodeURIComponent(me)}&limit=200`;
-          let hist = await fetchJson(histUrl); // ASSUME BACKEND SHAPE
-          if (typeof hist === "string") { try { hist = JSON.parse(hist); } catch { hist = []; } }
-          const arr = Array.isArray(hist) ? hist : [];
-  
-          if(!arr.length){
-            // caso “nessun asset” o mai ricevuto
-            historyBox.innerHTML = `<div class="help">You don’t have assets staked in this farm, or you have not received any distributions yet.</div>`;
-          } else {
-            // Mai sommare token diversi: subtotal per-symbol separati
-            const bySym = new Map();
-            arr.forEach(ev=>{
-              const sym = String(ev.token_symbol || "").toUpperCase();
-              const amt = Number(ev.amount || 0);
-              if(!bySym.has(sym)) bySym.set(sym, 0);
-              bySym.set(sym, bySym.get(sym) + (isFinite(amt) ? amt : 0));
-            });
-            const totals = Array.from(bySym.entries()).map(([sym,sum])=>({symbol:sym, amount:sum}))
-                               .sort((a,b)=>a.symbol.localeCompare(b.symbol));
-  
-            const rows = arr.map(ev=>`
-              <tr>
-                <td>${new Date(ev.ts).toLocaleString()}</td>
-                <td><strong>${esc(String(ev.token_symbol||"").toUpperCase())}</strong></td>
-                <td>${fmt(ev.amount||0)}</td>
-                <td>${esc(ev.schema_name||"—")} / ID ${esc(String(ev.template_id||"—"))}</td>
-                <td>${esc(ev.note||"—")}</td>
-              </tr>`).join("");
-  
-            const totalsRows = totals.map(t=>`
-              <tr>
-                <td><strong>${esc(t.symbol)}</strong></td>
-                <td>${fmt(t.amount)}</td>
-              </tr>`).join("");
-  
-            historyBox.innerHTML = `
-              <div class="grid" style="gap:8px;">
-                <div class="soft" style="padding:8px;">
-                  <h5 style="margin:.2rem 0;">Per-token totals (never aggregated across different symbols)</h5>
-                  <table>
-                    <thead><tr><th>Token</th><th>Total received</th></tr></thead>
-                    <tbody>${totalsRows}</tbody>
-                  </table>
-                </div>
-                <div class="soft" style="padding:8px;">
-                  <h5 style="margin:.2rem 0;">Event log</h5>
-                  <table>
-                    <thead><tr><th>Time</th><th>Token</th><th>Amount</th><th>Template</th><th>Note</th></tr></thead>
-                    <tbody>${rows}</tbody>
-                  </table>
-                </div>
-              </div>
-            `;
-          }
-        }catch(e){
-          historyBox.innerHTML = `<div class="help">Unable to load your history: ${esc(String(e.message||e))}</div>`;
-        }
-      }
-    }catch(e){
-      overview.innerHTML = `<div class="help">${esc(String(e.message||e))}</div>`;
-      historyBox.innerHTML = "";
+    // attach handlers
+    bindCreatorHandlers(state);
+    // initial farms list + token library + balances panel
+    loadCreatorFarms(state);
+    renderTokenLibrary(state);
+    updateTopupPanel(state);
+    if (rLS(LS.autoMonitor, false)) {
+      const auto = $("#ncf-auto"); if (auto) auto.checked = true;
+      startAutoBalances(state);
     }
-  }
-    
-  async function fetchActiveFarms(cfg){
-    // Riuso /list con filtro; fallback se il backend ignora il filtro
-    const url = buildUrl(apiBase(cfg), DEFAULTS.endpoints.activeFarms) + `?status=active`;
-    let data = await fetchJson(url);
-    if (typeof data === "string") { try { data = JSON.parse(data); } catch { data = []; } }
-    return Array.isArray(data) ? data : [];
-  }
-  
-  // ASSUME BACKEND: stats.summary.valid_templates_total, stats.summary.remaining_by_token
-  function renderActiveFarmsList(state, farms, cfg){
-    const box = $("#ncf-active-list");
-    if (!farms.length){
-      box.innerHTML = `<div class="help">No active farms found.</div>`;
-      return;
-    }
-    box.innerHTML = farms.map(f=>{
-      const id = String(f.farm_id ?? "—");
-      const col = esc(f.collection || "");
-      const creator = esc(f.creator || f.creator_wax_account || "—");
-      // small stub: numbers may be filled after click (from farmStats)
-      return `
-        <div class="soft" style="padding:10px; display:flex; justify-content:space-between; gap:10px;" data-farm="${id}">
-          <div class="col">
-            <div class="row" style="gap:.5rem;">
-              <strong>Farm #${id}</strong>
-              <span class="muted">${col}</span>
-            </div>
-            <small class="muted">Creator: ${creator}</small>
-          </div>
-          <div class="row">
-            <button class="btn btn-ghost ncf-open-farm">Open</button>
-          </div>
-        </div>`;
-    }).join("");
-  
-    $$("#ncf-active-list .ncf-open-farm").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        const card = btn.closest("[data-farm]");
-        openFarmDetail(state, cfg, card?.dataset.farm);
-      });
-    });
-  }
-  
-  async function ensureActiveFarmsLoaded(state, cfg){
-    const list = $("#ncf-active-list");
-    const detail = $("#ncf-active-detail");
-    list.style.display = "";
-    detail.style.display = "none";
-    list.innerHTML = `<div class="help">Loading…</div>`;
-    try{
-      const farms = await fetchActiveFarms(cfg);
-      state._activeFarms = farms || [];
-      renderActiveFarmsList(state, state._activeFarms, cfg);
-    }catch(e){
-      list.innerHTML = `<div class="help">${esc(String(e.message||e))}</div>`;
-    }
-  }
-  
-  function renderSkeleton(el){ el.innerHTML=`<div class="soft" style="padding:1rem; text-align:center;"><div style="height:12px; width:240px; margin:.35rem auto; background:rgba(255,255,255,.06); border-radius:8px;"></div><div style="height:12px; width:320px; margin:.35rem auto; background:rgba(255,255,255,.06); border-radius:8px;"></div></div>`; }
-
-  function wizardGo(state, id){
-    $$("#ncf-wizard .step").forEach(x=>x.classList.remove("active"));
-    $(id).classList.add("active");
-    state.wizard.step=id;
-    wLS(DEFAULTS.ls.wizard, state.wizard);
+    // show step A by default
+    wizardGo(state, state.creator.wizard.step || "#ncf-step-a");
   }
 
-  function buildTokenOptionsFromSource(source){
-    const list = source==="telegram" ? telegramBalances() : twitchBalances();
-    const m=new Map();
-    list.forEach(x=>{ const s=(x.symbol||"").toUpperCase(); if(!s) return; m.set(s, num(m.get(s),0)+num(x.amount,0)); });
-    return Array.from(m.entries()).sort((a,b)=>b[1]-a[1]).map(([symbol,amount])=>({symbol,amount}));
-  }
-
+  // ---------- Token library ----------
   function renderTokenLibrary(state){
     const list=$("#ncf-token-list");
-    const holdings=sumHoldingsFromDom();
-    const arr=state.tokens.slice().sort((a,b)=>num(holdings.get(b.symbol),0)-num(holdings.get(a.symbol),0));
-    if(!arr.length){ list.innerHTML=`<div class="help">No tokens configured. Add some above.</div>`; return; }
+    const holdings=sumHoldings();
+    const arr=state.creator.tokens.slice().sort((a,b)=>num(holdings.get(b.symbol),0)-num(holdings.get(a.symbol),0));
+    if(!arr.length){ list.innerHTML=`<div class="muted">No tokens configured. Add some above.</div>`; return; }
     list.innerHTML=arr.map(t=>{
       const held=num(holdings.get(t.symbol),0);
       const hint=held>0?`<span class="badge ok">You hold ${fmt(held)} ${esc(t.symbol)}</span>`:`<span class="badge">No local balance</span>`;
@@ -662,16 +969,74 @@
     $$("#ncf-token-list .ncf-token-del").forEach(btn=>{
       btn.addEventListener("click",e=>{
         const pill=e.target.closest("[data-id]"); const [c,s]=pill.dataset.id.split(":");
-        state.tokens=state.tokens.filter(x=>!(x.contract===c&&x.symbol===s));
-        Object.keys(state.rewardsPerToken).forEach(k=>{ if(state.rewardsPerToken[k]) delete state.rewardsPerToken[k][`${c}:${s}`];});
-        wLS(DEFAULTS.ls.tokens,state.tokens); wLS(DEFAULTS.ls.rewardsPerToken,state.rewardsPerToken);
+        state.creator.tokens=state.creator.tokens.filter(x=>!(x.contract===c&&x.symbol===s));
+        Object.keys(state.creator.rewardsPerToken).forEach(k=>{ if(state.creator.rewardsPerToken[k]) delete state.creator.rewardsPerToken[k][`${c}:${s}`];});
+        wLS(LS.tokens,state.creator.tokens); wLS(LS.rewardsPerToken,state.creator.rewardsPerToken);
         renderTokenLibrary(state); updateRewardsPanel(state);
       });
     });
   }
 
+  // ---------- Wizard helpers ----------
+  function wizardGo(state, id){
+    $$("#ncf-wizard .step").forEach(x=>x.style.display="none");
+    const el = $(id);
+    if(el){ el.style.display = ""; }
+    state.creator.wizard.step=id;
+    wLS(LS.wizard, state.creator.wizard);
+  }
+
+  function updateCTAState(state){
+    const selOfThis = Object.values(state.creator.selection).filter(x => x.collection === state.creator.collection);
+    const hasSel = selOfThis.length > 0;
+
+    const hasAnyPositive = selOfThis.some(x => {
+      const k = `${x.collection}::${x.schema_name}::${x.template_id}`;
+      const m = state.creator.rewardsPerToken[k] || {};
+      return Object.values(m).some(v => String(v).trim() !== "" && Number(v) > 0);
+    });
+
+    const set = (id, on) => { const el = document.getElementById(id); if(el) { el.disabled = !on; } };
+
+    set("ncf-next-b", !!state.creator.collection);
+    set("ncf-next-c", hasSel);
+    set("ncf-save-draft", hasSel && hasAnyPositive);
+    set("ncf-next-d",    hasSel && hasAnyPositive);
+    set("ncf-confirm",   hasSel && hasAnyPositive);
+  }
+
+  function refreshStep4Summary(state){
+    const sel = Object.values(state.creator.selection).filter(x => x.collection === state.creator.collection);
+    const badgeSel = document.getElementById("ncf-sel-count");
+    const badgeTok = document.getElementById("ncf-active-tokens");
+    const badgePay = document.getElementById("ncf-daily-cost");
+    if(!badgeSel || !badgeTok || !badgePay) return;
+
+    badgeSel.textContent = `Selected: ${sel.length}`;
+
+    // sum per token (never across symbols)
+    const perToken = new Map();
+    sel.forEach(x => {
+      const k = `${x.collection}::${x.schema_name}::${x.template_id}`;
+      const rewards = state.creator.rewardsPerToken[k] || {};
+      Object.entries(rewards).forEach(([id,v]) => {
+        const [, sym] = id.split(":");
+        const daily = Number(v) || 0;
+        if (daily > 0) perToken.set(sym, (perToken.get(sym)||0) + daily);
+      });
+    });
+
+    badgeTok.textContent = `Active tokens: ${perToken.size}`;
+    const parts = Array.from(perToken.entries()).map(([s,a]) => `${s}: ${a}/day`);
+    badgePay.textContent = parts.length ? `Est. daily payout: ${parts.join(" · ")}` : "Est. daily payout: —";
+  }
+
+  // ---------- Step A load collection ----------
+  function renderSkeleton(el){ el.innerHTML=`<div class="soft" style="padding:1rem; text-align:center;"><div style="height:12px; width:240px; margin:.35rem auto; background:rgba(255,255,255,.06); border-radius:8px;"></div><div style="height:12px; width:320px; margin:.35rem auto; background:rgba(255,255,255,.06); border-radius:8px;"></div></div>`; }
+
   function sectionId(name){ return `ncf-sec-${name.replace(/[^a-z0-9]+/gi,"-")}`; }
   function th(l,k){ return `<th data-key="${k}" aria-sort="none">${l}</th>`; }
+  const percent = (i,m)=>{i=num(i,0);m=num(m,0); if(!isFinite(i)||!isFinite(m)||m<=0) return "—"; return `${clamp((i/m)*100,0,100).toFixed(1)}%`;};
   function rowHtml(schemaName,t,checked){
     const pct=percent(t.circulating_supply,t.max_supply);
     return `<tr data-tid="${t.template_id}">
@@ -683,54 +1048,28 @@
       <td>${pct}</td></tr>`;
   }
 
-  function renderSections(el,data,state){
-    const search=(state.search||"").toLowerCase().trim();
-    const f=state.schemaFilter||"";
-    const filtered=(data.schemas||[])
-      .filter(s=>!f||s.schema_name===f)
-      .map(s=>{
-        if(!search) return s;
-        const ft=s.templates.filter(t=>String(t.template_id).includes(search)||(t.template_name||"").toLowerCase().includes(search));
-        return {...s,templates:ft};
-      })
-      .filter(s=>(s.templates||[]).length>0);
-    const totalSchemas=filtered.length;
-    const totalTemplates=filtered.reduce((a,s)=>a+(s.templates?.length||0),0);
-    $("#ncf-count-schemas").textContent=`Schemas: ${totalSchemas}`;
-    $("#ncf-count-templates").textContent=`Templates: ${totalTemplates}`;
-    if(!totalTemplates){ el.innerHTML=`<div class="soft" style="padding:14px; text-align:center;">No results. Try different filters.</div>`; return; }
-    el.innerHTML=filtered.map(s=>{
-      const sid=sectionId(s.schema_name); const open=state.expandAll?" open":"";
-      return `<details class="ncf-section"${open} id="${sid}">
-        <summary style="display:flex; align-items:center; gap:.6rem; padding:10px 14px; border-bottom:1px solid rgba(255,255,255,.08);">
-          <span><strong>${esc(s.schema_name)}</strong></span><span class="badge">${s.templates.length}</span>
-          <div style="margin-left:auto;" class="row"><button class="btn btn-ghost ncf-sec-select">Select schema</button><button class="btn btn-ghost ncf-sec-clear">Clear</button></div>
-        </summary>
-        <div style="overflow:auto;">
-          <table class="ncf-table" data-schema="${esc(s.schema_name)}">
-            <thead><tr>
-              <th style="width:44px;"><input type="checkbox" class="ncf-head-check" title="Select visible"></th>
-              ${th("ID","template_id")}${th("Name","template_name")}${th("Circulating","circulating_supply")}${th("Max","max_supply")}${th("% Mint","pct")}
-            </tr></thead>
-            <tbody>${s.templates.map(t=>rowHtml(s.schema_name,t,!!state.selection[selectionKey(state.collection,s.schema_name,t.template_id)])).join("")}</tbody>
-          </table>
-        </div></details>`;
-    }).join("");
-    filtered.forEach(s=>bindSection(sectionId(s.schema_name), s, state));
-  }
-
-  function bindSection(sid, schema, state){
+  function bindSection(state, sid, schema){
     const sec=document.getElementById(sid);
     const table=$("table",sec);
     const head=$(".ncf-head-check",sec);
+
     $(".ncf-sec-select",sec).addEventListener("click",()=>{
-      $$("tbody tr",table).forEach(r=>{ const chk=$(".ncf-row-check",r); if(!chk.checked) chk.checked=true; setSelected(state,state.collection,schema.schema_name,Number(r.dataset.tid),true);});
+      $$("tbody tr",table).forEach(r=>{
+        const chk=$(".ncf-row-check",r);
+        if(!chk.checked) chk.checked=true;
+        setSelected(state,state.creator.collection,schema.schema_name,Number(r.dataset.tid),true);
+      });
       updateRewardsPanel(state);
     });
     $(".ncf-sec-clear",sec).addEventListener("click",()=>{
-      $$("tbody tr",table).forEach(r=>{ const chk=$(".ncf-row-check",r); if(chk.checked) chk.checked=false; setSelected(state,state.collection,schema.schema_name,Number(r.dataset.tid),false);});
+      $$("tbody tr",table).forEach(r=>{
+        const chk=$(".ncf-row-check",r);
+        if(chk.checked) chk.checked=false;
+        setSelected(state,state.creator.collection,schema.schema_name,Number(r.dataset.tid),false);
+      });
       updateRewardsPanel(state);
     });
+
     $$("thead th[data-key]",table).forEach(h=>{
       h.addEventListener("click",()=>{
         const key=h.dataset.key; const dir=h.getAttribute("aria-sort")==="ascending"?-1:1;
@@ -745,110 +1084,125 @@
         rows.forEach(r=>tb.appendChild(r));
       });
     });
+
     $$(".ncf-id-btn",sec).forEach(btn=>btn.addEventListener("click",()=>navigator.clipboard.writeText(btn.textContent.trim()).then(()=>toast("Template ID copied"))));
-    $$(".ncf-row-check",sec).forEach(chk=>chk.addEventListener("change",e=>{ const tr=e.target.closest("tr"); setSelected(state,state.collection,schema.schema_name,Number(tr.dataset.tid),e.target.checked); updateRewardsPanel(state);}));
-    head.addEventListener("change",e=>{ $$("tbody tr",table).forEach(r=>{ const chk=$(".ncf-row-check",r); chk.checked=e.target.checked; setSelected(state,state.collection,schema.schema_name,Number(r.dataset.tid),e.target.checked);}); updateRewardsPanel(state);});
-  }
-
-  function loadSel(){ return rLS(DEFAULTS.ls.selection,{}); }
-  function saveSel(s){ wLS(DEFAULTS.ls.selection,s); }
-  function loadTokens(){ return rLS(DEFAULTS.ls.tokens,[]); }
-  function saveTokens(a){ wLS(DEFAULTS.ls.tokens,a); }
-  function loadRPT(){ return rLS(DEFAULTS.ls.rewardsPerToken,{}); }
-  function saveRPT(m){ wLS(DEFAULTS.ls.rewardsPerToken,m); }
-  function loadExp(){ return rLS(DEFAULTS.ls.expiry,{}); }
-  function saveExp(m){ wLS(DEFAULTS.ls.expiry,m); }
-
-  function setSelected(state, collection, schema, tid, on){
-    const k=selectionKey(collection,schema,tid);
-    if(on) state.selection[k]={collection,schema_name:schema,template_id:tid};
-    else { delete state.selection[k]; delete state.rewardsPerToken[k]; delete state.expiry[k]; }
-    saveSel(state.selection); saveRPT(state.rewardsPerToken); saveExp(state.expiry); updateSelectedCount(state);
-    updateCTAState(state);
-    refreshStep4Summary(state);
-  }
-  function updateSelectedCount(state){
-    const c=Object.values(state.selection).filter(x=>x.collection===state.collection).length;
-    $("#ncf-count-selected").textContent=`Selected: ${c}`;
-    updateCTAState(state);
-    refreshStep4Summary(state);
-  }
-  
-  function updateCTAState(state){
-    const selOfThis = Object.values(state.selection).filter(x => x.collection === state.collection);
-    const hasSel = selOfThis.length > 0;
-  
-    // c'è almeno 1 token attivo con valore > 0?
-    const hasAnyPositive = selOfThis.some(x => {
-      const k = `${x.collection}::${x.schema_name}::${x.template_id}`;
-      const m = state.rewardsPerToken[k] || {};
-      return Object.values(m).some(v => String(v).trim() !== "" && Number(v) > 0);
-    });
-  
-    const set = (id, on) => { const el = document.getElementById(id); if(el) el.toggleAttribute("disabled", !on); };
-  
-    set("ncf-next-b", hasSel);                 // step 2 -> step 3
-    set("ncf-next-c", hasSel);                 // step 3 -> step 4
-    set("ncf-save-draft", hasSel && hasAnyPositive);
-    set("ncf-next-d",    hasSel && hasAnyPositive);
-    set("ncf-confirm",   hasSel && hasAnyPositive);
-  }
-  
-  function refreshStep4Summary(state){
-    const sel = Object.values(state.selection).filter(x => x.collection === state.collection);
-    const badgeSel = document.getElementById("ncf-sel-count");
-    const badgeTok = document.getElementById("ncf-active-tokens");
-    const badgePay = document.getElementById("ncf-daily-cost");
-    if(!badgeSel || !badgeTok || !badgePay) return;
-  
-    badgeSel.textContent = `Selected: ${sel.length}`;
-  
-    // somma per simbolo, MAI tra simboli diversi
-    const perToken = new Map();
-    sel.forEach(x => {
-      const k = `${x.collection}::${x.schema_name}::${x.template_id}`;
-      const rewards = state.rewardsPerToken[k] || {};
-      Object.entries(rewards).forEach(([id,v]) => {
-        const [, sym] = id.split(":");
-        const daily = Number(v) || 0;
-        if (daily > 0) perToken.set(sym, (perToken.get(sym)||0) + daily);
+    $$(".ncf-row-check",sec).forEach(chk=>chk.addEventListener("change",e=>{
+      const tr=e.target.closest("tr");
+      setSelected(state,state.creator.collection,schema.schema_name,Number(tr.dataset.tid),e.target.checked);
+      updateRewardsPanel(state);
+    }));
+    head.addEventListener("change",e=>{
+      $$("tbody tr",table).forEach(r=>{
+        const chk=$(".ncf-row-check",r);
+        chk.checked=e.target.checked;
+        setSelected(state,state.creator.collection,schema.schema_name,Number(r.dataset.tid),e.target.checked);
       });
+      updateRewardsPanel(state);
     });
-  
-    badgeTok.textContent = `Active tokens: ${perToken.size}`;
-    const parts = Array.from(perToken.entries()).map(([s,a]) => `${s}: ${a}/day`);
-    badgePay.textContent = parts.length ? `Est. daily payout: ${parts.join(" · ")}` : "Est. daily payout: —";
   }
 
-  function enrichFromTable(schemaName, tid){
-    const sid=sectionId(schemaName);
-    const row=$(`#${sid} tr[data-tid="${tid}"]`);
-    let name=null,circ=0,max=null;
-    if(row){
-      name=row.children[2].textContent.trim()||null;
-      circ=Number(row.children[3].textContent.trim().replace(/[^\d]/g,""))||0;
-      const m=row.children[4].textContent.trim(); max=m==="—"?null:Number(m.replace(/[^\d]/g,""))||0;
-    }
-    return {template_name:name,circulating_supply:circ,max_supply:max};
+  function renderSections(state, el, data){
+    const search=(state.creator.search||"").toLowerCase().trim();
+    const f=state.creator.schemaFilter||"";
+    const filtered=(data.schemas||[])
+      .filter(s=>!f||s.schema_name===f)
+      .map(s=>{
+        if(!search) return s;
+        const ft=s.templates.filter(t=>String(t.template_id).includes(search)||(t.template_name||"").toLowerCase().includes(search));
+        return {...s,templates:ft};
+      })
+      .filter(s=>(s.templates||[]).length>0);
+    const totalSchemas=filtered.length;
+    const totalTemplates=filtered.reduce((a,s)=>a+(s.templates?.length||0),0);
+    $("#ncf-count-schemas").textContent=`Schemas: ${totalSchemas}`;
+    $("#ncf-count-templates").textContent=`Templates: ${totalTemplates}`;
+    if(!totalTemplates){ el.innerHTML=`<div class="soft" style="padding:14px; text-align:center;">No results. Try different filters.</div>`; return; }
+    el.innerHTML=filtered.map(s=>{
+      const sid=sectionId(s.schema_name); const open=state.creator.expandAll?" open":"";
+      return `<details class="ncf-section"${open} id="${sid}">
+        <summary style="display:flex; align-items:center; gap:.6rem; padding:10px 14px; border-bottom:1px solid rgba(255,255,255,.08);">
+          <span><strong>${esc(s.schema_name)}</strong></span><span class="badge">${s.templates.length}</span>
+          <div style="margin-left:auto;" class="row">
+            <button class="btn btn-ghost ncf-sec-select">Select schema</button>
+            <button class="btn btn-ghost ncf-sec-clear">Clear</button>
+          </div>
+        </summary>
+        <div style="overflow:auto;">
+          <table class="ncf-table" data-schema="${esc(s.schema_name)}">
+            <thead><tr>
+              <th style="width:44px;"><input type="checkbox" class="ncf-head-check" title="Select visible"></th>
+              ${th("ID","template_id")}${th("Name","template_name")}${th("Circulating","circulating_supply")}${th("Max","max_supply")}${th("% Mint","pct")}
+            </tr></thead>
+            <tbody>${(s.templates||[]).map(t=>rowHtml(s.schema_name,t,!!state.creator.selection[selectionKey(state.creator.collection,s.schema_name,t.template_id)])).join("")}</tbody>
+          </table>
+        </div></details>`;
+    }).join("");
+    filtered.forEach(s=>bindSection(state, sectionId(s.schema_name), s));
   }
 
+  function loadCreatorFarms(state){
+    const box = $("#ncf-farms-list");
+    if(!box) return;
+    box.innerHTML = `<div class="muted">Loading…</div>`;
+    fetchFarmsForCreator(state).then(farms=>{
+      state.creator._creatorFarms = farms || [];
+      if (!Array.isArray(farms) || !farms.length){
+        box.innerHTML = `<div class="muted">No farms yet for this creator.</div>`;
+        return;
+      }
+      box.innerHTML = farms.map(f => {
+        const col = f.collection || "";
+        const id  = String(f.farm_id ?? "—");
+        return `
+          <div class="soft" style="padding:8px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div class="row">
+              <strong>${esc(col)}</strong>
+              <small class="muted">#${esc(id)}</small>
+            </div>
+            <div class="row">
+              <button class="btn btn-ghost ncf-farm-edit"  data-col="${esc(col)}">Edit</button>
+              <button class="btn btn-ghost ncf-farm-stats" data-id="${esc(id)}">Stats</button>
+            </div>
+          </div>`;
+      }).join("");
+      $$("#ncf-farms-list .ncf-farm-edit").forEach(b=>{
+        b.addEventListener("click", () => {
+          const col = b.dataset.col || "";
+          $("#ncf-collection").value = col;
+          doLoadCollection(state);
+          wizardGo(state, "#ncf-step-b");
+        });
+      });
+      $$("#ncf-farms-list .ncf-farm-stats").forEach(b=>{
+        b.addEventListener("click", () => {
+          const id = b.dataset.id;
+          // switch to Stats tab and pre-load that farm
+          $("#ncf-tab-stats")?.click();
+          ensureStatsPaneMounted(state, id);
+        });
+      });
+    }).catch(e=>{
+      box.innerHTML = `<div class="muted">${esc(String(e.message||e))}</div>`;
+    });
+  }
+
+  // ---------- Balances table (Step B) ----------
   function activeTokenIds(state){
-    const ids=new Set(); Object.values(state.rewardsPerToken).forEach(m=>{ if(!m) return; Object.keys(m).forEach(id=>ids.add(id)); }); return ids;
+    const ids=new Set(); Object.values(state.creator.rewardsPerToken).forEach(m=>{ if(!m) return; Object.keys(m).forEach(id=>ids.add(id)); }); return ids;
   }
-
   function renderFarmBalances(state){
     const tb = $("#ncf-farm-balances");
-    const last = state.farmBalancesTS ? new Date(state.farmBalancesTS) : null;
+    const last = state.creator.farmBalancesTS ? new Date(state.creator.farmBalancesTS) : null;
     const ts = last ? last.toLocaleString() : "—";
-  
-    const ids = activeTokenIds(state); // Set("contract:symbol")
+
+    const ids = activeTokenIds(state);
     const rows = [];
     let anyZero = false;
-  
+
     if (ids.size) {
       ids.forEach(id => {
         const [c,s] = id.split(":");
-        const bal = num(state.farmBalances.get(s), 0);
+        const bal = num(state.creator.farmBalances.get(s), 0);
         const st = bal > 0 ? `<span class="badge ok">OK</span>` : `<span class="badge err">0</span>`;
         if (bal <= 0) anyZero = true;
         rows.push(
@@ -861,10 +1215,9 @@
         );
       });
     } else {
-      // Nessun token "attivo" nelle regole ⇒ mostra tutti i saldi del Farm-Wallet
-      if (state.farmBalances && state.farmBalances.size) {
-        Array.from(state.farmBalances.entries())
-          .sort((a,b)=>b[1]-a[1]) // saldo desc
+      if (state.creator.farmBalances && state.creator.farmBalances.size) {
+        Array.from(state.creator.farmBalances.entries())
+          .sort((a,b)=>b[1]-a[1])
           .forEach(([symbol, bal]) => {
             const st = bal > 0 ? `<span class="badge ok">OK</span>` : `<span class="badge err">0</span>`;
             if (bal <= 0) anyZero = true;
@@ -879,21 +1232,18 @@
           });
       }
     }
-  
+
     tb.innerHTML = rows.length
       ? rows.join("")
       : `<tr><td colspan="4" style="text-align:center;padding:10px;">No balances</td></tr>`;
-  
-    // Avviso solo se ci sono token attivi e almeno uno ha saldo 0.
+
     $("#ncf-farm-alert").style.display = (ids.size && anyZero) ? "" : "none";
-  
-    // Hint: se non ci sono token attivi, niente messaggi confusivi
+
     if (!ids.size) {
       $("#ncf-user-hints").innerHTML =
-        `<p class="help" style="margin:0;">Tip: add a token on the Right Library (Step 4) to mark it as “active” (available as reward in your farm).</p>`;
+        `<p class="muted" style="margin:0;">Tip: add a token in the Tokens Library to mark it as “active” in Step 4.</p>`;
     } else {
-      // Mostra “hai X in TW/TG” per i token attivi
-      const holdings = sumHoldingsFromDom();
+      const holdings = sumHoldings();
       const hints = [];
       ids.forEach(id => {
         const [, symbol] = id.split(":");
@@ -901,70 +1251,432 @@
         if (have > 0) hints.push(`You hold <strong>${fmt(have)} ${esc(symbol)}</strong> across Twitch/Telegram wallets.`);
       });
       $("#ncf-user-hints").innerHTML = hints.length
-        ? `<p class="help" style="margin:0;">${hints.join(" ")}</p>`
-        : `<p class="help" style="margin:0;">No local balances detected for your active tokens.</p>`;
+        ? `<p class="muted" style="margin:0;">${hints.join(" ")}</p>`
+        : `<p class="muted" style="margin:0;">No local balances detected for your active tokens.</p>`;
     }
   }
 
-  async function refreshFarmWalletBalances(state, cfg){
-    const url = buildUrl(apiBase(cfg), DEFAULTS.endpoints.farmBalances);
+  async function refreshFarmWalletBalances(state){
     try{
-      const wax = getWax();
-      const qs = wax ? `?creator=${encodeURIComponent(wax)}` : "";
-      const raw = await fetchJson(url + qs);
-  
-      // ⚠️ Alcuni backend rispondono con una STRINGA JSON; normalizziamo.
-      let data = raw;
-      if (typeof data === "string") {
-        try { data = JSON.parse(data); } catch { data = []; }
-      }
-      if (!Array.isArray(data)) data = [];
-  
-      const m = new Map();
-      data.forEach(x => {
-        const sym = (x.symbol || x.token_symbol || "").toUpperCase();
-        if (!sym) return;
-        m.set(sym, num(x.amount, 0));
-      });
-  
-      state.farmBalances = m;
-      state.farmBalancesTS = Date.now();
+      const res = await fetchFarmBalances(state);
+      state.creator.farmBalances = res.map;
+      state.creator.farmBalancesTS = res.ts;
       renderFarmBalances(state);
     }catch(e){
       toast(String(e.message||e), "error");
     }
   }
+  function startAutoBalances(state){
+    stopAutoBalances(state);
+    state.creator.monitorId = setInterval(()=>refreshFarmWalletBalances(state), 120*1000);
+  }
+  function stopAutoBalances(state){
+    if(state.creator.monitorId){ clearInterval(state.creator.monitorId); state.creator.monitorId=null; }
+  }
+  function updateTopupPanel(state){
+    const src=$("#ncf-src")?.value||"twitch";
+    const tok=$("#ncf-token"); const amt=$("#ncf-amount"); const hint=$("#ncf-bal-hint"); const empty=$("#ncf-empty");
+    if(!tok||!amt||!hint||!empty) return;
+    const opts=tokenOptsFromSource(src);
+    const cur=tok.value;
+    tok.innerHTML=`<option value="">Select token…</option>`+opts.map(o=>`<option value="${o.symbol}">${o.symbol} — balance ${fmt(o.amount)}</option>`).join("");
+    const first=opts.find(o=>o.amount>0)?.symbol||"";
+    tok.value=opts.some(o=>o.symbol===cur)?cur:first;
+    const sym=tok.value||""; const bal=num(opts.find(o=>o.symbol===sym)?.amount,0);
+    hint.textContent=`Balance: ${fmt(bal)} ${sym||""}`;
+    amt.value="";
+    empty.style.display=opts.some(o=>o.amount>0)?"none":"";
+  }
+  async function performTopUp(state){
+    const src=($("#ncf-src").value||"twitch").toLowerCase();
+    const sym=($("#ncf-token").value||"").toUpperCase();
+    const amt=Number($("#ncf-amount").value||"0");
+    if(!sym){ toast("Select a token.","error"); return; }
+    if(!(amt>0)){ toast("Enter a positive amount.","error"); return; }
+    const opts=tokenOptsFromSource(src); const bal=num(opts.find(o=>o.symbol===sym)?.amount,0);
+    if(amt>bal){ toast("Amount exceeds your wallet balance.","error"); return; }
+    const tc=(state.creator.tokens.find(t=>(t.symbol||"").toUpperCase()===sym)?.contract)||null;
+    const payload={creator_wax_account:getWax()||null, source:src, token_symbol:sym, token_contract:tc||undefined, amount:amt};
+    try{
+      const res=await postJson(buildUrl(apiBase(state.cfg),state.cfg.endpoints.depositToFarm), payload);
+      if(!res||res.ok!==true) throw new Error("Deposit failed");
+      toast("Deposit completed.");
+      if(res.balances?.twitch) window.twitchWalletBalances=res.balances.twitch;
+      if(res.balances?.telegram) window.telegramWalletBalances=res.balances.telegram;
+      updateTopupPanel(state); await refreshFarmWalletBalances(state);
+    }catch(e){ toast(String(e.message||e),"error");}
+  }
 
-  async function fetchFarmsForCreator(cfg){
-    const wax = getWax();
-    if(!wax) return [];
-    const url = buildUrl(apiBase(cfg), DEFAULTS.endpoints.farmsByCreator) + `?creator=${encodeURIComponent(wax)}`;
-    let data = await fetchJson(url);
-    if (typeof data === "string") { try{ data = JSON.parse(data);} catch{ data = []; } }
-    return Array.isArray(data) ? data : [];
+  // ---------- Step C selection ----------
+  function setSelected(state, collection, schema, tid, on){
+    const k=selectionKey(collection,schema,tid);
+    if(on) state.creator.selection[k]={collection,schema_name:schema,template_id:tid};
+    else { delete state.creator.selection[k]; delete state.creator.rewardsPerToken[k]; delete state.creator.expiry[k]; }
+    wLS(LS.selection,state.creator.selection); wLS(LS.rewardsPerToken,state.creator.rewardsPerToken); wLS(LS.expiry,state.creator.expiry);
+    updateSelectedCount(state);
+    updateCTAState(state);
+    refreshStep4Summary(state);
   }
-  
-  async function fetchFarmStats(cfg, {farm_id=null} = {}){
-    let qs = farm_id ? `?farm_id=${encodeURIComponent(farm_id)}` : `?creator=${encodeURIComponent(getWax()||"")}`;
-    const url = buildUrl(apiBase(cfg), DEFAULTS.endpoints.farmStats) + qs;
-    let data = await fetchJson(url);
-    if (typeof data === "string") { try{ data = JSON.parse(data);} catch{ data = {}; } }
-    return data || {};
+  function updateSelectedCount(state){
+    const c=Object.values(state.creator.selection).filter(x=>x.collection===state.creator.collection).length;
+    $("#ncf-count-selected").textContent=`Selected: ${c}`;
+    updateCTAState(state);
+    refreshStep4Summary(state);
   }
-  
-  async function fetchDistributions(cfg, {farm_id=null, limit=100} = {}){
-    if(!farm_id) return [];
-    const url = buildUrl(apiBase(cfg), DEFAULTS.endpoints.farmDistributions) + `?farm_id=${encodeURIComponent(farm_id)}&limit=${limit}`;
-    let data = await fetchJson(url);
-    if (typeof data === "string") { try{ data = JSON.parse(data);} catch{ data = []; } }
-    return Array.isArray(data) ? data : [];
+
+  // ---------- Step D rewards panel ----------
+  function enrichFromTable(schemaName, tid){
+    const sid=sectionId(schemaName);
+    const row=$(`#${sid} tr[data-tid="${tid}"]`);
+    let name=null,circ=0,max=null;
+    if(row){
+      name=row.children[2].textContent.trim()||null;
+      circ=Number(row.children[3].textContent.trim().replace(/[^\d]/g,""))||0;
+      const m=row.children[4].textContent.trim(); max=m==="—"?null:Number(m.replace(/[^\d]/g,""))||0;
+    }
+    return {template_name:name,circulating_supply:circ,max_supply:max};
   }
-  
-  async function postKick(cfg, body){
-    const url = buildUrl(apiBase(cfg), DEFAULTS.endpoints.farmKick);
-    return postJson(url, body);
+
+  function updateRewardsPanel(state){
+    updateSelectedCount(state);
+    const sel=Object.values(state.creator.selection).filter(x=>x.collection===state.creator.collection);
+    const body=$("#ncf-rp-body");
+    if(!sel.length){ body.innerHTML=`<div class="soft" style="padding:12px;text-align:center;">No templates selected yet.</div>`; return; }
+    const tokens=state.creator.tokens;
+    body.innerHTML=sel.map(s=>{
+      const k=selectionKey(s.collection,s.schema_name,s.template_id);
+      const meta=enrichFromTable(s.schema_name,s.template_id);
+      const minISO=toLoc(nowPlusMin(5));
+      const exISO=state.creator.expiry[k]||"";
+      const chips=tokens.map(t=>{
+        const id=`${t.contract}:${t.symbol}`;
+        const on=!!(state.creator.rewardsPerToken[k]&&state.creator.rewardsPerToken[k][id]!==undefined);
+        return `<label class="badge ${on?"ok":""}" style="cursor:pointer;" data-key="${esc(k)}" data-token="${esc(id)}">
+                  <input type="checkbox" style="display:none"${on?" checked":""}/>
+                  <strong>${esc(t.symbol)}</strong> <small class="muted">@${esc(t.contract)}</small>
+                </label>`;
+      }).join("") || `<div class="muted">Add tokens in the right panel.</div>`;
+      const inputs = tokens.map(t => {
+        const id = `${t.contract}:${t.symbol}`;
+        const on = !!(state.creator.rewardsPerToken[k] && state.creator.rewardsPerToken[k][id] !== undefined);
+        const v  = on ? (state.creator.rewardsPerToken[k][id] ?? "") : "";
+        const show = on ? "" : "display:none;";
+        return `<div class="row ncf-reward-row" data-key="${esc(k)}" data-token="${esc(id)}" style="${show}">
+          <span class="muted" style="min-width:160px;"><strong>${esc(t.symbol)}</strong> <small>@${esc(t.contract)}</small></span>
+          <input type="number" class="input ncf-reward-input" step="0.0001" min="0" placeholder="Reward per asset(NFT) each day" value="${String(v)}" style="width:220px;">
+        </div>`;
+      }).join("");
+      return `<div class="soft" style="padding:10px;" data-item="${esc(k)}">
+        <div class="row" style="justify-content:space-between;">
+          <div class="row" style="gap:.5rem;">
+            <strong>${esc(s.schema_name)}</strong>
+            <span class="muted">ID <button class="btn btn-ghost ncf-id-btn" style="padding:.15rem .5rem;">${s.template_id}</button></span>
+          </div>
+          <button class="btn btn-ghost ncf-remove">Remove</button>
+        </div>
+        <div class="muted" style="margin:.25rem 0 .5rem;">${esc(meta.template_name||"—")} · Circulating: ${fmt(meta.circulating_supply)} · Max: ${meta.max_supply==null?"—":fmt(meta.max_supply)}</div>
+        <div class="grid" style="gap:8px;">
+          <div class="row" style="align-items:flex-end;">
+            <div class="row">
+              <label class="muted" style="margin-right:.5rem;"><small>Max validity</small></label>
+              <input type="datetime-local" class="input ncf-expiry" min="${minISO}" value="${exISO?toLoc(new Date(exISO)):""}" style="min-width:220px;">
+            </div>
+            <button class="btn btn-ghost ncf-plus7">+7d</button>
+            <button class="btn btn-ghost ncf-plus30">+30d</button>
+          </div>
+          <div class="row ncf-token-chips" style="flex-wrap:wrap;">${chips}</div>
+          <div class="col"><div class="ncf-token-inputs">${inputs}</div></div>
+        </div>
+      </div>`;
+    }).join("");
+
+    $$("#ncf-rp-body .ncf-id-btn").forEach(b=>b.addEventListener("click",()=>navigator.clipboard.writeText(b.textContent.trim()).then(()=>toast("Template ID copied"))));
+    $$("#ncf-rp-body .ncf-remove").forEach(btn=>btn.addEventListener("click",e=>{
+      const box=e.target.closest("[data-item]"); const k=box.dataset.item; const obj=state.creator.selection[k]; if(!obj) return;
+      const sid=sectionId(obj.schema_name); const row=$(`#${sid} tr[data-tid="${obj.template_id}"]`); if(row){ const chk=$(".ncf-row-check",row); if(chk) chk.checked=false; }
+      delete state.creator.selection[k]; delete state.creator.rewardsPerToken[k]; delete state.creator.expiry[k];
+      wLS(LS.selection,state.creator.selection); wLS(LS.rewardsPerToken,state.creator.rewardsPerToken); wLS(LS.expiry,state.creator.expiry);
+      updateRewardsPanel(state);
+    }));
+    $$("#ncf-rp-body .ncf-expiry").forEach(inp=>inp.addEventListener("change",e=>{
+      const box=e.target.closest("[data-item]"); const k=box.dataset.item; const nd=parseLoc(e.target.value);
+      if(!nd){ delete state.creator.expiry[k]; wLS(LS.expiry,state.creator.expiry); return; }
+      const prev=state.creator.expiry[k]?new Date(state.creator.expiry[k]):null; if(prev && nd<prev){ e.target.value=toLoc(prev); toast("Expiration can only be extended.","error"); return; }
+      state.creator.expiry[k]=nd.toISOString(); wLS(LS.expiry,state.creator.expiry);
+    }));
+    $$("#ncf-rp-body .ncf-plus7").forEach(btn=>btn.addEventListener("click",e=>{
+      const box=e.target.closest("[data-item]"); const k=box.dataset.item; const inp=$(".ncf-expiry",box);
+      const base=state.creator.expiry[k]?new Date(state.creator.expiry[k]):nowPlusMin(5); const d=new Date(base); d.setDate(d.getDate()+7);
+      state.creator.expiry[k]=d.toISOString(); wLS(LS.expiry,state.creator.expiry); inp.value=toLoc(d);
+    }));
+    $$("#ncf-rp-body .ncf-plus30").forEach(btn=>btn.addEventListener("click",e=>{
+      const box=e.target.closest("[data-item]"); const k=box.dataset.item; const inp=$(".ncf-expiry",box);
+      const base=state.creator.expiry[k]?new Date(state.creator.expiry[k]):nowPlusMin(5); const d=new Date(base); d.setDate(d.getDate()+30);
+      state.creator.expiry[k]=d.toISOString(); wLS(LS.expiry,state.creator.expiry); inp.value=toLoc(d);
+    }));
+
+    // chips delegation
+    if (!state.creator._chipDelegationBound) {
+      document.getElementById("ncf-rp-body").addEventListener("click", (e) => {
+        const chip = e.target.closest(".ncf-token-chips .badge");
+        if (!chip) return;
+        e.preventDefault();
+        chip.classList.toggle("ok");
+        const k  = chip.dataset.key;
+        const id = chip.dataset.token;
+        const on = chip.classList.contains("ok");
+        state.creator.rewardsPerToken[k] = state.creator.rewardsPerToken[k] || {};
+        if (on) {
+          if (state.creator.rewardsPerToken[k][id] === undefined) state.creator.rewardsPerToken[k][id] = "";
+        } else {
+          delete state.creator.rewardsPerToken[k][id];
+        }
+        wLS(LS.rewardsPerToken,state.creator.rewardsPerToken);
+        // show/hide input row
+        const row = document.querySelector(`.ncf-reward-row[data-key="${CSS.escape(k)}"][data-token="${CSS.escape(id)}"]`);
+        if (row) row.style.display = on ? "" : "none";
+        updateCTAState(state);
+        refreshStep4Summary(state);
+      });
+      state.creator._chipDelegationBound = true;
+    }
+    $$("#ncf-rp-body .ncf-reward-input").forEach(inp=>inp.addEventListener("input",e=>{
+      const row=e.target.closest(".ncf-reward-row"); const k=row.dataset.key; const id=row.dataset.token;
+      state.creator.rewardsPerToken[k]=state.creator.rewardsPerToken[k]||{}; state.creator.rewardsPerToken[k][id]=e.target.value; wLS(LS.rewardsPerToken,state.creator.rewardsPerToken);
+      updateCTAState(state);
+      refreshStep4Summary(state);
+    }));
+
+    updateCTAState(state);
+    refreshStep4Summary(state);
   }
-  
+
+  // ---------- Build payload + summary ----------
+  function buildDraftPayload(state){
+    const items = Object.values(state.creator.selection)
+      .filter(x => x.collection === state.creator.collection)
+      .map(x => {
+        const k = `${x.collection}::${x.schema_name}::${x.template_id}`;
+        const expiry = state.creator.expiry[k] || null;
+        const per = state.creator.rewardsPerToken[k] || {};
+        const rewards = [];
+
+        Object.entries(per).forEach(([id, v]) => {
+          const amount = Number(v);
+          if (!isFinite(amount) || amount <= 0) return;
+          const [contract, symbol] = id.split(":");
+          const meta = state.creator.tokens.find(t => t.contract === contract && t.symbol === symbol) || {};
+          rewards.push({
+            token_contract: contract,
+            token_symbol: symbol,
+            decimals: meta.decimals ?? null,
+            reward_per_asset_per_day: amount
+          });
+        });
+
+        return { schema_name: x.schema_name, template_id: Number(x.template_id), expiry, rewards };
+      });
+
+    return {
+      collection: state.creator.collection,
+      creator_wax_account: getWax() || null,
+      policy: {
+        distribution: "daily",
+        semantics: "Rewards are per asset_id per day. Expiration can only be extended.",
+        payout_time_cet: "14:00",
+        non_custodial: "NFTs remain in the owner wallets; eligibility by template_id."
+      },
+      tokens_catalog: state.creator.tokens,
+      total_selected: items.length,
+      items
+    };
+  }
+
+  function renderSummary(state){
+    const fw=[];
+    activeTokenIds(state).forEach(id=>{ const [,s]=id.split(":"); fw.push({symbol:s,balance:num(state.creator.farmBalances.get(s),0)});});
+    const rows=Object.values(state.creator.selection).filter(x=>x.collection===state.creator.collection).map(x=>{
+      const k=selectionKey(x.collection,x.schema_name,x.template_id);
+      const per=state.creator.rewardsPerToken[k]||{}; const exp=state.creator.expiry[k]?new Date(state.creator.expiry[k]).toLocaleString():"—";
+      const rr=Object.entries(per).filter(([,v])=>Number(v)>0).map(([id,v])=>{ const [,s]=id.split(":"); return `${esc(s)}: ${v}/day`; }).join(", ") || "—";
+      const meta=enrichFromTable(x.schema_name,x.template_id);
+      return `<tr><td>${esc(x.schema_name)} <small class="muted">ID ${x.template_id} — ${esc(meta.template_name||"—")}</small></td><td>${rr}</td><td>${esc(exp)}</td></tr>`;
+    }).join("");
+    const fwRows=fw.length?fw.map(t=>`<li>${esc(t.symbol)} — Farm balance: <strong>${fmt(t.balance)}</strong></li>`).join(""):"<li>No active tokens</li>";
+    $("#ncf-summary").innerHTML=`<div class="grid" style="gap:8px;">
+      <div class="row"><strong>Collection:</strong> <span>${esc(state.creator.collection)}</span></div>
+      <div class="row"><strong>Creator:</strong> <span>${esc(getWax()||"—")}</span></div>
+      <div class="soft" style="padding:8px;"><div class="muted">Farm-Wallet overview</div><ul class="muted" style="margin:.3rem 0 0 1rem;">${fwRows}</ul></div>
+      <div class="soft" style="padding:8px;"><table style="width:100%"><thead><tr><th>Template</th><th>Rewards (per day)</th><th>Expiry</th></tr></thead><tbody>${rows||`<tr><td colspan="3">No templates</td></tr>`}</tbody></table></div>
+    </div>`;
+  }
+
+  function renderFinalTable(state){
+    const root=$("#ncf-farm-table");
+    const ids=activeTokenIds(state);
+    const rows=Object.values(state.creator.selection).filter(x=>x.collection===state.creator.collection).map(x=>{
+      const k=selectionKey(x.collection,x.schema_name,x.template_id);
+      const per=state.creator.rewardsPerToken[k]||{}; const exp=state.creator.expiry[k]?new Date(state.creator.expiry[k]).toLocaleString():"—";
+      const tokenRows=Object.entries(per).filter(([,v])=>Number(v)>0).map(([id,v])=>{
+        const [c,s]=id.split(":"); const bal=num(state.creator.farmBalances.get(s),0); const st=bal>0?"OK":(ids.has(id)?"Low/0":"—");
+        return `<div class="row" style="gap:.5rem;"><span class="badge">${esc(s)}</span><small class="muted">@${esc(c)}</small><span class="muted">reward: ${v}/day</span><span class="muted">FW: ${fmt(bal)}</span><span class="badge ${bal>0?"ok":"err"}">${st}</span></div>`;
+      }).join("") || "<div class='muted'>—</div>";
+      const meta=enrichFromTable(x.schema_name,x.template_id);
+      return `<tr><td><strong>${esc(x.schema_name)}</strong> <small class="muted">ID ${x.template_id} — ${esc(meta.template_name||"—")}</small></td><td>${tokenRows}</td><td>${esc(exp)}</td></tr>`;
+    }).join("");
+    root.innerHTML=`<table><thead><tr><th>Template</th><th>Token → reward/day → Farm-Wallet balance</th><th>Expiry</th></tr></thead><tbody>${rows||`<tr><td colspan="3">No data</td></tr>`}</tbody></table>`;
+  }
+
+  async function saveDraft(state){
+    const sel=Object.values(state.creator.selection).filter(x=>x.collection===state.creator.collection);
+    if(!sel.length){ toast("Select at least one template.","error"); return false; }
+    const any=sel.some(x=>{ const k=selectionKey(x.collection,x.schema_name,x.template_id); const m=state.creator.rewardsPerToken[k]||{}; return Object.values(m).some(v=>String(v).trim()!=="" && Number(v)>0); });
+    if(!any){ toast("Add at least one token with a positive daily reward.","error"); return false; }
+    try{
+      const res=await postJson(buildUrl(apiBase(state.cfg),state.cfg.endpoints.saveRewards), buildDraftPayload(state));
+      if(!(res && (res.ok===true||res.status==="ok"))) throw new Error("Draft failed");
+      sel.forEach(t=>toast(`Draft saved for T${t.template_id}`));
+      return true;
+    } catch(e){
+      toast(String(e.message||e),"error"); return false;
+    }
+  }
+
+  // ---------- Step A action ----------
+  async function doLoadCollection(state){
+    const col=$("#ncf-collection").value.trim();
+    if(!col){ toast("Enter a collection name.","error"); return; }
+    state.creator.collection=col; wLS(LS.lastCollection,col); $("#ncf-meta").textContent="Loading…"; $("#ncf-sections").innerHTML=""; renderSkeleton($("#ncf-status"));
+    try{
+      const data=await fetchTemplatesBySchema(state, col);
+      state.creator.raw=data;
+      const opts=(data.schemas||[]).map(s=>`<option value="${esc(s.schema_name)}">${esc(s.schema_name)}</option>`).join("");
+      $("#ncf-schema").innerHTML=`<option value="">All schemas</option>${opts}`;
+      const ts=(data.schemas||[]).length, tt=(data.schemas||[]).reduce((a,s)=>a+(s.templates?.length||0),0);
+      const farms = Array.isArray(state.creator._creatorFarms) ? state.creator._creatorFarms : [];
+      const exists = farms.some(f => (f.collection || "").toLowerCase() === String(data.collection||"").toLowerCase());
+      $("#ncf-meta").innerHTML =
+        `Collection: ${esc(data.collection||col)} — Schemas ${ts} — Templates ${tt}
+         ${ exists ? '<span class="badge ok" style="margin-left:.5rem;">Existing</span>' : '<span class="badge warn" style="margin-left:.5rem;">New</span>' }`;
+      $("#ncf-status").innerHTML="";
+      renderSections(state, $("#ncf-sections"), data);
+      updateRewardsPanel(state);
+      wizardGo(state,"#ncf-step-b");
+      await refreshFarmWalletBalances(state);
+      updateTopupPanel(state);
+      if($("#ncf-auto")?.checked) startAutoBalances(state);
+      loadCreatorFarms(state);
+    }catch(e){
+      $("#ncf-status").innerHTML=`<div class="soft" style="padding:14px; text-align:center;">${esc(String(e.message||e))}</div>`;
+      $("#ncf-meta").textContent="Error";
+    }
+  }
+
+  // ---------- Creator handlers binding ----------
+  function bindCreatorHandlers(state){
+    // Step A
+    $("#ncf-load")?.addEventListener("click",()=>doLoadCollection(state));
+    $("#ncf-collection")?.addEventListener("keydown",(e)=>{ if(e.key==="Enter") doLoadCollection(state); });
+    $("#ncf-refresh-farms")?.addEventListener("click",()=>loadCreatorFarms(state));
+    $("#ncf-reload-farms")?.addEventListener("click",()=>loadCreatorFarms(state));
+
+    // Step B
+    $("#ncf-src")?.addEventListener("change",()=>updateTopupPanel(state));
+    $("#ncf-token")?.addEventListener("change",()=>updateTopupPanel(state));
+    $("#ncf-max")?.addEventListener("click",()=>{ const src=$("#ncf-src").value||"twitch"; const sym=($("#ncf-token").value||"").toUpperCase(); if(!sym) return; const bal=tokenOptsFromSource(src).find(o=>o.symbol===sym)?.amount||0; $("#ncf-amount").value=String(bal);});
+    $("#ncf-deposit")?.addEventListener("click",()=>performTopUp(state));
+    $("#ncf-copy-account").addEventListener("click",()=>navigator.clipboard.writeText(state.cfg.farmWalletAccount).then(()=>toast("Account copied")));
+    $("#ncf-copy-tw").addEventListener("click",()=>navigator.clipboard.writeText(state.cfg.memoTwitch).then(()=>toast("Memo copied")));
+    $("#ncf-copy-tg").addEventListener("click",()=>navigator.clipboard.writeText(state.cfg.memoTelegram).then(()=>toast("Memo copied")));
+    $("#ncf-refresh-farm")?.addEventListener("click",()=>refreshFarmWalletBalances(state));
+    $("#ncf-auto")?.addEventListener("change",(e)=>{ wLS(LS.autoMonitor, !!e.target.checked); if(e.target.checked) startAutoBalances(state); else stopAutoBalances(state); });
+    $("#ncf-change-col")?.addEventListener("click", ()=> {
+      state.creator.collection = "";
+      wLS(LS.lastCollection, "");
+      $("#ncf-collection").value = "";
+      wizardGo(state, "#ncf-step-a");
+    });
+    $("#ncf-next-b")?.addEventListener("click",()=> wizardGo(state,"#ncf-step-c"));
+
+    // Step C
+    $("#ncf-search-templates")?.addEventListener("input",(e)=>{ state.creator.search=e.target.value||""; if(state.creator.raw) renderSections(state,$("#ncf-sections"), state.creator.raw); });
+    $("#ncf-schema")?.addEventListener("change",(e)=>{ state.creator.schemaFilter=e.target.value||""; if(state.creator.raw) renderSections(state,$("#ncf-sections"), state.creator.raw); });
+    $("#ncf-expand")?.addEventListener("click",()=>{ state.creator.expandAll=!state.creator.expandAll; $("#ncf-expand").textContent=state.creator.expandAll?"Collapse all":"Expand all"; if(state.creator.raw) renderSections(state,$("#ncf-sections"), state.creator.raw); });
+    $("#ncf-select-all")?.addEventListener("click",()=>{ if(!state.creator.raw) return; (state.creator.raw.schemas||[]).forEach(s=>(s.templates||[]).forEach(t=>setSelected(state,state.creator.collection,s.schema_name,Number(t.template_id),true))); $$(".ncf-row-check").forEach(c=>c.checked=true); updateRewardsPanel(state); });
+    $("#ncf-clear")?.addEventListener("click",()=>{ if(!state.creator.raw) return; Object.keys(state.creator.selection).forEach(k=>{ if(k.startsWith(`${state.creator.collection}::`)){ delete state.creator.selection[k]; delete state.creator.rewardsPerToken[k]; delete state.creator.expiry[k]; }}); wLS(LS.selection,state.creator.selection); wLS(LS.rewardsPerToken,state.creator.rewardsPerToken); wLS(LS.expiry,state.creator.expiry); $$(".ncf-row-check").forEach(c=>c.checked=false); updateRewardsPanel(state); });
+    $("#ncf-next-c")?.addEventListener("click",()=>{ const count=Object.values(state.creator.selection).filter(x=>x.collection===state.creator.collection).length; if(!count){ toast("Select at least one template.","error"); return; } wizardGo(state,"#ncf-step-d"); updateRewardsPanel(state); });
+
+    // Step D
+    $("#ncf-save-draft")?.addEventListener("click",()=>saveDraft(state));
+    $("#ncf-next-d")?.addEventListener("click",async()=>{ const ok=await saveDraft(state); if(!ok) return; renderSummary(state); wizardGo(state,"#ncf-step-e"); });
+
+    // Step E
+    $("#ncf-confirm")?.addEventListener("click",async()=>{ const ok=await saveDraft(state); if(!ok) return; toast("Configuration saved."); $("#ncf-wizard").style.display="none"; $("#ncf-collapsed").style.display=""; $("#ncf-summary-table").style.display=""; renderFinalTable(state); });
+
+    // Tokens Library add
+    $("#ncf-tok-add")?.addEventListener("click",()=>{ const c=$("#ncf-tok-contract").value.trim(); const s=$("#ncf-tok-symbol").value.trim().toUpperCase(); const d=$("#ncf-tok-dec").value===""?null:Number($("#ncf-tok-dec").value); if(!c||!s){ toast("Provide contract and symbol.","error"); return; } if(state.creator.tokens.some(t=>t.contract===c&&t.symbol===s)){ toast("Token already present."); return; } state.creator.tokens.push({contract:c,symbol:s,decimals:d}); wLS(LS.tokens,state.creator.tokens); $("#ncf-tok-contract").value=""; $("#ncf-tok-symbol").value=""; $("#ncf-tok-dec").value=""; renderTokenLibrary(state); updateRewardsPanel(state); });
+
+    // visibility pause auto
+    document.addEventListener("visibilitychange",()=>{ if(document.hidden) stopAutoBalances(state); });
+  }
+
+  // ---------- Stats pane ----------
+  function mountStatsPane(state){
+    const host = $("#ncf-pane-stats");
+    if(!host) return;
+    host.innerHTML = `
+      <div class="grid" style="gap:12px;">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <h2 style="margin:0;">Farm Stats</h2>
+          <div class="row">
+            <select id="ncf-farm-picker" class="input" style="min-width:260px;">
+              <option value="">All farms (this creator)</option>
+            </select>
+            <button id="ncf-refresh-stats" class="btn btn-ghost">Refresh</button>
+            <input id="ncf-farm-quick-id" class="input" placeholder="Farm ID…" style="width:140px;">
+            <button id="ncf-open-farmid" class="btn btn-ghost">Open</button>
+          </div>
+        </div>
+
+        <div class="soft" style="padding:10px;">
+          <div class="row" style="gap:10px; flex-wrap:wrap;">
+            <div class="badge" id="ncf-stats-head-farms">Farms: 0</div>
+            <div class="badge" id="ncf-stats-head-owners">Unique owners: 0</div>
+            <div class="badge" id="ncf-stats-head-assets">Staked assets: 0</div>
+            <div class="badge" id="ncf-stats-head-lastdist">Last distribution: —</div>
+          </div>
+        </div>
+
+        <div class="grid" style="gap:12px;">
+          <div class="soft" style="padding:10px;">
+            <h4 style="margin:.2rem 0;">Rewards (grouped)</h4>
+            <div class="muted" style="margin:.2rem 0;">Grouped by <strong>Owner</strong> → <strong>Schema</strong> → <strong>Template</strong> → <strong>Token</strong>.</div>
+            <div id="ncf-stats-grouped" style="overflow:auto; max-height:46vh;">
+              <div class="muted">No data yet.</div>
+            </div>
+          </div>
+
+          <div class="soft" style="padding:10px;">
+            <h4 style="margin:.2rem 0;">Distributions history</h4>
+            <div id="ncf-stats-history" style="overflow:auto; max-height:38vh;">
+              <div class="muted">No history yet.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    $("#ncf-refresh-stats")?.addEventListener("click", ()=> ensureStatsPaneMounted(state));
+    $("#ncf-farm-picker")?.addEventListener("change", ()=> ensureStatsPaneMounted(state));
+    $("#ncf-open-farmid")?.addEventListener("click", ()=>{
+      const fid = ($("#ncf-farm-quick-id").value || "").trim();
+      if(!fid){ toast("Enter a Farm ID.", "error"); return; }
+      $("#ncf-farm-picker").value = "";
+      ensureStatsPaneMounted(state, fid);
+    });
+    $("#ncf-farm-quick-id")?.addEventListener("keydown",(e)=>{ if(e.key==="Enter") $("#ncf-open-farmid").click(); });
+  }
+
   function renderFarmPicker(state, farms){
     const sel = $("#ncf-farm-picker");
     const cur = sel.value;
@@ -973,254 +1685,144 @@
     sel.innerHTML = opts.join("");
     if (farms.some(f => String(f.farm_id) === cur)) sel.value = cur;
   }
-function renderFarmsStep1(state, farms, cfg){
-  const list = $("#ncf-farms-list");
-  if (!Array.isArray(farms) || !farms.length){
-    list.innerHTML = `<div class="help">No farms yet for this creator.</div>`;
-    return;
-  }
-  list.innerHTML = farms.map(f => {
-    const col = f.collection || "";
-    const id  = String(f.farm_id ?? "—");
-    return `
-      <div class="soft" style="padding:8px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
-        <div class="row">
-          <strong>${esc(col)}</strong>
-          <small class="muted">#${esc(id)}</small>
+
+  function groupStatsView(state, stats){
+    const owners = Array.isArray(stats?.owners) ? stats.owners : [];
+    const head   = stats?.summary || {};
+    const creatorWax = (stats && (stats.creator_wax_account || stats.creator)) ? String(stats.creator_wax_account || stats.creator) : "";
+    const me = String(getWax() || "");
+    const isCreator = me && creatorWax && me.trim() === creatorWax.trim();
+
+    $("#ncf-stats-head-owners").textContent = `Unique owners: ${head.owners ?? owners.length}`;
+    $("#ncf-stats-head-assets").textContent = `Staked assets: ${head.assets ?? 0}`;
+    $("#ncf-stats-head-lastdist").textContent = `Last distribution: ${head.last_distribution_at ? new Date(head.last_distribution_at).toLocaleString() : "—"}`;
+
+    const perToken = head.per_token_last_cycle && typeof head.per_token_last_cycle === "object"
+      ? Object.entries(head.per_token_last_cycle).map(([sym, tot]) => [String(sym).toUpperCase(), Number(tot) || 0])
+      : [];
+    perToken.sort((a,b)=>b[1]-a[1]);
+
+    const kpiCards = `
+      <div class="grid" style="gap:10px; margin-bottom:10px;">
+        <div class="row" style="gap:10px; flex-wrap:wrap;">
+          <div class="badge">Active tokens (last cycle): ${head.active_tokens_last_cycle ?? perToken.length}</div>
+          <div class="badge">Active templates (last cycle): ${head.active_templates_last_cycle ?? 0}</div>
+          <div class="badge">Templates with rewards (configured): ${head.templates_configured_with_rewards ?? 0}</div>
         </div>
-        <div class="row">
-          <button class="btn btn-ghost ncf-farm-edit"  data-col="${esc(col)}">Edit</button>
-          <button class="btn btn-ghost ncf-farm-stats" data-id="${esc(id)}">Stats</button>
-        </div>
-      </div>`;
-  }).join("");
-
-  // Edit: carica la collezione selezionata e passa allo Step 2
-  $$("#ncf-farms-list .ncf-farm-edit").forEach(b=>{
-    b.addEventListener("click", () => {
-      const col = b.dataset.col || "";
-      $("#ncf-collection").value = col;
-      doLoad(state, cfg);               // carica schemas/templates + bal FW
-      wizardGo(state, "#ncf-step-b");   // vai allo Step 2
-    });
-  });
-
-  // Stats: passa alla tab Stats con la farm selezionata
-  $$("#ncf-farms-list .ncf-farm-stats").forEach(b=>{
-    b.addEventListener("click", () => {
-      const id = b.dataset.id;
-      $("#ncf-farm-picker").value = String(id);
-      $("#ncf-tab-stats").click();      // cambia tab → Stats
-    });
-  });
-}
-
-// Carica l’elenco delle farm del creator e popola lo Step 1
-async function loadCreatorFarmsIntoStep1(state, cfg){
-  const box = $("#ncf-farms-list");
-  try{
-    box.innerHTML = `<div class="help">Loading…</div>`;
-    const farms = await fetchFarmsForCreator(cfg);
-    state._creatorFarms = farms || [];
-    renderFarmsStep1(state, state._creatorFarms, cfg);
-  }catch(e){
-    box.innerHTML = `<div class="help">${esc(String(e.message||e))}</div>`;
-  }
-}
-  
-function groupStatsView(stats,cfg){
-  // shape attesa:
-  // {
-  //   summary: {
-  //     owners, assets, last_distribution_at,
-  //     per_token_last_cycle: { [SYMBOL]: totalPaid },
-  //     active_tokens_last_cycle, active_templates_last_cycle,
-  //     templates_configured_with_rewards
-  //   },
-  //   owners: [
-  //     {
-  //       owner, assets, last_rewarded_at,
-  //       tokens: [{symbol, amount, token_contract}],
-  //       trees: [{schema_name, template_id, token_contract, token_symbol, amount}]
-  //     }, ...
-  //   ]
-  // }
-  const owners = Array.isArray(stats?.owners) ? stats.owners : [];
-  const head   = stats?.summary || {};
-
-  // 👇 sei il creator di questa farm?
-  const creatorWax =
-    (stats && (stats.creator_wax_account || stats.creator)) ? String(stats.creator_wax_account || stats.creator) : "";
-  const me = String(getWax() || "");
-  const isCreator = me && creatorWax && me.trim() === creatorWax.trim();
-
-  // Header badges (già presenti nel layout)
-  $("#ncf-stats-head-owners").textContent = `Unique owners: ${head.owners ?? owners.length}`;
-  $("#ncf-stats-head-assets").textContent = `Staked assets: ${head.assets ?? 0}`;
-  $("#ncf-stats-head-lastdist").textContent = `Last distribution: ${head.last_distribution_at ? new Date(head.last_distribution_at).toLocaleString() : "—"}`;
-
-  // Pannello riepilogo extra (inserito in cima all'area grouped)
-  const perToken = head.per_token_last_cycle && typeof head.per_token_last_cycle === "object"
-    ? Object.entries(head.per_token_last_cycle).map(([sym, tot]) => [String(sym).toUpperCase(), Number(tot) || 0])
-    : [];
-  perToken.sort((a,b)=>b[1]-a[1]);
-
-  const kpiCards = `
-    <div class="grid" style="gap:10px; margin-bottom:10px;">
-      <div class="row" style="gap:10px; flex-wrap:wrap;">
-        <div class="badge" title="Number of tokens that actually paid something in the last completed cycle.">
-          Active tokens (last cycle): ${head.active_tokens_last_cycle ?? perToken.length}
-        </div>
-        <div class="badge" title="Templates that produced any payout in the last completed cycle.">
-          Active templates (last cycle): ${head.active_templates_last_cycle ?? 0}
-        </div>
-        <div class="badge" title="Templates configured with at least one active reward (configuration, not payout).">
-          Templates with rewards (configured): ${head.templates_configured_with_rewards ?? 0}
-        </div>
+        ${
+          perToken.length
+            ? `<div class="soft" style="padding:8px;">
+                 <h5 style="margin:.2rem 0;">Per-token totals (last cycle)</h5>
+                 <table><thead><tr><th>Token</th><th>Total paid</th></tr></thead>
+                 <tbody>${perToken.map(([sym,tot])=>`<tr><td><strong>${esc(sym)}</strong></td><td>${fmt(tot)}</td></tr>`).join("")}</tbody></table>
+               </div>`
+            : `<div class="soft" style="padding:8px;"><div class="muted">No token payouts recorded for the last cycle yet.</div></div>`
+        }
       </div>
-      ${
-        perToken.length
-          ? `
-            <div class="soft" style="padding:8px;">
-              <div class="row" style="justify-content:space-between; align-items:center;">
-                <h4 style="margin:.2rem 0;">Per-token totals (last cycle)</h4>
-                <small class="help" title="Total amount distributed per token in the last completed payout cycle (typically daily).">What is this?</small>
-              </div>
-              <table>
-                <thead>
-                  <tr>
-                    <th title="Token symbol">Token</th>
-                    <th title="Total amount distributed in the last completed cycle">Total paid (last cycle)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${perToken.map(([sym,tot])=>`
-                    <tr>
-                      <td><strong>${esc(sym)}</strong></td>
-                      <td>${fmt(tot)}</td>
-                    </tr>
-                  `).join("")}
-                </tbody>
-              </table>
-            </div>`
-          : `<div class="soft" style="padding:8px;">
-               <div class="help">No token payouts recorded for the last cycle yet.</div>
-             </div>`
-      }
-    </div>
-  `;
+    `;
 
-  if (!owners.length) {
-    $("#ncf-stats-grouped").innerHTML = kpiCards + `<div class="help">No stakers yet.</div>`;
-    return;
-  }
+    if (!owners.length) {
+      $("#ncf-stats-grouped").innerHTML = kpiCards + `<div class="muted">No stakers yet.</div>`;
+      return;
+    }
 
-  // Calcolo subtotale per owner (per ordinamento e visual)
-  const ownersWithSubtotal = owners.map(o=>{
-    const subtotal = (Array.isArray(o.tokens) ? o.tokens : []).reduce((a,b)=>a+Number(b.amount||0),0);
-    return {...o, _subtotal: subtotal};
-  }).sort((a,b)=> b._subtotal - a._subtotal || (b.assets||0) - (a.assets||0));
+    const ownersWithSubtotal = owners.map(o=>{
+      const subtotal = (Array.isArray(o.tokens) ? o.tokens : []).reduce((a,b)=>a+Number(b.amount||0),0);
+      return {...o, _subtotal: subtotal};
+    }).sort((a,b)=> b._subtotal - a._subtotal || (b.assets||0) - (a.assets||0));
 
-  const htmlOwners = ownersWithSubtotal.map(o=>{
-    const owner = o.owner || "—";
-    const last  = o.last_rewarded_at ? new Date(o.last_rewarded_at).toLocaleString() : "—";
-    const tokensLine = (o.tokens||[]).map(t=>`${esc(t.symbol)}: ${fmt(t.amount)}`).join(", ") || "—";
+    const htmlOwners = ownersWithSubtotal.map(o=>{
+      const owner = o.owner || "—";
+      const last  = o.last_rewarded_at ? new Date(o.last_rewarded_at).toLocaleString() : "—";
+      const tokensLine = (o.tokens||[]).map(t=>`${esc(t.symbol)}: ${fmt(t.amount)}`).join(", ") || "—";
 
-    // nested: schema → template → token
-    const trees = Array.isArray(o.trees) ? o.trees : [];
-    const bySchema = new Map();
-    trees.forEach(r=>{
-      const key = r.schema_name || "—";
-      if(!bySchema.has(key)) bySchema.set(key, []);
-      bySchema.get(key).push(r);
-    });
-
-    const schemaBlocks = Array.from(bySchema.entries()).map(([schema, arr])=>{
-      const byTemplate = new Map();
-      arr.forEach(x=>{
-        const k = String(x.template_id);
-        if(!byTemplate.has(k)) byTemplate.set(k, []);
-        byTemplate.get(k).push(x);
+      const trees = Array.isArray(o.trees) ? o.trees : [];
+      const bySchema = new Map();
+      trees.forEach(r=>{
+        const key = r.schema_name || "—";
+        if(!bySchema.has(key)) bySchema.set(key, []);
+        bySchema.get(key).push(r);
       });
 
-      const templatesHtml = Array.from(byTemplate.entries()).map(([tid, rows])=>{
-        const inner = rows.map(r=>`
-          <div class="row" style="gap:.5rem;" title="Amount paid for this token on the last completed cycle for this template.">
-            <span class="badge" title="Token symbol">${esc(r.token_symbol)}</span>
-            <small class="muted" title="Token contract">@${esc(r.token_contract||"")}</small>
-            <span class="muted">last cycle: <strong>${fmt(r.amount||0)}</strong></span>
-          </div>
-        `).join("");
+      const schemaBlocks = Array.from(bySchema.entries()).map(([schema, arr])=>{
+        const byTemplate = new Map();
+        arr.forEach(x=>{
+          const k = String(x.template_id);
+          if(!byTemplate.has(k)) byTemplate.set(k, []);
+          byTemplate.get(k).push(x);
+        });
 
+        const templatesHtml = Array.from(byTemplate.entries()).map(([tid, rows])=>{
+          const inner = rows.map(r=>`
+            <div class="row" style="gap:.5rem;">
+              <span class="badge">${esc(r.token_symbol)}</span>
+              <small class="muted">@${esc(r.token_contract||"")}</small>
+              <span class="muted">last cycle: <strong>${fmt(r.amount||0)}</strong></span>
+            </div>
+          `).join("");
+
+          return `
+            <details>
+              <summary class="row" style="gap:.5rem;">
+                <strong>Template</strong> <span class="badge">ID ${esc(tid)}</span>
+              </summary>
+              ${inner}
+            </details>`;
+        }).join("");
+
+        const subtotal = arr.reduce((a,b)=>a+Number(b.amount||0),0);
         return `
           <details>
-            <summary class="row" style="gap:.5rem;" title="Click to see token subtotals for this template.">
-              <strong>Template</strong> <span class="badge">ID ${esc(tid)}</span>
+            <summary class="row" style="gap:.5rem;">
+              <strong>Schema</strong> <span class="badge">${esc(schema)}</span>
+              <span class="badge ok">Subtotal: ${fmt(subtotal)}</span>
             </summary>
-            ${inner}
+            <div class="grid" style="gap:6px;">${templatesHtml}</div>
           </details>`;
       }).join("");
 
-      const subtotal = arr.reduce((a,b)=>a+Number(b.amount||0),0);
+      const kickHtml = isCreator ? `
+        <div class="row" style="gap:.5rem; margin-top:6px;">
+          <button class="btn btn-ghost ncf-kick" data-owner="${esc(owner)}" title="Remove this staker from the farm">
+            Kick from staking
+          </button>
+        </div>` : ``;
+
       return `
-        <details>
-          <summary class="row" style="gap:.5rem;" title="Click to expand this schema details.">
-            <strong>Schema</strong> <span class="badge">${esc(schema)}</span>
-            <span class="badge ok" title="Sum of all token payouts for this schema (last cycle).">Subtotal: ${fmt(subtotal)}</span>
+        <details class="soft" style="padding:8px;">
+          <summary class="row" style="gap:.6rem;">
+            <strong>${esc(owner)}</strong>
+            <span class="badge">Assets: ${fmt(o.assets||0)}</span>
+            <span class="badge ok">Subtotal: ${fmt(o._subtotal)}</span>
+            <span class="badge">Last: ${esc(last)}</span>
           </summary>
-          <div class="grid" style="gap:6px;">${templatesHtml}</div>
+          <div class="grid" style="gap:8px; margin-top:6px;">
+            <div class="muted">Tokens subtotal: ${esc(tokensLine)}</div>
+            <div>${schemaBlocks || "<div class='muted'>No details</div>"}</div>
+            ${kickHtml}
+          </div>
         </details>`;
     }).join("");
 
-    // bottone Kick solo se isCreator === true
-    const kickHtml = isCreator ? `
-      <div class="row" style="gap:.5rem; margin-top:6px;">
-        <button class="btn btn-danger ncf-kick" data-owner="${esc(owner)}"
-          title="Remove this staker from the farm (their assets will stop earning).">
-          Kick from staking
-        </button>
-      </div>` : ``;
+    $("#ncf-stats-grouped").innerHTML = kpiCards + htmlOwners;
 
-    return `
-      <details class="soft" style="padding:8px;">
-        <summary class="row" style="gap:.6rem;">
-          <strong title="Staker wallet">${esc(owner)}</strong>
-          <span class="badge" title="How many NFTs this staker currently has staked in this farm.">Assets: ${fmt(o.assets||0)}</span>
-          <span class="badge ok" title="Sum of all rewards (all tokens) this staker received in the last completed cycle.">
-            Subtotal: ${fmt(o._subtotal)}
-          </span>
-          <span class="badge" title="When this staker last received a payout.">Last: ${esc(last)}</span>
-        </summary>
-        <div class="grid" style="gap:8px; margin-top:6px;">
-          <div class="help" title="Per-token subtotal for the last completed cycle.">
-            Tokens subtotal: ${esc(tokensLine)}
-          </div>
-          <div>${schemaBlocks || "<div class='help'>No details</div>"}</div>
-          ${kickHtml}
-        </div>
-      </details>`;
-  }).join("");
-
-  $("#ncf-stats-grouped").innerHTML = kpiCards + htmlOwners;
-
-  // Bind pulsanti "Kick" (se presenti)
-  $$("#ncf-stats-grouped .ncf-kick").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      const farmId = $("#ncf-farm-picker").value || null;
-      const owner = btn.dataset.owner;
-      const reason = "manual kick (UI)";
-      if(!farmId){ toast("Pick a specific farm to kick.", "error"); return; }
-      try{
-        await postKick(cfg, { farm_id: farmId, wax_account: owner, reason });
-        toast(`Kick requested for ${owner}.`);
-      }catch(e){ toast(String(e.message||e), "error"); }
+    $$("#ncf-stats-grouped .ncf-kick").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        const farmId = $("#ncf-farm-picker").value || null;
+        const owner = btn.dataset.owner;
+        const reason = "manual kick (UI)";
+        if(!farmId){ toast("Pick a specific farm to kick.","error"); return; }
+        try{
+          await postKick(state, { farm_id: farmId, wax_account: owner, reason });
+          toast(`Kick requested for ${owner}.`);
+        }catch(e){ toast(String(e.message||e), "error"); }
+      });
     });
-  });
-}
+  }
 
   function renderDistributionsHistory(list){
     if (!Array.isArray(list) || !list.length) {
-      $("#ncf-stats-history").innerHTML = `<div class="help">No history yet.</div>`;
+      $("#ncf-stats-history").innerHTML = `<div class="muted">No history yet.</div>`;
       return;
     }
     const rows = list.map(x=>`<tr>
@@ -1231,7 +1833,7 @@ function groupStatsView(stats,cfg){
       <td>${esc(x.schema_name || "—")}</td>
       <td>${esc(String(x.template_id || "—"))}</td>
     </tr>`).join("");
-  
+
     $("#ncf-stats-history").innerHTML = `
       <table>
         <thead><tr>
@@ -1240,391 +1842,218 @@ function groupStatsView(stats,cfg){
         <tbody>${rows}</tbody>
       </table>`;
   }
-  
-  async function ensureStatsLoaded(state, cfg, directFarmId=null){
+
+  async function ensureStatsPaneMounted(state, directFarmId=null){
+    // load farms for picker
     try{
-      const farms = await fetchFarmsForCreator(cfg);
+      const farms = await fetchFarmsForCreator(state);
       $("#ncf-stats-head-farms").textContent = `Farms: ${farms.length}`;
       renderFarmPicker(state, farms);
-  
+
       const farmIdSel = directFarmId || $("#ncf-farm-picker").value || null;
-  
+
       if (!farmIdSel && (!Array.isArray(farms) || farms.length === 0)) {
-        // utente non-creatore: guida
         $("#ncf-stats-grouped").innerHTML =
           `<div class="soft" style="padding:10px;">
-             <div class="help">
-               You have no farms as a creator. Paste a <strong>Farm ID</strong> above, or switch to the <em>Active Farms</em> tab to browse public farms.
+             <div class="muted">
+               You have no farms as a creator. Paste a <strong>Farm ID</strong> above, or switch to the <em>Farms</em> tab to browse public farms.
              </div>
            </div>`;
-        $("#ncf-stats-history").innerHTML = `<div class="help">No farm selected.</div>`;
+        $("#ncf-stats-history").innerHTML = `<div class="muted">No farm selected.</div>`;
         return;
       }
-  
-      const stats = await fetchFarmStats(cfg, { farm_id: farmIdSel || null });
-      groupStatsView(stats, cfg);
-  
-      const history = farmIdSel ? (await fetchDistributions(cfg, {farm_id: farmIdSel, limit: 200})) : [];
+
+      const stats = await fetchFarmStatsById(state, farmIdSel || farms[0]?.farm_id);
+      groupStatsView(state, stats);
+      const history = (farmIdSel || farms[0]?.farm_id) ? (await fetchDistributions(state, (farmIdSel || farms[0]?.farm_id), 200)) : [];
       renderDistributionsHistory(history);
-  
     }catch(e){
       toast(String(e.message||e), "error");
     }
   }
 
-  function startAuto(state,cfg){ stopAuto(state); state.monitorId=setInterval(()=>refreshFarmWalletBalances(state,cfg),DEFAULTS.autoMonitorEverySec*1000); }
-  function stopAuto(state){ if(state.monitorId){ clearInterval(state.monitorId); state.monitorId=null; } }
+  // ---------- Bootstrapping PART 2 with PART 1 ----------
+  function enhanceAfterInit(){
+    const state = window.__NCF_STATE__;
+    if(!state || !state.cfg) return;
 
-  function updateTopupPanel(state,cfg){
-    const src=$("#ncf-src").value||"twitch";
-    const tok=$("#ncf-token"); const amt=$("#ncf-amount"); const hint=$("#ncf-bal-hint"); const empty=$("#ncf-empty");
-    const opts=buildTokenOptionsFromSource(src);
-    const cur=tok.value;
-    tok.innerHTML=`<option value="">Select token…</option>`+opts.map(o=>`<option value="${o.symbol}">${o.symbol} — balance ${fmt(o.amount)}</option>`).join("");
-    const first=opts.find(o=>o.amount>0)?.symbol||"";
-    tok.value=opts.some(o=>o.symbol===cur)?cur:first;
-    const sym=tok.value||""; const bal=num(opts.find(o=>o.symbol===sym)?.amount,0);
-    hint.textContent=`Balance: ${fmt(bal)} ${sym||""}`;
-    amt.value="";
-    empty.style.display=opts.some(o=>o.amount>0)?"none":"";
-  }
-
-  function updateRewardsPanel(state){
-    updateSelectedCount(state);
-    const sel=Object.values(state.selection).filter(x=>x.collection===state.collection);
-    const body=$("#ncf-rp-body");
-    if(!sel.length){ body.innerHTML=`<div class="soft" style="padding:12px;text-align:center;">No templates selected yet.</div>`; return; }
-    const tokens=state.tokens;
-    body.innerHTML=sel.map(s=>{
-      const k=selectionKey(s.collection,s.schema_name,s.template_id);
-      const meta=enrichFromTable(s.schema_name,s.template_id);
-      const minISO=toLoc(nowPlusMin(5));
-      const exISO=state.expiry[k]||"";
-      const chips=tokens.map(t=>{
-        const id=`${t.contract}:${t.symbol}`;
-        const on=!!(state.rewardsPerToken[k]&&state.rewardsPerToken[k][id]!==undefined);
-        return `<label class="chip ${on?"active":""}" data-key="${esc(k)}" data-token="${esc(id)}"><input type="checkbox" style="display:none"${on?" checked":""}/><strong>${esc(t.symbol)}</strong><small class="muted">@${esc(t.contract)}</small></label>`;
-      }).join("") || `<div class="help">Add tokens in the right panel.</div>`;
-      const inputs = tokens.map(t => {
-        const id = `${t.contract}:${t.symbol}`;
-        const on = !!(state.rewardsPerToken[k] && state.rewardsPerToken[k][id] !== undefined);
-        const v  = on ? (state.rewardsPerToken[k][id] ?? "") : "";
-        const show = on ? "" : "display:none;";  // <- se attivo ma v==="", mostra comunque
-      
-        return `<div class="row ncf-reward-row" data-key="${esc(k)}" data-token="${esc(id)}" style="${show}">
-          <span class="muted" style="min-width:160px;"><strong>${esc(t.symbol)}</strong> <small>@${esc(t.contract)}</small></span>
-          <input type="number" class="input ncf-reward-input" step="0.0001" min="0" placeholder="Reward per asset(NFT) each day" value="${String(v)}" style="width:220px;">
-        </div>`;
-      }).join("");
-      return `<div class="soft" style="padding:10px;" data-item="${esc(k)}">
-        <div class="row" style="justify-content:space-between;"><div class="row" style="gap:.5rem;"><strong>${esc(s.schema_name)}</strong><span class="muted">ID <button class="btn btn-ghost ncf-id-btn" style="padding:.15rem .5rem;">${s.template_id}</button></span></div><button class="btn btn-ghost ncf-remove">Remove</button></div>
-        <div class="help" style="margin:.25rem 0 .5rem;">${esc(meta.template_name||"—")} · Circulating: ${fmt(meta.circulating_supply)} · Max: ${meta.max_supply==null?"—":fmt(meta.max_supply)}</div>
-        <div class="grid" style="gap:8px;">
-          <div class="row" style="align-items:flex-end;">
-            <div class="col"><label class="muted"><small>Max validity</small></label><input type="datetime-local" class="input ncf-expiry" min="${minISO}" value="${exISO?toLoc(new Date(exISO)):""}" style="min-width:220px;"></div>
-            <button class="btn btn-ghost ncf-plus7">+7d</button><button class="btn btn-ghost ncf-plus30">+30d</button>
-          </div>
-          <div class="col"><label class="muted"><small>Tokens</small></label><div class="row ncf-token-chips" style="flex-wrap:wrap;">${chips}</div></div>
-          <div class="col"><div class="ncf-token-inputs">${inputs}</div></div>
-        </div></div>`;
-    }).join("");
-    $$("#ncf-rp-body .ncf-id-btn").forEach(b=>b.addEventListener("click",()=>navigator.clipboard.writeText(b.textContent.trim()).then(()=>toast("Template ID copied"))));
-    $$("#ncf-rp-body .ncf-remove").forEach(btn=>btn.addEventListener("click",e=>{
-      const box=e.target.closest("[data-item]"); const k=box.dataset.item; const obj=state.selection[k]; if(!obj) return;
-      const sid=sectionId(obj.schema_name); const row=$(`#${sid} tr[data-tid="${obj.template_id}"]`); if(row){ const chk=$(".ncf-row-check",row); if(chk) chk.checked=false; }
-      delete state.selection[k]; delete state.rewardsPerToken[k]; delete state.expiry[k];
-      saveSel(state.selection); saveRPT(state.rewardsPerToken); saveExp(state.expiry); updateRewardsPanel(state);
-    }));
-    $$("#ncf-rp-body .ncf-expiry").forEach(inp=>inp.addEventListener("change",e=>{
-      const box=e.target.closest("[data-item]"); const k=box.dataset.item; const nd=parseLoc(e.target.value);
-      if(!nd){ delete state.expiry[k]; saveExp(state.expiry); return; }
-      const prev=state.expiry[k]?new Date(state.expiry[k]):null; if(prev && nd<prev){ e.target.value=toLoc(prev); toast("Expiration can only be extended.","error"); return; }
-      state.expiry[k]=nd.toISOString(); saveExp(state.expiry);
-    }));
-    $$("#ncf-rp-body .ncf-plus7").forEach(btn=>btn.addEventListener("click",e=>{
-      const box=e.target.closest("[data-item]"); const k=box.dataset.item; const inp=$(".ncf-expiry",box);
-      const base=state.expiry[k]?new Date(state.expiry[k]):nowPlusMin(5); const d=new Date(base); d.setDate(d.getDate()+7);
-      state.expiry[k]=d.toISOString(); saveExp(state.expiry); inp.value=toLoc(d);
-    }));
-    $$("#ncf-rp-body .ncf-plus30").forEach(btn=>btn.addEventListener("click",e=>{
-      const box=e.target.closest("[data-item]"); const k=box.dataset.item; const inp=$(".ncf-expiry",box);
-      const base=state.expiry[k]?new Date(state.expiry[k]):nowPlusMin(5); const d=new Date(base); d.setDate(d.getDate()+30);
-      state.expiry[k]=d.toISOString(); saveExp(state.expiry); inp.value=toLoc(d);
-    }));
-    // Delegation per i chip (attivo sempre, anche dopo re-render)
-    const cssEscape = (window.CSS && CSS.escape) ? CSS.escape : (s)=>String(s).replace(/"/g,'\\"');
-    
-    if (!state._chipDelegationBound) {
-      document.getElementById("ncf-rp-body").addEventListener("click", (e) => {
-        const chip = e.target.closest(".ncf-token-chips .chip");
-        if (!chip) return;
-    
-        e.preventDefault();
-        // toggle UI
-        chip.classList.toggle("active");
-    
-        const k  = chip.dataset.key;
-        const id = chip.dataset.token;
-        const on = chip.classList.contains("active");
-    
-        // stato logico
-        state.rewardsPerToken[k] = state.rewardsPerToken[k] || {};
-        if (on) {
-          if (state.rewardsPerToken[k][id] === undefined) state.rewardsPerToken[k][id] = "";
-        } else {
-          delete state.rewardsPerToken[k][id];
-        }
-        saveRPT(state.rewardsPerToken);
-    
-        // mostra/nascondi la riga input corrispondente
-        const row = document.querySelector(
-          `.ncf-reward-row[data-key="${cssEscape(k)}"][data-token="${cssEscape(id)}"]`
-        );
-        if (row) row.style.display = on ? "" : "none";
-      });
-    
-      state._chipDelegationBound = true;
-    }
-
-    $$("#ncf-rp-body .ncf-reward-input").forEach(inp=>inp.addEventListener("input",e=>{
-      const row=e.target.closest(".ncf-reward-row"); const k=row.dataset.key; const id=row.dataset.token;
-      state.rewardsPerToken[k]=state.rewardsPerToken[k]||{}; state.rewardsPerToken[k][id]=e.target.value; saveRPT(state.rewardsPerToken);
-    }));
-    updateCTAState(state);
-    refreshStep4Summary(state);
-  }
-
-  function buildDraftPayload(state, perHour=false){
-    const items = Object.values(state.selection)
-      .filter(x => x.collection === state.collection)
-      .map(x => {
-        const k = `${x.collection}::${x.schema_name}::${x.template_id}`;
-        const expiry = state.expiry[k] || null;
-        const per = state.rewardsPerToken[k] || {};
-        const rewards = [];
-  
-        Object.entries(per).forEach(([id, v]) => {
-          const amount = Number(v);
-          if (!isFinite(amount) || amount <= 0) return;
-          const [contract, symbol] = id.split(":");
-          const meta = state.tokens.find(t => t.contract === contract && t.symbol === symbol) || {};
-          rewards.push({
-            token_contract: contract,
-            token_symbol: symbol,
-            decimals: meta.decimals ?? null,
-            // SOLO per-day verso il backend:
-            reward_per_asset_per_day: amount
-          });
-        });
-  
-        return { schema_name: x.schema_name, template_id: Number(x.template_id), expiry, rewards };
-      });
-  
-    return {
-      collection: state.collection,
-      creator_wax_account: getWax() || null,
-      policy: {
-        distribution: "daily",
-        semantics: "Rewards are per asset_id per day. Expiration can only be extended.",
-        deposit_required: "Payouts require a positive Farm-Wallet balance."
-      },
-      tokens_catalog: state.tokens,
-      total_selected: items.length,
-      items
-    };
-  }
-
-
-  async function saveDraft(state,cfg){
-    const url=buildUrl(apiBase(cfg),DEFAULTS.endpoints.saveRewards);
-    const sel=Object.values(state.selection).filter(x=>x.collection===state.collection);
-    if(!sel.length){ toast("Select at least one template.","error"); return false; }
-    const any=sel.some(x=>{ const k=selectionKey(x.collection,x.schema_name,x.template_id); const m=state.rewardsPerToken[k]||{}; return Object.values(m).some(v=>String(v).trim()!=="" && Number(v)>0); });
-    if(!any){ toast("Add at least one token with a positive daily reward.","error"); return false; }
-    try{ const res=await postJson(url, buildDraftPayload(state,true)); if(!(res && (res.ok===true||res.status==="ok"))) throw new Error("Draft failed"); sel.forEach(t=>toast(`Draft saved for T${t.template_id}`)); return true; } catch(e){ toast(String(e.message||e),"error"); return false; }
-  }
-
-  function renderSummary(state){
-    const fw=[];
-    activeTokenIds(state).forEach(id=>{ const [,s]=id.split(":"); fw.push({symbol:s,balance:num(state.farmBalances.get(s),0)});});
-    const rows=Object.values(state.selection).filter(x=>x.collection===state.collection).map(x=>{
-      const k=selectionKey(x.collection,x.schema_name,x.template_id);
-      const per=state.rewardsPerToken[k]||{}; const exp=state.expiry[k]?new Date(state.expiry[k]).toLocaleString():"—";
-      const rr=Object.entries(per).filter(([,v])=>Number(v)>0).map(([id,v])=>{ const [,s]=id.split(":"); return `${esc(s)}: ${v}/day`; }).join(", ") || "—";
-      const meta=enrichFromTable(x.schema_name,x.template_id);
-      return `<tr><td>${esc(x.schema_name)} <small class="muted">ID ${x.template_id} — ${esc(meta.template_name||"—")}</small></td><td>${rr}</td><td>${esc(exp)}</td></tr>`;
-    }).join("");
-    const fwRows=fw.length?fw.map(t=>`<li>${esc(t.symbol)} — Farm balance: <strong>${fmt(t.balance)}</strong></li>`).join(""):"<li>No active tokens</li>";
-    $("#ncf-summary").innerHTML=`<div class="grid" style="gap:8px;">
-      <div class="row"><strong>Collection:</strong> <span>${esc(state.collection)}</span></div>
-      <div class="row"><strong>Creator:</strong> <span>${esc(getWax()||"—")}</span></div>
-      <div class="soft" style="padding:8px;"><div class="muted">Farm-Wallet overview</div><ul class="help" style="margin:.3rem 0 0 1rem;">${fwRows}</ul></div>
-      <div class="soft" style="padding:8px;"><table style="width:100%"><thead><tr><th>Template</th><th>Rewards (per day)</th><th>Expiry</th></tr></thead><tbody>${rows||`<tr><td colspan="3">No templates</td></tr>`}</tbody></table></div>
-    </div>`;
-  }
-
-  function renderFinalTable(state){
-    const root=$("#ncf-farm-table");
-    const ids=activeTokenIds(state);
-    const rows=Object.values(state.selection).filter(x=>x.collection===state.collection).map(x=>{
-      const k=selectionKey(x.collection,x.schema_name,x.template_id);
-      const per=state.rewardsPerToken[k]||{}; const exp=state.expiry[k]?new Date(state.expiry[k]).toLocaleString():"—";
-      const tokenRows=Object.entries(per).filter(([,v])=>Number(v)>0).map(([id,v])=>{
-        const [c,s]=id.split(":"); const bal=num(state.farmBalances.get(s),0); const st=bal>0?"OK":(ids.has(id)?"Low/0":"—");
-        return `<div class="row" style="gap:.5rem;"><span class="badge">${esc(s)}</span><small class="muted">@${esc(c)}</small><span class="muted">reward: ${v}/day</span><span class="muted">FW: ${fmt(bal)}</span><span class="badge ${bal>0?"ok":"err"}">${st}</span></div>`;
-      }).join("") || "<div class='muted'>—</div>";
-      const meta=enrichFromTable(x.schema_name,x.template_id);
-      return `<tr><td><strong>${esc(x.schema_name)}</strong> <small class="muted">ID ${x.template_id} — ${esc(meta.template_name||"—")}</small></td><td>${tokenRows}</td><td>${esc(exp)}</td></tr>`;
-    }).join("");
-    root.innerHTML=`<table><thead><tr><th>Template</th><th>Token → reward/day → Farm-Wallet balance</th><th>Expiry</th></tr></thead><tbody>${rows||`<tr><td colspan="3">No data</td></tr>`}</tbody></table>`;
-  }
-
-  async function performTopUp(state,cfg){
-    const src=($("#ncf-src").value||"twitch").toLowerCase();
-    const sym=($("#ncf-token").value||"").toUpperCase();
-    const amt=Number($("#ncf-amount").value||"0");
-    if(!sym){ toast("Select a token.","error"); return; }
-    if(!(amt>0)){ toast("Enter a positive amount.","error"); return; }
-    const opts=buildTokenOptionsFromSource(src); const bal=num(opts.find(o=>o.symbol===sym)?.amount,0);
-    if(amt>bal){ toast("Amount exceeds your wallet balance.","error"); return; }
-    const tc=(state.tokens.find(t=>(t.symbol||"").toUpperCase()===sym)?.contract)||null;
-    const payload={creator_wax_account:getWax()||null, source:src, token_symbol:sym, token_contract:tc||undefined, amount:amt};
-    try{
-      const res=await postJson(buildUrl(apiBase(cfg),DEFAULTS.endpoints.depositToFarm), payload);
-      if(!res||res.ok!==true) throw new Error("Deposit failed");
-      toast("Deposit completed.");
-      if(res.balances?.twitch) window.twitchWalletBalances=res.balances.twitch;
-      if(res.balances?.telegram) window.telegramWalletBalances=res.balances.telegram;
-      updateTopupPanel(state,cfg); await refreshFarmWalletBalances(state,cfg);
-    }catch(e){ toast(String(e.message||e),"error");}
-  }
-
-  function initManageNFTsFarm(opts={}){
-    injectStyles();
-    const cfg={...DEFAULTS,...opts};
-    const host = cfg.containerId ? document.getElementById(cfg.containerId) : (()=>{const d=document.createElement("div"); d.id="ncf-root-auto"; document.body.appendChild(d); return d;})();
-    createLayout(host,cfg);
-    let state;
-    state={
-      apiBaseUrl: apiBase(cfg),
-      collection: rLS(DEFAULTS.ls.lastCollection,""),
-      raw:null,
-      search:"",
-      schemaFilter:"",
-      expandAll:true,
-      selection: loadSel(),
-      tokens: loadTokens(),
-      rewardsPerToken: loadRPT(),
-      expiry: loadExp(),
-      farmBalances:new Map(),
-      farmBalancesTS:null,
-      monitorId:null,
-      wizard: rLS(DEFAULTS.ls.wizard,{step:"#ncf-step-a"})
-    };
-    bindTabs(state, cfg);
-    $("#ncf-collection").value=state.collection||"";
-    $("#ncf-auto").checked=!!rLS(DEFAULTS.ls.autoMonitor,false);
-    // Carica l'elenco delle farm del creator nello Step 1
-    loadCreatorFarmsIntoStep1(state, cfg);
-    $("#ncf-load").addEventListener("click",()=>doLoad(state,cfg));
-    $("#ncf-collection").addEventListener("keydown",(e)=>{ if(e.key==="Enter") doLoad(state,cfg); });
-    $("#ncf-refresh-farms").addEventListener("click", ()=> loadCreatorFarmsIntoStep1(state, cfg));
-    $("#ncf-src").addEventListener("change",()=>updateTopupPanel(state,cfg));
-    $("#ncf-token").addEventListener("change",()=>updateTopupPanel(state,cfg));
-    $("#ncf-max").addEventListener("click",()=>{ const src=$("#ncf-src").value||"twitch"; const sym=($("#ncf-token").value||"").toUpperCase(); if(!sym) return; const bal=buildTokenOptionsFromSource(src).find(o=>o.symbol===sym)?.amount||0; $("#ncf-amount").value=String(bal);});
-    $("#ncf-deposit").addEventListener("click",()=>performTopUp(state,cfg));
-    $("#ncf-copy-account").addEventListener("click",()=>navigator.clipboard.writeText(cfg.farmWalletAccount).then(()=>toast("Account copied")));
-    $("#ncf-copy-tw").addEventListener("click",()=>navigator.clipboard.writeText(cfg.memoTwitch).then(()=>toast("Memo copied")));
-    $("#ncf-copy-tg").addEventListener("click",()=>navigator.clipboard.writeText(cfg.memoTelegram).then(()=>toast("Memo copied")));
-    $("#ncf-refresh-farm").addEventListener("click",()=>refreshFarmWalletBalances(state,cfg));
-    $("#ncf-auto").addEventListener("change",(e)=>{ wLS(DEFAULTS.ls.autoMonitor,!!e.target.checked); if(e.target.checked) startAuto(state,cfg); else stopAuto(state); });
-
-    $("#ncf-search").addEventListener("input",(e)=>{ state.search=e.target.value||""; if(state.raw) renderSections($("#ncf-sections"), state.raw, state); });
-    $("#ncf-schema").addEventListener("change",(e)=>{ state.schemaFilter=e.target.value||""; if(state.raw) renderSections($("#ncf-sections"), state.raw, state); });
-    $("#ncf-expand").addEventListener("click",()=>{ state.expandAll=!state.expandAll; $("#ncf-expand").textContent=state.expandAll?"Collapse all":"Expand all"; if(state.raw) renderSections($("#ncf-sections"), state.raw, state); });
-    $("#ncf-select-all").addEventListener("click",()=>{ if(!state.raw) return; (state.raw.schemas||[]).forEach(s=>(s.templates||[]).forEach(t=>setSelected(state,state.collection,s.schema_name,Number(t.template_id),true))); $$(".ncf-row-check").forEach(c=>c.checked=true); updateRewardsPanel(state); });
-    $("#ncf-clear").addEventListener("click",()=>{ if(!state.raw) return; Object.keys(state.selection).forEach(k=>{ if(k.startsWith(`${state.collection}::`)){ delete state.selection[k]; delete state.rewardsPerToken[k]; delete state.expiry[k]; }}); saveSel(state.selection); saveRPT(state.rewardsPerToken); saveExp(state.expiry); $$(".ncf-row-check").forEach(c=>c.checked=false); updateRewardsPanel(state); });
-    $("#ncf-refresh-active")?.addEventListener("click", ()=> ensureActiveFarmsLoaded(state, cfg));
-    $("#ncf-active-back")?.addEventListener("click", ()=>{
-      $("#ncf-active-detail").style.display = "none";
-      $("#ncf-active-list").style.display = "";
+    // mount creator & stats when their tabs are opened
+    $("#ncf-tab-creator")?.addEventListener("click", ()=> {
+      showTabFromPart2("creator");
+      if (!state._creatorMounted) {
+        mountCreatorDashboard(state);
+        state._creatorMounted = true;
+      }
     });
-    $("#ncf-tok-add").addEventListener("click",()=>{ const c=$("#ncf-tok-contract").value.trim(); const s=$("#ncf-tok-symbol").value.trim().toUpperCase(); const d=$("#ncf-tok-dec").value===""?null:Number($("#ncf-tok-dec").value); if(!c||!s){ toast("Provide contract and symbol.","error"); return; } if(state.tokens.some(t=>t.contract===c&&t.symbol===s)){ toast("Token already present."); return; } state.tokens.push({contract:c,symbol:s,decimals:d}); saveTokens(state.tokens); $("#ncf-tok-contract").value=""; $("#ncf-tok-symbol").value=""; $("#ncf-tok-dec").value=""; renderTokenLibrary(state); updateRewardsPanel(state); });
-    $("#ncf-farm-picker").addEventListener("change", ()=> ensureStatsLoaded(state, cfg));
-    $("#ncf-refresh-stats").addEventListener("click", ()=> ensureStatsLoaded(state, cfg));
-    $("#ncf-change-col")?.addEventListener("click", () => {
-      state.collection = "";
-      wLS(DEFAULTS.ls.lastCollection, "");   // pulisci la collezione salvata
-      $("#ncf-collection").value = "";
-      wizardGo(state, "#ncf-step-a");        // torna allo Step 1
+    $("#ncf-tab-stats")?.addEventListener("click", ()=> {
+      showTabFromPart2("stats");
+      if (!state._statsMounted) {
+        mountStatsPane(state);
+        ensureStatsPaneMounted(state);
+        state._statsMounted = true;
+      }
     });
+    $("#ncf-tab-help")?.addEventListener("click", ()=> showTabFromPart2("help"));
+    $("#ncf-tab-browse")?.addEventListener("click", ()=> showTabFromPart2("browse"));
 
-    $("#ncf-next-b").addEventListener("click",()=>{
-      const ok = true; if(!ok){ toast("Complete this step first.","error"); return; }
-      wizardGo(state,"#ncf-step-c");
-    });
-    $("#ncf-save-draft").addEventListener("click",()=>saveDraft(state,cfg));
-    $("#ncf-next-c").addEventListener("click",()=>{
-      const count=Object.values(state.selection).filter(x=>x.collection===state.collection).length;
-      if(!count){ toast("Select at least one template.","error"); return; }
-      wizardGo(state,"#ncf-step-d"); updateRewardsPanel(state);
-    });
-    $("#ncf-next-d").addEventListener("click",async()=>{
-      const ok=await saveDraft(state,cfg); if(!ok) return;
-      renderSummary(state); wizardGo(state,"#ncf-step-e");
-    });
-    $("#ncf-confirm").addEventListener("click",async()=>{
-      const ok=await saveDraft(state,cfg); if(!ok) return;
-      toast("Configuration saved."); $("#ncf-wizard").style.display="none"; $("#ncf-collapsed").style.display=""; $("#ncf-summary-table").style.display=""; renderFinalTable(state);
-    });
-    
-    $("#ncf-open-farmid").addEventListener("click", ()=>{
-      const fid = ($("#ncf-farm-quick-id").value || "").trim();
-      if(!fid){ toast("Enter a Farm ID.", "error"); return; }
-      $("#ncf-farm-picker").value = "";   // forza modalità “by id”
-      ensureStatsLoaded(state, cfg, fid);
-    });
-    $("#ncf-farm-quick-id").addEventListener("keydown", (e)=>{
-      if(e.key === "Enter") $("#ncf-open-farmid").click();
-    });
-
-    document.addEventListener("visibilitychange",()=>{ if(document.hidden) stopAuto(state); });
-
-    renderTokenLibrary(state);
-    updateCTAState(state);
-    // Mostra sempre Step 1; se c'è una collezione salvata, solo precompila il campo.
-    wizardGo(state, "#ncf-step-a");
-    if(state.collection) doLoad(state,cfg); else updateTopupPanel(state,cfg);
+    // If user starts on Creator/Stats tab, ensure it mounts on first click.
   }
 
-  async function doLoad(state,cfg){
-    const col=$("#ncf-collection").value.trim();
-    if(!col){ toast("Enter a collection name.","error"); return; }
-    state.collection=col; wLS(DEFAULTS.ls.lastCollection,col); $("#ncf-meta").textContent="Loading…"; $("#ncf-sections").innerHTML=""; renderSkeleton($("#ncf-status"));
-    try{
-      const data=await postJson(buildUrl(apiBase(cfg),DEFAULTS.endpoints.templatesBySchema),{collection_name:col});
-      state.raw=data;
-      const opts=(data.schemas||[]).map(s=>`<option value="${esc(s.schema_name)}">${esc(s.schema_name)}</option>`).join("");
-      $("#ncf-schema").innerHTML=`<option value="">All schemas</option>${opts}`;
-      const ts=(data.schemas||[]).length, tt=(data.schemas||[]).reduce((a,s)=>a+(s.templates?.length||0),0);
-     // Se la collezione coincide con una farm già esistente per il creator, mostriamo "Existing"
-     const farms = Array.isArray(state._creatorFarms) ? state._creatorFarms : [];
-     const exists = farms.some(f => (f.collection || "").toLowerCase() === String(data.collection||"").toLowerCase());
-     $("#ncf-meta").innerHTML =
-       `Collection: ${esc(data.collection)} — Schemas ${ts} — Templates ${tt}
-        ${ exists ? '<span class="badge ok" style="margin-left:.5rem;">Existing</span>'
-                  : '<span class="badge warn" style="margin-left:.5rem;">New</span>' }`;
-      $("#ncf-status").innerHTML=""; renderSections($("#ncf-sections"),data,state); updateRewardsPanel(state);
-      wizardGo(state,"#ncf-step-b");
-      await refreshFarmWalletBalances(state,cfg);
-      updateTopupPanel(state,cfg);
-      if($("#ncf-auto").checked) startAuto(state,cfg);
-      loadCreatorFarmsIntoStep1(state, cfg);
-    }catch(e){
-      $("#ncf-status").innerHTML=`<div class="soft" style="padding:14px; text-align:center;">${esc(String(e.message||e))}</div>`;
-      $("#ncf-meta").textContent="Error";
-    }
+  // mirror of PART 1 showTab (without overwriting it)
+  function showTabFromPart2(which){
+    const tabs = [
+      { btn: "#ncf-tab-browse",  pane: "#ncf-pane-browse"  },
+      { btn: "#ncf-tab-creator", pane: "#ncf-pane-creator" },
+      { btn: "#ncf-tab-stats",   pane: "#ncf-pane-stats"   },
+      { btn: "#ncf-tab-help",    pane: "#ncf-pane-help"    }
+    ];
+    tabs.forEach(({ btn, pane }) => {
+      const b = $(btn);
+      const p = $(pane);
+      const on = pane === `#ncf-pane-${which}`;
+      if (b) b.setAttribute("aria-selected", on ? "true" : "false");
+      if (p) p.style.display = on ? "" : "none";
+    });
   }
 
-  window.initManageNFTsFarm = initManageNFTsFarm;
+  // Patch exported init so PART 2 hooks are guaranteed
+  const __oldInit = window.initNonCustodialFarms;
+  window.initNonCustodialFarms = function(opts){
+    const ret = __oldInit.call(this, opts);
+    // defer to next tick to ensure PART 1 finished DOM build
+    setTimeout(enhanceAfterInit, 0);
+    return ret;
+  };
+  // keep alias
+  window.initManageNFTsFarm = window.initNonCustodialFarms;
+
+  // If PART 1 already ran before PART 2 got loaded
+  if (window.__NCF_STATE__) {
+    // we’re late—but we can still attach
+    enhanceAfterInit();
+  }
+
+  // Done.
 })();
+
+/* ===================== BACKEND ENDPOINTS (expected) =====================
+
+All responses should be JSON. Strings that are JSON-encoded are tolerated but JSON is preferred.
+
+GET  /api/farm/list?status=active
+  -> [ { farm_id, collection, creator (or creator_wax_account) }, ... ]
+
+GET  /api/farm/list?creator=<wax>
+  -> [ { farm_id, collection, creator (or creator_wax_account) }, ... ]
+
+POST /api/templates-by-schema
+  Body: { collection_name: string }
+  -> {
+       collection: string,
+       schemas: [
+         {
+           schema_name: string,
+           templates: [
+             {
+               template_id: number,
+               template_name?: string,
+               circulating_supply?: number,
+               max_supply?: number|null
+             }, ...
+           ]
+         }, ...
+       ]
+     }
+
+GET  /api/farm/deposit/balances?creator=<wax>
+  -> [ { token_symbol | symbol: string, amount: number }, ... ]
+     (symbols uppercase, please)
+
+POST /api/farm/deposit
+  Body: {
+    creator_wax_account: string,
+    source: "twitch" | "telegram",
+    token_symbol: string,
+    token_contract?: string,
+    amount: number
+  }
+  -> { ok: true, balances?: { twitch?: [...], telegram?: [...] } }
+
+POST /api/farm/rewards/draft
+  Body: {
+    collection: string,
+    creator_wax_account: string,
+    policy: {
+      distribution: "daily",
+      semantics: string,
+      payout_time_cet: "14:00",
+      non_custodial: string
+    },
+    tokens_catalog: [ { contract, symbol, decimals|null }, ... ],
+    total_selected: number,
+    items: [
+      {
+        schema_name: string,
+        template_id: number,
+        expiry: string|null (ISO),
+        rewards: [
+          {
+            token_contract: string,
+            token_symbol: string,          // UPPERCASE
+            decimals: number|null,
+            reward_per_asset_per_day: number
+          }, ...
+        ]
+      }, ...
+    ]
+  }
+  -> { ok: true }  // or { status: "ok" }
+
+GET  /api/farm/stats?farm_id=<id>
+  -> {
+       farm_id: string|number,
+       collection: string,
+       creator | creator_wax_account: string,
+       summary: {
+         owners: number,
+         assets: number,
+         last_distribution_at: ISO|string|null,
+         valid_templates_total?: number,
+         per_token_last_cycle?: { [SYMBOL]: number },
+         active_tokens_last_cycle?: number,
+         active_templates_last_cycle?: number,
+         templates_configured_with_rewards?: number,
+         remaining_by_token?: { [SYMBOL]: number }
+       },
+       config?: { items?: [
+         { schema_name, template_id, expiry?: ISO, rewards?: [
+             { token_contract, token_symbol, reward_per_asset_per_day }
+         ] }
+       ] },
+       owners?: [
+         {
+           owner: string,
+           assets: number,
+           last_rewarded_at?: ISO,
+           tokens?: [{ symbol, amount, token_contract? }],
+           trees?: [
+             { schema_name, template_id, token_contract, token_symbol, amount }
+           ]
+         }
+       ]
+     }
+
+GET  /api/farm/distributions?farm_id=<id>&limit=200
+  -> [ { ts: ISO, token_symbol: string, total_amount: number,
+         unique_owners: number, schema_name?: string, template_id?: number }, ... ]
+
+GET  /api/farm/user-history?farm_id=<id>&owner=<wax>&limit=200
+  -> [ { ts: ISO, token_symbol: string, amount: number,
+         schema_name?: string, template_id?: number, note?: string }, ... ]
+
+POST /api/farm/kick
+  Body: { farm_id: string|number, wax_account: string, reason?: string }
+  -> { ok: true }
+
+========================================================================= */
+

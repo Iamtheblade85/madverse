@@ -759,14 +759,6 @@
     host.innerHTML = `
       <div class="grid" style="grid-template-columns: 1fr minmax(320px,420px); gap:18px;">
         <div id="ncf-creator-main" class="grid" style="gap:14px;">
-          <section class="soft" style="padding:10px;">
-            <div class="row" role="tablist" aria-label="Creator tabs">
-              <span class="badge ok">Non-custodial</span>
-              <span class="badge" title="Payout cadence">${esc(state.cfg.payoutSchedule)}</span>
-              <span class="badge">Signed-in: <strong>${esc(getWax() || "—")}</strong></span>
-            </div>
-          </section>
-
           <section class="cy-card" style="padding:16px;">
             <h2 style="margin:0 0 .25rem 0;">Create / Edit Farm</h2>
             <div id="ncf-wizard" class="grid" style="gap:12px;">
@@ -917,12 +909,18 @@
             </div>
           </section>
 
-          <section id="ncf-collapsed" class="cy-card" style="padding:12px; display:none;">
-            <div class="row" style="justify-content:space-between;align-items:center;">
-              <strong>Farm configuration saved</strong>
-              <span class="badge ok">Saved</span>
-            </div>
-          </section>
+		<section id="ncf-collapsed" class="cy-card" style="padding:12px; display:none;">
+		  <div class="row" style="justify-content:space-between;align-items:center;">
+		    <div class="row" style="gap:.6rem;">
+		      <strong>Farm configuration saved</strong>
+		      <span class="badge ok">Saved</span>
+		    </div>
+		    <div class="row" style="gap:.5rem;">
+		      <button id="ncf-edit-again" class="btn btn-ghost" title="Edit current config">Edit</button>
+		      <button id="ncf-back-start" class="btn btn-ghost" title="Back to Step 1">Back to start</button>
+		    </div>
+		  </div>
+		</section>
 
           <section id="ncf-summary-table" class="cy-card" style="padding:14px; display:none;">
             <h3 style="margin:.2rem 0;">Current Farm</h3>
@@ -1033,15 +1031,17 @@
 
     // sum per token (never across symbols)
     const perToken = new Map();
-    sel.forEach(x => {
-      const k = `${x.collection}::${x.schema_name}::${x.template_id}`;
-      const rewards = state.creator.rewardsPerToken[k] || {};
-      Object.entries(rewards).forEach(([id,v]) => {
-        const [, sym] = id.split(":");
-        const daily = Number(v) || 0;
-        if (daily > 0) perToken.set(sym, (perToken.get(sym)||0) + daily);
-      });
-    });
+	sel.forEach(x => {
+	  const k = `${x.collection}::${x.schema_name}::${x.template_id}`;
+	  const rewards = state.creator.rewardsPerToken[k] || {};
+	  const circ = enrichFromTable(x.schema_name, x.template_id).circulating_supply || 0; // <-- moltiplicatore
+	  Object.entries(rewards).forEach(([id, v]) => {
+	    const [, sym] = id.split(":");
+	    const perAssetDaily = Number(v) || 0;
+	    const contrib = perAssetDaily > 0 ? perAssetDaily * circ : 0;
+	    if (contrib > 0) perToken.set(sym, (perToken.get(sym) || 0) + contrib);
+	  });
+	});
 
     badgeTok.textContent = `Active tokens: ${perToken.size}`;
     const parts = Array.from(perToken.entries()).map(([s,a]) => `${s}: ${a}/day`);
@@ -1629,6 +1629,23 @@
 
     // Step E
     $("#ncf-confirm")?.addEventListener("click",async()=>{ const ok=await saveDraft(state); if(!ok) return; toast("Configuration saved."); $("#ncf-wizard").style.display="none"; $("#ncf-collapsed").style.display=""; $("#ncf-summary-table").style.display=""; renderFinalTable(state); });
+	
+	  // Pulsanti post-salvataggio
+	$("#ncf-edit-again")?.addEventListener("click", () => {
+	  // riapri il wizard sullo Step D per modificare rewards/expiry
+	  $("#ncf-collapsed").style.display = "none";
+	  $("#ncf-summary-table").style.display = "none";
+	  $("#ncf-wizard").style.display = "";
+	  wizardGo(state, "#ncf-step-d");
+	});
+	
+	$("#ncf-back-start")?.addEventListener("click", () => {
+	  // torna alla sezione iniziale (Step A)
+	  $("#ncf-collapsed").style.display = "none";
+	  $("#ncf-summary-table").style.display = "none";
+	  $("#ncf-wizard").style.display = "";
+	  wizardGo(state, "#ncf-step-a");
+	});
 
     // Tokens Library add
     $("#ncf-tok-add")?.addEventListener("click",()=>{ const c=$("#ncf-tok-contract").value.trim(); const s=$("#ncf-tok-symbol").value.trim().toUpperCase(); const d=$("#ncf-tok-dec").value===""?null:Number($("#ncf-tok-dec").value); if(!c||!s){ toast("Provide contract and symbol.","error"); return; } if(state.creator.tokens.some(t=>t.contract===c&&t.symbol===s)){ toast("Token already present."); return; } state.creator.tokens.push({contract:c,symbol:s,decimals:d}); wLS(LS.tokens,state.creator.tokens); $("#ncf-tok-contract").value=""; $("#ncf-tok-symbol").value=""; $("#ncf-tok-dec").value=""; renderTokenLibrary(state); updateRewardsPanel(state); });

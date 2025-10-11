@@ -26,6 +26,26 @@
       50% { text-shadow: 0 0 12px #ff00ff, 0 0 24px #ff00ff; }
       100% { text-shadow: 0 0 6px #ff00ff, 0 0 12px #ff00ff; }
     }
+
+    /* Badge NEW intermittente */
+    .badge-new{
+      display:inline-block;
+      margin-left:.5rem;
+      padding:.05rem .4rem;
+      font-size:.65rem;
+      font-weight:800;
+      line-height:1.2;
+      border-radius:9999px;
+      background:linear-gradient(135deg,#ffea00,#ff7b00);
+      color:#111;
+      box-shadow:0 0 8px rgba(255,200,0,.6), 0 0 18px rgba(255,120,0,.35);
+      animation:badgeBlink 1.2s ease-in-out infinite;
+      vertical-align:middle;
+    }
+    @keyframes badgeBlink{
+      0%,100%{ opacity:1; transform:scale(1); filter:saturate(1.15); }
+      50%    { opacity:.35; transform:scale(1.1); filter:saturate(1.4); }
+    }
   </style>
 </head>
 
@@ -91,9 +111,16 @@
           <button class="menu-button" data-section="account">Account</button>
           <div class="dropdown">
             <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">Earn ▾</button>
-            <div class="dropdown-menu hidden" role="menu">
+            <div class="dropdown-menu hidden" role="menu" id="earn-menu">
               <button class="dropdown-item" data-section="token-staking">Token Staking</button>
               <button class="dropdown-item" data-section="nfts-staking">NFTs Staking</button>
+
+              <!-- ✅ Nuova voce "Not-Custodial NFTs Farms" con badge NEW -->
+              <button class="dropdown-item" data-section="noncustodialfarms">
+                Not-Custodial NFTs Farms
+                <span class="badge-new" aria-hidden="true">NEW</span>
+              </button>
+
               <hr class="dropdown-divider" />
               <div class="dropdown-group">
                 <button class="dropdown-item" data-section="c2e-telegram">C2E - Telegram</button>
@@ -153,96 +180,42 @@
   <script>window.__NFTF_AUTO_DISABLED__ = true;</script>
   <script src="main_restyled.js?v=prod-2025-10-04" defer></script>
 
-<script>
-  (function () {
-    // ❑ 1) ELENCO WALLET AUTORIZZATI (minuscoli)
-    const ALLOWED_WALLETS = [
-      "agoscry4ever",
-      "li2ty.wam",
-      "welshdanft55",
-      "mpvee.wam",
-      "vicventura21",
-      "valkyriaswax",
-      "1wolfatheina",      
-      "ldyu4.wam",
-      "ksgbk.wam",
-      "qev4o.c.wam",
-      "sa3bu.wam",
-      "patrickwax11"
-    ].map(w => w.toLowerCase());
-
-    // opzionale: consenti override via window (es. impostato dal backend)
-    if (Array.isArray(window.NCF_ALLOWED_WALLETS)) {
-      ALLOWED_WALLETS.splice(0, ALLOWED_WALLETS.length, ...window.NCF_ALLOWED_WALLETS.map(w => String(w).toLowerCase()));
-    }
-
-    const ALLOWED_SET = new Set(ALLOWED_WALLETS);
-    const MENU_ID = "creators-tools-menu";
-    const BTN_SELECTOR = '[data-section="noncustodialfarms"]';
-
-    // helper
-    const getWax = () => (window.userData?.wax_account || "").trim().toLowerCase();
-    const hasAccess = () => ALLOWED_SET.has(getWax());
-
-    // dropdown behavior (come prima)
-    document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-      toggle.addEventListener('click', () => {
-        document.querySelectorAll('.dropdown-menu').forEach(m => {
-          if (m !== toggle.nextElementSibling) m.classList.add('hidden');
+  <script>
+    (function () {
+      // Toggle dropdowns
+      document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+          document.querySelectorAll('.dropdown-menu').forEach(m => {
+            if (m !== toggle.nextElementSibling) m.classList.add('hidden');
+          });
+          toggle.nextElementSibling.classList.toggle('hidden');
         });
-        toggle.nextElementSibling.classList.toggle('hidden');
       });
-    });
 
-    function injectButton() {
-      const menu = document.getElementById(MENU_ID);
-      if (!menu) return false;
-      if (!hasAccess()) return false;
-      if (menu.querySelector(BTN_SELECTOR)) return true;
-
-      const btn = document.createElement("button");
-      btn.className = "dropdown-item";
-      btn.dataset.section = "noncustodialfarms";
-      btn.textContent = "Non Custodial NFTsFarms";
-      menu.appendChild(btn);
-      return true;
-    }
-
-    if (!injectButton()) {
-      let tries = 0, max = 40;
-      const iv = setInterval(() => {
-        tries++;
-        if (injectButton() || tries >= max) clearInterval(iv);
-      }, 250);
-      const menu = document.getElementById(MENU_ID);
-      if (menu) new MutationObserver(() => injectButton()).observe(menu, { childList: true });
-      window.addEventListener("user:loggedin", injectButton);
-    }
-
-    document.addEventListener('click', (e) => {
-      const item = e.target.closest('.dropdown-item');
-      if (!item) return;
-      const section = item.dataset.section;
-      if (typeof loadSection === 'function') loadSection(section);
-      document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
-    });
-
-    // modali (come prima)
-    const closeModalBtn = document.getElementById('close-modal');
-    if (closeModalBtn) {
-      closeModalBtn.addEventListener('click', () => {
-        document.getElementById('modal').classList.add('hidden');
+      // Delegation per le voci dei menu a tendina
+      document.addEventListener('click', (e) => {
+        const item = e.target.closest('.dropdown-item');
+        if (!item) return;
+        const section = item.dataset.section;
+        if (typeof loadSection === 'function') loadSection(section);
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
       });
-    }
-    const confirmCancel = document.getElementById('confirm-cancel');
-    if (confirmCancel) {
-      confirmCancel.addEventListener('click', () => {
-        document.getElementById('confirm-modal').classList.add('hidden');
-      });
-    }
-  })();
-</script>
 
+      // Modali
+      const closeModalBtn = document.getElementById('close-modal');
+      if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', () => {
+          document.getElementById('modal').classList.add('hidden');
+        });
+      }
+      const confirmCancel = document.getElementById('confirm-cancel');
+      if (confirmCancel) {
+        confirmCancel.addEventListener('click', () => {
+          document.getElementById('confirm-modal').classList.add('hidden');
+        });
+      }
+    })();
+  </script>
 
   <footer class="footer-cybertribal">
     <div class="footer-inner">

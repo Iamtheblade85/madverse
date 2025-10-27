@@ -2922,7 +2922,113 @@ else if (section === 'token-staking') {
         </div>
      `;
       showNewsSection()
-    }
+	} else if (section === 'creator-dashboard') {
+	  const app = document.getElementById('app');
+	  const { userId, usx_token, wax_account } = window.userData || {};
+	  if (!userId || !usx_token || !wax_account) {
+	    app.innerHTML = `<div class="section-container">
+	      <h2 class="section-title text-center">Creator Dashboard</h2>
+	      <div class="error-message">You must be logged in.</div>
+	    </div>`;
+	    return;
+	  }
+	
+	  app.innerHTML = `
+	    <div class="section-container">
+	      <h2 class="section-title text-center">Creator Dashboard</h2>
+	
+	      <!-- Top summary -->
+	      <div class="cards-grid" style="display:grid;grid-template-columns:repeat(12,1fr);gap:14px;">
+	        <!-- Subscription -->
+	        <div class="card" style="grid-column: span 4; background:#0a0f1a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;">
+	          <div style="display:flex;justify-content:space-between;align-items:center;">
+	            <div style="font-weight:900;color:#e2e8f0;">Subscription</div>
+	            <div id="cd-sub-chip"></div>
+	          </div>
+	          <div id="cd-sub-body" style="margin-top:8px;color:#cbd5e1;font-size:.95rem;"></div>
+	        </div>
+	
+	        <!-- Rewards & Deposits -->
+	        <div class="card" style="grid-column: span 4; background:#0a0f1a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;">
+	          <div style="font-weight:900;color:#e2e8f0;">Token Rewards & Deposits</div>
+	          <div id="cd-rewards" style="margin-top:8px;"></div>
+	        </div>
+	
+	        <!-- ADS quick controls -->
+	        <div class="card" style="grid-column: span 4; background:#0a0f1a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;">
+	          <div style="font-weight:900;color:#e2e8f0;">Ads Settings</div>
+	          <div id="cd-ads-quick" style="margin-top:8px;color:#cbd5e1;"></div>
+	        </div>
+	      </div>
+	
+	      <!-- Links -->
+	      <div class="card" style="margin-top:14px;background:#0a0f1a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;">
+	        <div style="font-weight:900;color:#e2e8f0;margin-bottom:8px;">Quick Links</div>
+	        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+	          <button class="btn btn-primary" data-menu="twitch-nfts-giveaways">NFT Giveaways</button>
+	          <button class="btn btn-primary" data-menu="log-storms-giveaways">Token Storms</button>
+	          <button class="btn btn-primary" data-section="noncustodialfarms">NC-NFTs Farms</button>
+	          <button class="btn btn-primary" data-section="create-token-pool">Token Staking Farms</button>
+	        </div>
+	      </div>
+	
+	      <!-- Ads editor -->
+	      <div class="card" style="margin-top:14px;background:#0a0f1a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;">
+	        <div style="display:flex;justify-content:space-between;align-items:center;">
+	          <div style="font-weight:900;color:#e2e8f0;">Ads — Global + Channel</div>
+	          <div id="cd-ads-status" style="font-size:.9rem;color:#94a3b8;"></div>
+	        </div>
+	        <div id="cd-ads-editor" style="margin-top:10px;"></div>
+	      </div>
+	
+	      <!-- History tabs -->
+	      <div class="card" style="margin-top:14px;background:#0a0f1a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;">
+	        <div style="display:flex;gap:8px;margin-bottom:10px;">
+	          <button id="cd-tab-giveaways" class="btn btn-secondary">NFT Giveaways</button>
+	          <button id="cd-tab-storms" class="btn btn-secondary">Token Storms</button>
+	          <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+	            <input id="cd-filter-q" class="input-field" placeholder="Search…" style="width:220px;">
+	            <select id="cd-filter-status" class="filter-select">
+	              <option value="">All</option>
+	              <option value="pending">Pending</option>
+	              <option value="sent">Sent/Executed</option>
+	              <option value="failed">Failed</option>
+	            </select>
+	            <input type="date" id="cd-date-from" class="input-field">
+	            <input type="date" id="cd-date-to" class="input-field">
+	            <button id="cd-filter-reset" class="btn btn-secondary">Reset</button>
+	          </div>
+	        </div>
+	        <div id="cd-history"></div>
+	      </div>
+	    </div>
+	  `;
+	
+	  // quick navigation
+	  app.querySelectorAll('[data-menu]').forEach(b=>{
+	    b.addEventListener('click', e=>{
+	      const menu = e.currentTarget.getAttribute('data-menu');
+	      // riusa i menu già esistenti (vedi sezione C2E) :contentReference[oaicite:1]{index=1}
+	      loadSection('c2e-twitch');
+	      setTimeout(()=>{
+	        const btn = document.querySelector(`.c2e-menu-btn[data-menu="${menu}"]`);
+	        if (btn) btn.click();
+	      }, 0);
+	    });
+	  });
+	  app.querySelectorAll('[data-section]').forEach(b=>{
+	    b.addEventListener('click', e=>{
+	      loadSection(e.currentTarget.getAttribute('data-section'));
+	    });
+	  });
+	
+	  // carica dati e monta UI
+	  await window.CreatorDash.mount({
+	    container: app,
+	    userId, usx_token, wax_account,
+	    baseUrl: BASE_URL
+	  });
+	}	
   }
 
 function showNewsSection() {

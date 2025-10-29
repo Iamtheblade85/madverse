@@ -263,28 +263,27 @@
     </div>
   </footer>
 <script>
-  // Questa funzione controlla chi è loggato e mostra/nasconde il pulsante Creator Dashboard
+  // 1. funzione globale che mostra/nasconde il pulsante "Creator Dashboard"
   window.updateCreatorDashboardVisibility = function () {
     const btn = document.getElementById('creator-dashboard-nav-btn');
     if (!btn) return;
 
     const wax = window?.userData?.wax_account;
-    if (wax && wax === 'agoscry4ever') {
+    if (wax && wax.toLowerCase() === 'agoscry4ever') {
       // account autorizzato → mostra
       btn.classList.remove('hidden');
     } else {
-      // altri account → resta nascosto
+      // tutti gli altri → nascondi
       btn.classList.add('hidden');
     }
   };
 
-  // Eseguiamo il check dopo che la pagina è pronta.
-  // A questo punto main_restyled.js (defer) è già stato caricato,
-  // e quindi window.userData di solito è già stato popolato.
+  // 2. richiamiamo questa funzione quando il DOM è pronto
   document.addEventListener('DOMContentLoaded', () => {
     window.updateCreatorDashboardVisibility();
   });
 </script>
+
   
 </body>
 </html>

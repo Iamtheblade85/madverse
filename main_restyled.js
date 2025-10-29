@@ -2769,7 +2769,7 @@ async function loadSection(section) {
 
     // blocco admin per distribuzione manuale
     try {
-      const allowedDist = (window.userData?.wax_account || '').toLowerCase() === 'agoscry4ever';
+      const allowedDist = (window.userData?.wax_account || '').toLowerCase() === 'welshdanft55';
       const distActions = document.getElementById('dist-actions');
       if (distActions) distActions.style.display = allowedDist ? 'flex' : 'none';
 

@@ -303,13 +303,18 @@ function saveUserData(data, remember = false) {
   window.userData = {
     email: data.email,
     password: data.password,
-    user_id: data.user_id ?? data.userId,   // <-- NEW
-    userId: data.user_id ?? data.userId,    // <-- NEW (compat)
+    user_id: data.user_id ?? data.userId,
+    userId: data.user_id ?? data.userId,
     usx_token: data.usx_token,
     wax_account: data.wax_account
   };
   if (remember) {
     localStorage.setItem('userData', JSON.stringify(window.userData));
+  }
+
+  // 👇 mostra/nasconde il bottone Creator Dashboard in base al wax_account
+  if (window.updateCreatorDashboardVisibility) {
+    window.updateCreatorDashboardVisibility();
   }
 }
 
@@ -376,41 +381,23 @@ async function initApp() {
 async function finalizeAppLoad() {
   renderAuthButton(true);
 
-  await loadAvailableTokens();
-
-  // 🔓 Sblocca voce "Creator Dashboard" solo per agoscry4ever
-  try {
-    const wax = (window.userData?.wax_account || '').toLowerCase();
-    const creatorBtn = document.getElementById('creator-dashboard-btn');
-    if (creatorBtn) {
-      if (wax === 'agoscry4ever') {
-        // Mostra il bottone nel dropdown "Creators Tools"
-        creatorBtn.style.display = ''; // toglie display:none
-      } else {
-        creatorBtn.style.display = 'none';
-      }
-    }
-  } catch (err) {
-    console.warn("[creator-dashboard-btn] visibility error:", err);
+  // 👇 assicurati che il bottone sia aggiornato anche dopo auto-login
+  if (window.updateCreatorDashboardVisibility) {
+    window.updateCreatorDashboardVisibility();
   }
 
-  // dispatch "logged in"
-  window.dispatchEvent(new CustomEvent('user:loggedin', { detail: window.userData }));
+  await loadAvailableTokens();
 
-  // carica sezione iniziale
+  window.dispatchEvent(new CustomEvent('user:loggedin', { detail: window.userData }));
   loadSection('loadLatestNews');
 
-  // listener globali di navigazione per tutti i pulsanti/menu
   document.querySelectorAll('.menu-button, .menu-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const section = e.target.getAttribute('data-section');
-      if (section) {
-        loadSection(section);
-      }
+      loadSection(section);
     });
   });
 }
-
 
 function renderAuthButton(isLoggedIn) {
   const container = document.getElementById('auth-button-container');

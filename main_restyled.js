@@ -2924,112 +2924,868 @@ else if (section === 'token-staking') {
       showNewsSection()
 	} else if (section === 'creator-dashboard') {
 	  const app = document.getElementById('app');
-	  const { userId, usx_token, wax_account } = window.userData || {};
-	  if (!userId || !usx_token || !wax_account) {
-	    app.innerHTML = `<div class="section-container">
-	      <h2 class="section-title text-center">Creator Dashboard</h2>
-	      <div class="error-message">You must be logged in.</div>
-	    </div>`;
-	    return;
-	  }
 	
+	  // prepara un mount point vuoto dove CreatorDash andrà a renderizzare tutta la dashboard
 	  app.innerHTML = `
-	    <div class="section-container">
-	      <h2 class="section-title text-center">Creator Dashboard</h2>
-	
-	      <!-- Top summary -->
-	      <div class="cards-grid" style="display:grid;grid-template-columns:repeat(12,1fr);gap:14px;">
-	        <!-- Subscription -->
-	        <div class="card" style="grid-column: span 4; background:#0a0f1a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;">
-	          <div style="display:flex;justify-content:space-between;align-items:center;">
-	            <div style="font-weight:900;color:#e2e8f0;">Subscription</div>
-	            <div id="cd-sub-chip"></div>
-	          </div>
-	          <div id="cd-sub-body" style="margin-top:8px;color:#cbd5e1;font-size:.95rem;"></div>
-	        </div>
-	
-	        <!-- Rewards & Deposits -->
-	        <div class="card" style="grid-column: span 4; background:#0a0f1a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;">
-	          <div style="font-weight:900;color:#e2e8f0;">Token Rewards & Deposits</div>
-	          <div id="cd-rewards" style="margin-top:8px;"></div>
-	        </div>
-	
-	        <!-- ADS quick controls -->
-	        <div class="card" style="grid-column: span 4; background:#0a0f1a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;">
-	          <div style="font-weight:900;color:#e2e8f0;">Ads Settings</div>
-	          <div id="cd-ads-quick" style="margin-top:8px;color:#cbd5e1;"></div>
-	        </div>
-	      </div>
-	
-	      <!-- Links -->
-	      <div class="card" style="margin-top:14px;background:#0a0f1a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;">
-	        <div style="font-weight:900;color:#e2e8f0;margin-bottom:8px;">Quick Links</div>
-	        <div style="display:flex;flex-wrap:wrap;gap:8px;">
-	          <button class="btn btn-primary" data-menu="twitch-nfts-giveaways">NFT Giveaways</button>
-	          <button class="btn btn-primary" data-menu="log-storms-giveaways">Token Storms</button>
-	          <button class="btn btn-primary" data-section="noncustodialfarms">NC-NFTs Farms</button>
-	          <button class="btn btn-primary" data-section="create-token-pool">Token Staking Farms</button>
-	        </div>
-	      </div>
-	
-	      <!-- Ads editor -->
-	      <div class="card" style="margin-top:14px;background:#0a0f1a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;">
-	        <div style="display:flex;justify-content:space-between;align-items:center;">
-	          <div style="font-weight:900;color:#e2e8f0;">Ads — Global + Channel</div>
-	          <div id="cd-ads-status" style="font-size:.9rem;color:#94a3b8;"></div>
-	        </div>
-	        <div id="cd-ads-editor" style="margin-top:10px;"></div>
-	      </div>
-	
-	      <!-- History tabs -->
-	      <div class="card" style="margin-top:14px;background:#0a0f1a;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;">
-	        <div style="display:flex;gap:8px;margin-bottom:10px;">
-	          <button id="cd-tab-giveaways" class="btn btn-secondary">NFT Giveaways</button>
-	          <button id="cd-tab-storms" class="btn btn-secondary">Token Storms</button>
-	          <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
-	            <input id="cd-filter-q" class="input-field" placeholder="Search…" style="width:220px;">
-	            <select id="cd-filter-status" class="filter-select">
-	              <option value="">All</option>
-	              <option value="pending">Pending</option>
-	              <option value="sent">Sent/Executed</option>
-	              <option value="failed">Failed</option>
-	            </select>
-	            <input type="date" id="cd-date-from" class="input-field">
-	            <input type="date" id="cd-date-to" class="input-field">
-	            <button id="cd-filter-reset" class="btn btn-secondary">Reset</button>
-	          </div>
-	        </div>
-	        <div id="cd-history"></div>
-	      </div>
+	    <div class="section-wrapper" id="creator-dashboard-root" style="padding:1rem 0;">
+	      <div style="color:#ccc;font-size:.9rem;">Loading Creator Dashboard…</div>
 	    </div>
 	  `;
 	
-	  // quick navigation
-	  app.querySelectorAll('[data-menu]').forEach(b=>{
-	    b.addEventListener('click', e=>{
-	      const menu = e.currentTarget.getAttribute('data-menu');
-	      // riusa i menu già esistenti (vedi sezione C2E) :contentReference[oaicite:1]{index=1}
-	      loadSection('c2e-twitch');
-	      setTimeout(()=>{
-	        const btn = document.querySelector(`.c2e-menu-btn[data-menu="${menu}"]`);
-	        if (btn) btn.click();
-	      }, 0);
-	    });
-	  });
-	  app.querySelectorAll('[data-section]').forEach(b=>{
-	    b.addEventListener('click', e=>{
-	      loadSection(e.currentTarget.getAttribute('data-section'));
-	    });
-	  });
+	  // recuperiamo i dati dell'utente loggato
+	  const { userId, usx_token, wax_account } = window.userData || {};
 	
-	  // carica dati e monta UI
-	  await window.CreatorDash.mount({
-	    container: app,
-	    userId, usx_token, wax_account,
-	    baseUrl: BASE_URL
+	  // se non loggato / manca wax_account → messaggio e stop
+	  if (!userId || !usx_token || !wax_account) {
+	    const mountPoint = document.getElementById('creator-dashboard-root');
+	    mountPoint.innerHTML = `
+	      <div class="account-card2" style="padding:16px;background:#1f2937;border-radius:12px;color:#fff;">
+	        <div style="font-weight:700;font-size:1rem;color:#fff;">Not logged in</div>
+	        <div style="color:#9ca3af;font-size:.9rem;margin-top:4px;">
+	          Please login to view your creator dashboard.
+	        </div>
+	      </div>
+	    `;
+	    return;
+	  }
+	
+	  // monta la dashboard dinamica vera:
+	  // CreatorDash:
+	  // - chiama gli endpoint backend
+	  // - costruisce le tab (Overview / Ads Manager / History)
+	  // - gestisce l'editor delle Channel Ads e il salvataggio sul backend
+	  window.CreatorDash.mount({
+	    rootEl: document.getElementById('creator-dashboard-root'),
+	    baseUrl: BASE_URL,
+	    userId,
+	    usx_token,
+	    wax_account
 	  });
-	}	
+	}
   }
+
+// ======================================================
+// =============== CREATOR DASHBOARD MODULE =============
+// ======================================================
+
+window.CreatorDash = (() => {
+
+  // --- STATE -------------------------------------------------
+  const st = {
+    loading: true,
+    error: null,
+    activeTab: 'overview', // 'overview' | 'ads' | 'history'
+
+    // auth / identity
+    baseUrl: '',
+    userId: '',
+    usx_token: '',
+    wax_account: '',
+
+    // dati canale e sub
+    channel: '',
+    subscription: null,
+    subscription_status: '',           // "active" | "expired" | "unknown"
+    rewards_active: false,
+    rewards_status_message: '',
+
+    // token rewards
+    effectiveRewards: [],              // [{token, per_message, remaining, messages_left, reward_source}, ...]
+    depositsMap: {},                   // token -> remaining
+    fetched_at: '',
+
+    // ads config
+    ads_global: {                      // provenienti da channel='chipsmasterbot' (GLOBALI)
+      list: [],
+      interval_seconds: 900,
+      rotation_mode: 'sequential',
+      updated_at: null
+    },
+    ads_channel: {                     // override/config del TUO canale
+      list: [],
+      interval_seconds: 900,
+      rotation_mode: 'sequential',
+      enabled: true,
+      updated_at: null
+    },
+
+    // storico azioni pianificate
+    giveaways: [],                     // scheduled_nft_giveaways_by_wax
+    storms: [],                        // scheduled_storms_by_wax
+
+    // DOM root
+    rootEl: null
+  };
+
+  // --- HELPERS ------------------------------------------------
+
+  // escape HTML minimo per sicurezza nell'output
+  function esc(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;");
+  }
+
+  // formattatore numeri tipo 12345.6789 -> "12,345.6789"
+  function chip(v, dp = 4) {
+    if (v === null || v === undefined || isNaN(v)) return '-';
+    return Number(v).toLocaleString('en-US',{
+      minimumFractionDigits:0,
+      maximumFractionDigits:dp
+    });
+  }
+
+  // fetch wrapper con gestione base errori
+  async function fetchJSON(url, opts = {}) {
+    const res = await fetch(url, opts);
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok) {
+      const msg = data?.error || data?.message || (`HTTP ${res.status}`);
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  // calcola badge "Expired / Active / Unknown"
+  function renderSubStatusBadge() {
+    const stClassBase = `
+      display:inline-block;
+      font-size:.75rem;
+      font-weight:700;
+      padding:4px 8px;
+      border-radius:6px;
+      line-height:1;
+    `;
+    if (st.subscription_status === 'active') {
+      return `<span style="${stClassBase}background:#16a34a;color:#03130a;border:1px solid rgba(0,0,0,.4);">ACTIVE</span>`;
+    }
+    if (st.subscription_status === 'expired') {
+      return `<span style="${stClassBase}background:#dc2626;color:#fff;border:1px solid rgba(0,0,0,.4);">EXPIRED</span>`;
+    }
+    return `<span style="${stClassBase}background:#6b7280;color:#fff;border:1px solid rgba(0,0,0,.4);">UNKNOWN</span>`;
+  }
+
+  // -------------------------------------------------------------------------------------------------
+  // FETCH DATA DAL BACKEND
+  // -------------------------------------------------------------------------------------------------
+
+  async function loadAllData() {
+    st.loading = true;
+    st.error   = null;
+    render(); // mostra "loading..."
+
+    const qsBaseAuth = new URLSearchParams({
+      user_id: st.userId,
+      usx_token: st.usx_token,
+      wax_account: st.wax_account
+    }).toString();
+
+    try {
+      // 1) token rewards + deposito + stato sub
+      const rewardsPayload = await fetchJSON(
+        `${st.baseUrl}/get_channel_token_rewards?${qsBaseAuth}`
+      );
+      st.channel                 = rewardsPayload.channel || '';
+      st.subscription            = rewardsPayload.subscription || null;
+      st.subscription_status     = rewardsPayload.subscription?.status || '';
+      st.rewards_active          = !!rewardsPayload.rewards_active;
+      st.rewards_status_message  = rewardsPayload.rewards_status_message || '';
+      st.effectiveRewards        = rewardsPayload.effective || [];
+      st.depositsMap             = rewardsPayload.deposits || {};
+      st.fetched_at              = rewardsPayload.fetched_at || '';
+
+      // 2) ads config (global + channel)
+      //    NOTA IMPORTANTE:
+      //    qui assumiamo che /get_channel_ads_by_wax ora ritorni:
+      //    {
+      //       wax_account,
+      //       channel,
+      //       subscription: {...},
+      //       ads_global: {
+      //          ads_list: [...],
+      //          interval_seconds: <int>,
+      //          rotation_mode: "sequential"|"random",
+      //          updated_at: "...",
+      //       },
+      //       ads_channel: {
+      //          ads_list: [...],
+      //          interval_seconds: <int>,
+      //          rotation_mode: "sequential"|"random",
+      //          enabled: true/false,
+      //          updated_at: "...",
+      //       }
+      //    }
+      const adsPayload = await fetchJSON(
+        `${st.baseUrl}/get_channel_ads_by_wax?${qsBaseAuth}`
+      );
+
+      st.ads_global = {
+        list: adsPayload?.ads_global?.ads_list || [],
+        interval_seconds: adsPayload?.ads_global?.interval_seconds ?? 900,
+        rotation_mode: adsPayload?.ads_global?.rotation_mode || 'sequential',
+        updated_at: adsPayload?.ads_global?.updated_at || null
+      };
+
+      st.ads_channel = {
+        list: adsPayload?.ads_channel?.ads_list || [],
+        interval_seconds: adsPayload?.ads_channel?.interval_seconds ?? 900,
+        rotation_mode: adsPayload?.ads_channel?.rotation_mode || 'sequential',
+        enabled: !!adsPayload?.ads_channel?.enabled,
+        updated_at: adsPayload?.ads_channel?.updated_at || null
+      };
+
+      // 3) storico storms di questo creator
+      const stormsPayload = await fetchJSON(
+        `${st.baseUrl}/scheduled_storms_by_wax?usx_token=${encodeURIComponent(st.usx_token)}&wax_account=${encodeURIComponent(st.wax_account)}`
+      );
+      st.storms = Array.isArray(stormsPayload) ? stormsPayload : [];
+
+      // 4) storico nft giveaways di questo creator
+      const givsPayload = await fetchJSON(
+        `${st.baseUrl}/get_scheduled_nft_giveaways_by_wax?usx_token=${encodeURIComponent(st.usx_token)}&wax_account=${encodeURIComponent(st.wax_account)}`
+      );
+      st.giveaways = Array.isArray(givsPayload) ? givsPayload : [];
+
+    } catch (err) {
+      console.error("❌ CreatorDash loadAllData error:", err);
+      st.error = err.message || String(err || 'Unknown error');
+    }
+
+    st.loading = false;
+    render();
+  }
+
+  // -------------------------------------------------------------------------------------------------
+  // RENDER UI PRINCIPALE
+  // -------------------------------------------------------------------------------------------------
+
+  function render() {
+    const root = st.rootEl;
+    if (!root) return;
+
+    if (st.loading) {
+      root.innerHTML = `
+        <div class="account-card2" style="padding:16px;background:#1f2937;border-radius:12px;color:#fff;">
+          <div style="font-weight:700;font-size:1rem;color:#fff;margin-bottom:4px;">
+            Loading Creator Dashboard…
+          </div>
+          <div style="color:#9ca3af;font-size:.9rem;">
+            Please wait while we fetch your channel data.
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    if (st.error) {
+      root.innerHTML = `
+        <div class="account-card2" style="padding:16px;background:#1f2937;border-radius:12px;color:#fff;border:1px solid #7f1d1d;">
+          <div style="font-weight:700;font-size:1rem;color:#f87171;margin-bottom:4px;">
+            Error loading dashboard
+          </div>
+          <div style="color:#9ca3af;font-size:.9rem;margin-bottom:12px;">${esc(st.error)}</div>
+          <button id="cd-retry" class="btn btn-secondary" style="padding:8px 12px;border-radius:8px;background:#374151;">
+            Retry
+          </button>
+        </div>
+      `;
+      const retryBtn = root.querySelector('#cd-retry');
+      if (retryBtn) retryBtn.addEventListener('click', () => loadAllData());
+      return;
+    }
+
+    // Header tabs + quick links
+    root.innerHTML = `
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:1rem 1.5rem;margin-bottom:1rem;">
+        <div style="flex-grow:1;min-width:200px;">
+          <div style="font-size:1.1rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:.5rem;">
+            <span>Creator Dashboard</span>
+            ${renderSubStatusBadge()}
+          </div>
+          <div style="font-size:.8rem;color:#9ca3af;line-height:1.4;margin-top:2px;">
+            Channel: <span style="color:#fff;font-weight:600;">${esc(st.channel)}</span><br/>
+            Wax Account: <span style="color:#fff;font-weight:600;">${esc(st.wax_account)}</span><br/>
+            ${st.rewards_active
+              ? `<span style="color:#22c55e;font-weight:600;">${esc(st.rewards_status_message)}</span>`
+              : `<span style="color:#f87171;font-weight:600;">${esc(st.rewards_status_message)}</span>`
+            }
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:.5rem;min-width:200px;">
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            <button class="cd-tab-btn ${st.activeTab==='overview'?'cd-tab-active':''}" data-tab="overview"
+              style="${tabBtnStyle(st.activeTab==='overview')}">Overview</button>
+
+            <button class="cd-tab-btn ${st.activeTab==='ads'?'cd-tab-active':''}" data-tab="ads"
+              style="${tabBtnStyle(st.activeTab==='ads')}">Ads Manager</button>
+
+            <button class="cd-tab-btn ${st.activeTab==='history'?'cd-tab-active':''}" data-tab="history"
+              style="${tabBtnStyle(st.activeTab==='history')}">History</button>
+          </div>
+
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            <button class="btn btn-secondary"
+              style="${miniLinkBtnStyle()}"
+              onclick="loadSection('log-nft-giveaways')">🎁 NFT Giveaways</button>
+
+            <button class="btn btn-secondary"
+              style="${miniLinkBtnStyle()}"
+              onclick="loadSection('log-storms-giveaways')">🌪 Storms</button>
+
+            <button class="btn btn-secondary"
+              style="${miniLinkBtnStyle()}"
+              onclick="loadSection('noncustodialfarms')">🌱 NFT Farms</button>
+
+            <button class="btn btn-secondary"
+              style="${miniLinkBtnStyle()}"
+              onclick="loadSection('create-token-pool')">💰 Token Farms</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="cd-body">
+        ${renderActiveTab()}
+      </div>
+    `;
+
+    bindTabSwitcher();
+
+    if (st.activeTab === 'ads') {
+      bindAdsEditor(); // serve per gestire Add/Edit/Delete + Save
+    }
+  }
+
+  function tabBtnStyle(active){
+    return `
+      cursor:pointer;border:none;border-radius:8px;
+      padding:8px 12px;
+      font-size:.8rem;font-weight:700;line-height:1;
+      ${active
+        ? 'background:#22c55e;color:#0a0f0a;'
+        : 'background:#1f2937;color:#e5e7eb;border:1px solid rgba(255,255,255,.08);'
+      }
+    `;
+  }
+
+  function miniLinkBtnStyle(){
+    return `
+      cursor:pointer;border:none;border-radius:8px;
+      padding:6px 10px;
+      font-size:.7rem;font-weight:600;line-height:1;
+      background:#1f2937;color:#e5e7eb;border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 0 10px rgba(0,255,200,.15);
+    `;
+  }
+
+  function bindTabSwitcher() {
+    const btns = st.rootEl.querySelectorAll('.cd-tab-btn');
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-tab');
+        st.activeTab = tab;
+        render();
+      });
+    });
+  }
+
+  function renderActiveTab() {
+    if (st.activeTab === 'ads')     return renderAdsTab();
+    if (st.activeTab === 'history') return renderHistoryTab();
+    return renderOverviewTab();
+  }
+
+  // -------------------------------------------------------------------------------------------------
+  // TAB 1: OVERVIEW (subscription + rewards)
+  // -------------------------------------------------------------------------------------------------
+
+  function renderOverviewTab() {
+    const sub = st.subscription || {};
+    const daysLeft = (sub.days_left !== undefined && sub.days_left !== null)
+      ? `${sub.days_left} days`
+      : "-";
+
+    const rewardsCards = st.effectiveRewards.map(r => {
+      return `
+        <div style="
+          flex:1 1 140px;min-width:140px;
+          background:#111827;border-radius:10px;
+          border:1px solid rgba(255,255,255,.07);
+          padding:12px 14px;color:#fff;
+          box-shadow:0 0 10px rgba(0,255,200,.08);
+        ">
+          <div style="font-size:.8rem;color:#9ca3af;display:flex;justify-content:space-between;">
+            <span>${esc(r.token)}</span>
+            <span style="color:#4ade80;font-weight:700;">${esc(r.reward_source)}</span>
+          </div>
+          <div style="margin-top:4px;font-size:.9rem;font-weight:700;">
+            ${chip(r.per_message,6)} /msg
+          </div>
+          <div style="margin-top:4px;font-size:.8rem;color:#9ca3af;">
+            Remaining: <strong style="color:#fff;">${chip(r.remaining,6)}</strong><br/>
+            Msgs left: <strong style="color:#fff;">${r.messages_left == null ? '-' : chip(r.messages_left,0)}</strong>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+
+        <!-- Subscription card -->
+        <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:16px;color:#fff;">
+          <div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;">
+            <div style="min-width:200px;flex:1;">
+              <div style="font-size:.8rem;color:#9ca3af;">Plan</div>
+              <div style="font-size:1rem;font-weight:700;">
+                ${esc(sub.plan_id ?? '-')} 
+                ${sub.type ? `<span style="font-size:.7rem;font-weight:600;color:#a5b4fc;">(${esc(sub.type)})</span>` : ''}
+              </div>
+
+              <div style="margin-top:8px;font-size:.8rem;color:#9ca3af;">Started</div>
+              <div style="font-size:.9rem;font-weight:600;">${esc(sub.start_date || '-')}</div>
+
+              <div style="margin-top:8px;font-size:.8rem;color:#9ca3af;">Expires</div>
+              <div style="font-size:.9rem;font-weight:600;">${esc(sub.expiry_date || '-')} (${daysLeft} left)</div>
+            </div>
+
+            <div style="min-width:200px;flex:1;">
+              <div style="font-size:.8rem;color:#9ca3af;">Paid WAX</div>
+              <div style="font-size:.9rem;font-weight:600;">${chip(sub.paid_wax_amount,4)} ${esc(sub.token_symbol||'WAX')}</div>
+
+              <div style="margin-top:8px;font-size:.8rem;color:#9ca3af;">USD est.</div>
+              <div style="font-size:.9rem;font-weight:600;">$${chip(sub.usd_value_estimated,2)}</div>
+
+              <div style="margin-top:8px;font-size:.8rem;color:#9ca3af;">Memo</div>
+              <div style="font-size:.8rem;color:#e5e7eb;">${esc(sub.memo || '-')}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rewards summary -->
+        <div class="account-card2" style="background:#111827;border-radius:12px;padding:16px;color:#fff;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+            <div style="min-width:180px;flex:1;">
+              <div style="font-size:1rem;font-weight:700;color:#fff;">Chat Rewards</div>
+              <div style="color:${st.rewards_active ? '#4ade80' : '#f87171'};font-size:.8rem;font-weight:600;margin-top:4px;">
+                ${esc(st.rewards_status_message)}
+              </div>
+              <div style="font-size:.7rem;color:#9ca3af;margin-top:6px;">
+                Last sync: ${esc(st.fetched_at || '-')}
+              </div>
+            </div>
+
+            <div style="flex:3;display:flex;flex-wrap:wrap;gap:.75rem;">
+              ${rewardsCards || `<div style="color:#9ca3af;font-size:.8rem;">No rewards data.</div>`}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  // -------------------------------------------------------------------------------------------------
+  // TAB 2: ADS MANAGER (global vs personalizzate canale)
+  // -------------------------------------------------------------------------------------------------
+
+  function renderAdsTab() {
+    // GLOBAL (sola lettura)
+    const globalListHTML = (st.ads_global.list || []).map((msg, idx) => `
+      <div style="
+        border:1px solid rgba(255,255,255,.07);
+        border-radius:8px;
+        background:#1e293b;
+        padding:10px 12px;
+        color:#fff;
+        font-size:.8rem;
+        line-height:1.4;
+      ">
+        <div style="font-weight:700;color:#93c5fd;font-size:.7rem;margin-bottom:4px;">GLOBAL #${idx+1}</div>
+        <div style="white-space:pre-wrap;">${esc(msg)}</div>
+      </div>
+    `).join('');
+
+    // CHANNEL (editabile)
+    const channelListHTML = (st.ads_channel.list || []).map((msg, idx) => `
+      <div class="cd-ad-row" data-idx="${idx}" style="
+        border:1px solid rgba(255,255,255,.07);
+        border-radius:8px;
+        background:#0f172a;
+        padding:10px 12px;
+        color:#fff;
+        font-size:.8rem;
+        line-height:1.4;
+        position:relative;
+      ">
+        <div style="font-weight:700;color:#facc15;font-size:.7rem;margin-bottom:4px;">CHAN #${idx+1}</div>
+        <div class="cd-ad-text" style="white-space:pre-wrap;">${esc(msg)}</div>
+        <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;">
+          <button class="cd-edit-ad btn btn-secondary" style="${miniIconBtnStyle()}">✏️</button>
+          <button class="cd-del-ad btn btn-secondary" style="${miniIconBtnStyle()}">🗑</button>
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+
+        <!-- GLOBAL ADS (read only) -->
+        <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:16px;color:#fff;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+            <div style="min-width:200px;flex:1;">
+              <div style="font-size:1rem;font-weight:700;color:#fff;">Global Rotation (readonly)</div>
+              <div style="font-size:.8rem;color:#9ca3af;line-height:1.4;margin-top:4px;">
+                Questi messaggi vengono inviati automaticamente da ChipsMasterBot a tutti i canali partner.
+              </div>
+              <div style="font-size:.8rem;color:#9ca3af;margin-top:6px;">
+                Interval: <span style="color:#fff;font-weight:600;">${chip(st.ads_global.interval_seconds,0)}s</span><br/>
+                Mode: <span style="color:#fff;font-weight:600;">${esc(st.ads_global.rotation_mode)}</span><br/>
+                Last update: <span style="color:#fff;font-weight:600;">${esc(st.ads_global.updated_at || '-')}</span>
+              </div>
+            </div>
+
+            <div style="flex:2;display:flex;flex-direction:column;gap:.5rem;min-width:250px;">
+              ${globalListHTML || `<div style="color:#9ca3af;font-size:.8rem;">No global ads configured.</div>`}
+            </div>
+          </div>
+        </div>
+
+        <!-- CHANNEL ADS (editable) -->
+        <div class="account-card2" style="background:#111827;border-radius:12px;padding:16px;color:#fff;">
+          <div style="font-size:1rem;font-weight:700;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+            <div>Channel Ads for <span style="color:#facc15;">${esc(st.channel)}</span></div>
+            <div style="font-size:.7rem;color:#9ca3af;">Last update: ${esc(st.ads_channel.updated_at || '-')}</div>
+          </div>
+
+          <div style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:1rem;">
+            <div style="min-width:200px;flex:1;">
+              <label style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:#fff;font-weight:600;">
+                <input id="cd-channel-enabled" type="checkbox" ${st.ads_channel.enabled?'checked':''}
+                  style="accent-color:#22c55e;cursor:pointer;">
+                Enable Channel Ads
+              </label>
+
+              <div style="margin-top:.75rem;font-size:.8rem;color:#9ca3af;">
+                Interval (seconds)
+              </div>
+              <input id="cd-channel-interval" type="number" min="30" step="30"
+                value="${esc(st.ads_channel.interval_seconds)}"
+                style="${inputStyle()}">
+
+              <div style="margin-top:.75rem;font-size:.8rem;color:#9ca3af;">
+                Rotation Mode
+              </div>
+              <select id="cd-channel-rotation" style="${inputStyle()}">
+                <option value="sequential" ${st.ads_channel.rotation_mode==='sequential'?'selected':''}>Sequential</option>
+                <option value="random" ${st.ads_channel.rotation_mode==='random'?'selected':''}>Random</option>
+              </select>
+
+              <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+                <button id="cd-add-ad" class="btn btn-secondary" style="${actionBtnStyle('#1e40af')}">➕ Add message</button>
+                <button id="cd-save-ads" class="btn btn-primary" style="${actionBtnStyle('#22c55e','#0a0f0a')}">💾 Save</button>
+              </div>
+
+              <div id="cd-save-feedback" style="font-size:.75rem;color:#9ca3af;margin-top:.5rem;"></div>
+            </div>
+
+            <div style="flex:2;min-width:250px;display:flex;flex-direction:column;gap:.75rem;" id="cd-channel-ads-list">
+              ${channelListHTML || `<div style="color:#9ca3af;font-size:.8rem;">No custom channel ads yet. Click "➕ Add message".</div>`}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  function miniIconBtnStyle() {
+    return `
+      cursor:pointer;
+      background:#1f2937;
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:6px;
+      padding:4px 6px;
+      font-size:.7rem;
+      line-height:1;
+      color:#fff;
+    `;
+  }
+
+  function actionBtnStyle(bg,fg){
+    return `
+      cursor:pointer;
+      border:none;
+      border-radius:8px;
+      padding:8px 12px;
+      font-size:.8rem;
+      line-height:1;
+      font-weight:700;
+      background:${bg || '#1f2937'};
+      color:${fg || '#fff'};
+      box-shadow:0 0 10px rgba(0,255,200,.15);
+    `;
+  }
+
+  function inputStyle(){
+    return `
+      width:100%;
+      background:#1f2937;
+      color:#fff;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:8px;
+      padding:8px 10px;
+      font-size:.8rem;
+      font-weight:600;
+      outline:none;
+    `;
+  }
+
+  // after rendering Ads tab, collega i bottoni (Add/Edit/Delete/Save)
+  function bindAdsEditor() {
+    const listEl = st.rootEl.querySelector('#cd-channel-ads-list');
+    const addBtn = st.rootEl.querySelector('#cd-add-ad');
+    const saveBtn= st.rootEl.querySelector('#cd-save-ads');
+    const intervalInput  = st.rootEl.querySelector('#cd-channel-interval');
+    const rotationSelect = st.rootEl.querySelector('#cd-channel-rotation');
+    const enabledCheck   = st.rootEl.querySelector('#cd-channel-enabled');
+    const feedbackEl     = st.rootEl.querySelector('#cd-save-feedback');
+
+    if (!listEl || !addBtn || !saveBtn) return;
+
+    // lavoriamo su una copia "locale" modificabile
+    let workingList = [...(st.ads_channel.list || [])];
+
+    function rerenderWorkingList() {
+      listEl.innerHTML = workingList.map((msg, idx) => `
+        <div class="cd-ad-row" data-idx="${idx}" style="
+          border:1px solid rgba(255,255,255,.07);
+          border-radius:8px;
+          background:#0f172a;
+          padding:10px 12px;
+          color:#fff;
+          font-size:.8rem;
+          line-height:1.4;
+          position:relative;
+        ">
+          <div style="font-weight:700;color:#facc15;font-size:.7rem;margin-bottom:4px;">CHAN #${idx+1}</div>
+          <div class="cd-ad-text" style="white-space:pre-wrap;">${esc(msg)}</div>
+          <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;">
+            <button class="cd-edit-ad btn btn-secondary" style="${miniIconBtnStyle()}">✏️</button>
+            <button class="cd-del-ad btn btn-secondary" style="${miniIconBtnStyle()}">🗑</button>
+          </div>
+        </div>
+      `).join('') || `<div style="color:#9ca3af;font-size:.8rem;">No custom channel ads yet. Click "➕ Add message".</div>`;
+
+      // collega EDIT / DELETE
+      listEl.querySelectorAll('.cd-edit-ad').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const parent = btn.closest('.cd-ad-row');
+          const idx = Number(parent?.getAttribute('data-idx'));
+          const currentText = workingList[idx] || '';
+          const next = window.prompt('Edit message:', currentText);
+          if (next !== null && next.trim() !== '') {
+            workingList[idx] = next.trim();
+            rerenderWorkingList();
+          }
+        });
+      });
+      listEl.querySelectorAll('.cd-del-ad').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const parent = btn.closest('.cd-ad-row');
+          const idx = Number(parent?.getAttribute('data-idx'));
+          if (window.confirm('Delete this ad message?')) {
+            workingList.splice(idx,1);
+            rerenderWorkingList();
+          }
+        });
+      });
+    }
+
+    // first render
+    rerenderWorkingList();
+
+    // ADD button
+    addBtn.addEventListener('click', () => {
+      const txt = window.prompt('New ad message:');
+      if (txt && txt.trim() !== '') {
+        workingList.push(txt.trim());
+        rerenderWorkingList();
+      }
+    });
+
+    // SAVE button → POST config al backend
+    saveBtn.addEventListener('click', async () => {
+      feedbackEl.style.color = '#9ca3af';
+      feedbackEl.textContent = 'Saving…';
+
+      const payload = {
+        user_id: st.userId,
+        usx_token: st.usx_token,
+        channel: st.channel,
+        enabled: !!enabledCheck.checked,
+        interval_seconds: Number(intervalInput.value) || 900,
+        rotation_mode: rotationSelect.value || 'sequential',
+        ads_list: workingList
+      };
+
+      try {
+        const res = await fetchJSON(`${st.baseUrl}/channel_ads_config/save`, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        // aggiorna stato locale con quello appena salvato
+        st.ads_channel.enabled          = payload.enabled;
+        st.ads_channel.interval_seconds = payload.interval_seconds;
+        st.ads_channel.rotation_mode    = payload.rotation_mode;
+        st.ads_channel.list             = [...workingList];
+        st.ads_channel.updated_at       = (res && res.updated_at) || new Date().toISOString();
+
+        feedbackEl.style.color = '#22c55e';
+        feedbackEl.textContent = 'Saved ✔';
+
+      } catch (err) {
+        console.error("❌ save channel ads error:", err);
+        feedbackEl.style.color = '#f87171';
+        feedbackEl.textContent = 'Save failed: ' + (err.message || 'unknown error');
+      }
+    });
+  }
+
+  // -------------------------------------------------------------------------------------------------
+  // TAB 3: HISTORY (giveaways & storms dello user)
+  // -------------------------------------------------------------------------------------------------
+
+  function renderHistoryTab() {
+    const givRows = st.giveaways.map(g => `
+      <tr style="border-bottom:1px solid rgba(255,255,255,.07);">
+        <td style="${tdHist()}">${esc(g.id)}</td>
+        <td style="${tdHist()}">${esc(g.scheduled_time||'-')}</td>
+        <td style="${tdHist()}">${esc(g.channel_name||'-')}</td>
+        <td style="${tdHist()}">${esc(g.collection_name||'-')}</td>
+        <td style="${tdHist()}">${esc(g.template_names||g.template_id||'-')}</td>
+        <td style="${tdHist()}">${esc(g.status||'-')}</td>
+        <td style="${tdHist()}">${esc(g.winner||'-')}</td>
+        <td style="${tdHist()}">${esc(g.timeframe||'-')}</td>
+      </tr>
+    `).join('') || `
+      <tr><td colspan="8" style="${tdHist('center','#9ca3af')}">No NFT giveaways found.</td></tr>
+    `;
+
+    const stormRows = st.storms.map(s => `
+      <tr style="border-bottom:1px solid rgba(255,255,255,.07);">
+        <td style="${tdHist()}">${esc(s.id)}</td>
+        <td style="${tdHist()}">${esc(s.scheduled_time||'-')}</td>
+        <td style="${tdHist()}">${esc(s.channel_name||'-')}</td>
+        <td style="${tdHist()}">${chip(s.amount,6)} ${esc(s.token_symbol||'')}</td>
+        <td style="${tdHist()}">${esc(s.timeframe||'-')}</td>
+        <td style="${tdHist()}">${esc(s.status||'-')}</td>
+        <td style="${tdHist()}">${esc(s.winners_display||'-')}</td>
+      </tr>
+    `).join('') || `
+      <tr><td colspan="7" style="${tdHist('center','#9ca3af')}">No storms found.</td></tr>
+    `;
+
+    return `
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+
+        <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:16px;color:#fff;">
+          <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:.5rem;">
+            NFT Giveaways History
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:700px;">
+              <thead>
+                <tr style="background:#111827;color:#fff;text-align:left;">
+                  <th style="${thHist()}">ID</th>
+                  <th style="${thHist()}">Scheduled</th>
+                  <th style="${thHist()}">Channel</th>
+                  <th style="${thHist()}">Collection</th>
+                  <th style="${thHist()}">Template(s)</th>
+                  <th style="${thHist()}">Status</th>
+                  <th style="${thHist()}">Winner</th>
+                  <th style="${thHist()}">Timeframe</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${givRows}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="account-card2" style="background:#111827;border-radius:12px;padding:16px;color:#fff;">
+          <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:.5rem;">
+            Token Storms History
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:700px;">
+              <thead>
+                <tr style="background:#1f2937;color:#fff;text-align:left;">
+                  <th style="${thHist()}">ID</th>
+                  <th style="${thHist()}">Scheduled</th>
+                  <th style="${thHist()}">Channel</th>
+                  <th style="${thHist()}">Amount</th>
+                  <th style="${thHist()}">Timeframe</th>
+                  <th style="${thHist()}">Status</th>
+                  <th style="${thHist()}">Winners</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${stormRows}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  function thHist(){
+    return `
+      font-weight:600;
+      padding:8px 10px;
+      color:#fff;
+      border-bottom:1px solid rgba(255,255,255,.15);
+      font-size:.7rem;
+      white-space:nowrap;
+    `;
+  }
+  function tdHist(align='left',color='#e5e7eb'){
+    return `
+      padding:8px 10px;
+      color:${color};
+      font-size:.7rem;
+      white-space:nowrap;
+      text-align:${align};
+    `;
+  }
+
+  // -------------------------------------------------------------------------------------------------
+  // PUBLIC API
+  // -------------------------------------------------------------------------------------------------
+
+  function mount({ rootEl, baseUrl, userId, usx_token, wax_account }) {
+    st.rootEl      = rootEl;
+    st.baseUrl     = baseUrl;
+    st.userId      = userId;
+    st.usx_token   = usx_token;
+    st.wax_account = wax_account;
+
+    // reset tab su mount
+    st.activeTab = 'overview';
+
+    loadAllData();
+  }
+
+  return { mount };
+})();
 
 function showNewsSection() {
   loadNewsList({ page: 1 });

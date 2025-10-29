@@ -2996,12 +2996,19 @@ async function loadSection(section) {
 // ======================================================
 
 window.CreatorDash = (() => {
+  // ---------- UI SCALES ----------
+  const FS = {
+    xs: '0.95rem',
+    sm: '1.05rem',
+    md: '1.15rem',
+    lg: '1.25rem',
+  };
 
-  // --- STATE -------------------------------------------------
+  // ---------- STATE ----------
   const st = {
     loading: true,
     error: null,
-    activeTab: 'overview', // 'overview' | 'ads' | 'history'
+    activeTab: 'overview', // 'overview' | 'rewards' | 'ads' | 'history'
 
     // auth / identity
     baseUrl: '',
@@ -3009,26 +3016,27 @@ window.CreatorDash = (() => {
     usx_token: '',
     wax_account: '',
 
-    // dati canale e sub
+    // channel & subscription
     channel: '',
     subscription: null,
     subscription_status: '',           // "active" | "expired" | "unknown"
     rewards_active: false,
     rewards_status_message: '',
 
-    // token rewards
+    // rewards data
+    rewardsMap: {},                    // from backend.rewards {SYM: {per_message, source}}
     effectiveRewards: [],              // [{token, per_message, remaining, messages_left, reward_source}, ...]
     depositsMap: {},                   // token -> remaining
     fetched_at: '',
 
     // ads config
-    ads_global: {                      // provenienti da channel='chipsmasterbot' (GLOBALI)
+    ads_global: {                      // channel='chipsmasterbot'
       list: [],
       interval_seconds: 900,
       rotation_mode: 'sequential',
       updated_at: null
     },
-    ads_channel: {                     // override/config del TUO canale
+    ads_channel: {                     // channel override/config
       list: [],
       interval_seconds: 900,
       rotation_mode: 'sequential',
@@ -3036,36 +3044,27 @@ window.CreatorDash = (() => {
       updated_at: null
     },
 
-    // storico azioni pianificate
-    giveaways: [],                     // scheduled_nft_giveaways_by_wax
-    storms: [],                        // scheduled_storms_by_wax
+    // history
+    giveaways: [],
+    storms: [],
 
     // DOM root
     rootEl: null
   };
 
-  // --- HELPERS ------------------------------------------------
+  // ---------- HELPERS ----------
+  const esc = (s) => s == null ? '' : String(s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
-  // escape HTML minimo per sicurezza nell'output
-  function esc(str) {
-    if (str === null || str === undefined) return '';
-    return String(str)
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;")
-      .replace(/"/g,"&quot;");
-  }
-
-  // formattatore numeri tipo 12345.6789 -> "12,345.6789"
   function chip(v, dp = 4) {
     if (v === null || v === undefined || isNaN(v)) return '-';
-    return Number(v).toLocaleString('en-US',{
-      minimumFractionDigits:0,
-      maximumFractionDigits:dp
+    return Number(v).toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: dp
     });
   }
 
-  // fetch wrapper con gestione base errori
   async function fetchJSON(url, opts = {}) {
     const res = await fetch(url, opts);
     const data = await res.json().catch(()=> ({}));
@@ -3076,86 +3075,68 @@ window.CreatorDash = (() => {
     return data;
   }
 
-  // calcola badge "Expired / Active / Unknown"
   function renderSubStatusBadge() {
-    const stClassBase = `
-      display:inline-block;
-      font-size:.75rem;
-      font-weight:700;
-      padding:4px 8px;
-      border-radius:6px;
-      line-height:1;
+    const base = `
+      display:inline-block;font-size:${FS.xs};font-weight:800;
+      padding:6px 10px;border-radius:8px;line-height:1;
     `;
     if (st.subscription_status === 'active') {
-      return `<span style="${stClassBase}background:#16a34a;color:#03130a;border:1px solid rgba(0,0,0,.4);">ACTIVE</span>`;
+      return `<span style="${base}background:#16a34a;color:#03130a;border:1px solid rgba(0,0,0,.4);">ACTIVE</span>`;
     }
     if (st.subscription_status === 'expired') {
-      return `<span style="${stClassBase}background:#dc2626;color:#fff;border:1px solid rgba(0,0,0,.4);">EXPIRED</span>`;
+      return `<span style="${base}background:#dc2626;color:#fff;border:1px solid rgba(0,0,0,.4);">EXPIRED</span>`;
     }
-    return `<span style="${stClassBase}background:#6b7280;color:#fff;border:1px solid rgba(0,0,0,.4);">UNKNOWN</span>`;
+    return `<span style="${base}background:#6b7280;color:#fff;border:1px solid rgba(0,0,0,.4);">UNKNOWN</span>`;
   }
 
-  // -------------------------------------------------------------------------------------------------
-  // FETCH DATA DAL BACKEND
-  // -------------------------------------------------------------------------------------------------
+  function splitRewardsBySource() {
+    const global = [];
+    const channel = [];
+    for (const [sym, obj] of Object.entries(st.rewardsMap || {})) {
+      const src = (obj?.source || '').toLowerCase();
+      const row = { token: sym, per_message: obj?.per_message ?? null };
+      if (src === 'global') global.push(row);
+      else if (src === 'channel') channel.push(row);
+    }
+    // sort alphabetically for stable UI
+    global.sort((a,b)=>a.token.localeCompare(b.token));
+    channel.sort((a,b)=>a.token.localeCompare(b.token));
+    return { global, channel };
+  }
 
+  // ---------- DATA LOAD ----------
   async function loadAllData() {
     st.loading = true;
     st.error   = null;
-    render(); // mostra "loading..."
+    render();
 
-    const qsBaseAuth = new URLSearchParams({
+    const qs = new URLSearchParams({
       user_id: st.userId,
       usx_token: st.usx_token,
       wax_account: st.wax_account
     }).toString();
 
     try {
-      // 1) token rewards + deposito + stato sub
-      const rewardsPayload = await fetchJSON(
-        `${st.baseUrl}/get_channel_token_rewards?${qsBaseAuth}`
-      );
+      // 1) token rewards + deposits + subscription
+      const rewardsPayload = await fetchJSON(`${st.baseUrl}/get_channel_token_rewards?${qs}`);
       st.channel                 = rewardsPayload.channel || '';
       st.subscription            = rewardsPayload.subscription || null;
       st.subscription_status     = rewardsPayload.subscription?.status || '';
       st.rewards_active          = !!rewardsPayload.rewards_active;
       st.rewards_status_message  = rewardsPayload.rewards_status_message || '';
+      st.rewardsMap              = rewardsPayload.rewards || {};
       st.effectiveRewards        = rewardsPayload.effective || [];
       st.depositsMap             = rewardsPayload.deposits || {};
       st.fetched_at              = rewardsPayload.fetched_at || '';
 
       // 2) ads config (global + channel)
-      //    NOTA IMPORTANTE:
-      //    qui assumiamo che /get_channel_ads_by_wax ora ritorni:
-      //    {
-      //       wax_account,
-      //       channel,
-      //       subscription: {...},
-      //       ads_global: {
-      //          ads_list: [...],
-      //          interval_seconds: <int>,
-      //          rotation_mode: "sequential"|"random",
-      //          updated_at: "...",
-      //       },
-      //       ads_channel: {
-      //          ads_list: [...],
-      //          interval_seconds: <int>,
-      //          rotation_mode: "sequential"|"random",
-      //          enabled: true/false,
-      //          updated_at: "...",
-      //       }
-      //    }
-      const adsPayload = await fetchJSON(
-        `${st.baseUrl}/get_channel_ads_by_wax?${qsBaseAuth}`
-      );
-
+      const adsPayload = await fetchJSON(`${st.baseUrl}/get_channel_ads_by_wax?${qs}`);
       st.ads_global = {
         list: adsPayload?.ads_global?.ads_list || [],
         interval_seconds: adsPayload?.ads_global?.interval_seconds ?? 900,
         rotation_mode: adsPayload?.ads_global?.rotation_mode || 'sequential',
         updated_at: adsPayload?.ads_global?.updated_at || null
       };
-
       st.ads_channel = {
         list: adsPayload?.ads_channel?.ads_list || [],
         interval_seconds: adsPayload?.ads_channel?.interval_seconds ?? 900,
@@ -3164,13 +3145,13 @@ window.CreatorDash = (() => {
         updated_at: adsPayload?.ads_channel?.updated_at || null
       };
 
-      // 3) storico storms di questo creator
+      // 3) storms history
       const stormsPayload = await fetchJSON(
         `${st.baseUrl}/scheduled_storms_by_wax?usx_token=${encodeURIComponent(st.usx_token)}&wax_account=${encodeURIComponent(st.wax_account)}`
       );
       st.storms = Array.isArray(stormsPayload) ? stormsPayload : [];
 
-      // 4) storico nft giveaways di questo creator
+      // 4) giveaways history
       const givsPayload = await fetchJSON(
         `${st.baseUrl}/get_scheduled_nft_giveaways_by_wax?usx_token=${encodeURIComponent(st.usx_token)}&wax_account=${encodeURIComponent(st.wax_account)}`
       );
@@ -3185,21 +3166,18 @@ window.CreatorDash = (() => {
     render();
   }
 
-  // -------------------------------------------------------------------------------------------------
-  // RENDER UI PRINCIPALE
-  // -------------------------------------------------------------------------------------------------
-
+  // ---------- RENDER ----------
   function render() {
     const root = st.rootEl;
     if (!root) return;
 
     if (st.loading) {
       root.innerHTML = `
-        <div class="account-card2" style="padding:16px;background:#1f2937;border-radius:12px;color:#fff;">
-          <div style="font-weight:700;font-size:1rem;color:#fff;margin-bottom:4px;">
+        <div class="account-card2" style="padding:18px;background:#1f2937;border-radius:12px;color:#fff;">
+          <div style="font-weight:800;font-size:${FS.sm};color:#fff;margin-bottom:6px;">
             Loading Creator Dashboard…
           </div>
-          <div style="color:#9ca3af;font-size:.9rem;">
+          <div style="color:#cbd5e1;font-size:${FS.xs};">
             Please wait while we fetch your channel data.
           </div>
         </div>
@@ -3209,12 +3187,12 @@ window.CreatorDash = (() => {
 
     if (st.error) {
       root.innerHTML = `
-        <div class="account-card2" style="padding:16px;background:#1f2937;border-radius:12px;color:#fff;border:1px solid #7f1d1d;">
-          <div style="font-weight:700;font-size:1rem;color:#f87171;margin-bottom:4px;">
+        <div class="account-card2" style="padding:18px;background:#1f2937;border-radius:12px;color:#fff;border:1px solid #7f1d1d;">
+          <div style="font-weight:800;font-size:${FS.sm};color:#fca5a5;margin-bottom:8px;">
             Error loading dashboard
           </div>
-          <div style="color:#9ca3af;font-size:.9rem;margin-bottom:12px;">${esc(st.error)}</div>
-          <button id="cd-retry" class="btn btn-secondary" style="padding:8px 12px;border-radius:8px;background:#374151;">
+          <div style="color:#e5e7eb;font-size:${FS.xs};margin-bottom:12px;">${esc(st.error)}</div>
+          <button id="cd-retry" class="btn btn-secondary" style="padding:10px 14px;border-radius:10px;background:#374151;">
             Retry
           </button>
         </div>
@@ -3224,52 +3202,36 @@ window.CreatorDash = (() => {
       return;
     }
 
-    // Header tabs + quick links
     root.innerHTML = `
       <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:1rem 1.5rem;margin-bottom:1rem;">
-        <div style="flex-grow:1;min-width:200px;">
-          <div style="font-size:1.1rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:.5rem;">
+        <div style="flex-grow:1;min-width:240px;">
+          <div style="font-size:${FS.md};font-weight:900;color:#fff;display:flex;align-items:center;gap:.6rem;">
             <span>Creator Dashboard</span>
             ${renderSubStatusBadge()}
           </div>
-          <div style="font-size:.8rem;color:#9ca3af;line-height:1.4;margin-top:2px;">
-            Channel: <span style="color:#fff;font-weight:600;">${esc(st.channel)}</span><br/>
-            Wax Account: <span style="color:#fff;font-weight:600;">${esc(st.wax_account)}</span><br/>
+          <div style="font-size:${FS.xs};color:#cbd5e1;line-height:1.45;margin-top:4px;">
+            Channel: <span style="color:#fff;font-weight:700;">${esc(st.channel)}</span><br/>
+            WAX Account: <span style="color:#fff;font-weight:700;">${esc(st.wax_account)}</span><br/>
             ${st.rewards_active
-              ? `<span style="color:#22c55e;font-weight:600;">${esc(st.rewards_status_message)}</span>`
-              : `<span style="color:#f87171;font-weight:600;">${esc(st.rewards_status_message)}</span>`
+              ? `<span style="color:#86efac;font-weight:700;">${esc(st.rewards_status_message)}</span>`
+              : `<span style="color:#fca5a5;font-weight:700;">${esc(st.rewards_status_message)}</span>`
             }
           </div>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:.5rem;min-width:200px;">
-          <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-            <button class="cd-tab-btn ${st.activeTab==='overview'?'cd-tab-active':''}" data-tab="overview"
-              style="${tabBtnStyle(st.activeTab==='overview')}">Overview</button>
-
-            <button class="cd-tab-btn ${st.activeTab==='ads'?'cd-tab-active':''}" data-tab="ads"
-              style="${tabBtnStyle(st.activeTab==='ads')}">Ads Manager</button>
-
-            <button class="cd-tab-btn ${st.activeTab==='history'?'cd-tab-active':''}" data-tab="history"
-              style="${tabBtnStyle(st.activeTab==='history')}">History</button>
+        <div style="display:flex;flex-direction:column;gap:.6rem;min-width:260px;">
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+            ${tabBtn('overview','Overview')}
+            ${tabBtn('rewards','Rewards')}
+            ${tabBtn('ads','Ads Manager')}
+            ${tabBtn('history','History')}
           </div>
 
           <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-            <button class="btn btn-secondary"
-              style="${miniLinkBtnStyle()}"
-              onclick="loadSection('log-nft-giveaways')">🎁 NFT Giveaways</button>
-
-            <button class="btn btn-secondary"
-              style="${miniLinkBtnStyle()}"
-              onclick="loadSection('log-storms-giveaways')">🌪 Storms</button>
-
-            <button class="btn btn-secondary"
-              style="${miniLinkBtnStyle()}"
-              onclick="loadSection('noncustodialfarms')">🌱 NFT Farms</button>
-
-            <button class="btn btn-secondary"
-              style="${miniLinkBtnStyle()}"
-              onclick="loadSection('create-token-pool')">💰 Token Farms</button>
+            <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('log-nft-giveaways')">🎁 NFT Giveaways</button>
+            <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('log-storms-giveaways')">🌪 Storms</button>
+            <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('noncustodialfarms')">🌱 NFT Farms</button>
+            <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('create-token-pool')">💰 Token Farms</button>
           </div>
         </div>
       </div>
@@ -3281,30 +3243,32 @@ window.CreatorDash = (() => {
 
     bindTabSwitcher();
 
-    if (st.activeTab === 'ads') {
-      bindAdsEditor(); // serve per gestire Add/Edit/Delete + Save
-    }
+    if (st.activeTab === 'ads')      bindAdsEditor();
+    if (st.activeTab === 'rewards')  bindRewardsEditor();
   }
 
-  function tabBtnStyle(active){
+  function tabBtn(tab, label){
+    const active = st.activeTab === tab;
     return `
-      cursor:pointer;border:none;border-radius:8px;
-      padding:8px 12px;
-      font-size:.8rem;font-weight:700;line-height:1;
-      ${active
-        ? 'background:#22c55e;color:#0a0f0a;'
-        : 'background:#1f2937;color:#e5e7eb;border:1px solid rgba(255,255,255,.08);'
-      }
+      <button class="cd-tab-btn ${active?'cd-tab-active':''}" data-tab="${tab}"
+        style="
+          cursor:pointer;border:none;border-radius:10px;
+          padding:10px 14px;
+          font-size:${FS.xs};font-weight:800;line-height:1;
+          ${active ? 'background:#22c55e;color:#0a0f0a;'
+                   : 'background:#1f2937;color:#e5e7eb;border:1px solid rgba(255,255,255,.12);'}
+        ">
+        ${label}
+      </button>
     `;
   }
 
   function miniLinkBtnStyle(){
     return `
-      cursor:pointer;border:none;border-radius:8px;
-      padding:6px 10px;
-      font-size:.7rem;font-weight:600;line-height:1;
-      background:#1f2937;color:#e5e7eb;border:1px solid rgba(255,255,255,.08);
-      box-shadow:0 0 10px rgba(0,255,200,.15);
+      cursor:pointer;border:none;border-radius:10px;
+      padding:8px 12px;font-size:${FS.xs};font-weight:700;line-height:1;
+      background:#111827;color:#f1f5f9;border:1px solid rgba(255,255,255,.14);
+      box-shadow:0 0 12px rgba(0,255,200,.12);
     `;
   }
 
@@ -3312,101 +3276,92 @@ window.CreatorDash = (() => {
     const btns = st.rootEl.querySelectorAll('.cd-tab-btn');
     btns.forEach(btn => {
       btn.addEventListener('click', () => {
-        const tab = btn.getAttribute('data-tab');
-        st.activeTab = tab;
+        st.activeTab = btn.getAttribute('data-tab');
         render();
       });
     });
   }
 
   function renderActiveTab() {
+    if (st.activeTab === 'rewards') return renderRewardsTab();
     if (st.activeTab === 'ads')     return renderAdsTab();
     if (st.activeTab === 'history') return renderHistoryTab();
     return renderOverviewTab();
   }
 
-  // -------------------------------------------------------------------------------------------------
-  // TAB 1: OVERVIEW (subscription + rewards)
-  // -------------------------------------------------------------------------------------------------
-
+  // ---------- TAB: OVERVIEW ----------
   function renderOverviewTab() {
     const sub = st.subscription || {};
-    const daysLeft = (sub.days_left !== undefined && sub.days_left !== null)
-      ? `${sub.days_left} days`
-      : "-";
+    const daysLeft = (sub.days_left ?? null) !== null ? `${sub.days_left} days` : "-";
 
-    const rewardsCards = st.effectiveRewards.map(r => {
-      return `
-        <div style="
-          flex:1 1 140px;min-width:140px;
-          background:#111827;border-radius:10px;
-          border:1px solid rgba(255,255,255,.07);
-          padding:12px 14px;color:#fff;
-          box-shadow:0 0 10px rgba(0,255,200,.08);
-        ">
-          <div style="font-size:.8rem;color:#9ca3af;display:flex;justify-content:space-between;">
-            <span>${esc(r.token)}</span>
-            <span style="color:#4ade80;font-weight:700;">${esc(r.reward_source)}</span>
-          </div>
-          <div style="margin-top:4px;font-size:.9rem;font-weight:700;">
-            ${chip(r.per_message,6)} /msg
-          </div>
-          <div style="margin-top:4px;font-size:.8rem;color:#9ca3af;">
-            Remaining: <strong style="color:#fff;">${chip(r.remaining,6)}</strong><br/>
-            Msgs left: <strong style="color:#fff;">${r.messages_left == null ? '-' : chip(r.messages_left,0)}</strong>
-          </div>
+    // compact effective reward cards
+    const cards = st.effectiveRewards.map(r => `
+      <div style="
+        flex:1 1 180px;min-width:180px;
+        background:#0b1220;border-radius:12px;
+        border:1px solid rgba(255,255,255,.10);
+        padding:14px;color:#fff;box-shadow:0 0 12px rgba(0,255,200,.08);
+      ">
+        <div style="font-size:${FS.xs};color:#cbd5e1;display:flex;justify-content:space-between;gap:6px;">
+          <span>${esc(r.token)}</span>
+          <span style="color:${r.reward_source==='channel'?'#fde68a':'#93c5fd'};font-weight:800;text-transform:uppercase;">${esc(r.reward_source)}</span>
         </div>
-      `;
-    }).join('');
+        <div style="margin-top:6px;font-size:${FS.sm};font-weight:900;">${chip(r.per_message,6)} /msg</div>
+        <div style="margin-top:6px;font-size:${FS.xs};color:#cbd5e1;line-height:1.35;">
+          Remaining: <strong style="color:#fff;">${chip(r.remaining,6)}</strong><br/>
+          Messages left: <strong style="color:#fff;">${r.messages_left == null ? '-' : chip(r.messages_left,0)}</strong>
+        </div>
+      </div>
+    `).join('');
 
     return `
       <div style="display:flex;flex-direction:column;gap:1rem;">
 
-        <!-- Subscription card -->
-        <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:16px;color:#fff;">
+        <!-- Subscription -->
+        <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:18px;color:#fff;">
           <div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;">
-            <div style="min-width:200px;flex:1;">
-              <div style="font-size:.8rem;color:#9ca3af;">Plan</div>
-              <div style="font-size:1rem;font-weight:700;">
-                ${esc(sub.plan_id ?? '-')} 
-                ${sub.type ? `<span style="font-size:.7rem;font-weight:600;color:#a5b4fc;">(${esc(sub.type)})</span>` : ''}
+            <div style="min-width:240px;flex:1;">
+              <div style="font-size:${FS.xs};color:#cbd5e1;">Plan</div>
+              <div style="font-size:${FS.sm};font-weight:900;">
+                ${esc(sub.plan_id ?? '-')}
+                ${sub.type ? `<span style="font-size:${FS.xs};font-weight:700;color:#a5b4fc;">(${esc(sub.type)})</span>` : ''}
               </div>
 
-              <div style="margin-top:8px;font-size:.8rem;color:#9ca3af;">Started</div>
-              <div style="font-size:.9rem;font-weight:600;">${esc(sub.start_date || '-')}</div>
+              <div style="margin-top:10px;font-size:${FS.xs};color:#cbd5e1;">Started</div>
+              <div style="font-size:${FS.xs};font-weight:700;">${esc(sub.start_date || '-')}</div>
 
-              <div style="margin-top:8px;font-size:.8rem;color:#9ca3af;">Expires</div>
-              <div style="font-size:.9rem;font-weight:600;">${esc(sub.expiry_date || '-')} (${daysLeft} left)</div>
+              <div style="margin-top:10px;font-size:${FS.xs};color:#cbd5e1;">Expires</div>
+              <div style="font-size:${FS.xs};font-weight:700;">${esc(sub.expiry_date || '-')} (${daysLeft} left)</div>
             </div>
 
-            <div style="min-width:200px;flex:1;">
-              <div style="font-size:.8rem;color:#9ca3af;">Paid WAX</div>
-              <div style="font-size:.9rem;font-weight:600;">${chip(sub.paid_wax_amount,4)} ${esc(sub.token_symbol||'WAX')}</div>
+            <div style="min-width:240px;flex:1;">
+              <div style="font-size:${FS.xs};color:#cbd5e1;">Paid WAX</div>
+              <div style="font-size:${FS.xs};font-weight:700;">${chip(sub.paid_wax_amount,4)} ${esc(sub.token_symbol||'WAX')}</div>
 
-              <div style="margin-top:8px;font-size:.8rem;color:#9ca3af;">USD est.</div>
-              <div style="font-size:.9rem;font-weight:600;">$${chip(sub.usd_value_estimated,2)}</div>
+              <div style="margin-top:10px;font-size:${FS.xs};color:#cbd5e1;">USD est.</div>
+              <div style="font-size:${FS.xs};font-weight:700;">$${chip(sub.usd_value_estimated,2)}</div>
 
-              <div style="margin-top:8px;font-size:.8rem;color:#9ca3af;">Memo</div>
-              <div style="font-size:.8rem;color:#e5e7eb;">${esc(sub.memo || '-')}</div>
+              <div style="margin-top:10px;font-size:${FS.xs};color:#cbd5e1;">Memo</div>
+              <div style="font-size:${FS.xs};color:#f8fafc;">${esc(sub.memo || '-')}</div>
             </div>
           </div>
         </div>
 
-        <!-- Rewards summary -->
-        <div class="account-card2" style="background:#111827;border-radius:12px;padding:16px;color:#fff;">
+        <!-- Effective Chat Rewards -->
+        <div class="account-card2" style="background:#0b1220;border-radius:12px;padding:18px;color:#fff;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
-            <div style="min-width:180px;flex:1;">
-              <div style="font-size:1rem;font-weight:700;color:#fff;">Chat Rewards</div>
-              <div style="color:${st.rewards_active ? '#4ade80' : '#f87171'};font-size:.8rem;font-weight:600;margin-top:4px;">
+            <div style="min-width:200px;flex:1;">
+              <div style="font-size:${FS.sm};font-weight:900;">Effective Chat Rewards</div>
+              <div style="color:${st.rewards_active ? '#86efac' : '#fca5a5'};font-size:${FS.xs};font-weight:700;margin-top:6px;">
                 ${esc(st.rewards_status_message)}
               </div>
-              <div style="font-size:.7rem;color:#9ca3af;margin-top:6px;">
+              <div style="font-size:${FS.xs};color:#94a3b8;margin-top:8px;">
                 Last sync: ${esc(st.fetched_at || '-')}
               </div>
             </div>
 
-            <div style="flex:3;display:flex;flex-wrap:wrap;gap:.75rem;">
-              ${rewardsCards || `<div style="color:#9ca3af;font-size:.8rem;">No rewards data.</div>`}
+            <div style="flex:3;display:flex;flex-wrap:wrap;gap:.9rem;">
+              ${cards || `<div style="color:#cbd5e1;font-size:${FS.xs};">No rewards data.</div>`}
             </div>
           </div>
         </div>
@@ -3415,112 +3370,279 @@ window.CreatorDash = (() => {
     `;
   }
 
-  // -------------------------------------------------------------------------------------------------
-  // TAB 2: ADS MANAGER (global vs personalizzate canale)
-  // -------------------------------------------------------------------------------------------------
+  // ---------- TAB: REWARDS (GLOBAL vs CHANNEL + editor) ----------
+  function renderRewardsTab() {
+    const { global, channel } = splitRewardsBySource();
 
-  function renderAdsTab() {
-    // GLOBAL (sola lettura)
-    const globalListHTML = (st.ads_global.list || []).map((msg, idx) => `
+    const globalHTML = global.map(r => `
       <div style="
-        border:1px solid rgba(255,255,255,.07);
-        border-radius:8px;
-        background:#1e293b;
-        padding:10px 12px;
-        color:#fff;
-        font-size:.8rem;
-        line-height:1.4;
+        border:1px solid rgba(255,255,255,.10);border-radius:10px;
+        background:#102038;padding:12px;color:#fff;font-size:${FS.xs};
+        display:flex;justify-content:space-between;align-items:center;
       ">
-        <div style="font-weight:700;color:#93c5fd;font-size:.7rem;margin-bottom:4px;">GLOBAL #${idx+1}</div>
-        <div style="white-space:pre-wrap;">${esc(msg)}</div>
+        <div style="font-weight:800;">${esc(r.token)}</div>
+        <div style="opacity:.9;">${chip(r.per_message,6)} /msg</div>
       </div>
-    `).join('');
+    `).join('') || `<div style="font-size:${FS.xs};color:#94a3b8;">No global rewards.</div>`;
 
-    // CHANNEL (editabile)
-    const channelListHTML = (st.ads_channel.list || []).map((msg, idx) => `
-      <div class="cd-ad-row" data-idx="${idx}" style="
-        border:1px solid rgba(255,255,255,.07);
-        border-radius:8px;
-        background:#0f172a;
-        padding:10px 12px;
-        color:#fff;
-        font-size:.8rem;
-        line-height:1.4;
-        position:relative;
-      ">
-        <div style="font-weight:700;color:#facc15;font-size:.7rem;margin-bottom:4px;">CHAN #${idx+1}</div>
-        <div class="cd-ad-text" style="white-space:pre-wrap;">${esc(msg)}</div>
-        <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;">
-          <button class="cd-edit-ad btn btn-secondary" style="${miniIconBtnStyle()}">✏️</button>
-          <button class="cd-del-ad btn btn-secondary" style="${miniIconBtnStyle()}">🗑</button>
-        </div>
-      </div>
-    `).join('');
+    // editable table for channel rewards
+    const channelRows = channel.map((r, i) => rewardRowHTML(i, r.token, r.per_message)).join('') ||
+      rewardRowHTML(0, '', '');
 
     return `
       <div style="display:flex;flex-direction:column;gap:1rem;">
 
-        <!-- GLOBAL ADS (read only) -->
-        <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:16px;color:#fff;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
-            <div style="min-width:200px;flex:1;">
-              <div style="font-size:1rem;font-weight:700;color:#fff;">Global Rotation (readonly)</div>
-              <div style="font-size:.8rem;color:#9ca3af;line-height:1.4;margin-top:4px;">
-                Questi messaggi vengono inviati automaticamente da ChipsMasterBot a tutti i canali partner.
-              </div>
-              <div style="font-size:.8rem;color:#9ca3af;margin-top:6px;">
-                Interval: <span style="color:#fff;font-weight:600;">${chip(st.ads_global.interval_seconds,0)}s</span><br/>
-                Mode: <span style="color:#fff;font-weight:600;">${esc(st.ads_global.rotation_mode)}</span><br/>
-                Last update: <span style="color:#fff;font-weight:600;">${esc(st.ads_global.updated_at || '-')}</span>
+        <!-- Global (read-only) -->
+        <div class="account-card2" style="background:#0f172a;border-radius:12px;padding:18px;color:#fff;">
+          <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;">
+            <div style="min-width:260px;flex:1;">
+              <div style="font-size:${FS.sm};font-weight:900;">Global Rewards (read-only)</div>
+              <div style="font-size:${FS.xs};color:#94a3b8;margin-top:6px;line-height:1.45;">
+                These are default per-message rewards applied platform-wide by <strong>ChipsMasterBot</strong>.
+                Channel overrides below will take precedence for your channel.
               </div>
             </div>
-
-            <div style="flex:2;display:flex;flex-direction:column;gap:.5rem;min-width:250px;">
-              ${globalListHTML || `<div style="color:#9ca3af;font-size:.8rem;">No global ads configured.</div>`}
+            <div style="flex:2;display:flex;flex-direction:column;gap:.6rem;min-width:260px;">
+              ${globalHTML}
             </div>
           </div>
         </div>
 
-        <!-- CHANNEL ADS (editable) -->
-        <div class="account-card2" style="background:#111827;border-radius:12px;padding:16px;color:#fff;">
-          <div style="font-size:1rem;font-weight:700;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
-            <div>Channel Ads for <span style="color:#facc15;">${esc(st.channel)}</span></div>
-            <div style="font-size:.7rem;color:#9ca3af;">Last update: ${esc(st.ads_channel.updated_at || '-')}</div>
+        <!-- Channel (editable) -->
+        <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+            <div style="font-size:${FS.sm};font-weight:900;">Channel Rewards — <span style="color:#fde68a;">${esc(st.channel)}</span></div>
+            <div style="font-size:${FS.xs};color:#94a3b8;">Define per-message rewards specific to your channel</div>
           </div>
 
-          <div style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:1rem;">
-            <div style="min-width:200px;flex:1;">
-              <label style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:#fff;font-weight:600;">
+          <div style="margin-top:12px;overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;min-width:640px;">
+              <thead>
+                <tr style="background:#0b1220;color:#fff;text-align:left;">
+                  <th style="${thCell()}">Token</th>
+                  <th style="${thCell()}">Per message</th>
+                  <th style="${thCell()}">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rw-rows">
+                ${channelRows}
+              </tbody>
+            </table>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:.6rem;flex-wrap:wrap;">
+            <button id="rw-add"  class="btn btn-secondary" style="${actionBtnStyle('#1e40af','#fff')}">➕ Add token</button>
+            <button id="rw-save" class="btn btn-primary"   style="${actionBtnStyle('#22c55e','#0a0f0a')}">💾 Save changes</button>
+            <div id="rw-feedback" style="font-size:${FS.xs};color:#94a3b8;align-self:center;"></div>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  function rewardRowHTML(idx, token = '', per = '') {
+    return `
+      <tr class="rw-row" data-idx="${idx}" style="border-bottom:1px solid rgba(255,255,255,.1);">
+        <td style="${tdCell()}">
+          <input class="rw-token" value="${esc(token)}" placeholder="e.g. CHIPS" style="${inputStyle('uppercase')}" />
+        </td>
+        <td style="${tdCell()}">
+          <input class="rw-per" type="number" step="0.00000001" min="0" value="${per === '' ? '' : esc(per)}" placeholder="0.0" style="${inputStyle()}" />
+        </td>
+        <td style="${tdCell()}">
+          <button class="rw-del" style="${miniIconBtnStyle()}">🗑 Remove</button>
+        </td>
+      </tr>
+    `;
+  }
+
+  function thCell(){
+    return `
+      padding:10px 12px;color:#fff;border-bottom:1px solid rgba(255,255,255,.15);
+      font-size:${FS.xs};font-weight:800;white-space:nowrap;
+    `;
+  }
+  function tdCell(){
+    return `
+      padding:10px 12px;color:#e5e7eb;font-size:${FS.xs};white-space:nowrap;
+    `;
+  }
+
+  function inputStyle(tt='none'){
+    return `
+      width:100%;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.18);
+      border-radius:10px;padding:10px 12px;font-size:${FS.xs};font-weight:700;outline:none;
+      text-transform:${tt};
+    `;
+  }
+  function miniIconBtnStyle() {
+    return `
+      cursor:pointer;background:#1f2937;border:1px solid rgba(255,255,255,.18);
+      border-radius:8px;padding:8px 10px;font-size:${FS.xs};color:#fff;
+    `;
+  }
+  function actionBtnStyle(bg,fg){
+    return `
+      cursor:pointer;border:none;border-radius:10px;padding:10px 14px;font-size:${FS.xs};
+      line-height:1;font-weight:900;background:${bg || '#1f2937'};color:${fg || '#fff'};
+      box-shadow:0 0 12px rgba(0,255,200,.12);
+    `;
+  }
+
+  function bindRewardsEditor(){
+    const tbody    = st.rootEl.querySelector('#rw-rows');
+    const addBtn   = st.rootEl.querySelector('#rw-add');
+    const saveBtn  = st.rootEl.querySelector('#rw-save');
+    const feedback = st.rootEl.querySelector('#rw-feedback');
+
+    if (!tbody || !addBtn || !saveBtn) return;
+
+    // hook remove
+    tbody.querySelectorAll('.rw-del').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const tr = btn.closest('tr');
+        tr?.remove();
+      });
+    });
+
+    // add row
+    addBtn.addEventListener('click', ()=>{
+      const idx = tbody.querySelectorAll('tr').length;
+      tbody.insertAdjacentHTML('beforeend', rewardRowHTML(idx,'',''));
+      // bind del on the new row
+      const last = tbody.querySelector('tr:last-child .rw-del');
+      if (last) last.addEventListener('click', ()=> last.closest('tr')?.remove());
+    });
+
+    // save rows
+    saveBtn.addEventListener('click', async ()=>{
+      feedback.style.color = '#94a3b8';
+      feedback.textContent = 'Saving…';
+
+      // collect rows
+      const rows = [];
+      tbody.querySelectorAll('tr').forEach(tr=>{
+        const token = (tr.querySelector('.rw-token')?.value || '').trim().toUpperCase();
+        const per   = tr.querySelector('.rw-per')?.value;
+        if (!token) return;
+        const num = Number(per);
+        if (!isFinite(num) || num < 0) return;
+        rows.push({ token_symbol: token, per_message: num });
+      });
+
+      // call backend (⚠️ implement on server):
+      // POST /channel_rewards/save  { user_id, usx_token, channel, rewards:[{token_symbol, per_message}...] }
+      try {
+        const res = await fetchJSON(`${st.baseUrl}/channel_rewards/save`, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({
+            user_id: st.userId,
+            usx_token: st.usx_token,
+            channel: st.channel,
+            rewards: rows
+          })
+        });
+
+        // reload to reflect effective & sources
+        await loadAllData();
+
+        feedback.style.color = '#22c55e';
+        feedback.textContent = 'Saved ✔';
+
+      } catch (err) {
+        console.error('save channel rewards error', err);
+        feedback.style.color = '#f87171';
+        feedback.textContent = 'Save failed: ' + (err.message || 'unknown error');
+      }
+    });
+  }
+
+  // ---------- TAB: ADS ----------
+  function renderAdsTab() {
+    const globalListHTML = (st.ads_global.list || []).map((msg, idx) => `
+      <div style="
+        border:1px solid rgba(255,255,255,.10);border-radius:10px;
+        background:#102038;padding:12px;color:#fff;font-size:${FS.xs};line-height:1.4;
+      ">
+        <div style="font-weight:800;color:#93c5fd;font-size:${FS.xs};margin-bottom:6px;">GLOBAL #${idx+1}</div>
+        <div style="white-space:pre-wrap;">${esc(msg)}</div>
+      </div>
+    `).join('') || `<div style="font-size:${FS.xs};color:#94a3b8;">No global ads configured.</div>`;
+
+    const channelListHTML = (st.ads_channel.list || []).map((msg, idx) => `
+      <div class="cd-ad-row" data-idx="${idx}" style="
+        border:1px solid rgba(255,255,255,.10);border-radius:10px;background:#0f172a;
+        padding:12px;color:#fff;font-size:${FS.xs};line-height:1.45;position:relative;
+      ">
+        <div style="font-weight:800;color:#facc15;font-size:${FS.xs};margin-bottom:6px;">CHANNEL #${idx+1}</div>
+        <div class="cd-ad-text" style="white-space:pre-wrap;">${esc(msg)}</div>
+        <div style="position:absolute;top:10px;right:10px;display:flex;gap:6px;">
+          <button class="cd-edit-ad btn btn-secondary" style="${miniIconBtnStyle()}">✏️ Edit</button>
+          <button class="cd-del-ad btn btn-secondary" style="${miniIconBtnStyle()}">🗑 Delete</button>
+        </div>
+      </div>
+    `).join('') || `<div style="font-size:${FS.xs};color:#94a3b8;">No custom channel ads yet. Click “Add message”.</div>`;
+
+    return `
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+
+        <!-- GLOBAL (read only) -->
+        <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:18px;color:#fff;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+            <div style="min-width:240px;flex:1;">
+              <div style="font-size:${FS.sm};font-weight:900;">Global Rotation (read-only)</div>
+              <div style="font-size:${FS.xs};color:#94a3b8;line-height:1.45;margin-top:6px;">
+                These messages are automatically broadcast by <strong>ChipsMasterBot</strong> to all partner channels.
+              </div>
+              <div style="font-size:${FS.xs};color:#cbd5e1;margin-top:10px;">
+                Interval: <span style="color:#fff;font-weight:800;">${chip(st.ads_global.interval_seconds,0)}s</span><br/>
+                Mode: <span style="color:#fff;font-weight:800;">${esc(st.ads_global.rotation_mode)}</span><br/>
+                Last update: <span style="color:#fff;font-weight:800;">${esc(st.ads_global.updated_at || '-')}</span>
+              </div>
+            </div>
+
+            <div style="flex:2;display:flex;flex-direction:column;gap:.6rem;min-width:260px;">
+              ${globalListHTML}
+            </div>
+          </div>
+        </div>
+
+        <!-- CHANNEL (editable) -->
+        <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;">
+          <div style="font-size:${FS.sm};font-weight:900;display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+            <div>Channel Ads — <span style="color:#fde68a;">${esc(st.channel)}</span></div>
+            <div style="font-size:${FS.xs};color:#94a3b8;">Last update: ${esc(st.ads_channel.updated_at || '-')}</div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:1rem;">
+            <div style="min-width:240px;flex:1;">
+              <label style="display:flex;align-items:center;gap:.6rem;font-size:${FS.xs};color:#fff;font-weight:800;">
                 <input id="cd-channel-enabled" type="checkbox" ${st.ads_channel.enabled?'checked':''}
-                  style="accent-color:#22c55e;cursor:pointer;">
+                  style="accent-color:#22c55e;cursor:pointer;width:18px;height:18px;">
                 Enable Channel Ads
               </label>
 
-              <div style="margin-top:.75rem;font-size:.8rem;color:#9ca3af;">
-                Interval (seconds)
-              </div>
-              <input id="cd-channel-interval" type="number" min="30" step="30"
-                value="${esc(st.ads_channel.interval_seconds)}"
-                style="${inputStyle()}">
+              <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Interval (seconds)</div>
+              <input id="cd-channel-interval" type="number" min="30" step="30" value="${esc(st.ads_channel.interval_seconds)}" style="${inputStyle()}">
 
-              <div style="margin-top:.75rem;font-size:.8rem;color:#9ca3af;">
-                Rotation Mode
-              </div>
+              <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Rotation Mode</div>
               <select id="cd-channel-rotation" style="${inputStyle()}">
                 <option value="sequential" ${st.ads_channel.rotation_mode==='sequential'?'selected':''}>Sequential</option>
                 <option value="random" ${st.ads_channel.rotation_mode==='random'?'selected':''}>Random</option>
               </select>
 
-              <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;">
-                <button id="cd-add-ad" class="btn btn-secondary" style="${actionBtnStyle('#1e40af')}">➕ Add message</button>
+              <div style="margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap;">
+                <button id="cd-add-ad" class="btn btn-secondary" style="${actionBtnStyle('#1e40af','#fff')}">➕ Add message</button>
                 <button id="cd-save-ads" class="btn btn-primary" style="${actionBtnStyle('#22c55e','#0a0f0a')}">💾 Save</button>
               </div>
 
-              <div id="cd-save-feedback" style="font-size:.75rem;color:#9ca3af;margin-top:.5rem;"></div>
+              <div id="cd-save-feedback" style="font-size:${FS.xs};color:#94a3b8;margin-top:.6rem;"></div>
             </div>
 
-            <div style="flex:2;min-width:250px;display:flex;flex-direction:column;gap:.75rem;" id="cd-channel-ads-list">
-              ${channelListHTML || `<div style="color:#9ca3af;font-size:.8rem;">No custom channel ads yet. Click "➕ Add message".</div>`}
+            <div style="flex:2;min-width:260px;display:flex;flex-direction:column;gap:.75rem;" id="cd-channel-ads-list">
+              ${channelListHTML}
             </div>
           </div>
         </div>
@@ -3529,49 +3651,6 @@ window.CreatorDash = (() => {
     `;
   }
 
-  function miniIconBtnStyle() {
-    return `
-      cursor:pointer;
-      background:#1f2937;
-      border:1px solid rgba(255,255,255,.15);
-      border-radius:6px;
-      padding:4px 6px;
-      font-size:.7rem;
-      line-height:1;
-      color:#fff;
-    `;
-  }
-
-  function actionBtnStyle(bg,fg){
-    return `
-      cursor:pointer;
-      border:none;
-      border-radius:8px;
-      padding:8px 12px;
-      font-size:.8rem;
-      line-height:1;
-      font-weight:700;
-      background:${bg || '#1f2937'};
-      color:${fg || '#fff'};
-      box-shadow:0 0 10px rgba(0,255,200,.15);
-    `;
-  }
-
-  function inputStyle(){
-    return `
-      width:100%;
-      background:#1f2937;
-      color:#fff;
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:8px;
-      padding:8px 10px;
-      font-size:.8rem;
-      font-weight:600;
-      outline:none;
-    `;
-  }
-
-  // after rendering Ads tab, collega i bottoni (Add/Edit/Delete/Save)
   function bindAdsEditor() {
     const listEl = st.rootEl.querySelector('#cd-channel-ads-list');
     const addBtn = st.rootEl.querySelector('#cd-add-ad');
@@ -3580,34 +3659,24 @@ window.CreatorDash = (() => {
     const rotationSelect = st.rootEl.querySelector('#cd-channel-rotation');
     const enabledCheck   = st.rootEl.querySelector('#cd-channel-enabled');
     const feedbackEl     = st.rootEl.querySelector('#cd-save-feedback');
-
     if (!listEl || !addBtn || !saveBtn) return;
 
-    // lavoriamo su una copia "locale" modificabile
     let workingList = [...(st.ads_channel.list || [])];
 
     function rerenderWorkingList() {
       listEl.innerHTML = workingList.map((msg, idx) => `
         <div class="cd-ad-row" data-idx="${idx}" style="
-          border:1px solid rgba(255,255,255,.07);
-          border-radius:8px;
-          background:#0f172a;
-          padding:10px 12px;
-          color:#fff;
-          font-size:.8rem;
-          line-height:1.4;
-          position:relative;
-        ">
-          <div style="font-weight:700;color:#facc15;font-size:.7rem;margin-bottom:4px;">CHAN #${idx+1}</div>
+          border:1px solid rgba(255,255,255,.10);border-radius:10px;background:#0f172a;
+          padding:12px;color:#fff;font-size:${FS.xs};line-height:1.45;position:relative;">
+          <div style="font-weight:800;color:#facc15;font-size:${FS.xs};margin-bottom:6px;">CHANNEL #${idx+1}</div>
           <div class="cd-ad-text" style="white-space:pre-wrap;">${esc(msg)}</div>
-          <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;">
-            <button class="cd-edit-ad btn btn-secondary" style="${miniIconBtnStyle()}">✏️</button>
-            <button class="cd-del-ad btn btn-secondary" style="${miniIconBtnStyle()}">🗑</button>
+          <div style="position:absolute;top:10px;right:10px;display:flex;gap:6px;">
+            <button class="cd-edit-ad btn btn-secondary" style="${miniIconBtnStyle()}">✏️ Edit</button>
+            <button class="cd-del-ad btn btn-secondary" style="${miniIconBtnStyle()}">🗑 Delete</button>
           </div>
         </div>
-      `).join('') || `<div style="color:#9ca3af;font-size:.8rem;">No custom channel ads yet. Click "➕ Add message".</div>`;
+      `).join('') || `<div style="color:#94a3b8;font-size:${FS.xs};">No custom channel ads yet. Click “Add message”.</div>`;
 
-      // collega EDIT / DELETE
       listEl.querySelectorAll('.cd-edit-ad').forEach(btn => {
         btn.addEventListener('click', () => {
           const parent = btn.closest('.cd-ad-row');
@@ -3632,10 +3701,8 @@ window.CreatorDash = (() => {
       });
     }
 
-    // first render
     rerenderWorkingList();
 
-    // ADD button
     addBtn.addEventListener('click', () => {
       const txt = window.prompt('New ad message:');
       if (txt && txt.trim() !== '') {
@@ -3644,9 +3711,8 @@ window.CreatorDash = (() => {
       }
     });
 
-    // SAVE button → POST config al backend
     saveBtn.addEventListener('click', async () => {
-      feedbackEl.style.color = '#9ca3af';
+      feedbackEl.style.color = '#94a3b8';
       feedbackEl.textContent = 'Saving…';
 
       const payload = {
@@ -3666,7 +3732,6 @@ window.CreatorDash = (() => {
           body: JSON.stringify(payload)
         });
 
-        // aggiorna stato locale con quello appena salvato
         st.ads_channel.enabled          = payload.enabled;
         st.ads_channel.interval_seconds = payload.interval_seconds;
         st.ads_channel.rotation_mode    = payload.rotation_mode;
@@ -3677,20 +3742,17 @@ window.CreatorDash = (() => {
         feedbackEl.textContent = 'Saved ✔';
 
       } catch (err) {
-        console.error("❌ save channel ads error:", err);
+        console.error("save channel ads error:", err);
         feedbackEl.style.color = '#f87171';
         feedbackEl.textContent = 'Save failed: ' + (err.message || 'unknown error');
       }
     });
   }
 
-  // -------------------------------------------------------------------------------------------------
-  // TAB 3: HISTORY (giveaways & storms dello user)
-  // -------------------------------------------------------------------------------------------------
-
+  // ---------- TAB: HISTORY ----------
   function renderHistoryTab() {
     const givRows = st.giveaways.map(g => `
-      <tr style="border-bottom:1px solid rgba(255,255,255,.07);">
+      <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
         <td style="${tdHist()}">${esc(g.id)}</td>
         <td style="${tdHist()}">${esc(g.scheduled_time||'-')}</td>
         <td style="${tdHist()}">${esc(g.channel_name||'-')}</td>
@@ -3701,11 +3763,11 @@ window.CreatorDash = (() => {
         <td style="${tdHist()}">${esc(g.timeframe||'-')}</td>
       </tr>
     `).join('') || `
-      <tr><td colspan="8" style="${tdHist('center','#9ca3af')}">No NFT giveaways found.</td></tr>
+      <tr><td colspan="8" style="${tdHist('center','#94a3b8')}">No NFT giveaways found.</td></tr>
     `;
 
     const stormRows = st.storms.map(s => `
-      <tr style="border-bottom:1px solid rgba(255,255,255,.07);">
+      <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
         <td style="${tdHist()}">${esc(s.id)}</td>
         <td style="${tdHist()}">${esc(s.scheduled_time||'-')}</td>
         <td style="${tdHist()}">${esc(s.channel_name||'-')}</td>
@@ -3715,18 +3777,18 @@ window.CreatorDash = (() => {
         <td style="${tdHist()}">${esc(s.winners_display||'-')}</td>
       </tr>
     `).join('') || `
-      <tr><td colspan="7" style="${tdHist('center','#9ca3af')}">No storms found.</td></tr>
+      <tr><td colspan="7" style="${tdHist('center','#94a3b8')}">No storms found.</td></tr>
     `;
 
     return `
       <div style="display:flex;flex-direction:column;gap:1rem;">
 
-        <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:16px;color:#fff;">
-          <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:.5rem;">
+        <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:18px;color:#fff;">
+          <div style="font-size:${FS.sm};font-weight:900;margin-bottom:.6rem;">
             NFT Giveaways History
           </div>
           <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:700px;">
+            <table style="width:100%;border-collapse:collapse;min-width:760px;">
               <thead>
                 <tr style="background:#111827;color:#fff;text-align:left;">
                   <th style="${thHist()}">ID</th>
@@ -3746,12 +3808,12 @@ window.CreatorDash = (() => {
           </div>
         </div>
 
-        <div class="account-card2" style="background:#111827;border-radius:12px;padding:16px;color:#fff;">
-          <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:.5rem;">
+        <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;">
+          <div style="font-size:${FS.sm};font-weight:900;margin-bottom:.6rem;">
             Token Storms History
           </div>
           <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;font-size:.75rem;min-width:700px;">
+            <table style="width:100%;border-collapse:collapse;min-width:760px;">
               <thead>
                 <tr style="background:#1f2937;color:#fff;text-align:left;">
                   <th style="${thHist()}">ID</th>
@@ -3776,38 +3838,24 @@ window.CreatorDash = (() => {
 
   function thHist(){
     return `
-      font-weight:600;
-      padding:8px 10px;
-      color:#fff;
-      border-bottom:1px solid rgba(255,255,255,.15);
-      font-size:.7rem;
-      white-space:nowrap;
+      font-weight:900;padding:10px 12px;color:#fff;border-bottom:1px solid rgba(255,255,255,.16);
+      font-size:${FS.xs};white-space:nowrap;
     `;
   }
   function tdHist(align='left',color='#e5e7eb'){
     return `
-      padding:8px 10px;
-      color:${color};
-      font-size:.7rem;
-      white-space:nowrap;
-      text-align:${align};
+      padding:10px 12px;color:${color};font-size:${FS.xs};white-space:nowrap;text-align:${align};
     `;
   }
 
-  // -------------------------------------------------------------------------------------------------
-  // PUBLIC API
-  // -------------------------------------------------------------------------------------------------
-
+  // ---------- PUBLIC API ----------
   function mount({ rootEl, baseUrl, userId, usx_token, wax_account }) {
     st.rootEl      = rootEl;
     st.baseUrl     = baseUrl;
     st.userId      = userId;
     st.usx_token   = usx_token;
     st.wax_account = wax_account;
-
-    // reset tab su mount
-    st.activeTab = 'overview';
-
+    st.activeTab   = 'overview';
     loadAllData();
   }
 

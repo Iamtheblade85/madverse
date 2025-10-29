@@ -341,25 +341,32 @@ async function initApp() {
     }
   }
 
-  // 2. Fallback login: user_id + usx_token da URL
-  const urlParams = getUrlParams();
-  if (urlParams.userId && urlParams.usx_token) {
-    try {
-      const res = await fetch(`${BASE_URL}/main_door?user_id=${encodeURIComponent(urlParams.userId)}&usx_token=${encodeURIComponent(urlParams.usx_token)}`);
-      const data = await res.json();
+	// 2. Fallback login: user_id + usx_token da URL
+	const urlParams = getUrlParams();
+	if (urlParams.userId && urlParams.usx_token) {
+	  try {
+	    const res = await fetch(
+	      `${BASE_URL}/main_door?user_id=${encodeURIComponent(urlParams.userId)}&usx_token=${encodeURIComponent(urlParams.usx_token)}`
+	    );
+	    const data = await res.json();
+	
+	    if (data.user_id && data.wax_account) {
+	      // usa la stessa logica di saveUserData così abbiamo SEMPRE
+	      // sia user_id che userId nello state
+	      saveUserData({
+	        user_id: data.user_id,
+	        userId: data.user_id,
+	        usx_token: urlParams.usx_token,
+	        wax_account: data.wax_account
+	      }, false);
+	
+	      return finalizeAppLoad();
+	    }
+	  } catch (err) {
+	    console.error("[❌] Error in fallback login:", err);
+	  }
+	}
 
-      if (data.user_id && data.wax_account) {
-        window.userData = {
-          user_id: data.user_id,
-          usx_token: urlParams.usx_token,
-          wax_account: data.wax_account
-        };
-        return finalizeAppLoad();
-      } 
-    } catch (err) {
-      console.error("[❌] Error in fallback login:", err);
-    }
-  }
 
   // 3. Nessun login valido → mostra login/registrazione
   renderAuthButton(false);
@@ -368,16 +375,42 @@ async function initApp() {
 
 async function finalizeAppLoad() {
   renderAuthButton(true);
+
   await loadAvailableTokens();
+
+  // 🔓 Sblocca voce "Creator Dashboard" solo per agoscry4ever
+  try {
+    const wax = (window.userData?.wax_account || '').toLowerCase();
+    const creatorBtn = document.getElementById('creator-dashboard-btn');
+    if (creatorBtn) {
+      if (wax === 'agoscry4ever') {
+        // Mostra il bottone nel dropdown "Creators Tools"
+        creatorBtn.style.display = ''; // toglie display:none
+      } else {
+        creatorBtn.style.display = 'none';
+      }
+    }
+  } catch (err) {
+    console.warn("[creator-dashboard-btn] visibility error:", err);
+  }
+
+  // dispatch "logged in"
   window.dispatchEvent(new CustomEvent('user:loggedin', { detail: window.userData }));
+
+  // carica sezione iniziale
   loadSection('loadLatestNews');
-  document.querySelectorAll('.menu-button, .menu-btn').forEach(btn => { // <-- accetta entrambe le classi
+
+  // listener globali di navigazione per tutti i pulsanti/menu
+  document.querySelectorAll('.menu-button, .menu-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const section = e.target.getAttribute('data-section');
-      loadSection(section);
+      if (section) {
+        loadSection(section);
+      }
     });
   });
 }
+
 
 function renderAuthButton(isLoggedIn) {
   const container = document.getElementById('auth-button-container');

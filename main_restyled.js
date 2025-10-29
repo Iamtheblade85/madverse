@@ -2514,33 +2514,37 @@ window.openEditRewards = openEditRewards;
 // Funzione per caricare dinamicamente sezioni
 async function loadSection(section) {
   const app = document.getElementById('app');
-  const { userId, usx_token, wax_account } = window.userData;
+
+  // ⛑ fallback safe: se window.userData non esiste ancora (utente non loggato)
+  const { userId, usx_token, wax_account } = window.userData || {};
+
   if (section === 'c2e-twitch') {
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title text-center">C2E - Twitch</h2>
-          <div class="c2e-menu">
-            <button class="c2e-menu-btn" data-menu="log-reward-activity"
-              style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-              Log Reward Activity
-            </button>
-            <button class="c2e-menu-btn" data-menu="log-storms-giveaways"
-              style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-              Twitch Storms
-            </button>
-            <button class="c2e-menu-btn" data-menu="twitch-nfts-giveaways"
-              style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-              Twitch NFTs Giveaways(NEW!)
-            </button>
-            <button class="c2e-menu-btn" data-menu="twitch-game"
-              style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-              Twitch Game(!soon!)
-            </button>
-          </div>
+        <div class="c2e-menu">
+          <button class="c2e-menu-btn" data-menu="log-reward-activity"
+            style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+            Log Reward Activity
+          </button>
+          <button class="c2e-menu-btn" data-menu="log-storms-giveaways"
+            style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+            Twitch Storms
+          </button>
+          <button class="c2e-menu-btn" data-menu="twitch-nfts-giveaways"
+            style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+            Twitch NFTs Giveaways(NEW!)
+          </button>
+          <button class="c2e-menu-btn" data-menu="twitch-game"
+            style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+            Twitch Game(!soon!)
+          </button>
+        </div>
         <div id="c2e-content" class="c2e-content">Loading last activity...</div>
       </div>
     `;
 
+    // default tab on open
     loadLogRewardActivity();
 
     document.querySelectorAll('.c2e-menu-btn').forEach(btn => {
@@ -2550,239 +2554,247 @@ async function loadSection(section) {
 
         const menu = e.target.getAttribute('data-menu');
         switch(menu) {
-          case 'log-reward-activity': loadLogRewardActivity(); break;
-          case 'log-storms-giveaways': loadLogStormsGiveaways(); break;
-          case 'twitch-nfts-giveaways': loadTwitchNftsGiveaways(); break;
-          case 'twitch-game': loadTwitchGame(); break;
+          case 'log-reward-activity':    loadLogRewardActivity();     break;
+          case 'log-storms-giveaways':   loadLogStormsGiveaways();    break;
+          case 'twitch-nfts-giveaways':  loadTwitchNftsGiveaways();   break;
+          case 'twitch-game':            loadTwitchGame();            break;
         }
       });
     });
-	  } else if (section === 'noncustodialfarms') {
-	  const app = document.getElementById('app');
-	
-	  //if (!isLoggedIn?.() || (window.userData?.wax_account !== "agoscry4ever")) {
-	    //if (window.Swal) Swal.fire("Accesso negato", "Sezione riservata.", "warning");
-	    //return;
-	  //}
-	
-	  app.innerHTML = `
-	    <div class="section-container">
-	      <h2 class="section-title text-center">Manage not-custodial NFTs Farm</h2>
-	      <div id="manage-nft-farm-page"></div>
-	    </div>
-	  `;
-	
-	  ensureNCFarmsLoaded(() => {
-	    if (window.__NFTF_MOUNTED__) return;
-	    const API_BASE = BASE_URL;
-	    window.initManageNFTsFarm({
-	      apiBaseUrl: API_BASE,
-	      containerId: "manage-nft-farm-page",
-	    });
-	    window.__NFTF_MOUNTED__ = true;
-	
-	    if (!window.__NFTF_REWARD_LISTENER__) {
-	      window.addEventListener("nftFarm:rewardsDraft", (e) => {
-	        const draft = e.detail;
-	        console.log("Rewards draft:", draft);
-	      });
-	      window.__NFTF_REWARD_LISTENER__ = true;
-	    }
-	  });
-	
-	  return;
-	} else if (section === 'wallet') {
-      app.innerHTML = `
-        <div class="section-container">
-          <h2 class="section-title">Wallet</h2>
-          <div id="wallet-table">Loading Wallet...</div>
-        </div>
-      `;
-    loadWallet();
-  } else if (section === 'goblin-dex') {
-      app.innerHTML = `
-        <div class="section-container">
-          <h2 class="section-title">Goblin Dex</h2>
-          <div id="goblin-dex">Loading character...</div>
-        </div>
-      `;
-    loadGoblinDex();
-  } else if (section === 'nfts') {
+
+  } else if (section === 'noncustodialfarms') {
+
+    // ⚠️ NON ridichiarare const app qui: lo abbiamo già sopra
+
+    // eventuale controllo accesso (lasciato commentato per ora)
+    // if (!isLoggedIn?.() || (window.userData?.wax_account !== "agoscry4ever")) {
+    //   if (window.Swal) Swal.fire("Accesso negato", "Sezione riservata.", "warning");
+    //   return;
+    // }
+
     app.innerHTML = `
-    <div class="section-container">
-      <h2 class="section-title">My NFTs</h2>
-      <div class="filters-group">
-        <label for="search-template">Template:</label>
-        <input type="text" id="search-template" placeholder="Search by Template Name..." class="form-input">
-      
-        <label for="filter-status">Status:</label>
-        <select id="filter-status" class="form-select">
-          <option value="">All</option>
-          <option value="Staked">Staked</option>
-          <option value="Not Staked">Not Staked</option>
-        </select>
-      
-        <label for="filter-stakable">Stakable:</label>
-        <select id="filter-stakable" class="form-select">
-          <option value="">All</option>
-          <option value="Stakable">Stakable</option>
-          <option value="Not Stakable">Not Stakable</option>
-        </select>
-      
-        <label for="filter-for-sale">For Sale:</label>
-        <select id="filter-for-sale" class="form-select">
-          <option value="">All</option>
-          <option value="Yes">For Sale</option>
-          <option value="No">Not For Sale</option>
-        </select>
-      
-        <label for="filter-collection">Collection:</label>
-        <select id="filter-collection" class="form-select">
-          <option value="">All</option>
-        </select>
-      
-        <label for="sort-by">Sort By:</label>
-        <select id="sort-by" class="form-select">
-          <option value="created_at_desc">Newest</option>
-          <option value="created_at_asc">Oldest</option>
-          <option value="template_name_asc">Template (A-Z)</option>
-          <option value="template_name_desc">Template (Z-A)</option>
-        </select>
+      <div class="section-container">
+        <h2 class="section-title text-center">Manage not-custodial NFTs Farm</h2>
+        <div id="manage-nft-farm-page"></div>
       </div>
+    `;
 
+    ensureNCFarmsLoaded(() => {
+      if (window.__NFTF_MOUNTED__) return;
+      const API_BASE = BASE_URL;
+      window.initManageNFTsFarm({
+        apiBaseUrl: API_BASE,
+        containerId: "manage-nft-farm-page",
+      });
+      window.__NFTF_MOUNTED__ = true;
 
-      <div id="bulk-actions" class="bulk-actions hidden">
-        <button id="bulk-withdraw" class="btn btn-secondary">Withdraw Selected</button>
-        <button id="bulk-send" class="btn btn-primary">Send Selected</button>
+      if (!window.__NFTF_REWARD_LISTENER__) {
+        window.addEventListener("nftFarm:rewardsDraft", (e) => {
+          const draft = e.detail;
+          console.log("Rewards draft:", draft);
+        });
+        window.__NFTF_REWARD_LISTENER__ = true;
+      }
+    });
+
+    return;
+
+  } else if (section === 'wallet') {
+
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">Wallet</h2>
+        <div id="wallet-table">Loading Wallet...</div>
       </div>
+    `;
+    loadWallet();
 
-      <div id="nfts-loading" class="nfts-loading">🔄 Loading NFTs...</div>
-      <div id="nfts-count" class="nfts-count"></div>
+  } else if (section === 'goblin-dex') {
 
-      <div id="nfts-list" class="nfts-grid"></div>
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">Goblin Dex</h2>
+        <div id="goblin-dex">Loading character...</div>
+      </div>
+    `;
+    loadGoblinDex();
 
-      <div id="pagination" class="pagination"></div>
-      <div id="modal-nft" class="modal-backdrop hidden">
-        <div class="modal-content">
-          <button class="modal-close">X</button>
-          <div id="modal-content"></div>
+  } else if (section === 'nfts') {
+
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">My NFTs</h2>
+        <div class="filters-group">
+          <label for="search-template">Template:</label>
+          <input type="text" id="search-template" placeholder="Search by Template Name..." class="form-input">
+        
+          <label for="filter-status">Status:</label>
+          <select id="filter-status" class="form-select">
+            <option value="">All</option>
+            <option value="Staked">Staked</option>
+            <option value="Not Staked">Not Staked</option>
+          </select>
+        
+          <label for="filter-stakable">Stakable:</label>
+          <select id="filter-stakable" class="form-select">
+            <option value="">All</option>
+            <option value="Stakable">Stakable</option>
+            <option value="Not Stakable">Not Stakable</option>
+          </select>
+        
+          <label for="filter-for-sale">For Sale:</label>
+          <select id="filter-for-sale" class="form-select">
+            <option value="">All</option>
+            <option value="Yes">For Sale</option>
+            <option value="No">Not For Sale</option>
+          </select>
+        
+          <label for="filter-collection">Collection:</label>
+          <select id="filter-collection" class="form-select">
+            <option value="">All</option>
+          </select>
+        
+          <label for="sort-by">Sort By:</label>
+          <select id="sort-by" class="form-select">
+            <option value="created_at_desc">Newest</option>
+            <option value="created_at_asc">Oldest</option>
+            <option value="template_name_asc">Template (A-Z)</option>
+            <option value="template_name_desc">Template (Z-A)</option>
+          </select>
         </div>
-      </div>
+
+        <div id="bulk-actions" class="bulk-actions hidden">
+          <button id="bulk-withdraw" class="btn btn-secondary">Withdraw Selected</button>
+          <button id="bulk-send" class="btn btn-primary">Send Selected</button>
+        </div>
+
+        <div id="nfts-loading" class="nfts-loading">🔄 Loading NFTs...</div>
+        <div id="nfts-count" class="nfts-count"></div>
+
+        <div id="nfts-list" class="nfts-grid"></div>
+
+        <div id="pagination" class="pagination"></div>
+        <div id="modal-nft" class="modal-backdrop hidden">
+          <div class="modal-content">
+            <button class="modal-close">X</button>
+            <div id="modal-content"></div>
+          </div>
+        </div>
       </div>
     `;
     loadNFTs();
-  }
-else if (section === 'token-staking') {
-  app.innerHTML = `
-    <div class="section-container">
-      <h2 class="section-title">Token Staking</h2>
 
-      <!-- Toolbar: Tabs + Distribution -->
-      <div class="token-toolbar" style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; justify-content:space-between; margin-bottom:12px;">
-        <div class="tabs" role="tablist" aria-label="Token staking tabs" style="display:flex; gap:6px;">
-          <button id="tab-pools" class="tab active" role="tab" aria-selected="true" aria-controls="tab-pools-content">Pools</button>
-          <button id="tab-earnings" class="tab" role="tab" aria-selected="false" aria-controls="tab-earnings-content">Earning History</button>
-        </div>
-        
-        <div class="actions" id="dist-actions" style="display:none; align-items:center; gap:.5rem; margin: .5rem 0 1rem;">
-          <label style="display:flex; align-items:center; gap:.35rem; font-size:.95rem;">
-            <input type="checkbox" id="dist-dry" checked>
-            Dry run
-          </label>
-          <button id="btn-distribute"
-                  class="btn btn-primary"
-                  style="display:inline-flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border:1px solid #2b2b2b;border-radius:8px;background:#0d6efd;color:#fff;font-weight:600;cursor:pointer;">
-            <span id="dist-spinner"
-                  class="spin"
-                  style="display:none;width:14px;height:14px;border:2px solid rgba(255,255,255,.6);border-top-color:#fff;border-radius:50%;"></span>
-            <span id="dist-label">Run Distribution</span>
-          </button>
-        </div>
-      </div>
-      <style>
-      @keyframes spin { to { transform: rotate(360deg); } }
-      .spin { animation: spin .8s linear infinite; }
-      </style>
+  } else if (section === 'token-staking') {
 
-      <!-- Tabs content -->
-      <div id="tab-content">
-        <!-- Pools tab -->
-        <div id="tab-pools-content" role="tabpanel" aria-labelledby="tab-pools">
-          <input type="text" id="search-pools" placeholder="Search token pool name" class="form-input search-token-pool" style="margin-bottom:10px;">
-          <div id="pool-buttons" class="pool-buttons"></div>
-          <div id="selected-pool-details">
-            <div class="loading-message">Loading pool data...</div>
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">Token Staking</h2>
+
+        <!-- Toolbar: Tabs + Distribution -->
+        <div class="token-toolbar" style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; justify-content:space-between; margin-bottom:12px;">
+          <div class="tabs" role="tablist" aria-label="Token staking tabs" style="display:flex; gap:6px;">
+            <button id="tab-pools" class="tab active" role="tab" aria-selected="true" aria-controls="tab-pools-content">Pools</button>
+            <button id="tab-earnings" class="tab" role="tab" aria-selected="false" aria-controls="tab-earnings-content">Earning History</button>
+          </div>
+          
+          <div class="actions" id="dist-actions" style="display:none; align-items:center; gap:.5rem; margin: .5rem 0 1rem;">
+            <label style="display:flex; align-items:center; gap:.35rem; font-size:.95rem;">
+              <input type="checkbox" id="dist-dry" checked>
+              Dry run
+            </label>
+            <button id="btn-distribute"
+                    class="btn btn-primary"
+                    style="display:inline-flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border:1px solid #2b2b2b;border-radius:8px;background:#0d6efd;color:#fff;font-weight:600;cursor:pointer;">
+              <span id="dist-spinner"
+                    class="spin"
+                    style="display:none;width:14px;height:14px;border:2px solid rgba(255,255,255,.6);border-top-color:#fff;border-radius:50%;"></span>
+              <span id="dist-label">Run Distribution</span>
+            </button>
           </div>
         </div>
+        <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin .8s linear infinite; }
+        </style>
 
-        <!-- Earnings tab -->
-        <div id="tab-earnings-content" role="tabpanel" aria-labelledby="tab-earnings" hidden>
-          <div class="card" style="margin-bottom:12px;">
-            <h3 class="card-title">Earning History</h3>
-            <div style="display:flex; gap:.5rem; align-items:flex-end; flex-wrap:wrap;">
-              <div>
-                <label class="label">From</label>
-                <input type="date" id="eh-start" class="form-input" />
-              </div>
-              <div>
-                <label class="label">To</label>
-                <input type="date" id="eh-end" class="form-input" />
-              </div>
-              <div>
-                <label class="label">Quick</label>
-                <select id="eh-quick" class="form-input">
-                  <option value="7">Last 7 days</option>
-                  <option value="14">Last 14 days</option>
-                  <option value="30">Last 30 days</option>
-                </select>
-              </div>
-              <button id="eh-refresh" class="btn btn-secondary">Refresh</button>
+        <!-- Tabs content -->
+        <div id="tab-content">
+          <!-- Pools tab -->
+          <div id="tab-pools-content" role="tabpanel" aria-labelledby="tab-pools">
+            <input type="text" id="search-pools" placeholder="Search token pool name" class="form-input search-token-pool" style="margin-bottom:10px;">
+            <div id="pool-buttons" class="pool-buttons"></div>
+            <div id="selected-pool-details">
+              <div class="loading-message">Loading pool data...</div>
             </div>
           </div>
 
-          <div id="eh-summary" class="card" style="margin-bottom:12px;">
-            <h4 class="card-title">Summary</h4>
-            <div id="eh-summary-body" class="label">Select a range and click Refresh.</div>
-          </div>
+          <!-- Earnings tab -->
+          <div id="tab-earnings-content" role="tabpanel" aria-labelledby="tab-earnings" hidden>
+            <div class="card" style="margin-bottom:12px;">
+              <h3 class="card-title">Earning History</h3>
+              <div style="display:flex; gap:.5rem; align-items:flex-end; flex-wrap:wrap;">
+                <div>
+                  <label class="label">From</label>
+                  <input type="date" id="eh-start" class="form-input" />
+                </div>
+                <div>
+                  <label class="label">To</label>
+                  <input type="date" id="eh-end" class="form-input" />
+                </div>
+                <div>
+                  <label class="label">Quick</label>
+                  <select id="eh-quick" class="form-input">
+                    <option value="7">Last 7 days</option>
+                    <option value="14">Last 14 days</option>
+                    <option value="30">Last 30 days</option>
+                  </select>
+                </div>
+                <button id="eh-refresh" class="btn btn-secondary">Refresh</button>
+              </div>
+            </div>
 
-          <div id="eh-days"></div>
+            <div id="eh-summary" class="card" style="margin-bottom:12px;">
+              <h4 class="card-title">Summary</h4>
+              <div id="eh-summary-body" class="label">Select a range and click Refresh.</div>
+            </div>
+
+            <div id="eh-days"></div>
+          </div>
         </div>
       </div>
-    </div>
-  `;
+    `;
 
-  // init tabs
-  initTokenStakingTabs();
+    // init tabs
+    initTokenStakingTabs();
 
-  // 🔐 mostra il blocco solo se il wallet è quello autorizzato
-  try {
-    const allowedDist = (window.userData?.wax_account === 'agoscry4ever');
-    const distActions = document.getElementById('dist-actions');
-    if (distActions) distActions.style.display = allowedDist ? 'flex' : 'none';
+    // blocco admin per distribuzione manuale
+    try {
+      const allowedDist = (window.userData?.wax_account || '').toLowerCase() === 'agoscry4ever';
+      const distActions = document.getElementById('dist-actions');
+      if (distActions) distActions.style.display = allowedDist ? 'flex' : 'none';
 
-    // singolo hook sul click
-    const btn = document.getElementById('btn-distribute');
-    if (btn && allowedDist) {
-      btn.addEventListener('click', runTokenDistribution);
+      const btn = document.getElementById('btn-distribute');
+      if (btn && allowedDist) {
+        btn.addEventListener('click', runTokenDistribution);
+      }
+    } catch (e) {
+      console.warn('dist-actions init error', e);
     }
-  } catch (e) {
-    console.warn('dist-actions init error', e);
-  }
 
-  // load pools tab una sola volta
-  loadStakingPools();
+    // carica pools
+    loadStakingPools();
+    // init earning history defaults
+    initEarningHistoryControls();
 
-  // init earning history defaults
-  initEarningHistoryControls();
-} else if (section === 'nfts-staking') {
+  } else if (section === 'nfts-staking') {
+
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title">NFT Staking</h2>
   
-        <!-- Toolbar con inline CSS -->
         <div id="farm-tools" style="
           display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-          background:#0f172a; /* slate-900 */
+          background:#0f172a;
           border:1px solid rgba(255,255,255,0.08);
           padding:12px;border-radius:10px;margin-bottom:14px;
         ">
@@ -2792,7 +2804,6 @@ else if (section === 'token-staking') {
             box-shadow:0 1px 1px rgba(0,0,0,0.15);
           ">📜 Earning History</button>
   
-          <!-- Container Admin visibile solo per agoscry4ever -->
           <div id="admin-distribute-container" style="
             display:none;align-items:center;gap:10px;margin-left:auto;
             background:#0b1220;border:1px dashed rgba(255,255,255,0.12);
@@ -2812,21 +2823,17 @@ else if (section === 'token-staking') {
           </div>
         </div>
   
-        <!-- Feedback dinamico per la distribuzione -->
         <div id="distribution-feedback" style="margin:-6px 0 16px 0;"></div>
   
         <div id="nft-farms-container" class="vertical-list">Loading NFT farms...</div>
       </div>
     `;
   
-    // Inizializza la toolbar (visibilità admin, listeners)
     initFarmToolsControls();
-  
-    // Carica le farm
     loadNFTFarms();
-  }
-  
-  else if (section === 'create-nfts-farm') {
+
+  } else if (section === 'create-nfts-farm') {
+
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title">Create NFTs Staking Farm</h2>
@@ -2834,8 +2841,9 @@ else if (section === 'token-staking') {
       </div>
     `;
     loadCreateNFTFarm();
-  }
-   else if (section === 'create-token-pool') {
+
+  } else if (section === 'create-token-pool') {
+
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title">Create Token Staking Pool</h2>
@@ -2843,66 +2851,68 @@ else if (section === 'token-staking') {
       </div>
     `;
     loadCreateTokenStaking();
+
   } else if (section === 'daily') {
-  app.innerHTML = `
-    <div class="section-container">
-      <h2 class="section-title">Daily Chest</h2>
-      <div id="daily-box">Loading...</div>
-    </div>
-  `;
 
-  try {
-    const dailyBoxRes = await fetch(`${BASE_URL}/daily_chest_open`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId,
-        usx_token,
-        wax_account
-      })
-    });
-
-    const dailyBoxData = await dailyBoxRes.json();
-    window.accountData = {
-      ...window.accountData,
-      dailyBox: dailyBoxData
-    };
-
-    renderDailyBox(dailyBoxData);
-  } catch (err) {
-    console.error("[❌] Failed to fetch daily box:", err);
-    document.getElementById('daily-box').innerText = "Failed to load Daily Chest.";
-  }
-}  else if (section === 'account') {
     app.innerHTML = `
       <div class="section-container">
-      
+        <h2 class="section-title">Daily Chest</h2>
+        <div id="daily-box">Loading...</div>
+      </div>
+    `;
+
+    try {
+      const dailyBoxRes = await fetch(`${BASE_URL}/daily_chest_open`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          usx_token,
+          wax_account
+        })
+      });
+
+      const dailyBoxData = await dailyBoxRes.json();
+      window.accountData = {
+        ...window.accountData,
+        dailyBox: dailyBoxData
+      };
+
+      renderDailyBox(dailyBoxData);
+    } catch (err) {
+      console.error("[❌] Failed to fetch Daily Chest:", err);
+      document.getElementById('daily-box').innerText = "Failed to load Daily Chest.";
+    }
+
+  } else if (section === 'account') {
+
+    app.innerHTML = `
+      <div class="section-container">
         <h2 class="section-title2">💠 Account Overview</h2>
-        
         <p style="
-        font-family: 'Rock Salt', cursive;
-        text-transform: uppercase;
-        font-size: 1rem;
-        color: #ffe600;
-        margin-top: 1rem;
-        white-space: nowrap;
-        overflow: hidden;
-        border-right: 2px solid #ffe600;
-        display: inline-block;
-        animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
-        position: relative;
-      ">
-        Why not peek behind the scenes?
-        <span style="
-          position: absolute;
-          left: 0;
-          bottom: -4px;
-          height: 2px;
-          width: 0;
-          background: #f39c12;
-          animation: underlineSlide 2.5s ease-in-out 3s forwards;
-        "></span>
-      </p>
+          font-family: 'Rock Salt', cursive;
+          text-transform: uppercase;
+          font-size: 1rem;
+          color: #ffe600;
+          margin-top: 1rem;
+          white-space: nowrap;
+          overflow: hidden;
+          border-right: 2px solid #ffe600;
+          display: inline-block;
+          animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
+          position: relative;
+        ">
+          Why not peek behind the scenes?
+          <span style="
+            position: absolute;
+            left: 0;
+            bottom: -4px;
+            height: 2px;
+            width: 0;
+            background: #f39c12;
+            animation: underlineSlide 2.5s ease-in-out 3s forwards;
+          "></span>
+        </p>
 
         <div class="loading-message typing-loader">
           <div class="typing-text">⌛ Loading blockchain data... please wait. </div>
@@ -2927,62 +2937,59 @@ else if (section === 'token-staking') {
             <img class="block-deco left" src="https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeicmgskdkv7l7zinxbmolfbwt36375h54gjss2sp4wrcynrvn4trsu" alt="decor-left">
             <div id="recent-activity"></div>
           </details>
-  
         </div>
       </div>
     `;
-  
     loadAccountSection();
-  }
-  else if (section === 'loadLatestNews') {
-      app.innerHTML = `
-        <div class="section-container">
-          <h2 class="section-title">Guides and Infos</h2>  
-          <div id="main-wrapper"></div>
+
+  } else if (section === 'loadLatestNews') {
+
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">Guides and Infos</h2>  
+        <div id="main-wrapper"></div>
+      </div>
+    `;
+    showNewsSection();
+
+  } else if (section === 'creator-dashboard') {
+
+    // ❗ NON ridichiarare const app: ce l'abbiamo già in alto.
+
+    // mount point per la dashboard dinamica
+    app.innerHTML = `
+      <div class="section-wrapper" id="creator-dashboard-root" style="padding:1rem 0;">
+        <div style="color:#ccc;font-size:.9rem;">Loading Creator Dashboard…</div>
+      </div>
+    `;
+
+    // dati auth
+    const { userId, usx_token, wax_account } = window.userData || {};
+
+    if (!userId || !usx_token || !wax_account) {
+      const mountPoint = document.getElementById('creator-dashboard-root');
+      mountPoint.innerHTML = `
+        <div class="account-card2" style="padding:16px;background:#1f2937;border-radius:12px;color:#fff;">
+          <div style="font-weight:700;font-size:1rem;color:#fff;">Not logged in</div>
+          <div style="color:#9ca3af;font-size:.9rem;margin-top:4px;">
+            Please login to view your creator dashboard.
+          </div>
         </div>
-     `;
-      showNewsSection()
-	} else if (section === 'creator-dashboard') {
-	  const app = document.getElementById('app');
-	
-	  // prepara un mount point vuoto dove CreatorDash andrà a renderizzare tutta la dashboard
-	  app.innerHTML = `
-	    <div class="section-wrapper" id="creator-dashboard-root" style="padding:1rem 0;">
-	      <div style="color:#ccc;font-size:.9rem;">Loading Creator Dashboard…</div>
-	    </div>
-	  `;
-	
-	  // recuperiamo i dati dell'utente loggato
-	  const { userId, usx_token, wax_account } = window.userData || {};
-	
-	  // se non loggato / manca wax_account → messaggio e stop
-	  if (!userId || !usx_token || !wax_account) {
-	    const mountPoint = document.getElementById('creator-dashboard-root');
-	    mountPoint.innerHTML = `
-	      <div class="account-card2" style="padding:16px;background:#1f2937;border-radius:12px;color:#fff;">
-	        <div style="font-weight:700;font-size:1rem;color:#fff;">Not logged in</div>
-	        <div style="color:#9ca3af;font-size:.9rem;margin-top:4px;">
-	          Please login to view your creator dashboard.
-	        </div>
-	      </div>
-	    `;
-	    return;
-	  }
-	
-	  // monta la dashboard dinamica vera:
-	  // CreatorDash:
-	  // - chiama gli endpoint backend
-	  // - costruisce le tab (Overview / Ads Manager / History)
-	  // - gestisce l'editor delle Channel Ads e il salvataggio sul backend
-	  window.CreatorDash.mount({
-	    rootEl: document.getElementById('creator-dashboard-root'),
-	    baseUrl: BASE_URL,
-	    userId,
-	    usx_token,
-	    wax_account
-	  });
-	}
+      `;
+      return;
+    }
+
+    // monta dashboard creator
+    window.CreatorDash.mount({
+      rootEl: document.getElementById('creator-dashboard-root'),
+      baseUrl: BASE_URL,
+      userId,
+      usx_token,
+      wax_account
+    });
+
   }
+}
 
 // ======================================================
 // =============== CREATOR DASHBOARD MODULE =============

@@ -127,12 +127,32 @@
               </div>
             </div>
           </div>
-          <div class="dropdown">
-            <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">Creators Tools ▾</button>
-            <div class="dropdown-menu hidden" role="menu" id="creators-tools-menu">
-              <button class="dropdown-item" data-section="create-token-pool">Create Token Staking Pool</button>
-            </div>
-          </div>
+<div class="dropdown">
+  <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+    Creators Tools ▾
+  </button>
+
+  <div class="dropdown-menu hidden" role="menu" id="creators-tools-menu">
+
+    <!-- QUESTO è SEMPRE visibile -->
+    <button class="dropdown-item" data-section="create-token-pool">
+      Create Token Staking Pool
+    </button>
+
+    <!-- QUESTO è il nuovo pulsante Creator Dashboard -->
+    <!-- Parte nascosto con class="hidden" -->
+    <button
+      class="dropdown-item hidden"
+      id="creator-dashboard-nav-btn"
+      data-section="creator-dashboard"
+    >
+      Creator Dashboard
+      <span class="badge-new" aria-hidden="true">NEW</span>
+    </button>
+
+  </div>
+</div>
+
         </div>
       </nav>
     </div>
@@ -242,5 +262,29 @@
       </div>
     </div>
   </footer>
+<script>
+  // Questa funzione controlla chi è loggato e mostra/nasconde il pulsante Creator Dashboard
+  window.updateCreatorDashboardVisibility = function () {
+    const btn = document.getElementById('creator-dashboard-nav-btn');
+    if (!btn) return;
+
+    const wax = window?.userData?.wax_account;
+    if (wax && wax === 'agoscry4ever') {
+      // account autorizzato → mostra
+      btn.classList.remove('hidden');
+    } else {
+      // altri account → resta nascosto
+      btn.classList.add('hidden');
+    }
+  };
+
+  // Eseguiamo il check dopo che la pagina è pronta.
+  // A questo punto main_restyled.js (defer) è già stato caricato,
+  // e quindi window.userData di solito è già stato popolato.
+  document.addEventListener('DOMContentLoaded', () => {
+    window.updateCreatorDashboardVisibility();
+  });
+</script>
+  
 </body>
 </html>

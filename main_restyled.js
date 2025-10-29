@@ -2769,7 +2769,7 @@ async function loadSection(section) {
 
     // blocco admin per distribuzione manuale
     try {
-      const allowedDist = (window.userData?.wax_account || '').toLowerCase() === 'welshdanft55';
+      const allowedDist = (window.userData?.wax_account || '').toLowerCase() === 'agoscry4ever';
       const distActions = document.getElementById('dist-actions');
       if (distActions) distActions.style.display = allowedDist ? 'flex' : 'none';
 
@@ -3534,17 +3534,17 @@ window.CreatorDash = (() => {
       // call backend (⚠️ implement on server):
       // POST /channel_rewards/save  { user_id, usx_token, channel, rewards:[{token_symbol, per_message}...] }
       try {
-        const res = await fetchJSON(`${st.baseUrl}/channel_rewards/save`, {
-          method: 'POST',
-          headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({
-            user_id: st.userId,
-            usx_token: st.usx_token,
-            channel: st.channel,
-            rewards: rows
-          })
-        });
-
+		const res = await fetchJSON(`${st.baseUrl}/channel_rewards/save`, {
+		  method: 'POST',
+		  headers: { 'Content-Type':'application/json' },
+		  body: JSON.stringify({
+		    user_id:      st.userId,
+		    usx_token:    st.usx_token,
+		    wax_account:  st.wax_account,   // <-- AGGIUNTO
+		    channel:      st.channel,       // opzionale, solo per logging lato server
+		    rewards:      rows              // [{token_symbol, per_message}, ...]
+		  })
+		});
         // reload to reflect effective & sources
         await loadAllData();
 

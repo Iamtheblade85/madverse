@@ -3295,26 +3295,51 @@ window.CreatorDash = (() => {
     const daysLeft = (sub.days_left ?? null) !== null ? `${sub.days_left} days` : "-";
 
     // compact effective reward cards
-    const cards = st.effectiveRewards.map(r => `
-      <div style="
-        flex:1 1 180px;min-width:180px;
-        background:#0b1220;border-radius:12px;
-        border:1px solid rgba(255,255,255,.10);
-        padding:14px;color:#fff;box-shadow:0 0 12px rgba(0,255,200,.08);
-      ">
-        <div style="font-size:${FS.xs};color:#cbd5e1;display:flex;justify-content:space-between;gap:6px;">
-          <span>${esc(r.token)}</span>
-          <span style="color:${r.reward_source==='channel'?'#fde68a':'#93c5fd'};font-weight:800;text-transform:uppercase;">${esc(r.reward_source)}</span>
-        </div>
-    <div style="margin-top:6px;font-size:${FS.sm};font-weight:900;">
-      ${chip(r.per_message_effective ?? r.per_message, 6)} /msg
-    </div>
-        <div style="margin-top:6px;font-size:${FS.xs};color:#cbd5e1;line-height:1.35;">
-          Remaining: <strong style="color:#fff;">${chip(r.remaining,6)}</strong><br/>
-          Messages left: <strong style="color:#fff;">${r.messages_left == null ? '-' : chip(r.messages_left,0)}</strong>
-        </div>
+// ---- Effective + (Global/Channel) per token ----
+const effBySym = Object.fromEntries((st.effectiveRewards || []).map(r => [r.token, r]));
+
+// unione di tutti i token noti (global, channel, effective)
+const allSyms = Array.from(new Set([
+  ...Object.keys(st.rewardsGlobal || {}),
+  ...Object.keys(st.rewardsChannel || {}),
+  ...Object.keys(effBySym || {})
+])).sort((a,b)=> a.localeCompare(b));
+
+const cards = allSyms.map(sym => {
+  const eff = effBySym[sym] || {};
+  const g   = (st.rewardsGlobal  || {})[sym];
+  const ch  = (st.rewardsChannel || {})[sym];
+
+  const effVal   = ch ?? g; // regola "effective"
+  const src      = ch != null ? 'channel' : (g != null ? 'global' : '-');
+  const srcColor = src === 'channel' ? '#fde68a' : '#93c5fd';
+
+  return `
+    <div style="
+      flex:1 1 180px;min-width:180px;
+      background:#0b1220;border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      padding:14px;color:#fff;box-shadow:0 0 12px rgba(0,255,200,.08);
+    ">
+      <div style="font-size:${FS.xs};color:#cbd5e1;display:flex;justify-content:space-between;gap:6px;">
+        <span>${esc(sym)}</span>
+        <span style="color:${srcColor};font-weight:800;text-transform:uppercase;">${esc(src)}</span>
       </div>
-    `).join('');
+
+      <div style="margin-top:6px;font-size:${FS.sm};font-weight:900;">
+        ${chip(effVal,6)} /msg
+      </div>
+
+      <div style="margin-top:6px;font-size:${FS.xs};color:#cbd5e1;line-height:1.35;">
+        ${g  != null ? `Global: <strong style="color:#fff;">${chip(g,6)}</strong><br/>` : ``}
+        ${ch != null ? `Channel: <strong style="color:#fff;">${chip(ch,6)}</strong><br/>` : ``}
+        Remaining: <strong style="color:#fff;">${chip(eff.remaining,6)}</strong><br/>
+        Messages left: <strong style="color:#fff;">${eff.messages_left == null ? '-' : chip(eff.messages_left,0)}</strong>
+      </div>
+    </div>
+  `;
+}).join('');
+
 
     return `
       <div style="display:flex;flex-direction:column;gap:1rem;">

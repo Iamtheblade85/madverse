@@ -3560,6 +3560,33 @@ const cards = allSyms.map(sym => {
     `;
   }
 
+	function balancesTableHTML(map) {
+	  const rows = Object.entries(map || {}).sort((a,b)=> a[0].localeCompare(b[0]));
+	  if (!rows.length) {
+	    return `<div style="color:#94a3b8;font-size:${FS.xs};margin-top:8px;">No balances found.</div>`;
+	  }
+	  return `
+	    <div style="margin-top:10px;overflow-x:auto;">
+	      <table style="width:100%;border-collapse:collapse;min-width:320px;">
+	        <thead>
+	          <tr style="background:#101828;color:#fff;text-align:left;">
+	            <th style="${thCell()}">Token</th>
+	            <th style="${thCell()}">Balance</th>
+	          </tr>
+	        </thead>
+	        <tbody>
+	          ${rows.map(([sym, amt]) => `
+	            <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
+	              <td style="${tdCell()}">${esc(sym)}</td>
+	              <td style="${tdCell()}">${chip(amt,6)}</td>
+	            </tr>
+	          `).join('')}
+	        </tbody>
+	      </table>
+	    </div>
+	  `;
+	}
+	
   function inputStyle(tt='none'){
     return `
       width:100%;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.18);
@@ -3952,33 +3979,6 @@ const cards = allSyms.map(sym => {
 
   return { mount };
 })();
-
-function balancesTableHTML(map) {
-  const rows = Object.entries(map || {}).sort((a,b)=> a[0].localeCompare(b[0]));
-  if (!rows.length) {
-    return `<div style="color:#94a3b8;font-size:${FS.xs};margin-top:8px;">No balances found.</div>`;
-  }
-  return `
-    <div style="margin-top:10px;overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;min-width:320px;">
-        <thead>
-          <tr style="background:#101828;color:#fff;text-align:left;">
-            <th style="${thCell()}">Token</th>
-            <th style="${thCell()}">Balance</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows.map(([sym, amt]) => `
-            <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
-              <td style="${tdCell()}">${esc(sym)}</td>
-              <td style="${tdCell()}">${chip(amt,6)}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
-}
 
 function showNewsSection() {
   loadNewsList({ page: 1 });

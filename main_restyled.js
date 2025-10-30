@@ -3620,90 +3620,31 @@ function bindRewardsEditor(){
 
   if (!tbody || !addBtn || !saveBtn) return;
 
-  // Delega: remove + top-up su tutte le righe (anche quelle aggiunte dopo)
-  tbody.addEventListener('click', async (ev) => {
-    const delBtn  = ev.target.closest('.rw-del');
-    const topBtn  = ev.target.closest('.rw-topup');
-
-    // Rimozione riga
-    if (delBtn) {
-      const tr = delBtn.closest('tr');
+  // hook remove
+  tbody.querySelectorAll('.rw-del').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const tr = btn.closest('tr');
       tr?.remove();
-      return;
-    }
-
-    // Top-Up pool canale da wallet Twitch/Telegram
-    if (topBtn) {
-      const tr    = topBtn.closest('tr');
-      const token = (tr.querySelector('.rw-token')?.value || '').trim().toUpperCase();
-      if (!token) { alert('Please enter/select a token symbol first.'); return; }
-
-      const twitchAvail   = Number(st.twitchBalances?.[token]   || 0);
-      const telegramAvail = Number(st.telegramBalances?.[token] || 0);
-
-      const src = (window.prompt(
-        `Top-Up ${token}\n\nChoose source wallet: type "twitch" or "telegram"\n\nAvailable:\n- Twitch: ${chip(twitchAvail,6)}\n- Telegram: ${chip(telegramAvail,6)}`
-      ) || '').trim().toLowerCase();
-
-      if (src !== 'twitch' && src !== 'telegram') {
-        if (src) alert('Source must be "twitch" or "telegram".');
-        return;
-      }
-
-      const maxAvail = src === 'twitch' ? twitchAvail : telegramAvail;
-      if (maxAvail <= 0) { alert(`No available ${token} in ${src} wallet.`); return; }
-
-      const amtStr = (window.prompt(`Amount of ${token} to top-up (max ${chip(maxAvail,6)}):`) || '').trim();
-      const amt = Number(amtStr);
-      if (!isFinite(amt) || amt <= 0) { alert('Invalid amount.'); return; }
-      if (amt > maxAvail) { alert(`Amount exceeds available balance in ${src} wallet.`); return; }
-
-      // UI lock sul solo bottone
-      topBtn.disabled = true;
-      const origText = topBtn.textContent;
-      topBtn.textContent = '⏳';
-
-      try {
-        await fetchJSON(`${st.baseUrl}/channel_rewards/topup`, {
-          method: 'POST',
-          headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({
-            user_id:       st.userId,
-            usx_token:     st.usx_token,
-            wax_account:   st.wax_account,
-            channel:       st.channel,      // opzionale
-            token_symbol:  token,
-            amount:        amt,
-            source_wallet: src              // 'twitch' | 'telegram'
-          })
-        });
-
-        // Ricarica dati: aggiorna pool "Remaining" e balances wallet
-        await loadAllData();
-        alert(`Top-Up OK: ${token} +${chip(amt,6)} from ${src} wallet`);
-      } catch (err) {
-        console.error('topup error', err);
-        alert('Top-Up failed: ' + (err.message || 'unknown error'));
-      } finally {
-        // se il bottone non esiste più dopo il re-render, nessun problema
-        try { topBtn.disabled = false; topBtn.textContent = origText; } catch(_) {}
-      }
-    }
+    });
   });
 
-  // Aggiungi riga
-  addBtn.addEventListener('click', () => {
+  // add row
+  addBtn.addEventListener('click', ()=>{
     const idx = tbody.querySelectorAll('tr').length;
-    tbody.insertAdjacentHTML('beforeend', rewardRowHTML(idx, '', ''));
+    tbody.insertAdjacentHTML('beforeend', rewardRowHTML(idx,'',''));
+    // bind del on the new row
+    const last = tbody.querySelector('tr:last-child .rw-del');
+    if (last) last.addEventListener('click', ()=> last.closest('tr')?.remove());
   });
 
-  // Salva righe
-  saveBtn.addEventListener('click', async () => {
+  // save rows
+  saveBtn.addEventListener('click', async ()=>{
     feedback.style.color = '#94a3b8';
     feedback.textContent = 'Saving…';
 
+    // collect rows
     const rows = [];
-    tbody.querySelectorAll('tr').forEach(tr => {
+    tbody.querySelectorAll('tr').forEach(tr=>{
       const token = (tr.querySelector('.rw-token')?.value || '').trim().toUpperCase();
       const per   = tr.querySelector('.rw-per')?.value;
       if (!token) return;
@@ -3713,31 +3654,89 @@ function bindRewardsEditor(){
     });
 
     try {
-      await fetchJSON(`${st.baseUrl}/channel_rewards/save`, {
+      const res = await fetchJSON(`${st.baseUrl}/channel_rewards/save`, {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
         body: JSON.stringify({
-          user_id:     st.userId,
-          usx_token:   st.usx_token,
-          wax_account: st.wax_account,
-          channel:     st.channel,
-          rewards:     rows
+          user_id:      st.userId,
+          usx_token:    st.usx_token,
+          wax_account:  st.wax_account,
+          channel:      st.channel,
+          rewards:      rows
         })
       });
 
       await loadAllData();
       feedback.style.color = '#22c55e';
       feedback.textContent = 'Saved ✔';
+
     } catch (err) {
       console.error('save channel rewards error', err);
       feedback.style.color = '#f87171';
       feedback.textContent = 'Save failed: ' + (err.message || 'unknown error');
     }
   });
+
+  // Top-Up con delega (un solo listener su tbody)
+  tbody.addEventListener('click', async (ev) => {
+    const topBtn = ev.target.closest('.rw-topup');
+    if (!topBtn) return;
+
+    const tr    = topBtn.closest('tr');
+    const token = (tr.querySelector('.rw-token')?.value || '').trim().toUpperCase();
+    if (!token) { alert('Please enter/select a token symbol first.'); return; }
+
+    const twitchAvail   = Number(st.twitchBalances?.[token]   || 0);
+    const telegramAvail = Number(st.telegramBalances?.[token] || 0);
+
+    const src = (window.prompt(
+      `Top-Up ${token}\n\nChoose source wallet: type "twitch" or "telegram"\n\nAvailable:\n- Twitch: ${chip(twitchAvail,6)}\n- Telegram: ${chip(telegramAvail,6)}`
+    ) || '').trim().toLowerCase();
+
+    if (src !== 'twitch' && src !== 'telegram') {
+      if (src) alert('Source must be "twitch" or "telegram".');
+      return;
+    }
+
+    const maxAvail = src === 'twitch' ? twitchAvail : telegramAvail;
+    if (maxAvail <= 0) { alert(`No available ${token} in ${src} wallet.`); return; }
+
+    const amtStr = (window.prompt(`Amount of ${token} to top-up (max ${chip(maxAvail,6)}):`) || '').trim();
+    const amt = Number(amtStr);
+    if (!isFinite(amt) || amt <= 0) { alert('Invalid amount.'); return; }
+    if (amt > maxAvail) { alert(`Amount exceeds available balance in ${src} wallet.`); return; }
+
+    // lock solo sul bottone cliccato
+    topBtn.disabled = true;
+    const origText = topBtn.textContent;
+    topBtn.textContent = '⏳';
+
+    try {
+      await fetchJSON(`${st.baseUrl}/channel_rewards/topup`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          user_id:       st.userId,
+          usx_token:     st.usx_token,
+          wax_account:   st.wax_account,
+          channel:       st.channel,      // opzionale
+          token_symbol:  token,
+          amount:        amt,
+          source_wallet: src              // 'twitch' | 'telegram'
+        })
+      });
+
+      await loadAllData();
+      alert(`Top-Up OK: ${token} +${chip(amt,6)} from ${src} wallet`);
+
+    } catch (err) {
+      console.error('topup error', err);
+      alert('Top-Up failed: ' + (err.message || 'unknown error'));
+    } finally {
+      try { topBtn.disabled = false; topBtn.textContent = origText; } catch(_) {}
+    }
+  });
 }
-
-
-
 
   // ---------- TAB: ADS ----------
   function renderAdsTab() {

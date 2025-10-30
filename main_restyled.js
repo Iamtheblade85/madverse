@@ -3030,6 +3030,9 @@ window.CreatorDash = (() => {
     effectiveRewards: [],              // [{token, per_message, remaining, messages_left, reward_source}, ...]
     depositsMap: {},                   // token -> remaining
     fetched_at: '',
+	twitchBalances: {},     // {SYM: number} da user_tokens
+	telegramBalances: {},   // {SYM: number} da chips_wallet_user_tokens
+	balancesFetchedAt: { twitch: null, telegram: null },
 
     // ads config
     ads_global: {                      // channel='chipsmasterbot'
@@ -3122,9 +3125,9 @@ window.CreatorDash = (() => {
       st.subscription_status     = rewardsPayload.subscription?.status || '';
       st.rewards_active          = !!rewardsPayload.rewards_active;
       st.rewards_status_message  = rewardsPayload.rewards_status_message || '';
- st.rewardsMap              = rewardsPayload.rewards || {};          // legacy (se serve altrove)
- st.rewardsGlobal           = rewardsPayload.rewards?.global || {};
- st.rewardsChannel          = rewardsPayload.rewards?.channel || {};
+	 st.rewardsMap              = rewardsPayload.rewards || {};          // legacy (se serve altrove)
+	 st.rewardsGlobal           = rewardsPayload.rewards?.global || {};
+	 st.rewardsChannel          = rewardsPayload.rewards?.channel || {};
       st.effectiveRewards        = rewardsPayload.effective || [];
       st.depositsMap             = rewardsPayload.deposits || {};
       st.fetched_at              = rewardsPayload.fetched_at || '';
@@ -3156,6 +3159,14 @@ window.CreatorDash = (() => {
         `${st.baseUrl}/get_scheduled_nft_giveaways_by_wax?usx_token=${encodeURIComponent(st.usx_token)}&wax_account=${encodeURIComponent(st.wax_account)}`
       );
       st.giveaways = Array.isArray(givsPayload) ? givsPayload : [];
+		// 5) balances per Top-Up (Twitch & Telegram)
+		const balancesPayload = await fetchJSON(`${st.baseUrl}/wallet_balances?${qs}`);
+		st.twitchBalances   = balancesPayload?.twitch?.balances   || {};
+		st.telegramBalances = balancesPayload?.telegram?.balances || {};
+		st.balancesFetchedAt = {
+		  twitch:   balancesPayload?.twitch?.updated_at   || null,
+		  telegram: balancesPayload?.telegram?.updated_at || null,
+		};
 
     } catch (err) {
       console.error("❌ CreatorDash loadAllData error:", err);
@@ -3401,16 +3412,20 @@ const cards = allSyms.map(sym => {
   function renderRewardsTab() {
     const { global, channel } = splitRewardsBySource();
 
-    const globalHTML = global.map(r => `
-      <div style="
-        border:1px solid rgba(255,255,255,.10);border-radius:10px;
-        background:#102038;padding:12px;color:#fff;font-size:${FS.xs};
-        display:flex;justify-content:space-between;align-items:center;
-      ">
-        <div style="font-weight:800;">${esc(r.token)}</div>
-        <div style="opacity:.9;">${chip(r.per_message,6)} /msg</div>
-      </div>
-    `).join('') || `<div style="font-size:${FS.xs};color:#94a3b8;">No global rewards.</div>`;
+	const globalHTML = global.map(r => `
+	  <div style="
+	    border:1px solid rgba(255,255,255,.10);border-radius:10px;
+	    background:#102038;padding:12px;color:#fff;font-size:${FS.xs};
+	    display:flex;justify-content:space-between;align-items:center;gap:.8rem;
+	  ">
+	    <div style="font-weight:800;display:flex;align-items:center;gap:.6rem;">
+	      <span>${esc(r.token)}</span>
+	      <span title="Global rewards do not consume a channel pool" style="opacity:.8;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:2px 6px;">Remaining: -</span>
+	    </div>
+	    <div style="opacity:.9;">${chip(r.per_message,6)} /msg</div>
+	  </div>
+	`).join('') || `<div style="font-size:${FS.xs};color:#94a3b8;">No global rewards.</div>`;
+
 
     // editable table for channel rewards
     const channelRows = channel.map((r, i) => rewardRowHTML(i, r.token, r.per_message)).join('') ||
@@ -3444,13 +3459,15 @@ const cards = allSyms.map(sym => {
 
           <div style="margin-top:12px;overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;min-width:640px;">
-              <thead>
-                <tr style="background:#0b1220;color:#fff;text-align:left;">
-                  <th style="${thCell()}">Token</th>
-                  <th style="${thCell()}">Per message</th>
-                  <th style="${thCell()}">Actions</th>
-                </tr>
-              </thead>
+			<thead>
+			  <tr style="background:#0b1220;color:#fff;text-align:left;">
+			    <th style="${thCell()}">Token</th>
+			    <th style="${thCell()}">Per message</th>
+			    <th style="${thCell()}">Pool remaining</th>
+			    <th style="${thCell()}">Actions</th>
+			  </tr>
+			</thead>
+
               <tbody id="rw-rows">
                 ${channelRows}
               </tbody>
@@ -3462,27 +3479,74 @@ const cards = allSyms.map(sym => {
             <button id="rw-save" class="btn btn-primary"   style="${actionBtnStyle('#22c55e','#0a0f0a')}">💾 Save changes</button>
             <div id="rw-feedback" style="font-size:${FS.xs};color:#94a3b8;align-self:center;"></div>
           </div>
+			<!-- TOP-UP / RICARICA -->
+			<div class="account-card2" style="background:#0f172a;border-radius:12px;padding:18px;color:#fff;">
+			  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+			    <div style="min-width:260px;flex:1;">
+			      <div style="font-size:${FS.sm};font-weight:900;">Top-Up (Wallets)</div>
+			      <div style="font-size:${FS.xs};color:#94a3b8;margin-top:6px;line-height:1.45;">
+			        Use this panel to fund your rewards pools. Hover the <span title="More info" style="border:1px solid rgba(255,255,255,.3);padding:0 6px;border-radius:8px;">?</span> for instructions.
+			      </div>
+			    </div>
+			    <div style="min-width:200px;text-align:right;font-size:${FS.xs};color:#94a3b8;">
+			      Last sync — Twitch: <strong style="color:#fff;">${esc(st.balancesFetchedAt.twitch || '-')}</strong><br/>
+			      Last sync — Telegram: <strong style="color:#fff;">${esc(st.balancesFetchedAt.telegram || '-')}</strong>
+			    </div>
+			  </div>
+			
+			  <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:12px;">
+			    <!-- Twitch balances -->
+			    <div style="flex:1;min-width:280px;background:#0b1220;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px;">
+			      <div style="display:flex;justify-content:space-between;align-items:center;">
+			        <div style="font-weight:900;">Twitch Balances</div>
+			        <div title="To top-up your Twitch Wallet: send an on-chain transfer to 'xcryptochips' with memo: 'deposit twitch'. You can use waxblock.io, AtomicHub, Taco, Alcor, NeftyBlocks or waxonedge. Deposits are typically processed within ~60s (network congestion may vary)."
+			             style="cursor:help;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:2px 6px;font-size:${FS.xs};">?</div>
+			      </div>
+			      ${balancesTableHTML(st.twitchBalances)}
+			    </div>
+			
+			    <!-- Telegram balances -->
+			    <div style="flex:1;min-width:280px;background:#0b1220;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px;">
+			      <div style="display:flex;justify-content:space-between;align-items:center;">
+			        <div style="font-weight:900;">Telegram Balances</div>
+			        <div title="To top-up your Telegram Wallet: send an on-chain transfer to 'xcryptochips' with memo: 'deposit token'. You can use waxblock.io, AtomicHub, Taco, Alcor, NeftyBlocks or waxonedge. Deposits are typically processed within ~60s (network congestion may vary)."
+			             style="cursor:help;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:2px 6px;font-size:${FS.xs};">?</div>
+			      </div>
+			      ${balancesTableHTML(st.telegramBalances)}
+			    </div>
+			  </div>
+			
+			  <div style="margin-top:10px;font-size:${FS.xs};color:#94a3b8;">
+			    Tip: after topping up, hit <strong>Refresh</strong> on this page if balances don’t update automatically within a minute.
+			  </div>
+			</div>
+		  
         </div>
 
       </div>
     `;
   }
 
-  function rewardRowHTML(idx, token = '', per = '') {
-    return `
-      <tr class="rw-row" data-idx="${idx}" style="border-bottom:1px solid rgba(255,255,255,.1);">
-        <td style="${tdCell()}">
-          <input class="rw-token" value="${esc(token)}" placeholder="e.g. CHIPS" style="${inputStyle('uppercase')}" />
-        </td>
-        <td style="${tdCell()}">
-          <input class="rw-per" type="number" step="0.00000001" min="0" value="${per === '' ? '' : esc(per)}" placeholder="0.0" style="${inputStyle()}" />
-        </td>
-        <td style="${tdCell()}">
-          <button class="rw-del" style="${miniIconBtnStyle()}">🗑 Remove</button>
-        </td>
-      </tr>
-    `;
-  }
+	function rewardRowHTML(idx, token = '', per = '') {
+	  const remaining = token ? st.depositsMap?.[token] : null; // totale residuo del pool per QUEL canale
+	  return `
+	    <tr class="rw-row" data-idx="${idx}" style="border-bottom:1px solid rgba(255,255,255,.1);">
+	      <td style="${tdCell()}">
+	        <input class="rw-token" value="${esc(token)}" placeholder="e.g. CHIPS" style="${inputStyle('uppercase')}" />
+	      </td>
+	      <td style="${tdCell()}">
+	        <input class="rw-per" type="number" step="0.00000001" min="0" value="${per === '' ? '' : esc(per)}" placeholder="0.0" style="${inputStyle()}" />
+	      </td>
+	      <td style="${tdCell()}">
+	        <span title="Total remaining in this channel pool">${chip(remaining,6)}</span>
+	      </td>
+	      <td style="${tdCell()}">
+	        <button class="rw-del" style="${miniIconBtnStyle()}">🗑 Remove</button>
+	      </td>
+	    </tr>
+	  `;
+	}
+
 
   function thCell(){
     return `
@@ -3888,6 +3952,33 @@ const cards = allSyms.map(sym => {
 
   return { mount };
 })();
+
+function balancesTableHTML(map) {
+  const rows = Object.entries(map || {}).sort((a,b)=> a[0].localeCompare(b[0]));
+  if (!rows.length) {
+    return `<div style="color:#94a3b8;font-size:${FS.xs};margin-top:8px;">No balances found.</div>`;
+  }
+  return `
+    <div style="margin-top:10px;overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;min-width:320px;">
+        <thead>
+          <tr style="background:#101828;color:#fff;text-align:left;">
+            <th style="${thCell()}">Token</th>
+            <th style="${thCell()}">Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(([sym, amt]) => `
+            <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
+              <td style="${tdCell()}">${esc(sym)}</td>
+              <td style="${tdCell()}">${chip(amt,6)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
 
 function showNewsSection() {
   loadNewsList({ page: 1 });

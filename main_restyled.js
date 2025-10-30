@@ -3527,25 +3527,29 @@ const cards = allSyms.map(sym => {
     `;
   }
 
-	function rewardRowHTML(idx, token = '', per = '') {
-	  const remaining = token ? st.depositsMap?.[token] : null; // totale residuo del pool per QUEL canale
-	  return `
-	    <tr class="rw-row" data-idx="${idx}" style="border-bottom:1px solid rgba(255,255,255,.1);">
-	      <td style="${tdCell()}">
-	        <input class="rw-token" value="${esc(token)}" placeholder="e.g. CHIPS" style="${inputStyle('uppercase')}" />
-	      </td>
-	      <td style="${tdCell()}">
-	        <input class="rw-per" type="number" step="0.00000001" min="0" value="${per === '' ? '' : esc(per)}" placeholder="0.0" style="${inputStyle()}" />
-	      </td>
-	      <td style="${tdCell()}">
-	        <span title="Total remaining in this channel pool">${chip(remaining,6)}</span>
-	      </td>
-	      <td style="${tdCell()}">
-	        <button class="rw-del" style="${miniIconBtnStyle()}">🗑 Remove</button>
-	      </td>
-	    </tr>
-	  `;
-	}
+function rewardRowHTML(idx, token = '', per = '') {
+  const remaining = token ? st.depositsMap?.[token] : null; // totale residuo del pool per questo canale
+  return `
+    <tr class="rw-row" data-idx="${idx}" style="border-bottom:1px solid rgba(255,255,255,.1);">
+      <td style="${tdCell()}">
+        <input class="rw-token" value="${esc(token)}" placeholder="e.g. CHIPS" style="${inputStyle('uppercase')}" />
+      </td>
+      <td style="${tdCell()}">
+        <input class="rw-per" type="number" step="0.00000001" min="0" value="${per === '' ? '' : esc(per)}" placeholder="0.0" style="${inputStyle()}" />
+      </td>
+      <td style="${tdCell()}">
+        <span title="Total remaining in this channel pool">${chip(remaining,6)}</span>
+      </td>
+      <td style="${tdCell()}">
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <button class="rw-topup" style="${miniIconBtnStyle()}">⬆️ Top-Up</button>
+          <button class="rw-del"   style="${miniIconBtnStyle()}">🗑 Remove</button>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
 
 
   function thCell(){
@@ -3675,7 +3679,86 @@ const cards = allSyms.map(sym => {
         feedback.textContent = 'Save failed: ' + (err.message || 'unknown error');
       }
     });
-  }
+// hook top-up (event delegation, evita doppi listener)
+function bindTopUpDelegation() {
+  tbody.addEventListener('click', async (ev) => {
+    const btn = ev.target.closest('.rw-topup');
+    if (!btn) return;
+
+    const tr = btn.closest('tr');
+    const token = (tr.querySelector('.rw-token')?.value || '').trim().toUpperCase();
+    if (!token) {
+      alert('Please enter/select a token symbol first.');
+      return;
+    }
+
+    const twitchAvail   = Number(st.twitchBalances?.[token]   || 0);
+    const telegramAvail = Number(st.telegramBalances?.[token] || 0);
+
+    const src = (window.prompt(
+      `Top-Up ${token}\n\nChoose source wallet: type "twitch" or "telegram"\n\nAvailable:\n- Twitch: ${chip(twitchAvail,6)}\n- Telegram: ${chip(telegramAvail,6)}`
+    ) || '').trim().toLowerCase();
+
+    if (src !== 'twitch' && src !== 'telegram') {
+      if (src) alert('Source must be "twitch" or "telegram".');
+      return;
+    }
+
+    const maxAvail = src === 'twitch' ? twitchAvail : telegramAvail;
+    if (maxAvail <= 0) {
+      alert(`No available ${token} in ${src} wallet.`);
+      return;
+    }
+
+    const amtStr = (window.prompt(`Amount of ${token} to top-up (max ${chip(maxAvail,6)}):`) || '').trim();
+    const amt = Number(amtStr);
+    if (!isFinite(amt) || amt <= 0) {
+      alert('Invalid amount.');
+      return;
+    }
+    if (amt > maxAvail) {
+      alert(`Amount exceeds available balance in ${src} wallet.`);
+      return;
+    }
+
+    // disabilito solo il bottone cliccato
+    btn.disabled = true;
+    const origText = btn.textContent;
+    btn.textContent = '⏳';
+
+    try {
+      await fetchJSON(`${st.baseUrl}/channel_rewards/topup`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          user_id:      st.userId,
+          usx_token:    st.usx_token,
+          wax_account:  st.wax_account,
+          channel:      st.channel,      // opzionale
+          token_symbol: token,
+          amount:       amt,
+          source_wallet: src
+        })
+      });
+
+      // ricarica: aggiorna pool remaining + balances
+      await loadAllData();
+      alert(`Top-Up OK: ${token} +${chip(amt,6)} from ${src} wallet`);
+
+    } catch (err) {
+      console.error('topup error', err);
+      alert('Top-Up failed: ' + (err.message || 'unknown error'));
+    } finally {
+      // dopo il reload, questo bottone potrebbe non essere più in DOM; nessun problema nel provarci
+      btn.disabled = false;
+      btn.textContent = origText;
+    }
+  });
+}
+
+// chiama una sola volta
+bindTopUpDelegation();
+
 
   // ---------- TAB: ADS ----------
   function renderAdsTab() {

@@ -2563,15 +2563,6 @@ async function loadSection(section) {
     });
 
   } else if (section === 'noncustodialfarms') {
-
-    // ⚠️ NON ridichiarare const app qui: lo abbiamo già sopra
-
-    // eventuale controllo accesso (lasciato commentato per ora)
-    // if (!isLoggedIn?.() || (window.userData?.wax_account !== "agoscry4ever")) {
-    //   if (window.Swal) Swal.fire("Accesso negato", "Sezione riservata.", "warning");
-    //   return;
-    // }
-
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title text-center">Manage not-custodial NFTs Farm</h2>
@@ -2998,10 +2989,10 @@ async function loadSection(section) {
 window.CreatorDash = (() => {
   // ---------- UI SCALES ----------
   const FS = {
-    xs: '0.95rem',
-    sm: '1.05rem',
-    md: '1.15rem',
-    lg: '1.25rem',
+    xs: '1.01rem',
+    sm: '1.25rem',
+    md: '1.45rem',
+    lg: '1.65rem',
   };
 
   // ---------- STATE ----------
@@ -3739,22 +3730,131 @@ function bindRewardsEditor(){
 }
 
   // ---------- TAB: ADS ----------
-  function renderAdsTab() {
-    const globalListHTML = (st.ads_global.list || []).map((msg, idx) => `
-      <div style="
-        border:1px solid rgba(255,255,255,.10);border-radius:10px;
-        background:#102038;padding:12px;color:#fff;font-size:${FS.xs};line-height:1.4;
-      ">
-        <div style="font-weight:800;color:#93c5fd;font-size:${FS.xs};margin-bottom:6px;">GLOBAL #${idx+1}</div>
-        <div style="white-space:pre-wrap;">${esc(msg)}</div>
-      </div>
-    `).join('') || `<div style="font-size:${FS.xs};color:#94a3b8;">No global ads configured.</div>`;
+function renderAdsTab() {
+  const isGlobalChannel = (st.channel || '').toLowerCase() === 'chipsmasterbot';
 
-    const channelListHTML = (st.ads_channel.list || []).map((msg, idx) => `
+  const globalListHTML = (st.ads_global.list || []).map((msg, idx) => `
+    <div style="
+      border:1px solid rgba(255,255,255,.10);border-radius:10px;
+      background:#102038;padding:12px;color:#fff;font-size:${FS.xs};line-height:1.4;
+    ">
+      <div style="font-weight:800;color:#93c5fd;font-size:${FS.xs};margin-bottom:6px;">GLOBAL #${idx+1}</div>
+      <div style="white-space:pre-wrap;">${esc(msg)}</div>
+    </div>
+  `).join('') || `<div style="font-size:${FS.xs};color:#94a3b8;">No global ads configured.</div>`;
+
+  const channelListHTML = (st.ads_channel.list || []).map((msg, idx) => `
+    <div class="cd-ad-row" data-idx="${idx}" style="
+      border:1px solid rgba(255,255,255,.10);border-radius:10px;background:#0f172a;
+      padding:12px;color:#fff;font-size:${FS.xs};line-height:1.45;position:relative;">
+      <div style="font-weight:800;color:#facc15;font-size:${FS.xs};margin-bottom:6px;">CHANNEL #${idx+1}</div>
+      <div class="cd-ad-text" style="white-space:pre-wrap;">${esc(msg)}</div>
+      ${isGlobalChannel ? '' : `
+      <div style="position:absolute;top:10px;right:10px;display:flex;gap:6px;">
+        <button class="cd-edit-ad btn btn-secondary" style="${miniIconBtnStyle()}">✏️ Edit</button>
+        <button class="cd-del-ad btn btn-secondary" style="${miniIconBtnStyle()}">🗑 Delete</button>
+      </div>
+      `}
+    </div>
+  `).join('') || `<div style="font-size:${FS.xs};color:#94a3b8;">No custom channel ads yet. Click “Add message”.</div>`;
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+
+      <!-- GLOBAL (read only) -->
+      <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:18px;color:#fff;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+          <div style="min-width:240px;flex:1;">
+            <div style="font-size:${FS.sm};font-weight:900;">Global Rotation (read-only)</div>
+            <div style="font-size:${FS.xs};color:#94a3b8;line-height:1.45;margin-top:6px;">
+              These messages are automatically broadcast by <strong>ChipsMasterBot</strong> to all partner channels.
+            </div>
+            <div style="font-size:${FS.xs};color:#cbd5e1;margin-top:10px;">
+              Interval: <span style="color:#fff;font-weight:800;">${chip(st.ads_global.interval_seconds,0)}s</span><br/>
+              Mode: <span style="color:#fff;font-weight:800;">${esc(st.ads_global.rotation_mode)}</span><br/>
+              Last update: <span style="color:#fff;font-weight:800;">${esc(st.ads_global.updated_at || '-')}</span>
+            </div>
+          </div>
+
+          <div style="flex:2;display:flex;flex-direction:column;gap:.6rem;min-width:260px;">
+            ${globalListHTML}
+          </div>
+        </div>
+      </div>
+
+      <!-- CHANNEL (editable o read-only se globale) -->
+      <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;">
+        <div style="font-size:${FS.sm};font-weight:900;display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+          <div>Channel Ads — <span style="color:#fde68a;">${esc(st.channel)}</span></div>
+          <div style="font-size:${FS.xs};color:${isGlobalChannel ? '#fca5a5' : '#94a3b8'};">
+            Last update: ${esc(st.ads_channel.updated_at || '-')}
+            ${isGlobalChannel ? ' · Global channel is read-only' : ''}
+          </div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:1rem;">
+          <div style="min-width:240px;flex:1;">
+            <label style="display:flex;align-items:center;gap:.6rem;font-size:${FS.xs};color:#fff;font-weight:800;">
+              <input id="cd-channel-enabled" type="checkbox" ${st.ads_channel.enabled?'checked':''} ${isGlobalChannel?'disabled':''}
+                style="accent-color:#22c55e;cursor:pointer;width:18px;height:18px;">
+              Enable Channel Ads
+            </label>
+
+            <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Interval (seconds)</div>
+            <input id="cd-channel-interval" type="number" min="30" step="30" value="${esc(st.ads_channel.interval_seconds)}" style="${inputStyle()}" ${isGlobalChannel?'disabled':''}>
+
+            <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Rotation Mode</div>
+            <select id="cd-channel-rotation" style="${inputStyle()}" ${isGlobalChannel?'disabled':''}>
+              <option value="sequential" ${st.ads_channel.rotation_mode==='sequential'?'selected':''}>Sequential</option>
+              <option value="random" ${st.ads_channel.rotation_mode==='random'?'selected':''}>Random</option>
+            </select>
+
+            <div style="margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap;">
+              <button id="cd-add-ad" class="btn btn-secondary" style="${actionBtnStyle('#1e40af','#fff')}" ${isGlobalChannel?'disabled title="Global ads are read-only"':''}>➕ Add message</button>
+              <button id="cd-save-ads" class="btn btn-primary" style="${actionBtnStyle('#22c55e','#0a0f0a')}" ${isGlobalChannel?'disabled title="Global ads are read-only"':''}>💾 Save</button>
+            </div>
+
+            <div id="cd-save-feedback" style="font-size:${FS.xs};color:#94a3b8;margin-top:.6rem;"></div>
+          </div>
+
+          <div style="flex:2;min-width:260px;display:flex;flex-direction:column;gap:.75rem;" id="cd-channel-ads-list">
+            ${channelListHTML}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+function bindAdsEditor() {
+  const isGlobalChannel = (st.channel || '').toLowerCase() === 'chipsmasterbot';
+
+  const listEl = st.rootEl.querySelector('#cd-channel-ads-list');
+  const addBtn = st.rootEl.querySelector('#cd-add-ad');
+  const saveBtn= st.rootEl.querySelector('#cd-save-ads');
+  const intervalInput  = st.rootEl.querySelector('#cd-channel-interval');
+  const rotationSelect = st.rootEl.querySelector('#cd-channel-rotation');
+  const enabledCheck   = st.rootEl.querySelector('#cd-channel-enabled');
+  const feedbackEl     = st.rootEl.querySelector('#cd-save-feedback');
+  if (!listEl || !addBtn || !saveBtn) return;
+
+  // Se il canale è globale, lascia tutto in sola lettura e non bindare eventi
+  if (isGlobalChannel) {
+    if (feedbackEl) {
+      feedbackEl.style.color = '#94a3b8';
+      feedbackEl.textContent = 'Global channel is read-only.';
+    }
+    return;
+  }
+
+  let workingList = [...(st.ads_channel.list || [])];
+
+  function rerenderWorkingList() {
+    listEl.innerHTML = workingList.map((msg, idx) => `
       <div class="cd-ad-row" data-idx="${idx}" style="
         border:1px solid rgba(255,255,255,.10);border-radius:10px;background:#0f172a;
-        padding:12px;color:#fff;font-size:${FS.xs};line-height:1.45;position:relative;
-      ">
+        padding:12px;color:#fff;font-size:${FS.xs};line-height:1.45;position:relative;">
         <div style="font-weight:800;color:#facc15;font-size:${FS.xs};margin-bottom:6px;">CHANNEL #${idx+1}</div>
         <div class="cd-ad-text" style="white-space:pre-wrap;">${esc(msg)}</div>
         <div style="position:absolute;top:10px;right:10px;display:flex;gap:6px;">
@@ -3762,171 +3862,84 @@ function bindRewardsEditor(){
           <button class="cd-del-ad btn btn-secondary" style="${miniIconBtnStyle()}">🗑 Delete</button>
         </div>
       </div>
-    `).join('') || `<div style="font-size:${FS.xs};color:#94a3b8;">No custom channel ads yet. Click “Add message”.</div>`;
+    `).join('') || `<div style="color:#94a3b8;font-size:${FS.xs};">No custom channel ads yet. Click “Add message”.</div>`;
 
-    return `
-      <div style="display:flex;flex-direction:column;gap:1rem;">
-
-        <!-- GLOBAL (read only) -->
-        <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:18px;color:#fff;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
-            <div style="min-width:240px;flex:1;">
-              <div style="font-size:${FS.sm};font-weight:900;">Global Rotation (read-only)</div>
-              <div style="font-size:${FS.xs};color:#94a3b8;line-height:1.45;margin-top:6px;">
-                These messages are automatically broadcast by <strong>ChipsMasterBot</strong> to all partner channels.
-              </div>
-              <div style="font-size:${FS.xs};color:#cbd5e1;margin-top:10px;">
-                Interval: <span style="color:#fff;font-weight:800;">${chip(st.ads_global.interval_seconds,0)}s</span><br/>
-                Mode: <span style="color:#fff;font-weight:800;">${esc(st.ads_global.rotation_mode)}</span><br/>
-                Last update: <span style="color:#fff;font-weight:800;">${esc(st.ads_global.updated_at || '-')}</span>
-              </div>
-            </div>
-
-            <div style="flex:2;display:flex;flex-direction:column;gap:.6rem;min-width:260px;">
-              ${globalListHTML}
-            </div>
-          </div>
-        </div>
-
-        <!-- CHANNEL (editable) -->
-        <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;">
-          <div style="font-size:${FS.sm};font-weight:900;display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
-            <div>Channel Ads — <span style="color:#fde68a;">${esc(st.channel)}</span></div>
-            <div style="font-size:${FS.xs};color:#94a3b8;">Last update: ${esc(st.ads_channel.updated_at || '-')}</div>
-          </div>
-
-          <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:1rem;">
-            <div style="min-width:240px;flex:1;">
-              <label style="display:flex;align-items:center;gap:.6rem;font-size:${FS.xs};color:#fff;font-weight:800;">
-                <input id="cd-channel-enabled" type="checkbox" ${st.ads_channel.enabled?'checked':''}
-                  style="accent-color:#22c55e;cursor:pointer;width:18px;height:18px;">
-                Enable Channel Ads
-              </label>
-
-              <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Interval (seconds)</div>
-              <input id="cd-channel-interval" type="number" min="30" step="30" value="${esc(st.ads_channel.interval_seconds)}" style="${inputStyle()}">
-
-              <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Rotation Mode</div>
-              <select id="cd-channel-rotation" style="${inputStyle()}">
-                <option value="sequential" ${st.ads_channel.rotation_mode==='sequential'?'selected':''}>Sequential</option>
-                <option value="random" ${st.ads_channel.rotation_mode==='random'?'selected':''}>Random</option>
-              </select>
-
-              <div style="margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap;">
-                <button id="cd-add-ad" class="btn btn-secondary" style="${actionBtnStyle('#1e40af','#fff')}">➕ Add message</button>
-                <button id="cd-save-ads" class="btn btn-primary" style="${actionBtnStyle('#22c55e','#0a0f0a')}">💾 Save</button>
-              </div>
-
-              <div id="cd-save-feedback" style="font-size:${FS.xs};color:#94a3b8;margin-top:.6rem;"></div>
-            </div>
-
-            <div style="flex:2;min-width:260px;display:flex;flex-direction:column;gap:.75rem;" id="cd-channel-ads-list">
-              ${channelListHTML}
-            </div>
-          </div>
-        </div>
-
-      </div>
-    `;
+    listEl.querySelectorAll('.cd-edit-ad').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const parent = btn.closest('.cd-ad-row');
+        const idx = Number(parent?.getAttribute('data-idx'));
+        const currentText = workingList[idx] || '';
+        const next = window.prompt('Edit message:', currentText);
+        if (next !== null && next.trim() !== '') {
+          workingList[idx] = next.trim();
+          rerenderWorkingList();
+        }
+      });
+    });
+    listEl.querySelectorAll('.cd-del-ad').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const parent = btn.closest('.cd-ad-row');
+        const idx = Number(parent?.getAttribute('data-idx'));
+        if (window.confirm('Delete this ad message?')) {
+          workingList.splice(idx,1);
+          rerenderWorkingList();
+        }
+      });
+    });
   }
 
-  function bindAdsEditor() {
-    const listEl = st.rootEl.querySelector('#cd-channel-ads-list');
-    const addBtn = st.rootEl.querySelector('#cd-add-ad');
-    const saveBtn= st.rootEl.querySelector('#cd-save-ads');
-    const intervalInput  = st.rootEl.querySelector('#cd-channel-interval');
-    const rotationSelect = st.rootEl.querySelector('#cd-channel-rotation');
-    const enabledCheck   = st.rootEl.querySelector('#cd-channel-enabled');
-    const feedbackEl     = st.rootEl.querySelector('#cd-save-feedback');
-    if (!listEl || !addBtn || !saveBtn) return;
+  rerenderWorkingList();
 
-    let workingList = [...(st.ads_channel.list || [])];
-
-    function rerenderWorkingList() {
-      listEl.innerHTML = workingList.map((msg, idx) => `
-        <div class="cd-ad-row" data-idx="${idx}" style="
-          border:1px solid rgba(255,255,255,.10);border-radius:10px;background:#0f172a;
-          padding:12px;color:#fff;font-size:${FS.xs};line-height:1.45;position:relative;">
-          <div style="font-weight:800;color:#facc15;font-size:${FS.xs};margin-bottom:6px;">CHANNEL #${idx+1}</div>
-          <div class="cd-ad-text" style="white-space:pre-wrap;">${esc(msg)}</div>
-          <div style="position:absolute;top:10px;right:10px;display:flex;gap:6px;">
-            <button class="cd-edit-ad btn btn-secondary" style="${miniIconBtnStyle()}">✏️ Edit</button>
-            <button class="cd-del-ad btn btn-secondary" style="${miniIconBtnStyle()}">🗑 Delete</button>
-          </div>
-        </div>
-      `).join('') || `<div style="color:#94a3b8;font-size:${FS.xs};">No custom channel ads yet. Click “Add message”.</div>`;
-
-      listEl.querySelectorAll('.cd-edit-ad').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const parent = btn.closest('.cd-ad-row');
-          const idx = Number(parent?.getAttribute('data-idx'));
-          const currentText = workingList[idx] || '';
-          const next = window.prompt('Edit message:', currentText);
-          if (next !== null && next.trim() !== '') {
-            workingList[idx] = next.trim();
-            rerenderWorkingList();
-          }
-        });
-      });
-      listEl.querySelectorAll('.cd-del-ad').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const parent = btn.closest('.cd-ad-row');
-          const idx = Number(parent?.getAttribute('data-idx'));
-          if (window.confirm('Delete this ad message?')) {
-            workingList.splice(idx,1);
-            rerenderWorkingList();
-          }
-        });
-      });
+  addBtn.addEventListener('click', () => {
+    const txt = window.prompt('New ad message:');
+    if (txt && txt.trim() !== '') {
+      workingList.push(txt.trim());
+      rerenderWorkingList();
     }
+  });
 
-    rerenderWorkingList();
+  saveBtn.addEventListener('click', async () => {
+    if (!feedbackEl) return;
+    feedbackEl.style.color = '#94a3b8';
+    feedbackEl.textContent = 'Saving…';
 
-    addBtn.addEventListener('click', () => {
-      const txt = window.prompt('New ad message:');
-      if (txt && txt.trim() !== '') {
-        workingList.push(txt.trim());
-        rerenderWorkingList();
-      }
-    });
+    const payload = {
+      user_id: st.userId,
+      usx_token: st.usx_token,
+      channel: st.channel,
+      enabled: !!enabledCheck.checked,
+      interval_seconds: Number(intervalInput.value) || 900,
+      rotation_mode: rotationSelect.value || 'sequential',
+      ads_list: workingList
+    };
 
-    saveBtn.addEventListener('click', async () => {
-      feedbackEl.style.color = '#94a3b8';
-      feedbackEl.textContent = 'Saving…';
+    try {
+      const res = await fetchJSON(`${st.baseUrl}/channel_ads_config/save`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-      const payload = {
-        user_id: st.userId,
-        usx_token: st.usx_token,
-        channel: st.channel,
-        enabled: !!enabledCheck.checked,
-        interval_seconds: Number(intervalInput.value) || 900,
-        rotation_mode: rotationSelect.value || 'sequential',
-        ads_list: workingList
-      };
+      st.ads_channel.enabled          = payload.enabled;
+      st.ads_channel.interval_seconds = payload.interval_seconds;
+      st.ads_channel.rotation_mode    = payload.rotation_mode;
+      st.ads_channel.list             = [...workingList];
+      st.ads_channel.updated_at       = (res && res.updated_at) || new Date().toISOString();
 
-      try {
-        const res = await fetchJSON(`${st.baseUrl}/channel_ads_config/save`, {
-          method: 'POST',
-          headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify(payload)
-        });
+      feedbackEl.style.color = '#22c55e';
+      feedbackEl.textContent = 'Saved ✔';
 
-        st.ads_channel.enabled          = payload.enabled;
-        st.ads_channel.interval_seconds = payload.interval_seconds;
-        st.ads_channel.rotation_mode    = payload.rotation_mode;
-        st.ads_channel.list             = [...workingList];
-        st.ads_channel.updated_at       = (res && res.updated_at) || new Date().toISOString();
+    } catch (err) {
+      console.error("save channel ads error:", err);
+      feedbackEl.style.color = '#f87171';
+      const msg = (err && err.message) || '';
+      feedbackEl.textContent = msg.includes('Global ads are read-only')
+        ? 'Save failed: global ads are read-only.'
+        : 'Save failed: ' + (msg || 'unknown error');
+    }
+  });
+}
 
-        feedbackEl.style.color = '#22c55e';
-        feedbackEl.textContent = 'Saved ✔';
-
-      } catch (err) {
-        console.error("save channel ads error:", err);
-        feedbackEl.style.color = '#f87171';
-        feedbackEl.textContent = 'Save failed: ' + (err.message || 'unknown error');
-      }
-    });
-  }
 
   // ---------- TAB: HISTORY ----------
   function renderHistoryTab() {

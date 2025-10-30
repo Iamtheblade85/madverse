@@ -3024,7 +3024,9 @@ window.CreatorDash = (() => {
     rewards_status_message: '',
 
     // rewards data
-    rewardsMap: {},                    // from backend.rewards {SYM: {per_message, source}}
+  rewardsMap: {},                    // (retrocompat) NON più usato per la UI
+  rewardsGlobal: {},                 // {SYM: number}
+  rewardsChannel: {},                // {SYM: number}
     effectiveRewards: [],              // [{token, per_message, remaining, messages_left, reward_source}, ...]
     depositsMap: {},                   // token -> remaining
     fetched_at: '',
@@ -3089,20 +3091,16 @@ window.CreatorDash = (() => {
     return `<span style="${base}background:#6b7280;color:#fff;border:1px solid rgba(0,0,0,.4);">UNKNOWN</span>`;
   }
 
-  function splitRewardsBySource() {
-    const global = [];
-    const channel = [];
-    for (const [sym, obj] of Object.entries(st.rewardsMap || {})) {
-      const src = (obj?.source || '').toLowerCase();
-      const row = { token: sym, per_message: obj?.per_message ?? null };
-      if (src === 'global') global.push(row);
-      else if (src === 'channel') channel.push(row);
-    }
-    // sort alphabetically for stable UI
-    global.sort((a,b)=>a.token.localeCompare(b.token));
-    channel.sort((a,b)=>a.token.localeCompare(b.token));
-    return { global, channel };
-  }
+ function splitRewardsBySource() {
+   const toRows = (mapObj) =>
+     Object.entries(mapObj || {})
+       .map(([sym, val]) => ({ token: sym, per_message: (val ?? null) }))
+       .sort((a,b) => a.token.localeCompare(b.token));
+   return {
+     global: toRows(st.rewardsGlobal),
+     channel: toRows(st.rewardsChannel),
+   };
+ }
 
   // ---------- DATA LOAD ----------
   async function loadAllData() {
@@ -3124,7 +3122,9 @@ window.CreatorDash = (() => {
       st.subscription_status     = rewardsPayload.subscription?.status || '';
       st.rewards_active          = !!rewardsPayload.rewards_active;
       st.rewards_status_message  = rewardsPayload.rewards_status_message || '';
-      st.rewardsMap              = rewardsPayload.rewards || {};
+ st.rewardsMap              = rewardsPayload.rewards || {};          // legacy (se serve altrove)
+ st.rewardsGlobal           = rewardsPayload.rewards?.global || {};
+ st.rewardsChannel          = rewardsPayload.rewards?.channel || {};
       st.effectiveRewards        = rewardsPayload.effective || [];
       st.depositsMap             = rewardsPayload.deposits || {};
       st.fetched_at              = rewardsPayload.fetched_at || '';
@@ -3306,7 +3306,9 @@ window.CreatorDash = (() => {
           <span>${esc(r.token)}</span>
           <span style="color:${r.reward_source==='channel'?'#fde68a':'#93c5fd'};font-weight:800;text-transform:uppercase;">${esc(r.reward_source)}</span>
         </div>
-        <div style="margin-top:6px;font-size:${FS.sm};font-weight:900;">${chip(r.per_message,6)} /msg</div>
+    <div style="margin-top:6px;font-size:${FS.sm};font-weight:900;">
+      ${chip(r.per_message_effective ?? r.per_message, 6)} /msg
+    </div>
         <div style="margin-top:6px;font-size:${FS.xs};color:#cbd5e1;line-height:1.35;">
           Remaining: <strong style="color:#fff;">${chip(r.remaining,6)}</strong><br/>
           Messages left: <strong style="color:#fff;">${r.messages_left == null ? '-' : chip(r.messages_left,0)}</strong>

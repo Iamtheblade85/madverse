@@ -3751,16 +3751,6 @@ function bindRewardsEditor(){
 function renderAdsTab() {
   const isGlobalChannel = (st.channel || '').toLowerCase() === 'chipsmasterbot';
 
-  const globalListHTML = (st.ads_global.list || []).map((msg, idx) => `
-    <div style="
-      border:1px solid rgba(255,255,255,.10);border-radius:10px;
-      background:#102038;padding:12px;color:#fff;font-size:${FS.xs};line-height:1.4;
-    ">
-      <div style="font-weight:800;color:#93c5fd;font-size:${FS.xs};margin-bottom:6px;">GLOBAL #${idx+1}</div>
-      <div style="white-space:pre-wrap;">${esc(msg)}</div>
-    </div>
-  `).join('') || `<div style="font-size:${FS.xs};color:#94a3b8;">No global ads configured.</div>`;
-
   const giRows = (st.global_injection.items || []).map((it, i) => `
     <tr data-idx="${i}" data-id="${it.id}" style="border-bottom:1px solid rgba(255,255,255,.1);">
       <td style="${tdCell()}">
@@ -3802,38 +3792,22 @@ function renderAdsTab() {
   return `
     <div style="display:flex;flex-direction:column;gap:1rem;">
 
-      <!-- GLOBAL CONTENT (read-only) -->
-      <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:18px;color:#fff;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
-          <div style="min-width:240px;flex:1;">
-            <div style="font-size:${FS.sm};font-weight:900;">Global Ads (read-only content)</div>
-            <div style="font-size:${FS.xs};color:#cbd5e1;margin-top:10px;">
-              Interval: <span style="color:#fff;font-weight:800;">${chip(st.ads_global.interval_seconds,0)}s</span><br/>
-              Mode: <span style="color:#fff;font-weight:800;">${esc(st.ads_global.rotation_mode)}</span><br/>
-              Last update: <span style="color:#fff;font-weight:800;">${esc(st.ads_global.updated_at || '-')}</span>
-            </div>
-          </div>
-          <div style="flex:2;display:flex;flex-direction:column;gap:.6rem;min-width:260px;">
-            ${globalListHTML}
-          </div>
-        </div>
-      </div>
-
-      <!-- GLOBAL INJECTION (per-ad) -->
+      <!-- GLOBAL INJECTION (per-ad, unico blocco per i globali) -->
       ${isGlobalChannel ? '' : `
       <div class="account-card2" style="background:#0f172a;border-radius:12px;padding:18px;color:#fff;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
           <div style="min-width:240px;flex:1;">
             <div style="font-size:${FS.sm};font-weight:900;">Global Ads in Your Channel</div>
             <div style="font-size:${FS.xs};color:#94a3b8;margin-top:6px;">
-              Enable/disable specific global ads and set per-ad frequency. Leave blank to use the default interval.
+              Enable/disable specific global ads and set a per-ad interval (leave blank to use the default interval below).
+              Messages content is managed globally and cannot be edited here.
             </div>
 
             <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Default interval (seconds)</div>
             <input id="cd-gi-default-interval" type="number" min="30" step="30"
                    value="${esc(st.global_injection.default_interval_seconds)}" style="${inputStyle()}">
 
-            <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Rotation Mode</div>
+            <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Rotation Mode (for global ads in your channel)</div>
             <select id="cd-gi-rotation" style="${inputStyle()}">
               <option value="sequential" ${st.global_injection.rotation_mode==='sequential'?'selected':''}>Sequential</option>
               <option value="random" ${st.global_injection.rotation_mode==='random'?'selected':''}>Random</option>
@@ -3842,6 +3816,10 @@ function renderAdsTab() {
             <div style="margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap;">
               <button id="cd-save-globalinj" class="btn btn-primary" style="${actionBtnStyle('#22c55e','#0a0f0a')}">💾 Save Global Injection</button>
               <div id="cd-gi-feedback" style="font-size:${FS.xs};color:#94a3b8;align-self:center;"></div>
+            </div>
+
+            <div style="margin-top:.6rem;font-size:${FS.xs};color:#94a3b8;">
+              Last update: ${esc(st.global_injection.updated_at || '-')}
             </div>
           </div>
 
@@ -3884,7 +3862,7 @@ function renderAdsTab() {
             <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Interval (seconds)</div>
             <input id="cd-channel-interval" type="number" min="30" step="30" value="${esc(st.ads_channel.interval_seconds)}" style="${inputStyle()}" ${isGlobalChannel?'disabled':''}>
 
-            <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Rotation Mode</div>
+            <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Rotation Mode (for your channel ads)</div>
             <select id="cd-channel-rotation" style="${inputStyle()}" ${isGlobalChannel?'disabled':''}>
               <option value="sequential" ${st.ads_channel.rotation_mode==='sequential'?'selected':''}>Sequential</option>
               <option value="random" ${st.ads_channel.rotation_mode==='random'?'selected':''}>Random</option>
@@ -3907,8 +3885,6 @@ function renderAdsTab() {
     </div>
   `;
 }
-
-
 
 function bindAdsEditor() {
   const isGlobalChannel = (st.channel || '').toLowerCase() === 'chipsmasterbot';
@@ -3935,7 +3911,6 @@ function bindAdsEditor() {
       giFeedback.style.color = '#94a3b8';
       giFeedback.textContent = 'Saving…';
 
-      // raccogli righe
       const items = [];
       giRowsTbody.querySelectorAll('tr[data-id]').forEach(tr => {
         const id = Number(tr.getAttribute('data-id'));
@@ -3963,7 +3938,7 @@ function bindAdsEditor() {
           body: JSON.stringify(payload)
         });
 
-        // aggiorna stato locale
+        // update local state (effective intervals)
         st.global_injection.rotation_mode = payload.global_injection.rotation_mode;
         st.global_injection.default_interval_seconds = payload.global_injection.default_interval_seconds;
         st.global_injection.items = st.global_injection.items.map((it) => {
@@ -4082,9 +4057,6 @@ function bindAdsEditor() {
     }
   });
 }
-
-
-
 
   // ---------- TAB: HISTORY ----------
   function renderHistoryTab() {

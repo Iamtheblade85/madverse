@@ -75,6 +75,94 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
+// ====== LIVE circulating (in-memory) ======
+const ensureCircState = (state) => {
+  if (!state._circ) {
+    state._circ = { map: new Map(), timer: null, collection: null };
+  }
+  return state._circ;
+};
+
+// Legge dall'endpoint live (full o subset)
+async function fetchCirculatingLive(state, collection, tids /* array opzionale */) {
+  const base = apiBase(state.cfg).replace(/\/+$/,"");
+  const qsTids = Array.isArray(tids) && tids.length ? `&tids=${encodeURIComponent(tids.join(","))}` : "";
+  const url = `${base}/api/templates/circulating-live?collection=${encodeURIComponent(collection)}${qsTids}`;
+  let data = await fetchJson(url);
+  if (typeof data === "string") { try { data = JSON.parse(data); } catch { data = { items: [] }; } }
+  const circ = ensureCircState(state);
+  circ.map.clear();
+  (data.items || []).forEach(it => {
+    circ.map.set(Number(it.template_id), {
+      circ: Number(it.circulating_supply || 0),
+      max:  (it.max_supply == null ? null : Number(it.max_supply))
+    });
+  });
+  circ.collection = collection;
+  return circ;
+}
+
+// Aggiorna le tabelle Step C e i pannelli Step D
+function applyCirculatingToUI(state) {
+  const circ = ensureCircState(state);
+
+  // Step C: tabella per schema
+  document.querySelectorAll('#ncf-sections table.ncf-table tbody tr[data-tid]').forEach(tr => {
+    const tid = Number(tr.getAttribute('data-tid'));
+    const m = circ.map.get(tid);
+    if (!m) return;
+    const cells = tr.children; // [0..5] = [chk, ID, Nome, Circ, Max, %]
+    const curCirc = Number((cells[3].textContent || "").replace(/[^\d]/g,"")) || 0;
+    const curMaxTxt = cells[4].textContent.trim();
+    const curMax = curMaxTxt === "—" ? null : Number(curMaxTxt.replace(/[^\d]/g,"")) || 0;
+
+    if (curCirc !== m.circ) cells[3].textContent = m.circ.toLocaleString();
+    if ((curMax ?? null) !== (m.max ?? null)) cells[4].textContent = (m.max == null ? "—" : m.max.toLocaleString());
+    const pct = (m.max && m.max > 0) ? `${Math.min(100, (m.circ / m.max) * 100).toFixed(1)}%` : "—";
+    cells[5].textContent = pct;
+  });
+
+  // Step D: ricostruisci righe e riepilogo che usano circulating
+  updateRewardsPanel(state);
+  refreshStep4Summary(state);
+}
+
+// Polling (default 60s). Usa subset = template visibili/selezionati per minimizzare payload.
+function startLiveCircPolling(state, collection, intervalMs = 60000) {
+  stopLiveCircPolling(state);
+  const pickTids = () => {
+    const ids = new Set();
+    // 1) selezionati nello Step D:
+    Object.values(state.creator?.selection || {})
+      .filter(x => x.collection === state.creator.collection)
+      .forEach(x => ids.add(Number(x.template_id)));
+    // 2) visibili in Step C (righe filtrate correnti):
+    document.querySelectorAll('#ncf-sections table.ncf-table tbody tr[data-tid]')
+      .forEach(tr => ids.add(Number(tr.getAttribute('data-tid'))));
+    return Array.from(ids.values());
+  };
+
+  const tick = async () => {
+    try {
+      const tids = pickTids();
+      await fetchCirculatingLive(state, collection, tids);
+      applyCirculatingToUI(state);
+    } catch (e) {
+      // silenzioso: se fallisce un giro non blocchiamo la UI
+      console.warn("live circulating refresh failed:", e);
+    }
+  };
+
+  // primo giro immediato (subset)
+  tick();
+  const circ = ensureCircState(state);
+  circ.timer = setInterval(tick, Math.max(15000, Number(intervalMs) || 60000)); // minimo 15s di guardia
+}
+
+function stopLiveCircPolling(state) {
+  const circ = ensureCircState(state);
+  if (circ.timer) { clearInterval(circ.timer); circ.timer = null; }
+}
 
   const toast = (() => {
     let tmr = null;
@@ -1342,17 +1430,30 @@
   }
 
   // ---------- Step D rewards panel ----------
-  function enrichFromTable(schemaName, tid){
-    const sid=sectionId(schemaName);
-    const row=$(`#${sid} tr[data-tid="${tid}"]`);
-    let name=null,circ=0,max=null;
-    if(row){
-      name=row.children[2].textContent.trim()||null;
-      circ=Number(row.children[3].textContent.trim().replace(/[^\d]/g,""))||0;
-      const m=row.children[4].textContent.trim(); max=m==="—"?null:Number(m.replace(/[^\d]/g,""))||0;
-    }
-    return {template_name:name,circulating_supply:circ,max_supply:max};
+function enrichFromTable(schemaName, tid){
+  // prova dalla mappa live prima
+  const st = window.__NCF_STATE__;
+  const circ = st ? ensureCircState(st) : null;
+  const live = circ?.map?.get(Number(tid)) || null;
+
+  // fallback: DOM (vecchi valori visuali se live ancora non pronto)
+  let name = null, circDom = 0, maxDom = null;
+  const sid = sectionId(schemaName);
+  const row = document.querySelector(`#${sid} tr[data-tid="${tid}"]`);
+  if (row) {
+    name = row.children[2].textContent.trim() || null;
+    circDom = Number(row.children[3].textContent.replace(/[^\d]/g,"")) || 0;
+    const m = row.children[4].textContent.trim();
+    maxDom = (m === "—" ? null : Number(m.replace(/[^\d]/g,"")) || 0);
   }
+
+  return {
+    template_name: name,
+    circulating_supply: live ? live.circ : circDom,
+    max_supply: live ? live.max : maxDom
+  };
+}
+
 
   function updateRewardsPanel(state){
     updateSelectedCount(state);
@@ -1560,34 +1661,48 @@
   }
 
   // ---------- Step A action ----------
-  async function doLoadCollection(state){
-    const col=$("#ncf-collection").value.trim();
-    if(!col){ toast("Enter a collection name.","error"); return; }
-    state.creator.collection=col; wLS(LS.lastCollection,col); $("#ncf-meta").textContent="Loading…"; $("#ncf-sections").innerHTML=""; renderSkeleton($("#ncf-status"));
-    try{
-      const data=await fetchTemplatesBySchema(state, col);
-      state.creator.raw=data;
-      const opts=(data.schemas||[]).map(s=>`<option value="${esc(s.schema_name)}">${esc(s.schema_name)}</option>`).join("");
-      $("#ncf-schema").innerHTML=`<option value="">All schemas</option>${opts}`;
-      const ts=(data.schemas||[]).length, tt=(data.schemas||[]).reduce((a,s)=>a+(s.templates?.length||0),0);
-      const farms = Array.isArray(state.creator._creatorFarms) ? state.creator._creatorFarms : [];
-      const exists = farms.some(f => (f.collection || "").toLowerCase() === String(data.collection||"").toLowerCase());
-      $("#ncf-meta").innerHTML =
-        `Collection: ${esc(data.collection||col)} — Schemas ${ts} — Templates ${tt}
-         ${ exists ? '<span class="badge ok" style="margin-left:.5rem;">Existing</span>' : '<span class="badge warn" style="margin-left:.5rem;">New</span>' }`;
-      $("#ncf-status").innerHTML="";
-      renderSections(state, $("#ncf-sections"), data);
-      updateRewardsPanel(state);
-      wizardGo(state,"#ncf-step-b");
-      await refreshFarmWalletBalances(state);
-      updateTopupPanel(state);
-      if($("#ncf-auto")?.checked) startAutoBalances(state);
-      loadCreatorFarms(state);
-    }catch(e){
-      $("#ncf-status").innerHTML=`<div class="soft" style="padding:14px; text-align:center;">${esc(String(e.message||e))}</div>`;
-      $("#ncf-meta").textContent="Error";
-    }
+async function doLoadCollection(state){
+  const col = $("#ncf-collection").value.trim();
+  if(!col){ toast("Enter a collection name.","error"); return; }
+
+  state.creator.collection = col;
+  wLS(LS.lastCollection, col);
+  $("#ncf-meta").textContent = "Loading…";
+  $("#ncf-sections").innerHTML = "";
+  renderSkeleton($("#ncf-status"));
+
+  try{
+    // 1) carica struttura schemi+template (prima vista)
+    const data = await fetchTemplatesBySchema(state, col);
+    state.creator.raw = data;
+
+    // 2) UI schemi
+    const opts=(data.schemas||[]).map(s=>`<option value="${esc(s.schema_name)}">${esc(s.schema_name)}</option>`).join("");
+    $("#ncf-schema").innerHTML=`<option value="">All schemas</option>${opts}`;
+    const ts=(data.schemas||[]).length, tt=(data.schemas||[]).reduce((a,s)=>a+(s.templates?.length||0),0);
+    $("#ncf-status").innerHTML = "";
+    $("#ncf-meta").innerHTML = `Collection: ${esc(data.collection||col)} — Schemas ${ts} — Templates ${tt}`;
+    renderSections(state, $("#ncf-sections"), data);
+
+    // 3) PRIMO LIVE (subset visibile + selezionati) + applica al DOM
+    await fetchCirculatingLive(state, data.collection || col, []);
+    applyCirculatingToUI(state);
+
+    // 4) avanza wizard, bilanci ecc
+    updateRewardsPanel(state);
+    wizardGo(state, "#ncf-step-b");
+    await refreshFarmWalletBalances(state);
+    updateTopupPanel(state);
+
+    // 5) avvia polling live (60s, subset dinamico)
+    startLiveCircPolling(state, data.collection || col, 60000);
+
+  }catch(e){
+    $("#ncf-status").innerHTML = `<div class="soft" style="padding:14px; text-align:center;">${esc(String(e.message||e))}</div>`;
+    $("#ncf-meta").textContent = "Error";
   }
+}
+
 
   // ---------- Creator handlers binding ----------
   function bindCreatorHandlers(state){
@@ -1676,6 +1791,25 @@
 
     // visibility pause auto
     document.addEventListener("visibilitychange",()=>{ if(document.hidden) stopAutoBalances(state); });
+	// Stop polling quando non serve
+	document.addEventListener("visibilitychange", () => {
+	  if (document.hidden) stopLiveCircPolling(state);
+	});
+	
+	// quando l’utente cambia tab principale, spegni/accendi in base al tab
+	const tabIds = ["#ncf-tab-browse", "#ncf-tab-creator", "#ncf-tab-stats", "#ncf-tab-help"];
+	tabIds.forEach(id => {
+	  const b = document.querySelector(id);
+	  if (!b) return;
+	  b.addEventListener("click", () => {
+	    const onCreator = (id === "#ncf-tab-creator");
+	    if (!onCreator) stopLiveCircPolling(state);
+	    else if (state.creator?.collection) {
+	      startLiveCircPolling(state, state.creator.collection, 60000);
+	    }
+	  });
+	});
+	  
   }
 
   // ---------- Stats pane ----------

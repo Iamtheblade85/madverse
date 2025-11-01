@@ -5215,3 +5215,9 @@ select:focus, input[type="number"]:focus {
 .cv-btn { border:1px solid rgba(255,255,255,.16); background:#121416; color:#e7fffa; border-radius:10px; }
 .cv-card { transition: transform .08s ease, box-shadow .12s ease; }
 .cv-card:hover { transform: translateY(-1px); }
+
+/* Allarga solo i wrapper “principali” */
+.navbar .max-w-7xl,
+.main-content .max-w-7xl {
+  max-width: none !important;
+}

@@ -493,20 +493,27 @@
 <script>
 (() => {
   // Evita doppie inizializzazioni
-  if (document.getElementById('bats-canvas')) return;
+  const EXISTING = document.getElementById('bats-canvas');
+  if (EXISTING) EXISTING.remove();
 
-  // Rispetta accessibilità
+  // === CONFIG SPRITE BAT (4 frame orizzontali) =========================
+  const SPRITE = {
+    src: 'bats-sprite.png', // <-- metti qui il tuo PNG 4x1
+    frameW: 128,                   // larghezza singolo frame
+    frameH: 64,                    // altezza singolo frame
+    frames: 4,                     // <--- 4 FRAME
+    fps: 12                        // velocità animazione
+  };
+
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  // Canvas overlay
+  // Canvas overlay sopra tutto ma sotto le modali (9999)
   const canvas = document.createElement('canvas');
   canvas.id = 'bats-canvas';
-  canvas.style.position = 'fixed';
-  canvas.style.inset = '0';
-  canvas.style.width = '100vw';
-  canvas.style.height = '100vh';
-  canvas.style.zIndex = '9998';
-  canvas.style.pointerEvents = 'none';
+  Object.assign(canvas.style, {
+    position: 'fixed', inset: 0, width: '100vw', height: '100vh',
+    zIndex: 9998, pointerEvents: 'none'
+  });
   document.body.appendChild(canvas);
   const ctx = canvas.getContext('2d', { alpha: true });
 
@@ -514,131 +521,46 @@
   let dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
   function sizeCanvas() {
     dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-    const w = window.innerWidth, h = window.innerHeight;
+    const w = innerWidth, h = innerHeight;
     canvas.width  = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
-  window.addEventListener('resize', () => {
-    sizeCanvas();
-    layoutPumpkins();
-    tuneBats();
-  }, { passive: true });
-  sizeCanvas();
 
-  // Se avevi vecchie .bats decorative, le nascondo
+  // Nascondi eventuale vecchia decorazione .bats
   const oldBats = document.querySelector('.bats');
   if (oldBats) oldBats.style.display = 'none';
 
-  // ---------- BATTI (come prima, leggermente rifiniti) ----------
-  const rand = (a, b) => a + Math.random() * (b - a);
-  const bats = [];
-  function targetBatCount() {
-    return Math.max(8, Math.min(20, Math.floor(window.innerWidth / 90)));
-  }
-  class Bat {
-    constructor(initial = false) { this.reset(initial); }
-    reset(initial) {
-      const margin = 60;
-      this.x = initial ? rand(-margin, window.innerWidth + margin) : -margin;
-      this.s = rand(0.7, 1.4);
-      this.vx = rand(60, 140) * this.s;
-      this.baseY = rand(window.innerHeight * 0.15, window.innerHeight * 0.85);
-      this.amp = rand(12, 28) * this.s;
-      this.freq = rand(0.3, 0.7);
-      this.phase = Math.random() * Math.PI * 2;
-      this.y = this.baseY;
-    }
-    update(dt, t) {
-      this.x += this.vx * (dt / 1000);
-      this.y = this.baseY + Math.sin((t * 2 * Math.PI * this.freq) + this.phase) * this.amp;
-      if (this.x > window.innerWidth + 80) this.reset(false);
-    }
-  }
-  function tuneBats() {
-    const target = targetBatCount();
-    while (bats.length < target) bats.push(new Bat(true));
-    while (bats.length > target) bats.pop();
-  }
-  tuneBats();
-
-  function drawBat(b, t) {
-    const s = b.s;
-    const flap = Math.sin(t * (2 * Math.PI) * (2.2 * s) + b.phase);
-    const wing = flap * 0.45;
-
-    ctx.save();
-    ctx.translate(b.x, b.y);
-
-    ctx.fillStyle = '#000';
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 1.6;
-
-    // Corpo
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 8 * s, 4.5 * s, 0, 0, Math.PI * 2);
-    ctx.fill(); ctx.stroke();
-
-    // Testa
-    ctx.beginPath();
-    ctx.ellipse(7.5 * s, 0, 3 * s, 3 * s, 0, 0, Math.PI * 2);
-    ctx.fill(); ctx.stroke();
-
-    // Orecchie
-    ctx.beginPath();
-    ctx.moveTo(6.0 * s, -3.0 * s);
-    ctx.lineTo(7.5 * s, -7.0 * s);
-    ctx.lineTo(9.0 * s, -3.0 * s);
-    ctx.closePath();
-    ctx.fill(); ctx.stroke();
-
-    // Ali
-    ctx.beginPath();
-    ctx.moveTo(-2 * s, 0);
-    ctx.quadraticCurveTo(-12 * s, -6 * s + wing * -12 * s, -24 * s, 0);
-    ctx.quadraticCurveTo(-18 * s,  6 * s + wing *  10 * s, -10 * s, 2 * s);
-    ctx.quadraticCurveTo(-12 * s,  2 * s, -2 * s, 0);
-    ctx.fill(); ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(2 * s, 0);
-    ctx.quadraticCurveTo(12 * s, -6 * s + wing * 12 * s, 24 * s, 0);
-    ctx.quadraticCurveTo(18 * s,  6 * s + wing * -10 * s, 10 * s, 2 * s);
-    ctx.quadraticCurveTo(12 * s,  2 * s, 2 * s, 0);
-    ctx.fill(); ctx.stroke();
-
-    // Occhi rossi
-    ctx.fillStyle = '#ff1a1a';
-    ctx.beginPath(); ctx.arc(8.6 * s, -1.1 * s, 0.9 * s, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(8.6 * s,  1.1 * s, 0.9 * s, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(8.9 * s, -1.3 * s, 0.25 * s, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(8.9 * s,  0.9 * s, 0.25 * s, 0, Math.PI * 2); ctx.fill();
-
-    ctx.restore();
-  }
-
-  // ---------- ZUCCHE: dettagliate con ombre, nervature, volto e candela ----------
+  // ================== ZUCCHE (basso + sopra il logo) ===================
   const pumpkins = [];
   function layoutPumpkins() {
     pumpkins.length = 0;
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const baseY = h - 40; // “appoggiate” in basso
 
-    // sinistra, destra, e una centrale più piccola
-    pumpkins.push({ anchor: 'left',  x: 120, y: baseY, s: Math.max(1.2, Math.min(2.2, w / 1200)) });
-    pumpkins.push({ anchor: 'right', x: w - 120, y: baseY, s: Math.max(1.2, Math.min(2.0, w / 1300)) });
-    pumpkins.push({ anchor: 'mid',   x: w * 0.5, y: baseY - 10, s: Math.max(0.8, Math.min(1.2, w / 1800)), floatPhase: Math.random()*Math.PI*2 });
+    // --- 1) Zucche "di base" in basso ---
+    const w = innerWidth, h = innerHeight, baseY = h - 40;
+    pumpkins.push({ anchor: 'left',  x: 120,     y: baseY,     s: Math.max(1.2, Math.min(2.2, w / 1200)) });
+    pumpkins.push({ anchor: 'right', x: w - 120, y: baseY,     s: Math.max(1.2, Math.min(2.0, w / 1300)) });
+    pumpkins.push({ anchor: 'mid',   x: w * 0.5, y: baseY - 8, s: Math.max(0.8, Math.min(1.2, w / 1800)), floatPhase: Math.random()*Math.PI*2 });
+
+    // --- 2) Zucche sopra il logo ---
+    const logo = document.querySelector('img[alt="CryptoChips Logo"]');
+    if (logo) {
+      const r = logo.getBoundingClientRect();      // coordinate viewport
+      const cx = r.left + r.width/2;
+      const cy = r.top  + r.height*0.35;           // zona centrale del logo
+      const s  = Math.min(1.1, Math.max(0.7, r.width / 600)); // scala proporzionata al logo
+
+      // due zucche laterali e una più piccola centrale
+      pumpkins.push({ anchor: 'abs', x: cx - r.width*0.42, y: cy,         s: s*0.85, floatPhase: Math.random()*6.28 });
+      pumpkins.push({ anchor: 'abs', x: cx + r.width*0.42, y: cy,         s: s*0.85, floatPhase: Math.random()*6.28 });
+      pumpkins.push({ anchor: 'abs', x: cx,                y: r.top+10,   s: s*0.65, floatPhase: Math.random()*6.28 });
+    }
   }
-  layoutPumpkins();
 
   function pumpkinBodyGradient(x, y, s) {
-    const grad = ctx.createLinearGradient(x, y - 40*s, x, y + 40*s);
-    grad.addColorStop(0.0, '#ff9a2e');
-    grad.addColorStop(0.5, '#ff7a00');
-    grad.addColorStop(1.0, '#c85c00');
-    return grad;
+    const g = ctx.createLinearGradient(x, y - 40*s, x, y + 40*s);
+    g.addColorStop(0.0, '#ff9a2e'); g.addColorStop(0.5, '#ff7a00'); g.addColorStop(1.0, '#c85c00');
+    return g;
   }
   function pumpkinHighlightGradient(x, y, s) {
     const g = ctx.createRadialGradient(x - 20*s, y - 25*s, 6*s, x - 20*s, y - 25*s, 55*s);
@@ -647,247 +569,174 @@
     g.addColorStop(1.0, 'rgba(255,220,160,0)');
     return g;
   }
-  function drawRidge(x, y, s, offset, alpha) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.strokeStyle = `rgba(0,0,0,${alpha})`;
-    ctx.lineWidth = 1.2;
+  function drawRidge(x, y, s, o, a){
+    ctx.save(); ctx.translate(x,y);
+    ctx.strokeStyle = `rgba(0,0,0,${a})`; ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(offset * s, -34*s);
-    ctx.bezierCurveTo(offset * s - 8*s, -28*s, offset * s - 10*s, -10*s, offset * s, 0);
-    ctx.bezierCurveTo(offset * s + 10*s, 10*s, offset * s + 8*s, 28*s, offset * s, 34*s);
-    ctx.stroke();
-    ctx.restore();
+    ctx.moveTo(o*s,-34*s);
+    ctx.bezierCurveTo(o*s-8*s,-28*s,o*s-10*s,-10*s,o*s,0);
+    ctx.bezierCurveTo(o*s+10*s,10*s,o*s+8*s,28*s,o*s,34*s);
+    ctx.stroke(); ctx.restore();
   }
-
-  function carveAndGlow(shapeFn, glowColorStops, intensity, x, y, s) {
-    // riempi cavità scura
-    ctx.save();
-    ctx.beginPath();
-    shapeFn();
-    ctx.fillStyle = '#120800';
-    ctx.fill();
-    // clip per glow interno
-    ctx.clip();
-    // glow radiale
-    const rg = ctx.createRadialGradient(x, y, 2*s, x, y, 34*s);
-    glowColorStops.forEach(([off, col]) => rg.addColorStop(off, col));
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = intensity;
-    ctx.fillStyle = rg;
-    ctx.fillRect(x - 40*s, y - 40*s, 80*s, 80*s);
-    ctx.restore();
-    ctx.globalAlpha = 1;
-    ctx.globalCompositeOperation = 'source-over';
+  function carveAndGlow(shapeFn, stops, k, x, y, s){
+    ctx.save(); ctx.beginPath(); shapeFn(); ctx.fillStyle='#120800'; ctx.fill(); ctx.clip();
+    const rg=ctx.createRadialGradient(x,y,2*s,x,y,34*s);
+    stops.forEach(([d,c])=>rg.addColorStop(d,c));
+    ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=k; ctx.fillStyle=rg;
+    ctx.fillRect(x-40*s,y-40*s,80*s,80*s);
+    ctx.restore(); ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
   }
+  function drawCandle(cx,cy,s,t){
+    const h=14*s,w=3.5*s;
+    ctx.fillStyle='#f7f2e8'; ctx.strokeStyle='#c8c0b2'; ctx.lineWidth=.8;
+    ctx.beginPath(); ctx.roundRect(cx-w/2, cy-h, w, h, .8*s); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+w*.2, cy-h*.6); ctx.quadraticCurveTo(cx+w, cy-h*.2, cx+w*.2, cy-h*.05);
+    ctx.lineTo(cx+w*.25, cy-h*.6); ctx.closePath(); ctx.fillStyle='#efe7d9'; ctx.fill();
 
-  function drawCandle(cx, cy, s, t) {
-    // corpo candela
-    const h = 14*s, w = 3.5*s;
-    ctx.fillStyle = '#f7f2e8';
-    ctx.strokeStyle = '#c8c0b2';
-    ctx.lineWidth = 0.8;
+    const fl=(Math.sin(t*9.7)+Math.cos(t*5.3))*.5;
+    const Fh=7.5*s+fl*.9*s, Fw=3.8*s+fl*.4*s;
+
+    const gg=ctx.createRadialGradient(cx,cy-h-Fh*.4,1*s,cx,cy-h-Fh*.4,24*s);
+    gg.addColorStop(0,'rgba(255,240,120,.7)');
+    gg.addColorStop(.4,'rgba(255,150,40,.35)');
+    gg.addColorStop(1,'rgba(255,150,40,0)');
+    ctx.globalCompositeOperation='lighter';
+    ctx.fillStyle=gg; ctx.fillRect(cx-30*s,cy-h-30*s,60*s,60*s);
+    ctx.globalCompositeOperation='source-over';
+
+    const grad=ctx.createLinearGradient(cx,cy-h-Fh,cx,cy-h);
+    grad.addColorStop(0,'#fff8d2'); grad.addColorStop(.45,'#ffd24a'); grad.addColorStop(1,'#ff7a00');
     ctx.beginPath();
-    ctx.roundRect(cx - w/2, cy - h, w, h, 0.8*s);
-    ctx.fill(); ctx.stroke();
+    ctx.moveTo(cx, cy-h-Fh);
+    ctx.quadraticCurveTo(cx-Fw*.75, cy-h-Fh*.25, cx, cy-h+.2*s);
+    ctx.quadraticCurveTo(cx+Fw*.75, cy-h-Fh*.25, cx, cy-h-Fh);
+    ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
 
-    // goccia di cera
-    ctx.beginPath();
-    ctx.moveTo(cx + w*0.2, cy - h*0.6);
-    ctx.quadraticCurveTo(cx + w, cy - h*0.2, cx + w*0.2, cy - h*0.05);
-    ctx.lineTo(cx + w*0.25, cy - h*0.6);
-    ctx.closePath();
-    ctx.fillStyle = '#efe7d9';
-    ctx.fill();
-
-    // fiamma (flicker)
-    const flick = (Math.sin(t*9.7) + Math.cos(t*5.3))*0.5;
-    const flameH = 7.5*s + flick*0.9*s;
-    const flameW = 3.8*s + flick*0.4*s;
-
-    // glow dietro fiamma
-    const gg = ctx.createRadialGradient(cx, cy - h - flameH*0.4, 1*s, cx, cy - h - flameH*0.4, 24*s);
-    gg.addColorStop(0, 'rgba(255,240,120,0.7)');
-    gg.addColorStop(0.4, 'rgba(255,150,40,0.35)');
-    gg.addColorStop(1, 'rgba(255,150,40,0)');
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.fillStyle = gg;
-    ctx.fillRect(cx - 30*s, cy - h - 30*s, 60*s, 60*s);
-    ctx.globalCompositeOperation = 'source-over';
-
-    // fiamma teardrop
-    const grad = ctx.createLinearGradient(cx, cy - h - flameH, cx, cy - h);
-    grad.addColorStop(0, '#fff8d2');
-    grad.addColorStop(0.45, '#ffd24a');
-    grad.addColorStop(1, '#ff7a00');
-
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - h - flameH);
-    ctx.quadraticCurveTo(cx - flameW*0.75, cy - h - flameH*0.25, cx, cy - h + 0.2*s);
-    ctx.quadraticCurveTo(cx + flameW*0.75, cy - h - flameH*0.25, cx, cy - h - flameH);
-    ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // stoppino
-    ctx.strokeStyle = '#2b1b0a';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - h + 0.2*s);
-    ctx.lineTo(cx, cy - h + 2.2*s);
-    ctx.stroke();
+    ctx.strokeStyle='#2b1b0a'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(cx,cy-h+.2*s); ctx.lineTo(cx,cy-h+2.2*s); ctx.stroke();
   }
+  function drawPumpkin(p,t){
+    let {x,y,s}=p;
+    if (p.anchor==='right') x = innerWidth - 120;
+    if (p.anchor==='mid')   y += Math.sin((t*2*Math.PI)*.25 + (p.floatPhase||0))*4;
+    if (p.anchor==='abs')   y += Math.sin((t*2*Math.PI)*.35 + (p.floatPhase||0))*2; // lieve bobbing sopra logo
 
-  function drawPumpkin(p, t) {
-    // posizione (quella centrale "galleggia" appena)
-    let { x, y, s } = p;
-    if (p.anchor === 'right') x = window.innerWidth - 120;
-    if (p.anchor === 'mid') y += Math.sin((t*2*Math.PI)*0.25 + (p.floatPhase||0)) * 4;
-
-    // Stelo
-    ctx.save();
-    ctx.fillStyle = '#2e6b2e';
-    ctx.strokeStyle = '#1d441d';
-    ctx.lineWidth = 1.2;
+    // stelo
+    ctx.save(); ctx.fillStyle='#2e6b2e'; ctx.strokeStyle='#1d441d'; ctx.lineWidth=1.2;
     ctx.beginPath();
-    ctx.moveTo(x - 3*s, y - 38*s);
-    ctx.bezierCurveTo(x - 4*s, y - 50*s, x + 8*s, y - 52*s, x + 6*s, y - 40*s);
-    ctx.lineTo(x + 4*s, y - 33*s);
-    ctx.lineTo(x - 4*s, y - 33*s);
-    ctx.closePath();
-    ctx.fill(); ctx.stroke();
+    ctx.moveTo(x-3*s,y-38*s);
+    ctx.bezierCurveTo(x-4*s,y-50*s,x+8*s,y-52*s,x+6*s,y-40*s);
+    ctx.lineTo(x+4*s,y-33*s); ctx.lineTo(x-4*s,y-33*s); ctx.closePath();
+    ctx.fill(); ctx.stroke(); ctx.restore();
+
+    // corpo
+    ctx.save(); ctx.fillStyle=pumpkinBodyGradient(x,y,s); ctx.strokeStyle='#7a3a00'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(x,y,46*s,36*s,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=pumpkinHighlightGradient(x,y,s);
+    ctx.beginPath(); ctx.ellipse(x-5*s,y-6*s,30*s,24*s,-.1,0,Math.PI*2); ctx.fill();
+    [ -26,-14,-5,5,14,26 ].forEach((o,i)=>drawRidge(x,y,s,o,(i===3||i===2)?.28:.18));
     ctx.restore();
 
-    // Corpo (ovale base)
-    ctx.save();
-    ctx.fillStyle = pumpkinBodyGradient(x, y, s);
-    ctx.strokeStyle = '#7a3a00';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(x, y, 46*s, 36*s, 0, 0, Math.PI*2);
-    ctx.fill(); ctx.stroke();
+    // volto
+    const eyeL=()=>{ctx.moveTo(x-16*s,y-8*s);ctx.lineTo(x-4*s,y-18*s);ctx.lineTo(x-2*s,y-4*s);ctx.closePath();};
+    const eyeR=()=>{ctx.moveTo(x+16*s,y-8*s);ctx.lineTo(x+2*s,y-18*s);ctx.lineTo(x+0*s,y-4*s);ctx.closePath();};
+    const nose =()=>{ctx.moveTo(x-2*s,y-2*s); ctx.lineTo(x+2*s,y-2*s); ctx.lineTo(x+0*s,y+3*s); ctx.closePath();};
+    const mouth=()=>{ctx.moveTo(x-26*s,y+12*s); ctx.lineTo(x-20*s,y+6*s); ctx.lineTo(x-14*s,y+12*s); ctx.lineTo(x-8*s,y+6*s);
+                     ctx.lineTo(x-2*s,y+12*s); ctx.lineTo(x+4*s,y+6*s); ctx.lineTo(x+10*s,y+12*s); ctx.lineTo(x+16*s,y+6*s);
+                     ctx.lineTo(x+22*s,y+12*s); ctx.lineTo(x+28*s,y+10*s); ctx.lineTo(x+28*s,y+16*s); ctx.lineTo(x-26*s,y+16*s); ctx.closePath();};
 
-    // Ombra/luce
-    ctx.fillStyle = pumpkinHighlightGradient(x, y, s);
-    ctx.beginPath();
-    ctx.ellipse(x-5*s, y-6*s, 30*s, 24*s, -0.1, 0, Math.PI*2);
-    ctx.fill();
+    ctx.beginPath(); eyeL(); carveAndGlow(eyeL, [[0,'rgba(255,240,140,.9)'],[.4,'rgba(255,170,60,.5)'],[1,'rgba(255,120,30,0)']], 1.0, x-8*s, y-10*s, s);
+    ctx.beginPath(); eyeR(); carveAndGlow(eyeR, [[0,'rgba(255,240,140,.9)'],[.4,'rgba(255,170,60,.5)'],[1,'rgba(255,120,30,0)']], 1.0, x+8*s, y-10*s, s);
+    ctx.beginPath(); nose();  carveAndGlow(nose, [[0,'rgba(255,230,130,.9)'],[.5,'rgba(255,160,45,.5)'],[1,'rgba(255,120,30,0)']], .9, x, y+1*s, s);
+    ctx.beginPath(); mouth(); carveAndGlow(mouth,[[0,'rgba(255,230,120,.85)'],[.5,'rgba(255,150,40,.5)'],[1,'rgba(255,120,30,0)']], .85, x+2*s, y+12*s, s);
 
-    // Nervature (leggere)
-    [ -26, -14, -5, 5, 14, 26 ].forEach((off, i) => {
-      drawRidge(x, y, s, off, i===3 || i===2 ? 0.28 : 0.18);
-    });
-    ctx.restore();
+    // candela dentro
+    drawCandle(x+2*s,y+15*s,s*.9,t);
 
-    // Volto intagliato: occhi, naso, bocca con glow interno
-    // Occhio sinistro
-    const eyeL = () => {
-      ctx.moveTo(x - 16*s, y - 8*s);
-      ctx.lineTo(x - 4*s,  y - 18*s);
-      ctx.lineTo(x - 2*s,  y - 4*s);
-      ctx.closePath();
-    };
-    // Occhio destro
-    const eyeR = () => {
-      ctx.moveTo(x + 16*s, y - 8*s);
-      ctx.lineTo(x + 2*s,  y - 18*s);
-      ctx.lineTo(x + 0*s,  y - 4*s);
-      ctx.closePath();
-    };
-    // Naso
-    const nose = () => {
-      ctx.moveTo(x - 2*s, y - 2*s);
-      ctx.lineTo(x + 2*s, y - 2*s);
-      ctx.lineTo(x + 0*s, y + 3*s);
-      ctx.closePath();
-    };
-    // Bocca seghettata
-    const mouthPath = () => {
-      ctx.moveTo(x - 26*s, y + 12*s);
-      ctx.lineTo(x - 20*s, y + 6*s);
-      ctx.lineTo(x - 14*s, y + 12*s);
-      ctx.lineTo(x - 8*s,  y + 6*s);
-      ctx.lineTo(x - 2*s,  y + 12*s);
-      ctx.lineTo(x + 4*s,  y + 6*s);
-      ctx.lineTo(x + 10*s, y + 12*s);
-      ctx.lineTo(x + 16*s, y + 6*s);
-      ctx.lineTo(x + 22*s, y + 12*s);
-      ctx.lineTo(x + 28*s, y + 10*s);
-      ctx.lineTo(x + 28*s, y + 16*s);
-      ctx.lineTo(x - 26*s, y + 16*s);
-      ctx.closePath();
-    };
-
-    // Occhi glow
-    ctx.beginPath(); eyeL();
-    carveAndGlow(eyeL,
-      [[0,'rgba(255,240,140,0.9)'],[0.4,'rgba(255,170,60,0.5)'],[1,'rgba(255,120,30,0)']],
-      1.0, x - 8*s, y - 10*s, s
-    );
-    ctx.beginPath(); eyeR();
-    carveAndGlow(eyeR,
-      [[0,'rgba(255,240,140,0.9)'],[0.4,'rgba(255,170,60,0.5)'],[1,'rgba(255,120,30,0)']],
-      1.0, x + 8*s, y - 10*s, s
-    );
-
-    // Naso glow
-    ctx.beginPath(); nose();
-    carveAndGlow(nose,
-      [[0,'rgba(255,230,130,0.9)'],[0.5,'rgba(255,160,45,0.5)'],[1,'rgba(255,120,30,0)']],
-      0.9, x, y + 1*s, s
-    );
-
-    // Bocca glow
-    ctx.beginPath(); mouthPath();
-    carveAndGlow(mouthPath,
-      [[0,'rgba(255,230,120,0.85)'],[0.5,'rgba(255,150,40,0.5)'],[1,'rgba(255,120,30,0)']],
-      0.85, x + 2*s, y + 12*s, s
-    );
-
-    // Candela: centrata dietro la bocca
-    drawCandle(x + 2*s, y + 15*s, s*0.9, t);
-
-    // Bordino luminoso intorno ai tagli (accento)
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255,180,60,0.55)';
-    ctx.lineWidth = 1;
+    // bordo luminoso
+    ctx.save(); ctx.strokeStyle='rgba(255,180,60,.55)'; ctx.lineWidth=1;
     ctx.beginPath(); eyeL(); ctx.stroke();
     ctx.beginPath(); eyeR(); ctx.stroke();
     ctx.beginPath(); nose();  ctx.stroke();
-    ctx.beginPath(); mouthPath(); ctx.stroke();
+    ctx.beginPath(); mouth(); ctx.stroke();
     ctx.restore();
   }
 
-  // ---------- Loop ----------
-  let last = performance.now();
-  let rafId = null;
-  function frame(now) {
-    const dt = Math.min(50, now - last);
-    last = now;
-    const t = now / 1000;
+  // ================== PIPISTRELLI (sprite 4x1) ==========================
+  const bats = [];
+  const spriteImg = new Image();
+  spriteImg.src = SPRITE.src;
 
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  function targetBatCount(){ return Math.max(8, Math.min(20, Math.floor(innerWidth / 90))); }
+  function tuneBats(){
+    const target = targetBatCount();
+    while (bats.length < target) bats.push(makeBat(true));
+    while (bats.length > target) bats.pop();
+  }
+  function makeBat(initial=false){
+    const margin = 60, s = Math.random()*0.7 + 0.7;
+    return {
+      x: initial ? Math.random()*(innerWidth+2*margin)-margin : -margin,
+      yBase: Math.random()*(innerHeight*0.7)+innerHeight*0.15,
+      amp: (12+Math.random()*16)*s,
+      freq: 0.3 + Math.random()*0.4,
+      phase: Math.random()*Math.PI*2,
+      vx: (60+Math.random()*80)*s,
+      s, frame: Math.floor(Math.random()*SPRITE.frames), fTimer: 0
+    };
+  }
+  function updateBat(b, dt, t){
+    b.x += b.vx * (dt/1000);
+    const flap = Math.sin((t*2*Math.PI*b.freq)+b.phase);
+    b.y = b.yBase + flap * b.amp;
 
-    // ZUCCHE prima (in basso), poi pipistrelli sopra
+    // animazione 4 frame
+    b.fTimer += dt;
+    const fdur = 1000 / SPRITE.fps;
+    while (b.fTimer >= fdur) { b.fTimer -= fdur; b.frame = (b.frame + 1) % SPRITE.frames; }
+
+    if (b.x > innerWidth + 80) Object.assign(b, makeBat(false));
+  }
+  function drawBatSprite(b){
+    if (!spriteImg.complete || !spriteImg.naturalWidth) return;
+    const sw=SPRITE.frameW, sh=SPRITE.frameH;
+    const sx=b.frame*sw, sy=0;
+    const dw=sw*b.s, dh=sh*b.s;
+    ctx.drawImage(spriteImg, sx, sy, sw, sh, Math.round(b.x - dw/2), Math.round(b.y - dh/2), Math.round(dw), Math.round(dh));
+  }
+
+  // ================== LOOP ==============================================
+  let last = performance.now(), rafId = null;
+  function frame(now){
+    const dt = Math.min(50, now - last); last = now; const t = now/1000;
+
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+
+    // 1) Zucche (in basso e sopra il logo)
     pumpkins.forEach(p => drawPumpkin(p, t));
-    if (!prefersReduced.matches) {
-      bats.forEach(b => { b.update(dt, t); drawBat(b, t); });
-    } else {
-      bats.forEach(b => drawBat(b, t));
-    }
+
+    // 2) Pipistrelli (sopra alle zucche)
+    if (!prefersReduced.matches) bats.forEach(b => { updateBat(b, dt, t); drawBatSprite(b); });
+    else bats.forEach(b => drawBatSprite(b));
 
     rafId = requestAnimationFrame(frame);
   }
 
+  // Resize/scroll per riposizionare zucche rispetto al logo
+  function relayout(){ sizeCanvas(); layoutPumpkins(); tuneBats(); }
+  addEventListener('resize', relayout, { passive: true });
+  addEventListener('scroll', () => layoutPumpkins(), { passive: true });
+
+  // Avvio
+  relayout();
+  spriteImg.decode?.().catch(()=>{}).finally(()=>{ last = performance.now(); rafId = requestAnimationFrame(frame); });
+
   // Pausa quando la tab non è visibile
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { if (rafId) cancelAnimationFrame(rafId), rafId = null; }
+    if (document.hidden) { if (rafId) cancelAnimationFrame(rafId), rafId=null; }
     else if (!rafId) { last = performance.now(); rafId = requestAnimationFrame(frame); }
   });
-
-  // Via!
-  rafId = requestAnimationFrame(frame);
 })();
 </script>
 

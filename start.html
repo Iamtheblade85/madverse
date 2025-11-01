@@ -1,106 +1,314 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="it" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CryptoChips Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CryptoChips Portal — Halloween Edition 🎃</title>
+
+  <!-- Libs -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
-  <link href="https://fonts.googleapis.com/css2?family=Rock+Salt&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Rock+Salt&family=Creepster&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Il tuo CSS originale (resta caricato) -->
   <link id="theme-style" rel="stylesheet" href="styles6_cybertriba_glow.css"/>
+
+  <!-- Overrides + Tema Halloween -->
   <style>
-    @media (min-width:768px){
-      #partners-left, #partners-right { display:flex !important; }
+    /* =========================
+       RESET & FULL-WIDTH FIXES
+       ========================= */
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow-x: hidden;
+      background: #0b0612;
     }
+    /* Annulla i limiti di larghezza che arrivano dal CSS esterno */
+    .footer-cybertribal .footer-inner { max-width: none !important; width: 100% !important; margin: 0 !important; }
+    form { max-width: none !important; }
+    .modal { max-width: 100vw; }
+    .typing-text { max-width: none !important; }
+
+    /* Rimuovi eventuali container centrati stretti */
+    .w-full { width: 100% !important; }
+    .max-w-none { max-width: none !important; }
+
+    /* Nascondi scrollbar orizzontale ovunque */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    img { image-rendering:auto; }
-    .partner-wrap { transition: transform .12s ease, background-color .12s ease, filter .12s ease; }
-    .partner-wrap:hover { transform: translateY(-2px); background-color: rgba(255,255,255,.08); filter: saturate(1.05); }
-    .partner-list { list-style: none; margin: 0; padding: 0; }
-    @keyframes pulseGlow {
-      0% { text-shadow: 0 0 6px #ff00ff, 0 0 12px #ff00ff; }
-      50% { text-shadow: 0 0 12px #ff00ff, 0 0 24px #ff00ff; }
-      100% { text-shadow: 0 0 6px #ff00ff, 0 0 12px #ff00ff; }
+
+    /* =========================
+       TEMA HALLOWEEN
+       ========================= */
+    :root {
+      --hx-bg: radial-gradient(1200px 600px at 10% -10%, rgba(255,120,0,.12), transparent 50%),
+               radial-gradient(1200px 600px at 90% 0%, rgba(162,98,255,.10), transparent 50%),
+               #0b0612;
+      --hx-panel: rgba(255,255,255,.04);
+      --hx-border: rgba(255,255,255,.10);
+      --hx-text: #e9e5ff;
+      --hx-muted: #bfaaff;
+      --hx-primary: #ff7a00;  /* arancio */
+      --hx-primary-2: #ffb703;
+      --hx-accent: #a162ff;   /* viola */
+      --hx-accent-2: #4c2a9e;
+      --hx-glow-o: 0 0 16px rgba(255,122,0,.55), 0 0 30px rgba(255,183,3,.35);
+      --hx-glow-v: 0 0 16px rgba(161,98,255,.55), 0 0 30px rgba(76,42,158,.35);
     }
 
-    /* Badge NEW intermittente */
-    .badge-new{
-      display:inline-block;
-      margin-left:.5rem;
-      padding:.05rem .4rem;
-      font-size:.65rem;
-      font-weight:800;
-      line-height:1.2;
-      border-radius:9999px;
+    body.app.halloween {
+      background: var(--hx-bg);
+      color: var(--hx-text);
+      font-smooth: always;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* Header / Navbar Halloween */
+    #navbar.navbar {
+      width: 100%;
+      background:
+        linear-gradient(180deg, rgba(161,98,255,.18), rgba(161,98,255,0) 60%),
+        linear-gradient(180deg, rgba(255,122,0,.16), rgba(255,122,0,0) 65%);
+      border-bottom: 1px solid var(--hx-border);
+      box-shadow: inset 0 -1px 0 rgba(255,255,255,.06);
+      position: relative;
+    }
+    /* Ragnatele decorative */
+    #navbar.navbar:before,
+    #navbar.navbar:after {
+      content: "";
+      position: absolute;
+      top: 0; width: 420px; height: 420px;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,.07) 0 2px, transparent 3px) 0 0/28px 28px,
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,.06) 0 1px, transparent 2px) 14px 14px/28px 28px;
+      opacity: .15;
+      pointer-events: none;
+      filter: blur(.3px);
+    }
+    #navbar.navbar:before { left: -60px; }
+    #navbar.navbar:after  { right: -60px; transform: scaleX(-1); }
+
+    /* Titoli/claim */
+    .brand-line { font-family: 'Rock Salt', system-ui, sans-serif; letter-spacing: .3px; }
+
+    /* Pulsanti menu */
+    .navbar-menu .menu-button,
+    .dropdown-item {
+      background: linear-gradient(180deg, rgba(255,122,0,.12), rgba(255,122,0,.05));
+      border: 1px solid var(--hx-border);
+      color: var(--hx-text);
+      padding: .55rem .9rem;
+      border-radius: .75rem;
+      transition: transform .12s ease, background-color .12s ease, box-shadow .12s ease, border-color .12s ease;
+      backdrop-filter: blur(2px);
+    }
+    .navbar-menu .menu-button:hover,
+    .dropdown-item:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(180deg, rgba(161,98,255,.18), rgba(161,98,255,.06));
+      border-color: rgba(255,122,0,.35);
+      box-shadow: var(--hx-glow-o);
+    }
+    .dropdown .dropdown-menu {
+      position: absolute;
+      z-index: 50;
+      margin-top: .5rem;
+      background: rgba(15,10,22,.96);
+      border: 1px solid var(--hx-border);
+      border-radius: 1rem;
+      padding: .5rem;
+      min-width: 14rem;
+      box-shadow: 0 12px 50px rgba(0,0,0,.45), var(--hx-glow-v);
+    }
+    .dropdown-divider {
+      border: 0; height: 1px; margin: .35rem 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+    }
+
+    /* Badge NEW */
+    .badge-new {
+      display:inline-block; margin-left:.5rem; padding:.05rem .4rem;
+      font-size:.65rem; font-weight:800; line-height:1.2; border-radius:9999px;
       background:linear-gradient(135deg,#ffea00,#ff7b00);
-      color:#111;
-      box-shadow:0 0 8px rgba(255,200,0,.6), 0 0 18px rgba(255,120,0,.35);
-      animation:badgeBlink 1.2s ease-in-out infinite;
+      color:#111; box-shadow: var(--hx-glow-o);
+      animation: badgeBlink 1.2s ease-in-out infinite;
       vertical-align:middle;
     }
     @keyframes badgeBlink{
       0%,100%{ opacity:1; transform:scale(1); filter:saturate(1.15); }
       50%    { opacity:.35; transform:scale(1.1); filter:saturate(1.4); }
     }
+
+    /* Partner tiles */
+    .partner-list { list-style: none; margin: 0; padding: 0; }
+    .partner-wrap {
+      border-radius: .9rem;
+      background: var(--hx-panel);
+      border: 1px solid var(--hx-border);
+      padding: .4rem .5rem;
+      transition: transform .12s ease, background-color .12s ease, filter .12s ease, box-shadow .12s ease;
+    }
+    .partner-wrap:hover {
+      transform: translateY(-2px);
+      background-color: rgba(255,122,0,.08);
+      filter: saturate(1.05);
+      box-shadow: var(--hx-glow-o);
+    }
+
+    /* Main content area full width */
+    .main-content {
+      display:flex; justify-content:center; align-items:flex-start;
+      width:100%; min-height: calc(100vh - 240px);
+      margin:0; padding: 1.5rem 2rem;
+      box-sizing:border-box;
+      background:
+        radial-gradient(1000px 500px at 50% 0%, rgba(161,98,255,.08), transparent 60%),
+        radial-gradient(1200px 600px at 50% 100%, rgba(255,122,0,.08), transparent 60%);
+    }
+
+    /* Cards generiche interne (se presenti) */
+    .hx-card {
+      background: rgba(20,14,31,.66);
+      border: 1px solid var(--hx-border);
+      border-radius: 1.1rem;
+      padding: 1rem;
+      box-shadow: 0 8px 40px rgba(0,0,0,.28);
+    }
+
+    /* Modali */
+    .modal-dirty, .modal {
+      backdrop-filter: blur(2px);
+      border-radius: 1rem;
+      border: 1px solid var(--hx-border);
+    }
+    .modal .modal-content,
+    .modal-dirty .modal-content {
+      background: rgba(16,10,28,.98);
+      border-radius: 1rem;
+      border: 1px solid var(--hx-border);
+      box-shadow: 0 20px 70px rgba(0,0,0,.6), var(--hx-glow-v);
+    }
+    .modal-close {
+      background: none;
+      border: none; color: #fff; font-size: 1.8rem; cursor: pointer;
+      line-height: 1; padding: .2rem .5rem; border-radius: .5rem;
+    }
+    .modal-close:hover { filter: drop-shadow(0 0 8px #ff7a00); }
+
+    /* Footer */
+    .footer-cybertribal {
+      width: 100%;
+      background:
+        linear-gradient(0deg, rgba(255,122,0,.14), rgba(255,122,0,0) 70%),
+        linear-gradient(0deg, rgba(161,98,255,.18), rgba(161,98,255,0) 75%),
+        rgba(12,8,20, .95);
+      border-top: 1px solid var(--hx-border);
+      margin-top: 2rem;
+    }
+    .footer-cybertribal .footer-text,
+    .footer-cybertribal .footer-sub { color: var(--hx-muted); }
+    .footer-cybertribal a {
+      color: #ffd089; text-decoration: none; border-bottom: 1px dashed rgba(255,208,137,.35);
+    }
+    .footer-cybertribal a:hover { color: #ffb703; box-shadow: var(--hx-glow-o); }
+
+    /* Responsive piccole rifiniture */
+    @media (min-width: 768px){
+      #partners-left, #partners-right { display:flex !important; }
+    }
+
+    /* Effetti tematici extra */
+    .halloween-title {
+      font-family: 'Creepster', system-ui, sans-serif;
+      letter-spacing: 1px;
+      color: #ffd089;
+      text-shadow: 0 0 8px rgba(255,122,0,.7), 0 0 22px rgba(161,98,255,.55);
+    }
+
+    /* Piccolo effetto "pipistrelli" */
+    .bats {
+      position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+    }
+    .bat {
+      position: absolute; top: 10%; width: 22px; height: 8px;
+      background: linear-gradient(90deg, #000 40%, transparent 40%), linear-gradient(90deg, transparent 60%, #000 60%);
+      border-radius: 50%;
+      opacity: .22; animation: fly 14s linear infinite;
+    }
+    .bat:nth-child(2){ top: 25%; animation-duration: 18s; transform: scale(1.1); }
+    .bat:nth-child(3){ top: 40%; animation-duration: 20s; transform: scale(1.3); }
+    @keyframes fly {
+      0% { left: -10%; transform: translateY(0) scale(1) rotate(0deg); }
+      50% { transform: translateY(-10px) scale(1.05) rotate(2deg); }
+      100% { left: 110%; transform: translateY(0) scale(1) rotate(0deg); }
+    }
+  /* Nasconde eventuale vecchia decorazione CSS .bats/.bat */
+  .bats { display: none !important; }
+
+  /* Canvas overlay per i pipistrelli */
+  #bats-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9998;          /* sotto le tue modali (9999) */
+    pointer-events: none;   /* non blocca i click */
+  }    
   </style>
 </head>
 
-<body class="app">
+<body class="app halloween">
+  <!-- Decorazioni pipistrelli -->
+  <div class="bats" aria-hidden="true">
+    <div class="bat"></div><div class="bat"></div><div class="bat"></div>
+  </div>
+
   <div id="auth-button-container" style="position:absolute; top:1rem; left:1rem; z-index:10;"></div>
+
+  <!-- HEADER -->
   <header id="navbar" class="navbar">
-    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+    <div class="w-full px-4 sm:px-6 lg:px-8 pt-6">
       <div class="grid items-center gap-4 md:gap-8 md:grid-cols-3">
+        <!-- Partners left -->
         <ul id="partners-left" class="partner-list hidden md:!flex justify-end items-center gap-4 lg:gap-6 min-h-[3.5rem]">
-          <li class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1">
-            <img src="partner_1.png" alt="Partner 1" class="block h-12 lg:h-14 w-auto object-contain" width="120" height="80" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
-          </li>
-          <li class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1">
-            <img src="partner_2.png" alt="Partner 2" class="block h-12 lg:h-14 w-auto object-contain" width="120" height="80" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
-          </li>
-          <li class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1">
-            <img src="partner_3.png" alt="Partner 3" class="block h-12 lg:h-14 w-auto object-contain" width="120" height="80" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
-          </li>
+          <li class="partner-wrap"><img src="partner_1.png" alt="Partner 1" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
+          <li class="partner-wrap"><img src="partner_2.png" alt="Partner 2" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
+          <li class="partner-wrap"><img src="partner_3.png" alt="Partner 3" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
+          <li class="partner-wrap"><img src="partner_8.jpg" alt="Partner 8" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
         </ul>
+
+        <!-- Brand -->
         <div class="flex flex-col items-center text-center justify-self-center">
-          <img src="logocc1.png" alt="CryptoChips Logo" class="w-[220px] sm:w-[300px] md:w-[360px] lg:w-[420px] h-auto mb-3 md:mb-4 drop-shadow-xl" width="300" height="100" fetchpriority="high" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
-          <p class="text-yellow-300 text-xs sm:text-sm italic">Built for Users, Powered by Blockchain</p>
+          <img src="logocc1.png" alt="CryptoChips Logo" class="w-[220px] sm:w-[300px] md:w-[360px] lg:w-[420px] h-auto mb-2 md:mb-3 drop-shadow-xl" width="300" height="100" fetchpriority="high" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
+          <p class="halloween-title text-base sm:text-lg">Halloween Edition</p>
+          <p class="text-amber-300/90 text-xs sm:text-sm italic brand-line mt-1">Built for Users, Powered by Blockchain</p>
         </div>
+
+        <!-- Partners right -->
         <ul id="partners-right" class="partner-list hidden md:!flex justify-start items-center gap-4 lg:gap-6 min-h-[3.5rem]">
-          <li class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1">
-            <img src="partner_4.png" alt="Partner 4" class="block h-12 lg:h-14 w-auto object-contain" width="120" height="80" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
-          </li>
-          <li class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1">
-            <img src="partner_5.png" alt="Partner 5" class="block h-12 lg:h-14 w-auto object-contain" width="120" height="80" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
-          </li>
-          <li class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1">
-            <img src="partner_6.png" alt="Partner 6" class="block h-12 lg:h-14 w-auto object-contain" width="120" height="80" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
-          </li>
-          <li class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1">
-            <img src="partner_7.jpg" alt="Partner 7" class="block h-12 lg:h-14 w-auto object-contain" width="120" height="80" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
-          </li>
+          <li class="partner-wrap"><img src="partner_4.png" alt="Partner 4" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
+          <li class="partner-wrap"><img src="partner_5.png" alt="Partner 5" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
+          <li class="partner-wrap"><img src="partner_6.png" alt="Partner 6" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
+          <li class="partner-wrap"><img src="partner_7.jpg" alt="Partner 7" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
         </ul>
       </div>
+
+      <!-- Partners mobile -->
       <div id="partners-mobile" class="md:hidden mt-4 flex flex-row items-center gap-3 overflow-x-auto no-scrollbar py-1" aria-label="Partners">
-        <div class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1 flex-none">
-          <img src="partner1.png" alt="Partner 1" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
-        </div>
-        <div class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1 flex-none">
-          <img src="partner2.png" alt="Partner 2" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
-        </div>
-        <div class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1 flex-none">
-          <img src="partner3.png" alt="Partner 3" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
-        </div>
-        <div class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1 flex-none">
-          <img src="partner4.png" alt="Partner 4" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
-        </div>
-        <div class="partner-wrap rounded-lg bg-white/5 ring-1 ring-white/10 px-2 py-1 flex-none">
-          <img src="partner5.png" alt="Partner 5" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;">
-        </div>
+        <div class="partner-wrap flex-none"><img src="partner1.png" alt="Partner 1" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
+        <div class="partner-wrap flex-none"><img src="partner2.png" alt="Partner 2" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
+        <div class="partner-wrap flex-none"><img src="partner3.png" alt="Partner 3" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
+        <div class="partner-wrap flex-none"><img src="partner4.png" alt="Partner 4" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
+        <div class="partner-wrap flex-none"><img src="partner5.png" alt="Partner 5" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
       </div>
+
+      <!-- NAVBAR MENU -->
       <nav class="navbar-menu mt-6" role="navigation" aria-label="Main Navigation">
         <div class="flex flex-wrap gap-2 md:gap-3">
           <button class="menu-button" data-section="loadLatestNews">News & Guides</button>
@@ -109,66 +317,59 @@
           <button class="menu-button" data-section="goblin-dex">Goblin DeX(Beta)</button>
           <button class="menu-button" data-section="daily">Daily Chests</button>
           <button class="menu-button" data-section="account">Account</button>
-          <div class="dropdown">
+
+          <div class="dropdown relative">
             <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">
               Earn <span class="badge-new" aria-hidden="true">NEW</span> ▾
             </button>
             <div class="dropdown-menu hidden" role="menu" id="earn-menu">
-              <button class="dropdown-item" data-section="token-staking">Custodial Token Staking</button>
-              <button class="dropdown-item" data-section="noncustodialfarms">
-                NC NFTs Farms
-                <span class="badge-new" aria-hidden="true">NEW</span>
+              <button class="dropdown-item w-full text-left" data-section="token-staking">Custodial Token Staking</button>
+              <button class="dropdown-item w-full text-left" data-section="noncustodialfarms">
+                NC NFTs Farms <span class="badge-new" aria-hidden="true">NEW</span>
               </button>
-
-              <hr class="dropdown-divider" />
+              <hr class="dropdown-divider"/>
               <div class="dropdown-group">
-                <button class="dropdown-item" data-section="c2e-telegram">C2E - Telegram</button>
-                <button class="dropdown-item" data-section="c2e-twitch">C2E - Twitch</button>
+                <button class="dropdown-item w-full text-left" data-section="c2e-telegram">C2E - Telegram</button>
+                <button class="dropdown-item w-full text-left" data-section="c2e-twitch">C2E - Twitch</button>
               </div>
             </div>
           </div>
-<div class="dropdown">
-  <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">
-    Creators Tools ▾
-  </button>
 
-  <div class="dropdown-menu hidden" role="menu" id="creators-tools-menu">
-
-    <!-- QUESTO è SEMPRE visibile -->
-    <button class="dropdown-item" data-section="create-token-pool">
-      Create Token Staking Pool
-    </button>
-
-    <!-- QUESTO è il nuovo pulsante Creator Dashboard -->
-    <!-- Parte nascosto con class="hidden" -->
-    <button
-      class="dropdown-item hidden"
-      id="creator-dashboard-nav-btn"
-      data-section="creator-dashboard"
-    >
-      Creator Dashboard
-      <span class="badge-new" aria-hidden="true">NEW</span>
-    </button>
-
-  </div>
-</div>
+          <div class="dropdown relative">
+            <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+              Creators Tools ▾
+            </button>
+            <div class="dropdown-menu hidden" role="menu" id="creators-tools-menu">
+              <button class="dropdown-item w-full text-left" data-section="create-token-pool">Create Token Staking Pool</button>
+              <button class="dropdown-item w-full text-left hidden" id="creator-dashboard-nav-btn" data-section="creator-dashboard">
+                Creator Dashboard <span class="badge-new" aria-hidden="true">NEW</span>
+              </button>
+            </div>
+          </div>
 
         </div>
       </nav>
     </div>
   </header>
 
-  <main id="app" class="main-content" role="main" style="display:flex; justify-content:center; align-items:flex-start; width:100%; min-height:100vh; margin:0 auto; padding:2rem; box-sizing:border-box;">
-    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"></div>
+  <!-- MAIN (full width) -->
+  <main id="app" class="main-content" role="main">
+    <div class="w-full px-4 sm:px-6 lg:px-8">
+      <!-- Qui dentro i contenuti caricati dalle sezioni useranno tutta la larghezza disponibile -->
+      <div id="content-root" class="w-full"></div>
+    </div>
   </main>
 
-  <div id="modal" class="modal-dirty hidden" role="dialog" aria-modal="true" style="position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background-color: rgba(0, 0, 0, 0.85); padding: 2rem; border-radius: 8px; box-shadow: 0 0 20px #00ffcc;">
-    <button id="close-modal" class="modal-close" style="position: absolute; z-index: 10001; top: 0.75rem; right: 0.75rem; background: none; border: none; font-size: 1.9rem; color: #fff; cursor: pointer;">×</button>
+  <!-- MODAL “dirty” -->
+  <div id="modal" class="modal-dirty hidden" role="dialog" aria-modal="true"
+       style="position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background-color: rgba(0, 0, 0, 0.85); padding: 2rem; border-radius: 12px; box-shadow: 0 0 20px #ff7a00;">
+    <button id="close-modal" class="modal-close" style="position: absolute; z-index: 10001; top: 0.75rem; right: 0.75rem;">×</button>
     <div class="modal-content" style="position: relative; max-width: 90vw; max-height: 90vh; overflow-y: auto; color: #fff;">
       <div id="modal-body" class="modal-body"></div>
     </div>
   </div>
 
+  <!-- UNIVERSAL MODAL -->
   <div id="universal-modal" class="modal hidden">
     <div class="modal-content">
       <button class="modal-close">×</button>
@@ -179,35 +380,42 @@
     </div>
   </div>
 
-  <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" style="position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background-color: rgba(0, 0, 0, 0.9); padding: 2rem; display: none; border-radius: 8px; box-shadow: 0 0 20px #ff073a;">
-    <div class="modal-content confirm-box" style="max-width: 400px; color: #fff;">
+  <!-- CONFIRM MODAL -->
+  <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true"
+       style="position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background-color: rgba(0, 0, 0, 0.9); padding: 2rem; display: none; border-radius: 12px; box-shadow: 0 0 20px #ff073a;">
+    <div class="modal-content confirm-box" style="max-width: 460px; color: #fff;">
       <h2 class="modal-title">Confirm Deletion</h2>
       <p id="confirm-message" class="modal-text">Are you sure you want to remove this item?</p>
       <div class="modal-actions" style="margin-top: 1rem; display: flex; justify-content: space-between;">
-        <button id="confirm-cancel" class="btn-cancel" style="padding: 0.5rem 1rem; background-color: #666; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
-        <button id="confirm-yes" class="btn-confirm" style="padding: 0.5rem 1rem; background-color: #ff073a; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Yes, Remove</button>
+        <button id="confirm-cancel" class="btn-cancel" style="padding: 0.5rem 1rem; background-color: #666; color: #fff; border: none; border-radius: 6px; cursor: pointer;">Cancel</button>
+        <button id="confirm-yes" class="btn-confirm" style="padding: 0.5rem 1rem; background-color: #ff073a; color: #fff; border: none; border-radius: 6px; cursor: pointer;">Yes, Remove</button>
       </div>
     </div>
   </div>
 
   <aside id="toast-container" class="toast-container" role="status" aria-live="polite"></aside>
 
-  <script>
-    window.__APP_BUILD__ = "prod-2025-10-04";
-  </script>
+  <!-- Build flags -->
+  <script>window.__APP_BUILD__ = "prod-2025-10-04";</script>
   <script>window.__NFTF_AUTO_DISABLED__ = true;</script>
   <script src="main_restyled.js?v=prod-2025-10-04" defer></script>
 
+  <!-- UI wiring -->
   <script>
     (function () {
       // Toggle dropdowns
       document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-        toggle.addEventListener('click', () => {
+        toggle.addEventListener('click', (e) => {
+          e.stopPropagation();
           document.querySelectorAll('.dropdown-menu').forEach(m => {
             if (m !== toggle.nextElementSibling) m.classList.add('hidden');
           });
           toggle.nextElementSibling.classList.toggle('hidden');
         });
+      });
+      // Chiudi dropdown cliccando fuori
+      document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
       });
 
       // Delegation per le voci dei menu a tendina
@@ -235,18 +443,19 @@
     })();
   </script>
 
+  <!-- FOOTER -->
   <footer class="footer-cybertribal">
-    <div class="footer-inner">
+    <div class="footer-inner w-full px-4 sm:px-6 lg:px-8 py-8">
       <p class="footer-text">
-        🚀 Powered by <strong>CryptoChips</strong> — Built on WAX Blockchain 🧿<br/>
+        🎃 Powered by <strong>CryptoChips</strong> — Built on WAX Blockchain 🧿<br/>
         <span class="footer-sub">All rights reserved © 2025 — ChipsWallet</span>
       </p>
-      <div class="footer-links">
+      <div class="footer-links mt-3 flex flex-wrap gap-4">
         <a href="https://neftyblocks.com/collection/cryptochaos1" target="_blank">NFT Store</a>
         <a href="https://x.com/ooc_nfts" target="_blank">Twitter Official</a>
         <a href="https://wax.bloks.io/account/xcryptochips" target="_blank">Smart Contract</a>
       </div>
-      <div class="footer-telegram">
+      <div class="footer-telegram mt-4">
         <p class="footer-sub">
           💬 Join the community to chat, ask questions or get support:
           <a href="https://t.me/outofcontrolnfts" target="_blank">Official Telegram</a>
@@ -254,34 +463,432 @@
           <a href="https://t.me/chipswallet_bot" target="_blank">Telegram Bot</a>
         </p>
       </div>
-      <div class="footer-twitch">
+      <div class="footer-twitch mt-2">
         <p class="footer-sub">
-          💬 Join the Twitch ChipsMasterBot to get rewarded in the partner Twitch Channel during streamings and not only:
+          🧛 Join the Twitch ChipsMasterBot to get rewarded in the partner Twitch Channel during streamings:
           <a href="https://www.twitch.tv/chipsmasterbot" target="_blank">Twitch Bot</a>
         </p>
       </div>
     </div>
   </footer>
+
+  <!-- Creator Dashboard Gate -->
+  <script>
+    // 1. funzione globale che mostra/nasconde il pulsante "Creator Dashboard"
+    window.updateCreatorDashboardVisibility = function () {
+      const btn = document.getElementById('creator-dashboard-nav-btn');
+      if (!btn) return;
+      const wax = window?.userData?.wax_account;
+      if (wax && wax.toLowerCase() === 'agoscry4ever') {
+        btn.classList.remove('hidden');
+      } else {
+        btn.classList.add('hidden');
+      }
+    };
+    // 2. richiamiamo questa funzione quando il DOM è pronto
+    document.addEventListener('DOMContentLoaded', () => {
+      window.updateCreatorDashboardVisibility();
+    });
+  </script>
 <script>
-  // 1. funzione globale che mostra/nasconde il pulsante "Creator Dashboard"
-  window.updateCreatorDashboardVisibility = function () {
-    const btn = document.getElementById('creator-dashboard-nav-btn');
-    if (!btn) return;
+(() => {
+  // Evita doppie inizializzazioni
+  if (document.getElementById('bats-canvas')) return;
 
-    const wax = window?.userData?.wax_account;
-    if (wax && wax.toLowerCase() === 'agoscry4ever') {
-      // account autorizzato → mostra
-      btn.classList.remove('hidden');
-    } else {
-      // tutti gli altri → nascondi
-      btn.classList.add('hidden');
+  // Rispetta accessibilità
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  // Canvas overlay
+  const canvas = document.createElement('canvas');
+  canvas.id = 'bats-canvas';
+  canvas.style.position = 'fixed';
+  canvas.style.inset = '0';
+  canvas.style.width = '100vw';
+  canvas.style.height = '100vh';
+  canvas.style.zIndex = '9998';
+  canvas.style.pointerEvents = 'none';
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d', { alpha: true });
+
+  // HiDPI
+  let dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  function sizeCanvas() {
+    dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const w = window.innerWidth, h = window.innerHeight;
+    canvas.width  = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', () => {
+    sizeCanvas();
+    layoutPumpkins();
+    tuneBats();
+  }, { passive: true });
+  sizeCanvas();
+
+  // Se avevi vecchie .bats decorative, le nascondo
+  const oldBats = document.querySelector('.bats');
+  if (oldBats) oldBats.style.display = 'none';
+
+  // ---------- BATTI (come prima, leggermente rifiniti) ----------
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const bats = [];
+  function targetBatCount() {
+    return Math.max(8, Math.min(20, Math.floor(window.innerWidth / 90)));
+  }
+  class Bat {
+    constructor(initial = false) { this.reset(initial); }
+    reset(initial) {
+      const margin = 60;
+      this.x = initial ? rand(-margin, window.innerWidth + margin) : -margin;
+      this.s = rand(0.7, 1.4);
+      this.vx = rand(60, 140) * this.s;
+      this.baseY = rand(window.innerHeight * 0.15, window.innerHeight * 0.85);
+      this.amp = rand(12, 28) * this.s;
+      this.freq = rand(0.3, 0.7);
+      this.phase = Math.random() * Math.PI * 2;
+      this.y = this.baseY;
     }
-  };
+    update(dt, t) {
+      this.x += this.vx * (dt / 1000);
+      this.y = this.baseY + Math.sin((t * 2 * Math.PI * this.freq) + this.phase) * this.amp;
+      if (this.x > window.innerWidth + 80) this.reset(false);
+    }
+  }
+  function tuneBats() {
+    const target = targetBatCount();
+    while (bats.length < target) bats.push(new Bat(true));
+    while (bats.length > target) bats.pop();
+  }
+  tuneBats();
 
-  // 2. richiamiamo questa funzione quando il DOM è pronto
-  document.addEventListener('DOMContentLoaded', () => {
-    window.updateCreatorDashboardVisibility();
+  function drawBat(b, t) {
+    const s = b.s;
+    const flap = Math.sin(t * (2 * Math.PI) * (2.2 * s) + b.phase);
+    const wing = flap * 0.45;
+
+    ctx.save();
+    ctx.translate(b.x, b.y);
+
+    ctx.fillStyle = '#000';
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.6;
+
+    // Corpo
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 8 * s, 4.5 * s, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+
+    // Testa
+    ctx.beginPath();
+    ctx.ellipse(7.5 * s, 0, 3 * s, 3 * s, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+
+    // Orecchie
+    ctx.beginPath();
+    ctx.moveTo(6.0 * s, -3.0 * s);
+    ctx.lineTo(7.5 * s, -7.0 * s);
+    ctx.lineTo(9.0 * s, -3.0 * s);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    // Ali
+    ctx.beginPath();
+    ctx.moveTo(-2 * s, 0);
+    ctx.quadraticCurveTo(-12 * s, -6 * s + wing * -12 * s, -24 * s, 0);
+    ctx.quadraticCurveTo(-18 * s,  6 * s + wing *  10 * s, -10 * s, 2 * s);
+    ctx.quadraticCurveTo(-12 * s,  2 * s, -2 * s, 0);
+    ctx.fill(); ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(2 * s, 0);
+    ctx.quadraticCurveTo(12 * s, -6 * s + wing * 12 * s, 24 * s, 0);
+    ctx.quadraticCurveTo(18 * s,  6 * s + wing * -10 * s, 10 * s, 2 * s);
+    ctx.quadraticCurveTo(12 * s,  2 * s, 2 * s, 0);
+    ctx.fill(); ctx.stroke();
+
+    // Occhi rossi
+    ctx.fillStyle = '#ff1a1a';
+    ctx.beginPath(); ctx.arc(8.6 * s, -1.1 * s, 0.9 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(8.6 * s,  1.1 * s, 0.9 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(8.9 * s, -1.3 * s, 0.25 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(8.9 * s,  0.9 * s, 0.25 * s, 0, Math.PI * 2); ctx.fill();
+
+    ctx.restore();
+  }
+
+  // ---------- ZUCCHE: dettagliate con ombre, nervature, volto e candela ----------
+  const pumpkins = [];
+  function layoutPumpkins() {
+    pumpkins.length = 0;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const baseY = h - 40; // “appoggiate” in basso
+
+    // sinistra, destra, e una centrale più piccola
+    pumpkins.push({ anchor: 'left',  x: 120, y: baseY, s: Math.max(1.2, Math.min(2.2, w / 1200)) });
+    pumpkins.push({ anchor: 'right', x: w - 120, y: baseY, s: Math.max(1.2, Math.min(2.0, w / 1300)) });
+    pumpkins.push({ anchor: 'mid',   x: w * 0.5, y: baseY - 10, s: Math.max(0.8, Math.min(1.2, w / 1800)), floatPhase: Math.random()*Math.PI*2 });
+  }
+  layoutPumpkins();
+
+  function pumpkinBodyGradient(x, y, s) {
+    const grad = ctx.createLinearGradient(x, y - 40*s, x, y + 40*s);
+    grad.addColorStop(0.0, '#ff9a2e');
+    grad.addColorStop(0.5, '#ff7a00');
+    grad.addColorStop(1.0, '#c85c00');
+    return grad;
+  }
+  function pumpkinHighlightGradient(x, y, s) {
+    const g = ctx.createRadialGradient(x - 20*s, y - 25*s, 6*s, x - 20*s, y - 25*s, 55*s);
+    g.addColorStop(0.0, 'rgba(255,220,160,0.35)');
+    g.addColorStop(0.3, 'rgba(255,220,160,0.18)');
+    g.addColorStop(1.0, 'rgba(255,220,160,0)');
+    return g;
+  }
+  function drawRidge(x, y, s, offset, alpha) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.strokeStyle = `rgba(0,0,0,${alpha})`;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(offset * s, -34*s);
+    ctx.bezierCurveTo(offset * s - 8*s, -28*s, offset * s - 10*s, -10*s, offset * s, 0);
+    ctx.bezierCurveTo(offset * s + 10*s, 10*s, offset * s + 8*s, 28*s, offset * s, 34*s);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function carveAndGlow(shapeFn, glowColorStops, intensity, x, y, s) {
+    // riempi cavità scura
+    ctx.save();
+    ctx.beginPath();
+    shapeFn();
+    ctx.fillStyle = '#120800';
+    ctx.fill();
+    // clip per glow interno
+    ctx.clip();
+    // glow radiale
+    const rg = ctx.createRadialGradient(x, y, 2*s, x, y, 34*s);
+    glowColorStops.forEach(([off, col]) => rg.addColorStop(off, col));
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = intensity;
+    ctx.fillStyle = rg;
+    ctx.fillRect(x - 40*s, y - 40*s, 80*s, 80*s);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  function drawCandle(cx, cy, s, t) {
+    // corpo candela
+    const h = 14*s, w = 3.5*s;
+    ctx.fillStyle = '#f7f2e8';
+    ctx.strokeStyle = '#c8c0b2';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.roundRect(cx - w/2, cy - h, w, h, 0.8*s);
+    ctx.fill(); ctx.stroke();
+
+    // goccia di cera
+    ctx.beginPath();
+    ctx.moveTo(cx + w*0.2, cy - h*0.6);
+    ctx.quadraticCurveTo(cx + w, cy - h*0.2, cx + w*0.2, cy - h*0.05);
+    ctx.lineTo(cx + w*0.25, cy - h*0.6);
+    ctx.closePath();
+    ctx.fillStyle = '#efe7d9';
+    ctx.fill();
+
+    // fiamma (flicker)
+    const flick = (Math.sin(t*9.7) + Math.cos(t*5.3))*0.5;
+    const flameH = 7.5*s + flick*0.9*s;
+    const flameW = 3.8*s + flick*0.4*s;
+
+    // glow dietro fiamma
+    const gg = ctx.createRadialGradient(cx, cy - h - flameH*0.4, 1*s, cx, cy - h - flameH*0.4, 24*s);
+    gg.addColorStop(0, 'rgba(255,240,120,0.7)');
+    gg.addColorStop(0.4, 'rgba(255,150,40,0.35)');
+    gg.addColorStop(1, 'rgba(255,150,40,0)');
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = gg;
+    ctx.fillRect(cx - 30*s, cy - h - 30*s, 60*s, 60*s);
+    ctx.globalCompositeOperation = 'source-over';
+
+    // fiamma teardrop
+    const grad = ctx.createLinearGradient(cx, cy - h - flameH, cx, cy - h);
+    grad.addColorStop(0, '#fff8d2');
+    grad.addColorStop(0.45, '#ffd24a');
+    grad.addColorStop(1, '#ff7a00');
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - h - flameH);
+    ctx.quadraticCurveTo(cx - flameW*0.75, cy - h - flameH*0.25, cx, cy - h + 0.2*s);
+    ctx.quadraticCurveTo(cx + flameW*0.75, cy - h - flameH*0.25, cx, cy - h - flameH);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // stoppino
+    ctx.strokeStyle = '#2b1b0a';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - h + 0.2*s);
+    ctx.lineTo(cx, cy - h + 2.2*s);
+    ctx.stroke();
+  }
+
+  function drawPumpkin(p, t) {
+    // posizione (quella centrale "galleggia" appena)
+    let { x, y, s } = p;
+    if (p.anchor === 'right') x = window.innerWidth - 120;
+    if (p.anchor === 'mid') y += Math.sin((t*2*Math.PI)*0.25 + (p.floatPhase||0)) * 4;
+
+    // Stelo
+    ctx.save();
+    ctx.fillStyle = '#2e6b2e';
+    ctx.strokeStyle = '#1d441d';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x - 3*s, y - 38*s);
+    ctx.bezierCurveTo(x - 4*s, y - 50*s, x + 8*s, y - 52*s, x + 6*s, y - 40*s);
+    ctx.lineTo(x + 4*s, y - 33*s);
+    ctx.lineTo(x - 4*s, y - 33*s);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+
+    // Corpo (ovale base)
+    ctx.save();
+    ctx.fillStyle = pumpkinBodyGradient(x, y, s);
+    ctx.strokeStyle = '#7a3a00';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 46*s, 36*s, 0, 0, Math.PI*2);
+    ctx.fill(); ctx.stroke();
+
+    // Ombra/luce
+    ctx.fillStyle = pumpkinHighlightGradient(x, y, s);
+    ctx.beginPath();
+    ctx.ellipse(x-5*s, y-6*s, 30*s, 24*s, -0.1, 0, Math.PI*2);
+    ctx.fill();
+
+    // Nervature (leggere)
+    [ -26, -14, -5, 5, 14, 26 ].forEach((off, i) => {
+      drawRidge(x, y, s, off, i===3 || i===2 ? 0.28 : 0.18);
+    });
+    ctx.restore();
+
+    // Volto intagliato: occhi, naso, bocca con glow interno
+    // Occhio sinistro
+    const eyeL = () => {
+      ctx.moveTo(x - 16*s, y - 8*s);
+      ctx.lineTo(x - 4*s,  y - 18*s);
+      ctx.lineTo(x - 2*s,  y - 4*s);
+      ctx.closePath();
+    };
+    // Occhio destro
+    const eyeR = () => {
+      ctx.moveTo(x + 16*s, y - 8*s);
+      ctx.lineTo(x + 2*s,  y - 18*s);
+      ctx.lineTo(x + 0*s,  y - 4*s);
+      ctx.closePath();
+    };
+    // Naso
+    const nose = () => {
+      ctx.moveTo(x - 2*s, y - 2*s);
+      ctx.lineTo(x + 2*s, y - 2*s);
+      ctx.lineTo(x + 0*s, y + 3*s);
+      ctx.closePath();
+    };
+    // Bocca seghettata
+    const mouthPath = () => {
+      ctx.moveTo(x - 26*s, y + 12*s);
+      ctx.lineTo(x - 20*s, y + 6*s);
+      ctx.lineTo(x - 14*s, y + 12*s);
+      ctx.lineTo(x - 8*s,  y + 6*s);
+      ctx.lineTo(x - 2*s,  y + 12*s);
+      ctx.lineTo(x + 4*s,  y + 6*s);
+      ctx.lineTo(x + 10*s, y + 12*s);
+      ctx.lineTo(x + 16*s, y + 6*s);
+      ctx.lineTo(x + 22*s, y + 12*s);
+      ctx.lineTo(x + 28*s, y + 10*s);
+      ctx.lineTo(x + 28*s, y + 16*s);
+      ctx.lineTo(x - 26*s, y + 16*s);
+      ctx.closePath();
+    };
+
+    // Occhi glow
+    ctx.beginPath(); eyeL();
+    carveAndGlow(eyeL,
+      [[0,'rgba(255,240,140,0.9)'],[0.4,'rgba(255,170,60,0.5)'],[1,'rgba(255,120,30,0)']],
+      1.0, x - 8*s, y - 10*s, s
+    );
+    ctx.beginPath(); eyeR();
+    carveAndGlow(eyeR,
+      [[0,'rgba(255,240,140,0.9)'],[0.4,'rgba(255,170,60,0.5)'],[1,'rgba(255,120,30,0)']],
+      1.0, x + 8*s, y - 10*s, s
+    );
+
+    // Naso glow
+    ctx.beginPath(); nose();
+    carveAndGlow(nose,
+      [[0,'rgba(255,230,130,0.9)'],[0.5,'rgba(255,160,45,0.5)'],[1,'rgba(255,120,30,0)']],
+      0.9, x, y + 1*s, s
+    );
+
+    // Bocca glow
+    ctx.beginPath(); mouthPath();
+    carveAndGlow(mouthPath,
+      [[0,'rgba(255,230,120,0.85)'],[0.5,'rgba(255,150,40,0.5)'],[1,'rgba(255,120,30,0)']],
+      0.85, x + 2*s, y + 12*s, s
+    );
+
+    // Candela: centrata dietro la bocca
+    drawCandle(x + 2*s, y + 15*s, s*0.9, t);
+
+    // Bordino luminoso intorno ai tagli (accento)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,180,60,0.55)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); eyeL(); ctx.stroke();
+    ctx.beginPath(); eyeR(); ctx.stroke();
+    ctx.beginPath(); nose();  ctx.stroke();
+    ctx.beginPath(); mouthPath(); ctx.stroke();
+    ctx.restore();
+  }
+
+  // ---------- Loop ----------
+  let last = performance.now();
+  let rafId = null;
+  function frame(now) {
+    const dt = Math.min(50, now - last);
+    last = now;
+    const t = now / 1000;
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+    // ZUCCHE prima (in basso), poi pipistrelli sopra
+    pumpkins.forEach(p => drawPumpkin(p, t));
+    if (!prefersReduced.matches) {
+      bats.forEach(b => { b.update(dt, t); drawBat(b, t); });
+    } else {
+      bats.forEach(b => drawBat(b, t));
+    }
+
+    rafId = requestAnimationFrame(frame);
+  }
+
+  // Pausa quando la tab non è visibile
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { if (rafId) cancelAnimationFrame(rafId), rafId = null; }
+    else if (!rafId) { last = performance.now(); rafId = requestAnimationFrame(frame); }
   });
+
+  // Via!
+  rafId = requestAnimationFrame(frame);
+})();
 </script>
 
   

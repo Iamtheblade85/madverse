@@ -688,10 +688,20 @@ function stopLiveCircPolling(state) {
     window.__NCF_STATE__ = state;
   }
 
-  // Back-compat export name (old code called this):
-  window.initNonCustodialFarms = initNonCustodialFarms;
-  window.initManageNFTsFarm = initNonCustodialFarms;
+// --- expose PART 1 live helpers for PART 2 ---
+window.__NCF_API__ = Object.assign({}, window.__NCF_API__, {
+  ensureCircState,
+  fetchCirculatingLive,
+  applyCirculatingToUI,
+  startLiveCircPolling,
+  stopLiveCircPolling,
+});
+
+// Back-compat export name (old code called this):
+window.initNonCustodialFarms = initNonCustodialFarms;
+window.initManageNFTsFarm = initNonCustodialFarms;
 })();
+
 
 /* noncustodial_farms.js — PART 2/2 (Creator Dashboard + Stats)
    Paste this *after* PART 1. Together they are one single JS.
@@ -717,6 +727,18 @@ function stopLiveCircPolling(state) {
   const buildUrl = (b, p) => `${String(b).replace(/\/+$/,"")}${p}`;
   const fetchJson = async (u,i)=>{const r=await fetch(u,i); if(!r.ok){const tx=await r.text().catch(()=> ""); throw new Error(`HTTP ${r.status} — ${tx||r.statusText}`);} const raw=await r.text(); try{return JSON.parse(raw);}catch{return raw;}};
   const postJson = (u,b)=>fetchJson(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
+// ===== Bridge to PART 1 live helpers (must be loaded BEFORE this file) =====
+const {
+  ensureCircState,
+  fetchCirculatingLive,
+  applyCirculatingToUI,
+  startLiveCircPolling,
+  stopLiveCircPolling,
+} = window.__NCF_API__ || {};
+
+if (!fetchCirculatingLive || !applyCirculatingToUI) {
+  console.error("NCF: PART 1 live helpers not loaded. Include PART 1 before PART 2.");
+}
 
   // a second small toast (reuses same #ncf-toast node created by PART 1)
   const toast = (() => {

@@ -3013,6 +3013,8 @@ window.CreatorDash = (() => {
     subscription_status: '',           // "active" | "expired" | "unknown"
     rewards_active: false,
     rewards_status_message: '',
+	// chat-rewards switch
+	channelRewardsSwitch: { status: 'active', readonly: false, updated_at: null },
 
     // rewards data
   rewardsMap: {},                    // (retrocompat) NON più usato per la UI
@@ -3068,6 +3070,16 @@ window.CreatorDash = (() => {
       maximumFractionDigits: dp
     });
   }
+function fmtUTC(ts) {
+  if (!ts) return '-';
+  try {
+    // normalizza e mostra sempre in UTC
+    const d = new Date(ts);
+    return d.toISOString().replace('T', ' ').replace('Z', ' UTC');
+  } catch (_) {
+    return String(ts) + ' UTC';
+  }
+}
 
   async function fetchJSON(url, opts = {}) {
     const res = await fetch(url, opts);
@@ -3130,6 +3142,12 @@ window.CreatorDash = (() => {
       st.effectiveRewards        = rewardsPayload.effective || [];
       st.depositsMap             = rewardsPayload.deposits || {};
       st.fetched_at              = rewardsPayload.fetched_at || '';
+		// chat-rewards switch (chipsmasterbot = readonly+active)
+		st.channelRewardsSwitch = rewardsPayload.channel_rewards_switch || {
+		  status: 'active',
+		  readonly: (rewardsPayload.channel || '').toLowerCase() === 'chipsmasterbot',
+		  updated_at: null
+		};
 
       // 2) ads config (global + channel)
       const adsPayload = await fetchJSON(`${st.baseUrl}/get_channel_ads_by_wax?${qs}`);
@@ -3417,124 +3435,183 @@ const cards = allSyms.map(sym => {
     `;
   }
 
-  // ---------- TAB: REWARDS (GLOBAL vs CHANNEL + editor) ----------
-  function renderRewardsTab() {
-    const { global, channel } = splitRewardsBySource();
+// ---------- TAB: REWARDS (GLOBAL vs CHANNEL + editor) ----------
+function renderRewardsTab() {
+  const { global, channel } = splitRewardsBySource();
 
-	const globalHTML = global.map(r => `
-	  <div style="
-	    border:1px solid rgba(255,255,255,.10);border-radius:10px;
-	    background:#102038;padding:12px;color:#fff;font-size:${FS.xs};
-	    display:flex;justify-content:space-between;align-items:center;gap:.8rem;
-	  ">
-	    <div style="font-weight:800;display:flex;align-items:center;gap:.6rem;">
-	      <span>${esc(r.token)}</span>
-	      <span title="Global rewards do not consume a channel pool" style="opacity:.8;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:2px 6px;">Remaining: -</span>
-	    </div>
-	    <div style="opacity:.9;">${chip(r.per_message,6)} /msg</div>
-	  </div>
-	`).join('') || `<div style="font-size:${FS.xs};color:#94a3b8;">No global rewards.</div>`;
+  // --- Chat-Rewards switch card (status + controls) ---
+  const isReadonlySwitch = !!st.channelRewardsSwitch.readonly;
+  const isPaused = (st.channelRewardsSwitch.status || 'active') !== 'active';
 
+  const switchBadge = (() => {
+    const base = `
+      display:inline-block;font-size:${FS.xs};font-weight:900;line-height:1;
+      padding:6px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.4);
+    `;
+    if (isPaused) return `<span style="${base}background:#6b7280;color:#fff;">PAUSED</span>`;
+    return `<span style="${base}background:#16a34a;color:#03130a;">ACTIVE</span>`;
+  })();
 
-    // editable table for channel rewards
-    const channelRows = channel.map((r, i) => rewardRowHTML(i, r.token, r.per_message)).join('') ||
-      rewardRowHTML(0, '', '');
+  const switchControls = `
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+      <button id="rw-activate" class="btn btn-primary"
+        ${!isPaused ? 'disabled' : ''} ${isReadonlySwitch ? 'disabled title="Global channel is always active"' : ''}
+        style="${actionBtnStyle('#22c55e','#0a0f0a')}">▶ Activate</button>
+      <button id="rw-pause" class="btn btn-secondary"
+        ${isPaused ? 'disabled' : ''} ${isReadonlySwitch ? 'disabled title="Global channel is read-only"' : ''}
+        style="${actionBtnStyle('#1f2937','#fff')}">⏸ Pause</button>
+    </div>
+  `;
 
-    return `
-      <div style="display:flex;flex-direction:column;gap:1rem;">
+  const pausedNotice = isPaused ? `
+    <div style="margin-top:8px;padding:8px 10px;border:1px dashed rgba(252,165,165,.6);
+                background:rgba(127,29,29,.25);color:#fecaca;border-radius:10px;
+                font-size:${FS.xs};font-weight:700;">
+      Channel chat-rewards are paused → only <strong>Global Rewards</strong> will apply until you activate again.
+    </div>
+  ` : '';
 
-        <!-- Global (read-only) -->
-        <div class="account-card2" style="background:#0f172a;border-radius:12px;padding:18px;color:#fff;">
-          <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;">
-            <div style="min-width:260px;flex:1;">
-              <div style="font-size:${FS.sm};font-weight:900;">Global Rewards (read-only)</div>
-              <div style="font-size:${FS.xs};color:#94a3b8;margin-top:6px;line-height:1.45;">
-                These are default per-message rewards applied platform-wide by <strong>ChipsMasterBot</strong>.
-                Channel overrides below will take precedence for your channel.
-              </div>
+  const chatSwitchCard = `
+    <div class="account-card2" style="background:#0b1220;border-radius:12px;padding:18px;color:#fff;">
+      <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;">
+        <div style="min-width:260px;flex:1;">
+          <div style="font-size:${FS.sm};font-weight:900;">
+            Chat-Rewards Status — <span style="color:#fde68a;">${esc(st.channel)}</span>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:.6rem;align-items:center;">
+            ${switchBadge}
+            <span style="font-size:${FS.xs};color:#94a3b8;">
+              Last change: <strong style="color:#fff;">${fmtUTC(st.channelRewardsSwitch.updated_at)}</strong>
+              ${isReadonlySwitch ? ' · read-only' : ''}
+            </span>
+          </div>
+          ${pausedNotice}
+        </div>
+        <div style="min-width:240px;display:flex;justify-content:flex-end;align-items:center;">
+          ${switchControls}
+        </div>
+      </div>
+    </div>
+  `;
+
+  // --- Global list (read-only)
+  const globalHTML = global.map(r => `
+    <div style="
+      border:1px solid rgba(255,255,255,.10);border-radius:10px;
+      background:#102038;padding:12px;color:#fff;font-size:${FS.xs};
+      display:flex;justify-content:space-between;align-items:center;gap:.8rem;
+    ">
+      <div style="font-weight:800;display:flex;align-items:center;gap:.6rem;">
+        <span>${esc(r.token)}</span>
+        <span title="Global rewards do not consume a channel pool" style="opacity:.8;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:2px 6px;">Remaining: -</span>
+      </div>
+      <div style="opacity:.9;">${chip(r.per_message,6)} /msg</div>
+    </div>
+  `).join('') || `<div style="font-size:${FS.xs};color:#94a3b8;">No global rewards.</div>`;
+
+  // --- Channel editable table
+  const channelRows = channel.map((r, i) => rewardRowHTML(i, r.token, r.per_message)).join('') ||
+    rewardRowHTML(0, '', '');
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+
+      ${chatSwitchCard}
+
+      <!-- Global (read-only) -->
+      <div class="account-card2" style="background:#0f172a;border-radius:12px;padding:18px;color:#fff;">
+        <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;">
+          <div style="min-width:260px;flex:1;">
+            <div style="font-size:${FS.sm};font-weight:900;">Global Rewards (read-only)</div>
+            <div style="font-size:${FS.xs};color:#94a3b8;margin-top:6px;line-height:1.45;">
+              These are default per-message rewards applied platform-wide by <strong>ChipsMasterBot</strong>.
+              Channel overrides below will take precedence for your channel.
             </div>
-            <div style="flex:2;display:flex;flex-direction:column;gap:.6rem;min-width:260px;">
-              ${globalHTML}
-            </div>
+          </div>
+          <div style="flex:2;display:flex;flex-direction:column;gap:.6rem;min-width:260px;">
+            ${globalHTML}
           </div>
         </div>
+      </div>
 
-        <!-- Channel (editable) -->
-        <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;">
+      <!-- Channel (editable) -->
+      <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+          <div style="font-size:${FS.sm};font-weight:900;">Channel Rewards — <span style="color:#fde68a;">${esc(st.channel)}</span></div>
+          <div style="font-size:${FS.xs};color:#94a3b8;">Define per-message rewards specific to your channel</div>
+        </div>
+
+        <div style="margin-top:12px;overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;min-width:640px;">
+            <thead>
+              <tr style="background:#0b1220;color:#fff;text-align:left;">
+                <th style="${thCell()}">Token</th>
+                <th style="${thCell()}">Per message</th>
+                <th style="${thCell()}">Pool remaining</th>
+                <th style="${thCell()}">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody id="rw-rows">
+              ${channelRows}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:.6rem;flex-wrap:wrap;">
+          <button id="rw-add"  class="btn btn-secondary" style="${actionBtnStyle('#1e40af','#fff')}">➕ Add token</button>
+          <button id="rw-save" class="btn btn-primary"   style="${actionBtnStyle('#22c55e','#0a0f0a')}">💾 Save changes</button>
+          <div id="rw-feedback" style="font-size:${FS.xs};color:#94a3b8;align-self:center;"></div>
+        </div>
+
+        <!-- TOP-UP / FUNDING -->
+        <div class="account-card2" style="background:#0f172a;border-radius:12px;padding:18px;color:#fff;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
-            <div style="font-size:${FS.sm};font-weight:900;">Channel Rewards — <span style="color:#fde68a;">${esc(st.channel)}</span></div>
-            <div style="font-size:${FS.xs};color:#94a3b8;">Define per-message rewards specific to your channel</div>
+            <div style="min-width:260px;flex:1;">
+              <div style="font-size:${FS.sm};font-weight:900;">Top-Up (Wallets)</div>
+              <div style="font-size:${FS.xs};color:#94a3b8;margin-top:6px;line-height:1.45;">
+                Use this panel to fund your rewards pools. Hover the <span title="More info" style="border:1px solid rgba(255,255,255,.3);padding:0 6px;border-radius:8px;">?</span> for instructions.
+              </div>
+            </div>
+            <div style="min-width:200px;text-align:right;font-size:${FS.xs};color:#94a3b8;">
+              Last sync — Twitch: <strong style="color:#fff;">${esc(st.balancesFetchedAt.twitch || '-')}</strong><br/>
+              Last sync — Telegram: <strong style="color:#fff;">${esc(st.balancesFetchedAt.telegram || '-')}</strong>
+            </div>
           </div>
 
-          <div style="margin-top:12px;overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;min-width:640px;">
-			<thead>
-			  <tr style="background:#0b1220;color:#fff;text-align:left;">
-			    <th style="${thCell()}">Token</th>
-			    <th style="${thCell()}">Per message</th>
-			    <th style="${thCell()}">Pool remaining</th>
-			    <th style="${thCell()}">Actions</th>
-			  </tr>
-			</thead>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:12px;">
+            <!-- Twitch balances -->
+            <div style="flex:1;min-width:280px;background:#0b1220;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-weight:900;">Twitch Balances</div>
+                <div title="To top up your Twitch wallet: send an on-chain transfer to 'xcryptochips' with memo: 'deposit twitch'. You can use waxblock.io, AtomicHub, Taco, Alcor, NeftyBlocks or waxonedge."
+                     style="cursor:help;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:2px 6px;font-size:${FS.xs};">?</div>
+              </div>
+              ${balancesTableHTML(st.twitchBalances)}
+            </div>
 
-              <tbody id="rw-rows">
-                ${channelRows}
-              </tbody>
-            </table>
+            <!-- Telegram balances -->
+            <div style="flex:1;min-width:280px;background:#0b1220;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-weight:900;">Telegram Balances</div>
+                <div title="To top up your Telegram wallet: send an on-chain transfer to 'xcryptochips' with memo: 'deposit token'. You can use waxblock.io, AtomicHub, Taco, Alcor, NeftyBlocks or waxonedge."
+                     style="cursor:help;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:2px 6px;font-size:${FS.xs};">?</div>
+              </div>
+              ${balancesTableHTML(st.telegramBalances)}
+            </div>
           </div>
 
-          <div style="margin-top:12px;display:flex;gap:.6rem;flex-wrap:wrap;">
-            <button id="rw-add"  class="btn btn-secondary" style="${actionBtnStyle('#1e40af','#fff')}">➕ Add token</button>
-            <button id="rw-save" class="btn btn-primary"   style="${actionBtnStyle('#22c55e','#0a0f0a')}">💾 Save changes</button>
-            <div id="rw-feedback" style="font-size:${FS.xs};color:#94a3b8;align-self:center;"></div>
+          <div style="margin-top:10px;font-size:${FS.xs};color:#94a3b8;">
+            Tip: after topping up, hit <strong>Refresh</strong> on this page if balances don’t update automatically within a minute.
           </div>
-			<!-- TOP-UP / RICARICA -->
-			<div class="account-card2" style="background:#0f172a;border-radius:12px;padding:18px;color:#fff;">
-			  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
-			    <div style="min-width:260px;flex:1;">
-			      <div style="font-size:${FS.sm};font-weight:900;">Top-Up (Wallets)</div>
-			      <div style="font-size:${FS.xs};color:#94a3b8;margin-top:6px;line-height:1.45;">
-			        Use this panel to fund your rewards pools. Hover the <span title="More info" style="border:1px solid rgba(255,255,255,.3);padding:0 6px;border-radius:8px;">?</span> for instructions.
-			      </div>
-			    </div>
-			    <div style="min-width:200px;text-align:right;font-size:${FS.xs};color:#94a3b8;">
-			      Last sync — Twitch: <strong style="color:#fff;">${esc(st.balancesFetchedAt.twitch || '-')}</strong><br/>
-			      Last sync — Telegram: <strong style="color:#fff;">${esc(st.balancesFetchedAt.telegram || '-')}</strong>
-			    </div>
-			  </div>
-			
-			  <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:12px;">
-			    <!-- Twitch balances -->
-			    <div style="flex:1;min-width:280px;background:#0b1220;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px;">
-			      <div style="display:flex;justify-content:space-between;align-items:center;">
-			        <div style="font-weight:900;">Twitch Balances</div>
-			        <div title="To top-up your Twitch Wallet: send an on-chain transfer to 'xcryptochips' with memo: 'deposit twitch'. You can use waxblock.io, AtomicHub, Taco, Alcor, NeftyBlocks or waxonedge. Deposits are typically processed within ~60s (network congestion may vary)."
-			             style="cursor:help;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:2px 6px;font-size:${FS.xs};">?</div>
-			      </div>
-			      ${balancesTableHTML(st.twitchBalances)}
-			    </div>
-			
-			    <!-- Telegram balances -->
-			    <div style="flex:1;min-width:280px;background:#0b1220;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px;">
-			      <div style="display:flex;justify-content:space-between;align-items:center;">
-			        <div style="font-weight:900;">Telegram Balances</div>
-			        <div title="To top-up your Telegram Wallet: send an on-chain transfer to 'xcryptochips' with memo: 'deposit token'. You can use waxblock.io, AtomicHub, Taco, Alcor, NeftyBlocks or waxonedge. Deposits are typically processed within ~60s (network congestion may vary)."
-			             style="cursor:help;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:2px 6px;font-size:${FS.xs};">?</div>
-			      </div>
-			      ${balancesTableHTML(st.telegramBalances)}
-			    </div>
-			  </div>
-			
-			  <div style="margin-top:10px;font-size:${FS.xs};color:#94a3b8;">
-			    Tip: after topping up, hit <strong>Refresh</strong> on this page if balances don’t update automatically within a minute.
-			  </div>
-			</div>
-		  
         </div>
 
       </div>
-    `;
-  }
+
+    </div>
+  `;
+}
+
 
 function rewardRowHTML(idx, token = '', per = '') {
   const remaining = token ? st.depositsMap?.[token] : null; // totale residuo del pool per questo canale
@@ -3627,9 +3704,47 @@ function bindRewardsEditor(){
   const saveBtn  = st.rootEl.querySelector('#rw-save');
   const feedback = st.rootEl.querySelector('#rw-feedback');
 
+  // Toggle ON/OFF chat-rewards (switch buttons may exist even if table elements are missing)
+  const btnActivate = st.rootEl.querySelector('#rw-activate');
+  const btnPause    = st.rootEl.querySelector('#rw-pause');
+
+  async function postSwitch(nextStatus) {
+    const a = btnActivate, p = btnPause;
+    try {
+      if (a) a.disabled = true;
+      if (p) p.disabled = true;
+      await fetchJSON(`${st.baseUrl}/channel_rewards/status`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          user_id:   st.userId,
+          usx_token: st.usx_token,
+          channel:   st.channel,
+          status:    nextStatus   // 'active' | 'paused'
+        })
+      });
+      // Soft feedback
+      if (feedback) {
+        feedback.style.color = '#22c55e';
+        feedback.textContent = nextStatus === 'active' ? 'Chat-rewards activated ✔' : 'Chat-rewards paused ✔';
+      }
+      await loadAllData();
+    } catch (err) {
+      console.error('switch toggle error', err);
+      alert('Failed to change chat-rewards status: ' + (err.message || 'unknown error'));
+    } finally {
+      if (a) a.disabled = false;
+      if (p) p.disabled = false;
+    }
+  }
+
+  if (btnActivate) btnActivate.addEventListener('click', () => postSwitch('active'));
+  if (btnPause)    btnPause.addEventListener('click',   () => postSwitch('paused'));
+
+  // If table controls aren’t present, stop here (switch buttons were already bound)
   if (!tbody || !addBtn || !saveBtn) return;
 
-  // hook remove
+  // Remove row
   tbody.querySelectorAll('.rw-del').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const tr = btn.closest('tr');
@@ -3637,21 +3752,19 @@ function bindRewardsEditor(){
     });
   });
 
-  // add row
+  // Add row
   addBtn.addEventListener('click', ()=>{
     const idx = tbody.querySelectorAll('tr').length;
     tbody.insertAdjacentHTML('beforeend', rewardRowHTML(idx,'',''));
-    // bind del on the new row
     const last = tbody.querySelector('tr:last-child .rw-del');
     if (last) last.addEventListener('click', ()=> last.closest('tr')?.remove());
   });
 
-  // save rows
+  // Save rows
   saveBtn.addEventListener('click', async ()=>{
     feedback.style.color = '#94a3b8';
     feedback.textContent = 'Saving…';
 
-    // collect rows
     const rows = [];
     tbody.querySelectorAll('tr').forEach(tr=>{
       const token = (tr.querySelector('.rw-token')?.value || '').trim().toUpperCase();
@@ -3663,7 +3776,7 @@ function bindRewardsEditor(){
     });
 
     try {
-      const res = await fetchJSON(`${st.baseUrl}/channel_rewards/save`, {
+      await fetchJSON(`${st.baseUrl}/channel_rewards/save`, {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
         body: JSON.stringify({
@@ -3686,7 +3799,7 @@ function bindRewardsEditor(){
     }
   });
 
-  // Top-Up con delega (un solo listener su tbody)
+  // Top-Up (delegated)
   tbody.addEventListener('click', async (ev) => {
     const topBtn = ev.target.closest('.rw-topup');
     if (!topBtn) return;
@@ -3710,12 +3823,11 @@ function bindRewardsEditor(){
     const maxAvail = src === 'twitch' ? twitchAvail : telegramAvail;
     if (maxAvail <= 0) { alert(`No available ${token} in ${src} wallet.`); return; }
 
-    const amtStr = (window.prompt(`Amount of ${token} to top-up (max ${chip(maxAvail,6)}):`) || '').trim();
+    const amtStr = (window.prompt(`Amount of ${token} to top up (max ${chip(maxAvail,6)}):`) || '').trim();
     const amt = Number(amtStr);
     if (!isFinite(amt) || amt <= 0) { alert('Invalid amount.'); return; }
     if (amt > maxAvail) { alert(`Amount exceeds available balance in ${src} wallet.`); return; }
 
-    // lock solo sul bottone cliccato
     topBtn.disabled = true;
     const origText = topBtn.textContent;
     topBtn.textContent = '⏳';
@@ -3728,7 +3840,7 @@ function bindRewardsEditor(){
           user_id:       st.userId,
           usx_token:     st.usx_token,
           wax_account:   st.wax_account,
-          channel:       st.channel,      // opzionale
+          channel:       st.channel,      // optional
           token_symbol:  token,
           amount:        amt,
           source_wallet: src              // 'twitch' | 'telegram'
@@ -3746,6 +3858,7 @@ function bindRewardsEditor(){
     }
   });
 }
+
 
   // ---------- TAB: ADS ----------
 function renderAdsTab() {

@@ -1,6 +1,6 @@
 /* noncustodial_farms.js — FULL FILE (PART 1/2 + PART 2/2) — revamped UI with right-side vertical stepper
    Paste this WHOLE FILE. It keeps all payloads/endpoints identical to your backend.
-   UI language: EN only.
+   UI language: EN only. UI max level
 */ 
 (function () {
   "use strict";

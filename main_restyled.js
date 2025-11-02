@@ -3049,6 +3049,22 @@ window.CreatorDash = (() => {
 	  updated_at: null
 	},
 
+// inside st:
+historySection: 'chat', // 'chat' | 'giveaways' | 'storms'
+
+// Chat rewards history (with filters + pagination)
+chatHistory: {
+  items: [],
+  nextCursor: null,
+  loading: false,
+  error: null,
+  filters: {
+    token: '',
+    user: '',
+    source: 'all',   // 'all' | 'global' | 'channel'
+    range: '30d'     // '7d' | '30d' | '90d' | 'all'
+  }
+},
 
     // history
     giveaways: [],
@@ -3079,6 +3095,116 @@ function fmtUTC(ts) {
   } catch (_) {
     return String(ts) + ' UTC';
   }
+}
+function renderGiveawaysPanel() {
+  const rows = st.giveaways.map(g => `
+    <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
+      <td style="${tdHist()}">${esc(g.id)}</td>
+      <td style="${tdHist()}">${esc(g.scheduled_time||'-')}</td>
+      <td style="${tdHist()}">${esc(g.channel_name||'-')}</td>
+      <td style="${tdHist()}">${esc(g.collection_name||'-')}</td>
+      <td style="${tdHist()}">${esc(g.template_names||g.template_id||'-')}</td>
+      <td style="${tdHist()}">${esc(g.offered_by || g.sponsor || '-')}</td>
+      <td style="${tdHist()}">${esc(g.status||'-')}</td>
+      <td style="${tdHist()}">${esc(g.winner||'-')}</td>
+      <td style="${tdHist()}">${esc(g.timeframe||'-')}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="9" style="${tdHist('center','#94a3b8')}">No NFT giveaways found.</td></tr>`;
+
+  return `
+    <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:18px;color:#fff;">
+      <div style="font-size:${FS.sm};font-weight:900;margin-bottom:.6rem;">NFT Giveaways</div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;min-width:920px;">
+          <thead>
+            <tr style="background:#111827;color:#fff;text-align:left;">
+              <th style="${thHist()}">ID</th>
+              <th style="${thHist()}">Scheduled</th>
+              <th style="${thHist()}">Channel</th>
+              <th style="${thHist()}">Collection</th>
+              <th style="${thHist()}">Template(s)</th>
+              <th style="${thHist()}">Offered by</th>
+              <th style="${thHist()}">Status</th>
+              <th style="${thHist()}">Winner</th>
+              <th style="${thHist()}">Timeframe</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderStormsPanel() {
+  const rows = st.storms.map(s => `
+    <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
+      <td style="${tdHist()}">${esc(s.id)}</td>
+      <td style="${tdHist()}">${esc(s.scheduled_time||'-')}</td>
+      <td style="${tdHist()}">${esc(s.channel_name||'-')}</td>
+      <td style="${tdHist()}">${chip(s.amount,6)} ${esc(s.token_symbol||'')}</td>
+      <td style="${tdHist()}">${esc(s.timeframe||'-')}</td>
+      <td style="${tdHist()}">${esc(s.status||'-')}</td>
+      <td style="${tdHist()}">${esc(s.winners_display||'-')}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="7" style="${tdHist('center','#94a3b8')}">No storms found.</td></tr>`;
+
+  return `
+    <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;">
+      <div style="font-size:${FS.sm};font-weight:900;margin-bottom:.6rem;">Token Storms</div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;min-width:760px;">
+          <thead>
+            <tr style="background:#1f2937;color:#fff;text-align:left;">
+              <th style="${thHist()}">ID</th>
+              <th style="${thHist()}">Scheduled</th>
+              <th style="${thHist()}">Channel</th>
+              <th style="${thHist()}">Amount</th>
+              <th style="${thHist()}">Timeframe</th>
+              <th style="${thHist()}">Status</th>
+              <th style="${thHist()}">Winners</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+async function loadChatRewardsHistory({ reset = false } = {}) {
+  st.chatHistory.loading = true;
+  st.chatHistory.error = null;
+  if (reset) {
+    st.chatHistory.items = [];
+    st.chatHistory.nextCursor = null;
+  }
+  render(); // optional: per mostrare spinner
+
+  const { token, user, source, range } = st.chatHistory.filters;
+  const qs = new URLSearchParams({
+    user_id: st.userId,
+    usx_token: st.usx_token,
+    wax_account: st.wax_account,
+    limit: '50',
+    range
+  });
+  if (token)  qs.set('token', token.toUpperCase());
+  if (user)   qs.set('user', user);
+  if (source && source !== 'all') qs.set('source', source);
+  if (!reset && st.chatHistory.nextCursor) qs.set('cursor_id', String(st.chatHistory.nextCursor));
+
+  try {
+    const data = await fetchJSON(`${st.baseUrl}/chat_rewards/history?${qs.toString()}`);
+    const newItems = Array.isArray(data.items) ? data.items : [];
+    st.chatHistory.items = reset ? newItems : st.chatHistory.items.concat(newItems);
+    st.chatHistory.nextCursor = data.next_cursor || null;
+  } catch (err) {
+    console.error('chat history load error', err);
+    st.chatHistory.error = err.message || 'Unknown error';
+  }
+  st.chatHistory.loading = false;
+  render();
 }
 
   async function fetchJSON(url, opts = {}) {
@@ -3283,6 +3409,8 @@ function fmtUTC(ts) {
 
     if (st.activeTab === 'ads')      bindAdsEditor();
     if (st.activeTab === 'rewards')  bindRewardsEditor();
+	if (st.activeTab === 'history') bindHistory();
+
   }
 
   function tabBtn(tab, label){
@@ -3310,15 +3438,19 @@ function fmtUTC(ts) {
     `;
   }
 
-  function bindTabSwitcher() {
-    const btns = st.rootEl.querySelectorAll('.cd-tab-btn');
-    btns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        st.activeTab = btn.getAttribute('data-tab');
-        render();
-      });
+function bindTabSwitcher() {
+  const btns = st.rootEl.querySelectorAll('.cd-tab-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      st.activeTab = btn.getAttribute('data-tab');
+      render();
+      if (st.activeTab === 'history' && st.historySection === 'chat' && st.chatHistory.items.length === 0) {
+        await loadChatRewardsHistory({ reset: true });
+      }
     });
-  }
+  });
+}
+
 
   function renderActiveTab() {
     if (st.activeTab === 'rewards') return renderRewardsTab();
@@ -4172,98 +4304,201 @@ function bindAdsEditor() {
 }
 
   // ---------- TAB: HISTORY ----------
-  function renderHistoryTab() {
-    const givRows = st.giveaways.map(g => `
-      <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
-        <td style="${tdHist()}">${esc(g.id)}</td>
-        <td style="${tdHist()}">${esc(g.scheduled_time||'-')}</td>
-        <td style="${tdHist()}">${esc(g.channel_name||'-')}</td>
-        <td style="${tdHist()}">${esc(g.collection_name||'-')}</td>
-        <td style="${tdHist()}">${esc(g.template_names||g.template_id||'-')}</td>
-        <td style="${tdHist()}">${esc(g.status||'-')}</td>
-        <td style="${tdHist()}">${esc(g.winner||'-')}</td>
-        <td style="${tdHist()}">${esc(g.timeframe||'-')}</td>
-      </tr>
-    `).join('') || `
-      <tr><td colspan="8" style="${tdHist('center','#94a3b8')}">No NFT giveaways found.</td></tr>
-    `;
+function renderHistoryTab() {
+  const leftMenu = `
+    <div style="width:220px;min-width:220px;background:#0b1220;border:1px solid rgba(255,255,255,.1);
+                border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:.4rem;">
+      ${historyMenuBtn('chat','💬 Chat Rewards')}
+      ${historyMenuBtn('giveaways','🎁 NFT Giveaways')}
+      ${historyMenuBtn('storms','🌪 Token Storms')}
+    </div>
+  `;
 
-    const stormRows = st.storms.map(s => `
-      <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
-        <td style="${tdHist()}">${esc(s.id)}</td>
-        <td style="${tdHist()}">${esc(s.scheduled_time||'-')}</td>
-        <td style="${tdHist()}">${esc(s.channel_name||'-')}</td>
-        <td style="${tdHist()}">${chip(s.amount,6)} ${esc(s.token_symbol||'')}</td>
-        <td style="${tdHist()}">${esc(s.timeframe||'-')}</td>
-        <td style="${tdHist()}">${esc(s.status||'-')}</td>
-        <td style="${tdHist()}">${esc(s.winners_display||'-')}</td>
-      </tr>
-    `).join('') || `
-      <tr><td colspan="7" style="${tdHist('center','#94a3b8')}">No storms found.</td></tr>
-    `;
+  const rightPanel = `
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1rem;">
+      ${st.historySection === 'chat' ? renderChatRewardsPanel()
+        : st.historySection === 'giveaways' ? renderGiveawaysPanel()
+        : renderStormsPanel()}
+    </div>
+  `;
 
-    return `
-      <div style="display:flex;flex-direction:column;gap:1rem;">
+  return `
+    <div style="display:flex;gap:1rem;align-items:flex-start;">
+      ${leftMenu}
+      ${rightPanel}
+    </div>
+  `;
+}
 
-        <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:18px;color:#fff;">
-          <div style="font-size:${FS.sm};font-weight:900;margin-bottom:.6rem;">
-            NFT Giveaways History
-          </div>
-          <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;min-width:760px;">
-              <thead>
-                <tr style="background:#111827;color:#fff;text-align:left;">
-                  <th style="${thHist()}">ID</th>
-                  <th style="${thHist()}">Scheduled</th>
-                  <th style="${thHist()}">Channel</th>
-                  <th style="${thHist()}">Collection</th>
-                  <th style="${thHist()}">Template(s)</th>
-                  <th style="${thHist()}">Status</th>
-                  <th style="${thHist()}">Winner</th>
-                  <th style="${thHist()}">Timeframe</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${givRows}
-              </tbody>
-            </table>
-          </div>
+function historyMenuBtn(key, label) {
+  const active = st.historySection === key;
+  return `
+    <button class="hist-nav" data-key="${key}"
+      style="
+        text-align:left;border:none;border-radius:10px;padding:10px 12px;font-size:${FS.xs};font-weight:800;
+        ${active ? 'background:#22c55e;color:#0a0f0a;' : 'background:#111827;color:#e5e7eb;border:1px solid rgba(255,255,255,.12);'}
+      ">
+      ${label}
+    </button>
+  `;
+}
+
+function renderChatRewardsPanel() {
+  const h = st.chatHistory;
+  // totals per token (current view)
+  const tokenTotals = h.items.reduce((acc, r) => {
+    const k = r.token_symbol || '-';
+    acc[k] = (acc[k] || 0) + (Number(r.amount) || 0);
+    return acc;
+  }, {});
+
+  const totalChips = Object.entries(tokenTotals).map(([sym, amt]) =>
+    `<span style="border:1px solid rgba(255,255,255,.15);padding:2px 8px;border-radius:8px;">${esc(sym)}: <strong>${chip(amt,6)}</strong></span>`
+  ).join(' ');
+
+  const rows = (h.items || []).map(r => `
+    <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
+      <td style="${tdHist()}">${esc(r.created_at || '-')}</td>
+      <td style="${tdHist()}">${esc(r.username || '-')}</td>
+      <td style="${tdHist()}">${esc(r.token_symbol || '-')}</td>
+      <td style="${tdHist('right')}">${chip(r.amount,6)}</td>
+      <td style="${tdHist()}">${esc((r.reward_source || '-').toUpperCase())}</td>
+      <td style="${tdHist('right')}">${r.per_message != null ? chip(r.per_message,6) : '-'}</td>
+      <td style="${tdHist()}">${esc(r.message_id || '-')}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="7" style="${tdHist('center','#94a3b8')}">No chat rewards found.</td></tr>`;
+
+  return `
+    <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;">
+      <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;">
+        <div style="font-size:${FS.sm};font-weight:900;">Chat Rewards — ${esc(st.channel)}</div>
+        <div style="font-size:${FS.xs};color:#94a3b8;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+          Totals (page): ${totalChips || '-'}
+          <button id="chat-export" class="btn btn-secondary" style="${miniIconBtnStyle()}">⬇ Export CSV</button>
         </div>
-
-        <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;">
-          <div style="font-size:${FS.sm};font-weight:900;margin-bottom:.6rem;">
-            Token Storms History
-          </div>
-          <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;min-width:760px;">
-              <thead>
-                <tr style="background:#1f2937;color:#fff;text-align:left;">
-                  <th style="${thHist()}">ID</th>
-                  <th style="${thHist()}">Scheduled</th>
-                  <th style="${thHist()}">Channel</th>
-                  <th style="${thHist()}">Amount</th>
-                  <th style="${thHist()}">Timeframe</th>
-                  <th style="${thHist()}">Status</th>
-                  <th style="${thHist()}">Winners</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${stormRows}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
       </div>
-    `;
-  }
 
-  function thHist(){
-    return `
-      font-weight:900;padding:10px 12px;color:#fff;border-bottom:1px solid rgba(255,255,255,.16);
-      font-size:${FS.xs};white-space:nowrap;
-    `;
+      <!-- Filters -->
+      <div style="margin-top:10px;display:flex;gap:.6rem;flex-wrap:wrap;">
+        <input id="f-user" placeholder="Filter by user" value="${esc(st.chatHistory.filters.user)}" style="${inputStyle()};max-width:220px;">
+        <input id="f-token" placeholder="Filter by token (e.g. CHIPS)" value="${esc(st.chatHistory.filters.token)}" style="${inputStyle('uppercase')};max-width:180px;">
+        <select id="f-source" style="${inputStyle()};max-width:180px;">
+          <option value="all"     ${st.chatHistory.filters.source==='all'?'selected':''}>Source: All</option>
+          <option value="global"  ${st.chatHistory.filters.source==='global'?'selected':''}>Source: Global</option>
+          <option value="channel" ${st.chatHistory.filters.source==='channel'?'selected':''}>Source: Channel</option>
+        </select>
+        <select id="f-range" style="${inputStyle()};max-width:160px;">
+          <option value="7d"  ${st.chatHistory.filters.range==='7d'?'selected':''}>Last 7d</option>
+          <option value="30d" ${st.chatHistory.filters.range==='30d'?'selected':''}>Last 30d</option>
+          <option value="90d" ${st.chatHistory.filters.range==='90d'?'selected':''}>Last 90d</option>
+          <option value="all" ${st.chatHistory.filters.range==='all'?'selected':''}>All</option>
+        </select>
+        <button id="f-apply" class="btn btn-primary" style="${actionBtnStyle('#22c55e','#0a0f0a')}">Apply</button>
+        <button id="f-reset" class="btn btn-secondary" style="${actionBtnStyle('#1f2937','#fff')}">Reset</button>
+      </div>
+
+      <!-- Table -->
+      <div style="overflow-x:auto;margin-top:12px;">
+        <table style="width:100%;border-collapse:collapse;min-width:760px;">
+          <thead>
+            <tr style="background:#1f2937;color:#fff;text-align:left;">
+              <th style="${thHist()}">Date (UTC)</th>
+              <th style="${thHist()}">User</th>
+              <th style="${thHist()}">Token</th>
+              <th style="${thHist('right')}">Amount</th>
+              <th style="${thHist()}">Source</th>
+              <th style="${thHist('right')}">Per msg</th>
+              <th style="${thHist()}">Msg ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:${FS.xs};color:#94a3b8;">
+          ${st.chatHistory.loading ? 'Loading…' : (st.chatHistory.error ? '<span style="color:#f87171;">'+esc(st.chatHistory.error)+'</span>' : '')}
+        </div>
+        <button id="chat-load-more" class="btn btn-secondary"
+                ${st.chatHistory.nextCursor ? '' : 'disabled'}
+                style="${actionBtnStyle('#1f2937','#fff')}">Load more</button>
+      </div>
+    </div>
+  `;
+}
+
+function bindHistory() {
+  // left menu
+  st.rootEl.querySelectorAll('.hist-nav').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      st.historySection = btn.getAttribute('data-key');
+      render();
+      if (st.historySection === 'chat' && st.chatHistory.items.length === 0) {
+        await loadChatRewardsHistory({ reset: true });
+      }
+    });
+  });
+
+  if (st.historySection === 'chat') {
+    const fUser   = st.rootEl.querySelector('#f-user');
+    const fToken  = st.rootEl.querySelector('#f-token');
+    const fSource = st.rootEl.querySelector('#f-source');
+    const fRange  = st.rootEl.querySelector('#f-range');
+    const fApply  = st.rootEl.querySelector('#f-apply');
+    const fReset  = st.rootEl.querySelector('#f-reset');
+    const btnMore = st.rootEl.querySelector('#chat-load-more');
+    const btnCsv  = st.rootEl.querySelector('#chat-export');
+
+    if (fApply) fApply.addEventListener('click', () => {
+      st.chatHistory.filters.user   = (fUser.value || '').trim();
+      st.chatHistory.filters.token  = (fToken.value || '').trim().toUpperCase();
+      st.chatHistory.filters.source = fSource.value || 'all';
+      st.chatHistory.filters.range  = fRange.value || '30d';
+      loadChatRewardsHistory({ reset: true });
+    });
+
+    if (fReset) fReset.addEventListener('click', () => {
+      st.chatHistory.filters = { token:'', user:'', source:'all', range:'30d' };
+      loadChatRewardsHistory({ reset: true });
+    });
+
+    if (btnMore) btnMore.addEventListener('click', () => loadChatRewardsHistory({ reset: false }));
+
+    if (btnCsv) btnCsv.addEventListener('click', () => {
+      const rows = st.chatHistory.items || [];
+      const header = ['id','created_at','username','user_wax_account','token_symbol','amount','reward_source','per_message','message_id','message_ts'];
+      const csv = [header.join(',')].concat(
+        rows.map(r => [
+          r.id, `"${(r.created_at||'').replace(/"/g,'""')}"`,
+          `"${(r.username||'').replace(/"/g,'""')}"`,
+          `"${(r.user_wax_account||'').replace(/"/g,'""')}"`,
+          r.token_symbol, r.amount, r.reward_source,
+          (r.per_message != null ? r.per_message : ''),
+          `"${(r.message_id||'').replace(/"/g,'""')}"`,
+          `"${(r.message_ts||'').replace(/"/g,'""')}"`
+        ].join(','))
+      ).join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `chat_rewards_${(st.channel||'channel')}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
   }
+}
+
+function thHist(align='left'){
+  return `
+    font-weight:900;padding:10px 12px;color:#fff;border-bottom:1px solid rgba(255,255,255,.16);
+    font-size:${FS.xs};white-space:nowrap;text-align:${align};
+  `;
+}
+
   function tdHist(align='left',color='#e5e7eb'){
     return `
       padding:10px 12px;color:${color};font-size:${FS.xs};white-space:nowrap;text-align:${align};

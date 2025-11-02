@@ -1,7 +1,7 @@
-/* noncustodial_farms.js — FULL FILE (PART 1/2 + PART 2/2) — revamped UI with right-side vertical stepper
-   Paste this WHOLE FILE. It keeps all payloads/endpoints identical to your backend.
-   UI language: EN only. UI max level
-*/ 
+/* noncustodial_farms.js — PART 1/2 (Simple User UX + Base Framework)
+   Paste PART 1 first. When you paste PART 2, they become one single file.
+   UI language: EN only.
+*/
 (function () {
   "use strict";
 
@@ -75,99 +75,94 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
+// ====== LIVE circulating (in-memory) ======
+const ensureCircState = (state) => {
+  if (!state._circ) {
+    state._circ = { map: new Map(), timer: null, collection: null };
+  }
+  return state._circ;
+};
 
-  // ====== LIVE circulating (in-memory) ======
-  const ensureCircState = (state) => {
-    if (!state._circ) {
-      state._circ = { map: new Map(), timer: null, collection: null };
-    }
-    return state._circ;
+// Legge dall'endpoint live (full o subset)
+async function fetchCirculatingLive(state, collection, tids /* array opzionale */) {
+  const base = apiBase(state.cfg).replace(/\/+$/,"");
+  const qsTids = Array.isArray(tids) && tids.length ? `&tids=${encodeURIComponent(tids.join(","))}` : "";
+  const url = `${base}/api/templates/circulating-live?collection=${encodeURIComponent(collection)}${qsTids}`;
+  let data = await fetchJson(url);
+  if (typeof data === "string") { try { data = JSON.parse(data); } catch { data = { items: [] }; } }
+  const circ = ensureCircState(state);
+  circ.map.clear();
+  (data.items || []).forEach(it => {
+    circ.map.set(Number(it.template_id), {
+      circ: Number(it.circulating_supply || 0),
+      max:  (it.max_supply == null ? null : Number(it.max_supply))
+    });
+  });
+  circ.collection = collection;
+  return circ;
+}
+
+// Aggiorna le tabelle Step C e i pannelli Step D
+function applyCirculatingToUI(state) {
+  const circ = ensureCircState(state);
+
+  // Step C: tabella per schema
+  document.querySelectorAll('#ncf-sections table.ncf-table tbody tr[data-tid]').forEach(tr => {
+    const tid = Number(tr.getAttribute('data-tid'));
+    const m = circ.map.get(tid);
+    if (!m) return;
+    const cells = tr.children; // [0..5] = [chk, ID, Nome, Circ, Max, %]
+    const curCirc = Number((cells[3].textContent || "").replace(/[^\d]/g,"")) || 0;
+    const curMaxTxt = cells[4].textContent.trim();
+    const curMax = curMaxTxt === "—" ? null : Number(curMaxTxt.replace(/[^\d]/g,"")) || 0;
+
+    if (curCirc !== m.circ) cells[3].textContent = m.circ.toLocaleString();
+    if ((curMax ?? null) !== (m.max ?? null)) cells[4].textContent = (m.max == null ? "—" : m.max.toLocaleString());
+    const pct = (m.max && m.max > 0) ? `${Math.min(100, (m.circ / m.max) * 100).toFixed(1)}%` : "—";
+    cells[5].textContent = pct;
+  });
+
+  // Step D: ricostruisci righe e riepilogo che usano circulating
+  updateRewardsPanel(state);
+  refreshStep4Summary(state);
+}
+
+// Polling (default 60s). Usa subset = template visibili/selezionati per minimizzare payload.
+function startLiveCircPolling(state, collection, intervalMs = 60000) {
+  stopLiveCircPolling(state);
+  const pickTids = () => {
+    const ids = new Set();
+    // 1) selezionati nello Step D:
+    Object.values(state.creator?.selection || {})
+      .filter(x => x.collection === state.creator.collection)
+      .forEach(x => ids.add(Number(x.template_id)));
+    // 2) visibili in Step C (righe filtrate correnti):
+    document.querySelectorAll('#ncf-sections table.ncf-table tbody tr[data-tid]')
+      .forEach(tr => ids.add(Number(tr.getAttribute('data-tid'))));
+    return Array.from(ids.values());
   };
 
-  // Legge dall'endpoint live (full o subset)
-  async function fetchCirculatingLive(state, collection, tids /* array opzionale */) {
-    const base = apiBase(state.cfg).replace(/\/+$/,"");
-    const qsTids = Array.isArray(tids) && tids.length ? `&tids=${encodeURIComponent(tids.join(","))}` : "";
-    const url = `${base}/api/templates/circulating-live?collection=${encodeURIComponent(collection)}${qsTids}`;
-    let data = await fetchJson(url);
-    if (typeof data === "string") { try { data = JSON.parse(data); } catch { data = { items: [] }; } }
-    const circ = ensureCircState(state);
-    circ.map.clear();
-    (data.items || []).forEach(it => {
-      circ.map.set(Number(it.template_id), {
-        circ: Number(it.circulating_supply || 0),
-        max:  (it.max_supply == null ? null : Number(it.max_supply))
-      });
-    });
-    circ.collection = collection;
-    return circ;
-  }
-
-  // Aggiorna le tabelle Step C e i pannelli Step D
-  function applyCirculatingToUI(state) {
-    const circ = ensureCircState(state);
-
-    // Step C: tabella per schema
-    document.querySelectorAll('#ncf-sections table.ncf-table tbody tr[data-tid]').forEach(tr => {
-      const tid = Number(tr.getAttribute('data-tid'));
-      const m = circ.map.get(tid);
-      if (!m) return;
-      const cells = tr.children; // [0..5] = [chk, ID, Nome, Circ, Max, %]
-      const curCirc = Number((cells[3].textContent || "").replace(/[^\d]/g,"")) || 0;
-      const curMaxTxt = cells[4].textContent.trim();
-      const curMax = curMaxTxt === "—" ? null : Number(curMaxTxt.replace(/[^\d]/g,"")) || 0;
-
-      if (curCirc !== m.circ) cells[3].textContent = m.circ.toLocaleString();
-      if ((curMax ?? null) !== (m.max ?? null)) cells[4].textContent = (m.max == null ? "—" : m.max.toLocaleString());
-      const pct = (m.max && m.max > 0) ? `${Math.min(100, (m.circ / m.max) * 100).toFixed(1)}%` : "—";
-      cells[5].textContent = pct;
-    });
-
-    // Step D: ricostruisci righe e riepilogo che usano circulating
-    if (window.__NCF_API__?.updateRewardsPanel) {
-      window.__NCF_API__.updateRewardsPanel(state);
+  const tick = async () => {
+    try {
+      const tids = pickTids();
+      await fetchCirculatingLive(state, collection, tids);
+      applyCirculatingToUI(state);
+    } catch (e) {
+      // silenzioso: se fallisce un giro non blocchiamo la UI
+      console.warn("live circulating refresh failed:", e);
     }
-    if (window.__NCF_API__?.refreshStep4Summary) {
-      window.__NCF_API__.refreshStep4Summary(state);
-    }
-  }
+  };
 
-  // Polling (default 60s). Usa subset = template visibili/selezionati per minimizzare payload.
-  function startLiveCircPolling(state, collection, intervalMs = 60000) {
-    stopLiveCircPolling(state);
-    const pickTids = () => {
-      const ids = new Set();
-      // 1) selezionati nello Step D:
-      Object.values(state.creator?.selection || {})
-        .filter(x => x.collection === state.creator.collection)
-        .forEach(x => ids.add(Number(x.template_id)));
-      // 2) visibili in Step C (righe filtrate correnti):
-      document.querySelectorAll('#ncf-sections table.ncf-table tbody tr[data-tid]')
-        .forEach(tr => ids.add(Number(tr.getAttribute('data-tid'))));
-      return Array.from(ids.values());
-    };
+  // primo giro immediato (subset)
+  tick();
+  const circ = ensureCircState(state);
+  circ.timer = setInterval(tick, Math.max(15000, Number(intervalMs) || 60000)); // minimo 15s di guardia
+}
 
-    const tick = async () => {
-      try {
-        const tids = pickTids();
-        await fetchCirculatingLive(state, collection, tids);
-        applyCirculatingToUI(state);
-      } catch (e) {
-        // silenzioso: se fallisce un giro non blocchiamo la UI
-        console.warn("live circulating refresh failed:", e);
-      }
-    };
-
-    // primo giro immediato (subset)
-    tick();
-    const circ = ensureCircState(state);
-    circ.timer = setInterval(tick, Math.max(15000, Number(intervalMs) || 60000)); // minimo 15s di guardia
-  }
-
-  function stopLiveCircPolling(state) {
-    const circ = ensureCircState(state);
-    if (circ.timer) { clearInterval(circ.timer); circ.timer = null; }
-  }
+function stopLiveCircPolling(state) {
+  const circ = ensureCircState(state);
+  if (circ.timer) { clearInterval(circ.timer); circ.timer = null; }
+}
 
   const toast = (() => {
     let tmr = null;
@@ -190,53 +185,24 @@
 
   const injectStyles = once(() => {
     const css = `
-:root {
-  --card-bg: rgba(12,16,22,.66);
-  --line: rgba(255,255,255,.08);
-  --glow: rgba(0,255,200,.15);
-  --accent-1: #00e6c3;
-  --accent-2: #00a8ff;
-  --warn: #f8c555;
-  --err: #ff7b7b;
-  --ok: #22e4b6;
-  --fs-base: 17px;
-  --fs-sm: .95rem;
-  --fs-md: 1.05rem;
-  --fs-lg: 1.25rem;
-  --fs-xl: 1.6rem;
-}
-#ncf-root { color:#e6eef8; font-size: var(--fs-base); line-height: 1.35; }
-#ncf-root h1{font-size:var(--fs-xl); letter-spacing:.2px}
-#ncf-root h2{font-size:var(--fs-lg)}
-#ncf-root h3{font-size:1.15rem}
-#ncf-root .cy-card{background:var(--card-bg);border:1px solid rgba(0,255,200,.18);border-radius:16px;box-shadow:0 0 22px var(--glow),inset 0 0 0 1px rgba(255,255,255,.03)}
-#ncf-root .grid{display:grid;gap:14px} .row{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}
-#ncf-root .muted{color:rgba(230,238,248,.78)} .soft{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px}
-#ncf-root .input{height:44px;padding:0 .85rem;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(10,14,18,.85);color:#e6eef8;font-size:var(--fs-md)}
-#ncf-root .btn{cursor:pointer;border-radius:999px;padding:.65rem 1.05rem;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(20,28,36,.95),rgba(10,14,18,.95));color:#e6eef8;font-weight:600}
-#ncf-root .btn:focus{outline:none;box-shadow:0 0 0 2px rgba(0,255,200,.35)} .btn[disabled]{opacity:.55;cursor:not-allowed}
-#ncf-root .btn-primary{border-color:transparent;background:linear-gradient(180deg,var(--accent-1),var(--accent-2));color:#001418;font-weight:800}
+:root { --card-bg: rgba(12,16,22,.66); --line: rgba(255,255,255,.08); --glow: rgba(0,255,200,.15); }
+#ncf-root { color:#e6eef8; }
+#ncf-root .cy-card{background:var(--card-bg);border:1px solid rgba(0,255,200,.18);border-radius:14px;box-shadow:0 0 22px var(--glow),inset 0 0 0 1px rgba(255,255,255,.03)}
+#ncf-root .grid{display:grid;gap:12px} .row{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}
+#ncf-root .muted{color:rgba(230,238,248,.75)} .soft{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px}
+#ncf-root .btn{cursor:pointer;border-radius:999px;padding:.6rem 1rem;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(20,28,36,.9),rgba(10,14,18,.9));color:#e6eef8}
+#ncf-root .btn:focus{outline:none;box-shadow:0 0 0 2px rgba(0,255,200,.35)} .btn[disabled]{opacity:.6;cursor:not-allowed}
+#ncf-root .btn-primary{border-color:transparent;background:linear-gradient(180deg,rgba(0,255,200,.9),rgba(0,196,255,.9));color:#001418;font-weight:800}
 #ncf-root .btn-ghost{background:transparent}
-#ncf-root .badge{display:inline-flex;align-items:center;gap:.5rem;padding:.38rem .7rem;border-radius:999px;font-size:.92rem;border:1px solid var(--line)}
-#ncf-root .badge.ok{color:var(--ok);background:rgba(34,228,182,.14)} .badge.warn{color:var(--warn);background:rgba(248,197,85,.14)} .badge.err{color:var(--err);background:rgba(255,123,123,.14)}
-#ncf-root table{width:100%;border-collapse:separate;border-spacing:0;font-size:1rem;min-width:620px}
-#ncf-root thead th{position:sticky;top:0;padding:.65rem .85rem;text-align:left;background:rgba(10,14,18,.97);border-bottom:1px solid var(--line);font-weight:700}
-#ncf-root tbody td{padding:.6rem .85rem;border-bottom:1px dashed var(--line)}
+#ncf-root .badge{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .6rem;border-radius:999px;font-size:.85rem;border:1px solid var(--line)}
+#ncf-root .badge.ok{color:#22e4b6;background:rgba(34,228,182,.12)} .badge.warn{color:#f8c555;background:rgba(248,197,85,.12)} .badge.err{color:#ff7b7b;background:rgba(255,123,123,.12)}
+#ncf-root table{width:100%;border-collapse:separate;border-spacing:0;font-size:.95rem;min-width:540px}
+#ncf-root thead th{position:sticky;top:0;padding:.6rem .8rem;text-align:left;background:rgba(10,14,18,.95);border-bottom:1px solid var(--line)}
+#ncf-root tbody td{padding:.6rem .8rem;border-bottom:1px dashed var(--line)}
 #ncf-root details > summary {cursor:pointer;user-select:none}
 #ncf-root .tabbar button[aria-selected="true"]{box-shadow:0 0 0 2px rgba(0,255,200,.35)}
 #ncf-root .kpi{display:flex;gap:.5rem;flex-wrap:wrap}
-
-/* Right-side vertical stepper */
-#ncf-stepper-dock .stepper-item{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.035)}
-#ncf-stepper-dock .stepper-head{display:flex;align-items:center;gap:.6rem;justify-content:space-between}
-#ncf-stepper-dock .stepper-title{font-weight:800}
-#ncf-stepper-dock .stepper-actions .btn{padding:.4rem .65rem}
-#ncf-stepper-dock .peek{display:none;margin-top:4px;border-top:1px dashed var(--line);padding-top:6px;font-size:.95rem}
-#ncf-stepper-dock .stepper-item[data-open="true"] .peek{display:block}
-#ncf-stepper-dock .step-index{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(0,255,200,.18);font-weight:900;color:#00ffd1}
-
-/* Toast */
-#ncf-toast{position:fixed;bottom:18px;left:50%;transform:translate(-50%,18px);opacity:0;background:rgba(12,16,22,.92);border:1px solid rgba(0,255,200,.25);color:#e6eef8;padding:.6rem .95rem;border-radius:12px;box-shadow:0 0 18px var(--glow);z-index:9999;transition:all .18s ease}
+#ncf-toast{position:fixed;bottom:18px;left:50%;transform:translate(-50%,18px);opacity:0;background:rgba(12,16,22,.92);border:1px solid rgba(0,255,200,.25);color:#e6eef8;padding:.55rem .9rem;border-radius:12px;box-shadow:0 0 18px var(--glow);z-index:9999;transition:all .18s ease}
 #ncf-toast.show{opacity:1;transform:translate(-50%,0)}
     `.trim();
     const s = document.createElement("style");
@@ -285,7 +251,7 @@
   // ---------- RENDER HELPERS ----------
   function skeleton(lines = 2) {
     const rows = Array.from({ length: lines })
-      .map(() => `<div style="height:12px; width:${Math.round(220 + Math.random() * 200)}px; margin:.35rem 0; background:rgba(255,255,255,.06); border-radius:8px;"></div>`)
+      .map(() => `<div style="height:12px; width:${Math.round(220 + Math.random() * 160)}px; margin:.35rem 0; background:rgba(255,255,255,.06); border-radius:8px;"></div>`)
       .join("");
     return `<div class="soft" style="padding:1rem;">${rows}</div>`;
   }
@@ -296,11 +262,11 @@
         <h2 style="margin:0 0 .5rem;">How it works</h2>
         <div class="grid">
           <div class="soft" style="padding:10px;">
-            <h3 style="margin:.2rem 0;">Non-custodial by design</h3>
+            <h3 style="margin:.2rem 0;">Not-custodial by design</h3>
             <p class="muted" style="margin:.4rem 0;">
-              You never send NFTs to anyone. To be rewarded, simply hold the required NFTs
+              You never send NFTs to anyone for staking. To be rewarded, simply hold the required NFTs
               in your own wallet (e.g., AtomicHub, NFTHive, NeftyBlocks, etc.).
-              If your NFTs match a farm’s valid <em>template_id</em>, you are eligible.
+              If your NFTs match a farm’s valid <em>template-ID</em>, you are eligible and you will be rewarded.
             </p>
             <p class="badge ok" title="Payout cadence">${esc(cfg.payoutSchedule)}</p>
           </div>
@@ -318,7 +284,7 @@
             <h3 style="margin:.2rem 0;">Who is this for?</h3>
             <ul class="muted" style="margin:.4rem 0 .2rem 1.2rem;">
               <li><strong>Collectors/Players:</strong> Browse active farms, open details, and see your history (when signed in).</li>
-              <li><strong>Creators & Managers:</strong> Create/edit farms, manage balances, and view aggregate stats.</li>
+              <li><strong>Creators:</strong> Create/edit farms and see aggregate stats (Creator modules load in Part 2).</li>
             </ul>
           </div>
         </div>
@@ -347,6 +313,7 @@
   }
 
 	function renderActiveFarmsList(state, farms) {
+	  // usa l'id corretto, con fallback per compat vecchi
 	  const box = document.querySelector("#ncf-list-view") || document.querySelector("#ncf-active-list");
 	  if (!box) {
 	    console.warn("NCF: missing list container (#ncf-list-view).");
@@ -360,6 +327,7 @@
 	
 	  box.innerHTML = farms.map(renderFarmCard).join("");
 	
+	  // aggiorna i binding sul contenitore corretto
 	  (box.querySelectorAll(".ncf-view-farm") || []).forEach((btn) => {
 	    btn.addEventListener("click", () => {
 	      const card = btn.closest("[data-farm]");
@@ -494,7 +462,7 @@
           <div class="row" style="justify-content:space-between; align-items:center;">
             <h2 style="margin:0;">Active Farms</h2>
             <div class="row">
-              <input id="ncf-search" class="input" placeholder="Search by collection, creator, or farm id…" style="min-width:280px;">
+              <input id="ncf-search" class="input" placeholder="Search by collection, creator, or farm id…" style="height:40px;padding:0 .8rem;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(10,14,18,.8);color:#e6eef8;min-width:280px;">
               <button id="ncf-refresh" class="btn btn-ghost">Refresh</button>
             </div>
           </div>
@@ -720,21 +688,24 @@
     window.__NCF_STATE__ = state;
   }
 
-  // --- expose PART 1 live helpers + hooks for PART 2 ---
-  window.__NCF_API__ = Object.assign({}, window.__NCF_API__, {
-    ensureCircState,
-    fetchCirculatingLive,
-    applyCirculatingToUI,
-    startLiveCircPolling,
-    stopLiveCircPolling,
-  });
+// --- expose PART 1 live helpers for PART 2 ---
+window.__NCF_API__ = Object.assign({}, window.__NCF_API__, {
+  ensureCircState,
+  fetchCirculatingLive,
+  applyCirculatingToUI,
+  startLiveCircPolling,
+  stopLiveCircPolling,
+});
 
-  // Back-compat export name (old code called this):
-  window.initNonCustodialFarms = initNonCustodialFarms;
-  window.initManageNFTsFarm = initNonCustodialFarms;
+// Back-compat export name (old code called this):
+window.initNonCustodialFarms = initNonCustodialFarms;
+window.initManageNFTsFarm = initNonCustodialFarms;
 })();
 
-/* noncustodial_farms.js — PART 2/2 (Creator Dashboard + Stats) — with right-side vertical stepper */
+
+/* noncustodial_farms.js — PART 2/2 (Creator Dashboard + Stats)
+   Paste this *after* PART 1. Together they are one single JS.
+*/
 (function () {
   "use strict";
 
@@ -756,19 +727,18 @@
   const buildUrl = (b, p) => `${String(b).replace(/\/+$/,"")}${p}`;
   const fetchJson = async (u,i)=>{const r=await fetch(u,i); if(!r.ok){const tx=await r.text().catch(()=> ""); throw new Error(`HTTP ${r.status} — ${tx||r.statusText}`);} const raw=await r.text(); try{return JSON.parse(raw);}catch{return raw;}};
   const postJson = (u,b)=>fetchJson(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
+// ===== Bridge to PART 1 live helpers (must be loaded BEFORE this file) =====
+const {
+  ensureCircState,
+  fetchCirculatingLive,
+  applyCirculatingToUI,
+  startLiveCircPolling,
+  stopLiveCircPolling,
+} = window.__NCF_API__ || {};
 
-  // ===== Bridge to PART 1 live helpers (must be loaded BEFORE this file) =====
-  const {
-    ensureCircState,
-    fetchCirculatingLive,
-    applyCirculatingToUI,
-    startLiveCircPolling,
-    stopLiveCircPolling,
-  } = window.__NCF_API__ || {};
-
-  if (!fetchCirculatingLive || !applyCirculatingToUI) {
-    console.error("NCF: PART 1 live helpers not loaded. Include PART 1 before PART 2.");
-  }
+if (!fetchCirculatingLive || !applyCirculatingToUI) {
+  console.error("NCF: PART 1 live helpers not loaded. Include PART 1 before PART 2.");
+}
 
   // a second small toast (reuses same #ncf-toast node created by PART 1)
   const toast = (() => {
@@ -788,7 +758,7 @@
     };
   })();
 
-  // ---------- Local storage ----------
+  // ---------- Local storage (scoped keys; does not depend on PART 1 DEFAULTS) ----------
   const LS = {
     lastCollection: "ncf.lastCollection.v2",
     tokens: "ncf.tokens.v2",
@@ -853,7 +823,7 @@
     return postJson(url, body);
   }
 
-  // ---------- Wallet holdings helpers (internal wallets) ----------
+  // ---------- Wallet holdings helpers (for Twitch/Telegram internal wallets) ----------
   const twitchBalances = () => Array.isArray(window.twitchWalletBalances) ? window.twitchWalletBalances : [];
   const telegramBalances = () => Array.isArray(window.telegramWalletBalances) ? window.telegramWalletBalances : [];
   const sumHoldings = () => {
@@ -890,99 +860,6 @@
     }
   }
 
-  // ---------- RIGHT-SIDE VERTICAL STEPPER ----------
-  function computeDailyPayoutPerToken(state){
-    const sel = Object.values(state.creator.selection).filter(x=>x.collection===state.creator.collection);
-    const perToken = new Map();
-    sel.forEach(x=>{
-      const k = `${x.collection}::${x.schema_name}::${x.template_id}`;
-      const rewards = state.creator.rewardsPerToken[k] || {};
-      const circ = enrichFromTable(x.schema_name, x.template_id).circulating_supply || 0;
-      Object.entries(rewards).forEach(([id, v])=>{
-        const [, sym] = id.split(":");
-        const perAssetDaily = Number(v) || 0;
-        const contrib = perAssetDaily > 0 ? perAssetDaily * circ : 0;
-        if (contrib > 0) perToken.set(sym, (perToken.get(sym) || 0) + contrib);
-      });
-    });
-    return perToken;
-  }
-
-  function renderStepper(state){
-    const dock = $("#ncf-stepper-dock");
-    if (!dock) return;
-
-    const curStep = state.creator?.wizard?.step || "#ncf-step-a";
-    const col = state.creator?.collection || "";
-    const selectedCount = Object.values(state.creator?.selection || {}).filter(x=>x.collection===col).length;
-    const activeTokenIds = (()=>{ const ids=new Set(); Object.values(state.creator.rewardsPerToken||{}).forEach(m=>{ if(!m) return; Object.entries(m).forEach(([id,v])=>{ if(Number(v)>0) ids.add(id); });}); return ids;})();
-    const perToken = computeDailyPayoutPerToken(state);
-    const fwRows = [];
-    activeTokenIds.forEach(id=>{ const [,s]=id.split(":"); fwRows.push(`${s}: ${fmt(num(state.creator.farmBalances.get(s),0))}`); });
-
-    const item = (idx, id, title, subtitle, peekHtml) => {
-      const isActive = (curStep === id);
-      return `
-        <div class="stepper-item" data-step="${esc(id)}" data-open="${isActive?"true":"false"}">
-          <div class="stepper-head">
-            <div class="row" style="gap:.5rem;">
-              <span class="step-index">${idx}</span>
-              <div class="stepper-title">${esc(title)}</div>
-            </div>
-            <div class="stepper-actions row">
-              <button class="btn btn-ghost ncf-step-go" data-step="${esc(id)}" title="Go to step">Open</button>
-              <button class="btn btn-ghost ncf-step-peek" data-step="${esc(id)}" title="Peek">Peek</button>
-            </div>
-          </div>
-          <div class="muted">${esc(subtitle)}</div>
-          <div class="peek">${peekHtml}</div>
-        </div>
-      `;
-    };
-
-    const peekA = `
-      <div class="row"><span class="badge">${col?esc(col):"—"}</span></div>
-      <div class="muted">Load your AtomicAssets collection to fetch schemas & templates.</div>
-    `;
-    const peekB = `
-      <div class="muted">Farm-Wallet balances:</div>
-      <ul class="muted" style="margin:.2rem 0 0 1rem;">${fwRows.length?fwRows.map(x=>`<li>${x}</li>`).join(""):"<li>—</li>"}</ul>
-    `;
-    const peekC = `
-      <div class="row"><span class="badge ok">Selected: ${selectedCount}</span></div>
-      <div class="muted">Pick templates to reward.</div>
-    `;
-    const tokCount = Array.from(activeTokenIds).length;
-    const perTokenLine = Array.from(perToken.entries()).map(([s,a])=>`${esc(s)}: ${fmt(a)}/day`).join(" · ") || "—";
-    const peekD = `
-      <div class="row"><span class="badge">Active tokens: ${tokCount}</span></div>
-      <div class="muted">Est. daily payout → ${perTokenLine}</div>
-    `;
-    const peekE = `
-      <div class="muted">Review your summary and save configuration.</div>
-    `;
-
-    dock.innerHTML = `
-      ${item(1, "#ncf-step-a", "Step 1 — Collection", col?`Collection: ${esc(col)}`:"Pick your collection", peekA)}
-      ${item(2, "#ncf-step-b", "Step 2 — Funds & Deposit", "Manage Farm-Wallet and top up", peekB)}
-      ${item(3, "#ncf-step-c", "Step 3 — Pick templates", `Selected: ${selectedCount}`, peekC)}
-      ${item(4, "#ncf-step-d", "Step 4 — Rewards", perTokenLine==="—"?"Add rewards":"Payout: " + perTokenLine, peekD)}
-      ${item(5, "#ncf-step-e", "Step 5 — Summary & Save", "Final check & save", peekE)}
-    `;
-
-    $$("#ncf-stepper-dock .ncf-step-go").forEach(b=>{
-      b.addEventListener("click", () => wizardGo(state, b.dataset.step));
-    });
-    $$("#ncf-stepper-dock .ncf-step-peek").forEach(b=>{
-      b.addEventListener("click", () => {
-        const box = b.closest(".stepper-item");
-        const open = box.getAttribute("data-open")==="true";
-        $$("#ncf-stepper-dock .stepper-item").forEach(x=>x.setAttribute("data-open","false"));
-        box.setAttribute("data-open", open ? "false" : "true");
-      });
-    });
-  }
-
   // ---------- Creator UI (layout) ----------
   function mountCreatorDashboard(state){
     ensureCreatorState(state);
@@ -990,7 +867,7 @@
     if(!host) return;
 
     host.innerHTML = `
-      <div class="grid" style="grid-template-columns: minmax(560px,1fr) minmax(340px,420px); gap:18px;">
+      <div class="grid" style="grid-template-columns: 1fr minmax(320px,420px); gap:18px;">
         <div id="ncf-creator-main" class="grid" style="gap:14px;">
           <section class="cy-card" style="padding:16px;">
             <h2 style="margin:0 0 .25rem 0;">Create / Edit Farm</h2>
@@ -999,7 +876,7 @@
               <div class="step" id="ncf-step-a">
                 <h3 style="margin:.2rem 0;">Step 1 — Collection</h3>
                 <div class="row">
-                  <input id="ncf-collection" class="input" placeholder="AtomicAssets collection name (e.g. cryptochaos1)" style="min-width:320px;">
+                  <input id="ncf-collection" class="input" placeholder="AtomicAssets collection name (e.g. cryptochaos1)" style="min-width:280px;">
                   <button id="ncf-load" class="btn btn-primary">Load</button>
                   <div class="badge" id="ncf-meta">Ready</div>
                   <button id="ncf-refresh-farms" class="btn btn-ghost" title="Refresh your farms">My farms</button>
@@ -1024,8 +901,8 @@
                       <option value="twitch">From Twitch Wallet</option>
                       <option value="telegram">From Telegram Wallet</option>
                     </select>
-                    <select id="ncf-token" class="input" style="min-width:180px;"><option value="">Select token…</option></select>
-                    <input id="ncf-amount" class="input" type="number" step="0.0001" min="0" placeholder="Amount" style="width:160px;">
+                    <select id="ncf-token" class="input" style="min-width:160px;"><option value="">Select token…</option></select>
+                    <input id="ncf-amount" class="input" type="number" step="0.0001" min="0" placeholder="Amount" style="width:140px;">
                     <button id="ncf-max" class="btn btn-ghost">MAX</button>
                     <button id="ncf-deposit" class="btn">Deposit to Farm-Wallet</button>
                   </div>
@@ -1035,8 +912,8 @@
                     <div class="badge warn">No available balance on this wallet</div>
                     <p class="muted" style="margin:.4rem 0 0;">Top up the internal wallet (memo shown below):</p>
                     <ul class="muted" style="margin:.2rem 0 0 1rem;">
-                      <li><strong>Twitch Wallet</strong> memo: <code>${esc(state.cfg.memoTwitch)}</code></li>
-                      <li><strong>Telegram Wallet</strong> memo: <code>${esc(state.cfg.memoTelegram)}</code></li>
+						<li><strong>Twitch Wallet</strong> memo: <code>${esc(state.cfg.memoTwitch)}</code></li>
+						<li><strong>Telegram Wallet</strong> memo: <code>${esc(state.cfg.memoTelegram)}</code></li>
                     </ul>
                     <div class="row" style="margin-top:8px;">
                       <button id="ncf-copy-account" class="btn btn-ghost">Copy account</button>
@@ -1066,11 +943,12 @@
                   </div>
                 </div>
 
-                <div class="row" style="margin-top:10px;">
-                  <button id="ncf-prev-b" class="btn btn-ghost">Back</button>
-                  <button id="ncf-cancel-b" class="btn btn-ghost">Cancel</button>
-                  <button id="ncf-next-b" class="btn btn-primary" disabled>Continue</button>
-                </div>
+				<div class="row" style="margin-top:10px;">
+				  <button id="ncf-prev-b" class="btn btn-ghost">Back</button>
+				  <button id="ncf-cancel-b" class="btn btn-ghost">Cancel</button>
+				  <button id="ncf-next-b" class="btn btn-primary" disabled>Continue</button>
+				</div>
+
               </div>
 
               <!-- STEP C -->
@@ -1078,25 +956,25 @@
                 <h3 style="margin:.2rem 0;">Step 3 — Pick templates</h3>
                 <div class="row" style="margin-bottom:8px;">
                   <input id="ncf-search-templates" class="input" placeholder="Search by Template ID or Name…" style="flex:1;min-width:240px;">
-                  <select id="ncf-schema" class="input" style="min-width:200px;"><option value="">All schemas</option></select>
+                  <select id="ncf-schema" class="input" style="min-width:180px;"><option value="">All schemas</option></select>
                   <button id="ncf-expand" class="btn btn-ghost" title="Expand or collapse all schemas">Collapse all</button>
                 </div>
                 <div id="ncf-table-wrap" style="overflow:auto; max-height:44vh;">
                   <div id="ncf-status" style="padding:8px;"></div>
                   <div id="ncf-sections"></div>
                 </div>
-                <div class="row" style="margin-top:8px;align-items:center;">
-                  <span class="badge" id="ncf-count-schemas">Schemas: 0</span>
-                  <span class="badge" id="ncf-count-templates">Templates: 0</span>
-                  <span class="badge ok" id="ncf-count-selected">Selected: 0</span>
-                  <div style="margin-left:auto;">
-                    <button id="ncf-prev-c" class="btn btn-ghost">Back</button>
-                    <button id="ncf-cancel-c" class="btn btn-ghost">Cancel</button>
-                    <button id="ncf-select-all" class="btn btn-ghost" title="Select all visible">Select all</button>
-                    <button id="ncf-clear" class="btn btn-ghost" title="Clear selection">Clear</button>
-                    <button id="ncf-next-c" class="btn btn-primary" disabled>Continue</button>
-                  </div>
-                </div>
+				<div class="row" style="margin-top:8px;align-items:center;">
+				  <span class="badge" id="ncf-count-schemas">Schemas: 0</span>
+				  <span class="badge" id="ncf-count-templates">Templates: 0</span>
+				  <span class="badge ok" id="ncf-count-selected">Selected: 0</span>
+				  <div style="margin-left:auto;">
+				    <button id="ncf-prev-c" class="btn btn-ghost">Back</button>
+				    <button id="ncf-cancel-c" class="btn btn-ghost">Cancel</button>
+				    <button id="ncf-select-all" class="btn btn-ghost" title="Select all visible">Select all</button>
+				    <button id="ncf-clear" class="btn btn-ghost" title="Clear selection">Clear</button>
+				    <button id="ncf-next-c" class="btn btn-primary" disabled>Continue</button>
+				  </div>
+				</div>
               </div>
 
               <!-- STEP D -->
@@ -1116,12 +994,13 @@
                 <div id="ncf-rp-body" class="grid" style="gap:10px;">
                   <div class="soft" style="padding:12px; text-align:center;">No templates selected yet.</div>
                 </div>
-                <div class="row" style="margin-top:10px;">
-                  <button id="ncf-prev-d" class="btn btn-ghost">Back</button>
-                  <button id="ncf-cancel-d" class="btn btn-ghost">Cancel</button>
-                  <button id="ncf-save-draft" class="btn" disabled>Save Draft</button>
-                  <button id="ncf-next-d" class="btn btn-primary" disabled>Continue</button>
-                </div>
+				<div class="row" style="margin-top:10px;">
+				  <button id="ncf-prev-d" class="btn btn-ghost">Back</button>
+				  <button id="ncf-cancel-d" class="btn btn-ghost">Cancel</button>
+				  <button id="ncf-save-draft" class="btn" disabled>Save Draft</button>
+				  <button id="ncf-next-d" class="btn btn-primary" disabled>Continue</button>
+				</div>
+
               </div>
 
               <!-- STEP E -->
@@ -1131,27 +1010,27 @@
                   Summary of the configuration and Farm-Wallet balance check for the active tokens.
                 </div>
                 <div id="ncf-summary" class="soft" style="padding:10px;"></div>
-                <div class="row" style="margin-top:10px;">
-                  <button id="ncf-prev-e" class="btn btn-ghost">Back</button>
-                  <button id="ncf-cancel-e" class="btn btn-ghost">Cancel</button>
-                  <button id="ncf-confirm" class="btn btn-primary" disabled>Confirm & Save</button>
-                </div>
+				<div class="row" style="margin-top:10px;">
+				  <button id="ncf-prev-e" class="btn btn-ghost">Back</button>
+				  <button id="ncf-cancel-e" class="btn btn-ghost">Cancel</button>
+				  <button id="ncf-confirm" class="btn btn-primary" disabled>Confirm & Save</button>
+				</div>
               </div>
             </div>
           </section>
 
-          <section id="ncf-collapsed" class="cy-card" style="padding:12px; display:none;">
-            <div class="row" style="justify-content:space-between;align-items:center;">
-              <div class="row" style="gap:.6rem;">
-                <strong>Farm configuration saved</strong>
-                <span class="badge ok">Saved</span>
-              </div>
-              <div class="row" style="gap:.5rem;">
-                <button id="ncf-edit-again" class="btn btn-ghost" title="Edit current config">Edit</button>
-                <button id="ncf-back-start" class="btn btn-ghost" title="Back to Step 1">Back to start</button>
-              </div>
-            </div>
-          </section>
+		<section id="ncf-collapsed" class="cy-card" style="padding:12px; display:none;">
+		  <div class="row" style="justify-content:space-between;align-items:center;">
+		    <div class="row" style="gap:.6rem;">
+		      <strong>Farm configuration saved</strong>
+		      <span class="badge ok">Saved</span>
+		    </div>
+		    <div class="row" style="gap:.5rem;">
+		      <button id="ncf-edit-again" class="btn btn-ghost" title="Edit current config">Edit</button>
+		      <button id="ncf-back-start" class="btn btn-ghost" title="Back to Step 1">Back to start</button>
+		    </div>
+		  </div>
+		</section>
 
           <section id="ncf-summary-table" class="cy-card" style="padding:14px; display:none;">
             <h3 style="margin:.2rem 0;">Current Farm</h3>
@@ -1159,23 +1038,15 @@
           </section>
         </div>
 
-        <!-- RIGHT: Vertical stepper + Tokens Library -->
+        <!-- RIGHT: Tokens Library -->
         <aside id="ncf-rightpanel" class="grid" style="gap:14px;">
-          <section class="cy-card" style="padding:14px;">
-            <h3 style="margin:.1rem 0 .5rem;">Wizard Steps</h3>
-            <div id="ncf-stepper-dock" class="grid" style="gap:10px;">
-              <!-- filled by renderStepper -->
-              ${skeleton(3)}
-            </div>
-          </section>
-
           <section class="cy-card" style="padding:14px;">
             <h3 style="margin:.1rem 0 .5rem;">Tokens Library</h3>
             <div class="muted" style="margin-bottom:.5rem;">
               Add tokens you intend to use as rewards. Sorting prioritizes tokens you hold in internal wallets.
             </div>
             <div class="grid" style="gap:10px;">
-              <div class="row" style="align-items:flex-end;">
+              <div class="row">
                 <input id="ncf-tok-contract" class="input" placeholder="Token contract (e.g. eosio.token)" style="min-width:220px;">
                 <input id="ncf-tok-symbol" class="input" placeholder="Symbol (e.g. WAX)" style="width:120px;">
                 <input id="ncf-tok-dec" class="input" type="number" min="0" max="18" step="1" placeholder="Decimals" style="width:120px;">
@@ -1189,18 +1060,20 @@
       </div>
     `;
 
+    // preload field(s)
     $("#ncf-collection").value = state.creator.collection || "";
 
+    // attach handlers
     bindCreatorHandlers(state);
+    // initial farms list + token library + balances panel
     loadCreatorFarms(state);
     renderTokenLibrary(state);
     updateTopupPanel(state);
-    renderStepper(state);
-
     if (rLS(LS.autoMonitor, false)) {
       const auto = $("#ncf-auto"); if (auto) auto.checked = true;
       startAutoBalances(state);
     }
+    // show step A by default
     wizardGo(state, state.creator.wizard.step || "#ncf-step-a");
   }
 
@@ -1224,7 +1097,7 @@
         state.creator.tokens=state.creator.tokens.filter(x=>!(x.contract===c&&x.symbol===s));
         Object.keys(state.creator.rewardsPerToken).forEach(k=>{ if(state.creator.rewardsPerToken[k]) delete state.creator.rewardsPerToken[k][`${c}:${s}`];});
         wLS(LS.tokens,state.creator.tokens); wLS(LS.rewardsPerToken,state.creator.rewardsPerToken);
-        renderTokenLibrary(state); updateRewardsPanel(state); renderStepper(state);
+        renderTokenLibrary(state); updateRewardsPanel(state);
       });
     });
   }
@@ -1236,7 +1109,6 @@
     if(el){ el.style.display = ""; }
     state.creator.wizard.step=id;
     wLS(LS.wizard, state.creator.wizard);
-    renderStepper(state);
   }
 
   function updateCTAState(state){
@@ -1256,7 +1128,6 @@
     set("ncf-save-draft", hasSel && hasAnyPositive);
     set("ncf-next-d",    hasSel && hasAnyPositive);
     set("ncf-confirm",   hasSel && hasAnyPositive);
-    renderStepper(state);
   }
 
   function refreshStep4Summary(state){
@@ -1268,23 +1139,23 @@
 
     badgeSel.textContent = `Selected: ${sel.length}`;
 
+    // sum per token (never across symbols)
     const perToken = new Map();
-    sel.forEach(x => {
-      const k = `${x.collection}::${x.schema_name}::${x.template_id}`;
-      const rewards = state.creator.rewardsPerToken[k] || {};
-      const circ = enrichFromTable(x.schema_name, x.template_id).circulating_supply || 0;
-      Object.entries(rewards).forEach(([id, v]) => {
-        const [, sym] = id.split(":");
-        const perAssetDaily = Number(v) || 0;
-        const contrib = perAssetDaily > 0 ? perAssetDaily * circ : 0;
-        if (contrib > 0) perToken.set(sym, (perToken.get(sym) || 0) + contrib);
-      });
-    });
+	sel.forEach(x => {
+	  const k = `${x.collection}::${x.schema_name}::${x.template_id}`;
+	  const rewards = state.creator.rewardsPerToken[k] || {};
+	  const circ = enrichFromTable(x.schema_name, x.template_id).circulating_supply || 0; // <-- moltiplicatore
+	  Object.entries(rewards).forEach(([id, v]) => {
+	    const [, sym] = id.split(":");
+	    const perAssetDaily = Number(v) || 0;
+	    const contrib = perAssetDaily > 0 ? perAssetDaily * circ : 0;
+	    if (contrib > 0) perToken.set(sym, (perToken.get(sym) || 0) + contrib);
+	  });
+	});
 
     badgeTok.textContent = `Active tokens: ${perToken.size}`;
-    const parts = Array.from(perToken.entries()).map(([s,a]) => `${s}: ${fmt(a)}/day`);
+    const parts = Array.from(perToken.entries()).map(([s,a]) => `${s}: ${a}/day`);
     badgePay.textContent = parts.length ? `Est. daily payout: ${parts.join(" · ")}` : "Est. daily payout: —";
-    renderStepper(state);
   }
 
   // ---------- Step A load collection ----------
@@ -1432,6 +1303,7 @@
       $$("#ncf-farms-list .ncf-farm-stats").forEach(b=>{
         b.addEventListener("click", () => {
           const id = b.dataset.id;
+          // switch to Stats tab and pre-load that farm
           $("#ncf-tab-stats")?.click();
           ensureStatsPaneMounted(state, id);
         });
@@ -1509,25 +1381,25 @@
         ? `<p class="muted" style="margin:0;">${hints.join(" ")}</p>`
         : `<p class="muted" style="margin:0;">No local balances detected for your active tokens.</p>`;
     }
-    renderStepper(state);
   }
 
-  async function refreshFarmWalletBalances(state){
-    if (!getWax()) {
-      state.creator.farmBalances = new Map();
-      state.creator.farmBalancesTS = Date.now();
-      renderFarmBalances(state);
-      return;
-    }
-    try{
-      const res = await fetchFarmBalances(state);
-      state.creator.farmBalances = res.map;
-      state.creator.farmBalancesTS = res.ts;
-      renderFarmBalances(state);
-    }catch(e){
-      toast(String(e.message||e), "error");
-    }
+async function refreshFarmWalletBalances(state){
+  // se non sei loggato, non chiamare l'endpoint
+  if (!getWax()) {
+    state.creator.farmBalances = new Map();
+    state.creator.farmBalancesTS = Date.now();
+    renderFarmBalances(state);
+    return;
   }
+  try{
+    const res = await fetchFarmBalances(state);
+    state.creator.farmBalances = res.map;
+    state.creator.farmBalancesTS = res.ts;
+    renderFarmBalances(state);
+  }catch(e){
+    toast(String(e.message||e), "error");
+  }
+}
 
   function startAutoBalances(state){
     stopAutoBalances(state);
@@ -1549,7 +1421,6 @@
     hint.textContent=`Balance: ${fmt(bal)} ${sym||""}`;
     amt.value="";
     empty.style.display=opts.some(o=>o.amount>0)?"none":"";
-    renderStepper(state);
   }
   async function performTopUp(state){
     const src=($("#ncf-src").value||"twitch").toLowerCase();
@@ -1586,37 +1457,39 @@
     $("#ncf-count-selected").textContent=`Selected: ${c}`;
     updateCTAState(state);
     refreshStep4Summary(state);
-    renderStepper(state);
   }
 
   // ---------- Step D rewards panel ----------
-  function enrichFromTable(schemaName, tid){
-    const st = window.__NCF_STATE__;
-    const circ = st ? ensureCircState(st) : null;
-    const live = circ?.map?.get(Number(tid)) || null;
+function enrichFromTable(schemaName, tid){
+  // prova dalla mappa live prima
+  const st = window.__NCF_STATE__;
+  const circ = st ? ensureCircState(st) : null;
+  const live = circ?.map?.get(Number(tid)) || null;
 
-    let name = null, circDom = 0, maxDom = null;
-    const sid = `ncf-sec-${schemaName.replace(/[^a-z0-9]+/gi,"-")}`;
-    const row = document.querySelector(`#${sid} tr[data-tid="${tid}"]`);
-    if (row) {
-      name = row.children[2].textContent.trim() || null;
-      circDom = Number(row.children[3].textContent.replace(/[^\d]/g,"")) || 0;
-      const m = row.children[4].textContent.trim();
-      maxDom = (m === "—" ? null : Number(m.replace(/[^\d]/g,"")) || 0);
-    }
-
-    return {
-      template_name: name,
-      circulating_supply: live ? live.circ : circDom,
-      max_supply: live ? live.max : maxDom
-    };
+  // fallback: DOM (vecchi valori visuali se live ancora non pronto)
+  let name = null, circDom = 0, maxDom = null;
+  const sid = sectionId(schemaName);
+  const row = document.querySelector(`#${sid} tr[data-tid="${tid}"]`);
+  if (row) {
+    name = row.children[2].textContent.trim() || null;
+    circDom = Number(row.children[3].textContent.replace(/[^\d]/g,"")) || 0;
+    const m = row.children[4].textContent.trim();
+    maxDom = (m === "—" ? null : Number(m.replace(/[^\d]/g,"")) || 0);
   }
+
+  return {
+    template_name: name,
+    circulating_supply: live ? live.circ : circDom,
+    max_supply: live ? live.max : maxDom
+  };
+}
+
 
   function updateRewardsPanel(state){
     updateSelectedCount(state);
     const sel=Object.values(state.creator.selection).filter(x=>x.collection===state.creator.collection);
     const body=$("#ncf-rp-body");
-    if(!sel.length){ body.innerHTML=`<div class="soft" style="padding:12px;text-align:center;">No templates selected yet.</div>`; renderStepper(state); return; }
+    if(!sel.length){ body.innerHTML=`<div class="soft" style="padding:12px;text-align:center;">No templates selected yet.</div>`; return; }
     const tokens=state.creator.tokens;
     body.innerHTML=sel.map(s=>{
       const k=selectionKey(s.collection,s.schema_name,s.template_id);
@@ -1637,8 +1510,8 @@
         const v  = on ? (state.creator.rewardsPerToken[k][id] ?? "") : "";
         const show = on ? "" : "display:none;";
         return `<div class="row ncf-reward-row" data-key="${esc(k)}" data-token="${esc(id)}" style="${show}">
-          <span class="muted" style="min-width:180px;"><strong>${esc(t.symbol)}</strong> <small>@${esc(t.contract)}</small></span>
-          <input type="number" class="input ncf-reward-input" step="0.0001" min="0" placeholder="Reward per asset(NFT) each day" value="${String(v)}" style="width:240px;">
+          <span class="muted" style="min-width:160px;"><strong>${esc(t.symbol)}</strong> <small>@${esc(t.contract)}</small></span>
+          <input type="number" class="input ncf-reward-input" step="0.0001" min="0" placeholder="Reward per asset(NFT) each day" value="${String(v)}" style="width:220px;">
         </div>`;
       }).join("");
       return `<div class="soft" style="padding:10px;" data-item="${esc(k)}">
@@ -1654,7 +1527,7 @@
           <div class="row" style="align-items:flex-end;">
             <div class="row">
               <label class="muted" style="margin-right:.5rem;"><small>Max validity</small></label>
-              <input type="datetime-local" class="input ncf-expiry" min="${minISO}" value="${exISO?toLoc(new Date(exISO)):""}" style="min-width:240px;">
+              <input type="datetime-local" class="input ncf-expiry" min="${minISO}" value="${exISO?toLoc(new Date(exISO)):""}" style="min-width:220px;">
             </div>
             <button class="btn btn-ghost ncf-plus7">+7d</button>
             <button class="btn btn-ghost ncf-plus30">+30d</button>
@@ -1668,7 +1541,7 @@
     $$("#ncf-rp-body .ncf-id-btn").forEach(b=>b.addEventListener("click",()=>navigator.clipboard.writeText(b.textContent.trim()).then(()=>toast("Template ID copied"))));
     $$("#ncf-rp-body .ncf-remove").forEach(btn=>btn.addEventListener("click",e=>{
       const box=e.target.closest("[data-item]"); const k=box.dataset.item; const obj=state.creator.selection[k]; if(!obj) return;
-      const sid=`ncf-sec-${obj.schema_name.replace(/[^a-z0-9]+/gi,"-")}`; const row=$(`#${sid} tr[data-tid="${obj.template_id}"]`); if(row){ const chk=$(".ncf-row-check",row); if(chk) chk.checked=false; }
+      const sid=sectionId(obj.schema_name); const row=$(`#${sid} tr[data-tid="${obj.template_id}"]`); if(row){ const chk=$(".ncf-row-check",row); if(chk) chk.checked=false; }
       delete state.creator.selection[k]; delete state.creator.rewardsPerToken[k]; delete state.creator.expiry[k];
       wLS(LS.selection,state.creator.selection); wLS(LS.rewardsPerToken,state.creator.rewardsPerToken); wLS(LS.expiry,state.creator.expiry);
       updateRewardsPanel(state);
@@ -1677,19 +1550,20 @@
       const box=e.target.closest("[data-item]"); const k=box.dataset.item; const nd=parseLoc(e.target.value);
       if(!nd){ delete state.creator.expiry[k]; wLS(LS.expiry,state.creator.expiry); return; }
       const prev=state.creator.expiry[k]?new Date(state.creator.expiry[k]):null; if(prev && nd<prev){ e.target.value=toLoc(prev); toast("Expiration can only be extended.","error"); return; }
-      state.creator.expiry[k]=nd.toISOString(); wLS(LS.expiry,state.creator.expiry); renderStepper(state);
+      state.creator.expiry[k]=nd.toISOString(); wLS(LS.expiry,state.creator.expiry);
     }));
     $$("#ncf-rp-body .ncf-plus7").forEach(btn=>btn.addEventListener("click",e=>{
       const box=e.target.closest("[data-item]"); const k=box.dataset.item; const inp=$(".ncf-expiry",box);
       const base=state.creator.expiry[k]?new Date(state.creator.expiry[k]):nowPlusMin(5); const d=new Date(base); d.setDate(d.getDate()+7);
-      state.creator.expiry[k]=d.toISOString(); wLS(LS.expiry,state.creator.expiry); inp.value=toLoc(d); renderStepper(state);
+      state.creator.expiry[k]=d.toISOString(); wLS(LS.expiry,state.creator.expiry); inp.value=toLoc(d);
     }));
     $$("#ncf-rp-body .ncf-plus30").forEach(btn=>btn.addEventListener("click",e=>{
       const box=e.target.closest("[data-item]"); const k=box.dataset.item; const inp=$(".ncf-expiry",box);
       const base=state.creator.expiry[k]?new Date(state.creator.expiry[k]):nowPlusMin(5); const d=new Date(base); d.setDate(d.getDate()+30);
-      state.creator.expiry[k]=d.toISOString(); wLS(LS.expiry,state.creator.expiry); inp.value=toLoc(d); renderStepper(state);
+      state.creator.expiry[k]=d.toISOString(); wLS(LS.expiry,state.creator.expiry); inp.value=toLoc(d);
     }));
 
+    // chips delegation
     if (!state.creator._chipDelegationBound) {
       document.getElementById("ncf-rp-body").addEventListener("click", (e) => {
         const chip = e.target.closest(".ncf-token-chips .badge");
@@ -1706,6 +1580,7 @@
           delete state.creator.rewardsPerToken[k][id];
         }
         wLS(LS.rewardsPerToken,state.creator.rewardsPerToken);
+        // show/hide input row
         const row = document.querySelector(`.ncf-reward-row[data-key="${CSS.escape(k)}"][data-token="${CSS.escape(id)}"]`);
         if (row) row.style.display = on ? "" : "none";
         updateCTAState(state);
@@ -1722,7 +1597,6 @@
 
     updateCTAState(state);
     refreshStep4Summary(state);
-    renderStepper(state);
   }
 
   // ---------- Build payload + summary ----------
@@ -1783,7 +1657,6 @@
       <div class="soft" style="padding:8px;"><div class="muted">Farm-Wallet overview</div><ul class="muted" style="margin:.3rem 0 0 1rem;">${fwRows}</ul></div>
       <div class="soft" style="padding:8px;"><table style="width:100%"><thead><tr><th>Template</th><th>Rewards (per day)</th><th>Expiry</th></tr></thead><tbody>${rows||`<tr><td colspan="3">No templates</td></tr>`}</tbody></table></div>
     </div>`;
-    renderStepper(state);
   }
 
   function renderFinalTable(state){
@@ -1817,71 +1690,69 @@
     }
   }
 
-  // ---------- Step A action ----------
-  async function doLoadCollection(state){
-    const col = $("#ncf-collection").value.trim();
-    if(!col){ toast("Enter a collection name.","error"); return; }
+// ---------- Step A action ----------
+async function doLoadCollection(state){
+  const col = $("#ncf-collection").value.trim();
+  if(!col){ toast("Enter a collection name.","error"); return; }
 
-    state.creator.collection = col;
-    wLS(LS.lastCollection, col);
-    $("#ncf-meta").textContent = "Loading…";
-    $("#ncf-sections").innerHTML = "";
-    renderSkeleton($("#ncf-status"));
+  state.creator.collection = col;
+  wLS(LS.lastCollection, col);
+  $("#ncf-meta").textContent = "Loading…";
+  $("#ncf-sections").innerHTML = "";
+  renderSkeleton($("#ncf-status"));
 
-    // 1) fetch schemas+templates
-    let data;
-    try{
-      data = await fetchTemplatesBySchema(state, col);
-    }catch(e){
-      $("#ncf-status").innerHTML = `<div class="soft" style="padding:14px; text-align:center;">${esc(String(e.message||e))}</div>`;
-      $("#ncf-meta").textContent = "Error loading collection";
-      renderStepper(state);
-      return;
-    }
-
-    // 2) Render iniziale
-    state.creator.raw = data;
-    const opts=(data.schemas||[]).map(s=>`<option value="${esc(s.schema_name)}">${esc(s.schema_name)}</option>`).join("");
-    $("#ncf-schema").innerHTML=`<option value="">All schemas</option>${opts}`;
-    const ts=(data.schemas||[]).length, tt=(data.schemas||[]).reduce((a,s)=>a+(s.templates?.length||0),0);
-    $("#ncf-status").innerHTML = "";
-    $("#ncf-meta").innerHTML = `Collection: ${esc(data.collection||col)} — Schemas ${ts} — Templates ${tt}`;
-    renderSections(state, $("#ncf-sections"), data);
-
-    // 3) Live circulating (best-effort)
-    try{
-      await fetchCirculatingLive(state, data.collection || col, []);
-      applyCirculatingToUI(state);
-    }catch(e){
-      console.warn("circulating-live failed:", e);
-      toast("Live supply unavailable right now.", "error");
-    }
-
-    // 4) Avanza wizard + pannelli
-    updateRewardsPanel(state);
-    wizardGo(state, "#ncf-step-b");
-
-    // 5) Farm-Wallet balances (best-effort e solo se loggato)
-    try{
-      if (getWax()) {
-        await refreshFarmWalletBalances(state);
-      } else {
-        const tb = $("#ncf-farm-balances");
-        if (tb) tb.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:10px;">Sign in to view balances</td></tr>`;
-      }
-    }catch(e){
-      console.warn("balances fetch failed:", e);
-    }
-    updateTopupPanel(state);
-
-    // 6) Polling live (silenzioso)
-    try{
-      startLiveCircPolling(state, data.collection || col, 60000);
-    }catch(e){
-      console.warn("startLiveCircPolling failed:", e);
-    }
-    renderStepper(state);
+  // 1) Carica struttura schemi+template (unico step “blocking”)
+  let data;
+  try{
+    data = await fetchTemplatesBySchema(state, col);
+  }catch(e){
+    $("#ncf-status").innerHTML = `<div class="soft" style="padding:14px; text-align:center;">${esc(String(e.message||e))}</div>`;
+    $("#ncf-meta").textContent = "Error loading collection";
+    return;
   }
+
+  // 2) Render iniziale
+  state.creator.raw = data;
+  const opts=(data.schemas||[]).map(s=>`<option value="${esc(s.schema_name)}">${esc(s.schema_name)}</option>`).join("");
+  $("#ncf-schema").innerHTML=`<option value="">All schemas</option>${opts}`;
+  const ts=(data.schemas||[]).length, tt=(data.schemas||[]).reduce((a,s)=>a+(s.templates?.length||0),0);
+  $("#ncf-status").innerHTML = "";
+  $("#ncf-meta").innerHTML = `Collection: ${esc(data.collection||col)} — Schemas ${ts} — Templates ${tt}`;
+  renderSections(state, $("#ncf-sections"), data);
+
+  // 3) Live circulating (best-effort)
+  try{
+    await fetchCirculatingLive(state, data.collection || col, []);
+    applyCirculatingToUI(state);
+  }catch(e){
+    console.warn("circulating-live failed:", e);
+    toast("Live supply unavailable right now.", "error");
+  }
+
+  // 4) Avanza wizard + pannelli
+  updateRewardsPanel(state);
+  wizardGo(state, "#ncf-step-b");
+
+  // 5) Farm-Wallet balances (best-effort e solo se loggato)
+  try{
+    if (getWax()) {
+      await refreshFarmWalletBalances(state);
+    } else {
+      const tb = $("#ncf-farm-balances");
+      if (tb) tb.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:10px;">Sign in to view balances</td></tr>`;
+    }
+  }catch(e){
+    console.warn("balances fetch failed:", e);
+  }
+  updateTopupPanel(state);
+
+  // 6) Polling live (silenzioso)
+  try{
+    startLiveCircPolling(state, data.collection || col, 60000);
+  }catch(e){
+    console.warn("startLiveCircPolling failed:", e);
+  }
+}
 
   // ---------- Creator handlers binding ----------
   function bindCreatorHandlers(state){
@@ -1910,9 +1781,9 @@
     $("#ncf-next-b")?.addEventListener("click",()=> wizardGo(state,"#ncf-step-c"));
 
     // Step C
-    $("#ncf-search-templates")?.addEventListener("input",(e)=>{ state.creator.search=e.target.value||""; if(state.creator.raw) renderSections(state,$("#ncf-sections"), state.creator.raw); renderStepper(state); });
-    $("#ncf-schema")?.addEventListener("change",(e)=>{ state.creator.schemaFilter=e.target.value||""; if(state.creator.raw) renderSections(state,$("#ncf-sections"), state.creator.raw); renderStepper(state); });
-    $("#ncf-expand")?.addEventListener("click",()=>{ state.creator.expandAll=!state.creator.expandAll; $("#ncf-expand").textContent=state.creator.expandAll?"Collapse all":"Expand all"; if(state.creator.raw) renderSections(state,$("#ncf-sections"), state.creator.raw); renderStepper(state); });
+    $("#ncf-search-templates")?.addEventListener("input",(e)=>{ state.creator.search=e.target.value||""; if(state.creator.raw) renderSections(state,$("#ncf-sections"), state.creator.raw); });
+    $("#ncf-schema")?.addEventListener("change",(e)=>{ state.creator.schemaFilter=e.target.value||""; if(state.creator.raw) renderSections(state,$("#ncf-sections"), state.creator.raw); });
+    $("#ncf-expand")?.addEventListener("click",()=>{ state.creator.expandAll=!state.creator.expandAll; $("#ncf-expand").textContent=state.creator.expandAll?"Collapse all":"Expand all"; if(state.creator.raw) renderSections(state,$("#ncf-sections"), state.creator.raw); });
     $("#ncf-select-all")?.addEventListener("click",()=>{ if(!state.creator.raw) return; (state.creator.raw.schemas||[]).forEach(s=>(s.templates||[]).forEach(t=>setSelected(state,state.creator.collection,s.schema_name,Number(t.template_id),true))); $$(".ncf-row-check").forEach(c=>c.checked=true); updateRewardsPanel(state); });
     $("#ncf-clear")?.addEventListener("click",()=>{ if(!state.creator.raw) return; Object.keys(state.creator.selection).forEach(k=>{ if(k.startsWith(`${state.creator.collection}::`)){ delete state.creator.selection[k]; delete state.creator.rewardsPerToken[k]; delete state.creator.expiry[k]; }}); wLS(LS.selection,state.creator.selection); wLS(LS.rewardsPerToken,state.creator.rewardsPerToken); wLS(LS.expiry,state.creator.expiry); $$(".ncf-row-check").forEach(c=>c.checked=false); updateRewardsPanel(state); });
     $("#ncf-next-c")?.addEventListener("click",()=>{ const count=Object.values(state.creator.selection).filter(x=>x.collection===state.creator.collection).length; if(!count){ toast("Select at least one template.","error"); return; } wizardGo(state,"#ncf-step-d"); updateRewardsPanel(state); });
@@ -1922,60 +1793,73 @@
     $("#ncf-next-d")?.addEventListener("click",async()=>{ const ok=await saveDraft(state); if(!ok) return; renderSummary(state); wizardGo(state,"#ncf-step-e"); });
 
     // Step E
-    $("#ncf-confirm")?.addEventListener("click",async()=>{ const ok=await saveDraft(state); if(!ok) return; toast("Configuration saved."); $("#ncf-wizard").style.display="none"; $("#ncf-collapsed").style.display=""; $("#ncf-summary-table").style.display=""; renderFinalTable(state); renderStepper(state); });
+    $("#ncf-confirm")?.addEventListener("click",async()=>{ const ok=await saveDraft(state); if(!ok) return; toast("Configuration saved."); $("#ncf-wizard").style.display="none"; $("#ncf-collapsed").style.display=""; $("#ncf-summary-table").style.display=""; renderFinalTable(state); });
 	
-    // Post-save
-    $("#ncf-edit-again")?.addEventListener("click", () => {
-      $("#ncf-collapsed").style.display = "none";
-      $("#ncf-summary-table").style.display = "none";
-      $("#ncf-wizard").style.display = "";
-      wizardGo(state, "#ncf-step-d");
-    });
-    $("#ncf-back-start")?.addEventListener("click", () => {
-      $("#ncf-collapsed").style.display = "none";
-      $("#ncf-summary-table").style.display = "none";
-      $("#ncf-wizard").style.display = "";
-      wizardGo(state, "#ncf-step-a");
-    });
+	  // Pulsanti post-salvataggio
+	$("#ncf-edit-again")?.addEventListener("click", () => {
+	  // riapri il wizard sullo Step D per modificare rewards/expiry
+	  $("#ncf-collapsed").style.display = "none";
+	  $("#ncf-summary-table").style.display = "none";
+	  $("#ncf-wizard").style.display = "";
+	  wizardGo(state, "#ncf-step-d");
+	});
+	
+	$("#ncf-back-start")?.addEventListener("click", () => {
+	  // torna alla sezione iniziale (Step A)
+	  $("#ncf-collapsed").style.display = "none";
+	  $("#ncf-summary-table").style.display = "none";
+	  $("#ncf-wizard").style.display = "";
+	  wizardGo(state, "#ncf-step-a");
+	});
 
     // Tokens Library add
     $("#ncf-tok-add")?.addEventListener("click",()=>{ const c=$("#ncf-tok-contract").value.trim(); const s=$("#ncf-tok-symbol").value.trim().toUpperCase(); const d=$("#ncf-tok-dec").value===""?null:Number($("#ncf-tok-dec").value); if(!c||!s){ toast("Provide contract and symbol.","error"); return; } if(state.creator.tokens.some(t=>t.contract===c&&t.symbol===s)){ toast("Token already present."); return; } state.creator.tokens.push({contract:c,symbol:s,decimals:d}); wLS(LS.tokens,state.creator.tokens); $("#ncf-tok-contract").value=""; $("#ncf-tok-symbol").value=""; $("#ncf-tok-dec").value=""; renderTokenLibrary(state); updateRewardsPanel(state); });
+	// helper di navigazione
+	function goHomeCreator() { wizardGo(state, "#ncf-step-a"); }
+	const backTo = {
+	  b: () => wizardGo(state, "#ncf-step-a"),
+	  c: () => wizardGo(state, "#ncf-step-b"),
+	  d: () => wizardGo(state, "#ncf-step-c"),
+	  e: () => wizardGo(state, "#ncf-step-d"),
+	};
+	
+	// STEP B
+	document.getElementById("ncf-prev-b")?.addEventListener("click", backTo.b);
+	document.getElementById("ncf-cancel-b")?.addEventListener("click", goHomeCreator);
+	
+	// STEP C
+	document.getElementById("ncf-prev-c")?.addEventListener("click", backTo.c);
+	document.getElementById("ncf-cancel-c")?.addEventListener("click", goHomeCreator);
+	
+	// STEP D
+	document.getElementById("ncf-prev-d")?.addEventListener("click", backTo.d);
+	document.getElementById("ncf-cancel-d")?.addEventListener("click", goHomeCreator);
+	
+	// STEP E
+	document.getElementById("ncf-prev-e")?.addEventListener("click", backTo.e);
+	document.getElementById("ncf-cancel-e")?.addEventListener("click", goHomeCreator);
 
-    // Quick nav helpers
-    function goHomeCreator() { wizardGo(state, "#ncf-step-a"); }
-    const backTo = {
-      b: () => wizardGo(state, "#ncf-step-a"),
-      c: () => wizardGo(state, "#ncf-step-b"),
-      d: () => wizardGo(state, "#ncf-step-c"),
-      e: () => wizardGo(state, "#ncf-step-d"),
-    };
-    document.getElementById("ncf-prev-b")?.addEventListener("click", backTo.b);
-    document.getElementById("ncf-cancel-b")?.addEventListener("click", goHomeCreator);
-    document.getElementById("ncf-prev-c")?.addEventListener("click", backTo.c);
-    document.getElementById("ncf-cancel-c")?.addEventListener("click", goHomeCreator);
-    document.getElementById("ncf-prev-d")?.addEventListener("click", backTo.d);
-    document.getElementById("ncf-cancel-d")?.addEventListener("click", goHomeCreator);
-    document.getElementById("ncf-prev-e")?.addEventListener("click", backTo.e);
-    document.getElementById("ncf-cancel-e")?.addEventListener("click", goHomeCreator);
-
-    // visibility pause auto/pollers
+    // visibility pause auto
     document.addEventListener("visibilitychange",()=>{ if(document.hidden) stopAutoBalances(state); });
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) stopLiveCircPolling(state);
-    });
-
-    // when switching main tabs, stop/start live polling
-    ["#ncf-tab-browse", "#ncf-tab-creator", "#ncf-tab-stats", "#ncf-tab-help"].forEach(id => {
-      const b = document.querySelector(id);
-      if (!b) return;
-      b.addEventListener("click", () => {
-        const onCreator = (id === "#ncf-tab-creator");
-        if (!onCreator) stopLiveCircPolling(state);
-        else if (state.creator?.collection) {
-          startLiveCircPolling(state, state.creator.collection, 60000);
-        }
-      });
-    });
+	// Stop polling quando non serve
+	document.addEventListener("visibilitychange", () => {
+	  if (document.hidden) stopLiveCircPolling(state);
+	});
+	
+	// quando l’utente cambia tab principale, spegni/accendi in base al tab
+	const tabIds = ["#ncf-tab-browse", "#ncf-tab-creator", "#ncf-tab-stats", "#ncf-tab-help"];
+	tabIds.forEach(id => {
+	  const b = document.querySelector(id);
+	  if (!b) return;
+	  b.addEventListener("click", () => {
+	    const onCreator = (id === "#ncf-tab-creator");
+	    if (!onCreator) stopLiveCircPolling(state);
+	    else if (state.creator?.collection) {
+	      startLiveCircPolling(state, state.creator.collection, 60000);
+	    }
+	  });
+	});
+	  
   }
 
   // ---------- Stats pane ----------
@@ -1991,7 +1875,7 @@
               <option value="">All farms (this creator)</option>
             </select>
             <button id="ncf-refresh-stats" class="btn btn-ghost">Refresh</button>
-            <input id="ncf-farm-quick-id" class="input" placeholder="Farm ID…" style="width:160px;">
+            <input id="ncf-farm-quick-id" class="input" placeholder="Farm ID…" style="width:140px;">
             <button id="ncf-open-farmid" class="btn btn-ghost">Open</button>
           </div>
         </div>
@@ -2202,6 +2086,7 @@
   }
 
   async function ensureStatsPaneMounted(state, directFarmId=null){
+    // load farms for picker
     try{
       const farms = await fetchFarmsForCreator(state);
       $("#ncf-stats-head-farms").textContent = `Farms: ${farms.length}`;
@@ -2234,6 +2119,7 @@
     const state = window.__NCF_STATE__;
     if(!state || !state.cfg) return;
 
+    // mount creator & stats when their tabs are opened
     $("#ncf-tab-creator")?.addEventListener("click", ()=> {
       showTabFromPart2("creator");
       if (!state._creatorMounted) {
@@ -2251,6 +2137,8 @@
     });
     $("#ncf-tab-help")?.addEventListener("click", ()=> showTabFromPart2("help"));
     $("#ncf-tab-browse")?.addEventListener("click", ()=> showTabFromPart2("browse"));
+
+    // If user starts on Creator/Stats tab, ensure it mounts on first click.
   }
 
   // mirror of PART 1 showTab (without overwriting it)
@@ -2274,19 +2162,140 @@
   const __oldInit = window.initNonCustodialFarms;
   window.initNonCustodialFarms = function(opts){
     const ret = __oldInit.call(this, opts);
+    // defer to next tick to ensure PART 1 finished DOM build
     setTimeout(enhanceAfterInit, 0);
     return ret;
   };
+  // keep alias
   window.initManageNFTsFarm = window.initNonCustodialFarms;
 
+  // If PART 1 already ran before PART 2 got loaded
   if (window.__NCF_STATE__) {
+    // we’re late—but we can still attach
     enhanceAfterInit();
   }
 
-  // Expose a couple functions for PART 1 live refresh hooks
-  window.__NCF_API__ = Object.assign({}, window.__NCF_API__, {
-    updateRewardsPanel,
-    refreshStep4Summary
-  });
-
+  // Done.
 })();
+
+/* ===================== BACKEND ENDPOINTS (expected) =====================
+
+All responses should be JSON. Strings that are JSON-encoded are tolerated but JSON is preferred.
+
+GET  /api/farm/list?status=active
+  -> [ { farm_id, collection, creator (or creator_wax_account) }, ... ]
+
+GET  /api/farm/list?creator=<wax>
+  -> [ { farm_id, collection, creator (or creator_wax_account) }, ... ]
+
+POST /api/templates-by-schema
+  Body: { collection_name: string }
+  -> {
+       collection: string,
+       schemas: [
+         {
+           schema_name: string,
+           templates: [
+             {
+               template_id: number,
+               template_name?: string,
+               circulating_supply?: number,
+               max_supply?: number|null
+             }, ...
+           ]
+         }, ...
+       ]
+     }
+
+GET  /api/farm/deposit/balances?creator=<wax>
+  -> [ { token_symbol | symbol: string, amount: number }, ... ]
+     (symbols uppercase, please)
+
+POST /api/farm/deposit
+  Body: {
+    creator_wax_account: string,
+    source: "twitch" | "telegram",
+    token_symbol: string,
+    token_contract?: string,
+    amount: number
+  }
+  -> { ok: true, balances?: { twitch?: [...], telegram?: [...] } }
+
+POST /api/farm/rewards/draft
+  Body: {
+    collection: string,
+    creator_wax_account: string,
+    policy: {
+      distribution: "daily",
+      semantics: string,
+      payout_time_cet: "14:00",
+      non_custodial: string
+    },
+    tokens_catalog: [ { contract, symbol, decimals|null }, ... ],
+    total_selected: number,
+    items: [
+      {
+        schema_name: string,
+        template_id: number,
+        expiry: string|null (ISO),
+        rewards: [
+          {
+            token_contract: string,
+            token_symbol: string,          // UPPERCASE
+            decimals: number|null,
+            reward_per_asset_per_day: number
+          }, ...
+        ]
+      }, ...
+    ]
+  }
+  -> { ok: true }  // or { status: "ok" }
+
+GET  /api/farm/stats?farm_id=<id>
+  -> {
+       farm_id: string|number,
+       collection: string,
+       creator | creator_wax_account: string,
+       summary: {
+         owners: number,
+         assets: number,
+         last_distribution_at: ISO|string|null,
+         valid_templates_total?: number,
+         per_token_last_cycle?: { [SYMBOL]: number },
+         active_tokens_last_cycle?: number,
+         active_templates_last_cycle?: number,
+         templates_configured_with_rewards?: number,
+         remaining_by_token?: { [SYMBOL]: number }
+       },
+       config?: { items?: [
+         { schema_name, template_id, expiry?: ISO, rewards?: [
+             { token_contract, token_symbol, reward_per_asset_per_day }
+         ] }
+       ] },
+       owners?: [
+         {
+           owner: string,
+           assets: number,
+           last_rewarded_at?: ISO,
+           tokens?: [{ symbol, amount, token_contract? }],
+           trees?: [
+             { schema_name, template_id, token_contract, token_symbol, amount }
+           ]
+         }
+       ]
+     }
+
+GET  /api/farm/distributions?farm_id=<id>&limit=200
+  -> [ { ts: ISO, token_symbol: string, total_amount: number,
+         unique_owners: number, schema_name?: string, template_id?: number }, ... ]
+
+GET  /api/farm/user-history?farm_id=<id>&owner=<wax>&limit=200
+  -> [ { ts: ISO, token_symbol: string, amount: number,
+         schema_name?: string, template_id?: number, note?: string }, ... ]
+
+POST /api/farm/kick
+  Body: { farm_id: string|number, wax_account: string, reason?: string }
+  -> { ok: true }
+
+========================================================================= */
+

@@ -1383,16 +1383,24 @@ if (!fetchCirculatingLive || !applyCirculatingToUI) {
     }
   }
 
-  async function refreshFarmWalletBalances(state){
-    try{
-      const res = await fetchFarmBalances(state);
-      state.creator.farmBalances = res.map;
-      state.creator.farmBalancesTS = res.ts;
-      renderFarmBalances(state);
-    }catch(e){
-      toast(String(e.message||e), "error");
-    }
+async function refreshFarmWalletBalances(state){
+  // se non sei loggato, non chiamare l'endpoint
+  if (!getWax()) {
+    state.creator.farmBalances = new Map();
+    state.creator.farmBalancesTS = Date.now();
+    renderFarmBalances(state);
+    return;
   }
+  try{
+    const res = await fetchFarmBalances(state);
+    state.creator.farmBalances = res.map;
+    state.creator.farmBalancesTS = res.ts;
+    renderFarmBalances(state);
+  }catch(e){
+    toast(String(e.message||e), "error");
+  }
+}
+
   function startAutoBalances(state){
     stopAutoBalances(state);
     state.creator.monitorId = setInterval(()=>refreshFarmWalletBalances(state), 120*1000);
@@ -1682,7 +1690,7 @@ function enrichFromTable(schemaName, tid){
     }
   }
 
-  // ---------- Step A action ----------
+// ---------- Step A action ----------
 async function doLoadCollection(state){
   const col = $("#ncf-collection").value.trim();
   if(!col){ toast("Enter a collection name.","error"); return; }
@@ -1693,38 +1701,58 @@ async function doLoadCollection(state){
   $("#ncf-sections").innerHTML = "";
   renderSkeleton($("#ncf-status"));
 
+  // 1) Carica struttura schemi+template (unico step “blocking”)
+  let data;
   try{
-    // 1) carica struttura schemi+template (prima vista)
-    const data = await fetchTemplatesBySchema(state, col);
-    state.creator.raw = data;
-
-    // 2) UI schemi
-    const opts=(data.schemas||[]).map(s=>`<option value="${esc(s.schema_name)}">${esc(s.schema_name)}</option>`).join("");
-    $("#ncf-schema").innerHTML=`<option value="">All schemas</option>${opts}`;
-    const ts=(data.schemas||[]).length, tt=(data.schemas||[]).reduce((a,s)=>a+(s.templates?.length||0),0);
-    $("#ncf-status").innerHTML = "";
-    $("#ncf-meta").innerHTML = `Collection: ${esc(data.collection||col)} — Schemas ${ts} — Templates ${tt}`;
-    renderSections(state, $("#ncf-sections"), data);
-
-    // 3) PRIMO LIVE (subset visibile + selezionati) + applica al DOM
-    await fetchCirculatingLive(state, data.collection || col, []);
-    applyCirculatingToUI(state);
-
-    // 4) avanza wizard, bilanci ecc
-    updateRewardsPanel(state);
-    wizardGo(state, "#ncf-step-b");
-    await refreshFarmWalletBalances(state);
-    updateTopupPanel(state);
-
-    // 5) avvia polling live (60s, subset dinamico)
-    startLiveCircPolling(state, data.collection || col, 60000);
-
+    data = await fetchTemplatesBySchema(state, col);
   }catch(e){
     $("#ncf-status").innerHTML = `<div class="soft" style="padding:14px; text-align:center;">${esc(String(e.message||e))}</div>`;
-    $("#ncf-meta").textContent = "Error";
+    $("#ncf-meta").textContent = "Error loading collection";
+    return;
+  }
+
+  // 2) Render iniziale
+  state.creator.raw = data;
+  const opts=(data.schemas||[]).map(s=>`<option value="${esc(s.schema_name)}">${esc(s.schema_name)}</option>`).join("");
+  $("#ncf-schema").innerHTML=`<option value="">All schemas</option>${opts}`;
+  const ts=(data.schemas||[]).length, tt=(data.schemas||[]).reduce((a,s)=>a+(s.templates?.length||0),0);
+  $("#ncf-status").innerHTML = "";
+  $("#ncf-meta").innerHTML = `Collection: ${esc(data.collection||col)} — Schemas ${ts} — Templates ${tt}`;
+  renderSections(state, $("#ncf-sections"), data);
+
+  // 3) Live circulating (best-effort)
+  try{
+    await fetchCirculatingLive(state, data.collection || col, []);
+    applyCirculatingToUI(state);
+  }catch(e){
+    console.warn("circulating-live failed:", e);
+    toast("Live supply unavailable right now.", "error");
+  }
+
+  // 4) Avanza wizard + pannelli
+  updateRewardsPanel(state);
+  wizardGo(state, "#ncf-step-b");
+
+  // 5) Farm-Wallet balances (best-effort e solo se loggato)
+  try{
+    if (getWax()) {
+      await refreshFarmWalletBalances(state);
+    } else {
+      const tb = $("#ncf-farm-balances");
+      if (tb) tb.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:10px;">Sign in to view balances</td></tr>`;
+    }
+  }catch(e){
+    console.warn("balances fetch failed:", e);
+  }
+  updateTopupPanel(state);
+
+  // 6) Polling live (silenzioso)
+  try{
+    startLiveCircPolling(state, data.collection || col, 60000);
+  }catch(e){
+    console.warn("startLiveCircPolling failed:", e);
   }
 }
-
 
   // ---------- Creator handlers binding ----------
   function bindCreatorHandlers(state){

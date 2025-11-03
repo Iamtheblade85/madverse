@@ -79,7 +79,7 @@ const Crash = {
   SHAKE_MAX:1.6, SHAKE_MS:140, ZOOM_MAX:0.012, ZOOM_MS:90,
 
   // decals
-  DECAL_MAX: 70, DECAL_FADE_MS:16000,
+  DECAL_MAX: 70, DECAL_FADE_MS:3000,
 
   // qualità adattiva + BUDGET per frame
   qLevel:2, emaDt:16.7, lastDrawT:0,
@@ -228,8 +228,10 @@ const Crash = {
     if(this.decals.length){
       ctx.save();
       for(const d of this.decals){
-        const k=clamp(1-(T-d.at)/d.life,0,1)*(0.5+0.5*d.f); if(k<=0.02) continue;
-        const R=d.r; ctx.globalAlpha=0.75*k;
+        const k = clamp(1 - (T - d.at) / d.life, 0, 1) * (0.35 + 0.35 * d.f);
+        if(k<=0.02) continue;
+        const R=d.r; 
+        ctx.globalAlpha = 0.45 * k;
         ctx.drawImage(SPR.scorch, d.x-R, d.y-R, R*2, R*2);
       }
       ctx.restore();
@@ -281,13 +283,19 @@ const Crash = {
         sp.dist += sp.sp * (cell*0.12);
         const px=cx+Math.cos(sp.ang)*sp.dist, py=cy+Math.sin(sp.ang)*sp.dist;
         const tFade=alive/sp.life; const L=sp.len*(0.5+0.5*tFade), a=0.75*tFade; if(a<0.04) return false;
-        ctx.globalAlpha=a; ctx.translate(px,py); ctx.rotate(sp.ang);
-        ctx.drawImage(SPR.spark, -L*0.9, -3, L, 6); ctx.setTransform(1,0,0,1,0,0);
+        ctx.save();
+        ctx.globalAlpha = a;
+        ctx.translate(px, py);
+        ctx.rotate(sp.ang);
+        ctx.drawImage(SPR.spark, -L*0.9, -3, L, 6);
+        ctx.restore(); // <-- non rompe shake/zoom della camera
+
       });
       ctx.restore();
 
       // DUST
-      ctx.save(); ctx.globalCompositeOperation='multiply';
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over'; // non scurisce il layer
       stepList(ev.dust,'_iD', 5, (d)=>{
         const alive=Math.max(0, d.life-(T-ev.at)); if(!alive) return false;
         d.vx*=this.DUST_DRAG; d.vy=d.vy*this.DUST_DRAG + this.DUST_GRAV*(cell);

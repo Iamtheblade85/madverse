@@ -21,12 +21,28 @@
     /* Resetta overflow orizzontale e impianto fluido */
     html, body { margin:0; padding:0; width:100%; height:100%; overflow-x:hidden; }
 
-    /* HEADER sticky per migliore navigazione */
-    #navbar.navbar { position: sticky !important; top: 0 !important; z-index: 60 !important;
-      backdrop-filter: saturate(140%) blur(6px) !important;
-      background: linear-gradient(180deg, rgba(12,14,20,.86), rgba(12,14,20,.66)) !important;
-      border-bottom: 1px solid rgba(255,255,255,.06) !important;
-    }
+  /* HEADER non-sticky: lascia scorrere la pagina */
+  #navbar.navbar,
+  header.navbar,
+  .navbar.sticky {
+    position: static !important;   /* <-- rimuove sticky/fixed */
+    top: auto !important;
+    z-index: auto !important;
+    overflow: visible !important;   /* evita clipping dei dropdown */
+    /* tieni la stessa resa grafica, ma senza i filtri “sticky” */
+    backdrop-filter: none !important;
+    background: transparent !important; /* puoi rimettere un colore se preferisci */
+    border-bottom: 1px solid rgba(255,255,255,.06) !important;
+  }
+
+  .dropdown-menu {
+    position: absolute; top: calc(100% + 6px); left: 0;
+    background: rgba(16,18,24,.98) !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    border-radius: .8rem !important; padding: .4rem !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5) !important;
+    min-width: 240px !important;
+  }
 
     /* Contenuto principale full-width con margini 5% */
     .main-content { display:flex; justify-content:center; align-items:flex-start;

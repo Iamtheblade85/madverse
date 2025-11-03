@@ -16,45 +16,96 @@
   <!-- CSS originale -->
   <link id="theme-style" rel="stylesheet" href="styles6_cybertriba_glow.css"/>
 
-  <!-- Overrides neutri (no Halloween) -->
+  <!-- === OVERRIDES PERSISTENTI (non sovrascrivibili) === -->
   <style>
-    /* Full-width fixes */
+    /* Resetta overflow orizzontale e impianto fluido */
     html, body { margin:0; padding:0; width:100%; height:100%; overflow-x:hidden; }
-    .footer-cybertribal .footer-inner { max-width:none !important; width:100% !important; margin:0 !important; }
-    form, .typing-text, .w-full { max-width:none !important; width:100% !important; }
+
+    /* HEADER sticky per migliore navigazione */
+    #navbar.navbar { position: sticky !important; top: 0 !important; z-index: 60 !important;
+      backdrop-filter: saturate(140%) blur(6px) !important;
+      background: linear-gradient(180deg, rgba(12,14,20,.86), rgba(12,14,20,.66)) !important;
+      border-bottom: 1px solid rgba(255,255,255,.06) !important;
+    }
+
+    /* Contenuto principale full-width con margini 5% */
+    .main-content { display:flex; justify-content:center; align-items:flex-start;
+      width:100% !important; min-height: calc(100vh - 240px);
+      margin:0 !important; padding: 1.5rem 5vw !important; box-sizing:border-box;
+    }
+    /* La inner mantiene la larghezza fluida */
+    .main-content > .w-full { max-width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+
+    /* Liste partner: contenitori con spazio per la miccia (outline animato) */
+    #partners-left, #partners-right {
+      position: relative !important;
+      padding: .6rem !important;
+      border-radius: 1.1rem !important;
+      /* bordo “di base” molto leggero (il glow animato lo copre) */
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08) !important;
+      isolation: isolate; /* per compositing del canvas */
+    }
+
+    /* CANVAS overlay per effetto miccia */
+    .fuse-canvas {
+      position: absolute !important;
+      inset: -6px !important; /* leggermente fuori per il glow */
+      width: calc(100% + 12px) !important;
+      height: calc(100% + 12px) !important;
+      pointer-events: none !important;
+      z-index: -1 !important; /* dietro le tile ma sopra lo sfondo */
+      border-radius: 1.25rem !important;
+    }
+
+    /* Card partner */
+    .partner-list { list-style:none; margin:0; padding:0; }
+
+    .partner-wrap {
+      border-radius: 1rem !important;
+      background: rgba(255,255,255,.04) !important;
+      border: 1px solid rgba(255,255,255,.10) !important;
+      padding: .5rem .6rem !important;
+      transition: transform .14s ease, background-color .14s ease, filter .14s ease, box-shadow .14s ease !important;
+      will-change: transform, filter;
+    }
+    .partner-wrap:hover { transform: translateY(-3px) !important; background-color: rgba(255,255,255,.06) !important; filter: saturate(1.06) !important; box-shadow: 0 10px 28px rgba(0,0,0,.28) !important; }
+
+    /* ⬆️ TRIPLICE DIMENSIONE LOGHI (desktop) */
+    /* h-12 ≈ 3rem => 9rem; lg:h-14 ≈ 3.5rem => 10.5rem */
+    .partner-img { height: 9rem !important; width: auto !important; object-fit: contain !important; display:block !important; }
+    @media (min-width: 1024px){ .partner-img { height: 10.5rem !important; } }
+
+    /* Mobile strip: h-10 => 7.5rem */
+    #partners-mobile img { height: 7.5rem !important; width: auto !important; object-fit: contain !important; }
+
+    /* Migliorie UI bottoni menu (senza cambiare palette) */
+    .menu-button, .dropdown-toggle {
+      border: 1px solid rgba(255,255,255,.10) !important;
+      border-radius: .8rem !important;
+      padding: .55rem .9rem !important;
+      transition: transform .08s ease, box-shadow .16s ease, background-color .16s ease !important;
+      backdrop-filter: saturate(120%) !important;
+    }
+    .menu-button:hover, .dropdown-toggle:hover { transform: translateY(-1px) !important; box-shadow: 0 8px 20px rgba(0,0,0,.28) !important; background: rgba(255,255,255,.06) !important; }
+    .menu-button:focus-visible, .dropdown-toggle:focus-visible { outline: 2px solid rgba(250,204,21,.55) !important; outline-offset: 2px !important; }
+
+    /* Dropdown più leggibili */
+    .dropdown-menu { position:absolute; top: calc(100% + 6px); left:0; background: rgba(16,18,24,.98) !important; border:1px solid rgba(255,255,255,.12) !important; border-radius: .8rem !important; padding:.4rem !important; box-shadow: 0 20px 60px rgba(0,0,0,.5) !important; min-width: 240px !important; }
+    .dropdown-item { padding:.55rem .65rem !important; border-radius:.6rem !important; }
+    .dropdown-item:hover { background: rgba(255,255,255,.06) !important; }
+
+    /* Modali: leggere micro-animazioni */
+    .modal, .modal-dirty .modal-content { animation: popIn .18s ease-out; }
+    @keyframes popIn { from { transform: translateY(6px) scale(.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+    /* Footer full width coerente */
+    .footer-cybertribal .footer-inner { max-width:none !important; width:100% !important; margin:0 !important; padding-left: 5vw !important; padding-right: 5vw !important; }
+
+    /* Accessibilità: nascondi scrollbar orizz. su strip mobile */
     .no-scrollbar::-webkit-scrollbar { display:none; }
     .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
 
-    /* Partner tiles (neutro) */
-    .partner-list { list-style:none; margin:0; padding:0; }
-    .partner-wrap {
-      border-radius:.9rem;
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.10);
-      padding:.4rem .5rem;
-      transition: transform .12s ease, background-color .12s ease, filter .12s ease, box-shadow .12s ease;
-    }
-    .partner-wrap:hover {
-      transform: translateY(-2px);
-      background-color: rgba(255,255,255,.06);
-      filter: saturate(1.05);
-      box-shadow: 0 8px 24px rgba(0,0,0,.25);
-    }
-
-    /* Area contenuti (full width, neutra) */
-    .main-content {
-      display:flex; justify-content:center; align-items:flex-start;
-      width:100%; min-height: calc(100vh - 240px);
-      margin:0; padding: 1.5rem 2rem; box-sizing:border-box;
-    }
-
-    /* Card/modali base (neutri) */
-    .hx-card { background: rgba(20,20,28,.66); border:1px solid rgba(255,255,255,.1); border-radius:1.1rem; padding:1rem; box-shadow: 0 8px 40px rgba(0,0,0,.28); }
-    .modal-dirty, .modal { backdrop-filter: blur(2px); border-radius:1rem; border:1px solid rgba(255,255,255,.1); }
-    .modal .modal-content, .modal-dirty .modal-content { background: rgba(16,18,24,.98); border-radius:1rem; border:1px solid rgba(255,255,255,.1); box-shadow: 0 20px 70px rgba(0,0,0,.6); }
-    .modal-close { background:none; border:none; color:#fff; font-size:1.8rem; cursor:pointer; line-height:1; padding:.2rem .5rem; border-radius:.5rem; }
-
-    /* Responsive */
+    /* Responsivo: mostra le due liste ai breakpoint medi+ */
     @media (min-width: 768px){
       #partners-left, #partners-right { display:flex !important; }
     }
@@ -62,18 +113,21 @@
 </head>
 
 <body class="app">
-  <div id="auth-button-container" style="position:absolute; top:1rem; left:1rem; z-index:10;"></div>
+  <div id="auth-button-container" style="position:absolute; top:1rem; left:1rem; z-index:70;"></div>
 
   <!-- HEADER -->
   <header id="navbar" class="navbar">
     <div class="w-full px-4 sm:px-6 lg:px-8 pt-6">
       <div class="grid items-center gap-4 md:gap-8 md:grid-cols-3">
-        <!-- Partners left -->
+        <!-- Partners left + CANVAS miccia -->
         <ul id="partners-left" class="partner-list hidden md:!flex justify-end items-center gap-4 lg:gap-6 min-h-[3.5rem]">
-          <li class="partner-wrap"><img src="partner_1.png" alt="Partner 1" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
-          <li class="partner-wrap"><img src="partner_2.png" alt="Partner 2" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
-          <li class="partner-wrap"><img src="partner_3.png" alt="Partner 3" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
-          <li class="partner-wrap"><img src="partner_8.jpg" alt="Partner 8" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
+          <!-- canvas per glow/miccia -->
+          <canvas class="fuse-canvas" aria-hidden="true"></canvas>
+
+          <li class="partner-wrap"><img src="partner_1.png" alt="Partner 1" class="partner-img" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
+          <li class="partner-wrap"><img src="partner_2.png" alt="Partner 2" class="partner-img" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
+          <li class="partner-wrap"><img src="partner_3.png" alt="Partner 3" class="partner-img" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
+          <li class="partner-wrap"><img src="partner_8.jpg" alt="Partner 8" class="partner-img" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
         </ul>
 
         <!-- Brand -->
@@ -82,22 +136,24 @@
           <p class="text-amber-300/90 text-xs sm:text-sm italic" style="font-family: 'Rock Salt', system-ui, sans-serif;">Built for Users, Powered by Blockchain</p>
         </div>
 
-        <!-- Partners right -->
+        <!-- Partners right + CANVAS miccia -->
         <ul id="partners-right" class="partner-list hidden md:!flex justify-start items-center gap-4 lg:gap-6 min-h-[3.5rem]">
-          <li class="partner-wrap"><img src="partner_4.png" alt="Partner 4" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
-          <li class="partner-wrap"><img src="partner_5.png" alt="Partner 5" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
-          <li class="partner-wrap"><img src="partner_6.png" alt="Partner 6" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
-          <li class="partner-wrap"><img src="partner_7.jpg" alt="Partner 7" class="block h-12 lg:h-14 w-auto object-contain" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
+          <canvas class="fuse-canvas" aria-hidden="true"></canvas>
+
+          <li class="partner-wrap"><img src="partner_4.png" alt="Partner 4" class="partner-img" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
+          <li class="partner-wrap"><img src="partner_5.png" alt="Partner 5" class="partner-img" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
+          <li class="partner-wrap"><img src="partner_6.png" alt="Partner 6" class="partner-img" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
+          <li class="partner-wrap"><img src="partner_7.jpg" alt="Partner 7" class="partner-img" width="200" height="200" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></li>
         </ul>
       </div>
 
-      <!-- Partners mobile -->
+      <!-- Partners mobile (loghi triplicati) -->
       <div id="partners-mobile" class="md:hidden mt-4 flex flex-row items-center gap-3 overflow-x-auto no-scrollbar py-1" aria-label="Partners">
-        <div class="partner-wrap flex-none"><img src="partner1.png" alt="Partner 1" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
-        <div class="partner-wrap flex-none"><img src="partner2.png" alt="Partner 2" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
-        <div class="partner-wrap flex-none"><img src="partner3.png" alt="Partner 3" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
-        <div class="partner-wrap flex-none"><img src="partner4.png" alt="Partner 4" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
-        <div class="partner-wrap flex-none"><img src="partner5.png" alt="Partner 5" class="block h-10 w-auto object-contain" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
+        <div class="partner-wrap flex-none"><img src="partner1.png" alt="Partner 1" class="block" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
+        <div class="partner-wrap flex-none"><img src="partner2.png" alt="Partner 2" class="block" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
+        <div class="partner-wrap flex-none"><img src="partner3.png" alt="Partner 3" class="block" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
+        <div class="partner-wrap flex-none"><img src="partner4.png" alt="Partner 4" class="block" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
+        <div class="partner-wrap flex-none"><img src="partner5.png" alt="Partner 5" class="block" width="140" height="44" loading="lazy" decoding="async" onerror="this.src='partner-fallback.svg'; this.onerror=null;"></div>
       </div>
 
       <!-- NAVBAR MENU -->
@@ -111,9 +167,7 @@
           <button class="menu-button" data-section="account">Account</button>
 
           <div class="dropdown relative">
-            <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">
-              Earn ▾
-            </button>
+            <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">Earn ▾</button>
             <div class="dropdown-menu hidden" role="menu" id="earn-menu">
               <button class="dropdown-item w-full text-left" data-section="token-staking">Custodial Token Staking</button>
               <button class="dropdown-item w-full text-left" data-section="noncustodialfarms">NC NFTs Farms</button>
@@ -126,14 +180,10 @@
           </div>
 
           <div class="dropdown relative">
-            <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">
-              Creators Tools ▾
-            </button>
+            <button class="menu-button dropdown-toggle" aria-haspopup="true" aria-expanded="false">Creators Tools ▾</button>
             <div class="dropdown-menu hidden" role="menu" id="creators-tools-menu">
               <button class="dropdown-item w-full text-left" data-section="create-token-pool">Create Token Staking Pool</button>
-              <button class="dropdown-item w-full text-left hidden" id="creator-dashboard-nav-btn" data-section="creator-dashboard">
-                Creator Dashboard
-              </button>
+              <button class="dropdown-item w-full text-left hidden" id="creator-dashboard-nav-btn" data-section="creator-dashboard">Creator Dashboard</button>
             </div>
           </div>
         </div>
@@ -141,14 +191,14 @@
     </div>
   </header>
 
-  <!-- MAIN (full width) -->
+  <!-- MAIN -->
   <main id="app" class="main-content" role="main">
-    <div class="w-full px-4 sm:px-6 lg:px-8">
+    <div class="w-full">
       <div id="content-root" class="w-full"></div>
     </div>
   </main>
 
-  <!-- MODAL “dirty” -->
+  <!-- MODALS come da tuo originale (immutati) -->
   <div id="modal" class="modal-dirty hidden" role="dialog" aria-modal="true"
        style="position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background-color: rgba(0, 0, 0, 0.85); padding: 2rem; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,.5);">
     <button id="close-modal" class="modal-close" style="position: absolute; z-index: 10001; top: 0.75rem; right: 0.75rem;">×</button>
@@ -157,7 +207,6 @@
     </div>
   </div>
 
-  <!-- UNIVERSAL MODAL -->
   <div id="universal-modal" class="modal hidden">
     <div class="modal-content">
       <button class="modal-close">×</button>
@@ -168,7 +217,6 @@
     </div>
   </div>
 
-  <!-- CONFIRM MODAL -->
   <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true"
        style="position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background-color: rgba(0, 0, 0, 0.9); padding: 2rem; display: none; border-radius: 12px; box-shadow: 0 0 20px rgba(255,0,0,.4);">
     <div class="modal-content confirm-box" style="max-width: 460px; color: #fff;">
@@ -188,7 +236,7 @@
   <script>window.__NFTF_AUTO_DISABLED__ = true;</script>
   <script src="main_restyled.js?v=prod-2025-10-04" defer></script>
 
-  <!-- UI wiring -->
+  <!-- UI wiring di base -->
   <script>
     (function () {
       // Toggle dropdowns
@@ -217,23 +265,186 @@
 
       // Modali
       const closeModalBtn = document.getElementById('close-modal');
-      if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', () => {
-          document.getElementById('modal').classList.add('hidden');
-        });
-      }
+      if (closeModalBtn) closeModalBtn.addEventListener('click', () => document.getElementById('modal').classList.add('hidden'));
       const confirmCancel = document.getElementById('confirm-cancel');
-      if (confirmCancel) {
-        confirmCancel.addEventListener('click', () => {
-          document.getElementById('confirm-modal').classList.add('hidden');
-        });
+      if (confirmCancel) confirmCancel.addEventListener('click', () => document.getElementById('confirm-modal').classList.add('hidden'));
+    })();
+  </script>
+
+  <!-- === EFFETTO MICCIA (canvas) per #partners-left e #partners-right === -->
+  <script>
+    (function fuseOutline(){
+      function initFuseFor(container){
+        const canvas = container.querySelector('.fuse-canvas');
+        if(!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        let w = 0, h = 0, t0 = performance.now();
+
+        function resize(){
+          // padding per il glow
+          const r = container.getBoundingClientRect();
+          const scale = (window.devicePixelRatio || 1);
+          w = Math.max(2, Math.floor((r.width + 12) * scale));
+          h = Math.max(2, Math.floor((r.height + 12) * scale));
+          canvas.width = w; canvas.height = h;
+          canvas.style.width = (r.width + 12) + 'px';
+          canvas.style.height = (r.height + 12) + 'px';
+          ctx.setTransform(scale,0,0,scale,0,0);
+        }
+
+        const flameColors = [
+          'rgba(255,240,180,0.85)',
+          'rgba(255,180,60,0.75)',
+          'rgba(255,90,20,0.65)'
+        ];
+
+        function draw(now){
+          const t = (now - t0) / 1000;
+
+          // clear con leggera scia
+          ctx.clearRect(0,0,w,h);
+
+          const pad = 8; // distanza dal bordo del container
+          const radius = 18;
+          const x0 = pad, y0 = pad;
+          const cw = (w / (window.devicePixelRatio||1)) - pad*2;
+          const ch = (h / (window.devicePixelRatio||1)) - pad*2;
+
+          // percorso rettangolare stondato
+          function roundedRectPath(x,y,w,h,r){
+            ctx.beginPath();
+            ctx.moveTo(x+r, y);
+            ctx.lineTo(x+w-r, y);
+            ctx.arcTo(x+w, y, x+w, y+r, r);
+            ctx.lineTo(x+w, y+h-r);
+            ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+            ctx.lineTo(x+r, y+h);
+            ctx.arcTo(x, y+h, x, y+h-r, r);
+            ctx.lineTo(x, y+r);
+            ctx.arcTo(x, y, x+r, y, r);
+            ctx.closePath();
+          }
+
+          // traccia base leggermente pulsante
+          const pulse = 0.5 + 0.5*Math.sin(t*2.2);
+          ctx.save();
+          roundedRectPath(x0,y0,cw,ch,radius);
+          ctx.strokeStyle = `rgba(255,255,255,${0.08 + pulse*0.06})`;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6,6]);
+          ctx.lineDashOffset = -t*40;
+          ctx.stroke();
+          ctx.restore();
+
+          // “miccia”: un punto incandescente che percorre il bordo
+          const perim = 2*(cw+ch) + 2*(Math.PI*radius - 4*radius); // approx
+          const speed = 160; // px/sec lungo il percorso
+          const dist = (t*speed) % perim;
+
+          // calcola posizione lungo il perimetro
+          function pointOnRectPerimeter(d){
+            const straight = [cw-2*radius, ch-2*radius, cw-2*radius, ch-2*radius];
+            const arcLen = (Math.PI/2)*radius;
+            const seg = [
+              radius + straight[0],      // top edge + 2 angoli
+              arcLen,                    // top-right corner
+              straight[1],               // right edge
+              arcLen,                    // bottom-right
+              straight[2],               // bottom edge
+              arcLen,                    // bottom-left
+              straight[3],               // left edge
+              arcLen                     // top-left
+            ];
+            const total = seg.reduce((a,b)=>a+b,0);
+            let s = ((d%total)+total)%total;
+            // partendo da x0+r -> verso dx
+            let x = x0+radius, y = y0, ang = 0;
+            // helper
+            function take(len){
+              const m = Math.min(s, len); s -= m; return m;
+            }
+            // top straight
+            let m = take(seg[0]); x += m; if(s<=0) return {x,y,ang:0};
+            // top-right arc
+            m = take(seg[1]); if(s<=0){
+              const a = (m/arcLen)*(Math.PI/2);
+              return {x:x0+cw-radius + Math.sin(a)*radius, y:y0+radius - Math.cos(a)*radius, ang:a};
+            }
+            // right straight
+            x = x0+cw; y = y0+radius;
+            m = take(seg[2]); y += m; if(s<=0) return {x,y,ang:Math.PI/2};
+            // bottom-right arc
+            m = take(seg[3]); if(s<=0){
+              const a = (m/arcLen)*(Math.PI/2);
+              return {x:x0+cw-radius + Math.cos(a)*radius, y:y0+ch-radius + Math.sin(a)*radius, ang:Math.PI/2 + a};
+            }
+            // bottom straight
+            x = x0+cw-radius; y = y0+ch;
+            m = take(seg[4]); x -= m; if(s<=0) return {x,y,ang:Math.PI};
+            // bottom-left arc
+            m = take(seg[5]); if(s<=0){
+              const a = (m/arcLen)*(Math.PI/2);
+              return {x:x0+radius - Math.sin(a)*radius, y:y0+ch-radius + Math.cos(a)*radius, ang:Math.PI + a};
+            }
+            // left straight
+            x = x0; y = y0+ch-radius;
+            m = take(seg[6]); y -= m; if(s<=0) return {x,y,ang:Math.PI*1.5};
+            // top-left arc
+            m = take(seg[7]); {
+              const a = (m/arcLen)*(Math.PI/2);
+              return {x:x0+radius - Math.cos(a)*radius, y:y0+radius - Math.sin(a)*radius, ang:Math.PI*1.5 + a};
+            }
+          }
+
+          const p = pointOnRectPerimeter(dist);
+
+          // glow della brace
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          for(let i=0;i<flameColors.length;i++){
+            const r = 18 - i*5;
+            const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+            g.addColorStop(0, flameColors[i]);
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(p.x,p.y,r,0,Math.PI*2);
+            ctx.fill();
+          }
+          ctx.restore();
+
+          // scintille
+          for(let i=0;i<3;i++){
+            const a = p.ang + (Math.random()-0.5)*0.8;
+            const d = 8 + Math.random()*22;
+            const sx = p.x - Math.cos(a)*d;
+            const sy = p.y - Math.sin(a)*d;
+            ctx.beginPath();
+            ctx.fillStyle = 'rgba(255,200,120,0.55)';
+            ctx.arc(sx, sy, 1.2+Math.random()*1.2, 0, Math.PI*2);
+            ctx.fill();
+          }
+
+          requestAnimationFrame(draw);
+        }
+
+        const ro = new ResizeObserver(resize);
+        ro.observe(container);
+        resize();
+        requestAnimationFrame(draw);
       }
+
+      ['partners-left','partners-right'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) initFuseFor(el);
+      });
     })();
   </script>
 
   <!-- FOOTER -->
   <footer class="footer-cybertribal">
-    <div class="footer-inner w-full px-4 sm:px-6 lg:px-8 py-8">
+    <div class="footer-inner w-full px-0 py-8">
       <p class="footer-text">
         Powered by <strong>CryptoChips</strong> — Built on WAX Blockchain<br/>
         <span class="footer-sub">All rights reserved © 2025 — ChipsWallet</span>
@@ -260,21 +471,16 @@
     </div>
   </footer>
 
-  <!-- Creator Dashboard Gate -->
+  <!-- Creator Dashboard Gate (immutato) -->
   <script>
     window.updateCreatorDashboardVisibility = function () {
       const btn = document.getElementById('creator-dashboard-nav-btn');
       if (!btn) return;
       const wax = window?.userData?.wax_account;
-      if (wax && wax.toLowerCase() === 'agoscry4ever') {
-        btn.classList.remove('hidden');
-      } else {
-        btn.classList.add('hidden');
-      }
+      if (wax && wax.toLowerCase() === 'agoscry4ever') btn.classList.remove('hidden');
+      else btn.classList.add('hidden');
     };
-    document.addEventListener('DOMContentLoaded', () => {
-      window.updateCreatorDashboardVisibility();
-    });
+    document.addEventListener('DOMContentLoaded', () => window.updateCreatorDashboardVisibility());
   </script>
 </body>
 </html>

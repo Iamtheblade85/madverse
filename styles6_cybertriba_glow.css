@@ -5221,3 +5221,16 @@ select:focus, input[type="number"]:focus {
 .main-content .max-w-7xl {
   max-width: none !important;
 }
+
+/* Il contenitore resta relativo */
+.dropdown { position: relative; }
+
+/* Fai partecipare i menu al flusso del documento */
+.dropdown-menu {
+  position: static !important; /* <-- rimuove l'assoluto */
+  margin-top: .5rem;
+  box-shadow: none;            /* opzionale: puoi tenerlo */
+}
+
+/* Transizione di altezza (facoltativa, richiede max-height trick) */
+.dropdown-menu.hidden { display: none; } /* come già fai */

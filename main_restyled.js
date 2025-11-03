@@ -2517,8 +2517,22 @@ async function loadSection(section) {
 
   // ⛑ fallback safe: se window.userData non esiste ancora (utente non loggato)
   const { userId, usx_token, wax_account } = window.userData || {};
+	if (section === 'twitch-nfts-giveaways' || section === 'log-storms-giveaways') {
+	  window.__C2E_DEFAULT_TAB__ = section;      // memorizza quale tab aprire
+	  return loadSection('c2e-twitch');          // entra nella sezione madre
+	}
 
   if (section === 'c2e-twitch') {
+	// default tab on open (prima era fisso: loadLogRewardActivity())
+	const firstTab = window.__C2E_DEFAULT_TAB__ || 'log-reward-activity';
+	window.__C2E_DEFAULT_TAB__ = null;
+	
+	switch (firstTab) {
+	  case 'log-storms-giveaways':   loadLogStormsGiveaways();   break; // crea/mostra Storms
+	  case 'twitch-nfts-giveaways':  loadTwitchNftsGiveaways();  break; // crea/mostra NFT giveaways
+	  default:                       loadLogRewardActivity();    break;
+	}
+		  
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title text-center">C2E - Twitch</h2>
@@ -3456,7 +3470,7 @@ async function loadChatRewardsHistory({ reset = false } = {}) {
 	        </div>
 	
 	        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-	          <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('log-nft-giveaways')">🎁 NFT Giveaways</button>
+	          <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('twitch-nfts-giveaways')">🎁 NFT Giveaways</button>
 	          <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('log-storms-giveaways')">🌪 Storms</button>
 	          <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('noncustodialfarms')">🌱 NFT Farms</button>
 	          <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('create-token-pool')">💰 Token Farms</button>

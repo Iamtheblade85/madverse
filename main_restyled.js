@@ -3112,10 +3112,10 @@ function renderGiveawaysPanel() {
   `).join('') || `<tr><td colspan="9" style="${tdHist('center','#94a3b8')}">No NFT giveaways found.</td></tr>`;
 
   return `
-    <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:18px;color:#fff;">
+    <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:18px;color:#fff;max-width:100% !important;">
       <div style="font-size:${FS.sm};font-weight:900;margin-bottom:.6rem;">NFT Giveaways</div>
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;min-width:920px;">
+      <div style="overflow-x:auto; max-width:100% !important;">
+        <table style="width:100%; table-layout:auto; border-collapse:collapse; min-width:680px;">
           <thead>
             <tr style="background:#111827;color:#fff;text-align:left;">
               <th style="${thHist()}">ID</th>
@@ -3129,7 +3129,7 @@ function renderGiveawaysPanel() {
               <th style="${thHist()}">Timeframe</th>
             </tr>
           </thead>
-          <tbody>${rows}</tbody>
+          <tbody style="word-break:break-word;">${rows}</tbody>
         </table>
       </div>
     </div>
@@ -3150,10 +3150,10 @@ function renderStormsPanel() {
   `).join('') || `<tr><td colspan="7" style="${tdHist('center','#94a3b8')}">No storms found.</td></tr>`;
 
   return `
-    <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;">
+    <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;max-width:100% !important;">
       <div style="font-size:${FS.sm};font-weight:900;margin-bottom:.6rem;">Token Storms</div>
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;min-width:760px;">
+      <div style="overflow-x:auto; max-width:100% !important;">
+        <table style="width:100%; table-layout:auto; border-collapse:collapse; min-width:620px;">
           <thead>
             <tr style="background:#1f2937;color:#fff;text-align:left;">
               <th style="${thHist()}">ID</th>
@@ -3165,7 +3165,7 @@ function renderStormsPanel() {
               <th style="${thHist()}">Winners</th>
             </tr>
           </thead>
-          <tbody>${rows}</tbody>
+          <tbody style="word-break:break-word;">${rows}</tbody>
         </table>
       </div>
     </div>
@@ -3366,44 +3366,47 @@ async function loadChatRewardsHistory({ reset = false } = {}) {
       return;
     }
 
-    root.innerHTML = `
-      <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:1rem 1.5rem;margin-bottom:1rem;">
-        <div style="flex-grow:1;min-width:240px;">
-          <div style="font-size:${FS.md};font-weight:900;color:#fff;display:flex;align-items:center;gap:.6rem;">
-            <span>Creator Dashboard</span>
-            ${renderSubStatusBadge()}
-          </div>
-          <div style="font-size:${FS.xs};color:#cbd5e1;line-height:1.45;margin-top:4px;">
-            Channel: <span style="color:#fff;font-weight:700;">${esc(st.channel)}</span><br/>
-            WAX Account: <span style="color:#fff;font-weight:700;">${esc(st.wax_account)}</span><br/>
-            ${st.rewards_active
-              ? `<span style="color:#86efac;font-weight:700;">${esc(st.rewards_status_message)}</span>`
-              : `<span style="color:#fca5a5;font-weight:700;">${esc(st.rewards_status_message)}</span>`
-            }
-          </div>
-        </div>
+	root.innerHTML = `
+	  <div id="cd-shell" style="width:100% !important; max-width:none !important; margin:0 auto; padding:0 5vw;">
+	    <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:1rem 1.5rem;margin-bottom:1rem;">
+	      <div style="flex-grow:1;min-width:240px;">
+	        <div style="font-size:${FS.md};font-weight:900;color:#fff;display:flex;align-items:center;gap:.6rem;">
+	          <span>Creator Dashboard</span>
+	          ${renderSubStatusBadge()}
+	        </div>
+	        <div style="font-size:${FS.xs};color:#cbd5e1;line-height:1.45;margin-top:4px;">
+	          Channel: <span style="color:#fff;font-weight:700;">${esc(st.channel)}</span><br/>
+	          WAX Account: <span style="color:#fff;font-weight:700;">${esc(st.wax_account)}</span><br/>
+	          ${st.rewards_active
+	            ? `<span style="color:#86efac;font-weight:700;">${esc(st.rewards_status_message)}</span>`
+	            : `<span style="color:#fca5a5;font-weight:700;">${esc(st.rewards_status_message)}</span>`
+	          }
+	        </div>
+	      </div>
+	
+	      <div style="display:flex;flex-direction:column;gap:.6rem;min-width:260px;">
+	        <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+	          ${tabBtn('overview','Overview')}
+	          ${tabBtn('rewards','Rewards')}
+	          ${tabBtn('ads','Ads Manager')}
+	          ${tabBtn('history','History')}
+	        </div>
+	
+	        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+	          <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('log-nft-giveaways')">🎁 NFT Giveaways</button>
+	          <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('log-storms-giveaways')">🌪 Storms</button>
+	          <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('noncustodialfarms')">🌱 NFT Farms</button>
+	          <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('create-token-pool')">💰 Token Farms</button>
+	        </div>
+	      </div>
+	    </div>
+	
+	    <div id="cd-body">
+	      ${renderActiveTab()}
+	    </div>
+	  </div>
+	`;
 
-        <div style="display:flex;flex-direction:column;gap:.6rem;min-width:260px;">
-          <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
-            ${tabBtn('overview','Overview')}
-            ${tabBtn('rewards','Rewards')}
-            ${tabBtn('ads','Ads Manager')}
-            ${tabBtn('history','History')}
-          </div>
-
-          <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-            <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('log-nft-giveaways')">🎁 NFT Giveaways</button>
-            <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('log-storms-giveaways')">🌪 Storms</button>
-            <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('noncustodialfarms')">🌱 NFT Farms</button>
-            <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('create-token-pool')">💰 Token Farms</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="cd-body">
-        ${renderActiveTab()}
-      </div>
-    `;
 
     bindTabSwitcher();
 
@@ -4322,12 +4325,12 @@ function renderHistoryTab() {
     </div>
   `;
 
-  return `
-    <div style="display:flex;gap:1rem;align-items:flex-start;">
-      ${leftMenu}
-      ${rightPanel}
-    </div>
-  `;
+	return `
+	  <div style="display:flex;gap:1rem;align-items:flex-start;max-width:100% !important;">
+	    ${leftMenu}
+	    ${rightPanel}
+	  </div>
+	`;
 }
 
 function historyMenuBtn(key, label) {
@@ -4505,16 +4508,31 @@ function thHist(align='left'){
     `;
   }
 
-  // ---------- PUBLIC API ----------
-  function mount({ rootEl, baseUrl, userId, usx_token, wax_account }) {
-    st.rootEl      = rootEl;
-    st.baseUrl     = baseUrl;
-    st.userId      = userId;
-    st.usx_token   = usx_token;
-    st.wax_account = wax_account;
-    st.activeTab   = 'overview';
-    loadAllData();
-  }
+	// ---------- PUBLIC API ----------
+	function mount({ rootEl, baseUrl, userId, usx_token, wax_account }) {
+	  st.rootEl      = rootEl;
+	  st.baseUrl     = baseUrl;
+	  st.userId      = userId;
+	  st.usx_token   = usx_token;
+	  st.wax_account = wax_account;
+	  st.activeTab   = 'overview';
+	
+	  // Forza contenitore fluido (evita "larghezza molto ridotta")
+	  try {
+	    const p = rootEl.parentElement;
+	    if (p) {
+	      p.style.maxWidth = 'none';
+	      p.style.width    = '100%';
+	    }
+	    rootEl.style.maxWidth = 'none';
+	    rootEl.style.width    = '100%';
+	    rootEl.style.margin   = '0';
+	    rootEl.style.padding  = '0';
+	  } catch(_) {}
+	
+	  loadAllData();
+	}
+
 
   return { mount };
 })();

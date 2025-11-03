@@ -3096,6 +3096,33 @@ function fmtUTC(ts) {
     return String(ts) + ' UTC';
   }
 }
+
+	// === Wide fixes confined to Creator Dashboard ===
+function ensureWideShellStyles() {
+  if (document.getElementById('cd-wide-fixes')) return;
+  const css = `
+    /* Contenitore dashboard: riempi orizzontale ovunque */
+    #cd-shell{width:100% !important; max-width:100% !important; margin:0 !important; padding-left:5vw; padding-right:5vw;}
+    /* Evita qualunque max-width o centratura sui blocchi interni */
+    #cd-shell .account-card2,
+    #cd-shell .w-full,
+    #cd-shell [style*="max-width"]{
+      max-width:none !important; width:100% !important; margin-left:0 !important; margin-right:0 !important;
+    }
+    /* Le tabelle devono adattarsi al contenitore senza allargare la pagina */
+    #cd-shell table{width:100% !important; table-layout:fixed !important; border-collapse:collapse !important;}
+    #cd-shell thead th, #cd-shell tbody td{overflow:hidden !important; text-overflow:ellipsis !important; white-space:nowrap !important;}
+    /* Permetti agli elementi flessibili di comprimersi davvero */
+    #cd-shell [style*="flex:1;min-width:0"]{min-width:0 !important;}
+    /* Wrapper helper per scroll orizzontale controllato */
+    #cd-shell .scroll-x{overflow-x:auto !important; -webkit-overflow-scrolling:touch;}
+  `;
+  const el = document.createElement('style');
+  el.id = 'cd-wide-fixes';
+  el.textContent = css;
+  document.head.appendChild(el);
+}
+
 function renderGiveawaysPanel() {
   const rows = st.giveaways.map(g => `
     <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
@@ -3112,10 +3139,22 @@ function renderGiveawaysPanel() {
   `).join('') || `<tr><td colspan="9" style="${tdHist('center','#94a3b8')}">No NFT giveaways found.</td></tr>`;
 
   return `
-    <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:18px;color:#fff;max-width:100% !important;">
+    <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:18px;color:#fff;max-width:100% !important; width:100% !important;">
       <div style="font-size:${FS.sm};font-weight:900;margin-bottom:.6rem;">NFT Giveaways</div>
-      <div style="overflow-x:auto; max-width:100% !important;">
-        <table style="width:100%; table-layout:auto; border-collapse:collapse; min-width:680px;">
+      <div class="scroll-x" style="max-width:100% !important;">
+        <table style="width:100%; table-layout:fixed !important; border-collapse:collapse;">
+          <!-- colonne con larghezze ragionevoli + campi lunghi ellissati -->
+          <colgroup>
+            <col style="width:8%">
+            <col style="width:14%">
+            <col style="width:14%">
+            <col style="width:14%">
+            <col style="width:20%">  <!-- Template(s) (più lungo) -->
+            <col style="width:14%">
+            <col style="width:8%">
+            <col style="width:8%">
+            <col style="width:10%">
+          </colgroup>
           <thead>
             <tr style="background:#111827;color:#fff;text-align:left;">
               <th style="${thHist()}">ID</th>
@@ -3129,7 +3168,7 @@ function renderGiveawaysPanel() {
               <th style="${thHist()}">Timeframe</th>
             </tr>
           </thead>
-          <tbody style="word-break:break-word;">${rows}</tbody>
+          <tbody style="overflow-wrap:anywhere;">${rows}</tbody>
         </table>
       </div>
     </div>
@@ -3142,7 +3181,7 @@ function renderStormsPanel() {
       <td style="${tdHist()}">${esc(s.id)}</td>
       <td style="${tdHist()}">${esc(s.scheduled_time||'-')}</td>
       <td style="${tdHist()}">${esc(s.channel_name||'-')}</td>
-      <td style="${tdHist()}">${chip(s.amount,6)} ${esc(s.token_symbol||'')}</td>
+      <td style="${tdHist('right')}">${chip(s.amount,6)} ${esc(s.token_symbol||'')}</td>
       <td style="${tdHist()}">${esc(s.timeframe||'-')}</td>
       <td style="${tdHist()}">${esc(s.status||'-')}</td>
       <td style="${tdHist()}">${esc(s.winners_display||'-')}</td>
@@ -3150,22 +3189,31 @@ function renderStormsPanel() {
   `).join('') || `<tr><td colspan="7" style="${tdHist('center','#94a3b8')}">No storms found.</td></tr>`;
 
   return `
-    <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;max-width:100% !important;">
+    <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;max-width:100% !important; width:100% !important;">
       <div style="font-size:${FS.sm};font-weight:900;margin-bottom:.6rem;">Token Storms</div>
-      <div style="overflow-x:auto; max-width:100% !important;">
-        <table style="width:100%; table-layout:auto; border-collapse:collapse; min-width:620px;">
+      <div class="scroll-x" style="max-width:100% !important;">
+        <table style="width:100%; table-layout:fixed !important; border-collapse:collapse;">
+          <colgroup>
+            <col style="width:12%">
+            <col style="width:16%">
+            <col style="width:18%">
+            <col style="width:18%">
+            <col style="width:14%">
+            <col style="width:12%">
+            <col style="width:10%">
+          </colgroup>
           <thead>
             <tr style="background:#1f2937;color:#fff;text-align:left;">
               <th style="${thHist()}">ID</th>
               <th style="${thHist()}">Scheduled</th>
               <th style="${thHist()}">Channel</th>
-              <th style="${thHist()}">Amount</th>
+              <th style="${thHist('right')}">Amount</th>
               <th style="${thHist()}">Timeframe</th>
               <th style="${thHist()}">Status</th>
               <th style="${thHist()}">Winners</th>
             </tr>
           </thead>
-          <tbody style="word-break:break-word;">${rows}</tbody>
+          <tbody style="overflow-wrap:anywhere;">${rows}</tbody>
         </table>
       </div>
     </div>
@@ -3334,7 +3382,7 @@ async function loadChatRewardsHistory({ reset = false } = {}) {
   function render() {
     const root = st.rootEl;
     if (!root) return;
-
+	ensureWideShellStyles();
     if (st.loading) {
       root.innerHTML = `
         <div class="account-card2" style="padding:18px;background:#1f2937;border-radius:12px;color:#fff;">
@@ -4328,7 +4376,9 @@ function renderHistoryTab() {
 	return `
 	  <div style="display:flex;gap:1rem;align-items:flex-start;max-width:100% !important;">
 	    ${leftMenu}
-	    ${rightPanel}
+	    <div class="hist-right" style="flex:1;min-width:0;max-width:100%;">
+	      ${rightPanel}
+	    </div>
 	  </div>
 	`;
 }

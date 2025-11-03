@@ -2522,61 +2522,65 @@ async function loadSection(section) {
 	  return loadSection('c2e-twitch');          // entra nella sezione madre
 	}
 
-  if (section === 'c2e-twitch') {
-	// default tab on open (prima era fisso: loadLogRewardActivity())
-	const firstTab = window.__C2E_DEFAULT_TAB__ || 'log-reward-activity';
-	window.__C2E_DEFAULT_TAB__ = null;
-	
-	switch (firstTab) {
-	  case 'log-storms-giveaways':   loadLogStormsGiveaways();   break; // crea/mostra Storms
-	  case 'twitch-nfts-giveaways':  loadTwitchNftsGiveaways();  break; // crea/mostra NFT giveaways
-	  default:                       loadLogRewardActivity();    break;
-	}
-		  
-    app.innerHTML = `
-      <div class="section-container">
-        <h2 class="section-title text-center">C2E - Twitch</h2>
-        <div class="c2e-menu">
-          <button class="c2e-menu-btn" data-menu="log-reward-activity"
-            style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-            Log Reward Activity
-          </button>
-          <button class="c2e-menu-btn" data-menu="log-storms-giveaways"
-            style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-            Twitch Storms
-          </button>
-          <button class="c2e-menu-btn" data-menu="twitch-nfts-giveaways"
-            style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-            Twitch NFTs Giveaways(NEW!)
-          </button>
-          <button class="c2e-menu-btn" data-menu="twitch-game"
-            style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-            Twitch Game(!soon!)
-          </button>
-        </div>
-        <div id="c2e-content" class="c2e-content">Loading last activity...</div>
+if (section === 'c2e-twitch') {
+  app.innerHTML = `
+    <div class="section-container">
+      <h2 class="section-title text-center">C2E - Twitch</h2>
+      <div class="c2e-menu">
+        <button class="c2e-menu-btn" data-menu="log-reward-activity"
+          style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          Log Reward Activity
+        </button>
+        <button class="c2e-menu-btn" data-menu="log-storms-giveaways"
+          style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          Twitch Storms
+        </button>
+        <button class="c2e-menu-btn" data-menu="twitch-nfts-giveaways"
+          style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          Twitch NFTs Giveaways(NEW!)
+        </button>
+        <button class="c2e-menu-btn" data-menu="twitch-game"
+          style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          Twitch Game(!soon!)
+        </button>
       </div>
-    `;
+      <div id="c2e-content" class="c2e-content">Loading…</div>
+    </div>
+  `;
 
-    // default tab on open
-    loadLogRewardActivity();
+  // Scegli il tab iniziale (proviene da scorciatoie esterne) e resetta il flag
+  const firstTab = window.__C2E_DEFAULT_TAB__ || 'log-reward-activity';
+  window.__C2E_DEFAULT_TAB__ = null;
 
-    document.querySelectorAll('.c2e-menu-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.c2e-menu-btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
+  // Evidenzia il bottone del tab scelto
+  const defaultBtn =
+    document.querySelector(`.c2e-menu-btn[data-menu="${firstTab}"]`) ||
+    document.querySelector(`.c2e-menu-btn[data-menu="log-reward-activity"]`);
+  if (defaultBtn) defaultBtn.classList.add('active');
 
-        const menu = e.target.getAttribute('data-menu');
-        switch(menu) {
-          case 'log-reward-activity':    loadLogRewardActivity();     break;
-          case 'log-storms-giveaways':   loadLogStormsGiveaways();    break;
-          case 'twitch-nfts-giveaways':  loadTwitchNftsGiveaways();   break;
-          case 'twitch-game':            loadTwitchGame();            break;
-        }
-      });
+  // Carica UNA SOLA VOLTA il contenuto del tab iniziale
+  switch (firstTab) {
+    case 'log-storms-giveaways':  loadLogStormsGiveaways();  break;
+    case 'twitch-nfts-giveaways': loadTwitchNftsGiveaways(); break;
+    default:                      loadLogRewardActivity();   break;
+  }
+
+  // Listener per i click dei tab
+  document.querySelectorAll('.c2e-menu-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.c2e-menu-btn').forEach(b => b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+
+      const menu = e.currentTarget.getAttribute('data-menu');
+      switch (menu) {
+        case 'log-reward-activity':    loadLogRewardActivity();    break;
+        case 'log-storms-giveaways':   loadLogStormsGiveaways();   break;
+        case 'twitch-nfts-giveaways':  loadTwitchNftsGiveaways();  break;
+        case 'twitch-game':            loadTwitchGame();           break;
+      }
     });
-
-  } else if (section === 'noncustodialfarms') {
+  });
+} else if (section === 'noncustodialfarms') {
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title text-center">Manage not-custodial NFTs Farm</h2>

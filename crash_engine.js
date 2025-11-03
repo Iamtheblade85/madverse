@@ -53,7 +53,7 @@ const Crash = {
 
   // scala (4× più piccoli rispetto a prima)
   IMPACT_SCALE: 0.16,  // prima ~0.65
-
+  PIXEL_SCALE: 0.25,
   // fisica/tempi compatti
   MIN_DIST:3, RESOLVE_PUSH:0.95, PAUSE_MS:[180,300], LIFETIME_MS:9000,
 
@@ -158,6 +158,13 @@ const Crash = {
       const ax=offX+a.x*(this.Cave.cellX||cell), ay=offY+a.y*(this.Cave.cellY||cell);
       const bx=offX+b.x*(this.Cave.cellX||cell), by=offY+b.y*(this.Cave.cellY||cell);
       const cx=(ax+bx)/2, cy=(ay+by)/2;
+      // ⛏️ quick reject: evento fuori viewport → salta (gratis in performance)
+      const rMax = cell * 6 * this.IMPACT_SCALE;
+      const W = ctx.canvas.width, H = ctx.canvas.height;
+      if (cx + rMax < 0 || cy + rMax < 0 || cx - rMax > W || cy - rMax > H) {
+        continue;
+      }
+      
       this._spawnDecal(ev,cx,cy,cell);
       try{ if(typeof this.onImpact==='function') this.onImpact({strength:f}); }catch(_){}
       this.events.push(ev);
@@ -206,6 +213,16 @@ const Crash = {
   _budgetForLevel(){ return this.qLevel===2? this.BASE_BUDGET : this.qLevel===1? this.MID_BUDGET : this.LOW_BUDGET; },
 
   draw(ctx){
+    // 🔒 sandbox per non “sporcare” il canvas del gioco
+    ctx.save();
+    // stato pulito: niente blend strani / alpha / filtri / ombre ereditati
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.filter = 'none';
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;    
     const T=now(); if(!this.lastDrawT) this.lastDrawT=T;
     const dt=T-this.lastDrawT; this.lastDrawT=T;
     this.emaDt = this.emaDt*0.9 + dt*0.1; this._updateQuality();
@@ -215,7 +232,7 @@ const Crash = {
     const offX=this.Cave.offsetX||0, offY=this.Cave.offsetY||0;
     const cellX=this.Cave.cellX||10, cellY=this.Cave.cellY||10;
     const cell=this._cell(), baseR=cell*this.IMPACT_SCALE;
-
+    const PS = this.PIXEL_SCALE * (cell / 10);
     // camera mini
     let shakeX=0, shakeY=0, zoom=1;
     for(const ev of this.events){
@@ -282,12 +299,13 @@ const Crash = {
         const alive=Math.max(0, sp.life-(T-ev.at)); if(alive<=0) return false;
         sp.dist += sp.sp * (cell*0.12);
         const px=cx+Math.cos(sp.ang)*sp.dist, py=cy+Math.sin(sp.ang)*sp.dist;
-        const tFade=alive/sp.life; const L=sp.len*(0.5+0.5*tFade), a=0.75*tFade; if(a<0.04) return false;
+        const tFade=alive/sp.life; const L=sp.len*(0.5+0.5*tFade)*PS, a=0.75*tFade; if(a<0.04) return false;
         ctx.save();
         ctx.globalAlpha = a;
         ctx.translate(px, py);
         ctx.rotate(sp.ang);
-        ctx.drawImage(SPR.spark, -L*0.9, -3, L, 6);
+        const H = 6*PS;
+        ctx.drawImage(SPR.spark, -L*0.9, -H/2, L, H);
         ctx.restore(); // <-- non rompe shake/zoom della camera
 
       });
@@ -302,7 +320,8 @@ const Crash = {
         d.x+=d.vx; d.y+=d.vy;
         const a=clamp(alive/this.DUST_FADE_MS,0,1)*0.45*(0.5+0.6*ev.f); if(a<0.03) return false;
         ctx.globalAlpha=a; const px=cx+d.x*0.8, py=cy+d.y*0.8;
-        ctx.drawImage(SPR.dust, px-27, py-27, 54, 54);
+        const dSz = 54*PS;
+        ctx.drawImage(SPR.dust, px-dSz/2, py-dSz/2, dSz, dSz);
       });
       ctx.restore();
 
@@ -311,7 +330,7 @@ const Crash = {
         const alive=Math.max(0, p.life-(T-ev.at)); if(!alive) return false;
         p.r += p.grow*(1+ev.f);
         const k=clamp(alive/this.PUFF_FADE_MS,0,1)*0.18*(0.6+0.6*ev.f); if(k<0.02) return false;
-        const sz=p.r*1.8; ctx.globalAlpha=k; ctx.drawImage(SPR.smoke, cx-sz/2, cy-sz/2, sz, sz);
+        const sz=p.r*1.8*PS; ctx.globalAlpha=k; ctx.drawImage(SPR.smoke, cx-sz/2, cy-sz/2, sz, sz);
       });
 
       // DEBRIS
@@ -327,10 +346,11 @@ const Crash = {
         }else{ d.vx*=0.95; d.va*=0.92; d.x+=d.vx*0.45; d.a+=d.va*0.45; }
         const k=clamp(alive/this.DEBRIS_FADE_MS,0,1)*0.8; if(k<0.04) return false;
         const px=cx + d.x*cell*0.07, py=cy + d.y*cell*0.07;
-        const sx=SPR.debris.width*d.s, sy=SPR.debris.height*d.s;
+        const sx=SPR.debris.width*d.s*PS, sy=SPR.debris.height*d.s*PS;
         // ombra
         ctx.save(); ctx.globalAlpha=0.12*k; ctx.fillStyle='#0b0b0b';
-        ctx.beginPath(); ctx.ellipse(px, py+1.5, sx*0.35, sy*0.16, 0,0,Math.PI*2); ctx.fill(); ctx.restore();
+        ctx.beginPath(); ctx.ellipse(px, py+1.5*PS, sx*0.35, sy*0.16, 0,0,Math.PI*2); ctx.fill(); ctx.restore();
+
         // frammento
         ctx.save(); ctx.translate(px,py); ctx.rotate(d.a); ctx.globalAlpha=k*(0.6+0.5*ev.f);
         ctx.drawImage(SPR.debris, -sx/2, -sy/2, sx, sy); ctx.restore();
@@ -343,12 +363,13 @@ const Crash = {
         const t=(T-ev.at)/1000, wob=Math.sin(e.phase+t*e.wob)*cell*0.06;
         const px=cx+wob, py=cy - t*e.up*cell*0.45;
         const a=clamp(alive/this.EMBERS_FADE_MS,0,1)*0.55*(0.5+0.6*ev.f); if(a<0.03) return false;
-        const s=14*e.scale; ctx.globalAlpha=a; ctx.drawImage(SPR.glow, px-s/2, py-s/2, s, s);
+        const s=14*e.scale*PS; ctx.globalAlpha=a; ctx.drawImage(SPR.glow, px-s/2, py-s/2, s, s);
       });
       ctx.restore();
     }
 
     if(shakeX||shakeY||zoom!==1) ctx.restore();
+    ctx.restore();
   }
 };
 

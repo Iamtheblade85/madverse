@@ -3086,6 +3086,18 @@ chatHistory: {
       maximumFractionDigits: dp
     });
   }
+
+function whoOffered(s) {
+  const u = (s?.offered_by_username || '').trim();
+  const w = (s?.offered_by_wax || '').trim();
+  const disp = (s?.offered_by || '').trim();  // già calcolato dal backend
+  if (u && w) return `${esc(u)} · <span style="opacity:.85">${esc(w)}</span>`;
+  if (disp)   return esc(disp);
+  if (u)      return esc(u);
+  if (w)      return esc(w);
+  return '-';
+}
+
 function fmtUTC(ts) {
   if (!ts) return '-';
   try {
@@ -3181,12 +3193,13 @@ function renderStormsPanel() {
       <td style="${tdHist()}">${esc(s.id)}</td>
       <td style="${tdHist()}">${esc(s.scheduled_time||'-')}</td>
       <td style="${tdHist()}">${esc(s.channel_name||'-')}</td>
+      <td style="${tdHist()}">${whoOffered(s)}</td>
       <td style="${tdHist('right')}">${chip(s.amount,6)} ${esc(s.token_symbol||'')}</td>
       <td style="${tdHist()}">${esc(s.timeframe||'-')}</td>
       <td style="${tdHist()}">${esc(s.status||'-')}</td>
       <td style="${tdHist()}">${esc(s.winners_display||'-')}</td>
     </tr>
-  `).join('') || `<tr><td colspan="7" style="${tdHist('center','#94a3b8')}">No storms found.</td></tr>`;
+  `).join('') || `<tr><td colspan="8" style="${tdHist('center','#94a3b8')}">No storms found.</td></tr>`;
 
   return `
     <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;max-width:100% !important; width:100% !important;">
@@ -3194,19 +3207,21 @@ function renderStormsPanel() {
       <div class="scroll-x" style="max-width:100% !important;">
         <table style="width:100%; table-layout:fixed !important; border-collapse:collapse;">
           <colgroup>
-            <col style="width:12%">
-            <col style="width:16%">
-            <col style="width:18%">
-            <col style="width:18%">
-            <col style="width:14%">
-            <col style="width:12%">
-            <col style="width:10%">
+            <col style="width:10%">  <!-- ID -->
+            <col style="width:14%">  <!-- Scheduled -->
+            <col style="width:16%">  <!-- Channel -->
+            <col style="width:18%">  <!-- Offered by -->
+            <col style="width:14%">  <!-- Amount -->
+            <col style="width:10%">  <!-- Timeframe -->
+            <col style="width:9%">   <!-- Status -->
+            <col style="width:9%">   <!-- Winners -->
           </colgroup>
           <thead>
             <tr style="background:#1f2937;color:#fff;text-align:left;">
               <th style="${thHist()}">ID</th>
               <th style="${thHist()}">Scheduled</th>
               <th style="${thHist()}">Channel</th>
+              <th style="${thHist()}">Offered by</th>
               <th style="${thHist('right')}">Amount</th>
               <th style="${thHist()}">Timeframe</th>
               <th style="${thHist()}">Status</th>

@@ -122,9 +122,10 @@ function applyCirculatingToUI(state) {
     cells[5].textContent = pct;
   });
 
-  // Step D: ricostruisci righe e riepilogo che usano circulating
-  updateRewardsPanel(state);
-  refreshStep4Summary(state);
+  // Step D: ricostruisci righe e riepilogo che usano circulating (solo se disponibili)
+  const api = window.__NCF_API__ || {};
+  if (typeof api.updateRewardsPanel === "function") api.updateRewardsPanel(state);
+  if (typeof api.refreshStep4Summary === "function") api.refreshStep4Summary(state);
 }
 
 // Polling (default 60s). Usa subset = template visibili/selezionati per minimizzare payload.
@@ -719,8 +720,30 @@ window.initManageNFTsFarm = initNonCustodialFarms;
     .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const nowPlusMin = (m)=>{const d=new Date(); d.setMinutes(d.getMinutes()+m); return d;};
-  const toLoc = (d)=>{const p=(n)=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;};
-  const parseLoc = (v)=>{const d=new Date(v); return isNaN(d.getTime())?null:d;};
+	// Helper locale robusti per <input type="datetime-local">
+	const toLoc = (d) => {
+	  // format "YYYY-MM-DDTHH:mm" in **locale**
+	  const pad = (n) => String(n).padStart(2, "0");
+	  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+	};
+	
+	// Parse "YYYY-MM-DDTHH:mm" in maniera **cross-browser** (niente Date.parse)
+	const parseLoc = (str) => {
+	  const m = String(str || "").match(
+	    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/
+	  );
+	  if (!m) return null;
+	  const Y = +m[1], M = +m[2], D = +m[3], h = +m[4], mi = +m[5];
+	  // Costruisce una Date in **orario locale**
+	  return new Date(Y, M - 1, D, h, mi, 0, 0);
+	};
+	
+	// utility: fine giornata locale (per i quick buttons)
+	const endOfLocalDay = (d) => {
+	  const x = new Date(d);
+	  x.setHours(23, 59, 59, 999);
+	  return x;
+	};
   const selectionKey = (collection, schema, tid) => `${collection}::${schema}::${tid}`;
   const getWax = () => (window.userData?.wax_account || "").trim();
   const apiBase = (cfg) => cfg.apiBaseUrl || window.BASE_URL || window.API_BASE || location.origin;
@@ -1494,8 +1517,8 @@ function enrichFromTable(schemaName, tid){
     body.innerHTML=sel.map(s=>{
       const k=selectionKey(s.collection,s.schema_name,s.template_id);
       const meta=enrichFromTable(s.schema_name,s.template_id);
-      const minISO=toLoc(nowPlusMin(5));
-      const exISO=state.creator.expiry[k]||"";
+		const minISO = toLoc(nowPlusMin(5));
+		const exISO  = state.creator.expiry[k] || "";
       const chips=tokens.map(t=>{
         const id=`${t.contract}:${t.symbol}`;
         const on=!!(state.creator.rewardsPerToken[k]&&state.creator.rewardsPerToken[k][id]!==undefined);
@@ -1546,22 +1569,66 @@ function enrichFromTable(schemaName, tid){
       wLS(LS.selection,state.creator.selection); wLS(LS.rewardsPerToken,state.creator.rewardsPerToken); wLS(LS.expiry,state.creator.expiry);
       updateRewardsPanel(state);
     }));
-    $$("#ncf-rp-body .ncf-expiry").forEach(inp=>inp.addEventListener("change",e=>{
-      const box=e.target.closest("[data-item]"); const k=box.dataset.item; const nd=parseLoc(e.target.value);
-      if(!nd){ delete state.creator.expiry[k]; wLS(LS.expiry,state.creator.expiry); return; }
-      const prev=state.creator.expiry[k]?new Date(state.creator.expiry[k]):null; if(prev && nd<prev){ e.target.value=toLoc(prev); toast("Expiration can only be extended.","error"); return; }
-      state.creator.expiry[k]=nd.toISOString(); wLS(LS.expiry,state.creator.expiry);
-    }));
-    $$("#ncf-rp-body .ncf-plus7").forEach(btn=>btn.addEventListener("click",e=>{
-      const box=e.target.closest("[data-item]"); const k=box.dataset.item; const inp=$(".ncf-expiry",box);
-      const base=state.creator.expiry[k]?new Date(state.creator.expiry[k]):nowPlusMin(5); const d=new Date(base); d.setDate(d.getDate()+7);
-      state.creator.expiry[k]=d.toISOString(); wLS(LS.expiry,state.creator.expiry); inp.value=toLoc(d);
-    }));
-    $$("#ncf-rp-body .ncf-plus30").forEach(btn=>btn.addEventListener("click",e=>{
-      const box=e.target.closest("[data-item]"); const k=box.dataset.item; const inp=$(".ncf-expiry",box);
-      const base=state.creator.expiry[k]?new Date(state.creator.expiry[k]):nowPlusMin(5); const d=new Date(base); d.setDate(d.getDate()+30);
-      state.creator.expiry[k]=d.toISOString(); wLS(LS.expiry,state.creator.expiry); inp.value=toLoc(d);
-    }));
+	// DOPO
+	const EPS = 60 * 1000; // 60s di tolleranza per evitare falsi negativi
+	
+	$$("#ncf-rp-body .ncf-expiry").forEach((inp) =>
+	  inp.addEventListener("change", (e) => {
+	    const box = e.target.closest("[data-item]");
+	    const k = box.dataset.item;
+	    const nd = parseLoc(e.target.value);         // PARSE robusto
+	    if (!nd) {
+	      delete state.creator.expiry[k];
+	      wLS(LS.expiry, state.creator.expiry);
+	      return;
+	    }
+	    const prev = state.creator.expiry[k] ? new Date(state.creator.expiry[k]) : null;
+	    if (prev && nd.getTime() + EPS < prev.getTime()) {
+	      // non permettere di accorciare (con tolleranza)
+	      e.target.value = toLoc(prev);
+	      toast("Expiration can only be extended.", "error");
+	      return;
+	    }
+	    state.creator.expiry[k] = nd.toISOString();  // salviamo sempre in UTC ISO
+	    wLS(LS.expiry, state.creator.expiry);
+	  })
+	);
+	
+	$$("#ncf-rp-body .ncf-plus7").forEach((btn) =>
+	  btn.addEventListener("click", (e) => {
+	    const box = e.target.closest("[data-item]");
+	    const k = box.dataset.item;
+	    const inp = $(".ncf-expiry", box);
+	    const base = state.creator.expiry[k]
+	      ? new Date(state.creator.expiry[k])
+	      : nowPlusMin(5);
+	    // aggiungi 7 giorni e **ancora a fine giornata locale**
+	    const d = new Date(base);
+	    d.setDate(d.getDate() + 7);
+	    const z = endOfLocalDay(d);
+	    state.creator.expiry[k] = z.toISOString();
+	    wLS(LS.expiry, state.creator.expiry);
+	    inp.value = toLoc(z);
+	  })
+	);
+	
+	$$("#ncf-rp-body .ncf-plus30").forEach((btn) =>
+	  btn.addEventListener("click", (e) => {
+	    const box = e.target.closest("[data-item]");
+	    const k = box.dataset.item;
+	    const inp = $(".ncf-expiry", box);
+	    const base = state.creator.expiry[k]
+	      ? new Date(state.creator.expiry[k])
+	      : nowPlusMin(5);
+	    // aggiungi 30 giorni e **ancora a fine giornata locale**
+	    const d = new Date(base);
+	    d.setDate(d.getDate() + 30);
+	    const z = endOfLocalDay(d);
+	    state.creator.expiry[k] = z.toISOString();
+	    wLS(LS.expiry, state.creator.expiry);
+	    inp.value = toLoc(z);
+	  })
+	);
 
     // chips delegation
     if (!state.creator._chipDelegationBound) {
@@ -1598,6 +1665,11 @@ function enrichFromTable(schemaName, tid){
     updateCTAState(state);
     refreshStep4Summary(state);
   }
+  // Espone funzioni di Step D per l'uso da PART 1
+  window.__NCF_API__ = Object.assign({}, window.__NCF_API__, {
+    updateRewardsPanel,
+    refreshStep4Summary,
+  });
 
   // ---------- Build payload + summary ----------
   function buildDraftPayload(state){

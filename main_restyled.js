@@ -16186,9 +16186,9 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
           animation: fadeIn 0.4s ease-in-out;
         ">
           <strong>Swap Completed</strong><br>
-          ${details.amount} ${details.from_token} ➡️ ${details.received_amount.toFixed(9)} ${details.to_token}<br>
+          ${details.amount_spent} ${details.from_token} ➡️ ${Number(details.received_amount_net).toFixed(8)} ${details.to_token}<br>
           <em>Price:</em> ${details.execution_price}<br>
-          <em>Fee:</em> ${details.commission.toFixed(9)}
+          <em>Fee:</em> ${Number(details.commission_total).toFixed(9)}
         </div>
       `;
     } else if (action === "bridge_to" && data.net_amount && data.fee_applied !== undefined) {

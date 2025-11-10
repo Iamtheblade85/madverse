@@ -14134,220 +14134,166 @@ function renderWalletView(type) {
     // Build grouping key:
     //  - prefer tx_id
     //  - else compose from (reference_type, reference_id, channel, from/to) + minute bucket
-    function txKeyFor(it) {
-      const et  = String(it.event_type||'').toLowerCase();
-      const rt  = String(it.reference_type||'').toLowerCase();
-      const id  = it.id && String(it.id);
-      const txid= it.tx_id || it.metadata?.tx_id;
-    
-      if (txid) return `tx::${txid}`;
-    
-      // 🔒 NON aggregare transfer/bridge (mostra ogni riga separata)
-      if (rt === 'internal_transfer' || et.startsWith('transfer') || et.startsWith('bridge')) {
-        return `row::${id || crypto?.randomUUID?.() || Math.random()}`;
-      }
-    
-      // 🏧 Withdraw: gruppo "initiated + send" per simbolo+destinatario su bucket 20'
-      if (rt === 'withdraw' || et.startsWith('withdraw') || et === 'send') {
-        const sym = (it.symbol||'').toUpperCase();
-        const to  = (it.to_account||'').toLowerCase();
-        const tms = it.created_at ? new Date(it.created_at).getTime() : Date.now();
-        const bucket = Math.floor(tms / (20*60*1000)); // 20 minuti
-        return `wd::${sym}|${to}|${bucket}`;
-      }
-    
-      // 🔄 Swap: raggruppa per pair + canale + importo input su bucket 5'
-      if (rt === 'swap' || et.startsWith('swap')) {
-        const ref = String(it.reference_id||'').toUpperCase(); // es: FROM->TO
-        const ch  = String(it.channel||'').toLowerCase();
-        const ain = (it.amount!=null) ? Number(it.amount).toFixed(6) : '0';
-        const tms = it.created_at ? new Date(it.created_at).getTime() : Date.now();
-        const bucket = Math.floor(tms / (5*60*1000));
-        return `sw::${ref}|${ch}|${ain}|${bucket}`;
-      }
-    
-      // fallback: non aggregare
-      return `row::${id || crypto?.randomUUID?.() || Math.random()}`;
-    }
+	function txKeyFor(it) {
+	  const et  = String(it.event_type||'').toLowerCase();
+	  const rt  = String(it.reference_type||'').toLowerCase();
+	  const id  = it.id && String(it.id);
+	  const txid= it.tx_id || it.metadata?.tx_id;
+	
+	  // se c'è un tx_id, quello è il grouping key
+	  if (txid) return `tx::${txid}`;
+	
+	  // non raggruppare transfer/bridge (mostra ogni riga)
+	  if (rt === 'internal_transfer' || rt === 'bridge' || et.startsWith('transfer') || et.startsWith('bridge')) {
+	    return `row::${id || crypto?.randomUUID?.() || Math.random()}`;
+	  }
+	
+	  // withdraw: raggruppa initiated+completed per symbol+destinatario su bucket 20'
+	  if (rt === 'withdraw' || et.includes('withdraw') || et === 'send') {
+	    const sym = (it.symbol||'').toUpperCase();
+	    const to  = (it.to_account||'').toLowerCase();
+	    const tms = it.created_at ? new Date(it.created_at).getTime() : Date.now();
+	    const bucket = Math.floor(tms / (20*60*1000));
+	    return `wd::${sym}|${to}|${bucket}`;
+	  }
+	
+	  // swap: raggruppa per coppia + canale + importo input su bucket 5'
+	  if (rt === 'swap' || et.startsWith('swap')) {
+	    const ref = String(it.reference_id||'').toUpperCase(); // es: FROM->TO
+	    const ch  = String(it.channel||'').toLowerCase();
+	    const ain = (it.amount!=null) ? Number(it.amount).toFixed(6) : '0';
+	    const tms = it.created_at ? new Date(it.created_at).getTime() : Date.now();
+	    const bucket = Math.floor(tms / (5*60*1000));
+	    return `sw::${ref}|${ch}|${ain}|${bucket}`;
+	  }
+	
+	  // fallback: non raggruppare
+	  return `row::${id || crypto?.randomUUID?.() || Math.random()}`;
+	}
 
-
-    function upsertTx(it) {
-      const et = String(it.event_type||'').toLowerCase();
-      if (et === 'network_fee' || et === 'fee_collected') return; // hide fees always
-
-      // Infer primary type for UI
-      const primaryType = (() => {
-        const rt = String(it.reference_type||'').toLowerCase();
-        if (rt === 'swap') return 'swap';
-        if (rt === 'internal_transfer') return 'transfer';
-        if (rt === 'bridge') return 'bridge';
-        // withdraw flow tags:
-        if (['withdraw_initiated','withdraw_completed','withdraw_failed','send'].includes(et)) return 'withdraw';
-        return rt || (it.object_type || 'tx');
-      })();
-
-      const key = txKeyFor(it);
-      const cur = th.txMap.get(key) || {
-        key,
-        type: primaryType,                 // withdraw|swap|transfer|bridge
-        status: 'pending',                 // pending|success|failed
-        created_at: it.created_at || null,
-        updated_at: it.created_at || null,
-        channel: (it.channel || '').toLowerCase(),
-        from_account: it.from_account || '',
-        to_account: it.to_account || '',
-        tx_id: it.tx_id || it.metadata?.tx_id || null,
-        memo: it.memo || '',
-        // amounts (we show net / received and/or spent)
-        amount_in: null,   // e.g., swap debit / withdraw requested
-        symbol_in: null,
-        amount_out: null,  // e.g., swap credit / withdraw sent / transfer net / bridge net
-        symbol_out: null,
-        // swap pair parsing (FROM->TO)
-        pair: null,
-        meta: it.metadata || {}
-      };
-
-      // time bounds
-      if (it.created_at) {
-        if (!cur.created_at || new Date(it.created_at) < new Date(cur.created_at)) cur.created_at = it.created_at;
-        if (!cur.updated_at || new Date(it.created_at) > new Date(cur.updated_at)) cur.updated_at = it.created_at;
-      }
-      // memo (keep the latest meaningful)
-      if (it.memo && (!cur.memo || it.memo.length > cur.memo.length)) cur.memo = it.memo;
-
-      // Populate amounts/status by event type
-      switch (et) {
-        // ---------- WITHDRAW ----------
-        case 'withdraw_initiated': {
-          // tentative net (if provided via metadata), but keep pending
-          cur.status = (cur.status === 'success' || cur.status === 'failed') ? cur.status : 'pending';
-          if (cur.amount_out == null) cur.amount_out = Number(it.metadata?.net_on_chain || it.amount || 0);
-          if (!cur.symbol_out) cur.symbol_out = it.symbol || cur.symbol_out;
-          break;
-        }
-        case 'send':
-        case 'withdraw_completed': {
-          cur.status = 'success';
-          cur.amount_out = Number(it.amount || cur.amount_out || 0); // show net sent
-          cur.symbol_out = it.symbol || cur.symbol_out;
-          if (!cur.tx_id && it.tx_id) cur.tx_id = it.tx_id;
-          if (it.to_account) cur.to_account = it.to_account;
-          break;
-        }
-        case 'withdraw_failed': {
-          if (cur.status !== 'success') cur.status = 'failed';
-          break;
-        }
-
-        // ---------- SWAP ----------
-        case 'swap': {
-          cur.type = 'swap';
-        
-          // pair FROM->TO
-          const ref = it.reference_id || '';
-          const parts = ref.split('->');
-          if (parts.length === 2) {
-            cur.pair = `${parts[0].toUpperCase()}→${parts[1].toUpperCase()}`;
-            if (!cur.symbol_in)  cur.symbol_in  = parts[0].toUpperCase();
-            if (!cur.symbol_out) cur.symbol_out = parts[1].toUpperCase();
-          }
-        
-          // input: amount + symbol dal record principale
-          if (it.amount != null)  cur.amount_in  = Number(it.amount);
-          if (it.symbol)          cur.symbol_in  = it.symbol.toUpperCase();
-        
-          // output netto: ricavalo dalle metadata (real_output_before_fees - commission_dynamic)
-          const md = it.metadata || {};
-          const outNet = (md.real_output_before_fees!=null && md.commission_dynamic!=null)
-            ? (Number(md.real_output_before_fees) - Number(md.commission_dynamic))
-            : (md.quoted_output!=null && md.commission_total!=null)
-              ? (Number(md.quoted_output) - Number(md.commission_total))
-              : null;
-          if (outNet != null) {
-            cur.amount_out = outNet;
-            if (!cur.symbol_out && parts.length === 2) cur.symbol_out = parts[1].toUpperCase();
-          }
-        
-          // stato: usa il flag success nelle metadata, altrimenti resta pending; 'swap_failed' lo imposterà a failed
-          if (md.success === true) cur.status = 'success';
-          else if (md.success === false && cur.status !== 'success') cur.status = 'failed';
-          break;
-        }
-
-        case 'debit': { // from_token spent
-          cur.type = 'swap';
-          cur.amount_in = Number(it.amount || cur.amount_in || 0);
-          cur.symbol_in = it.symbol || cur.symbol_in;
-          break;
-        }
-        case 'credit': { // to_token received (net!)
-          cur.type = 'swap';
-          cur.status = 'success';
-          cur.amount_out = Number(it.amount || cur.amount_out || 0);
-          cur.symbol_out = it.symbol || cur.symbol_out;
-          break;
-        }
-        case 'swap_failed': {
-          if (cur.status !== 'success') cur.status = 'failed';
-          break;
-        }
-
-        // ---------- TRANSFER ----------
-        case 'transfer': { // success; amount already net of fee
-          cur.type = 'transfer';
-          cur.status = 'success';
-          cur.amount_out = Number(it.amount || cur.amount_out || 0);
-          cur.symbol_out = it.symbol || cur.symbol_out;
-          break;
-        }
-        case 'transfer_denied':
-        case 'transfer_failed': {
-          cur.type = 'transfer';
-          if (cur.status !== 'success') cur.status = 'failed';
-          if (cur.amount_out == null && it.amount != null) {
-            cur.amount_out = Number(it.amount); cur.symbol_out = it.symbol || cur.symbol_out;
-          }
-          break;
-        }
-
-        // ---------- BRIDGE ----------
-        case 'bridge_success': {
-          cur.type = 'bridge';
-          cur.status = 'success';
-          // amount: gross; net amount in metadata.net_amount (prefer net display)
-          if (it.metadata?.net_amount != null) {
-            cur.amount_out = Number(it.metadata.net_amount);
-            cur.symbol_out = it.symbol || cur.symbol_out;
-          } else {
-            cur.amount_out = Number(it.amount || cur.amount_out || 0);
-            cur.symbol_out = it.symbol || cur.symbol_out;
-          }
-          break;
-        }
-        case 'bridge_failed':
-        case 'bridge_denied': {
-          cur.type = 'bridge';
-          if (cur.status !== 'success') cur.status = 'failed';
-          if (cur.amount_out == null && it.amount != null) {
-            cur.amount_out = Number(it.amount); cur.symbol_out = it.symbol || cur.symbol_out;
-          }
-          break;
-        }
-
-        default: {
-          // fallback: keep whatever; do not expose fees
-          break;
-        }
-      }
-
-      // keep channel/from/to if provided later
-      if (it.channel && !cur.channel) cur.channel = String(it.channel||'').toLowerCase();
-      if (it.from_account && !cur.from_account) cur.from_account = it.from_account;
-      if (it.to_account && !cur.to_account) cur.to_account = it.to_account;
-
-      th.txMap.set(key, cur);
-    }
+	function upsertTx(it) {
+	  const et = String(it.event_type||'').toLowerCase();
+	  const rt = String(it.reference_type||'').toLowerCase();
+	
+	  // non mostrare mai righe fee
+	  if (et === 'network_fee' || et === 'fee_collected') return;
+	
+	  // tipo primario per UI
+	  const primaryType = (() => {
+	    if (rt === 'swap' || et.startsWith('swap')) return 'swap';
+	    if (rt === 'bridge' || et.startsWith('bridge')) return 'bridge';
+	    if (rt === 'internal_transfer' || et.startsWith('transfer')) return 'transfer';
+	    if (rt === 'withdraw' || et.includes('withdraw') || et === 'send') return 'withdraw';
+	    return rt || (it.object_type || 'tx');
+	  })();
+	
+	  const key = txKeyFor(it);
+	  const cur = th.txMap.get(key) || {
+	    key,
+	    type: primaryType,                 // withdraw|swap|transfer|bridge
+	    status: 'pending',                 // pending|success|failed
+	    created_at: it.created_at || null,
+	    updated_at: it.created_at || null,
+	    channel: (it.channel || '').toLowerCase(),
+	    from_account: it.from_account || '',
+	    to_account: it.to_account || '',
+	    tx_id: it.tx_id || it.metadata?.tx_id || null,
+	    memo: it.memo || '',
+	    amount_in: null,   // per swap: quanto addebitato (token di partenza)
+	    symbol_in: null,
+	    amount_out: null,  // valore da mostrare (netto ricevuto per swap; importo inviato per withdraw/bridge/transfer)
+	    symbol_out: null,
+	    pair: null,
+	    meta: it.metadata || {}
+	  };
+	
+	  // date bounds
+	  if (it.created_at) {
+	    if (!cur.created_at || new Date(it.created_at) < new Date(cur.created_at)) cur.created_at = it.created_at;
+	    if (!cur.updated_at || new Date(it.created_at) > new Date(cur.updated_at)) cur.updated_at = it.created_at;
+	  }
+	
+	  // memo (mantieni il più informativo)
+	  if (it.memo && (!cur.memo || it.memo.length > cur.memo.length)) cur.memo = it.memo;
+	
+	  // status dal top-level (preferito), con priorità: success > failed > pending
+	  const topStatus = String(it.status||'').toLowerCase();
+	  if (topStatus === 'completed' || topStatus === 'success') cur.status = 'success';
+	  else if (topStatus === 'failed' && cur.status !== 'success') cur.status = 'failed';
+	
+	  // popolamento campi per tipo
+	  if (cur.type === 'swap') {
+	    // pair FROM->TO
+	    const ref = it.reference_id || '';
+	    const parts = ref.split('->');
+	    if (parts.length === 2) {
+	      cur.pair = `${parts[0].toUpperCase()}→${parts[1].toUpperCase()}`;
+	      if (!cur.symbol_in)  cur.symbol_in  = parts[0].toUpperCase();
+	      if (!cur.symbol_out) cur.symbol_out = parts[1].toUpperCase();
+	    }
+	
+	    // input: amount + symbol dal record principale (amount = speso on-chain lato custodial)
+	    if (it.amount != null)  cur.amount_in  = Number(it.amount);
+	    if (it.symbol)          cur.symbol_in  = it.symbol.toUpperCase();
+	
+	    // output NETTO: prendere direttamente il valore computato dal backend
+	    const md = it.metadata || {};
+	    if (md.net_out != null) {
+	      cur.amount_out = Number(md.net_out);
+	    } else if (md.received_amount_net != null) {
+	      cur.amount_out = Number(md.received_amount_net);
+	    }
+	    if (!cur.symbol_out && parts.length === 2) cur.symbol_out = parts[1].toUpperCase();
+	
+	    // in assenza di top-level, valuta md.success
+	    if (!topStatus) {
+	      if (md.success === true) cur.status = 'success';
+	      else if (md.success === false && cur.status !== 'success') cur.status = 'failed';
+	    }
+	  }
+	
+	  else if (cur.type === 'withdraw') {
+	    // withdraw: mostra l'importo inviato on-chain (netto). Di solito it.amount è già quello effettivo.
+	    if (it.amount != null && cur.amount_out == null) cur.amount_out = Number(it.amount);
+	    if (it.symbol && !cur.symbol_out) cur.symbol_out = it.symbol.toUpperCase();
+	
+	    // tx_id e destinazione
+	    if (!cur.tx_id && it.tx_id) cur.tx_id = it.tx_id;
+	    if (it.to_account) cur.to_account = it.to_account;
+	
+	    // se l'evento è withdraw_initiated e non abbiamo completed, resta pending
+	    if (!topStatus && et === 'withdraw_initiated' && cur.status !== 'success' && cur.status !== 'failed') {
+	      cur.status = 'pending';
+	    }
+	  }
+	
+	  else if (cur.type === 'bridge') {
+	    // bridge interno: mostra il NET spostato (preferisci metadata.net_amount)
+	    if (it.metadata?.net_amount != null) {
+	      cur.amount_out = Number(it.metadata.net_amount);
+	    } else if (it.amount != null) {
+	      cur.amount_out = Number(it.amount);
+	    }
+	    if (it.symbol && !cur.symbol_out) cur.symbol_out = it.symbol.toUpperCase();
+	
+	    // canale: trattalo come "internal" se non specificato
+	    if (!cur.channel) cur.channel = 'internal';
+	  }
+	
+	  else if (cur.type === 'transfer') {
+	    // transfer interno: importo già netto
+	    if (it.amount != null) cur.amount_out = Number(it.amount);
+	    if (it.symbol && !cur.symbol_out) cur.symbol_out = it.symbol.toUpperCase();
+	    cur.status = topStatus ? cur.status : 'success';
+	  }
+	
+	  // conserva channel/from/to se arrivano dopo
+	  if (it.channel && !cur.channel) cur.channel = String(it.channel||'').toLowerCase();
+	  if (it.from_account && !cur.from_account) cur.from_account = it.from_account;
+	  if (it.to_account && !cur.to_account) cur.to_account = it.to_account;
+	
+	  th.txMap.set(key, cur);
+	}
 
     function aggregateItems(items) {
       for (const it of items) upsertTx(it);
@@ -14432,19 +14378,39 @@ function renderWalletView(type) {
       return '-';
     }
 
-    function rowDetails(r){
-      // No fees shown; only helpful info
-      const lines = [];
-      if (r.pair) lines.push(`<div><strong>Pair</strong>: ${esc(r.pair)}</div>`);
-      if (r.memo) lines.push(`<div><strong>Note</strong>: ${esc(r.memo)}</div>`);
-      if (r.from_account) lines.push(`<div><strong>From</strong>: ${esc(r.from_account)}</div>`);
-      if (r.to_account)   lines.push(`<div><strong>To</strong>: ${esc(r.to_account)}</div>`);
-      if (r.meta?.execution_price != null) lines.push(`<div><strong>Execution price</strong>: ${esc(r.meta.execution_price)}</div>`);
-      if (r.meta?.quoted_output != null)   lines.push(`<div><strong>Quoted output</strong>: ${esc(r.meta.quoted_output)}</div>`);
-      if (r.type==='bridge' && r.meta?.net_amount != null) lines.push(`<div><strong>Net bridged</strong>: ${fmtAmt(r.meta.net_amount)} ${esc(r.symbol_out||'')}</div>`);
-      return lines.join('') || `<div style="opacity:.8;">No extra details.</div>`;
-    }
-    
+	function rowDetails(r){
+	  const lines = [];
+	  if (r.pair) lines.push(`<div><strong>Pair</strong>: ${esc(r.pair)}</div>`);
+	  if (r.memo) lines.push(`<div><strong>Note</strong>: ${esc(r.memo)}</div>`);
+	
+	  // origine/destinazione (se utili)
+	  if (r.from_account) lines.push(`<div><strong>From</strong>: ${esc(r.from_account)}</div>`);
+	  if (r.to_account)   lines.push(`<div><strong>To</strong>: ${esc(r.to_account)}</div>`);
+	
+	  // prezzo di esecuzione (se presente nelle metadata)
+	  if (r.meta?.execution_price != null) {
+	    lines.push(`<div><strong>Execution price</strong>: ${esc(r.meta.execution_price)}</div>`);
+	  }
+	
+	  // NON mostrare quoted output negli swap (irrilevante per l’utente)
+	  if (r.type!=='swap' && r.meta?.quoted_output != null) {
+	    lines.push(`<div><strong>Quoted output</strong>: ${esc(r.meta.quoted_output)}</div>`);
+	  }
+	
+	  // bridge: mostra anche il netto (se presente)
+	  if (r.type==='bridge' && r.meta?.net_amount != null) {
+	    lines.push(`<div><strong>Net bridged</strong>: ${fmtAmt(r.meta.net_amount)} ${esc(r.symbol_out||'')}</div>`);
+	  }
+	
+	  // canale (wallet) esplicito
+	  if (r.channel) {
+	    const ch = r.channel.charAt(0).toUpperCase()+r.channel.slice(1);
+	    lines.push(`<div><strong>Wallet</strong>: ${esc(ch)}</div>`);
+	  }
+	
+	  return lines.join('') || `<div style="opacity:.8;">No extra details.</div>`;
+	}
+
     function toneFor(r){
       const t=(r.type||'').toLowerCase();
       const s=r.status;
@@ -14501,7 +14467,7 @@ function renderWalletView(type) {
 
       el.list.innerHTML = rows.map((r,i)=>{
         const waxLike = r.tx_id && /^[a-f0-9]{64}$/i.test(r.tx_id);
-        const txUrl = waxLike ? `https://waxblock.io/transaction/${esc(r.tx_id)}` : '';
+        const txUrl = (waxLike && r.type==='withdraw') ? `https://waxblock.io/transaction/${esc(r.tx_id)}` : '';
         const subtitle = [
           r.type ? r.type.toUpperCase() : 'TX',
           r.pair ? `• ${r.pair}` : (r.symbol_out || r.symbol_in ? `• ${esc(r.symbol_out||r.symbol_in)}`:''),

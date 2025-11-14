@@ -14004,6 +14004,7 @@ async function loadWallet(preferredTab = 'twitch', force = false) {
   window.currentWalletTab = desired;
   setActive(desired);
   renderWalletView(desired);
+	setupWalletPriceSidebar();
 }
 
 function renderWalletView(type) {
@@ -16393,4 +16394,367 @@ function showModal({ title = '', body = '', footer = '' }) {
     const top = scrollY + (viewportHeight - modalHeight) / 2;
     modal.style.top = `${Math.max(top, 40)}px`;
   }, 0);
+}
+
+/* -----------------------------------------------------------
+ * WALLETS — Price Checker Sidebar (English UI, /preview_swap)
+ * ----------------------------------------------------------- */
+async function setupWalletPriceSidebar() {
+  const main = document.getElementById('wallet-content');
+  if (!main) return;
+  if (document.getElementById('wallet-price-sidebar')) return; // already mounted
+
+  // Two-column wrapper (main + sidebar)
+  const wrap = document.createElement('div');
+  wrap.id = 'wallet-2col';
+  wrap.style.display = 'grid';
+  wrap.style.gridTemplateColumns = '1fr 340px';
+  wrap.style.gap = '12px';
+  wrap.style.alignItems = 'start';
+
+  const parent = main.parentNode;
+  parent.insertBefore(wrap, main);
+  wrap.appendChild(main);
+
+  const aside = document.createElement('aside');
+  aside.id = 'wallet-price-sidebar';
+  wrap.appendChild(aside);
+
+  await mountPriceFetchWidget(aside);
+}
+
+async function mountPriceFetchWidget(aside) {
+  if (!aside) return;
+
+  // Ensure tokens list
+  try { await loadAvailableTokens(); } catch (_) {}
+  const TOKENS = Array.isArray(window.availableTokensDetailed) ? window.availableTokensDetailed : [];
+
+  // UI
+  aside.innerHTML = `
+    <div style="
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      background:linear-gradient(145deg, rgba(0,255,200,.08), rgba(255,0,255,.06));
+      padding:14px; box-shadow:0 0 14px rgba(0,255,200,.12);
+      position:sticky; top:10px;
+    ">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <h3 style="margin:0;color:#e7fffa;font-weight:900;letter-spacing:.2px;">💱 Price checker</h3>
+        <small style="opacity:.75;color:#e7fffa;">beta</small>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <label for="pw-amount" style="display:block;color:#bfeee4;font-size:12px;margin-bottom:6px;">Amount</label>
+          <input id="pw-amount" type="number" inputmode="decimal" placeholder="0.0" style="
+            width:100%;background:#0b1220;border:1px solid rgba(255,255,255,.14);
+            color:#e7fffa;padding:10px;border-radius:10px;box-shadow:inset 0 0 8px rgba(0,255,200,.08);
+          ">
+        </div>
+
+        <div id="pw-cb1"></div>
+        <div id="pw-cb2"></div>
+
+        <div id="pw-actions" style="display:flex;gap:8px;margin-top:2px;">
+          <button id="pw-swap" title="Swap tokens" style="
+            cursor:pointer;border:1px solid rgba(255,255,255,.18);
+            border-radius:10px;background:transparent;color:#e7fffa;font-weight:800;padding:8px 10px;flex:0 0 auto;
+          ">⇄</button>
+          <button id="pw-refresh" style="
+            cursor:pointer;border:1px solid rgba(0,255,200,.35);
+            border-radius:10px;background:linear-gradient(135deg, rgba(0,255,200,.20), rgba(255,0,255,.14));
+            color:#00150f;font-weight:900;padding:8px 12px;box-shadow:0 0 12px rgba(0,255,200,.25);
+          ">Refresh</button>
+        </div>
+
+        <div id="pw-output" style="
+          margin-top:6px;border:1px solid rgba(255,255,255,.12);border-radius:10px;
+          background:rgba(0,0,0,.35);padding:10px;color:#e7fffa;min-height:64px;
+        ">
+          <div style="opacity:.8;">Enter an amount and pick tokens…</div>
+        </div>
+
+        <small style="opacity:.7;color:#bdebe1;">Indicative data, fees excluded.</small>
+      </div>
+    </div>
+
+    <style>
+      .pw-combo{position:relative;}
+      .pw-combo > label{
+        display:block;color:#bfeee4;font-size:12px;margin:6px 0 6px 0;
+      }
+      .pw-combo input[type="text"]{
+        width:100%;background:#0b1220;border:1px solid rgba(255,255,255,.14);
+        color:#e7fffa;padding:10px;border-radius:10px;box-shadow:inset 0 0 8px rgba(0,255,200,.08);
+      }
+      .pw-list{
+        position:absolute;left:0;right:0;top:100%;z-index:40;
+        max-height:260px;overflow:auto;margin-top:6px;padding:6px;border-radius:10px;
+        background:#0b1220;border:1px solid rgba(255,255,255,.14);box-shadow:0 12px 18px rgba(0,0,0,.35);
+      }
+      .pw-item{
+        display:flex;justify-content:space-between;align-items:center;
+        padding:8px;border-radius:8px;cursor:pointer;color:#e7fffa;
+      }
+      .pw-item:hover,.pw-item[aria-selected="true"]{background:rgba(0,255,200,.08);}
+      .pw-meta{opacity:.65;font-size:12px;}
+      .pw-pill{
+        display:inline-flex;gap:6px;align-items:center;
+        background:linear-gradient(135deg, rgba(0,255,200,.16), rgba(255,0,255,.12));
+        border:1px solid rgba(255,255,255,.14);border-radius:999px;color:#e7fffa;
+        font-size:12px;font-weight:800;padding:4px 8px;margin-top:6px;
+      }
+      @keyframes pwspin{to{transform:rotate(360deg)}}
+    </style>
+  `;
+
+  // Comboboxes with integrated search
+  const cb1 = createTokenCombobox(
+    document.getElementById('pw-cb1'),
+    { id:'from', label:'From token', tokens: TOKENS }
+  );
+  const cb2 = createTokenCombobox(
+    document.getElementById('pw-cb2'),
+    { id:'to', label:'To token', tokens: TOKENS }
+  );
+
+  // Smart defaults (CHIPS → WAX, when available)
+  const pick = (sym) => TOKENS.find(t => t.symbol === sym);
+  cb1.select(pick('CHIPS') || TOKENS[0]);
+  cb2.select(pick('WAX')   || TOKENS.find(t=>t.symbol !== cb1.value?.symbol) || TOKENS[1] || TOKENS[0]);
+
+  // Inputs & actions
+  const $amount  = document.getElementById('pw-amount');
+  const $swap    = document.getElementById('pw-swap');
+  const $refresh = document.getElementById('pw-refresh');
+  const $out     = document.getElementById('pw-output');
+
+  // Amount step precision based on "from" token decimals (fallbacks if helpers are absent)
+  function stepFromDecimalsLocal(dec){ try{ return (typeof stepFromDecimals==='function') ? stepFromDecimals(dec) : String(Math.pow(10, -Math.max(0, Number(dec)||0))); }catch(_){ return '0.0001'; } }
+  function getTokenDecimalsLocal(sym){ try{ return (typeof getTokenDecimals==='function') ? getTokenDecimals(sym) : 4; }catch(_){ return 4; } }
+  function fmtAmount(n, max=8){
+    const num = Number(n);
+    if (!isFinite(num)) return String(n);
+    const s = num.toFixed(Math.min(max, 12));
+    return s.replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.$/,'');
+  }
+
+  function updateAmountStep() {
+    const dec = getTokenDecimalsLocal(cb1.value?.symbol || '');
+    $amount.setAttribute('step', stepFromDecimalsLocal(dec));
+    if (!$amount.value) $amount.placeholder = `step ${stepFromDecimalsLocal(dec)}`;
+  }
+
+  // Debounce helper
+  const debounceLocal = (fn, ms=450) => (window.debounce ? window.debounce(fn, ms) : (()=>{
+    let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); };
+  })());
+
+  const update = debounceLocal(async (force=false) => {
+    const from = cb1.value, to = cb2.value;
+    const amt  = parseFloat($amount.value || '0');
+    if (!from || !to || !(amt > 0)) {
+      $out.innerHTML = `<div style="opacity:.8;">Enter an amount and pick tokens…</div>`;
+      return;
+    }
+    $out.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#22c55e;border-radius:50%;animation:pwspin .9s linear infinite;"></div>
+        <div style="opacity:.85;">Fetching quote…</div>
+      </div>`;
+
+    try {
+      const quote = await fetchPreviewSwap({ amount: amt, from, to });
+      renderQuote($out, { amount: amt, from, to, quote });
+    } catch (err) {
+      $out.innerHTML = `
+        <div style="border-left:3px solid #f87171;background:rgba(248,113,113,.08);color:#fecaca;padding:10px;border-radius:8px;">
+          <div style="font-weight:900;margin-bottom:4px;">Error</div>
+          <div>${String(err.message || err)}</div>
+        </div>`;
+    }
+  }, 420);
+
+  function renderQuote(container, { amount, from, to, quote }) {
+    // Expected /preview_swap response fields:
+    //  - minReceived (float, units of "to" token)
+    //  - priceImpact (float, bps)
+    // Optional fields (may be present):
+    //  - estimate (float, best expected out)
+    const minOut = Number(quote?.minReceived);
+    const estOut = ('estimate' in (quote||{})) ? Number(quote.estimate) : NaN;
+    const rateMin = (minOut > 0 && amount > 0) ? (minOut / amount) : NaN;
+    const rateEst = (estOut > 0 && amount > 0) ? (estOut / amount) : NaN;
+    const impactBps = Number(quote?.priceImpact ?? 0);
+    const impactPct = isFinite(impactBps) ? (impactBps / 100) : NaN;
+
+    if (isFinite(minOut) && minOut > 0) {
+      container.innerHTML = `
+        <div style="border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:10px;background:rgba(0,0,0,.25);display:grid;gap:6px;">
+          <div style="font-size:14px;opacity:.8;">
+            ${isFinite(rateEst) ? `1 ${from.symbol} ≈ <b>${fmtAmount(rateEst, 8)}</b> ${to.symbol} (est)` :
+            isFinite(rateMin) ? `1 ${from.symbol} ≈ <b>${fmtAmount(rateMin, 8)}</b> ${to.symbol} (min)` :
+            `Quote ready`}
+          </div>
+
+          <div style="font-size:18px;font-weight:900;">
+            ${amount} ${from.symbol} → <span style="color:#9afbd9">${fmtAmount(minOut, 8)} ${to.symbol}</span> <span style="opacity:.75">(min)</span>
+          </div>
+
+          ${isFinite(estOut) && estOut > 0 ? `
+            <div style="font-size:14px;opacity:.9;">
+              Best estimate: <b>${fmtAmount(estOut, 8)} ${to.symbol}</b>
+            </div>` : ''}
+
+          <div style="font-size:13px;opacity:.9;">
+            Price impact: <b>${fmtAmount(impactBps, 2)} bps</b>${isFinite(impactPct) ? ` (~${fmtAmount(impactPct, 2)}%)` : ''}
+          </div>
+        </div>
+      `;
+    } else {
+      // Fallback: show raw JSON
+      container.innerHTML = `
+        <div style="font-size:13px;opacity:.85;margin-bottom:6px;">Backend response:</div>
+        <pre style="white-space:pre-wrap;background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:8px;color:#e7fffa;max-height:260px;overflow:auto;">${escapeHtml(JSON.stringify(quote, null, 2))}</pre>
+      `;
+    }
+  }
+
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+  // Listeners
+  $amount.addEventListener('input', () => update());
+  cb1.onChange(() => { updateAmountStep(); update(true); });
+  cb2.onChange(() => { update(true); });
+  $swap.addEventListener('click', () => {
+    const a = cb1.value, b = cb2.value; if (!a || !b) return;
+    cb1.select(b); cb2.select(a); updateAmountStep(); update(true);
+  });
+  $refresh.addEventListener('click', () => update(true));
+
+  updateAmountStep(); // initial setup
+}
+
+function createTokenCombobox(container, { id, label, tokens }) {
+  container.className = 'pw-combo';
+  container.innerHTML = `
+    <label for="pw-search-${id}">${label}</label>
+    <input id="pw-search-${id}" type="text" autocomplete="off" placeholder="Search token…">
+    <div class="pw-pill" id="pw-pill-${id}" style="display:none;"></div>
+    <div class="pw-list" id="pw-list-${id}" style="display:none;"></div>
+  `;
+
+  const $input = container.querySelector(`#pw-search-${id}`);
+  const $list  = container.querySelector(`#pw-list-${id}`);
+  const $pill  = container.querySelector(`#pw-pill-${id}`);
+
+  const OFFICIAL = Array.isArray(window.OFFICIAL_TOKENS) ? window.OFFICIAL_TOKENS : [];
+  const isOfficial = (t) => OFFICIAL.some(o => o.symbol === t.symbol && o.contract === t.contract);
+
+  let selected = null;
+
+  function renderList(q = '') {
+    const n = (s)=>String(s||'').toLowerCase();
+    const qq = n(q);
+    const scored = tokens.map(t => {
+      let s = isOfficial(t) ? 2000 : 0;
+      if (!qq) return { t, s };
+      if (n(t.symbol) === qq) s += 1000;
+      else if (n(t.symbol).startsWith(qq)) s += 750;
+      else if (n(t.name).startsWith(qq)) s += 500;
+      else if (n(t.symbol).includes(qq)) s += 300;
+      if (n(t.contract).includes(qq)) s += 100;
+      return { t, s };
+    }).sort((a,b)=>b.s-a.s).slice(0, 80);
+
+    $list.innerHTML = scored.map(({t}) => `
+      <div class="pw-item" data-symbol="${t.symbol}" data-contract="${t.contract}">
+        <div>
+          <div style="font-weight:900;">${t.symbol} ${isOfficial(t) ? '✅' : ''}</div>
+          <div class="pw-meta">${t.name || ''}</div>
+        </div>
+        <div class="pw-meta">${t.contract}</div>
+      </div>
+    `).join('');
+
+    $list.style.display = 'block';
+    $list.querySelectorAll('.pw-item').forEach(it=>{
+      it.addEventListener('click', ()=>{
+        const sym = it.getAttribute('data-symbol');
+        const con = it.getAttribute('data-contract');
+        const tok = tokens.find(x => x.symbol===sym && x.contract===con);
+        if (tok) select(tok);
+      });
+    });
+  }
+
+  function select(tok){
+    selected = tok || null;
+    if (selected) {
+      $pill.style.display = 'inline-flex';
+      $pill.textContent = `${selected.symbol} • ${selected.contract}`;
+      $input.value = `${selected.symbol}`;
+    } else {
+      $pill.style.display = 'none';
+      $input.value = '';
+    }
+    $list.style.display = 'none';
+    emit();
+  }
+
+  const listeners = new Set();
+  function onChange(fn){ listeners.add(fn); }
+  function emit(){ listeners.forEach(fn=>fn(selected)); }
+
+  $input.addEventListener('focus', ()=> renderList($input.value));
+  $input.addEventListener('input', ()=> renderList($input.value));
+  document.addEventListener('click', (e)=>{
+    if (!container.contains(e.target)) $list.style.display = 'none';
+  });
+
+  return {
+    onChange,
+    get value(){ return selected; },
+    select
+  };
+}
+
+// Call your backend: POST /preview_swap (JSON body)
+async function fetchPreviewSwap({ amount, from, to }) {
+  const user = (window.userData || {});
+  const wax_account = (user.wax_account || '').trim();
+  if (!wax_account) throw new Error('Wallet not connected: wax_account is missing.');
+
+  const body = {
+    wax_account,
+    from_token: String(from.symbol).toUpperCase(),
+    to_token:   String(to.symbol).toUpperCase(),
+    amount:     Number(amount),
+    chain:      (window.DEFAULT_CHAIN || 'WAX')
+    // Optional tuning (uncomment if you want to control them from UI or config):
+    // slip_bps: 60,
+    // split: 10,
+    // extra_cushion_bps: 0,
+    // router_sub_pf: false
+  };
+
+  const base = (typeof BASE_URL === 'string' && BASE_URL) ? BASE_URL : '';
+  const url  = base.replace(/\/$/,'') + '/preview_swap';
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    // credentials: 'include', // enable if your API needs cookies
+    body: JSON.stringify(body)
+  });
+
+  let data = {};
+  try { data = await res.json(); } catch (_) {}
+
+  if (!res.ok) {
+    const msg = data?.error || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return data;
 }

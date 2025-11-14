@@ -14004,7 +14004,7 @@ async function loadWallet(preferredTab = 'twitch', force = false) {
   window.currentWalletTab = desired;
   setActive(desired);
   renderWalletView(desired);
-	setupWalletPriceSidebar();
+  setupWalletPriceSidebar();
 }
 
 function renderWalletView(type) {
@@ -16398,6 +16398,8 @@ function showModal({ title = '', body = '', footer = '' }) {
 
 /* -----------------------------------------------------------
  * WALLETS — Price Checker Sidebar (English UI, /preview_swap)
+ * - Safe amount input (no scientific notation, no +/-)
+ * - Uses /preview_swap; estimate net-of-fees via router_sub_pf=true
  * ----------------------------------------------------------- */
 async function setupWalletPriceSidebar() {
   const main = document.getElementById('wallet-content');
@@ -16447,7 +16449,7 @@ async function mountPriceFetchWidget(aside) {
       <div style="display:flex;flex-direction:column;gap:10px;">
         <div>
           <label for="pw-amount" style="display:block;color:#bfeee4;font-size:12px;margin-bottom:6px;">Amount</label>
-          <input id="pw-amount" type="number" inputmode="decimal" placeholder="0.0" style="
+          <input id="pw-amount" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="0" style="
             width:100%;background:#0b1220;border:1px solid rgba(255,255,255,.14);
             color:#e7fffa;padding:10px;border-radius:10px;box-shadow:inset 0 0 8px rgba(0,255,200,.08);
           ">
@@ -16474,8 +16476,6 @@ async function mountPriceFetchWidget(aside) {
         ">
           <div style="opacity:.8;">Enter an amount and pick tokens…</div>
         </div>
-
-        <small style="opacity:.7;color:#bdebe1;">Indicative data, fees excluded.</small>
       </div>
     </div>
 
@@ -16530,20 +16530,49 @@ async function mountPriceFetchWidget(aside) {
   const $refresh = document.getElementById('pw-refresh');
   const $out     = document.getElementById('pw-output');
 
-  // Amount step precision based on "from" token decimals (fallbacks if helpers are absent)
-  function stepFromDecimalsLocal(dec){ try{ return (typeof stepFromDecimals==='function') ? stepFromDecimals(dec) : String(Math.pow(10, -Math.max(0, Number(dec)||0))); }catch(_){ return '0.0001'; } }
-  function getTokenDecimalsLocal(sym){ try{ return (typeof getTokenDecimals==='function') ? getTokenDecimals(sym) : 4; }catch(_){ return 4; } }
+  // -------- Helpers (local fallbacks if your project helpers are absent)
+  function stepFromDecimalsLocal(dec){
+    try{ return (typeof stepFromDecimals==='function') ? stepFromDecimals(dec) : String(Math.pow(10, -Math.max(0, Number(dec)||0))); }
+    catch(_){ return '0.0001'; }
+  }
+  function getTokenDecimalsLocal(sym){
+    try{ return (typeof getTokenDecimals==='function') ? getTokenDecimals(sym) : 4; }
+    catch(_){ return 4; }
+  }
   function fmtAmount(n, max=8){
     const num = Number(n);
     if (!isFinite(num)) return String(n);
     const s = num.toFixed(Math.min(max, 12));
     return s.replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.$/,'');
   }
+  function sanitizeAmountStr(str, maxDecimals = 8) {
+    let s = String(str || '');
+    s = s.replace(/\s+/g, '');     // remove spaces
+    s = s.replace(/,/g, '.');      // locale: comma → dot
+    s = s.replace(/[eE\+\-]/g, ''); // block scientific notation and signs
+    s = s.replace(/[^0-9.]/g, ''); // keep only digits and dot
+    const firstDot = s.indexOf('.');
+    if (firstDot !== -1) {
+      s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '');
+    }
+    if (maxDecimals >= 0 && s.includes('.')) {
+      const [i, d] = s.split('.');
+      s = i + '.' + d.slice(0, maxDecimals);
+    }
+    if (s.startsWith('.')) s = '0' + s;
+    return s;
+  }
+  function getMaxDecimalsForToken(sym) {
+    const dec = getTokenDecimalsLocal(sym);
+    return Number.isFinite(dec) ? Math.max(0, Math.min(12, dec)) : 8;
+  }
 
+  // Amount placeholder adapted to token decimals (no HTML step on text input)
   function updateAmountStep() {
-    const dec = getTokenDecimalsLocal(cb1.value?.symbol || '');
-    $amount.setAttribute('step', stepFromDecimalsLocal(dec));
-    if (!$amount.value) $amount.placeholder = `step ${stepFromDecimalsLocal(dec)}`;
+    const dec = getMaxDecimalsForToken(cb1.value?.symbol || '');
+    if (!$amount.value) {
+      $amount.placeholder = dec > 0 ? `0.${'0'.repeat(Math.min(2, dec))}` : '0';
+    }
   }
 
   // Debounce helper
@@ -16551,9 +16580,12 @@ async function mountPriceFetchWidget(aside) {
     let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); };
   })());
 
-  const update = debounceLocal(async (force=false) => {
+  const update = debounceLocal(async () => {
     const from = cb1.value, to = cb2.value;
-    const amt  = parseFloat($amount.value || '0');
+    const maxDec = getMaxDecimalsForToken(cb1.value?.symbol || '');
+    const clean = sanitizeAmountStr($amount.value, maxDec);
+    const amt   = clean ? Number(clean) : 0;
+
     if (!from || !to || !(amt > 0)) {
       $out.innerHTML = `<div style="opacity:.8;">Enter an amount and pick tokens…</div>`;
       return;
@@ -16577,11 +16609,11 @@ async function mountPriceFetchWidget(aside) {
   }, 420);
 
   function renderQuote(container, { amount, from, to, quote }) {
-    // Expected /preview_swap response fields:
-    //  - minReceived (float, units of "to" token)
+    // /preview_swap returns:
+    //  - minReceived (float, in "to" token units) — conservative
     //  - priceImpact (float, bps)
-    // Optional fields (may be present):
-    //  - estimate (float, best expected out)
+    // Optional:
+    //  - estimate (float) — best expected out (we request it net-of-fees)
     const minOut = Number(quote?.minReceived);
     const estOut = ('estimate' in (quote||{})) ? Number(quote.estimate) : NaN;
     const rateMin = (minOut > 0 && amount > 0) ? (minOut / amount) : NaN;
@@ -16623,15 +16655,24 @@ async function mountPriceFetchWidget(aside) {
 
   function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 
-  // Listeners
-  $amount.addEventListener('input', () => update());
-  cb1.onChange(() => { updateAmountStep(); update(true); });
-  cb2.onChange(() => { update(true); });
+  // Listeners (block unwanted keys and sanitize on the fly)
+  $amount.addEventListener('keydown', (e) => {
+    if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+  });
+  $amount.addEventListener('input', () => {
+    const maxDec = getMaxDecimalsForToken(cb1.value?.symbol || '');
+    const clean = sanitizeAmountStr($amount.value, maxDec);
+    if ($amount.value !== clean) $amount.value = clean;
+    update();
+  });
+
+  cb1.onChange(() => { updateAmountStep(); update(); });
+  cb2.onChange(() => { update(); });
   $swap.addEventListener('click', () => {
     const a = cb1.value, b = cb2.value; if (!a || !b) return;
-    cb1.select(b); cb2.select(a); updateAmountStep(); update(true);
+    cb1.select(b); cb2.select(a); updateAmountStep(); update();
   });
-  $refresh.addEventListener('click', () => update(true));
+  $refresh.addEventListener('click', () => update());
 
   updateAmountStep(); // initial setup
 }
@@ -16721,6 +16762,8 @@ function createTokenCombobox(container, { id, label, tokens }) {
 }
 
 // Call your backend: POST /preview_swap (JSON body)
+// NOTE: We set router_sub_pf=true so estimate is net of platform fees.
+// The backend should include "estimate" if you want to show it (minReceived is always used).
 async function fetchPreviewSwap({ amount, from, to }) {
   const user = (window.userData || {});
   const wax_account = (user.wax_account || '').trim();
@@ -16731,12 +16774,11 @@ async function fetchPreviewSwap({ amount, from, to }) {
     from_token: String(from.symbol).toUpperCase(),
     to_token:   String(to.symbol).toUpperCase(),
     amount:     Number(amount),
-    chain:      (window.DEFAULT_CHAIN || 'WAX')
-    // Optional tuning (uncomment if you want to control them from UI or config):
+    chain:      (window.DEFAULT_CHAIN || 'WAX'),
+    router_sub_pf: true
     // slip_bps: 60,
     // split: 10,
-    // extra_cushion_bps: 0,
-    // router_sub_pf: false
+    // extra_cushion_bps: 0
   };
 
   const base = (typeof BASE_URL === 'string' && BASE_URL) ? BASE_URL : '';
@@ -16745,7 +16787,6 @@ async function fetchPreviewSwap({ amount, from, to }) {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    // credentials: 'include', // enable if your API needs cookies
     body: JSON.stringify(body)
   });
 

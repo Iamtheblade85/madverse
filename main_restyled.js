@@ -10310,6 +10310,93 @@ function showEmailEditForm(currentEmail) {
   });
 }
 
+function showTwitchEditForm(currentTwitch) {
+  const twitchBlock = document.getElementById('twitch-block');
+  if (!twitchBlock) return;
+
+  twitchBlock.innerHTML = `
+    <form id="twitch-form">
+      <label for="new-twitch" class="label">🎮 New Twitch Username:</label>
+      <input
+        type="text"
+        id="new-twitch"
+        value="${currentTwitch || ''}"
+        required
+        placeholder="Enter new Twitch username..."
+      />
+      <p style="font-size: 0.8rem; color: #9ca3af; margin-top: 4px;">
+        Please enter your Twitch nickname <strong>without</strong> the @.
+      </p>
+      <button type="submit" class="small-btn">💾 Save</button>
+      <button type="button" class="small-btn cancel" id="cancel-twitch-btn">✖ Cancel</button>
+      <div id="twitch-feedback" class="form-feedback" style="margin-top: 8px;"></div>
+    </form>
+  `;
+
+  const feedbackEl = document.getElementById('twitch-feedback');
+
+  document.getElementById('cancel-twitch-btn').addEventListener('click', () => {
+    // Ripristina tutta la card Personal Info
+    renderPersonalInfo(window.accountData.userInfo);
+  });
+
+  document.getElementById('twitch-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const raw = document.getElementById('new-twitch').value || '';
+    // riutilizziamo la stessa helper usata nella registrazione
+    const newTwitch = sanitizeHandle(raw);
+
+    if (!newTwitch) {
+      feedbackEl.textContent = '❌ Please enter a valid Twitch username.';
+      feedbackEl.style.color = 'crimson';
+      return;
+    }
+
+    feedbackEl.textContent = '⏳ Updating...';
+    feedbackEl.style.color = '#888';
+
+    try {
+      const { userId, usx_token } = window.userData || {};
+
+      const res = await fetch(`${BASE_URL}/account/update_twitch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          usx_token: usx_token,
+          new_twitch_username: newTwitch
+        })
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        feedbackEl.textContent = '✅ Twitch username updated successfully!';
+        feedbackEl.style.color = 'limegreen';
+
+        // aggiorna localmente il dato che usi nella card
+        if (window.accountData && window.accountData.userInfo) {
+          window.accountData.userInfo.twitch_username = newTwitch;
+        }
+
+        // dopo un breve delay, ricarica la sezione
+        setTimeout(() => {
+          renderPersonalInfo(window.accountData.userInfo);
+        }, 1500);
+      } else {
+        feedbackEl.textContent = `❌ ${result.error || 'Unknown error.'}`;
+        feedbackEl.style.color = 'crimson';
+      }
+    } catch (err) {
+      feedbackEl.textContent = `❌ Failed to update Twitch username: ${err.message}`;
+      feedbackEl.style.color = 'crimson';
+    }
+  });
+}
+
 function renderPersonalInfo(info) {
   const container = document.getElementById('personal-info');
 
@@ -10338,8 +10425,15 @@ function renderPersonalInfo(info) {
 
   container.innerHTML = `
     <div class="card-glow">
-      <h2 class="glow-text">👤 ${info.telegram_username || 'Unknown'}</h2>
-      <p><span class="label">🎮 Twitch:</span> ${info.twitch_username || 'N/A'}</p>
+      <h2 class="glow-text">👤 Telegram username: ${info.telegram_username || 'Unknown'}</h2>
+      <div id="twitch-block">
+        <p>
+          <span class="label">🎮 Twitch username:</span>
+          <span id="twitch-text">${info.twitch_username || 'N/A'}</span>
+        </p>
+        <button class="small-btn" id="change-twitch-btn">✏️ Change Twitch Username</button>
+      </div>
+
       <p><span class="label">🔑 Wax Account:</span> <code>${info.wax_account}</code></p>
       <p><span class="label">🏅 Role:</span> <span class="role-tag">${info.role}</span></p>
       <p><span class="label">📈 Chips Staking Rank:</span> ${info.staking_rank ? `#${info.staking_rank}` : 'Out of Top 50'}</p>
@@ -10354,10 +10448,20 @@ function renderPersonalInfo(info) {
     </div>
   `;
 
-  const btn = document.getElementById('change-email-btn');
-  btn.addEventListener('click', () => {
-    showEmailEditForm(info.email || '');
-  });
+  const emailBtn = document.getElementById('change-email-btn');
+  if (emailBtn) {
+    emailBtn.addEventListener('click', () => {
+      showEmailEditForm(info.email || '');
+    });
+  }
+
+  const twitchBtn = document.getElementById('change-twitch-btn');
+  if (twitchBtn) {
+    twitchBtn.addEventListener('click', () => {
+      // passiamo il valore attuale, così l'input è precompilato
+      showTwitchEditForm(info.twitch_username || '');
+    });
+  }
 }
 
 function renderChatRewards(telegram, twitch) {

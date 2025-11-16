@@ -5234,3 +5234,10 @@ select:focus, input[type="number"]:focus {
 
 /* Transizione di altezza (facoltativa, richiede max-height trick) */
 .dropdown-menu.hidden { display: none; } /* come già fai */
+
+/* 🔧 Fix per il modal di login/registrazione (id="modal") */
+#modal.modal {
+  top: 50% !important;                     /* centro verticale */
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}

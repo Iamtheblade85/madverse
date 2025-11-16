@@ -444,6 +444,26 @@ function sanitizeHandle(v) {
   return v.trim().replace(/^@+/, ""); 
 }
 
+function centerAuthModal() {
+  const modal = document.getElementById('modal');
+  if (!modal) return;
+  const modalContent = modal.querySelector('.modal-content');
+  if (!modalContent) return;
+
+  // Aspetta il layout, poi calcola il centro verticale
+  requestAnimationFrame(() => {
+    const viewportHeight =
+      window.innerHeight || document.documentElement.clientHeight || 0;
+    const rect = modalContent.getBoundingClientRect();
+
+    // Spazio sopra: metà dello schermo meno metà dell’altezza del contenuto
+    const offset = Math.max((viewportHeight - rect.height) / 2, 24);
+
+    modalContent.style.marginTop = offset + 'px';
+    modalContent.style.marginBottom = '24px'; // un po’ di respiro sotto
+  });
+}
+
 function openResetPwdModal() {
   const modal = document.getElementById('modal');
   const body = document.getElementById('modal-body');
@@ -487,6 +507,7 @@ function openResetPwdModal() {
   modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
+  centerAuthModal();
 
   // Pre-compila wax/email se già note
   if (window.userData?.wax_account) {
@@ -625,7 +646,7 @@ function openLoginModal() {
   modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
-
+  centerAuthModal(); 
   document.getElementById('submit-login').onclick = async () => {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value.trim();
@@ -714,7 +735,7 @@ function openRegisterModal() {
   modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
-
+  centerAuthModal();
   document.getElementById('submit-register').onclick = async () => {
     const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value.trim();
@@ -16488,7 +16509,7 @@ function showModal({ title = '', body = '', footer = '' }) {
   modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
-
+  centerAuthModal(); 
   // 💡 Aspetta che il browser calcoli dimensioni visibili
   setTimeout(() => {
     const scrollY = window.scrollY || window.pageYOffset;

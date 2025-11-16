@@ -3526,7 +3526,7 @@ body {
 /* Modal Styling (centrato, nascosto inizialmente, alto z-index) */
 .modal {
   position: fixed;
-  top: 15%;
+  top: 50%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 9999;
@@ -3927,7 +3927,7 @@ button:hover, .btn:hover, .menu-button:hover {
 /* 🌌 Struttura Modale */
 .modal {
   position: fixed;
-  top: 20%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 9999;

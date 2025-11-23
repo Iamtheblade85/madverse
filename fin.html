@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Assistente Finanziario Web (Solo Browser)</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #1e1e1e;
+            color: #f0f0f0;
+        }
+        a {
+            color: #4fc3f7;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .topbar {
+            background: #252526;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .topbar-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .nav {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .nav button {
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #2d2d30;
+            font-size: 13px;
+            border: none;
+            color: #f0f0f0;
+            cursor: pointer;
+        }
+        .nav button.active {
+            background: #007acc;
+        }
+        .container {
+            padding: 20px;
+        }
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .page-subtitle {
+            font-size: 13px;
+            color: #bbbbbb;
+            margin-bottom: 16px;
+        }
+        .cards-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .card {
+            background: #252526;
+            border-radius: 10px;
+            padding: 10px 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+        .card-title {
+            font-size: 12px;
+            color: #bbbbbb;
+            margin-bottom: 4px;
+        }
+        .card-value {
+            font-size: 17px;
+            font-weight: 700;
+        }
+        .layout-two {
+            display: grid;
+            grid-template-columns: minmax(0,2.2fr) minmax(0,1.8fr);
+            gap: 12px;
+        }
+        .section {
+            background: #252526;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 14px;
+        }
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        th, td {
+            padding: 4px 6px;
+            border-bottom: 1px solid #333;
+        }
+        th {
+            text-align: left;
+            background: #2d2d30;
+        }
+        tr:nth-child(even) td {
+            background: #222224;
+        }
+        input[type="text"], input[type="number"], input[type="date"], select, textarea {
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 6px;
+            border: 1px solid #3a3a3d;
+            background: #1e1e1e;
+            color: #f0f0f0;
+            padding: 5px 7px;
+            font-size: 12px;
+        }
+        textarea {
+            resize: vertical;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 140px minmax(0,1fr);
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .form-label {
+            font-size: 12px;
+            color: #c0c0c0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            background: #0e639c;
+            color: #fff;
+        }
+        .btn.secondary {
+            background: #3a3d41;
+        }
+        .btn.danger {
+            background: #c62828;
+        }
+        .btn.small {
+            padding: 3px 7px;
+            font-size: 11px;
+        }
+        .btn + .btn {
+            margin-left: 6px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: #2e7d32;
+            font-size: 12px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+            gap: 12px;
+        }
+        pre {
+            white-space: pre-wrap;
+            font-size: 12px;
+            background: #1e1e1e;
+            padding: 6px 8px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .muted {
+            color: #9e9e9e;
+            font-size: 11px;
+        }
+        .tag {
+            display: inline-block;
+            padding: 0 6px;
+            border-radius: 999px;
+            font-size: 10px;
+            background: #424242;
+            color: #fff;
+            margin-left: 4px;
+        }
+        .tag.green {
+            background: #2e7d32;
+        }
+        .tag.red {
+            background: #c62828;
+        }
+        .tag.orange {
+            background: #ef6c00;
+        }
+        .toolbar {
+            margin-bottom: 8px;
+        }
+        .toolbar .btn {
+            margin-right: 6px;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <div class="topbar-title">Assistente Finanziario Web (LocalStorage)</div>
+    <div class="nav">
+        <button data-page="dashboard">Dashboard</button>
+        <button data-page="accounts">Conti</button>
+        <button data-page="categories">Categorie</button>
+        <button data-page="transactions">Transazioni</button>
+        <button data-page="budgets">Budget</button>
+        <button data-page="goals">Obiettivi</button>
+        <button data-page="reports">Report</button>
+    </div>
+</div>
+<div class="container">
+    <div id="message"></div>
+    <div id="content"></div>
+</div>
+
+<script>
+    const STORAGE_KEY = "financeAppDataV1";
+
+    const app = {
+        data: null,
+        currentPage: "dashboard",
+        editAccountId: null,
+        editCategoryId: null,
+        editTxId: null,
+        editBudgetId: null,
+        editGoalId: null,
+        txFilter: null,
+        reportPeriodFilter: null,
+        reportCatFilter: null
+    };
+
+    function loadData() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (!parsed.nextIds) {
+                    parsed.nextIds = {account:1, category:1, transaction:1, budget:1, goal:1};
+                    parsed.accounts.forEach(a => { if (a.id >= parsed.nextIds.account) parsed.nextIds.account = a.id + 1; });
+                    parsed.categories.forEach(c => { if (c.id >= parsed.nextIds.category) parsed.nextIds.category = c.id + 1; });
+                    parsed.transactions.forEach(t => { if (t.id >= parsed.nextIds.transaction) parsed.nextIds.transaction = t.id + 1; });
+                    parsed.budgets.forEach(b => { if (b.id >= parsed.nextIds.budget) parsed.nextIds.budget = b.id + 1; });
+                    parsed.goals.forEach(g => { if (g.id >= parsed.nextIds.goal) parsed.nextIds.goal = g.id + 1; });
+                }
+                return parsed;
+            }
+        } catch(e) {}
+        return {
+            accounts: [],
+            categories: [],
+            transactions: [],
+            budgets: [],
+            goals: [],
+            nextIds: {account:1, category:1, transaction:1, budget:1, goal:1}
+        };
+    }
+
+    function saveData() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(app.data));
+    }
+
+    function h(s) {
+        return String(s == null ? "" : s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+    }
+
+    function todayStr() {
+        const d = new Date();
+        return d.toISOString().slice(0,10);
+    }
+
+    function dateFromStr(str) {
+        if (!str) return null;
+        const d = new Date(str);
+        if (isNaN(d.getTime())) return null;
+        d.setHours(0,0,0,0);
+        return d;
+    }
+
+    function dateToStr(d) {
+        if (!d) return "";
+        const z = new Date(d);
+        return z.toISOString().slice(0,10);
+    }
+
+    function addDays(d, days) {
+        const r = new Date(d);
+        r.setDate(r.getDate() + days);
+        r.setHours(0,0,0,0);
+        return r;
+    }
+
+    function addMonths(d, months) {
+        const r = new Date(d);
+        r.setDate(1);
+        r.setMonth(r.getMonth() + months);
+        return r;
+    }
+
+    function diffDays(a, b) {
+        const ms = b - a;
+        return Math.floor(ms / 86400000);
+    }
+
+    function getAccounts(activeOnly) {
+        if (!activeOnly) return app.data.accounts.slice();
+        return app.data.accounts.filter(a => a.is_active);
+    }
+
+    function getCategories() {
+        return app.data.categories.slice();
+    }
+
+    function computeBalances(includePrivate) {
+        const accs = app.data.accounts.map(a => ({
+            id: a.id,
+            name: a.name,
+            type: a.type,
+            currency: a.currency,
+            initial_balance: Number(a.initial_balance || 0),
+            balance: Number(a.initial_balance || 0)
+        }));
+        const txs = app.data.transactions;
+        for (const t of txs) {
+            if (!includePrivate && t.is_private) continue;
+            const acc = accs.find(a => a.id === t.account_id);
+            if (!acc) continue;
+            const amount = Number(t.amount || 0);
+            if (t.direction === "in") acc.balance += amount;
+            else acc.balance -= amount;
+        }
+        return accs;
+    }
+
+    function computeGlobalBalance(includePrivate) {
+        const rows = computeBalances(includePrivate);
+        return rows.reduce((s, r) => s + r.balance, 0);
+    }
+
+    function computePeriodSummary(start, end, includePrivate) {
+        const s = dateFromStr(dateToStr(start));
+        const e = dateFromStr(dateToStr(end));
+        if (!s || !e) return [0,0,0,0,0];
+        let totIn = 0, totOut = 0;
+        for (const t of app.data.transactions) {
+            if (!includePrivate && t.is_private) continue;
+            const d = dateFromStr(t.date);
+            if (!d) continue;
+            if (d < s || d > e) continue;
+            const amount = Number(t.amount || 0);
+            if (t.direction === "in") totIn += amount;
+            else totOut += amount;
+        }
+        const spread = totIn - totOut;
+        const days = diffDays(s, e) + 1;
+        const avgIn = days > 0 ? totIn / days : 0;
+        const avgOut = days > 0 ? totOut / days : 0;
+        return [totIn, totOut, spread, avgIn, avgOut];
+    }
+
+    function computeCategoryTotals(start, end, includePrivate, directionFilter) {
+        const s = dateFromStr(dateToStr(start));
+        const e = dateFromStr(dateToStr(end));
+        const catsById = {};
+        for (const c of app.data.categories) catsById[c.id] = c;
+        const map = {};
+        for (const t of app.data.transactions) {
+            if (!includePrivate && t.is_private) continue;
+            if (directionFilter && t.direction !== directionFilter) continue;
+            const d = dateFromStr(t.date);
+            if (!d || d < s || d > e) continue;
+            const amount = Number(t.amount || 0);
+            const catName = t.category_id ? (catsById[t.category_id]?.name || "(Senza categoria)") : "(Senza categoria)";
+            if (!map[catName]) map[catName] = {cat: catName, net:0, tot_in:0, tot_out:0};
+            if (t.direction === "in") {
+                map[catName].net += amount;
+                map[catName].tot_in += amount;
+            } else {
+                map[catName].net -= amount;
+                map[catName].tot_out += amount;
+            }
+        }
+        const rows = Object.values(map);
+        rows.sort((a,b) => b.net - a.net);
+        return rows;
+    }
+
+    function getRecurringTransactions(includePrivate) {
+        return app.data.transactions.filter(t => t.freq !== "once" && (includePrivate || !t.is_private));
+    }
+
+    function netMonthlyFromRecurring(includePrivate) {
+        const recs = getRecurringTransactions(includePrivate);
+        let totalIn = 0, totalOut = 0;
+        for (const r of recs) {
+            const amount = Number(r.amount || 0);
+            let factor;
+            if (r.freq === "daily") factor = 30;
+            else if (r.freq === "weekly") factor = 4.345;
+            else if (r.freq === "monthly") factor = 1;
+            else if (r.freq === "yearly") factor = 1/12;
+            else factor = 0;
+            const eff = amount * factor;
+            if (r.direction === "in") totalIn += eff;
+            else totalOut += eff;
+        }
+        return [totalIn, totalOut];
+    }
+
+    function forecastMonths(months, includePrivate) {
+        const base = computeGlobalBalance(includePrivate);
+        const [monthlyIn, monthlyOut] = netMonthlyFromRecurring(includePrivate);
+        const net = monthlyIn - monthlyOut;
+        const today = new Date();
+        const firstMonth = dateFromStr(today.toISOString().slice(0,7) + "-01");
+        const result = [];
+        let balance = base;
+        for (let i=0;i<months;i++) {
+            balance += net;
+            const mDate = addMonths(firstMonth, i+1);
+            result.push({month: mDate.toISOString().slice(0,7), balance, net});
+        }
+        return [base, result, monthlyIn, monthlyOut];
+    }
+
+    function computeBudgetStatus(periodType, refDate) {
+        const d = refDate || new Date();
+        let start, end;
+        if (periodType === "monthly") {
+            start = dateFromStr(d.toISOString().slice(0,7) + "-01");
+            end = addMonths(start,1);
+            end = addDays(end,-1);
+        } else {
+            start = dateFromStr(d.getFullYear() + "-01-01");
+            end = dateFromStr(d.getFullYear() + "-12-31");
+        }
+        const catsById = {};
+        for (const c of app.data.categories) catsById[c.id] = c;
+        const results = [];
+        for (const b of app.data.budgets) {
+            if (b.period_type !== periodType) continue;
+            const cat = catsById[b.category_id];
+            if (!cat) continue;
+            const catType = cat.type;
+            let used = 0;
+            for (const t of app.data.transactions) {
+                if (t.category_id !== cat.id) continue;
+                const dtx = dateFromStr(t.date);
+                if (!dtx || dtx < start || dtx > end) continue;
+                const amount = Number(t.amount || 0);
+                if (catType === "expense" && t.direction === "out") used += amount;
+                if (catType === "income" && t.direction === "in") used += amount;
+            }
+            const amountBudget = Number(b.amount || 0);
+            let diff, status;
+            if (catType === "expense") {
+                diff = amountBudget - used;
+                status = used <= amountBudget ? "OK" : "SFONDATO";
+            } else {
+                diff = used - amountBudget;
+                status = used >= amountBudget ? "OK" : "SOTTO OBIETTIVO";
+            }
+            results.push({
+                category_name: cat.name,
+                category_type: catType,
+                period_type: periodType,
+                amount: amountBudget,
+                used,
+                diff,
+                status
+            });
+        }
+        return [start, end, results];
+    }
+
+    function computeGoalsStatus() {
+        const balances = computeBalances(true);
+        const balById = {};
+        for (const b of balances) balById[b.id] = b.balance;
+        const globalBalance = balances.reduce((s,b) => s + b.balance, 0);
+        const accById = {};
+        for (const a of app.data.accounts) accById[a.id] = a;
+        const results = [];
+        for (const g of app.data.goals) {
+            const target = Number(g.target_amount || 0);
+            let progress;
+            if (g.account_id) progress = balById[g.account_id] || 0;
+            else progress = globalBalance;
+            const remaining = target - progress;
+            const status = remaining <= 0 ? "RAGGIUNTO" : "DA RAGGIUNGERE";
+            results.push({
+                id: g.id,
+                name: g.name,
+                target,
+                deadline: g.deadline || "",
+                account_name: g.account_id ? (accById[g.account_id]?.name || "") : "",
+                progress,
+                remaining,
+                status
+            });
+        }
+        return results;
+    }
+
+    function analyzeHealth(includePrivate) {
+        const today = dateFromStr(todayStr());
+        const start30 = addDays(today, -29);
+        const start90 = addDays(today, -89);
+        const [totIn30, totOut30, spread30] = computePeriodSummary(start30, today, includePrivate);
+        const [totIn90, totOut90, spread90] = computePeriodSummary(start90, today, includePrivate);
+        const totalBalance = computeGlobalBalance(includePrivate);
+        const [monthlyInRec, monthlyOutRec] = netMonthlyFromRecurring(includePrivate);
+        const netRec = monthlyInRec - monthlyOutRec;
+        const savingsRate30 = totIn30 > 0 ? (spread30 / totIn30) * 100 : 0;
+        let status;
+        if (spread90 > 0) status = "SANO";
+        else if (totOut90 > 0 && spread90 > -0.05 * totOut90) status = "LEGGERA PRESSIONE";
+        else status = "CRITICO";
+        let runway = null;
+        if (netRec < 0) {
+            const netMonthly = netRec;
+            if (netMonthly !== 0) runway = totalBalance / Math.abs(netMonthly);
+        }
+        const startMonth = dateFromStr(today.toISOString().slice(0,7) + "-01");
+        let endMonth = addMonths(startMonth,1);
+        endMonth = addDays(endMonth,-1);
+        const [totInM, totOutM, spreadM] = computePeriodSummary(startMonth, today, includePrivate);
+        const remainingDays = diffDays(today, endMonth);
+        let safeDaily = null;
+        if (remainingDays > 0) {
+            const remainingSpend = Math.max(0, totInM - totOutM);
+            safeDaily = remainingSpend / remainingDays;
+        }
+        const start60 = addDays(today, -59);
+        const rowsCat = computeCategoryTotals(start60, today, includePrivate, "out");
+        const topCats = rowsCat.slice(0,3);
+        const nf = (x) => x.toFixed(2).replace(".", ",");
+        const lines = [];
+        lines.push("Stato complessivo: " + status);
+        lines.push("");
+        lines.push("Saldo totale (incl. saldi iniziali): " + nf(totalBalance));
+        lines.push("");
+        lines.push("Ultimi 30 giorni:");
+        lines.push("- Entrate: " + nf(totIn30));
+        lines.push("- Uscite: " + nf(totOut30));
+        lines.push("- Spread: " + nf(spread30));
+        lines.push("- Tasso di risparmio: " + savingsRate30.toFixed(1).replace(".", ",") + "%");
+        lines.push("");
+        lines.push("Ultimi 90 giorni:");
+        lines.push("- Entrate: " + nf(totIn90));
+        lines.push("- Uscite: " + nf(totOut90));
+        lines.push("- Spread: " + nf(spread90));
+        lines.push("");
+        lines.push("Ricorrenti stimati (mese tipo):");
+        lines.push("- Entrate ricorrenti: " + nf(monthlyInRec));
+        lines.push("- Uscite ricorrenti: " + nf(monthlyOutRec));
+        lines.push("- Netto mensile ricorrente: " + nf(netRec));
+        if (runway !== null) {
+            lines.push("- Runway stimata: " + runway.toFixed(1).replace(".", ",") + " mesi prima di azzerare il saldo se nulla cambia");
+        }
+        lines.push("");
+        lines.push("Categorie principali (ultimi 60 giorni, uscite):");
+        if (!topCats.length) {
+            lines.push("- Nessuna uscita registrata.");
+        } else {
+            for (const r of topCats) {
+                lines.push("- " + r.cat + ": " + nf(r.tot_out || 0));
+            }
+        }
+        lines.push("");
+        if (safeDaily !== null) {
+            lines.push("Per chiudere il mese in pareggio, puoi spendere ancora circa " + nf(safeDaily) + " al giorno.");
+        } else {
+            lines.push("Il mese è quasi terminato: non ha senso calcolare un limite giornaliero.");
+        }
+        return lines.join("\n");
+    }
+
+    function computeSafeDailySpendText(includePrivate) {
+        const today = dateFromStr(todayStr());
+        const startMonth = dateFromStr(today.toISOString().slice(0,7) + "-01");
+        let endMonth = addMonths(startMonth,1);
+        endMonth = addDays(endMonth,-1);
+        const [totIn, totOut] = computePeriodSummary(startMonth, today, includePrivate);
+        const remainingDays = diffDays(today, endMonth);
+        if (remainingDays <= 0) return "Il mese è praticamente finito, non ha senso calcolare un limite giornaliero.";
+        const remainingSpend = Math.max(0, totIn - totOut);
+        const safeDaily = remainingSpend / remainingDays;
+        const nf = (x) => x.toFixed(2).replace(".", ",");
+        return "Da oggi a fine mese puoi spendere in media circa " + nf(safeDaily) + " al giorno, se vuoi chiudere il mese intorno al pareggio rispetto alle entrate registrate finora.";
+    }
+
+    function forecastShortText(months, includePrivate) {
+        const [base, result, minc, mout] = forecastMonths(months, includePrivate);
+        if (!result.length) return "Non ci sono dati sufficienti per una previsione.";
+        const nf = (x) => x.toFixed(2).replace(".", ",");
+        const lines = [];
+        lines.push("Saldo attuale stimato: " + nf(base));
+        lines.push("Netto mensile ricorrente stimato: " + nf(minc - mout));
+        lines.push("");
+        lines.push("Previsione prossimi " + months + " mesi (solo ricorrenti):");
+        for (const r of result) {
+            lines.push("- " + r.month + ": saldo stimato " + nf(r.balance) + " (netto mese " + nf(r.net) + ")");
+        }
+        return lines.join("\n");
+    }
+
+    function setMessage(text) {
+        const m = document.getElementById("message");
+        if (!text) {
+            m.innerHTML = "";
+            return;
+        }
+        m.innerHTML = '<div class="message">' + h(text) + '</div>';
+    }
+
+    function setPage(page) {
+        app.currentPage = page;
+        app.editAccountId = null;
+        app.editCategoryId = null;
+        app.editTxId = null;
+        app.editBudgetId = null;
+        app.editGoalId = null;
+        setMessage("");
+        render();
+        const btns = document.querySelectorAll(".nav button");
+        btns.forEach(b => {
+            b.classList.toggle("active", b.dataset.page === page);
+        });
+    }
+
+    function render() {
+        if (app.currentPage === "dashboard") renderDashboard();
+        else if (app.currentPage === "accounts") renderAccounts();
+        else if (app.currentPage === "categories") renderCategories();
+        else if (app.currentPage === "transactions") renderTransactions();
+        else if (app.currentPage === "budgets") renderBudgets();
+        else if (app.currentPage === "goals") renderGoals();
+        else if (app.currentPage === "reports") renderReports();
+    }
+
+    function renderDashboard() {
+        const container = document.getElementById("content");
+        const balances = computeBalances(true);
+        const total = balances.reduce((s,b) => s + b.balance, 0);
+        const today = dateFromStr(todayStr());
+        const startMonth = dateFromStr(today.toISOString().slice(0,7) + "-01");
+        const [totInM, totOutM, spreadM] = computePeriodSummary(startMonth, today, true);
+        const healthText = analyzeHealth(true);
+        const firstLine = healthText.split("\n")[0].replace("Stato complessivo: ","");
+        const forecastText = forecastShortText(3,true).split("\n");
+        const nf = (x) => x.toFixed(2).replace(".", ",");
+        let html = "";
+        html += '<div class="page-title">Dashboard</div>';
+        html += '<div class="page-subtitle">Panoramica sintetica e rapida del tuo stato finanziario</div>';
+        html += '<div class="cards-row">';
+        html += '<div class="card"><div class="card-title">Saldo totale (incl. saldi iniziali)</div><div class="card-value">'+h(nf(total))+' €</div></div>';
+        html += '<div class="card"><div class="card-title">Entrate mese corrente</div><div class="card-value">'+h(nf(totInM))+' €</div></div>';
+        html += '<div class="card"><div class="card-title">Uscite mese corrente</div><div class="card-value">'+h(nf(totOutM))+' €</div></div>';
+        html += '<div class="card"><div class="card-title">Spread mese corrente</div><div class="card-value">'+h(nf(spreadM))+' €</div></div>';
+        html += '</div>';
+        html += '<div class="cards-row">';
+        html += '<div class="card"><div class="card-title">Stato salute finanziaria</div><div class="card-value">'+h(firstLine)+'</div><div class="muted" style="margin-top:4px;">Dettaglio nella sezione Report.</div></div>';
+        html += '<div class="card"><div class="card-title">Previsione prossimi 3 mesi (ricorrenti)</div><div class="muted">';
+        html += h(forecastText[0] || "") + "<br>" + h(forecastText[1] || "") + "</div></div>";
+        html += '</div>';
+        html += '<div class="layout-two"><div>';
+        html += '<div class="section"><div class="section-title">Saldi per conto</div><table><thead><tr><th>Conto</th><th>Tipologia</th><th>Saldo</th><th>Valuta</th></tr></thead><tbody>';
+        if (!balances.length) {
+            html += '<tr><td colspan="4" class="muted">Nessun conto definito.</td></tr>';
+        } else {
+            for (const b of balances) {
+                html += '<tr><td>'+h(b.name)+'</td><td>'+h(b.type)+'</td><td>'+h(nf(b.balance))+'</td><td>'+h(b.currency)+'</td></tr>';
+            }
+        }
+        html += '</tbody></table></div>';
+        html += '</div><div>';
+        html += '<div class="section"><div class="section-title">Ultime transazioni registrate</div><table><thead><tr><th>Data</th><th>Conto</th><th>Tipo</th><th>Importo</th><th>Categoria</th><th>Privata</th><th>Descrizione</th></tr></thead><tbody>';
+        const txs = app.data.transactions.slice().sort((a,b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id)).slice(0,20);
+        const accById = {}; for (const a of app.data.accounts) accById[a.id] = a;
+        const catById = {}; for (const c of app.data.categories) catById[c.id] = c;
+        if (!txs.length) {
+            html += '<tr><td colspan="7" class="muted">Nessuna transazione.</td></tr>';
+        } else {
+            for (const t of txs) {
+                const sign = t.direction === "in" ? "+" : "-";
+                const accName = accById[t.account_id]?.name || "";
+                const catName = t.category_id ? (catById[t.category_id]?.name || "-") : "-";
+                const desc = t.description ? (t.description.length>40 ? t.description.slice(0,40)+"…" : t.description) : "";
+                html += '<tr><td>'+h(t.date)+'</td><td>'+h(accName)+'</td><td>'+(t.direction==="in"?"Entrata":"Uscita")+'</td><td>'+h(sign+nf(Number(t.amount||0)))+'</td><td>'+h(catName)+'</td><td>'+(t.is_private?"Sì":"No")+'</td><td>'+h(desc)+'</td></tr>';
+            }
+        }
+        html += '</tbody></table></div>';
+        html += '</div></div>';
+        container.innerHTML = html;
+    }
+
+    function renderAccounts() {
+        const container = document.getElementById("content");
+        const accounts = app.data.accounts.slice();
+        const acc = app.editAccountId ? accounts.find(a => a.id === app.editAccountId) : null;
+        const formData = {
+            id: acc ? acc.id : null,
+            name: acc ? acc.name : "",
+            type: acc ? acc.type : "Contanti",
+            currency: acc ? acc.currency : "EUR",
+            description: acc ? (acc.description || "") : "",
+            is_active: acc ? !!acc.is_active : true,
+            initial_balance: acc ? Number(acc.initial_balance || 0) : 0
+        };
+        const nf = (x) => Number(x).toFixed(2).replace(".", ",");
+        let html = "";
+        html += '<div class="page-title">Conti</div>';
+        html += '<div class="page-subtitle">Gestisci contanti, conti bancari, wallet crypto, bauspar e altri contenitori di denaro</div>';
+        html += '<div class="layout-two"><div>';
+        html += '<div class="section"><div class="section-title">Elenco conti</div><table><thead><tr><th>Nome</th><th>Tipologia</th><th>Valuta</th><th>Saldo iniziale</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
+        if (!accounts.length) {
+            html += '<tr><td colspan="6" class="muted">Nessun conto ancora definito.</td></tr>';
+        } else {
+            for (const a of accounts) {
+                html += '<tr><td>'+h(a.name)+'</td><td>'+h(a.type)+'</td><td>'+h(a.currency)+'</td><td>'+h(nf(a.initial_balance || 0))+'</td><td>'+(a.is_active?"Attivo":"Chiuso")+'</td><td>';
+                html += '<button class="btn small secondary" data-action="edit-account" data-id="'+a.id+'">Modifica</button>';
+                html += '<button class="btn small danger" data-action="delete-account" data-id="'+a.id+'">Elimina</button>';
+                html += '</td></tr>';
+            }
+        }
+        html += '</tbody></table></div>';
+        html += '</div><div>';
+        html += '<div class="section"><div class="section-title">'+(formData.id?'Modifica conto':'Nuovo conto')+'</div>';
+        html += '<form id="accountForm">';
+        html += '<div class="form-row"><div class="form-label">Nome conto</div><div><input type="text" name="name" value="'+h(formData.name)+'" required></div></div>';
+        html += '<div class="form-row"><div class="form-label">Tipologia</div><div><select name="type">';
+        const types = ["Contanti","Conto bancario","Carta di credito","Wallet crypto","Bauspar","Altro"];
+        for (const t of types) {
+            html += '<option value="'+h(t)+'"'+(formData.type===t?' selected':'')+'>'+h(t)+'</option>';
+        }
+        html += '</select></div></div>';
+        html += '<div class="form-row"><div class="form-label">Valuta</div><div><select name="currency">';
+        const currs = ["EUR","USD","CHF","GBP"];
+        for (const c of currs) {
+            html += '<option value="'+h(c)+'"'+(formData.currency===c?' selected':'')+'>'+h(c)+'</option>';
+        }
+        html += '</select></div></div>';
+        html += '<div class="form-row"><div class="form-label">Saldo iniziale</div><div><input type="number" step="0.01" name="initial_balance" value="'+h(formData.initial_balance)+'"></div></div>';
+        html += '<div class="form-row"><div class="form-label">Descrizione</div><div><textarea name="description" rows="2">'+h(formData.description)+'</textarea></div></div>';
+        html += '<div class="form-row"><div class="form-label">Stato</div><div><label><input type="checkbox" name="is_active"'+(formData.is_active?' checked':'')+'> Conto attivo</label></div></div>';
+        html += '<div style="margin-top:8px;"><button class="btn" type="submit">Salva conto</button><button type="button" class="btn secondary" id="accountNewBtn">Nuovo</button></div>';
+        html += '<div class="muted" style="margin-top:6px;">Il saldo iniziale viene sommato alle transazioni per il calcolo del saldo attuale.</div>';
+        html += '</form></div>';
+        html += '</div></div>';
+        container.innerHTML = html;
+
+        document.getElementById("accountForm").addEventListener("submit", e => {
+            e.preventDefault();
+            const f = e.target;
+            const name = f.name.value.trim();
+            const type = f.type.value.trim();
+            const currency = f.currency.value.trim();
+            const initial_balance = parseFloat(f.initial_balance.value || "0");
+            const description = f.description.value.trim();
+            const is_active = !!f.is_active.checked;
+            if (!name || !type || !currency) {
+                setMessage("Compila tutti i campi obbligatori.");
+                return;
+            }
+            if (formData.id) {
+                const a = app.data.accounts.find(x => x.id === formData.id);
+                if (a) {
+                    a.name = name;
+                    a.type = type;
+                    a.currency = currency;
+                    a.initial_balance = initial_balance;
+                    a.description = description || "";
+                    a.is_active = is_active;
+                }
+                setMessage("Conto aggiornato.");
+            } else {
+                const id = app.data.nextIds.account++;
+                app.data.accounts.push({
+                    id,
+                    name,
+                    type,
+                    currency,
+                    description: description || "",
+                    is_active,
+                    initial_balance
+                });
+                setMessage("Conto creato.");
+            }
+            saveData();
+            app.editAccountId = null;
+            renderAccounts();
+        });
+        document.getElementById("accountNewBtn").addEventListener("click", () => {
+            app.editAccountId = null;
+            renderAccounts();
+        });
+        const btns = container.querySelectorAll("button[data-action='edit-account']");
+        btns.forEach(b => b.addEventListener("click", () => {
+            app.editAccountId = parseInt(b.dataset.id,10);
+            renderAccounts();
+        }));
+        const dbtns = container.querySelectorAll("button[data-action='delete-account']");
+        dbtns.forEach(b => b.addEventListener("click", () => {
+            const id = parseInt(b.dataset.id,10);
+            if (!confirm("Eliminare questo conto? (Le transazioni collegate resteranno orfane)")) return;
+            app.data.accounts = app.data.accounts.filter(a => a.id !== id);
+            saveData();
+            setMessage("Conto eliminato.");
+            renderAccounts();
+        }));
+    }
+
+    function renderCategories() {
+        const container = document.getElementById("content");
+        const cats = app.data.categories.slice();
+        const formCat = app.editCategoryId ? cats.find(c => c.id === app.editCategoryId) : null;
+        const formData = {
+            id: formCat ? formCat.id : null,
+            name: formCat ? formCat.name : "",
+            type: formCat ? formCat.type : "expense",
+            parent_id: formCat ? (formCat.parent_id || null) : null
+        };
+        const catById = {};
+        for (const c of cats) catById[c.id] = c;
+        let html = "";
+        html += '<div class="page-title">Categorie</div>';
+        html += '<div class="page-subtitle">Organizza entrate, uscite e trasferimenti in categorie leggibili</div>';
+        html += '<div class="layout-two"><div>';
+        html += '<div class="section"><div class="section-title">Elenco categorie</div><table><thead><tr><th>Nome</th><th>Tipo</th><th>Categoria padre</th><th>Azioni</th></tr></thead><tbody>';
+        if (!cats.length) {
+            html += '<tr><td colspan="4" class="muted">Nessuna categoria.</td></tr>';
+        } else {
+            for (const c of cats) {
+                const parentName = c.parent_id ? (catById[c.parent_id]?.name || "") : "";
+                html += '<tr><td>'+h(c.name)+'</td><td>'+(c.type==="income"?"Entrata":(c.type==="expense"?"Uscita":"Trasferimento"))+'</td><td>'+h(parentName)+'</td><td>';
+                html += '<button class="btn small secondary" data-action="edit-cat" data-id="'+c.id+'">Modifica</button>';
+                html += '<button class="btn small danger" data-action="delete-cat" data-id="'+c.id+'">Elimina</button>';
+                html += '</td></tr>';
+            }
+        }
+        html += '</tbody></table></div>';
+        html += '</div><div>';
+        html += '<div class="section"><div class="section-title">'+(formData.id?'Modifica categoria':'Nuova categoria')+'</div>';
+        html += '<form id="catForm">';
+        html += '<div class="form-row"><div class="form-label">Nome categoria</div><div><input type="text" name="name" value="'+h(formData.name)+'" required></div></div>';
+        html += '<div class="form-row"><div class="form-label">Tipo</div><div><select name="type">';
+        html += '<option value="income"'+(formData.type==="income"?' selected':'')+'>Entrata</option>';
+        html += '<option value="expense"'+(formData.type==="expense"?' selected':'')+'>Uscita</option>';
+        html += '<option value="transfer"'+(formData.type==="transfer"?' selected':'')+'>Trasferimento</option>';
+        html += '</select></div></div>';
+        html += '<div class="form-row"><div class="form-label">Categoria padre (opzionale)</div><div><select name="parent"><option value="">Nessuna</option>';
+        for (const c of cats) {
+            html += '<option value="'+c.id+'"'+(formData.parent_id===c.id?' selected':'')+'>'+h(c.name)+' ('+h(c.type)+')</option>';
+        }
+        html += '</select></div></div>';
+        html += '<div style="margin-top:8px;"><button class="btn" type="submit">Salva categoria</button><button type="button" class="btn secondary" id="catNewBtn">Nuova</button></div>';
+        html += '</form></div>';
+        html += '</div></div>';
+        container.innerHTML = html;
+
+        document.getElementById("catForm").addEventListener("submit", e => {
+            e.preventDefault();
+            const f = e.target;
+            const name = f.name.value.trim();
+            const type = f.type.value;
+            const parentVal = f.parent.value.trim();
+            const parent_id = parentVal ? parseInt(parentVal,10) : null;
+            if (!name || !["income","expense","transfer"].includes(type)) {
+                setMessage("Compila correttamente i campi.");
+                return;
+            }
+            if (formData.id) {
+                const c = app.data.categories.find(x => x.id === formData.id);
+                if (c) {
+                    c.name = name;
+                    c.type = type;
+                    c.parent_id = parent_id;
+                }
+                setMessage("Categoria aggiornata.");
+            } else {
+                const id = app.data.nextIds.category++;
+                app.data.categories.push({id,name,type,parent_id});
+                setMessage("Categoria creata.");
+            }
+            saveData();
+            app.editCategoryId = null;
+            renderCategories();
+        });
+        document.getElementById("catNewBtn").addEventListener("click", () => {
+            app.editCategoryId = null;
+            renderCategories();
+        });
+        container.querySelectorAll("button[data-action='edit-cat']").forEach(b => {
+            b.addEventListener("click", () => {
+                app.editCategoryId = parseInt(b.dataset.id,10);
+                renderCategories();
+            });
+        });
+        container.querySelectorAll("button[data-action='delete-cat']").forEach(b => {
+            b.addEventListener("click", () => {
+                const id = parseInt(b.dataset.id,10);
+                if (!confirm("Eliminare questa categoria?")) return;
+                app.data.categories = app.data.categories.filter(c => c.id !== id);
+                saveData();
+                setMessage("Categoria eliminata.");
+                renderCategories();
+            });
+        });
+    }
+
+    function renderTransactions() {
+        const container = document.getElementById("content");
+        const today = dateFromStr(todayStr());
+        if (!app.txFilter) {
+            app.txFilter = {
+                start: addDays(today,-30),
+                end: today,
+                direction: "all",
+                accId: 0,
+                priv: "all"
+            };
+        }
+        const f = app.txFilter;
+        const accs = app.data.accounts.slice();
+        const cats = app.data.categories.slice();
+        const catsIncome = cats.filter(c => c.type==="income");
+        const catsExpense = cats.filter(c => c.type==="expense");
+        const catsTransfer = cats.filter(c => c.type==="transfer");
+        const tx = app.editTxId ? app.data.transactions.find(t => t.id === app.editTxId) : null;
+        const txForm = {
+            id: tx ? tx.id : null,
+            date: tx ? tx.date : todayStr(),
+            account_id: tx ? tx.account_id : "",
+            amount: tx ? tx.amount : "",
+            direction: tx ? tx.direction : "out",
+            category_id: tx ? (tx.category_id || "") : "",
+            description: tx ? (tx.description || "") : "",
+            is_private: tx ? !!tx.is_private : false,
+            freq: tx ? tx.freq : "once",
+            income_kind: tx ? (tx.income_kind || "variable") : "variable"
+        };
+        const accById = {}; for (const a of accs) accById[a.id] = a;
+        const catById = {}; for (const c of cats) catById[c.id] = c;
+        const s = f.start, e = f.end;
+        let filtered = app.data.transactions.filter(t => {
+            const d = dateFromStr(t.date);
+            if (!d || d < s || d > e) return false;
+            if (f.direction !== "all" && t.direction !== f.direction) return false;
+            if (f.accId && t.account_id !== f.accId) return false;
+            if (f.priv === "public" && t.is_private) return false;
+            if (f.priv === "private" && !t.is_private) return false;
+            return true;
+        });
+        filtered.sort((a,b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id));
+        filtered = filtered.slice(0,300);
+        const nf = (x) => Number(x).toFixed(2).replace(".", ",");
+        let html = "";
+        html += '<div class="page-title">Transazioni</div>';
+        html += '<div class="page-subtitle">Registra entrate, uscite, movimenti ricorrenti e privati su qualsiasi data</div>';
+        html += '<div class="section"><div class="section-title">Filtri rapidi</div>';
+        html += '<form id="txFilterForm"><div class="grid-2">';
+        html += '<div class="form-row"><div class="form-label">Da data</div><div><input type="date" name="start" value="'+h(dateToStr(f.start))+'"></div></div>';
+        html += '<div class="form-row"><div class="form-label">A data</div><div><input type="date" name="end" value="'+h(dateToStr(f.end))+'"></div></div>';
+        html += '<div class="form-row"><div class="form-label">Tipo movimento</div><div><select name="direction">';
+        html += '<option value="all"'+(f.direction==="all"?' selected':'')+'>Entrate e uscite</option>';
+        html += '<option value="in"'+(f.direction==="in"?' selected':'')+'>Solo entrate</option>';
+        html += '<option value="out"'+(f.direction==="out"?' selected':'')+'>Solo uscite</option>';
+        html += '</select></div></div>';
+        html += '<div class="form-row"><div class="form-label">Conto</div><div><select name="acc">';
+        html += '<option value="0"'+(!f.accId?' selected':'')+'>Tutti i conti</option>';
+        for (const a of accs) {
+            html += '<option value="'+a.id+'"'+(f.accId===a.id?' selected':'')+'>'+h(a.name)+'</option>';
+        }
+        html += '</select></div></div>';
+        html += '<div class="form-row"><div class="form-label">Movimenti privati</div><div><select name="priv">';
+        html += '<option value="all"'+(f.priv==="all"?' selected':'')+'>Includi tutti</option>';
+        html += '<option value="public"'+(f.priv==="public"?' selected':'')+'>Solo pubblici</option>';
+        html += '<option value="private"'+(f.priv==="private"?' selected':'')+'>Solo privati</option>';
+        html += '</select></div></div>';
+        html += '<div class="form-row"><div class="form-label"></div><div><button class="btn" type="submit">Applica filtri</button></div></div>';
+        html += '</div></form>';
+        html += '<div class="layout-two"><div>';
+        html += '<div class="section" style="background:none;padding:0;margin:0;"><div class="section-title">Transazioni nell\'intervallo</div>';
+        html += '<table><thead><tr><th>Data</th><th>Conto</th><th>Tipo</th><th>Importo</th><th>Categoria</th><th>Ricorrente</th><th>Privata</th><th>Descrizione</th><th>Azioni</th></tr></thead><tbody>';
+        if (!filtered.length) {
+            html += '<tr><td colspan="9" class="muted">Nessuna transazione per i filtri selezionati.</td></tr>';
+        } else {
+            for (const t of filtered) {
+                const sign = t.direction==="in"?"+":"-";
+                const accName = accById[t.account_id]?.name || "";
+                const catName = t.category_id ? (catById[t.category_id]?.name || "-") : "-";
+                const desc = t.description ? (t.description.length>40 ? t.description.slice(0,40)+"…" : t.description) : "";
+                const freqLabel = t.freq==="once"?"Una tantum":t.freq;
+                html += '<tr><td>'+h(t.date)+'</td><td>'+h(accName)+'</td><td>'+(t.direction==="in"?"Entrata":"Uscita")+'</td><td>'+h(sign+nf(Number(t.amount||0)))+'</td><td>'+h(catName)+'</td><td>'+h(freqLabel)+'</td><td>'+(t.is_private?"Sì":"No")+'</td><td>'+h(desc)+'</td><td>';
+                html += '<button class="btn small secondary" data-action="edit-tx" data-id="'+t.id+'">Modifica</button>';
+                html += '<button class="btn small danger" data-action="delete-tx" data-id="'+t.id+'">Elimina</button>';
+                html += '</td></tr>';
+            }
+        }
+        html += '</tbody></table></div></div><div>';
+        html += '<div class="section"><div class="section-title">'+(txForm.id?'Modifica transazione':'Nuova transazione')+'</div>';
+        html += '<form id="txForm">';
+        html += '<div class="form-row"><div class="form-label">Data</div><div><input type="date" name="date" value="'+h(txForm.date)+'"></div></div>';
+        html += '<div class="form-row"><div class="form-label">Conto</div><div><select name="account_id" required><option value="">Seleziona</option>';
+        for (const a of accs) {
+            html += '<option value="'+a.id+'"'+(txForm.account_id===a.id?' selected':'')+'>'+h(a.name)+' ('+h(a.currency)+')</option>';
+        }
+        html += '</select></div></div>';
+        html += '<div class="form-row"><div class="form-label">Tipo movimento</div><div><select name="direction" id="tx_direction_select">';
+        html += '<option value="out"'+(txForm.direction==="out"?' selected':'')+'>Uscita</option>';
+        html += '<option value="in"'+(txForm.direction==="in"?' selected':'')+'>Entrata</option>';
+        html += '</select></div></div>';
+        html += '<div class="form-row"><div class="form-label">Importo</div><div><input type="number" step="0.01" name="amount" value="'+h(txForm.amount)+'" required></div></div>';
+        html += '<div class="form-row"><div class="form-label">Categoria</div><div><select name="category_id">';
+        html += '<option value="">Nessuna</option>';
+        html += '<optgroup label="Uscite">';
+        for (const c of catsExpense) {
+            html += '<option value="'+c.id+'"'+(txForm.category_id===c.id?' selected':'')+'>'+h(c.name)+'</option>';
+        }
+        html += '</optgroup><optgroup label="Entrate">';
+        for (const c of catsIncome) {
+            html += '<option value="'+c.id+'"'+(txForm.category_id===c.id?' selected':'')+'>'+h(c.name)+'</option>';
+        }
+        html += '</optgroup><optgroup label="Trasferimenti">';
+        for (const c of catsTransfer) {
+            html += '<option value="'+c.id+'"'+(txForm.category_id===c.id?' selected':'')+'>'+h(c.name)+'</option>';
+        }
+        html += '</optgroup></select></div></div>';
+        html += '<div class="form-row"><div class="form-label">Descrizione</div><div><textarea name="description" rows="2">'+h(txForm.description)+'</textarea></div></div>';
+        html += '<div class="form-row"><div class="form-label">Visibilità</div><div><label><input type="checkbox" name="is_private"'+(txForm.is_private?' checked':'')+'> Movimento privato (escludibile da alcuni report)</label></div></div>';
+        html += '<div class="form-row"><div class="form-label">Frequenza</div><div><select name="freq">';
+        const freqs = [
+            {v:"once",l:"Una tantum"},
+            {v:"daily",l:"Giornaliera"},
+            {v:"weekly",l:"Settimanale"},
+            {v:"monthly",l:"Mensile"},
+            {v:"yearly",l:"Annuale"}
+        ];
+        for (const fr of freqs) {
+            html += '<option value="'+fr.v+'"'+(txForm.freq===fr.v?' selected':'')+'>'+h(fr.l)+'</option>';
+        }
+        html += '</select></div></div>';
+        html += '<div class="form-row" id="income_kind_row"><div class="form-label">Tipo entrata</div><div><select name="income_kind">';
+        html += '<option value="fixed"'+(txForm.income_kind==="fixed"?' selected':'')+'>Entrata fissa</option>';
+        html += '<option value="variable"'+(txForm.income_kind==="variable"?' selected':'')+'>Entrata variabile</option>';
+        html += '<option value="one-off"'+(txForm.income_kind==="one-off"?' selected':'')+'>Entrata una tantum</option>';
+        html += '</select></div></div>';
+        html += '<div style="margin-top:8px;"><button class="btn" type="submit">Salva transazione</button><button type="button" class="btn secondary" id="txNewBtn">Nuova</button></div>';
+        html += '<div class="muted" style="margin-top:6px;">Puoi inserire liberamente date passate o future. Le ricorrenze vengono utilizzate nelle analisi e previsioni.</div>';
+        html += '</form></div></div></div>';
+        container.innerHTML = html;
+
+        const dirSelect = document.getElementById("tx_direction_select");
+        const incomeRow = document.getElementById("income_kind_row");
+        function updateIncomeKindVisibility() {
+            incomeRow.style.display = dirSelect.value === "in" ? "" : "none";
+        }
+        updateIncomeKindVisibility();
+        dirSelect.addEventListener("change", updateIncomeKindVisibility);
+
+        document.getElementById("txFilterForm").addEventListener("submit", e => {
+            e.preventDefault();
+            const fDom = e.target;
+            app.txFilter.start = dateFromStr(fDom.start.value) || addDays(today,-30);
+            app.txFilter.end = dateFromStr(fDom.end.value) || today;
+            app.txFilter.direction = fDom.direction.value;
+            app.txFilter.accId = parseInt(fDom.acc.value || "0",10);
+            app.txFilter.priv = fDom.priv.value;
+            renderTransactions();
+        });
+        document.getElementById("txForm").addEventListener("submit", e => {
+            e.preventDefault();
+            const fDom = e.target;
+            const date = fDom.date.value || todayStr();
+            const account_id = parseInt(fDom.account_id.value,10);
+            const amount = parseFloat(fDom.amount.value || "0");
+            const direction = fDom.direction.value==="in"?"in":"out";
+            const catVal = fDom.category_id.value.trim();
+            const category_id = catVal ? parseInt(catVal,10) : null;
+            const description = fDom.description.value.trim();
+            const is_private = !!fDom.is_private.checked;
+            const freq = fDom.freq.value;
+            let income_kind = fDom.income_kind.value;
+            if (direction==="out") income_kind = null;
+            if (!account_id || !amount) {
+                setMessage("Compila conto e importo.");
+                return;
+            }
+            if (txForm.id) {
+                const t = app.data.transactions.find(x => x.id === txForm.id);
+                if (t) {
+                    t.date = date;
+                    t.account_id = account_id;
+                    t.amount = amount;
+                    t.direction = direction;
+                    t.category_id = category_id;
+                    t.description = description || "";
+                    t.is_private = is_private;
+                    t.freq = freqs.some(fr => fr.v===freq)?freq:"once";
+                    t.income_kind = income_kind;
+                }
+                setMessage("Transazione aggiornata.");
+            } else {
+                const id = app.data.nextIds.transaction++;
+                app.data.transactions.push({
+                    id,
+                    date,
+                    account_id,
+                    amount,
+                    direction,
+                    category_id,
+                    description: description || "",
+                    is_private,
+                    freq: freqs.some(fr => fr.v===freq)?freq:"once",
+                    income_kind
+                });
+                setMessage("Transazione salvata.");
+            }
+            saveData();
+            app.editTxId = null;
+            renderTransactions();
+        });
+        document.getElementById("txNewBtn").addEventListener("click", () => {
+            app.editTxId = null;
+            renderTransactions();
+        });
+        container.querySelectorAll("button[data-action='edit-tx']").forEach(b => {
+            b.addEventListener("click", () => {
+                app.editTxId = parseInt(b.dataset.id,10);
+                renderTransactions();
+            });
+        });
+        container.querySelectorAll("button[data-action='delete-tx']").forEach(b => {
+            b.addEventListener("click", () => {
+                const id = parseInt(b.dataset.id,10);
+                if (!confirm("Eliminare questa transazione?")) return;
+                app.data.transactions = app.data.transactions.filter(t => t.id !== id);
+                saveData();
+                setMessage("Transazione eliminata.");
+                renderTransactions();
+            });
+        });
+    }
+
+    function renderBudgets() {
+        const container = document.getElementById("content");
+        const budgets = app.data.budgets.slice();
+        const cats = app.data.categories.slice();
+        const formBud = app.editBudgetId ? budgets.find(b => b.id === app.editBudgetId) : null;
+        const formData = {
+            id: formBud ? formBud.id : null,
+            category_id: formBud ? formBud.category_id : "",
+            period_type: formBud ? formBud.period_type : "monthly",
+            amount: formBud ? formBud.amount : "",
+            start_date: formBud ? (formBud.start_date || "") : ""
+        };
+        const nf = (x) => Number(x).toFixed(2).replace(".", ",");
+        const catsById = {}; for (const c of cats) catsById[c.id] = c;
+        let html = "";
+        html += '<div class="page-title">Budget</div>';
+        html += '<div class="page-subtitle">Imposta limiti di spesa e obiettivi di entrata per categoria e controlla lo stato del mese</div>';
+        html += '<div class="layout-two"><div>';
+        html += '<div class="section"><div class="section-title">Budget definiti</div><table><thead><tr><th>Categoria</th><th>Tipo cat.</th><th>Periodo</th><th>Importo</th><th>Data inizio</th><th>Azioni</th></tr></thead><tbody>';
+        if (!budgets.length) {
+            html += '<tr><td colspan="6" class="muted">Nessun budget definito.</td></tr>';
+        } else {
+            for (const b of budgets) {
+                const cat = catsById[b.category_id];
+                if (!cat) continue;
+                html += '<tr><td>'+h(cat.name)+'</td><td>'+(cat.type==="expense"?"Uscite":"Entrate")+'</td><td>'+(b.period_type==="monthly"?"Mensile":"Annuale")+'</td><td>'+h(nf(b.amount||0))+'</td><td>'+h(b.start_date||"")+'</td><td>';
+                html += '<button class="btn small secondary" data-action="edit-bud" data-id="'+b.id+'">Modifica</button>';
+                html += '<button class="btn small danger" data-action="delete-bud" data-id="'+b.id+'">Elimina</button>';
+                html += '</td></tr>';
+            }
+        }
+        html += '</tbody></table></div>';
+        html += '</div><div>';
+        html += '<div class="section"><div class="section-title">'+(formData.id?'Modifica budget':'Nuovo budget')+'</div>';
+        html += '<form id="budgetForm">';
+        html += '<div class="form-row"><div class="form-label">Categoria</div><div><select name="category_id" required><option value="">Seleziona categoria</option>';
+        for (const c of cats) {
+            html += '<option value="'+c.id+'"'+(formData.category_id===c.id?' selected':'')+'>'+h(c.name)+' ('+(c.type==="expense"?"Uscite":"Entrate")+')</option>';
+        }
+        html += '</select></div></div>';
+        html += '<div class="form-row"><div class="form-label">Periodo</div><div><select name="period_type"><option value="monthly"'+(formData.period_type==="monthly"?' selected':'')+'>Mensile</option><option value="yearly"'+(formData.period_type==="yearly"?' selected':'')+'>Annuale</option></select></div></div>';
+        html += '<div class="form-row"><div class="form-label">Importo obiettivo</div><div><input type="number" step="0.01" name="amount" value="'+h(formData.amount)+'" required></div></div>';
+        html += '<div class="form-row"><div class="form-label">Data inizio (opzionale)</div><div><input type="date" name="start_date" value="'+h(formData.start_date)+'"></div></div>';
+        html += '<div style="margin-top:8px;"><button class="btn" type="submit">Salva budget</button><button type="button" class="btn secondary" id="budgetNewBtn">Nuovo</button></div>';
+        html += '</form></div>';
+        html += '</div></div>';
+        const [bs,be,brows] = computeBudgetStatus("monthly");
+        html += '<div class="section"><div class="section-title">Stato budget mese corrente</div><table><thead><tr><th>Categoria</th><th>Tipo</th><th>Budget</th><th>Usato</th><th>Delta</th><th>Stato</th></tr></thead><tbody>';
+        if (!brows.length) {
+            html += '<tr><td colspan="6" class="muted">Nessun budget mensile definito.</td></tr>';
+        } else {
+            for (const r of brows) {
+                html += '<tr><td>'+h(r.category_name)+'</td><td>'+(r.category_type==="expense"?"Uscite":"Entrate")+'</td><td>'+h(nf(r.amount))+'</td><td>'+h(nf(r.used))+'</td><td>'+h(nf(r.diff))+'</td><td>'+h(r.status)+'</td></tr>';
+            }
+        }
+        html += '</tbody></table><div class="muted" style="margin-top:4px;">Il periodo considerato è '+h(dateToStr(bs))+' - '+h(dateToStr(be))+'.</div></div>';
+        container.innerHTML = html;
+
+        document.getElementById("budgetForm").addEventListener("submit", e => {
+            e.preventDefault();
+            const fDom = e.target;
+            const category_id = parseInt(fDom.category_id.value,10);
+            const period_type = fDom.period_type.value;
+            const amount = parseFloat(fDom.amount.value||"0");
+            const start_date = fDom.start_date.value || "";
+            if (!category_id || !["monthly","yearly"].includes(period_type)) {
+                setMessage("Compila correttamente i campi.");
+                return;
+            }
+            if (formData.id) {
+                const b = app.data.budgets.find(x => x.id === formData.id);
+                if (b) {
+                    b.category_id = category_id;
+                    b.period_type = period_type;
+                    b.amount = amount;
+                    b.start_date = start_date;
+                }
+                setMessage("Budget aggiornato.");
+            } else {
+                const id = app.data.nextIds.budget++;
+                app.data.budgets.push({id,category_id,period_type,amount,start_date});
+                setMessage("Budget creato.");
+            }
+            saveData();
+            app.editBudgetId = null;
+            renderBudgets();
+        });
+        document.getElementById("budgetNewBtn").addEventListener("click", () => {
+            app.editBudgetId = null;
+            renderBudgets();
+        });
+        container.querySelectorAll("button[data-action='edit-bud']").forEach(b => {
+            b.addEventListener("click", () => {
+                app.editBudgetId = parseInt(b.dataset.id,10);
+                renderBudgets();
+            });
+        });
+        container.querySelectorAll("button[data-action='delete-bud']").forEach(b => {
+            b.addEventListener("click", () => {
+                const id = parseInt(b.dataset.id,10);
+                if (!confirm("Eliminare questo budget?")) return;
+                app.data.budgets = app.data.budgets.filter(bu => bu.id !== id);
+                saveData();
+                setMessage("Budget eliminato.");
+                renderBudgets();
+            });
+        });
+    }
+
+    function renderGoals() {
+        const container = document.getElementById("content");
+        const goalsRaw = app.data.goals.slice();
+        const accs = app.data.accounts.slice();
+        const goalsStatus = computeGoalsStatus();
+        const formGoal = app.editGoalId ? goalsRaw.find(g => g.id === app.editGoalId) : null;
+        const formData = {
+            id: formGoal ? formGoal.id : null,
+            name: formGoal ? formGoal.name : "",
+            target_amount: formGoal ? formGoal.target_amount : "",
+            deadline: formGoal ? (formGoal.deadline || "") : "",
+            account_id: formGoal ? (formGoal.account_id || "") : "",
+            description: formGoal ? (formGoal.description || "") : ""
+        };
+        const nf = (x) => Number(x).toFixed(2).replace(".", ",");
+        let html = "";
+        html += '<div class="page-title">Obiettivi e spese grandi pianificate</div>';
+        html += '<div class="page-subtitle">Imposta traguardi di risparmio e spese importanti future, collegandoli ai conti</div>';
+        html += '<div class="layout-two"><div>';
+        html += '<div class="section"><div class="section-title">Obiettivi attuali</div><table><thead><tr><th>Nome</th><th>Target</th><th>Deadline</th><th>Conto di riferimento</th><th>Progress</th><th>Mancano</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
+        if (!goalsStatus.length) {
+            html += '<tr><td colspan="8" class="muted">Nessun obiettivo ancora definito.</td></tr>';
+        } else {
+            for (const g of goalsStatus) {
+                html += '<tr><td>'+h(g.name)+'</td><td>'+h(nf(g.target))+'</td><td>'+h(g.deadline)+'</td><td>'+h(g.account_name || "Tutti i conti")+'</td><td>'+h(nf(g.progress))+'</td><td>'+h(nf(g.remaining))+'</td><td>'+h(g.status)+'</td><td>';
+                html += '<button class="btn small secondary" data-action="edit-goal" data-id="'+g.id+'">Modifica</button>';
+                html += '<button class="btn small danger" data-action="delete-goal" data-id="'+g.id+'">Elimina</button>';
+                html += '</td></tr>';
+            }
+        }
+        html += '</tbody></table></div>';
+        html += '</div><div>';
+        html += '<div class="section"><div class="section-title">'+(formData.id?'Modifica obiettivo':'Nuovo obiettivo / spesa grande')+'</div>';
+        html += '<form id="goalForm">';
+        html += '<div class="form-row"><div class="form-label">Nome obiettivo</div><div><input type="text" name="name" value="'+h(formData.name)+'" required></div></div>';
+        html += '<div class="form-row"><div class="form-label">Target (€)</div><div><input type="number" step="0.01" name="target_amount" value="'+h(formData.target_amount)+'" required></div></div>';
+        html += '<div class="form-row"><div class="form-label">Deadline (opzionale)</div><div><input type="date" name="deadline" value="'+h(formData.deadline)+'"></div></div>';
+        html += '<div class="form-row"><div class="form-label">Conto principale</div><div><select name="account_id"><option value="">Tutti i conti</option>';
+        for (const a of accs) {
+            html += '<option value="'+a.id+'"'+(formData.account_id===a.id?' selected':'')+'>'+h(a.name)+'</option>';
+        }
+        html += '</select></div></div>';
+        html += '<div class="form-row"><div class="form-label">Descrizione</div><div><textarea name="description" rows="3">'+h(formData.description)+'</textarea></div></div>';
+        html += '<div style="margin-top:8px;"><button class="btn" type="submit">Salva obiettivo</button><button type="button" class="btn secondary" id="goalNewBtn">Nuovo</button></div>';
+        html += '<div class="muted" style="margin-top:6px;">Gli obiettivi possono rappresentare sia risparmi (es. fondo emergenza) che spese future (es. auto nuova).</div>';
+        html += '</form></div>';
+        html += '</div></div>';
+        container.innerHTML = html;
+
+        document.getElementById("goalForm").addEventListener("submit", e => {
+            e.preventDefault();
+            const fDom = e.target;
+            const name = fDom.name.value.trim();
+            const target_amount = parseFloat(fDom.target_amount.value||"0");
+            const deadline = fDom.deadline.value || "";
+            const accVal = fDom.account_id.value.trim();
+            const account_id = accVal ? parseInt(accVal,10) : null;
+            const description = fDom.description.value.trim();
+            if (!name || target_amount<=0) {
+                setMessage("Compila correttamente nome e target.");
+                return;
+            }
+            if (formData.id) {
+                const g = app.data.goals.find(x => x.id === formData.id);
+                if (g) {
+                    g.name = name;
+                    g.target_amount = target_amount;
+                    g.deadline = deadline;
+                    g.account_id = account_id;
+                    g.description = description || "";
+                }
+                setMessage("Obiettivo aggiornato.");
+            } else {
+                const id = app.data.nextIds.goal++;
+                app.data.goals.push({
+                    id,
+                    name,
+                    target_amount,
+                    deadline,
+                    account_id,
+                    description: description || ""
+                });
+                setMessage("Obiettivo creato.");
+            }
+            saveData();
+            app.editGoalId = null;
+            renderGoals();
+        });
+        document.getElementById("goalNewBtn").addEventListener("click", () => {
+            app.editGoalId = null;
+            renderGoals();
+        });
+        container.querySelectorAll("button[data-action='edit-goal']").forEach(b => {
+            b.addEventListener("click", () => {
+                app.editGoalId = parseInt(b.dataset.id,10);
+                renderGoals();
+            });
+        });
+        container.querySelectorAll("button[data-action='delete-goal']").forEach(b => {
+            b.addEventListener("click", () => {
+                const id = parseInt(b.dataset.id,10);
+                if (!confirm("Eliminare questo obiettivo?")) return;
+                app.data.goals = app.data.goals.filter(g => g.id !== id);
+                saveData();
+                setMessage("Obiettivo eliminato.");
+                renderGoals();
+            });
+        });
+    }
+
+    function renderReports() {
+        const container = document.getElementById("content");
+        const balances = computeBalances(true);
+        const tot = balances.reduce((s,b) => s + b.balance, 0);
+        const nf = (x) => Number(x).toFixed(2).replace(".", ",");
+        const today = dateFromStr(todayStr());
+        if (!app.reportPeriodFilter) {
+            app.reportPeriodFilter = {
+                start: addDays(today,-30),
+                end: today
+            };
+        }
+        if (!app.reportCatFilter) {
+            app.reportCatFilter = {
+                start: addDays(today,-30),
+                end: today,
+                dir: "all"
+            };
+        }
+        const pf = app.reportPeriodFilter;
+        const cf = app.reportCatFilter;
+        const [rpIn,rpOut,rpSpread,rpAvgIn,rpAvgOut] = computePeriodSummary(pf.start, pf.end, true);
+        const dirFilter = cf.dir==="in" || cf.dir==="out" ? cf.dir : null;
+        const catRows = computeCategoryTotals(cf.start, cf.end, true, dirFilter);
+        let html = "";
+        html += '<div class="page-title">Report e analisi</div>';
+        html += '<div class="page-subtitle">Riepilogo saldi, analisi per periodo, categorie, salute e previsioni</div>';
+        html += '<div class="grid-2"><div>';
+        html += '<div class="section"><div class="section-title">Saldi attuali per conto</div>';
+        html += '<div class="muted" style="margin-bottom:6px;">Saldo totale complessivo: <strong>'+h(nf(tot))+' €</strong></div>';
+        html += '<table><thead><tr><th>Conto</th><th>Tipologia</th><th>Saldo</th><th>Valuta</th></tr></thead><tbody>';
+        if (!balances.length) {
+            html += '<tr><td colspan="4" class="muted">Nessun conto definito.</td></tr>';
+        } else {
+            for (const b of balances) {
+                html += '<tr><td>'+h(b.name)+'</td><td>'+h(b.type)+'</td><td>'+h(nf(b.balance))+'</td><td>'+h(b.currency)+'</td></tr>';
+            }
+        }
+        html += '</tbody></table></div>';
+        html += '<div class="section"><div class="section-title">Analisi salute finanziaria</div><pre>'+h(analyzeHealth(true))+'</pre></div>';
+        html += '</div><div>';
+        html += '<div class="section"><div class="section-title">Riepilogo entrate/uscite per periodo</div>';
+        html += '<form id="rpForm" style="margin-bottom:6px;"><div class="form-row"><div class="form-label">Da data</div><div><input type="date" name="rp_start" value="'+h(dateToStr(pf.start))+'"></div></div>';
+        html += '<div class="form-row"><div class="form-label">A data</div><div><input type="date" name="rp_end" value="'+h(dateToStr(pf.end))+'"></div></div>';
+        html += '<div style="margin-top:4px;"><button class="btn" type="submit">Ricalcola periodo</button></div></form>';
+        html += '<pre>';
+        html += "Periodo "+dateToStr(pf.start)+" - "+dateToStr(pf.end)+"\n\n";
+        html += "Entrate: "+nf(rpIn)+" €\n";
+        html += "Uscite: "+nf(rpOut)+" €\n";
+        html += "Spread: "+nf(rpSpread)+" €\n\n";
+        html += "Media giornaliera entrate: "+nf(rpAvgIn)+" €\n";
+        html += "Media giornaliera uscite: "+nf(rpAvgOut)+" €\n";
+        html += '</pre></div>';
+        html += '<div class="section"><div class="section-title">Categorie principali nel periodo</div>';
+        html += '<form id="rcForm" style="margin-bottom:6px;"><div class="form-row"><div class="form-label">Da data</div><div><input type="date" name="rc_start" value="'+h(dateToStr(cf.start))+'"></div></div>';
+        html += '<div class="form-row"><div class="form-label">A data</div><div><input type="date" name="rc_end" value="'+h(dateToStr(cf.end))+'"></div></div>';
+        html += '<div class="form-row"><div class="form-label">Tipo</div><div><select name="rc_dir"><option value="all"'+(cf.dir==="all"?' selected':'')+'>Entrate e uscite</option><option value="in"'+(cf.dir==="in"?' selected':'')+'>Solo entrate</option><option value="out"'+(cf.dir==="out"?' selected':'')+'>Solo uscite</option></select></div></div>';
+        html += '<div style="margin-top:4px;"><button class="btn" type="submit">Ricalcola categorie</button></div></form>';
+        html += '<table><thead><tr><th>Categoria</th><th>Netto</th><th>Entrate</th><th>Uscite</th></tr></thead><tbody>';
+        if (!catRows.length) {
+            html += '<tr><td colspan="4" class="muted">Nessun dato per il periodo.</td></tr>';
+        } else {
+            for (const r of catRows) {
+                html += '<tr><td>'+h(r.cat)+'</td><td>'+h(nf(r.net))+'</td><td>'+h(nf(r.tot_in))+'</td><td>'+h(nf(r.tot_out))+'</td></tr>';
+            }
+        }
+        html += '</tbody></table></div>';
+        html += '<div class="section"><div class="section-title">Quanto puoi spendere oggi</div><pre>'+h(computeSafeDailySpendText(true))+'</pre></div>';
+        html += '<div class="section"><div class="section-title">Previsione prossimi 3 mesi (solo ricorrenti)</div><pre>'+h(forecastShortText(3,true))+'</pre></div>';
+        html += '</div></div>';
+        container.innerHTML = html;
+
+        document.getElementById("rpForm").addEventListener("submit", e => {
+            e.preventDefault();
+            const fDom = e.target;
+            const s = dateFromStr(fDom.rp_start.value);
+            const ed = dateFromStr(fDom.rp_end.value);
+            if (!s || !ed) {
+                setMessage("Date non valide.");
+                return;
+            }
+            app.reportPeriodFilter.start = s;
+            app.reportPeriodFilter.end = ed;
+            renderReports();
+        });
+        document.getElementById("rcForm").addEventListener("submit", e => {
+            e.preventDefault();
+            const fDom = e.target;
+            const s = dateFromStr(fDom.rc_start.value);
+            const ed = dateFromStr(fDom.rc_end.value);
+            const dir = fDom.rc_dir.value;
+            if (!s || !ed) {
+                setMessage("Date non valide.");
+                return;
+            }
+            app.reportCatFilter.start = s;
+            app.reportCatFilter.end = ed;
+            app.reportCatFilter.dir = dir;
+            renderReports();
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        app.data = loadData();
+        document.querySelectorAll(".nav button").forEach(b => {
+            b.addEventListener("click", () => setPage(b.dataset.page));
+        });
+        setPage("dashboard");
+    });
+</script>
+</body>
+</html>

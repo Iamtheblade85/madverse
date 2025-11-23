@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Assistente Finanziario Web</title>
     <!-- Qui puoi collegare il tuo CSS personalizzato -->
-    <link rel="stylesheet" href="finanza-app.css">
+    <link rel="stylesheet" href="fin-theme.css">
 </head>
 <body class="app-body">
 <div class="app-root">
@@ -551,7 +551,7 @@ function renderDashboard() {
     html += '<div class="cards-row cards-row--secondary">';
     html += '<article class="card card--info"><div class="card-title" data-tooltip="Valutazione basata su entrate/uscite, ricorrenti e saldo"><span>Stato salute finanziaria</span></div><div class="card-value">'+h(firstLine)+'</div><div class="card-note">Dettaglio nella sezione Report.</div></article>';
     html += '<article class="card card--info"><div class="card-title">Previsione prossimi 3 mesi (ricorrenti)</div><div class="card-note">';
-    html += h(forecastText[0] || "") + "<br>" + h(forecastText[1] || "") + "</div></article>';
+    html += h(forecastText[0] || "") + "<br>" + h(forecastText[1] || "") + "</div></article>";
     html += '</div>';
 
     html += '<div class="layout-two layout-two--main">';

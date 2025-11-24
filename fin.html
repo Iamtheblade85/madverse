@@ -59,7 +59,8 @@ const app = {
     editGoalId: null,
     txFilter: null,
     reportPeriodFilter: null,
-    reportCatFilter: null
+    reportCatFilter: null,
+    futureBalanceDate: null    
 };
 
 /* ===========================
@@ -227,7 +228,12 @@ function getCategories() {
     return app.data.categories.slice();
 }
 
-function computeBalances(includePrivate) {
+function computeBalances(includePrivate, asOfDate) {
+    // data limite: se non fornita, uso oggi
+    const limit = asOfDate
+        ? dateFromStr(dateToStr(asOfDate))
+        : dateFromStr(todayStr());
+
     const accs = app.data.accounts.map(a => ({
         id: a.id,
         name: a.name,
@@ -236,9 +242,17 @@ function computeBalances(includePrivate) {
         initial_balance: Number(a.initial_balance || 0),
         balance: Number(a.initial_balance || 0)
     }));
+
     const txs = app.data.transactions;
     for (const t of txs) {
         if (!includePrivate && t.is_private) continue;
+
+        const d = dateFromStr(t.date);
+        if (!d) continue;
+
+        // ⬅️ ESCLUDO le transazioni nel futuro rispetto a "limit"
+        if (limit && d > limit) continue;
+
         const acc = accs.find(a => a.id === t.account_id);
         if (!acc) continue;
         const amount = Number(t.amount || 0);
@@ -248,8 +262,8 @@ function computeBalances(includePrivate) {
     return accs;
 }
 
-function computeGlobalBalance(includePrivate) {
-    const rows = computeBalances(includePrivate);
+function computeGlobalBalance(includePrivate, asOfDate) {
+    const rows = computeBalances(includePrivate, asOfDate);
     return rows.reduce((s, r) => s + r.balance, 0);
 }
 
@@ -559,6 +573,18 @@ function renderDashboard() {
     const balances = computeBalances(true);
     const total = balances.reduce((s,b) => s + b.balance, 0);
     const today = dateFromStr(todayStr());
+    const futureDate = app.futureBalanceDate ? dateFromStr(app.futureBalanceDate) : null;
+    const futureBalances = futureDate ? computeBalances(true, futureDate) : null;
+    const futureTotal = futureBalances
+        ? futureBalances.reduce((s, b) => s + b.balance, 0)
+        : null;
+
+    const futureBalMap = {};
+    if (futureBalances) {
+        for (const fb of futureBalances) {
+            futureBalMap[fb.id] = fb.balance;
+        }
+    }   
     const startMonth = dateFromStr(today.toISOString().slice(0,7) + "-01");
     const [totInM, totOutM, spreadM] = computePeriodSummary(startMonth, today, true);
     const healthText = analyzeHealth(true);
@@ -581,20 +607,61 @@ function renderDashboard() {
     html += '</div>';
 
     html += '<div class="cards-row cards-row--secondary">';
-    html += '<article class="card card--info"><div class="card-title" data-tooltip="Valutazione basata su entrate/uscite, ricorrenti e saldo"><span>Stato salute finanziaria</span></div><div class="card-value">'+h(firstLine)+'</div><div class="card-note">Dettaglio nella sezione Report.</div></article>';
-    html += '<article class="card card--info"><div class="card-title">Previsione prossimi 3 mesi (ricorrenti)</div><div class="card-note">';
-    html += h(forecastText[0] || "") + "<br>" + h(forecastText[1] || "") + "</div></article>";
+    
+    // Stato salute
+    html += '<article class="card card--info">';
+    html += '<div class="card-title" data-tooltip="Valutazione basata su entrate/uscite, ricorrenti e saldo"><span>Stato salute finanziaria</span></div>';
+    html += '<div class="card-value">'+h(firstLine)+'</div>';
+    html += '<div class="card-note">Dettaglio nella sezione Report.</div>';
+    html += '</article>';
+    
+    // Previsione 3 mesi
+    html += '<article class="card card--info">';
+    html += '<div class="card-title">Previsione prossimi 3 mesi (ricorrenti)</div>';
+    html += '<div class="card-note">'+h(forecastText[0] || "") + "<br>" + h(forecastText[1] || "") + "</div>';
+    html += '</article>';
+    
+    // ⬇️ NUOVA CARD: SALDO FUTURO
+    html += '<article class="card card--info">';
+    html += '<div class="card-title">Saldo futuro alla data</div>';
+    html += '<div class="card-value" id="future-balance-value">';
+    if (futureTotal !== null) {
+        html += h(nf(futureTotal)) + ' €';
+    } else {
+        html += '-';
+    }
+    html += '</div>';
+    html += '<div class="card-note">';
+    html += '<form id="futureBalanceForm" class="form form-inline">';
+    html += '<input class="input input-date" type="date" name="future_date" min="'+h(todayStr())+'" value="'+h(app.futureBalanceDate || "")+'">';
+    html += '<button class="btn btn--small btn--secondary" type="submit">Calcola</button>';
+    html += '</form>';
+    html += '</div>';
+    html += '</article>';
     html += '</div>';
 
     html += '<div class="layout-two layout-two--main">';
     html += '<section class="section section--panel">';
     html += '<header class="section-header"><h2 class="section-title">Saldi per conto</h2></header>';
-    html += '<div class="table-wrap"><table class="table table--accounts"><thead><tr><th>Conto</th><th>Tipologia</th><th>Saldo</th><th>Valuta</th></tr></thead><tbody>';
+    html += '<div class="table-wrap"><table class="table table--accounts"><thead><tr>';
+    html += '<th>Conto</th><th>Tipologia</th><th>Saldo attuale</th>';
+    html += '<th>Saldo alla data selezionata</th><th>Valuta</th>';
+    html += '</tr></thead><tbody>';
     if (!balances.length) {
         html += '<tr><td colspan="4" class="table-empty">Nessun conto definito.</td></tr>';
     } else {
         for (const b of balances) {
-            html += '<tr><td>'+h(b.name)+'</td><td>'+h(b.type)+'</td><td>'+h(nf(b.balance))+'</td><td>'+h(b.currency)+'</td></tr>';
+            const futureVal = futureBalances
+                ? (futureBalMap[b.id] != null ? nf(futureBalMap[b.id]) : nf(b.balance))
+                : null;
+        
+            html += '<tr>';
+            html += '<td>'+h(b.name)+'</td>';
+            html += '<td>'+h(b.type)+'</td>';
+            html += '<td>'+h(nf(b.balance))+'</td>';
+            html += '<td>'+(futureVal !== null ? h(futureVal) : '-')+'</td>';
+            html += '<td>'+h(b.currency)+'</td>';
+            html += '</tr>';
         }
     }
     html += '</tbody></table></div>';
@@ -623,6 +690,26 @@ function renderDashboard() {
 
     html += '</div>'; // page
     container.innerHTML = html;
+    // --- Event handler per il saldo futuro ---
+    const fbForm = document.getElementById("futureBalanceForm");
+    if (fbForm) {
+        fbForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const val = fbForm.future_date.value;
+            if (!val) {
+                app.futureBalanceDate = null;
+            } else {
+                const d = dateFromStr(val);
+                if (!d) {
+                    setMessage("Data futura non valida.", "warning");
+                    return;
+                }
+                app.futureBalanceDate = dateToStr(d);
+            }
+            // Rende di nuovo SOLO la dashboard, mantenendo gli altri stati
+            renderDashboard();
+        });
+    }  
 }
 
 /* ===========================

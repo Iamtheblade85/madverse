@@ -385,7 +385,75 @@ function computeCategoryTotals(start, end, includePrivate, directionFilter) {
     rows.sort((a,b) => b.net - a.net);
     return rows;
 }
+    
+// ===========================
+// ANALISI "QUICK INSIGHTS"
+// ===========================
 
+// Restituisce Top N categorie di spesa negli ultimi "days" giorni
+function getTopSpendingCategoriesWindow(days, includePrivate, limit) {
+    const today = dateFromStr(todayStr());
+    const start = addDays(today, -Math.abs(days) + 1);
+    const dirFilter = "out";
+    const rows = computeCategoryTotals(start, today, includePrivate, dirFilter);
+    return rows.slice(0, limit || 3);
+}
+
+// Trova il budget mensile "più critico" (più sfondato o più lontano da OK)
+function getMostCriticalMonthlyBudget(includePrivate) {
+    const [bs, be, rows] = computeBudgetStatus("monthly");
+    if (!rows.length) return null;
+
+    // ordino: prima quelli "SFONDATO", poi ordinati per diff crescente (più negativo = più grave)
+    const ordered = rows.slice().sort((a, b) => {
+        const aCritical = (a.category_type === "expense" && a.used > a.amount) ||
+                          (a.category_type === "income" && a.used < a.amount);
+        const bCritical = (b.category_type === "expense" && b.used > b.amount) ||
+                          (b.category_type === "income" && b.used < b.amount);
+
+        if (aCritical && !bCritical) return -1;
+        if (!aCritical && bCritical) return 1;
+
+        // entrambi critici o entrambi ok: ordina per diff "peggiore"
+        return a.diff - b.diff;
+    });
+
+    return {
+        period_start: bs,
+        period_end: be,
+        row: ordered[0]
+    };
+}
+
+// Restituisce l'obiettivo con deadline più vicina (non ancora raggiunto)
+function getClosestActiveGoal() {
+    const goals = computeGoalsStatus();
+    if (!goals.length) return null;
+
+    const today = dateFromStr(todayStr());
+    const active = goals.filter(g => g.status !== "RAGGIUNTO" && g.deadline);
+    if (!active.length) return null;
+
+    active.sort((a, b) => {
+        const da = dateFromStr(a.deadline) || today;
+        const db = dateFromStr(b.deadline) || today;
+        return da - db;
+    });
+
+    return active[0];
+}
+
+// Recupera la prossima occorrenza di transazione ricorrente in uscita
+function getNextRecurringExpense(includePrivate) {
+    const today = dateFromStr(todayStr());
+    const window = getRecurringOccurrencesWindow(0, 30, includePrivate); // 30 giorni in avanti
+    const outOnly = window.filter(ev => ev.transaction.direction === "out" && ev.is_future);
+    if (!outOnly.length) return null;
+
+    outOnly.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+    return outOnly[0];
+}
+   
 function getRecurringTransactions(includePrivate) {
     return app.data.transactions.filter(t => t.freq !== "once" && (includePrivate || !t.is_private));
 }
@@ -695,9 +763,14 @@ function render() {
 
 function renderDashboard() {
     const container = document.getElementById("content");
+
+    const today = dateFromStr(todayStr());
+    const todayStrVal = todayStr();
+
+    // Saldi attuali e futuri
     const balances = computeBalances(true);
     const total = balances.reduce((s,b) => s + b.balance, 0);
-    const today = dateFromStr(todayStr());
+
     const futureDate = app.futureBalanceDate ? dateFromStr(app.futureBalanceDate) : null;
     const futureBalances = futureDate ? computeBalances(true, futureDate) : null;
     const futureTotal = futureBalances
@@ -709,18 +782,27 @@ function renderDashboard() {
         for (const fb of futureBalances) {
             futureBalMap[fb.id] = fb.balance;
         }
-    }   
+    }
+
+    // Analisi mese corrente
     const startMonth = dateFromStr(today.toISOString().slice(0,7) + "-01");
     const [totInM, totOutM, spreadM] = computePeriodSummary(startMonth, today, true);
+
+    // Analisi salute / previsioni
     const healthText = analyzeHealth(true);
-    const firstLine = healthText.split("\n")[0].replace("Stato complessivo: ","");
-    const forecastText = forecastShortText(3,true).split("\n");
-    const nf = (x) => Number(x).toFixed(2).replace(".", ",");
+    const healthFirstLine = healthText.split("\n")[0].replace("Stato complessivo: ","");
+    const forecastTextLines = forecastShortText(3,true).split("\n");
+
+    // Safe daily spend (già calcolabile con funzione dedicata)
+    const safeDailyText = computeSafeDailySpendText(true);
+
     // Map rapida per conti e categorie (usata in timeline e tabella transazioni)
     const accById = {}; for (const a of app.data.accounts) accById[a.id] = a;
     const catById = {}; for (const c of app.data.categories) catById[c.id] = c;
 
-    // --- TIMELINE EVENTI ±3 GIORNI ---
+    const nf = (x) => Number(x).toFixed(2).replace(".", ",");
+
+    // ---------- TIMELINE EVENTI ±3 GIORNI ----------
 
     // Occorrenze di transazioni ricorrenti nella finestra [-3, +3] giorni
     const recWindow = getRecurringOccurrencesWindow(3, 3, true);
@@ -738,7 +820,6 @@ function renderDashboard() {
     const [bs, be, brows] = computeBudgetStatus("monthly");
     const endMonthStr = dateToStr(be);
 
-    const todayStrVal = todayStr();
     const daysPipeline = [];
     const eventsByDate = {};
 
@@ -783,48 +864,78 @@ function renderDashboard() {
         });
     }
 
+    // ---------- QUICK INSIGHTS: categorie, budget, obiettivi, ricorrenti ----------
+
+    const topSpending30 = getTopSpendingCategoriesWindow(30, true, 3);
+    const criticalBudget = getMostCriticalMonthlyBudget(true);
+    const closestGoal = getClosestActiveGoal();
+    const nextRecExpense = getNextRecurringExpense(true);
+
+    // ---------- ULTIME TRANSAZIONI ----------
+
+    const txs = app.data.transactions
+        .slice()
+        .sort((a,b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id))
+        .slice(0,20);
+
+    // ---------- HTML ----------
+
     let html = "";
     html += '<div class="page page-dashboard">';
     html += '<div class="page-header">';
     html += '<h1 class="page-title">Dashboard</h1>';
-    html += '<p class="page-subtitle">Panoramica sintetica e rapida del tuo stato finanziario</p>';
+    html += '<p class="page-subtitle">Panoramica completa: saldi, flussi del mese, eventi imminenti, budget e obiettivi in un unico colpo d’occhio.</p>';
     html += '</div>';
 
+    // --- RIGA KPI PRINCIPALI ---
     html += '<div class="cards-row cards-row--summary">';
-    html += '<article class="card card--summary card--info"><div class="card-title">Saldo totale (incl. saldi iniziali)</div><div class="card-value">'+h(nf(total))+' €</div></article>';
-    html += '<article class="card card--summary card--success"><div class="card-title">Entrate mese corrente</div><div class="card-value">'+h(nf(totInM))+' €</div></article>';
-    html += '<article class="card card--summary card--danger"><div class="card-title">Uscite mese corrente</div><div class="card-value">'+h(nf(totOutM))+' €</div></article>';
-    html += '<article class="card card--summary card--warning"><div class="card-title">Spread mese corrente</div><div class="card-value">'+h(nf(spreadM))+' €</div></article>';
+    html += '<article class="card card--summary card--info">';
+    html += '<div class="card-title">Saldo totale (incl. saldi iniziali)</div>';
+    html += '<div class="card-value">'+h(nf(total))+' €</div>';
+    html += '</article>';
+
+    html += '<article class="card card--summary card--success">';
+    html += '<div class="card-title">Entrate mese corrente</div>';
+    html += '<div class="card-value">'+h(nf(totInM))+' €</div>';
+    html += '</article>';
+
+    html += '<article class="card card--summary card--danger">';
+    html += '<div class="card-title">Uscite mese corrente</div>';
+    html += '<div class="card-value">'+h(nf(totOutM))+' €</div>';
+    html += '</article>';
+
+    html += '<article class="card card--summary card--warning">';
+    html += '<div class="card-title">Spread mese corrente</div>';
+    html += '<div class="card-value">'+h(nf(spreadM))+' €</div>';
+    html += '</article>';
     html += '</div>';
 
+    // --- RIGA KPI APPROFONDITI: salute, previsione, saldo futuro, limite giornaliero ---
     html += '<div class="cards-row cards-row--secondary">';
-    
+
     // Stato salute
     html += '<article class="card card--info">';
-    html += '<div class="card-title" data-tooltip="Valutazione basata su entrate/uscite, ricorrenti e saldo"><span>Stato salute finanziaria</span></div>';
-    html += '<div class="card-value">'+h(firstLine)+'</div>';
-    html += '<div class="card-note">Dettaglio nella sezione Report.</div>';
+    html += '<div class="card-title" data-tooltip="Valutazione basata su 30–90 giorni di storico, ricorrenti e saldo.">';
+    html += '<span>Stato salute finanziaria</span>';
+    html += '</div>';
+    html += '<div class="card-value">'+h(healthFirstLine)+'</div>';
+    html += '<div class="card-note">Dettaglio completo nella sezione Report &gt; Analisi salute.</div>';
     html += '</article>';
-    
+
     // Previsione 3 mesi
     html += '<article class="card card--info">';
     html += '<div class="card-title">Previsione prossimi 3 mesi (ricorrenti)</div>';
-    html += '<div class="card-note">'
-          + h(forecastText[0] || "")
-          + "<br>"
-          + h(forecastText[1] || "")
-          + "</div>";
+    html += '<div class="card-note">';
+    html += h(forecastTextLines[0] || "");
+    if (forecastTextLines[1]) html += "<br>" + h(forecastTextLines[1]);
+    html += '</div>';
     html += '</article>';
 
-    // ⬇️ NUOVA CARD: SALDO FUTURO
+    // Saldo futuro
     html += '<article class="card card--info">';
     html += '<div class="card-title">Saldo futuro alla data</div>';
     html += '<div class="card-value" id="future-balance-value">';
-    if (futureTotal !== null) {
-        html += h(nf(futureTotal)) + ' €';
-    } else {
-        html += '-';
-    }
+    html += (futureTotal !== null ? h(nf(futureTotal)) + ' €' : '-');
     html += '</div>';
     html += '<div class="card-note">';
     html += '<form id="futureBalanceForm" class="form form-inline">';
@@ -833,23 +944,35 @@ function renderDashboard() {
     html += '</form>';
     html += '</div>';
     html += '</article>';
-    html += '</div>';
 
+    // Limite giornaliero
+    html += '<article class="card card--warning">';
+    html += '<div class="card-title">Quanto puoi spendere da oggi</div>';
+    html += '<div class="card-note">'+h(safeDailyText)+'</div>';
+    html += '</article>';
+
+    html += '</div>'; // cards-row secondary
+
+    // --- LAYOUT DUE COLONNE PRINCIPALE ---
     html += '<div class="layout-two layout-two--main">';
+
+    // COLONNA SINISTRA: saldi + quick insights
     html += '<section class="section section--panel">';
-    html += '<header class="section-header"><h2 class="section-title">Saldi per conto</h2></header>';
-    html += '<div class="table-wrap"><table class="table table--accounts"><thead><tr>';
-    html += '<th>Conto</th><th>Tipologia</th><th>Saldo attuale</th>';
-    html += '<th>Saldo alla data selezionata</th><th>Valuta</th>';
+    html += '<header class="section-header">';
+    html += '<h2 class="section-title">Saldi per conto</h2>';
+    html += '</header>';
+    html += '<div class="table-wrap"><table class="table table--accounts">';
+    html += '<thead><tr>';
+    html += '<th>Conto</th><th>Tipologia</th><th>Saldo attuale</th><th>Saldo alla data selezionata</th><th>Valuta</th>';
     html += '</tr></thead><tbody>';
+
     if (!balances.length) {
-        html += '<tr><td colspan="4" class="table-empty">Nessun conto definito.</td></tr>';
+        html += '<tr><td colspan="5" class="table-empty">Nessun conto definito.</td></tr>';
     } else {
         for (const b of balances) {
             const futureVal = futureBalances
                 ? (futureBalMap[b.id] != null ? nf(futureBalMap[b.id]) : nf(b.balance))
                 : null;
-        
             html += '<tr>';
             html += '<td>'+h(b.name)+'</td>';
             html += '<td>'+h(b.type)+'</td>';
@@ -861,15 +984,72 @@ function renderDashboard() {
     }
     html += '</tbody></table></div>';
     html += '</section>';
-    // --- TIMELINE EVENTI ±3 GIORNI ---
+
+    // QUICK INSIGHTS incrociando categorie / budget / obiettivi / ricorrenti
+    html += '<section class="section section--panel">';
+    html += '<header class="section-header">';
+    html += '<h2 class="section-title">Insight rapidi</h2>';
+    html += '</header>';
+    html += '<ul class="insights-list">';
+
+    // Top categorie 30 giorni
+    if (!topSpending30.length) {
+        html += '<li class="muted">Nessuna uscita registrata negli ultimi 30 giorni.</li>';
+    } else {
+        const top = topSpending30[0];
+        html += '<li><strong>Categoria di spesa principale (ultimi 30 giorni):</strong> ';
+        html += h(top.cat) + " — " + h(nf(top.tot_out)) + " €</li>";
+        if (topSpending30.length > 1) {
+            html += '<li class="muted">Altre categorie rilevanti:&nbsp;';
+            html += topSpending30.slice(1).map(r => h(r.cat) + " ("+h(nf(r.tot_out))+" €)").join(", ");
+            html += '</li>';
+        }
+    }
+
+    // Budget più critico
+    if (criticalBudget && criticalBudget.row) {
+        const r = criticalBudget.row;
+        html += '<li><strong>Budget più a rischio:</strong> ' + h(r.category_name) +
+            " — usato " + h(nf(r.used)) + " € su " + h(nf(r.amount)) +
+            " (" + h(r.status) + ", Δ " + h(nf(r.diff)) + " €)";
+    } else {
+        html += '<li class="muted">Nessun budget mensile definito o dati insufficienti.</li>';
+    }
+
+    // Obiettivo più vicino
+    if (closestGoal) {
+        html += '<li><strong>Obiettivo con deadline più vicina:</strong> ' + h(closestGoal.name) +
+            " — manca " + h(nf(closestGoal.remaining)) + " € entro " + h(closestGoal.deadline || "-") +
+            (closestGoal.account_name ? " (conto: " + h(closestGoal.account_name) + ")" : "");
+    } else {
+        html += '<li class="muted">Nessun obiettivo con deadline futura non ancora raggiunto.</li>';
+    }
+
+    // Prossima spesa ricorrente
+    if (nextRecExpense) {
+        const t = nextRecExpense.transaction;
+        const accName = accById[t.account_id]?.name || "";
+        const catName = t.category_id ? (catById[t.category_id]?.name || "-") : "-";
+        html += '<li><strong>Prossima uscita ricorrente:</strong> ' + h(nextRecExpense.date) +
+            " — " + h(nf(Number(t.amount || 0))) + " €" +
+            (catName !== "-" ? " • " + h(catName) : "") +
+            (accName ? " • " + h(accName) : "");
+    } else {
+        html += '<li class="muted">Nessuna uscita ricorrente prevista nei prossimi 30 giorni.</li>';
+    }
+
+    html += '</ul>';
+    html += '<p class="section-note">Per approfondire, visita le sezioni Budget, Obiettivi e Report.</p>';
+    html += '</section>';
+
+    // COLONNA DESTRA: timeline + ultime transazioni
     html += '<section class="section section--panel">';
     html += '<header class="section-header">';
     html += '<h2 class="section-title">Timeline eventi (3 giorni fa / oggi / 3 giorni dopo)</h2>';
-    html += '<p class="section-subtitle">Transazioni ricorrenti, deadline obiettivi e fine mese budget per singolo giorno.</p>';
+    html += '<p class="section-note">Transazioni ricorrenti, deadline obiettivi e stato budget alla fine del mese, giorno per giorno.</p>';
     html += '</header>';
 
     html += '<div class="timeline">';
-
     for (const day of daysPipeline) {
         const dStr = day.dateStr;
 
@@ -905,7 +1085,6 @@ function renderDashboard() {
         html += '</div>'; // badge
 
         html += '<div class="timeline-events">';
-
         if (!evs.length) {
             html += '<div class="timeline-event timeline-event--empty">Nessun evento previsto per questo giorno.</div>';
         } else {
@@ -933,17 +1112,15 @@ function renderDashboard() {
         html += '</div>'; // timeline-events
         html += '</div>'; // timeline-day
     }
-
     html += '</div>'; // timeline
+
     html += '</section>';
 
+    // Ultime transazioni
     html += '<section class="section section--panel">';
     html += '<header class="section-header"><h2 class="section-title">Ultime transazioni registrate</h2></header>';
-    html += '<div class="table-wrap"><table class="table table--transactions"><thead><tr><th>Data</th><th>Conto</th><th>Tipo</th><th>Importo</th><th>Categoria</th><th>Privata</th><th>Descrizione</th></tr></thead><tbody>';
-    const txs = app.data.transactions
-        .slice()
-        .sort((a,b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id))
-        .slice(0,20);
+    html += '<div class="table-wrap"><table class="table table--transactions">';
+    html += '<thead><tr><th>Data</th><th>Conto</th><th>Tipo</th><th>Importo</th><th>Categoria</th><th>Privata</th><th>Descrizione</th></tr></thead><tbody>';
 
     if (!txs.length) {
         html += '<tr><td colspan="7" class="table-empty">Nessuna transazione.</td></tr>';
@@ -952,17 +1129,28 @@ function renderDashboard() {
             const sign = t.direction === "in" ? "+" : "-";
             const accName = accById[t.account_id]?.name || "";
             const catName = t.category_id ? (catById[t.category_id]?.name || "-") : "-";
-            const desc = t.description ? (t.description.length>40 ? t.description.slice(0,40)+"…" : t.description) : "";
-            html += '<tr class="row-transaction row-transaction--'+(t.direction==="in"?"income":"expense")+'"><td>'+h(t.date)+'</td><td>'+h(accName)+'</td><td>'+(t.direction==="in"?"Entrata":"Uscita")+'</td><td>'+h(sign+nf(Number(t.amount||0)))+'</td><td>'+h(catName)+'</td><td>'+(t.is_private?"Sì":"No")+'</td><td>'+h(desc)+'</td></tr>';
+            const desc = t.description ? (t.description.length>60 ? t.description.slice(0,60)+"…" : t.description) : "";
+            html += '<tr class="row-transaction row-transaction--'+(t.direction==="in"?"income":"expense")+'">';
+            html += '<td>'+h(t.date)+'</td>';
+            html += '<td>'+h(accName)+'</td>';
+            html += '<td>'+(t.direction==="in"?"Entrata":"Uscita")+'</td>';
+            html += '<td>'+h(sign+nf(Number(t.amount||0)))+'</td>';
+            html += '<td>'+h(catName)+'</td>';
+            html += '<td>'+(t.is_private?"Sì":"No")+'</td>';
+            html += '<td>'+h(desc)+'</td>';
+            html += '</tr>';
         }
     }
+
     html += '</tbody></table></div>';
     html += '</section>';
-    html += '</div>'; // layout-two
 
+    html += '</div>'; // layout-two
     html += '</div>'; // page
+
     container.innerHTML = html;
-    // --- Event handler per il saldo futuro ---
+
+    // Handler saldo futuro
     const fbForm = document.getElementById("futureBalanceForm");
     if (fbForm) {
         fbForm.addEventListener("submit", (e) => {
@@ -978,11 +1166,11 @@ function renderDashboard() {
                 }
                 app.futureBalanceDate = dateToStr(d);
             }
-            // Rende di nuovo SOLO la dashboard, mantenendo gli altri stati
             renderDashboard();
         });
-    }  
+    }
 }
+
 
 /* ===========================
  * RENDER: CONTI

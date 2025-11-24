@@ -3,25 +3,34 @@
    ========================================= */
 
 :root {
+    /* Background */
     --bg-main: #050710;
     --bg-main-alt: #090c16;
     --bg-elevated: #111627;
     --bg-elevated-soft: #171c2f;
     --bg-highlight: #1b2137;
     --bg-topbar: #050712;
+    --bg-table: #080b16;
 
+    /* Borders */
     --border-soft: #262b3a;
     --border-strong: #3a4257;
     --border-subtle: #151827;
 
+    /* Text */
     --text-primary: #f4f5ff;
     --text-secondary: #a5aec4;
     --text-muted: #7e8699;
     --text-soft: #626a7f;
 
+    /* Accenti principali */
     --accent-primary: #2f80ff;
     --accent-primary-soft: rgba(47, 128, 255, 0.16);
     --accent-primary-soft-2: rgba(47, 128, 255, 0.07);
+
+    /* Accenti aggiuntivi / stato */
+    --accent-secondary: #7b61ff;
+    --accent-secondary-soft: rgba(123, 97, 255, 0.18);
 
     --accent-success: #27ae60;
     --accent-success-soft: rgba(39, 174, 96, 0.16);
@@ -35,6 +44,16 @@
     --accent-info: #56ccf2;
     --accent-info-soft: rgba(86, 204, 242, 0.16);
 
+    /* Tipografia (scala) */
+    --fs-xxs: 10px;
+    --fs-xs: 11px;
+    --fs-sm: 12px;
+    --fs-md: 13px;
+    --fs-lg: 14px;
+    --fs-xl: 18px;
+    --fs-xxl: 22px;
+
+    /* Raggi, ombre, transizioni */
     --card-radius: 12px;
     --card-radius-lg: 16px;
     --card-shadow-soft: 0 12px 36px rgba(0, 0, 0, 0.55);
@@ -77,6 +96,8 @@ body,
     -webkit-font-smoothing: antialiased;
     display: flex;
     flex-direction: column;
+    font-size: var(--fs-sm);
+    line-height: 1.45;
 }
 
 /* Link */
@@ -124,9 +145,9 @@ a:hover {
 }
 
 .topbar-title {
-    font-size: 18px;
+    font-size: var(--fs-xl);
     font-weight: 700;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     white-space: nowrap;
     display: flex;
     align-items: center;
@@ -156,7 +177,7 @@ a:hover {
     padding: 6px 14px;
     border-radius: 999px;
     background: #111525;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     border: 1px solid rgba(74, 82, 114, 0.85);
     color: var(--text-secondary);
     cursor: pointer;
@@ -179,7 +200,7 @@ a:hover {
 }
 
 .nav-main .nav-btn.nav-btn--active {
-    background: var(--accent-primary);
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
     border-color: #6ea4ff;
     color: #f6f8ff;
     box-shadow:
@@ -229,7 +250,7 @@ a:hover {
 .app-message {
     padding: 8px 12px;
     border-radius: 999px;
-    font-size: 12px;
+    font-size: var(--fs-xs);
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -299,7 +320,7 @@ a:hover {
     background: var(--accent-danger-soft);
     border: 1px solid #ff8a80;
     color: #ffebee;
-    font-size: 13px;
+    font-size: var(--fs-sm);
 }
 
 /* =========================================
@@ -317,7 +338,7 @@ a:hover {
 }
 
 .page-title {
-    font-size: 22px;
+    font-size: var(--fs-xxl);
     font-weight: 700;
     margin: 0 0 4px;
     display: flex;
@@ -334,9 +355,20 @@ a:hover {
 }
 
 .page-subtitle {
-    font-size: 13px;
+    font-size: var(--fs-md);
     color: var(--text-muted);
     margin: 0 0 12px;
+}
+
+/* Distinzione pagine (solo margini verticali leggermente diversi) */
+.page-dashboard .page-header,
+.page-accounts .page-header,
+.page-categories .page-header,
+.page-transactions .page-header,
+.page-budgets .page-header,
+.page-goals .page-header,
+.page-reports .page-header {
+    margin-bottom: 8px;
 }
 
 /* =========================================
@@ -352,6 +384,12 @@ a:hover {
 
 .cards-row--summary {
     margin-bottom: 16px;
+}
+
+/* seconda riga dashboard (salute, forecast, saldo futuro, limite) */
+.cards-row--secondary {
+    margin-bottom: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
 }
 
 .card {
@@ -399,7 +437,7 @@ a:hover {
 }
 
 .card-title {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--text-muted);
     margin-bottom: 4px;
 }
@@ -414,7 +452,7 @@ a:hover {
 }
 
 .card-note {
-    font-size: 11px;
+    font-size: var(--fs-xxs);
     color: var(--text-soft);
     margin-top: 4px;
 }
@@ -441,7 +479,7 @@ a:hover {
     right: 9px;
     padding: 2px 8px;
     border-radius: 999px;
-    font-size: 10px;
+    font-size: var(--fs-xxs);
     background: rgba(0, 0, 0, 0.4);
     color: var(--text-secondary);
 }
@@ -497,6 +535,12 @@ a:hover {
     .page-title::after {
         display: none;
     }
+
+    .app-topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
 }
 
 /* =========================================
@@ -512,10 +556,14 @@ a:hover {
     position: relative;
 }
 
-/* panel variant */
-
-.section--panel {
-    /* già coperto, ma tieni spazio per differenze future */
+/* panel variant – spazio per differenze future */
+.section--panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    pointer-events: none;
 }
 
 .section-header {
@@ -527,16 +575,38 @@ a:hover {
 }
 
 .section-title {
-    font-size: 14px;
+    font-size: var(--fs-lg);
     font-weight: 600;
     color: #f4f5ff;
     margin: 0;
 }
 
 .section-note {
-    font-size: 11px;
+    font-size: var(--fs-xs);
     color: var(--text-muted);
     margin-top: 6px;
+}
+
+/* =========================================
+   INSIGHTS (lista nella dashboard)
+   ========================================= */
+
+.insights-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.insights-list li {
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+}
+
+.insights-list li strong {
+    color: var(--text-primary);
 }
 
 /* =========================================
@@ -548,13 +618,13 @@ a:hover {
     overflow-x: auto;
     border-radius: 10px;
     border: 1px solid var(--border-soft);
-    background: #080b16;
+    background: var(--bg-table);
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: var(--fs-xs);
     border-radius: 10px;
     overflow: hidden;
 }
@@ -575,6 +645,8 @@ th {
     top: 0;
     z-index: 1;
 }
+
+/* righe di corpo tabella */
 
 tbody tr:nth-child(even) td {
     background: rgba(16, 20, 35, 0.98);
@@ -603,7 +675,7 @@ tbody tr:hover td {
 .table-empty {
     text-align: center;
     padding: 10px 6px;
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--text-muted);
 }
 
@@ -611,6 +683,13 @@ tbody tr:hover td {
 
 td.num {
     text-align: right;
+}
+
+/* Tabelle specifiche (solo fine-tuning spazi) */
+
+.table--accounts th:nth-child(1),
+.table--accounts td:nth-child(1) {
+    white-space: nowrap;
 }
 
 /* =========================================
@@ -634,7 +713,7 @@ td.num {
 }
 
 .form-label {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--text-secondary);
 }
 
@@ -655,7 +734,7 @@ td.num {
     background: #0d111d;
     color: var(--text-primary);
     padding: 6px 8px;
-    font-size: 12px;
+    font-size: var(--fs-sm);
     outline: none;
     transition:
         border-color var(--trans-fast),
@@ -682,6 +761,16 @@ td.num {
 .input-checkbox {
     width: auto;
     accent-color: var(--accent-primary);
+}
+
+/* etichetta checkbox */
+
+.checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
 }
 
 /* Placeholder */
@@ -725,14 +814,14 @@ textarea::placeholder {
     }
 
     .form-label {
-        font-size: 11px;
+        font-size: var(--fs-xxs);
     }
 }
 
 /* Help */
 
 .form-help {
-    font-size: 11px;
+    font-size: var(--fs-xs);
     color: var(--text-muted);
     margin-top: 4px;
 }
@@ -748,7 +837,7 @@ textarea::placeholder {
     padding: 6px 12px;
     border-radius: 999px;
     border: 1px solid transparent;
-    font-size: 12px;
+    font-size: var(--fs-sm);
     cursor: pointer;
     background: var(--accent-primary);
     color: #f5f8ff;
@@ -763,7 +852,7 @@ textarea::placeholder {
 }
 
 .btn--primary {
-    background: var(--accent-primary);
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
     border-color: #2f80ff;
 }
 
@@ -780,7 +869,7 @@ textarea::placeholder {
 
 .btn--small {
     padding: 3px 9px;
-    font-size: 11px;
+    font-size: var(--fs-xxs);
 }
 
 .btn:hover:not(:disabled) {
@@ -820,7 +909,7 @@ textarea::placeholder {
 
 .muted {
     color: var(--text-muted);
-    font-size: 11px;
+    font-size: var(--fs-xs);
 }
 
 /* =========================================
@@ -829,7 +918,7 @@ textarea::placeholder {
 
 pre {
     white-space: pre-wrap;
-    font-size: 12px;
+    font-size: var(--fs-xs);
     background: #0b0f1d;
     padding: 8px 10px;
     border-radius: 10px;
@@ -839,6 +928,10 @@ pre {
     max-height: 280px;
     overflow: auto;
     margin: 0;
+}
+
+pre.report-block {
+    font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 /* =========================================
@@ -860,7 +953,7 @@ pre {
     background: #111521;
     color: #e7ebff;
     padding: 4px 6px;
-    font-size: 10px;
+    font-size: var(--fs-xxs);
     border-radius: 6px;
     border: 1px solid #2c3247;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);

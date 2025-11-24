@@ -618,9 +618,13 @@ function renderDashboard() {
     // Previsione 3 mesi
     html += '<article class="card card--info">';
     html += '<div class="card-title">Previsione prossimi 3 mesi (ricorrenti)</div>';
-    html += '<div class="card-note">'+h(forecastText[0] || "") + "<br>" + h(forecastText[1] || "") + "</div>';
+    html += '<div class="card-note">'
+          + h(forecastText[0] || "")
+          + "<br>"
+          + h(forecastText[1] || "")
+          + "</div>";
     html += '</article>';
-    
+
     // ⬇️ NUOVA CARD: SALDO FUTURO
     html += '<article class="card card--info">';
     html += '<div class="card-title">Saldo futuro alla data</div>';

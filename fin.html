@@ -180,6 +180,66 @@ function diffDays(a, b) {
     return Math.floor(ms / 86400000);
 }
 
+// Differenza in mesi "interi" tra due date (per ricorrenze mensili)
+// start <= limit
+function monthsDiff(start, limit) {
+    let y = limit.getFullYear() - start.getFullYear();
+    let m = limit.getMonth() - start.getMonth();
+    let diff = y * 12 + m;
+    // se il giorno del mese di "limit" è prima del giorno di "start",
+    // la ricorrenza di quel mese non è ancora scattata
+    if (limit.getDate() < start.getDate()) diff -= 1;
+    return diff;
+}
+
+// Conta quante volte una transazione ricorrente "t" è scattata
+// dalla sua data iniziale t.date fino a "limitDate" (incluso).
+// Se la frequenza è "once" o mancante, restituisce 1 solo se t.date <= limitDate.
+function countOccurrencesUpTo(t, limitDate) {
+    const start = dateFromStr(t.date);
+    if (!start || !limitDate) return 0;
+
+    // Se il limite è prima della data di inizio, non è ancora scattata
+    if (limitDate < start) return 0;
+
+    // Una tantum
+    if (!t.freq || t.freq === "once") {
+        return 1;
+    }
+
+    const freq = t.freq;
+
+    if (freq === "daily") {
+        // ogni giorno a partire da start
+        return diffDays(start, limitDate) + 1;
+    }
+
+    if (freq === "weekly") {
+        const days = diffDays(start, limitDate);
+        return Math.floor(days / 7) + 1;
+    }
+
+    if (freq === "monthly") {
+        const md = monthsDiff(start, limitDate);
+        return md >= 0 ? md + 1 : 0;
+    }
+
+    if (freq === "yearly") {
+        let years = limitDate.getFullYear() - start.getFullYear();
+        // se non abbiamo ancora raggiunto il "compleanno" di quest'anno, togli 1
+        if (
+            limitDate.getMonth() < start.getMonth() ||
+            (limitDate.getMonth() === start.getMonth() && limitDate.getDate() < start.getDate())
+        ) {
+            years -= 1;
+        }
+        return years >= 0 ? years + 1 : 0;
+    }
+
+    // fallback: considerala una tantum
+    return 1;
+}
+    
 function setMessage(text, type = "info") {
     const m = document.getElementById("message");
     if (!text) {
@@ -229,10 +289,15 @@ function getCategories() {
 }
 
 function computeBalances(includePrivate, asOfDate) {
-    // data limite: se non fornita, uso oggi
+    // oggi "reale"
+    const today = dateFromStr(todayStr());
+
+    // data limite per il calcolo saldi:
+    // - se non fornita → oggi (istantanea reale)
+    // - se fornita → saldo alla data (può essere anche futura → previsione)
     const limit = asOfDate
         ? dateFromStr(dateToStr(asOfDate))
-        : dateFromStr(todayStr());
+        : today;
 
     const accs = app.data.accounts.map(a => ({
         id: a.id,
@@ -244,21 +309,27 @@ function computeBalances(includePrivate, asOfDate) {
     }));
 
     const txs = app.data.transactions;
+
     for (const t of txs) {
         if (!includePrivate && t.is_private) continue;
 
-        const d = dateFromStr(t.date);
-        if (!d) continue;
-
-        // ⬅️ ESCLUDO le transazioni nel futuro rispetto a "limit"
-        if (limit && d > limit) continue;
-
         const acc = accs.find(a => a.id === t.account_id);
         if (!acc) continue;
+
         const amount = Number(t.amount || 0);
-        if (t.direction === "in") acc.balance += amount;
-        else acc.balance -= amount;
+        if (!amount) continue;
+
+        const occ = countOccurrencesUpTo(t, limit);
+
+        // occ = 0  → transazione non ancora "scattata" entro limit
+        if (occ <= 0) continue;
+
+        const totalAmount = amount * occ;
+
+        if (t.direction === "in") acc.balance += totalAmount;
+        else acc.balance -= totalAmount;
     }
+
     return accs;
 }
 
@@ -319,6 +390,60 @@ function getRecurringTransactions(includePrivate) {
     return app.data.transactions.filter(t => t.freq !== "once" && (includePrivate || !t.is_private));
 }
 
+// Restituisce le occorrenze di transazioni ricorrenti in una finestra
+// [oggi - daysBack, oggi + daysForward], usate solo per pipeline/eventi.
+function getRecurringOccurrencesWindow(daysBack, daysForward, includePrivate) {
+    const today = dateFromStr(todayStr());
+    const startWindow = addDays(today, -Math.abs(daysBack || 0));
+    const endWindow   = addDays(today,  Math.abs(daysForward || 0));
+
+    const recs = getRecurringTransactions(includePrivate);
+    const result = [];
+
+    for (const t of recs) {
+        const start = dateFromStr(t.date);
+        if (!start) continue;
+
+        // se la ricorrenza inizia dopo la fine della finestra, salta
+        if (start > endWindow) continue;
+
+        let current = new Date(start.getTime());
+
+        while (current <= endWindow) {
+            // se current è dentro la finestra, aggiungi l'evento
+            if (current >= startWindow) {
+                result.push({
+                    date: dateToStr(current),
+                    is_past: current < today,
+                    is_today: current.getTime() === today.getTime(),
+                    is_future: current > today,
+                    transaction: t
+                });
+            }
+
+            // passa all'occorrenza successiva in base alla freq
+            if (t.freq === "daily") {
+                current = addDays(current, 1);
+            } else if (t.freq === "weekly") {
+                current = addDays(current, 7);
+            } else if (t.freq === "monthly") {
+                current = addMonths(current, 1);
+            } else if (t.freq === "yearly") {
+                const next = new Date(current);
+                next.setFullYear(next.getFullYear() + 1);
+                current = next;
+            } else {
+                // se per qualche motivo non è ricorrente, esci dal loop
+                break;
+            }
+        }
+    }
+
+    // Ordina per data
+    result.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+    return result;
+}
+    
 function netMonthlyFromRecurring(includePrivate) {
     const recs = getRecurringTransactions(includePrivate);
     let totalIn = 0, totalOut = 0;
@@ -591,6 +716,72 @@ function renderDashboard() {
     const firstLine = healthText.split("\n")[0].replace("Stato complessivo: ","");
     const forecastText = forecastShortText(3,true).split("\n");
     const nf = (x) => Number(x).toFixed(2).replace(".", ",");
+    // Map rapida per conti e categorie (usata in timeline e tabella transazioni)
+    const accById = {}; for (const a of app.data.accounts) accById[a.id] = a;
+    const catById = {}; for (const c of app.data.categories) catById[c.id] = c;
+
+    // --- TIMELINE EVENTI ±3 GIORNI ---
+
+    // Occorrenze di transazioni ricorrenti nella finestra [-3, +3] giorni
+    const recWindow = getRecurringOccurrencesWindow(3, 3, true);
+
+    // Stato obiettivi (per usare deadline e progressi)
+    const goalsStatus = computeGoalsStatus();
+    const goalsByDeadline = {};
+    for (const g of goalsStatus) {
+        if (!g.deadline) continue;
+        if (!goalsByDeadline[g.deadline]) goalsByDeadline[g.deadline] = [];
+        goalsByDeadline[g.deadline].push(g);
+    }
+
+    // Stato budget mensile corrente (per fine mese)
+    const [bs, be, brows] = computeBudgetStatus("monthly");
+    const endMonthStr = dateToStr(be);
+
+    const todayStrVal = todayStr();
+    const daysPipeline = [];
+    const eventsByDate = {};
+
+    // Raccogli eventi ricorrenti per data
+    for (const occ of recWindow) {
+        if (!eventsByDate[occ.date]) eventsByDate[occ.date] = [];
+        const t = occ.transaction;
+        const sign = t.direction === "in" ? "+" : "-";
+        const accName = accById[t.account_id]?.name || "";
+        const catName = t.category_id ? (catById[t.category_id]?.name || "-") : "-";
+        eventsByDate[occ.date].push({
+            kind: "rec_tx",
+            label: (t.direction === "in" ? "Entrata" : "Uscita") + " ricorrente"
+                + (catName !== "-" ? " • " + catName : "")
+                + (accName ? " • " + accName : ""),
+            amount: sign + nf(Number(t.amount || 0))
+        });
+    }
+
+    // Raccogli eventi obiettivi per data di deadline
+    for (const dStr in goalsByDeadline) {
+        if (!eventsByDate[dStr]) eventsByDate[dStr] = [];
+        for (const g of goalsByDeadline[dStr]) {
+            eventsByDate[dStr].push({
+                kind: "goal",
+                label: "Deadline obiettivo: " + g.name,
+                extra: "Mancano " + nf(g.remaining) + " €"
+            });
+        }
+    }
+
+    // Giorni da -3 a +3 rispetto a oggi
+    for (let delta = -3; delta <= 3; delta++) {
+        const d = addDays(today, delta);
+        const dStr = dateToStr(d);
+        daysPipeline.push({
+            date: d,
+            dateStr: dStr,
+            is_today: dStr === todayStrVal,
+            is_past: d < today,
+            is_future: d > today
+        });
+    }
 
     let html = "";
     html += '<div class="page page-dashboard">';
@@ -670,13 +861,90 @@ function renderDashboard() {
     }
     html += '</tbody></table></div>';
     html += '</section>';
+    // --- TIMELINE EVENTI ±3 GIORNI ---
+    html += '<section class="section section--panel">';
+    html += '<header class="section-header">';
+    html += '<h2 class="section-title">Timeline eventi (3 giorni fa / oggi / 3 giorni dopo)</h2>';
+    html += '<p class="section-subtitle">Transazioni ricorrenti, deadline obiettivi e fine mese budget per singolo giorno.</p>';
+    html += '</header>';
+
+    html += '<div class="timeline">';
+
+    for (const day of daysPipeline) {
+        const dStr = day.dateStr;
+
+        // Copia shallow degli eventi di quel giorno (se presenti)
+        const evs = eventsByDate[dStr] ? eventsByDate[dStr].slice() : [];
+
+        // Se questo giorno è fine mese e ci sono budget, aggiungi eventi budget
+        if (dStr === endMonthStr && brows && brows.length) {
+            for (const r of brows) {
+                evs.push({
+                    kind: "budget",
+                    label: "Budget " + r.category_name,
+                    extra: r.status + " — Δ " + nf(r.diff) + " €"
+                });
+            }
+        }
+
+        const badgeClass =
+            day.is_today ? "timeline-day-badge timeline-day-badge--today" :
+            day.is_future ? "timeline-day-badge timeline-day-badge--future" :
+                            "timeline-day-badge timeline-day-badge--past";
+
+        html += '<div class="timeline-day">';
+        html += '<div class="'+badgeClass+'">';
+        if (day.is_today) {
+            html += '<div class="timeline-day-label">Oggi</div>';
+        } else if (day.is_future) {
+            html += '<div class="timeline-day-label">In arrivo</div>';
+        } else {
+            html += '<div class="timeline-day-label">Passato</div>';
+        }
+        html += '<div class="timeline-day-date">'+h(dStr)+'</div>';
+        html += '</div>'; // badge
+
+        html += '<div class="timeline-events">';
+
+        if (!evs.length) {
+            html += '<div class="timeline-event timeline-event--empty">Nessun evento previsto per questo giorno.</div>';
+        } else {
+            for (const ev of evs) {
+                let kindLabel = "";
+                if (ev.kind === "rec_tx") kindLabel = "Ricorrente";
+                else if (ev.kind === "goal") kindLabel = "Obiettivo";
+                else if (ev.kind === "budget") kindLabel = "Budget";
+
+                html += '<div class="timeline-event">';
+                if (kindLabel) {
+                    html += '<span class="timeline-event-tag">'+h(kindLabel)+'</span>';
+                }
+                html += '<span class="timeline-event-text">'+h(ev.label)+'</span>';
+                if (ev.amount) {
+                    html += '<span class="timeline-event-amount">'+h(ev.amount)+' €</span>';
+                }
+                if (ev.extra) {
+                    html += '<div class="timeline-event-extra">'+h(ev.extra)+'</div>';
+                }
+                html += '</div>';
+            }
+        }
+
+        html += '</div>'; // timeline-events
+        html += '</div>'; // timeline-day
+    }
+
+    html += '</div>'; // timeline
+    html += '</section>';
 
     html += '<section class="section section--panel">';
     html += '<header class="section-header"><h2 class="section-title">Ultime transazioni registrate</h2></header>';
     html += '<div class="table-wrap"><table class="table table--transactions"><thead><tr><th>Data</th><th>Conto</th><th>Tipo</th><th>Importo</th><th>Categoria</th><th>Privata</th><th>Descrizione</th></tr></thead><tbody>';
-    const txs = app.data.transactions.slice().sort((a,b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id)).slice(0,20);
-    const accById = {}; for (const a of app.data.accounts) accById[a.id] = a;
-    const catById = {}; for (const c of app.data.categories) catById[c.id] = c;
+    const txs = app.data.transactions
+        .slice()
+        .sort((a,b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.id - a.id))
+        .slice(0,20);
+
     if (!txs.length) {
         html += '<tr><td colspan="7" class="table-empty">Nessuna transazione.</td></tr>';
     } else {

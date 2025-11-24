@@ -396,7 +396,12 @@ function getTopSpendingCategoriesWindow(days, includePrivate, limit) {
     const start = addDays(today, -Math.abs(days) + 1);
     const dirFilter = "out";
     const rows = computeCategoryTotals(start, today, includePrivate, dirFilter);
-    return rows.slice(0, limit || 3);
+
+    // consideriamo solo categorie con uscite > 0 e le ordiniamo per tot_out decrescente
+    const onlyOut = rows.filter(r => (r.tot_out || 0) > 0);
+    onlyOut.sort((a, b) => (b.tot_out || 0) - (a.tot_out || 0));
+
+    return onlyOut.slice(0, limit || 3);
 }
 
 // Trova il budget mensile "più critico" (più sfondato o più lontano da OK)

@@ -1,122 +1,59 @@
-<!DOCTYPE html>
-<html lang="it">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Login con Wax e Anchor</title>
+  <meta charset="utf-8">
+  <title>Dwarfs Cave – Goblins, Orcs & Weekly Pass</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h1 { color: #333; }
-    button { margin: 5px; padding: 10px 20px; cursor: pointer; }
-    #result { margin-top: 20px; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #02030a;
+      color: #f5f5f5;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    body {
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+    }
+    .page-shell {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 12px;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 <body>
-  <h1>Login con Wax e Anchor</h1>
-  <button id="btnWax">Login con Wax</button>
-  <button id="btnAnchor">Login con Anchor</button>
-  <div id="resultDiv"></div>
+  <div class="page-shell">
+    <div id="goblin-content"></div>
+  </div>
 
-  <!-- Usa type="module" per gli import ES -->
-  <script type="module">
-    // Importa WaxJS dal percorso corretto come default export
-    import WaxJS from "https://cdn.jsdelivr.net/npm/@waxio/waxjs@1.7.1/dist/waxjs.esm.js";
+  <!-- Config: backend base URL and user auth data -->
+  <script>
+    window.CAVE_API_BASE = "https://iamemanuele.pythonanywhere.com";
 
-    // Fissa le versioni compatibili di anchor-link e anchor-link-browser-transport
-    import AnchorLink from "https://cdn.skypack.dev/anchor-link@3.5.0";
-    import AnchorLinkBrowserTransport from "https://cdn.skypack.dev/anchor-link-browser-transport@3.5.0";
+    window.userData = {
+      wax_account: "yourwaxaccount.wam",
+      user_id: "USER_ID_HERE",
+      usx_token: "USX_TOKEN_HERE"
+    };
 
-    class User {
-      constructor() {
-        this.appName = 'Chaos Marketplace';
-        // Imposta il nodo RPC: per mainnet usa 'https://wax.pink.gg'
-        this.rpcEndpoint = 'https://wax.pink.gg';
-        this.wax = null;
-        this.anchorSession = null;
-        // Configurazione per Anchor
-        this.transport = new AnchorLinkBrowserTransport();
-        this.anchorLink = new AnchorLink({
-          transport: this.transport,
-          chains: [
-            {
-              chainId: '1064487b3cd1a897ce03ae5b6a865651747e2e152090f99c1d19d44e01aea5a4',
-              nodeUrl: 'https://wax.eosphere.io'
-            }
-          ]
-        });
-      }
-
-      // Login con Wax Cloud Wallet
-      async waxLogin() {
-        try {
-          this.wax = new WaxJS({ rpcEndpoint: this.rpcEndpoint, tryAutoLogin: true });
-          const userAccount = await this.wax.login();
-          console.log("Wax login account:", userAccount);
-          return userAccount;
-        } catch (e) {
-          console.error("Errore in waxLogin:", e.message);
-          return null;
-        }
-      }
-
-      // Login con Anchor
-      async anchorConnect() {
-        try {
-          // Inizializza anche WaxJS per poter effettuare chiamate RPC
-          this.wax = new WaxJS({ rpcEndpoint: this.rpcEndpoint, tryAutoLogin: true });
-          const identity = await this.anchorLink.login('mydapp');
-          this.anchorSession = identity.session;
-          const account = identity.session.auth.actor.toString();
-          console.log("Anchor login account:", account);
-          return account;
-        } catch (e) {
-          console.error("Errore in anchorConnect:", e);
-          return null;
-        }
-      }
-
-      // Recupera il bilancio (core_liquid_balance) dell’account WAX
-      async getWaxBalance(account) {
-        if (!account) return null;
-        try {
-          const accountData = await this.wax.rpc.get_account(account);
-          return accountData.core_liquid_balance || "0 WAX";
-        } catch (e) {
-          console.error("Errore in getWaxBalance:", e);
-          return null;
-        }
-      }
-    }
-
-    const userService = new User();
-    const resultDiv = document.getElementById("result");
-
-    function displayResult(account, balance) {
-      resultDiv.innerHTML = `<p><strong>Account:</strong> ${account}</p>
-                             <p><strong>Bilancio:</strong> ${balance}</p>`;
-    }
-
-    document.getElementById("btnWax").addEventListener("click", async () => {
-      resultDiv.innerHTML = "<p>Login con Wax in corso...</p>";
-      const account = await userService.waxLogin();
-      if (account) {
-        const balance = await userService.getWaxBalance(account);
-        displayResult(account, balance);
-      } else {
-        resultDiv.innerHTML = "<p>Errore durante il login con Wax.</p>";
-      }
-    });
-
-    document.getElementById("btnAnchor").addEventListener("click", async () => {
-      resultDiv.innerHTML = "<p>Login con Anchor in corso...</p>";
-      const account = await userService.anchorConnect();
-      if (account) {
-        const balance = await userService.getWaxBalance(account);
-        displayResult(account, balance);
-      } else {
-        resultDiv.innerHTML = "<p>Errore durante il login con Anchor.</p>";
-      }
-    });
+    // Set to true if this page is used as a read-only overlay (OBS, stream, etc.)
+    window.CAVE_OVERLAY = false;
   </script>
+
+  <!-- Frontend logic: use the JS file you already have, unchanged -->
+  <!-- Option 1: external file (recommended) -->
+  <script src="/js/cave_logic_frontend.js"></script>
+
+  <!--
+  Option 2: inline script
+  If you prefer inline, paste here EXACTLY the <script>...</script> code
+  I gave you in the previous message, instead of the src above.
+  -->
 </body>
 </html>

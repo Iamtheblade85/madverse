@@ -324,8 +324,15 @@
   function syncUserFromStorage() {
     try {
       const raw = localStorage.getItem('userData');
-      if (!raw) return;
-      const u = JSON.parse(raw);
+      let u = null;
+      if (raw) {
+        u = JSON.parse(raw);
+      } else if (window.userData) {
+        // fallback ai dati bootstrap dalla pagina
+        u = window.userData;
+        // opzionale: salvali in localStorage per le prossime volte
+        localStorage.setItem('userData', JSON.stringify(u));
+      }
       if (!u) return;
       State.user.wax_account = u.wax_account || u.wax || '';
       State.user.user_id = u.user_id || u.userId || '';
@@ -2520,7 +2527,7 @@
   function startSSE() {
     if (State.net.sse) return;
     try {
-      const es = new EventSource(CONFIG.apiBase + '/events');
+      const es = new EventSource(CONFIG.apiBase + '/2events?cv=1');
       es.onmessage = ev => {
         try {
           const msg = JSON.parse(ev.data);

@@ -285,7 +285,7 @@
       const id = setTimeout(() => ctrl.abort(), timeout);
       try {
         const res = await fetch(CONFIG.apiBase + path, {
-          credentials: 'include',
+          // ❌ NIENTE credentials: 'include'
           signal: ctrl.signal,
         });
         const data = await res.json().catch(() => null);
@@ -302,7 +302,7 @@
       try {
         const res = await fetch(CONFIG.apiBase + path, {
           method: 'POST',
-          credentials: 'include',
+          // ❌ NIENTE credentials: 'include'
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body || {}),
           signal: ctrl.signal,

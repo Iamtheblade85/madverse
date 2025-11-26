@@ -1058,58 +1058,47 @@
     // ---------- SYNC FROM SERVER SNAPSHOT ----------
 
     syncExpeditions(expeditions = []) {
-      // expeditions: [{ expedition_id, wax_account, goblins: [{id, x,y}], ... }, ...]
-      const seenGoblinIds = new Set();
-
-      expeditions.forEach((exp, expIdx) => {
+      // Ogni spedizione viene rappresentata da UN solo GoblinEntity
+    
+      const seenExpIds = new Set();
+      const { minX, maxX, minY, maxY } = this.getBounds();
+    
+      expeditions.forEach((exp, idx) => {
         const owner = exp.wax_account || exp.owner || 'player';
-        const expId = exp.expedition_id ?? exp.id ?? owner ?? expIdx;
-        const gobArr = Array.isArray(exp.goblins)
-          ? exp.goblins
-          : Array.isArray(exp.positions)
-          ? exp.positions
-          : [];
-
-        gobArr.forEach((gData, idx) => {
-          const gId = String(gData.id ?? `${expId}|${idx}`);
-          seenGoblinIds.add(gId);
-
-          let g = this.goblinById.get(gId);
-          const color = colorByIndex(idx);
-
-          const hasServerPos =
-            typeof gData.x === 'number' && typeof gData.y === 'number';
-
-          const { minX, maxX, minY, maxY } = this.getBounds();
-          if (!g) {
-            const gx = hasServerPos
-              ? clamp(gData.x, minX, maxX)
-              : randRange(minX + 1, maxX - 1);
-            const gy = hasServerPos
-              ? clamp(gData.y, minY, maxY)
-              : randRange(minY + 1, maxY - 1);
-
-            g = new GoblinEntity({
-              id: gId,
-              owner,
-              color,
-              x: gx,
-              y: gy,
-            });
-            this.goblinById.set(gId, g);
-          }
-
-          // se il server manda la posizione, la usiamo come punto di verità
-          if (hasServerPos) {
-            g.x = clamp(gData.x, minX, maxX);
-            g.y = clamp(gData.y, minY, maxY);
-          }
-        });
+        const expId = String(exp.expedition_id ?? exp.id ?? idx);
+    
+        seenExpIds.add(expId);
+    
+        let g = this.goblinById.get(expId);
+        const color = colorByIndex(idx);
+    
+        if (!g) {
+          // posizione iniziale casuale dentro ai bounds
+          const gx = randRange(minX + 1, maxX - 1);
+          const gy = randRange(minY + 1, maxY - 1);
+    
+          g = new GoblinEntity({
+            id: expId,
+            owner,
+            color,
+            x: gx,
+            y: gy,
+          });
+    
+          // opzionale: memorizza qualche info sulla spedizione
+          g._groupSize = exp.total_goblins ?? (Array.isArray(exp.goblin_ids) ? exp.goblin_ids.length : 0);
+          g._expeditionId = expId;
+    
+          this.goblinById.set(expId, g);
+        } else {
+          // se vuoi aggiornare qualche campo ad ogni snapshot, fallo qui
+          g._groupSize = exp.total_goblins ?? g._groupSize ?? 0;
+        }
       });
-
-      // rimuovi goblin che non esistono più server-side
+    
+      // Rimuovi i goblin che non hanno più una spedizione corrispondente
       for (const [id] of this.goblinById) {
-        if (!seenGoblinIds.has(id)) {
+        if (!seenExpIds.has(id)) {
           this.goblinById.delete(id);
         }
       }
@@ -1870,15 +1859,27 @@
     `;
     right.appendChild(panelBonus);
 
-    // TAB SWITCH
+    // TAB SWITCH (versione esplicita + re-render contenuti)
     const tabButtons = tabs.querySelectorAll('.gd-tab');
     tabButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const panelName = btn.dataset.panel;
-        tabButtons.forEach(b => b.classList.toggle('active', b === btn));
-        [panelMy, panelGlobal, panelRecent, panelBonus].forEach(p => {
-          p.hidden = p.dataset.panel !== panelName;
+    
+        // stato visuale del tab
+        tabButtons.forEach(b => {
+          b.classList.toggle('active', b === btn);
         });
+    
+        // mostra/nascondi pannelli
+        panelMy.hidden     = panelName !== 'my-exp';
+        panelGlobal.hidden = panelName !== 'global';
+        panelRecent.hidden = panelName !== 'recent';
+        panelBonus.hidden  = panelName !== 'bonus';
+    
+        // (opzionale ma utile) re-render dei dati del tab che è appena stato aperto
+        if (panelName === 'global') renderGlobalPanel();
+        if (panelName === 'recent') renderRecentPanel();
+        if (panelName === 'bonus')  renderBonusPanel();
       });
     });
 

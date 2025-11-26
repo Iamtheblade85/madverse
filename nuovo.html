@@ -424,35 +424,64 @@
     }
 
     draw(ctx, t) {
-      if (!Assets.chest?.complete) return;
-      const { toScreen, cellSize } = t;
+      if (!Assets.goblin?.complete) return;
+      const { toScreen, cellSize, canvasWidth, canvasHeight } = t;
+
+      // posizione del goblin in coordinate canvas
       const pos = toScreen(this.x, this.y);
-      const size = cellSize * 1.1;
-      const haloR = size * 0.9;
+      const size = cellSize * 3.5;
+      const bob = Math.sin(this.walkPhase) * size * 0.08;
+
+      // trail prima
+      this.drawTrail(ctx, t);
+
+      // posizione finale dello sprite (già “bobbed”)
+      const gx = pos.x;
+      const gy = pos.y + bob;
 
       ctx.save();
-      ctx.translate(pos.x, pos.y);
 
-      // halo
-      if (this.claimable && !this.taken) {
-        const grad = ctx.createRadialGradient(
-          0,
-          0,
-          haloR * 0.1,
-          0,
-          0,
-          haloR * 1.1
-        );
-        grad.addColorStop(0, 'rgba(250,204,21,0.35)');
-        grad.addColorStop(1, 'rgba(250,204,21,0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(0, 0, haloR, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      // disegna lo sprite del goblin SENZA translate
+      ctx.drawImage(
+        Assets.goblin,
+        gx - size / 2,
+        gy - size / 2,
+        size,
+        size
+      );
 
-      // chest sprite
-      ctx.drawImage(Assets.chest, -size / 2, -size / 2, size, size);
+      // label WAX account
+      const label = this.owner || 'goblin';
+      const labelW = size * 1.8;
+      const labelH = size * 0.45;
+      const fontSize = Math.max(10, size * 0.26);
+
+      // box centrato sotto il goblin (partendo da gx,gy)
+      let boxX = gx - labelW / 2;
+      let boxY = gy + size * 0.6;
+
+      // clamp dentro il canvas per non tagliare troppo
+      boxX = clamp(boxX, 4, canvasWidth - labelW - 4);
+      boxY = clamp(boxY, 4, canvasHeight - labelH - 4);
+
+      ctx.font = `${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // sfondo label
+      ctx.fillStyle = 'rgba(15,23,42,0.9)';
+      ctx.beginPath();
+      ctx.roundRect(boxX, boxY, labelW, labelH, labelH / 2);
+      ctx.fill();
+
+      // bordo con colore del goblin
+      ctx.strokeStyle = this.color;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      // testo
+      ctx.fillStyle = '#e5e7eb';
+      ctx.fillText(label, boxX + labelW / 2, boxY + labelH / 2);
 
       ctx.restore();
     }
@@ -1415,6 +1444,10 @@
         flex-direction:column;
         gap:6px;
       }
+      .gd-panel[hidden]{
+        display:none !important;
+      }
+    
       .gd-panel-header{
         display:flex;
         align-items:center;

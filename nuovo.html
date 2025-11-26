@@ -901,18 +901,47 @@
       c.fillStyle = grad;
       c.fillRect(0, 0, w, h);
 
-      // tiled bg on play area
+      // tiled bg on play area (scala automaticamente la cave-grid in base alla cellSize)
       const { cellSize, offsetX, offsetY } = this.transform;
       const areaW = this.world.width * cellSize;
       const areaH = this.world.height * cellSize;
+    
       c.save();
       c.translate(offsetX, offsetY);
-      const pattern = c.createPattern(Assets.bg, 'repeat');
-      if (pattern) {
-        c.globalAlpha = 0.32;
-        c.fillStyle = pattern;
-        c.fillRect(0, 0, areaW, areaH);
+    
+      if (Assets.bg && Assets.bg.complete) {
+        const imgW = Assets.bg.width;
+        const imgH = Assets.bg.height;
+    
+        // quanto devo scalare l'immagine per farla combaciare con la cella logica
+        const scaleX = cellSize / imgW;
+        const scaleY = cellSize / imgH;
+    
+        const pattern = c.createPattern(Assets.bg, 'repeat');
+        if (pattern) {
+          // se supportato, applichiamo una trasformazione al pattern stesso
+          if (typeof pattern.setTransform === 'function') {
+            const m = new DOMMatrix();
+            m.a = scaleX;  // scala asse X
+            m.d = scaleY;  // scala asse Y
+            pattern.setTransform(m);
+          } else {
+            // fallback: niente trasformazione del pattern, ma almeno disegniamo scalato
+            // (in questo caso usiamo un semplice drawImage scalato per coprire l'area)
+            c.globalAlpha = 0.32;
+            c.drawImage(Assets.bg, 0, 0, imgW, imgH, 0, 0, areaW, areaH);
+            c.restore();
+            // il resto della funzione (grid lines) rimane invariato
+            this.bgCache = off;
+            return;
+          }
+    
+          c.globalAlpha = 0.32;
+          c.fillStyle = pattern;
+          c.fillRect(0, 0, areaW, areaH);
+        }
       }
+    
       c.restore();
 
       // grid

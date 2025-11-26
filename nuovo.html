@@ -121,6 +121,7 @@
           deselect: null,
           sendExpedition: null,
           launchPerk: null,
+          toggleView: null,
         },
       },
       toastHost: null,
@@ -1085,15 +1086,17 @@
             y: gy,
           });
     
-          // opzionale: memorizza qualche info sulla spedizione
-          g._groupSize = exp.total_goblins ?? (Array.isArray(exp.goblin_ids) ? exp.goblin_ids.length : 0);
-          g._expeditionId = expId;
-    
           this.goblinById.set(expId, g);
-        } else {
-          // se vuoi aggiornare qualche campo ad ogni snapshot, fallo qui
-          g._groupSize = exp.total_goblins ?? g._groupSize ?? 0;
         }
+    
+        // 🔴 IMPORTANTISSIMO: allinea sempre l'owner alla snapshot corrente
+        g.owner = owner;
+    
+        // opzionale: memorizza qualche info sulla spedizione
+        g._groupSize =
+          exp.total_goblins ??
+          (Array.isArray(exp.goblin_ids) ? exp.goblin_ids.length : g._groupSize ?? 0);
+        g._expeditionId = expId;
       });
     
       // Rimuovi i goblin che non hanno più una spedizione corrispondente
@@ -1802,6 +1805,14 @@
           </div>
         </div>
         <div class="gd-gb-list" id="gd-gb-list"></div>
+
+        <!-- View more / View less -->
+        <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+          <button class="gd-btn" id="gd-gb-toggle-view" style="display:none;">
+            ▼ View more
+          </button>
+        </div>
+
         <div style="display:flex; justify-content:space-between; gap:6px; margin-top:6px; flex-wrap:wrap;">
           <button class="gd-btn" id="gd-send-expedition">🚀 Start Expedition</button>
           <button class="gd-btn" id="gd-launch-perk">✨ Launch Perk</button>
@@ -1929,7 +1940,8 @@
       panelMy.querySelector('#gd-send-expedition');
     State.ui.goblinBuilder.buttons.launchPerk =
       panelMy.querySelector('#gd-launch-perk');
-
+    State.ui.goblinBuilder.buttons.toggleView =
+      panelMy.querySelector('#gd-gb-toggle-view');
     State.ui.toastHost = panelMy.querySelector('#gd-toast-host');
 
     return container;
@@ -2001,6 +2013,9 @@
 
     const nfts = State.goblinsUser;
     const selected = State.selectedGoblinIds;
+    const toggleViewBtn = State.ui.goblinBuilder.buttons.toggleView;
+    let showAll = false;                 // 👈 per view more/less
+    const COLLAPSED_LIMIT = 30;          // 👈 quanti goblin far vedere "collapsed"
 
     // filters
     const searchInput = State.ui.goblinBuilder.filters.search;
@@ -2073,9 +2088,11 @@
       if (powerLabel) powerLabel.textContent = String(minPower);
 
       const filtered = applyFilters(nfts);
-      const maxPower = Math.max(1, ...filtered.map(g => g.daily_power_num || 0));
 
-      const html = filtered
+      // quali goblin mostriamo: tutti o solo i primi N?
+      const visible = showAll ? filtered : filtered.slice(0, COLLAPSED_LIMIT);
+      const maxPower = Math.max(1, ...filtered.map(g => g.daily_power_num || 0));
+      const html = visible
         .map(g => {
           const tired = (g.daily_power_num || 0) < CONFIG.minGoblinDailyPowerToSend;
           const sel = selected.has(g.asset_id);
@@ -2116,6 +2133,19 @@
         .join('');
 
       listHost.innerHTML = html;
+
+      // gestisci stato del bottone View more / View less
+      if (toggleViewBtn) {
+        const hasOverflow = filtered.length > COLLAPSED_LIMIT;
+        if (!hasOverflow) {
+          toggleViewBtn.style.display = 'none';
+        } else {
+          toggleViewBtn.style.display = 'inline-flex';
+          toggleViewBtn.textContent = showAll
+            ? '▲ View less'
+            : `▼ View more (${filtered.length - visible.length} hidden)`;
+        }
+      }
 
       listHost.querySelectorAll('.gd-gb-card').forEach(card => {
         const id = card.dataset.id;
@@ -2193,6 +2223,13 @@
     if (clearBtn) {
       clearBtn.onclick = () => {
         selected.clear();
+        renderList();
+      };
+    }
+
+    if (toggleViewBtn) {
+      toggleViewBtn.onclick = () => {
+        showAll = !showAll;
         renderList();
       };
     }

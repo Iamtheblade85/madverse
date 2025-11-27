@@ -1166,5 +1166,18 @@
     window.GoblinDex = { mount };
   })();
   </script>
+  <script>
+    // illumina l'area in base al puntatore (facoltativo)
+    (function () {
+      const targets = document.querySelectorAll('#duration-switch button, #goblin-list button[role="checkbox"]');
+      targets.forEach(el=>{
+        el.addEventListener('mousemove', e=>{
+          const r = el.getBoundingClientRect();
+          const x = ((e.clientX - r.left) / r.width) * 100;
+          el.style.setProperty('--mx', x + '%');
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

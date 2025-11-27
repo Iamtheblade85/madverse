@@ -351,3 +351,26 @@ button:focus-visible,[role="button"]:focus-visible,input:focus-visible,select:fo
 #action-buttons{
   display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
 }
+/* ---- Builder controls area ---- */
+#builder-controls { display:grid; gap:10px; }
+#builder-controls .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+#builder-controls .spacer { flex:1 1 auto; }
+
+/* Forecast */
+#run-forecast{
+  display:grid; gap:10px; padding:12px;
+  border:1px solid var(--line-2); border-radius:16px; background:var(--panel-b);
+}
+#run-forecast .hdr{ display:flex; align-items:center; gap:10px; font-weight:900; font-size:var(--m); }
+#run-forecast .grid{ display:grid; gap:10px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+#run-forecast .card{ border:1px solid var(--line-2); border-radius:14px; padding:10px; background:var(--btn-a); }
+#run-forecast .kv{ display:grid; gap:6px; font-size:var(--s); }
+#run-forecast .kv div{ display:flex; justify-content:space-between; gap:10px; }
+#run-forecast .kv .label{ color:var(--fg-1); }
+#run-forecast .hint{ font-size:var(--xxs); color:var(--muted); }
+
+/* Disabled look chiaro */
+button[disabled]{ opacity:.55; cursor:not-allowed; filter:grayscale(.2); }
+
+/* Tooltip base */
+[aria-describedby="hint"] { text-decoration: underline dotted rgba(255,255,255,.35); text-underline-offset:3px; }

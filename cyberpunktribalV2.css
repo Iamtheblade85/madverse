@@ -72,7 +72,24 @@ body:has(#tabs [data-panel="tab-recent"][aria-selected="true"]),body:has(#tabs [
 #game-area>h2{margin:0 0 6px 2px;font-size:var(--xl);font-weight:900;letter-spacing:.6px;background:linear-gradient(90deg,var(--bl),var(--vt),var(--pk),var(--cy));-webkit-background-clip:text;background-clip:text;color:transparent}
 
 /* — Canvas container rules kept as before — */
-#canvas-wrap{position:relative;overflow:hidden;border-radius:20px;border:1px solid var(--line-2);background:#000;height:50vh;max-width:60%;width:100%;margin-inline:auto}
+/* usa tutta la larghezza disponibile del contenitore */
+#canvas-wrap{
+  position:relative; overflow:hidden;
+  border-radius:20px; border:1px solid var(--line-2);
+  background:#000;
+  width:100%; max-width:none;
+  height:50vh;           /* cap verticale deciso da JS/UX */
+  margin-inline:auto;
+}
+
+/* il canvas deve sempre riempire al 100% il wrap */
+#game-canvas{
+  position:absolute; inset:0; display:block;
+  width:100% !important; height:100% !important;
+  max-width:none; max-height:none;
+  object-fit:fill; image-rendering:crisp-edges; image-rendering:pixelated;
+  filter:none!important; backdrop-filter:none!important; pointer-events:auto;
+}
 
 /* — Force canvas to exactly fill its container, breaking aspect if needed — */
 #game-canvas{position:absolute;inset:0;display:block;width:100% !important;height:100% !important;max-width:100%;max-height:100%;object-fit:fill;image-rendering:crisp-edges;image-rendering:pixelated;filter:none!important;backdrop-filter:none!important;pointer-events:auto}
@@ -227,3 +244,17 @@ button:focus-visible,[role="button"]:focus-visible,input:focus-visible,select:fo
 #duration-switch:has(.menu button[aria-pressed="true"][data-duration="30"]) .dropdown .value::before{content:"30m"}
 #duration-switch:has(.menu button[aria-pressed="true"][data-duration="60"]) .dropdown .value::before{content:"60m"}
 #duration-switch:has(.menu button[aria-pressed="true"][data-duration="120"]) .dropdown .value::before{content:"2h"}
+/* piccolo host per messaggi sopra il canvas */
+#canvas-wrap .feedback-near-canvas{
+  position:absolute; left:12px; bottom:12px; right:auto;
+  display:grid; gap:8px; z-index:15; pointer-events:none;
+}
+#canvas-wrap .feedback-near-canvas > .msg{
+  pointer-events:auto;
+  padding:8px 10px; border-radius:14px;
+  background:rgba(24,30,48,.96);
+  border:1px solid var(--line-2);
+  color:var(--fg-0); font-weight:900; font-size:var(--s);
+  box-shadow:0 0 18px rgba(0,255,224,.18), 0 0 18px rgba(143,125,255,.12);
+  animation:toastIn .22s ease-out;
+}

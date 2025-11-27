@@ -623,25 +623,36 @@
         };
       }
       clear(){
-        const w = this.canvas.width / State.dpr; const h = this.canvas.height / State.dpr;
-        const ctx = this.ctx; ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,w,h); ctx.restore();
+        const w = this.canvas.width / State.dpr; 
+        const h = this.canvas.height / State.dpr;
+        const ctx = this.ctx; ctx.save(); 
+        ctx.setTransform(1,0,0,1,0,0); 
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); // <-- usa width/height nativi
+        ctx.restore();
       }
       drawBackground(){
-        const w = this.canvas.width / State.dpr; const h = this.canvas.height / State.dpr;
-        const ctx = this.ctx; ctx.save(); ctx.setTransform(1,0,0,1,0,0);
-        // simple dark background + grid (no CSS)
-        ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h); ctx.restore();
-
+        const w = this.canvas.width;   // <-- nativi, NON / State.dpr
+        const h = this.canvas.height;  // <--
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+      
         const { cellSize, offsetX, offsetY } = this.transform;
-        const areaW = this.world.width * cellSize; const areaH = this.world.height * cellSize;
-        const c = this.ctx; c.save(); c.translate(offsetX, offsetY);
-        if (Assets.bg) {
-          // stretch bg to exact play area
-          c.globalAlpha = 0.32;
-          c.drawImage(Assets.bg, 0, 0, Assets.bg.width, Assets.bg.height, 0, 0, areaW, areaH);
-        } else {
-          c.fillStyle = '#111'; c.fillRect(0,0,areaW,areaH);
-        }
+        const areaW = this.world.width * cellSize;
+        const areaH = this.world.height * cellSize;
+        const c = this.ctx;
+        c.save();
+        c.translate(offsetX, offsetY);
+      
+        // Se vuoi zero offuscamento della GIF di sfondo, porta a 1.0 la globalAlpha:
+        c.globalAlpha = 1.0; // era 0.32
+        if (Assets.bg) c.drawImage(Assets.bg, 0, 0, Assets.bg.width, Assets.bg.height, 0, 0, areaW, areaH);
+        else { c.fillStyle = '#111'; c.fillRect(0,0,areaW,areaH); }
+      
+        c.globalAlpha = 1.0; // (facoltativo, per sicurezza)
         c.strokeStyle = '#333'; c.lineWidth = 1;
         for (let x=0;x<=this.world.width;x++){ const px = x*cellSize+0.5; c.beginPath(); c.moveTo(px,0); c.lineTo(px,areaH); c.stroke(); }
         for (let y=0;y<=this.world.height;y++){ const py = y*cellSize+0.5; c.beginPath(); c.moveTo(0,py); c.lineTo(areaW,py); c.stroke(); }

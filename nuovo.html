@@ -23,12 +23,15 @@
 
       <!-- Action bar always on top -->
       <nav id="action-bar" aria-label="Actions">
-        <div id="duration-switch" aria-label="Expedition Duration" role="group">
-          <span>Duration:</span>
-          <button data-duration="5"   title="Short scouting run (5 minutes)">5m</button>
-          <button data-duration="30"  title="Standard run (30 minutes)" aria-pressed="true">30m</button>
-          <button data-duration="60"  title="Long run (60 minutes)">60m</button>
-          <button data-duration="120" title="Marathon run (120 minutes)">2h</button>
+        <div id="duration-switch" aria-label="Expedition Duration">
+          <label for="sel-duration" style="margin-right:8px;font-weight:900;">Duration</label>
+          <select id="sel-duration" title="Choose expedition duration" style="min-width:140px;">
+            <option value="5">5m — Blitz</option>
+            <option value="30" selected>30m — Standard</option>
+            <option value="60">60m — Long</option>
+            <option value="120">120m — Marathon</option>
+          </select>
+          <small id="duration-hint" style="margin-left:10px;opacity:.85;"></small>
         </div>
         <div id="cap-line" aria-live="polite">
           <span id="cap-label" title="Maximum goblins you can send in the current run">Max goblins this run: 50</span> ·
@@ -228,7 +231,8 @@
         capLabel: null,
         reinfLabel: null,
 
-        durationButtons: null,
+        durationSelect: null,
+        durationHint: null,
 
         // panels
         panelMy: null,
@@ -911,6 +915,11 @@
       // Reading order already puts game area first, panels second. Nothing else to do here.
       // The engine.handleResize() manages canvas size.
       // You can add extra DOM moves if desired later with CSS.
+      const meta = document.getElementById('global-meta');
+      if (meta){
+        const w = window.innerWidth || 800;
+        meta.style.gridTemplateColumns = w<480 ? 'repeat(2,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))';
+      }   
     }
 
     // ------------------------------------------------------------
@@ -931,15 +940,27 @@
       if (State.ui.btnBest)  State.ui.btnBest.textContent  = `🏆 Best ${cap}`;
     }
     function initDurationSwitch(){
-      const btns = State.ui.durationButtons || [];
-      btns.forEach(b=>{
-        b.addEventListener('click', ()=>{
-          const val = Number(b.dataset.duration || 0) || 30;
-          State.expedition.durationMinutes = val;
-          btns.forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
-          toast(`Duration set to ${val} minutes`);
-        });
-      });
+      const sel = State.ui.durationSelect;
+      const hint = State.ui.durationHint;
+      if (!sel) return;
+    
+      function update(valMin){
+        State.expedition.durationMinutes = valMin;
+        if (hint) hint.textContent = buildDurationHint(valMin);
+      }
+      sel.addEventListener('change', ()=> update(Number(sel.value||30)));
+      update(Number(sel.value||30));
+    }
+
+    function buildDurationHint(mins){
+      // costo base usato dal BE: 0.8*m + 0.04*m^2  (senza riduzioni/resistance)
+      function cost(m){ return 0.8*m + 0.04*m*m; }
+      // rendimento relativo per ora di gioco (più alto = meglio): completare più corse corte conviene
+      const ref = cost(60)/60;        // costo medio/min a 60'
+      const cur = cost(mins)/mins;    // costo medio/min al valore selezionato
+      const efficiency = Math.max(0.6, Math.min(1.5, ref/cur)); // normalizza 0.6..1.5 per copy più pulita
+      const tag = mins<=15 ? 'High yield' : mins<=45 ? 'Balanced' : 'Chill';
+      return `${tag}: short runs complete more often → more loot rolls/hour (×${efficiency.toFixed(2)})`;
     }
 
     function hydrateGoblinBuilder(){
@@ -1018,6 +1039,15 @@
       }, {res:0, loot:0, spd:0, acc:0});
       if (countEl) countEl.textContent = `Selected goblins: ${selArr.length}`;
       if (statsEl) statsEl.textContent = `R: ${formatCompact(sums.res)} · L: ${formatCompact(sums.loot)} · S: ${formatCompact(sums.spd)} · A: ${formatCompact(sums.acc)}`;
+       // tip dinamico: se selezione < cap, suggerisci rinforzi
+      const cap = getSendCap();
+      if (countEl){
+        const missing = cap - State.selectedGoblinIds.size;
+        if (missing > 0 && State.expedition.durationMinutes <= 30){
+          // runs corte consigliate + hint rinforzi
+          toast(`Tip: short runs complete more often. You can still add ${missing} goblins (cap ${cap}).`);
+        }
+      }
     }
 
     function wireBuilderUI(){
@@ -1052,17 +1082,44 @@
       const host = State.ui.globalList, label = State.ui.globalCount;
       if (!host || !label) return;
       host.innerHTML = '';
+      GlobalTimers.rows.clear();
     
       const exps = State.globalExpeditions || [];
       label.textContent = String(exps.length);
-      GlobalTimers.rows.clear();
     
+      // --- META COMPETITIVO (aggregati globali) ---
+      const meta = exps.reduce((a,e)=>{
+        const c = e.total_goblins ?? (Array.isArray(e.goblin_ids)?e.goblin_ids.length:0);
+        a.players += 1;
+        a.goblins += c;
+        const s = e.stats_totals || {};
+        a.res += toNumber(s.resistance); a.loot += toNumber(s.loot_hungry);
+        a.spd += toNumber(s.speed); a.acc += toNumber(s.accuracy);
+        const sr = toNumber(e.seconds_remaining);
+        if (sr>0){ a.etaCount++; a.etaSum += sr; }
+        return a;
+      }, {players:0,goblins:0,res:0,loot:0,spd:0,acc:0,etaSum:0,etaCount:0});
+      const avgEta = meta.etaCount ? fmtHMS((meta.etaSum/meta.etaCount)*1000) : '--:--:--';
+    
+      const metaBox = document.createElement('div');
+      metaBox.setAttribute('id','global-meta');
+      metaBox.style.cssText = 'display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:8px 0 12px 0;';
+      metaBox.innerHTML = `
+        <div><div style="opacity:.75;font-size:12px;">Players</div><div style="font-weight:900">${formatCompact(meta.players)}</div></div>
+        <div><div style="opacity:.75;font-size:12px;">Goblins in play</div><div style="font-weight:900">${formatCompact(meta.goblins)}</div></div>
+        <div><div style="opacity:.75;font-size:12px;">R+L+S+A</div><div style="font-weight:900">${formatCompact(meta.res+meta.loot+meta.spd+meta.acc)}</div></div>
+        <div><div style="opacity:.75;font-size:12px;">Avg time left</div><div style="font-weight:900">${avgEta}</div></div>
+        <div><div style="opacity:.75;font-size:12px;">Tip</div><div style="font-weight:900">Short runs ⇒ more rolls</div></div>
+      `;
+      host.appendChild(metaBox);
+    
+      // --- RIGHE PER-PLAYER ---
       exps.forEach(exp=>{
         const owner = exp.wax_account || exp.owner || 'unknown';
         const count = exp.total_goblins ?? (Array.isArray(exp.goblin_ids) ? exp.goblin_ids.length : 0);
         const { res, loot, spd, acc } = sumStatsForExp(exp);
     
-        const sr = fromSecondsRemaining(exp);            // usa seconds_remaining (live)
+        const sr = fromSecondsRemaining(exp);
         const endsAt = sr ? sr.endsAt() : getEndsAt(exp);
         const leftMs = sr ? sr.leftMs() : getTimeLeftMs(exp);
     
@@ -1075,7 +1132,7 @@
         const left = document.createElement('div');
         left.innerHTML =
           `<strong>${safe(owner)}</strong> &middot; <span class="badge">Goblins army: ${formatCompact(count)}</span>
-           <div style="display:flex;gap:10px;margin-top:6px;font-size:12px;color:#c6d2ef">
+           <div style="display:flex;gap:10px;margin-top:6px;font-size:12px;opacity:.9">
               <span>R: <b>${formatCompact(res)}</b></span>
               <span>L: <b>${formatCompact(loot)}</b></span>
               <span>S: <b>${formatCompact(spd)}</b></span>
@@ -1088,7 +1145,7 @@
           `<div style="font-weight:900">
              <span class="badge ok">⏳ <span data-eta>${leftMs!=null?fmtHMS(leftMs):'--:--:--'}</span></span>
            </div>
-           <div style="font-size:12px;color:#97a8cc;margin-top:4px">
+           <div style="font-size:12px;opacity:.85;margin-top:4px">
              ends <span data-end>${endsAt?timeHM(endsAt):'--:--'}</span>
            </div>`;
     
@@ -1100,7 +1157,7 @@
           exp,
           etaEl: right.querySelector('[data-eta]'),
           endEl: right.querySelector('[data-end]'),
-          sr, // oggetto calcolatore per seconds_remaining
+          sr,
         });
       });
     
@@ -1302,14 +1359,27 @@
       const cap = getSendCap();
       if (ids.length > cap){ toast(`You selected ${ids.length} goblins but your cap is ${cap} (max 250).`); return; }
       syncUserFromStorage(); try { assertAuth(); } catch { toast('Please log in first'); return; }
-
+    
       const durationMinutes = State.expedition?.durationMinutes || 30;
       const res = await Api.post('/2start_expedition', {
         wax_account:State.user.wax_account, user_id:State.user.user_id, usx_token:State.user.usx_token,
         asset_ids: ids, duration_minutes: durationMinutes
       }, 20000);
-      if (!res.ok){ toast('Could not start expedition'); return; }
-      toast('⛏️ Expedition started!');
+    
+      if (!res.ok){
+        // se 409: già in corso → mostra ETA residua
+        if (res.status === 409 && res.data?.seconds_remaining){
+          const left = fmtHMS(res.data.seconds_remaining*1000);
+          toast(`You already have an expedition in progress. Ends in ${left}.`);
+        } else {
+          toast('Could not start expedition');
+        }
+        return;
+      }
+    
+      const durSec = toNumber(res.data?.duration_seconds) || durationMinutes*60;
+      const endAt = new Date(Date.now() + durSec*1000);
+      toast(`⛏️ Expedition started! ${ids.length}/${cap} goblins · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`);
       fetchGlobalSnapshot();
     }
     async function launchPerk(){
@@ -1355,7 +1425,8 @@
 
       State.ui.capLabel   = document.getElementById('cap-label');
       State.ui.reinfLabel = document.getElementById('reinf-label');
-      State.ui.durationButtons = Array.from(document.querySelectorAll('#duration-switch button'));
+      State.ui.durationSelect = document.getElementById('sel-duration');
+      State.ui.durationHint = document.getElementById('duration-hint');
 
       State.ui.panelMy      = document.getElementById('tab-my');
       State.ui.panelGlobal  = document.getElementById('tab-global');

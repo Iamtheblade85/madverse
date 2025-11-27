@@ -1040,7 +1040,6 @@
       if (countEl) countEl.textContent = `Selected goblins: ${selArr.length}`;
       if (statsEl) statsEl.textContent = `R: ${formatCompact(sums.res)} · L: ${formatCompact(sums.loot)} · S: ${formatCompact(sums.spd)} · A: ${formatCompact(sums.acc)}`;
        // tip dinamico: se selezione < cap, suggerisci rinforzi
-      const cap = getSendCap();
       if (countEl){
         const missing = cap - State.selectedGoblinIds.size;
         if (missing > 0 && State.expedition.durationMinutes <= 30){

@@ -258,7 +258,9 @@ button:focus-visible,[role="button"]:focus-visible,input:focus-visible,select:fo
 /* ---- Duration: compatta, accessibile, coerente col tema ---- */
 
 /* nascondi il <select> ma mantieni focus/AT */
-#duration-switch select#sel-duration {
+/* mostra il <select> nativo, stilato come il tema */
+/* nascondi il <select> solo se è presente il dropdown custom */
+#duration-switch:has(.dropdown) select#sel-duration {
   position: absolute !important;
   inset: auto auto auto -9999px !important;
   width: 1px !important; height: 1px !important;

@@ -103,6 +103,10 @@
             <input id="flt-power" type="range" min="0" max="100" step="5" value="0">
             <span id="flt-power-label">0</span>
           </section>
+          <!-- Expedition controls (moved here by JS) -->
+          <section id="builder-controls" aria-label="Expedition controls">
+            <!-- JS will move #duration-switch, #cap-line, #action-buttons here -->
+          </section>
 
           <section id="quick-select" aria-label="Quick selection">
             <button id="qs-first"  title="Pick the first goblins up to your cap">✅ First 50</button>
@@ -921,6 +925,71 @@
         meta.style.gridTemplateColumns = w<480 ? 'repeat(2,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))';
       }   
     }
+    function moveControlsIntoBuilder(){
+      const container = document.getElementById('builder-controls');
+      const bar = document.getElementById('action-bar');
+      if (!container || !bar) return;
+    
+      // Nodi esistenti (li spostiamo, non li cloniamo)
+      const duration = document.getElementById('duration-switch');
+      const capLine  = document.getElementById('cap-line');
+      const actions  = document.getElementById('action-buttons');
+    
+      // Griglia semplice e responsiva senza CSS esterno
+      container.style.cssText = 'display:grid;gap:10px;margin:10px 0 14px;grid-template-columns:1fr;';
+      
+      // Righe logiche
+      const row1 = document.createElement('div'); // duration
+      const row2 = document.createElement('div'); // cap & reinf
+      const row3 = document.createElement('div'); // buttons
+    
+      if (duration) {
+        row1.appendChild(duration);
+        styleDurationBlock(duration);
+      }
+      if (capLine) {
+        row2.appendChild(capLine);
+        capLine.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
+      }
+      if (actions) {
+        row3.appendChild(actions);
+        actions.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
+      }
+    
+      container.append(row1, row2, row3);
+    
+      // Nascondi la barra in header (ora è vuota)
+      bar.hidden = true;
+    }
+    
+    function styleDurationBlock(box){
+      // Layout compatto per label+select+hint
+      box.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;';
+    
+      const sel  = document.getElementById('sel-duration');
+      const hint = document.getElementById('duration-hint');
+    
+      if (sel) {
+        // Sovrascrivi il min-width inline e rendi il dropdown più piccolo
+        sel.style.minWidth = 'unset';
+        sel.style.maxWidth = '160px';
+        sel.style.width    = 'auto';
+        sel.style.padding  = '4px 8px';
+        sel.style.borderRadius = '6px';
+        sel.style.font = 'inherit';        // fa “agganciare” il font del tema
+        sel.style.lineHeight = '1.2';
+        sel.style.boxSizing = 'border-box';
+        // opzionale: per uniformare l’aspetto tra browser
+        sel.style.webkitAppearance = 'menulist';
+        sel.style.MozAppearance    = 'menulist';
+        sel.style.appearance       = 'menulist';
+      }
+      if (hint) {
+        hint.style.display = 'block';
+        hint.style.opacity = '.85';
+        hint.style.marginLeft = '0';
+      }
+    }
 
     // ------------------------------------------------------------
     // GOBLIN BUILDER
@@ -1442,7 +1511,7 @@
       wireBuilderUI();
       updateCapUI();
       initDurationSwitch();
-
+      moveControlsIntoBuilder();
       // Buttons
       if (State.ui.btnStart) State.ui.btnStart.onclick = sendExpedition;
       if (State.ui.btnPerk) State.ui.btnPerk.onclick = launchPerk;

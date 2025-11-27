@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Dwarfs Cave – Goblins, Orcs & Weekly Pass (Optimized)</title>
+  <title>Dwarfs Cave – Goblins, Orcs & Weekly Pass (No-CSS)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Fonts -->
+  <!-- (opzionale ma consigliato) Google Fonts usati dal tema -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
-
-  <!-- Theme CSS (esterno) -->
+  
+  <!-- Caricamento veloce del tema CyberPunkTribalV2 -->
   <link rel="preload" as="style" href="cyberpunktribalV2.css?v=1" onload="this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="cyberpunktribalV2.css?v=1"></noscript>
+
 </head>
 <body>
   <div id="app-root">
@@ -35,12 +35,10 @@
           </select>
           <small id="duration-hint" style="margin-left:10px;opacity:.85;"></small>
         </div>
-
         <div id="cap-line" aria-live="polite">
           <span id="cap-label" title="Maximum goblins you can send in the current run">Max goblins this run: 50</span> ·
           <span id="reinf-label" title="Reinforcement adds +5 goblins each, up to +200">Base 50 + 0× Reinforcement (= 0 extra)</span>
         </div>
-
         <div id="action-buttons" role="group" aria-label="Primary actions">
           <button id="btn-start" title="Start an expedition with the selected goblins">🚀 Start Expedition</button>
           <button id="btn-perk"  title="Launch a perk (1 attempt every 10 minutes)">✨ Launch Perk</button>
@@ -60,31 +58,24 @@
       </div>
     </header>
 
-    <!-- Main responsive layout -->
+    <!-- Main responsive layout (no CSS – managed by JS) -->
     <main id="main-layout" aria-label="Main content">
-      <!-- Game Area -->
+      <!-- Game Area always first to keep focus on gameplay -->
       <section id="game-area" aria-label="Game Area">
         <h2>World Expeditions Map</h2>
         <div id="canvas-wrap" aria-label="Game viewport">
           <canvas id="game-canvas"></canvas>
         </div>
-
-        <!-- Global hero bar per eventi -->
-        <div id="global-hero-bar" aria-live="polite" aria-atomic="false">
-          <!-- Messaggi globali iniettati via JS -->
-        </div>
-
         <div id="legend">
           <span>Legend:</span>
           <span>Goblin</span> · <span>Chest</span> · <span>Perk</span>
         </div>
-
         <div id="ticker" aria-live="polite">
           <strong>GLOBAL LOG:</strong> <span id="ticker-line">Waiting for events…</span>
         </div>
       </section>
 
-      <!-- Right-side panels -->
+      <!-- Right-side panels (on mobile become stacked) -->
       <aside id="panels" aria-label="Information panels">
         <!-- Tabs -->
         <nav id="tabs" role="tablist" aria-label="Panels">
@@ -114,15 +105,13 @@
             <input id="flt-power" type="range" min="0" max="100" step="5" value="0">
             <span id="flt-power-label">0</span>
           </section>
-
-          <!-- Expedition controls (durata + cap + azioni) -->
+          <!-- Expedition controls (moved here by JS) -->
           <section id="builder-controls" aria-label="Expedition controls">
             <!-- JS will move #duration-switch, #cap-line, #action-buttons here -->
           </section>
-
           <!-- Forecast/Summary -->
           <section id="run-forecast" aria-live="polite" hidden></section>
-
+          
           <section id="quick-select" aria-label="Quick selection">
             <button id="qs-first"  title="Pick the first goblins up to your cap">✅ First 50</button>
             <button id="qs-best"   title="Pick the strongest goblins up to your cap">🏆 Best 50</button>
@@ -144,7 +133,7 @@
             <button id="btn-toggle-more" title="Expand or collapse the list" hidden>View more</button>
           </div>
 
-          <!-- Toaster (vecchio) -->
+          <!-- Toaster -->
           <div id="toast-host" aria-live="polite"></div>
         </section>
 
@@ -172,9 +161,6 @@
     <footer id="app-footer" aria-label="Footer">
       <small>Overlay-only link available from the top bar. All times are local to your device.</small>
     </footer>
-
-    <!-- Personal notifications overlay -->
-    <div id="personal-notifications" aria-live="polite" aria-atomic="false"></div>
   </div>
 
   <!-- Config / Auth bootstrap (replace with your values or inject at runtime) -->
@@ -188,7 +174,7 @@
     window.CAVE_OVERLAY = false;
   </script>
 
-  <!-- App -->
+  <!-- App (no CSS) -->
   <script>
   ;(function () {
     'use strict';
@@ -204,11 +190,7 @@
       snapshotTimeoutMs: 10000,
       recentTimeoutMs: 12000,
       winnersTimeoutMs: 12000,
-      perkDropProbability: 0.95,       // probabilità che un perk droppi UNA chest
-      perkMinTravelBeforeDrop: 0.15,   // frazione minima del percorso prima che possa droppare
-      perkMaxTravelBeforeDrop: 0.75,   // frazione massima del percorso
-      chestLifetimeMs: 60_000,         // durata di vita di una chest se non claImata
-      chestClaimRadiusCells: 1.5,      // 3x3 → Chebyshev radius ≈1.5 celle
+      perkDropProbability: 0.95,
       canvasAspect: 16/9,
       maxGoblinsPerExpedition: 250,
       minGoblinDailyPowerToSend: 5,
@@ -232,9 +214,7 @@
         canvas: null,
         latency: null,
         ticker: null,
-
-        heroBar: null,
-        personalNotifications: null,
+        tabs: null,
 
         // builder
         listHost: null,
@@ -285,10 +265,10 @@
       // expedition params
       expedition: {
         durationMinutes: 30,
-        reinforcementCount: 0,  // numero di Reinforcement Troops posseduti (0–40)
+        reinforcementCount: 0,
       },
 
-      // world / engine
+      // world
       engine: null,
 
       // network
@@ -298,15 +278,6 @@
       globalExpeditions: [],
       recentExpeditions: [],
       recentWinners: [],
-
-      // runtime
-      runtime: {
-        expeditionInProgress: false,
-        perkCooldownUntil: 0,
-        lastForecastPayloadKey: '',
-        forecastBusy: false,
-        forecastData: null,
-      }
     };
 
     // ------------------------------------------------------------
@@ -333,27 +304,9 @@
       if (n >= 1_000) return (n/1_000).toFixed(1).replace(/\.0$/,'') + 'k';
       return String(n);
     }
-    function debounce(fn, ms=250){
-      let t = null;
-      return (...args) => {
-        clearTimeout(t);
-        t = setTimeout(() => fn(...args), ms);
-      };
-    }
-    function ts(x){
-      if (!x) return null;
-      if (typeof x === 'number') return new Date(x > 2e12 ? x : x*1000);
-      const d = new Date(x); return isNaN(d) ? null : d;
-    }
-    function fmtHMS(msLeft){
-      const s = Math.floor(msLeft/1000);
-      const h = Math.floor(s/3600);
-      const m = Math.floor((s%3600)/60);
-      const sec = s%60;
-      const HH = String(h).padStart(2,'0');
-      const MM = String(m).padStart(2,'0');
-      const SS = String(sec).padStart(2,'0');
-      return `${HH}:${MM}:${SS}`;
+    function hueFromString(str){
+      let h = 0; for (let i=0;i<str.length;i++) h = (h*31 + str.charCodeAt(i))|0;
+      return Math.abs(h)%360;
     }
 
     function getStatFromNFT(nft, key) {
@@ -376,13 +329,31 @@
       }
       return 0;
     }
-
+    // ---- Debounce helper ----
+    function debounce(fn, ms=250){
+      let t = null;
+      return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), ms); };
+    }
+    
+    // ---- Nuovo stato runtime ----
+    State.runtime = {
+      expeditionInProgress: false,
+      perkCooldownUntil: 0,
+      lastForecastPayloadKey: '',
+      forecastBusy: false,
+      forecastData: null
+    };
+    
+    // Deriva il cap corrente (già esiste getSendCap)
     function getSelectedGoblins(){
       return State.goblinsUser.filter(g => State.selectedGoblinIds.has(g.asset_id));
     }
+    
     function isGoblinTired(g){
       return (g.daily_power_num || 0) < CONFIG.minGoblinDailyPowerToSend;
     }
+    
+    // Valida se si può inviare
     function canSendExpedition(){
       if (State.runtime.expeditionInProgress) return { ok:false, reason:'in_progress' };
       const sel = getSelectedGoblins();
@@ -393,58 +364,98 @@
       if (tired.length) return { ok:false, reason:'tired_present', data:tired };
       return { ok:true };
     }
+    
+    // Cooldown Perk
     function isPerkOnCooldown(){
       return Date.now() < (State.runtime.perkCooldownUntil || 0);
     }
 
-    // ------------------------------------------------------------
-    // GLOBAL / PERSONAL NOTIFICATIONS
-    // ------------------------------------------------------------
-    function showGlobalEvent(type, message, meta){
-      const host = State.ui.heroBar;
-      if (!host) return;
-      const item = document.createElement('div');
-      item.className = 'hero-item hero-' + (type || 'info');
-      item.innerHTML = `
-        <div class="hero-pill">
-          <span class="hero-icon">${meta?.icon || '✨'}</span>
-          <span class="hero-text">${safe(message)}</span>
-        </div>
-      `;
-      host.appendChild(item);
-      requestAnimationFrame(() => item.classList.add('visible'));
-      setTimeout(() => {
-        item.classList.remove('visible');
-        setTimeout(() => item.remove(), 400);
-      }, meta?.ttl || 5000);
+    // ------- EXPEDITION HELPERS -------
+    function ms(n){ return Number(n)||0; }
+    function ts(x){
+      // prova molte chiavi comuni: seconds ms iso
+      if (!x) return null;
+      if (typeof x === 'number') return new Date(x > 2e12 ? x : x*1000);
+      const d = new Date(x); return isNaN(d) ? null : d;
     }
-
-    function showPersonalNotification(title, body, meta){
-      const host = State.ui.personalNotifications;
-      if (!host) return;
-      const item = document.createElement('div');
-      item.className = 'pn-item';
-      item.innerHTML = `
-        <div class="pn-icon">${meta?.icon || '🎉'}</div>
-        <div class="pn-content">
-          <div class="pn-title">${safe(title)}</div>
-          <div class="pn-body">${safe(body)}</div>
-        </div>
-      `;
-      host.appendChild(item);
-      requestAnimationFrame(() => item.classList.add('visible'));
-      setTimeout(() => {
-        item.classList.remove('visible');
-        setTimeout(() => item.remove(), 400);
-      }, meta?.ttl || 6500);
+    function getDurationMin(exp){
+      return toNumber(exp.duration_minutes ?? exp.duration ?? exp.mins ?? 30);
     }
+    function getStart(exp){
+      return ts(exp.started_at ?? exp.start_time ?? exp.start_ts ?? exp.created_at);
+    }
+    function getEndsAt(exp){
+      // preferisci 'ends_at' se presente, altrimenti start + duration
+      const explicitEnd = ts(exp.ends_at ?? exp.end_time ?? exp.end_ts);
+      if (explicitEnd) return explicitEnd;
+      const start = getStart(exp);
+      const mins = getDurationMin(exp);
+      return start ? new Date(start.getTime() + mins*60*1000) : null;
+    }
+    function getTimeLeftMs(exp, now=new Date()){
+      const end = getEndsAt(exp);
+      if (!end) return null;
+      return Math.max(0, end.getTime() - now.getTime());
+    }
+    function fmtHMS(msLeft){
+      const s = Math.floor(msLeft/1000);
+      const h = Math.floor(s/3600);
+      const m = Math.floor((s%3600)/60);
+      const sec = s%60;
+      const HH = String(h).padStart(2,'0');
+      const MM = String(m).padStart(2,'0');
+      const SS = String(sec).padStart(2,'0');
+      return `${HH}:${MM}:${SS}`;
+    }
+    function fromSecondsRemaining(exp){
+      const sec = toNumber(exp.seconds_remaining);
+      if (!sec) return null;
+      const snap = exp._snapAt || Date.now();
+      return {
+        baseLeftMs: sec*1000,
+        snapAt: snap,
+        // tempo residuo live = base - trascorso
+        leftMs(now=Date.now()){ return Math.max(0, this.baseLeftMs - (now - this.snapAt)); },
+        endsAt(){ return new Date(this.snapAt + this.baseLeftMs); }
+      };
+    }   
+    function sumStatsForExp(exp){
+      const t = exp.stats_totals || exp.statsTotals || exp.stats || exp.totals || {};
+      let res  = toNumber(t.resistance);
+      let loot = toNumber(t.loot_hungry);
+      let spd  = toNumber(t.speed);
+      let acc  = toNumber(t.accuracy);
 
-    function toast(msg){
-      const host = State.ui.toastHost; if (!host) return;
-      const div = document.createElement('div');
-      div.textContent = msg;
-      host.appendChild(div);
-      setTimeout(()=>div.remove(), 3500);
+      if (!(res||loot||spd||acc) && Array.isArray(exp.goblin_ids) && exp.goblin_ids.length){
+        for (const id of exp.goblin_ids){
+          const nft = State.nftIndex.get(String(id));
+          res  += getStatFromNFT(nft,'resistance');
+          loot += getStatFromNFT(nft,'loot_hungry');
+          spd  += getStatFromNFT(nft,'speed');
+          acc  += getStatFromNFT(nft,'accuracy');
+        }
+      }
+      return { res, loot, spd, acc };
+    }
+    // memorizza timers per global panel
+    const GlobalTimers = { tickId:null, rows:new Map() };
+    function onExpeditionEnd(exp){
+      // rimuovi dal canvas subito
+      if (State.engine && exp && (exp.expedition_id || exp.id)){
+        State.engine.goblinById.delete(String(exp.expedition_id ?? exp.id));
+      }
+      // se dopo poco arriva un "recent_expedition", mostra quello; altrimenti toast generico
+      const who = exp.wax_account || exp.owner || 'player';
+      const started = getStart(exp);
+      const durMin = getDurationMin(exp);
+      const durationHHMM = fmtHMS(durMin*60*1000).slice(0,5);
+      setTimeout(()=>{
+        // prova a trovare risultato recente di quel player
+        const r = State.recentExpeditions.find(e => (e.wax_account||e.owner)===who);
+        const chips = r?.chips ?? 0;
+        const nfts  = r?.nfts_count ?? r?.nfts ?? 0;
+        toast(`${who} expedition ended: +${formatCompact(chips)} CHIPS${nfts?` +${nfts} NFT`:''} after ${durationHHMM}`);
+      }, 600);
     }
 
     // ------------------------------------------------------------
@@ -464,10 +475,8 @@
         const ctrl = new AbortController(); const id = setTimeout(()=>ctrl.abort(), timeout);
         try {
           const res = await fetch(CONFIG.apiBase + path, {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify(body || {}),
-            signal: ctrl.signal
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(body || {}), signal: ctrl.signal
           });
           const data = await res.json().catch(()=>null);
           return { ok: res.ok, status: res.status, data };
@@ -497,28 +506,18 @@
     }
 
     // ------------------------------------------------------------
-    // ASSETS
+    // ASSETS (no CSS; images optional, kept for parity)
     // ------------------------------------------------------------
     const Assets = { loaded:false, goblin:null, chest:null, bg:null, perks:{} };
     function loadImg(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; }); }
     async function loadAssets(){
       if (Assets.loaded) return;
       const [goblin, chest, bg, pDragon, pDwarf, pSkeleton, pBlackCat] = await Promise.all([
-        loadImg('goblin.png'),
-        loadImg('chest.png'),
-        loadImg('cave-grid.gif'),
-        loadImg('perk_dragon.png'),
-        loadImg('perk_dwarf.png'),
-        loadImg('perk_skeleton.png'),
-        loadImg('perk_blackcat.png'),
+        loadImg('goblin.png'), loadImg('chest.png'), loadImg('cave-grid.gif'),
+        loadImg('perk_dragon.png'), loadImg('perk_dwarf.png'), loadImg('perk_skeleton.png'), loadImg('perk_blackcat.png'),
       ]).catch(()=>[null,null,null,null,null,null,null]);
       Assets.goblin = goblin; Assets.chest = chest; Assets.bg = bg;
-      Assets.perks = {
-        dragon: pDragon,
-        dwarf: pDwarf,
-        skeleton: pSkeleton,
-        black_cat: pBlackCat
-      };
+      Assets.perks = { dragon:pDragon, dwarf:pDwarf, skeleton:pSkeleton, black_cat:pBlackCat };
       Assets.loaded = true;
     }
 
@@ -526,60 +525,22 @@
     // ENTITIES
     // ------------------------------------------------------------
     class ChestEntity {
-      constructor({ id, x, y, rarity='common', claimable=true, taken=false, createdAt=null, lifetimeMs=null }){
+      constructor({ id, x, y, rarity='common', claimable=true, taken=false }){
         this.id = String(id ?? `${x}|${y}|c`);
-        this.x = x;
-        this.y = y;
-        this.rarity = rarity;
-        this.claimable = !!claimable;
-        this.taken = !!taken;
-        this.t = 0; // tempo accumulato
-        this.createdAt = createdAt || Date.now();
-        this.lifetimeMs = lifetimeMs ?? CONFIG.chestLifetimeMs;
-        this.pendingClaim = false; // per evitare doppio claim client-side
+        this.x=x; this.y=y; this.rarity=rarity; this.claimable=!!claimable; this.taken=!!taken; this.t=0;
       }
-      update(dt){
-        this.t += dt;
-      }
-      isExpired(){
-        return !this.taken && (Date.now() - this.createdAt) > this.lifetimeMs;
-      }
-      draw(ctx, t){
-        const { toScreen, cellSizeX, cellSizeY } = t;
-        const pos = toScreen(this.x, this.y);
-        const sizeW = cellSizeX * 1.6;
-        const sizeH = cellSizeY * 1.6;
-
-        const ageRatio = clamp((Date.now() - this.createdAt) / this.lifetimeMs, 0, 1);
-        const pulse = 0.85 + Math.sin(this.t * 3) * 0.08;
-        const alpha = this.taken ? 0.3 : (1 - ageRatio * 0.3);
-
-        ctx.save();
-        ctx.translate(pos.x, pos.y);
-        ctx.globalAlpha = alpha;
-
-        if (Assets.chest) {
-          const scale = 0.9 + pulse * 0.15;
-          const w = sizeW * scale;
-          const h = sizeH * scale;
-          ctx.drawImage(Assets.chest, -w/2, -h/2, w, h);
-        } else {
-          ctx.fillStyle = this.claimable && !this.taken ? '#ccaa00' : '#555';
-          ctx.fillRect(-sizeW/2, -sizeH/2, sizeW, sizeH);
+      update(dt){ this.t += dt; }
+        draw(ctx, t){
+          const { toScreen, cellSizeX, cellSizeY } = t;
+          const pos = toScreen(this.x, this.y);
+          const sizeW = cellSizeX * 1.6;
+          const sizeH = cellSizeY * 1.6;
+          ctx.save();
+          ctx.translate(pos.x, pos.y);
+          if (Assets.chest) ctx.drawImage(Assets.chest, -sizeW/2, -sizeH/2, sizeW, sizeH);
+          else { ctx.fillStyle = this.claimable && !this.taken ? '#ccaa00' : '#555'; ctx.fillRect(-sizeW/2, -sizeH/2, sizeW, sizeH); }
+          ctx.restore();
         }
-
-        // aura per chest claimable
-        if (this.claimable && !this.taken) {
-          ctx.globalAlpha = 0.35 + 0.25*Math.sin(this.t * 4);
-          ctx.strokeStyle = '#facc15';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.ellipse(0,0,sizeW*0.75,sizeH*0.35,0,0,Math.PI*2);
-          ctx.stroke();
-        }
-
-        ctx.restore();
-      }
     }
 
     class PerkEntity {
@@ -588,185 +549,101 @@
         this.perkName = perkName || 'dragon';
         this.wax_account = wax_account || '';
         this.dir = dir || 'left-to-right';
-        this.x = x;
-        this.yBase = y;
-        this.amp = amp;
-        this.freq = freq;
-        this.speed = speed;
-
-        this.t = 0;
-        this.frame = 0;
-        this.tick = 0;
-        this.frameDelay = 6;
-        this.frames = 6;
-
-        this.hasDropped = false;
-        this.done = false;
+        this.x = x; this.yBase = y; this.amp = amp; this.freq = freq; this.speed = speed;
+        this.t=0; this.frame=0; this.tick=0; this.frameDelay=6; this.frames=6;
+        this.hasDropped=false; this.done=false;
         this.image = Assets.perks[this.perkName] || null;
-
-        // definisci una frazione casuale del percorso a cui tentare il drop
-        this.dropFraction = CONFIG.perkMinTravelBeforeDrop +
-          Math.random() * (CONFIG.perkMaxTravelBeforeDrop - CONFIG.perkMinTravelBeforeDrop);
-        this.spawnXTarget = null; // impostato dopo il primo update
-        this.totalTravel = 0;
       }
       waveY(x){ return this.yBase + Math.sin(x * this.freq) * this.amp; }
       update(dt, world, engine){
-        this.t += dt;
-        this.tick++;
-        if (this.tick >= this.frameDelay){
-          this.tick = 0;
-          this.frame = (this.frame+1) % this.frames;
+        this.t += dt; this.tick++; if (this.tick >= this.frameDelay){ this.tick=0; this.frame=(this.frame+1)%this.frames; }
+        if (!this.hasDropped && Math.random() < CONFIG.perkDropProbability){
+          this.hasDropped = true;
+          const { minX, maxX, minY, maxY } = engine.getBounds();
+          const dx = randInt(minX, maxX); const dy = randInt(minY, maxY);
+          const chest = new ChestEntity({ id:null, x:dx, y:dy, rarity:'perk', claimable:true });
+          engine.upsertChest(chest);
+          try { syncUserFromStorage(); assertAuth(); } catch{}
+          Api.post('/2spawn_chest', { wax_account:this.wax_account, perk_type:this.perkName, x:dx, y:dy })
+            .then(r => { if (r.ok && r.data?.chest_id != null){ chest.id = String(r.data.chest_id); engine.upsertChest(chest); }});
         }
-
-        const { minX, maxX, minY, maxY } = engine.getBounds();
-        if (this.spawnXTarget == null) {
-          const pathLength = (maxX - minX);
-          this.totalTravel = pathLength;
-          this.spawnXTarget = this.dir === 'left-to-right'
-            ? minX + pathLength * this.dropFraction
-            : maxX - pathLength * this.dropFraction;
-        }
-
         const dirFactor = this.dir === 'left-to-right' ? 1 : -1;
         this.x += this.speed * dirFactor * dt;
-
-        // drop chest UNA volta, se permesso
-        if (!this.hasDropped && Math.random() < CONFIG.perkDropProbability) {
-          if ((dirFactor > 0 && this.x >= this.spawnXTarget) ||
-              (dirFactor < 0 && this.x <= this.spawnXTarget)) {
-            this.hasDropped = true;
-            const dx = clamp(this.x, minX+1, maxX-1);
-            const dy = clamp(this.waveY(this.x), minY+1, maxY-1);
-            const chest = new ChestEntity({
-              id: null,
-              x: dx,
-              y: dy,
-              rarity: this.perkName,
-              claimable: true,
-              taken: false,
-              createdAt: Date.now(),
-              lifetimeMs: CONFIG.chestLifetimeMs
-            });
-            engine.spawnChestFromPerk(chest, this);
-          }
-        }
-
+        const { minX, maxX, minY, maxY } = engine.getBounds();
         const wy = this.waveY(this.x);
-        if (this.x < minX - 1 || this.x > maxX + 1 || wy < minY - 2 || wy > maxY + 2){
-          this.done = true;
-        }
+        if (this.x < minX - 1 || this.x > maxX + 1 || wy < minY - 2 || wy > maxY + 2) this.done = true;
       }
       draw(ctx, t){
         const { toScreen, cellSizeX, cellSizeY } = t;
-        const wy = this.waveY(this.x);
-        const pos = toScreen(this.x, wy);
-
-        ctx.save();
-        ctx.translate(pos.x, pos.y);
+        const wy = this.waveY(this.x); const pos = toScreen(this.x, wy);
+        ctx.save(); ctx.translate(pos.x, pos.y);
         const sizeW = cellSizeX * 2.8;
         const sizeH = cellSizeY * 2.8;
-
         if (this.image){
-          const srcW = this.image.width / this.frames;
-          const srcH = this.image.height;
-          const sx = this.frame * srcW;
+          const srcW = this.image.width / this.frames, srcH = this.image.height, sx = this.frame * srcW;
           ctx.drawImage(this.image, sx, 0, srcW, srcH, -sizeW/2, -sizeH/2, sizeW, sizeH);
-        } else {
-          ctx.fillStyle='#88f';
-          ctx.beginPath();
-          ctx.ellipse(0,0, sizeW/2, sizeH/2, 0, 0, Math.PI*2);
-          ctx.fill();
-        }
-
+        } else { ctx.fillStyle='#88f'; ctx.beginPath(); ctx.ellipse(0,0, sizeW/2, sizeH/2, 0, 0, Math.PI*2); ctx.fill(); }
         ctx.restore();
       }
     }
 
     class GoblinEntity {
       constructor({ id, owner, color, x, y }){
-        this.id = String(id);
-        this.owner = owner || 'goblin';
-        this.color = color || '#facc15';
-        this.x = x;
-        this.y = y;
-        this.target = {x, y};
-        this.heading = Math.random()*Math.PI*2;
-        this.speed = 7.4 + randRange(-0.6, 0.6);
-        this.turnRate = 9.3 + randRange(-1.0, 1.0);
-        this.trail = [];
-        this.trailMax = 28;
-        this.walkPhase = Math.random()*Math.PI*2;
-
-        this.digging = false;
-        this.speedBoostUntil = 0;
-        this.pauseUntil = 0;
+        this.id = String(id); this.owner = owner || 'goblin'; this.color = color || '#facc15';
+        this.x = x; this.y = y; this.target = {x, y};
+        this.heading = Math.random()*Math.PI*2; this.speed = 7.4 + randRange(-0.6, 0.6);
+        this.turnRate = 9.3 + randRange(-1.0, 1.0); this.trail=[]; this.trailMax=28; this.walkPhase=Math.random()*Math.PI*2;
+        this.digging=false; this.speedBoostUntil=0; this.pauseUntil=0;
       }
       update(dt, engine, chests){
         if (this.digging) return;
-        const now = performance.now();
-        const { minX, maxX, minY, maxY } = engine.getBounds();
+        const now = performance.now(); const { minX, maxX, minY, maxY } = engine.getBounds();
         if (now < this.pauseUntil) return;
-
         if (!this.target) this.target = { x:this.x, y:this.y };
 
-        // AI basica + ricerca forziere più vicino
+        // seek nearest chest
         let bestChest=null, bestD2=Infinity;
         for (const chest of chests){
           if (!chest.claimable || chest.taken) continue;
-          const dx=chest.x-this.x, dy=chest.y-this.y;
-          const d2=dx*dx+dy*dy;
+          const dx=chest.x-this.x, dy=chest.y-this.y, d2=dx*dx+dy*dy;
           if (d2 < bestD2){ bestD2=d2; bestChest=chest; }
         }
 
         let desired = Math.atan2(this.target.y - this.y, this.target.x - this.x);
         const distTarget2 = (this.target.x - this.x)**2 + (this.target.y - this.y)**2;
         if (distTarget2 < 0.09){
-          this.target.x = randRange(minX+1, maxX-1);
-          this.target.y = randRange(minY+1, maxY-1);
+          this.target.x = randRange(minX+1, maxX-1); this.target.y = randRange(minY+1, maxY-1);
           if (Math.random() < 0.12) this.pauseUntil = now + 260 + Math.random()*360;
         }
 
         if (bestChest){
-          const dx=bestChest.x-this.x, dy=bestChest.y-this.y;
-          const d=Math.hypot(dx,dy);
+          const dx=bestChest.x-this.x, dy=bestChest.y-this.y; const d=Math.hypot(dx,dy);
           const CHEST_SEEK_R = 4;
           if (d < CHEST_SEEK_R){
-            const toChest = Math.atan2(dy,dx);
-            const bias = 0.35 + (1 - d/CHEST_SEEK_R) * 0.3;
+            const toChest = Math.atan2(dy,dx); const bias = 0.35 + (1 - d/CHEST_SEEK_R) * 0.3;
             desired = desired + (toChest - desired) * clamp(bias,0,0.75);
             if (d < 1.5) this.speedBoostUntil = now + 1200;
-            if (d < 0.8 && !this.digging){
-              this.startDigging();
-            }
+            if (d < 0.8 && !this.digging){ this.startDigging(); bestChest.taken = true; }
           }
         }
 
-        // separazione
-        let sepX=0, sepY=0, seen=0;
-        const SEP_R=1.3;
+        // separation
+        let sepX=0, sepY=0, seen=0; const SEP_R=1.3;
         for (const other of engine.goblins.values()){
           if (other === this) continue;
-          const dx=this.x - other.x, dy=this.y - other.y;
-          const d2=dx*dx+dy*dy;
+          const dx=this.x - other.x, dy=this.y - other.y; const d2=dx*dx+dy*dy;
           if (d2 > SEP_R*SEP_R || d2 === 0) continue;
-          const d=Math.sqrt(d2);
-          const push=(SEP_R - d)/SEP_R;
-          sepX += (dx/(d || 0.0001)) * push;
-          sepY += (dy/(d || 0.0001)) * push;
-          seen++;
+          const d=Math.sqrt(d2); const push=(SEP_R - d)/SEP_R;
+          sepX += (dx/(d || 0.0001)) * push; sepY += (dy/(d || 0.0001)) * push; seen++;
         }
         if (seen){
           const ang = Math.atan2(sepY, sepX);
           desired = desired + (ang - desired) * 0.25;
         }
 
-        // bounds
+        // stay inside bounds
         if (this.x < minX+0.5 || this.x > maxX-0.5 || this.y < minY+0.5 || this.y > maxY-0.5){
-          const back = Math.atan2(
-            clamp(this.y, minY+1, maxY-1)-this.y,
-            clamp(this.x, minX+1, maxX-1)-this.x
-          );
+          const back = Math.atan2(clamp(this.y, minY+1, maxY-1)-this.y, clamp(this.x, minX+1, maxX-1)-this.x);
           desired = desired + (back - desired) * 0.65;
         }
 
@@ -787,42 +664,23 @@
         const last = this.trail[this.trail.length-1];
         const cellDist = 0.20;
         if (!last || (last.x - this.x)**2 + (last.y - this.y)**2 > cellDist*cellDist){
-          this.trail.push({x:this.x, y:this.y});
-          if (this.trail.length > this.trailMax) this.trail.shift();
+          this.trail.push({x:this.x, y:this.y}); if (this.trail.length > this.trailMax) this.trail.shift();
         }
-        this.walkPhase += dt * 10;
 
-        // AUTO-CLAIM CHEST entro 3x3 (Chebyshev)
-        const radius = CONFIG.chestClaimRadiusCells;
-        for (const chest of chests){
-          if (!chest.claimable || chest.taken || chest.pendingClaim) continue;
-          const dx = Math.abs(chest.x - this.x);
-          const dy = Math.abs(chest.y - this.y);
-          if (dx <= radius && dy <= radius){
-            engine.handleChestAutoClaim(this, chest);
-            break;
-          }
-        }
+        this.walkPhase += dt * 10;
       }
-      startDigging(){
-        this.digging = true;
-        setTimeout(()=> { this.digging = false; }, 1800 + Math.random()*900);
-      }
+      startDigging(){ this.digging=true; setTimeout(()=>this.digging=false, 1800 + Math.random()*900); }
       drawTrail(ctx, t){
         const { toScreen, cellSizeX, cellSizeY } = t;
-        const segs = this.trail;
-        if (!segs || segs.length < 2) return;
+        const segs = this.trail; if (!segs || segs.length < 2) return;
         ctx.save();
         for (let i=0;i<segs.length-1;i++){
           const a = toScreen(segs[i].x, segs[i].y);
           const b = toScreen(segs[i+1].x, segs[i+1].y);
-          ctx.beginPath();
-          ctx.moveTo(a.x,a.y);
-          ctx.lineTo(b.x,b.y);
+          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
           const thick = Math.max(1.0, ((cellSizeX + cellSizeY)/2) * 0.18 * (0.5 + (i/segs.length)));
           ctx.lineWidth = thick;
-          ctx.strokeStyle = '#888';
-          ctx.stroke();
+          ctx.strokeStyle = '#888'; ctx.stroke();
         }
         ctx.restore();
       }
@@ -832,31 +690,18 @@
         const sizeW = cellSizeX * 2.4;
         const sizeH = cellSizeY * 2.4;
         const bob = Math.sin(this.walkPhase) * sizeH * 0.08;
-
+      
         this.drawTrail(ctx, t);
-
-        ctx.save();
-        ctx.translate(pos.x, pos.y + bob);
-
-        if (Assets.goblin){
-          ctx.drawImage(Assets.goblin, -sizeW/2, -sizeH/2, sizeW, sizeH);
-        } else {
-          ctx.fillStyle = '#6c3';
-          ctx.fillRect(-sizeW/2, -sizeH/2, sizeW, sizeH);
-        }
-
-        const labelW = sizeW * 1.8;
-        const labelH = sizeH * 0.45;
-        ctx.fillStyle = '#111';
-        ctx.fillRect(-labelW/2, sizeH*0.6, labelW, labelH);
-        ctx.strokeStyle = this.color;
-        ctx.strokeRect(-labelW/2, sizeH*0.6, labelW, labelH);
-        ctx.fillStyle = '#eee';
-        ctx.textAlign='center';
-        ctx.textBaseline='middle';
-        ctx.font = '12px sans-serif';
+      
+        ctx.save(); ctx.translate(pos.x, pos.y + bob);
+        if (Assets.goblin) ctx.drawImage(Assets.goblin, -sizeW/2, -sizeH/2, sizeW, sizeH);
+        else { ctx.fillStyle = '#6c3'; ctx.fillRect(-sizeW/2, -sizeH/2, sizeW, sizeH); }
+      
+        const labelW = sizeW * 1.8, labelH = sizeH * 0.45;
+        ctx.fillStyle = '#111'; ctx.fillRect(-labelW/2, sizeH*0.6, labelW, labelH);
+        ctx.strokeStyle = this.color; ctx.strokeRect(-labelW/2, sizeH*0.6, labelW, labelH);
+        ctx.fillStyle = '#eee'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font = '12px sans-serif';
         ctx.fillText(this.owner || 'goblin', 0, sizeH*0.6 + labelH/2);
-
         ctx.restore();
       }
     }
@@ -871,68 +716,63 @@
     // ------------------------------------------------------------
     class GameEngine {
       constructor(canvas){
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
+        this.canvas = canvas; this.ctx = canvas.getContext('2d');
         this.world = { width: CONFIG.worldCols, height: CONFIG.worldRows };
-
+        // iniziale coerente con la nuova API:
         this.transform = {
           cellSizeX: 16, cellSizeY: 16,
           offsetX: 0, offsetY: 0,
           canvasWidth: canvas.width, canvasHeight: canvas.height,
           toScreen: (x,y) => ({ x, y })
         };
-
-        this.running=false;
-        this.lastTs=performance.now();
-
-        this.goblinById = new Map();
-        this.goblins = this.goblinById;
-        this.chestById = new Map();
-        this.perkById = new Map();
-
+        this.running=false; this.lastTs=performance.now();
+        this.goblinById = new Map(); this.goblins=this.goblinById;
+        this.chestById = new Map(); this.perkById = new Map();
         this.handleResize = this.handleResize.bind(this);
         window.addEventListener('resize', this.handleResize, { passive:true });
         this.handleResize();
       }
-      destroy(){
-        this.stop();
-        window.removeEventListener('resize', this.handleResize);
-      }
-      getBounds(){
-        return { minX:1, minY:1, maxX:this.world.width-2, maxY:this.world.height-2 };
-      }
+      destroy(){ this.stop(); window.removeEventListener('resize', this.handleResize); }
+      getBounds(){ return { minX:1, minY:1, maxX:this.world.width-2, maxY:this.world.height-2 }; }
       handleResize(){
         const root = document.getElementById('canvas-wrap') || document.getElementById('app-root');
         const rect = root.getBoundingClientRect();
+      
+        // 1) dimensione target: usa tutta la larghezza disponibile del contenitore
         const containerW = Math.max(320, Math.floor(rect.width));
+        // 2) altezza cappata: metà viewport (o quello che preferisci)
         const maxH = Math.max(200, Math.floor((window.innerHeight || 800) * 0.50));
-
-        const targetW = containerW;
-        const targetH = maxH;
-
+      
+        const targetW = containerW;       // niente aspect-ratio
+        const targetH = maxH;             // altezza massima consentita
+      
+        // DPR
         const dpr = State.dpr;
         this.canvas.width  = Math.round(targetW * dpr);
         this.canvas.height = Math.round(targetH * dpr);
         this.canvas.style.width  = targetW + 'px';
         this.canvas.style.height = targetH + 'px';
-
+      
         const ctx = this.ctx;
         ctx.setTransform(dpr,0,0,dpr,0,0);
         ctx.imageSmoothingEnabled = false;
-
+      
+        // Margini interni
         const padX = 8, padY = 8;
         const availW = Math.max(50, targetW - padX*2);
         const availH = Math.max(50, targetH - padY*2);
-
+      
+        // 3) SCALA NON UNIFORME: ogni cella ha dimensione X e Y indipendenti
         const worldW = this.world.width, worldH = this.world.height;
         const cellSizeX = availW / worldW;
         const cellSizeY = availH / worldH;
-
+      
+        // centra l’area di gioco nel canvas
         const areaW = worldW * cellSizeX;
         const areaH = worldH * cellSizeY;
         const offsetX = Math.floor((targetW - areaW) / 2);
         const offsetY = Math.floor((targetH - areaH) / 2);
-
+      
         this.transform = {
           cellSizeX, cellSizeY,
           offsetX, offsetY,
@@ -941,28 +781,32 @@
         };
       }
       clear(){
-        const ctx = this.ctx;
-        ctx.save();
-        ctx.setTransform(1,0,0,1,0,0);
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        const w = this.canvas.width / State.dpr; 
+        const h = this.canvas.height / State.dpr;
+        const ctx = this.ctx; ctx.save(); 
+        ctx.setTransform(1,0,0,1,0,0); 
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); // <-- usa width/height nativi
         ctx.restore();
       }
       drawBackground(){
         const ctx = this.ctx;
+      
+        // Pulisci tutto il buffer
         ctx.save();
         ctx.setTransform(1,0,0,1,0,0);
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         ctx.restore();
-
+      
         const { cellSizeX, cellSizeY, offsetX, offsetY } = this.transform;
         const areaW = this.world.width  * cellSizeX;
         const areaH = this.world.height * cellSizeY;
-
+      
         const c = ctx;
         c.save();
         c.translate(offsetX, offsetY);
-
+      
+        // Sfondo gif allungato a piena area di gioco (niente alfa)
         if (Assets.bg) {
           c.globalAlpha = 1.0;
           c.drawImage(
@@ -973,9 +817,11 @@
           c.fillStyle = '#111';
           c.fillRect(0, 0, areaW, areaH);
         }
-
+      
+        // Griglia con scala non uniforme
         c.strokeStyle = '#333';
         c.lineWidth = 1;
+      
         for (let x = 0; x <= this.world.width; x++){
           const px = Math.round(x * cellSizeX) + 0.5;
           c.beginPath(); c.moveTo(px, 0); c.lineTo(px, areaH); c.stroke();
@@ -984,76 +830,60 @@
           const py = Math.round(y * cellSizeY) + 0.5;
           c.beginPath(); c.moveTo(0, py); c.lineTo(areaW, py); c.stroke();
         }
-
+      
         c.restore();
       }
-      start(){
-        if (this.running) return;
-        this.running = true;
-        this.lastTs = performance.now();
-        const loop = ts => {
-          if (!this.running) return;
-          this.tick(ts || performance.now());
-          requestAnimationFrame(loop);
-        };
+      start(){ if (this.running) return; this.running = true; this.lastTs = performance.now();
+        const loop = ts => { if (!this.running) return; this.tick(ts || performance.now()); requestAnimationFrame(loop); };
         requestAnimationFrame(loop);
       }
-      stop(){
-        this.running=false;
-      }
+      stop(){ this.running=false; }
       tick(ts){
-        const dtMs = ts - this.lastTs;
-        this.lastTs = ts;
-        const dt = Math.min(0.05, Math.max(0.001, dtMs/1000));
-        this.update(dt);
-        this.draw();
+        const dtMs = ts - this.lastTs; this.lastTs = ts; const dt = Math.min(0.05, Math.max(0.001, dtMs/1000));
+        this.update(dt); this.draw();
       }
       update(dt){
         for (const c of this.chestById.values()) c.update(dt);
         for (const p of this.perkById.values()) p.update(dt, this.world, this);
-        for (const [id,p] of this.perkById){
-          if (p.done) this.perkById.delete(id);
-        }
-
+        for (const [id,p] of this.perkById){ if (p.done) this.perkById.delete(id); }
         const chestList = [...this.chestById.values()];
         for (const g of this.goblinById.values()) g.update(dt, this, chestList);
-
-        // rimuovi chest scadute
-        for (const [id,c] of this.chestById){
-          if (c.isExpired()){
-            this.chestById.delete(id);
-          }
-        }
       }
       draw(){
-        this.clear();
-        this.drawBackground();
+        this.clear(); this.drawBackground();
         const ctx = this.ctx;
         for (const c of this.chestById.values()) c.draw(ctx, this.transform);
         for (const p of this.perkById.values()) p.draw(ctx, this.transform);
         for (const g of this.goblinById.values()) g.draw(ctx, this.transform);
       }
       syncExpeditions(exps=[]){
-        const seenExpIds = new Set();
-        const { minX, maxX, minY, maxY } = this.getBounds();
+        const seenExpIds = new Set(); const { minX, maxX, minY, maxY } = this.getBounds();
         exps.forEach((exp, idx) => {
           const owner = exp.wax_account || exp.owner || 'player';
           const expId = String(exp.expedition_id ?? exp.id ?? idx);
           seenExpIds.add(expId);
-
+      
           let g = this.goblinById.get(expId);
           const color = colorByIndex(idx);
           if (!g){
-            const gx = randRange(minX+1, maxX-1);
-            const gy = randRange(minY+1, maxY-1);
+            const gx = randRange(minX+1, maxX-1); const gy = randRange(minY+1, maxY-1);
             g = new GoblinEntity({ id:expId, owner, color, x:gx, y:gy });
             this.goblinById.set(expId, g);
           }
           g.owner = owner;
           g._groupSize = exp.total_goblins ?? (Array.isArray(exp.goblin_ids) ? exp.goblin_ids.length : g._groupSize ?? 0);
           g._expeditionId = expId;
+          // calcola e memorizza finestra temporale
+          const sr = toNumber(exp.seconds_remaining);
+          if (sr > 0) {
+            const snap = exp._snapAt || Date.now();
+            g._endsAt = snap + sr*1000;
+          } else {
+            g._endsAt = getEndsAt(exp)?.getTime() || null;
+          }
         });
-
+      
+        // se un goblin non è più presente nello snapshot => è finita
         for (const [id, gob] of this.goblinById){
           if (!seenExpIds.has(id)){
             this.goblinById.delete(id);
@@ -1061,220 +891,290 @@
         }
       }
       syncChests(chests=[]){
-        const seen = new Set();
-        const { minX, maxX, minY, maxY } = this.getBounds();
+        const seen = new Set(); const { minX, maxX, minY, maxY } = this.getBounds();
         chests.forEach(c => {
-          const id = String(c.id ?? c.chest_id ?? `${c.x}|${c.y}|net`);
-          seen.add(id);
+          const id = String(c.id ?? c.chest_id ?? `${c.x}|${c.y}|net`); seen.add(id);
           let chest = this.chestById.get(id);
           const x = clamp(Number(c.x) || randRange(minX, maxX), minX, maxX);
           const y = clamp(Number(c.y) || randRange(minY, maxY), minY, maxY);
           const rarity = c.rarity || c.perk_type || 'common';
           const claimable = c.claimable !== false && !c.claimed && !c.taken;
           const taken = !!c.claimed || !!c.taken;
-          const createdAt = ts(c.created_at)?.getTime() || Date.now();
-          const lifetimeMs = c.lifetime_ms || CONFIG.chestLifetimeMs;
-
-          if (!chest){
-            chest = new ChestEntity({ id, x, y, rarity, claimable, taken, createdAt, lifetimeMs });
-            this.chestById.set(id, chest);
-          } else {
-            chest.x = x;
-            chest.y = y;
-            chest.rarity = rarity;
-            chest.claimable = claimable;
-            chest.taken = taken;
-          }
+          if (!chest){ chest = new ChestEntity({ id, x, y, rarity, claimable, taken }); this.chestById.set(id, chest); }
+          else { chest.x=x; chest.y=y; chest.rarity=rarity; chest.claimable=claimable; chest.taken=taken; }
         });
-
-        for (const [id] of this.chestById){
-          if (!seen.has(id)) this.chestById.delete(id);
-        }
+        for (const [id] of this.chestById){ if (!seen.has(id)) this.chestById.delete(id); }
       }
-      upsertChest(chest){
-        this.chestById.set(chest.id, chest);
-      }
+      upsertChest(chest){ this.chestById.set(chest.id, chest); }
       spawnPerkFromCommand(perkName, wax_account){
         const dir = Math.random() < 0.5 ? 'left-to-right' : 'right-to-left';
         const { minX, maxX, minY, maxY } = this.getBounds();
         const startX = dir === 'left-to-right' ? minX : maxX;
-        const amp = 3 + Math.random()*4;
-        const baseY = randRange(minY+amp+1, maxY-amp-1);
-        const freq = 0.16 + Math.random()*0.16;
-        const speed = 1.2 + Math.random()*0.8;
-        const p = new PerkEntity({
-          id:null,
-          perkName,
-          wax_account,
-          dir,
-          x:startX,
-          y:baseY,
-          amp,
-          freq,
-          speed
-        });
+        const amp = 3 + Math.random()*4; const baseY = randRange(minY+amp+1, maxY-amp-1);
+        const freq = 0.16 + Math.random()*0.16; const speed = 1.2 + Math.random()*0.8;
+        const p = new PerkEntity({ id:null, perkName, wax_account, dir, x:startX, y:baseY, amp, freq, speed });
         this.perkById.set(p.id, p);
       }
-      spawnChestFromPerk(chest, perkEntity){
-        // disegna subito la chest local
-        this.upsertChest(chest);
-
-        // notifica globale visiva
-        showGlobalEvent('chest_spawn',
-          `${perkEntity.wax_account || 'A player'} dropped a chest!`,
-          { icon:'💰', ttl:4500 });
-
-        // notifica backend → spawn globale
-        syncUserFromStorage();
-        try { assertAuth(); } catch { return; }
-
-        Api.post('/2spawn_chest', {
-          wax_account: perkEntity.wax_account || State.user.wax_account,
-          perk_type: perkEntity.perkName,
-          x: chest.x,
-          y: chest.y,
-          lifetime_ms: chest.lifetimeMs
-        }, 12000).then(r => {
-          if (r.ok && r.data && r.data.chest_id != null){
-            chest.id = String(r.data.chest_id);
-            this.upsertChest(chest);
-          }
-        }).catch(()=>{});
-      }
-      handleChestAutoClaim(goblin, chest){
-        if (chest.pendingClaim || chest.taken || !chest.claimable) return;
-        chest.pendingClaim = true;
-
-        // effetto "pop" visivo immediato
-        showGlobalEvent('chest_claim',
-          `${goblin.owner} claimed a chest!`,
-          { icon:'🏆', ttl:4500 });
-
-        // backend: auto-claim (endpoint da implementare lato server)
-        syncUserFromStorage();
-        let isOwner = false;
-        try {
-          assertAuth();
-          isOwner = goblin.owner === State.user.wax_account;
-        } catch { /* guest */ }
-
-        const payload = {
-          wax_account: State.user.wax_account || null,
-          goblin_group_id: goblin._expeditionId || null,
-          chest_id: chest.id
-        };
-        Api.post('/2chest_autoclaim', payload, 12000)
-          .then(res => {
-            // server farà broadcast SSE con chest_update + winner / reward
-          })
-          .catch(()=>{});
-
-        chest.taken = true;
-        chest.claimable = false;
-
-        // se è il mio goblin → notifica personale
-        if (isOwner){
-          showPersonalNotification(
-            'Chest claimed!',
-            'Your goblins picked up a chest while exploring.',
-            { icon:'💰' }
-          );
-        }
-      }
     }
 
     // ------------------------------------------------------------
-    // EXPEDITION HELPERS
+    // UI HELPERS (no CSS)
     // ------------------------------------------------------------
-    function getDurationMin(exp){
-      return toNumber(exp.duration_minutes ?? exp.duration ?? exp.mins ?? 30);
+    function toast(msg){
+      const host = State.ui.toastHost; if (!host) return;
+      const div = document.createElement('div'); div.textContent = msg; host.appendChild(div);
+      setTimeout(()=>div.remove(), 3500);
     }
-    function getStart(exp){
-      return ts(exp.started_at ?? exp.start_time ?? exp.start_ts ?? exp.created_at);
+    // ricalcola se ho una spedizione attiva, aggiorna UI e forecast ===
+    function recalcMyExpeditionFlagAndUI(){
+      const mine = (State.globalExpeditions || []).some(e => (e.wax_account || e.owner) === State.user.wax_account);
+      State.runtime.expeditionInProgress = !!mine;
+      updateActionButtonsUI();
+      if (!mine) scheduleForecastIfReady();
     }
-    function getEndsAt(exp){
-      const explicitEnd = ts(exp.ends_at ?? exp.end_time ?? exp.end_ts);
-      if (explicitEnd) return explicitEnd;
-      const start = getStart(exp);
-      const mins = getDurationMin(exp);
-      return start ? new Date(start.getTime() + mins*60*1000) : null;
+
+    function setTabsBehavior(){
+      const tabs = document.getElementById('tabs');
+      const my = document.getElementById('tab-my');
+      const global = document.getElementById('tab-global');
+      const recent = document.getElementById('tab-recent');
+      const rewards = document.getElementById('tab-rewards');
+
+      function activate(panelName){
+        my.hidden = panelName !== 'tab-my';
+        global.hidden = panelName !== 'tab-global';
+        recent.hidden = panelName !== 'tab-recent';
+        rewards.hidden = panelName !== 'tab-rewards';
+        // Selected aria
+        tabs.querySelectorAll('button[role="tab"]').forEach(b=>{
+          b.setAttribute('aria-selected', String(b.dataset.panel === panelName));
+        });
+        if (panelName === 'tab-global') renderGlobalPanel();
+        if (panelName === 'tab-recent') renderRecentPanel();
+        if (panelName === 'tab-rewards') renderRewardsPanel();
+      }
+
+      tabs.querySelectorAll('button[role="tab"]').forEach(btn=>{
+        btn.addEventListener('click', ()=> activate(btn.dataset.panel));
+      });
+
+      // default
+      activate('tab-my');
     }
-    function getTimeLeftMs(exp, now=new Date()){
-      const end = getEndsAt(exp);
-      if (!end) return null;
-      return Math.max(0, end.getTime() - now.getTime());
+
+    function responsiveFlow(){
+      // Basic responsive flow without CSS:
+      // - If width < 600 => stack: game area, then tabs, each panel below
+      // - If 600–1024 => game area then tabs; panels remain below but show more room
+      // - If >1024 => keep as is (canvas prominent, panels alongside via reading order)
+      // Reading order already puts game area first, panels second. Nothing else to do here.
+      // The engine.handleResize() manages canvas size.
+      // You can add extra DOM moves if desired later with CSS.
+      const meta = document.getElementById('global-meta');
+      if (meta){
+        const w = window.innerWidth || 800;
+        meta.style.gridTemplateColumns = w<480 ? 'repeat(2,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))';
+      }   
     }
-    function fromSecondsRemaining(exp){
-      const sec = toNumber(exp.seconds_remaining);
-      if (!sec) return null;
-      const snap = exp._snapAt || Date.now();
-      return {
-        baseLeftMs: sec*1000,
-        snapAt: snap,
-        leftMs(now=Date.now()){ return Math.max(0, this.baseLeftMs - (now - this.snapAt)); },
-        endsAt(){ return new Date(this.snapAt + this.baseLeftMs); }
+    function moveControlsIntoBuilder(){
+      const host = document.getElementById('builder-controls');
+      const duration = document.getElementById('duration-switch');
+      const capLine  = document.getElementById('cap-line');
+      const actions  = document.getElementById('action-buttons');
+      if (!host || !duration || !capLine || !actions) return;
+    
+      host.innerHTML = ''; // ricomponi
+      const row1 = document.createElement('div'); row1.className = 'row';
+      const row2 = document.createElement('div'); row2.className = 'row';
+    
+      row1.appendChild(duration);
+      const spacer = document.createElement('div'); spacer.className='spacer';
+      row1.appendChild(spacer);
+      row1.appendChild(capLine);
+    
+      row2.appendChild(actions);
+    
+      host.appendChild(row1);
+      host.appendChild(row2);
+    
+      // tooltip rapidi
+      actions.title = 'Start an expedition or try a perk (cooldown applies).';
+      capLine.title = 'Your current cap is based on Troop Reinforcements NFTs.';
+    }
+
+    function styleDurationBlock(box){
+      // Layout compatto per label+select+hint
+      box.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;';
+    
+      const sel  = document.getElementById('sel-duration');
+      const hint = document.getElementById('duration-hint');
+    
+      if (sel) {
+        // Sovrascrivi il min-width inline e rendi il dropdown più piccolo
+        sel.style.minWidth = 'unset';
+        sel.style.maxWidth = '160px';
+        sel.style.width    = 'auto';
+        sel.style.padding  = '4px 8px';
+        sel.style.borderRadius = '6px';
+        sel.style.font = 'inherit';        // fa “agganciare” il font del tema
+        sel.style.lineHeight = '1.2';
+        sel.style.boxSizing = 'border-box';
+        // opzionale: per uniformare l’aspetto tra browser
+        sel.style.webkitAppearance = 'menulist';
+        sel.style.MozAppearance    = 'menulist';
+        sel.style.appearance       = 'menulist';
+      }
+      if (hint) {
+        hint.style.display = 'block';
+        hint.style.opacity = '.85';
+        hint.style.marginLeft = '0';
+      }
+    }
+    // --- Pulsanti: abilitazione + tooltip motivo ---
+    function updateActionButtonsUI(){
+      const btnStart = State.ui.btnStart;
+      const btnPerk  = State.ui.btnPerk;
+      if (!btnStart || !btnPerk) return;
+    
+      const val = canSendExpedition();
+      btnStart.disabled = !val.ok;
+      let startHint = 'Start an expedition with the selected goblins.';
+      if (!val.ok){
+        if (val.reason==='in_progress') startHint = 'You already have an expedition in progress.';
+        if (val.reason==='no_selection') startHint = 'Select at least one goblin.';
+        if (val.reason==='over_cap') startHint = 'Selection exceeds your current cap.';
+        if (val.reason==='tired_present') startHint = 'Your selection includes tired goblins.';
+      }
+      btnStart.setAttribute('aria-describedby','hint');
+      btnStart.title = startHint;
+    
+      const onCd = isPerkOnCooldown();
+      btnPerk.disabled = onCd || !State.user?.wax_account;
+      btnPerk.setAttribute('aria-describedby','hint');
+      if (onCd){
+        const secs = Math.max(0, Math.ceil((State.runtime.perkCooldownUntil - Date.now())/1000));
+        btnPerk.title = `Perk on cooldown. Ready in ${secs}s.`;
+      } else {
+        btnPerk.title = 'Try launching a perk. Cooldown: 10 minutes.';
+      }
+    }
+    
+    // --- FORECAST (debounced) ---
+    const requestForecastDebounced = debounce(requestForecast, 320);
+    
+    function scheduleForecastIfReady(){
+      const duration = State.expedition?.durationMinutes || 0;
+      const sel = getSelectedGoblins();
+      if (!duration || !sel.length) { renderForecast(null, 'Select goblins and a duration.'); return; }
+    
+      const payloadKey = JSON.stringify({
+        d: duration,
+        ids: sel.map(g=>g.asset_id).sort(),
+        reinf: State.expedition?.reinforcementCount || 0
+      });
+      if (payloadKey === State.runtime.lastForecastPayloadKey && State.runtime.forecastData){
+        renderForecast(State.runtime.forecastData, null);
+        return;
+      }
+      State.runtime.lastForecastPayloadKey = payloadKey;
+      requestForecastDebounced(duration, sel);
+    }
+    
+    async function requestForecast(duration, selArr){
+      if (State.runtime.expeditionInProgress) { renderForecast(null, 'An expedition is running.'); return; }
+      if (!selArr?.length || !duration) { renderForecast(null, ''); return; }
+      try { assertAuth(); } catch { renderForecast(null,'Sign in to preview rewards.'); return; }
+    
+      const body = {
+        wax_account: State.user.wax_account,
+        user_id: State.user.user_id,
+        usx_token: State.user.usx_token,
+        duration_minutes: duration,
+        asset_ids: selArr.map(g=> g.asset_id),
+        reinforcement_count: State.expedition?.reinforcementCount || 0
       };
-    }
-    function sumStatsForExp(exp){
-      const t = exp.stats_totals || exp.statsTotals || exp.stats || exp.totals || {};
-      let res  = toNumber(t.resistance);
-      let loot = toNumber(t.loot_hungry);
-      let spd  = toNumber(t.speed);
-      let acc  = toNumber(t.accuracy);
-
-      if (!(res||loot||spd||acc) && Array.isArray(exp.goblin_ids) && exp.goblin_ids.length){
-        for (const id of exp.goblin_ids){
-          const nft = State.nftIndex.get(String(id));
-          res  += getStatFromNFT(nft,'resistance');
-          loot += getStatFromNFT(nft,'loot_hungry');
-          spd  += getStatFromNFT(nft,'speed');
-          acc  += getStatFromNFT(nft,'accuracy');
-        }
+    
+      State.runtime.forecastBusy = true;
+      renderForecastLoading();
+    
+      const res = await Api.post('/2expedition_forecast', body, 12000).catch(()=>({ok:false}));
+      State.runtime.forecastBusy = false;
+    
+      if (!res || !res.ok || !res.data){
+        renderForecast(null, 'Forecast unavailable right now.');
+        return;
       }
-      return { res, loot, spd, acc };
+      State.runtime.forecastData = res.data;
+      renderForecast(res.data, null);
     }
-
-    const GlobalTimers = { tickId:null, rows:new Map() };
-    function ensureGlobalTimers(){
-      if (GlobalTimers.tickId) return;
-      GlobalTimers.tickId = setInterval(()=>{
-        const now = Date.now();
-        for (const [row,info] of GlobalTimers.rows){
-          const { etaEl, endEl, sr } = info;
-          let leftMs = null;
-          let endsAt = null;
-          if (sr){
-            leftMs = sr.leftMs(now);
-            endsAt = sr.endsAt();
-          } else {
-            const exp = info.exp;
-            leftMs = getTimeLeftMs(exp, new Date(now));
-            endsAt = getEndsAt(exp);
-          }
-          if (etaEl && leftMs != null) etaEl.textContent = fmtHMS(leftMs);
-          if (endEl && endsAt) endEl.textContent = timeHM(endsAt);
-        }
-      }, 1000);
+    
+    function renderForecastLoading(){
+      const host = document.getElementById('run-forecast'); if (!host) return;
+      host.hidden = false;
+      host.innerHTML = `<div class="hdr"><span class="tag cyan">Run Forecast</span> <span class="hint">Computing…</span></div>`;
     }
-
-    function onExpeditionEnd(exp){
-      const who = exp.wax_account || exp.owner || 'player';
-      const durMin = getDurationMin(exp);
-      const durationHHMM = fmtHMS(durMin*60*1000).slice(0,5);
-      setTimeout(()=>{
-        const r = State.recentExpeditions.find(e => (e.wax_account||e.owner)===who);
-        const chips = r?.chips ?? 0;
-        const nfts  = r?.nfts_count ?? r?.nfts ?? 0;
-        const msg = `${who} expedition ended: +${formatCompact(chips)} CHIPS${nfts?` +${nfts} NFT`:''} after ${durationHHMM}`;
-        showGlobalEvent('exp_end', msg, { icon:'⛏️' });
-        if (who === State.user.wax_account){
-          showPersonalNotification(
-            'Expedition completed',
-            `+${formatCompact(chips)} CHIPS${nfts?` · ${nfts} NFT`:''}`,
-            { icon:'⛏️' }
-          );
-        }
-      }, 600);
+    
+    function renderForecast(data, message){
+      const host = document.getElementById('run-forecast'); if (!host) return;
+      if (message){
+        host.hidden = false;
+        host.innerHTML = `
+          <div class="hdr"><span class="tag cyan">Run Forecast</span></div>
+          <div class="hint">${safe(message)}</div>
+        `;
+        return;
+      }
+      if (!data){ host.hidden = true; host.innerHTML = ''; return; }
+    
+      const durEff = toNumber(data.duration_effective_minutes) || State.expedition.durationMinutes;
+      const powTot = toNumber(data.power_needed_total);
+      const tMin = toNumber(data.tokens_min);
+      const tMax = toNumber(data.tokens_max);
+      const probs = data.token_tier_probs || {};
+      const nftRewards = Array.isArray(data.nft_rewards) ? data.nft_rewards : [];
+      const msgs = Array.isArray(data.messages) ? data.messages : [];
+    
+      host.hidden = false;
+      host.innerHTML = `
+        <div class="hdr">
+          <span class="tag cyan">Run Forecast</span>
+          <span class="hint">Updated on change; cleared when you start.</span>
+        </div>
+    
+        <div class="grid">
+          <div class="card">
+            <div class="kv">
+              <div><span class="label">Nominal duration</span><b>${State.expedition.durationMinutes} min</b></div>
+              <div><span class="label">Effective duration</span><b>${durEff} min</b></div>
+              <div><span class="label">Total daily power</span><b>${powTot || '—'}</b></div>
+              <div><span class="label">Selected goblins</span><b>${State.selectedGoblinIds.size}</b></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="kv">
+              <div><span class="label">Token reward (min–max)</span><b>${tMin || '—'} – ${tMax || '—'}</b></div>
+              ${Object.keys(probs).length ? `<div><span class="label">Token tier probs</span><b>${
+                Object.entries(probs).map(([k,v])=>`${safe(k)} ${(Math.round(v*100))}%`).join(' · ')
+              }</b></div>`:''}
+              ${nftRewards.length ? `<div><span class="label">NFT chances</span><b>${
+                nftRewards.map(it=>`${safe(it.name)} ${(Math.round((it.chance||0)*100))}%`).join(' · ')
+              }</b></div>`:''}
+            </div>
+          </div>
+        </div>
+    
+        ${data.power_needed_by_asset ? `
+        <div class="card">
+          <div class="kv">
+            <div class="label">Power per goblin</div>
+            ${Object.entries(data.power_needed_by_asset).slice(0,10).map(([id,val])=>
+              `<div><span>#${safe(id)}</span><b>${val}</b></div>`).join('')}
+            ${Object.keys(data.power_needed_by_asset).length>10 ? `<div class="hint">+ more…</div>`:''}
+          </div>
+        </div>`:''}
+    
+        ${msgs.length ? `<div class="hint">${msgs.map(safe).join(' · ')}</div>`:''}
+      `;
     }
 
     // ------------------------------------------------------------
@@ -1282,46 +1182,48 @@
     // ------------------------------------------------------------
     function getSendCap(){
       const base = 50, perReinf = 5, maxExtra = 200;
-      const reinf = State.expedition?.reinforcementCount || 0; // 0–40
+      const reinf = State.expedition?.reinforcementCount || 0;
       const extra = clamp(reinf * perReinf, 0, maxExtra);
       return clamp(base + extra, base, CONFIG.maxGoblinsPerExpedition);
     }
     function updateCapUI(){
-      const cap = getSendCap();
-      const reinf = State.expedition?.reinforcementCount || 0;
+      const cap = getSendCap(); const reinf = State.expedition?.reinforcementCount || 0;
       const extra = Math.min(reinf * 5, 200);
       if (State.ui.capLabel)   State.ui.capLabel.textContent = `Max goblins this run: ${cap}`;
       if (State.ui.reinfLabel) State.ui.reinfLabel.textContent = `Base 50 + ${reinf}× Reinforcement (= ${extra} extra)`;
       if (State.ui.btnFirst) State.ui.btnFirst.textContent = `✅ First ${cap}`;
       if (State.ui.btnBest)  State.ui.btnBest.textContent  = `🏆 Best ${cap}`;
     }
-
-    function buildDurationHint(mins){
-      function cost(m){ return 0.8*m + 0.04*m*m; }
-      const ref = cost(60)/60;
-      const cur = cost(mins)/mins;
-      const efficiency = Math.max(0.6, Math.min(1.5, ref/cur));
-      const tag = mins<=15 ? 'High yield' : mins<=45 ? 'Balanced' : 'Chill';
-      return `${tag}: short runs complete more often → more loot rolls/hour (×${efficiency.toFixed(2)})`;
-    }
-
     function initDurationSwitch(){
       const sel = State.ui.durationSelect;
       const hint = State.ui.durationHint;
       if (!sel) return;
+    
       function update(valMin){
         State.expedition.durationMinutes = valMin;
         if (hint) hint.textContent = buildDurationHint(valMin);
-        scheduleForecastIfReady();
+        scheduleForecastIfReady(); // <--- AGGIUNTO
       }
       sel.addEventListener('change', ()=> update(Number(sel.value||30)));
       update(Number(sel.value||30));
     }
 
+    function buildDurationHint(mins){
+      // costo base usato dal BE: 0.8*m + 0.04*m^2  (senza riduzioni/resistance)
+      function cost(m){ return 0.8*m + 0.04*m*m; }
+      // rendimento relativo per ora di gioco (più alto = meglio): completare più corse corte conviene
+      const ref = cost(60)/60;        // costo medio/min a 60'
+      const cur = cost(mins)/mins;    // costo medio/min al valore selezionato
+      const efficiency = Math.max(0.6, Math.min(1.5, ref/cur)); // normalizza 0.6..1.5 per copy più pulita
+      const tag = mins<=15 ? 'High yield' : mins<=45 ? 'Balanced' : 'Chill';
+      return `${tag}: short runs complete more often → more loot rolls/hour (×${efficiency.toFixed(2)})`;
+    }
+
     function hydrateGoblinBuilder(){
-      const listHost = State.ui.listHost;
+      const listHost = State.ui.listHost; const countEl = State.ui.summaryCount; const statsEl = State.ui.summaryStats;
       if (!listHost) return;
 
+      // filters
       const q = (State.ui.fltSearch?.value || '').trim().toLowerCase();
       const rarity = State.ui.fltRarity?.value || '';
       const minPower = Number(State.ui.fltPower?.value || 0);
@@ -1356,18 +1258,13 @@
         card.title = tired ? 'Resting (below min power)' : 'Click to select/deselect';
 
         const pct = Math.max(6, Math.round((g.daily_power_num || 0)/maxPower*100));
-        card.textContent =
-          `#${g.asset_id} · ${g.name} · ${g.rarity || 'Unknown'} · Power ${g.daily_power_num} (${pct}%)` +
-          (tired ? ' · RESTING' : '');
+        card.textContent = `#${g.asset_id} · ${g.name} · ${g.rarity || 'Unknown'} · Power ${g.daily_power_num} (${pct}%)` + (tired?' · RESTING':'');
 
         if (!tired){
           card.addEventListener('click', ()=>{
-            if (State.selectedGoblinIds.has(g.asset_id)) {
-              State.selectedGoblinIds.delete(g.asset_id);
-            } else if (State.selectedGoblinIds.size < cap) {
-              State.selectedGoblinIds.add(g.asset_id);
-            }
-            hydrateGoblinBuilder();
+            if (State.selectedGoblinIds.has(g.asset_id)) State.selectedGoblinIds.delete(g.asset_id);
+            else if (State.selectedGoblinIds.size < cap) State.selectedGoblinIds.add(g.asset_id);
+            hydrateGoblinBuilder(); // re-render
           });
         } else {
           card.disabled = true;
@@ -1375,18 +1272,17 @@
         listHost.appendChild(card);
       });
 
+      // toggle more
       if (State.ui.btnToggleMore){
         const hasOverflow = filtered.length > COLLAPSED;
         State.ui.btnToggleMore.hidden = !hasOverflow;
-        State.ui.btnToggleMore.textContent = showAll
-          ? 'View less'
-          : `View more (${filtered.length - visible.length} hidden)`;
+        State.ui.btnToggleMore.textContent = showAll ? 'View less' : `View more (${filtered.length - visible.length} hidden)`;
         State.ui.btnToggleMore.onclick = ()=>{
           listHost.setAttribute('data-show-all', showAll ? '0' : '1');
           hydrateGoblinBuilder();
         };
       }
-
+      // --- summary ---
       const selArr = State.goblinsUser.filter(g => State.selectedGoblinIds.has(g.asset_id));
       const sums = selArr.reduce((acc,g)=>{
         const nft = State.nftIndex.get(String(g.asset_id));
@@ -1396,58 +1292,48 @@
         acc.acc += getStatFromNFT(nft,'accuracy');
         return acc;
       }, {res:0, loot:0, spd:0, acc:0});
-
+      
       const selected = selArr.length;
-      const capNow = getSendCap();
       if (State.ui.summaryCount) {
-        const over = selected > capNow;
+        const over = selected > cap;
         const tiredCount = State.goblinsUser.filter(isGoblinTired).length;
         State.ui.summaryCount.innerHTML =
-          `Selected goblins: <b>${selected}</b> / <b>${capNow}</b>` +
+          `Selected goblins: <b>${selected}</b> / <b>${cap}</b>` +
           (over ? ` <span class="badge err" title="You are above your cap. Remove some goblins.">Over cap</span>` : '') +
           (tiredCount ? ` <span class="badge warn" title="Some goblins are below the minimum daily power threshold.">${tiredCount} tired</span>` : '');
       }
-      if (State.ui.summaryStats){
-        State.ui.summaryStats.textContent =
-          `R: ${formatCompact(sums.res)} · L: ${formatCompact(sums.loot)} · S: ${formatCompact(sums.spd)} · A: ${formatCompact(sums.acc)}`;
-      }
-
+      if (State.ui.summaryStats)
+        State.ui.summaryStats.textContent = `R: ${formatCompact(sums.res)} · L: ${formatCompact(sums.loot)} · S: ${formatCompact(sums.spd)} · A: ${formatCompact(sums.acc)}`;
+      
+      // --- aggiornamenti post-render ---
       updateActionButtonsUI();
       scheduleForecastIfReady();
     }
 
     function wireBuilderUI(){
-      const fSearch = State.ui.fltSearch;
-      const fRarity = State.ui.fltRarity;
-      const fPower = State.ui.fltPower;
-      const fLabel = State.ui.fltPowerLabel;
-
-      if (fSearch) fSearch.addEventListener('input', debounce(hydrateGoblinBuilder, 120));
+      const fSearch = State.ui.fltSearch, fRarity = State.ui.fltRarity, fPower = State.ui.fltPower, fLabel = State.ui.fltPowerLabel;
+      if (fSearch) fSearch.addEventListener('input', hydrateGoblinBuilder);
       if (fRarity) fRarity.addEventListener('change', hydrateGoblinBuilder);
       if (fPower){
-        fPower.addEventListener('input', ()=>{
-          if (fLabel) fLabel.textContent = String(fPower.value||0);
-          hydrateGoblinBuilder();
-        });
+        fPower.addEventListener('input', ()=>{ if (fLabel) fLabel.textContent = String(fPower.value||0); hydrateGoblinBuilder(); });
       }
 
-      const bFirst = State.ui.btnFirst;
-      const bBest = State.ui.btnBest;
-      const bClear = State.ui.btnClear;
-
+      const bFirst = State.ui.btnFirst, bBest = State.ui.btnBest, bClear = State.ui.btnClear;
       if (bFirst) bFirst.onclick = ()=>{
         State.selectedGoblinIds.clear();
         const cap = getSendCap();
+        // primi id tra i NON TIRED
         const eligible = State.goblinsUser.filter(g => !isGoblinTired(g));
         eligible.slice(0, cap).forEach(g=> State.selectedGoblinIds.add(g.asset_id));
-
+      
+        // se non bastano, consenti TIRED solo se necessari per non lasciare 0
         if (State.selectedGoblinIds.size === 0 && State.goblinsUser.length){
           const tired = State.goblinsUser.filter(isGoblinTired);
           tired.slice(0, cap).forEach(g=> State.selectedGoblinIds.add(g.asset_id));
         }
         hydrateGoblinBuilder();
       };
-
+      
       if (bBest) bBest.onclick = ()=>{
         State.selectedGoblinIds.clear();
         const cap = getSendCap();
@@ -1455,7 +1341,8 @@
           .filter(g => !isGoblinTired(g))
           .sort((a,b)=>(b.daily_power_num||0)-(a.daily_power_num||0));
         eligible.slice(0, cap).forEach(g=> State.selectedGoblinIds.add(g.asset_id));
-
+      
+        // fallback se nessuno
         if (State.selectedGoblinIds.size === 0){
           const tiredSorted = [...State.goblinsUser]
             .sort((a,b)=>(b.daily_power_num||0)-(a.daily_power_num||0));
@@ -1463,165 +1350,22 @@
         }
         hydrateGoblinBuilder();
       };
-
-      if (bClear) bClear.onclick = ()=>{
-        State.selectedGoblinIds.clear();
-        hydrateGoblinBuilder();
-      };
+      if (bClear) bClear.onclick = ()=>{ State.selectedGoblinIds.clear(); hydrateGoblinBuilder(); };
     }
 
     // ------------------------------------------------------------
-    // FORECAST
-    // ------------------------------------------------------------
-    const requestForecastDebounced = debounce(requestForecast, 320);
-
-    function scheduleForecastIfReady(){
-      const duration = State.expedition?.durationMinutes || 0;
-      const sel = getSelectedGoblins();
-      if (!duration || !sel.length) {
-        renderForecast(null, 'Select goblins and a duration.');
-        return;
-      }
-      const payloadKey = JSON.stringify({
-        d: duration,
-        ids: sel.map(g=>g.asset_id).sort(),
-        reinf: State.expedition?.reinforcementCount || 0
-      });
-      if (payloadKey === State.runtime.lastForecastPayloadKey && State.runtime.forecastData){
-        renderForecast(State.runtime.forecastData, null);
-        return;
-      }
-      State.runtime.lastForecastPayloadKey = payloadKey;
-      requestForecastDebounced(duration, sel);
-    }
-
-    async function requestForecast(duration, selArr){
-      if (State.runtime.expeditionInProgress) {
-        renderForecast(null, 'An expedition is running.');
-        return;
-      }
-      if (!selArr?.length || !duration) {
-        renderForecast(null, '');
-        return;
-      }
-      try { assertAuth(); } catch {
-        renderForecast(null,'Sign in to preview rewards.');
-        return;
-      }
-
-      const body = {
-        wax_account: State.user.wax_account,
-        user_id: State.user.user_id,
-        usx_token: State.user.usx_token,
-        duration_minutes: duration,
-        asset_ids: selArr.map(g=> g.asset_id),
-        reinforcement_count: State.expedition?.reinforcementCount || 0
-      };
-
-      State.runtime.forecastBusy = true;
-      renderForecastLoading();
-
-      const res = await Api.post('/2expedition_forecast', body, 12000).catch(()=>({ok:false}));
-      State.runtime.forecastBusy = false;
-
-      if (!res || !res.ok || !res.data){
-        renderForecast(null, 'Forecast unavailable right now.');
-        return;
-      }
-      State.runtime.forecastData = res.data;
-      renderForecast(res.data, null);
-    }
-
-    function renderForecastLoading(){
-      const host = document.getElementById('run-forecast'); if (!host) return;
-      host.hidden = false;
-      host.innerHTML = `
-        <div class="hdr"><span class="tag cyan">Run Forecast</span> <span class="hint">Computing…</span></div>
-      `;
-    }
-
-    function renderForecast(data, message){
-      const host = document.getElementById('run-forecast'); if (!host) return;
-
-      if (message){
-        host.hidden = false;
-        host.innerHTML = `
-          <div class="hdr"><span class="tag cyan">Run Forecast</span></div>
-          <div class="hint">${safe(message)}</div>
-        `;
-        return;
-      }
-      if (!data){
-        host.hidden = true;
-        host.innerHTML = '';
-        return;
-      }
-
-      const durEff = toNumber(data.duration_effective_minutes) || State.expedition.durationMinutes;
-      const powTot = toNumber(data.power_needed_total);
-      const tMin = toNumber(data.tokens_min);
-      const tMax = toNumber(data.tokens_max);
-      const probs = data.token_tier_probs || {};
-      const nftRewards = Array.isArray(data.nft_rewards) ? data.nft_rewards : [];
-      const msgs = Array.isArray(data.messages) ? data.messages : [];
-
-      host.hidden = false;
-      host.innerHTML = `
-        <div class="hdr">
-          <span class="tag cyan">Run Forecast</span>
-          <span class="hint">Updated on change; cleared when you start.</span>
-        </div>
-
-        <div class="grid">
-          <div class="card">
-            <div class="kv">
-              <div><span class="label">Nominal duration</span><b>${State.expedition.durationMinutes} min</b></div>
-              <div><span class="label">Effective duration</span><b>${durEff} min</b></div>
-              <div><span class="label">Total daily power</span><b>${powTot || '—'}</b></div>
-              <div><span class="label">Selected goblins</span><b>${State.selectedGoblinIds.size}</b></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="kv">
-              <div><span class="label">Token reward (min–max)</span><b>${tMin || '—'} – ${tMax || '—'}</b></div>
-              ${Object.keys(probs).length ? `
-                <div><span class="label">Token tier probs</span><b>${
-                  Object.entries(probs).map(([k,v])=>`${safe(k)} ${(Math.round(v*100))}%`).join(' · ')
-                }</b></div>` : ''}
-              ${nftRewards.length ? `
-                <div><span class="label">NFT chances</span><b>${
-                  nftRewards.map(it=>`${safe(it.name)} ${(Math.round((it.chance||0)*100))}%`).join(' · ')
-                }</b></div>` : ''}
-            </div>
-          </div>
-        </div>
-
-        ${data.power_needed_by_asset ? `
-        <div class="card">
-          <div class="kv">
-            <div class="label">Power per goblin</div>
-            ${Object.entries(data.power_needed_by_asset).slice(0,10).map(([id,val]) =>
-              `<div><span>#${safe(id)}</span><b>${val}</b></div>`).join('')}
-            ${Object.keys(data.power_needed_by_asset).length>10 ? `<div class="hint">+ more…</div>`:''}
-          </div>
-        </div>` : ''}
-
-        ${msgs.length ? `<div class="hint">${msgs.map(safe).join(' · ')}</div>`:''}
-      `;
-    }
-
-    // ------------------------------------------------------------
-    // PANELS
+    // PANELS RENDER
     // ------------------------------------------------------------
     function renderGlobalPanel(){
       const host = State.ui.globalList, label = State.ui.globalCount;
       if (!host || !label) return;
       host.innerHTML = '';
       GlobalTimers.rows.clear();
-
+    
       const exps = State.globalExpeditions || [];
       label.textContent = String(exps.length);
-
+    
+      // --- META COMPETITIVO (aggregati globali) ---
       const meta = exps.reduce((a,e)=>{
         const c = e.total_goblins ?? (Array.isArray(e.goblin_ids)?e.goblin_ids.length:0);
         a.players += 1;
@@ -1634,7 +1378,7 @@
         return a;
       }, {players:0,goblins:0,res:0,loot:0,spd:0,acc:0,etaSum:0,etaCount:0});
       const avgEta = meta.etaCount ? fmtHMS((meta.etaSum/meta.etaCount)*1000) : '--:--:--';
-
+    
       const metaBox = document.createElement('div');
       metaBox.setAttribute('id','global-meta');
       metaBox.style.cssText = 'display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:8px 0 12px 0;';
@@ -1646,22 +1390,23 @@
         <div><div style="opacity:.75;font-size:12px;">Tip</div><div style="font-weight:900">Short runs ⇒ more rolls</div></div>
       `;
       host.appendChild(metaBox);
-
+    
+      // --- RIGHE PER-PLAYER ---
       exps.forEach(exp=>{
         const owner = exp.wax_account || exp.owner || 'unknown';
         const count = exp.total_goblins ?? (Array.isArray(exp.goblin_ids) ? exp.goblin_ids.length : 0);
         const { res, loot, spd, acc } = sumStatsForExp(exp);
-
+    
         const sr = fromSecondsRemaining(exp);
         const endsAt = sr ? sr.endsAt() : getEndsAt(exp);
         const leftMs = sr ? sr.leftMs() : getTimeLeftMs(exp);
-
+    
         const row = document.createElement('div');
         row.setAttribute('role','group');
         row.style.display = 'grid';
         row.style.gridTemplateColumns = '1fr auto';
         row.style.gap = '8px';
-
+    
         const left = document.createElement('div');
         left.innerHTML =
           `<strong>${safe(owner)}</strong> &middot; <span class="badge">Goblins army: ${formatCompact(count)}</span>
@@ -1671,7 +1416,7 @@
               <span>S: <b>${formatCompact(spd)}</b></span>
               <span>A: <b>${formatCompact(acc)}</b></span>
            </div>`;
-
+    
         const right = document.createElement('div');
         right.style.textAlign = 'right';
         right.innerHTML =
@@ -1681,11 +1426,11 @@
            <div style="font-size:12px;opacity:.85;margin-top:4px">
              ends <span data-end>${endsAt?timeHM(endsAt):'--:--'}</span>
            </div>`;
-
+    
         row.appendChild(left);
         row.appendChild(right);
         host.appendChild(row);
-
+    
         GlobalTimers.rows.set(row, {
           exp,
           etaEl: right.querySelector('[data-eta]'),
@@ -1693,290 +1438,244 @@
           sr,
         });
       });
-
+    
       ensureGlobalTimers();
     }
-
     function renderRecentPanel(){
       const host = State.ui.recentList; if (!host) return;
       host.innerHTML = '';
       State.recentExpeditions.forEach(item=>{
         const chips = item.chips ?? 0;
         const nfts = item.nfts_count ?? 0;
-        const tsVal = item.timestamp ?? item.time ?? item.created_at;
-        const t = tsVal ? new Date(tsVal) : null;
-        const who = item.wax_account || item.owner || 'player';
+        const ts = item.timestamp ?? item.time ?? item.created_at;
+        const t = ts ? timeHM(ts) : '';
         const div = document.createElement('div');
-        div.className = 'recent-row';
-        div.innerHTML =
-          `<strong>${safe(who)}</strong> · +${formatCompact(chips)} CHIPS` +
-          (nfts ? ` · ${nfts} NFT` : '') +
-          (t ? ` · ${timeHM(t)}` : '');
+        div.textContent = `${item.wax_account} · ${t} · +${formatCompact(chips)} CHIPS${nfts?` · ${nfts} NFT`:''}`;
         host.appendChild(div);
       });
     }
-
     function renderRewardsPanel(){
       const host = State.ui.rewardsList; if (!host) return;
       host.innerHTML = '';
-      State.recentWinners.forEach(item=>{
-        const chips = item.chips ?? item.tokens ?? 0;
-        const nfts = item.nfts_count ?? item.nfts ?? 0;
-        const who = item.wax_account || item.owner || 'player';
+      State.recentWinners.forEach(w=>{
+        const chips = w.chips ?? 0;
+        const nfts = w.nfts_count ?? 0;
+        const ts = w.created_at ?? w.timestamp; const t = ts ? timeHM(ts) : '';
         const div = document.createElement('div');
-        div.className = 'reward-row';
-        div.innerHTML =
-          `<strong>${safe(who)}</strong> got +${formatCompact(chips)} CHIPS` +
-          (nfts ? ` and ${nfts} NFT` : '');
+        div.textContent = `${w.wax_account} · ${t} · +${formatCompact(chips)} CHIPS${nfts?` · ${nfts} NFT`:''}`;
         host.appendChild(div);
       });
     }
-
+    function ensureGlobalTimers(){
+      if (GlobalTimers.tickId) cancelAnimationFrame(GlobalTimers.tickId);
+      const tick = ()=>{
+        const now = Date.now();
+        for (const [row, meta] of GlobalTimers.rows){
+          let leftMs = null, endAt = null;
+    
+          if (meta.sr){
+            leftMs = meta.sr.leftMs(now);
+            endAt  = meta.sr.endsAt();
+          } else {
+            leftMs = getTimeLeftMs(meta.exp, new Date(now));
+            endAt  = getEndsAt(meta.exp);
+          }
+    
+          if (leftMs == null){
+            if (meta.etaEl) meta.etaEl.textContent = '--:--:--';
+            continue;
+          }
+          if (leftMs <= 0){
+            row.remove();
+            GlobalTimers.rows.delete(row);
+            onExpeditionEnd(meta.exp);
+    
+            // rimuovi anche dallo stato/engine
+            const id = String(meta.exp.expedition_id ?? meta.exp.id ?? '');
+            State.globalExpeditions = State.globalExpeditions.filter(e => String(e.expedition_id ?? e.id) !== id);
+            if (State.ui.globalCount) State.ui.globalCount.textContent = String(State.globalExpeditions.length);
+            if (State.engine) State.engine.goblinById.delete(id);
+    
+            // <<< ricalcola stato "mine"
+            recalcMyExpeditionFlagAndUI();
+            continue;
+          }
+          if (meta.etaEl) meta.etaEl.textContent = fmtHMS(leftMs);
+          if (meta.endEl && endAt) meta.endEl.textContent = timeHM(endAt);
+        }
+        GlobalTimers.tickId = requestAnimationFrame(tick);
+      };
+      GlobalTimers.tickId = requestAnimationFrame(tick);
+    }
+    // ------------------------------------------------------------
+    // GLOBAL TICKER
+    // ------------------------------------------------------------
     function updateTicker(){
-      const t = document.getElementById('ticker-line');
-      if (!t) return;
-      const lastExp = State.recentExpeditions[0];
-      const lastWin = State.recentWinners[0];
-      if (lastWin){
-        const who = lastWin.wax_account || lastWin.owner || 'player';
-        const chips = lastWin.chips ?? lastWin.tokens ?? 0;
-        const nfts = lastWin.nfts_count ?? lastWin.nfts ?? 0;
-        t.textContent = `${who} pulled +${formatCompact(chips)} CHIPS${nfts?` & ${nfts} NFT`:''} from a chest.`;
-      } else if (lastExp){
-        const who = lastExp.wax_account || lastExp.owner || 'player';
-        const chips = lastExp.chips ?? 0;
-        t.textContent = `${who} finished an expedition with +${formatCompact(chips)} CHIPS.`;
-      } else {
-        t.textContent = 'Waiting for events…';
+      const el = State.ui.ticker; if (!el) return;
+      const latestWinner = State.recentWinners[0];
+      const latestExp = State.recentExpeditions[0];
+      if (latestWinner){
+        el.innerHTML = `<strong>${safe(latestWinner.wax_account)}</strong> opened a chest: +${formatCompact(latestWinner.chips)} CHIPS${latestWinner.nfts_count?` · ${latestWinner.nfts_count} NFT`:''}`;
+        return;
       }
+      if (latestExp){
+        el.innerHTML = `<strong>${safe(latestExp.wax_account)}</strong> finished an expedition: +${formatCompact(latestExp.chips)} CHIPS${latestExp.nfts_count?` · ${latestExp.nfts_count} NFT`:''}`;
+        return;
+      }
+      el.textContent = 'Waiting for events…';
     }
 
     // ------------------------------------------------------------
-    // NETWORK: SNAPSHOTS & SSE
+    // SNAPSHOTS / POLLING / SSE
     // ------------------------------------------------------------
     async function fetchGlobalSnapshot(){
       if (State.net.busySnapshot) return;
       State.net.busySnapshot = true;
       const t0 = performance.now();
-      const res = await Api.get('/2snapshot_world', CONFIG.snapshotTimeoutMs);
-      const t1 = performance.now();
-      if (State.ui.latency){
-        State.ui.latency.textContent = res.ok ? `sync ${Math.round(t1-t0)} ms` : 'sync error';
+      try {
+        const [expRes, recentRes, winnersRes] = await Promise.all([
+          Api.post('/2all_expeditions', {}, CONFIG.snapshotTimeoutMs),
+          Api.get('/2recent_expeditions', CONFIG.recentTimeoutMs),
+          Api.get('/2recent_winners', CONFIG.winnersTimeoutMs),
+        ]);
+    
+        // Expeditions snapshot
+        if (expRes.ok && expRes.data){
+          const exps = Array.isArray(expRes.data) ? expRes.data :
+                       (Array.isArray(expRes.data.items) ? expRes.data.items : []);
+          const snapAt = Date.now();
+          State.globalExpeditions = exps.map(e => (e && typeof e === 'object')
+            ? Object.assign(e, {_snapAt:snapAt})
+            : e);
+    
+          if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
+          renderGlobalPanel();
+          ensureGlobalTimers();
+          recalcMyExpeditionFlagAndUI(); // <<< importante
+        }
+    
+        // Recent
+        if (recentRes.ok && recentRes.data){
+          const arr = Array.isArray(recentRes.data) ? recentRes.data :
+                      (Array.isArray(recentRes.data.items) ? recentRes.data.items : []);
+          State.recentExpeditions = arr;
+          renderRecentPanel();
+        }
+    
+        // Winners
+        if (winnersRes.ok && winnersRes.data){
+          const arr = Array.isArray(winnersRes.data) ? winnersRes.data :
+                      (Array.isArray(winnersRes.data.items) ? winnersRes.data.items : []);
+          State.recentWinners = arr;
+          renderRewardsPanel();
+        }
+    
+        updateTicker();
+        const latency = Math.round(performance.now() - t0);
+        if (State.ui.latency) State.ui.latency.textContent = `${latency} ms · synced`;
+      } catch (e) {
+        // ignore
+      } finally {
+        State.net.busySnapshot = false;
       }
-
-      if (res.ok && res.data){
-        const payload = res.data;
-        const exps = Array.isArray(payload.expeditions) ? payload.expeditions : (payload.global_expeditions || []);
-        const chests = Array.isArray(payload.chests) ? payload.chests : [];
-        State.globalExpeditions = exps;
-        if (State.engine) State.engine.syncExpeditions(exps);
-        if (State.engine) State.engine.syncChests(chests);
-        renderGlobalPanel();
-      }
-      State.net.busySnapshot = false;
     }
-
-    async function fetchRecent(){
-      const r1 = await Api.get('/2recent_expeditions', CONFIG.recentTimeoutMs);
-      if (r1.ok && Array.isArray(r1.data)){
-        State.recentExpeditions = r1.data.slice(0,50);
-        renderRecentPanel();
-      }
-      const r2 = await Api.get('/2winners', CONFIG.winnersTimeoutMs);
-      if (r2.ok && Array.isArray(r2.data)){
-        State.recentWinners = r2.data.slice(0,50);
-        renderRewardsPanel();
-      }
-      updateTicker();
-    }
-
-    function startPolling(){
-      if (State.net.pollTimer) return;
-      State.net.pollTimer = setInterval(()=>{
-        fetchGlobalSnapshot();
-        fetchRecent();
-      }, CONFIG.pollIntervalMs * 3);
-    }
-    function stopPolling(){
-      if (State.net.pollTimer){
-        clearInterval(State.net.pollTimer);
-        State.net.pollTimer = null;
-      }
-    }
+    function startPolling(){ if (State.net.pollTimer) return; State.net.pollTimer = setInterval(fetchGlobalSnapshot, CONFIG.pollIntervalMs); }
+    function stopPolling(){ if (State.net.pollTimer){ clearInterval(State.net.pollTimer); State.net.pollTimer=null; } }
 
     function startSSE(){
-      if (!window.EventSource || State.net.sse) return;
+      if (State.net.sse) return;
       try {
-        const url = CONFIG.apiBase + '/2events_stream';
-        const es = new EventSource(url);
-
-        es.onmessage = (ev)=>{
-          try{
-            const msg = JSON.parse(ev.data || '{}');
-            if (!msg || !msg.type) return;
+        const es = new EventSource(CONFIG.apiBase + '/2events?cv=1');
+    
+        es.onmessage = ev => {
+          try {
+            const msg = JSON.parse(ev.data);
             switch (msg.type){
-              case 'snapshot':
-                if (Array.isArray(msg.expeditions)){
-                  State.globalExpeditions = msg.expeditions;
-                  if (State.engine) State.engine.syncExpeditions(msg.expeditions);
-                  renderGlobalPanel();
-                }
-                if (Array.isArray(msg.chests) && State.engine){
-                  State.engine.syncChests(msg.chests);
-                }
-                break;
-
-              case 'expedition_start':
-                if (msg.expedition){
-                  State.globalExpeditions.push(msg.expedition);
+    
+              case 'expeditions_snapshot': {
+                if (msg.expeditions){
+                  const snapAt = Date.now();
+                  State.globalExpeditions = (msg.expeditions || []).map(e =>
+                    (e && typeof e==='object') ? Object.assign(e,{_snapAt:snapAt}) : e
+                  );
                   if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
                   renderGlobalPanel();
-                  updateTicker();
-                  const who = msg.expedition.wax_account || msg.expedition.owner || 'player';
-                  showGlobalEvent('exp_start', `${who} started an expedition`, { icon:'🚀', ttl:4000 });
+                  ensureGlobalTimers();
+                  recalcMyExpeditionFlagAndUI(); // <<< importante
                 }
                 break;
-
-              case 'expedition_end':
-                if (msg.expedition){
-                  onExpeditionEnd(msg.expedition);
-                  State.globalExpeditions = State.globalExpeditions.filter(e => (e.id ?? e.expedition_id) !== (msg.expedition.id ?? msg.expedition.expedition_id));
-                  if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
-                  renderGlobalPanel();
-                  updateTicker();
-                  if ((msg.expedition.wax_account || msg.expedition.owner) === State.user.wax_account){
-                    State.runtime.expeditionInProgress = false;
-                    updateActionButtonsUI();
-                  }
-                }
-                break;
-
-              case 'chests_snapshot':
+              }
+    
+              case 'chests_snapshot': {
                 if (msg.chests && State.engine) State.engine.syncChests(msg.chests);
                 break;
-
+              }
+    
               case 'chest_spawn':
               case 'chest_update': {
                 if (State.engine && msg.chest){
                   const chest = new ChestEntity({
                     id: msg.chest.id || msg.chest.chest_id,
-                    x: msg.chest.x,
-                    y: msg.chest.y,
+                    x: msg.chest.x, y: msg.chest.y,
                     rarity: msg.chest.rarity || msg.chest.perk_type || 'common',
                     claimable: msg.chest.claimable !== false && !msg.chest.claimed && !msg.chest.taken,
-                    taken: !!msg.chest.claimed,
-                    createdAt: ts(msg.chest.created_at)?.getTime() || Date.now(),
-                    lifetimeMs: msg.chest.lifetime_ms || CONFIG.chestLifetimeMs
+                    taken: !!msg.chest.claimed
                   });
                   State.engine.upsertChest(chest);
-
-                  if (msg.type === 'chest_spawn'){
-                    showGlobalEvent('chest_spawn',
-                      `${msg.chest.wax_account || 'A player'} spawned a chest`,
-                      { icon:'💰', ttl:4500 });
-                  } else if (msg.chest.claimed){
-                    const who = msg.chest.claimer || msg.chest.wax_account || 'A player';
-                    showGlobalEvent('chest_claim',
-                      `${who} claimed a chest`,
-                      { icon:'🏆', ttl:4500 });
-                    if (who === State.user.wax_account){
-                      showPersonalNotification('Chest claimed!', 'Your goblins grabbed a chest.', { icon:'🏆' });
-                    }
-                  }
                 }
                 break;
               }
-
+    
               case 'perk_launch': {
                 if (State.engine) State.engine.spawnPerkFromCommand(msg.perk_type || 'dragon', msg.wax_account);
-                showGlobalEvent('perk', `${msg.wax_account || 'A player'} launched a perk`, { icon:'🐉', ttl:4000 });
                 break;
               }
-
+    
               case 'winner': {
                 if (msg.winner){
                   State.recentWinners.unshift(msg.winner);
                   State.recentWinners = State.recentWinners.slice(0,50);
-                  renderRewardsPanel();
-                  updateTicker();
-                  const who = msg.winner.wax_account || msg.winner.owner || 'player';
-                  const chips = msg.winner.chips ?? msg.winner.tokens ?? 0;
-                  const nfts = msg.winner.nfts_count ?? msg.winner.nfts ?? 0;
-                  showGlobalEvent('winner',
-                    `${who} looted +${formatCompact(chips)} CHIPS${nfts?` & ${nfts} NFT`:''}`,
-                    { icon:'🎁', ttl:5500 });
-                  if (who === State.user.wax_account){
-                    showPersonalNotification(
-                      'You looted a chest!',
-                      `+${formatCompact(chips)} CHIPS${nfts?` · ${nfts} NFT`:''}`,
-                      { icon:'🎁' }
-                    );
-                  }
+                  renderRewardsPanel(); updateTicker();
                 }
                 break;
               }
-
+    
               case 'recent_expedition': {
                 if (msg.expedition){
                   State.recentExpeditions.unshift(msg.expedition);
                   State.recentExpeditions = State.recentExpeditions.slice(0,50);
-                  renderRecentPanel();
-                  updateTicker();
+                  renderRecentPanel(); updateTicker();
                 }
                 break;
               }
             }
           } catch {}
         };
-
+    
         es.onerror = ()=>{ es.close(); State.net.sse = null; };
         State.net.sse = es;
       } catch {}
     }
-    function stopSSE(){
-      if (State.net.sse){
-        try{ State.net.sse.close(); }catch{}
-        State.net.sse=null;
-      }
-    }
+    function stopSSE(){ if (State.net.sse){ try{ State.net.sse.close(); }catch{} State.net.sse=null; } }
 
     // ------------------------------------------------------------
     // USER NFTs
     // ------------------------------------------------------------
     async function fetchUserNFTs(){
       syncUserFromStorage(); try { assertAuth(); } catch { return; }
-      const res = await Api.post('/2user_nfts', {
-        wax_account:State.user.wax_account,
-        user_id:State.user.user_id,
-        usx_token:State.user.usx_token
-      }, CONFIG.userNftsTimeoutMs);
-
-      if (!res.ok){
-        toast('Could not load goblins');
-        return;
-      }
-
-      const arr = Array.isArray(res.data) ? res.data :
-        (Array.isArray(res.data?.nfts) ? res.data.nfts : []);
-      State.nftsLoaded = true;
-      State.nftIndex.clear();
+      const res = await Api.post('/2user_nfts', { wax_account:State.user.wax_account, user_id:State.user.user_id, usx_token:State.user.usx_token }, CONFIG.userNftsTimeoutMs);
+      if (!res.ok){ toast('Could not load goblins'); return; }
+      const arr = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.nfts) ? res.data.nfts : []);
+      State.nftsLoaded = true; State.nftIndex.clear();
       const goblins = arr.map(n=>{
-        const id = String(n.asset_id || n.assetId || n.id);
-        State.nftIndex.set(id,n);
+        const id = String(n.asset_id || n.assetId || n.id); State.nftIndex.set(id,n);
         const dailyPower = toNumber(n.daily_power ?? n.power ?? n.strength ?? n.stats?.power) || 0;
-        return {
-          asset_id:id,
-          name:n.name || n.title || `Goblin #${id}`,
-          rarity:n.rarity || n.tier || '',
-          daily_power_num: dailyPower
-        };
+        return { asset_id:id, name:n.name || n.title || `Goblin #${id}`, rarity:n.rarity || n.tier || '', daily_power_num: dailyPower };
       });
       State.goblinsUser = goblins;
 
-      const reinfRaw = toNumber(res.data?.reinforcement_count) ||
-                       toNumber(res.data?.troop_reinforcement) || 0;
+      const reinfRaw = toNumber(res.data?.reinforcement_count) || toNumber(res.data?.troop_reinforcement) || 0;
       State.expedition.reinforcementCount = clamp(reinfRaw, 0, 40); // 40 * 5 = 200 extra
-
       updateCapUI();
       hydrateGoblinBuilder();
       updateActionButtonsUI();
@@ -1986,60 +1685,21 @@
     // ------------------------------------------------------------
     // COMMANDS
     // ------------------------------------------------------------
-    function updateActionButtonsUI(){
-      const btnStart = State.ui.btnStart;
-      const btnPerk  = State.ui.btnPerk;
-      if (!btnStart || !btnPerk) return;
-
-      const val = canSendExpedition();
-      btnStart.disabled = !val.ok;
-      let startHint = 'Start an expedition with the selected goblins.';
-      if (!val.ok){
-        if (val.reason==='in_progress') startHint = 'You already have an expedition in progress.';
-        if (val.reason==='no_selection') startHint = 'Select at least one goblin.';
-        if (val.reason==='over_cap') startHint = 'Selection exceeds your current cap.';
-        if (val.reason==='tired_present') startHint = 'Your selection includes tired goblins.';
-      }
-      btnStart.title = startHint;
-
-      const onCd = isPerkOnCooldown();
-      btnPerk.disabled = onCd || !State.user?.wax_account;
-      if (onCd){
-        const secs = Math.max(0, Math.ceil((State.runtime.perkCooldownUntil - Date.now())/1000));
-        btnPerk.title = `Perk on cooldown. Ready in ${secs}s.`;
-      } else {
-        btnPerk.title = 'Try launching a perk. Cooldown: 10 minutes.';
-      }
-    }
-
     async function sendExpedition(){
       const ids = Array.from(State.selectedGoblinIds);
-      if (!ids.length){
-        toast('Select at least one goblin');
-        return;
-      }
+      if (!ids.length){ toast('Select at least one goblin'); return; }
       const cap = getSendCap();
-      if (ids.length > cap){
-        toast(`You selected ${ids.length} goblins but your cap is ${cap} (max 250).`);
-        return;
-      }
-
-      syncUserFromStorage();
-      try { assertAuth(); } catch {
-        toast('Please log in first');
-        return;
-      }
-
+      if (ids.length > cap){ toast(`You selected ${ids.length} goblins but your cap is ${cap} (max 250).`); return; }
+      syncUserFromStorage(); try { assertAuth(); } catch { toast('Please log in first'); return; }
+    
       const durationMinutes = State.expedition?.durationMinutes || 30;
       const res = await Api.post('/2start_expedition', {
-        wax_account:State.user.wax_account,
-        user_id:State.user.user_id,
-        usx_token:State.user.usx_token,
-        asset_ids: ids,
-        duration_minutes: durationMinutes
+        wax_account:State.user.wax_account, user_id:State.user.user_id, usx_token:State.user.usx_token,
+        asset_ids: ids, duration_minutes: durationMinutes
       }, 20000);
-
+    
       if (!res.ok){
+        // se 409: già in corso → mostra ETA residua
         if (res.status === 409 && res.data?.seconds_remaining){
           const left = fmtHMS(res.data.seconds_remaining*1000);
           toast(`You already have an expedition in progress. Ends in ${left}.`);
@@ -2048,231 +1708,178 @@
         }
         return;
       }
-
+    
       const durSec = toNumber(res.data?.duration_seconds) || durationMinutes*60;
       const endAt = new Date(Date.now() + durSec*1000);
       toast(`⛏️ Expedition started! ${ids.length}/${cap} goblins · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`);
-
+      
       State.runtime.expeditionInProgress = true;
-      const rf = document.getElementById('run-forecast');
-      if (rf){ rf.replaceChildren(); rf.hidden = true; }
+      document.getElementById('run-forecast')?.replaceChildren();
+      document.getElementById('run-forecast')?.setAttribute('hidden','');
       updateActionButtonsUI();
       fetchGlobalSnapshot();
-    }
 
+    }
     async function launchPerk(){
-      syncUserFromStorage();
-      try { assertAuth(); } catch {
-        toast('Please log in first');
-        return;
-      }
+      syncUserFromStorage(); try { assertAuth(); } catch { toast('Please log in first'); return; }
       const perkName = 'dragon';
       const res = await Api.post('/2perk_launch', {
-        wax_account:State.user.wax_account,
-        user_id:State.user.user_id,
-        usx_token:State.user.usx_token,
-        perk_type:perkName
+        wax_account:State.user.wax_account, user_id:State.user.user_id, usx_token:State.user.usx_token, perk_type:perkName
       }, 12000);
-
-      if (!res.ok){
-        toast('Could not launch perk');
-        return;
-      }
-
+    
+      if (!res.ok){ toast('Could not launch perk'); return; }
+    
       toast('✨ Perk launched!');
-      State.runtime.perkCooldownUntil = Date.now() + (10 * 60 * 1000);
+      State.runtime.perkCooldownUntil = Date.now() + (10 * 60 * 1000); // 10 minuti
       updateActionButtonsUI();
-
+    
       if (State.engine) State.engine.spawnPerkFromCommand(perkName, State.user.wax_account);
-    }
-
-    // ------------------------------------------------------------
-    // UI WIRING / RESPONSIVE
-    // ------------------------------------------------------------
-    function setTabsBehavior(){
-      const tabs = document.getElementById('tabs');
-      const my = document.getElementById('tab-my');
-      const global = document.getElementById('tab-global');
-      const recent = document.getElementById('tab-recent');
-      const rewards = document.getElementById('tab-rewards');
-      if (!tabs || !my || !global || !recent || !rewards) return;
-
-      function activate(panelName){
-        my.hidden = panelName !== 'tab-my';
-        global.hidden = panelName !== 'tab-global';
-        recent.hidden = panelName !== 'tab-recent';
-        rewards.hidden = panelName !== 'tab-rewards';
-
-        tabs.querySelectorAll('button[role="tab"]').forEach(b=>{
-          b.setAttribute('aria-selected', String(b.dataset.panel === panelName));
-        });
-
-        if (panelName === 'tab-global') renderGlobalPanel();
-        if (panelName === 'tab-recent') renderRecentPanel();
-        if (panelName === 'tab-rewards') renderRewardsPanel();
-      }
-
-      tabs.querySelectorAll('button[role="tab"]').forEach(btn=>{
-        btn.addEventListener('click', ()=> activate(btn.dataset.panel));
-      });
-
-      activate('tab-my');
-    }
-
-    function moveControlsIntoBuilder(){
-      const host = document.getElementById('builder-controls');
-      const duration = document.getElementById('duration-switch');
-      const capLine  = document.getElementById('cap-line');
-      const actions  = document.getElementById('action-buttons');
-      if (!host || !duration || !capLine || !actions) return;
-
-      host.innerHTML = '';
-      const row1 = document.createElement('div');
-      row1.className = 'row';
-      const row2 = document.createElement('div');
-      row2.className = 'row';
-
-      row1.appendChild(duration);
-      const spacer = document.createElement('div'); spacer.className='spacer';
-      row1.appendChild(spacer);
-      row1.appendChild(capLine);
-
-      row2.appendChild(actions);
-
-      host.appendChild(row1);
-      host.appendChild(row2);
-
-      actions.title = 'Start an expedition or try a perk (cooldown applies).';
-      capLine.title = 'Your current cap is based on Troop Reinforcements NFTs.';
-    }
-
-    function styleDurationBlock(){
-      const box  = document.getElementById('duration-switch');
-      const sel  = document.getElementById('sel-duration');
-      const hint = document.getElementById('duration-hint');
-      if (!box || !sel) return;
-
-      box.style.display = 'flex';
-      box.style.gap = '8px';
-      box.style.alignItems = 'center';
-      box.style.flexWrap = 'wrap';
-
-      sel.style.display = 'inline-block';
-      sel.style.minWidth = 'unset';
-      sel.style.maxWidth = '160px';
-      sel.style.width    = 'auto';
-      sel.style.padding  = '4px 8px';
-      sel.style.borderRadius = '6px';
-      sel.style.font = 'inherit';
-      sel.style.lineHeight = '1.2';
-      sel.style.boxSizing = 'border-box';
-
-      if (hint) {
-        hint.style.display = 'block';
-        hint.style.opacity = '.85';
-        hint.style.marginLeft = '0';
-      }
-    }
-
-    function responsiveFlow(){
-      const meta = document.getElementById('global-meta');
-      if (meta){
-        const w = window.innerWidth || 800;
-        meta.style.gridTemplateColumns = w<480
-          ? 'repeat(2,minmax(0,1fr))'
-          : 'repeat(5,minmax(0,1fr))';
-      }
-    }
-
-    function recalcMyExpeditionFlagAndUI(){
-      const mine = (State.globalExpeditions || [])
-        .some(e => (e.wax_account || e.owner) === State.user.wax_account);
-      State.runtime.expeditionInProgress = !!mine;
-      updateActionButtonsUI();
-      if (!mine) scheduleForecastIfReady();
     }
 
     // ------------------------------------------------------------
     // MOUNT
     // ------------------------------------------------------------
     function mount(){
-      if (State.mounted) return;
-      State.mounted = true;
-
+      if (State.mounted) return; State.mounted = true;
+    
+      // Wire UI refs
       State.ui.canvas = document.getElementById('game-canvas');
       State.ui.latency = document.getElementById('latency-label');
       State.ui.ticker = document.getElementById('ticker-line');
-
-      State.ui.heroBar = document.getElementById('global-hero-bar');
-      State.ui.personalNotifications = document.getElementById('personal-notifications');
-
-      State.ui.listHost = document.getElementById('goblin-list');
+    
+      State.ui.tabs = document.getElementById('tabs');
       State.ui.toastHost = document.getElementById('toast-host');
+    
+      State.ui.listHost = document.getElementById('goblin-list');
       State.ui.summaryCount = document.getElementById('sel-count');
       State.ui.summaryStats = document.getElementById('sel-stats');
-
+    
       State.ui.fltSearch = document.getElementById('flt-search');
       State.ui.fltRarity = document.getElementById('flt-rarity');
       State.ui.fltPower = document.getElementById('flt-power');
       State.ui.fltPowerLabel = document.getElementById('flt-power-label');
-
+    
       State.ui.btnFirst = document.getElementById('qs-first');
-      State.ui.btnBest = document.getElementById('qs-best');
+      State.ui.btnBest  = document.getElementById('qs-best');
       State.ui.btnClear = document.getElementById('qs-clear');
       State.ui.btnToggleMore = document.getElementById('btn-toggle-more');
-
+    
       State.ui.btnStart = document.getElementById('btn-start');
-      State.ui.btnPerk = document.getElementById('btn-perk');
+      State.ui.btnPerk  = document.getElementById('btn-perk');
       State.ui.btnCopyOverlay = document.getElementById('btn-copy-overlay');
-
-      State.ui.capLabel = document.getElementById('cap-label');
+    
+      State.ui.capLabel   = document.getElementById('cap-label');
       State.ui.reinfLabel = document.getElementById('reinf-label');
-
       State.ui.durationSelect = document.getElementById('sel-duration');
       State.ui.durationHint = document.getElementById('duration-hint');
-
-      State.ui.panelMy = document.getElementById('tab-my');
-      State.ui.panelGlobal = document.getElementById('tab-global');
-      State.ui.panelRecent = document.getElementById('tab-recent');
+    
+      State.ui.panelMy      = document.getElementById('tab-my');
+      State.ui.panelGlobal  = document.getElementById('tab-global');
+      State.ui.panelRecent  = document.getElementById('tab-recent');
       State.ui.panelRewards = document.getElementById('tab-rewards');
-
+    
       State.ui.globalList = document.getElementById('global-list');
       State.ui.globalCount = document.getElementById('global-count');
       State.ui.recentList = document.getElementById('recent-list');
       State.ui.rewardsList = document.getElementById('rewards-list');
-
+    
+      // Tabs + builder
       setTabsBehavior();
-      moveControlsIntoBuilder();
-      styleDurationBlock();
-      initDurationSwitch();
       wireBuilderUI();
+      updateCapUI();
+      initDurationSwitch();
+      moveControlsIntoBuilder();
+// forza lo spostamento + stile + debug visibilità
+(function ensureDurationVisible(){
+  const host = document.getElementById('builder-controls');
+  const box  = document.getElementById('duration-switch');
+  const sel  = document.getElementById('sel-duration');
+  const cap  = document.getElementById('cap-line');
+  const act  = document.getElementById('action-buttons');
 
+  // 1) se manca qualcosa, logga
+  if (!host || !box || !sel || !cap || !act) {
+    console.warn('[DEX] duration controls missing', {host:!!host, box:!!box, sel:!!sel, cap:!!cap, act:!!act});
+    return;
+  }
+
+  // 2) se non è già nel builder, spostalo in cima
+  if (!host.contains(box)) {
+    // crea righe se non ci sono
+    if (!host.querySelector('.row')) {
+      const row1 = document.createElement('div'); row1.className = 'row';
+      const row2 = document.createElement('div'); row2.className = 'row';
+      host.appendChild(row1); host.appendChild(row2);
+    }
+    const row1 = host.querySelector('.row');
+    const row2 = host.querySelectorAll('.row')[1] || host.querySelector('.row');
+
+    // ricomponi row1: [duration | spacer | cap]
+    row1.innerHTML = '';
+    row1.appendChild(box);
+    const spacer = document.createElement('div'); spacer.className='spacer';
+    row1.appendChild(spacer);
+    row1.appendChild(cap);
+
+    // row2: [actions]
+    row2.innerHTML = '';
+    row2.appendChild(act);
+  }
+
+  // 3) applica stile inline compatto per evitare che il tema lo nasconda
+  box.style.display = 'flex';
+  box.style.gap = '8px';
+  box.style.alignItems = 'center';
+  box.style.flexWrap = 'wrap';
+  sel.style.display = 'inline-block';
+  sel.style.visibility = 'visible';
+  sel.style.minWidth = 'unset';
+  sel.style.maxWidth = '160px';
+  sel.style.padding  = '4px 8px';
+  sel.style.borderRadius = '6px';
+
+  // 4) se qualche CSS lo nasconde, annulla forzando visibilità
+  [box, sel].forEach(el => {
+    el.removeAttribute('hidden');
+    el.style.opacity = '1';
+  });
+
+  // 5) debug a console
+  console.log('[DEX] duration mounted in builder:', {
+    inBuilder: host.contains(box),
+    selValue: sel.value,
+    boxDisplay: getComputedStyle(box).display,
+    selDisplay: getComputedStyle(sel).display
+  });
+})();
+      
+      styleDurationBlock(document.getElementById('duration-switch'));
+      // <<< Novità: inizializza subito stato pulsanti + forecast
+      updateActionButtonsUI();
+      scheduleForecastIfReady();
+    
+      // Buttons
       if (State.ui.btnStart) State.ui.btnStart.onclick = sendExpedition;
       if (State.ui.btnPerk) State.ui.btnPerk.onclick = launchPerk;
       if (State.ui.btnCopyOverlay) State.ui.btnCopyOverlay.onclick = ()=>{
-        const url = new URL(window.location.href);
-        url.searchParams.set('overlay','1');
+        const url = new URL(window.location.href); url.searchParams.set('overlay','1');
         navigator.clipboard.writeText(url.toString()).then(()=>toast('Overlay link copied'));
       };
-
+    
+      // Engine
       State.engine = new GameEngine(State.ui.canvas);
       loadAssets().then(()=> State.engine && State.engine.handleResize());
       State.engine.start();
-
+    
+      // Data
       fetchUserNFTs();
       fetchGlobalSnapshot();
-      fetchRecent();
       startPolling();
       startSSE();
-
+    
+      // Responsive (no CSS)
       responsiveFlow();
-      window.addEventListener('orientationchange', ()=>{
-        State.engine && State.engine.handleResize();
-        responsiveFlow();
-      });
-
-      updateActionButtonsUI();
-      scheduleForecastIfReady();
+      window.addEventListener('orientationchange', ()=>{ State.engine && State.engine.handleResize(); responsiveFlow(); });
     }
 
     // ------------------------------------------------------------
@@ -2284,9 +1891,8 @@
     window.GoblinDex = { mount };
   })();
   </script>
-
-  <!-- Optional: small pointer highlight effect -->
   <script>
+    // illumina l'area in base al puntatore (facoltativo)
     (function () {
       const targets = document.querySelectorAll('#duration-switch button, #goblin-list button[role="checkbox"]');
       targets.forEach(el=>{

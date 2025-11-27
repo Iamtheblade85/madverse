@@ -107,7 +107,9 @@
           <section id="builder-controls" aria-label="Expedition controls">
             <!-- JS will move #duration-switch, #cap-line, #action-buttons here -->
           </section>
-
+          <!-- Forecast/Summary -->
+          <section id="run-forecast" aria-live="polite" hidden></section>
+          
           <section id="quick-select" aria-label="Quick selection">
             <button id="qs-first"  title="Pick the first goblins up to your cap">✅ First 50</button>
             <button id="qs-best"   title="Pick the strongest goblins up to your cap">🏆 Best 50</button>
@@ -324,6 +326,46 @@
         }
       }
       return 0;
+    }
+    // ---- Debounce helper ----
+    function debounce(fn, ms=250){
+      let t = null;
+      return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), ms); };
+    }
+    
+    // ---- Nuovo stato runtime ----
+    State.runtime = {
+      expeditionInProgress: false,
+      perkCooldownUntil: 0,
+      lastForecastPayloadKey: '',
+      forecastBusy: false,
+      forecastData: null
+    };
+    
+    // Deriva il cap corrente (già esiste getSendCap)
+    function getSelectedGoblins(){
+      return State.goblinsUser.filter(g => State.selectedGoblinIds.has(g.asset_id));
+    }
+    
+    function isGoblinTired(g){
+      return (g.daily_power_num || 0) < CONFIG.minGoblinDailyPowerToSend;
+    }
+    
+    // Valida se si può inviare
+    function canSendExpedition(){
+      if (State.runtime.expeditionInProgress) return { ok:false, reason:'in_progress' };
+      const sel = getSelectedGoblins();
+      if (!sel.length) return { ok:false, reason:'no_selection' };
+      const cap = getSendCap();
+      if (sel.length > cap) return { ok:false, reason:'over_cap' };
+      const tired = sel.filter(isGoblinTired);
+      if (tired.length) return { ok:false, reason:'tired_present', data:tired };
+      return { ok:true };
+    }
+    
+    // Cooldown Perk
+    function isPerkOnCooldown(){
+      return Date.now() < (State.runtime.perkCooldownUntil || 0);
     }
 
     // ------- EXPEDITION HELPERS -------
@@ -881,6 +923,13 @@
       const div = document.createElement('div'); div.textContent = msg; host.appendChild(div);
       setTimeout(()=>div.remove(), 3500);
     }
+    // ricalcola se ho una spedizione attiva, aggiorna UI e forecast ===
+    function recalcMyExpeditionFlagAndUI(){
+      const mine = (State.globalExpeditions || []).some(e => (e.wax_account || e.owner) === State.user.wax_account);
+      State.runtime.expeditionInProgress = !!mine;
+      updateActionButtonsUI();
+      if (!mine) scheduleForecastIfReady();
+    }
 
     function setTabsBehavior(){
       const tabs = document.getElementById('tabs');
@@ -926,42 +975,31 @@
       }   
     }
     function moveControlsIntoBuilder(){
-      const container = document.getElementById('builder-controls');
-      const bar = document.getElementById('action-bar');
-      if (!container || !bar) return;
-    
-      // Nodi esistenti (li spostiamo, non li cloniamo)
+      const host = document.getElementById('builder-controls');
       const duration = document.getElementById('duration-switch');
       const capLine  = document.getElementById('cap-line');
       const actions  = document.getElementById('action-buttons');
+      if (!host || !duration || !capLine || !actions) return;
     
-      // Griglia semplice e responsiva senza CSS esterno
-      container.style.cssText = 'display:grid;gap:10px;margin:10px 0 14px;grid-template-columns:1fr;';
-      
-      // Righe logiche
-      const row1 = document.createElement('div'); // duration
-      const row2 = document.createElement('div'); // cap & reinf
-      const row3 = document.createElement('div'); // buttons
+      host.innerHTML = ''; // ricomponi
+      const row1 = document.createElement('div'); row1.className = 'row';
+      const row2 = document.createElement('div'); row2.className = 'row';
     
-      if (duration) {
-        row1.appendChild(duration);
-        styleDurationBlock(duration);
-      }
-      if (capLine) {
-        row2.appendChild(capLine);
-        capLine.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
-      }
-      if (actions) {
-        row3.appendChild(actions);
-        actions.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
-      }
+      row1.appendChild(duration);
+      const spacer = document.createElement('div'); spacer.className='spacer';
+      row1.appendChild(spacer);
+      row1.appendChild(capLine);
     
-      container.append(row1, row2, row3);
+      row2.appendChild(actions);
     
-      // Nascondi la barra in header (ora è vuota)
-      bar.hidden = true;
+      host.appendChild(row1);
+      host.appendChild(row2);
+    
+      // tooltip rapidi
+      actions.title = 'Start an expedition or try a perk (cooldown applies).';
+      capLine.title = 'Your current cap is based on Troop Reinforcements NFTs.';
     }
-    
+
     function styleDurationBlock(box){
       // Layout compatto per label+select+hint
       box.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;';
@@ -990,6 +1028,152 @@
         hint.style.marginLeft = '0';
       }
     }
+    // --- Pulsanti: abilitazione + tooltip motivo ---
+    function updateActionButtonsUI(){
+      const btnStart = State.ui.btnStart;
+      const btnPerk  = State.ui.btnPerk;
+      if (!btnStart || !btnPerk) return;
+    
+      const val = canSendExpedition();
+      btnStart.disabled = !val.ok;
+      let startHint = 'Start an expedition with the selected goblins.';
+      if (!val.ok){
+        if (val.reason==='in_progress') startHint = 'You already have an expedition in progress.';
+        if (val.reason==='no_selection') startHint = 'Select at least one goblin.';
+        if (val.reason==='over_cap') startHint = 'Selection exceeds your current cap.';
+        if (val.reason==='tired_present') startHint = 'Your selection includes tired goblins.';
+      }
+      btnStart.setAttribute('aria-describedby','hint');
+      btnStart.title = startHint;
+    
+      const onCd = isPerkOnCooldown();
+      btnPerk.disabled = onCd || !State.user?.wax_account;
+      btnPerk.setAttribute('aria-describedby','hint');
+      if (onCd){
+        const secs = Math.max(0, Math.ceil((State.runtime.perkCooldownUntil - Date.now())/1000));
+        btnPerk.title = `Perk on cooldown. Ready in ${secs}s.`;
+      } else {
+        btnPerk.title = 'Try launching a perk. Cooldown: 10 minutes.';
+      }
+    }
+    
+    // --- FORECAST (debounced) ---
+    const requestForecastDebounced = debounce(requestForecast, 320);
+    
+    function scheduleForecastIfReady(){
+      const duration = State.expedition?.durationMinutes || 0;
+      const sel = getSelectedGoblins();
+      if (!duration || !sel.length) { renderForecast(null, 'Select goblins and a duration.'); return; }
+    
+      const payloadKey = JSON.stringify({
+        d: duration,
+        ids: sel.map(g=>g.asset_id).sort(),
+        reinf: State.expedition?.reinforcementCount || 0
+      });
+      if (payloadKey === State.runtime.lastForecastPayloadKey && State.runtime.forecastData){
+        renderForecast(State.runtime.forecastData, null);
+        return;
+      }
+      State.runtime.lastForecastPayloadKey = payloadKey;
+      requestForecastDebounced(duration, sel);
+    }
+    
+    async function requestForecast(duration, selArr){
+      if (State.runtime.expeditionInProgress) { renderForecast(null, 'An expedition is running.'); return; }
+      if (!selArr?.length || !duration) { renderForecast(null, ''); return; }
+      try { assertAuth(); } catch { renderForecast(null,'Sign in to preview rewards.'); return; }
+    
+      const body = {
+        wax_account: State.user.wax_account,
+        user_id: State.user.user_id,
+        usx_token: State.user.usx_token,
+        duration_minutes: duration,
+        asset_ids: selArr.map(g=> g.asset_id),
+        reinforcement_count: State.expedition?.reinforcementCount || 0
+      };
+    
+      State.runtime.forecastBusy = true;
+      renderForecastLoading();
+    
+      const res = await Api.post('/2expedition_forecast', body, 12000).catch(()=>({ok:false}));
+      State.runtime.forecastBusy = false;
+    
+      if (!res || !res.ok || !res.data){
+        renderForecast(null, 'Forecast unavailable right now.');
+        return;
+      }
+      State.runtime.forecastData = res.data;
+      renderForecast(res.data, null);
+    }
+    
+    function renderForecastLoading(){
+      const host = document.getElementById('run-forecast'); if (!host) return;
+      host.hidden = false;
+      host.innerHTML = `<div class="hdr"><span class="tag cyan">Run Forecast</span> <span class="hint">Computing…</span></div>`;
+    }
+    
+    function renderForecast(data, message){
+      const host = document.getElementById('run-forecast'); if (!host) return;
+      if (message){
+        host.hidden = false;
+        host.innerHTML = `
+          <div class="hdr"><span class="tag cyan">Run Forecast</span></div>
+          <div class="hint">${safe(message)}</div>
+        `;
+        return;
+      }
+      if (!data){ host.hidden = true; host.innerHTML = ''; return; }
+    
+      const durEff = toNumber(data.duration_effective_minutes) || State.expedition.durationMinutes;
+      const powTot = toNumber(data.power_needed_total);
+      const tMin = toNumber(data.tokens_min);
+      const tMax = toNumber(data.tokens_max);
+      const probs = data.token_tier_probs || {};
+      const nftRewards = Array.isArray(data.nft_rewards) ? data.nft_rewards : [];
+      const msgs = Array.isArray(data.messages) ? data.messages : [];
+    
+      host.hidden = false;
+      host.innerHTML = `
+        <div class="hdr">
+          <span class="tag cyan">Run Forecast</span>
+          <span class="hint">Updated on change; cleared when you start.</span>
+        </div>
+    
+        <div class="grid">
+          <div class="card">
+            <div class="kv">
+              <div><span class="label">Nominal duration</span><b>${State.expedition.durationMinutes} min</b></div>
+              <div><span class="label">Effective duration</span><b>${durEff} min</b></div>
+              <div><span class="label">Total daily power</span><b>${powTot || '—'}</b></div>
+              <div><span class="label">Selected goblins</span><b>${State.selectedGoblinIds.size}</b></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="kv">
+              <div><span class="label">Token reward (min–max)</span><b>${tMin || '—'} – ${tMax || '—'}</b></div>
+              ${Object.keys(probs).length ? `<div><span class="label">Token tier probs</span><b>${
+                Object.entries(probs).map(([k,v])=>`${safe(k)} ${(Math.round(v*100))}%`).join(' · ')
+              }</b></div>`:''}
+              ${nftRewards.length ? `<div><span class="label">NFT chances</span><b>${
+                nftRewards.map(it=>`${safe(it.name)} ${(Math.round((it.chance||0)*100))}%`).join(' · ')
+              }</b></div>`:''}
+            </div>
+          </div>
+        </div>
+    
+        ${data.power_needed_by_asset ? `
+        <div class="card">
+          <div class="kv">
+            <div class="label">Power per goblin</div>
+            ${Object.entries(data.power_needed_by_asset).slice(0,10).map(([id,val])=>
+              `<div><span>#${safe(id)}</span><b>${val}</b></div>`).join('')}
+            ${Object.keys(data.power_needed_by_asset).length>10 ? `<div class="hint">+ more…</div>`:''}
+          </div>
+        </div>`:''}
+    
+        ${msgs.length ? `<div class="hint">${msgs.map(safe).join(' · ')}</div>`:''}
+      `;
+    }
 
     // ------------------------------------------------------------
     // GOBLIN BUILDER
@@ -1016,6 +1200,7 @@
       function update(valMin){
         State.expedition.durationMinutes = valMin;
         if (hint) hint.textContent = buildDurationHint(valMin);
+        scheduleForecastIfReady(); // <--- AGGIUNTO
       }
       sel.addEventListener('change', ()=> update(Number(sel.value||30)));
       update(Number(sel.value||30));
@@ -1095,8 +1280,7 @@
           hydrateGoblinBuilder();
         };
       }
-
-      // summary
+      // --- summary ---
       const selArr = State.goblinsUser.filter(g => State.selectedGoblinIds.has(g.asset_id));
       const sums = selArr.reduce((acc,g)=>{
         const nft = State.nftIndex.get(String(g.asset_id));
@@ -1106,16 +1290,22 @@
         acc.acc += getStatFromNFT(nft,'accuracy');
         return acc;
       }, {res:0, loot:0, spd:0, acc:0});
-      if (countEl) countEl.textContent = `Selected goblins: ${selArr.length}`;
-      if (statsEl) statsEl.textContent = `R: ${formatCompact(sums.res)} · L: ${formatCompact(sums.loot)} · S: ${formatCompact(sums.spd)} · A: ${formatCompact(sums.acc)}`;
-       // tip dinamico: se selezione < cap, suggerisci rinforzi
-      if (countEl){
-        const missing = cap - State.selectedGoblinIds.size;
-        if (missing > 0 && State.expedition.durationMinutes <= 30){
-          // runs corte consigliate + hint rinforzi
-          toast(`Tip: short runs complete more often. You can still add ${missing} goblins (cap ${cap}).`);
-        }
+      
+      const selected = selArr.length;
+      if (State.ui.summaryCount) {
+        const over = selected > cap;
+        const tiredCount = State.goblinsUser.filter(isGoblinTired).length;
+        State.ui.summaryCount.innerHTML =
+          `Selected goblins: <b>${selected}</b> / <b>${cap}</b>` +
+          (over ? ` <span class="badge err" title="You are above your cap. Remove some goblins.">Over cap</span>` : '') +
+          (tiredCount ? ` <span class="badge warn" title="Some goblins are below the minimum daily power threshold.">${tiredCount} tired</span>` : '');
       }
+      if (State.ui.summaryStats)
+        State.ui.summaryStats.textContent = `R: ${formatCompact(sums.res)} · L: ${formatCompact(sums.loot)} · S: ${formatCompact(sums.spd)} · A: ${formatCompact(sums.acc)}`;
+      
+      // --- aggiornamenti post-render ---
+      updateActionButtonsUI();
+      scheduleForecastIfReady();
     }
 
     function wireBuilderUI(){
@@ -1129,15 +1319,33 @@
       const bFirst = State.ui.btnFirst, bBest = State.ui.btnBest, bClear = State.ui.btnClear;
       if (bFirst) bFirst.onclick = ()=>{
         State.selectedGoblinIds.clear();
-        const eligible = State.goblinsUser.filter(g => (g.daily_power_num || 0) >= CONFIG.minGoblinDailyPowerToSend);
-        const cap = getSendCap(); eligible.slice(0, cap).forEach(g=> State.selectedGoblinIds.add(g.asset_id));
+        const cap = getSendCap();
+        // primi id tra i NON TIRED
+        const eligible = State.goblinsUser.filter(g => !isGoblinTired(g));
+        eligible.slice(0, cap).forEach(g=> State.selectedGoblinIds.add(g.asset_id));
+      
+        // se non bastano, consenti TIRED solo se necessari per non lasciare 0
+        if (State.selectedGoblinIds.size === 0 && State.goblinsUser.length){
+          const tired = State.goblinsUser.filter(isGoblinTired);
+          tired.slice(0, cap).forEach(g=> State.selectedGoblinIds.add(g.asset_id));
+        }
         hydrateGoblinBuilder();
       };
+      
       if (bBest) bBest.onclick = ()=>{
         State.selectedGoblinIds.clear();
-        const sorted = [...State.goblinsUser].sort((a,b)=>(b.daily_power_num||0)-(a.daily_power_num||0));
-        const eligible = sorted.filter(g => (g.daily_power_num || 0) >= CONFIG.minGoblinDailyPowerToSend);
-        const cap = getSendCap(); eligible.slice(0, cap).forEach(g=> State.selectedGoblinIds.add(g.asset_id));
+        const cap = getSendCap();
+        const eligible = [...State.goblinsUser]
+          .filter(g => !isGoblinTired(g))
+          .sort((a,b)=>(b.daily_power_num||0)-(a.daily_power_num||0));
+        eligible.slice(0, cap).forEach(g=> State.selectedGoblinIds.add(g.asset_id));
+      
+        // fallback se nessuno
+        if (State.selectedGoblinIds.size === 0){
+          const tiredSorted = [...State.goblinsUser]
+            .sort((a,b)=>(b.daily_power_num||0)-(a.daily_power_num||0));
+          tiredSorted.slice(0, cap).forEach(g=> State.selectedGoblinIds.add(g.asset_id));
+        }
         hydrateGoblinBuilder();
       };
       if (bClear) bClear.onclick = ()=>{ State.selectedGoblinIds.clear(); hydrateGoblinBuilder(); };
@@ -1285,6 +1493,9 @@
             State.globalExpeditions = State.globalExpeditions.filter(e => String(e.expedition_id ?? e.id) !== id);
             if (State.ui.globalCount) State.ui.globalCount.textContent = String(State.globalExpeditions.length);
             if (State.engine) State.engine.goblinById.delete(id);
+    
+            // <<< ricalcola stato "mine"
+            recalcMyExpeditionFlagAndUI();
             continue;
           }
           if (meta.etaEl) meta.etaEl.textContent = fmtHMS(leftMs);
@@ -1325,28 +1536,46 @@
           Api.get('/2recent_expeditions', CONFIG.recentTimeoutMs),
           Api.get('/2recent_winners', CONFIG.winnersTimeoutMs),
         ]);
+    
+        // Expeditions snapshot
         if (expRes.ok && expRes.data){
-          const exps = Array.isArray(expRes.data) ? expRes.data : (Array.isArray(expRes.data.items) ? expRes.data.items : []);
+          const exps = Array.isArray(expRes.data) ? expRes.data :
+                       (Array.isArray(expRes.data.items) ? expRes.data.items : []);
           const snapAt = Date.now();
-          State.globalExpeditions = exps.map(e => (e && typeof e === 'object') ? Object.assign(e, {_snapAt:snapAt}) : e);
+          State.globalExpeditions = exps.map(e => (e && typeof e === 'object')
+            ? Object.assign(e, {_snapAt:snapAt})
+            : e);
+    
           if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
           renderGlobalPanel();
           ensureGlobalTimers();
+          recalcMyExpeditionFlagAndUI(); // <<< importante
         }
+    
+        // Recent
         if (recentRes.ok && recentRes.data){
-          const arr = Array.isArray(recentRes.data) ? recentRes.data : (Array.isArray(recentRes.data.items) ? recentRes.data.items : []);
-          State.recentExpeditions = arr; renderRecentPanel();
+          const arr = Array.isArray(recentRes.data) ? recentRes.data :
+                      (Array.isArray(recentRes.data.items) ? recentRes.data.items : []);
+          State.recentExpeditions = arr;
+          renderRecentPanel();
         }
+    
+        // Winners
         if (winnersRes.ok && winnersRes.data){
-          const arr = Array.isArray(winnersRes.data) ? winnersRes.data : (Array.isArray(winnersRes.data.items) ? winnersRes.data.items : []);
-          State.recentWinners = arr; renderRewardsPanel();
+          const arr = Array.isArray(winnersRes.data) ? winnersRes.data :
+                      (Array.isArray(winnersRes.data.items) ? winnersRes.data.items : []);
+          State.recentWinners = arr;
+          renderRewardsPanel();
         }
+    
         updateTicker();
         const latency = Math.round(performance.now() - t0);
         if (State.ui.latency) State.ui.latency.textContent = `${latency} ms · synced`;
       } catch (e) {
         // ignore
-      } finally { State.net.busySnapshot = false; }
+      } finally {
+        State.net.busySnapshot = false;
+      }
     }
     function startPolling(){ if (State.net.pollTimer) return; State.net.pollTimer = setInterval(fetchGlobalSnapshot, CONFIG.pollIntervalMs); }
     function stopPolling(){ if (State.net.pollTimer){ clearInterval(State.net.pollTimer); State.net.pollTimer=null; } }
@@ -1355,41 +1584,72 @@
       if (State.net.sse) return;
       try {
         const es = new EventSource(CONFIG.apiBase + '/2events?cv=1');
+    
         es.onmessage = ev => {
           try {
             const msg = JSON.parse(ev.data);
             switch (msg.type){
-              case 'expeditions_snapshot':
-                if (msg.expeditions && State.engine){
+    
+              case 'expeditions_snapshot': {
+                if (msg.expeditions){
                   const snapAt = Date.now();
-                  State.globalExpeditions = (msg.expeditions || []).map(e => (e && typeof e==='object') ? Object.assign(e,{_snapAt:snapAt}) : e);
-                  State.engine.syncExpeditions(State.globalExpeditions);
+                  State.globalExpeditions = (msg.expeditions || []).map(e =>
+                    (e && typeof e==='object') ? Object.assign(e,{_snapAt:snapAt}) : e
+                  );
+                  if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
                   renderGlobalPanel();
                   ensureGlobalTimers();
+                  recalcMyExpeditionFlagAndUI(); // <<< importante
                 }
                 break;
-              case 'chests_snapshot':
-                if (msg.chests && State.engine){ State.engine.syncChests(msg.chests); }
+              }
+    
+              case 'chests_snapshot': {
+                if (msg.chests && State.engine) State.engine.syncChests(msg.chests);
                 break;
+              }
+    
               case 'chest_spawn':
-              case 'chest_update':
+              case 'chest_update': {
                 if (State.engine && msg.chest){
-                  const chest = new ChestEntity({ id: msg.chest.id || msg.chest.chest_id, x: msg.chest.x, y: msg.chest.y, rarity: msg.chest.rarity || msg.chest.perk_type || 'common', claimable: msg.chest.claimable !== false && !msg.chest.claimed && !msg.chest.taken, taken: !!msg.chest.claimed });
+                  const chest = new ChestEntity({
+                    id: msg.chest.id || msg.chest.chest_id,
+                    x: msg.chest.x, y: msg.chest.y,
+                    rarity: msg.chest.rarity || msg.chest.perk_type || 'common',
+                    claimable: msg.chest.claimable !== false && !msg.chest.claimed && !msg.chest.taken,
+                    taken: !!msg.chest.claimed
+                  });
                   State.engine.upsertChest(chest);
                 }
                 break;
-              case 'perk_launch':
+              }
+    
+              case 'perk_launch': {
                 if (State.engine) State.engine.spawnPerkFromCommand(msg.perk_type || 'dragon', msg.wax_account);
                 break;
-              case 'winner':
-                if (msg.winner){ State.recentWinners.unshift(msg.winner); State.recentWinners = State.recentWinners.slice(0,50); renderRewardsPanel(); updateTicker(); }
+              }
+    
+              case 'winner': {
+                if (msg.winner){
+                  State.recentWinners.unshift(msg.winner);
+                  State.recentWinners = State.recentWinners.slice(0,50);
+                  renderRewardsPanel(); updateTicker();
+                }
                 break;
-              case 'recent_expedition':
-                if (msg.expedition){ State.recentExpeditions.unshift(msg.expedition); State.recentExpeditions = State.recentExpeditions.slice(0,50); renderRecentPanel(); updateTicker(); }
+              }
+    
+              case 'recent_expedition': {
+                if (msg.expedition){
+                  State.recentExpeditions.unshift(msg.expedition);
+                  State.recentExpeditions = State.recentExpeditions.slice(0,50);
+                  renderRecentPanel(); updateTicker();
+                }
                 break;
+              }
             }
           } catch {}
         };
+    
         es.onerror = ()=>{ es.close(); State.net.sse = null; };
         State.net.sse = es;
       } catch {}
@@ -1416,6 +1676,8 @@
       State.expedition.reinforcementCount = clamp(reinfRaw, 0, 40); // 40 * 5 = 200 extra
       updateCapUI();
       hydrateGoblinBuilder();
+      updateActionButtonsUI();
+      scheduleForecastIfReady();
     }
 
     // ------------------------------------------------------------
@@ -1448,14 +1710,27 @@
       const durSec = toNumber(res.data?.duration_seconds) || durationMinutes*60;
       const endAt = new Date(Date.now() + durSec*1000);
       toast(`⛏️ Expedition started! ${ids.length}/${cap} goblins · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`);
+      
+      State.runtime.expeditionInProgress = true;
+      document.getElementById('run-forecast')?.replaceChildren();
+      document.getElementById('run-forecast')?.setAttribute('hidden','');
+      updateActionButtonsUI();
       fetchGlobalSnapshot();
+
     }
     async function launchPerk(){
       syncUserFromStorage(); try { assertAuth(); } catch { toast('Please log in first'); return; }
       const perkName = 'dragon';
-      const res = await Api.post('/2perk_launch', { wax_account:State.user.wax_account, user_id:State.user.user_id, usx_token:State.user.usx_token, perk_type:perkName }, 12000);
+      const res = await Api.post('/2perk_launch', {
+        wax_account:State.user.wax_account, user_id:State.user.user_id, usx_token:State.user.usx_token, perk_type:perkName
+      }, 12000);
+    
       if (!res.ok){ toast('Could not launch perk'); return; }
+    
       toast('✨ Perk launched!');
+      State.runtime.perkCooldownUntil = Date.now() + (10 * 60 * 1000); // 10 minuti
+      updateActionButtonsUI();
+    
       if (State.engine) State.engine.spawnPerkFromCommand(perkName, State.user.wax_account);
     }
 
@@ -1464,54 +1739,59 @@
     // ------------------------------------------------------------
     function mount(){
       if (State.mounted) return; State.mounted = true;
-
+    
       // Wire UI refs
       State.ui.canvas = document.getElementById('game-canvas');
       State.ui.latency = document.getElementById('latency-label');
       State.ui.ticker = document.getElementById('ticker-line');
-
+    
       State.ui.tabs = document.getElementById('tabs');
       State.ui.toastHost = document.getElementById('toast-host');
-
+    
       State.ui.listHost = document.getElementById('goblin-list');
       State.ui.summaryCount = document.getElementById('sel-count');
       State.ui.summaryStats = document.getElementById('sel-stats');
-
+    
       State.ui.fltSearch = document.getElementById('flt-search');
       State.ui.fltRarity = document.getElementById('flt-rarity');
       State.ui.fltPower = document.getElementById('flt-power');
       State.ui.fltPowerLabel = document.getElementById('flt-power-label');
-
+    
       State.ui.btnFirst = document.getElementById('qs-first');
       State.ui.btnBest  = document.getElementById('qs-best');
       State.ui.btnClear = document.getElementById('qs-clear');
       State.ui.btnToggleMore = document.getElementById('btn-toggle-more');
-
+    
       State.ui.btnStart = document.getElementById('btn-start');
       State.ui.btnPerk  = document.getElementById('btn-perk');
       State.ui.btnCopyOverlay = document.getElementById('btn-copy-overlay');
-
+    
       State.ui.capLabel   = document.getElementById('cap-label');
       State.ui.reinfLabel = document.getElementById('reinf-label');
       State.ui.durationSelect = document.getElementById('sel-duration');
       State.ui.durationHint = document.getElementById('duration-hint');
-
+    
       State.ui.panelMy      = document.getElementById('tab-my');
       State.ui.panelGlobal  = document.getElementById('tab-global');
       State.ui.panelRecent  = document.getElementById('tab-recent');
       State.ui.panelRewards = document.getElementById('tab-rewards');
-
+    
       State.ui.globalList = document.getElementById('global-list');
       State.ui.globalCount = document.getElementById('global-count');
       State.ui.recentList = document.getElementById('recent-list');
       State.ui.rewardsList = document.getElementById('rewards-list');
-
+    
       // Tabs + builder
       setTabsBehavior();
       wireBuilderUI();
       updateCapUI();
       initDurationSwitch();
       moveControlsIntoBuilder();
+    
+      // <<< Novità: inizializza subito stato pulsanti + forecast
+      updateActionButtonsUI();
+      scheduleForecastIfReady();
+    
       // Buttons
       if (State.ui.btnStart) State.ui.btnStart.onclick = sendExpedition;
       if (State.ui.btnPerk) State.ui.btnPerk.onclick = launchPerk;
@@ -1519,18 +1799,18 @@
         const url = new URL(window.location.href); url.searchParams.set('overlay','1');
         navigator.clipboard.writeText(url.toString()).then(()=>toast('Overlay link copied'));
       };
-
+    
       // Engine
       State.engine = new GameEngine(State.ui.canvas);
       loadAssets().then(()=> State.engine && State.engine.handleResize());
       State.engine.start();
-
+    
       // Data
       fetchUserNFTs();
       fetchGlobalSnapshot();
       startPolling();
       startSSE();
-
+    
       // Responsive (no CSS)
       responsiveFlow();
       window.addEventListener('orientationchange', ()=>{ State.engine && State.engine.handleResize(); responsiveFlow(); });

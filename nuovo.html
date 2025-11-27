@@ -355,29 +355,38 @@
       const SS = String(sec).padStart(2,'0');
       return `${HH}:${MM}:${SS}`;
     }
+    function fromSecondsRemaining(exp){
+      const sec = toNumber(exp.seconds_remaining);
+      if (!sec) return null;
+      const snap = exp._snapAt || Date.now();
+      return {
+        baseLeftMs: sec*1000,
+        snapAt: snap,
+        // tempo residuo live = base - trascorso
+        leftMs(now=Date.now()){ return Math.max(0, this.baseLeftMs - (now - this.snapAt)); },
+        endsAt(){ return new Date(this.snapAt + this.baseLeftMs); }
+      };
+    }   
     function sumStatsForExp(exp){
-      // 1) se l'API già fornisce aggregati, usali
-      const fromExp = (k)=> toNumber(
-        exp[k] ?? exp.stats?.[k] ?? exp.totals?.[k] ??
-        exp[k?.toUpperCase?.()] ?? 0
-      );
-      let res = fromExp('resistance'), loot = fromExp('loot_hungry'), spd = fromExp('speed'), acc = fromExp('accuracy');
-    
-      // 2) altrimenti somma dagli NFT (se ci sono gli id)
+      const t = exp.stats_totals || exp.statsTotals || exp.stats || exp.totals || {};
+      let res  = toNumber(t.resistance);
+      let loot = toNumber(t.loot_hungry);
+      let spd  = toNumber(t.speed);
+      let acc  = toNumber(t.accuracy);
+
       if (!(res||loot||spd||acc) && Array.isArray(exp.goblin_ids) && exp.goblin_ids.length){
         for (const id of exp.goblin_ids){
           const nft = State.nftIndex.get(String(id));
-          res += getStatFromNFT(nft,'resistance');
-          loot+= getStatFromNFT(nft,'loot_hungry');
-          spd += getStatFromNFT(nft,'speed');
-          acc += getStatFromNFT(nft,'accuracy');
+          res  += getStatFromNFT(nft,'resistance');
+          loot += getStatFromNFT(nft,'loot_hungry');
+          spd  += getStatFromNFT(nft,'speed');
+          acc  += getStatFromNFT(nft,'accuracy');
         }
       }
       return { res, loot, spd, acc };
     }
     // memorizza timers per global panel
     const GlobalTimers = { tickId:null, rows:new Map() };
-    
     function onExpeditionEnd(exp){
       // rimuovi dal canvas subito
       if (State.engine && exp && (exp.expedition_id || exp.id)){
@@ -813,7 +822,13 @@
           g._groupSize = exp.total_goblins ?? (Array.isArray(exp.goblin_ids) ? exp.goblin_ids.length : g._groupSize ?? 0);
           g._expeditionId = expId;
           // calcola e memorizza finestra temporale
-          g._endsAt = getEndsAt(exp)?.getTime() || null;
+          const sr = toNumber(exp.seconds_remaining);
+          if (sr > 0) {
+            const snap = exp._snapAt || Date.now();
+            g._endsAt = snap + sr*1000;
+          } else {
+            g._endsAt = getEndsAt(exp)?.getTime() || null;
+          }
         });
       
         // se un goblin non è più presente nello snapshot => è finita
@@ -1037,17 +1052,19 @@
       const host = State.ui.globalList, label = State.ui.globalCount;
       if (!host || !label) return;
       host.innerHTML = '';
-      const exps = State.globalExpeditions;
-      label.textContent = String(exps.length);
     
+      const exps = State.globalExpeditions || [];
+      label.textContent = String(exps.length);
       GlobalTimers.rows.clear();
     
       exps.forEach(exp=>{
         const owner = exp.wax_account || exp.owner || 'unknown';
         const count = exp.total_goblins ?? (Array.isArray(exp.goblin_ids) ? exp.goblin_ids.length : 0);
         const { res, loot, spd, acc } = sumStatsForExp(exp);
-        const endsAt = getEndsAt(exp);
-        const leftMs = endsAt ? getTimeLeftMs(exp) : null;
+    
+        const sr = fromSecondsRemaining(exp);            // usa seconds_remaining (live)
+        const endsAt = sr ? sr.endsAt() : getEndsAt(exp);
+        const leftMs = sr ? sr.leftMs() : getTimeLeftMs(exp);
     
         const row = document.createElement('div');
         row.setAttribute('role','group');
@@ -1058,7 +1075,6 @@
         const left = document.createElement('div');
         left.innerHTML =
           `<strong>${safe(owner)}</strong> &middot; <span class="badge">Goblins army: ${formatCompact(count)}</span>
-           <div class="meter" style="margin-top:6px"><i style="width:100%"></i></div>
            <div style="display:flex;gap:10px;margin-top:6px;font-size:12px;color:#c6d2ef">
               <span>R: <b>${formatCompact(res)}</b></span>
               <span>L: <b>${formatCompact(loot)}</b></span>
@@ -1080,8 +1096,12 @@
         row.appendChild(right);
         host.appendChild(row);
     
-        // registra per l'aggiornamento live
-        GlobalTimers.rows.set(row, { exp, etaEl: right.querySelector('[data-eta]'), endEl: right.querySelector('[data-end]') });
+        GlobalTimers.rows.set(row, {
+          exp,
+          etaEl: right.querySelector('[data-eta]'),
+          endEl: right.querySelector('[data-end]'),
+          sr, // oggetto calcolatore per seconds_remaining
+        });
       });
     
       ensureGlobalTimers();
@@ -1116,29 +1136,34 @@
       const tick = ()=>{
         const now = Date.now();
         for (const [row, meta] of GlobalTimers.rows){
-          const leftMs = getTimeLeftMs(meta.exp, new Date(now));
+          let leftMs = null, endAt = null;
+    
+          if (meta.sr){
+            leftMs = meta.sr.leftMs(now);
+            endAt  = meta.sr.endsAt();
+          } else {
+            leftMs = getTimeLeftMs(meta.exp, new Date(now));
+            endAt  = getEndsAt(meta.exp);
+          }
+    
           if (leftMs == null){
             if (meta.etaEl) meta.etaEl.textContent = '--:--:--';
             continue;
           }
           if (leftMs <= 0){
-            // rimuovi riga UI
             row.remove();
             GlobalTimers.rows.delete(row);
-            // side effects: rimozione dal canvas + toast
             onExpeditionEnd(meta.exp);
-            // togli anche dal model globale, così il contatore in alto scende
-            State.globalExpeditions = State.globalExpeditions.filter(e => String(e.expedition_id ?? e.id) !== String(meta.exp.expedition_id ?? meta.exp.id));
+    
+            // rimuovi anche dallo stato/engine
+            const id = String(meta.exp.expedition_id ?? meta.exp.id ?? '');
+            State.globalExpeditions = State.globalExpeditions.filter(e => String(e.expedition_id ?? e.id) !== id);
             if (State.ui.globalCount) State.ui.globalCount.textContent = String(State.globalExpeditions.length);
-            // e togli goblin dall'engine (failsafe)
-            if (State.engine) State.engine.goblinById.delete(String(meta.exp.expedition_id ?? meta.exp.id));
+            if (State.engine) State.engine.goblinById.delete(id);
             continue;
           }
           if (meta.etaEl) meta.etaEl.textContent = fmtHMS(leftMs);
-          if (meta.endEl){
-            const endD = getEndsAt(meta.exp);
-            if (endD) meta.endEl.textContent = timeHM(endD);
-          }
+          if (meta.endEl && endAt) meta.endEl.textContent = timeHM(endAt);
         }
         GlobalTimers.tickId = requestAnimationFrame(tick);
       };
@@ -1177,8 +1202,9 @@
         ]);
         if (expRes.ok && expRes.data){
           const exps = Array.isArray(expRes.data) ? expRes.data : (Array.isArray(expRes.data.items) ? expRes.data.items : []);
-          State.globalExpeditions = exps;
-          if (State.engine) State.engine.syncExpeditions(exps);
+          const snapAt = Date.now();
+          State.globalExpeditions = exps.map(e => (e && typeof e === 'object') ? Object.assign(e, {_snapAt:snapAt}) : e);
+          if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
           renderGlobalPanel();
           ensureGlobalTimers();
         }
@@ -1210,8 +1236,9 @@
             switch (msg.type){
               case 'expeditions_snapshot':
                 if (msg.expeditions && State.engine){
-                  State.globalExpeditions = msg.expeditions;
-                  State.engine.syncExpeditions(msg.expeditions);
+                  const snapAt = Date.now();
+                  State.globalExpeditions = (msg.expeditions || []).map(e => (e && typeof e==='object') ? Object.assign(e,{_snapAt:snapAt}) : e);
+                  State.engine.syncExpeditions(State.globalExpeditions);
                   renderGlobalPanel();
                   ensureGlobalTimers();
                 }

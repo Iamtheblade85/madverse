@@ -199,20 +199,17 @@ button:focus-visible,[role="button"]:focus-visible,input:focus-visible,select:fo
 
 @media (min-width:1600px){
   #main-layout{grid-template-columns:minmax(0,2.7fr) minmax(360px,.48fr);gap:22px}
-  #canvas-wrap{max-width:62%}
 }
 @media (min-width:1201px) and (max-width:1599px){
   #main-layout{grid-template-columns:minmax(0,2.6fr) minmax(340px,.5fr)}
-  #canvas-wrap{max-width:60%}
 }
 @media (min-width:1001px) and (max-width:1200px){
   #main-layout{grid-template-columns:minmax(0,2.5fr) minmax(320px,.55fr)}
-  #canvas-wrap{max-width:60%}
 }
 @media (max-width:1000px){
   #main-layout{grid-template-columns:1fr;gap:16px}
   #game-area{width:100%;margin-inline:auto}
-  #canvas-wrap{max-width:80%;width:95%;height:50vh}
+  #canvas-wrap{width:100%;max-width:none;height:50vh}
   #tabs{grid-auto-flow:column;overflow:auto;scrollbar-width:thin}
   #tabs [role="tab"]{min-width:150px}
   #ticker{overflow:hidden}

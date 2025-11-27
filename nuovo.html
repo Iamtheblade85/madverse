@@ -28,8 +28,10 @@
           <select id="sel-duration" title="Choose expedition duration" style="min-width:140px;">
             <option value="5">5m — Blitz</option>
             <option value="30" selected>30m — Standard</option>
-            <option value="60">60m — Long</option>
-            <option value="120">120m — Marathon</option>
+            <option value="60">1h — Long</option>
+            <option value="120">2h — Marathon</option>
+            <option value="360">6h — Endurance</option>
+            <option value="1440">24h — Ultra</option>
           </select>
           <small id="duration-hint" style="margin-left:10px;opacity:.85;"></small>
         </div>
@@ -1787,7 +1789,7 @@
       updateCapUI();
       initDurationSwitch();
       moveControlsIntoBuilder();
-    
+      styleDurationBlock(document.getElementById('duration-switch'));
       // <<< Novità: inizializza subito stato pulsanti + forecast
       updateActionButtonsUI();
       scheduleForecastIfReady();

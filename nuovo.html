@@ -390,16 +390,17 @@
         this.x=x; this.y=y; this.rarity=rarity; this.claimable=!!claimable; this.taken=!!taken; this.t=0;
       }
       update(dt){ this.t += dt; }
-      draw(ctx, t){
-        const { toScreen, cellSize } = t;
-        const pos = toScreen(this.x, this.y);
-        const size = cellSize * 1.6;
-        ctx.save();
-        ctx.translate(pos.x, pos.y);
-        if (Assets.chest) ctx.drawImage(Assets.chest, -size/2, -size/2, size, size);
-        else { ctx.fillStyle = this.claimable && !this.taken ? '#ccaa00' : '#555'; ctx.fillRect(-size/2, -size/2, size, size); }
-        ctx.restore();
-      }
+        draw(ctx, t){
+          const { toScreen, cellSizeX, cellSizeY } = t;
+          const pos = toScreen(this.x, this.y);
+          const sizeW = cellSizeX * 1.6;
+          const sizeH = cellSizeY * 1.6;
+          ctx.save();
+          ctx.translate(pos.x, pos.y);
+          if (Assets.chest) ctx.drawImage(Assets.chest, -sizeW/2, -sizeH/2, sizeW, sizeH);
+          else { ctx.fillStyle = this.claimable && !this.taken ? '#ccaa00' : '#555'; ctx.fillRect(-sizeW/2, -sizeH/2, sizeW, sizeH); }
+          ctx.restore();
+        }
     }
 
     class PerkEntity {
@@ -433,13 +434,15 @@
         if (this.x < minX - 1 || this.x > maxX + 1 || wy < minY - 2 || wy > maxY + 2) this.done = true;
       }
       draw(ctx, t){
-        const { toScreen, cellSize } = t; const wy = this.waveY(this.x); const pos = toScreen(this.x, wy);
+        const { toScreen, cellSizeX, cellSizeY } = t;
+        const wy = this.waveY(this.x); const pos = toScreen(this.x, wy);
         ctx.save(); ctx.translate(pos.x, pos.y);
-        const size = cellSize * 2.8;
+        const sizeW = cellSizeX * 2.8;
+        const sizeH = cellSizeY * 2.8;
         if (this.image){
-          const srcW = this.image.width / this.frames; const srcH = this.image.height; const sx = this.frame * srcW;
-          ctx.drawImage(this.image, sx, 0, srcW, srcH, -size/2, -size/2, size, size);
-        } else { ctx.fillStyle='#88f'; ctx.beginPath(); ctx.arc(0,0,size/2,0,Math.PI*2); ctx.fill(); }
+          const srcW = this.image.width / this.frames, srcH = this.image.height, sx = this.frame * srcW;
+          ctx.drawImage(this.image, sx, 0, srcW, srcH, -sizeW/2, -sizeH/2, sizeW, sizeH);
+        } else { ctx.fillStyle='#88f'; ctx.beginPath(); ctx.ellipse(0,0, sizeW/2, sizeH/2, 0, 0, Math.PI*2); ctx.fill(); }
         ctx.restore();
       }
     }
@@ -528,31 +531,37 @@
       }
       startDigging(){ this.digging=true; setTimeout(()=>this.digging=false, 1800 + Math.random()*900); }
       drawTrail(ctx, t){
-        const { toScreen, cellSize } = t; const segs=this.trail;
-        if (!segs || segs.length<2) return;
+        const { toScreen, cellSizeX, cellSizeY } = t;
+        const segs = this.trail; if (!segs || segs.length < 2) return;
         ctx.save();
         for (let i=0;i<segs.length-1;i++){
-          const a=toScreen(segs[i].x, segs[i].y); const b=toScreen(segs[i+1].x, segs[i+1].y);
+          const a = toScreen(segs[i].x, segs[i].y);
+          const b = toScreen(segs[i+1].x, segs[i+1].y);
           ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
-          ctx.lineWidth = Math.max(1.0, cellSize*0.18*(0.5 + (i/segs.length)));
+          const thick = Math.max(1.0, ((cellSizeX + cellSizeY)/2) * 0.18 * (0.5 + (i/segs.length)));
+          ctx.lineWidth = thick;
           ctx.strokeStyle = '#888'; ctx.stroke();
         }
         ctx.restore();
       }
       draw(ctx, t){
-        const { toScreen, cellSize } = t; const pos=toScreen(this.x, this.y);
-        const size = cellSize * 2.4; const bob = Math.sin(this.walkPhase) * size * 0.08;
+        const { toScreen, cellSizeX, cellSizeY } = t;
+        const pos = toScreen(this.x, this.y);
+        const sizeW = cellSizeX * 2.4;
+        const sizeH = cellSizeY * 2.4;
+        const bob = Math.sin(this.walkPhase) * sizeH * 0.08;
+      
         this.drawTrail(ctx, t);
+      
         ctx.save(); ctx.translate(pos.x, pos.y + bob);
-        if (Assets.goblin) ctx.drawImage(Assets.goblin, -size/2, -size/2, size, size);
-        else { ctx.fillStyle='#6c3'; ctx.fillRect(-size/2, -size/2, size, size); }
-        // label
-        const label = this.owner || 'goblin'; const labelW = size*1.8; const labelH = size*0.45;
-        // simple label (no CSS): gray box + text
-        ctx.fillStyle = '#111'; ctx.fillRect(-labelW/2, size*0.6, labelW, labelH);
-        ctx.strokeStyle = this.color; ctx.strokeRect(-labelW/2, size*0.6, labelW, labelH);
+        if (Assets.goblin) ctx.drawImage(Assets.goblin, -sizeW/2, -sizeH/2, sizeW, sizeH);
+        else { ctx.fillStyle = '#6c3'; ctx.fillRect(-sizeW/2, -sizeH/2, sizeW, sizeH); }
+      
+        const labelW = sizeW * 1.8, labelH = sizeH * 0.45;
+        ctx.fillStyle = '#111'; ctx.fillRect(-labelW/2, sizeH*0.6, labelW, labelH);
+        ctx.strokeStyle = this.color; ctx.strokeRect(-labelW/2, sizeH*0.6, labelW, labelH);
         ctx.fillStyle = '#eee'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font = '12px sans-serif';
-        ctx.fillText(label, 0, size*0.6 + labelH/2);
+        ctx.fillText(this.owner || 'goblin', 0, sizeH*0.6 + labelH/2);
         ctx.restore();
       }
     }
@@ -569,7 +578,13 @@
       constructor(canvas){
         this.canvas = canvas; this.ctx = canvas.getContext('2d');
         this.world = { width: CONFIG.worldCols, height: CONFIG.worldRows };
-        this.transform = { cellSize:16, offsetX:0, offsetY:0, canvasWidth:canvas.width, canvasHeight:canvas.height, toScreen:(x,y)=>({x,y}) };
+        // iniziale coerente con la nuova API:
+        this.transform = {
+          cellSizeX: 16, cellSizeY: 16,
+          offsetX: 0, offsetY: 0,
+          canvasWidth: canvas.width, canvasHeight: canvas.height,
+          toScreen: (x,y) => ({ x, y })
+        };
         this.running=false; this.lastTs=performance.now();
         this.goblinById = new Map(); this.goblins=this.goblinById;
         this.chestById = new Map(); this.perkById = new Map();
@@ -580,46 +595,49 @@
       destroy(){ this.stop(); window.removeEventListener('resize', this.handleResize); }
       getBounds(){ return { minX:1, minY:1, maxX:this.world.width-2, maxY:this.world.height-2 }; }
       handleResize(){
-        // Responsive strategy (no CSS):
-        // - PC landscape: canvas fills width up to a safe height (16:9)
-        // - Tablet: similar logic, smaller world cell size
-        // - Phone portrait: use almost full width, reduce cell size; panels stacked below
-        const root = document.getElementById('app-root');
+        const root = document.getElementById('canvas-wrap') || document.getElementById('app-root');
         const rect = root.getBoundingClientRect();
-        const viewportW = Math.max(320, window.innerWidth || rect.width || 320);
-        const viewportH = Math.max(240, window.innerHeight || rect.height || 240);
-        const aspect = CONFIG.canvasAspect;
-
-        // try to allocate up to 60% height to canvas on portrait phones, 55% on tablets, 70% on desktop
-        let targetH;
-        if (viewportW < 600) {             // phone portrait
-          targetH = Math.floor(viewportH * 0.58);
-        } else if (viewportW < 1024) {     // tablet
-          targetH = Math.floor(viewportH * 0.60);
-        } else {                            // desktop
-          targetH = Math.floor(viewportH * 0.70);
-        }
-        let targetW = Math.floor(targetH * aspect);
-        if (targetW > viewportW) { targetW = viewportW - 20; targetH = Math.floor(targetW / aspect); }
-
+      
+        // 1) dimensione target: usa tutta la larghezza disponibile del contenitore
+        const containerW = Math.max(320, Math.floor(rect.width));
+        // 2) altezza cappata: metà viewport (o quello che preferisci)
+        const maxH = Math.max(200, Math.floor((window.innerHeight || 800) * 0.50));
+      
+        const targetW = containerW;       // niente aspect-ratio
+        const targetH = maxH;             // altezza massima consentita
+      
+        // DPR
         const dpr = State.dpr;
-        this.canvas.width  = Math.max(320, Math.round(targetW * dpr));
-        this.canvas.height = Math.max(180, Math.round(targetH * dpr));
-        this.canvas.style.width  = String(Math.round(targetW)) + 'px';
-        this.canvas.style.height = String(Math.round(targetH)) + 'px';
-        const ctx = this.ctx; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.imageSmoothingEnabled = false;
-
-        const margin = 8;
-        const cssW = targetW, cssH = targetH;
+        this.canvas.width  = Math.round(targetW * dpr);
+        this.canvas.height = Math.round(targetH * dpr);
+        this.canvas.style.width  = targetW + 'px';
+        this.canvas.style.height = targetH + 'px';
+      
+        const ctx = this.ctx;
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        ctx.imageSmoothingEnabled = false;
+      
+        // Margini interni
+        const padX = 8, padY = 8;
+        const availW = Math.max(50, targetW - padX*2);
+        const availH = Math.max(50, targetH - padY*2);
+      
+        // 3) SCALA NON UNIFORME: ogni cella ha dimensione X e Y indipendenti
         const worldW = this.world.width, worldH = this.world.height;
-        const availW = cssW - margin*2, availH = cssH - margin*2;
-        const cellSize = Math.min(availW / worldW, availH / worldH);
-        const offsetX = (cssW - worldW * cellSize) / 2;
-        const offsetY = (cssH - worldH * cellSize) / 2;
-
+        const cellSizeX = availW / worldW;
+        const cellSizeY = availH / worldH;
+      
+        // centra l’area di gioco nel canvas
+        const areaW = worldW * cellSizeX;
+        const areaH = worldH * cellSizeY;
+        const offsetX = Math.floor((targetW - areaW) / 2);
+        const offsetY = Math.floor((targetH - areaH) / 2);
+      
         this.transform = {
-          cellSize, offsetX, offsetY, canvasWidth: cssW, canvasHeight: cssH,
-          toScreen: (x,y)=>({ x: offsetX + x*cellSize, y: offsetY + y*cellSize })
+          cellSizeX, cellSizeY,
+          offsetX, offsetY,
+          canvasWidth: targetW, canvasHeight: targetH,
+          toScreen: (x, y) => ({ x: offsetX + x * cellSizeX, y: offsetY + y * cellSizeY })
         };
       }
       clear(){
@@ -631,31 +649,48 @@
         ctx.restore();
       }
       drawBackground(){
-        const w = this.canvas.width;   // <-- nativi, NON / State.dpr
-        const h = this.canvas.height;  // <--
         const ctx = this.ctx;
+      
+        // Pulisci tutto il buffer
         ctx.save();
         ctx.setTransform(1,0,0,1,0,0);
         ctx.fillStyle = '#000';
-        ctx.fillRect(0,0,w,h);
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         ctx.restore();
       
-        const { cellSize, offsetX, offsetY } = this.transform;
-        const areaW = this.world.width * cellSize;
-        const areaH = this.world.height * cellSize;
-        const c = this.ctx;
+        const { cellSizeX, cellSizeY, offsetX, offsetY } = this.transform;
+        const areaW = this.world.width  * cellSizeX;
+        const areaH = this.world.height * cellSizeY;
+      
+        const c = ctx;
         c.save();
         c.translate(offsetX, offsetY);
       
-        // Se vuoi zero offuscamento della GIF di sfondo, porta a 1.0 la globalAlpha:
-        c.globalAlpha = 1.0; // era 0.32
-        if (Assets.bg) c.drawImage(Assets.bg, 0, 0, Assets.bg.width, Assets.bg.height, 0, 0, areaW, areaH);
-        else { c.fillStyle = '#111'; c.fillRect(0,0,areaW,areaH); }
+        // Sfondo gif allungato a piena area di gioco (niente alfa)
+        if (Assets.bg) {
+          c.globalAlpha = 1.0;
+          c.drawImage(
+            Assets.bg, 0, 0, Assets.bg.width, Assets.bg.height,
+            0, 0, areaW, areaH
+          );
+        } else {
+          c.fillStyle = '#111';
+          c.fillRect(0, 0, areaW, areaH);
+        }
       
-        c.globalAlpha = 1.0; // (facoltativo, per sicurezza)
-        c.strokeStyle = '#333'; c.lineWidth = 1;
-        for (let x=0;x<=this.world.width;x++){ const px = x*cellSize+0.5; c.beginPath(); c.moveTo(px,0); c.lineTo(px,areaH); c.stroke(); }
-        for (let y=0;y<=this.world.height;y++){ const py = y*cellSize+0.5; c.beginPath(); c.moveTo(0,py); c.lineTo(areaW,py); c.stroke(); }
+        // Griglia con scala non uniforme
+        c.strokeStyle = '#333';
+        c.lineWidth = 1;
+      
+        for (let x = 0; x <= this.world.width; x++){
+          const px = Math.round(x * cellSizeX) + 0.5;
+          c.beginPath(); c.moveTo(px, 0); c.lineTo(px, areaH); c.stroke();
+        }
+        for (let y = 0; y <= this.world.height; y++){
+          const py = Math.round(y * cellSizeY) + 0.5;
+          c.beginPath(); c.moveTo(0, py); c.lineTo(areaW, py); c.stroke();
+        }
+      
         c.restore();
       }
       start(){ if (this.running) return; this.running = true; this.lastTs = performance.now();

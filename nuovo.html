@@ -1789,6 +1789,70 @@
       updateCapUI();
       initDurationSwitch();
       moveControlsIntoBuilder();
+// forza lo spostamento + stile + debug visibilità
+(function ensureDurationVisible(){
+  const host = document.getElementById('builder-controls');
+  const box  = document.getElementById('duration-switch');
+  const sel  = document.getElementById('sel-duration');
+  const cap  = document.getElementById('cap-line');
+  const act  = document.getElementById('action-buttons');
+
+  // 1) se manca qualcosa, logga
+  if (!host || !box || !sel || !cap || !act) {
+    console.warn('[DEX] duration controls missing', {host:!!host, box:!!box, sel:!!sel, cap:!!cap, act:!!act});
+    return;
+  }
+
+  // 2) se non è già nel builder, spostalo in cima
+  if (!host.contains(box)) {
+    // crea righe se non ci sono
+    if (!host.querySelector('.row')) {
+      const row1 = document.createElement('div'); row1.className = 'row';
+      const row2 = document.createElement('div'); row2.className = 'row';
+      host.appendChild(row1); host.appendChild(row2);
+    }
+    const row1 = host.querySelector('.row');
+    const row2 = host.querySelectorAll('.row')[1] || host.querySelector('.row');
+
+    // ricomponi row1: [duration | spacer | cap]
+    row1.innerHTML = '';
+    row1.appendChild(box);
+    const spacer = document.createElement('div'); spacer.className='spacer';
+    row1.appendChild(spacer);
+    row1.appendChild(cap);
+
+    // row2: [actions]
+    row2.innerHTML = '';
+    row2.appendChild(act);
+  }
+
+  // 3) applica stile inline compatto per evitare che il tema lo nasconda
+  box.style.display = 'flex';
+  box.style.gap = '8px';
+  box.style.alignItems = 'center';
+  box.style.flexWrap = 'wrap';
+  sel.style.display = 'inline-block';
+  sel.style.visibility = 'visible';
+  sel.style.minWidth = 'unset';
+  sel.style.maxWidth = '160px';
+  sel.style.padding  = '4px 8px';
+  sel.style.borderRadius = '6px';
+
+  // 4) se qualche CSS lo nasconde, annulla forzando visibilità
+  [box, sel].forEach(el => {
+    el.removeAttribute('hidden');
+    el.style.opacity = '1';
+  });
+
+  // 5) debug a console
+  console.log('[DEX] duration mounted in builder:', {
+    inBuilder: host.contains(box),
+    selValue: sel.value,
+    boxDisplay: getComputedStyle(box).display,
+    selDisplay: getComputedStyle(sel).display
+  });
+})();
+      
       styleDurationBlock(document.getElementById('duration-switch'));
       // <<< Novità: inizializza subito stato pulsanti + forecast
       updateActionButtonsUI();

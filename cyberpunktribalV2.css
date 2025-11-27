@@ -255,3 +255,99 @@ button:focus-visible,[role="button"]:focus-visible,input:focus-visible,select:fo
   box-shadow:0 0 18px rgba(0,255,224,.18), 0 0 18px rgba(143,125,255,.12);
   animation:toastIn .22s ease-out;
 }
+/* ---- Duration: compatta, accessibile, coerente col tema ---- */
+
+/* nascondi il <select> ma mantieni focus/AT */
+#duration-switch select#sel-duration {
+  position: absolute !important;
+  inset: auto auto auto -9999px !important;
+  width: 1px !important; height: 1px !important;
+  padding: 0 !important; border: 0 !important;
+  clip: rect(0 0 0 0) !important; clip-path: inset(50%) !important;
+  white-space: nowrap !important; overflow: hidden !important;
+}
+
+/* contenitore duration dentro il builder */
+#builder-controls {
+  display: grid; gap: 12px; margin: 6px 0 14px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 760px) {
+  #builder-controls { grid-template-columns: 1fr; }
+}
+
+/* blocco duration a griglia compatta */
+#duration-switch {
+  display: grid; align-items: center; gap: 8px;
+}
+
+/* dropdown “card” coerente con tema e meno ingombrante */
+#duration-switch .dropdown { position: relative; min-width: 0; }
+#duration-switch .dropdown .current{
+  cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 10px 12px; border-radius: 14px;
+  border: 1px solid var(--line-2); background: var(--btn-a);
+  font-weight: 900; letter-spacing: .25px; font-size: var(--m);
+  min-width: 140px; max-width: 180px;
+}
+#duration-switch .dropdown .current:focus-visible{
+  box-shadow: 0 0 0 3px rgba(70,166,255,.3), inset 0 0 0 1px rgba(255,255,255,.35);
+}
+#duration-switch .dropdown .current::after{ content: "▾"; opacity: .9 }
+
+/* menu */
+#duration-switch .menu{
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  display: grid; gap: 6px; padding: 8px; border-radius: 14px;
+  border: 1px solid var(--line-2); background: var(--panel-b);
+  box-shadow: 0 20px 40px rgba(0,0,0,.35);
+  opacity: 0; visibility: hidden; transform: translateY(6px);
+  transition: opacity var(--fx-m), transform var(--fx-m), visibility var(--fx-m);
+  z-index: 5;
+}
+#duration-switch[aria-expanded="true"] .menu{
+  opacity: 1; visibility: visible; transform: translateY(0);
+}
+
+/* voci */
+#duration-switch .menu button{
+  cursor: pointer; padding: 9px 10px; border-radius: 12px;
+  border: 1px solid var(--line-2); background: var(--btn-a); color: var(--fg-0);
+  font-weight: 900; letter-spacing: .2px; font-size: var(--s);
+  transition: transform var(--fx-f), box-shadow var(--fx-f), border-color var(--fx-f);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+#duration-switch .menu button:hover{
+  transform: translateY(-1px);
+  border-color: rgba(70,166,255,.7);
+  box-shadow: 0 0 22px rgba(70,166,255,.24);
+}
+#duration-switch .menu button[aria-pressed="true"]{
+  border-color: rgba(0,255,224,.85);
+  box-shadow: 0 0 22px rgba(0,255,224,.24);
+}
+
+/* etichetta+valore compatti */
+#duration-switch .dropdown .label{ font-size: var(--s); color: var(--fg-1) }
+#duration-switch .dropdown .value{ font-weight: 900 }
+
+/* testo mostrato nel “pill” corrente – default 30m */
+#duration-switch .dropdown .value::before{ content: "30m" }
+#duration-switch[data-value="5"]   .dropdown .value::before{ content: "5m" }
+#duration-switch[data-value="30"]  .dropdown .value::before{ content: "30m" }
+#duration-switch[data-value="60"]  .dropdown .value::before{ content: "60m" }
+#duration-switch[data-value="120"] .dropdown .value::before{ content: "2h" }
+
+/* hint duration più integrato */
+#duration-hint{
+  display: inline-block; font-size: var(--s); color: var(--fg-1);
+  opacity: .9; margin-left: 2px;
+}
+
+/* barra finale: cap + actions più “card” */
+#cap-line{
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}
+#action-buttons{
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}

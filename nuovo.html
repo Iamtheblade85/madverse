@@ -1635,7 +1635,11 @@
       
         // rimuovi chests non più presenti nello snapshot
         for (const [id] of this.chestById){
-          if (!seen.has(id)) this.chestById.delete(id);
+          if (!seen.has(id)) {
+            this.chestById.delete(id);
+            State.runtime.chestAnnounce.delete(String(id));        // ✅ FIX: sblocca ticker
+            State.runtime.locallyClaimedUntil.delete(String(id));  // (opzionale, pulizia)
+          }
         }
       }
       upsertChest(chest){ this.chestById.set(chest.id, chest); }
@@ -2682,7 +2686,13 @@
                   const visibleAtMs = State.runtime.pendingChestByKey.get(key) || Date.now();
               
                   const id = msg.chest.id || msg.chest.chest_id;
-              
+                  const isTaken = !!msg.chest.claimed || !!msg.chest.taken;
+                  if (isTaken){
+                    State.engine.chestById.delete(String(id));
+                    State.runtime.chestAnnounce.delete(String(id)); // ✅ FIX: niente countdown zombie
+                    break;
+                  }
+                               
                   const chest = new ChestEntity({
                     id,
                     x, y,
@@ -2719,13 +2729,28 @@
     
               case 'winner': {
                 if (msg.winner){
-                  State.recentWinners.unshift(msg.winner);
+                  const w = msg.winner;
+              
+                  State.recentWinners.unshift(w);
                   State.recentWinners = State.recentWinners.slice(0,50);
-                  renderRewardsPanel(); updateTicker();
+                  renderRewardsPanel();
+              
+                  // ✅ FIX: feedback visibile (toast + canvas + ticker)
+                  const parsed = parseClaimResponse(w);
+                  showGlobalWin(parsed.wax, parsed.tokenAmount, parsed.tokenSymbol, parsed.nftCount);
+              
+                  // ✅ FIX: se il winner include chest_id, pulisci subito l’annuncio/countdown
+                  const cid = w.chest_id || w.chestId;
+                  if (cid){
+                    State.runtime.chestAnnounce.delete(String(cid));
+                    if (State.engine) State.engine.chestById.delete(String(cid));
+                  }
+              
+                  updateTicker();
                 }
                 break;
               }
-    
+                  
               case 'recent_expedition': {
                 if (msg.expedition){
                   State.recentExpeditions.unshift(msg.expedition);

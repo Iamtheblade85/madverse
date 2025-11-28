@@ -1614,11 +1614,17 @@
     // ------------------------------------------------------------
     // DATA: USER NFTs
     // ------------------------------------------------------------
-    async function fetchUserNFTs(){
+    async function fetchUserNFTs() {
       syncUserFromStorage();
-      try { assertAuth(); } catch {
-        document.getElementById('my-status')?.replaceChildren();
-        document.getElementById('my-status')?.textContent = 'Not authenticated.';
+    
+      try { 
+        assertAuth(); 
+      } catch {
+        const statusEl = document.getElementById('my-status');
+        if (statusEl) {
+          statusEl.replaceChildren(); // opzionale
+          statusEl.textContent = 'Not authenticated.';
+        }
         return;
       }
 

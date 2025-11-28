@@ -12,6 +12,11 @@
   <!-- Caricamento veloce del tema CyberPunkTribalV2 -->
   <link rel="preload" as="style" href="cyberpunktribalV2.css?v=1" onload="this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="cyberpunktribalV2.css?v=1"></noscript>
+  <style>
+    #panels [role="tabpanel"][hidden] { display: none !important; }
+    #canvas-feedback { pointer-events:none; }
+    #canvas-feedback .msg { margin:6px 0; }
+  </style>
 
 </head>
 <body>
@@ -65,7 +70,9 @@
         <h2>World Expeditions Map</h2>
         <div id="canvas-wrap" aria-label="Game viewport">
           <canvas id="game-canvas"></canvas>
+          <div id="canvas-feedback" class="feedback-near-canvas" aria-live="polite"></div>
         </div>
+
         <div id="legend">
           <span>Legend:</span>
           <span>Goblin</span> · <span>Chest</span> · <span>Perk</span>
@@ -190,11 +197,22 @@
       snapshotTimeoutMs: 10000,
       recentTimeoutMs: 12000,
       winnersTimeoutMs: 12000,
+    
+      // NON usare più drop per-frame: lo teniamo ma non viene più usato nel PerkEntity nuovo
       perkDropProbability: 0.95,
+    
       canvasAspect: 16/9,
       maxGoblinsPerExpedition: 250,
       minGoblinDailyPowerToSend: 5,
       apiBase: (window.CAVE_API_BASE || '').replace(/\/$/, ''),
+    
+      // ⭐ nuove impostazioni movimento/fx
+      chestTtlSeconds: 90,            // fallback se backend non manda expires_at
+      chestDropFlightMs: 900,         // durata intera della FX “lancio+uscita+rientro+landing”
+      perkSpeedMin: 4.8,
+      perkSpeedMax: 6.8,
+      goblinSpeedMin: 4.8,
+      goblinSpeedMax: 7.8,
     };
 
     const QS = new URLSearchParams(location.search);
@@ -341,7 +359,14 @@
       perkCooldownUntil: 0,
       lastForecastPayloadKey: '',
       forecastBusy: false,
-      forecastData: null
+      forecastData: null,
+    
+      // ticker countdown chest (sincronizzato se server manda expires_at)
+      chestAnnounce: new Map(),     // chest_id -> { perk, createdAtMs, expiresAtMs }
+      chestTickerTimer: null,
+    
+      // evita che la chest appaia “subito” se SSE/snapshot arriva prima che finisca la FX
+      pendingChestByKey: new Map(), // key wax|perk|x|y -> visibleAtMs
     };
     
     // Deriva il cap corrente (già esiste getSendCap)
@@ -525,22 +550,218 @@
     // ENTITIES
     // ------------------------------------------------------------
     class ChestEntity {
-      constructor({ id, x, y, rarity='common', claimable=true, taken=false }){
+      constructor({ id, x, y, rarity='common', claimable=true, taken=false, created_at=null, expires_at=null, visible_at_ms=null }){
         this.id = String(id ?? `${x}|${y}|c`);
-        this.x=x; this.y=y; this.rarity=rarity; this.claimable=!!claimable; this.taken=!!taken; this.t=0;
+        this.x = x; this.y = y;
+    
+        this.rarity = rarity;
+        this.claimable = !!claimable;
+        this.taken = !!taken;
+    
+        this.createdAtMs = created_at ? Date.parse(created_at) : Date.now();
+        this.expiresAtMs = expires_at ? Date.parse(expires_at) : (this.createdAtMs + CONFIG.chestTtlSeconds*1000);
+    
+        // ✅ non disegnare finché la FX non “atterra”
+        this.visibleAtMs = (typeof visible_at_ms === 'number') ? visible_at_ms : this.createdAtMs;
+    
+        this.t = 0;
+        this.pop = 0; // 0..1
       }
-      update(dt){ this.t += dt; }
-        draw(ctx, t){
-          const { toScreen, cellSizeX, cellSizeY } = t;
-          const pos = toScreen(this.x, this.y);
-          const sizeW = cellSizeX * 1.6;
-          const sizeH = cellSizeY * 1.6;
-          ctx.save();
-          ctx.translate(pos.x, pos.y);
-          if (Assets.chest) ctx.drawImage(Assets.chest, -sizeW/2, -sizeH/2, sizeW, sizeH);
-          else { ctx.fillStyle = this.claimable && !this.taken ? '#ccaa00' : '#555'; ctx.fillRect(-sizeW/2, -sizeH/2, sizeW, sizeH); }
-          ctx.restore();
+    
+      update(dt){
+        this.t += dt;
+        this.pop = Math.min(1, this.pop + dt * 3.2);
+      }
+    
+      draw(ctx, tr){
+        const now = Date.now();
+        if (now < this.visibleAtMs) return;
+    
+        const { toScreen, cellSizeX, cellSizeY } = tr;
+        const pos = toScreen(this.x, this.y);
+    
+        const baseW = cellSizeX * 1.6;
+        const baseH = cellSizeY * 1.6;
+    
+        const p = this.pop;
+        const ease = 1 - Math.pow(1-p, 3);
+        const scale = 0.78 + 0.22 * ease;
+    
+        const bob = Math.sin(this.t * 5.5) * baseH * 0.04;
+    
+        ctx.save();
+        ctx.translate(pos.x, pos.y + bob);
+    
+        // glow led sottile
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(baseW,baseH)*0.55, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(0,255,224,${this.claimable && !this.taken ? 0.10 : 0.04})`;
+        ctx.fill();
+    
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.rotate(Math.sin(this.t*2.0)*0.05);
+    
+        const w = baseW * scale;
+        const h = baseH * scale;
+    
+        if (Assets.chest) {
+          ctx.drawImage(Assets.chest, -w/2, -h/2, w, h);
+        } else {
+          ctx.fillStyle = this.claimable && !this.taken ? '#ccaa00' : '#555';
+          ctx.fillRect(-w/2, -h/2, w, h);
         }
+    
+        ctx.restore();
+      }
+    }
+
+      class ChestDropFX {
+      constructor({ perkName, wax_account, startX, startY, targetX, targetY }){
+        this.perkName = perkName || 'perk';
+        this.wax_account = wax_account || '';
+    
+        this.startX = startX; this.startY = startY;
+        this.targetX = targetX; this.targetY = targetY;
+    
+        this.elapsedMs = 0;
+        this.done = false;
+    
+        this.spawnRequested = false;
+        this.spawnResult = null;
+        this.spawnError = false;
+    
+        // fasi: 1) lancio e “uscita”  2) rientro verticale e atterraggio
+        this.phase1 = Math.floor(CONFIG.chestDropFlightMs * 0.52);
+        this.phase2 = CONFIG.chestDropFlightMs - this.phase1;
+    
+        // ✅ registriamo un “pending spawn” per impedire l’apparizione anticipata via SSE/snapshot
+        const key = makeChestKey(this.wax_account, this.perkName, this.targetX, this.targetY);
+        State.runtime.pendingChestByKey.set(key, Date.now() + CONFIG.chestDropFlightMs);
+      }
+    
+      _easeOutCubic(t){ return 1 - Math.pow(1-t, 3); }
+      _easeInCubic(t){ return t*t*t; }
+    
+      update(dt, engine){
+        if (this.done) return;
+        this.elapsedMs += dt*1000;
+    
+        // chiedi spawn quando sei già “in volo” (non subito)
+        if (!this.spawnRequested && this.elapsedMs >= this.phase1 * 0.65){
+          this.spawnRequested = true;
+    
+          Api.post('/2spawn_chest', {
+            wax_account: this.wax_account,
+            perk_type: this.perkName,
+            x: this.targetX,
+            y: this.targetY
+          }, 12000).then(r=>{
+            if (r && r.ok && r.data){
+              this.spawnResult = r.data;
+    
+              upsertChestAnnouncement({
+                chest_id: r.data.chest_id ?? r.data.id,
+                perk_type: this.perkName,
+                created_at: r.data.created_at,
+                expires_at: r.data.expires_at
+              });
+    
+              pushCanvasMsg(`✨ ${this.perkName} dropped a chest!`);
+            } else {
+              this.spawnError = true;
+            }
+          }).catch(()=>{ this.spawnError = true; });
+        }
+    
+        // landing: crea entità chest solo alla fine della FX (sul client che l’ha lanciata)
+        if (this.elapsedMs >= CONFIG.chestDropFlightMs){
+          this.done = true;
+    
+          // pulisci pending (target raggiunto)
+          const key = makeChestKey(this.wax_account, this.perkName, this.targetX, this.targetY);
+          State.runtime.pendingChestByKey.delete(key);
+    
+          if (this.spawnResult && engine){
+            const id = String(this.spawnResult.chest_id ?? this.spawnResult.id ?? `${this.targetX}|${this.targetY}|srv`);
+            const chest = new ChestEntity({
+              id,
+              x: this.targetX,
+              y: this.targetY,
+              rarity: this.perkName,
+              claimable: true,
+              taken: false,
+              created_at: this.spawnResult.created_at,
+              expires_at: this.spawnResult.expires_at,
+              visible_at_ms: Date.now()
+            });
+            engine.upsertChest(chest);
+          }
+        }
+      }
+    
+      draw(ctx, tr){
+        if (this.done) return;
+    
+        const { toScreen, canvasWidth, canvasHeight, cellSizeX, cellSizeY } = tr;
+    
+        const s0 = toScreen(this.startX, this.startY);
+        const sd = toScreen(this.targetX, this.targetY);
+    
+        const t = this.elapsedMs;
+    
+        let x=sd.x, y=sd.y, scale=1, rot=0;
+    
+        if (t <= this.phase1){
+          const p = t / this.phase1;
+          const e = this._easeOutCubic(p);
+    
+          // “lancio → verso centro → fuori canvas in alto”
+          const cx = canvasWidth * 0.52;
+          const cy = -canvasHeight * 0.35;
+    
+          x = s0.x + (cx - s0.x) * e;
+          y = s0.y + (cy - s0.y) * e;
+    
+          // ✅ cresce e ruota velocissimo
+          scale = 1.0 + 1.8 * e;
+          rot = (p * 10.5);
+        } else {
+          const p = (t - this.phase1) / this.phase2;
+          const e = this._easeInCubic(p);
+    
+          // “rientro verticale” sopra la posizione finale
+          const topY = -canvasHeight * 0.22;
+    
+          x = sd.x;
+          y = topY + (sd.y - topY) * e;
+    
+          // ✅ torna a size normale in landing, ruota smorzando
+          scale = 2.7 + (1.0 - 2.7) * e;
+          rot = (1 - e) * 6.5;
+        }
+    
+        const w = cellSizeX * 1.8 * scale;
+        const h = cellSizeY * 1.8 * scale;
+    
+        ctx.save();
+        ctx.translate(x, y);
+    
+        // glow led durante il volo
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(w,h)*0.35, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(198,255,51,0.10)';
+        ctx.fill();
+    
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.rotate(rot);
+    
+        if (Assets.chest) ctx.drawImage(Assets.chest, -w/2, -h/2, w, h);
+        else { ctx.fillStyle='#ccaa00'; ctx.fillRect(-w/2, -h/2, w, h); }
+    
+        ctx.restore();
+      }
     }
 
     class PerkEntity {
@@ -548,41 +769,186 @@
         this.id = id || `perk-${Date.now()}-${Math.random().toString(16).slice(2)}`;
         this.perkName = perkName || 'dragon';
         this.wax_account = wax_account || '';
+    
         this.dir = dir || 'left-to-right';
-        this.x = x; this.yBase = y; this.amp = amp; this.freq = freq; this.speed = speed;
-        this.t=0; this.frame=0; this.tick=0; this.frameDelay=6; this.frames=6;
-        this.hasDropped=false; this.done=false;
+        this.x = x;
+        this.yBase = y;
+    
+        this.amp = amp;
+        this.freq = freq;
+    
+        // speed variabile (non costante)
+        this.speedBase = speed;
+        this.speedPhase = randRange(0, Math.PI*2);
+        this.speedJitter = randRange(0.14, 0.24);
+    
+        this.t = 0;
+        this.hasDropped = false;
+        this.done = false;
+    
+        // drop plan
+        this.dropX = null;
+        this.dropTarget = null; // {x,y}
+    
+        // trail perk
+        this.trail = [];
+        this.trailMax = 26;
+    
+        // sprite sheet anim
+        this.frame = 0; this.tick = 0;
+        this.frameDelay = 5;
+        this.frames = 6;
+    
         this.image = Assets.perks[this.perkName] || null;
       }
+    
       waveY(x){ return this.yBase + Math.sin(x * this.freq) * this.amp; }
-      update(dt, world, engine){
-        this.t += dt; this.tick++; if (this.tick >= this.frameDelay){ this.tick=0; this.frame=(this.frame+1)%this.frames; }
-        if (!this.hasDropped && Math.random() < CONFIG.perkDropProbability){
-          this.hasDropped = true;
-          const { minX, maxX, minY, maxY } = engine.getBounds();
-          const dx = randInt(minX, maxX); const dy = randInt(minY, maxY);
-          const chest = new ChestEntity({ id:null, x:dx, y:dy, rarity:'perk', claimable:true });
-          engine.upsertChest(chest);
-          try { syncUserFromStorage(); assertAuth(); } catch{}
-          Api.post('/2spawn_chest', { wax_account:this.wax_account, perk_type:this.perkName, x:dx, y:dy })
-            .then(r => { if (r.ok && r.data?.chest_id != null){ chest.id = String(r.data.chest_id); engine.upsertChest(chest); }});
+    
+      _trailAdd(px, py){
+        const last = this.trail[this.trail.length-1];
+        const d2 = last ? (last.x-px)*(last.x-px)+(last.y-py)*(last.y-py) : 9;
+        if (!last || d2 > 0.10*0.10){
+          this.trail.push({x:px,y:py});
+          if (this.trail.length > this.trailMax) this.trail.shift();
         }
-        const dirFactor = this.dir === 'left-to-right' ? 1 : -1;
-        this.x += this.speed * dirFactor * dt;
-        const { minX, maxX, minY, maxY } = engine.getBounds();
-        const wy = this.waveY(this.x);
-        if (this.x < minX - 1 || this.x > maxX + 1 || wy < minY - 2 || wy > maxY + 2) this.done = true;
       }
-      draw(ctx, t){
-        const { toScreen, cellSizeX, cellSizeY } = t;
-        const wy = this.waveY(this.x); const pos = toScreen(this.x, wy);
-        ctx.save(); ctx.translate(pos.x, pos.y);
-        const sizeW = cellSizeX * 2.8;
-        const sizeH = cellSizeY * 2.8;
+    
+      _drawTrail(ctx, tr){
+        if (this.trail.length < 2) return;
+        const { toScreen, cellSizeX, cellSizeY } = tr;
+        const thick = Math.max(1, ((cellSizeX+cellSizeY)/2) * 0.08);
+    
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    
+        for (let i=0;i<this.trail.length-1;i++){
+          const a = toScreen(this.trail[i].x, this.trail[i].y);
+          const b = toScreen(this.trail[i+1].x, this.trail[i+1].y);
+          const k = i/(this.trail.length-1);
+          const alpha = 0.04 + 0.18*(1-k);
+    
+          ctx.beginPath();
+          ctx.moveTo(a.x,a.y);
+          ctx.lineTo(b.x,b.y);
+          ctx.lineWidth = thick * (1.8 - 1.0*k);
+          ctx.strokeStyle = `rgba(0,255,224,${alpha})`;
+          ctx.stroke();
+    
+          ctx.beginPath();
+          ctx.moveTo(a.x,a.y);
+          ctx.lineTo(b.x,b.y);
+          ctx.lineWidth = thick * (0.9 - 0.45*k);
+          ctx.strokeStyle = `rgba(255,65,196,${alpha*0.55})`;
+          ctx.stroke();
+        }
+    
+        ctx.restore();
+      }
+    
+      update(dt, world, engine){
+        this.t += dt;
+    
+        // anim frames
+        this.tick++;
+        if (this.tick >= this.frameDelay){ this.tick=0; this.frame=(this.frame+1)%this.frames; }
+    
+        // init drop plan
+        if (!this.dropX){
+          const { minX, maxX, minY, maxY } = engine.getBounds();
+    
+          // ✅ drop sempre “verso centro”, mai troppo vicino ai lati
+          const marginX = 7;
+          const centerMin = minX + marginX;
+          const centerMax = maxX - marginX;
+    
+          this.dropX = randRange(centerMin + (centerMax-centerMin)*0.18, centerMax - (centerMax-centerMin)*0.18);
+    
+          const tx = randInt(centerMin, centerMax);
+          const ty = randInt(minY+3, maxY-3);
+          this.dropTarget = { x: tx, y: ty };
+        }
+    
+        const dirFactor = this.dir === 'left-to-right' ? 1 : -1;
+    
+        // speed variabile
+        this.speedPhase += dt * (1.6 + this.speedJitter);
+        const wob = 0.86 + 0.20*Math.sin(this.speedPhase) + 0.10*Math.sin(this.speedPhase*0.62 + 2.1);
+        const s = this.speedBase * wob;
+    
+        this.x += s * dirFactor * dt;
+    
+        const y = this.waveY(this.x);
+        this._trailAdd(this.x, y);
+    
+        // ✅ drop SOLO quando passa dropX (non per-frame random)
+        if (!this.hasDropped){
+          const passed = (dirFactor > 0) ? (this.x >= this.dropX) : (this.x <= this.dropX);
+          if (passed){
+            this.hasDropped = true;
+    
+            // start pos = posizione corrente perk
+            const startX = this.x;
+            const startY = y;
+    
+            // crea FX non bloccante
+            engine.addFx(new ChestDropFX({
+              perkName: this.perkName,
+              wax_account: this.wax_account,
+              startX, startY,
+              targetX: this.dropTarget.x,
+              targetY: this.dropTarget.y
+            }));
+          }
+        }
+    
+        // fine perk quando esce
+        const { minX, maxX, minY, maxY } = engine.getBounds();
+        if (this.x < minX - 3 || this.x > maxX + 3 || y < minY - 4 || y > maxY + 4) this.done = true;
+      }
+    
+      draw(ctx, tr){
+        this._drawTrail(ctx, tr);
+    
+        const { toScreen, cellSizeX, cellSizeY } = tr;
+        const y = this.waveY(this.x);
+        const pos = toScreen(this.x, y);
+    
+        const sizeW = cellSizeX * 3.1;
+        const sizeH = cellSizeY * 3.1;
+    
+        // ✅ flip coerente direzione (sprite default “a destra”)
+        const facing = (this.dir === 'left-to-right') ? 1 : -1;
+    
+        ctx.save();
+        ctx.translate(pos.x, pos.y);
+    
+        // micro lean
+        ctx.rotate(Math.sin(this.t*3.0) * 0.05);
+    
+        // glow
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(sizeW,sizeH)*0.45, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(143,125,255,0.08)';
+        ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+    
+        ctx.scale(facing, 1);
+    
         if (this.image){
-          const srcW = this.image.width / this.frames, srcH = this.image.height, sx = this.frame * srcW;
+          const srcW = this.image.width / this.frames;
+          const srcH = this.image.height;
+          const sx = this.frame * srcW;
           ctx.drawImage(this.image, sx, 0, srcW, srcH, -sizeW/2, -sizeH/2, sizeW, sizeH);
-        } else { ctx.fillStyle='#88f'; ctx.beginPath(); ctx.ellipse(0,0, sizeW/2, sizeH/2, 0, 0, Math.PI*2); ctx.fill(); }
+        } else {
+          ctx.fillStyle='#88f';
+          ctx.beginPath();
+          ctx.ellipse(0,0, sizeW/2, sizeH/2, 0, 0, Math.PI*2);
+          ctx.fill();
+        }
+    
         ctx.restore();
       }
     }
@@ -593,143 +959,129 @@
         this.owner = owner || 'goblin';
         this.color = color || '#facc15';
     
-        // posizione
         this.x = x; this.y = y;
-    
-        // fisica base
-        this.vx = randRange(-0.3, 0.3);
-        this.vy = randRange(-0.3, 0.3);
+        this.vx = randRange(-0.4, 0.4);
+        this.vy = randRange(-0.4, 0.4);
         this.ax = 0; this.ay = 0;
     
-        // parametri movimento (celle/secondo)
-        this.maxSpeed = randRange(2.6, 3.6);          // più realistico del 7+
-        this.boostSpeed = this.maxSpeed * 1.35;
-        this.maxForce = 8.5;                          // forza sterzo
-        this.friction = 0.96;                         // smorza vibrazioni
+        // ✅ velocità buona + variazione
+        this.maxSpeed = randRange(CONFIG.goblinSpeedMin, CONFIG.goblinSpeedMax);
+        this.boostSpeed = this.maxSpeed * 1.55;
+        this.maxForce = 11.5;
+        this.friction = 0.93;
     
-        // wander “smooth”
+        // wander
         this.wanderAngle = randRange(0, Math.PI*2);
-        this.wanderRadius = 0.85;
-        this.wanderDistance = 1.4;
-        this.wanderJitter = 1.15;
+        this.wanderRadius = 0.95;
+        this.wanderDistance = 1.6;
+        this.wanderJitter = 1.25;
     
         // stato
         this.digging = false;
         this.pauseUntil = 0;
         this.boostUntil = 0;
     
+        // facing flip “stabile”
+        this.facing = 1;
+        this._faceLockUntil = 0;
+    
         // anti-stuck
         this._stuckT = 0;
         this._lastX = x; this._lastY = y;
     
-        // trail/anim
+        // trail
         this.trail = [];
-        this.trailMax = 34;
+        this.trailMax = 30;
+    
+        // gait
+        this.gaitPhase = randRange(0, Math.PI*2);
         this.walkPhase = randRange(0, Math.PI*2);
       }
     
-      // ---------- vettori ----------
-      _addForce(fx, fy){
-        this.ax += fx;
-        this.ay += fy;
-      }
-      _limitVec(x, y, max){
-        const m = Math.hypot(x, y);
-        if (m <= max || m < 1e-9) return {x, y};
-        const s = max / m;
-        return {x: x*s, y: y*s};
-      }
+      _addForce(fx, fy){ this.ax += fx; this.ay += fy; }
       _normalize(x, y){
         const m = Math.hypot(x, y);
         if (m < 1e-9) return {x:0, y:0};
         return {x:x/m, y:y/m};
       }
+      _limitVec(x, y, max){
+        const m = Math.hypot(x, y);
+        if (m <= max || m < 1e-9) return {x, y};
+        const s = max / m;
+        return {x:x*s, y:y*s};
+      }
     
-      // ---------- steering ----------
       _seek(tx, ty, desiredSpeed){
         const dx = tx - this.x;
         const dy = ty - this.y;
         const n = this._normalize(dx, dy);
         const dvx = n.x * desiredSpeed;
         const dvy = n.y * desiredSpeed;
-        // steering = desiredVel - vel
         return { x: dvx - this.vx, y: dvy - this.vy };
       }
     
-      _arrive(tx, ty, desiredSpeed, slowRadius=2.4){
+      _arrive(tx, ty, desiredSpeed, slowRadius=2.6){
         const dx = tx - this.x, dy = ty - this.y;
         const dist = Math.hypot(dx, dy);
         if (dist < 1e-6) return {x:0,y:0};
         const t = clamp(dist / slowRadius, 0, 1);
-        const sp = desiredSpeed * (0.25 + 0.75 * t); // rallenta in arrivo
+        const sp = desiredSpeed * (0.22 + 0.78 * t);
         return this._seek(tx, ty, sp);
       }
     
       _wander(){
-        // jitter morbido sull’angolo
-        this.wanderAngle += randRange(-1,1) * this.wanderJitter * 0.12;
-    
+        this.wanderAngle += randRange(-1,1) * this.wanderJitter * 0.11;
         const v = this._normalize(this.vx, this.vy);
-        // se quasi fermo, inventa una direzione
         const dir = (Math.hypot(v.x,v.y) < 1e-3) ? {x:Math.cos(this.wanderAngle), y:Math.sin(this.wanderAngle)} : v;
     
-        // punto davanti al goblin
         const px = this.x + dir.x * this.wanderDistance;
         const py = this.y + dir.y * this.wanderDistance;
     
-        // punto sul cerchio
         const wx = px + Math.cos(this.wanderAngle) * this.wanderRadius;
         const wy = py + Math.sin(this.wanderAngle) * this.wanderRadius;
     
-        // steering verso quel punto
         return this._seek(wx, wy, this.maxSpeed * 0.92);
       }
     
       _wallAvoid(engine){
-        // campo di potenziale: più vicino al muro => più spinta verso dentro
         const { minX, maxX, minY, maxY } = engine.getBounds();
-    
-        // margine “soft”: prima di arrivare al muro già aumenta la repulsione
-        const soft = 2.0;
-    
+        const soft = 2.2;
         const dl = (this.x - minX);
         const dr = (maxX - this.x);
         const dt = (this.y - minY);
         const db = (maxY - this.y);
     
         let fx = 0, fy = 0;
-    
-        // repulsione ~ 1/d^2 dentro soft zone
         const repel = (d) => {
           const dd = Math.max(0.06, d);
           const t = clamp((soft - dd)/soft, 0, 1);
           return (t*t) / (dd*dd);
         };
     
-        fx += repel(dl) *  1;   // spinge a destra se vicino sinistra
-        fx += repel(dr) * -1;   // spinge a sinistra se vicino destra
-        fy += repel(dt) *  1;   // spinge giù se vicino top
-        fy += repel(db) * -1;   // spinge su se vicino bottom
+        fx += repel(dl) *  1;
+        fx += repel(dr) * -1;
+        fy += repel(dt) *  1;
+        fy += repel(db) * -1;
     
-        // extra anti-angolo: spinta verso il centro se due lati sono vicini insieme
-        const nearCorner = (dl < 1.3 && dt < 1.3) || (dl < 1.3 && db < 1.3) || (dr < 1.3 && dt < 1.3) || (dr < 1.3 && db < 1.3);
+        const nearCorner =
+          (dl < 1.3 && dt < 1.3) || (dl < 1.3 && db < 1.3) ||
+          (dr < 1.3 && dt < 1.3) || (dr < 1.3 && db < 1.3);
+    
         if (nearCorner){
           const cx = (minX + maxX) * 0.5;
           const cy = (minY + maxY) * 0.5;
           const toC = this._normalize(cx - this.x, cy - this.y);
-          fx += toC.x * 1.4;
-          fy += toC.y * 1.4;
+          fx += toC.x * 1.5;
+          fy += toC.y * 1.5;
         }
     
-        // scala forza
-        return { x: fx * this.maxForce * 1.9, y: fy * this.maxForce * 1.9 };
+        return { x: fx * this.maxForce * 2.0, y: fy * this.maxForce * 2.0 };
       }
     
       _separation(engine){
-        // boids separazione (evita impatti + “blob”)
-        const SEP_R = 1.35;
-        const SEP_R2 = SEP_R * SEP_R;
-        let sx = 0, sy = 0, count = 0;
+        const SEP_R = 1.25;
+        const SEP_R2 = SEP_R*SEP_R;
+        let sx=0, sy=0, count=0;
     
         for (const other of engine.goblins.values()){
           if (other === this) continue;
@@ -746,46 +1098,43 @@
         }
     
         if (!count) return {x:0,y:0};
-        sx /= count; sy /= count;
-        // più forte quando sono vicini
-        return { x: sx * this.maxForce * 1.0, y: sy * this.maxForce * 1.0 };
+        sx/=count; sy/=count;
+        return { x: sx * this.maxForce * 1.05, y: sy * this.maxForce * 1.05 };
       }
     
       _nearestChest(chests){
-        let best = null, bestD2 = Infinity;
+        let best=null, bestD2=Infinity;
         for (const c of chests){
           if (!c.claimable || c.taken) continue;
-          const dx = c.x - this.x, dy = c.y - this.y;
-          const d2 = dx*dx + dy*dy;
-          if (d2 < bestD2){ bestD2 = d2; best = c; }
+          const dx=c.x-this.x, dy=c.y-this.y;
+          const d2=dx*dx+dy*dy;
+          if (d2 < bestD2){ bestD2=d2; best=c; }
         }
         return best;
       }
     
       _unstuck(engine){
-        // se non si muove davvero -> impulso verso dentro + reset wander
-        const moved = Math.hypot(this.x - this._lastX, this.y - this._lastY);
-        this._lastX = this.x; this._lastY = this.y;
+        const moved = Math.hypot(this.x-this._lastX, this.y-this._lastY);
+        this._lastX=this.x; this._lastY=this.y;
     
-        if (moved < 0.005 && Math.hypot(this.vx, this.vy) < 0.12) this._stuckT += 1;
+        if (moved < 0.006 && Math.hypot(this.vx,this.vy) < 0.16) this._stuckT += 1;
         else this._stuckT = Math.max(0, this._stuckT - 1);
     
-        if (this._stuckT > 30){
+        if (this._stuckT > 26){
           this._stuckT = 0;
           const { minX, maxX, minY, maxY } = engine.getBounds();
-          const cx = (minX + maxX) * 0.5;
-          const cy = (minY + maxY) * 0.5;
-          const toC = this._normalize(cx - this.x, cy - this.y);
-    
-          this.vx += toC.x * 1.2;
-          this.vy += toC.y * 1.2;
-          this.wanderAngle = randRange(0, Math.PI*2);
+          const cx=(minX+maxX)*0.5, cy=(minY+maxY)*0.5;
+          const toC=this._normalize(cx-this.x, cy-this.y);
+          this.vx += toC.x * 1.8;
+          this.vy += toC.y * 1.8;
+          this.wanderAngle = randRange(0,Math.PI*2);
+          this.boostUntil = performance.now() + 900;
         }
       }
     
       startDigging(){
         this.digging = true;
-        setTimeout(()=> this.digging = false, 1200 + Math.random()*700);
+        setTimeout(()=> this.digging=false, 900 + Math.random()*650);
       }
     
       update(dt, engine, chests){
@@ -797,143 +1146,166 @@
         const chestList = chests || [];
         const bestChest = this._nearestChest(chestList);
     
-        // speed target (boost vicino chest o quando accelera)
-        const desiredSpeed = (now < this.boostUntil) ? this.boostSpeed : this.maxSpeed;
+        // variazione velocità
+        this.gaitPhase += dt * 2.3;
+        const gait = 0.86 + 0.18*Math.sin(this.gaitPhase) + 0.08*Math.sin(this.gaitPhase*0.55 + 1.8);
     
-        // --- calcola steering mix ---
-        // wander sempre attivo (evita looping)
+        const base = (now < this.boostUntil) ? this.boostSpeed : this.maxSpeed;
+        let desiredSpeed = base * gait;
+    
         const fw = this._wander();
-    
-        // evita muri/angoli (fondamentale per “non impantanarsi”)
         const fWall = this._wallAvoid(engine);
+        const fSep  = this._separation(engine);
     
-        // separazione dagli altri (più plausibile)
-        const fSep = this._separation(engine);
+        let fChest = {x:0,y:0};
     
-        // chest seeking con arrive (movimento naturale)
-        let fChest = {x:0, y:0};
         if (bestChest){
-          const d = Math.hypot(bestChest.x - this.x, bestChest.y - this.y);
-          const DETECT = 6.2;       // vede chest da più lontano
-          const GRAB = 0.85;        // distanza “scavo”
+          const dx = bestChest.x - this.x;
+          const dy = bestChest.y - this.y;
     
-          if (d < DETECT){
-            // arriva alla chest senza orbite / cerchi (arrive + damping)
-            fChest = this._arrive(bestChest.x, bestChest.y, desiredSpeed * 1.06, 2.8);
+          const DETECT = 8.4;
+          const dist = Math.hypot(dx,dy);
     
-            if (d < 1.6) this.boostUntil = now + 1000; // piccolo sprint finale
-            if (d < GRAB && !this.digging){
-              this.startDigging();
+          if (dist < DETECT){
+            desiredSpeed *= 1.10;
+            fChest = this._arrive(bestChest.x, bestChest.y, desiredSpeed * 1.08, 3.0);
+    
+            // ✅ pickup 3x3
+            const in3x3 = (Math.abs(dx) <= 1) && (Math.abs(dy) <= 1);
+            if (in3x3 && !this.digging){
               bestChest.taken = true;
+              this.startDigging();
+              this.boostUntil = now + 850;
             }
+          }
+        } else {
+          if (Math.random() < 0.004){
+            this.pauseUntil = now + 120 + Math.random()*220;
           }
         }
     
-        // micro-pauses random (realistico)
-        if (!bestChest && Math.random() < 0.012){
-          this.pauseUntil = now + 180 + Math.random()*240;
-        }
-    
-        // pesi: murs > chest > sep > wander
         this.ax = 0; this.ay = 0;
         this._addForce(fWall.x * 1.00,  fWall.y * 1.00);
-        this._addForce(fChest.x * 0.95, fChest.y * 0.95);
-        this._addForce(fSep.x * 0.70,   fSep.y * 0.70);
-        this._addForce(fw.x * 0.55,     fw.y * 0.55);
+        this._addForce(fChest.x * 0.98, fChest.y * 0.98);
+        this._addForce(fSep.x * 0.72,   fSep.y * 0.72);
+        this._addForce(fw.x * 0.56,     fw.y * 0.56);
     
-        // limita accelerazione (evita “rotazioni a vuoto”)
-        const aLim = this._limitVec(this.ax, this.ay, this.maxForce);
-        this.ax = aLim.x; this.ay = aLim.y;
+        const aLim = this._limitVec(this.ax,this.ay,this.maxForce);
+        this.ax=aLim.x; this.ay=aLim.y;
     
-        // integra
         this.vx += this.ax * dt;
         this.vy += this.ay * dt;
     
-        // friction
         this.vx *= this.friction;
         this.vy *= this.friction;
     
-        // limita velocità
-        const vLim = this._limitVec(this.vx, this.vy, desiredSpeed);
-        this.vx = vLim.x; this.vy = vLim.y;
+        const vLim = this._limitVec(this.vx,this.vy,desiredSpeed);
+        this.vx=vLim.x; this.vy=vLim.y;
     
-        // muovi e clamp dentro bounds (sempre “sulla background area”)
         const { minX, maxX, minY, maxY } = engine.getBounds();
-        this.x = clamp(this.x + this.vx * dt, minX, maxX);
-        this.y = clamp(this.y + this.vy * dt, minY, maxY);
+        this.x = clamp(this.x + this.vx*dt, minX, maxX);
+        this.y = clamp(this.y + this.vy*dt, minY, maxY);
     
-        // anti-stuck
         this._unstuck(engine);
     
-        // trail
+        // ✅ flip diretto dalla vx, con lock breve anti-flicker
+        if (now > this._faceLockUntil){
+          if (this.vx > 0.10) { this.facing = 1; this._faceLockUntil = now + 110; }
+          else if (this.vx < -0.10){ this.facing = -1; this._faceLockUntil = now + 110; }
+        }
+    
         const last = this.trail[this.trail.length-1];
-        const cellDist = 0.16;
-        if (!last || (last.x - this.x)**2 + (last.y - this.y)**2 > cellDist*cellDist){
-          this.trail.push({x:this.x, y:this.y});
+        const cellDist = 0.18;
+        if (!last || (last.x-this.x)**2+(last.y-this.y)**2 > cellDist*cellDist){
+          this.trail.push({x:this.x,y:this.y});
           if (this.trail.length > this.trailMax) this.trail.shift();
         }
     
-        // anim walk: più veloce quando corre
         const speedNow = Math.hypot(this.vx, this.vy);
-        this.walkPhase += dt * (7.0 + speedNow * 3.2);
+        this.walkPhase += dt * (8.6 + speedNow * 3.1);
       }
     
-      drawTrail(ctx, t){
-        const segs = this.trail;
-        if (!segs || segs.length < 2) return;
+      drawTrail(ctx, tr){
+        const pts = this.trail;
+        if (!pts || pts.length < 2) return;
     
-        const { toScreen, cellSizeX, cellSizeY } = t;
+        const { toScreen, cellSizeX, cellSizeY } = tr;
+    
         ctx.save();
-        for (let i=0;i<segs.length-1;i++){
-          const a = toScreen(segs[i].x, segs[i].y);
-          const b = toScreen(segs[i+1].x, segs[i+1].y);
-          const thick = Math.max(1.0, ((cellSizeX + cellSizeY)/2) * 0.14 * (0.4 + i/segs.length));
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    
+        const base = Math.max(1, ((cellSizeX+cellSizeY)/2) * 0.085);
+    
+        for (let i=0;i<pts.length-1;i++){
+          const a = toScreen(pts[i].x, pts[i].y);
+          const b = toScreen(pts[i+1].x, pts[i+1].y);
+          const k = i/(pts.length-1);
+          const alpha = 0.03 + 0.22*(1-k);
+    
           ctx.beginPath();
           ctx.moveTo(a.x,a.y);
           ctx.lineTo(b.x,b.y);
-          ctx.lineWidth = thick;
-          ctx.strokeStyle = '#777';
+          ctx.lineWidth = base * (2.2 - 1.1*k);
+          ctx.strokeStyle = `rgba(0,255,224,${alpha})`;
+          ctx.stroke();
+    
+          ctx.beginPath();
+          ctx.moveTo(a.x,a.y);
+          ctx.lineTo(b.x,b.y);
+          ctx.lineWidth = base * (1.0 - 0.55*k);
+          ctx.strokeStyle = `rgba(198,255,51,${alpha*0.55})`;
           ctx.stroke();
         }
+    
         ctx.restore();
       }
     
-      draw(ctx, t){
-        const { toScreen, cellSizeX, cellSizeY } = t;
+      draw(ctx, tr){
+        const { toScreen, cellSizeX, cellSizeY } = tr;
         const pos = toScreen(this.x, this.y);
     
-        const sizeW = cellSizeX * 2.35;
-        const sizeH = cellSizeY * 2.35;
+        const sizeW = cellSizeX * 2.55;
+        const sizeH = cellSizeY * 2.55;
     
-        // bob + lean basati su velocità
         const sp = Math.hypot(this.vx, this.vy);
-        const bob = Math.sin(this.walkPhase) * sizeH * (0.06 + 0.02*clamp(sp/3,0,1));
-        const lean = clamp(this.vx / (this.maxSpeed || 1), -1, 1) * 0.18;
+        const bob = Math.sin(this.walkPhase) * sizeH * (0.06 + 0.02*clamp(sp/6,0,1));
+        const lean = clamp(this.vx / (this.maxSpeed || 1), -1, 1) * 0.22;
     
-        this.drawTrail(ctx, t);
+        this.drawTrail(ctx, tr);
     
         ctx.save();
         ctx.translate(pos.x, pos.y + bob);
         ctx.rotate(lean);
+        ctx.scale(this.facing, 1);
     
         if (Assets.goblin) ctx.drawImage(Assets.goblin, -sizeW/2, -sizeH/2, sizeW, sizeH);
-        else { ctx.fillStyle = '#6c3'; ctx.fillRect(-sizeW/2, -sizeH/2, sizeW, sizeH); }
+        else { ctx.fillStyle='#6c3'; ctx.fillRect(-sizeW/2, -sizeH/2, sizeW, sizeH); }
     
-        // label
-        const labelW = sizeW * 1.8, labelH = sizeH * 0.45;
-        ctx.fillStyle = '#111';
-        ctx.fillRect(-labelW/2, sizeH*0.6, labelW, labelH);
+        ctx.restore();
+    
+        // label non flippata
+        ctx.save();
+        ctx.translate(pos.x, pos.y + bob);
+    
+        const labelW = sizeW * 1.85, labelH = sizeH * 0.42;
+        ctx.fillStyle = 'rgba(0,0,0,0.65)';
+        ctx.fillRect(-labelW/2, sizeH*0.62, labelW, labelH);
+    
         ctx.strokeStyle = this.color;
-        ctx.strokeRect(-labelW/2, sizeH*0.6, labelW, labelH);
-        ctx.fillStyle = '#eee';
+        ctx.strokeRect(-labelW/2, sizeH*0.62, labelW, labelH);
+    
+        ctx.fillStyle = '#eef4ff';
         ctx.textAlign='center';
         ctx.textBaseline='middle';
         ctx.font = '12px sans-serif';
-        ctx.fillText(this.owner || 'goblin', 0, sizeH*0.6 + labelH/2);
+        ctx.fillText(this.owner || 'goblin', 0, sizeH*0.62 + labelH/2);
     
         ctx.restore();
       }
     }
+
 
 
     function colorByIndex(i){
@@ -958,6 +1330,7 @@
         this.running=false; this.lastTs=performance.now();
         this.goblinById = new Map(); this.goblins=this.goblinById;
         this.chestById = new Map(); this.perkById = new Map();
+        this.fx = [];
         this.handleResize = this.handleResize.bind(this);
         window.addEventListener('resize', this.handleResize, { passive:true });
         this.handleResize();
@@ -1073,17 +1446,47 @@
         this.update(dt); this.draw();
       }
       update(dt){
-        for (const c of this.chestById.values()) c.update(dt);
+        const now = Date.now();
+      
+        // chest update + TTL fallback (se backend non le rimuove)
+        for (const [id, c] of this.chestById){
+          c.update(dt);
+      
+          // se la chest ha expiresAtMs ed è scaduta, rimuovila (solo se non already taken)
+          if (!c.taken && c.expiresAtMs && now >= c.expiresAtMs){
+            this.chestById.delete(id);
+            State.runtime.chestAnnounce.delete(String(id));
+          }
+        }
+      
+        // perks
         for (const p of this.perkById.values()) p.update(dt, this.world, this);
         for (const [id,p] of this.perkById){ if (p.done) this.perkById.delete(id); }
+      
+        // FX (chest in volo)
+        for (const fx of this.fx) fx.update(dt, this);
+        this.fx = this.fx.filter(fx => !fx.done);
+      
+        // goblins
         const chestList = [...this.chestById.values()];
         for (const g of this.goblinById.values()) g.update(dt, this, chestList);
       }
       draw(){
-        this.clear(); this.drawBackground();
+        this.clear();
+        this.drawBackground();
+      
         const ctx = this.ctx;
+      
+        // chest già “a terra”
         for (const c of this.chestById.values()) c.draw(ctx, this.transform);
+      
+        // perk
         for (const p of this.perkById.values()) p.draw(ctx, this.transform);
+      
+        // FX (chest in aria che ruota e cresce)
+        for (const fx of this.fx) fx.draw(ctx, this.transform);
+      
+        // goblins sopra
         for (const g of this.goblinById.values()) g.draw(ctx, this.transform);
       }
       syncExpeditions(exps=[]){
@@ -1121,27 +1524,84 @@
         }
       }
       syncChests(chests=[]){
-        const seen = new Set(); const { minX, maxX, minY, maxY } = this.getBounds();
-        chests.forEach(c => {
-          const id = String(c.id ?? c.chest_id ?? `${c.x}|${c.y}|net`); seen.add(id);
-          let chest = this.chestById.get(id);
+        const now = Date.now();
+        const seen = new Set();
+        const { minX, maxX, minY, maxY } = this.getBounds();
+      
+        (chests || []).forEach(c => {
+          const id = String(c.id ?? c.chest_id ?? `${c.x}|${c.y}|net`);
+          seen.add(id);
+      
           const x = clamp(Number(c.x) || randRange(minX, maxX), minX, maxX);
           const y = clamp(Number(c.y) || randRange(minY, maxY), minY, maxY);
-          const rarity = c.rarity || c.perk_type || 'common';
+      
+          // IMPORTANT: il "rarity" lo usiamo anche come "perk_type" per chiave pending
+          const perkType = c.perk_type || c.rarity || c.rarity_name || 'common';
           const claimable = c.claimable !== false && !c.claimed && !c.taken;
           const taken = !!c.claimed || !!c.taken;
-          if (!chest){ chest = new ChestEntity({ id, x, y, rarity, claimable, taken }); this.chestById.set(id, chest); }
-          else { chest.x=x; chest.y=y; chest.rarity=rarity; chest.claimable=claimable; chest.taken=taken; }
+      
+          const created_at = c.created_at || null;
+          const expires_at = c.expires_at || null;
+      
+          // ✅ blocco anti-appear: se il drop è in FX, non renderizzare fino a end FX
+          const wax = c.wax_account || c.owner || '';
+          const key = makeChestKey(wax, perkType, x, y);
+          const visibleAtMs = State.runtime.pendingChestByKey.get(key) || now;
+      
+          let chest = this.chestById.get(id);
+      
+          if (!chest){
+            chest = new ChestEntity({
+              id, x, y,
+              rarity: perkType,
+              claimable,
+              taken,
+              created_at,
+              expires_at,
+              visible_at_ms: visibleAtMs
+            });
+            this.chestById.set(id, chest);
+          } else {
+            chest.x = x;
+            chest.y = y;
+            chest.rarity = perkType;
+            chest.claimable = claimable;
+            chest.taken = taken;
+      
+            if (created_at) chest.createdAtMs = Date.parse(created_at);
+            if (expires_at) chest.expiresAtMs = Date.parse(expires_at);
+      
+            // ✅ se arriva pending più avanti, estende la visibilità (non deve mai anticiparla)
+            chest.visibleAtMs = Math.max(chest.visibleAtMs || 0, visibleAtMs);
+          }
+      
+          // ✅ aggiorna ticker countdown
+          upsertChestAnnouncement({
+            chest_id: id,
+            perk_type: perkType,
+            created_at,
+            expires_at
+          });
         });
-        for (const [id] of this.chestById){ if (!seen.has(id)) this.chestById.delete(id); }
+      
+        // rimuovi chests non più presenti nello snapshot
+        for (const [id] of this.chestById){
+          if (!seen.has(id)) this.chestById.delete(id);
+        }
       }
       upsertChest(chest){ this.chestById.set(chest.id, chest); }
+      addFx(fx){ this.fx.push(fx); }
       spawnPerkFromCommand(perkName, wax_account){
         const dir = Math.random() < 0.5 ? 'left-to-right' : 'right-to-left';
         const { minX, maxX, minY, maxY } = this.getBounds();
         const startX = dir === 'left-to-right' ? minX : maxX;
-        const amp = 3 + Math.random()*4; const baseY = randRange(minY+amp+1, maxY-amp-1);
-        const freq = 0.16 + Math.random()*0.16; const speed = 1.2 + Math.random()*0.8;
+      
+        const amp = 2.4 + Math.random()*3.2;
+        const baseY = randRange(minY+amp+1, maxY-amp-1);
+      
+        const freq = 0.10 + Math.random()*0.08;
+        const speed = randRange(CONFIG.perkSpeedMin, CONFIG.perkSpeedMax);
+      
         const p = new PerkEntity({ id:null, perkName, wax_account, dir, x:startX, y:baseY, amp, freq, speed });
         this.perkById.set(p.id, p);
       }
@@ -1155,6 +1615,72 @@
       const div = document.createElement('div'); div.textContent = msg; host.appendChild(div);
       setTimeout(()=>div.remove(), 3500);
     }
+    
+    function pushCanvasMsg(text){
+      const host = document.getElementById('canvas-feedback');
+      if (!host) return;
+      const el = document.createElement('div');
+      el.className = 'msg';
+      el.textContent = text;
+      host.prepend(el);
+      setTimeout(()=> el.remove(), 6500);
+    }
+    
+    function makeChestKey(wax, perk, x, y){
+      return `${String(wax||'')}|${String(perk||'')}|${Number(x)||0}|${Number(y)||0}`;
+    }
+    
+    function upsertChestAnnouncement({ chest_id, perk_type, created_at, expires_at }){
+      const id = String(chest_id || '');
+      if (!id) return;
+    
+      const createdAtMs = created_at ? Date.parse(created_at) : Date.now();
+      const expiresAtMs =
+        expires_at ? Date.parse(expires_at)
+                   : (createdAtMs + CONFIG.chestTtlSeconds * 1000);
+    
+      State.runtime.chestAnnounce.set(id, {
+        perk: perk_type || 'perk',
+        createdAtMs,
+        expiresAtMs
+      });
+    
+      ensureChestTicker();
+    }
+    
+    function ensureChestTicker(){
+      if (State.runtime.chestTickerTimer) return;
+    
+      State.runtime.chestTickerTimer = setInterval(()=>{
+        const now = Date.now();
+    
+        // pulizia scaduti
+        for (const [id, it] of State.runtime.chestAnnounce){
+          if (now >= it.expiresAtMs) State.runtime.chestAnnounce.delete(id);
+        }
+    
+        const entries = [...State.runtime.chestAnnounce.entries()];
+        if (!entries.length){
+          clearInterval(State.runtime.chestTickerTimer);
+          State.runtime.chestTickerTimer = null;
+          updateTicker(); // torna al ticker normale
+          return;
+        }
+    
+        // ruota l’elemento mostrato nel ticker
+        const idx = Math.floor(now / 2500) % entries.length;
+        const [id, it] = entries[idx];
+        const leftMs = Math.max(0, it.expiresAtMs - now);
+    
+        const mm = String(Math.floor(leftMs/60000)).padStart(2,'0');
+        const ss = String(Math.floor((leftMs%60000)/1000)).padStart(2,'0');
+    
+        const line = `The Perk "${it.perk}" dropped a Chest — unspawn in ${mm}:${ss}`;
+        const el = State.ui.ticker;
+        if (el) el.textContent = line;
+      }, 250);
+    }
+    
     // ricalcola se ho una spedizione attiva, aggiorna UI e forecast ===
     function recalcMyExpeditionFlagAndUI(){
       const mine = (State.globalExpeditions || []).some(e => (e.wax_account || e.owner) === State.user.wax_account);
@@ -1742,6 +2268,7 @@
     // ------------------------------------------------------------
     function updateTicker(){
       const el = State.ui.ticker; if (!el) return;
+      if (State.runtime?.chestAnnounce && State.runtime.chestAnnounce.size > 0) return;
       const latestWinner = State.recentWinners[0];
       const latestExp = State.recentExpeditions[0];
       if (latestWinner){
@@ -1844,18 +2371,39 @@
               case 'chest_spawn':
               case 'chest_update': {
                 if (State.engine && msg.chest){
+                  const perkType = msg.chest.perk_type || msg.chest.rarity || 'common';
+                  const wax = msg.chest.wax_account || msg.chest.owner || '';
+                  const x = Number(msg.chest.x);
+                  const y = Number(msg.chest.y);
+              
+                  const key = makeChestKey(wax, perkType, x, y);
+                  const visibleAtMs = State.runtime.pendingChestByKey.get(key) || Date.now();
+              
+                  const id = msg.chest.id || msg.chest.chest_id;
+              
                   const chest = new ChestEntity({
-                    id: msg.chest.id || msg.chest.chest_id,
-                    x: msg.chest.x, y: msg.chest.y,
-                    rarity: msg.chest.rarity || msg.chest.perk_type || 'common',
+                    id,
+                    x, y,
+                    rarity: perkType,
                     claimable: msg.chest.claimable !== false && !msg.chest.claimed && !msg.chest.taken,
-                    taken: !!msg.chest.claimed
+                    taken: !!msg.chest.claimed || !!msg.chest.taken,
+                    created_at: msg.chest.created_at,
+                    expires_at: msg.chest.expires_at,
+                    visible_at_ms: visibleAtMs
                   });
+              
                   State.engine.upsertChest(chest);
+              
+                  upsertChestAnnouncement({
+                    chest_id: String(id),
+                    perk_type: perkType,
+                    created_at: msg.chest.created_at,
+                    expires_at: msg.chest.expires_at
+                  });
                 }
                 break;
               }
-    
+
               case 'perk_launch': {
                 if (State.engine) State.engine.spawnPerkFromCommand(msg.perk_type || 'dragon', msg.wax_account);
                 break;

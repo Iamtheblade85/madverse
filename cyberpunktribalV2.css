@@ -945,3 +945,20 @@ select:focus-visible{
   from{ transform: translateY(10px); opacity:0; }
   to  { transform: translateY(0); opacity:1; }
 }
+/* ✅ TAB PANELS: rispetta l'attributo hidden (gestito dal JS) */
+#panels { 
+  display: grid;
+  grid-template-columns: 1fr; /* evita che i pannelli si affianchino */
+  gap: 12px;
+}
+
+#panels [role="tabpanel"]{
+  display: grid;              /* stile del pannello quando visibile */
+  width: 100%;
+  min-width: 0;
+}
+
+/* questa è la riga più importante */
+#panels [role="tabpanel"][hidden]{
+  display: none !important;   /* forza il comportamento corretto */
+}

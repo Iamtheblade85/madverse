@@ -1618,7 +1618,7 @@
       syncUserFromStorage();
       try { assertAuth(); } catch {
         document.getElementById('my-status')?.replaceChildren();
-        document.getElementById('my-status')!.textContent = 'Not authenticated.';
+        document.getElementById('my-status')?.textContent = 'Not authenticated.';
         return;
       }
 

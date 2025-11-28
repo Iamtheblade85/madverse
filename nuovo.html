@@ -85,15 +85,27 @@
       <!-- Right-side panels (on mobile become stacked) -->
       <aside id="panels" aria-label="Information panels">
         <!-- Tabs -->
-        <nav id="tabs" role="tablist" aria-label="Panels">
-          <button role="tab" aria-selected="true"  data-panel="tab-my"      title="Build your expedition">My Goblins</button>
-          <button role="tab" aria-selected="false" data-panel="tab-global"  title="Live view of all expeditions">Global</button>
-          <button role="tab" aria-selected="false" data-panel="tab-recent"  title="Expeditions completed in the last 24h">Recent</button>
-          <button role="tab" aria-selected="false" data-panel="tab-rewards" title="Latest chest rewards from players">Rewards</button>
+        <nav id="tabs" role="tablist" aria-label="Panels" aria-orientation="horizontal">
+          <button id="tab-btn-my" role="tab" aria-selected="true" tabindex="0"
+                  aria-controls="tab-my" data-panel="tab-my" title="Build your expedition">
+            My Goblins
+          </button>
+          <button id="tab-btn-global" role="tab" aria-selected="false" tabindex="-1"
+                  aria-controls="tab-global" data-panel="tab-global" title="Live view of all expeditions">
+            Global
+          </button>
+          <button id="tab-btn-recent" role="tab" aria-selected="false" tabindex="-1"
+                  aria-controls="tab-recent" data-panel="tab-recent" title="Expeditions completed in the last 24h">
+            Recent
+          </button>
+          <button id="tab-btn-rewards" role="tab" aria-selected="false" tabindex="-1"
+                  aria-controls="tab-rewards" data-panel="tab-rewards" title="Latest chest rewards from players">
+            Rewards
+          </button>
         </nav>
 
         <!-- My Goblins -->
-        <section id="tab-my" role="tabpanel" aria-labelledby="tab-my" aria-label="My Goblins">
+          <section id="tab-my" role="tabpanel" aria-labelledby="tab-btn-my" tabindex="0" aria-label="My Goblins">
           <h3>🧬 Goblin Expedition Builder</h3>
           <div id="my-status" aria-live="polite">loading…</div>
 
@@ -116,6 +128,9 @@
           <section id="builder-controls" aria-label="Expedition controls">
             <!-- JS will move #duration-switch, #cap-line, #action-buttons here -->
           </section>
+            
+          <div id="action-hint" aria-live="polite"></div>
+
           <!-- Forecast/Summary -->
           <section id="run-forecast" aria-live="polite" hidden></section>
           
@@ -145,21 +160,21 @@
         </section>
 
         <!-- Global -->
-        <section id="tab-global" role="tabpanel" aria-labelledby="tab-global" aria-label="Global Expeditions" hidden>
-          <h3>🌍 Live Expeditions</h3>
+        <section id="tab-global" role="tabpanel" aria-labelledby="tab-btn-global" tabindex="0" aria-label="World Live Expeditions" hidden>
+          <h3>🌍 World Live Expeditions</h3>
           <div id="global-count">0</div>
           <div id="global-list" aria-label="Expeditions list"></div>
         </section>
 
         <!-- Recent -->
-        <section id="tab-recent" role="tabpanel" aria-labelledby="tab-recent" aria-label="Recent Expeditions" hidden>
-          <h3>🕒 Recent Expeditions</h3>
+        <section id="tab-recent" role="tabpanel" aria-labelledby="tab-btn-recent" tabindex="0" aria-label="Last Completed Expeditions" hidden>
+          <h3>🕒 Last Completed Expeditions</h3>
           <div id="recent-list" aria-label="Recent results"></div>
         </section>
 
         <!-- Rewards -->
-        <section id="tab-rewards" role="tabpanel" aria-labelledby="tab-rewards" aria-label="Rewards" hidden>
-          <h3>🎁 Chest Rewards</h3>
+        <section id="tab-rewards" role="tabpanel" aria-labelledby="tab-btn-rewards" tabindex="0" aria-label="Last Chest Rewards" hidden>
+          <h3>🎁 Last Chest Rewards</h3>
           <div id="rewards-list" aria-label="Rewards list"></div>
         </section>
       </aside>
@@ -197,7 +212,7 @@
       snapshotTimeoutMs: 10000,
       recentTimeoutMs: 12000,
       winnersTimeoutMs: 12000,
-    
+      activeChestsTimeoutMs: 12000,    
       // NON usare più drop per-frame: lo teniamo ma non viene più usato nel PerkEntity nuovo
       perkDropProbability: 0.95,
     
@@ -290,7 +305,14 @@
       engine: null,
 
       // network
-      net: { pollTimer:null, sse:null, busySnapshot:false },
+      net: {
+        pollTimer: null,
+        pollMs: CONFIG.pollIntervalMs,
+        sse: null,
+        sseRetryTimer: null,
+        sseRetryMs: 800,
+        busySnapshot: false
+      },
 
       // data feeds
       globalExpeditions: [],
@@ -357,16 +379,21 @@
     State.runtime = {
       expeditionInProgress: false,
       perkCooldownUntil: 0,
+      perkCooldownTimer: null,
       lastForecastPayloadKey: '',
       forecastBusy: false,
       forecastData: null,
-    
+
       // ticker countdown chest (sincronizzato se server manda expires_at)
       chestAnnounce: new Map(),     // chest_id -> { perk, createdAtMs, expiresAtMs }
       chestTickerTimer: null,
-    
+
       // evita che la chest appaia “subito” se SSE/snapshot arriva prima che finisca la FX
       pendingChestByKey: new Map(), // key wax|perk|x|y -> visibleAtMs
+
+      // P2: anti-spam claim + anti-flicker post-claim
+      claimLocks: new Set(),        // chest_id in claim
+      locallyClaimedUntil: new Map(), // chest_id -> untilMs (per evitare che ricompaia dal poll)
     };
     
     // Deriva il cap corrente (già esiste getSendCap)
@@ -617,7 +644,7 @@
     }
 
       class ChestDropFX {
-      constructor({ perkName, wax_account, startX, startY, targetX, targetY }){
+      constructor({ perkName, wax_account, startX, startY, targetX, targetY, chestPayload=null }){
         this.perkName = perkName || 'perk';
         this.wax_account = wax_account || '';
     
@@ -628,9 +655,10 @@
         this.done = false;
     
         this.spawnRequested = false;
-        this.spawnResult = null;
+        this.chestPayload = chestPayload || null;
+        this.spawnResult = (this.chestPayload && (this.chestPayload.chest_id || this.chestPayload.id)) ? this.chestPayload : null;
         this.spawnError = false;
-    
+
         // fasi: 1) lancio e “uscita”  2) rientro verticale e atterraggio
         this.phase1 = Math.floor(CONFIG.chestDropFlightMs * 0.52);
         this.phase2 = CONFIG.chestDropFlightMs - this.phase1;
@@ -650,28 +678,18 @@
         // chiedi spawn quando sei già “in volo” (non subito)
         if (!this.spawnRequested && this.elapsedMs >= this.phase1 * 0.65){
           this.spawnRequested = true;
-    
-          Api.post('/2spawn_chest', {
-            wax_account: this.wax_account,
-            perk_type: this.perkName,
-            x: this.targetX,
-            y: this.targetY
-          }, 12000).then(r=>{
-            if (r && r.ok && r.data){
-              this.spawnResult = r.data;
-    
-              upsertChestAnnouncement({
-                chest_id: r.data.chest_id ?? r.data.id,
-                perk_type: this.perkName,
-                created_at: r.data.created_at,
-                expires_at: r.data.expires_at
-              });
-    
-              pushCanvasMsg(`✨ ${this.perkName} dropped a chest!`);
-            } else {
-              this.spawnError = true;
-            }
-          }).catch(()=>{ this.spawnError = true; });
+
+          // Soluzione B: niente /2spawn_chest qui.
+          // La chest è già stata creata dal backend e passata via SSE/HTTP.
+          if (this.spawnResult){
+            upsertChestAnnouncement({
+              chest_id: this.spawnResult.chest_id ?? this.spawnResult.id,
+              perk_type: this.perkName,
+              created_at: this.spawnResult.created_at,
+              expires_at: this.spawnResult.expires_at
+            });
+          }
+          pushCanvasMsg(`✨ ${this.perkName} dropped a chest!`);
         }
     
         // landing: crea entità chest solo alla fine della FX (sul client che l’ha lanciata)
@@ -765,7 +783,7 @@
     }
 
     class PerkEntity {
-      constructor({ id, perkName, wax_account, dir, x, y, speed, amp, freq }){
+      constructor({ id, perkName, wax_account, dir, x, y, speed, amp, freq, dropTarget=null, chestPayload=null }){
         this.id = id || `perk-${Date.now()}-${Math.random().toString(16).slice(2)}`;
         this.perkName = perkName || 'dragon';
         this.wax_account = wax_account || '';
@@ -788,7 +806,8 @@
     
         // drop plan
         this.dropX = null;
-        this.dropTarget = null; // {x,y}
+        this.dropTarget = dropTarget; // {x,y} se arriva dal backend
+        this.chestPayload = chestPayload; // chest dal backend
     
         // trail perk
         this.trail = [];
@@ -857,19 +876,27 @@
         // init drop plan
         if (!this.dropX){
           const { minX, maxX, minY, maxY } = engine.getBounds();
-    
-          // ✅ drop sempre “verso centro”, mai troppo vicino ai lati
-          const marginX = 7;
-          const centerMin = minX + marginX;
-          const centerMax = maxX - marginX;
-    
-          this.dropX = randRange(centerMin + (centerMax-centerMin)*0.18, centerMax - (centerMax-centerMin)*0.18);
-    
-          const tx = randInt(centerMin, centerMax);
-          const ty = randInt(minY+3, maxY-3);
-          this.dropTarget = { x: tx, y: ty };
+
+          // se target arriva dal backend → usalo
+          if (this.dropTarget && this.dropTarget.x != null && this.dropTarget.y != null){
+            const tx = clamp(Number(this.dropTarget.x), minX+2, maxX-2);
+            const ty = clamp(Number(this.dropTarget.y), minY+2, maxY-2);
+            this.dropTarget = { x: tx, y: ty };
+            this.dropX = tx; // drop quando il perk passa la colonna del target
+          } else {
+            // fallback (vecchio comportamento random)
+            const marginX = 7;
+            const centerMin = minX + marginX;
+            const centerMax = maxX - marginX;
+
+            this.dropX = randRange(centerMin + (centerMax-centerMin)*0.18, centerMax - (centerMax-centerMin)*0.18);
+
+            const tx = randInt(centerMin, centerMax);
+            const ty = randInt(minY+3, maxY-3);
+            this.dropTarget = { x: tx, y: ty };
+          }
         }
-    
+
         const dirFactor = this.dir === 'left-to-right' ? 1 : -1;
     
         // speed variabile
@@ -893,12 +920,21 @@
             const startY = y;
     
             // crea FX non bloccante
+            const payload = this.chestPayload || {
+              chest_id: null,
+              x: this.dropTarget.x,
+              y: this.dropTarget.y,
+              perk_type: this.perkName,
+              wax_account: this.wax_account
+            };
+
             engine.addFx(new ChestDropFX({
               perkName: this.perkName,
               wax_account: this.wax_account,
               startX, startY,
               targetX: this.dropTarget.x,
-              targetY: this.dropTarget.y
+              targetY: this.dropTarget.y,
+              chestPayload: payload
             }));
           }
         }
@@ -1173,9 +1209,13 @@
             // ✅ pickup 3x3
             const in3x3 = (Math.abs(dx) <= 1) && (Math.abs(dy) <= 1);
             if (in3x3 && !this.digging){
-              bestChest.taken = true;
               this.startDigging();
               this.boostUntil = now + 850;
+
+              // P2: claim reale SOLO per l’account locale (server authoritative)
+              if (this.owner === State.user.wax_account){
+                engine.tryClaimChest(bestChest);
+              }
             }
           }
         } else {
@@ -1344,7 +1384,7 @@
         // 1) dimensione target: usa tutta la larghezza disponibile del contenitore
         const containerW = Math.max(320, Math.floor(rect.width));
         // 2) altezza cappata: metà viewport (o quello che preferisci)
-        const maxH = Math.max(200, Math.floor((window.innerHeight || 800) * 0.50));
+        const maxH = Math.max(200, Math.floor((window.innerHeight || 800) * (State.overlay ? 0.92 : 0.50)));
       
         const targetW = containerW;       // niente aspect-ratio
         const targetH = maxH;             // altezza massima consentita
@@ -1537,8 +1577,17 @@
       
           // IMPORTANT: il "rarity" lo usiamo anche come "perk_type" per chiave pending
           const perkType = c.perk_type || c.rarity || c.rarity_name || 'common';
-          const claimable = c.claimable !== false && !c.claimed && !c.taken;
-          const taken = !!c.claimed || !!c.taken;
+          let claimable = c.claimable !== false && !c.claimed && !c.taken;
+          let taken = !!c.claimed || !!c.taken;
+
+          // P2: anti-flicker post-claim locale
+          const until = State.runtime.locallyClaimedUntil.get(id);
+          if (until && Date.now() < until){
+            taken = true;
+            claimable = false;
+          } else if (until && Date.now() >= until){
+            State.runtime.locallyClaimedUntil.delete(id);
+          }
       
           const created_at = c.created_at || null;
           const expires_at = c.expires_at || null;
@@ -1591,7 +1640,17 @@
       }
       upsertChest(chest){ this.chestById.set(chest.id, chest); }
       addFx(fx){ this.fx.push(fx); }
-      spawnPerkFromCommand(perkName, wax_account){
+      tryClaimChest(chest){
+        if (!chest || chest.taken || !chest.claimable) return;
+        if (chest._claiming) return;
+        chest._claiming = true;
+
+        claimChestOnServer(chest)
+          .catch(()=>{})
+          .finally(()=>{ chest._claiming = false; });
+      }
+      
+      spawnPerkFromCommand(perkName, wax_account, chestPayload=null){
         const dir = Math.random() < 0.5 ? 'left-to-right' : 'right-to-left';
         const { minX, maxX, minY, maxY } = this.getBounds();
         const startX = dir === 'left-to-right' ? minX : maxX;
@@ -1601,8 +1660,16 @@
       
         const freq = 0.10 + Math.random()*0.08;
         const speed = randRange(CONFIG.perkSpeedMin, CONFIG.perkSpeedMax);
-      
-        const p = new PerkEntity({ id:null, perkName, wax_account, dir, x:startX, y:baseY, amp, freq, speed });
+        // se il backend ci dà la chest, fissiamo target (x,y)
+        const fixedTarget = (chestPayload && chestPayload.x != null && chestPayload.y != null)
+          ? { x: Number(chestPayload.x), y: Number(chestPayload.y) }
+          : null;
+
+        const p = new PerkEntity({
+          id:null, perkName, wax_account, dir, x:startX, y:baseY, amp, freq, speed,
+          dropTarget: fixedTarget,
+          chestPayload
+        });
         this.perkById.set(p.id, p);
       }
     }
@@ -1624,6 +1691,92 @@
       el.textContent = text;
       host.prepend(el);
       setTimeout(()=> el.remove(), 6500);
+    }
+    function showGlobalWin(wax, tokenAmount, tokenSymbol, nftCount){
+      const w = wax || 'unknown';
+      const amt = formatCompact(toNumber(tokenAmount));
+      const sym = tokenSymbol || 'CHIPS';
+      const n = Math.max(0, Math.floor(toNumber(nftCount)));
+
+      const msg = `${w} ha vinto ${amt} ${sym} e ${n} NFT(s)`;
+
+      toast(`🏆 ${msg}`);
+      pushCanvasMsg(`🏆 ${msg}`);
+
+      // “feedback globale” nel ticker per qualche secondo
+      if (State.ui.ticker){
+        State.ui.ticker.innerHTML = `<strong>${safe(w)}</strong> ha vinto ${safe(amt)} ${safe(sym)} e ${safe(n)} NFT(s)`;
+        setTimeout(()=> updateTicker(), 6500);
+      }
+    }
+
+    function parseClaimResponse(data){
+      const wax = data?.wax_account || data?.winner?.wax_account || State.user?.wax_account || '';
+      const tokenSymbol = data?.token_symbol || data?.symbol || data?.token || 'CHIPS';
+
+      // supporta nomi diversi dal backend
+      const tokenAmount =
+        toNumber(data?.token_amount) ||
+        toNumber(data?.tokens) ||
+        toNumber(data?.chips) ||
+        toNumber(data?.reward_tokens) ||
+        toNumber(data?.winner?.chips) ||
+        0;
+
+      const nftCount =
+        toNumber(data?.nfts_count) ||
+        toNumber(data?.nft_count) ||
+        toNumber(data?.nfts) ||
+        (Array.isArray(data?.nfts_won) ? data.nfts_won.length : 0) ||
+        (Array.isArray(data?.nfts) ? data.nfts.length : 0) ||
+        toNumber(data?.winner?.nfts_count) ||
+        0;
+
+      return { wax, tokenAmount, tokenSymbol, nftCount };
+    }
+
+    async function claimChestOnServer(chestEntity){
+      const chestId = String(chestEntity?.id || '');
+      if (!chestId) return;
+
+      if (State.runtime.claimLocks.has(chestId)) return;
+      State.runtime.claimLocks.add(chestId);
+
+      syncUserFromStorage();
+      try { assertAuth(); } catch {
+        State.runtime.claimLocks.delete(chestId);
+        toast('Please log in first');
+        return;
+      }
+
+      // opzionale: feedback immediato
+      pushCanvasMsg(`🗝️ Claim chest ${chestId}…`);
+
+      const res = await Api.post('/2claim_chest', {
+        wax_account: State.user.wax_account,
+        user_id: State.user.user_id,
+        usx_token: State.user.usx_token,
+        chest_id: chestId
+      }, 15000).catch(()=>({ok:false}));
+
+      State.runtime.claimLocks.delete(chestId);
+
+      if (!res || !res.ok || !res.data){
+        toast('Chest claim failed');
+        return;
+      }
+
+      // mark locale anti-flicker (se /2active_chests è leggermente in ritardo)
+      State.runtime.locallyClaimedUntil.set(chestId, Date.now() + 15000);
+
+      // rimuovi subito dal canvas
+      try {
+        if (State.engine) State.engine.chestById.delete(chestId);
+        State.runtime.chestAnnounce.delete(chestId);
+      } catch {}
+
+      const parsed = parseClaimResponse(res.data);
+      showGlobalWin(parsed.wax, parsed.tokenAmount, parsed.tokenSymbol, parsed.nftCount);
     }
     
     function makeChestKey(wax, perk, x, y){
@@ -1732,89 +1885,156 @@
         meta.style.gridTemplateColumns = w<480 ? 'repeat(2,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))';
       }   
     }
-    function moveControlsIntoBuilder(){
+
+    function applyOverlayMode(){
+      if (!State.overlay) return;
+    
+      // Nascondi tutto ciò che non serve
+      const hideIds = [
+        'panels','app-footer','news-banner','action-bar','legend','subtitle'
+      ];
+      hideIds.forEach(id=>{
+        const el = document.getElementById(id);
+        if (el) el.hidden = true;
+      });
+    
+      // facoltativo: compatta header
+      const header = document.getElementById('app-header');
+      if (header) header.style.padding = '8px';
+    
+      // canvas-wrap: prova a dargli “respiro” verticale
+      const wrap = document.getElementById('canvas-wrap');
+      if (wrap){
+        wrap.style.width = '100%';
+        wrap.style.maxWidth = '100%';
+        wrap.style.height = Math.floor((window.innerHeight||800) * 0.95) + 'px';
+      }
+    
+      // titolo “mappa” spesso è rumore in overlay
+      const h2 = document.querySelector('#game-area > h2');
+      if (h2) h2.hidden = true;
+    }
+
+    function mountBuilderControls(){
       const host = document.getElementById('builder-controls');
       const duration = document.getElementById('duration-switch');
       const capLine  = document.getElementById('cap-line');
       const actions  = document.getElementById('action-buttons');
-      if (!host || !duration || !capLine || !actions) return;
+      const hintBox  = document.getElementById('action-hint');
     
-      host.innerHTML = ''; // ricomponi
-      const row1 = document.createElement('div'); row1.className = 'row';
-      const row2 = document.createElement('div'); row2.className = 'row';
+      if (!host || !duration || !capLine || !actions) {
+        console.warn('[DEX] builder-controls missing', {
+          host:!!host, duration:!!duration, cap:!!capLine, actions:!!actions
+        });
+        return;
+      }
     
-      row1.appendChild(duration);
-      const spacer = document.createElement('div'); spacer.className='spacer';
-      row1.appendChild(spacer);
-      row1.appendChild(capLine);
+      // ricrea layout sempre uguale (niente rimontaggi multipli)
+      host.innerHTML = '';
     
-      row2.appendChild(actions);
+      const row1 = document.createElement('div');
+      const row2 = document.createElement('div');
+      row1.className = 'row';
+      row2.className = 'row';
     
-      host.appendChild(row1);
-      host.appendChild(row2);
+      row1.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;';
+      row2.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-start;margin-top:8px;';
     
-      // tooltip rapidi
-      actions.title = 'Start an expedition or try a perk (cooldown applies).';
-      capLine.title = 'Your current cap is based on Troop Reinforcements NFTs.';
-    }
-
-    function styleDurationBlock(box){
-      // Layout compatto per label+select+hint
-      box.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;';
+      // duration block compatto
+      duration.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;';
     
       const sel  = document.getElementById('sel-duration');
       const hint = document.getElementById('duration-hint');
     
       if (sel) {
-        // Sovrascrivi il min-width inline e rendi il dropdown più piccolo
         sel.style.minWidth = 'unset';
         sel.style.maxWidth = '160px';
         sel.style.width    = 'auto';
         sel.style.padding  = '4px 8px';
         sel.style.borderRadius = '6px';
-        sel.style.font = 'inherit';        // fa “agganciare” il font del tema
+        sel.style.font = 'inherit';
         sel.style.lineHeight = '1.2';
         sel.style.boxSizing = 'border-box';
-        // opzionale: per uniformare l’aspetto tra browser
-        sel.style.webkitAppearance = 'menulist';
-        sel.style.MozAppearance    = 'menulist';
-        sel.style.appearance       = 'menulist';
+        sel.style.appearance = 'menulist';
       }
       if (hint) {
         hint.style.display = 'block';
         hint.style.opacity = '.85';
         hint.style.marginLeft = '0';
       }
+    
+      // forza visibilità (se il tema fa cose aggressive)
+      [duration, sel, capLine, actions].filter(Boolean).forEach(el=>{
+        el.removeAttribute('hidden');
+        el.style.visibility = 'visible';
+        el.style.opacity = '1';
+        if (getComputedStyle(el).display === 'none') el.style.display = (el === sel ? 'inline-block' : 'flex');
+      });
+    
+      row1.appendChild(duration);
+      row1.appendChild(capLine);
+      row2.appendChild(actions);
+    
+      host.appendChild(row1);
+      host.appendChild(row2);
+    
+      if (hintBox){
+        hintBox.style.cssText = 'margin-top:8px;opacity:.85;font-size:12px;line-height:1.35;';
+      }
     }
     // --- Pulsanti: abilitazione + tooltip motivo ---
     function updateActionButtonsUI(){
       const btnStart = State.ui.btnStart;
       const btnPerk  = State.ui.btnPerk;
+      const hintEl   = document.getElementById('action-hint');
+    
       if (!btnStart || !btnPerk) return;
     
+      // --- START ---
       const val = canSendExpedition();
       btnStart.disabled = !val.ok;
+    
       let startHint = 'Start an expedition with the selected goblins.';
       if (!val.ok){
         if (val.reason==='in_progress') startHint = 'You already have an expedition in progress.';
         if (val.reason==='no_selection') startHint = 'Select at least one goblin.';
-        if (val.reason==='over_cap') startHint = 'Selection exceeds your current cap.';
-        if (val.reason==='tired_present') startHint = 'Your selection includes tired goblins.';
+        if (val.reason==='over_cap')     startHint = 'Selection exceeds your current cap.';
+        if (val.reason==='tired_present')startHint = 'Your selection includes tired goblins.';
       }
-      btnStart.setAttribute('aria-describedby','hint');
       btnStart.title = startHint;
     
+      // --- PERK ---
       const onCd = isPerkOnCooldown();
-      btnPerk.disabled = onCd || !State.user?.wax_account;
-      btnPerk.setAttribute('aria-describedby','hint');
+      const hasAuth = !!State.user?.wax_account;
+      btnPerk.disabled = onCd || !hasAuth;
+    
+      let perkHint = 'Try launching a perk. Cooldown: 10 minutes.';
+      if (!hasAuth) perkHint = 'Sign in to launch perks.';
       if (onCd){
         const secs = Math.max(0, Math.ceil((State.runtime.perkCooldownUntil - Date.now())/1000));
-        btnPerk.title = `Perk on cooldown. Ready in ${secs}s.`;
-      } else {
-        btnPerk.title = 'Try launching a perk. Cooldown: 10 minutes.';
+        perkHint = `Perk on cooldown. Ready in ${secs}s.`;
+        ensurePerkCooldownTicker();
+      }
+      btnPerk.title = perkHint;
+    
+      // --- HINT BOX UI (accessibile e reale) ---
+      if (hintEl){
+        hintEl.textContent = `${startHint}  ${perkHint}`;
       }
     }
+
+    function ensurePerkCooldownTicker(){
+      if (State.runtime.perkCooldownTimer) return;
     
+      State.runtime.perkCooldownTimer = setInterval(()=>{
+        if (!isPerkOnCooldown()){
+          clearInterval(State.runtime.perkCooldownTimer);
+          State.runtime.perkCooldownTimer = null;
+        }
+        updateActionButtonsUI();
+      }, 750);
+    }
+
     // --- FORECAST (debounced) ---
     const requestForecastDebounced = debounce(requestForecast, 320);
     
@@ -2012,6 +2232,14 @@
         card.setAttribute('aria-checked', String(sel));
         card.dataset.id = g.asset_id;
         card.title = tired ? 'Resting (below min power)' : 'Click to select/deselect';
+        card.tabIndex = tired ? -1 : 0;
+        card.addEventListener('keydown', (e)=>{
+          if (tired) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
+          }
+        });
 
         const pct = Math.max(6, Math.round((g.daily_power_num || 0)/maxPower*100));
         card.textContent = `#${g.asset_id} · ${g.name} · ${g.rarity || 'Unknown'} · Power ${g.daily_power_num} (${pct}%)` + (tired?' · RESTING':'');
@@ -2290,10 +2518,11 @@
       State.net.busySnapshot = true;
       const t0 = performance.now();
       try {
-        const [expRes, recentRes, winnersRes] = await Promise.all([
+        const [expRes, recentRes, winnersRes, activeChestsRes] = await Promise.all([
           Api.post('/2all_expeditions', {}, CONFIG.snapshotTimeoutMs),
           Api.get('/2recent_expeditions', CONFIG.recentTimeoutMs),
           Api.get('/2recent_winners', CONFIG.winnersTimeoutMs),
+          Api.get('/2active_chests', CONFIG.activeChestsTimeoutMs),
         ]);
     
         // Expeditions snapshot
@@ -2326,7 +2555,15 @@
           State.recentWinners = arr;
           renderRewardsPanel();
         }
-    
+            // Active chests (P3)
+        if (activeChestsRes && activeChestsRes.ok && activeChestsRes.data && State.engine){
+          const activeChests =
+            Array.isArray(activeChestsRes.data) ? activeChestsRes.data :
+            (Array.isArray(activeChestsRes.data.items) ? activeChestsRes.data.items :
+            (Array.isArray(activeChestsRes.data.chests) ? activeChestsRes.data.chests : []));
+          State.engine.syncChests(activeChests);
+        }
+
         updateTicker();
         const latency = Math.round(performance.now() - t0);
         if (State.ui.latency) State.ui.latency.textContent = `${latency} ms · synced`;
@@ -2336,19 +2573,56 @@
         State.net.busySnapshot = false;
       }
     }
-    function startPolling(){ if (State.net.pollTimer) return; State.net.pollTimer = setInterval(fetchGlobalSnapshot, CONFIG.pollIntervalMs); }
-    function stopPolling(){ if (State.net.pollTimer){ clearInterval(State.net.pollTimer); State.net.pollTimer=null; } }
+    function setPollingInterval(ms){
+      const v = clamp(ms, 2500, 60000);
+      if (State.net.pollMs === v && State.net.pollTimer) return;
+      State.net.pollMs = v;
+      stopPolling();
+      State.net.pollTimer = setInterval(fetchGlobalSnapshot, State.net.pollMs);
+    }
+    function startPolling(){
+      setPollingInterval(State.net.pollMs || CONFIG.pollIntervalMs);
+    }
+    function stopPolling(){
+      if (State.net.pollTimer){
+        clearInterval(State.net.pollTimer);
+        State.net.pollTimer = null;
+      }
+    }
 
+    function scheduleSseRetry(){
+      if (State.net.sseRetryTimer) return;
+    
+      const wait = State.net.sseRetryMs || 800;
+      State.net.sseRetryTimer = setTimeout(()=>{
+        State.net.sseRetryTimer = null;
+        startSSE();
+      }, wait);
+    
+      State.net.sseRetryMs = Math.min(15000, Math.floor(wait * 1.7));
+    }
+    
     function startSSE(){
       if (State.net.sse) return;
+    
+      let es = null;
       try {
-        const es = new EventSource(CONFIG.apiBase + '/2events?cv=1');
+        es = new EventSource(CONFIG.apiBase + '/2events?cv=1');
+      } catch {
+        scheduleSseRetry();
+        return;
+      }
     
-        es.onmessage = ev => {
-          try {
-            const msg = JSON.parse(ev.data);
-            switch (msg.type){
+      es.onopen = () => {
+        State.net.sseRetryMs = 800;
+        // SSE attivo => polling più leggero (fallback)
+        setPollingInterval(15000);
+      };
     
+      es.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          switch (msg.type){
               case 'expeditions_snapshot': {
                 if (msg.expeditions){
                   const snapAt = Date.now();
@@ -2405,7 +2679,13 @@
               }
 
               case 'perk_launch': {
-                if (State.engine) State.engine.spawnPerkFromCommand(msg.perk_type || 'dragon', msg.wax_account);
+                if (State.engine) {
+                  State.engine.spawnPerkFromCommand(
+                    msg.perk_type || 'dragon',
+                    msg.wax_account,
+                    msg.chest || null
+                  );
+                }
                 break;
               }
     
@@ -2426,15 +2706,36 @@
                 }
                 break;
               }
-            }
-          } catch {}
-        };
+          }
     
-        es.onerror = ()=>{ es.close(); State.net.sse = null; };
-        State.net.sse = es;
-      } catch {}
+        } catch {}
+      };
+    
+      es.onerror = () => {
+        try { es.close(); } catch {}
+        if (State.net.sse === es) State.net.sse = null;
+    
+        // SSE giù => torna polling aggressivo
+        setPollingInterval(CONFIG.pollIntervalMs);
+        scheduleSseRetry();
+      };
+    
+      State.net.sse = es;
     }
-    function stopSSE(){ if (State.net.sse){ try{ State.net.sse.close(); }catch{} State.net.sse=null; } }
+
+    function stopSSE(){
+      if (State.net.sse){
+        try { State.net.sse.close(); } catch {}
+        State.net.sse = null;
+      }
+      if (State.net.sseRetryTimer){
+        clearTimeout(State.net.sseRetryTimer);
+        State.net.sseRetryTimer = null;
+      }
+      State.net.sseRetryMs = 800;
+      setPollingInterval(CONFIG.pollIntervalMs);
+    }
+
 
     // ------------------------------------------------------------
     // USER NFTs
@@ -2511,7 +2812,8 @@
       State.runtime.perkCooldownUntil = Date.now() + (10 * 60 * 1000); // 10 minuti
       updateActionButtonsUI();
     
-      if (State.engine) State.engine.spawnPerkFromCommand(perkName, State.user.wax_account);
+      const chest = res.data?.chest || null;
+      if (State.engine) State.engine.spawnPerkFromCommand(perkName, State.user.wax_account, chest);
     }
 
     // ------------------------------------------------------------
@@ -2560,77 +2862,16 @@
       State.ui.globalCount = document.getElementById('global-count');
       State.ui.recentList = document.getElementById('recent-list');
       State.ui.rewardsList = document.getElementById('rewards-list');
-    
+      
+      applyOverlayMode();
+
       // Tabs + builder
       setTabsBehavior();
       wireBuilderUI();
       updateCapUI();
       initDurationSwitch();
-      moveControlsIntoBuilder();
-// forza lo spostamento + stile + debug visibilità
-(function ensureDurationVisible(){
-  const host = document.getElementById('builder-controls');
-  const box  = document.getElementById('duration-switch');
-  const sel  = document.getElementById('sel-duration');
-  const cap  = document.getElementById('cap-line');
-  const act  = document.getElementById('action-buttons');
-
-  // 1) se manca qualcosa, logga
-  if (!host || !box || !sel || !cap || !act) {
-    console.warn('[DEX] duration controls missing', {host:!!host, box:!!box, sel:!!sel, cap:!!cap, act:!!act});
-    return;
-  }
-
-  // 2) se non è già nel builder, spostalo in cima
-  if (!host.contains(box)) {
-    // crea righe se non ci sono
-    if (!host.querySelector('.row')) {
-      const row1 = document.createElement('div'); row1.className = 'row';
-      const row2 = document.createElement('div'); row2.className = 'row';
-      host.appendChild(row1); host.appendChild(row2);
-    }
-    const row1 = host.querySelector('.row');
-    const row2 = host.querySelectorAll('.row')[1] || host.querySelector('.row');
-
-    // ricomponi row1: [duration | spacer | cap]
-    row1.innerHTML = '';
-    row1.appendChild(box);
-    const spacer = document.createElement('div'); spacer.className='spacer';
-    row1.appendChild(spacer);
-    row1.appendChild(cap);
-
-    // row2: [actions]
-    row2.innerHTML = '';
-    row2.appendChild(act);
-  }
-
-  // 3) applica stile inline compatto per evitare che il tema lo nasconda
-  box.style.display = 'flex';
-  box.style.gap = '8px';
-  box.style.alignItems = 'center';
-  box.style.flexWrap = 'wrap';
-  sel.style.display = 'inline-block';
-  sel.style.visibility = 'visible';
-  sel.style.minWidth = 'unset';
-  sel.style.maxWidth = '160px';
-  sel.style.padding  = '4px 8px';
-  sel.style.borderRadius = '6px';
-
-  // 4) se qualche CSS lo nasconde, annulla forzando visibilità
-  [box, sel].forEach(el => {
-    el.removeAttribute('hidden');
-    el.style.opacity = '1';
-  });
-
-  // 5) debug a console
-  console.log('[DEX] duration mounted in builder:', {
-    inBuilder: host.contains(box),
-    selValue: sel.value,
-    boxDisplay: getComputedStyle(box).display,
-    selDisplay: getComputedStyle(sel).display
-  });
-})();
-      
+      mountBuilderControls();
+     
       styleDurationBlock(document.getElementById('duration-switch'));
       // <<< Novità: inizializza subito stato pulsanti + forecast
       updateActionButtonsUI();
@@ -2640,10 +2881,19 @@
       if (State.ui.btnStart) State.ui.btnStart.onclick = sendExpedition;
       if (State.ui.btnPerk) State.ui.btnPerk.onclick = launchPerk;
       if (State.ui.btnCopyOverlay) State.ui.btnCopyOverlay.onclick = ()=>{
-        const url = new URL(window.location.href); url.searchParams.set('overlay','1');
-        navigator.clipboard.writeText(url.toString()).then(()=>toast('Overlay link copied'));
+        const url = new URL(window.location.href);
+        url.searchParams.set('overlay','1');
+        const text = url.toString();
+      
+        if (navigator.clipboard?.writeText){
+          navigator.clipboard.writeText(text)
+            .then(()=>toast('Overlay link copied'))
+            .catch(()=>{ prompt('Copy overlay link:', text); });
+        } else {
+          prompt('Copy overlay link:', text);
+        }
       };
-    
+
       // Engine
       State.engine = new GameEngine(State.ui.canvas);
       loadAssets().then(()=> State.engine && State.engine.handleResize());
@@ -2670,17 +2920,22 @@
   })();
   </script>
   <script>
-    // illumina l'area in base al puntatore (facoltativo)
-    (function () {
-      const targets = document.querySelectorAll('#duration-switch button, #goblin-list button[role="checkbox"]');
-      targets.forEach(el=>{
-        el.addEventListener('mousemove', e=>{
-          const r = el.getBoundingClientRect();
-          const x = ((e.clientX - r.left) / r.width) * 100;
-          el.style.setProperty('--mx', x + '%');
-        });
-      });
-    })();
+  (function () {
+    function applyGlow(el, e){
+      const r = el.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / Math.max(1, r.width)) * 100;
+      el.style.setProperty('--mx', x + '%');
+    }
+  
+    document.addEventListener('mousemove', (e) => {
+      const el = e.target.closest(
+        '#goblin-list button[role="checkbox"], #quick-select button, #action-buttons button, #tabs button[role="tab"]'
+      );
+      if (!el) return;
+      applyGlow(el, e);
+    }, { passive:true });
+  })();
   </script>
+
 </body>
 </html>

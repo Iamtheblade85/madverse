@@ -988,3 +988,603 @@ img,canvas{ max-width:100%; height:auto; }
   from{ transform: translateY(10px); opacity:0; }
   to  { transform: translateY(0); opacity:1; }
 }
+
+/* ============================
+   FIX: Duration <select> dropdown options readability
+   ============================ */
+
+/* 1) Ensure the control itself is always readable */
+#sel-duration{
+  color: var(--fg0) !important;
+  background:
+    radial-gradient(180px 90px at var(--mx) 0%, rgba(45,255,242,.12), transparent 65%),
+    linear-gradient(180deg, rgba(24,32,64,.96), rgba(14,18,40,.88)) !important;
+}
+
+/* 2) Key fix: in some browsers the <option> list uses system colors unless explicitly set.
+      Force a dark menu background + light text for options. */
+#sel-duration option{
+  background-color: #0b1026; /* dark, not pure black */
+  color: #eef4ff;
+}
+
+/* 3) Improve selected/checked option (Firefox supports :checked on option) */
+#sel-duration option:checked{
+  background-color: rgba(45,255,242,.20);
+  color: #ffffff;
+}
+
+/* 4) Hover on options (supported in some browsers; harmless elsewhere) */
+#sel-duration option:hover{
+  background-color: rgba(102,182,255,.22);
+  color: #ffffff;
+}
+
+/* 5) Accessible focus ring on the select control */
+#sel-duration:focus-visible{
+  border-color: rgba(45,255,242,.82) !important;
+  box-shadow: 0 0 0 3px rgba(45,255,242,.20), var(--glow-cy) !important;
+}
+
+/* 6) High-contrast fallback for forced-colors / Windows HC mode */
+@media (forced-colors: active){
+  #sel-duration{
+    forced-color-adjust: none;
+    background: Canvas !important;
+    color: CanvasText !important;
+    border-color: CanvasText !important;
+  }
+  #sel-duration option{
+    background: Canvas !important;
+    color: CanvasText !important;
+  }
+}
+
+/* 7) Extra polish: make dropdown feel “premium” when the select is open (where supported) */
+#duration-switch{
+  filter: drop-shadow(0 10px 24px rgba(0,0,0,.35));
+}
+/* =====================================================================================
+   Goblin DEX — UI HYPE PACK (paste at END of your CSS)
+   - Fix select dropdown readability
+   - Subtle, realistic animations + high-impact microinteractions
+   - Loot Scanner forecast styling
+   - Global panel “world is alive” emphasis
+   - Performance + accessibility safe
+   ===================================================================================== */
+
+/* ------------------------------
+  GLOBAL COLOR-SCHEME (helps <select>/<option> on many OS/browsers)
+------------------------------ */
+html, body{
+  color-scheme: dark; /* IMPORTANT: helps prevent white-on-white option menus */
+}
+
+/* ------------------------------
+  EXTRA TOKENS (tuned for “realistic, non-invasive” motion)
+------------------------------ */
+:root{
+  --hype-aura: rgba(45,255,242,.10);
+  --hype-aura2: rgba(255,79,216,.08);
+  --hype-warm: rgba(255,208,84,.10);
+  --hype-lime: rgba(207,255,74,.12);
+
+  --anim-slow: 10s;
+  --anim-med:  6.5s;
+  --anim-fast: 3.6s;
+
+  --scan-opacity: .18;
+  --scan-speed: 7.5s;
+
+  --spot-opacity: .40; /* hover “torch” strength */
+}
+
+/* ------------------------------
+  BACKGROUND: subtle living aurora (no overlays on canvas itself)
+------------------------------ */
+body::after{
+  content:"";
+  position: fixed;
+  inset: -20%;
+  pointer-events:none;
+  z-index: 0;
+  opacity: .22;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(900px 700px at 20% 20%, var(--hype-aura), transparent 60%),
+    radial-gradient(900px 700px at 80% 65%, var(--hype-aura2), transparent 62%),
+    radial-gradient(800px 600px at 65% 10%, var(--hype-warm), transparent 62%),
+    radial-gradient(900px 650px at 30% 85%, var(--hype-lime), transparent 62%);
+  filter: blur(14px);
+  transform: translate3d(0,0,0);
+  animation: auroraDrift var(--anim-slow) ease-in-out infinite alternate;
+}
+@keyframes auroraDrift{
+  0%   { transform: translate3d(-1.5%, -1.0%, 0) scale(1.00); }
+  100% { transform: translate3d( 1.2%,  1.1%, 0) scale(1.03); }
+}
+
+/* ------------------------------
+  FIX: Duration <select> / <option> readability (white-on-white)
+------------------------------ */
+#sel-duration{
+  color-scheme: dark;
+  color: var(--fg0) !important;
+  border-color: rgba(255,255,255,.18) !important;
+  background:
+    radial-gradient(180px 90px at var(--mx, 40%) 0%, rgba(45,255,242,.14), transparent 65%),
+    linear-gradient(180deg, rgba(24,32,64,.96), rgba(14,18,40,.88)) !important;
+}
+#sel-duration option{
+  background-color:#070b18;
+  color:#eef4ff;
+}
+#sel-duration option:checked{
+  background-color: rgba(45,255,242,.22);
+  color:#fff;
+}
+#sel-duration option:hover{
+  background-color: rgba(102,182,255,.22);
+  color:#fff;
+}
+#sel-duration:focus-visible{
+  border-color: rgba(45,255,242,.82) !important;
+  box-shadow: 0 0 0 3px rgba(45,255,242,.18), 0 0 0 1px rgba(45,255,242,.22), var(--glow-cy) !important;
+}
+
+/* Windows high-contrast / forced colors */
+@media (forced-colors: active){
+  #sel-duration{ forced-color-adjust:none; background:Canvas !important; color:CanvasText !important; border-color:CanvasText !important; }
+  #sel-duration option{ background:Canvas !important; color:CanvasText !important; }
+}
+
+/* ------------------------------
+  PREMIUM MICROINTERACTIONS (buttons + tabs) using --mx spotlight
+  (Your JS already updates --mx on mousemove)
+------------------------------ */
+:where(
+  #action-buttons button,
+  #quick-select button,
+  #btn-toggle-more,
+  #tabs [role="tab"],
+  #goblin-list button[role="checkbox"]
+){
+  position: relative;
+  isolation: isolate;
+  transform: translateZ(0);
+  will-change: transform, filter;
+}
+
+/* Hover spotlight that follows cursor (uses --mx: “0%..100%”) */
+:where(
+  #action-buttons button,
+  #quick-select button,
+  #btn-toggle-more,
+  #tabs [role="tab"],
+  #goblin-list button[role="checkbox"]
+)::after{
+  content:"";
+  position:absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events:none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity var(--fx-f), filter var(--fx-f);
+  background:
+    radial-gradient(220px 120px at var(--mx, 50%) 0%,
+      rgba(255,255,255,var(--spot-opacity)),
+      rgba(255,255,255,0) 62%);
+  mix-blend-mode: screen;
+  filter: blur(.2px);
+}
+
+:where(
+  #action-buttons button,
+  #quick-select button,
+  #btn-toggle-more,
+  #tabs [role="tab"],
+  #goblin-list button[role="checkbox"]
+):hover::after{
+  opacity: .65;
+}
+
+/* Tiny “shimmer” pass on hover (subtle, not casino) */
+:where(
+  #action-buttons button,
+  #quick-select button,
+  #btn-toggle-more,
+  #tabs [role="tab"]
+)::before{
+  content:"";
+  position:absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events:none;
+  z-index: 0;
+  opacity: 0;
+  background:
+    linear-gradient(110deg,
+      transparent 0%,
+      rgba(255,255,255,.10) 18%,
+      rgba(45,255,242,.14) 32%,
+      rgba(255,79,216,.12) 48%,
+      rgba(255,255,255,.08) 62%,
+      transparent 80%);
+  background-size: 220% 100%;
+  transform: translateZ(0);
+  filter: blur(.1px);
+  transition: opacity var(--fx-f);
+}
+:where(#action-buttons button, #quick-select button, #btn-toggle-more, #tabs [role="tab"]):hover::before{
+  opacity: .35;
+  animation: microShimmer 1.25s ease-out 1;
+}
+@keyframes microShimmer{
+  from{ background-position: 120% 0; }
+  to  { background-position: -40% 0; }
+}
+
+/* ------------------------------
+  START BUTTON: “breathing” readiness glow (ONLY when enabled)
+  realistic: slow, low amplitude, turns off on disabled
+------------------------------ */
+#btn-start{
+  border-color: rgba(207,255,74,.42) !important;
+  text-shadow: 0 0 16px rgba(207,255,74,.16);
+  letter-spacing: .38px;
+}
+
+#btn-start:not([disabled]){
+  animation: startBreath 4.8s ease-in-out infinite;
+}
+@keyframes startBreath{
+  0%,100%{
+    box-shadow:
+      0 12px 34px rgba(0,0,0,.40),
+      0 0 0 1px rgba(207,255,74,.16),
+      0 0 22px rgba(207,255,74,.10),
+      inset 0 0 0 1px rgba(255,255,255,.04);
+    filter: brightness(1.00) saturate(1.02);
+  }
+  50%{
+    box-shadow:
+      0 16px 44px rgba(0,0,0,.46),
+      0 0 0 1px rgba(207,255,74,.22),
+      0 0 30px rgba(207,255,74,.16),
+      0 0 18px rgba(45,255,242,.10),
+      inset 0 0 0 1px rgba(255,255,255,.06);
+    filter: brightness(1.03) saturate(1.05);
+  }
+}
+
+/* A tiny “ready” ping dot (top-right) when enabled */
+#btn-start:not([disabled]) .ready-dot{ display:none; } /* (in case you ever add it in HTML) */
+#btn-start:not([disabled]){ padding-right: 18px; }
+#btn-start:not([disabled])::marker{ content:""; }
+#btn-start:not([disabled])::before{
+  /* do NOT conflict with other pseudos? This button already uses none in your base CSS.
+     If you already have ::before on this button elsewhere, keep the dot via background instead. */
+  content:"";
+  position:absolute;
+  right: 12px;
+  top: 12px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(207,255,74,.95);
+  box-shadow: 0 0 0 0 rgba(207,255,74,.38);
+  opacity: .95;
+  animation: readyPing 1.8s ease-out infinite;
+  pointer-events:none;
+}
+@keyframes readyPing{
+  0%   { box-shadow: 0 0 0 0 rgba(207,255,74,.34); transform: scale(1); }
+  70%  { box-shadow: 0 0 0 14px rgba(207,255,74,0); transform: scale(1.05); }
+  100% { box-shadow: 0 0 0 0 rgba(207,255,74,0); transform: scale(1); }
+}
+
+/* Disable breathing instantly if disabled */
+#btn-start[disabled]{ animation: none !important; }
+#btn-start[disabled]::before{ display:none !important; }
+
+/* Copy overlay button: cooler “utility” vibe */
+#btn-copy-overlay{
+  border-color: rgba(255,208,84,.40) !important;
+}
+#btn-copy-overlay:hover{
+  box-shadow: 0 16px 44px rgba(0,0,0,.46), var(--glow-am) !important;
+}
+
+/* ------------------------------
+  TABS: feel like “modules” + animated active underline (slow)
+------------------------------ */
+#tabs [role="tab"]{
+  text-transform: uppercase;
+  letter-spacing: .42px;
+}
+#tabs [role="tab"][aria-selected="true"]{
+  position: relative;
+  overflow: hidden;
+}
+#tabs [role="tab"][aria-selected="true"]::after{
+  /* animated neon underline (non-invasive) */
+  content:"";
+  position:absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 9px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(45,255,242,.0), rgba(45,255,242,.85), rgba(255,79,216,.70), rgba(207,255,74,.65), rgba(45,255,242,.0));
+  background-size: 220% 100%;
+  opacity: .90;
+  animation: underlineFlow 3.4s linear infinite;
+  pointer-events:none;
+}
+@keyframes underlineFlow{
+  from{ background-position: 0% 0; }
+  to  { background-position: 220% 0; }
+}
+
+/* ------------------------------
+  LOOT SCANNER — Run Forecast (high-impact, readable numbers, subtle scanning)
+------------------------------ */
+#run-forecast{
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(45,255,242,.26);
+  box-shadow:
+    0 18px 52px rgba(0,0,0,.38),
+    0 0 0 1px rgba(45,255,242,.10),
+    inset 0 0 0 1px rgba(255,255,255,.03);
+}
+
+/* scanline layer (does NOT touch canvas) */
+#run-forecast::before{
+  content:"";
+  position:absolute;
+  inset: 0;
+  pointer-events:none;
+  opacity: var(--scan-opacity);
+  mix-blend-mode: screen;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(255,255,255,.05) 0 1px,
+      transparent 1px 6px
+    );
+}
+#run-forecast::after{
+  /* slow scanner sweep */
+  content:"";
+  position:absolute;
+  inset:-40% -20%;
+  pointer-events:none;
+  opacity: .55;
+  background:
+    linear-gradient(115deg,
+      transparent 0%,
+      rgba(45,255,242,.10) 20%,
+      rgba(255,79,216,.08) 35%,
+      rgba(255,208,84,.06) 50%,
+      transparent 70%);
+  transform: translate3d(-10%, -10%, 0) rotate(6deg);
+  filter: blur(8px);
+  animation: scanSweep var(--scan-speed) ease-in-out infinite;
+}
+@keyframes scanSweep{
+  0%   { transform: translate3d(-18%, -12%, 0) rotate(6deg); }
+  50%  { transform: translate3d( 12%,  10%, 0) rotate(6deg); }
+  100% { transform: translate3d(-18%, -12%, 0) rotate(6deg); }
+}
+
+/* Forecast header: “HUD” */
+#run-forecast .hdr{
+  align-items: center;
+  gap: 10px;
+}
+#run-forecast .hdr .tag{
+  border-color: rgba(45,255,242,.30);
+  background:
+    radial-gradient(180px 80px at var(--mx,50%) 0%, rgba(45,255,242,.14), transparent 65%),
+    linear-gradient(180deg, rgba(22,28,58,.65), rgba(10,12,22,.38));
+  box-shadow: 0 10px 26px rgba(0,0,0,.28), 0 0 18px rgba(45,255,242,.10);
+}
+
+/* Make the “numbers” feel rewarding */
+#run-forecast .kv b{
+  font-size: clamp(14px, 1.05vw, 18px);
+  letter-spacing: .25px;
+}
+#run-forecast .kv .label{
+  color: rgba(207,217,255,.88);
+}
+#run-forecast .card{
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(255,255,255,.14);
+  transition: transform var(--fx-f), border-color var(--fx-f), box-shadow var(--fx-f), filter var(--fx-f);
+}
+#run-forecast .card:hover{
+  transform: translateY(-1px);
+  border-color: rgba(45,255,242,.28);
+  box-shadow: 0 16px 44px rgba(0,0,0,.38), 0 0 22px rgba(45,255,242,.10);
+  filter: brightness(1.02);
+}
+
+/* ------------------------------
+  GLOBAL PANEL: “World feels alive”
+  - top 3 entries get a hotter frame
+------------------------------ */
+#global-list > div{
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.14);
+  background:
+    radial-gradient(260px 120px at var(--mx,40%) 0%, rgba(45,255,242,.08), transparent 70%),
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+  padding: 10px 12px;
+  margin: 0 0 10px 0;
+  transition: transform var(--fx-f), border-color var(--fx-f), box-shadow var(--fx-f), filter var(--fx-f);
+}
+#global-list > div:hover{
+  transform: translateY(-1px);
+  border-color: rgba(155,140,255,.34);
+  box-shadow: 0 16px 44px rgba(0,0,0,.34), 0 0 22px rgba(155,140,255,.10);
+}
+
+/* Top 3 = “HOT” */
+#global-list > div:nth-child(-n+3){
+  border-color: rgba(255,208,84,.26);
+  box-shadow:
+    0 18px 52px rgba(0,0,0,.36),
+    0 0 0 1px rgba(255,208,84,.10),
+    0 0 26px rgba(255,79,216,.08);
+}
+#global-list > div:nth-child(-n+3)::before{
+  content:"";
+  position:absolute;
+  inset: 0;
+  pointer-events:none;
+  opacity: .22;
+  background:
+    linear-gradient(110deg,
+      transparent 0%,
+      rgba(255,208,84,.14) 18%,
+      rgba(45,255,242,.12) 34%,
+      rgba(255,79,216,.10) 52%,
+      transparent 70%);
+  background-size: 220% 100%;
+  animation: hotShimmer 3.8s ease-in-out infinite;
+}
+@keyframes hotShimmer{
+  0%   { background-position: 120% 0; }
+  55%  { background-position: -60% 0; }
+  100% { background-position: -60% 0; }
+}
+
+/* Badges look sharper and “gamey” */
+.badge{
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.14);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.18);
+}
+.badge.ok{
+  box-shadow: 0 0 18px rgba(67,255,201,.10);
+}
+.badge.warn{
+  box-shadow: 0 0 18px rgba(255,208,84,.10);
+}
+.badge.err{
+  box-shadow: 0 0 18px rgba(255,75,106,.12);
+}
+
+/* ------------------------------
+  TICKER + LATENCY: “alive” but calm
+------------------------------ */
+#ticker{
+  position: relative;
+  overflow: hidden;
+}
+#ticker::after{
+  content:"";
+  position:absolute;
+  inset:-40% -20%;
+  pointer-events:none;
+  opacity: .22;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(45,255,242,.12) 20%,
+      rgba(255,79,216,.10) 45%,
+      rgba(207,255,74,.10) 70%,
+      transparent 100%);
+  background-size: 220% 100%;
+  animation: tickerSheen 9.5s linear infinite;
+  filter: blur(10px);
+}
+@keyframes tickerSheen{
+  from{ background-position: 0% 0; }
+  to  { background-position: 220% 0; }
+}
+
+/* Sync label feels responsive */
+#latency-label{
+  font-weight: 900;
+  letter-spacing: .22px;
+}
+#latency-label::after{
+  /* keep your ping dot but make it slightly more “organic” */
+  animation: ping 1.9s infinite ease-out;
+  opacity: .95;
+}
+
+/* ------------------------------
+  CANVAS FEEDBACK (messages near canvas): readable, stylish, fades in
+  (does NOT overlay the canvas graphics; sits inside #canvas-wrap container)
+------------------------------ */
+#canvas-feedback{
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  display: grid;
+  gap: 8px;
+  max-width: min(420px, 85%);
+  z-index: 3; /* above canvas element */
+}
+#canvas-feedback .msg{
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.16);
+  background:
+    radial-gradient(260px 120px at 18% 0%, rgba(45,255,242,.10), transparent 70%),
+    linear-gradient(180deg, rgba(12,16,36,.68), rgba(8,10,20,.52));
+  box-shadow: 0 14px 40px rgba(0,0,0,.45), 0 0 18px rgba(45,255,242,.10);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(242,246,255,.96);
+  font-weight: 800;
+  letter-spacing: .18px;
+  animation: msgIn .22s ease-out;
+}
+@keyframes msgIn{
+  from{ transform: translateY(-6px); opacity: 0; }
+  to  { transform: translateY(0); opacity: 1; }
+}
+
+/* ------------------------------
+  PERFORMANCE / SAFETY: never add overlays on actual canvas pixels
+------------------------------ */
+#canvas-wrap::before,
+#canvas-wrap::after,
+#game-canvas::before,
+#game-canvas::after{
+  content:none !important;
+  display:none !important;
+}
+
+/* ------------------------------
+  REDUCE MOTION: respectful fallback
+------------------------------ */
+@media (prefers-reduced-motion: reduce){
+  body::after,
+  #run-forecast::after,
+  #ticker::after,
+  #global-list > div:nth-child(-n+3)::before,
+  #tabs [role="tab"][aria-selected="true"]::after,
+  #btn-start:not([disabled]){
+    animation: none !important;
+  }
+  :where(
+    #action-buttons button,
+    #quick-select button,
+    #btn-toggle-more,
+    #tabs [role="tab"],
+    #goblin-list button[role="checkbox"]
+  )::before{
+    animation: none !important;
+  }
+}

@@ -5002,48 +5002,48 @@ async function renderGoblinInventory() {
     try { sessionStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), data })); } catch {}
   };
 
-  // Fetch /user_nfts with a single retry (and cache)
-  let retried = false;
-  async function fetchUserNFTs() {
-    // short-lived cache (60s)
-    const cached = getCache();
-    if (cached && Date.now() - cached.t < 60_000) return cached.data;
-
-    try {
-      if (typeof API !== "undefined" && API.post) {
-        const wax_account = window.userData?.wax_account;
-        const user_id     = window.userData?.userId || window.userData?.user_id;
-        const usx_token   = window.userData?.usx_token;
-        const r = await API.post("/user_nfts_light", { wax_account, user_id, usx_token }, 15000);
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const arr = Array.isArray(r.data) ? r.data : [];
-        setCache(arr);
-        return arr;
-      }
-      const res = await fetch(`${BASE_URL}/user_nfts_light`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          wax_account: window.userData?.wax_account,
-          user_id: window.userData?.userId,
-          usx_token: window.userData?.usx_token
-        })
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const arr = await res.json();
-      const data = Array.isArray(arr) ? arr : [];
-      setCache(data);
-      return data;
-    } catch (e) {
-      if (!retried) {
-        retried = true;
-        await new Promise(r => setTimeout(r, 10_000));
-        return fetchUserNFTs();
-      }
-      console.warn("[renderGoblinInventory] /user_nfts_light error:", e);
-      return [];
-    }
-  }
+	// Fetch /user_nfts (FULL) with a single retry (and cache)
+	let retried = false;
+	async function fetchUserNFTs() {
+	  // short-lived cache (60s)
+	  const cached = getCache();
+	  if (cached && Date.now() - cached.t < 60_000) return cached.data;
+	
+	  try {
+	    if (typeof API !== "undefined" && API.post) {
+	      const wax_account = window.userData?.wax_account;
+	      const user_id     = window.userData?.userId || window.userData?.user_id;
+	      const usx_token   = window.userData?.usx_token;
+	      const r = await API.post("/user_nfts", { wax_account, user_id, usx_token }, 15000);
+	      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+	      const arr = Array.isArray(r.data) ? r.data : [];
+	      setCache(arr);
+	      return arr;
+	    }
+	    const res = await fetch(`${BASE_URL}/user_nfts`, {
+	      method: "POST",
+	      headers: { "Content-Type": "application/json" },
+	      body: JSON.stringify({
+	        wax_account: window.userData?.wax_account,
+	        user_id: window.userData?.userId,
+	        usx_token: window.userData?.usx_token
+	      })
+	    });
+	    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+	    const arr = await res.json();
+	    const data = Array.isArray(arr) ? arr : [];
+	    setCache(data);
+	    return data;
+	  } catch (e) {
+	    if (!retried) {
+	      retried = true;
+	      await new Promise(r => setTimeout(r, 10_000));
+	      return fetchUserNFTs();
+	    }
+	    console.warn("[renderGoblinInventory] /user_nfts error:", e);
+	    return [];
+	  }
+	}
 
   const all = await fetchUserNFTs();
 

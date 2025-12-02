@@ -5014,13 +5014,13 @@ async function renderGoblinInventory() {
         const wax_account = window.userData?.wax_account;
         const user_id     = window.userData?.userId || window.userData?.user_id;
         const usx_token   = window.userData?.usx_token;
-        const r = await API.post("/user_nfts", { wax_account, user_id, usx_token }, 15000);
+        const r = await API.post("/user_nfts_light", { wax_account, user_id, usx_token }, 15000);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const arr = Array.isArray(r.data) ? r.data : [];
         setCache(arr);
         return arr;
       }
-      const res = await fetch(`${BASE_URL}/user_nfts`, {
+      const res = await fetch(`${BASE_URL}/user_nfts_light`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -5040,7 +5040,7 @@ async function renderGoblinInventory() {
         await new Promise(r => setTimeout(r, 10_000));
         return fetchUserNFTs();
       }
-      console.warn("[renderGoblinInventory] /user_nfts error:", e);
+      console.warn("[renderGoblinInventory] /user_nfts_light error:", e);
       return [];
     }
   }
@@ -6200,7 +6200,7 @@ function sumExpeditionStats(assetIds = []){
       user_id: Cave.user.user_id,
       usx_token: Cave.user.usx_token
     };
-    return API.post("/user_nfts", payload, timeoutMs);
+    return API.post("/user_nfts_light", payload, timeoutMs);
   }
 
 

@@ -1,1959 +1,2842 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Dwarfs Cave – Goblin Expeditions (No Perks/Chests)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Goblin Expeditions ⛏️</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Theme (kept) -->
+  <link rel="stylesheet" href="cyberpunktribalV2.css" />
 
-  <link rel="preload" as="style" href="cyberpunktribalV2.css?v=1" onload="this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="cyberpunktribalV2.css?v=1"></noscript>
-
+  <!-- UI/UX additions (global feed bar + modern toasts + responsive layout) -->
   <style>
-    #panels [role="tabpanel"][hidden]{ display:none !important; }
-    #canvas-feedback{ pointer-events:none; }
-    #canvas-feedback .msg{ margin:6px 0; }
+    :root{
+      --ui-bg: rgba(0,0,0,.55);
+      --ui-bg-2: rgba(0,0,0,.72);
+      --ui-stroke: rgba(255,255,255,.12);
+      --ui-stroke-2: rgba(255,255,255,.18);
+      --ui-text: rgba(255,255,255,.92);
+      --ui-muted: rgba(255,255,255,.72);
+      --ui-good: rgba(70, 255, 170, .95);
+      --ui-warn: rgba(255, 210, 90, .98);
+      --ui-bad: rgba(255, 90, 110, .98);
+      --ui-glow: 0 0 0 1px var(--ui-stroke), 0 18px 40px rgba(0,0,0,.35);
+      --ui-radius: 16px;
+    }
+    body{ color: var(--ui-text); }
+    #app-root{ max-width: 1400px; margin: 0 auto; padding: 16px; }
+
+    /* Layout */
+    #main-layout{
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 980px){
+      #main-layout{ grid-template-columns: 1fr; }
+      #panels{ order: 2; }
+      #game-area{ order: 1; }
+    }
+
+    /* Header bits */
+    #app-header{
+      display:flex; align-items:flex-start; justify-content: space-between;
+      gap: 12px; padding: 14px 16px; border-radius: var(--ui-radius);
+      background: var(--ui-bg); box-shadow: var(--ui-glow); border: 1px solid var(--ui-stroke);
+      position: sticky; top: 12px; z-index: 8;
+      backdrop-filter: blur(10px);
+    }
+    #head-left h1{ margin:0; font-size: 20px; letter-spacing:.2px; }
+    #head-left .subtitle{ margin-top: 6px; opacity:.8; font-size: 13px; line-height: 1.35; }
+    #head-right{ display:flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 320px; }
+    @media (max-width: 980px){ #head-right{ align-items: flex-start; min-width: unset; } }
+
+    #news-banner{
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--ui-stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+      box-shadow: var(--ui-glow);
+    }
+    #news-banner strong{ color: var(--ui-warn); }
+    #status-row{
+      display:flex; gap:10px; flex-wrap: wrap;
+      margin-top: 10px; opacity:.9; font-size: 12px;
+    }
+    #status-row .pill{
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--ui-stroke);
+      background: rgba(255,255,255,.06);
+    }
+
+    /* Buttons / controls (kept ids/classes; styled here to be consistent even without theme) */
+    .row{ display:flex; gap:10px; align-items:center; flex-wrap: wrap; }
+    .spacer{ flex: 1; }
+
+    #duration-switch{
+      display:flex; gap: 10px; align-items:center; flex-wrap: wrap;
+      padding: 8px 10px;
+      border-radius: 14px;
+      border: 1px solid var(--ui-stroke);
+      background: rgba(255,255,255,.05);
+    }
+    #duration-switch label{ opacity:.85; font-size: 12px; }
+    #sel-duration{
+      padding: 6px 10px; border-radius: 10px;
+      border: 1px solid var(--ui-stroke-2);
+      background: rgba(0,0,0,.25);
+      color: var(--ui-text);
+      outline: none;
+    }
+    #duration-hint{ font-size: 12px; opacity: .78; }
+    #cap-line{ display:flex; align-items:center; gap:8px; font-size: 12px; opacity: .92; white-space: nowrap; }
+    #action-buttons{ display:flex; gap: 10px; align-items:center; flex-wrap: wrap; }
+    button{
+      cursor: pointer;
+      color: var(--ui-text);
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--ui-stroke);
+      border-radius: 14px;
+      padding: 10px 12px;
+      transition: transform .08s ease, border-color .15s ease, background .15s ease, opacity .15s ease;
+      box-shadow: 0 10px 24px rgba(0,0,0,.25);
+    }
+    button:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.08); }
+    button:active{ transform: translateY(0px) scale(.99); }
+    button:disabled{ opacity: .45; cursor: not-allowed; filter: grayscale(.15); }
+    .primary{
+      background: linear-gradient(180deg, rgba(70,255,170,.18), rgba(70,255,170,.06));
+      border-color: rgba(70,255,170,.35);
+    }
+    .secondary{
+      background: linear-gradient(180deg, rgba(56,189,248,.18), rgba(56,189,248,.06));
+      border-color: rgba(56,189,248,.35);
+    }
+    .ghost{ background: rgba(255,255,255,.03); }
+
+    .badge{
+      display:inline-flex; align-items:center; gap: 6px;
+      padding: 4px 10px; border-radius: 999px;
+      border: 1px solid var(--ui-stroke);
+      background: rgba(255,255,255,.05);
+      font-size: 12px;
+    }
+    .badge.ok{ border-color: rgba(70,255,170,.35); color: rgba(70,255,170,.98); }
+    .badge.warn{ border-color: rgba(255,210,90,.40); color: rgba(255,210,90,.98); }
+    .badge.err{ border-color: rgba(255,90,110,.40); color: rgba(255,90,110,.98); }
+
+    /* Game area */
+    #game-area{
+      border-radius: var(--ui-radius);
+      background: var(--ui-bg);
+      border: 1px solid var(--ui-stroke);
+      box-shadow: var(--ui-glow);
+      padding: 14px 14px 16px;
+      overflow: hidden;
+    }
+    #game-head{
+      display:flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    #game-head h2{ margin:0; font-size: 16px; }
+    #ticker-line{
+      opacity:.85; font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--ui-stroke);
+      background: rgba(255,255,255,.03);
+    }
+
+    /* Global live feed bar (requested) */
+    #global-feed-bar{
+      display:flex; align-items:center; gap: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--ui-stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      box-shadow: 0 12px 22px rgba(0,0,0,.25);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    #global-feed-title{
+      font-size: 12px;
+      letter-spacing: .8px;
+      opacity: .85;
+      white-space: nowrap;
+      display:flex; align-items:center; gap:8px;
+    }
+    #global-feed-rail{
+      flex: 1;
+      display:flex; align-items:center; gap: 10px;
+      min-width: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .feed-item{
+      flex: 0 0 auto;
+      display:flex; align-items:center; gap: 10px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--ui-stroke);
+      background: rgba(0,0,0,.35);
+      box-shadow: 0 10px 22px rgba(0,0,0,.22);
+      max-width: min(520px, 90vw);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      animation: popin .25s ease-out both;
+    }
+    .feed-item .dot{
+      width: 8px; height: 8px; border-radius: 999px;
+      background: rgba(255,255,255,.6);
+      box-shadow: 0 0 0 4px rgba(255,255,255,.08);
+      flex: 0 0 auto;
+    }
+    .feed-item.good .dot{ background: rgba(70,255,170,.9); box-shadow: 0 0 0 4px rgba(70,255,170,.12); }
+    .feed-item.warn .dot{ background: rgba(255,210,90,.95); box-shadow: 0 0 0 4px rgba(255,210,90,.12); }
+    .feed-item.bad  .dot{ background: rgba(255,90,110,.95); box-shadow: 0 0 0 4px rgba(255,90,110,.12); }
+
+    @keyframes popin { from{ transform: translateY(6px); opacity:0; } to{ transform: translateY(0); opacity:1; } }
+
+    /* Canvas wrap kept */
+    #canvas-wrap{
+      width: 100%;
+      border-radius: var(--ui-radius);
+      overflow: hidden;
+      border: 1px solid var(--ui-stroke);
+      background: rgba(0,0,0,.5);
+      box-shadow: 0 20px 44px rgba(0,0,0,.35);
+    }
+    #game-canvas{ display:block; width: 100%; height: auto; }
+
+    /* Panels / tabs */
+    #panels{
+      border-radius: var(--ui-radius);
+      background: var(--ui-bg);
+      border: 1px solid var(--ui-stroke);
+      box-shadow: var(--ui-glow);
+      overflow: hidden;
+    }
+    #tabs{
+      display:flex; gap: 8px; flex-wrap: wrap;
+      padding: 12px;
+      border-bottom: 1px solid var(--ui-stroke);
+      background: rgba(255,255,255,.03);
+    }
+    #tabs button{
+      padding: 8px 10px;
+      border-radius: 999px;
+      box-shadow: none;
+    }
+    #tabs button[aria-selected="true"]{
+      border-color: rgba(70,255,170,.35);
+      background: rgba(70,255,170,.10);
+    }
+    .tab-panel{ padding: 12px; }
+    .card{
+      border-radius: 16px;
+      border: 1px solid var(--ui-stroke);
+      background: rgba(0,0,0,.35);
+      box-shadow: 0 14px 30px rgba(0,0,0,.25);
+      padding: 12px;
+    }
+    .kv{ display:grid; grid-template-columns: 1fr auto; gap: 8px; padding: 7px 0; border-bottom: 1px dashed rgba(255,255,255,.10); }
+    .kv:last-child{ border-bottom: none; }
+    .kv .k{ opacity:.72; font-size: 12px; }
+    .kv .v{ font-weight: 800; }
+
+    /* Builder list */
+    #builder-controls{ display:flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+    #builder-filters{
+      display:grid; gap:10px;
+      grid-template-columns: 1fr 1fr;
+      align-items:end;
+    }
+    #builder-filters input, #builder-filters select{
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--ui-stroke-2);
+      background: rgba(0,0,0,.25);
+      color: var(--ui-text);
+      outline: none;
+    }
+    #builder-filters label{ font-size: 12px; opacity:.85; display:block; margin-bottom: 6px; }
+    #flt-power-line{ grid-column: 1 / -1; }
+    #flt-power{ width: 100%; }
+
+    #quick-select{ display:flex; gap:10px; flex-wrap: wrap; }
+    #goblin-list{
+      display:flex; flex-direction: column; gap: 8px;
+      margin-top: 10px;
+      max-height: 420px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+    .goblin-card{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items:center;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--ui-stroke);
+      background: rgba(255,255,255,.04);
+      text-align:left;
+      box-shadow: none;
+    }
+    .goblin-card[aria-checked="true"]{
+      border-color: rgba(56,189,248,.35);
+      background: rgba(56,189,248,.10);
+    }
+    .goblin-card .title{
+      font-weight: 900;
+      display:flex; gap:8px; align-items:center; flex-wrap: wrap;
+    }
+    .goblin-card .meta{
+      opacity:.78; font-size: 12px;
+      display:flex; gap: 10px; flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--ui-stroke);
+      background: rgba(0,0,0,.22);
+      font-size: 12px;
+      opacity: .95;
+    }
+    .powerbar{
+      height: 8px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.3);
+      overflow:hidden;
+      margin-top: 8px;
+    }
+    .powerbar > div{
+      height: 100%;
+      background: linear-gradient(90deg, rgba(70,255,170,.85), rgba(56,189,248,.85));
+      width: 0%;
+      border-radius: 999px;
+    }
+
+    /* Forecast */
+    #run-forecast{ margin-top: 10px; }
+    #run-forecast[hidden]{ display:none; }
+    .hint{ opacity:.78; font-size: 12px; margin-top: 8px; }
+
+    /* Toasts (user-specific) */
+    #toast-host{
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 50;
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+      width: min(460px, calc(100vw - 32px));
+      pointer-events: none;
+    }
+    .toast{
+      pointer-events: auto;
+      display:grid;
+      grid-template-columns: 12px 1fr auto;
+      gap: 10px;
+      align-items:start;
+      padding: 12px 12px;
+      border-radius: 18px;
+      border: 1px solid var(--ui-stroke);
+      background: rgba(0,0,0,.72);
+      box-shadow: 0 24px 50px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      animation: toastIn .22s ease-out both;
+    }
+    @keyframes toastIn{ from{ transform: translateY(10px); opacity:0; } to{ transform: translateY(0); opacity:1; } }
+    .toast .bar{
+      width: 8px; height: 100%;
+      border-radius: 999px;
+      background: rgba(255,255,255,.35);
+      margin-top: 2px;
+    }
+    .toast.good .bar{ background: rgba(70,255,170,.9); }
+    .toast.warn .bar{ background: rgba(255,210,90,.95); }
+    .toast.bad  .bar{ background: rgba(255,90,110,.95); }
+    .toast .t-title{ font-weight: 900; }
+    .toast .t-body{ opacity:.85; font-size: 12.5px; margin-top: 4px; line-height: 1.25; }
+    .toast .t-close{
+      border-radius: 12px;
+      padding: 6px 8px;
+      box-shadow: none;
+    }
+
+    /* Overlay mode */
+    body.overlay #app-header,
+    body.overlay #panels,
+    body.overlay #news-banner{ display:none; }
+    body.overlay #main-layout{ grid-template-columns: 1fr; }
+    body.overlay #toast-host{ right: 12px; bottom: 12px; }
+
   </style>
 </head>
 
 <body>
   <div id="app-root">
-    <header id="app-header" aria-label="Application header">
-      <h1>Goblin DEX</h1>
-      <p id="subtitle">Real-time goblin expeditions. No perks, no chests.</p>
+    <header id="app-header">
+      <div id="head-left">
+        <h1>Goblin Expeditions ⛏️</h1>
+        <div class="subtitle">
+          Select your goblins (capped by ownership, max 250), send them on expeditions, and earn CHIPS + rare NFT drops.
+          <br/>
+          <span style="opacity:.9">Resistance ↓ Daily Power cost • Accuracy ↑ average rewards • Speed ↓ expedition duration • Loot-Hungry ↑ min/max reward range</span>
+        </div>
+      </div>
 
-      <nav id="action-bar" aria-label="Actions">
-        <div id="duration-switch" aria-label="Expedition Duration">
-          <label for="sel-duration" style="margin-right:8px;font-weight:900;">Duration</label>
-          <select id="sel-duration" title="Choose expedition duration" style="min-width:140px;">
-            <option value="5">5m — Blitz</option>
-            <option value="30" selected>30m — Standard</option>
-            <option value="60">1h — Long</option>
-            <option value="120">2h — Marathon</option>
-            <option value="360">6h — Endurance</option>
-            <option value="1440">24h — Ultra</option>
+      <div id="head-right">
+        <!-- Kept (these get moved into builder for UX consistency) -->
+        <div id="duration-switch">
+          <label for="sel-duration">Duration</label>
+          <select id="sel-duration">
+            <option value="15">15 min</option>
+            <option value="30" selected>30 min</option>
+            <option value="45">45 min</option>
+            <option value="60">60 min</option>
+            <option value="90">90 min</option>
           </select>
-          <small id="duration-hint" style="margin-left:10px;opacity:.85;"></small>
+          <div id="duration-hint"></div>
         </div>
 
-        <div id="cap-line" aria-live="polite">
-          <span id="cap-label" title="Maximum goblins you can send in the current run">Max goblins this run: 50</span> ·
-          <span id="reinf-label" title="Reinforcement adds +5 goblins each, up to +200">Base 50 + 0× Reinforcement (= 0 extra)</span>
+        <div id="cap-line">
+          <span class="badge">Cap: <b id="cap-label">50</b> / 250</span>
+          <span class="badge">Reinforcement Troops: <b id="reinf-label">0</b> / 40</span>
         </div>
 
-        <div id="action-buttons" role="group" aria-label="Primary actions">
-          <button id="btn-start" title="Start an expedition with the selected goblins">🚀 Start Expedition</button>
-          <button id="btn-copy-overlay" title="Copy a link to the overlay-only view">🔗 Copy overlay link</button>
+        <div id="action-buttons">
+          <button id="btn-start" class="primary">Start Expedition</button>
+          <button id="btn-perk" class="secondary">Launch Perk</button>
+          <button id="btn-copy-overlay" class="ghost">Copy Overlay Link</button>
         </div>
-      </nav>
-
-      <section id="news-banner" aria-label="News & Ads">
-        <strong>Live:</strong> Track world expeditions in real-time.
-      </section>
-
-      <div id="status-row" aria-live="polite">
-        <span id="latency-label" title="Time to sync the latest snapshot">syncing…</span>
       </div>
     </header>
 
-    <main id="main-layout" aria-label="Main content">
-      <section id="game-area" aria-label="Game Area">
-        <h2>World Expeditions Map</h2>
-        <div id="canvas-wrap" aria-label="Game viewport">
-          <canvas id="game-canvas"></canvas>
-          <div id="canvas-feedback" class="feedback-near-canvas" aria-live="polite"></div>
+    <div id="news-banner">
+      <strong>Chest rules update:</strong>
+      Chests can only drop from <b>Perks</b> launched by players, during the perk’s journey on the canvas.
+      Auto-claim happens when your goblin group walks within a <b>3×3</b> tile area (Chebyshev radius 1).
+      Chests disappear on contact or when their timer expires — whichever happens first.
+    </div>
+
+    <div id="status-row">
+      <div class="pill">Latency: <span id="latency-label">-- ms</span></div>
+      <div class="pill">Perk cooldown: <span id="perk-cd-label">--</span></div>
+      <div class="pill">Live sync: <span id="sync-label">booting…</span></div>
+    </div>
+
+    <main id="main-layout">
+      <section id="game-area">
+        <div id="game-head">
+          <h2>World Map</h2>
+          <div id="ticker-line">Loading…</div>
         </div>
 
-        <div id="legend">
-          <span>Legend:</span>
-          <span>Goblin Squad</span>
+        <!-- Requested: long, low, responsive global feedback strip above the canvas -->
+        <div id="global-feed-bar" aria-live="polite">
+          <div id="global-feed-title">🌐 LIVE FEED</div>
+          <div id="global-feed-rail"></div>
         </div>
 
-        <div id="ticker" aria-live="polite">
-          <strong>GLOBAL LOG:</strong> <span id="ticker-line">Waiting for events…</span>
+        <div id="canvas-wrap">
+          <canvas id="game-canvas" width="1200" height="520"></canvas>
+        </div>
+
+        <div class="hint" style="margin-top:10px;">
+          Canvas shows active expeditions (one moving goblin per player), perks flying across the arena, and dropped chests.
+          Global events are synced live across browsers.
         </div>
       </section>
 
-      <aside id="panels" aria-label="Information panels">
-        <nav id="tabs" role="tablist" aria-label="Panels" aria-orientation="horizontal">
-          <button id="tab-btn-my" role="tab" aria-selected="true" tabindex="0"
-                  aria-controls="tab-my" data-panel="tab-my" title="Build your expedition">
-            My Goblins
-          </button>
-          <button id="tab-btn-global" role="tab" aria-selected="false" tabindex="-1"
-                  aria-controls="tab-global" data-panel="tab-global" title="Live view of all expeditions">
-            Global
-          </button>
-          <button id="tab-btn-recent" role="tab" aria-selected="false" tabindex="-1"
-                  aria-controls="tab-recent" data-panel="tab-recent" title="Expeditions completed in the last 24h">
-            Recent
-          </button>
-        </nav>
+      <aside id="panels">
+        <div id="tabs" role="tablist" aria-label="Panels">
+          <button role="tab" aria-selected="true" aria-controls="tab-my" id="tabbtn-my">My Expedition</button>
+          <button role="tab" aria-selected="false" aria-controls="tab-global" id="tabbtn-global">Global <span class="badge" id="global-count">0</span></button>
+          <button role="tab" aria-selected="false" aria-controls="tab-recent" id="tabbtn-recent">Recent</button>
+          <button role="tab" aria-selected="false" aria-controls="tab-rewards" id="tabbtn-rewards">Rewards</button>
+        </div>
 
-        <section id="tab-my" role="tabpanel" aria-labelledby="tab-btn-my" tabindex="0" aria-label="My Goblins">
-          <h3>🧬 Goblin Expedition Builder</h3>
-          <div id="my-status" aria-live="polite">loading…</div>
-
-          <section id="filters" aria-label="Filters">
-            <input id="flt-search" type="search" placeholder="Search name or #id…" title="Filter goblins by name or asset id">
-            <select id="flt-rarity" title="Filter by rarity">
-              <option value="">All rarities</option>
-              <option>Common</option>
-              <option>Uncommon</option>
-              <option>Rare</option>
-              <option>Epic</option>
-              <option>Legendary</option>
-            </select>
-            <label for="flt-power" title="Only show goblins with at least this power">Min power</label>
-            <input id="flt-power" type="range" min="0" max="100" step="5" value="0">
-            <span id="flt-power-label">0</span>
-          </section>
-
-          <section id="builder-controls" aria-label="Expedition controls"></section>
-          <div id="action-hint" aria-live="polite"></div>
-
-          <section id="run-forecast" aria-live="polite" hidden></section>
-
-          <section id="quick-select" aria-label="Quick selection">
-            <button id="qs-first" title="Pick the first goblins up to your cap">✅ First 50</button>
-            <button id="qs-best"  title="Pick the strongest goblins up to your cap">🏆 Best 50</button>
-            <button id="qs-clear" title="Clear the current selection">❌ Clear</button>
-          </section>
-
-          <section id="selection-summary" aria-label="Selection summary">
-            <div id="sel-count">Selected goblins: 0</div>
-            <div id="sel-stats" title="Aggregated attributes of selected goblins">R: 0 · L: 0 · S: 0 · A: 0</div>
-          </section>
-
-          <section id="goblin-list" aria-label="Your goblins list"></section>
-
-          <div id="view-more" aria-label="Pagination">
-            <button id="btn-toggle-more" title="Expand or collapse the list" hidden>View more</button>
+        <section id="tab-my" class="tab-panel" role="tabpanel" aria-labelledby="tabbtn-my">
+          <div class="card" id="my-status">
+            <div class="kv"><div class="k">Account</div><div class="v" id="me-account">—</div></div>
+            <div class="kv"><div class="k">Owned Goblins</div><div class="v" id="me-owned">—</div></div>
+            <div class="kv"><div class="k">Selection</div><div class="v" id="sel-count">0</div></div>
+            <div class="kv"><div class="k">Totals (R / L / S / A)</div><div class="v" id="sel-stats">0 / 0 / 0 / 0</div></div>
+            <div class="kv"><div class="k">Expedition</div><div class="v" id="me-exp">—</div></div>
           </div>
 
-          <div id="toast-host" aria-live="polite"></div>
+          <div id="builder-controls"></div>
+
+          <div class="card" id="builder-filters" style="margin-top: 10px;">
+            <div>
+              <label for="flt-search">Search (name / id)</label>
+              <input id="flt-search" type="text" placeholder="e.g. #1234 / goblin name" />
+            </div>
+            <div>
+              <label for="flt-rarity">Rarity</label>
+              <select id="flt-rarity">
+                <option value="">All</option>
+                <option value="common">Common</option>
+                <option value="uncommon">Uncommon</option>
+                <option value="rare">Rare</option>
+                <option value="epic">Epic</option>
+                <option value="legendary">Legendary</option>
+              </select>
+            </div>
+            <div id="flt-power-line">
+              <label for="flt-power">Min Daily Power: <span id="flt-power-label">0</span></label>
+              <input id="flt-power" type="range" min="0" max="100" value="0" />
+            </div>
+          </div>
+
+          <div id="quick-select" style="margin-top: 10px;">
+            <button id="qs-first" class="ghost">Select First (cap)</button>
+            <button id="qs-best" class="ghost">Select Best Power (cap)</button>
+            <button id="qs-clear" class="ghost">Clear</button>
+            <button id="btn-toggle-more" class="ghost" hidden>View more</button>
+          </div>
+
+          <div id="run-forecast" class="card" hidden></div>
+
+          <div id="goblin-list" class="card" style="margin-top: 10px;" data-show-all="0"></div>
+
+          <div class="hint">
+            <b>Reinforcement Troops</b> increases your cap (max 40). Total cap is always capped at <b>250</b>.
+            Tired goblins (below the minimum Daily Power threshold) are not selectable.
+          </div>
         </section>
 
-        <section id="tab-global" role="tabpanel" aria-labelledby="tab-btn-global" tabindex="0" aria-label="World Live Expeditions" hidden>
-          <h3>🌍 World Live Expeditions</h3>
-          <div id="global-count">0</div>
-          <div id="global-list" aria-label="Expeditions list"></div>
+        <section id="tab-global" class="tab-panel" role="tabpanel" aria-labelledby="tabbtn-global" hidden>
+          <div class="hint" style="margin-bottom:10px;">
+            Live global expeditions. Each row shows player goblin count, total R/L/S/A, and dynamic ETA.
+          </div>
+          <div id="global-list" class="card"></div>
         </section>
 
-        <section id="tab-recent" role="tabpanel" aria-labelledby="tab-btn-recent" tabindex="0" aria-label="Last Completed Expeditions" hidden>
-          <h3>🕒 Last Completed Expeditions</h3>
-          <div id="recent-list" aria-label="Recent results"></div>
+        <section id="tab-recent" class="tab-panel" role="tabpanel" aria-labelledby="tabbtn-recent" hidden>
+          <div class="hint" style="margin-bottom:10px;">Latest expedition completions (chips + optional NFTs).</div>
+          <div id="recent-list" class="card"></div>
+        </section>
+
+        <section id="tab-rewards" class="tab-panel" role="tabpanel" aria-labelledby="tabbtn-rewards" hidden>
+          <div class="hint" style="margin-bottom:10px;">Recent chest winners (chips + optional NFTs).</div>
+          <div id="rewards-list" class="card"></div>
         </section>
       </aside>
     </main>
-
-    <footer id="app-footer" aria-label="Footer">
-      <small>Overlay-only link available from the top bar. All times are local to your device.</small>
-    </footer>
   </div>
 
-  <script>
-    window.CAVE_API_BASE = "https://iamemanuele.pythonanywhere.com";
-    window.userData = {
-      wax_account: "agoscry4ever",
-      user_id: "5235038223",
-      usx_token: "9o0B6EGF9CJxXMqKyZPtcGEcRifzP9Yeil5S1zuRGjZehKoyy9ZDcIEe26OgmiGuYAgFgqYletGoHVhFATQjrtP6ZPLuU9UvGYSki0rYw7kjCEw6q6of4xO0VPgt6WE0"
-    };
-    window.CAVE_OVERLAY = false;
-  </script>
+  <!-- User toasts (smart, visible, non-invasive) -->
+  <div id="toast-host" aria-live="polite" aria-relevant="additions"></div>
 
   <script>
-  ;(function () {
-    'use strict';
+    /**
+     * Single-page frontend:
+     * - Select goblins (owned) capped to max 250 (base + reinforcement, capped).
+     * - Start expedition (/2start_expedition), live global snapshots (poll + SSE).
+     * - Launch perk (/2perk_launch), perk moves on canvas; ONLY perk can drop chest.
+     * - Chest drop lifecycle: created via /2spawn_chest, broadcast to all browsers via SSE.
+     * - Auto-claim rule: when YOUR expedition goblin group walks within 3×3 tiles, we attempt a claim call
+     *   (if backend supports). Otherwise the server may claim and broadcast chest_update + winner.
+     */
+    (() => {
+      'use strict';
 
-    // ------------------------------------------------------------
-    // CONFIG
-    // ------------------------------------------------------------
-    const CONFIG = {
-      worldCols: 48,
-      worldRows: 24,
+      // ------------------------------------------------------------
+      // CONFIG
+      // ------------------------------------------------------------
+      const CONFIG = {
+        apiBase: '', // keep empty if same origin; set e.g. "https://yourdomain.com"
+        worldCols: 46,
+        worldRows: 26,
 
-      pollIntervalMs: 3500,
-      userNftsTimeoutMs: 15000,
-      snapshotTimeoutMs: 10000,
-      recentTimeoutMs: 12000,
+        pollIntervalMs: 4500,
 
-      apiBase: (window.CAVE_API_BASE || '').replace(/\/$/, ''),
+        minGoblinDailyPowerToSend: 10,
 
-      // ✅ Goblins 3x faster than before
-      goblinSpeedMin: 4.8 * 3,
-      goblinSpeedMax: 7.8 * 3,
+        // Cap rules (kept): base 50 + reinf*5, max 250; reinf max 40
+        baseCap: 50,
+        reinfMax: 40,
+        reinfCapBonusEach: 5,
+        absoluteCap: 250,
 
-      // Trail tuning (more realistic “neon smoke”)
-      trailBaseMaxAgeMs: 1400,
-      trailMinPointDist: 0.10,
-      trailMaxPoints: 60,
-    };
+        // Perk -> chest mechanics
+        perkCooldownMs: 10 * 60 * 1000,
+        perkFlySpeed: 10.5,         // grid cells / second (visual)
+        perkDropChance: 0.18,       // chance for perk to drop ONE chest during flight (tune in BE too)
+        perkDropAtMin: 0.18,        // progress fraction
+        perkDropAtMax: 0.72,
 
-    const QS = new URLSearchParams(location.search);
-    const OVERLAY_MODE =
-      QS.get('overlay') === '1' ||
-      /\/overlay\.html$/i.test(location.pathname);
-
-    // ------------------------------------------------------------
-    // STATE
-    // ------------------------------------------------------------
-    const State = {
-      mounted: false,
-      dpr: window.devicePixelRatio || 1,
-      overlay: OVERLAY_MODE,
-
-      ui: {
-        canvas: null,
-        latency: null,
-        ticker: null,
-        toastHost: null,
-
-        listHost: null,
-        summaryCount: null,
-        summaryStats: null,
-
-        fltSearch: null,
-        fltRarity: null,
-        fltPower: null,
-        fltPowerLabel: null,
-
-        btnFirst: null,
-        btnBest: null,
-        btnClear: null,
-        btnToggleMore: null,
-
-        btnStart: null,
-        btnCopyOverlay: null,
-
-        capLabel: null,
-        reinfLabel: null,
-
-        durationSelect: null,
-        durationHint: null,
-
-        globalList: null,
-        globalCount: null,
-        recentList: null,
-      },
-
-      user: { wax_account:'', user_id:'', usx_token:'' },
-
-      nftsLoaded: false,
-      nftIndex: new Map(),
-      goblinsUser: [],
-      selectedGoblinIds: new Set(),
-
-      expedition: {
-        durationMinutes: 30,
-        reinforcementCount: 0,
-      },
-
-      engine: null,
-
-      net: {
-        pollTimer: null,
-        pollMs: CONFIG.pollIntervalMs,
-        sse: null,
-        sseRetryTimer: null,
-        sseRetryMs: 800,
-        busySnapshot: false
-      },
-
-      globalExpeditions: [],
-      recentExpeditions: [],
-      runtime: {
-        expeditionInProgress: false,
-        lastForecastPayloadKey: '',
-        forecastBusy: false,
-        forecastData: null,
-      }
-    };
-
-    // ------------------------------------------------------------
-    // UTIL
-    // ------------------------------------------------------------
-    function clamp(v, min, max){ return v < min ? min : v > max ? max : v; }
-    function randRange(min,max){ return min + Math.random()*(max-min); }
-    function randInt(min,max){ return Math.floor(min + Math.random()*(max-min+1)); }
-    function toNumber(x){
-      if (x == null) return 0;
-      if (typeof x === 'number' && Number.isFinite(x)) return x;
-      const m = String(x).match(/-?\d+(\.\d+)?/);
-      return m ? Number(m[0]) : 0;
-    }
-    function timeHM(date){
-      const d = date instanceof Date ? date : new Date(date);
-      return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-    }
-    function safe(text){
-      return String(text ?? '')
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-    function formatCompact(n){
-      n = Number(n || 0);
-      if (!isFinite(n)) return '0';
-      if (n >= 1_000_000) return (n/1_000_000).toFixed(1).replace(/\.0$/,'') + 'M';
-      if (n >= 1_000) return (n/1_000).toFixed(1).replace(/\.0$/,'') + 'k';
-      return String(Math.round(n));
-    }
-    function debounce(fn, ms=250){
-      let t = null;
-      return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), ms); };
-    }
-
-    // ------- EXPEDITION HELPERS -------
-    function ts(x){
-      if (!x) return null;
-      if (typeof x === 'number') return new Date(x > 2e12 ? x : x*1000);
-      const d = new Date(x); return isNaN(d) ? null : d;
-    }
-    function getDurationMin(exp){ return toNumber(exp.duration_minutes ?? exp.duration ?? exp.mins ?? 30); }
-    function getStart(exp){ return ts(exp.started_at ?? exp.start_time ?? exp.start_ts ?? exp.created_at); }
-    function getEndsAt(exp){
-      const explicitEnd = ts(exp.ends_at ?? exp.end_time ?? exp.end_ts);
-      if (explicitEnd) return explicitEnd;
-      const start = getStart(exp);
-      const mins = getDurationMin(exp);
-      return start ? new Date(start.getTime() + mins*60*1000) : null;
-    }
-    function getTimeLeftMs(exp, now=new Date()){
-      const end = getEndsAt(exp);
-      if (!end) return null;
-      return Math.max(0, end.getTime() - now.getTime());
-    }
-    function fmtHMS(msLeft){
-      const s = Math.floor(msLeft/1000);
-      const h = Math.floor(s/3600);
-      const m = Math.floor((s%3600)/60);
-      const sec = s%60;
-      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-    }
-    function fromSecondsRemaining(exp){
-      const sec = toNumber(exp.seconds_remaining);
-      if (!sec) return null;
-      const snap = exp._snapAt || Date.now();
-      return {
-        baseLeftMs: sec*1000,
-        snapAt: snap,
-        leftMs(now=Date.now()){ return Math.max(0, this.baseLeftMs - (now - this.snapAt)); },
-        endsAt(){ return new Date(this.snapAt + this.baseLeftMs); }
+        // Chest lifecycle (if server doesn't send expires_at; we still draw a timer for UX)
+        chestTtlSecondsFallback: 90,
+        chestAutoClaimRadiusChebyshev: 1, // 3×3 around the goblin => radius 1
       };
-    }
 
-    // ------------------------------------------------------------
-    // API
-    // ------------------------------------------------------------
-    const Api = {
-      async get(path, timeout=10000){
-        const ctrl = new AbortController(); const id = setTimeout(()=>ctrl.abort(), timeout);
-        try {
-          const res = await fetch(CONFIG.apiBase + path, { signal: ctrl.signal });
-          const data = await res.json().catch(()=>null);
-          return { ok: res.ok, status: res.status, data };
-        } catch (e) { return { ok:false, status:0, error:e }; }
-        finally { clearTimeout(id); }
-      },
-      async post(path, body, timeout=10000){
-        const ctrl = new AbortController(); const id = setTimeout(()=>ctrl.abort(), timeout);
-        try {
-          const res = await fetch(CONFIG.apiBase + path, {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify(body || {}),
-            signal: ctrl.signal
-          });
-          const data = await res.json().catch(()=>null);
-          return { ok: res.ok, status: res.status, data };
-        } catch (e) { return { ok:false, status:0, error:e }; }
-        finally { clearTimeout(id); }
+      // Overlay mode
+      const OVERLAY_MODE = new URLSearchParams(location.search).get('overlay') === '1';
+      if (OVERLAY_MODE) document.body.classList.add('overlay');
+
+      // ------------------------------------------------------------
+      // STATE
+      // ------------------------------------------------------------
+      const State = {
+        mounted: false,
+        dpr: window.devicePixelRatio || 1,
+        overlay: OVERLAY_MODE,
+
+        ui: {
+          canvas: null,
+          latency: null,
+          ticker: null,
+          syncLabel: null,
+          perkCdLabel: null,
+
+          globalFeedRail: null,
+
+          tabs: null,
+
+          // builder
+          listHost: null,
+          toastHost: null,
+          summaryCount: null,
+          summaryStats: null,
+
+          fltSearch: null,
+          fltRarity: null,
+          fltPower: null,
+          fltPowerLabel: null,
+
+          btnFirst: null,
+          btnBest: null,
+          btnClear: null,
+          btnToggleMore: null,
+
+          btnStart: null,
+          btnPerk: null,
+          btnCopyOverlay: null,
+
+          capLabel: null,
+          reinfLabel: null,
+
+          durationSelect: null,
+          durationHint: null,
+
+          // panels
+          panelMy: null,
+          panelGlobal: null,
+          panelRecent: null,
+          panelRewards: null,
+
+          globalList: null,
+          globalCount: null,
+          recentList: null,
+          rewardsList: null,
+
+          // My status
+          meAccount: null,
+          meOwned: null,
+          meExp: null,
+        },
+
+        user: { wax_account:'', user_id:'', usx_token:'' },
+
+        runtime: {
+          perkCooldownUntil: 0,
+          expeditionInProgress: false,
+
+          lastForecastPayloadKey: '',
+          forecastData: null,
+          forecastBusy: false,
+
+          lastSnapshotAt: 0,
+          lastSseAt: 0,
+
+          // to avoid spamming claim calls
+          chestClaimPending: new Set(),
+        },
+
+        // NFTs
+        nftsLoaded: false,
+        nftIndex: new Map(),
+        goblinsUser: [],
+        selectedGoblinIds: new Set(),
+
+        expedition: {
+          durationMinutes: 30,
+          reinforcementCount: 0,
+        },
+
+        // world
+        engine: null,
+
+        // network
+        net: { pollTimer:null, sse:null, busySnapshot:false },
+
+        // data feeds
+        globalExpeditions: [],
+        recentExpeditions: [],
+        recentWinners: [],
+      };
+
+      // ------------------------------------------------------------
+      // UTIL
+      // ------------------------------------------------------------
+      const clamp = (v, min, max) => v < min ? min : v > max ? max : v;
+      const randRange = (min,max) => min + Math.random()*(max-min);
+      const randInt = (min,max) => Math.floor(min + Math.random()*(max-min+1));
+      const toNumber = (x) => {
+        if (x == null) return 0;
+        if (typeof x === 'number' && Number.isFinite(x)) return x;
+        const m = String(x).match(/-?\d+(\.\d+)?/);
+        return m ? Number(m[0]) : 0;
+      };
+      const safe = (text) => String(text ?? '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const formatCompact = (n) => {
+        n = Number(n || 0);
+        if (!isFinite(n)) return '0';
+        if (n >= 1_000_000) return (n/1_000_000).toFixed(1).replace(/\.0$/,'') + 'M';
+        if (n >= 1_000)     return (n/1_000).toFixed(1).replace(/\.0$/,'') + 'k';
+        return String(Math.round(n*100)/100);
+      };
+      const timeHM = (date) => {
+        const d = date instanceof Date ? date : new Date(date);
+        if (isNaN(d)) return '--:--';
+        return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+      };
+      const fmtHMS = (msLeft) => {
+        const s = Math.floor((msLeft||0)/1000);
+        const h = Math.floor(s/3600);
+        const m = Math.floor((s%3600)/60);
+        const sec = s%60;
+        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+      };
+      const ts = (x) => {
+        if (!x) return null;
+        if (typeof x === 'number') return new Date(x > 2e12 ? x : x*1000);
+        const d = new Date(x);
+        return isNaN(d) ? null : d;
+      };
+      const debounce = (fn, ms) => {
+        let t = null;
+        return (...args) => {
+          if (t) clearTimeout(t);
+          t = setTimeout(() => fn(...args), ms);
+        };
+      };
+
+      // ------------------------------------------------------------
+      // API
+      // ------------------------------------------------------------
+      const Api = {
+        async get(path, timeoutMs=12000){
+          const ctrl = new AbortController();
+          const id = setTimeout(()=>ctrl.abort(), timeoutMs);
+          try{
+            const res = await fetch(CONFIG.apiBase + path, { signal: ctrl.signal, credentials:'include' });
+            const data = await res.json().catch(()=>null);
+            return { ok: res.ok, status: res.status, data };
+          } catch (e){
+            return { ok:false, status:0, error:e };
+          } finally { clearTimeout(id); }
+        },
+        async post(path, body, timeoutMs=12000){
+          const ctrl = new AbortController();
+          const id = setTimeout(()=>ctrl.abort(), timeoutMs);
+          try{
+            const res = await fetch(CONFIG.apiBase + path, {
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              credentials:'include',
+              body: JSON.stringify(body || {}),
+              signal: ctrl.signal
+            });
+            const data = await res.json().catch(()=>null);
+            return { ok: res.ok, status: res.status, data };
+          } catch (e){
+            return { ok:false, status:0, error:e };
+          } finally { clearTimeout(id); }
+        }
+      };
+
+      // ------------------------------------------------------------
+      // AUTH
+      // ------------------------------------------------------------
+      function syncUserFromStorage(){
+        try{
+          const raw = localStorage.getItem('userData');
+          const u = raw ? JSON.parse(raw) : (window.userData || null);
+          if (!u) return;
+          localStorage.setItem('userData', JSON.stringify(u));
+          State.user.wax_account = u.wax_account || u.wax || '';
+          State.user.user_id = u.user_id || u.userId || '';
+          State.user.usx_token = u.usx_token || u.token || '';
+        } catch {}
       }
-    };
-
-    // ------------------------------------------------------------
-    // AUTH
-    // ------------------------------------------------------------
-    function syncUserFromStorage(){
-      try {
-        const raw = localStorage.getItem('userData');
-        let u = raw ? JSON.parse(raw) : (window.userData || null);
-        if (!u) return;
-        localStorage.setItem('userData', JSON.stringify(u));
-        State.user.wax_account = u.wax_account || u.wax || '';
-        State.user.user_id = u.user_id || u.userId || '';
-        State.user.usx_token = u.usx_token || u.token || '';
-      } catch {}
-    }
-    function assertAuth(){
-      if (!State.user.wax_account || !State.user.user_id || !State.user.usx_token) {
-        throw new Error('Not authenticated');
+      function assertAuth(){
+        if (!State.user.wax_account || !State.user.user_id || !State.user.usx_token){
+          throw new Error('Not authenticated');
+        }
       }
-    }
 
-    // ------------------------------------------------------------
-    // ASSETS
-    // ------------------------------------------------------------
-    const Assets = { loaded:false, goblin:null, bg:null };
-    function loadImg(src){
-      return new Promise((res,rej)=>{
+      // ------------------------------------------------------------
+      // ASSETS (optional images)
+      // ------------------------------------------------------------
+      const Assets = { loaded:false, goblin:null, chest:null, bg:null, perks:{} };
+      const loadImg = (src) => new Promise((res, rej) => {
         const i = new Image();
-        i.onload = ()=>res(i);
+        i.onload = () => res(i);
         i.onerror = rej;
         i.src = src;
       });
-    }
-    async function loadAssets(){
-      if (Assets.loaded) return;
-      const [goblin, bg] = await Promise.all([
-        loadImg('goblin.png'),
-        loadImg('cave-grid.gif'),
-      ]).catch(()=>[null,null]);
-      Assets.goblin = goblin;
-      Assets.bg = bg;
-      Assets.loaded = true;
-    }
 
-    // ------------------------------------------------------------
-    // UI HELPERS
-    // ------------------------------------------------------------
-    function toast(msg){
-      const host = State.ui.toastHost;
-      if (!host) return;
-      const div = document.createElement('div');
-      div.textContent = msg;
-      host.appendChild(div);
-      setTimeout(()=>div.remove(), 3500);
-    }
-    function pushCanvasMsg(text){
-      const host = document.getElementById('canvas-feedback');
-      if (!host) return;
-      const el = document.createElement('div');
-      el.className = 'msg';
-      el.textContent = text;
-      host.prepend(el);
-      setTimeout(()=> el.remove(), 6500);
-    }
+      async function loadAssets(){
+        if (Assets.loaded) return;
+        const [goblin, chest, bg, pDragon, pDwarf, pSkeleton, pBlackCat] = await Promise.all([
+          loadImg('goblin.png'),
+          loadImg('chest.png'),
+          loadImg('cave-grid.gif'),
+          loadImg('perk_dragon.png'),
+          loadImg('perk_dwarf.png'),
+          loadImg('perk_skeleton.png'),
+          loadImg('perk_blackcat.png'),
+        ]).catch(()=>[null,null,null,null,null,null,null]);
 
-    // ------------------------------------------------------------
-    // BUILDER HELPERS
-    // ------------------------------------------------------------
-    function getSendCap(){
-      const base = 50, perReinf = 5, maxExtra = 200;
-      const reinf = State.expedition?.reinforcementCount || 0;
-      const extra = clamp(reinf * perReinf, 0, maxExtra);
-      return clamp(base + extra, base, 250);
-    }
-    function updateCapUI(){
-      const cap = getSendCap();
-      const reinf = State.expedition?.reinforcementCount || 0;
-      const extra = Math.min(reinf * 5, 200);
-      if (State.ui.capLabel)   State.ui.capLabel.textContent = `Max goblins this run: ${cap}`;
-      if (State.ui.reinfLabel) State.ui.reinfLabel.textContent = `Base 50 + ${reinf}× Reinforcement (= ${extra} extra)`;
-      if (State.ui.btnFirst) State.ui.btnFirst.textContent = `✅ First ${cap}`;
-      if (State.ui.btnBest)  State.ui.btnBest.textContent  = `🏆 Best ${cap}`;
-    }
-    function isGoblinTired(g){
-      return (g.daily_power_num || 0) < 5;
-    }
-    function getSelectedGoblins(){
-      return State.goblinsUser.filter(g => State.selectedGoblinIds.has(g.asset_id));
-    }
-    function canSendExpedition(){
-      if (State.runtime.expeditionInProgress) return { ok:false, reason:'in_progress' };
-      const sel = getSelectedGoblins();
-      if (!sel.length) return { ok:false, reason:'no_selection' };
-      const cap = getSendCap();
-      if (sel.length > cap) return { ok:false, reason:'over_cap' };
-      const tired = sel.filter(isGoblinTired);
-      if (tired.length) return { ok:false, reason:'tired_present' };
-      return { ok:true };
-    }
-    function buildDurationHint(mins){
-      function cost(m){ return 0.8*m + 0.04*m*m; }
-      const ref = cost(60)/60;
-      const cur = cost(mins)/mins;
-      const efficiency = Math.max(0.6, Math.min(1.5, ref/cur));
-      const tag = mins<=15 ? 'High yield' : mins<=45 ? 'Balanced' : 'Chill';
-      return `${tag}: more completions/hour → more rolls (×${efficiency.toFixed(2)})`;
-    }
-    function initDurationSwitch(){
-      const sel = State.ui.durationSelect;
-      const hint = State.ui.durationHint;
-      if (!sel) return;
-      function update(valMin){
-        State.expedition.durationMinutes = valMin;
-        if (hint) hint.textContent = buildDurationHint(valMin);
-        scheduleForecastIfReady();
+        Assets.goblin = goblin;
+        Assets.chest = chest;
+        Assets.bg = bg;
+        Assets.perks = { dragon:pDragon, dwarf:pDwarf, skeleton:pSkeleton, black_cat:pBlackCat };
+        Assets.loaded = true;
       }
-      sel.addEventListener('change', ()=> update(Number(sel.value||30)));
-      update(Number(sel.value||30));
-    }
 
-    function updateActionButtonsUI(){
-      const btnStart = State.ui.btnStart;
-      const hintEl = document.getElementById('action-hint');
-      if (!btnStart) return;
-
-      const val = canSendExpedition();
-      btnStart.disabled = !val.ok;
-
-      let startHint = 'Start an expedition with the selected goblins.';
-      if (!val.ok){
-        if (val.reason==='in_progress') startHint = 'You already have an expedition in progress.';
-        if (val.reason==='no_selection') startHint = 'Select at least one goblin.';
-        if (val.reason==='over_cap')     startHint = 'Selection exceeds your current cap.';
-        if (val.reason==='tired_present')startHint = 'Your selection includes tired goblins.';
+      // ------------------------------------------------------------
+      // GAME LOGIC HELPERS
+      // ------------------------------------------------------------
+      function getSendCap(){
+        const reinf = clamp(toNumber(State.expedition.reinforcementCount), 0, CONFIG.reinfMax);
+        const cap = CONFIG.baseCap + reinf * CONFIG.reinfCapBonusEach;
+        return clamp(cap, 0, CONFIG.absoluteCap);
       }
-      btnStart.title = startHint;
-      if (hintEl) hintEl.textContent = startHint;
-    }
-
-    // ------------------------------------------------------------
-    // FORECAST (kept; not perks/chests)
-    // ------------------------------------------------------------
-    const requestForecastDebounced = debounce(requestForecast, 320);
-
-    function scheduleForecastIfReady(){
-      const duration = State.expedition?.durationMinutes || 0;
-      const sel = getSelectedGoblins();
-      if (!duration || !sel.length) { renderForecast(null, 'Select goblins and a duration.'); return; }
-
-      const payloadKey = JSON.stringify({
-        d: duration,
-        ids: sel.map(g=>g.asset_id).sort(),
-        reinf: State.expedition?.reinforcementCount || 0
-      });
-
-      if (payloadKey === State.runtime.lastForecastPayloadKey && State.runtime.forecastData){
-        renderForecast(State.runtime.forecastData, null);
-        return;
+      function getSelectedGoblins(){
+        return State.goblinsUser.filter(g => State.selectedGoblinIds.has(g.asset_id));
       }
-      State.runtime.lastForecastPayloadKey = payloadKey;
-      requestForecastDebounced(duration, sel);
-    }
-
-    async function requestForecast(duration, selArr){
-      if (State.runtime.expeditionInProgress) { renderForecast(null, 'An expedition is running.'); return; }
-      if (!selArr?.length || !duration) { renderForecast(null, ''); return; }
-      try { assertAuth(); } catch { renderForecast(null,'Sign in to preview rewards.'); return; }
-
-      const body = {
-        wax_account: State.user.wax_account,
-        user_id: State.user.user_id,
-        usx_token: State.user.usx_token,
-        duration_minutes: duration,
-        asset_ids: selArr.map(g=> g.asset_id),
-        reinforcement_count: State.expedition?.reinforcementCount || 0
-      };
-
-      State.runtime.forecastBusy = true;
-      renderForecastLoading();
-
-      const res = await Api.post('/2expedition_forecast', body, 12000).catch(()=>({ok:false}));
-      State.runtime.forecastBusy = false;
-
-      if (!res || !res.ok || !res.data){
-        renderForecast(null, 'Forecast unavailable right now.');
-        return;
+      function isGoblinTired(g){
+        return (g.daily_power_num || 0) < CONFIG.minGoblinDailyPowerToSend;
       }
-      State.runtime.forecastData = res.data;
-      renderForecast(res.data, null);
-    }
+      function canSendExpedition(){
+        if (State.runtime.expeditionInProgress) return { ok:false, reason:'in_progress' };
+        const sel = getSelectedGoblins();
+        if (!sel.length) return { ok:false, reason:'no_selection' };
+        const cap = getSendCap();
+        if (sel.length > cap) return { ok:false, reason:'over_cap' };
+        const tired = sel.filter(isGoblinTired);
+        if (tired.length) return { ok:false, reason:'tired_present', data:tired };
+        return { ok:true };
+      }
+      function isPerkOnCooldown(){
+        return Date.now() < (State.runtime.perkCooldownUntil || 0);
+      }
 
-    function renderForecastLoading(){
-      const host = document.getElementById('run-forecast'); if (!host) return;
-      host.hidden = false;
-      host.innerHTML = `<div class="hdr"><span class="tag cyan">Run Forecast</span> <span class="hint">Computing…</span></div>`;
-    }
+      // Stats extraction (flexible)
+      function getStatFromNFT(nft, key){
+        if (!nft || !key) return 0;
+        const k = String(key);
+        const direct =
+          toNumber(nft[k]) ||
+          toNumber(nft?.data?.[k]) ||
+          toNumber(nft?.stats?.[k]) ||
+          toNumber(nft?.mutable_data?.[k]) ||
+          toNumber(nft?.immutable_data?.[k]) ||
+          toNumber(nft?.template?.immutable_data?.[k]) ||
+          0;
+        return direct;
+      }
+      function sumStatsForExp(exp){
+        // Prefer server totals if provided
+        const s = exp?.stats_totals || exp?.stats || null;
+        if (s){
+          return {
+            res: toNumber(s.resistance),
+            loot: toNumber(s.loot_hungry),
+            spd: toNumber(s.speed),
+            acc: toNumber(s.accuracy),
+          };
+        }
+        // Otherwise try summing from goblin_ids
+        const ids = Array.isArray(exp?.goblin_ids) ? exp.goblin_ids : [];
+        const acc = { res:0, loot:0, spd:0, acc:0 };
+        for (const id of ids){
+          const nft = State.nftIndex.get(String(id));
+          acc.res += getStatFromNFT(nft,'resistance');
+          acc.loot += getStatFromNFT(nft,'loot_hungry');
+          acc.spd += getStatFromNFT(nft,'speed');
+          acc.acc += getStatFromNFT(nft,'accuracy');
+        }
+        return acc;
+      }
 
-    function renderForecast(data, message){
-      const host = document.getElementById('run-forecast'); if (!host) return;
-      if (message){
-        host.hidden = false;
-        host.innerHTML = `
-          <div class="hdr"><span class="tag cyan">Run Forecast</span></div>
-          <div class="hint">${safe(message)}</div>
+      // Expedition timing helpers
+      function getDurationMin(exp){ return toNumber(exp.duration_minutes ?? exp.duration ?? exp.mins ?? 30); }
+      function getStart(exp){ return ts(exp.started_at ?? exp.start_time ?? exp.start_ts ?? exp.created_at); }
+      function getEndsAt(exp){
+        const explicitEnd = ts(exp.ends_at ?? exp.end_time ?? exp.end_ts);
+        if (explicitEnd) return explicitEnd;
+        const start = getStart(exp);
+        const mins = getDurationMin(exp);
+        return start ? new Date(start.getTime() + mins*60*1000) : null;
+      }
+      function getTimeLeftMs(exp, now=new Date()){
+        const end = getEndsAt(exp);
+        if (!end) return null;
+        return Math.max(0, end.getTime() - now.getTime());
+      }
+      function fromSecondsRemaining(exp){
+        const sec = toNumber(exp.seconds_remaining);
+        if (!sec) return null;
+        const snap = exp._snapAt || Date.now();
+        return {
+          baseLeftMs: sec*1000,
+          snapAt: snap,
+          leftMs(now=Date.now()){ return Math.max(0, this.baseLeftMs - (now - this.snapAt)); },
+          endsAt(now=Date.now()){ return new Date(now + this.leftMs(now)); },
+        };
+      }
+
+      // ------------------------------------------------------------
+      // TOASTS (user-focused)
+      // ------------------------------------------------------------
+      function toast(title, body='', level='good', ttlMs=5200){
+        const host = State.ui.toastHost;
+        if (!host) return;
+
+        const el = document.createElement('div');
+        el.className = `toast ${level}`;
+        el.innerHTML = `
+          <div class="bar"></div>
+          <div>
+            <div class="t-title">${safe(title)}</div>
+            ${body ? `<div class="t-body">${safe(body)}</div>` : ``}
+          </div>
+          <button class="t-close ghost" aria-label="Close">✕</button>
         `;
-        return;
-      }
-      if (!data){ host.hidden = true; host.innerHTML = ''; return; }
+        const closeBtn = el.querySelector('.t-close');
+        const kill = () => {
+          el.style.opacity = '0';
+          el.style.transform = 'translateY(8px)';
+          setTimeout(()=> el.remove(), 180);
+        };
+        closeBtn?.addEventListener('click', kill);
 
-      const durEff = toNumber(data.duration_effective_minutes) || State.expedition.durationMinutes;
-      const powTot = toNumber(data.power_needed_total);
-      const tMin = toNumber(data.tokens_min);
-      const tMax = toNumber(data.tokens_max);
-      const probs = data.token_tier_probs || {};
-      const nftRewards = Array.isArray(data.nft_rewards) ? data.nft_rewards : [];
-      const msgs = Array.isArray(data.messages) ? data.messages : [];
+        host.prepend(el);
 
-      host.hidden = false;
-      host.innerHTML = `
-        <div class="hdr">
-          <span class="tag cyan">Run Forecast</span>
-          <span class="hint">Updates when selection/duration changes.</span>
-        </div>
+        // cap stack
+        while (host.children.length > 5) host.lastElementChild?.remove();
 
-        <div class="grid">
-          <div class="card">
-            <div class="kv">
-              <div><span class="label">Nominal duration</span><b>${State.expedition.durationMinutes} min</b></div>
-              <div><span class="label">Effective duration</span><b>${durEff} min</b></div>
-              <div><span class="label">Total daily power</span><b>${powTot || '—'}</b></div>
-              <div><span class="label">Selected goblins</span><b>${State.selectedGoblinIds.size}</b></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="kv">
-              <div><span class="label">Token reward (min–max)</span><b>${tMin || '—'} – ${tMax || '—'}</b></div>
-              ${Object.keys(probs).length ? `<div><span class="label">Token tier probs</span><b>${
-                Object.entries(probs).map(([k,v])=>`${safe(k)} ${(Math.round(v*100))}%`).join(' · ')
-              }</b></div>`:''}
-              ${nftRewards.length ? `<div><span class="label">NFT chances</span><b>${
-                nftRewards.map(it=>`${safe(it.name)} ${(Math.round((it.chance||0)*100))}%`).join(' · ')
-              }</b></div>`:''}
-            </div>
-          </div>
-        </div>
-
-        ${msgs.length ? `<div class="hint">${msgs.map(safe).join(' · ')}</div>`:''}
-      `;
-    }
-
-    // ------------------------------------------------------------
-    // NFT STAT HELP (kept)
-    // ------------------------------------------------------------
-    function getStatFromNFT(nft, key) {
-      if (!nft) return 0;
-      const tryKeys = [key];
-      if (key === 'loot_hungry') tryKeys.push('lootHungry','loot-hungry','loothungry');
-      const buckets = [nft[key], nft.attributes, nft.attrs, nft.stats, nft.data, nft.mutable_data, nft.immutable_data];
-      for (const val of buckets){
-        if (val == null) continue;
-        if (typeof val === 'number' || typeof val === 'string') return toNumber(val);
-        if (typeof val === 'object' && !Array.isArray(val)){
-          for (const k of tryKeys){ if (val[k] != null) return toNumber(val[k]); }
+        if (ttlMs > 0){
+          setTimeout(() => { if (el.isConnected) kill(); }, ttlMs);
         }
-        if (Array.isArray(val)){
-          for (const attr of val){
-            const trait = String(attr.trait_type || attr.trait || attr.key || attr.name || '').toLowerCase();
-            if (tryKeys.some(k => k.toLowerCase() === trait)) return toNumber(attr.value ?? attr.val ?? attr.score);
+      }
+
+      // ------------------------------------------------------------
+      // GLOBAL FEED BAR (global feedback for all users)
+      // ------------------------------------------------------------
+      function pushGlobalFeed(text, level='good'){
+        const rail = State.ui.globalFeedRail;
+        if (!rail) return;
+
+        const item = document.createElement('div');
+        item.className = `feed-item ${level}`;
+        item.title = text;
+        item.innerHTML = `<span class="dot"></span><span>${safe(text)}</span>`;
+        rail.prepend(item);
+
+        // cap items
+        while (rail.children.length > 8) rail.lastElementChild?.remove();
+
+        // auto-expire
+        setTimeout(()=>{ if (item.isConnected) item.remove(); }, 12000);
+      }
+
+      // ------------------------------------------------------------
+      // ENTITIES
+      // ------------------------------------------------------------
+      class ChestEntity {
+        constructor({ id, x, y, rarity='common', claimable=true, taken=false, expires_at=null, spawned_at=null, owner=null }){
+          this.id = String(id ?? `${x}|${y}|c`);
+          this.x = toNumber(x);
+          this.y = toNumber(y);
+          this.rarity = rarity || 'common';
+          this.claimable = !!claimable;
+          this.taken = !!taken;
+          this.owner = owner || null;
+
+          const sa = ts(spawned_at) || new Date();
+          const ea = ts(expires_at) || new Date(sa.getTime() + CONFIG.chestTtlSecondsFallback*1000);
+          this.spawnedAt = sa;
+          this.expiresAt = ea;
+
+          this.t = 0;
+        }
+        get expired(){ return Date.now() >= this.expiresAt.getTime(); }
+        update(dt){
+          this.t += dt;
+        }
+        draw(ctx, tr){
+          const { toScreen, cellSizeX, cellSizeY } = tr;
+          const pos = toScreen(this.x, this.y);
+
+          const sizeW = cellSizeX * 1.6;
+          const sizeH = cellSizeY * 1.6;
+
+          const pulse = 1 + Math.sin(this.t * 4.5) * 0.06;
+          const alpha = this.taken ? 0.45 : (this.expired ? 0.25 : 1);
+
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.translate(pos.x, pos.y);
+          ctx.scale(pulse, pulse);
+
+          if (Assets.chest){
+            ctx.drawImage(Assets.chest, -sizeW/2, -sizeH/2, sizeW, sizeH);
+          } else {
+            ctx.fillStyle = this.claimable && !this.taken ? '#ccaa00' : '#555';
+            ctx.fillRect(-sizeW/2, -sizeH/2, sizeW, sizeH);
+          }
+
+          // timer
+          const left = Math.max(0, this.expiresAt.getTime() - Date.now());
+          const label = this.taken ? 'CLAIMED' : (this.expired ? 'EXPIRED' : fmtHMS(left));
+          ctx.globalAlpha = Math.min(1, alpha + 0.15);
+          ctx.fillStyle = 'rgba(0,0,0,.65)';
+          const w = sizeW * 2.0;
+          const h = sizeH * 0.42;
+          ctx.fillRect(-w/2, sizeH*0.65, w, h);
+          ctx.strokeStyle = this.taken ? 'rgba(255,255,255,.25)' : 'rgba(255,255,255,.35)';
+          ctx.strokeRect(-w/2, sizeH*0.65, w, h);
+          ctx.fillStyle = 'rgba(255,255,255,.92)';
+          ctx.font = '12px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(label, 0, sizeH*0.65 + h/2);
+
+          ctx.restore();
+        }
+      }
+
+      class PerkEntity {
+        constructor({ id, perkName, wax_account, dir, x, y, speed, amp, freq }){
+          this.id = id || `perk-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+          this.perkName = perkName || 'dragon';
+          this.wax_account = wax_account || '';
+          this.dir = dir || 'left-to-right';
+          this.x = toNumber(x);
+          this.yBase = toNumber(y);
+          this.amp = toNumber(amp);
+          this.freq = toNumber(freq);
+          this.speed = toNumber(speed);
+
+          // sprite anim
+          this.t = 0;
+          this.frame = 0;
+          this.tick = 0;
+          this.frameDelay = 6;
+          this.frames = 6;
+
+          // drop logic: ONE roll during flight, at a chosen progress point
+          this.hasDropped = false;
+          this.dropPlannedAt = randRange(CONFIG.perkDropAtMin, CONFIG.perkDropAtMax);
+          this.dropRolled = false;
+          this.done = false;
+
+          this.image = Assets.perks[this.perkName] || null;
+        }
+
+        waveY(x){ return this.yBase + Math.sin(x * this.freq) * this.amp; }
+
+        update(dt, world, engine){
+          this.t += dt;
+
+          // animate frames
+          this.tick++;
+          if (this.tick >= this.frameDelay){
+            this.tick = 0;
+            this.frame = (this.frame + 1) % this.frames;
+          }
+
+          // move
+          const dirFactor = this.dir === 'left-to-right' ? 1 : -1;
+          this.x += this.speed * dirFactor * dt;
+
+          const { minX, maxX } = engine.getBounds();
+          const progress = clamp((this.x - minX) / Math.max(1e-6, (maxX - minX)), 0, 1);
+
+          // plan/roll drop exactly once, only by the perk owner (the one who clicked "launch perk")
+          // This preserves "start logic of chest drop is click launch perk", avoids multi-browser duplication.
+          if (!this.dropRolled && progress >= this.dropPlannedAt){
+            this.dropRolled = true;
+            const isOwnerClient = (this.wax_account && State.user.wax_account && this.wax_account === State.user.wax_account);
+            if (isOwnerClient){
+              const roll = Math.random();
+              if (roll < CONFIG.perkDropChance){
+                this.hasDropped = true;
+                engine.requestChestSpawnFromPerk(this);
+              }
+            }
+          }
+
+          const { minY, maxY } = engine.getBounds();
+          const wy = this.waveY(this.x);
+          if (this.x < minX - 1 || this.x > maxX + 1 || wy < minY - 2 || wy > maxY + 2){
+            this.done = true; // perk disappears after crossing arena
           }
         }
-      }
-      return 0;
-    }
 
-    // ------------------------------------------------------------
-    // TRAIL (more realistic)
-    // ------------------------------------------------------------
-    class NeonTrail {
-      constructor(){
-        this.points = []; // {x,y, tMs, spd}
-        this.maxPoints = CONFIG.trailMaxPoints;
-        this.baseMaxAgeMs = CONFIG.trailBaseMaxAgeMs;
-        this.minDist = CONFIG.trailMinPointDist;
-        this._lastAddX = null;
-        this._lastAddY = null;
-      }
+        draw(ctx, tr){
+          const { toScreen, cellSizeX, cellSizeY } = tr;
+          const wy = this.waveY(this.x);
+          const pos = toScreen(this.x, wy);
 
-      reset(){
-        this.points.length = 0;
-        this._lastAddX = this._lastAddY = null;
-      }
+          ctx.save();
+          ctx.translate(pos.x, pos.y);
 
-      add(x, y, speed, nowMs){
-        const lx = this._lastAddX, ly = this._lastAddY;
-        if (lx != null){
-          const dx = x - lx, dy = y - ly;
-          if (dx*dx + dy*dy < this.minDist*this.minDist) return;
-        }
-        this._lastAddX = x; this._lastAddY = y;
+          const sizeW = cellSizeX * 2.8;
+          const sizeH = cellSizeY * 2.8;
 
-        this.points.push({ x, y, tMs: nowMs, spd: speed });
-        if (this.points.length > this.maxPoints) this.points.shift();
-      }
-
-      prune(nowMs, speed){
-        // at higher speed the trail *can* be longer
-        const maxAge = this.baseMaxAgeMs + clamp(speed*45, 0, 750);
-        while (this.points.length && (nowMs - this.points[0].tMs) > maxAge) this.points.shift();
-      }
-
-      draw(ctx, tr, mainHue = 170){
-        if (this.points.length < 3) return;
-
-        const { toScreen, cellSizeX, cellSizeY } = tr;
-        const thickBase = Math.max(1, ((cellSizeX+cellSizeY)/2) * 0.10);
-
-        ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-
-        // Smooth-ish path: quadratic segments using midpoints
-        const pts = this.points;
-        const scr = pts.map(p => ({ ...p, s: toScreen(p.x, p.y) }));
-
-        // Draw 2 passes: outer glow + inner core
-        // Outer glow
-        for (let pass = 0; pass < 2; pass++){
-          const isCore = pass === 1;
-          const widthMul = isCore ? 0.70 : 1.95;
-          const alphaMul = isCore ? 0.85 : 0.55;
-
-          ctx.beginPath();
-          const p0 = scr[0].s;
-          ctx.moveTo(p0.x, p0.y);
-
-          for (let i = 1; i < scr.length - 1; i++){
-            const a = scr[i].s;
-            const b = scr[i+1].s;
-            const mx = (a.x + b.x) * 0.5;
-            const my = (a.y + b.y) * 0.5;
-            ctx.quadraticCurveTo(a.x, a.y, mx, my);
+          if (this.image){
+            const srcW = this.image.width / this.frames;
+            const srcH = this.image.height;
+            const sx = this.frame * srcW;
+            ctx.drawImage(this.image, sx, 0, srcW, srcH, -sizeW/2, -sizeH/2, sizeW, sizeH);
+          } else {
+            ctx.fillStyle = 'rgba(56,189,248,.9)';
+            ctx.fillRect(-sizeW/2, -sizeH/2, sizeW, sizeH);
           }
-          const pn = scr[scr.length - 1].s;
-          ctx.lineTo(pn.x, pn.y);
 
-          // We can’t gradient-stroke per segment, so we approximate via multiple strokes
-          // by slicing the path in segments (cheap enough at <= 60 points).
-          ctx.stroke(); // “warm” path to keep geometry
+          // owner label (small)
+          ctx.globalAlpha = 0.85;
+          ctx.fillStyle = 'rgba(0,0,0,.65)';
+          ctx.fillRect(-sizeW/2, sizeH*0.55, sizeW, sizeH*0.30);
+          ctx.fillStyle = 'rgba(255,255,255,.92)';
+          ctx.font = '12px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(this.wax_account ? this.wax_account.slice(0,12) : 'perk', 0, sizeH*0.70);
 
-          // Segment-based draw for fading + width
-          for (let i = 0; i < scr.length - 2; i++){
-            const A = scr[i], B = scr[i+1], C = scr[i+2];
-            const k = i / Math.max(1, (scr.length - 3)); // 0 head -> 1 tail
-            const fade = (1 - k);
-            const spd = Math.max(A.spd, B.spd, C.spd);
+          ctx.restore();
+        }
+      }
 
-            const w = thickBase * widthMul * (0.8 + clamp(spd/16, 0, 1)*0.9) * (0.35 + 0.65*fade);
-            const a = (0.03 + 0.26*fade*fade) * alphaMul;
+      class GoblinEntity {
+        constructor({ id, owner, count=1, color='#fff', x=0, y=0 }){
+          this.id = id;
+          this.owner = owner || '';
+          this.count = Math.max(1, toNumber(count)||1);
+          this.color = color;
 
-            // two-tone neon (cyan + magenta-ish)
-            const hueA = mainHue;
-            const hueB = (mainHue + 140) % 360;
+          this.x = toNumber(x);
+          this.y = toNumber(y);
 
-            ctx.lineWidth = w;
-            ctx.strokeStyle = `hsla(${hueA}, 100%, ${isCore ? 70 : 60}%, ${a})`;
+          this.target = { x: this.x, y: this.y };
+          this.heading = randRange(-Math.PI, Math.PI);
+          this.speed = randRange(1.0, 1.8);
+          this.turnRate = randRange(2.1, 3.2);
+          this.pauseUntil = 0;
+
+          this.speedBoostUntil = 0;
+          this.digging = false;
+          this.walkPhase = randRange(0, Math.PI*2);
+
+          this.trail = [];
+          this.trailMax = 24;
+        }
+
+        update(dt, engine){
+          const now = performance.now();
+          const { minX, maxX, minY, maxY } = engine.getBounds();
+
+          if (now < this.pauseUntil){
+            this.walkPhase += dt * 6.0;
+            return;
+          }
+
+          // choose a new random target when close
+          const distTarget2 = (this.target.x - this.x)**2 + (this.target.y - this.y)**2;
+          if (distTarget2 < 0.09){
+            this.target.x = randRange(minX+1, maxX-1);
+            this.target.y = randRange(minY+1, maxY-1);
+            if (Math.random() < 0.12) this.pauseUntil = now + 260 + Math.random()*360;
+          }
+
+          let desired = Math.atan2(this.target.y - this.y, this.target.x - this.x);
+
+          // mild chest attraction (visual only). Actual claim is handled by server or by owner client for their own goblin.
+          const chests = engine.chestById.values();
+          let bestChest = null, bestD2 = Infinity;
+          for (const chest of chests){
+            if (!chest.claimable || chest.taken || chest.expired) continue;
+            const dx = chest.x - this.x, dy = chest.y - this.y;
+            const d2 = dx*dx + dy*dy;
+            if (d2 < bestD2){ bestD2 = d2; bestChest = chest; }
+          }
+          if (bestChest){
+            const dx = bestChest.x - this.x, dy = bestChest.y - this.y;
+            const d = Math.hypot(dx,dy);
+            const SEEK_R = 4;
+            if (d < SEEK_R){
+              const toChest = Math.atan2(dy,dx);
+              const bias = 0.35 + (1 - d/SEEK_R) * 0.3;
+              desired = desired + (toChest - desired) * clamp(bias, 0, 0.75);
+
+              if (d < 1.5) this.speedBoostUntil = now + 1200;
+
+              // auto-claim for THIS BROWSER user only (needs auth). Others are expected to be handled by backend.
+              const isMyGoblin = (this.owner && State.user.wax_account && this.owner === State.user.wax_account);
+              if (isMyGoblin){
+                const r = CONFIG.chestAutoClaimRadiusChebyshev;
+                const within = Math.abs(bestChest.x - this.x) <= r && Math.abs(bestChest.y - this.y) <= r;
+                if (within){
+                  engine.tryClaimChest(bestChest, this.owner);
+                }
+              }
+            }
+          }
+
+          // separation to avoid stacking
+          let sepX = 0, sepY = 0, seen = 0; const SEP_R = 1.2;
+          for (const other of engine.goblinById.values()){
+            if (other === this) continue;
+            const dx = this.x - other.x, dy = this.y - other.y;
+            const d2 = dx*dx + dy*dy;
+            if (d2 > SEP_R*SEP_R || d2 === 0) continue;
+            const d = Math.sqrt(d2);
+            const push = (SEP_R - d)/SEP_R;
+            sepX += (dx/(d || 0.0001)) * push;
+            sepY += (dy/(d || 0.0001)) * push;
+            seen++;
+          }
+          if (seen){
+            const ang = Math.atan2(sepY, sepX);
+            desired = desired + (ang - desired) * 0.25;
+          }
+
+          // keep inside bounds
+          if (this.x < minX+0.5 || this.x > maxX-0.5 || this.y < minY+0.5 || this.y > maxY-0.5){
+            const back = Math.atan2(clamp(this.y, minY+1, maxY-1)-this.y, clamp(this.x, minX+1, maxX-1)-this.x);
+            desired = desired + (back - desired) * 0.65;
+          }
+
+          // turn
+          const maxTurn = this.turnRate * dt;
+          let dHeading = ((desired - this.heading + Math.PI*3) % (Math.PI*2)) - Math.PI;
+          dHeading = clamp(dHeading, -maxTurn, maxTurn);
+          this.heading += dHeading;
+          this.heading += randRange(-0.16, 0.16) * dt;
+
+          // speed
+          const boost = now < this.speedBoostUntil ? 1.8 : 1.0;
+          const v = this.speed * boost;
+          this.x += Math.cos(this.heading) * v * dt;
+          this.y += Math.sin(this.heading) * v * dt;
+
+          // trail
+          const last = this.trail[this.trail.length-1];
+          const cellDist = 0.20;
+          if (!last || (last.x - this.x)**2 + (last.y - this.y)**2 > cellDist*cellDist){
+            this.trail.push({x:this.x, y:this.y});
+            if (this.trail.length > this.trailMax) this.trail.shift();
+          }
+
+          this.walkPhase += dt * 10;
+        }
+
+        drawTrail(ctx, tr){
+          const { toScreen, cellSizeX, cellSizeY } = tr;
+          const segs = this.trail;
+          if (!segs || segs.length < 2) return;
+
+          ctx.save();
+          for (let i=0;i<segs.length-1;i++){
+            const a = toScreen(segs[i].x, segs[i].y);
+            const b = toScreen(segs[i+1].x, segs[i+1].y);
             ctx.beginPath();
-            ctx.moveTo(A.s.x, A.s.y);
-            ctx.quadraticCurveTo(B.s.x, B.s.y, C.s.x, C.s.y);
-            ctx.stroke();
-
-            ctx.lineWidth = Math.max(1, w*0.55);
-            ctx.strokeStyle = `hsla(${hueB}, 100%, ${isCore ? 65 : 55}%, ${a*0.55})`;
-            ctx.beginPath();
-            ctx.moveTo(A.s.x, A.s.y);
-            ctx.quadraticCurveTo(B.s.x, B.s.y, C.s.x, C.s.y);
+            ctx.moveTo(a.x,a.y);
+            ctx.lineTo(b.x,b.y);
+            const thick = Math.max(1.0, ((cellSizeX + cellSizeY)/2) * 0.18 * (0.5 + (i/segs.length)));
+            ctx.lineWidth = thick;
+            ctx.strokeStyle = 'rgba(255,255,255,.22)';
             ctx.stroke();
           }
+          ctx.restore();
         }
 
-        ctx.restore();
-      }
-    }
+        draw(ctx, tr){
+          const { toScreen, cellSizeX, cellSizeY } = tr;
+          const pos = toScreen(this.x, this.y);
+          const sizeW = cellSizeX * 2.4;
+          const sizeH = cellSizeY * 2.4;
+          const bob = Math.sin(this.walkPhase) * sizeH * 0.08;
 
-    // ------------------------------------------------------------
-    // ENTITIES
-    // ------------------------------------------------------------
-    class GoblinEntity {
-      constructor({ id, owner, color, x, y }){
-        this.id = String(id);
-        this.owner = owner || 'goblin';
-        this.color = color || '#facc15';
+          this.drawTrail(ctx, tr);
 
-        this.x = x; this.y = y;
-        this.vx = randRange(-0.4, 0.4);
-        this.vy = randRange(-0.4, 0.4);
-        this.ax = 0; this.ay = 0;
+          ctx.save();
+          ctx.translate(pos.x, pos.y + bob);
 
-        this.maxSpeed = randRange(CONFIG.goblinSpeedMin, CONFIG.goblinSpeedMax);
-        this.boostSpeed = this.maxSpeed * 1.35;
+          if (Assets.goblin){
+            ctx.drawImage(Assets.goblin, -sizeW/2, -sizeH/2, sizeW, sizeH);
+          } else {
+            ctx.fillStyle = 'rgba(70,255,170,.85)';
+            ctx.fillRect(-sizeW/2, -sizeH/2, sizeW, sizeH);
+          }
 
-        // scaled up steering for higher speeds
-        this.maxForce = 26.0;
-        this.friction = 0.90;
+          // owner label + count
+          const labelW = sizeW * 2.05, labelH = sizeH * 0.45;
+          ctx.fillStyle = 'rgba(0,0,0,.70)';
+          ctx.fillRect(-labelW/2, sizeH*0.58, labelW, labelH);
+          ctx.strokeStyle = this.color;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(-labelW/2, sizeH*0.58, labelW, labelH);
 
-        // wander jitter
-        this.wanderAngle = randRange(0, Math.PI*2);
-        this.wanderRadius = 1.05;
-        this.wanderDistance = 1.85;
-        this.wanderJitter = 1.55;
+          ctx.fillStyle = 'rgba(255,255,255,.94)';
+          ctx.textAlign='center';
+          ctx.textBaseline='middle';
+          ctx.font = '12px system-ui, sans-serif';
+          const name = this.owner ? this.owner.slice(0,12) : 'goblin';
+          ctx.fillText(`${name} · x${formatCompact(this.count)}`, 0, sizeH*0.58 + labelH/2);
 
-        // waypoint target (makes movement purposeful without chests)
-        this.tx = x; this.ty = y;
-        this.nextTargetAt = 0;
-
-        // facing
-        this.facing = 1;
-        this._faceLockUntil = 0;
-
-        // gait
-        this.gaitPhase = randRange(0, Math.PI*2);
-        this.walkPhase = randRange(0, Math.PI*2);
-
-        // trail
-        this.trail = new NeonTrail();
-        this.trailHue = 165; // can vary by owner hash if you want
-      }
-
-      _normalize(x, y){
-        const m = Math.hypot(x, y);
-        if (m < 1e-9) return {x:0, y:0};
-        return {x:x/m, y:y/m};
-      }
-      _limitVec(x, y, max){
-        const m = Math.hypot(x, y);
-        if (m <= max || m < 1e-9) return {x, y};
-        const s = max / m;
-        return {x:x*s, y:y*s};
-      }
-      _seek(tx, ty, desiredSpeed){
-        const dx = tx - this.x;
-        const dy = ty - this.y;
-        const n = this._normalize(dx, dy);
-        const dvx = n.x * desiredSpeed;
-        const dvy = n.y * desiredSpeed;
-        return { x: dvx - this.vx, y: dvy - this.vy };
-      }
-      _arrive(tx, ty, desiredSpeed, slowRadius=3.2){
-        const dx = tx - this.x, dy = ty - this.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < 1e-6) return {x:0,y:0};
-        const t = clamp(dist / slowRadius, 0, 1);
-        const sp = desiredSpeed * (0.15 + 0.85 * t);
-        return this._seek(tx, ty, sp);
-      }
-      _wander(){
-        this.wanderAngle += randRange(-1,1) * this.wanderJitter * 0.11;
-        const v = this._normalize(this.vx, this.vy);
-        const dir = (Math.hypot(v.x,v.y) < 1e-3)
-          ? {x:Math.cos(this.wanderAngle), y:Math.sin(this.wanderAngle)}
-          : v;
-
-        const px = this.x + dir.x * this.wanderDistance;
-        const py = this.y + dir.y * this.wanderDistance;
-
-        const wx = px + Math.cos(this.wanderAngle) * this.wanderRadius;
-        const wy = py + Math.sin(this.wanderAngle) * this.wanderRadius;
-
-        return this._seek(wx, wy, this.maxSpeed * 0.65);
-      }
-      _wallAvoid(engine){
-        const { minX, maxX, minY, maxY } = engine.getBounds();
-        const soft = 2.2;
-
-        const dl = (this.x - minX);
-        const dr = (maxX - this.x);
-        const dt = (this.y - minY);
-        const db = (maxY - this.y);
-
-        let fx = 0, fy = 0;
-        const repel = (d) => {
-          const dd = Math.max(0.06, d);
-          const t = clamp((soft - dd)/soft, 0, 1);
-          return (t*t) / (dd*dd);
-        };
-
-        fx += repel(dl) *  1;
-        fx += repel(dr) * -1;
-        fy += repel(dt) *  1;
-        fy += repel(db) * -1;
-
-        return { x: fx * this.maxForce * 2.3, y: fy * this.maxForce * 2.3 };
-      }
-      _separation(engine){
-        const SEP_R = 1.35;
-        const SEP_R2 = SEP_R*SEP_R;
-        let sx=0, sy=0, count=0;
-
-        for (const other of engine.goblins.values()){
-          if (other === this) continue;
-          const dx = this.x - other.x;
-          const dy = this.y - other.y;
-          const d2 = dx*dx + dy*dy;
-          if (d2 < 1e-6 || d2 > SEP_R2) continue;
-
-          const d = Math.sqrt(d2);
-          const push = (SEP_R - d) / SEP_R;
-          sx += (dx / d) * push;
-          sy += (dy / d) * push;
-          count++;
+          ctx.restore();
         }
-        if (!count) return {x:0, y:0};
-        sx/=count; sy/=count;
-        return { x: sx * this.maxForce * 1.2, y: sy * this.maxForce * 1.2 };
-      }
-      _pickNewTarget(engine, now){
-        const { minX, maxX, minY, maxY } = engine.getBounds();
-        this.tx = randRange(minX+2, maxX-2);
-        this.ty = randRange(minY+2, maxY-2);
-        this.nextTargetAt = now + 1300 + Math.random()*2200;
       }
 
-      update(dt, engine){
-        const now = performance.now();
+      function colorByIndex(i){
+        const palette = ['#facc15','#38bdf8','#22c55e','#f97316','#a855f7','#ec4899','#e11d48'];
+        return palette[i % palette.length];
+      }
 
-        if (!this.nextTargetAt || now > this.nextTargetAt || Math.hypot(this.tx-this.x, this.ty-this.y) < 1.2){
-          this._pickNewTarget(engine, now);
+      // ------------------------------------------------------------
+      // ENGINE
+      // ------------------------------------------------------------
+      class GameEngine {
+        constructor(canvas){
+          this.canvas = canvas;
+          this.ctx = canvas.getContext('2d');
+          this.world = { width: CONFIG.worldCols, height: CONFIG.worldRows };
+
+          this.transform = {
+            cellSizeX: 16, cellSizeY: 16,
+            offsetX: 0, offsetY: 0,
+            canvasWidth: canvas.width, canvasHeight: canvas.height,
+            toScreen: (x,y)=>({x,y})
+          };
+
+          this.running = false;
+          this.lastTs = performance.now();
+
+          this.goblinById = new Map();
+          this.chestById = new Map();
+          this.perkById = new Map();
+
+          this.handleResize = this.handleResize.bind(this);
+          window.addEventListener('resize', this.handleResize, { passive:true });
+          this.handleResize();
         }
 
-        // gait variation (keeps motion organic at higher speeds)
-        this.gaitPhase += dt * 3.0;
-        const gait = 0.78 + 0.20*Math.sin(this.gaitPhase) + 0.10*Math.sin(this.gaitPhase*0.55 + 1.8);
-
-        const desiredSpeed = this.maxSpeed * gait;
-
-        const fTarget = this._arrive(this.tx, this.ty, desiredSpeed, 4.6);
-        const fWander = this._wander();
-        const fWall = this._wallAvoid(engine);
-        const fSep  = this._separation(engine);
-
-        this.ax = 0; this.ay = 0;
-
-        // Stronger “intent”, but keep small wander so it doesn’t look robotic
-        this.ax += fTarget.x * 1.10;
-        this.ay += fTarget.y * 1.10;
-
-        this.ax += fWall.x   * 1.00;
-        this.ay += fWall.y   * 1.00;
-
-        this.ax += fSep.x    * 0.75;
-        this.ay += fSep.y    * 0.75;
-
-        this.ax += fWander.x * 0.40;
-        this.ay += fWander.y * 0.40;
-
-        const aLim = this._limitVec(this.ax,this.ay,this.maxForce);
-        this.ax=aLim.x; this.ay=aLim.y;
-
-        this.vx += this.ax * dt;
-        this.vy += this.ay * dt;
-
-        this.vx *= this.friction;
-        this.vy *= this.friction;
-
-        const vLim = this._limitVec(this.vx,this.vy,desiredSpeed);
-        this.vx=vLim.x; this.vy=vLim.y;
-
-        const { minX, maxX, minY, maxY } = engine.getBounds();
-        this.x = clamp(this.x + this.vx*dt, minX, maxX);
-        this.y = clamp(this.y + this.vy*dt, minY, maxY);
-
-        // facing (anti-flicker)
-        if (now > this._faceLockUntil){
-          if (this.vx > 0.25) { this.facing = 1; this._faceLockUntil = now + 120; }
-          else if (this.vx < -0.25){ this.facing = -1; this._faceLockUntil = now + 120; }
+        destroy(){
+          this.stop();
+          window.removeEventListener('resize', this.handleResize);
         }
 
-        const speedNow = Math.hypot(this.vx, this.vy);
-        this.walkPhase += dt * (10.0 + speedNow * 1.8);
-
-        // trail
-        const nowMs = Date.now();
-        this.trail.add(this.x, this.y, speedNow, nowMs);
-        this.trail.prune(nowMs, speedNow);
-      }
-
-      draw(ctx, tr){
-        // trail first (behind)
-        const sp = Math.hypot(this.vx, this.vy);
-        this.trail.draw(ctx, tr, this.trailHue);
-
-        const { toScreen, cellSizeX, cellSizeY } = tr;
-        const pos = toScreen(this.x, this.y);
-
-        const sizeW = cellSizeX * 2.55;
-        const sizeH = cellSizeY * 2.55;
-
-        const bob = Math.sin(this.walkPhase) * sizeH * (0.07 + 0.03*clamp(sp/18,0,1));
-        const lean = clamp(this.vx / (this.maxSpeed || 1), -1, 1) * 0.24;
-
-        ctx.save();
-        ctx.translate(pos.x, pos.y + bob);
-        ctx.rotate(lean);
-        ctx.scale(this.facing, 1);
-
-        if (Assets.goblin){
-          ctx.drawImage(Assets.goblin, -sizeW/2, -sizeH/2, sizeW, sizeH);
-        } else {
-          ctx.fillStyle = '#6c3';
-          ctx.fillRect(-sizeW/2, -sizeH/2, sizeW, sizeH);
-        }
-        ctx.restore();
-
-        // label
-        ctx.save();
-        ctx.translate(pos.x, pos.y + bob);
-
-        const labelW = sizeW * 1.85, labelH = sizeH * 0.42;
-        ctx.fillStyle = 'rgba(0,0,0,0.65)';
-        ctx.fillRect(-labelW/2, sizeH*0.62, labelW, labelH);
-
-        ctx.strokeStyle = this.color;
-        ctx.strokeRect(-labelW/2, sizeH*0.62, labelW, labelH);
-
-        ctx.fillStyle = '#eef4ff';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.font = '12px sans-serif';
-        ctx.fillText(this.owner || 'goblin', 0, sizeH*0.62 + labelH/2);
-        ctx.restore();
-      }
-    }
-
-    function colorByIndex(i){
-      const palette = ['#facc15','#38bdf8','#22c55e','#f97316','#a855f7','#ec4899','#e11d48'];
-      return palette[i % palette.length];
-    }
-
-    // ------------------------------------------------------------
-    // ENGINE
-    // ------------------------------------------------------------
-    class GameEngine {
-      constructor(canvas){
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
-
-        this.world = { width: CONFIG.worldCols, height: CONFIG.worldRows };
-
-        this.transform = {
-          cellSizeX: 16,
-          cellSizeY: 16,
-          offsetX: 0,
-          offsetY: 0,
-          canvasWidth: canvas.width,
-          canvasHeight: canvas.height,
-          toScreen: (x,y)=>({x,y})
-        };
-
-        this.running = false;
-        this.lastTs = performance.now();
-
-        this.goblinById = new Map();
-        this.goblins = this.goblinById;
-
-        this.handleResize = this.handleResize.bind(this);
-        window.addEventListener('resize', this.handleResize, { passive:true });
-        this.handleResize();
-      }
-
-      destroy(){
-        this.stop();
-        window.removeEventListener('resize', this.handleResize);
-      }
-
-      getBounds(){
-        return { minX:1, minY:1, maxX:this.world.width-2, maxY:this.world.height-2 };
-      }
-
-      handleResize(){
-        const root = document.getElementById('canvas-wrap') || document.getElementById('app-root');
-        const rect = root.getBoundingClientRect();
-
-        const containerW = Math.max(320, Math.floor(rect.width));
-        const maxH = Math.max(220, Math.floor((window.innerHeight || 800) * (State.overlay ? 0.92 : 0.50)));
-
-        const targetW = containerW;
-        const targetH = maxH;
-
-        const dpr = State.dpr;
-        this.canvas.width  = Math.round(targetW * dpr);
-        this.canvas.height = Math.round(targetH * dpr);
-        this.canvas.style.width  = targetW + 'px';
-        this.canvas.style.height = targetH + 'px';
-
-        const ctx = this.ctx;
-        ctx.setTransform(dpr,0,0,dpr,0,0);
-        ctx.imageSmoothingEnabled = true;
-
-        const padX = 8, padY = 8;
-        const availW = Math.max(50, targetW - padX*2);
-        const availH = Math.max(50, targetH - padY*2);
-
-        const worldW = this.world.width, worldH = this.world.height;
-        const cellSizeX = availW / worldW;
-        const cellSizeY = availH / worldH;
-
-        const areaW = worldW * cellSizeX;
-        const areaH = worldH * cellSizeY;
-        const offsetX = Math.floor((targetW - areaW) / 2);
-        const offsetY = Math.floor((targetH - areaH) / 2);
-
-        this.transform = {
-          cellSizeX, cellSizeY,
-          offsetX, offsetY,
-          canvasWidth: targetW,
-          canvasHeight: targetH,
-          toScreen: (x, y) => ({ x: offsetX + x * cellSizeX, y: offsetY + y * cellSizeY })
-        };
-      }
-
-      clear(){
-        this.ctx.save();
-        this.ctx.setTransform(1,0,0,1,0,0);
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.restore();
-      }
-
-      drawBackground(){
-        const ctx = this.ctx;
-        ctx.save();
-        ctx.setTransform(1,0,0,1,0,0);
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        ctx.restore();
-
-        const { cellSizeX, cellSizeY, offsetX, offsetY } = this.transform;
-        const areaW = this.world.width  * cellSizeX;
-        const areaH = this.world.height * cellSizeY;
-
-        ctx.save();
-        ctx.translate(offsetX, offsetY);
-
-        if (Assets.bg){
-          ctx.globalAlpha = 1.0;
-          ctx.drawImage(Assets.bg, 0, 0, Assets.bg.width, Assets.bg.height, 0, 0, areaW, areaH);
-        } else {
-          ctx.fillStyle = '#111';
-          ctx.fillRect(0, 0, areaW, areaH);
+        getBounds(){
+          return { minX:1, minY:1, maxX:this.world.width-2, maxY:this.world.height-2 };
         }
 
-        // grid
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 1;
-        for (let x = 0; x <= this.world.width; x++){
-          const px = Math.round(x * cellSizeX) + 0.5;
-          ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, areaH); ctx.stroke();
-        }
-        for (let y = 0; y <= this.world.height; y++){
-          const py = Math.round(y * cellSizeY) + 0.5;
-          ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(areaW, py); ctx.stroke();
+        handleResize(){
+          const root = document.getElementById('canvas-wrap') || document.getElementById('app-root');
+          const rect = root.getBoundingClientRect();
+
+          const containerW = Math.max(320, Math.floor(rect.width));
+          const maxH = Math.max(240, Math.floor((window.innerHeight || 900) * 0.55));
+
+          const targetW = containerW;
+          const targetH = maxH;
+
+          const dpr = State.dpr;
+          this.canvas.width  = Math.round(targetW * dpr);
+          this.canvas.height = Math.round(targetH * dpr);
+          this.canvas.style.width  = targetW + 'px';
+          this.canvas.style.height = targetH + 'px';
+
+          const ctx = this.ctx;
+          ctx.setTransform(dpr,0,0,dpr,0,0);
+          ctx.imageSmoothingEnabled = false;
+
+          const padX = 8, padY = 8;
+          const availW = Math.max(50, targetW - padX*2);
+          const availH = Math.max(50, targetH - padY*2);
+
+          const cellSizeX = availW / this.world.width;
+          const cellSizeY = availH / this.world.height;
+
+          const areaW = this.world.width * cellSizeX;
+          const areaH = this.world.height * cellSizeY;
+
+          const offsetX = Math.floor((targetW - areaW) / 2);
+          const offsetY = Math.floor((targetH - areaH) / 2);
+
+          this.transform = {
+            cellSizeX, cellSizeY,
+            offsetX, offsetY,
+            canvasWidth: targetW, canvasHeight: targetH,
+            toScreen: (x, y) => ({ x: offsetX + x * cellSizeX, y: offsetY + y * cellSizeY })
+          };
         }
 
-        ctx.restore();
-      }
+        start(){
+          if (this.running) return;
+          this.running = true;
+          this.lastTs = performance.now();
 
-      start(){
-        if (this.running) return;
-        this.running = true;
-        this.lastTs = performance.now();
-        const loop = (ts)=>{
-          if (!this.running) return;
-          this.tick(ts || performance.now());
+          const loop = (ts) => {
+            if (!this.running) return;
+            this.tick(ts || performance.now());
+            requestAnimationFrame(loop);
+          };
           requestAnimationFrame(loop);
+        }
+        stop(){ this.running = false; }
+
+        tick(ts){
+          const dtMs = ts - this.lastTs;
+          this.lastTs = ts;
+          const dt = Math.min(0.05, Math.max(0.001, dtMs/1000));
+          this.update(dt);
+          this.draw();
+        }
+
+        update(dt){
+          // remove expired perks
+          for (const [id, perk] of this.perkById){
+            perk.update(dt, this.world, this);
+            if (perk.done) this.perkById.delete(id);
+          }
+
+          // update chests + remove expired/taken locally (server will also broadcast updates)
+          for (const [id, chest] of this.chestById){
+            chest.update(dt);
+            if (chest.taken || chest.expired){
+              // don't instantly delete if server hasn't confirmed? for UX yes; keep a short grace.
+              // We'll keep it but fade (handled by draw). Hard delete only when server sends an update with claimable false or taken.
+              // If expired locally, we still let server update catch up.
+            }
+          }
+
+          // goblins
+          for (const gob of this.goblinById.values()){
+            gob.update(dt, this);
+          }
+        }
+
+        clear(){
+          const ctx = this.ctx;
+          ctx.save();
+          ctx.setTransform(1,0,0,1,0,0);
+          ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          ctx.restore();
+        }
+
+        drawBackground(){
+          const ctx = this.ctx;
+
+          ctx.save();
+          ctx.setTransform(1,0,0,1,0,0);
+          ctx.fillStyle = '#000';
+          ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
+          ctx.restore();
+
+          const { cellSizeX, cellSizeY, offsetX, offsetY } = this.transform;
+          const areaW = this.world.width * cellSizeX;
+          const areaH = this.world.height * cellSizeY;
+
+          ctx.save();
+          ctx.translate(offsetX, offsetY);
+
+          if (Assets.bg){
+            ctx.globalAlpha = 1.0;
+            ctx.drawImage(Assets.bg, 0, 0, Assets.bg.width, Assets.bg.height, 0, 0, areaW, areaH);
+          } else {
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0,0,areaW,areaH);
+          }
+
+          ctx.strokeStyle = 'rgba(255,255,255,.10)';
+          ctx.lineWidth = 1;
+
+          for (let x=0; x<=this.world.width; x++){
+            const px = Math.round(x * cellSizeX) + 0.5;
+            ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, areaH); ctx.stroke();
+          }
+          for (let y=0; y<=this.world.height; y++){
+            const py = Math.round(y * cellSizeY) + 0.5;
+            ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(areaW, py); ctx.stroke();
+          }
+
+          ctx.restore();
+        }
+
+        draw(){
+          this.clear();
+          this.drawBackground();
+
+          const ctx = this.ctx;
+          const tr = this.transform;
+
+          // chests (under goblins for nice overlap)
+          for (const chest of this.chestById.values()){
+            chest.draw(ctx, tr);
+          }
+
+          // perks
+          for (const perk of this.perkById.values()){
+            perk.draw(ctx, tr);
+          }
+
+          // goblins on top
+          for (const gob of this.goblinById.values()){
+            gob.draw(ctx, tr);
+          }
+        }
+
+        // ---------- SYNC ----------
+        syncExpeditions(exps){
+          const now = Date.now();
+
+          // create/update goblin entity per wax_account
+          const seen = new Set();
+
+          let i = 0;
+          for (const exp of (exps || [])){
+            const owner = exp?.wax_account || exp?.owner || 'unknown';
+            if (!owner) continue;
+            seen.add(owner);
+
+            const count = exp.total_goblins ?? (Array.isArray(exp.goblin_ids) ? exp.goblin_ids.length : 1);
+
+            let ent = this.goblinById.get(owner);
+            if (!ent){
+              const b = this.getBounds();
+              ent = new GoblinEntity({
+                id: owner,
+                owner,
+                count,
+                color: colorByIndex(i++),
+                x: randRange(b.minX+1, b.maxX-1),
+                y: randRange(b.minY+1, b.maxY-1),
+              });
+              this.goblinById.set(owner, ent);
+            } else {
+              ent.count = Math.max(1, toNumber(count)||1);
+            }
+          }
+
+          // remove entities that no longer have an expedition
+          for (const key of Array.from(this.goblinById.keys())){
+            if (!seen.has(key)) this.goblinById.delete(key);
+          }
+        }
+
+        syncChests(chests){
+          const snap = (chests || []);
+          const seen = new Set();
+
+          for (const c of snap){
+            const id = String(c.id ?? c.chest_id ?? `${c.x}|${c.y}`);
+            seen.add(id);
+            this.upsertChestFromServer(c);
+          }
+
+          // remove chests not present in snapshot
+          for (const key of Array.from(this.chestById.keys())){
+            if (!seen.has(key)) this.chestById.delete(key);
+          }
+        }
+
+        upsertChestFromServer(c){
+          const id = String(c.id ?? c.chest_id ?? `${c.x}|${c.y}`);
+          const claimable = (c.claimable !== false) && !c.claimed && !c.taken && !c.opened;
+          const taken = !!(c.claimed || c.taken || c.opened);
+
+          const cur = this.chestById.get(id);
+          const next = new ChestEntity({
+            id,
+            x: c.x, y: c.y,
+            rarity: c.rarity || c.perk_type || 'common',
+            claimable,
+            taken,
+            expires_at: c.expires_at ?? c.expire_at ?? c.expires,
+            spawned_at: c.spawned_at ?? c.created_at,
+            owner: c.owner ?? c.wax_account ?? null,
+          });
+
+          // preserve time accumulator for smooth pulsing
+          if (cur) next.t = cur.t;
+
+          if (taken || next.expired){
+            // if server marked it taken/expired, remove from map after a short fade window
+            this.chestById.set(id, next);
+            setTimeout(() => {
+              const latest = this.chestById.get(id);
+              if (latest && (latest.taken || latest.expired)) this.chestById.delete(id);
+            }, 800);
+          } else {
+            this.chestById.set(id, next);
+          }
+        }
+
+        upsertChest(chest){
+          const cur = this.chestById.get(chest.id);
+          if (cur) chest.t = cur.t;
+          this.chestById.set(chest.id, chest);
+        }
+
+        spawnPerkFromCommand(perkName, wax_account, perkId=null){
+          const bounds = this.getBounds();
+          const dir = Math.random() < 0.5 ? 'left-to-right' : 'right-to-left';
+          const startX = dir === 'left-to-right' ? bounds.minX - 1 : bounds.maxX + 1;
+          const y = randRange(bounds.minY + 2, bounds.maxY - 2);
+          const amp = randRange(0.6, 1.8);
+          const freq = randRange(0.12, 0.28);
+          const speed = CONFIG.perkFlySpeed;
+
+          const id = perkId ? String(perkId) : `perk-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+          const perk = new PerkEntity({ id, perkName, wax_account, dir, x:startX, y, speed, amp, freq });
+          this.perkById.set(perk.id, perk);
+        }
+
+        // ---------- NEW RULES: CHEST ONLY FROM PERK DROP ----------
+        async requestChestSpawnFromPerk(perk){
+          // chest spawn happens DURING perk flight; start logic is "Launch Perk" click.
+          // This client must be the perk owner (checked in perk update).
+
+          // Spawn near perk position on grid
+          const bounds = this.getBounds();
+          const wy = perk.waveY(perk.x);
+          const baseX = clamp(Math.round(perk.x), bounds.minX, bounds.maxX);
+          const baseY = clamp(Math.round(wy), bounds.minY, bounds.maxY);
+
+          const dx = clamp(baseX + randInt(-1, 1), bounds.minX, bounds.maxX);
+          const dy = clamp(baseY + randInt(-1, 1), bounds.minY, bounds.maxY);
+
+          // Optimistic display (id replaced when server replies / SSE arrives)
+          const optimistic = new ChestEntity({
+            id: `local-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+            x: dx, y: dy,
+            rarity: perk.perkName || 'common',
+            claimable: true,
+            taken: false,
+            spawned_at: new Date(),
+            expires_at: new Date(Date.now() + CONFIG.chestTtlSecondsFallback*1000),
+            owner: perk.wax_account || null,
+          });
+          this.upsertChest(optimistic);
+
+          pushGlobalFeed(`✨ Perk dropped a chest @ (${dx},${dy})`, 'good');
+
+          // Persist to backend + broadcast to all browsers
+          try { syncUserFromStorage(); assertAuth(); } catch {
+            toast('Not signed in', 'Cannot persist chest drop without auth.', 'warn');
+            return;
+          }
+
+          const res = await Api.post('/2spawn_chest', {
+            wax_account: perk.wax_account,
+            perk_type: perk.perkName,
+            x: dx, y: dy
+          }, 12000);
+
+          if (!res.ok){
+            toast('Chest spawn failed', 'Server rejected the drop. It will be removed.', 'bad');
+            this.chestById.delete(optimistic.id);
+            return;
+          }
+
+          // If server returns id, update optimistic chest (SSE may also come; both are safe)
+          const newId = res.data?.chest_id ?? res.data?.id ?? null;
+          const expiresAt = res.data?.expires_at ?? res.data?.expire_at ?? null;
+
+          if (newId != null){
+            this.chestById.delete(optimistic.id);
+            optimistic.id = String(newId);
+            if (expiresAt) optimistic.expiresAt = ts(expiresAt) || optimistic.expiresAt;
+            this.upsertChest(optimistic);
+          }
+
+          toast('Chest dropped!', 'A chest was created and broadcast globally.', 'good');
+        }
+
+        // Auto-claim: for current user only (needs auth). Server may also auto-claim and broadcast.
+        async tryClaimChest(chest, ownerWax){
+          if (!chest || chest.taken || chest.expired) return;
+          if (State.runtime.chestClaimPending.has(chest.id)) return;
+
+          State.runtime.chestClaimPending.add(chest.id);
+
+          // Soft UX: show that we "touched" it; real removal is on server update
+          pushGlobalFeed(`🧲 ${ownerWax.slice(0,12)} touched a chest`, 'warn');
+
+          // Attempt claim endpoint (if backend supports). If not, server might still claim separately.
+          // This is intentionally conservative: no spam, idempotent-friendly.
+          try { syncUserFromStorage(); assertAuth(); } catch {
+            State.runtime.chestClaimPending.delete(chest.id);
+            return;
+          }
+
+          const res = await Api.post('/2claim_chest', {
+            wax_account: State.user.wax_account,
+            user_id: State.user.user_id,
+            usx_token: State.user.usx_token,
+            chest_id: chest.id
+          }, 10000);
+
+          if (res.ok){
+            toast('Chest claimed!', `Rewards will appear in the global feed + Rewards tab.`, 'good');
+          } else {
+            // If 404/501, backend likely claims automatically; don't panic.
+            toast('Chest contact registered', 'Waiting for server confirmation…', 'warn', 3200);
+          }
+
+          setTimeout(()=>State.runtime.chestClaimPending.delete(chest.id), 2500);
+        }
+      }
+
+      // ------------------------------------------------------------
+      // UI - Tabs
+      // ------------------------------------------------------------
+      function setTabsBehavior(){
+        const mapping = [
+          { btn:'tabbtn-my', panel:'tab-my' },
+          { btn:'tabbtn-global', panel:'tab-global' },
+          { btn:'tabbtn-recent', panel:'tab-recent' },
+          { btn:'tabbtn-rewards', panel:'tab-rewards' },
+        ];
+        for (const {btn, panel} of mapping){
+          const b = document.getElementById(btn);
+          const p = document.getElementById(panel);
+          if (!b || !p) continue;
+
+          b.addEventListener('click', () => {
+            for (const {btn:ob, panel:op} of mapping){
+              const bb = document.getElementById(ob);
+              const pp = document.getElementById(op);
+              if (!bb || !pp) continue;
+              const active = (ob === btn);
+              bb.setAttribute('aria-selected', String(active));
+              pp.hidden = !active;
+            }
+          });
+        }
+      }
+
+      // ------------------------------------------------------------
+      // Builder UI
+      // ------------------------------------------------------------
+      function updateCapUI(){
+        const cap = getSendCap();
+        if (State.ui.capLabel) State.ui.capLabel.textContent = String(cap);
+        if (State.ui.reinfLabel) State.ui.reinfLabel.textContent = String(State.expedition.reinforcementCount || 0);
+
+        // My status labels
+        if (State.ui.meOwned) State.ui.meOwned.textContent = formatCompact(State.goblinsUser.length || 0);
+      }
+
+      function buildDurationHint(mins){
+        // Base cost used by BE: 0.8*m + 0.04*m^2 (before resistance reductions)
+        const cost = (m) => 0.8*m + 0.04*m*m;
+        const ref = cost(60)/60;
+        const cur = cost(mins)/mins;
+        const efficiency = Math.max(0.6, Math.min(1.5, ref/cur));
+        const tag = mins<=15 ? 'High yield' : mins<=45 ? 'Balanced' : 'Chill';
+        return `${tag}: short runs complete more often → more loot rolls/hour (×${efficiency.toFixed(2)})`;
+      }
+
+      function initDurationSwitch(){
+        const sel = State.ui.durationSelect;
+        const hint = State.ui.durationHint;
+        if (!sel) return;
+
+        const apply = (valMin) => {
+          State.expedition.durationMinutes = valMin;
+          if (hint) hint.textContent = buildDurationHint(valMin);
+          scheduleForecastIfReady();
         };
-        requestAnimationFrame(loop);
+
+        sel.addEventListener('change', () => apply(Number(sel.value || 30)));
+        apply(Number(sel.value || 30));
       }
 
-      stop(){ this.running = false; }
+      function updateActionButtonsUI(){
+        const btnStart = State.ui.btnStart;
+        const btnPerk  = State.ui.btnPerk;
+        if (!btnStart || !btnPerk) return;
 
-      tick(ts){
-        const dtMs = ts - this.lastTs;
-        this.lastTs = ts;
-        const dt = Math.min(0.05, Math.max(0.001, dtMs/1000));
-        this.update(dt);
-        this.draw();
-      }
+        const val = canSendExpedition();
+        btnStart.disabled = !val.ok;
 
-      update(dt){
-        for (const g of this.goblinById.values()){
-          g.update(dt, this);
+        let startHint = 'Start an expedition with the selected goblins.';
+        if (!val.ok){
+          if (val.reason==='in_progress') startHint = 'You already have an expedition in progress.';
+          if (val.reason==='no_selection') startHint = 'Select at least one goblin.';
+          if (val.reason==='over_cap') startHint = 'Selection exceeds your current cap.';
+          if (val.reason==='tired_present') startHint = 'Your selection includes tired goblins (below minimum Daily Power).';
         }
-      }
+        btnStart.title = startHint;
 
-      draw(){
-        this.clear();
-        this.drawBackground();
-        for (const g of this.goblinById.values()){
-          g.draw(this.ctx, this.transform);
+        const onCd = isPerkOnCooldown();
+        btnPerk.disabled = onCd || !State.user?.wax_account;
+        if (onCd){
+          const secs = Math.max(0, Math.ceil((State.runtime.perkCooldownUntil - Date.now())/1000));
+          btnPerk.title = `Perk on cooldown. Ready in ${secs}s.`;
+        } else {
+          btnPerk.title = 'Launch a perk. A perk may drop exactly one chest during flight.';
         }
-      }
 
-      syncExpeditions(exps=[]){
-        const seen = new Set();
-        const { minX, maxX, minY, maxY } = this.getBounds();
-
-        exps.forEach((exp, idx)=>{
-          const owner = exp.wax_account || exp.owner || 'player';
-          const expId = String(exp.expedition_id ?? exp.id ?? idx);
-          seen.add(expId);
-
-          let g = this.goblinById.get(expId);
-          const color = colorByIndex(idx);
-
-          if (!g){
-            const gx = randRange(minX+1, maxX-1);
-            const gy = randRange(minY+1, maxY-1);
-            g = new GoblinEntity({ id: expId, owner, color, x: gx, y: gy });
-            this.goblinById.set(expId, g);
-          }
-
-          g.owner = owner;
-          g.color = color;
-
-          const sr = toNumber(exp.seconds_remaining);
-          if (sr > 0) {
-            const snap = exp._snapAt || Date.now();
-            g._endsAt = snap + sr*1000;
+        // top status pill too
+        if (State.ui.perkCdLabel){
+          if (onCd){
+            const secs = Math.max(0, Math.ceil((State.runtime.perkCooldownUntil - Date.now())/1000));
+            State.ui.perkCdLabel.textContent = `${secs}s`;
           } else {
-            g._endsAt = getEndsAt(exp)?.getTime() || null;
+            State.ui.perkCdLabel.textContent = 'ready';
           }
-        });
-
-        for (const [id] of this.goblinById){
-          if (!seen.has(id)) this.goblinById.delete(id);
         }
       }
-    }
 
-    // ------------------------------------------------------------
-    // PANELS
-    // ------------------------------------------------------------
-    const GlobalTimers = { tickId:null, rows:new Map() };
+      function moveControlsIntoBuilder(){
+        const host = document.getElementById('builder-controls');
+        const duration = document.getElementById('duration-switch');
+        const capLine  = document.getElementById('cap-line');
+        const actions  = document.getElementById('action-buttons');
+        if (!host || !duration || !capLine || !actions) return;
 
-    function recalcMyExpeditionFlagAndUI(){
-      const mine = (State.globalExpeditions || []).some(e => (e.wax_account || e.owner) === State.user.wax_account);
-      State.runtime.expeditionInProgress = !!mine;
-      updateActionButtonsUI();
-      if (!mine) scheduleForecastIfReady();
-    }
+        host.replaceChildren();
 
-    function renderGlobalPanel(){
-      const host = State.ui.globalList, label = State.ui.globalCount;
-      if (!host || !label) return;
+        const row1 = document.createElement('div'); row1.className = 'row';
+        const row2 = document.createElement('div'); row2.className = 'row';
 
-      host.innerHTML = '';
-      GlobalTimers.rows.clear();
+        row1.appendChild(duration);
+        const spacer = document.createElement('div'); spacer.className = 'spacer';
+        row1.appendChild(spacer);
+        row1.appendChild(capLine);
 
-      const exps = State.globalExpeditions || [];
-      label.textContent = String(exps.length);
+        row2.appendChild(actions);
 
-      exps.forEach(exp=>{
-        const owner = exp.wax_account || exp.owner || 'unknown';
-        const count = exp.total_goblins ?? (Array.isArray(exp.goblin_ids) ? exp.goblin_ids.length : 0);
+        host.appendChild(row1);
+        host.appendChild(row2);
 
-        const sr = fromSecondsRemaining(exp);
-        const endsAt = sr ? sr.endsAt() : getEndsAt(exp);
-        const leftMs = sr ? sr.leftMs() : getTimeLeftMs(exp);
-
-        const row = document.createElement('div');
-        row.setAttribute('role','group');
-        row.style.display = 'grid';
-        row.style.gridTemplateColumns = '1fr auto';
-        row.style.gap = '8px';
-
-        const left = document.createElement('div');
-        left.innerHTML =
-          `<strong>${safe(owner)}</strong> &middot; <span class="badge">Goblins: ${formatCompact(count)}</span>`;
-
-        const right = document.createElement('div');
-        right.style.textAlign = 'right';
-        right.innerHTML =
-          `<div style="font-weight:900">
-             <span class="badge ok">⏳ <span data-eta>${leftMs!=null?fmtHMS(leftMs):'--:--:--'}</span></span>
-           </div>
-           <div style="font-size:12px;opacity:.85;margin-top:4px">
-             ends <span data-end>${endsAt?timeHM(endsAt):'--:--'}</span>
-           </div>`;
-
-        row.appendChild(left);
-        row.appendChild(right);
-        host.appendChild(row);
-
-        GlobalTimers.rows.set(row, {
-          exp,
-          etaEl: right.querySelector('[data-eta]'),
-          endEl: right.querySelector('[data-end]'),
-          sr,
-        });
-      });
-
-      ensureGlobalTimers();
-    }
-
-    function renderRecentPanel(){
-      const host = State.ui.recentList;
-      if (!host) return;
-      host.innerHTML = '';
-
-      (State.recentExpeditions || []).forEach(item=>{
-        const chips = item.chips ?? 0;
-        const nfts  = item.nfts_count ?? 0;
-        const tsVal = item.timestamp ?? item.time ?? item.created_at;
-        const t = tsVal ? timeHM(tsVal) : '';
-        const div = document.createElement('div');
-        div.textContent = `${item.wax_account} · ${t} · +${formatCompact(chips)} CHIPS${nfts?` · ${nfts} NFT`:''}`;
-        host.appendChild(div);
-      });
-    }
-
-    function ensureGlobalTimers(){
-      if (GlobalTimers.tickId) cancelAnimationFrame(GlobalTimers.tickId);
-
-      const tick = ()=>{
-        const now = Date.now();
-
-        for (const [row, meta] of GlobalTimers.rows){
-          let leftMs = null, endAt = null;
-
-          if (meta.sr){
-            leftMs = meta.sr.leftMs(now);
-            endAt  = meta.sr.endsAt();
-          } else {
-            leftMs = getTimeLeftMs(meta.exp, new Date(now));
-            endAt  = getEndsAt(meta.exp);
-          }
-
-          if (leftMs == null){
-            if (meta.etaEl) meta.etaEl.textContent = '--:--:--';
-            continue;
-          }
-          if (leftMs <= 0){
-            row.remove();
-            GlobalTimers.rows.delete(row);
-
-            const id = String(meta.exp.expedition_id ?? meta.exp.id ?? '');
-            State.globalExpeditions = State.globalExpeditions.filter(e => String(e.expedition_id ?? e.id) !== id);
-            if (State.ui.globalCount) State.ui.globalCount.textContent = String(State.globalExpeditions.length);
-            if (State.engine) State.engine.goblinById.delete(id);
-
-            recalcMyExpeditionFlagAndUI();
-            continue;
-          }
-
-          if (meta.etaEl) meta.etaEl.textContent = fmtHMS(leftMs);
-          if (meta.endEl && endAt) meta.endEl.textContent = timeHM(endAt);
-        }
-
-        GlobalTimers.tickId = requestAnimationFrame(tick);
-      };
-
-      GlobalTimers.tickId = requestAnimationFrame(tick);
-    }
-
-    // ------------------------------------------------------------
-    // TICKER
-    // ------------------------------------------------------------
-    function updateTicker(){
-      const el = State.ui.ticker;
-      if (!el) return;
-
-      const latest = State.recentExpeditions?.[0];
-      if (latest){
-        el.innerHTML = `<strong>${safe(latest.wax_account)}</strong> finished: +${formatCompact(latest.chips)} CHIPS${latest.nfts_count?` · ${latest.nfts_count} NFT`:''}`;
-        return;
-      }
-      el.textContent = 'Waiting for events…';
-    }
-
-    // ------------------------------------------------------------
-    // TABS / LAYOUT / OVERLAY
-    // ------------------------------------------------------------
-    function setTabsBehavior(){
-      const tabs = document.getElementById('tabs');
-      const my = document.getElementById('tab-my');
-      const global = document.getElementById('tab-global');
-      const recent = document.getElementById('tab-recent');
-
-      function activate(panelName){
-        my.hidden = panelName !== 'tab-my';
-        global.hidden = panelName !== 'tab-global';
-        recent.hidden = panelName !== 'tab-recent';
-
-        tabs.querySelectorAll('button[role="tab"]').forEach(b=>{
-          b.setAttribute('aria-selected', String(b.dataset.panel === panelName));
-          b.tabIndex = (b.dataset.panel === panelName) ? 0 : -1;
-        });
-
-        if (panelName === 'tab-global') renderGlobalPanel();
-        if (panelName === 'tab-recent') renderRecentPanel();
+        actions.title = 'Start an expedition or launch a perk (cooldown applies).';
+        capLine.title = 'Cap is based on Reinforcement Troops NFTs (max 40), always capped at 250.';
       }
 
-      tabs.querySelectorAll('button[role="tab"]').forEach(btn=>{
-        btn.addEventListener('click', ()=> activate(btn.dataset.panel));
-      });
+      function hydrateGoblinBuilder(){
+        const listHost = State.ui.listHost;
+        if (!listHost) return;
 
-      activate('tab-my');
-    }
+        const q = (State.ui.fltSearch?.value || '').trim().toLowerCase();
+        const rarity = State.ui.fltRarity?.value || '';
+        const minPower = Number(State.ui.fltPower?.value || 0);
 
-    function applyOverlayMode(){
-      if (!State.overlay) return;
-
-      const hideIds = [
-        'panels','app-footer','news-banner','action-bar','legend','subtitle'
-      ];
-      hideIds.forEach(id=>{
-        const el = document.getElementById(id);
-        if (el) el.hidden = true;
-      });
-
-      const header = document.getElementById('app-header');
-      if (header) header.style.padding = '8px';
-
-      const wrap = document.getElementById('canvas-wrap');
-      if (wrap){
-        wrap.style.width = '100%';
-        wrap.style.maxWidth = '100%';
-        wrap.style.height = Math.floor((window.innerHeight||800) * 0.95) + 'px';
-      }
-
-      const h2 = document.querySelector('#game-area > h2');
-      if (h2) h2.hidden = true;
-    }
-
-    function mountBuilderControls(){
-      const host = document.getElementById('builder-controls');
-      const duration = document.getElementById('duration-switch');
-      const capLine  = document.getElementById('cap-line');
-      const actions  = document.getElementById('action-buttons');
-      const hintBox  = document.getElementById('action-hint');
-      if (!host || !duration || !capLine || !actions) return;
-
-      host.innerHTML = '';
-
-      const row1 = document.createElement('div');
-      const row2 = document.createElement('div');
-
-      row1.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;';
-      row2.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-start;margin-top:8px;';
-
-      duration.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;';
-
-      const sel  = document.getElementById('sel-duration');
-      const hint = document.getElementById('duration-hint');
-      if (sel){
-        sel.style.maxWidth = '160px';
-        sel.style.width = 'auto';
-        sel.style.padding = '4px 8px';
-        sel.style.borderRadius = '6px';
-        sel.style.font = 'inherit';
-        sel.style.lineHeight = '1.2';
-        sel.style.boxSizing = 'border-box';
-        sel.style.appearance = 'menulist';
-      }
-      if (hint){
-        hint.style.display = 'block';
-        hint.style.opacity = '.85';
-        hint.style.marginLeft = '0';
-      }
-
-      [duration, sel, capLine, actions].filter(Boolean).forEach(el=>{
-        el.removeAttribute('hidden');
-        el.style.visibility = 'visible';
-        el.style.opacity = '1';
-        if (getComputedStyle(el).display === 'none'){
-          el.style.display = (el === sel ? 'inline-block' : 'flex');
-        }
-      });
-
-      row1.appendChild(duration);
-      row1.appendChild(capLine);
-      row2.appendChild(actions);
-
-      host.appendChild(row1);
-      host.appendChild(row2);
-
-      if (hintBox){
-        hintBox.style.cssText = 'margin-top:8px;opacity:.85;font-size:12px;line-height:1.35;';
-      }
-    }
-
-    // ------------------------------------------------------------
-    // BUILDER RENDER
-    // ------------------------------------------------------------
-    function hydrateGoblinBuilder(){
-      const listHost = State.ui.listHost;
-      if (!listHost) return;
-
-      const q = (State.ui.fltSearch?.value || '').trim().toLowerCase();
-      const rarity = State.ui.fltRarity?.value || '';
-      const minPower = Number(State.ui.fltPower?.value || 0);
-
-      function applyFilters(arr){
-        return arr.filter(g=>{
+        const filtered = State.goblinsUser.filter(g => {
           const name = String(g.name || '').toLowerCase();
           const okQ = !q || name.includes(q) || String(g.asset_id).includes(q);
           const okR = !rarity || String(g.rarity || '').toLowerCase() === rarity.toLowerCase();
           const okP = (g.daily_power_num || 0) >= minPower;
           return okQ && okR && okP;
         });
-      }
 
-      const filtered = applyFilters(State.goblinsUser);
-      const cap = getSendCap();
-      const COLLAPSED = 30;
+        const cap = getSendCap();
+        const COLLAPSED = 30;
+        const showAll = listHost.getAttribute('data-show-all') === '1';
+        const visible = showAll ? filtered : filtered.slice(0, COLLAPSED);
+        listHost.replaceChildren();
 
-      const showAll = listHost.getAttribute('data-show-all') === '1';
-      const visible = showAll ? filtered : filtered.slice(0, COLLAPSED);
+        const maxPower = Math.max(1, ...filtered.map(g => g.daily_power_num || 0));
 
-      listHost.innerHTML = '';
+        for (const g of visible){
+          const tired = isGoblinTired(g);
+          const sel = State.selectedGoblinIds.has(g.asset_id);
+          const pct = clamp(Math.round((g.daily_power_num || 0)/maxPower*100), 0, 100);
 
-      visible.forEach(g=>{
-        const tired = isGoblinTired(g);
-        const sel = State.selectedGoblinIds.has(g.asset_id);
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'goblin-card';
+          btn.setAttribute('role','checkbox');
+          btn.setAttribute('aria-checked', String(sel));
+          btn.dataset.id = g.asset_id;
+          btn.disabled = tired;
 
-        const card = document.createElement('button');
-        card.type = 'button';
-        card.setAttribute('role','checkbox');
-        card.setAttribute('aria-checked', String(sel));
-        card.dataset.id = g.asset_id;
-        card.title = tired ? 'Resting (below min power)' : 'Click to select/deselect';
-        card.tabIndex = tired ? -1 : 0;
+          const nft = State.nftIndex.get(String(g.asset_id));
+          const r = getStatFromNFT(nft,'resistance');
+          const l = getStatFromNFT(nft,'loot_hungry');
+          const s = getStatFromNFT(nft,'speed');
+          const a = getStatFromNFT(nft,'accuracy');
 
-        card.addEventListener('keydown', (e)=>{
-          if (tired) return;
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
-        });
+          btn.innerHTML = `
+            <div>
+              <div class="title">
+                <span>#${safe(g.asset_id)}</span>
+                <span style="opacity:.85">${safe(g.name || 'Goblin')}</span>
+                <span class="pill">${safe(g.rarity || 'unknown')}</span>
+                ${tired ? `<span class="pill" style="border-color: rgba(255,90,110,.38);">RESTING</span>` : ``}
+              </div>
+              <div class="meta">
+                <span class="pill">Daily Power: <b>${formatCompact(g.daily_power_num || 0)}</b></span>
+                <span class="pill" title="Resistance reduces Daily Power consumption per goblin">R <b>${formatCompact(r)}</b></span>
+                <span class="pill" title="Loot-Hungry increases min/max reward range">L <b>${formatCompact(l)}</b></span>
+                <span class="pill" title="Speed reduces expedition duration">S <b>${formatCompact(s)}</b></span>
+                <span class="pill" title="Accuracy increases average rewards within the range">A <b>${formatCompact(a)}</b></span>
+              </div>
+              <div class="powerbar" title="Relative daily power">
+                <div style="width:${pct}%;"></div>
+              </div>
+            </div>
+            <div>
+              ${sel ? `<span class="badge ok">Selected</span>` : `<span class="badge">Pick</span>`}
+            </div>
+          `;
 
-        card.textContent = `#${g.asset_id} · ${g.name} · ${g.rarity || 'Unknown'} · Power ${g.daily_power_num}` + (tired?' · RESTING':'');
+          btn.title = tired
+            ? 'Resting (below minimum daily power threshold).'
+            : (sel ? 'Click to deselect' : 'Click to select');
 
-        if (!tired){
-          card.addEventListener('click', ()=>{
-            if (State.selectedGoblinIds.has(g.asset_id)) State.selectedGoblinIds.delete(g.asset_id);
-            else if (State.selectedGoblinIds.size < cap) State.selectedGoblinIds.add(g.asset_id);
+          btn.addEventListener('click', () => {
+            if (State.selectedGoblinIds.has(g.asset_id)){
+              State.selectedGoblinIds.delete(g.asset_id);
+            } else {
+              if (State.selectedGoblinIds.size >= cap){
+                toast('Cap reached', `You can select up to ${cap} goblins (max 250).`, 'warn');
+                return;
+              }
+              State.selectedGoblinIds.add(g.asset_id);
+            }
             hydrateGoblinBuilder();
           });
-        } else {
-          card.disabled = true;
+
+          listHost.appendChild(btn);
         }
 
-        listHost.appendChild(card);
-      });
+        // toggle more
+        if (State.ui.btnToggleMore){
+          const hasOverflow = filtered.length > COLLAPSED;
+          State.ui.btnToggleMore.hidden = !hasOverflow;
+          State.ui.btnToggleMore.textContent = showAll
+            ? 'View less'
+            : `View more (${filtered.length - visible.length} hidden)`;
+          State.ui.btnToggleMore.onclick = () => {
+            listHost.setAttribute('data-show-all', showAll ? '0' : '1');
+            hydrateGoblinBuilder();
+          };
+        }
 
-      if (State.ui.btnToggleMore){
-        const hasOverflow = filtered.length > COLLAPSED;
-        State.ui.btnToggleMore.hidden = !hasOverflow;
-        State.ui.btnToggleMore.textContent = showAll ? 'View less' : `View more (${filtered.length - visible.length} hidden)`;
-        State.ui.btnToggleMore.onclick = ()=>{
-          listHost.setAttribute('data-show-all', showAll ? '0' : '1');
+        // summary
+        const selArr = getSelectedGoblins();
+        const sums = selArr.reduce((acc, g) => {
+          const nft = State.nftIndex.get(String(g.asset_id));
+          acc.res += getStatFromNFT(nft,'resistance');
+          acc.loot += getStatFromNFT(nft,'loot_hungry');
+          acc.spd += getStatFromNFT(nft,'speed');
+          acc.acc += getStatFromNFT(nft,'accuracy');
+          return acc;
+        }, {res:0, loot:0, spd:0, acc:0});
+
+        if (State.ui.summaryCount){
+          const over = selArr.length > cap;
+          const tiredCount = State.goblinsUser.filter(isGoblinTired).length;
+          State.ui.summaryCount.innerHTML =
+            `${formatCompact(selArr.length)} / ${formatCompact(cap)} selected` +
+            (over ? ` <span class="badge err" title="Over cap. Remove some goblins.">Over cap</span>` : '') +
+            (tiredCount ? ` <span class="badge warn" title="Some goblins are tired (below threshold).">${formatCompact(tiredCount)} tired</span>` : '');
+        }
+        if (State.ui.summaryStats){
+          State.ui.summaryStats.textContent =
+            `${formatCompact(sums.res)} / ${formatCompact(sums.loot)} / ${formatCompact(sums.spd)} / ${formatCompact(sums.acc)}`;
+        }
+
+        // after render
+        updateActionButtonsUI();
+        scheduleForecastIfReady();
+      }
+
+      function wireBuilderUI(){
+        State.ui.fltSearch?.addEventListener('input', hydrateGoblinBuilder);
+        State.ui.fltRarity?.addEventListener('change', hydrateGoblinBuilder);
+        if (State.ui.fltPower){
+          State.ui.fltPower.addEventListener('input', () => {
+            if (State.ui.fltPowerLabel) State.ui.fltPowerLabel.textContent = String(State.ui.fltPower.value || 0);
+            hydrateGoblinBuilder();
+          });
+        }
+
+        State.ui.btnFirst && (State.ui.btnFirst.onclick = () => {
+          State.selectedGoblinIds.clear();
+          const cap = getSendCap();
+          const eligible = State.goblinsUser.filter(g => !isGoblinTired(g));
+          eligible.slice(0, cap).forEach(g => State.selectedGoblinIds.add(g.asset_id));
+
+          // fallback if none selected
+          if (State.selectedGoblinIds.size === 0 && State.goblinsUser.length){
+            const tired = State.goblinsUser.filter(isGoblinTired);
+            tired.slice(0, cap).forEach(g => State.selectedGoblinIds.add(g.asset_id));
+          }
           hydrateGoblinBuilder();
-        };
-      }
+        });
 
-      // summary
-      const selArr = State.goblinsUser.filter(g => State.selectedGoblinIds.has(g.asset_id));
-      const sums = selArr.reduce((acc,g)=>{
-        const nft = State.nftIndex.get(String(g.asset_id));
-        acc.res += getStatFromNFT(nft,'resistance');
-        acc.loot+= getStatFromNFT(nft,'loot_hungry');
-        acc.spd += getStatFromNFT(nft,'speed');
-        acc.acc += getStatFromNFT(nft,'accuracy');
-        return acc;
-      }, {res:0, loot:0, spd:0, acc:0});
+        State.ui.btnBest && (State.ui.btnBest.onclick = () => {
+          State.selectedGoblinIds.clear();
+          const cap = getSendCap();
+          const eligible = [...State.goblinsUser]
+            .filter(g => !isGoblinTired(g))
+            .sort((a,b)=>(b.daily_power_num||0)-(a.daily_power_num||0));
 
-      const selected = selArr.length;
-      if (State.ui.summaryCount) {
-        const over = selected > cap;
-        const tiredCount = State.goblinsUser.filter(isGoblinTired).length;
-        State.ui.summaryCount.innerHTML =
-          `Selected goblins: <b>${selected}</b> / <b>${cap}</b>` +
-          (over ? ` <span class="badge err" title="You are above your cap. Remove some goblins.">Over cap</span>` : '') +
-          (tiredCount ? ` <span class="badge warn" title="Some goblins are below the minimum daily power threshold.">${tiredCount} tired</span>` : '');
-      }
-      if (State.ui.summaryStats){
-        State.ui.summaryStats.textContent =
-          `R: ${formatCompact(sums.res)} · L: ${formatCompact(sums.loot)} · S: ${formatCompact(sums.spd)} · A: ${formatCompact(sums.acc)}`;
-      }
+          eligible.slice(0, cap).forEach(g => State.selectedGoblinIds.add(g.asset_id));
 
-      updateActionButtonsUI();
-      scheduleForecastIfReady();
-    }
+          if (State.selectedGoblinIds.size === 0){
+            const tiredSorted = [...State.goblinsUser]
+              .sort((a,b)=>(b.daily_power_num||0)-(a.daily_power_num||0));
+            tiredSorted.slice(0, cap).forEach(g => State.selectedGoblinIds.add(g.asset_id));
+          }
+          hydrateGoblinBuilder();
+        });
 
-    function wireBuilderUI(){
-      const fSearch = State.ui.fltSearch;
-      const fRarity = State.ui.fltRarity;
-      const fPower  = State.ui.fltPower;
-      const fLabel  = State.ui.fltPowerLabel;
-
-      if (fSearch) fSearch.addEventListener('input', hydrateGoblinBuilder);
-      if (fRarity) fRarity.addEventListener('change', hydrateGoblinBuilder);
-      if (fPower){
-        fPower.addEventListener('input', ()=>{
-          if (fLabel) fLabel.textContent = String(fPower.value||0);
+        State.ui.btnClear && (State.ui.btnClear.onclick = () => {
+          State.selectedGoblinIds.clear();
           hydrateGoblinBuilder();
         });
       }
 
-      if (State.ui.btnFirst) State.ui.btnFirst.onclick = ()=>{
-        State.selectedGoblinIds.clear();
-        const cap = getSendCap();
-        const eligible = State.goblinsUser.filter(g => !isGoblinTired(g));
-        eligible.slice(0, cap).forEach(g=> State.selectedGoblinIds.add(g.asset_id));
-        if (State.selectedGoblinIds.size === 0 && State.goblinsUser.length){
-          State.goblinsUser.slice(0, cap).forEach(g=> State.selectedGoblinIds.add(g.asset_id));
-        }
-        hydrateGoblinBuilder();
-      };
+      // ------------------------------------------------------------
+      // FORECAST (kept endpoint /2expedition_forecast; debounced)
+      // ------------------------------------------------------------
+      const requestForecastDebounced = debounce(requestForecast, 320);
 
-      if (State.ui.btnBest) State.ui.btnBest.onclick = ()=>{
-        State.selectedGoblinIds.clear();
-        const cap = getSendCap();
-        const eligible = [...State.goblinsUser]
-          .filter(g => !isGoblinTired(g))
-          .sort((a,b)=>(b.daily_power_num||0)-(a.daily_power_num||0));
-        eligible.slice(0, cap).forEach(g=> State.selectedGoblinIds.add(g.asset_id));
-        if (State.selectedGoblinIds.size === 0){
-          [...State.goblinsUser]
-            .sort((a,b)=>(b.daily_power_num||0)-(a.daily_power_num||0))
-            .slice(0, cap)
-            .forEach(g=> State.selectedGoblinIds.add(g.asset_id));
-        }
-        hydrateGoblinBuilder();
-      };
+      function scheduleForecastIfReady(){
+        const host = document.getElementById('run-forecast');
+        const duration = State.expedition?.durationMinutes || 0;
+        const sel = getSelectedGoblins();
 
-      if (State.ui.btnClear) State.ui.btnClear.onclick = ()=>{
-        State.selectedGoblinIds.clear();
-        hydrateGoblinBuilder();
-      };
-    }
+        if (!host) return;
 
-    // ------------------------------------------------------------
-    // DATA: USER NFTs
-    // ------------------------------------------------------------
-    async function fetchUserNFTs() {
-      syncUserFromStorage();
-    
-      try { 
-        assertAuth(); 
-      } catch {
-        const statusEl = document.getElementById('my-status');
-        if (statusEl) {
-          statusEl.replaceChildren(); // opzionale
-          statusEl.textContent = 'Not authenticated.';
-        }
-        return;
-      }
-
-      const res = await Api.post('/2user_nfts', {
-        wax_account: State.user.wax_account,
-        user_id: State.user.user_id,
-        usx_token: State.user.usx_token
-      }, CONFIG.userNftsTimeoutMs);
-
-      if (!res.ok){ toast('Could not load goblins'); return; }
-
-      const arr = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.nfts) ? res.data.nfts : []);
-      State.nftsLoaded = true;
-      State.nftIndex.clear();
-
-      const goblins = arr.map(n=>{
-        const id = String(n.asset_id || n.assetId || n.id);
-        State.nftIndex.set(id, n);
-        const dailyPower = toNumber(n.daily_power ?? n.power ?? n.strength ?? n.stats?.power) || 0;
-        return {
-          asset_id: id,
-          name: n.name || n.title || `Goblin #${id}`,
-          rarity: n.rarity || n.tier || '',
-          daily_power_num: dailyPower
-        };
-      });
-
-      State.goblinsUser = goblins;
-
-      const reinfRaw = toNumber(res.data?.reinforcement_count) || toNumber(res.data?.troop_reinforcement) || 0;
-      State.expedition.reinforcementCount = clamp(reinfRaw, 0, 40);
-
-      const st = document.getElementById('my-status');
-      if (st) st.textContent = `Loaded ${goblins.length} goblins for ${State.user.wax_account}.`;
-
-      updateCapUI();
-      hydrateGoblinBuilder();
-      updateActionButtonsUI();
-      scheduleForecastIfReady();
-    }
-
-    // ------------------------------------------------------------
-    // COMMAND: START EXPEDITION
-    // ------------------------------------------------------------
-    async function sendExpedition(){
-      const ids = Array.from(State.selectedGoblinIds);
-      if (!ids.length){ toast('Select at least one goblin'); return; }
-
-      const cap = getSendCap();
-      if (ids.length > cap){
-        toast(`You selected ${ids.length} goblins but your cap is ${cap}.`);
-        return;
-      }
-
-      syncUserFromStorage();
-      try { assertAuth(); } catch { toast('Please log in first'); return; }
-
-      const durationMinutes = State.expedition?.durationMinutes || 30;
-
-      const res = await Api.post('/2start_expedition', {
-        wax_account: State.user.wax_account,
-        user_id: State.user.user_id,
-        usx_token: State.user.usx_token,
-        asset_ids: ids,
-        duration_minutes: durationMinutes
-      }, 20000);
-
-      if (!res.ok){
-        if (res.status === 409 && res.data?.seconds_remaining){
-          const left = fmtHMS(res.data.seconds_remaining*1000);
-          toast(`You already have an expedition in progress. Ends in ${left}.`);
-        } else {
-          toast('Could not start expedition');
-        }
-        return;
-      }
-
-      const durSec = toNumber(res.data?.duration_seconds) || durationMinutes*60;
-      const endAt = new Date(Date.now() + durSec*1000);
-
-      toast(`⛏️ Expedition started! ${ids.length}/${cap} goblins · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`);
-      pushCanvasMsg(`⛏️ ${State.user.wax_account} started an expedition`);
-
-      State.runtime.expeditionInProgress = true;
-      document.getElementById('run-forecast')?.replaceChildren();
-      document.getElementById('run-forecast')?.setAttribute('hidden','');
-
-      updateActionButtonsUI();
-      fetchGlobalSnapshot();
-    }
-
-    // ------------------------------------------------------------
-    // SNAPSHOTS / POLLING / SSE
-    // ------------------------------------------------------------
-    async function fetchGlobalSnapshot(){
-      if (State.net.busySnapshot) return;
-      State.net.busySnapshot = true;
-
-      const t0 = performance.now();
-      try {
-        const [expRes, recentRes] = await Promise.all([
-          Api.post('/2all_expeditions', {}, CONFIG.snapshotTimeoutMs),
-          Api.get('/2recent_expeditions', CONFIG.recentTimeoutMs),
-        ]);
-
-        // Expeditions
-        if (expRes.ok && expRes.data){
-          const exps = Array.isArray(expRes.data) ? expRes.data :
-                       (Array.isArray(expRes.data.items) ? expRes.data.items : []);
-          const snapAt = Date.now();
-          State.globalExpeditions = exps.map(e => (e && typeof e === 'object')
-            ? Object.assign(e, {_snapAt:snapAt})
-            : e);
-
-          if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
-          renderGlobalPanel();
-          ensureGlobalTimers();
-          recalcMyExpeditionFlagAndUI();
+        if (!duration || !sel.length){
+          renderForecast(null, 'Select goblins and a duration to preview.');
+          return;
         }
 
-        // Recent
-        if (recentRes.ok && recentRes.data){
-          const arr = Array.isArray(recentRes.data) ? recentRes.data :
-                      (Array.isArray(recentRes.data.items) ? recentRes.data.items : []);
-          State.recentExpeditions = arr;
-          renderRecentPanel();
+        const payloadKey = JSON.stringify({
+          d: duration,
+          ids: sel.map(g=>g.asset_id).sort(),
+          reinf: State.expedition?.reinforcementCount || 0
+        });
+
+        if (payloadKey === State.runtime.lastForecastPayloadKey && State.runtime.forecastData){
+          renderForecast(State.runtime.forecastData, null);
+          return;
         }
 
-        updateTicker();
-
-        const latency = Math.round(performance.now() - t0);
-        if (State.ui.latency) State.ui.latency.textContent = `${latency} ms · synced`;
-      } catch {
-        // ignore
-      } finally {
-        State.net.busySnapshot = false;
-      }
-    }
-
-    function setPollingInterval(ms){
-      const v = clamp(ms, 2500, 60000);
-      if (State.net.pollMs === v && State.net.pollTimer) return;
-      State.net.pollMs = v;
-      stopPolling();
-      State.net.pollTimer = setInterval(fetchGlobalSnapshot, State.net.pollMs);
-    }
-    function startPolling(){ setPollingInterval(State.net.pollMs || CONFIG.pollIntervalMs); }
-    function stopPolling(){
-      if (State.net.pollTimer){
-        clearInterval(State.net.pollTimer);
-        State.net.pollTimer = null;
-      }
-    }
-
-    function scheduleSseRetry(){
-      if (State.net.sseRetryTimer) return;
-      const wait = State.net.sseRetryMs || 800;
-      State.net.sseRetryTimer = setTimeout(()=>{
-        State.net.sseRetryTimer = null;
-        startSSE();
-      }, wait);
-      State.net.sseRetryMs = Math.min(15000, Math.floor(wait * 1.7));
-    }
-
-    function startSSE(){
-      if (State.net.sse) return;
-
-      let es = null;
-      try {
-        es = new EventSource(CONFIG.apiBase + '/2events?cv=1');
-      } catch {
-        scheduleSseRetry();
-        return;
+        State.runtime.lastForecastPayloadKey = payloadKey;
+        requestForecastDebounced(duration, sel);
       }
 
-      es.onopen = ()=>{
-        State.net.sseRetryMs = 800;
-        setPollingInterval(15000); // fallback lighter
-      };
+      async function requestForecast(duration, selArr){
+        if (State.runtime.expeditionInProgress){
+          renderForecast(null, 'An expedition is running.');
+          return;
+        }
+        if (!selArr?.length || !duration){
+          renderForecast(null,'');
+          return;
+        }
 
-      es.onmessage = (ev)=>{
-        try {
-          const msg = JSON.parse(ev.data);
+        try { syncUserFromStorage(); assertAuth(); }
+        catch { renderForecast(null, 'Sign in to preview rewards.'); return; }
 
-          switch (msg.type){
-            case 'expeditions_snapshot': {
-              if (msg.expeditions){
-                const snapAt = Date.now();
-                State.globalExpeditions = (msg.expeditions || []).map(e =>
-                  (e && typeof e === 'object') ? Object.assign(e,{_snapAt:snapAt}) : e
-                );
-                if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
-                renderGlobalPanel();
-                ensureGlobalTimers();
-                recalcMyExpeditionFlagAndUI();
-              }
-              break;
+        State.runtime.forecastBusy = true;
+        renderForecast(null, 'Calculating…');
+
+        const res = await Api.post('/2expedition_forecast', {
+          wax_account: State.user.wax_account,
+          user_id: State.user.user_id,
+          usx_token: State.user.usx_token,
+          asset_ids: selArr.map(g=>g.asset_id),
+          duration_minutes: duration,
+          reinforcement_count: State.expedition.reinforcementCount || 0
+        }, 14000);
+
+        State.runtime.forecastBusy = false;
+
+        if (!res.ok){
+          renderForecast(null, 'Forecast unavailable (server error).');
+          return;
+        }
+
+        State.runtime.forecastData = res.data || null;
+        renderForecast(State.runtime.forecastData, null);
+      }
+
+      function renderForecast(data, message){
+        const host = document.getElementById('run-forecast');
+        if (!host) return;
+
+        host.hidden = false;
+
+        if (message && !data){
+          host.innerHTML = `<div><b>Forecast</b></div><div class="hint">${safe(message)}</div>`;
+          if (message.toLowerCase().includes('select')) host.hidden = true;
+          return;
+        }
+
+        if (!data){
+          host.innerHTML = `<div><b>Forecast</b></div><div class="hint">No data.</div>`;
+          return;
+        }
+
+        // Try common keys; keep flexible
+        const chipsMin = toNumber(data.chips_min ?? data.min_chips ?? data.chips?.min);
+        const chipsMax = toNumber(data.chips_max ?? data.max_chips ?? data.chips?.max);
+        const nftChance = toNumber(data.nft_chance ?? data.nfts_chance ?? data.nft_drop_chance);
+        const durationSec = toNumber(data.duration_seconds ?? data.effective_duration_seconds ?? data.seconds);
+        const powerTotal = toNumber(data.total_power_cost ?? data.daily_power_cost ?? data.power_cost);
+        const notes = data.notes || data.hint || '';
+
+        host.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;">
+            <b>Forecast</b>
+            <span class="badge">${formatCompact(getSelectedGoblins().length)} goblins · ${formatCompact(State.expedition.durationMinutes)} min</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+            <div class="card" style="padding:10px;">
+              <div style="opacity:.78;font-size:12px;">CHIPS range</div>
+              <div style="font-weight:900;font-size:18px;margin-top:4px;">
+                ${formatCompact(chipsMin)} – ${formatCompact(chipsMax)}
+              </div>
+              <div class="hint">Accuracy increases the expected average inside this range. Loot-Hungry expands the range.</div>
+            </div>
+            <div class="card" style="padding:10px;">
+              <div style="opacity:.78;font-size:12px;">Effective duration</div>
+              <div style="font-weight:900;font-size:18px;margin-top:4px;">
+                ${durationSec ? fmtHMS(durationSec*1000) : `${formatCompact(State.expedition.durationMinutes)}m`}
+              </div>
+              <div class="hint">Speed reduces the nominal duration.</div>
+            </div>
+            <div class="card" style="padding:10px;">
+              <div style="opacity:.78;font-size:12px;">Power cost</div>
+              <div style="font-weight:900;font-size:18px;margin-top:4px;">
+                ${powerTotal ? formatCompact(powerTotal) : '—'}
+              </div>
+              <div class="hint">Resistance reduces Daily Power cost per goblin.</div>
+            </div>
+            <div class="card" style="padding:10px;">
+              <div style="opacity:.78;font-size:12px;">NFT drop</div>
+              <div style="font-weight:900;font-size:18px;margin-top:4px;">
+                ${nftChance ? `${(nftChance*100).toFixed(2)}%` : '—'}
+              </div>
+              <div class="hint">Some drops may be additional NFTs besides CHIPS.</div>
+            </div>
+          </div>
+
+          ${notes ? `<div class="hint" style="margin-top:10px;"><b>Note:</b> ${safe(String(notes))}</div>` : ``}
+        `;
+      }
+
+      // ------------------------------------------------------------
+      // PANELS RENDER (Global / Recent / Rewards)
+      // ------------------------------------------------------------
+      const GlobalTimers = { rows: new Map(), tickId: 0 };
+
+      function renderGlobalPanel(){
+        const host = State.ui.globalList, label = State.ui.globalCount;
+        if (!host || !label) return;
+
+        host.replaceChildren();
+        GlobalTimers.rows.clear();
+
+        const exps = State.globalExpeditions || [];
+        label.textContent = String(exps.length);
+
+        // meta box
+        const meta = exps.reduce((a,e)=>{
+          const c = e.total_goblins ?? (Array.isArray(e.goblin_ids) ? e.goblin_ids.length : 0);
+          a.players += 1;
+          a.goblins += c;
+          const s = e.stats_totals || {};
+          a.res += toNumber(s.resistance);
+          a.loot += toNumber(s.loot_hungry);
+          a.spd += toNumber(s.speed);
+          a.acc += toNumber(s.accuracy);
+          const sr = toNumber(e.seconds_remaining);
+          if (sr>0){ a.etaCount++; a.etaSum += sr; }
+          return a;
+        }, {players:0,goblins:0,res:0,loot:0,spd:0,acc:0,etaSum:0,etaCount:0});
+
+        const avgEta = meta.etaCount ? fmtHMS((meta.etaSum/meta.etaCount)*1000) : '--:--:--';
+
+        const metaBox = document.createElement('div');
+        metaBox.className = 'card';
+        metaBox.style.marginBottom = '10px';
+        metaBox.innerHTML = `
+          <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;">
+            <div><div style="opacity:.75;font-size:12px;">Players</div><div style="font-weight:900">${formatCompact(meta.players)}</div></div>
+            <div><div style="opacity:.75;font-size:12px;">Goblins in play</div><div style="font-weight:900">${formatCompact(meta.goblins)}</div></div>
+            <div><div style="opacity:.75;font-size:12px;">R+L+S+A</div><div style="font-weight:900">${formatCompact(meta.res+meta.loot+meta.spd+meta.acc)}</div></div>
+            <div><div style="opacity:.75;font-size:12px;">Avg time left</div><div style="font-weight:900">${avgEta}</div></div>
+            <div><div style="opacity:.75;font-size:12px;">Tip</div><div style="font-weight:900">Short runs ⇒ more rolls</div></div>
+          </div>
+        `;
+        host.appendChild(metaBox);
+
+        // player rows
+        for (const exp of exps){
+          const owner = exp.wax_account || exp.owner || 'unknown';
+          const count = exp.total_goblins ?? (Array.isArray(exp.goblin_ids) ? exp.goblin_ids.length : 0);
+          const { res, loot, spd, acc } = sumStatsForExp(exp);
+          const sr = fromSecondsRemaining(exp);
+          const endsAt = sr ? sr.endsAt() : getEndsAt(exp);
+          const leftMs = sr ? sr.leftMs() : getTimeLeftMs(exp);
+
+          const row = document.createElement('div');
+          row.className = 'card';
+          row.style.marginBottom = '10px';
+          row.style.display = 'grid';
+          row.style.gridTemplateColumns = '1fr auto';
+          row.style.gap = '10px';
+
+          const left = document.createElement('div');
+          left.innerHTML = `
+            <div style="font-weight:900">${safe(owner)}</div>
+            <div style="margin-top:6px;display:flex;gap:10px;flex-wrap:wrap;">
+              <span class="badge">Goblins army: <b>${formatCompact(count)}</b></span>
+              <span class="badge">R <b>${formatCompact(res)}</b></span>
+              <span class="badge">L <b>${formatCompact(loot)}</b></span>
+              <span class="badge">S <b>${formatCompact(spd)}</b></span>
+              <span class="badge">A <b>${formatCompact(acc)}</b></span>
+            </div>
+          `;
+
+          const right = document.createElement('div');
+          right.style.textAlign = 'right';
+          right.innerHTML = `
+            <div style="font-weight:900">
+              <span class="badge ok">⏳ <span data-eta>${leftMs!=null ? fmtHMS(leftMs) : '--:--:--'}</span></span>
+            </div>
+            <div style="font-size:12px;opacity:.85;margin-top:6px;">
+              ends <span data-end>${endsAt ? timeHM(endsAt) : '--:--'}</span>
+            </div>
+          `;
+
+          row.appendChild(left);
+          row.appendChild(right);
+          host.appendChild(row);
+
+          GlobalTimers.rows.set(row, {
+            exp,
+            etaEl: right.querySelector('[data-eta]'),
+            endEl: right.querySelector('[data-end]'),
+            sr,
+          });
+        }
+
+        ensureGlobalTimers();
+      }
+
+      function renderRecentPanel(){
+        const host = State.ui.recentList;
+        if (!host) return;
+        host.replaceChildren();
+
+        for (const item of (State.recentExpeditions || [])){
+          const chips = item.chips ?? 0;
+          const nfts = item.nfts_count ?? 0;
+          const when = item.timestamp ?? item.time ?? item.created_at;
+          const t = when ? timeHM(when) : '';
+          const div = document.createElement('div');
+          div.className = 'kv';
+          div.innerHTML = `
+            <div class="k">${safe(item.wax_account || 'unknown')} · ${safe(t)}</div>
+            <div class="v">+${formatCompact(chips)} CHIPS${nfts ? ` · ${formatCompact(nfts)} NFT` : ''}</div>
+          `;
+          host.appendChild(div);
+        }
+      }
+
+      function renderRewardsPanel(){
+        const host = State.ui.rewardsList;
+        if (!host) return;
+        host.replaceChildren();
+
+        for (const w of (State.recentWinners || [])){
+          const chips = w.chips ?? 0;
+          const nfts = w.nfts_count ?? 0;
+          const when = w.created_at ?? w.timestamp;
+          const t = when ? timeHM(when) : '';
+          const div = document.createElement('div');
+          div.className = 'kv';
+          div.innerHTML = `
+            <div class="k">${safe(w.wax_account || 'unknown')} · ${safe(t)}</div>
+            <div class="v">+${formatCompact(chips)} CHIPS${nfts ? ` · ${formatCompact(nfts)} NFT` : ''}</div>
+          `;
+          host.appendChild(div);
+        }
+      }
+
+      function ensureGlobalTimers(){
+        if (GlobalTimers.tickId) cancelAnimationFrame(GlobalTimers.tickId);
+
+        const tick = () => {
+          const now = Date.now();
+          for (const meta of GlobalTimers.rows.values()){
+            let leftMs = null, endAt = null;
+            if (meta.sr){
+              leftMs = meta.sr.leftMs(now);
+              endAt = meta.sr.endsAt(now);
+            } else {
+              leftMs = getTimeLeftMs(meta.exp, new Date(now));
+              endAt = getEndsAt(meta.exp);
             }
-
-            case 'recent_expedition': {
-              if (msg.expedition){
-                State.recentExpeditions.unshift(msg.expedition);
-                State.recentExpeditions = State.recentExpeditions.slice(0, 50);
-                renderRecentPanel();
-                updateTicker();
-              }
-              break;
-            }
-
-            default:
-              // ignore other events (perks/chests/etc.)
-              break;
+            if (meta.etaEl) meta.etaEl.textContent = leftMs != null ? fmtHMS(leftMs) : '--:--:--';
+            if (meta.endEl) meta.endEl.textContent = endAt ? timeHM(endAt) : '--:--';
           }
-        } catch {}
-      };
+          GlobalTimers.tickId = requestAnimationFrame(tick);
+        };
+        GlobalTimers.tickId = requestAnimationFrame(tick);
+      }
 
-      es.onerror = ()=>{
-        try { es.close(); } catch {}
-        if (State.net.sse === es) State.net.sse = null;
+      // ------------------------------------------------------------
+      // NETWORK: snapshot + SSE
+      // ------------------------------------------------------------
+      function updateTicker(){
+        const exps = State.globalExpeditions || [];
+        const chestsCount = State.engine ? State.engine.chestById.size : 0;
+        const perksCount  = State.engine ? State.engine.perkById.size : 0;
 
-        setPollingInterval(CONFIG.pollIntervalMs);
-        scheduleSseRetry();
-      };
+        const lastWinner = (State.recentWinners && State.recentWinners[0])
+          ? `${State.recentWinners[0].wax_account} +${formatCompact(State.recentWinners[0].chips || 0)}`
+          : '—';
 
-      State.net.sse = es;
-    }
-
-    // ------------------------------------------------------------
-    // MOUNT
-    // ------------------------------------------------------------
-    function mount(){
-      if (State.mounted) return;
-      State.mounted = true;
-
-      // refs
-      State.ui.canvas = document.getElementById('game-canvas');
-      State.ui.latency = document.getElementById('latency-label');
-      State.ui.ticker = document.getElementById('ticker-line');
-
-      State.ui.toastHost = document.getElementById('toast-host');
-      State.ui.listHost = document.getElementById('goblin-list');
-      State.ui.summaryCount = document.getElementById('sel-count');
-      State.ui.summaryStats = document.getElementById('sel-stats');
-
-      State.ui.fltSearch = document.getElementById('flt-search');
-      State.ui.fltRarity = document.getElementById('flt-rarity');
-      State.ui.fltPower = document.getElementById('flt-power');
-      State.ui.fltPowerLabel = document.getElementById('flt-power-label');
-
-      State.ui.btnFirst = document.getElementById('qs-first');
-      State.ui.btnBest  = document.getElementById('qs-best');
-      State.ui.btnClear = document.getElementById('qs-clear');
-      State.ui.btnToggleMore = document.getElementById('btn-toggle-more');
-
-      State.ui.btnStart = document.getElementById('btn-start');
-      State.ui.btnCopyOverlay = document.getElementById('btn-copy-overlay');
-
-      State.ui.capLabel = document.getElementById('cap-label');
-      State.ui.reinfLabel = document.getElementById('reinf-label');
-
-      State.ui.durationSelect = document.getElementById('sel-duration');
-      State.ui.durationHint = document.getElementById('duration-hint');
-
-      State.ui.globalList = document.getElementById('global-list');
-      State.ui.globalCount = document.getElementById('global-count');
-      State.ui.recentList = document.getElementById('recent-list');
-
-      applyOverlayMode();
-      setTabsBehavior();
-
-      wireBuilderUI();
-      updateCapUI();
-      initDurationSwitch();
-      mountBuilderControls();
-
-      updateActionButtonsUI();
-      scheduleForecastIfReady();
-
-      if (State.ui.btnStart) State.ui.btnStart.onclick = sendExpedition;
-      if (State.ui.btnCopyOverlay) State.ui.btnCopyOverlay.onclick = ()=>{
-        const url = new URL(window.location.href);
-        url.searchParams.set('overlay','1');
-        const text = url.toString();
-        if (navigator.clipboard?.writeText){
-          navigator.clipboard.writeText(text)
-            .then(()=>toast('Overlay link copied'))
-            .catch(()=>{ prompt('Copy overlay link:', text); });
-        } else {
-          prompt('Copy overlay link:', text);
+        if (State.ui.ticker){
+          State.ui.ticker.textContent =
+            `${formatCompact(exps.length)} expeditions · ${formatCompact(chestsCount)} chests · ${formatCompact(perksCount)} perks · last winner: ${lastWinner}`;
         }
-      };
+      }
 
-      // engine
-      State.engine = new GameEngine(State.ui.canvas);
-      loadAssets().then(()=> State.engine && State.engine.handleResize());
-      State.engine.start();
+      async function fetchGlobalSnapshot(){
+        if (State.net.busySnapshot) return;
+        State.net.busySnapshot = true;
+        const t0 = performance.now();
 
-      // data
-      fetchUserNFTs();
-      fetchGlobalSnapshot();
-      startPolling();
-      startSSE();
+        try{
+          const [snapRes, recentRes, winnersRes] = await Promise.all([
+            Api.get('/2snapshot_world', 14000),
+            Api.get('/2recent_expeditions', 14000),
+            Api.get('/2recent_winners', 14000),
+          ]);
 
-      window.addEventListener('orientationchange', ()=>{
-        State.engine && State.engine.handleResize();
-      }, { passive:true });
-    }
+          if (snapRes.ok && snapRes.data){
+            const snapAt = Date.now();
+            const exps = Array.isArray(snapRes.data.expeditions) ? snapRes.data.expeditions : (snapRes.data.items || []);
+            State.globalExpeditions = (exps || []).map(e => (e && typeof e === 'object') ? Object.assign(e, {_snapAt:snapAt}) : e);
 
-    if (!window.GOBLIN_DEX_NO_AUTO_MOUNT) mount();
-    window.GoblinDex = { mount };
-  })();
+            if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
+
+            // optional chests/perks
+            if (State.engine && Array.isArray(snapRes.data.chests)) State.engine.syncChests(snapRes.data.chests);
+            if (State.engine && Array.isArray(snapRes.data.perks)){
+              // if server provides perk list, render them
+              // (we keep minimal handling since SSE is primary)
+            }
+
+            renderGlobalPanel();
+            recalcMyExpeditionFlagAndUI();
+          }
+
+          if (recentRes.ok && recentRes.data){
+            const arr = Array.isArray(recentRes.data) ? recentRes.data : (recentRes.data.items || []);
+            State.recentExpeditions = arr || [];
+            renderRecentPanel();
+          }
+
+          if (winnersRes.ok && winnersRes.data){
+            const arr = Array.isArray(winnersRes.data) ? winnersRes.data : (winnersRes.data.items || []);
+            State.recentWinners = arr || [];
+            renderRewardsPanel();
+          }
+
+          updateTicker();
+
+          const latency = Math.round(performance.now() - t0);
+          if (State.ui.latency) State.ui.latency.textContent = `${latency} ms`;
+          State.ui.syncLabel && (State.ui.syncLabel.textContent = 'synced (poll)');
+        } catch {
+          // ignore
+        } finally {
+          State.net.busySnapshot = false;
+        }
+      }
+
+      function startPolling(){
+        if (State.net.pollTimer) return;
+        State.net.pollTimer = setInterval(fetchGlobalSnapshot, CONFIG.pollIntervalMs);
+      }
+      function stopPolling(){
+        if (State.net.pollTimer){
+          clearInterval(State.net.pollTimer);
+          State.net.pollTimer = null;
+        }
+      }
+
+      function startSSE(){
+        if (State.net.sse) return;
+        try{
+          const es = new EventSource(CONFIG.apiBase + '/2events?cv=1');
+
+          es.onopen = () => {
+            State.ui.syncLabel && (State.ui.syncLabel.textContent = 'synced (SSE)');
+            stopPolling(); // prefer SSE
+          };
+
+          es.onmessage = (ev) => {
+            State.runtime.lastSseAt = Date.now();
+            try{
+              const msg = JSON.parse(ev.data);
+
+              switch (msg.type){
+                case 'expeditions_snapshot': {
+                  const snapAt = Date.now();
+                  if (msg.expeditions){
+                    State.globalExpeditions = (msg.expeditions || []).map(e =>
+                      (e && typeof e==='object') ? Object.assign(e,{_snapAt:snapAt}) : e
+                    );
+                    if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
+                    renderGlobalPanel();
+                    recalcMyExpeditionFlagAndUI();
+                    updateTicker();
+                  }
+                  break;
+                }
+
+                case 'chests_snapshot': {
+                  if (msg.chests && State.engine){
+                    State.engine.syncChests(msg.chests);
+                    updateTicker();
+                  }
+                  break;
+                }
+
+                case 'chest_spawn': {
+                  if (State.engine && msg.chest){
+                    State.engine.upsertChestFromServer(msg.chest);
+                    pushGlobalFeed(`🧰 Chest spawned @ (${msg.chest.x},${msg.chest.y})`, 'good');
+                    updateTicker();
+                  }
+                  break;
+                }
+
+                case 'chest_update': {
+                  if (State.engine && msg.chest){
+                    // claim / expire updates
+                    const wasClaimed = !!(msg.chest.claimed || msg.chest.taken || msg.chest.opened);
+                    State.engine.upsertChestFromServer(msg.chest);
+                    pushGlobalFeed(wasClaimed ? `🏁 Chest claimed` : `⏳ Chest updated`, wasClaimed ? 'good' : 'warn');
+                    updateTicker();
+                  }
+                  break;
+                }
+
+                case 'perk_launch': {
+                  if (State.engine){
+                    State.engine.spawnPerkFromCommand(msg.perk_type || 'dragon', msg.wax_account || '');
+                    pushGlobalFeed(`✨ Perk launched by ${String(msg.wax_account||'player').slice(0,12)}`, 'good');
+                    updateTicker();
+                  }
+                  break;
+                }
+
+                case 'winner': {
+                  if (msg.winner){
+                    State.recentWinners.unshift(msg.winner);
+                    State.recentWinners = State.recentWinners.slice(0,50);
+                    renderRewardsPanel();
+                    updateTicker();
+
+                    const who = String(msg.winner.wax_account || 'player');
+                    pushGlobalFeed(`🏆 ${who.slice(0,12)} won +${formatCompact(msg.winner.chips||0)} CHIPS`, 'good');
+
+                    if (State.user.wax_account && who === State.user.wax_account){
+                      toast('You won!', `+${formatCompact(msg.winner.chips||0)} CHIPS${msg.winner.nfts_count ? ` · ${msg.winner.nfts_count} NFT` : ''}`, 'good', 9000);
+                    }
+                  }
+                  break;
+                }
+
+                case 'recent_expedition': {
+                  if (msg.expedition){
+                    State.recentExpeditions.unshift(msg.expedition);
+                    State.recentExpeditions = State.recentExpeditions.slice(0,50);
+                    renderRecentPanel();
+                    updateTicker();
+
+                    pushGlobalFeed(`⛏️ Expedition ended: ${String(msg.expedition.wax_account||'player').slice(0,12)} +${formatCompact(msg.expedition.chips||0)} CHIPS`, 'warn');
+
+                    if (State.user.wax_account && msg.expedition.wax_account === State.user.wax_account){
+                      toast('Expedition finished!', `+${formatCompact(msg.expedition.chips||0)} CHIPS${msg.expedition.nfts_count ? ` · ${msg.expedition.nfts_count} NFT` : ''}`, 'good', 9000);
+                      State.runtime.expeditionInProgress = false;
+                      updateActionButtonsUI();
+                      scheduleForecastIfReady();
+                    }
+                  }
+                  break;
+                }
+
+                case 'ping':
+                default:
+                  break;
+              }
+            } catch {}
+          };
+
+          es.onerror = () => {
+            // fallback to polling
+            State.ui.syncLabel && (State.ui.syncLabel.textContent = 'reconnecting…');
+            stopSSE();
+            startPolling();
+          };
+
+          State.net.sse = es;
+        } catch {
+          startPolling();
+        }
+      }
+
+      function stopSSE(){
+        if (State.net.sse){
+          try { State.net.sse.close(); } catch {}
+          State.net.sse = null;
+        }
+      }
+
+      // ------------------------------------------------------------
+      // PERSONAL / MY STATUS
+      // ------------------------------------------------------------
+      function recalcMyExpeditionFlagAndUI(){
+        const me = State.user.wax_account;
+        let mine = null;
+        if (me){
+          mine = (State.globalExpeditions || []).find(e => (e.wax_account || e.owner) === me) || null;
+        }
+
+        if (mine){
+          const sr = fromSecondsRemaining(mine);
+          const leftMs = sr ? sr.leftMs() : getTimeLeftMs(mine);
+          State.runtime.expeditionInProgress = (leftMs != null ? leftMs > 0 : true);
+
+          if (State.ui.meExp){
+            const endsAt = sr ? sr.endsAt() : getEndsAt(mine);
+            State.ui.meExp.textContent = leftMs != null
+              ? `running · ${fmtHMS(leftMs)} left (ends ${timeHM(endsAt)})`
+              : 'running';
+          }
+        } else {
+          State.runtime.expeditionInProgress = false;
+          if (State.ui.meExp) State.ui.meExp.textContent = 'idle';
+        }
+
+        updateActionButtonsUI();
+      }
+
+      // ------------------------------------------------------------
+      // DATA: user NFTs
+      // ------------------------------------------------------------
+      async function fetchUserNFTs(){
+        syncUserFromStorage();
+        if (!State.user.wax_account){
+          // allow viewing global without auth
+          return;
+        }
+
+        try { assertAuth(); } catch { return; }
+
+        const res = await Api.post('/2user_nfts', {
+          wax_account: State.user.wax_account,
+          user_id: State.user.user_id,
+          usx_token: State.user.usx_token,
+        }, 18000);
+
+        if (!res.ok || !res.data){
+          toast('Could not load NFTs', 'Check your session/auth.', 'warn');
+          return;
+        }
+
+        // Flexible parsing
+        const gobArr = Array.isArray(res.data?.goblins) ? res.data.goblins
+                     : Array.isArray(res.data?.goblin_nfts) ? res.data.goblin_nfts
+                     : Array.isArray(res.data?.items) ? res.data.items
+                     : [];
+
+        State.goblinsUser = gobArr.map(g => ({
+          asset_id: String(g.asset_id ?? g.id ?? g.assetId),
+          name: g.name ?? g.nft_name ?? g.title ?? 'Goblin',
+          rarity: g.rarity ?? g.tier ?? g.rank ?? 'unknown',
+          daily_power_num: toNumber(g.daily_power_num ?? g.daily_power ?? g.power ?? g.dp ?? 0),
+          raw: g
+        }));
+
+        // Full nft index (if provided)
+        State.nftIndex.clear();
+        for (const gg of gobArr){
+          const aid = String(gg.asset_id ?? gg.id ?? gg.assetId);
+          State.nftIndex.set(aid, gg);
+        }
+
+        const reinfRaw = toNumber(res.data?.reinforcement_count) || toNumber(res.data?.troop_reinforcement) || toNumber(res.data?.reinforcement) || 0;
+        State.expedition.reinforcementCount = clamp(reinfRaw, 0, CONFIG.reinfMax);
+
+        State.nftsLoaded = true;
+
+        // My status
+        if (State.ui.meAccount) State.ui.meAccount.textContent = State.user.wax_account || '—';
+        if (State.ui.meOwned) State.ui.meOwned.textContent = formatCompact(State.goblinsUser.length || 0);
+
+        updateCapUI();
+        hydrateGoblinBuilder();
+        updateActionButtonsUI();
+        scheduleForecastIfReady();
+      }
+
+      // ------------------------------------------------------------
+      // COMMANDS
+      // ------------------------------------------------------------
+      async function sendExpedition(){
+        const ids = Array.from(State.selectedGoblinIds);
+        if (!ids.length){
+          toast('No goblins selected', 'Pick at least one goblin.', 'warn');
+          return;
+        }
+
+        const cap = getSendCap();
+        if (ids.length > cap){
+          toast('Over cap', `You selected ${ids.length} but your cap is ${cap} (max 250).`, 'bad');
+          return;
+        }
+
+        syncUserFromStorage();
+        try { assertAuth(); } catch {
+          toast('Please log in first', 'Auth is required to start an expedition.', 'warn');
+          return;
+        }
+
+        const durationMinutes = State.expedition?.durationMinutes || 30;
+
+        const res = await Api.post('/2start_expedition', {
+          wax_account: State.user.wax_account,
+          user_id: State.user.user_id,
+          usx_token: State.user.usx_token,
+          asset_ids: ids,
+          duration_minutes: durationMinutes,
+        }, 20000);
+
+        if (!res.ok){
+          if (res.status === 409 && res.data?.seconds_remaining){
+            toast('Expedition already running', `Ends in ${fmtHMS(res.data.seconds_remaining*1000)}.`, 'warn');
+          } else {
+            toast('Could not start expedition', 'Server rejected the request.', 'bad');
+          }
+          return;
+        }
+
+        const durSec = toNumber(res.data?.duration_seconds) || durationMinutes*60;
+        const endAt = new Date(Date.now() + durSec*1000);
+
+        toast('⛏️ Expedition started!',
+          `${ids.length}/${cap} goblins · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`,
+          'good',
+          9000
+        );
+
+        State.runtime.expeditionInProgress = true;
+
+        // hide forecast while running
+        const f = document.getElementById('run-forecast');
+        if (f) { f.replaceChildren(); f.hidden = true; }
+
+        updateActionButtonsUI();
+
+        // immediate refresh
+        fetchGlobalSnapshot();
+      }
+
+      async function launchPerk(){
+        syncUserFromStorage();
+        try { assertAuth(); } catch {
+          toast('Please log in first', 'Auth is required to launch a perk.', 'warn');
+          return;
+        }
+
+        if (isPerkOnCooldown()){
+          toast('Perk on cooldown', 'Wait a bit and try again.', 'warn');
+          return;
+        }
+
+        const perkName = 'dragon'; // can be expanded to a selector later
+        const res = await Api.post('/2perk_launch', {
+          wax_account: State.user.wax_account,
+          user_id: State.user.user_id,
+          usx_token: State.user.usx_token,
+          perk_type: perkName,
+        }, 12000);
+
+        if (!res.ok){
+          toast('Could not launch perk', 'Server rejected the request.', 'bad');
+          return;
+        }
+
+        toast('✨ Perk launched!', 'It may drop a chest during flight.', 'good');
+        pushGlobalFeed(`✨ Perk launched by ${State.user.wax_account.slice(0,12)}`, 'good');
+
+        State.runtime.perkCooldownUntil = Date.now() + CONFIG.perkCooldownMs;
+        updateActionButtonsUI();
+
+        // Also show locally immediately (SSE will broadcast to everyone too)
+        State.engine?.spawnPerkFromCommand(perkName, State.user.wax_account, res.data?.perk_id ?? null);
+      }
+
+      // ------------------------------------------------------------
+      // MOUNT
+      // ------------------------------------------------------------
+      function mount(){
+        if (State.mounted) return;
+        State.mounted = true;
+
+        // UI refs
+        State.ui.canvas = document.getElementById('game-canvas');
+        State.ui.latency = document.getElementById('latency-label');
+        State.ui.ticker = document.getElementById('ticker-line');
+        State.ui.tabs = document.getElementById('tabs');
+        State.ui.toastHost = document.getElementById('toast-host');
+
+        State.ui.syncLabel = document.getElementById('sync-label');
+        State.ui.perkCdLabel = document.getElementById('perk-cd-label');
+
+        State.ui.globalFeedRail = document.getElementById('global-feed-rail');
+
+        State.ui.listHost = document.getElementById('goblin-list');
+        State.ui.summaryCount = document.getElementById('sel-count');
+        State.ui.summaryStats = document.getElementById('sel-stats');
+
+        State.ui.fltSearch = document.getElementById('flt-search');
+        State.ui.fltRarity = document.getElementById('flt-rarity');
+        State.ui.fltPower = document.getElementById('flt-power');
+        State.ui.fltPowerLabel = document.getElementById('flt-power-label');
+
+        State.ui.btnFirst = document.getElementById('qs-first');
+        State.ui.btnBest = document.getElementById('qs-best');
+        State.ui.btnClear = document.getElementById('qs-clear');
+        State.ui.btnToggleMore = document.getElementById('btn-toggle-more');
+
+        State.ui.btnStart = document.getElementById('btn-start');
+        State.ui.btnPerk = document.getElementById('btn-perk');
+        State.ui.btnCopyOverlay = document.getElementById('btn-copy-overlay');
+
+        State.ui.capLabel = document.getElementById('cap-label');
+        State.ui.reinfLabel = document.getElementById('reinf-label');
+        State.ui.durationSelect = document.getElementById('sel-duration');
+        State.ui.durationHint = document.getElementById('duration-hint');
+
+        State.ui.panelMy = document.getElementById('tab-my');
+        State.ui.panelGlobal = document.getElementById('tab-global');
+        State.ui.panelRecent = document.getElementById('tab-recent');
+        State.ui.panelRewards = document.getElementById('tab-rewards');
+
+        State.ui.globalList = document.getElementById('global-list');
+        State.ui.globalCount = document.getElementById('global-count');
+        State.ui.recentList = document.getElementById('recent-list');
+        State.ui.rewardsList = document.getElementById('rewards-list');
+
+        State.ui.meAccount = document.getElementById('me-account');
+        State.ui.meOwned = document.getElementById('me-owned');
+        State.ui.meExp = document.getElementById('me-exp');
+
+        // Tabs + builder
+        setTabsBehavior();
+        wireBuilderUI();
+        updateCapUI();
+        initDurationSwitch();
+        moveControlsIntoBuilder();
+
+        // Buttons
+        if (State.ui.btnStart) State.ui.btnStart.onclick = sendExpedition;
+        if (State.ui.btnPerk) State.ui.btnPerk.onclick = launchPerk;
+        if (State.ui.btnCopyOverlay) State.ui.btnCopyOverlay.onclick = async () => {
+          const url = new URL(window.location.href);
+          url.searchParams.set('overlay','1');
+          try{
+            await navigator.clipboard.writeText(url.toString());
+            toast('Overlay link copied', 'Paste it into OBS/your overlay browser source.', 'good');
+          } catch {
+            toast('Copy failed', 'Your browser blocked clipboard access.', 'warn');
+          }
+        };
+
+        // Engine
+        State.engine = new GameEngine(State.ui.canvas);
+        loadAssets().then(()=> State.engine?.handleResize());
+        State.engine.start();
+
+        // bootstrap auth + status
+        syncUserFromStorage();
+        if (State.ui.meAccount) State.ui.meAccount.textContent = State.user.wax_account || '—';
+
+        // Data
+        fetchUserNFTs();
+        fetchGlobalSnapshot();
+        startPolling();
+        startSSE();
+
+        // Keep perk cooldown label updated
+        setInterval(updateActionButtonsUI, 400);
+
+        pushGlobalFeed('Connected to world stream', 'good');
+        updateActionButtonsUI();
+      }
+
+      // Auto-mount
+      if (!window.GOBLIN_DEX_NO_AUTO_MOUNT) mount();
+
+      // Expose for debugging
+      window.GoblinDex = { mount, State };
+    })();
   </script>
 
   <script>
-  (function () {
-    function applyGlow(el, e){
-      const r = el.getBoundingClientRect();
-      const x = ((e.clientX - r.left) / Math.max(1, r.width)) * 100;
-      el.style.setProperty('--mx', x + '%');
-    }
-
-    document.addEventListener('mousemove', (e) => {
-      const el = e.target.closest(
-        '#goblin-list button[role="checkbox"], #quick-select button, #action-buttons button, #tabs button[role="tab"]'
-      );
-      if (!el) return;
-      applyGlow(el, e);
-    }, { passive:true });
-  })();
+    // Optional: subtle hover "light sweep" for interactive elements (kept idea, now broader)
+    (function () {
+      const apply = () => {
+        const targets = document.querySelectorAll('button, .goblin-card');
+        targets.forEach(el => {
+          el.addEventListener('mousemove', (e) => {
+            const r = el.getBoundingClientRect();
+            const x = ((e.clientX - r.left) / r.width) * 100;
+            el.style.setProperty('--mx', x + '%');
+          }, { passive:true });
+        });
+      };
+      apply();
+    })();
   </script>
 </body>
 </html>

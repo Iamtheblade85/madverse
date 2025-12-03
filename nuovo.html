@@ -469,7 +469,21 @@
         <section id="tab-my" class="tab-panel" role="tabpanel" aria-labelledby="tabbtn-my">
           <div class="card" id="my-status">
             <div class="kv"><div class="k">Account</div><div class="v" id="me-account">—</div></div>
-            <div class="kv"><div class="k">Owned Goblins</div><div class="v" id="me-owned">—</div></div>
+            <div class="kv">
+              <div class="k">Owned Goblins</div>
+              <div class="v" style="display:flex; align-items:center; gap:8px;">
+                <span id="me-owned">—</span>
+                <button id="btn-load-goblins" class="secondary" style="padding:6px 10px; border-radius:999px; box-shadow:none;">
+                  Load your goblins
+                </button>
+                <button id="btn-refresh-goblins" class="ghost" style="padding:6px 10px; border-radius:999px; box-shadow:none;" disabled title="Refresh">
+                  ↻
+                </button>
+              </div>
+            </div>
+            <div class="hint" id="goblins-hint" style="margin-top:8px;">
+              Click “Load your goblins” to fetch your NFTs.
+            </div>
             <div class="kv"><div class="k">Selection</div><div class="v" id="sel-count">0</div></div>
             <div class="kv"><div class="k">Totals (R / L / S / A)</div><div class="v" id="sel-stats">0 / 0 / 0 / 0</div></div>
             <div class="kv"><div class="k">Expedition</div><div class="v" id="me-exp">—</div></div>
@@ -600,7 +614,7 @@
           ticker: null,
           syncLabel: null,
           perkCdLabel: null,
-
+          
           globalFeedRail: null,
 
           tabs: null,
@@ -624,6 +638,9 @@
           btnStart: null,
           btnPerk: null,
           btnCopyOverlay: null,
+          btnLoadGoblins: null,
+          btnRefreshGoblins: null,
+          goblinsHint: null,
 
           capLabel: null,
           reinfLabel: null,
@@ -1753,7 +1770,11 @@
         if (State.ui.reinfLabel) State.ui.reinfLabel.textContent = String(State.expedition.reinforcementCount || 0);
 
         // My status labels
-        if (State.ui.meOwned) State.ui.meOwned.textContent = formatCompact(State.goblinsUser.length || 0);
+        if (State.ui.meOwned) {
+          State.ui.meOwned.textContent = State.nftsLoaded
+            ? formatCompact(State.goblinsUser.length || 0)
+            : '—';
+        }
       }
 
       function buildDurationHint(mins){
@@ -2561,32 +2582,54 @@
       // ------------------------------------------------------------
       // DATA: user NFTs
       // ------------------------------------------------------------
-      async function fetchUserNFTs(){
+      async function fetchUserNFTs({ userInitiated = false } = {}){
+        // UI helpers
+        const setHint = (txt) => { if (State.ui.goblinsHint) State.ui.goblinsHint.textContent = txt || ''; };
+        const setBusy = (busy) => {
+          if (State.ui.btnLoadGoblins){
+            State.ui.btnLoadGoblins.disabled = !!busy;
+            State.ui.btnLoadGoblins.textContent = busy ? 'Loading…' : 'Load your goblins';
+          }
+          if (State.ui.btnRefreshGoblins){
+            State.ui.btnRefreshGoblins.disabled = !!busy || !State.nftsLoaded;
+          }
+        };
+      
         syncUserFromStorage();
-        if (!State.user.wax_account){
-          // allow viewing global without auth
+      
+        // niente auto-load: se non ho auth e l’utente non ha cliccato, esco silenzioso
+        try { assertAuth(); }
+        catch {
+          if (userInitiated){
+            toast('Please log in first', 'Missing wax_account / user_id / usx_token.', 'warn');
+            setHint('Please log in, then click “Load your goblins”.');
+          }
           return;
         }
-
-        try { assertAuth(); } catch { return; }
-
+      
+        setBusy(true);
+        setHint('Fetching goblins from backend…');
+      
         const res = await Api.post('/2user_nfts', {
           wax_account: State.user.wax_account,
           user_id: State.user.user_id,
           usx_token: State.user.usx_token,
         }, 18000);
-
+      
         if (!res.ok || !res.data){
-          toast('Could not load NFTs', 'Check your session/auth.', 'warn');
+          setBusy(false);
+          toast('Could not load NFTs', 'Server error or session/auth issue.', 'warn');
+          setHint('Failed to load. Try again.');
           return;
         }
-
-        // Flexible parsing
+      
+        // Flexible parsing (come prima)
         const gobArr = Array.isArray(res.data?.goblins) ? res.data.goblins
                      : Array.isArray(res.data?.goblin_nfts) ? res.data.goblin_nfts
                      : Array.isArray(res.data?.items) ? res.data.items
                      : [];
-
+      
+        // aggiorno “integralmente” stato + index
         State.goblinsUser = gobArr.map(g => ({
           asset_id: String(g.asset_id ?? g.id ?? g.assetId),
           name: g.name ?? g.nft_name ?? g.title ?? 'Goblin',
@@ -2594,27 +2637,53 @@
           daily_power_num: toNumber(g.daily_power_num ?? g.daily_power ?? g.power ?? g.dp ?? 0),
           raw: g
         }));
-
-        // Full nft index (if provided)
+      
         State.nftIndex.clear();
         for (const gg of gobArr){
           const aid = String(gg.asset_id ?? gg.id ?? gg.assetId);
           State.nftIndex.set(aid, gg);
         }
-
-        const reinfRaw = toNumber(res.data?.reinforcement_count) || toNumber(res.data?.troop_reinforcement) || toNumber(res.data?.reinforcement) || 0;
+      
+        const reinfRaw = toNumber(res.data?.reinforcement_count)
+                      || toNumber(res.data?.troop_reinforcement)
+                      || toNumber(res.data?.reinforcement)
+                      || 0;
+      
         State.expedition.reinforcementCount = clamp(reinfRaw, 0, CONFIG.reinfMax);
-
         State.nftsLoaded = true;
-
+      
+        // pulizia selection: tieni solo ID ancora esistenti (refresh “pulito”, zero bug)
+        const validIds = new Set(State.goblinsUser.map(g => String(g.asset_id)));
+        for (const id of Array.from(State.selectedGoblinIds)){
+          if (!validIds.has(String(id))) State.selectedGoblinIds.delete(id);
+        }
+        // rimuovi eventuali “tired” dalla selection (non selezionabili)
+        for (const g of State.goblinsUser){
+          if (isGoblinTired(g)) State.selectedGoblinIds.delete(g.asset_id);
+        }
+        // se cap scende, taglia eccedenza
+        const cap = getSendCap();
+        if (State.selectedGoblinIds.size > cap){
+          const keep = [];
+          for (const id of State.selectedGoblinIds){ keep.push(id); }
+          State.selectedGoblinIds = new Set(keep.slice(0, cap));
+          toast('Selection trimmed', `Cap is ${cap}. Selection adjusted.`, 'warn', 4000);
+        }
+      
         // My status
         if (State.ui.meAccount) State.ui.meAccount.textContent = State.user.wax_account || '—';
         if (State.ui.meOwned) State.ui.meOwned.textContent = formatCompact(State.goblinsUser.length || 0);
-
+      
         updateCapUI();
         hydrateGoblinBuilder();
         updateActionButtonsUI();
         scheduleForecastIfReady();
+      
+        setHint(`Loaded ${State.goblinsUser.length} goblins.`);
+        setBusy(false);
+      
+        // abilita refresh
+        if (State.ui.btnRefreshGoblins) State.ui.btnRefreshGoblins.disabled = false;
       }
 
       // ------------------------------------------------------------
@@ -2769,6 +2838,9 @@
         State.ui.meAccount = document.getElementById('me-account');
         State.ui.meOwned = document.getElementById('me-owned');
         State.ui.meExp = document.getElementById('me-exp');
+        State.ui.btnLoadGoblins = document.getElementById('btn-load-goblins');
+        State.ui.btnRefreshGoblins = document.getElementById('btn-refresh-goblins');
+        State.ui.goblinsHint = document.getElementById('goblins-hint');
 
         // Tabs + builder
         setTabsBehavior();
@@ -2799,9 +2871,16 @@
         // bootstrap auth + status
         syncUserFromStorage();
         if (State.ui.meAccount) State.ui.meAccount.textContent = State.user.wax_account || '—';
+        if (State.ui.btnLoadGoblins) {
+          State.ui.btnLoadGoblins.onclick = () => fetchUserNFTs({ userInitiated: true });
+        }
+        if (State.ui.btnRefreshGoblins) {
+          State.ui.btnRefreshGoblins.onclick = () => fetchUserNFTs({ userInitiated: true });
+        }
+        if (State.ui.btnRefreshGoblins) State.ui.btnRefreshGoblins.disabled = true;
+        if (State.ui.goblinsHint) State.ui.goblinsHint.textContent = 'Click “Load your goblins” to fetch your NFTs.';
 
         // Data
-        fetchUserNFTs();
         fetchGlobalSnapshot();
         startPolling();
         startSSE();

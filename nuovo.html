@@ -2341,7 +2341,7 @@
 
         try{
           const [snapRes, recentRes, winnersRes] = await Promise.all([
-            Api.get('/2snapshot_world', 14000),
+            Api.get('/2world_snapshot', 14000),
             Api.get('/2recent_expeditions', 14000),
             Api.get('/2recent_winners', 14000),
           ]);

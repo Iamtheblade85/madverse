@@ -770,6 +770,7 @@
         async post(path, body, timeoutMs=12000){
           const ctrl = new AbortController();
           const id = setTimeout(()=>ctrl.abort(), timeoutMs);
+        
           try{
             const res = await fetch(CONFIG.apiBase + path, {
               method:'POST',
@@ -777,11 +778,18 @@
               body: JSON.stringify(body || {}),
               signal: ctrl.signal
             });
-            const data = await res.json().catch(()=>null);
-            return { ok: res.ok, status: res.status, data };
+        
+            // Leggiamo SEMPRE il testo, poi proviamo a parse JSON
+            const text = await res.text();
+            let data = null;
+            try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+        
+            return { ok: res.ok, status: res.status, data, text };
           } catch (e){
-            return { ok:false, status:0, error:e };
-          } finally { clearTimeout(id); }
+            return { ok:false, status:0, data:null, text:'', error:e };
+          } finally {
+            clearTimeout(id);
+          }
         }
       };
 
@@ -2616,19 +2624,38 @@
           usx_token: State.user.usx_token,
         }, 18000);
       
-        if (!res.ok || !res.data){
+        if (!res.ok){
           setBusy(false);
-          toast('Could not load NFTs', 'Server error or session/auth issue.', 'warn');
-          setHint('Failed to load. Try again.');
+        
+          const backendErr = res.data?.error || res.data?.message || '';
+          const detail =
+            res.status === 0
+              ? `Network/CORS/timeout (fetch failed). ${res.error ? String(res.error) : ''}`
+              : backendErr
+                ? `HTTP ${res.status}: ${backendErr}`
+                : `HTTP ${res.status}: ${String(res.text || '').slice(0, 140)}`;
+        
+          console.error('[/2user_nfts] failed', { status: res.status, data: res.data, text: res.text, error: res.error });
+          toast('Could not load NFTs', detail, 'warn', 9000);
+          setHint('Failed to load. Check console/network for details.');
+          return;
+        }
+        
+        if (!res.data){
+          setBusy(false);
+          console.error('[/2user_nfts] OK but non-JSON response', { status: res.status, text: res.text });
+          toast('Could not load NFTs', 'OK response but invalid JSON body.', 'warn', 9000);
+          setHint('Failed to load. Backend returned non-JSON.');
           return;
         }
       
         // Flexible parsing (come prima)
-        const gobArr = Array.isArray(res.data?.goblins) ? res.data.goblins
+        const gobArr = Array.isArray(res.data?.nfts) ? res.data.nfts
+                     : Array.isArray(res.data?.goblins) ? res.data.goblins
                      : Array.isArray(res.data?.goblin_nfts) ? res.data.goblin_nfts
                      : Array.isArray(res.data?.items) ? res.data.items
                      : [];
-      
+
         // aggiorno “integralmente” stato + index
         State.goblinsUser = gobArr.map(g => ({
           asset_id: String(g.asset_id ?? g.id ?? g.assetId),

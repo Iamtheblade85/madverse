@@ -743,7 +743,7 @@
           const ctrl = new AbortController();
           const id = setTimeout(()=>ctrl.abort(), timeoutMs);
           try{
-            const res = await fetch(CONFIG.apiBase + path, { signal: ctrl.signal, credentials:'include' });
+            const res = await fetch(CONFIG.apiBase + path, { signal: ctrl.signal });
             const data = await res.json().catch(()=>null);
             return { ok: res.ok, status: res.status, data };
           } catch (e){
@@ -757,7 +757,6 @@
             const res = await fetch(CONFIG.apiBase + path, {
               method:'POST',
               headers:{'Content-Type':'application/json'},
-              credentials:'include',
               body: JSON.stringify(body || {}),
               signal: ctrl.signal
             });

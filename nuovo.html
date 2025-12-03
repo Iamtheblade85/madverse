@@ -2134,13 +2134,58 @@
           return;
         }
 
-        // Try common keys; keep flexible
-        const chipsMin = toNumber(data.chips_min ?? data.min_chips ?? data.chips?.min);
-        const chipsMax = toNumber(data.chips_max ?? data.max_chips ?? data.chips?.max);
-        const nftChance = toNumber(data.nft_chance ?? data.nfts_chance ?? data.nft_drop_chance);
-        const durationSec = toNumber(data.duration_seconds ?? data.effective_duration_seconds ?? data.seconds);
-        const powerTotal = toNumber(data.total_power_cost ?? data.daily_power_cost ?? data.power_cost);
-        const notes = data.notes || data.hint || '';
+        // ---- Forecast parsing FIX (supports your backend keys) ----
+        const numOrNull = (v) => {
+          const n = toNumber(v);
+          return Number.isFinite(n) ? n : null;
+        };
+        
+        // CHIPS range: backend uses tokens_min / tokens_max
+        const chipsMin = numOrNull(
+          data.chips_min ?? data.min_chips ?? data.chips?.min ?? data.chipsMin ??
+          data.tokens_min ?? data.min_tokens ?? data.tokens?.min ?? data.tokensMin
+        );
+        
+        const chipsMax = numOrNull(
+          data.chips_max ?? data.max_chips ?? data.chips?.max ?? data.chipsMax ??
+          data.tokens_max ?? data.max_tokens ?? data.tokens?.max ?? data.tokensMax
+        );
+        
+        // Power cost: backend uses power_needed_total
+        const powerTotal = numOrNull(
+          data.total_power_cost ?? data.daily_power_cost ?? data.power_cost ?? data.powerTotal ??
+          data.power_needed_total
+        );
+        
+        // Duration: backend uses duration_effective_minutes
+        let durationSec = numOrNull(
+          data.duration_seconds ?? data.effective_duration_seconds ?? data.seconds ?? data.duration_sec
+        );
+        if (durationSec == null) {
+          const effMin = numOrNull(data.duration_effective_minutes);
+          if (effMin != null) durationSec = Math.round(effMin * 60);
+        }
+        
+        // NFT chance: backend returns nft_rewards[] with per-template chance
+        let nftChance = numOrNull(data.nft_chance ?? data.nfts_chance ?? data.nft_drop_chance ?? data.drop_chance);
+        if (nftChance == null && Array.isArray(data.nft_rewards) && data.nft_rewards.length) {
+          // Combine per-template probs into P(at least one) assuming independence:
+          // p_any = 1 - Π(1 - p_i)
+          let pZero = 1.0;
+          for (const r of data.nft_rewards) {
+            const p = numOrNull(r?.chance);
+            if (p != null) pZero *= (1 - Math.max(0, Math.min(1, p)));
+          }
+          nftChance = 1 - pZero;
+        }
+        if (nftChance != null && nftChance > 1) nftChance = nftChance / 100;
+        
+        // Notes/messages
+        const notes = Array.isArray(data.messages) ? data.messages.join(' • ') : (data.notes || data.hint || '');
+        
+        // Helpers for display (avoid "0 treated as false")
+        const fmtMaybe = (n) => (n == null ? '—' : formatCompact(n));
+        const pctMaybe = (p) => (p == null ? '—' : `${(p * 100).toFixed(2)}%`);
 
         host.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;">

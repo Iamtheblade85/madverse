@@ -317,6 +317,7 @@
 
       globalExpeditions: [],
       recentExpeditions: [],
+      globalLogEvents: [],    
       runtime: {
         expeditionInProgress: false,
         lastForecastPayloadKey: '',
@@ -382,6 +383,21 @@
       const m = Math.floor((s%3600)/60);
       const sec = s%60;
       return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    }
+    function formatMinutesShort(m){
+      m = Number(m || 0);
+      if (m >= 1440) return '1d';
+      if (m >= 360) return (m/60).toFixed(0) + 'h';
+      if (m >= 60) return (m/60).toFixed(0) + 'h';
+      return m + 'm';
+    }
+    function formatEffectiveDurationShort(sec){
+      sec = Number(sec || 0);
+      const m = Math.round(sec / 60);
+      if (m <= 0) return '—';
+      if (m >= 1440) return '≈1d';
+      if (m >= 60) return '≈' + (m/60).toFixed(1).replace(/\.0$/,'') + 'h';
+      return '≈' + m + 'm';
     }
     function fromSecondsRemaining(exp){
       const sec = toNumber(exp.seconds_remaining);
@@ -1449,11 +1465,58 @@
       const el = State.ui.ticker;
       if (!el) return;
 
-      const latest = State.recentExpeditions?.[0];
-      if (latest){
-        el.innerHTML = `<strong>${safe(latest.wax_account)}</strong> finished: +${formatCompact(latest.chips)} CHIPS${latest.nfts_count?` · ${latest.nfts_count} NFT`:''}`;
+      // 1) Prima scelta: eventi dal /2global_log (start + completed)
+      const ev = (State.globalLogEvents && State.globalLogEvents[0]) || null;
+      if (ev){
+        const when = timeHM(ev.timestamp);
+        const account = safe(ev.wax_account || 'unknown');
+        const nominal = formatMinutesShort(ev.nominal_minutes || 0);
+        const effective = formatEffectiveDurationShort(ev.effective_seconds || 0);
+        const goblins = ev.goblins_count != null ? Number(ev.goblins_count) : null;
+
+        if (ev.event_type === 'started'){
+          el.innerHTML =
+            `<span class="ticker-time">[${when}]</span> ` +
+            `<strong>${account}</strong> started ` +
+            `<span class="ticker-tag">${nominal}</span> expedition ` +
+            (goblins ? `<span class="ticker-extra">(${goblins} goblins)</span> ` : '') +
+            `<span class="ticker-eff">eff: ${effective}</span>`;
+          return;
+        }
+
+        if (ev.event_type === 'completed'){
+          const chips = ev.chips != null ? formatCompact(ev.chips) : '0';
+          const nftPart = ev.nfts_count ? ` · ${ev.nfts_count} NFT` : '';
+          el.innerHTML =
+            `<span class="ticker-time">[${when}]</span> ` +
+            `<strong>${account}</strong> completed ` +
+            `<span class="ticker-tag">${nominal}</span> expedition ` +
+            `<span class="ticker-eff">eff: ${effective}</span> ` +
+            `→ <span class="ticker-rew">+${chips} CHIPS${nftPart}</span>`;
+          return;
+        }
+
+        // altri tipi eventuali: fallback a testo grezzo
+        el.textContent = `[${when}] ${account}`;
         return;
       }
+
+      // 2) Fallback: se per qualsiasi motivo /2global_log non risponde,
+      //    usa comunque l'ultima spedizione completata come prima
+      const latest = State.recentExpeditions?.[0];
+      if (latest){
+        const when = timeHM(latest.timestamp || latest.created_at);
+        const account = safe(latest.wax_account || 'unknown');
+        const chips = formatCompact(latest.chips);
+        const nftPart = latest.nfts_count ? ` · ${latest.nfts_count} NFT` : '';
+        el.innerHTML =
+          `<span class="ticker-time">[${when}]</span> ` +
+          `<strong>${account}</strong> finished: ` +
+          `<span class="ticker-rew">+${chips} CHIPS${nftPart}</span>`;
+        return;
+      }
+
+      // 3) Nessun evento
       el.textContent = 'Waiting for events…';
     }
 
@@ -1903,11 +1966,13 @@
 
       const t0 = performance.now();
       try {
-        const [expRes, recentRes] = await Promise.all([
+        const [expRes, recentRes, logRes] = await Promise.all([
           Api.post('/2all_expeditions', {}, CONFIG.snapshotTimeoutMs),
           Api.get('/2recent_expeditions', CONFIG.recentTimeoutMs),
+          Api.get('/2global_log', CONFIG.recentTimeoutMs),
         ]);
 
+        // Expeditions in corso
         if (expRes.ok && expRes.data){
           const exps = Array.isArray(expRes.data) ? expRes.data :
                        (Array.isArray(expRes.data.items) ? expRes.data.items : []);
@@ -1922,11 +1987,19 @@
           recalcMyExpeditionFlagAndUI();
         }
 
+        // Recent completate (tab "Recent")
         if (recentRes.ok && recentRes.data){
           const arr = Array.isArray(recentRes.data) ? recentRes.data :
                       (Array.isArray(recentRes.data.items) ? recentRes.data.items : []);
           State.recentExpeditions = arr;
           renderRecentPanel();
+        }
+
+        // Global log (start + completed per ticker)
+        if (logRes && logRes.ok && Array.isArray(logRes.data)){
+          State.globalLogEvents = logRes.data;
+        } else if (logRes && logRes.ok && Array.isArray(logRes.data?.items)) {
+          State.globalLogEvents = logRes.data.items;
         }
 
         updateTicker();
@@ -1939,6 +2012,7 @@
         State.net.busySnapshot = false;
       }
     }
+
 
     function setPollingInterval(ms){
       const v = clamp(ms, 2500, 60000);

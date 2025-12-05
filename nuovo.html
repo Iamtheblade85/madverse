@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Dwarfs Cave – Goblin Expeditions (No Perks/Chests)</title>
+  <title>Dwarfs Cave – Goblin Expeditions (Polling, No SSE)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,6 +16,24 @@
     #panels [role="tabpanel"][hidden]{ display:none !important; }
     #canvas-feedback{ pointer-events:none; }
     #canvas-feedback .msg{ margin:6px 0; }
+
+    /* Piccola classe per “disabilitare” visualmente il builder finché non ci sono goblin */
+    .builder-disabled{
+      opacity:.55;
+      filter:grayscale(.3);
+      pointer-events:none;
+    }
+    .builder-disabled-hint{
+      font-size:12px;
+      opacity:.8;
+      margin:8px 0 0;
+    }
+    /* il bottone load goblins deve saltare all’occhio */
+    #btn-load-goblins{
+      font-family:'Orbitron', system-ui, sans-serif;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
   </style>
 </head>
 
@@ -23,7 +41,7 @@
   <div id="app-root">
     <header id="app-header" aria-label="Application header">
       <h1>Goblin DEX</h1>
-      <p id="subtitle">Real-time goblin expeditions. No perks, no chests.</p>
+      <p id="subtitle">Build goblin expeditions, watch the world map update via polling (no SSE).</p>
 
       <nav id="action-bar" aria-label="Actions">
         <div id="duration-switch" aria-label="Expedition Duration">
@@ -51,7 +69,7 @@
       </nav>
 
       <section id="news-banner" aria-label="News & Ads">
-        <strong>Live:</strong> Track world expeditions in real-time.
+        <strong>Live:</strong> World expeditions map updates every few seconds (HTTP polling only, no SSE).
       </section>
 
       <div id="status-row" aria-live="polite">
@@ -95,7 +113,40 @@
 
         <section id="tab-my" role="tabpanel" aria-labelledby="tab-btn-my" tabindex="0" aria-label="My Goblins">
           <h3>🧬 Goblin Expedition Builder</h3>
-          <div id="my-status" aria-live="polite">loading…</div>
+          <div id="my-status" aria-live="polite">
+            Load your goblins to start building an expedition.
+          </div>
+
+          <!-- Panoramica + bottone manuale per fetch goblins -->
+          <section id="goblin-overview" aria-label="Your goblins overview">
+            <div id="goblin-overview-card" class="card"
+                 style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 6px;">
+              <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;">
+                <div>
+                  <div style="font-size:11px;opacity:.8;">Total goblins</div>
+                  <div class="value" id="stat-goblins-count" style="font-weight:900;font-size:16px;">0</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;opacity:.8;">Total daily power</div>
+                  <div class="value" id="stat-goblins-power-total" style="font-weight:900;font-size:16px;">0</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;opacity:.8;">Average daily power</div>
+                  <div class="value" id="stat-goblins-power-avg" style="font-weight:900;font-size:16px;">0</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;opacity:.8;">Goblins data</div>
+                  <div class="value" id="stat-goblins-updated" style="font-size:12px;opacity:.9;">Not loaded yet</div>
+                </div>
+              </div>
+
+              <button id="btn-load-goblins" type="button"
+                      title="Fetch your goblins from the API"
+                      style="min-width:230px;padding:9px 16px;font-weight:800;font-size:14px;border-radius:999px;margin-left:auto;display:inline-flex;align-items:center;gap:6px;justify-content:center;">
+                🔄 Load / Refresh goblins
+              </button>
+            </div>
+          </section>
 
           <section id="filters" aria-label="Filters">
             <input id="flt-search" type="search" placeholder="Search name or #id…" title="Filter goblins by name or asset id">
@@ -183,11 +234,9 @@
 
       apiBase: (window.CAVE_API_BASE || '').replace(/\/$/, ''),
 
-      // ✅ Goblins 3x faster than before
       goblinSpeedMin: 4.8 * 3,
       goblinSpeedMax: 7.8 * 3,
 
-      // Trail tuning (more realistic “neon smoke”)
       trailBaseMaxAgeMs: 1400,
       trailMinPointDist: 0.10,
       trailMaxPoints: 60,
@@ -238,6 +287,12 @@
         globalList: null,
         globalCount: null,
         recentList: null,
+
+        goblinStatCount: null,
+        goblinStatTotal: null,
+        goblinStatAvg: null,
+        goblinStatUpdated: null,
+        btnLoadGoblins: null,
       },
 
       user: { wax_account:'', user_id:'', usx_token:'' },
@@ -257,9 +312,6 @@
       net: {
         pollTimer: null,
         pollMs: CONFIG.pollIntervalMs,
-        sse: null,
-        sseRetryTimer: null,
-        sseRetryMs: 800,
         busySnapshot: false
       },
 
@@ -278,7 +330,6 @@
     // ------------------------------------------------------------
     function clamp(v, min, max){ return v < min ? min : v > max ? max : v; }
     function randRange(min,max){ return min + Math.random()*(max-min); }
-    function randInt(min,max){ return Math.floor(min + Math.random()*(max-min+1)); }
     function toNumber(x){
       if (x == null) return 0;
       if (typeof x === 'number' && Number.isFinite(x)) return x;
@@ -438,8 +489,72 @@
     }
 
     // ------------------------------------------------------------
+    // BUILDER STATE / ENABLE-DISABLE
+    // ------------------------------------------------------------
+    function setBuilderEnabled(enabled){
+      const disableClass = 'builder-disabled';
+      const sections = [
+        document.getElementById('filters'),
+        document.getElementById('quick-select'),
+        document.getElementById('selection-summary'),
+        document.getElementById('goblin-list'),
+        document.getElementById('view-more')
+      ];
+      sections.forEach(el=>{
+        if (!el) return;
+        if (enabled) el.classList.remove(disableClass);
+        else el.classList.add(disableClass);
+      });
+
+      const btns = [
+        State.ui.btnFirst,
+        State.ui.btnBest,
+        State.ui.btnClear,
+        State.ui.btnToggleMore
+      ];
+      btns.forEach(b=>{
+        if (!b) return;
+        b.disabled = !enabled;
+      });
+
+      const filters = [
+        State.ui.fltSearch,
+        State.ui.fltRarity,
+        State.ui.fltPower
+      ];
+      filters.forEach(f=>{
+        if (!f) return;
+        f.disabled = !enabled;
+      });
+
+      // Start expedition è comunque ulteriormente gestito
+      if (State.ui.btnStart){
+        State.ui.btnStart.disabled = !enabled;
+      }
+    }
+
+    // ------------------------------------------------------------
     // BUILDER HELPERS
     // ------------------------------------------------------------
+    function updateGoblinGlobalStats(){
+      const total = State.goblinsUser.length;
+      let sumPower = 0;
+      for (const g of State.goblinsUser){
+        sumPower += toNumber(g.daily_power_num);
+      }
+      const avg = total ? (sumPower / total) : 0;
+
+      if (State.ui.goblinStatCount) {
+        State.ui.goblinStatCount.textContent = formatCompact(total);
+      }
+      if (State.ui.goblinStatTotal) {
+        State.ui.goblinStatTotal.textContent = formatCompact(sumPower);
+      }
+      if (State.ui.goblinStatAvg) {
+        State.ui.goblinStatAvg.textContent = total ? avg.toFixed(1) : '0';
+      }
+    }
+
     function getSendCap(){
       const base = 50, perReinf = 5, maxExtra = 200;
       const reinf = State.expedition?.reinforcementCount || 0;
@@ -462,6 +577,7 @@
       return State.goblinsUser.filter(g => State.selectedGoblinIds.has(g.asset_id));
     }
     function canSendExpedition(){
+      if (!State.nftsLoaded) return { ok:false, reason:'not_loaded' };
       if (State.runtime.expeditionInProgress) return { ok:false, reason:'in_progress' };
       const sel = getSelectedGoblins();
       if (!sel.length) return { ok:false, reason:'no_selection' };
@@ -497,29 +613,41 @@
       const hintEl = document.getElementById('action-hint');
       if (!btnStart) return;
 
-      const val = canSendExpedition();
-      btnStart.disabled = !val.ok;
-
       let startHint = 'Start an expedition with the selected goblins.';
+      const val = canSendExpedition();
+
       if (!val.ok){
-        if (val.reason==='in_progress') startHint = 'You already have an expedition in progress.';
-        if (val.reason==='no_selection') startHint = 'Select at least one goblin.';
-        if (val.reason==='over_cap')     startHint = 'Selection exceeds your current cap.';
-        if (val.reason==='tired_present')startHint = 'Your selection includes tired goblins.';
+        btnStart.disabled = true;
+        if (val.reason === 'not_loaded')      startHint = 'Load your goblins first using the button above.';
+        else if (val.reason==='in_progress')  startHint = 'You already have an expedition in progress.';
+        else if (val.reason==='no_selection') startHint = 'Select at least one goblin.';
+        else if (val.reason==='over_cap')     startHint = 'Selection exceeds your current cap.';
+        else if (val.reason==='tired_present')startHint = 'Your selection includes tired goblins.';
+      } else {
+        btnStart.disabled = false;
       }
+
       btnStart.title = startHint;
       if (hintEl) hintEl.textContent = startHint;
     }
 
     // ------------------------------------------------------------
-    // FORECAST (kept; not perks/chests)
+    // FORECAST
     // ------------------------------------------------------------
     const requestForecastDebounced = debounce(requestForecast, 320);
 
     function scheduleForecastIfReady(){
+      if (!State.nftsLoaded){
+        renderForecast(null, 'Load your goblins to see a run forecast.');
+        return;
+      }
+
       const duration = State.expedition?.durationMinutes || 0;
       const sel = getSelectedGoblins();
-      if (!duration || !sel.length) { renderForecast(null, 'Select goblins and a duration.'); return; }
+      if (!duration || !sel.length) {
+        renderForecast(null, 'Select some goblins and a duration.');
+        return;
+      }
 
       const payloadKey = JSON.stringify({
         d: duration,
@@ -537,6 +665,7 @@
 
     async function requestForecast(duration, selArr){
       if (State.runtime.expeditionInProgress) { renderForecast(null, 'An expedition is running.'); return; }
+      if (!State.nftsLoaded) { renderForecast(null,'Load your goblins first.'); return; }
       if (!selArr?.length || !duration) { renderForecast(null, ''); return; }
       try { assertAuth(); } catch { renderForecast(null,'Sign in to preview rewards.'); return; }
 
@@ -623,7 +752,7 @@
     }
 
     // ------------------------------------------------------------
-    // NFT STAT HELP (kept)
+    // NFT STAT HELP
     // ------------------------------------------------------------
     function getStatFromNFT(nft, key) {
       if (!nft) return 0;
@@ -647,11 +776,11 @@
     }
 
     // ------------------------------------------------------------
-    // TRAIL (more realistic)
+    // TRAIL
     // ------------------------------------------------------------
     class NeonTrail {
       constructor(){
-        this.points = []; // {x,y, tMs, spd}
+        this.points = [];
         this.maxPoints = CONFIG.trailMaxPoints;
         this.baseMaxAgeMs = CONFIG.trailBaseMaxAgeMs;
         this.minDist = CONFIG.trailMinPointDist;
@@ -677,7 +806,6 @@
       }
 
       prune(nowMs, speed){
-        // at higher speed the trail *can* be longer
         const maxAge = this.baseMaxAgeMs + clamp(speed*45, 0, 750);
         while (this.points.length && (nowMs - this.points[0].tMs) > maxAge) this.points.shift();
       }
@@ -693,12 +821,9 @@
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        // Smooth-ish path: quadratic segments using midpoints
         const pts = this.points;
         const scr = pts.map(p => ({ ...p, s: toScreen(p.x, p.y) }));
 
-        // Draw 2 passes: outer glow + inner core
-        // Outer glow
         for (let pass = 0; pass < 2; pass++){
           const isCore = pass === 1;
           const widthMul = isCore ? 0.70 : 1.95;
@@ -717,22 +842,17 @@
           }
           const pn = scr[scr.length - 1].s;
           ctx.lineTo(pn.x, pn.y);
+          ctx.stroke();
 
-          // We can’t gradient-stroke per segment, so we approximate via multiple strokes
-          // by slicing the path in segments (cheap enough at <= 60 points).
-          ctx.stroke(); // “warm” path to keep geometry
-
-          // Segment-based draw for fading + width
           for (let i = 0; i < scr.length - 2; i++){
             const A = scr[i], B = scr[i+1], C = scr[i+2];
-            const k = i / Math.max(1, (scr.length - 3)); // 0 head -> 1 tail
+            const k = i / Math.max(1, (scr.length - 3));
             const fade = (1 - k);
             const spd = Math.max(A.spd, B.spd, C.spd);
 
             const w = thickBase * widthMul * (0.8 + clamp(spd/16, 0, 1)*0.9) * (0.35 + 0.65*fade);
             const a = (0.03 + 0.26*fade*fade) * alphaMul;
 
-            // two-tone neon (cyan + magenta-ish)
             const hueA = mainHue;
             const hueB = (mainHue + 140) % 360;
 
@@ -773,31 +893,25 @@
         this.maxSpeed = randRange(CONFIG.goblinSpeedMin, CONFIG.goblinSpeedMax);
         this.boostSpeed = this.maxSpeed * 1.35;
 
-        // scaled up steering for higher speeds
         this.maxForce = 26.0;
         this.friction = 0.90;
 
-        // wander jitter
         this.wanderAngle = randRange(0, Math.PI*2);
         this.wanderRadius = 1.05;
         this.wanderDistance = 1.85;
         this.wanderJitter = 1.55;
 
-        // waypoint target (makes movement purposeful without chests)
         this.tx = x; this.ty = y;
         this.nextTargetAt = 0;
 
-        // facing
         this.facing = 1;
         this._faceLockUntil = 0;
 
-        // gait
         this.gaitPhase = randRange(0, Math.PI*2);
         this.walkPhase = randRange(0, Math.PI*2);
 
-        // trail
         this.trail = new NeonTrail();
-        this.trailHue = 165; // can vary by owner hash if you want
+        this.trailHue = 165;
       }
 
       _normalize(x, y){
@@ -829,10 +943,10 @@
       }
       _wander(){
         this.wanderAngle += randRange(-1,1) * this.wanderJitter * 0.11;
-        const v = this._normalize(this.vx, this.vy);
-        const dir = (Math.hypot(v.x,v.y) < 1e-3)
+        const vNorm = this._normalize(this.vx, this.vy);
+        const dir = (Math.hypot(vNorm.x,vNorm.y) < 1e-3)
           ? {x:Math.cos(this.wanderAngle), y:Math.sin(this.wanderAngle)}
-          : v;
+          : vNorm;
 
         const px = this.x + dir.x * this.wanderDistance;
         const py = this.y + dir.y * this.wanderDistance;
@@ -901,7 +1015,6 @@
           this._pickNewTarget(engine, now);
         }
 
-        // gait variation (keeps motion organic at higher speeds)
         this.gaitPhase += dt * 3.0;
         const gait = 0.78 + 0.20*Math.sin(this.gaitPhase) + 0.10*Math.sin(this.gaitPhase*0.55 + 1.8);
 
@@ -914,7 +1027,6 @@
 
         this.ax = 0; this.ay = 0;
 
-        // Stronger “intent”, but keep small wander so it doesn’t look robotic
         this.ax += fTarget.x * 1.10;
         this.ay += fTarget.y * 1.10;
 
@@ -943,7 +1055,6 @@
         this.x = clamp(this.x + this.vx*dt, minX, maxX);
         this.y = clamp(this.y + this.vy*dt, minY, maxY);
 
-        // facing (anti-flicker)
         if (now > this._faceLockUntil){
           if (this.vx > 0.25) { this.facing = 1; this._faceLockUntil = now + 120; }
           else if (this.vx < -0.25){ this.facing = -1; this._faceLockUntil = now + 120; }
@@ -952,14 +1063,12 @@
         const speedNow = Math.hypot(this.vx, this.vy);
         this.walkPhase += dt * (10.0 + speedNow * 1.8);
 
-        // trail
         const nowMs = Date.now();
         this.trail.add(this.x, this.y, speedNow, nowMs);
         this.trail.prune(nowMs, speedNow);
       }
 
       draw(ctx, tr){
-        // trail first (behind)
         const sp = Math.hypot(this.vx, this.vy);
         this.trail.draw(ctx, tr, this.trailHue);
 
@@ -985,7 +1094,6 @@
         }
         ctx.restore();
 
-        // label
         ctx.save();
         ctx.translate(pos.x, pos.y + bob);
 
@@ -1122,7 +1230,6 @@
           ctx.fillRect(0, 0, areaW, areaH);
         }
 
-        // grid
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 1;
         for (let x = 0; x <= this.world.width; x++){
@@ -1469,6 +1576,14 @@
       const listHost = State.ui.listHost;
       if (!listHost) return;
 
+      if (!State.nftsLoaded){
+        listHost.innerHTML = `<p class="builder-disabled-hint">Load your goblins with the button above to see them here.</p>`;
+        if (State.ui.summaryCount) State.ui.summaryCount.textContent = 'Selected goblins: 0';
+        if (State.ui.summaryStats) State.ui.summaryStats.textContent = 'R: 0 · L: 0 · S: 0 · A: 0';
+        updateActionButtonsUI();
+        return;
+      }
+
       const q = (State.ui.fltSearch?.value || '').trim().toLowerCase();
       const rarity = State.ui.fltRarity?.value || '';
       const minPower = Number(State.ui.fltPower?.value || 0);
@@ -1534,7 +1649,6 @@
         };
       }
 
-      // summary
       const selArr = State.goblinsUser.filter(g => State.selectedGoblinIds.has(g.asset_id));
       const sums = selArr.reduce((acc,g)=>{
         const nft = State.nftIndex.get(String(g.asset_id));
@@ -1579,6 +1693,7 @@
       }
 
       if (State.ui.btnFirst) State.ui.btnFirst.onclick = ()=>{
+        if (!State.nftsLoaded) return;
         State.selectedGoblinIds.clear();
         const cap = getSendCap();
         const eligible = State.goblinsUser.filter(g => !isGoblinTired(g));
@@ -1590,6 +1705,7 @@
       };
 
       if (State.ui.btnBest) State.ui.btnBest.onclick = ()=>{
+        if (!State.nftsLoaded) return;
         State.selectedGoblinIds.clear();
         const cap = getSendCap();
         const eligible = [...State.goblinsUser]
@@ -1612,18 +1728,33 @@
     }
 
     // ------------------------------------------------------------
-    // DATA: USER NFTs
+    // DATA: USER NFTs (manual fetch via button)
     // ------------------------------------------------------------
     async function fetchUserNFTs() {
       syncUserFromStorage();
-    
-      try { 
-        assertAuth(); 
+
+      const statusEl = document.getElementById('my-status');
+      const btn = State.ui.btnLoadGoblins;
+
+      if (btn && !btn.dataset.loading) {
+        btn.disabled = true;
+        btn.dataset.loading = '1';
+        btn.textContent = '⏳ Loading goblins…';
+      }
+      if (statusEl) {
+        statusEl.textContent = 'Loading goblins from the API…';
+      }
+
+      try {
+        assertAuth();
       } catch {
-        const statusEl = document.getElementById('my-status');
         if (statusEl) {
-          statusEl.replaceChildren(); // opzionale
-          statusEl.textContent = 'Not authenticated.';
+          statusEl.textContent = 'Not authenticated. Connect your account first.';
+        }
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '🔄 Load / Refresh goblins';
+          delete btn.dataset.loading;
         }
         return;
       }
@@ -1634,16 +1765,38 @@
         usx_token: State.user.usx_token
       }, CONFIG.userNftsTimeoutMs);
 
-      if (!res.ok){ toast('Could not load goblins'); return; }
+      if (!res.ok || !res.data) {
+        toast('Could not load goblins');
+        if (statusEl) {
+          statusEl.textContent = 'Could not load goblins right now.';
+        }
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '🔄 Load / Refresh goblins';
+          delete btn.dataset.loading;
+        }
+        return;
+      }
 
-      const arr = Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.nfts) ? res.data.nfts : []);
+      const arr = Array.isArray(res.data)
+        ? res.data
+        : (Array.isArray(res.data?.nfts) ? res.data.nfts : []);
+
       State.nftsLoaded = true;
       State.nftIndex.clear();
+      State.selectedGoblinIds.clear();
 
-      const goblins = arr.map(n=>{
+      const goblins = arr.map(n => {
         const id = String(n.asset_id || n.assetId || n.id);
         State.nftIndex.set(id, n);
-        const dailyPower = toNumber(n.daily_power ?? n.power ?? n.strength ?? n.stats?.power) || 0;
+        const dailyPower = toNumber(
+          n.daily_power ??
+          n['daily-power'] ??
+          n.power ??
+          n.strength ??
+          n.stats?.power
+        ) || 0;
+
         return {
           asset_id: id,
           name: n.name || n.title || `Goblin #${id}`,
@@ -1654,22 +1807,44 @@
 
       State.goblinsUser = goblins;
 
-      const reinfRaw = toNumber(res.data?.reinforcement_count) || toNumber(res.data?.troop_reinforcement) || 0;
+      const reinfRaw =
+        toNumber(res.data?.reinforcement_count) ||
+        toNumber(res.data?.troop_reinforcement) ||
+        0;
       State.expedition.reinforcementCount = clamp(reinfRaw, 0, 40);
 
-      const st = document.getElementById('my-status');
-      if (st) st.textContent = `Loaded ${goblins.length} goblins for ${State.user.wax_account}.`;
+      if (statusEl) {
+        statusEl.textContent =
+          `Loaded ${goblins.length} goblins for ${State.user.wax_account}.`;
+      }
+
+      updateGoblinGlobalStats();
+      if (State.ui.goblinStatUpdated){
+        State.ui.goblinStatUpdated.textContent = 'Updated at ' + timeHM(new Date());
+      }
 
       updateCapUI();
+      setBuilderEnabled(true);
       hydrateGoblinBuilder();
       updateActionButtonsUI();
       scheduleForecastIfReady();
+
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '🔄 Refresh goblins';
+        delete btn.dataset.loading;
+      }
     }
 
     // ------------------------------------------------------------
     // COMMAND: START EXPEDITION
     // ------------------------------------------------------------
     async function sendExpedition(){
+      if (!State.nftsLoaded){
+        toast('Load your goblins first.');
+        return;
+      }
+
       const ids = Array.from(State.selectedGoblinIds);
       if (!ids.length){ toast('Select at least one goblin'); return; }
 
@@ -1709,15 +1884,18 @@
       pushCanvasMsg(`⛏️ ${State.user.wax_account} started an expedition`);
 
       State.runtime.expeditionInProgress = true;
-      document.getElementById('run-forecast')?.replaceChildren();
-      document.getElementById('run-forecast')?.setAttribute('hidden','');
+      const rf = document.getElementById('run-forecast');
+      if (rf){
+        rf.replaceChildren();
+        rf.hidden = true;
+      }
 
       updateActionButtonsUI();
       fetchGlobalSnapshot();
     }
 
     // ------------------------------------------------------------
-    // SNAPSHOTS / POLLING / SSE
+    // SNAPSHOTS / POLLING (NO SSE)
     // ------------------------------------------------------------
     async function fetchGlobalSnapshot(){
       if (State.net.busySnapshot) return;
@@ -1730,7 +1908,6 @@
           Api.get('/2recent_expeditions', CONFIG.recentTimeoutMs),
         ]);
 
-        // Expeditions
         if (expRes.ok && expRes.data){
           const exps = Array.isArray(expRes.data) ? expRes.data :
                        (Array.isArray(expRes.data.items) ? expRes.data.items : []);
@@ -1745,7 +1922,6 @@
           recalcMyExpeditionFlagAndUI();
         }
 
-        // Recent
         if (recentRes.ok && recentRes.data){
           const arr = Array.isArray(recentRes.data) ? recentRes.data :
                       (Array.isArray(recentRes.data.items) ? recentRes.data.items : []);
@@ -1779,79 +1955,6 @@
       }
     }
 
-    function scheduleSseRetry(){
-      if (State.net.sseRetryTimer) return;
-      const wait = State.net.sseRetryMs || 800;
-      State.net.sseRetryTimer = setTimeout(()=>{
-        State.net.sseRetryTimer = null;
-        startSSE();
-      }, wait);
-      State.net.sseRetryMs = Math.min(15000, Math.floor(wait * 1.7));
-    }
-
-    function startSSE(){
-      if (State.net.sse) return;
-
-      let es = null;
-      try {
-        es = new EventSource(CONFIG.apiBase + '/2events?cv=1');
-      } catch {
-        scheduleSseRetry();
-        return;
-      }
-
-      es.onopen = ()=>{
-        State.net.sseRetryMs = 800;
-        setPollingInterval(15000); // fallback lighter
-      };
-
-      es.onmessage = (ev)=>{
-        try {
-          const msg = JSON.parse(ev.data);
-
-          switch (msg.type){
-            case 'expeditions_snapshot': {
-              if (msg.expeditions){
-                const snapAt = Date.now();
-                State.globalExpeditions = (msg.expeditions || []).map(e =>
-                  (e && typeof e === 'object') ? Object.assign(e,{_snapAt:snapAt}) : e
-                );
-                if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
-                renderGlobalPanel();
-                ensureGlobalTimers();
-                recalcMyExpeditionFlagAndUI();
-              }
-              break;
-            }
-
-            case 'recent_expedition': {
-              if (msg.expedition){
-                State.recentExpeditions.unshift(msg.expedition);
-                State.recentExpeditions = State.recentExpeditions.slice(0, 50);
-                renderRecentPanel();
-                updateTicker();
-              }
-              break;
-            }
-
-            default:
-              // ignore other events (perks/chests/etc.)
-              break;
-          }
-        } catch {}
-      };
-
-      es.onerror = ()=>{
-        try { es.close(); } catch {}
-        if (State.net.sse === es) State.net.sse = null;
-
-        setPollingInterval(CONFIG.pollIntervalMs);
-        scheduleSseRetry();
-      };
-
-      State.net.sse = es;
-    }
-
     // ------------------------------------------------------------
     // MOUNT
     // ------------------------------------------------------------
@@ -1859,7 +1962,6 @@
       if (State.mounted) return;
       State.mounted = true;
 
-      // refs
       State.ui.canvas = document.getElementById('game-canvas');
       State.ui.latency = document.getElementById('latency-label');
       State.ui.ticker = document.getElementById('ticker-line');
@@ -1892,6 +1994,12 @@
       State.ui.globalCount = document.getElementById('global-count');
       State.ui.recentList = document.getElementById('recent-list');
 
+      State.ui.goblinStatCount   = document.getElementById('stat-goblins-count');
+      State.ui.goblinStatTotal   = document.getElementById('stat-goblins-power-total');
+      State.ui.goblinStatAvg     = document.getElementById('stat-goblins-power-avg');
+      State.ui.goblinStatUpdated = document.getElementById('stat-goblins-updated');
+      State.ui.btnLoadGoblins    = document.getElementById('btn-load-goblins');
+
       applyOverlayMode();
       setTabsBehavior();
 
@@ -1900,8 +2008,10 @@
       initDurationSwitch();
       mountBuilderControls();
 
+      setBuilderEnabled(false);      // finché non carichi i goblin
+      updateGoblinGlobalStats();     // 0,0,0 all'inizio
       updateActionButtonsUI();
-      scheduleForecastIfReady();
+      scheduleForecastIfReady();     // mostra solo messaggio “Load your goblins…”
 
       if (State.ui.btnStart) State.ui.btnStart.onclick = sendExpedition;
       if (State.ui.btnCopyOverlay) State.ui.btnCopyOverlay.onclick = ()=>{
@@ -1917,16 +2027,16 @@
         }
       };
 
-      // engine
+      if (State.ui.btnLoadGoblins) {
+        State.ui.btnLoadGoblins.onclick = fetchUserNFTs;
+      }
+
       State.engine = new GameEngine(State.ui.canvas);
       loadAssets().then(()=> State.engine && State.engine.handleResize());
       State.engine.start();
 
-      // data
-      fetchUserNFTs();
       fetchGlobalSnapshot();
       startPolling();
-      startSSE();
 
       window.addEventListener('orientationchange', ()=>{
         State.engine && State.engine.handleResize();
@@ -1948,7 +2058,7 @@
 
     document.addEventListener('mousemove', (e) => {
       const el = e.target.closest(
-        '#goblin-list button[role="checkbox"], #quick-select button, #action-buttons button, #tabs button[role="tab"]'
+        '#goblin-list button[role="checkbox"], #quick-select button, #action-buttons button, #tabs button[role="tab"], #btn-load-goblins'
       );
       if (!el) return;
       applyGlow(el, e);

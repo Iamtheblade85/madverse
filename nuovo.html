@@ -611,24 +611,49 @@
     // ------------------------------------------------------------
     // BUILDER HELPERS
     // ------------------------------------------------------------
-    function updateGoblinGlobalStats(){
-      const total = State.goblinsUser.length;
-      let sumPower = 0;
-      for (const g of State.goblinsUser){
-        sumPower += toNumber(g.daily_power_num);
+    function updateGoblinGlobalStats(statsSummary, totalCountFallback) {
+      // 1) Aggiorna il pannello “Goblin account stats” (gas-*)
+      renderAccountSummary(statsSummary || {}, totalCountFallback);
+    
+      // 2) Aggiorna la card compatta in alto (stat-goblins-*)
+      //    usando stats_summary se c'è, altrimenti calcolando dal client.
+      const totalFromSummary =
+        (statsSummary && statsSummary.count_total) || 0;
+      const total = totalFromSummary ||
+                    totalCountFallback ||
+                    State.goblinsUser.length;
+    
+      let totalPower =
+        statsSummary && typeof statsSummary.total_daily_power === 'number'
+          ? statsSummary.total_daily_power
+          : 0;
+    
+      if (!totalPower && State.goblinsUser.length) {
+        totalPower = State.goblinsUser.reduce(
+          (acc, g) => acc + toNumber(g.daily_power_num),
+          0
+        );
       }
-      const avg = total ? (sumPower / total) : 0;
-
+    
+      const avgPower =
+        total > 0
+          ? (statsSummary && typeof statsSummary.avg_daily_power === 'number'
+              ? statsSummary.avg_daily_power
+              : (totalPower / total))
+          : 0;
+    
       if (State.ui.goblinStatCount) {
         State.ui.goblinStatCount.textContent = formatCompact(total);
       }
       if (State.ui.goblinStatTotal) {
-        State.ui.goblinStatTotal.textContent = formatCompact(sumPower);
+        State.ui.goblinStatTotal.textContent = formatCompact(totalPower);
       }
       if (State.ui.goblinStatAvg) {
-        State.ui.goblinStatAvg.textContent = total ? avg.toFixed(1) : '0';
+        State.ui.goblinStatAvg.textContent =
+          total ? avgPower.toFixed(1) : '0';
       }
     }
+
 
     function getSendCap(){
       const base = 50, perReinf = 5, maxExtra = 200;

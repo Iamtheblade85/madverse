@@ -116,6 +116,32 @@
           <div id="my-status" aria-live="polite">
             Load your goblins to start building an expedition.
           </div>
+          <section id="goblin-account-summary" aria-label="Goblin account stats">
+            <div class="gas-row">
+              <span id="gas-total-count">Goblins: 0</span>
+              <span id="gas-total-power">Total power: 0</span>
+              <span id="gas-avg-power">Avg power: 0</span>
+            </div>
+            <div class="gas-row">
+              <span id="gas-total-res">RES Σ: 0</span>
+              <span id="gas-total-acc">ACC Σ: 0</span>
+              <span id="gas-total-loot">LOOT Σ: 0</span>
+              <span id="gas-total-speed">SPD Σ: 0</span>
+            </div>
+            <div class="gas-row">
+              <span id="gas-avg-res">RES μ: 0</span>
+              <span id="gas-avg-acc">ACC μ: 0</span>
+              <span id="gas-avg-loot">LOOT μ: 0</span>
+              <span id="gas-avg-speed">SPD μ: 0</span>
+            </div>
+            <div class="gas-row">
+              <span id="gas-rarity-mythic">Mythic: 0</span>
+              <span id="gas-rarity-legendary">Legendary: 0</span>
+              <span id="gas-rarity-epic">Epic: 0</span>
+              <span id="gas-rarity-rare">Rare: 0</span>
+              <span id="gas-rarity-common">Common: 0</span>
+            </div>
+          </section>
 
           <!-- Panoramica + bottone manuale per fetch goblins -->
           <section id="goblin-overview" aria-label="Your goblins overview">
@@ -494,6 +520,39 @@
       host.appendChild(div);
       setTimeout(()=>div.remove(), 3500);
     }
+    function renderAccountSummary(summary, totalCountFallback){
+      const s = summary || {};
+      const totals = s.totals || {};
+      const avgs = s.averages || {};
+      const rar = s.rarity_counts || {};
+      const totalCount = s.count_total || totalCountFallback || 0;
+
+      function set(id, text){
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+      }
+
+      set('gas-total-count', `Goblins: ${formatCompact(totalCount)}`);
+      set('gas-total-power', `Total power: ${formatCompact(s.total_daily_power ?? 0)}`);
+      set('gas-avg-power', `Avg power: ${formatCompact(s.avg_daily_power ?? 0)}`);
+
+      set('gas-total-res', `RES Σ: ${formatCompact(totals.resistance ?? 0)}`);
+      set('gas-total-acc', `ACC Σ: ${formatCompact(totals.accuracy ?? 0)}`);
+      set('gas-total-loot', `LOOT Σ: ${formatCompact(totals.loot_hungry ?? 0)}`);
+      set('gas-total-speed', `SPD Σ: ${formatCompact(totals.speed ?? 0)}`);
+
+      set('gas-avg-res', `RES μ: ${formatCompact(avgs.resistance ?? 0)}`);
+      set('gas-avg-acc', `ACC μ: ${formatCompact(avgs.accuracy ?? 0)}`);
+      set('gas-avg-loot', `LOOT μ: ${formatCompact(avgs.loot_hungry ?? 0)}`);
+      set('gas-avg-speed', `SPD μ: ${formatCompact(avgs.speed ?? 0)}`);
+
+      set('gas-rarity-mythic', `Mythic: ${formatCompact(rar.mythic ?? 0)}`);
+      set('gas-rarity-legendary', `Legendary: ${formatCompact(rar.legendary ?? 0)}`);
+      set('gas-rarity-epic', `Epic: ${formatCompact(rar.epic ?? 0)}`);
+      set('gas-rarity-rare', `Rare: ${formatCompact(rar.rare ?? 0)}`);
+      set('gas-rarity-common', `Common: ${formatCompact(rar.common ?? 0)}`);
+    }
+    
     function pushCanvasMsg(text){
       const host = document.getElementById('canvas-feedback');
       if (!host) return;
@@ -1794,11 +1853,13 @@
     // DATA: USER NFTs (manual fetch via button)
     // ------------------------------------------------------------
     async function fetchUserNFTs() {
+      // Allinea userData da localStorage / window
       syncUserFromStorage();
-
+    
       const statusEl = document.getElementById('my-status');
       const btn = State.ui.btnLoadGoblins;
-
+    
+      // Stato UI: bottone e messaggio
       if (btn && !btn.dataset.loading) {
         btn.disabled = true;
         btn.dataset.loading = '1';
@@ -1807,7 +1868,8 @@
       if (statusEl) {
         statusEl.textContent = 'Loading goblins from the API…';
       }
-
+    
+      // Controllo auth lato FE
       try {
         assertAuth();
       } catch {
@@ -1821,17 +1883,23 @@
         }
         return;
       }
-
-      const res = await Api.post('/2user_nfts', {
-        wax_account: State.user.wax_account,
-        user_id: State.user.user_id,
-        usx_token: State.user.usx_token
-      }, CONFIG.userNftsTimeoutMs);
-
+    
+      // Chiamata API
+      const res = await Api.post(
+        '/2user_nfts',
+        {
+          wax_account: State.user.wax_account,
+          user_id: State.user.user_id,
+          usx_token: State.user.usx_token
+        },
+        CONFIG.userNftsTimeoutMs
+      );
+    
       if (!res.ok || !res.data) {
         toast('Could not load goblins');
         if (statusEl) {
-          statusEl.textContent = 'Could not load goblins right now.';
+          const msg = res.data?.error || 'Could not load goblins right now.';
+          statusEl.textContent = msg;
         }
         if (btn) {
           btn.disabled = false;
@@ -1840,18 +1908,24 @@
         }
         return;
       }
-
-      const arr = Array.isArray(res.data)
-        ? res.data
-        : (Array.isArray(res.data?.nfts) ? res.data.nfts : []);
-
+    
+      const payload = res.data || {};
+    
+      // nfts è sempre dentro payload.nfts col nuovo backend
+      const arr = Array.isArray(payload.nfts)
+        ? payload.nfts
+        // fallback ultra difensivo se in futuro tornasse un array “nudo”
+        : (Array.isArray(payload) ? payload : []);
+    
       State.nftsLoaded = true;
       State.nftIndex.clear();
       State.selectedGoblinIds.clear();
-
+    
+      // Normalizzazione goblin lato FE
       const goblins = arr.map(n => {
         const id = String(n.asset_id || n.assetId || n.id);
         State.nftIndex.set(id, n);
+    
         const dailyPower = toNumber(
           n.daily_power ??
           n['daily-power'] ??
@@ -1859,7 +1933,7 @@
           n.strength ??
           n.stats?.power
         ) || 0;
-
+    
         return {
           asset_id: id,
           name: n.name || n.title || `Goblin #${id}`,
@@ -1867,37 +1941,52 @@
           daily_power_num: dailyPower
         };
       });
-
+    
       State.goblinsUser = goblins;
-
+    
+      // Reinforcement per il cap
       const reinfRaw =
-        toNumber(res.data?.reinforcement_count) ||
-        toNumber(res.data?.troop_reinforcement) ||
+        toNumber(payload.reinforcement_count) ||
+        toNumber(payload.troop_reinforcement) ||
         0;
       State.expedition.reinforcementCount = clamp(reinfRaw, 0, 40);
-
+    
+      // Messaggio di stato base
       if (statusEl) {
-        statusEl.textContent =
-          `Loaded ${goblins.length} goblins for ${State.user.wax_account}.`;
+        statusEl.textContent = `Loaded ${goblins.length} goblins for ${State.user.wax_account}.`;
       }
-
-      updateGoblinGlobalStats();
-      if (State.ui.goblinStatUpdated){
+    
+      // ---- NUOVA PARTE: uso dei totali/medie/rarity_counts dal backend ----
+      const statsSummary = payload.stats_summary || null;
+      // Questa funzione deve usare:
+      //   statsSummary.count_total
+      //   statsSummary.totals.{loot_hungry,speed,resistance,accuracy}
+      //   statsSummary.averages.{...}
+      //   statsSummary.rarity_counts.{mythic,legendary,epic,rare,common,other}
+      // e aggiornare il pannello riassuntivo UX
+      if (typeof updateGoblinGlobalStats === 'function') {
+        updateGoblinGlobalStats(statsSummary, goblins.length);
+      }
+    
+      if (State.ui.goblinStatUpdated) {
         State.ui.goblinStatUpdated.textContent = 'Updated at ' + timeHM(new Date());
       }
-
+      // ---------------------------------------------------------------------
+    
+      // Rinfresca resto della UI builder
       updateCapUI();
       setBuilderEnabled(true);
       hydrateGoblinBuilder();
       updateActionButtonsUI();
       scheduleForecastIfReady();
-
+    
       if (btn) {
         btn.disabled = false;
         btn.textContent = '🔄 Refresh goblins';
         delete btn.dataset.loading;
       }
     }
+
 
     // ------------------------------------------------------------
     // COMMAND: START EXPEDITION

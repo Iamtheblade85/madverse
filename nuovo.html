@@ -1001,10 +1001,10 @@
     }
     function buildDurationHint(mins){
       const bucket = bucketFromMinutes(mins);
-      const base = nominalCostPerGoblinForMinutes(mins);  // DP nominale per goblin
+      const base = nominalCostPerGoblinForMinutes(mins);  // nominal DP per goblin
       const runsPerDay = bucket ? Math.floor(1440 / bucket) : 0;
-
-      return `Base cost: ${formatDP(base)} DP/goblin · tier ${bucket}m · fino a ${runsPerDay} run/giorno per goblin a piena power (prima degli attributi).`;
+    
+      return `Base cost: ${formatDP(base)} DP/goblin · tier ${bucket}m · up to ${runsPerDay} runs/day per goblin at full power (before attributes).`;
     }
     function initDurationSwitch(){
       const sel = State.ui.durationSelect;

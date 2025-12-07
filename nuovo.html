@@ -75,10 +75,34 @@
   }
 
   /* Colorazione semantica più marcata */
-  .gas-chip--power    { border-color:#facc15; color:#fefce8; }
-  .gas-chip--sum      { border-color:#0ea5e9; color:#e0f2fe; }
-  .gas-chip--avg      { border-color:#22c55e; color:#dcfce7; }
-  .gas-chip--rarity   { border-color:#a855f7; color:#f5f3ff; }
+.gas-chip--power {
+  border-color:#facc15;
+  background: radial-gradient(circle at top left, rgba(250,204,21,0.2), rgba(15,23,42,0.95));
+  color:#fefce8;
+  box-shadow: 0 0 10px rgba(250,204,21,0.35);
+}
+
+.gas-chip--sum {
+  border-color:#0ea5e9;
+  background: radial-gradient(circle at top left, rgba(14,165,233,0.2), rgba(15,23,42,0.95));
+  color:#e0f2fe;
+  box-shadow: 0 0 10px rgba(56,189,248,0.3);
+}
+
+.gas-chip--avg {
+  border-color:#22c55e;
+  background: radial-gradient(circle at top left, rgba(34,197,94,0.22), rgba(15,23,42,0.95));
+  color:#dcfce7;
+  box-shadow: 0 0 10px rgba(34,197,94,0.35);
+}
+
+.gas-chip--rarity {
+  border-color:#a855f7;
+  background: radial-gradient(circle at top left, rgba(168,85,247,0.26), rgba(15,23,42,0.95));
+  color:#f5f3ff;
+  box-shadow: 0 0 10px rgba(168,85,247,0.35);
+}
+
   /* Selection summary più grande e leggibile */
   #selection-summary {
     margin-top: 10px;
@@ -103,14 +127,31 @@
   .badge.warn { background: rgba(245,158,11,0.95); color:#111827; }
 
   /* Run forecast panel: cards, grid, badge, help text */
-  #run-forecast {
-    margin-top: 12px;
-    padding: 12px 14px 14px;
-    border-radius: 12px;
-    background: radial-gradient(circle at top left, rgba(56,189,248,0.08), rgba(15,23,42,0.98));
-    border: 1px solid rgba(125,211,252,0.5);
-    font-size: 13px;
-  }
+ #run-forecast {
+  margin-top: 12px;
+  padding: 12px 14px 14px;
+  border-radius: 12px;
+  background: radial-gradient(circle at top left, rgba(56,189,248,0.08), rgba(15,23,42,0.98));
+  border: 1px solid rgba(125,211,252,0.5);
+  font-size: 14px; /* prima 13px */
+}
+
+#run-forecast .kv .label{
+  display:block;
+  font-size:12px;  /* prima 11px */
+  opacity:.85;
+}
+
+#run-forecast .kv b{
+  font-size:15px;  /* prima 13px */
+}
+
+#run-forecast .forecast-help{
+  margin-top:6px;
+  font-size:13px;   /* prima 12px */
+  line-height:1.5;
+}
+
   #run-forecast .hdr{
     display:flex;
     align-items:center;
@@ -131,7 +172,7 @@
     background:radial-gradient(circle at top,rgba(8,47,73,1),rgba(15,23,42,1));
   }
   #run-forecast .hint{
-    font-size:12px;
+    font-size:16px;
     opacity:.9;
   }
   #run-forecast .grid{
@@ -156,31 +197,19 @@
     grid-template-columns:repeat(2,minmax(0,1fr));
     gap:6px 12px;
   }
-  #run-forecast .kv .label{
-    display:block;
-    font-size:11px;
-    opacity:.8;
-  }
-  #run-forecast .kv b{
-    font-size:13px;
-  }
   #run-forecast .badge-inline{
     display:inline-flex;
     align-items:center;
     padding:1px 6px;
     border-radius:999px;
-    font-size:11px;
+    font-size:16px;
     margin-left:4px;
     background:rgba(15,23,42,0.9);
     border:1px solid rgba(96,165,250,0.9);
   }
-  #run-forecast .forecast-help{
-    margin-top:4px;
-    font-size:12px;
-    line-height:1.4;
-  }
+
   #run-forecast .forecast-help-title{
-    font-size:12px;
+    font-size:16px;
     font-weight:800;
     margin-bottom:4px;
   }
@@ -387,25 +416,25 @@
               <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;">
                 <div>
                   <div style="font-size:11px;opacity:.8;">Total goblins</div>
-                  <div class="value" id="stat-goblins-count" style="font-weight:900;font-size:16px;">0</div>
+                  <div class="value" id="stat-goblins-count" style="font-weight:900;font-size:20px;">0</div>
                 </div>
                 <div>
                   <div style="font-size:11px;opacity:.8;">Total daily power</div>
-                  <div class="value" id="stat-goblins-power-total" style="font-weight:900;font-size:16px;">0</div>
+                  <div class="value" id="stat-goblins-power-total" style="font-weight:900;font-size:20px;">0</div>
                 </div>
                 <div>
                   <div style="font-size:11px;opacity:.8;">Average daily power</div>
-                  <div class="value" id="stat-goblins-power-avg" style="font-weight:900;font-size:16px;">0</div>
+                  <div class="value" id="stat-goblins-power-avg" style="font-weight:900;font-size:20px;">0</div>
                 </div>
                 <div>
                   <div style="font-size:11px;opacity:.8;">Goblins data</div>
-                  <div class="value" id="stat-goblins-updated" style="font-size:12px;opacity:.9;">Not loaded yet</div>
+                  <div class="value" id="stat-goblins-updated" style="font-size:18px;opacity:.9;">Not loaded yet</div>
                 </div>
               </div>
 
               <button id="btn-load-goblins" class="btn-primary" type="button"
                       title="Fetch your goblins from the API"
-                      style="min-width:230px;padding:9px 16px;font-weight:800;font-size:14px;border-radius:999px;margin-left:auto;display:inline-flex;align-items:center;gap:6px;justify-content:center;">
+                      style="min-width:230px;padding:9px 16px;font-weight:800;font-size:20px;border-radius:999px;margin-left:auto;display:inline-flex;align-items:center;gap:6px;justify-content:center;">
                 🔄 Load / Refresh goblins
               </button>
             </div>
@@ -416,7 +445,6 @@
             <select id="flt-rarity" title="Filter by rarity">
               <option value="">All rarities</option>
               <option>Common</option>
-              <option>Uncommon</option>
               <option>Rare</option>
               <option>Epic</option>
               <option>Legendary</option>
@@ -1135,88 +1163,120 @@
       host.innerHTML = `
         <div class="hdr">
           <span class="tag cyan">Run Forecast</span>
-          <span class="hint">Aggiornato quando cambi durata o selezione.</span>
+          <span class="hint">🔄 Updated when you change duration or selection.</span>
         </div>
-
+      
         <div class="grid">
           <div class="card">
             <div class="kv">
-              <div title="Minuti scelti nel selettore durata.">
-                <span class="label">Durata nominale</span>
+              <div title="Minutes chosen in the duration selector.">
+                <span class="label">⏱ Nominal duration</span>
                 <b>${durNominal} min</b>
               </div>
-              <div title="Durata stimata dopo il contributo totale di SPD.">
-                <span class="label">Durata effettiva</span>
-                <b>${durEff} min <span class="badge-inline">tier ${tierEff}m</span></b>
+      
+              <div title="Estimated duration after the total SPEED bonus is applied.">
+                <span class="label">⚡ Effective duration</span>
+                <b>
+                  ${durEff} min
+                  <span class="badge-inline">tier ${tierEff}m</span>
+                </b>
               </div>
-              <div title="Costo base per goblin PRIMA di RES/ATTRIBUTI, per questo tier di durata.">
-                <span class="label">Daily cost nominale / goblin</span>
-                <b>${formatDP(baseNominalPerGoblin)} DP</b>
+      
+              <div title="Base daily cost per goblin BEFORE RESISTANCE is applied, for this duration tier.">
+                <span class="label">💰 Nominal daily cost / goblin</span>
+                <b>
+                  ${formatDP(baseNominalPerGoblin)} DP
+                  <span class="badge-inline">base</span>
+                </b>
               </div>
-              <div title="Media del costo reale per goblin DOPO RES, calcolata dal backend.">
-                <span class="label">Daily cost effettivo medio / goblin</span>
-                <b>${selectedCount ? formatDP(effAvgPerGoblin) : '—'} DP</b>
+      
+              <div title="Average effective daily cost per goblin AFTER RES, calculated by the backend.">
+                <span class="label">🎯 Average effective daily cost / goblin</span>
+                <b>
+                  ${selectedCount ? formatDP(effAvgPerGoblin) : '—'} DP
+                  <span class="badge-inline">effective</span>
+                </b>
               </div>
-              <div title="Somma di tutti i costi effettivi di questa run.">
-                <span class="label">Daily power totale (run)</span>
+      
+              <div title="Sum of all effective daily power costs for this run.">
+                <span class="label">🔋 Total daily power (run)</span>
                 <b>${powTot ? formatDP(powTot) : '—'} DP</b>
               </div>
-              <div title="Goblin effettivamente usati nel forecast (dopo cap, se superi il limite).">
-                <span class="label">Goblins selezionati</span>
+      
+              <div title="Goblins actually used in the forecast (after applying the cap, if exceeded).">
+                <span class="label">🧬 Selected goblins</span>
                 <b>${selectedCount}</b>
               </div>
             </div>
           </div>
-
+      
           <div class="card">
             <div class="kv">
-              <div title="Intervallo di CHIPS atteso per questa run.">
-                <span class="label">Chips (min–max)</span>
-                <b>${tMin || '—'} – ${tMax || '—'}</b>
+              <div title="Expected CHIPS reward range for this run.">
+                <span class="label">💎 Chips (min–max)</span>
+                <b>
+                  ${tMin || '—'} – ${tMax || '—'}
+                  <span class="badge-inline">reward</span>
+                </b>
               </div>
-
+      
               ${Object.keys(probs).length ? `
-              <div title="Probabilità relative delle fasce di reward token in base all’ACC medio.">
-                <span class="label">Token tier probs</span>
+              <div title="Relative probability of token reward tiers based on average ACC.">
+                <span class="label">📊 Token tier probabilities</span>
                 <b>${
                   Object.entries(probs)
-                    .map(([k,v]) => `${safe(k)} ${(Math.round(v*100))}%`)
+                    .map(([k,v]) => `${safe(k)} ${Math.round(v * 100)}%`)
                     .join(' · ')
                 }</b>
               </div>` : ''}
-
+      
               ${nftRewards.length ? `
-              <div title="Chance approssimativa di ricevere ciascun template NFT in una singola run.">
-                <span class="label">NFT chances</span>
+              <div title="Approximate chance of receiving each NFT template in a single run.">
+                <span class="label">🎁 NFT drop chances</span>
                 <b>${
                   nftRewards
-                    .map(it => `${safe(it.name)} ${(Math.round((it.chance||0)*100))}%`)
+                    .map(it => `${safe(it.name)} ${Math.round((it.chance || 0) * 100)}%`)
                     .join(' · ')
                 }</b>
               </div>` : ''}
-
+      
               ${tiredCount ? `
               <div style="margin-top:6px;">
                 <button id="btn-remove-tired" class="btn-primary" type="button">
-                  💤 Remove ${tiredCount} tired goblin${tiredCount>1?'s':''} from selection
+                  💤 Remove ${tiredCount} tired goblin${tiredCount > 1 ? 's' : ''} from selection
                 </button>
               </div>` : ''}
             </div>
           </div>
         </div>
-
+      
         <div class="card forecast-help">
-          <div class="forecast-help-title">Come viene calcolata questa spedizione</div>
+          <div class="forecast-help-title">📘 How this expedition is calculated</div>
           <ul>
-            <li><strong>Troop Reinforcement NFT</strong>: alza il cap da 50 goblin di +5 per NFT, fino a 250 goblin totali per run.</li>
-            <li><strong>Speed (SPD)</strong>: la somma SPD riduce la <em>durata effettiva</em>; il tier di durata (${DURATION_BUCKETS.join(', ')} min) decide la <em>base cost nominale</em> per goblin.</li>
-            <li><strong>Resistance (RES)</strong>: applica uno sconto sul costo nominale → per goblin paghi meno DP rispetto al valore base.</li>
-            <li><strong>Loot Hungry (LOOT)</strong> e <strong>Accuracy (ACC)</strong>: aumentano il bottino medio in CHIPS e la qualità delle ricompense (token tiers + chance NFT).</li>
+            <li>
+              <strong>Troop Reinforcement NFT</strong> increases the base cap of 50 goblins
+              by +5 per NFT, up to 250 goblins per run.
+            </li>
+            <li>
+              <strong>Speed (SPD)</strong>: total SPD reduces the <em>effective duration</em>;
+              the duration tier (${DURATION_BUCKETS.join(', ')} min) determines the
+              <em>nominal base cost</em> per goblin.
+            </li>
+            <li>
+              <strong>Resistance (RES)</strong>: applies a discount to the nominal daily cost →
+              each goblin consumes fewer DP than the base value.
+            </li>
+            <li>
+              <strong>Loot Hungry (LOOT)</strong> and <strong>Accuracy (ACC)</strong>:
+              increase average CHIPS rewards and improve reward quality
+              (token tiers and NFT drop chances).
+            </li>
           </ul>
         </div>
-
-        ${msgs.length ? `<div class="hint">${msgs.map(safe).join(' · ')}</div>` : ''}
+      
+        ${msgs.length ? `<div class="hint">ℹ️ ${msgs.map(safe).join(' · ')}</div>` : ''}
       `;
+
 
       // Bottone “remove tired goblins”
       const btnRem = document.getElementById('btn-remove-tired');

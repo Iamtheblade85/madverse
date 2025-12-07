@@ -34,6 +34,123 @@
       letter-spacing:.04em;
       text-transform:uppercase;
     }
+  #goblin-account-summary {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: radial-gradient(circle at top left, rgba(34,197,94,0.12), rgba(15,23,42,0.9));
+    border: 1px solid rgba(148,163,184,0.4);
+    font-size: 12px;
+  }
+
+  #goblin-account-summary .gas-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  #goblin-account-summary .gas-row:last-child {
+    margin-bottom: 0;
+  }
+
+  #goblin-account-summary .gas-chip {
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(15,23,42,0.8);
+    border: 1px solid rgba(148,163,184,0.5);
+    white-space: nowrap;
+  }
+
+  #goblin-account-summary .gas-chip strong {
+    font-weight: 800;
+  }
+
+  /* Colorazione semantica */
+  .gas-chip--power    { border-color:#facc15; color:#fefce8; }
+  .gas-chip--sum      { border-color:#0ea5e9; color:#e0f2fe; }
+  .gas-chip--avg      { border-color:#22c55e; color:#dcfce7; }
+  .gas-chip--rarity   { border-color:#a855f7; color:#f5f3ff; }
+
+  /* Pulsanti “primari” / azioni importanti */
+  button.btn-primary {
+    border-radius: 999px;
+    padding: 9px 18px;
+    border: 1px solid rgba(251,191,36,0.7);
+    background: radial-gradient(circle at top, #facc15, #f97316);
+    color: #111827;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    box-shadow: 0 0 18px rgba(250,204,21,0.6);
+    cursor: pointer;
+    transition: transform .08s ease-out, box-shadow .08s ease-out, filter .08s;
+  }
+
+  button.btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 0 24px rgba(250,204,21,0.8);
+    filter: brightness(1.05);
+  }
+
+  button.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: default;
+    box-shadow: none;
+  }
+
+  /* Pulsanti utility / quick-select */
+  #quick-select button,
+  #action-buttons button,
+  #tabs button[role="tab"],
+  #btn-load-goblins {
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,184,0.6);
+    background: radial-gradient(circle at top, rgba(15,23,42,0.96), rgba(15,23,42,0.85));
+    color: #e5e7eb;
+    padding: 7px 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .08s ease-out, box-shadow .08s ease-out, border-color .08s;
+  }
+
+  #quick-select button:hover:not(:disabled),
+  #action-buttons button:hover:not(:disabled),
+  #tabs button[role="tab"]:hover:not(:disabled),
+  #btn-load-goblins:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 0 14px rgba(56,189,248,0.6);
+    border-color: rgba(56,189,248,0.9);
+  }
+
+  /* Goblin cards “tired / low power” */
+  #goblin-list button.card-tired {
+    border-color: rgba(248,113,113,0.9);
+    background: radial-gradient(circle at top, rgba(127,29,29,0.85), rgba(15,23,42,0.95));
+    color: #fee2e2;
+  }
+
+  #goblin-list button.card-tired::after {
+    content: 'LOW POWER';
+    margin-left: 8px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 10px;
+    background: rgba(248,113,113,0.9);
+    color:#111827;
+    font-weight: 800;
+  }
+
+  #goblin-list button.card-okpower::after {
+    content: 'POWER OK';
+    margin-left: 8px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 10px;
+    background: rgba(52,211,153,0.95);
+    color:#022c22;
+    font-weight: 800;
+  }    
   </style>
 </head>
 
@@ -63,8 +180,8 @@
         </div>
 
         <div id="action-buttons" role="group" aria-label="Primary actions">
-          <button id="btn-start" title="Start an expedition with the selected goblins">🚀 Start Expedition</button>
-          <button id="btn-copy-overlay" title="Copy a link to the overlay-only view">🔗 Copy overlay link</button>
+          <button id="btn-start" class="btn-primary" title="Start an expedition with the selected goblins">🚀 Start Expedition</button>
+          <button id="btn-copy-overlay" class="btn-primary" title="Copy a link to the overlay-only view">🔗 Copy overlay link</button>
         </div>
       </nav>
 
@@ -97,15 +214,15 @@
 
       <aside id="panels" aria-label="Information panels">
         <nav id="tabs" role="tablist" aria-label="Panels" aria-orientation="horizontal">
-          <button id="tab-btn-my" role="tab" aria-selected="true" tabindex="0"
+          <button id="tab-btn-my" class="btn-primary" role="tab" aria-selected="true" tabindex="0"
                   aria-controls="tab-my" data-panel="tab-my" title="Build your expedition">
             My Goblins
           </button>
-          <button id="tab-btn-global" role="tab" aria-selected="false" tabindex="-1"
+          <button id="tab-btn-global" class="btn-primary" role="tab" aria-selected="false" tabindex="-1"
                   aria-controls="tab-global" data-panel="tab-global" title="Live view of all expeditions">
             Global
           </button>
-          <button id="tab-btn-recent" role="tab" aria-selected="false" tabindex="-1"
+          <button id="tab-btn-recent" class="btn-primary" role="tab" aria-selected="false" tabindex="-1"
                   aria-controls="tab-recent" data-panel="tab-recent" title="Expeditions completed in the last 24h">
             Recent
           </button>
@@ -118,28 +235,28 @@
           </div>
           <section id="goblin-account-summary" aria-label="Goblin account stats">
             <div class="gas-row">
-              <span id="gas-total-count">Goblins: 0</span>
-              <span id="gas-total-power">Total power: 0</span>
-              <span id="gas-avg-power">Avg power: 0</span>
+              <span id="gas-total-count"  class="gas-chip gas-chip--power">Goblins: <strong>0</strong></span>
+              <span id="gas-total-power"  class="gas-chip gas-chip--power">Total power: <strong>0</strong></span>
+              <span id="gas-avg-power"    class="gas-chip gas-chip--power">Avg power: <strong>0</strong></span>
             </div>
             <div class="gas-row">
-              <span id="gas-total-res">RES Σ: 0</span>
-              <span id="gas-total-acc">ACC Σ: 0</span>
-              <span id="gas-total-loot">LOOT Σ: 0</span>
-              <span id="gas-total-speed">SPD Σ: 0</span>
+              <span id="gas-total-res"    class="gas-chip gas-chip--sum">RES Σ: <strong>0</strong></span>
+              <span id="gas-total-acc"    class="gas-chip gas-chip--sum">ACC Σ: <strong>0</strong></span>
+              <span id="gas-total-loot"   class="gas-chip gas-chip--sum">LOOT Σ: <strong>0</strong></span>
+              <span id="gas-total-speed"  class="gas-chip gas-chip--sum">SPD Σ: <strong>0</strong></span>
             </div>
             <div class="gas-row">
-              <span id="gas-avg-res">RES μ: 0</span>
-              <span id="gas-avg-acc">ACC μ: 0</span>
-              <span id="gas-avg-loot">LOOT μ: 0</span>
-              <span id="gas-avg-speed">SPD μ: 0</span>
+              <span id="gas-avg-res"      class="gas-chip gas-chip--avg">RES μ: <strong>0</strong></span>
+              <span id="gas-avg-acc"      class="gas-chip gas-chip--avg">ACC μ: <strong>0</strong></span>
+              <span id="gas-avg-loot"     class="gas-chip gas-chip--avg">LOOT μ: <strong>0</strong></span>
+              <span id="gas-avg-speed"    class="gas-chip gas-chip--avg">SPD μ: <strong>0</strong></span>
             </div>
             <div class="gas-row">
-              <span id="gas-rarity-mythic">Mythic: 0</span>
-              <span id="gas-rarity-legendary">Legendary: 0</span>
-              <span id="gas-rarity-epic">Epic: 0</span>
-              <span id="gas-rarity-rare">Rare: 0</span>
-              <span id="gas-rarity-common">Common: 0</span>
+              <span id="gas-rarity-mythic"    class="gas-chip gas-chip--rarity">Mythic: <strong>0</strong></span>
+              <span id="gas-rarity-legendary" class="gas-chip gas-chip--rarity">Legendary: <strong>0</strong></span>
+              <span id="gas-rarity-epic"      class="gas-chip gas-chip--rarity">Epic: <strong>0</strong></span>
+              <span id="gas-rarity-rare"      class="gas-chip gas-chip--rarity">Rare: <strong>0</strong></span>
+              <span id="gas-rarity-common"    class="gas-chip gas-chip--rarity">Common: <strong>0</strong></span>
             </div>
           </section>
 
@@ -166,7 +283,7 @@
                 </div>
               </div>
 
-              <button id="btn-load-goblins" type="button"
+              <button id="btn-load-goblins" class="btn-primary" type="button"
                       title="Fetch your goblins from the API"
                       style="min-width:230px;padding:9px 16px;font-weight:800;font-size:14px;border-radius:999px;margin-left:auto;display:inline-flex;align-items:center;gap:6px;justify-content:center;">
                 🔄 Load / Refresh goblins
@@ -195,9 +312,9 @@
           <section id="run-forecast" aria-live="polite" hidden></section>
 
           <section id="quick-select" aria-label="Quick selection">
-            <button id="qs-first" title="Pick the first goblins up to your cap">✅ First 50</button>
-            <button id="qs-best"  title="Pick the strongest goblins up to your cap">🏆 Best 50</button>
-            <button id="qs-clear" title="Clear the current selection">❌ Clear</button>
+            <button id="qs-first" class="btn-primary" title="Pick the first goblins up to your cap">✅ First 50</button>
+            <button id="qs-best"  class="btn-primary" title="Pick the strongest goblins up to your cap">🏆 Best 50</button>
+            <button id="qs-clear" class="btn-primary" title="Clear the current selection">❌ Clear</button>
           </section>
 
           <section id="selection-summary" aria-label="Selection summary">
@@ -208,7 +325,7 @@
           <section id="goblin-list" aria-label="Your goblins list"></section>
 
           <div id="view-more" aria-label="Pagination">
-            <button id="btn-toggle-more" title="Expand or collapse the list" hidden>View more</button>
+            <button id="btn-toggle-more" class="btn-primary" title="Expand or collapse the list" hidden>View more</button>
           </div>
 
           <div id="toast-host" aria-live="polite"></div>
@@ -349,6 +466,8 @@
         lastForecastPayloadKey: '',
         forecastBusy: false,
         forecastData: null,
+        forecastPowerByAsset: {},        // { asset_id: power_needed }
+        forecastInsufficientIds: new Set()     
       }
     };
 
@@ -670,8 +789,22 @@
       if (State.ui.btnFirst) State.ui.btnFirst.textContent = `✅ First ${cap}`;
       if (State.ui.btnBest)  State.ui.btnBest.textContent  = `🏆 Best ${cap}`;
     }
-    function isGoblinTired(g){
-      return (g.daily_power_num || 0) < 5;
+    function isGoblinTired(g) {
+      const id = String(g.asset_id);
+      const power = Number(g.daily_power_num || 0);
+    
+      // Se abbiamo una forecast recente con power_needed_by_asset,
+      // usiamo il dato reale del backend per quella durata/selezione.
+      const map = State.runtime.forecastPowerByAsset || {};
+      if (map && map[id] != null) {
+        const needed = toNumber(map[id]);
+        // piccola tolleranza per rounding
+        return power + 1e-6 < needed;
+      }
+    
+      // Fallback “vecchio stile” se non abbiamo forecast:
+      // sotto una certa soglia lo consideriamo a riposo.
+      return power < 0.5;
     }
     function getSelectedGoblins(){
       return State.goblinsUser.filter(g => State.selectedGoblinIds.has(g.asset_id));
@@ -788,8 +921,24 @@
         renderForecast(null, 'Forecast unavailable right now.');
         return;
       }
-      State.runtime.forecastData = res.data;
+      State.runtime.forecastData = res.data || {};
+      
+      const powerMap = (res.data && res.data.power_needed_by_asset) || {};
+      State.runtime.forecastPowerByAsset = powerMap || {};
+      State.runtime.forecastInsufficientIds = new Set();
+      
+      const sel = selArr || getSelectedGoblins();
+      for (const g of sel) {
+        const id = String(g.asset_id);
+        const needed = toNumber(powerMap[id]);
+        const dp = Number(g.daily_power_num || 0);
+        if (needed && dp + 1e-6 < needed) {
+          State.runtime.forecastInsufficientIds.add(id);
+        }
+      }
+      
       renderForecast(res.data, null);
+      hydrateGoblinBuilder(); // così le card si aggiornano con POWER OK / LOW POWER
     }
 
     function renderForecastLoading(){
@@ -819,18 +968,22 @@
       const msgs = Array.isArray(data.messages) ? data.messages : [];
 
       host.hidden = false;
+      const tiredCount = State.runtime.forecastInsufficientIds
+        ? State.runtime.forecastInsufficientIds.size
+        : 0;
+      
       host.innerHTML = `
         <div class="hdr">
           <span class="tag cyan">Run Forecast</span>
           <span class="hint">Updates when selection/duration changes.</span>
         </div>
-
+      
         <div class="grid">
           <div class="card">
             <div class="kv">
               <div><span class="label">Nominal duration</span><b>${State.expedition.durationMinutes} min</b></div>
               <div><span class="label">Effective duration</span><b>${durEff} min</b></div>
-              <div><span class="label">Total daily power</span><b>${powTot || '—'}</b></div>
+              <div><span class="label">Total daily power (cost)</span><b>${powTot || '—'}</b></div>
               <div><span class="label">Selected goblins</span><b>${State.selectedGoblinIds.size}</b></div>
             </div>
           </div>
@@ -843,12 +996,37 @@
               ${nftRewards.length ? `<div><span class="label">NFT chances</span><b>${
                 nftRewards.map(it=>`${safe(it.name)} ${(Math.round((it.chance||0)*100))}%`).join(' · ')
               }</b></div>`:''}
+              ${tiredCount ? `<div style="margin-top:6px;">
+                <button id="btn-remove-tired" class="btn-primary" type="button">
+                  💤 Remove ${tiredCount} tired goblin${tiredCount>1?'s':''} from selection
+                </button>
+              </div>`:''}
             </div>
           </div>
         </div>
-
+      
         ${msgs.length ? `<div class="hint">${msgs.map(safe).join(' · ')}</div>`:''}
       `;
+      
+      // Wire bottone remove-tired se esiste
+      const btnRem = document.getElementById('btn-remove-tired');
+      if (btnRem) {
+        btnRem.onclick = () => {
+          const bad = State.runtime.forecastInsufficientIds || new Set();
+          let removed = 0;
+          for (const id of Array.from(State.selectedGoblinIds)) {
+            if (bad.has(String(id))) {
+              State.selectedGoblinIds.delete(id);
+              removed++;
+            }
+          }
+          hydrateGoblinBuilder();
+          scheduleForecastIfReady();
+          if (removed > 0) {
+            toast(`Removed ${removed} goblin${removed>1?'s':''} with insufficient daily power.`);
+          }
+        };
+      }
     }
 
     // ------------------------------------------------------------
@@ -1757,22 +1935,28 @@
       visible.forEach(g=>{
         const tired = isGoblinTired(g);
         const sel = State.selectedGoblinIds.has(g.asset_id);
-
+      
         const card = document.createElement('button');
         card.type = 'button';
         card.setAttribute('role','checkbox');
         card.setAttribute('aria-checked', String(sel));
         card.dataset.id = g.asset_id;
-        card.title = tired ? 'Resting (below min power)' : 'Click to select/deselect';
+        card.title = tired
+          ? 'This goblin has insufficient daily power for the current duration.'
+          : 'Click to select/deselect';
         card.tabIndex = tired ? -1 : 0;
-
+      
+        card.classList.toggle('card-tired', !!tired);
+        card.classList.toggle('card-okpower', !tired && sel);
+      
         card.addEventListener('keydown', (e)=>{
           if (tired) return;
           if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
         });
-
-        card.textContent = `#${g.asset_id} · ${g.name} · ${g.rarity || 'Unknown'} · Power ${g.daily_power_num}` + (tired?' · RESTING':'');
-
+      
+        card.textContent =
+          `#${g.asset_id} · ${g.name} · ${g.rarity || 'Unknown'} · Power ${g.daily_power_num}`;
+      
         if (!tired){
           card.addEventListener('click', ()=>{
             if (State.selectedGoblinIds.has(g.asset_id)) State.selectedGoblinIds.delete(g.asset_id);
@@ -1782,7 +1966,7 @@
         } else {
           card.disabled = true;
         }
-
+      
         listHost.appendChild(card);
       });
 
@@ -1809,7 +1993,7 @@
       const selected = selArr.length;
       if (State.ui.summaryCount) {
         const over = selected > cap;
-        const tiredCount = State.goblinsUser.filter(isGoblinTired).length;
+        const tiredCount = selArr.filter(isGoblinTired).length;
         State.ui.summaryCount.innerHTML =
           `Selected goblins: <b>${selected}</b> / <b>${cap}</b>` +
           (over ? ` <span class="badge err" title="You are above your cap. Remove some goblins.">Over cap</span>` : '') +
@@ -2061,6 +2245,9 @@
       pushCanvasMsg(`⛏️ ${State.user.wax_account} started an expedition`);
 
       State.runtime.expeditionInProgress = true;
+      State.runtime.forecastPowerByAsset = {};
+      State.runtime.forecastInsufficientIds = new Set();
+     
       const rf = document.getElementById('run-forecast');
       if (rf){
         rf.replaceChildren();

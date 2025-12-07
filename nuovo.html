@@ -36,18 +36,18 @@
     }
   #goblin-account-summary {
     margin-top: 10px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: radial-gradient(circle at top left, rgba(34,197,94,0.12), rgba(15,23,42,0.9));
-    border: 1px solid rgba(148,163,184,0.4);
-    font-size: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: radial-gradient(circle at top left, rgba(34,197,94,0.16), rgba(15,23,42,0.96));
+    border: 1px solid rgba(148,163,184,0.55);
+    font-size: 13px;
   }
 
   #goblin-account-summary .gas-row {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
 
   #goblin-account-summary .gas-row:last-child {
@@ -55,22 +55,142 @@
   }
 
   #goblin-account-summary .gas-chip {
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: 999px;
-    background: rgba(15,23,42,0.8);
-    border: 1px solid rgba(148,163,184,0.5);
+    background: rgba(15,23,42,0.9);
+    border: 1px solid rgba(148,163,184,0.7);
     white-space: nowrap;
+    font-size: 12px;
+    position: relative;
   }
 
   #goblin-account-summary .gas-chip strong {
-    font-weight: 800;
+    font-weight: 900;
+    font-size: 13px;
   }
 
-  /* Colorazione semantica */
+  /* Piccolo “tooltip” testuale via title+cursor */
+  #goblin-account-summary .gas-chip[title] {
+    cursor: help;
+  }
+
+  /* Colorazione semantica più marcata */
   .gas-chip--power    { border-color:#facc15; color:#fefce8; }
   .gas-chip--sum      { border-color:#0ea5e9; color:#e0f2fe; }
   .gas-chip--avg      { border-color:#22c55e; color:#dcfce7; }
   .gas-chip--rarity   { border-color:#a855f7; color:#f5f3ff; }
+  /* Selection summary più grande e leggibile */
+  #selection-summary {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, rgba(15,23,42,0.95), rgba(30,64,175,0.85));
+    border: 1px solid rgba(59,130,246,0.7);
+    font-size: 13px;
+  }
+  #selection-summary #sel-count b {
+    font-size: 14px;
+  }
+  #selection-summary .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 11px;
+    margin-left: 4px;
+  }
+  .badge.err  { background: rgba(239,68,68,0.95);  color:#111827; }
+  .badge.warn { background: rgba(245,158,11,0.95); color:#111827; }
+
+  /* Run forecast panel: cards, grid, badge, help text */
+  #run-forecast {
+    margin-top: 12px;
+    padding: 12px 14px 14px;
+    border-radius: 12px;
+    background: radial-gradient(circle at top left, rgba(56,189,248,0.08), rgba(15,23,42,0.98));
+    border: 1px solid rgba(125,211,252,0.5);
+    font-size: 13px;
+  }
+  #run-forecast .hdr{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  #run-forecast .tag{
+    display:inline-flex;
+    align-items:center;
+    padding:3px 8px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    border:1px solid rgba(125,211,252,0.9);
+    background:radial-gradient(circle at top,rgba(8,47,73,1),rgba(15,23,42,1));
+  }
+  #run-forecast .hint{
+    font-size:12px;
+    opacity:.9;
+  }
+  #run-forecast .grid{
+    display:grid;
+    grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);
+    gap:10px;
+    margin-bottom:8px;
+  }
+  @media (max-width:900px){
+    #run-forecast .grid{
+      grid-template-columns:minmax(0,1fr);
+    }
+  }
+  #run-forecast .card{
+    padding:10px 11px;
+    border-radius:10px;
+    background:linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,64,175,0.75));
+    border:1px solid rgba(55,65,81,0.9);
+  }
+  #run-forecast .kv{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px 12px;
+  }
+  #run-forecast .kv .label{
+    display:block;
+    font-size:11px;
+    opacity:.8;
+  }
+  #run-forecast .kv b{
+    font-size:13px;
+  }
+  #run-forecast .badge-inline{
+    display:inline-flex;
+    align-items:center;
+    padding:1px 6px;
+    border-radius:999px;
+    font-size:11px;
+    margin-left:4px;
+    background:rgba(15,23,42,0.9);
+    border:1px solid rgba(96,165,250,0.9);
+  }
+  #run-forecast .forecast-help{
+    margin-top:4px;
+    font-size:12px;
+    line-height:1.4;
+  }
+  #run-forecast .forecast-help-title{
+    font-size:12px;
+    font-weight:800;
+    margin-bottom:4px;
+  }
+  #run-forecast .forecast-help ul{
+    margin:0;
+    padding-left:18px;
+  }
+  #run-forecast .forecast-help li{
+    margin:2px 0;
+  }
 
   /* Pulsanti “primari” / azioni importanti */
   button.btn-primary {
@@ -497,6 +617,37 @@
       if (n >= 1_000) return (n/1_000).toFixed(1).replace(/\.0$/,'') + 'k';
       return String(Math.round(n));
     }
+    function formatDP(n, digits=2){
+      const v = Number(n || 0);
+      if (!Number.isFinite(v)) return '0.00';
+      return v.toFixed(digits);
+    }
+
+    // --- Mappa FE allineata alla POWER_BASE_MAP del backend ---
+    const DURATION_BUCKETS = [5, 30, 60, 120, 360, 1440];
+    const POWER_BASE_MAP_FE = {
+      5:    0.52,
+      30:   2.50,
+      60:   4.80,
+      120:  9.20,
+      360:  26.50,
+      1440: 80.00,
+    };
+
+    function bucketFromMinutes(mins){
+      mins = Number(mins || 0);
+      if (mins <= 0) return 5;
+      for (const b of DURATION_BUCKETS){
+        if (mins <= b) return b;
+      }
+      return DURATION_BUCKETS[DURATION_BUCKETS.length - 1];
+    }
+
+    function nominalCostPerGoblinForMinutes(mins){
+      const bucket = bucketFromMinutes(mins);
+      return POWER_BASE_MAP_FE[bucket] || 0;
+    }
+    
     function debounce(fn, ms=250){
       let t = null;
       return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), ms); };
@@ -821,12 +972,11 @@
       return { ok:true };
     }
     function buildDurationHint(mins){
-      function cost(m){ return 0.8*m + 0.04*m*m; }
-      const ref = cost(60)/60;
-      const cur = cost(mins)/mins;
-      const efficiency = Math.max(0.6, Math.min(1.5, ref/cur));
-      const tag = mins<=15 ? 'High yield' : mins<=45 ? 'Balanced' : 'Chill';
-      return `${tag}: more completions/hour → more rolls (×${efficiency.toFixed(2)})`;
+      const bucket = bucketFromMinutes(mins);
+      const base = nominalCostPerGoblinForMinutes(mins);  // DP nominale per goblin
+      const runsPerDay = bucket ? Math.floor(1440 / bucket) : 0;
+
+      return `Base cost: ${formatDP(base)} DP/goblin · tier ${bucket}m · fino a ${runsPerDay} run/giorno per goblin a piena power (prima degli attributi).`;
     }
     function initDurationSwitch(){
       const sel = State.ui.durationSelect;
@@ -949,6 +1099,7 @@
 
     function renderForecast(data, message){
       const host = document.getElementById('run-forecast'); if (!host) return;
+
       if (message){
         host.hidden = false;
         host.innerHTML = `
@@ -959,7 +1110,8 @@
       }
       if (!data){ host.hidden = true; host.innerHTML = ''; return; }
 
-      const durEff = toNumber(data.duration_effective_minutes) || State.expedition.durationMinutes;
+      const durNominal = State.expedition.durationMinutes || 0;
+      const durEff = toNumber(data.duration_effective_minutes) || durNominal;
       const powTot = toNumber(data.power_needed_total);
       const tMin = toNumber(data.tokens_min);
       const tMax = toNumber(data.tokens_max);
@@ -967,48 +1119,106 @@
       const nftRewards = Array.isArray(data.nft_rewards) ? data.nft_rewards : [];
       const msgs = Array.isArray(data.messages) ? data.messages : [];
 
-      host.hidden = false;
+      const selectedCountBackend = toNumber(data.selected_count);
+      const selectedCount = selectedCountBackend || State.selectedGoblinIds.size || 0;
+
+      // Stesso tier che usa il backend (bucket su durata effettiva)
+      const tierEff = bucketFromMinutes(durEff);
+      const baseNominalPerGoblin = nominalCostPerGoblinForMinutes(durEff);
+      const effAvgPerGoblin = selectedCount ? (powTot / selectedCount) : 0;
+
       const tiredCount = State.runtime.forecastInsufficientIds
         ? State.runtime.forecastInsufficientIds.size
         : 0;
-      
+
+      host.hidden = false;
       host.innerHTML = `
         <div class="hdr">
           <span class="tag cyan">Run Forecast</span>
-          <span class="hint">Updates when selection/duration changes.</span>
+          <span class="hint">Aggiornato quando cambi durata o selezione.</span>
         </div>
-      
+
         <div class="grid">
           <div class="card">
             <div class="kv">
-              <div><span class="label">Nominal duration</span><b>${State.expedition.durationMinutes} min</b></div>
-              <div><span class="label">Effective duration</span><b>${durEff} min</b></div>
-              <div><span class="label">Total daily power (cost)</span><b>${powTot || '—'}</b></div>
-              <div><span class="label">Selected goblins</span><b>${State.selectedGoblinIds.size}</b></div>
+              <div title="Minuti scelti nel selettore durata.">
+                <span class="label">Durata nominale</span>
+                <b>${durNominal} min</b>
+              </div>
+              <div title="Durata stimata dopo il contributo totale di SPD.">
+                <span class="label">Durata effettiva</span>
+                <b>${durEff} min <span class="badge-inline">tier ${tierEff}m</span></b>
+              </div>
+              <div title="Costo base per goblin PRIMA di RES/ATTRIBUTI, per questo tier di durata.">
+                <span class="label">Daily cost nominale / goblin</span>
+                <b>${formatDP(baseNominalPerGoblin)} DP</b>
+              </div>
+              <div title="Media del costo reale per goblin DOPO RES, calcolata dal backend.">
+                <span class="label">Daily cost effettivo medio / goblin</span>
+                <b>${selectedCount ? formatDP(effAvgPerGoblin) : '—'} DP</b>
+              </div>
+              <div title="Somma di tutti i costi effettivi di questa run.">
+                <span class="label">Daily power totale (run)</span>
+                <b>${powTot ? formatDP(powTot) : '—'} DP</b>
+              </div>
+              <div title="Goblin effettivamente usati nel forecast (dopo cap, se superi il limite).">
+                <span class="label">Goblins selezionati</span>
+                <b>${selectedCount}</b>
+              </div>
             </div>
           </div>
+
           <div class="card">
             <div class="kv">
-              <div><span class="label">Token reward (min–max)</span><b>${tMin || '—'} – ${tMax || '—'}</b></div>
-              ${Object.keys(probs).length ? `<div><span class="label">Token tier probs</span><b>${
-                Object.entries(probs).map(([k,v])=>`${safe(k)} ${(Math.round(v*100))}%`).join(' · ')
-              }</b></div>`:''}
-              ${nftRewards.length ? `<div><span class="label">NFT chances</span><b>${
-                nftRewards.map(it=>`${safe(it.name)} ${(Math.round((it.chance||0)*100))}%`).join(' · ')
-              }</b></div>`:''}
-              ${tiredCount ? `<div style="margin-top:6px;">
+              <div title="Intervallo di CHIPS atteso per questa run.">
+                <span class="label">Chips (min–max)</span>
+                <b>${tMin || '—'} – ${tMax || '—'}</b>
+              </div>
+
+              ${Object.keys(probs).length ? `
+              <div title="Probabilità relative delle fasce di reward token in base all’ACC medio.">
+                <span class="label">Token tier probs</span>
+                <b>${
+                  Object.entries(probs)
+                    .map(([k,v]) => `${safe(k)} ${(Math.round(v*100))}%`)
+                    .join(' · ')
+                }</b>
+              </div>` : ''}
+
+              ${nftRewards.length ? `
+              <div title="Chance approssimativa di ricevere ciascun template NFT in una singola run.">
+                <span class="label">NFT chances</span>
+                <b>${
+                  nftRewards
+                    .map(it => `${safe(it.name)} ${(Math.round((it.chance||0)*100))}%`)
+                    .join(' · ')
+                }</b>
+              </div>` : ''}
+
+              ${tiredCount ? `
+              <div style="margin-top:6px;">
                 <button id="btn-remove-tired" class="btn-primary" type="button">
                   💤 Remove ${tiredCount} tired goblin${tiredCount>1?'s':''} from selection
                 </button>
-              </div>`:''}
+              </div>` : ''}
             </div>
           </div>
         </div>
-      
-        ${msgs.length ? `<div class="hint">${msgs.map(safe).join(' · ')}</div>`:''}
+
+        <div class="card forecast-help">
+          <div class="forecast-help-title">Come viene calcolata questa spedizione</div>
+          <ul>
+            <li><strong>Troop Reinforcement NFT</strong>: alza il cap da 50 goblin di +5 per NFT, fino a 250 goblin totali per run.</li>
+            <li><strong>Speed (SPD)</strong>: la somma SPD riduce la <em>durata effettiva</em>; il tier di durata (${DURATION_BUCKETS.join(', ')} min) decide la <em>base cost nominale</em> per goblin.</li>
+            <li><strong>Resistance (RES)</strong>: applica uno sconto sul costo nominale → per goblin paghi meno DP rispetto al valore base.</li>
+            <li><strong>Loot Hungry (LOOT)</strong> e <strong>Accuracy (ACC)</strong>: aumentano il bottino medio in CHIPS e la qualità delle ricompense (token tiers + chance NFT).</li>
+          </ul>
+        </div>
+
+        ${msgs.length ? `<div class="hint">${msgs.map(safe).join(' · ')}</div>` : ''}
       `;
-      
-      // Wire bottone remove-tired se esiste
+
+      // Bottone “remove tired goblins”
       const btnRem = document.getElementById('btn-remove-tired');
       if (btnRem) {
         btnRem.onclick = () => {

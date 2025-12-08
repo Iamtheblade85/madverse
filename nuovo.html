@@ -1082,8 +1082,8 @@
 
     async function loadAssets(){
       const [bg, gob] = await Promise.all([
-        loadImage('img/world-bg.webp'),
-        loadImage('img/goblin.png')
+        loadImage('cave-grid.gif'),
+        loadImage('goblin.png')
       ]);
       if (bg) Assets.bg = bg;
       if (gob) Assets.goblin = gob;

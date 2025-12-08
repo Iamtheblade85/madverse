@@ -265,6 +265,80 @@
   #run-forecast .forecast-help li{
     margin:2px 0;
   }
+/* --- Simulator pretty chips & layout --- */
+#run-forecast .sim-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+@media (max-width: 900px) {
+  #run-forecast .sim-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+#run-forecast .sim-card {
+  padding: 10px 11px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,64,175,0.75));
+  border: 1px solid rgba(55,65,81,0.9);
+  font-size: 13px;
+}
+
+#run-forecast .sim-section-title {
+  font-weight: 800;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+#run-forecast .sim-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+#run-forecast .sim-chip {
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(148,163,184,0.7);
+  background: radial-gradient(circle at top, rgba(15,23,42,0.96), rgba(15,23,42,0.9));
+  white-space: nowrap;
+}
+
+#run-forecast .sim-chip-label {
+  opacity: 0.9;
+}
+
+#run-forecast .sim-chip-value {
+  font-weight: 900;
+}
+
+/* colori semantici diversi */
+#run-forecast .sim-chip-token-low {
+  border-color:#22c55e;
+  box-shadow:0 0 10px rgba(34,197,94,0.35);
+}
+#run-forecast .sim-chip-token-mid {
+  border-color:#0ea5e9;
+  box-shadow:0 0 10px rgba(14,165,233,0.35);
+}
+#run-forecast .sim-chip-token-high {
+  border-color:#facc15;
+  box-shadow:0 0 10px rgba(250,204,21,0.4);
+}
+#run-forecast .sim-chip-token-veryhigh {
+  border-color:#fb923c;
+  box-shadow:0 0 10px rgba(249,115,22,0.4);
+}
+
+#run-forecast .sim-chip-nft {
+  border-color:#a855f7;
+  box-shadow:0 0 10px rgba(168,85,247,0.4);
+}
 
   /* Pulsanti “primari” / azioni importanti */
   button.btn-primary {
@@ -577,7 +651,7 @@
       trailMinPointDist: 0.10,
       trailMaxPoints: 60,
     };
-
+    const SIMULATION_API_PATH = '/2expedition_simulate';
     const QS = new URLSearchParams(location.search);
     const OVERLAY_MODE =
       QS.get('overlay') === '1' ||
@@ -1194,18 +1268,15 @@
       updateForecastTabs(host);
     }
 
-
 function ensureForecastShell() {
   const host = document.getElementById('run-forecast');
   if (!host) return null;
-
   if (!host.dataset.shellInitialized) {
     host.innerHTML = `
       <div class="hdr">
         <span class="tag cyan">Run Forecast</span>
         <span class="hint">🔄 Updated when you change duration or selection.</span>
       </div>
-
       <div class="forecast-tabs" role="tablist" aria-label="Forecast mode">
         <button type="button"
                 data-mode="real"
@@ -1218,9 +1289,7 @@ function ensureForecastShell() {
           🧪 Simulator
         </button>
       </div>
-
       <div id="forecast-panel-real"></div>
-
       <div id="forecast-panel-sim" hidden>
         <div class="card">
           <div class="forecast-sim-form" aria-label="Run simulator">
@@ -1235,39 +1304,32 @@ function ensureForecastShell() {
                 <option value="1440">24h — Ultra</option>
               </select>
             </label>
-
             <label>
-              # Goblins
+              Number of goblins
               <input id="sim-goblins" type="number" min="1" step="1" inputmode="numeric">
             </label>
-
             <label>
-              Total ACC
+              Total accuracy
               <input id="sim-acc" type="number" min="0" step="1" inputmode="numeric">
             </label>
-
             <label>
-              Total RES
+              Total resistance
               <input id="sim-res" type="number" min="0" step="1" inputmode="numeric">
             </label>
-
             <label>
-              Total SPD
+              Total speed
               <input id="sim-spd" type="number" min="0" step="1" inputmode="numeric">
             </label>
-
             <label>
-              Total LOOT
+              Total loot hunger
               <input id="sim-loot" type="number" min="0" step="1" inputmode="numeric">
             </label>
           </div>
-
           <div style="display:flex;justify-content:flex-start;margin-top:8px;gap:8px;">
             <button id="sim-run" class="btn-primary" type="button">
               🧪 Run simulation
             </button>
           </div>
-
           <div id="forecast-sim-result" class="forecast-help" style="margin-top:8px;">
             <div class="forecast-help-title">📘 Simulator</div>
             <p>Enter your totals and click <strong>Run simulation</strong> to preview an approximate expedition.</p>
@@ -1275,13 +1337,10 @@ function ensureForecastShell() {
         </div>
       </div>
     `;
-
     host.dataset.shellInitialized = '1';
-
     wireForecastTabs(host);
     wireSimForm(host);
   }
-
   return host;
 }
 
@@ -1336,17 +1395,135 @@ function updateForecastSimResult() {
     return;
   }
 
+  const duration = Number(
+    res.duration_minutes ??
+    cfg.durationMinutes ??
+    30
+  );
+  const goblinsCount = Number(
+    res.goblins_count ??
+    cfg.goblinsCount ??
+    0
+  );
+
+  const tokensMin  = toNumber(res.tokens_min);
+  const tokensMax  = toNumber(res.tokens_max);
+  const tokensAvg  = toNumber(res.tokens_avg ?? res.tokens_average ?? 0);
+
+  const tokenProbs = res.token_tier_probs || {};
+  const nftRewards = Array.isArray(res.nft_rewards) ? res.nft_rewards : [];
+
+  // helper per percentuali
+  const fmtPct = (v) => `${Math.round((Number(v) || 0) * 100)}%`;
+
+  // mapping di alcune chiavi "classiche" in label leggibili
+  const prettyTierName = (key) => {
+    const k = String(key || '').toLowerCase();
+    if (k.includes('low')) return 'Small token reward';
+    if (k.includes('mid') || k.includes('medium')) return 'Medium token reward';
+    if (k.includes('high') && !k.includes('very')) return 'High token reward';
+    if (k.includes('very') || k.includes('jackpot')) return 'Very high token reward';
+    return key; // fallback: mostra il nome così com’è
+  };
+
+  // scegli una classe colore in base all'ordine / "forza"
+  const tierClassByIndex = (idx) => {
+    if (idx === 0) return 'sim-chip-token-low';
+    if (idx === 1) return 'sim-chip-token-mid';
+    if (idx === 2) return 'sim-chip-token-high';
+    return 'sim-chip-token-veryhigh';
+  };
+
+  const tokenProbsHtml = Object.keys(tokenProbs).length
+    ? `
+      <div class="sim-section-title">Token reward probabilities</div>
+      <div class="sim-chips">
+        ${
+          Object.entries(tokenProbs)
+            .sort((a,b) => (b[1]||0) - (a[1]||0))
+            .map(([key, value], idx) => `
+              <span class="sim-chip ${tierClassByIndex(idx)}">
+                <span class="sim-chip-label">${safe(prettyTierName(key))}</span>
+                <span class="sim-chip-value">${fmtPct(value)}</span>
+              </span>
+            `).join('')
+        }
+      </div>
+    `
+    : `
+      <div class="sim-section-title">Token reward probabilities</div>
+      <p style="font-size:12px;opacity:.85;">No token probability breakdown available for this configuration.</p>
+    `;
+
+  const nftChipsHtml = nftRewards.length
+    ? `
+      <div class="sim-section-title">Collectible item chances (NFTs)</div>
+      <div class="sim-chips">
+        ${
+          nftRewards.map((n) => {
+            const name = safe(n.name || n.template_name || 'Unknown item');
+            const minC = n.chance_min != null ? fmtPct(n.chance_min) : null;
+            const maxC = n.chance_max != null ? fmtPct(n.chance_max) : null;
+            const midC = n.chance != null ? fmtPct(n.chance) : null;
+
+            let label;
+            if (minC && maxC) label = `${minC} – ${maxC}`;
+            else if (midC)    label = midC;
+            else              label = 'rare';
+
+            return `
+              <span class="sim-chip sim-chip-nft">
+                <span class="sim-chip-label">${name}</span>
+                <span class="sim-chip-value">${label}</span>
+              </span>
+            `;
+          }).join('')
+        }
+      </div>
+    `
+    : `
+      <div class="sim-section-title">Collectible item chances (NFTs)</div>
+      <p style="font-size:12px;opacity:.85;">This sample expedition has no specific collectible item chances to display.</p>
+    `;
+
   host.innerHTML = `
     <div class="forecast-help-title">🧪 Simulation result</div>
-    <ul>
-      <li><strong>Duration:</strong> ${cfg.durationMinutes} min (tier ${bucketFromMinutes(cfg.durationMinutes)}m)</li>
-      <li><strong># Goblins:</strong> ${cfg.goblinsCount}</li>
-      <li><strong>Estimated total DP cost:</strong> ${formatDP(res.totalDp || 0)} DP</li>
-      <li><strong>Estimated DP per goblin:</strong> ${cfg.goblinsCount ? formatDP((res.totalDp || 0) / cfg.goblinsCount) : '—'} DP</li>
-    </ul>
-    <p style="font-size:12px;opacity:.85;">
-      This is a <em>local approximation</em> using the same duration tiers as the real forecast.
-      You will still need to use your real goblins to start an expedition.
+
+    <div class="sim-grid">
+      <div class="sim-card">
+        <div class="sim-section-title">Expedition setup (simulated)</div>
+        <ul style="margin:0;padding-left:18px;font-size:13px;">
+          <li><strong>Duration:</strong> ${duration} minutes</li>
+          <li><strong>Number of goblins:</strong> ${goblinsCount}</li>
+          ${
+            (tokensMin || tokensMax)
+              ? `<li><strong>Estimated CHIPS range:</strong> ${tokensMin || '—'} – ${tokensMax || '—'}</li>`
+              : ''
+          }
+          ${
+            tokensAvg
+              ? `<li><strong>Estimated average CHIPS:</strong> ${tokensAvg}</li>`
+              : ''
+          }
+        </ul>
+
+        <p style="margin-top:6px;font-size:12px;opacity:.85;">
+          This simulator uses your total accuracy, resistance, speed and loot hunger
+          to approximate a single expedition. It does not reserve or spend any real power,
+          and it does not start an on-chain expedition.
+        </p>
+      </div>
+
+      <div class="sim-card">
+        ${tokenProbsHtml}
+        <div style="height:6px;"></div>
+        ${nftChipsHtml}
+      </div>
+    </div>
+
+    <p style="margin-top:8px;font-size:12px;opacity:.8;">
+      All values are indicative and based on the same internal logic used by real expeditions.
+      Actual on-chain rewards can be higher or lower due to randomness.
     </p>
   `;
 }
@@ -1398,27 +1575,50 @@ function wireSimForm(host) {
   }
 }
 
-// Simple local simulation of DP cost (placeholder; you can replace with a backend call)
-function runSimulationFromForm() {
-  const cfg = State.runtime.simConfig;
-  const bucket = bucketFromMinutes(cfg.durationMinutes || 30);
-  const basePerGoblin = nominalCostPerGoblinForMinutes(bucket);
+async function runSimulationFromForm() {
+  const cfg = State.runtime.simConfig || {};
+  const host = document.getElementById('forecast-sim-result');
 
-  const count = Math.max(0, Number(cfg.goblinsCount || 0));
-  if (!count) {
+  if (!host) return;
+
+  // Validazione base lato UI
+  const goblinsCount = Number(cfg.goblinsCount || 0);
+  if (!goblinsCount || goblinsCount <= 0) {
     State.runtime.simResult = null;
-    updateForecastSimResult();
+    host.innerHTML = `
+      <div class="forecast-help-title">🧪 Simulator</div>
+      <p>Please enter at least <strong>one goblin</strong> to run a simulation.</p>
+    `;
     return;
   }
 
-  // Very simple approximation: apply a small discount based on RES
-  const avgRes = count ? (Number(cfg.totalRes || 0) / count) : 0;
-  const resFactor = Math.max(0.5, 1 - (avgRes / 400)); // tune this as you like
-
-  const effectivePerGoblin = basePerGoblin * resFactor;
-  const totalDp = effectivePerGoblin * count;
-
-  State.runtime.simResult = { totalDp };
+  host.innerHTML = `
+    <div class="forecast-help-title">🧪 Simulator</div>
+    <p>Calculating a sample expedition with your numbers…</p>
+  `;
+  const body = {
+    duration_minutes: Number(cfg.durationMinutes || 30),
+    goblins_count: goblinsCount,
+    total_accuracy: Number(cfg.totalAcc || 0),
+    total_resistance: Number(cfg.totalRes || 0),
+    total_speed: Number(cfg.totalSpeed || 0),
+    total_loot: Number(cfg.totalLoot || 0)
+  };
+  let res;
+  try {
+    res = await Api.post(SIMULATION_API_PATH, body, 15000);
+  } catch (e) {
+    res = { ok: false, error: e };
+  }
+  if (!res.ok || !res.data) {
+    State.runtime.simResult = null;
+    host.innerHTML = `
+      <div class="forecast-help-title">🧪 Simulator</div>
+      <p>Simulation is temporarily unavailable. Please try again in a few seconds.</p>
+    `;
+    return;
+  }
+  State.runtime.simResult = res.data || {};
   updateForecastSimResult();
 }
 

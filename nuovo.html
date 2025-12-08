@@ -1123,46 +1123,51 @@
     // ------------------------------------------------------------
     // GOBLIN GLOBAL STATS PANEL
     // ------------------------------------------------------------
-
     function updateGoblinGlobalStats(statsSummary, countFallback){
       const totalCount = toNumber(statsSummary?.count_total) ||
                          toNumber(countFallback) || 0;
-
+    
+      const totals = statsSummary?.totals || {};
+      const avgs   = statsSummary?.averages || {};
+      const rarity = statsSummary?.rarity_counts || {};
+    
+      const totalPower = toNumber(totals.daily_power)   || 0;
+      const avgPower   = toNumber(avgs.daily_power)     || 0;
+    
       // pannello "Total goblins / Total daily power / Avg daily power"
       if (State.ui.goblinStatCount) {
         State.ui.goblinStatCount.textContent = String(totalCount);
       }
       if (State.ui.goblinStatTotal){
-        const totalPower = toNumber(statsSummary?.totals?.daily_power) || 0;
         State.ui.goblinStatTotal.textContent = formatCompact(totalPower);
       }
       if (State.ui.goblinStatAvg){
-        const avgPower = toNumber(statsSummary?.averages?.daily_power) || 0;
         State.ui.goblinStatAvg.textContent = formatDP(avgPower);
       }
-
-      const totals = statsSummary?.totals || {};
-      const avgs   = statsSummary?.averages || {};
-      const rarity = statsSummary?.rarity_counts || {};
-
+    
       const setStrong = (id, val)=>{
         const el = document.getElementById(id);
         if (!el) return;
         const strong = el.querySelector('strong');
         if (strong) strong.textContent = String(val);
       };
-
+    
+      // power nel riepilogo a chip
+      setStrong('gas-total-power', formatCompact(totalPower));
+      setStrong('gas-avg-power',   formatDP(avgPower));
+    
+      // resto dei totali
       setStrong('gas-total-count', totalCount);
       setStrong('gas-total-res',   formatCompact(totals.resistance   || 0));
       setStrong('gas-total-acc',   formatCompact(totals.accuracy     || 0));
       setStrong('gas-total-loot',  formatCompact(totals.loot_hungry  || 0));
       setStrong('gas-total-speed', formatCompact(totals.speed        || 0));
-
+    
       setStrong('gas-avg-res',   formatDP(avgs.resistance   || 0));
       setStrong('gas-avg-acc',   formatDP(avgs.accuracy     || 0));
       setStrong('gas-avg-loot',  formatDP(avgs.loot_hungry  || 0));
       setStrong('gas-avg-speed', formatDP(avgs.speed        || 0));
-
+    
       setStrong('gas-rarity-mythic',    rarity.mythic    || 0);
       setStrong('gas-rarity-legendary', rarity.legendary || 0);
       setStrong('gas-rarity-epic',      rarity.epic      || 0);
@@ -1203,10 +1208,10 @@
     }
 
     async function requestForecast(duration, selArr){
-      if (State.runtime.expeditionInProgress) { renderForecast(null, 'An expedition is running.'); return; }
-      if (!State.nftsLoaded) { renderForecast(null,'Load your goblins first.'); return; }
-      if (!selArr?.length || !duration) { renderForecast(null, ''); return; }
-      try { assertAuth(); } catch { renderForecast(null,'Sign in to preview rewards.'); return; }
+      //if (State.runtime.expeditionInProgress) { renderForecast(null, 'An expedition is running.'); return; }
+      //if (!State.nftsLoaded) { renderForecast(null,'Load your goblins first.'); return; }
+      //if (!selArr?.length || !duration) { renderForecast(null, ''); return; }
+      //try { assertAuth(); } catch { renderForecast(null,'Sign in to preview rewards.'); return; }
 
       const body = {
         wax_account: State.user.wax_account,
@@ -1432,6 +1437,16 @@
       let effAvgPerGoblin = toNumber(
         powerBlock.base_cost_effective_per_goblin ??
         0
+      );
+      const totalPowerNominal = toNumber(
+        powerBlock.total_power_nominal ??
+        (baseNominalPerGoblin * selectedCount)
+      );
+
+      const totalPowerEffective = toNumber(
+        powerBlock.total_power_effective ??
+        data.power_needed_total ??
+        totalPowerNominal
       );
       
       // fallback difensivo se manca il campo specifico

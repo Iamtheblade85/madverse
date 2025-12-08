@@ -843,6 +843,12 @@
       const mins = Math.round(toNumber(effSeconds) / 60);
       return formatMinutesShort(mins);
     }
+    function formatDurationMinSecFromSeconds(sec){
+      const total = Math.max(0, Math.floor(toNumber(sec)));
+      const m = Math.floor(total / 60);
+      const s = total % 60;
+      return `${m}m ${s.toString().padStart(2,'0')}s`;
+    }
 
     // --- durata / costo nominale ---
 
@@ -1398,6 +1404,12 @@
 
       const durNominal = State.expedition.durationMinutes || 0;
       const durEff = toNumber(data.duration_effective_minutes) || durNominal;
+      const durEffSeconds = toNumber(
+        data.duration?.effective_seconds ??
+        data.duration_effective_seconds ??
+        durEff * 60
+      );
+      
       const powTot = toNumber(data.power_needed_total);
       const tMin = toNumber(data.tokens_min);
       const tMax = toNumber(data.tokens_max);
@@ -1424,15 +1436,13 @@
                 <span class="label">⏱ Nominal duration</span>
                 <b>${durNominal} min</b>
               </div>
-
               <div title="Estimated duration after the total SPEED bonus is applied.">
                 <span class="label">⚡ Effective duration</span>
                 <b>
-                  ${durEff} min
+                  ${formatDurationMinSecFromSeconds(durEffSeconds)}
                   <span class="badge-inline">tier ${tierEff}m</span>
                 </b>
               </div>
-
               <div title="Base daily cost per goblin BEFORE RESISTANCE is applied, for this duration tier.">
                 <span class="label">💰 Nominal daily cost / goblin</span>
                 <b>
@@ -1726,7 +1736,9 @@
               <li>
                 <strong>Effective duration:</strong>
                 ${durationEffective} minutes
-                <span style="opacity:.7">(${formatEffectiveDurationShort(effectiveSeconds)} total)</span>
+                <span style="opacity:.7">
+                  (${formatDurationMinSecFromSeconds(effectiveSeconds)})
+                </span>
               </li>
               <li><strong>Number of goblins:</strong> ${goblinsCount}</li>
             </ul>

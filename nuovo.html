@@ -1454,10 +1454,13 @@
         effAvgPerGoblin = powTot / selectedCount;
       }
 
+      // tired goblins: prima usiamo il dato del backend, poi il set locale come fallback
+      const tiredFromBackend = toNumber(powerBlock.tired_goblins_effective);
+      const tiredCount = tiredFromBackend ||
+        (State.runtime.forecastInsufficientIds
+          ? State.runtime.forecastInsufficientIds.size
+          : 0);
 
-      const tiredCount = State.runtime.forecastInsufficientIds
-        ? State.runtime.forecastInsufficientIds.size
-        : 0;
 
       return `
         <div class="grid">
@@ -1492,13 +1495,14 @@
               
               <div title="Sum of all NOMINAL daily power costs (without RES) for this run.">
                 <span class="label">🔋 Total daily power (nominal)</span>
-                <b>${totalPowerNominal ? formatDP(totalPowerNominal) : '—'} DP</b>
+                <b>${Number.isFinite(totalPowerNominal) ? formatDP(totalPowerNominal) : '—'} DP</b>
               </div>
               
               <div title="Sum of all EFFECTIVE daily power costs (with RES) for this run.">
                 <span class="label">🔋 Total daily power (effective)</span>
-                <b>${totalPowerEffective ? formatDP(totalPowerEffective) : '—'} DP</b>
+                <b>${Number.isFinite(totalPowerEffective) ? formatDP(totalPowerEffective) : '—'} DP</b>
               </div>
+
               <div title="Goblins actually used in the forecast (after applying the cap, if exceeded).">
                 <span class="label">🧬 Selected goblins</span>
                 <b>${selectedCount}</b>
@@ -1511,11 +1515,10 @@
               <div title="Expected CHIPS reward range for this run.">
                 <span class="label">💎 Chips (min–max)</span>
                 <b>
-                  ${tMin || '—'} – ${tMax || '—'}
+                  ${Number.isFinite(tMin) ? tMin : '—'} – ${Number.isFinite(tMax) ? tMax : '—'}
                   <span class="badge-inline">reward</span>
                 </b>
               </div>
-
               ${Object.keys(probs).length ? `
               <div title="Relative probability of token reward tiers based on average ACC.">
                 <span class="label">📊 Token tier probabilities</span>

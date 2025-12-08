@@ -662,6 +662,14 @@
         forecastPowerByAsset: {},        // { asset_id: power_needed }
         forecastInsufficientIds: new Set(),     
         forecastMode: 'real',            // 'real' | 'sim'
+        simConfig: {                     // current simulator form values
+          durationMinutes: 30,
+          goblinsCount: 50,
+          totalAcc: 0,
+          totalRes: 0,
+          totalSpeed: 0,
+          totalLoot: 0
+        },      
         simResult: null                  // ultimo risultato simulato       
       }
     };
@@ -1172,75 +1180,255 @@
       host.innerHTML = `<div class="hdr"><span class="tag cyan">Run Forecast</span> <span class="hint">Computing…</span></div>`;
     }
 
-    function renderForecast(data, message){
-      const host = document.getElementById('run-forecast'); 
-      if (!host) return;
-    
-      const mode = State.runtime.forecastMode || 'real';
-    
-      // Se non c’è niente da mostrare (e nessun messaggio esplicito) in modalità reale
-      if (!data && !message && mode === 'real'){
-        host.hidden = true;
-        host.innerHTML = '';
-        return;
-      }
-    
-      host.hidden = false;
-    
-      // Contenitore con tab + pannelli
-      host.innerHTML = `
-        <div class="hdr">
-          <span class="tag cyan">Run Forecast</span>
-          <span class="hint">🔄 Updated when you change duration or selection.</span>
+function ensureForecastShell() {
+  const host = document.getElementById('run-forecast');
+  if (!host) return null;
+
+  if (!host.dataset.shellInitialized) {
+    host.innerHTML = `
+      <div class="hdr">
+        <span class="tag cyan">Run Forecast</span>
+        <span class="hint">🔄 Updated when you change duration or selection.</span>
+      </div>
+
+      <div class="forecast-tabs" role="tablist" aria-label="Forecast mode">
+        <button type="button"
+                data-mode="real"
+                aria-pressed="true">
+          🧬 My Goblins
+        </button>
+        <button type="button"
+                data-mode="sim"
+                aria-pressed="false">
+          🧪 Simulator
+        </button>
+      </div>
+
+      <div id="forecast-panel-real"></div>
+
+      <div id="forecast-panel-sim" hidden>
+        <div class="card">
+          <div class="forecast-sim-form" aria-label="Run simulator">
+            <label>
+              Duration
+              <select id="sim-duration">
+                <option value="5">5m — Blitz</option>
+                <option value="30">30m — Standard</option>
+                <option value="60">1h — Long</option>
+                <option value="120">2h — Marathon</option>
+                <option value="360">6h — Endurance</option>
+                <option value="1440">24h — Ultra</option>
+              </select>
+            </label>
+
+            <label>
+              # Goblins
+              <input id="sim-goblins" type="number" min="1" step="1" inputmode="numeric">
+            </label>
+
+            <label>
+              Total ACC
+              <input id="sim-acc" type="number" min="0" step="1" inputmode="numeric">
+            </label>
+
+            <label>
+              Total RES
+              <input id="sim-res" type="number" min="0" step="1" inputmode="numeric">
+            </label>
+
+            <label>
+              Total SPD
+              <input id="sim-spd" type="number" min="0" step="1" inputmode="numeric">
+            </label>
+
+            <label>
+              Total LOOT
+              <input id="sim-loot" type="number" min="0" step="1" inputmode="numeric">
+            </label>
+          </div>
+
+          <div style="display:flex;justify-content:flex-start;margin-top:8px;gap:8px;">
+            <button id="sim-run" class="btn-primary" type="button">
+              🧪 Run simulation
+            </button>
+          </div>
+
+          <div id="forecast-sim-result" class="forecast-help" style="margin-top:8px;">
+            <div class="forecast-help-title">📘 Simulator</div>
+            <p>Enter your totals and click <strong>Run simulation</strong> to preview an approximate expedition.</p>
+          </div>
         </div>
-    
-        <div class="forecast-tabs" role="tablist" aria-label="Forecast mode">
-          <button type="button"
-                  data-mode="real"
-                  aria-pressed="${mode === 'real'}">
-            🧬 My Goblins
-          </button>
-          <button type="button"
-                  data-mode="sim"
-                  aria-pressed="${mode === 'sim'}">
-            🧪 Simulator
-          </button>
-        </div>
-    
-        <div id="forecast-panel-real" ${mode !== 'real' ? 'hidden' : ''}></div>
-        <div id="forecast-panel-sim"  ${mode !== 'sim'  ? 'hidden' : ''}></div>
-      `;
-    
-      // Pannello "My Goblins" (reale)
-      const realHost = document.getElementById('forecast-panel-real');
-      if (realHost){
-        realHost.innerHTML = renderForecastRealContent(data, message);
-      }
-    
-      // Pannello "Simulator"
-      const simHost = document.getElementById('forecast-panel-sim');
-      if (simHost){
-        simHost.innerHTML = renderForecastSimContent(State.runtime.simResult);
-      }
-      
-      // Dopo aver scritto l'HTML del pannello sim, wire del form
-      if (mode === 'sim') {
-        wireSimForm();
-      }
-       
-      // Wire dei bottoni dei tab
-      host.querySelectorAll('.forecast-tabs button[data-mode]').forEach(btn=>{
-        btn.onclick = () => {
-          const m = btn.getAttribute('data-mode') === 'sim' ? 'sim' : 'real';
-          State.runtime.forecastMode = m;
-          // Rirenderizziamo il forecast usando l’ultimo data reale disponibile
-          renderForecast(State.runtime.forecastData, null);
-        };
-      });
-    
-      // Rimette il bottone "remove tired goblins" SOLO nel pannello reale
-      wireRemoveTiredButton();
-    }
+      </div>
+    `;
+
+    host.dataset.shellInitialized = '1';
+
+    wireForecastTabs(host);
+    wireSimForm(host);
+  }
+
+  return host;
+}
+
+function wireForecastTabs(host) {
+  const buttons = host.querySelectorAll('.forecast-tabs button[data-mode]');
+  buttons.forEach(btn => {
+    btn.onclick = () => {
+      const mode = btn.getAttribute('data-mode') === 'sim' ? 'sim' : 'real';
+      State.runtime.forecastMode = mode;
+      updateForecastTabs(host);
+    };
+  });
+
+  updateForecastTabs(host);
+}
+
+function updateForecastTabs(host) {
+  const mode = State.runtime.forecastMode || 'real';
+  const buttons = host.querySelectorAll('.forecast-tabs button[data-mode]');
+  buttons.forEach(btn => {
+    const m = btn.getAttribute('data-mode');
+    btn.setAttribute('aria-pressed', String(m === mode));
+  });
+
+  const realPanel = document.getElementById('forecast-panel-real');
+  const simPanel  = document.getElementById('forecast-panel-sim');
+  if (realPanel) realPanel.hidden = (mode !== 'real');
+  if (simPanel)  simPanel.hidden  = (mode !== 'sim');
+}
+
+// Only update the REAL panel content
+function updateForecastRealPanel(data, message) {
+  const panel = document.getElementById('forecast-panel-real');
+  if (!panel) return;
+
+  panel.innerHTML = renderForecastRealContent(data, message);
+}
+
+// Only update the SIM result (never the inputs)
+function updateForecastSimResult() {
+  const host = document.getElementById('forecast-sim-result');
+  if (!host) return;
+
+  const cfg = State.runtime.simConfig || {};
+  const res = State.runtime.simResult;
+
+  if (!res) {
+    host.innerHTML = `
+      <div class="forecast-help-title">📘 Simulator</div>
+      <p>Enter your totals and click <strong>Run simulation</strong> to preview an approximate expedition.</p>
+    `;
+    return;
+  }
+
+  host.innerHTML = `
+    <div class="forecast-help-title">🧪 Simulation result</div>
+    <ul>
+      <li><strong>Duration:</strong> ${cfg.durationMinutes} min (tier ${bucketFromMinutes(cfg.durationMinutes)}m)</li>
+      <li><strong># Goblins:</strong> ${cfg.goblinsCount}</li>
+      <li><strong>Estimated total DP cost:</strong> ${formatDP(res.totalDp || 0)} DP</li>
+      <li><strong>Estimated DP per goblin:</strong> ${cfg.goblinsCount ? formatDP((res.totalDp || 0) / cfg.goblinsCount) : '—'} DP</li>
+    </ul>
+    <p style="font-size:12px;opacity:.85;">
+      This is a <em>local approximation</em> using the same duration tiers as the real forecast.
+      You will still need to use your real goblins to start an expedition.
+    </p>
+  `;
+}
+
+// Wire simulator inputs so they update State.runtime.simConfig
+function wireSimForm(host) {
+  const cfg = State.runtime.simConfig;
+
+  const selDuration = host.querySelector('#sim-duration');
+  const inGoblins   = host.querySelector('#sim-goblins');
+  const inAcc       = host.querySelector('#sim-acc');
+  const inRes       = host.querySelector('#sim-res');
+  const inSpd       = host.querySelector('#sim-spd');
+  const inLoot      = host.querySelector('#sim-loot');
+  const btnRun      = host.querySelector('#sim-run');
+
+  // Initialize values from cfg
+  if (selDuration) selDuration.value = String(cfg.durationMinutes || 30);
+  if (inGoblins)   inGoblins.value   = String(cfg.goblinsCount || 0);
+  if (inAcc)       inAcc.value       = String(cfg.totalAcc || 0);
+  if (inRes)       inRes.value       = String(cfg.totalRes || 0);
+  if (inSpd)       inSpd.value       = String(cfg.totalSpeed || 0);
+  if (inLoot)      inLoot.value      = String(cfg.totalLoot || 0);
+
+  // Update config on input
+  if (selDuration) selDuration.addEventListener('change', () => {
+    cfg.durationMinutes = Number(selDuration.value || 30);
+  });
+
+  const syncNumber = (inputEl, key) => {
+    if (!inputEl) return;
+    inputEl.addEventListener('input', () => {
+      const val = Number(inputEl.value || 0);
+      cfg[key] = isNaN(val) ? 0 : val;
+    });
+  };
+
+  syncNumber(inGoblins, 'goblinsCount');
+  syncNumber(inAcc,     'totalAcc');
+  syncNumber(inRes,     'totalRes');
+  syncNumber(inSpd,     'totalSpeed');
+  syncNumber(inLoot,    'totalLoot');
+
+  // Run simulation on click
+  if (btnRun) {
+    btnRun.addEventListener('click', () => {
+      runSimulationFromForm();
+    });
+  }
+}
+
+// Simple local simulation of DP cost (placeholder; you can replace with a backend call)
+function runSimulationFromForm() {
+  const cfg = State.runtime.simConfig;
+  const bucket = bucketFromMinutes(cfg.durationMinutes || 30);
+  const basePerGoblin = nominalCostPerGoblinForMinutes(bucket);
+
+  const count = Math.max(0, Number(cfg.goblinsCount || 0));
+  if (!count) {
+    State.runtime.simResult = null;
+    updateForecastSimResult();
+    return;
+  }
+
+  // Very simple approximation: apply a small discount based on RES
+  const avgRes = count ? (Number(cfg.totalRes || 0) / count) : 0;
+  const resFactor = Math.max(0.5, 1 - (avgRes / 400)); // tune this as you like
+
+  const effectivePerGoblin = basePerGoblin * resFactor;
+  const totalDp = effectivePerGoblin * count;
+
+  State.runtime.simResult = { totalDp };
+  updateForecastSimResult();
+}
+
+// MAIN entry point called by the rest of the code
+function renderForecast(data, message) {
+  const mode = State.runtime.forecastMode || 'real';
+  const host = ensureForecastShell();
+  if (!host) return;
+
+  // If nothing to show and in real mode, hide panel
+  if (!data && !message && mode === 'real') {
+    host.hidden = true;
+    return;
+  }
+
+  host.hidden = false;
+  updateForecastTabs(host);
+
+  // Real forecast panel
+  updateForecastRealPanel(data, message);
+
+  // Keep simulator result in sync
+  updateForecastSimResult();
+}
+
 
     function wireRemoveTiredButton(){
       const btn = document.getElementById('btn-remove-tired');
@@ -1485,128 +1673,6 @@
         loot_sum: lootSum
       };
     }
-
-    function renderForecastSimContent(simResult){
-      const duration = State.expedition?.durationMinutes || 30;
-      const durBucket = bucketFromMinutes(duration);
-      const baseCostPerGoblin = nominalCostPerGoblinForMinutes(duration);
-    
-      const res = simResult || {};
-      const totalGoblins = res.totalGoblins || 0;
-    
-      // Micro helper per mostrare valore o trattino
-      const v = (x, digits=2) => (x || x === 0)
-        ? (typeof x === 'number' ? x.toFixed(digits) : x)
-        : '—';
-    
-      return `
-        <form id="forecast-sim-form" class="forecast-sim-form">
-          <label>
-            Duration (minutes)
-            <input name="duration" type="number" min="1" max="1440" value="${duration}">
-          </label>
-    
-          <label>
-            Goblins (total)
-            <input name="total_goblins" type="number" min="1" max="500" value="${totalGoblins || 50}">
-          </label>
-    
-          <label>
-            Total ACC
-            <input name="acc_sum" type="number" min="0" value="${res.acc_sum || 0}">
-          </label>
-    
-          <label>
-            Total RES
-            <input name="res_sum" type="number" min="0" value="${res.res_sum || 0}">
-          </label>
-    
-          <label>
-            Total SPD
-            <input name="spd_sum" type="number" min="0" value="${res.spd_sum || 0}">
-          </label>
-    
-          <label>
-            Total LOOT
-            <input name="loot_sum" type="number" min="0" value="${res.loot_sum || 0}">
-          </label>
-    
-          <div style="grid-column:1/-1;margin-top:4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-            <button type="submit" class="btn-primary">▶ Run simulation</button>
-            <small style="opacity:.8;">
-              This does not use your real goblins and cannot start a real expedition.
-            </small>
-          </div>
-        </form>
-    
-        <div class="grid" style="margin-top:8px;">
-          <div class="card">
-            <div class="kv">
-              <div>
-                <span class="label">⏱ Nominal duration</span>
-                <b>${v(res.duration || duration, 0)} min</b>
-              </div>
-              <div>
-                <span class="label">⚡ Effective duration (sim)</span>
-                <b>${v(res.eff_minutes)} min</b>
-              </div>
-              <div>
-                <span class="label">💰 Nominal daily cost / goblin</span>
-                <b>${formatDP(baseCostPerGoblin)} DP</b>
-              </div>
-              <div>
-                <span class="label">🎯 Effective cost / goblin (sim)</span>
-                <b>${v(res.eff_cost_per_goblin)} DP</b>
-              </div>
-              <div>
-                <span class="label">🔋 Total daily power (sim)</span>
-                <b>${v(res.power_total)} DP</b>
-              </div>
-              <div>
-                <span class="label">🧬 Goblins (sim)</span>
-                <b>${v(totalGoblins,0)}</b>
-              </div>
-            </div>
-          </div>
-    
-          <div class="card">
-            <div class="kv">
-              <div>
-                <span class="label">💎 Chips (min–max, sim)</span>
-                <b>${v(res.tokens_min,0)} – ${v(res.tokens_max,0)}</b>
-              </div>
-              <div>
-                <span class="label">📊 Token tier (approx)</span>
-                <b>${res.tier_label || '—'}</b>
-              </div>
-              <div>
-                <span class="label">🎁 NFT chance (sim)</span>
-                <b>${res.nft_chance_label || '—'}</b>
-              </div>
-            </div>
-          </div>
-        </div>
-    
-        <div class="card forecast-help">
-          <div class="forecast-help-title">🧪 Simulator notes</div>
-          <ul>
-            <li>
-              The simulator uses a simplified formula based on your input totals
-              (ACC, RES, SPD, LOOT) and the same duration tiers (${DURATION_BUCKETS.join(', ')} min).
-            </li>
-            <li>
-              It does <strong>not</strong> use your real goblins and
-              cannot start a real expedition.
-            </li>
-            <li>
-              Use it to experiment with different builds and see how
-              duration and attributes may affect rewards and daily power usage.
-            </li>
-          </ul>
-        </div>
-      `;
-    }
-
 
     // ------------------------------------------------------------
     // NFT STAT HELP

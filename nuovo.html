@@ -660,7 +660,7 @@
         forecastBusy: false,
         forecastData: null,
         forecastPowerByAsset: {},        // { asset_id: power_needed }
-        forecastInsufficientIds: new Set()     
+        forecastInsufficientIds: new Set(),     
         forecastMode: 'real',            // 'real' | 'sim'
         simResult: null                  // ultimo risultato simulato       
       }
@@ -1172,213 +1172,440 @@
       host.innerHTML = `<div class="hdr"><span class="tag cyan">Run Forecast</span> <span class="hint">Computing…</span></div>`;
     }
 
-function renderForecast(data, message){
-  const host = document.getElementById('run-forecast'); 
-  if (!host) return;
+    function renderForecast(data, message){
+      const host = document.getElementById('run-forecast'); 
+      if (!host) return;
+    
+      const mode = State.runtime.forecastMode || 'real';
+    
+      // Se non c’è niente da mostrare (e nessun messaggio esplicito) in modalità reale
+      if (!data && !message && mode === 'real'){
+        host.hidden = true;
+        host.innerHTML = '';
+        return;
+      }
+    
+      host.hidden = false;
+    
+      // Contenitore con tab + pannelli
+      host.innerHTML = `
+        <div class="hdr">
+          <span class="tag cyan">Run Forecast</span>
+          <span class="hint">🔄 Updated when you change duration or selection.</span>
+        </div>
+    
+        <div class="forecast-tabs" role="tablist" aria-label="Forecast mode">
+          <button type="button"
+                  data-mode="real"
+                  aria-pressed="${mode === 'real'}">
+            🧬 My Goblins
+          </button>
+          <button type="button"
+                  data-mode="sim"
+                  aria-pressed="${mode === 'sim'}">
+            🧪 Simulator
+          </button>
+        </div>
+    
+        <div id="forecast-panel-real" ${mode !== 'real' ? 'hidden' : ''}></div>
+        <div id="forecast-panel-sim"  ${mode !== 'sim'  ? 'hidden' : ''}></div>
+      `;
+    
+      // Pannello "My Goblins" (reale)
+      const realHost = document.getElementById('forecast-panel-real');
+      if (realHost){
+        realHost.innerHTML = renderForecastRealContent(data, message);
+      }
+    
+      // Pannello "Simulator"
+      const simHost = document.getElementById('forecast-panel-sim');
+      if (simHost){
+        simHost.innerHTML = renderForecastSimContent(State.runtime.simResult);
+      }
+      
+      // Dopo aver scritto l'HTML del pannello sim, wire del form
+      if (mode === 'sim') {
+        wireSimForm();
+      }
+       
+      // Wire dei bottoni dei tab
+      host.querySelectorAll('.forecast-tabs button[data-mode]').forEach(btn=>{
+        btn.onclick = () => {
+          const m = btn.getAttribute('data-mode') === 'sim' ? 'sim' : 'real';
+          State.runtime.forecastMode = m;
+          // Rirenderizziamo il forecast usando l’ultimo data reale disponibile
+          renderForecast(State.runtime.forecastData, null);
+        };
+      });
+    
+      // Rimette il bottone "remove tired goblins" SOLO nel pannello reale
+      wireRemoveTiredButton();
+    }
 
-  const mode = State.runtime.forecastMode || 'real';
+    function wireRemoveTiredButton(){
+      const btn = document.getElementById('btn-remove-tired');
+      if (!btn) return;
+      btn.onclick = () => {
+        if (!State.goblinsUser?.length) return;
+        const before = State.selectedGoblinIds.size;
+        for (const id of Array.from(State.runtime.forecastInsufficientIds || [])){
+          State.selectedGoblinIds.delete(id);
+        }
+        const after = State.selectedGoblinIds.size;
+        hydrateGoblinBuilder();
+        toast(`Removed tired goblins: ${before - after}`);
+      };
+    }
 
-  // Se non c’è niente da mostrare (e nessun messaggio esplicito)
-  if (!data && !message && mode === 'real'){
-    host.hidden = true;
-    host.innerHTML = '';
-    return;
-  }
-
-  host.hidden = false;
-
-  // Costruisco il container con tab + due pannelli vuoti
-  host.innerHTML = `
-    <div class="hdr">
-      <span class="tag cyan">Run Forecast</span>
-      <span class="hint">🔄 Updated when you change duration or selection.</span>
-    </div>
-
-    <div class="forecast-tabs" role="tablist" aria-label="Forecast mode">
-      <button type="button"
-              data-mode="real"
-              aria-pressed="${mode === 'real'}">
-        🧬 My Goblins
-      </button>
-      <button type="button"
-              data-mode="sim"
-              aria-pressed="${mode === 'sim'}">
-        🧪 Simulator
-      </button>
-    </div>
-
-    <div id="forecast-panel-real" ${mode !== 'real' ? 'hidden' : ''}></div>
-    <div id="forecast-panel-sim"  ${mode !== 'sim'  ? 'hidden' : ''}></div>
-  `;
-
-  // Riempie il pannello "real" con il layout che avevi già (spostato in helper)
-  const realHost = document.getElementById('forecast-panel-real');
-  if (realHost){
-    realHost.innerHTML = renderForecastRealContent(data, message);
-  }
-
-  // Riempie il pannello "sim" con il form di simulazione + risultati
-  const simHost = document.getElementById('forecast-panel-sim');
-  if (simHost){
-    simHost.innerHTML = renderForecastSimContent(State.runtime.simResult);
-  }
-
-  // Wire dei bottoni dei tab
-  host.querySelectorAll('.forecast-tabs button[data-mode]').forEach(btn=>{
-    btn.onclick = () => {
-      const m = btn.getAttribute('data-mode') === 'sim' ? 'sim' : 'real';
-      State.runtime.forecastMode = m;
-      renderForecast(State.runtime.forecastData, null);
-    };
-  });
-
-  // Bottone "remove tired goblins" rimane *solo* nel pannello real
-  wireRemoveTiredButton();
-}
-function renderForecastRealContent(data, message){
-  if (message){
-    return `
-      <div class="card">
-        <div class="hint">${safe(message)}</div>
-      </div>
-    `;
-  }
-  if (!data){
-    return '';
-  }
-
-  const durNominal = State.expedition.durationMinutes || 0;
-  const durEff = toNumber(data.duration_effective_minutes) || durNominal;
-  const powTot = toNumber(data.power_needed_total);
-  const tMin = toNumber(data.tokens_min);
-  const tMax = toNumber(data.tokens_max);
-  const probs = data.token_tier_probs || {};
-  const nftRewards = Array.isArray(data.nft_rewards) ? data.nft_rewards : [];
-  const msgs = Array.isArray(data.messages) ? data.messages : [];
-
-  const selectedCountBackend = toNumber(data.selected_count);
-  const selectedCount = selectedCountBackend || State.selectedGoblinIds.size || 0;
-
-  const tierEff = bucketFromMinutes(durEff);
-  const baseNominalPerGoblin = nominalCostPerGoblinForMinutes(durEff);
-  const effAvgPerGoblin = selectedCount ? (powTot / selectedCount) : 0;
-
-  const tiredCount = State.runtime.forecastInsufficientIds
-    ? State.runtime.forecastInsufficientIds.size
-    : 0;
-
-  return `
-    <div class="grid">
-      <div class="card">
-        <div class="kv">
-          <div title="Minutes chosen in the duration selector.">
-            <span class="label">⏱ Nominal duration</span>
-            <b>${durNominal} min</b>
+    function renderForecastRealContent(data, message){
+      if (message){
+        return `
+          <div class="card">
+            <div class="hint">${safe(message)}</div>
           </div>
-
-          <div title="Estimated duration after the total SPEED bonus is applied.">
-            <span class="label">⚡ Effective duration</span>
-            <b>
-              ${durEff} min
-              <span class="badge-inline">tier ${tierEff}m</span>
-            </b>
+        `;
+      }
+      if (!data){
+        return '';
+      }
+    
+      const durNominal = State.expedition.durationMinutes || 0;
+      const durEff = toNumber(data.duration_effective_minutes) || durNominal;
+      const powTot = toNumber(data.power_needed_total);
+      const tMin = toNumber(data.tokens_min);
+      const tMax = toNumber(data.tokens_max);
+      const probs = data.token_tier_probs || {};
+      const nftRewards = Array.isArray(data.nft_rewards) ? data.nft_rewards : [];
+      const msgs = Array.isArray(data.messages) ? data.messages : [];
+    
+      const selectedCountBackend = toNumber(data.selected_count);
+      const selectedCount = selectedCountBackend || State.selectedGoblinIds.size || 0;
+    
+      const tierEff = bucketFromMinutes(durEff);
+      const baseNominalPerGoblin = nominalCostPerGoblinForMinutes(durEff);
+      const effAvgPerGoblin = selectedCount ? (powTot / selectedCount) : 0;
+    
+      const tiredCount = State.runtime.forecastInsufficientIds
+        ? State.runtime.forecastInsufficientIds.size
+        : 0;
+    
+      return `
+        <div class="grid">
+          <div class="card">
+            <div class="kv">
+              <div title="Minutes chosen in the duration selector.">
+                <span class="label">⏱ Nominal duration</span>
+                <b>${durNominal} min</b>
+              </div>
+    
+              <div title="Estimated duration after the total SPEED bonus is applied.">
+                <span class="label">⚡ Effective duration</span>
+                <b>
+                  ${durEff} min
+                  <span class="badge-inline">tier ${tierEff}m</span>
+                </b>
+              </div>
+    
+              <div title="Base daily cost per goblin BEFORE RESISTANCE is applied, for this duration tier.">
+                <span class="label">💰 Nominal daily cost / goblin</span>
+                <b>
+                  ${formatDP(baseNominalPerGoblin)} DP
+                  <span class="badge-inline">base</span>
+                </b>
+              </div>
+    
+              <div title="Average effective daily cost per goblin AFTER RES, calculated by the backend.">
+                <span class="label">🎯 Average effective daily cost / goblin</span>
+                <b>
+                  ${selectedCount ? formatDP(effAvgPerGoblin) : '—'} DP
+                  <span class="badge-inline">effective</span>
+                </b>
+              </div>
+    
+              <div title="Sum of all effective daily power costs for this run.">
+                <span class="label">🔋 Total daily power (run)</span>
+                <b>${powTot ? formatDP(powTot) : '—'} DP</b>
+              </div>
+    
+              <div title="Goblins actually used in the forecast (after applying the cap, if exceeded).">
+                <span class="label">🧬 Selected goblins</span>
+                <b>${selectedCount}</b>
+              </div>
+            </div>
           </div>
-
-          <div title="Base daily cost per goblin BEFORE RESISTANCE is applied, for this duration tier.">
-            <span class="label">💰 Nominal daily cost / goblin</span>
-            <b>
-              ${formatDP(baseNominalPerGoblin)} DP
-              <span class="badge-inline">base</span>
-            </b>
-          </div>
-
-          <div title="Average effective daily cost per goblin AFTER RES, calculated by the backend.">
-            <span class="label">🎯 Average effective daily cost / goblin</span>
-            <b>
-              ${selectedCount ? formatDP(effAvgPerGoblin) : '—'} DP
-              <span class="badge-inline">effective</span>
-            </b>
-          </div>
-
-          <div title="Sum of all effective daily power costs for this run.">
-            <span class="label">🔋 Total daily power (run)</span>
-            <b>${powTot ? formatDP(powTot) : '—'} DP</b>
-          </div>
-
-          <div title="Goblins actually used in the forecast (after applying the cap, if exceeded).">
-            <span class="label">🧬 Selected goblins</span>
-            <b>${selectedCount}</b>
+    
+          <div class="card">
+            <div class="kv">
+              <div title="Expected CHIPS reward range for this run.">
+                <span class="label">💎 Chips (min–max)</span>
+                <b>
+                  ${tMin || '—'} – ${tMax || '—'}
+                  <span class="badge-inline">reward</span>
+                </b>
+              </div>
+    
+              ${Object.keys(probs).length ? `
+              <div title="Relative probability of token reward tiers based on average ACC.">
+                <span class="label">📊 Token tier probabilities</span>
+                <b>${
+                  Object.entries(probs)
+                    .map(([k,v]) => `${safe(k)} ${Math.round(v * 100)}%`)
+                    .join(' · ')
+                }</b>
+              </div>` : ''}
+    
+              ${nftRewards.length ? `
+              <div title="Approximate chance of receiving each NFT template in a single run.">
+                <span class="label">🎁 NFT drop chances</span>
+                <b>${
+                  nftRewards
+                    .map(it => `${safe(it.name)} ${Math.round((it.chance || 0) * 100)}%`)
+                    .join(' · ')
+                }</b>
+              </div>` : ''}
+    
+              ${tiredCount ? `
+              <div style="margin-top:6px;">
+                <button id="btn-remove-tired" class="btn-primary" type="button">
+                  💤 Remove ${tiredCount} tired goblin${tiredCount > 1 ? 's' : ''} from selection
+                </button>
+              </div>` : ''}
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="kv">
-          <div title="Expected CHIPS reward range for this run.">
-            <span class="label">💎 Chips (min–max)</span>
-            <b>
-              ${tMin || '—'} – ${tMax || '—'}
-              <span class="badge-inline">reward</span>
-            </b>
-          </div>
-
-          ${Object.keys(probs).length ? `
-          <div title="Relative probability of token reward tiers based on average ACC.">
-            <span class="label">📊 Token tier probabilities</span>
-            <b>${
-              Object.entries(probs)
-                .map(([k,v]) => `${safe(k)} ${Math.round(v * 100)}%`)
-                .join(' · ')
-            }</b>
-          </div>` : ''}
-
-          ${nftRewards.length ? `
-          <div title="Approximate chance of receiving each NFT template in a single run.">
-            <span class="label">🎁 NFT drop chances</span>
-            <b>${
-              nftRewards
-                .map(it => `${safe(it.name)} ${Math.round((it.chance || 0) * 100)}%`)
-                .join(' · ')
-            }</b>
-          </div>` : ''}
-
-          ${tiredCount ? `
-          <div style="margin-top:6px;">
-            <button id="btn-remove-tired" class="btn-primary" type="button">
-              💤 Remove ${tiredCount} tired goblin${tiredCount > 1 ? 's' : ''} from selection
-            </button>
-          </div>` : ''}
+    
+        <div class="card forecast-help">
+          <div class="forecast-help-title">📘 How this expedition is calculated</div>
+          <ul>
+            <li>
+              <strong>Troop Reinforcement NFT</strong> increases the base cap of 50 goblins
+              by +5 per NFT, up to 250 goblins per run.
+            </li>
+            <li>
+              <strong>Speed (SPD)</strong>: total SPD reduces the <em>effective duration</em>;
+              the duration tier (${DURATION_BUCKETS.join(', ')} min) determines the
+              <em>nominal base cost</em> per goblin.
+            </li>
+            <li>
+              <strong>Resistance (RES)</strong>: applies a discount to the nominal daily cost →
+              each goblin consumes fewer DP than the base value.
+            </li>
+            <li>
+              <strong>Loot Hungry (LOOT)</strong> and <strong>Accuracy (ACC)</strong>:
+              increase average CHIPS rewards and improve reward quality
+              (token tiers and NFT drop chances).
+            </li>
+          </ul>
         </div>
-      </div>
-    </div>
+    
+        ${msgs.length ? `<div class="hint">ℹ️ ${msgs.map(safe).join(' · ')}</div>` : ''}
+      `;
+    }
 
-    <div class="card forecast-help">
-      <div class="forecast-help-title">📘 How this expedition is calculated</div>
-      <ul>
-        <li>
-          <strong>Troop Reinforcement NFT</strong> increases the base cap of 50 goblins
-          by +5 per NFT, up to 250 goblins per run.
-        </li>
-        <li>
-          <strong>Speed (SPD)</strong>: total SPD reduces the <em>effective duration</em>;
-          the duration tier (${DURATION_BUCKETS.join(', ')} min) determines the
-          <em>nominal base cost</em> per goblin.
-        </li>
-        <li>
-          <strong>Resistance (RES)</strong>: applies a discount to the nominal daily cost →
-          each goblin consumes fewer DP than the base value.
-        </li>
-        <li>
-          <strong>Loot Hungry (LOOT)</strong> and <strong>Accuracy (ACC)</strong>:
-          increase average CHIPS rewards and improve reward quality
-          (token tiers and NFT drop chances).
-        </li>
-      </ul>
-    </div>
+    function wireSimForm(){
+      const form = document.getElementById('forecast-sim-form');
+      if (!form) return;
+    
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const result = computeSimResultFromForm(form);
+        State.runtime.simResult = result;
+        // Rirenderizza SOLO la parte sim, mantenendo il tab sim attivo
+        renderForecast(State.runtime.forecastData, null);
+      };
+    }
+    
+    function computeSimResultFromForm(form){
+      const duration = toNumber(form.duration.value) || (State.expedition?.durationMinutes || 30);
+      const totalGoblins = clamp(toNumber(form.total_goblins.value) || 0, 0, 500);
+      const accSum  = Math.max(0, toNumber(form.acc_sum.value));
+      const resSum  = Math.max(0, toNumber(form.res_sum.value));
+      const spdSum  = Math.max(0, toNumber(form.spd_sum.value));
+      const lootSum = Math.max(0, toNumber(form.loot_sum.value));
+    
+      const durBucket = bucketFromMinutes(duration);
+      const baseCostPerGoblin = nominalCostPerGoblinForMinutes(duration);
+    
+      // Stima rozza: SPD totale riduce la durata effettiva con rendimento decrescente
+      const spdFactor = 1 / (1 + spdSum / 800);  // più SPD → fattore < 1
+      const effMinutes = Math.max(5, Math.round(duration * spdFactor));
+    
+      // RES attenua il costo per goblin
+      const avgRes = totalGoblins ? (resSum / totalGoblins) : 0;
+      const resFactor = 1 / (1 + avgRes / 500); // più RES → costo minore
+      const effCostPerGoblin = baseCostPerGoblin * resFactor;
+    
+      const powerTotal = effCostPerGoblin * totalGoblins;
+    
+      // ACC + LOOT determinano i token stimati
+      const accAvg = totalGoblins ? (accSum / totalGoblins) : 0;
+      const lootAvg = totalGoblins ? (lootSum / totalGoblins) : 0;
+    
+      const tierScore = accAvg + lootAvg*0.6;
+      let tierLabel = 'Low';
+      let nftChanceLabel = 'Very low';
+      let tokensMin = 0, tokensMax = 0;
+    
+      if (tierScore <= 200){
+        tierLabel = 'Low';
+        nftChanceLabel = 'Very low';
+        tokensMin = Math.round(duration / 10);
+        tokensMax = Math.round(duration / 4);
+      } else if (tierScore <= 400){
+        tierLabel = 'Medium';
+        nftChanceLabel = 'Low–Medium';
+        tokensMin = Math.round(duration / 6);
+        tokensMax = Math.round(duration / 3);
+      } else if (tierScore <= 700){
+        tierLabel = 'High';
+        nftChanceLabel = 'Medium–High';
+        tokensMin = Math.round(duration / 5);
+        tokensMax = Math.round(duration / 2.5);
+      } else {
+        tierLabel = 'Very high';
+        nftChanceLabel = 'High';
+        tokensMin = Math.round(duration / 4);
+        tokensMax = Math.round(duration / 2);
+      }
+    
+      return {
+        duration,
+        eff_minutes: effMinutes,
+        eff_cost_per_goblin: effCostPerGoblin,
+        power_total: powerTotal,
+        tokens_min: tokensMin,
+        tokens_max: tokensMax,
+        tier_label: tierLabel,
+        nft_chance_label: nftChanceLabel,
+    
+        totalGoblins,
+        acc_sum: accSum,
+        res_sum: resSum,
+        spd_sum: spdSum,
+        loot_sum: lootSum
+      };
+    }
 
-    ${msgs.length ? `<div class="hint">ℹ️ ${msgs.map(safe).join(' · ')}</div>` : ''}
-  `;
-}
+    function renderForecastSimContent(simResult){
+      const duration = State.expedition?.durationMinutes || 30;
+      const durBucket = bucketFromMinutes(duration);
+      const baseCostPerGoblin = nominalCostPerGoblinForMinutes(duration);
+    
+      const res = simResult || {};
+      const totalGoblins = res.totalGoblins || 0;
+    
+      // Micro helper per mostrare valore o trattino
+      const v = (x, digits=2) => (x || x === 0)
+        ? (typeof x === 'number' ? x.toFixed(digits) : x)
+        : '—';
+    
+      return `
+        <form id="forecast-sim-form" class="forecast-sim-form">
+          <label>
+            Duration (minutes)
+            <input name="duration" type="number" min="1" max="1440" value="${duration}">
+          </label>
+    
+          <label>
+            Goblins (total)
+            <input name="total_goblins" type="number" min="1" max="500" value="${totalGoblins || 50}">
+          </label>
+    
+          <label>
+            Total ACC
+            <input name="acc_sum" type="number" min="0" value="${res.acc_sum || 0}">
+          </label>
+    
+          <label>
+            Total RES
+            <input name="res_sum" type="number" min="0" value="${res.res_sum || 0}">
+          </label>
+    
+          <label>
+            Total SPD
+            <input name="spd_sum" type="number" min="0" value="${res.spd_sum || 0}">
+          </label>
+    
+          <label>
+            Total LOOT
+            <input name="loot_sum" type="number" min="0" value="${res.loot_sum || 0}">
+          </label>
+    
+          <div style="grid-column:1/-1;margin-top:4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <button type="submit" class="btn-primary">▶ Run simulation</button>
+            <small style="opacity:.8;">
+              This does not use your real goblins and cannot start a real expedition.
+            </small>
+          </div>
+        </form>
+    
+        <div class="grid" style="margin-top:8px;">
+          <div class="card">
+            <div class="kv">
+              <div>
+                <span class="label">⏱ Nominal duration</span>
+                <b>${v(res.duration || duration, 0)} min</b>
+              </div>
+              <div>
+                <span class="label">⚡ Effective duration (sim)</span>
+                <b>${v(res.eff_minutes)} min</b>
+              </div>
+              <div>
+                <span class="label">💰 Nominal daily cost / goblin</span>
+                <b>${formatDP(baseCostPerGoblin)} DP</b>
+              </div>
+              <div>
+                <span class="label">🎯 Effective cost / goblin (sim)</span>
+                <b>${v(res.eff_cost_per_goblin)} DP</b>
+              </div>
+              <div>
+                <span class="label">🔋 Total daily power (sim)</span>
+                <b>${v(res.power_total)} DP</b>
+              </div>
+              <div>
+                <span class="label">🧬 Goblins (sim)</span>
+                <b>${v(totalGoblins,0)}</b>
+              </div>
+            </div>
+          </div>
+    
+          <div class="card">
+            <div class="kv">
+              <div>
+                <span class="label">💎 Chips (min–max, sim)</span>
+                <b>${v(res.tokens_min,0)} – ${v(res.tokens_max,0)}</b>
+              </div>
+              <div>
+                <span class="label">📊 Token tier (approx)</span>
+                <b>${res.tier_label || '—'}</b>
+              </div>
+              <div>
+                <span class="label">🎁 NFT chance (sim)</span>
+                <b>${res.nft_chance_label || '—'}</b>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+        <div class="card forecast-help">
+          <div class="forecast-help-title">🧪 Simulator notes</div>
+          <ul>
+            <li>
+              The simulator uses a simplified formula based on your input totals
+              (ACC, RES, SPD, LOOT) and the same duration tiers (${DURATION_BUCKETS.join(', ')} min).
+            </li>
+            <li>
+              It does <strong>not</strong> use your real goblins and
+              cannot start a real expedition.
+            </li>
+            <li>
+              Use it to experiment with different builds and see how
+              duration and attributes may affect rewards and daily power usage.
+            </li>
+          </ul>
+        </div>
+      `;
+    }
 
 
     // ------------------------------------------------------------
@@ -2556,6 +2783,10 @@ function renderForecastRealContent(data, message){
       if (!State.nftsLoaded){
         toast('Load your goblins first.');
         return;
+      }
+      // Se sei nel tab Simulator, ricordiamo che il run è sempre sui goblin reali
+      if (State.runtime.forecastMode === 'sim'){
+        toast('Simulator tab active: expedition will still use your real selected goblins.');
       }
 
       const ids = Array.from(State.selectedGoblinIds);

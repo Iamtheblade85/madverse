@@ -633,6 +633,7 @@
     // ------------------------------------------------------------
     // CONFIG
     // ------------------------------------------------------------
+    const DURATION_BUCKETS = [5, 30, 60, 120, 360, 1440];
     const CONFIG = {
       worldCols: 48,
       worldRows: 24,
@@ -748,7 +749,420 @@
       }
     };
 
-    // …
+    // ------------------------------------------------------------
+    // UTILS + API + HELPERS (reintrodotti)
+    // ------------------------------------------------------------
+
+    // --- debounce ---
+
+    function debounce(fn, delay){
+      let t;
+      return function(...args){
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, args), delay);
+      };
+    }
+
+    // --- numeri, clamp, random ---
+
+    function toNumber(x){
+      const n = Number(x);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function clamp(v, min, max){
+      return v < min ? min : (v > max ? max : v);
+    }
+
+    function randRange(min, max){
+      return min + Math.random() * (max - min);
+    }
+
+    // --- escape HTML ---
+
+    function safe(str){
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
+
+    // --- formattazioni varie ---
+
+    function formatCompact(num){
+      const n = toNumber(num);
+      if (n === 0) return '0';
+      const abs = Math.abs(n);
+      if (abs >= 1e9) return (n/1e9).toFixed(2).replace(/\.00$/,'') + 'B';
+      if (abs >= 1e6) return (n/1e6).toFixed(2).replace(/\.00$/,'') + 'M';
+      if (abs >= 1e3) return (n/1e3).toFixed(2).replace(/\.00$/,'') + 'K';
+      return String(Math.round(n));
+    }
+
+    function formatDP(v){
+      const n = toNumber(v);
+      if (n === 0) return '0';
+      if (Math.abs(n) < 1)   return n.toFixed(2);
+      if (Math.abs(n) < 10)  return n.toFixed(2);
+      if (Math.abs(n) < 100) return n.toFixed(1);
+      return formatCompact(n);
+    }
+
+    function timeHM(value){
+      let d;
+      if (value instanceof Date) d = value;
+      else if (typeof value === 'number') d = new Date(value);
+      else if (typeof value === 'string') d = new Date(value);
+      else return '';
+      if (isNaN(d.getTime())) return '';
+      const h = d.getHours().toString().padStart(2,'0');
+      const m = d.getMinutes().toString().padStart(2,'0');
+      return `${h}:${m}`;
+    }
+
+    function fmtHMS(ms){
+      const total = Math.max(0, Math.floor(ms / 1000));
+      const h = Math.floor(total / 3600).toString().padStart(2,'0');
+      const m = Math.floor((total % 3600) / 60).toString().padStart(2,'0');
+      const s = (total % 60).toString().padStart(2,'0');
+      return `${h}:${m}:${s}`;
+    }
+
+    function formatMinutesShort(mins){
+      const m = toNumber(mins);
+      if (!m) return '0m';
+      if (m % 1440 === 0) return (m/1440) + 'd';
+      if (m >= 60 && m % 60 === 0) return (m/60) + 'h';
+      return m + 'm';
+    }
+
+    function formatEffectiveDurationShort(effSeconds){
+      const mins = Math.round(toNumber(effSeconds) / 60);
+      return formatMinutesShort(mins);
+    }
+
+    // --- durata / costo nominale ---
+
+    function bucketFromMinutes(mins){
+      const m = toNumber(mins);
+      if (!m) return 0;
+      let best = DURATION_BUCKETS[0];
+      let bestDiff = Math.abs(m - best);
+      for (const b of DURATION_BUCKETS){
+        const diff = Math.abs(m - b);
+        if (diff < bestDiff){
+          bestDiff = diff;
+          best = b;
+        }
+      }
+      return best;
+    }
+
+    function nominalCostPerGoblinForMinutes(mins){
+      const m = toNumber(mins);
+      if (!m) return 0;
+      // Stima lineare semplice: 24h ≈ 100 DP base
+      return (m / 1440) * 100;
+    }
+
+    // ------------------------------------------------------------
+    // API helper (GET / POST con timeout)
+    // ------------------------------------------------------------
+
+    async function apiRequest(method, path, body, timeoutMs){
+      const base = CONFIG.apiBase || '';
+      const url = base + path;
+      const ctrl = new AbortController();
+      const tId = timeoutMs ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
+
+      let resp;
+      try{
+        resp = await fetch(url, {
+          method,
+          headers: { 'Content-Type':'application/json' },
+          body: body ? JSON.stringify(body) : null,
+          signal: ctrl.signal
+        });
+      } catch (err){
+        if (tId) clearTimeout(tId);
+        return { ok:false, status:0, error:err };
+      }
+      if (tId) clearTimeout(tId);
+
+      let data = null;
+      try { data = await resp.json(); } catch { /* ignore */ }
+
+      return { ok: resp.ok, status: resp.status, data };
+    }
+
+    const Api = {
+      get(path, timeoutMs){
+        return apiRequest('GET', path, null, timeoutMs);
+      },
+      post(path, body, timeoutMs){
+        return apiRequest('POST', path, body, timeoutMs);
+      }
+    };
+
+    // ------------------------------------------------------------
+    // AUTH
+    // ------------------------------------------------------------
+
+    function syncUserFromStorage(){
+      const src = (window.userData && typeof window.userData === 'object')
+        ? window.userData
+        : {};
+      State.user.wax_account = src.wax_account || State.user.wax_account || '';
+      State.user.user_id     = src.user_id     || State.user.user_id     || '';
+      State.user.usx_token   = src.usx_token   || State.user.usx_token   || '';
+    }
+
+    function assertAuth(){
+      syncUserFromStorage();
+      if (!State.user.wax_account || !State.user.user_id || !State.user.usx_token){
+        throw new Error('Not authenticated');
+      }
+    }
+
+    // ------------------------------------------------------------
+    // SELEZIONE / CAP / UI BOTTONI
+    // ------------------------------------------------------------
+
+    function getSendCap(){
+      const base = 50;
+      const reinf = State.expedition.reinforcementCount || 0;
+      const extraPer = 5;
+      const extra = clamp(reinf * extraPer, 0, 200);
+      return base + extra;
+    }
+
+    function updateCapUI(){
+      const base = 50;
+      const reinf = State.expedition.reinforcementCount || 0;
+      const extraPer = 5;
+      const extra = clamp(reinf * extraPer, 0, 200);
+      const cap = base + extra;
+
+      if (State.ui.capLabel){
+        State.ui.capLabel.textContent = `Max goblins this run: ${cap}`;
+      }
+      if (State.ui.reinfLabel){
+        State.ui.reinfLabel.textContent =
+          `Base ${base} + ${reinf}× Reinforcement (= ${extra} extra)`;
+      }
+    }
+
+    function getSelectedGoblins(){
+      if (!State.goblinsUser || !State.goblinsUser.length) return [];
+      const set = State.selectedGoblinIds;
+      return State.goblinsUser.filter(g => set.has(g.asset_id));
+    }
+
+    function isGoblinTired(g){
+      if (!g) return false;
+      const id = String(g.asset_id);
+      return State.runtime.forecastInsufficientIds
+        ? State.runtime.forecastInsufficientIds.has(id)
+        : false;
+    }
+
+    function updateActionButtonsUI(){
+      const btn = State.ui.btnStart;
+      if (!btn) return;
+      const hasSel = State.selectedGoblinIds.size > 0;
+      const inProg = !!State.runtime.expeditionInProgress;
+      btn.disabled = !hasSel || inProg;
+      if (inProg){
+        btn.textContent = '⛏️ Expedition running…';
+      } else {
+        btn.textContent = '🚀 Start Expedition';
+      }
+    }
+
+    function setBuilderEnabled(enabled){
+      const ids = ['filters','builder-controls','quick-select','goblin-list'];
+      ids.forEach(id=>{
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.toggle('builder-disabled', !enabled);
+      });
+      const rf = document.getElementById('run-forecast');
+      if (rf){
+        rf.classList.toggle('builder-disabled', !enabled);
+      }
+    }
+
+    function initDurationSwitch(){
+      const sel = State.ui.durationSelect;
+      const hint = State.ui.durationHint;
+      if (!sel) return;
+
+      const update = ()=>{
+        const val = Number(sel.value || 30);
+        State.expedition.durationMinutes = val;
+        if (hint){
+          hint.textContent = `Approx. ${formatMinutesShort(val)} expedition.`;
+        }
+        // ricalcola forecast quando cambi durata
+        scheduleForecastIfReady();
+      };
+
+      sel.addEventListener('change', update);
+      update();
+    }
+
+    // ------------------------------------------------------------
+    // TEMPO / GLOBAL SNAPSHOT
+    // ------------------------------------------------------------
+
+    function fromSecondsRemaining(exp){
+      const sr = toNumber(exp && exp.seconds_remaining);
+      if (!sr) return null;
+      const snapAt = exp._snapAt || Date.now();
+      const endTs = snapAt + sr * 1000;
+      return {
+        endsAt(){
+          return new Date(endTs);
+        },
+        leftMs(nowMs){
+          const now = nowMs || Date.now();
+          return Math.max(0, endTs - now);
+        }
+      };
+    }
+
+    function getEndsAt(exp){
+      if (!exp) return null;
+      if (exp.ends_at){
+        const d = new Date(exp.ends_at);
+        return isNaN(d.getTime()) ? null : d;
+      }
+      if (exp.end_time){
+        const d = new Date(exp.end_time);
+        return isNaN(d.getTime()) ? null : d;
+      }
+      const start = exp.start_time || exp.started_at || exp.timestamp;
+      const durSec = exp.duration_seconds || exp.effective_seconds || exp.nominal_seconds;
+      if (start && durSec){
+        const d0 = new Date(start);
+        if (!isNaN(d0.getTime())){
+          return new Date(d0.getTime() + toNumber(durSec) * 1000);
+        }
+      }
+      if (exp._snapAt && exp.seconds_remaining){
+        return new Date(exp._snapAt + toNumber(exp.seconds_remaining) * 1000);
+      }
+      return null;
+    }
+
+    function getTimeLeftMs(exp, now){
+      const end = getEndsAt(exp);
+      if (!end) return null;
+      const n = now instanceof Date ? now.getTime() : (now || Date.now());
+      return Math.max(0, end.getTime() - n);
+    }
+
+    // ------------------------------------------------------------
+    // ASSETS (background + goblin sprite)
+    // ------------------------------------------------------------
+
+    const Assets = { bg:null, goblin:null };
+
+    function loadImage(src){
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+    }
+
+    async function loadAssets(){
+      const [bg, gob] = await Promise.all([
+        loadImage('img/world-bg.webp'),
+        loadImage('img/goblin.png')
+      ]);
+      if (bg) Assets.bg = bg;
+      if (gob) Assets.goblin = gob;
+    }
+
+    // ------------------------------------------------------------
+    // TOAST / MESSAGGI VICINO AL CANVAS
+    // ------------------------------------------------------------
+
+    function toast(msg){
+      const host = State.ui.toastHost;
+      if (!host) return;
+      const div = document.createElement('div');
+      div.textContent = msg;
+      div.className = 'toast';
+      div.style.marginTop = '6px';
+      host.appendChild(div);
+      setTimeout(() => div.remove(), 4000);
+    }
+
+    function pushCanvasMsg(msg){
+      const host = document.getElementById('canvas-feedback');
+      if (!host) return;
+      const p = document.createElement('div');
+      p.className = 'msg';
+      p.textContent = msg;
+      host.appendChild(p);
+      setTimeout(() => p.remove(), 4000);
+    }
+
+    // ------------------------------------------------------------
+    // GOBLIN GLOBAL STATS PANEL
+    // ------------------------------------------------------------
+
+    function updateGoblinGlobalStats(statsSummary, countFallback){
+      const totalCount = toNumber(statsSummary?.count_total) ||
+                         toNumber(countFallback) || 0;
+
+      // pannello "Total goblins / Total daily power / Avg daily power"
+      if (State.ui.goblinStatCount) {
+        State.ui.goblinStatCount.textContent = String(totalCount);
+      }
+      if (State.ui.goblinStatTotal){
+        const totalPower = toNumber(statsSummary?.totals?.daily_power) || 0;
+        State.ui.goblinStatTotal.textContent = formatCompact(totalPower);
+      }
+      if (State.ui.goblinStatAvg){
+        const avgPower = toNumber(statsSummary?.averages?.daily_power) || 0;
+        State.ui.goblinStatAvg.textContent = formatDP(avgPower);
+      }
+
+      const totals = statsSummary?.totals || {};
+      const avgs   = statsSummary?.averages || {};
+      const rarity = statsSummary?.rarity_counts || {};
+
+      const setStrong = (id, val)=>{
+        const el = document.getElementById(id);
+        if (!el) return;
+        const strong = el.querySelector('strong');
+        if (strong) strong.textContent = String(val);
+      };
+
+      setStrong('gas-total-count', totalCount);
+      setStrong('gas-total-res',   formatCompact(totals.resistance   || 0));
+      setStrong('gas-total-acc',   formatCompact(totals.accuracy     || 0));
+      setStrong('gas-total-loot',  formatCompact(totals.loot_hungry  || 0));
+      setStrong('gas-total-speed', formatCompact(totals.speed        || 0));
+
+      setStrong('gas-avg-res',   formatDP(avgs.resistance   || 0));
+      setStrong('gas-avg-acc',   formatDP(avgs.accuracy     || 0));
+      setStrong('gas-avg-loot',  formatDP(avgs.loot_hungry  || 0));
+      setStrong('gas-avg-speed', formatDP(avgs.speed        || 0));
+
+      setStrong('gas-rarity-mythic',    rarity.mythic    || 0);
+      setStrong('gas-rarity-legendary', rarity.legendary || 0);
+      setStrong('gas-rarity-epic',      rarity.epic      || 0);
+      setStrong('gas-rarity-rare',      rarity.rare      || 0);
+      setStrong('gas-rarity-common',    rarity.common    || 0);
+    }
 
     // ------------------------------------------------------------
     // FORECAST (REAL + SIMULATOR)
@@ -1437,151 +1851,6 @@
         hydrateGoblinBuilder();
         toast(`Removed tired goblins: ${before - after}`);
       };
-    }
-
-    function renderForecastRealContent(data, message){
-      if (message){
-        return `
-          <div class="card">
-            <div class="hint">${safe(message)}</div>
-          </div>
-        `;
-      }
-      if (!data){
-        return '';
-      }
-    
-      const durNominal = State.expedition.durationMinutes || 0;
-      const durEff = toNumber(data.duration_effective_minutes) || durNominal;
-      const powTot = toNumber(data.power_needed_total);
-      const tMin = toNumber(data.tokens_min);
-      const tMax = toNumber(data.tokens_max);
-      const probs = data.token_tier_probs || {};
-      const nftRewards = Array.isArray(data.nft_rewards) ? data.nft_rewards : [];
-      const msgs = Array.isArray(data.messages) ? data.messages : [];
-    
-      const selectedCountBackend = toNumber(data.selected_count);
-      const selectedCount = selectedCountBackend || State.selectedGoblinIds.size || 0;
-    
-      const tierEff = bucketFromMinutes(durEff);
-      const baseNominalPerGoblin = nominalCostPerGoblinForMinutes(durEff);
-      const effAvgPerGoblin = selectedCount ? (powTot / selectedCount) : 0;
-    
-      const tiredCount = State.runtime.forecastInsufficientIds
-        ? State.runtime.forecastInsufficientIds.size
-        : 0;
-    
-      return `
-        <div class="grid">
-          <div class="card">
-            <div class="kv">
-              <div title="Minutes chosen in the duration selector.">
-                <span class="label">⏱ Nominal duration</span>
-                <b>${durNominal} min</b>
-              </div>
-    
-              <div title="Estimated duration after the total SPEED bonus is applied.">
-                <span class="label">⚡ Effective duration</span>
-                <b>
-                  ${durEff} min
-                  <span class="badge-inline">tier ${tierEff}m</span>
-                </b>
-              </div>
-    
-              <div title="Base daily cost per goblin BEFORE RESISTANCE is applied, for this duration tier.">
-                <span class="label">💰 Nominal daily cost / goblin</span>
-                <b>
-                  ${formatDP(baseNominalPerGoblin)} DP
-                  <span class="badge-inline">base</span>
-                </b>
-              </div>
-    
-              <div title="Average effective daily cost per goblin AFTER RES, calculated by the backend.">
-                <span class="label">🎯 Average effective daily cost / goblin</span>
-                <b>
-                  ${selectedCount ? formatDP(effAvgPerGoblin) : '—'} DP
-                  <span class="badge-inline">effective</span>
-                </b>
-              </div>
-    
-              <div title="Sum of all effective daily power costs for this run.">
-                <span class="label">🔋 Total daily power (run)</span>
-                <b>${powTot ? formatDP(powTot) : '—'} DP</b>
-              </div>
-    
-              <div title="Goblins actually used in the forecast (after applying the cap, if exceeded).">
-                <span class="label">🧬 Selected goblins</span>
-                <b>${selectedCount}</b>
-              </div>
-            </div>
-          </div>
-    
-          <div class="card">
-            <div class="kv">
-              <div title="Expected CHIPS reward range for this run.">
-                <span class="label">💎 Chips (min–max)</span>
-                <b>
-                  ${tMin || '—'} – ${tMax || '—'}
-                  <span class="badge-inline">reward</span>
-                </b>
-              </div>
-    
-              ${Object.keys(probs).length ? `
-              <div title="Relative probability of token reward tiers based on average ACC.">
-                <span class="label">📊 Token tier probabilities</span>
-                <b>${
-                  Object.entries(probs)
-                    .map(([k,v]) => `${safe(k)} ${Math.round(v * 100)}%`)
-                    .join(' · ')
-                }</b>
-              </div>` : ''}
-    
-              ${nftRewards.length ? `
-              <div title="Approximate chance of receiving each NFT template in a single run.">
-                <span class="label">🎁 NFT drop chances</span>
-                <b>${
-                  nftRewards
-                    .map(it => `${safe(it.name)} ${Math.round((it.chance || 0) * 100)}%`)
-                    .join(' · ')
-                }</b>
-              </div>` : ''}
-    
-              ${tiredCount ? `
-              <div style="margin-top:6px;">
-                <button id="btn-remove-tired" class="btn-primary" type="button">
-                  💤 Remove ${tiredCount} tired goblin${tiredCount > 1 ? 's' : ''} from selection
-                </button>
-              </div>` : ''}
-            </div>
-          </div>
-        </div>
-    
-        <div class="card forecast-help">
-          <div class="forecast-help-title">📘 How this expedition is calculated</div>
-          <ul>
-            <li>
-              <strong>Troop Reinforcement NFT</strong> increases the base cap of 50 goblins
-              by +5 per NFT, up to 250 goblins per run.
-            </li>
-            <li>
-              <strong>Speed (SPD)</strong>: total SPD reduces the <em>effective duration</em>;
-              the duration tier (${DURATION_BUCKETS.join(', ')} min) determines the
-              <em>nominal base cost</em> per goblin.
-            </li>
-            <li>
-              <strong>Resistance (RES)</strong>: applies a discount to the nominal daily cost →
-              each goblin consumes fewer DP than the base value.
-            </li>
-            <li>
-              <strong>Loot Hungry (LOOT)</strong> and <strong>Accuracy (ACC)</strong>:
-              increase average CHIPS rewards and improve reward quality
-              (token tiers and NFT drop chances).
-            </li>
-          </ul>
-        </div>
-    
-        ${msgs.length ? `<div class="hint">ℹ️ ${msgs.map(safe).join(' · ')}</div>` : ''}
-      `;
     }
 
     // ------------------------------------------------------------

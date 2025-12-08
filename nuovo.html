@@ -1175,10 +1175,25 @@
     }
 
     function renderForecastLoading(){
-      const host = document.getElementById('run-forecast'); if (!host) return;
+      const host = ensureForecastShell();   // usa sempre il guscio standard
+      if (!host) return;
+    
       host.hidden = false;
-      host.innerHTML = `<div class="hdr"><span class="tag cyan">Run Forecast</span> <span class="hint">Computing…</span></div>`;
+    
+      const realPanel = document.getElementById('forecast-panel-real');
+      if (realPanel){
+        realPanel.innerHTML = `
+          <div class="card">
+            <div class="hint">Computing…</div>
+          </div>
+        `;
+      }
+    
+      // opzionale: se vuoi che il tab attivo sia sempre "My Goblins" mentre calcoli
+      State.runtime.forecastMode = 'real';
+      updateForecastTabs(host);
     }
+
 
 function ensureForecastShell() {
   const host = document.getElementById('run-forecast');
@@ -1413,7 +1428,6 @@ function renderForecast(data, message) {
   const host = ensureForecastShell();
   if (!host) return;
 
-  // If nothing to show and in real mode, hide panel
   if (!data && !message && mode === 'real') {
     host.hidden = true;
     return;
@@ -1421,13 +1435,11 @@ function renderForecast(data, message) {
 
   host.hidden = false;
   updateForecastTabs(host);
-
-  // Real forecast panel
   updateForecastRealPanel(data, message);
-
-  // Keep simulator result in sync
   updateForecastSimResult();
+  wireRemoveTiredButton();
 }
+
 
 
     function wireRemoveTiredButton(){

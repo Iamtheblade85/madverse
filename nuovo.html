@@ -744,435 +744,14 @@
           totalSpeed: 0,
           totalLoot: 0
         },      
-        simResult: null                  // ultimo risultato simulato       
+        simResult: null                  // last simulation result
       }
     };
 
-    // ------------------------------------------------------------
-    // UTIL
-    // ------------------------------------------------------------
-    function clamp(v, min, max){ return v < min ? min : v > max ? max : v; }
-    function randRange(min,max){ return min + Math.random()*(max-min); }
-    function toNumber(x){
-      if (x == null) return 0;
-      if (typeof x === 'number' && Number.isFinite(x)) return x;
-      const m = String(x).match(/-?\d+(\.\d+)?/);
-      return m ? Number(m[0]) : 0;
-    }
-    function timeHM(date){
-      const d = date instanceof Date ? date : new Date(date);
-      return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-    }
-    function safe(text){
-      return String(text ?? '')
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-    function formatCompact(n){
-      n = Number(n || 0);
-      if (!isFinite(n)) return '0';
-      if (n >= 1_000_000) return (n/1_000_000).toFixed(1).replace(/\.0$/,'') + 'M';
-      if (n >= 1_000) return (n/1_000).toFixed(1).replace(/\.0$/,'') + 'k';
-      return String(Math.round(n));
-    }
-    function formatDP(n, digits=2){
-      const v = Number(n || 0);
-      if (!Number.isFinite(v)) return '0.00';
-      return v.toFixed(digits);
-    }
-
-    // --- Mappa FE allineata alla POWER_BASE_MAP del backend ---
-    const DURATION_BUCKETS = [5, 30, 60, 120, 360, 1440];
-    const POWER_BASE_MAP_FE = {
-      5:    0.52,
-      30:   2.50,
-      60:   4.80,
-      120:  9.20,
-      360:  26.50,
-      1440: 80.00,
-    };
-
-    function bucketFromMinutes(mins){
-      mins = Number(mins || 0);
-      if (mins <= 0) return 5;
-      for (const b of DURATION_BUCKETS){
-        if (mins <= b) return b;
-      }
-      return DURATION_BUCKETS[DURATION_BUCKETS.length - 1];
-    }
-
-    function nominalCostPerGoblinForMinutes(mins){
-      const bucket = bucketFromMinutes(mins);
-      return POWER_BASE_MAP_FE[bucket] || 0;
-    }
-    
-    function debounce(fn, ms=250){
-      let t = null;
-      return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), ms); };
-    }
-
-    // ------- EXPEDITION HELPERS -------
-    function ts(x){
-      if (!x) return null;
-      if (typeof x === 'number') return new Date(x > 2e12 ? x : x*1000);
-      const d = new Date(x); return isNaN(d) ? null : d;
-    }
-    function getDurationMin(exp){ return toNumber(exp.duration_minutes ?? exp.duration ?? exp.mins ?? 30); }
-    function getStart(exp){ return ts(exp.started_at ?? exp.start_time ?? exp.start_ts ?? exp.created_at); }
-    function getEndsAt(exp){
-      const explicitEnd = ts(exp.ends_at ?? exp.end_time ?? exp.end_ts);
-      if (explicitEnd) return explicitEnd;
-      const start = getStart(exp);
-      const mins = getDurationMin(exp);
-      return start ? new Date(start.getTime() + mins*60*1000) : null;
-    }
-    function getTimeLeftMs(exp, now=new Date()){
-      const end = getEndsAt(exp);
-      if (!end) return null;
-      return Math.max(0, end.getTime() - now.getTime());
-    }
-    function fmtHMS(msLeft){
-      const s = Math.floor(msLeft/1000);
-      const h = Math.floor(s/3600);
-      const m = Math.floor((s%3600)/60);
-      const sec = s%60;
-      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-    }
-    function formatMinutesShort(m){
-      m = Number(m || 0);
-      if (m >= 1440) return '1d';
-      if (m >= 360) return (m/60).toFixed(0) + 'h';
-      if (m >= 60) return (m/60).toFixed(0) + 'h';
-      return m + 'm';
-    }
-    function formatEffectiveDurationShort(sec){
-      sec = Number(sec || 0);
-      const m = Math.round(sec / 60);
-      if (m <= 0) return '—';
-      if (m >= 1440) return '≈1d';
-      if (m >= 60) return '≈' + (m/60).toFixed(1).replace(/\.0$/,'') + 'h';
-      return '≈' + m + 'm';
-    }
-    function fromSecondsRemaining(exp){
-      const sec = toNumber(exp.seconds_remaining);
-      if (!sec) return null;
-      const snap = exp._snapAt || Date.now();
-      return {
-        baseLeftMs: sec*1000,
-        snapAt: snap,
-        leftMs(now=Date.now()){ return Math.max(0, this.baseLeftMs - (now - this.snapAt)); },
-        endsAt(){ return new Date(this.snapAt + this.baseLeftMs); }
-      };
-    }
+    // …
 
     // ------------------------------------------------------------
-    // API
-    // ------------------------------------------------------------
-    const Api = {
-      async get(path, timeout=10000){
-        const ctrl = new AbortController(); const id = setTimeout(()=>ctrl.abort(), timeout);
-        try {
-          const res = await fetch(CONFIG.apiBase + path, { signal: ctrl.signal });
-          const data = await res.json().catch(()=>null);
-          return { ok: res.ok, status: res.status, data };
-        } catch (e) { return { ok:false, status:0, error:e }; }
-        finally { clearTimeout(id); }
-      },
-      async post(path, body, timeout=10000){
-        const ctrl = new AbortController(); const id = setTimeout(()=>ctrl.abort(), timeout);
-        try {
-          const res = await fetch(CONFIG.apiBase + path, {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify(body || {}),
-            signal: ctrl.signal
-          });
-          const data = await res.json().catch(()=>null);
-          return { ok: res.ok, status: res.status, data };
-        } catch (e) { return { ok:false, status:0, error:e }; }
-        finally { clearTimeout(id); }
-      }
-    };
-
-    // ------------------------------------------------------------
-    // AUTH
-    // ------------------------------------------------------------
-    function syncUserFromStorage(){
-      try {
-        const raw = localStorage.getItem('userData');
-        let u = raw ? JSON.parse(raw) : (window.userData || null);
-        if (!u) return;
-        localStorage.setItem('userData', JSON.stringify(u));
-        State.user.wax_account = u.wax_account || u.wax || '';
-        State.user.user_id = u.user_id || u.userId || '';
-        State.user.usx_token = u.usx_token || u.token || '';
-      } catch {}
-    }
-    function assertAuth(){
-      if (!State.user.wax_account || !State.user.user_id || !State.user.usx_token) {
-        throw new Error('Not authenticated');
-      }
-    }
-
-    // ------------------------------------------------------------
-    // ASSETS
-    // ------------------------------------------------------------
-    const Assets = { loaded:false, goblin:null, bg:null };
-    function loadImg(src){
-      return new Promise((res,rej)=>{
-        const i = new Image();
-        i.onload = ()=>res(i);
-        i.onerror = rej;
-        i.src = src;
-      });
-    }
-    async function loadAssets(){
-      if (Assets.loaded) return;
-      const [goblin, bg] = await Promise.all([
-        loadImg('goblin.png'),
-        loadImg('cave-grid.gif'),
-      ]).catch(()=>[null,null]);
-      Assets.goblin = goblin;
-      Assets.bg = bg;
-      Assets.loaded = true;
-    }
-
-    // ------------------------------------------------------------
-    // UI HELPERS
-    // ------------------------------------------------------------
-    function toast(msg){
-      const host = State.ui.toastHost;
-      if (!host) return;
-      const div = document.createElement('div');
-      div.textContent = msg;
-      host.appendChild(div);
-      setTimeout(()=>div.remove(), 3500);
-    }
-    function renderAccountSummary(summary, totalCountFallback){
-      const s = summary || {};
-      const totals = s.totals || {};
-      const avgs = s.averages || {};
-      const rar = s.rarity_counts || {};
-      const totalCount = s.count_total || totalCountFallback || 0;
-
-      function set(id, text){
-        const el = document.getElementById(id);
-        if (el) el.textContent = text;
-      }
-
-      set('gas-total-count', `Goblins: ${formatCompact(totalCount)}`);
-      set('gas-total-power', `Total power: ${formatCompact(s.total_daily_power ?? 0)}`);
-      set('gas-avg-power', `Avg power: ${formatCompact(s.avg_daily_power ?? 0)}`);
-
-      set('gas-total-res', `RES Σ: ${formatCompact(totals.resistance ?? 0)}`);
-      set('gas-total-acc', `ACC Σ: ${formatCompact(totals.accuracy ?? 0)}`);
-      set('gas-total-loot', `LOOT Σ: ${formatCompact(totals.loot_hungry ?? 0)}`);
-      set('gas-total-speed', `SPD Σ: ${formatCompact(totals.speed ?? 0)}`);
-
-      set('gas-avg-res', `RES μ: ${formatCompact(avgs.resistance ?? 0)}`);
-      set('gas-avg-acc', `ACC μ: ${formatCompact(avgs.accuracy ?? 0)}`);
-      set('gas-avg-loot', `LOOT μ: ${formatCompact(avgs.loot_hungry ?? 0)}`);
-      set('gas-avg-speed', `SPD μ: ${formatCompact(avgs.speed ?? 0)}`);
-
-      set('gas-rarity-mythic', `Mythic: ${formatCompact(rar.mythic ?? 0)}`);
-      set('gas-rarity-legendary', `Legendary: ${formatCompact(rar.legendary ?? 0)}`);
-      set('gas-rarity-epic', `Epic: ${formatCompact(rar.epic ?? 0)}`);
-      set('gas-rarity-rare', `Rare: ${formatCompact(rar.rare ?? 0)}`);
-      set('gas-rarity-common', `Common: ${formatCompact(rar.common ?? 0)}`);
-    }
-    
-    function pushCanvasMsg(text){
-      const host = document.getElementById('canvas-feedback');
-      if (!host) return;
-      const el = document.createElement('div');
-      el.className = 'msg';
-      el.textContent = text;
-      host.prepend(el);
-      setTimeout(()=> el.remove(), 6500);
-    }
-
-    // ------------------------------------------------------------
-    // BUILDER STATE / ENABLE-DISABLE
-    // ------------------------------------------------------------
-    function setBuilderEnabled(enabled){
-      const disableClass = 'builder-disabled';
-      const sections = [
-        document.getElementById('filters'),
-        document.getElementById('quick-select'),
-        document.getElementById('selection-summary'),
-        document.getElementById('goblin-list'),
-        document.getElementById('view-more')
-      ];
-      sections.forEach(el=>{
-        if (!el) return;
-        if (enabled) el.classList.remove(disableClass);
-        else el.classList.add(disableClass);
-      });
-
-      const btns = [
-        State.ui.btnFirst,
-        State.ui.btnBest,
-        State.ui.btnClear,
-        State.ui.btnToggleMore
-      ];
-      btns.forEach(b=>{
-        if (!b) return;
-        b.disabled = !enabled;
-      });
-
-      const filters = [
-        State.ui.fltSearch,
-        State.ui.fltRarity,
-        State.ui.fltPower
-      ];
-      filters.forEach(f=>{
-        if (!f) return;
-        f.disabled = !enabled;
-      });
-
-      // Start expedition è comunque ulteriormente gestito
-      if (State.ui.btnStart){
-        State.ui.btnStart.disabled = !enabled;
-      }
-    }
-
-    // ------------------------------------------------------------
-    // BUILDER HELPERS
-    // ------------------------------------------------------------
-    function updateGoblinGlobalStats(statsSummary, totalCountFallback) {
-      // 1) Aggiorna il pannello “Goblin account stats” (gas-*)
-      renderAccountSummary(statsSummary || {}, totalCountFallback);
-    
-      // 2) Aggiorna la card compatta in alto (stat-goblins-*)
-      //    usando stats_summary se c'è, altrimenti calcolando dal client.
-      const totalFromSummary =
-        (statsSummary && statsSummary.count_total) || 0;
-      const total = totalFromSummary ||
-                    totalCountFallback ||
-                    State.goblinsUser.length;
-    
-      let totalPower =
-        statsSummary && typeof statsSummary.total_daily_power === 'number'
-          ? statsSummary.total_daily_power
-          : 0;
-    
-      if (!totalPower && State.goblinsUser.length) {
-        totalPower = State.goblinsUser.reduce(
-          (acc, g) => acc + toNumber(g.daily_power_num),
-          0
-        );
-      }
-    
-      const avgPower =
-        total > 0
-          ? (statsSummary && typeof statsSummary.avg_daily_power === 'number'
-              ? statsSummary.avg_daily_power
-              : (totalPower / total))
-          : 0;
-    
-      if (State.ui.goblinStatCount) {
-        State.ui.goblinStatCount.textContent = formatCompact(total);
-      }
-      if (State.ui.goblinStatTotal) {
-        State.ui.goblinStatTotal.textContent = formatCompact(totalPower);
-      }
-      if (State.ui.goblinStatAvg) {
-        State.ui.goblinStatAvg.textContent =
-          total ? avgPower.toFixed(1) : '0';
-      }
-    }
-
-
-    function getSendCap(){
-      const base = 50, perReinf = 5, maxExtra = 200;
-      const reinf = State.expedition?.reinforcementCount || 0;
-      const extra = clamp(reinf * perReinf, 0, maxExtra);
-      return clamp(base + extra, base, 250);
-    }
-    function updateCapUI(){
-      const cap = getSendCap();
-      const reinf = State.expedition?.reinforcementCount || 0;
-      const extra = Math.min(reinf * 5, 200);
-      if (State.ui.capLabel)   State.ui.capLabel.textContent = `Max goblins this run: ${cap}`;
-      if (State.ui.reinfLabel) State.ui.reinfLabel.textContent = `Base 50 + ${reinf}× Reinforcement (= ${extra} extra)`;
-      if (State.ui.btnFirst) State.ui.btnFirst.textContent = `✅ First ${cap}`;
-      if (State.ui.btnBest)  State.ui.btnBest.textContent  = `🏆 Best ${cap}`;
-    }
-    function isGoblinTired(g) {
-      const id = String(g.asset_id);
-      const power = Number(g.daily_power_num || 0);
-    
-      // Se abbiamo una forecast recente con power_needed_by_asset,
-      // usiamo il dato reale del backend per quella durata/selezione.
-      const map = State.runtime.forecastPowerByAsset || {};
-      if (map && map[id] != null) {
-        const needed = toNumber(map[id]);
-        // piccola tolleranza per rounding
-        return power + 1e-6 < needed;
-      }
-    
-      // Fallback “vecchio stile” se non abbiamo forecast:
-      // sotto una certa soglia lo consideriamo a riposo.
-      return power < 0.5;
-    }
-    function getSelectedGoblins(){
-      return State.goblinsUser.filter(g => State.selectedGoblinIds.has(g.asset_id));
-    }
-    function canSendExpedition(){
-      if (!State.nftsLoaded) return { ok:false, reason:'not_loaded' };
-      if (State.runtime.expeditionInProgress) return { ok:false, reason:'in_progress' };
-      const sel = getSelectedGoblins();
-      if (!sel.length) return { ok:false, reason:'no_selection' };
-      const cap = getSendCap();
-      if (sel.length > cap) return { ok:false, reason:'over_cap' };
-      const tired = sel.filter(isGoblinTired);
-      if (tired.length) return { ok:false, reason:'tired_present' };
-      return { ok:true };
-    }
-    function buildDurationHint(mins){
-      const bucket = bucketFromMinutes(mins);
-      const base = nominalCostPerGoblinForMinutes(mins);  // nominal DP per goblin
-      const runsPerDay = bucket ? Math.floor(1440 / bucket) : 0;
-    
-      return `Base cost: ${formatDP(base)} DP/goblin · tier ${bucket}m · up to ${runsPerDay} runs/day per goblin at full power (before attributes).`;
-    }
-    function initDurationSwitch(){
-      const sel = State.ui.durationSelect;
-      const hint = State.ui.durationHint;
-      if (!sel) return;
-      function update(valMin){
-        State.expedition.durationMinutes = valMin;
-        if (hint) hint.textContent = buildDurationHint(valMin);
-        scheduleForecastIfReady();
-      }
-      sel.addEventListener('change', ()=> update(Number(sel.value||30)));
-      update(Number(sel.value||30));
-    }
-
-    function updateActionButtonsUI(){
-      const btnStart = State.ui.btnStart;
-      const hintEl = document.getElementById('action-hint');
-      if (!btnStart) return;
-
-      let startHint = 'Start an expedition with the selected goblins.';
-      const val = canSendExpedition();
-
-      if (!val.ok){
-        btnStart.disabled = true;
-        if (val.reason === 'not_loaded')      startHint = 'Load your goblins first using the button above.';
-        else if (val.reason==='in_progress')  startHint = 'You already have an expedition in progress.';
-        else if (val.reason==='no_selection') startHint = 'Select at least one goblin.';
-        else if (val.reason==='over_cap')     startHint = 'Selection exceeds your current cap.';
-        else if (val.reason==='tired_present')startHint = 'Your selection includes tired goblins.';
-      } else {
-        btnStart.disabled = false;
-      }
-
-      btnStart.title = startHint;
-      if (hintEl) hintEl.textContent = startHint;
-    }
-
-    // ------------------------------------------------------------
-    // FORECAST
+    // FORECAST (REAL + SIMULATOR)
     // ------------------------------------------------------------
     const requestForecastDebounced = debounce(requestForecast, 320);
 
@@ -1245,402 +824,605 @@
       }
       
       renderForecast(res.data, null);
-      hydrateGoblinBuilder(); // così le card si aggiornano con POWER OK / LOW POWER
+      hydrateGoblinBuilder(); // update card labels (POWER OK / LOW POWER)
     }
 
     function renderForecastLoading(){
-      const host = ensureForecastShell();   // usa sempre il guscio standard
+      const host = ensureForecastShell();
       if (!host) return;
-    
+
       host.hidden = false;
-    
       const realPanel = document.getElementById('forecast-panel-real');
       if (realPanel){
         realPanel.innerHTML = `
           <div class="card">
-            <div class="hint">Computing…</div>
+            <div class="hint">Computing forecast…</div>
           </div>
         `;
       }
-    
-      // opzionale: se vuoi che il tab attivo sia sempre "My Goblins" mentre calcoli
+
       State.runtime.forecastMode = 'real';
       updateForecastTabs(host);
     }
 
-function ensureForecastShell() {
-  const host = document.getElementById('run-forecast');
-  if (!host) return null;
-  if (!host.dataset.shellInitialized) {
-    host.innerHTML = `
-      <div class="hdr">
-        <span class="tag cyan">Run Forecast</span>
-        <span class="hint">🔄 Updated when you change duration or selection.</span>
-      </div>
-      <div class="forecast-tabs" role="tablist" aria-label="Forecast mode">
-        <button type="button"
-                data-mode="real"
-                aria-pressed="true">
-          🧬 My Goblins
-        </button>
-        <button type="button"
-                data-mode="sim"
-                aria-pressed="false">
-          🧪 Simulator
-        </button>
-      </div>
-      <div id="forecast-panel-real"></div>
-      <div id="forecast-panel-sim" hidden>
-        <div class="card">
-          <div class="forecast-sim-form" aria-label="Run simulator">
-            <label>
-              Duration
-              <select id="sim-duration">
-                <option value="5">5m — Blitz</option>
-                <option value="30">30m — Standard</option>
-                <option value="60">1h — Long</option>
-                <option value="120">2h — Marathon</option>
-                <option value="360">6h — Endurance</option>
-                <option value="1440">24h — Ultra</option>
-              </select>
-            </label>
-            <label>
-              Number of goblins
-              <input id="sim-goblins" type="number" min="1" step="1" inputmode="numeric">
-            </label>
-            <label>
-              Total accuracy
-              <input id="sim-acc" type="number" min="0" step="1" inputmode="numeric">
-            </label>
-            <label>
-              Total resistance
-              <input id="sim-res" type="number" min="0" step="1" inputmode="numeric">
-            </label>
-            <label>
-              Total speed
-              <input id="sim-spd" type="number" min="0" step="1" inputmode="numeric">
-            </label>
-            <label>
-              Total loot hunger
-              <input id="sim-loot" type="number" min="0" step="1" inputmode="numeric">
-            </label>
+    // -------- shell + tabs (REAL / SIM) --------
+    function ensureForecastShell() {
+      const host = document.getElementById('run-forecast');
+      if (!host) return null;
+      if (!host.dataset.shellInitialized) {
+        host.innerHTML = `
+          <div class="hdr">
+            <span class="tag cyan">Run Forecast & Simulator</span>
+            <span class="hint">🔄 Updates when you change duration, selection or simulator inputs.</span>
           </div>
-          <div style="display:flex;justify-content:flex-start;margin-top:8px;gap:8px;">
-            <button id="sim-run" class="btn-primary" type="button">
-              🧪 Run simulation
+          <div class="forecast-tabs" role="tablist" aria-label="Forecast mode">
+            <button type="button"
+                    data-mode="real"
+                    aria-pressed="true">
+              🧬 My Goblins
+            </button>
+            <button type="button"
+                    data-mode="sim"
+                    aria-pressed="false">
+              🧪 Attribute Simulator
             </button>
           </div>
-          <div id="forecast-sim-result" class="forecast-help" style="margin-top:8px;">
-            <div class="forecast-help-title">📘 Simulator</div>
-            <p>Enter your totals and click <strong>Run simulation</strong> to preview an approximate expedition.</p>
+          <div id="forecast-panel-real"></div>
+          <div id="forecast-panel-sim" hidden>
+            <div class="card">
+              <div class="forecast-sim-form" aria-label="Run simulator">
+                <label>
+                  Duration (minutes)
+                  <select id="sim-duration">
+                    <option value="5">5m — Blitz</option>
+                    <option value="30" selected>30m — Standard</option>
+                    <option value="60">1h — Long</option>
+                    <option value="120">2h — Marathon</option>
+                    <option value="360">6h — Endurance</option>
+                    <option value="1440">24h — Ultra</option>
+                  </select>
+                </label>
+                <label>
+                  Number of goblins
+                  <input id="sim-goblins" type="number" min="1" step="1" inputmode="numeric" placeholder="e.g. 50">
+                </label>
+                <label>
+                  Total Accuracy (ACC)
+                  <input id="sim-acc" type="number" min="0" step="1" inputmode="numeric" placeholder="sum of ACC">
+                </label>
+                <label>
+                  Total Resistance (RES)
+                  <input id="sim-res" type="number" min="0" step="1" inputmode="numeric" placeholder="sum of RES">
+                </label>
+                <label>
+                  Total Speed (SPD)
+                  <input id="sim-spd" type="number" min="0" step="1" inputmode="numeric" placeholder="sum of SPD">
+                </label>
+                <label>
+                  Total Loot Hungry (LOOT)
+                  <input id="sim-loot" type="number" min="0" step="1" inputmode="numeric" placeholder="sum of LOOT">
+                </label>
+              </div>
+              <div style="display:flex;justify-content:flex-start;margin-top:8px;gap:8px;">
+                <button id="sim-run" class="btn-primary" type="button">
+                  🧪 Run simulation
+                </button>
+              </div>
+              <div id="forecast-sim-result" class="forecast-help" style="margin-top:8px;">
+                <div class="forecast-help-title">📘 Attribute-based simulator</div>
+                <p>
+                  Enter <strong>number of goblins</strong> and your total
+                  <strong>SPD / RES / LOOT / ACC</strong>.
+                  The simulator will estimate one expedition without using any real goblins.
+                </p>
+              </div>
+            </div>
+          </div>
+        `;
+        host.dataset.shellInitialized = '1';
+        wireForecastTabs(host);
+        wireSimForm(host);
+      }
+      return host;
+    }
+
+    function wireForecastTabs(host) {
+      const buttons = host.querySelectorAll('.forecast-tabs button[data-mode]');
+      buttons.forEach(btn => {
+        btn.onclick = () => {
+          const mode = btn.getAttribute('data-mode') === 'sim' ? 'sim' : 'real';
+          State.runtime.forecastMode = mode;
+          updateForecastTabs(host);
+        };
+      });
+
+      updateForecastTabs(host);
+    }
+
+    function updateForecastTabs(host) {
+      const mode = State.runtime.forecastMode || 'real';
+      const buttons = host.querySelectorAll('.forecast-tabs button[data-mode]');
+      buttons.forEach(btn => {
+        const m = btn.getAttribute('data-mode');
+        btn.setAttribute('aria-pressed', String(m === mode));
+      });
+
+      const realPanel = document.getElementById('forecast-panel-real');
+      const simPanel  = document.getElementById('forecast-panel-sim');
+      if (realPanel) realPanel.hidden = (mode !== 'real');
+      if (simPanel)  simPanel.hidden  = (mode !== 'sim');
+    }
+
+    // ---------- REAL forecast panel (with your goblins) ----------
+    function updateForecastRealPanel(data, message) {
+      const panel = document.getElementById('forecast-panel-real');
+      if (!panel) return;
+
+      panel.innerHTML = renderForecastRealContent(data, message);
+    }
+
+    function renderForecastRealContent(data, message){
+      if (message){
+        return `
+          <div class="card">
+            <div class="hint">${safe(message)}</div>
+          </div>
+        `;
+      }
+      if (!data){
+        return '';
+      }
+
+      const durNominal = State.expedition.durationMinutes || 0;
+      const durEff = toNumber(data.duration_effective_minutes) || durNominal;
+      const powTot = toNumber(data.power_needed_total);
+      const tMin = toNumber(data.tokens_min);
+      const tMax = toNumber(data.tokens_max);
+      const probs = data.token_tier_probs || {};
+      const nftRewards = Array.isArray(data.nft_rewards) ? data.nft_rewards : [];
+      const msgs = Array.isArray(data.messages) ? data.messages : [];
+
+      const selectedCountBackend = toNumber(data.selected_count);
+      const selectedCount = selectedCountBackend || State.selectedGoblinIds.size || 0;
+
+      const tierEff = bucketFromMinutes(durEff);
+      const baseNominalPerGoblin = nominalCostPerGoblinForMinutes(durEff);
+      const effAvgPerGoblin = selectedCount ? (powTot / selectedCount) : 0;
+
+      const tiredCount = State.runtime.forecastInsufficientIds
+        ? State.runtime.forecastInsufficientIds.size
+        : 0;
+
+      return `
+        <div class="grid">
+          <div class="card">
+            <div class="kv">
+              <div title="Minutes chosen in the duration selector.">
+                <span class="label">⏱ Nominal duration</span>
+                <b>${durNominal} min</b>
+              </div>
+
+              <div title="Estimated duration after the total SPEED bonus is applied.">
+                <span class="label">⚡ Effective duration</span>
+                <b>
+                  ${durEff} min
+                  <span class="badge-inline">tier ${tierEff}m</span>
+                </b>
+              </div>
+
+              <div title="Base daily cost per goblin BEFORE RESISTANCE is applied, for this duration tier.">
+                <span class="label">💰 Nominal daily cost / goblin</span>
+                <b>
+                  ${formatDP(baseNominalPerGoblin)} DP
+                  <span class="badge-inline">base</span>
+                </b>
+              </div>
+
+              <div title="Average effective daily cost per goblin AFTER RES, calculated by the backend.">
+                <span class="label">🛡️ Average effective daily cost / goblin</span>
+                <b>
+                  ${selectedCount ? formatDP(effAvgPerGoblin) : '—'} DP
+                  <span class="badge-inline">effective</span>
+                </b>
+              </div>
+
+              <div title="Sum of all effective daily power costs for this run.">
+                <span class="label">🔋 Total daily power (run)</span>
+                <b>${powTot ? formatDP(powTot) : '—'} DP</b>
+              </div>
+
+              <div title="Goblins actually used in the forecast (after applying the cap, if exceeded).">
+                <span class="label">🧬 Selected goblins</span>
+                <b>${selectedCount}</b>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="kv">
+              <div title="Expected CHIPS reward range for this run.">
+                <span class="label">💎 Chips (min–max)</span>
+                <b>
+                  ${tMin || '—'} – ${tMax || '—'}
+                  <span class="badge-inline">reward</span>
+                </b>
+              </div>
+
+              ${Object.keys(probs).length ? `
+              <div title="Relative probability of token reward tiers based on average ACC.">
+                <span class="label">📊 Token tier probabilities</span>
+                <b>${
+                  Object.entries(probs)
+                    .map(([k,v]) => `${safe(k)} ${Math.round(v * 100)}%`)
+                    .join(' · ')
+                }</b>
+              </div>` : ''}
+
+              ${nftRewards.length ? `
+              <div title="Approximate chance of receiving each NFT template in a single run.">
+                <span class="label">🎁 NFT drop chances</span>
+                <b>${
+                  nftRewards
+                    .map(it => `${safe(it.name)} ${Math.round((it.chance || 0) * 100)}%`)
+                    .join(' · ')
+                }</b>
+              </div>` : ''}
+
+              ${tiredCount ? `
+              <div style="margin-top:6px;">
+                <button id="btn-remove-tired" class="btn-primary" type="button">
+                  💤 Remove ${tiredCount} tired goblin${tiredCount > 1 ? 's' : ''} from selection
+                </button>
+              </div>` : ''}
+            </div>
           </div>
         </div>
-      </div>
-    `;
-    host.dataset.shellInitialized = '1';
-    wireForecastTabs(host);
-    wireSimForm(host);
-  }
-  return host;
-}
 
-function wireForecastTabs(host) {
-  const buttons = host.querySelectorAll('.forecast-tabs button[data-mode]');
-  buttons.forEach(btn => {
-    btn.onclick = () => {
-      const mode = btn.getAttribute('data-mode') === 'sim' ? 'sim' : 'real';
-      State.runtime.forecastMode = mode;
-      updateForecastTabs(host);
-    };
-  });
+        <div class="card forecast-help">
+          <div class="forecast-help-title">📘 How your attributes affect this run</div>
+          <ul>
+            <li><strong>Speed (SPD)</strong> makes the run <em>finish faster</em> by reducing effective duration.</li>
+            <li><strong>Resistance (RES)</strong> <em>reduces Daily Power cost</em> per goblin, making runs cheaper.</li>
+            <li><strong>Loot Hungry (LOOT)</strong> scales how many <em>CHIPS</em> you can loot on average.</li>
+            <li><strong>Accuracy (ACC)</strong> improves <em>reward quality</em>: better token tiers and higher NFT drop chances.</li>
+          </ul>
+        </div>
 
-  updateForecastTabs(host);
-}
+        ${msgs.length ? `<div class="hint">ℹ️ ${msgs.map(safe).join(' · ')}</div>` : ''}
+      `;
+    }
 
-function updateForecastTabs(host) {
-  const mode = State.runtime.forecastMode || 'real';
-  const buttons = host.querySelectorAll('.forecast-tabs button[data-mode]');
-  buttons.forEach(btn => {
-    const m = btn.getAttribute('data-mode');
-    btn.setAttribute('aria-pressed', String(m === mode));
-  });
+    // ---------- SIMULATOR result panel ----------
+    function updateForecastSimResult() {
+      const host = document.getElementById('forecast-sim-result');
+      if (!host) return;
 
-  const realPanel = document.getElementById('forecast-panel-real');
-  const simPanel  = document.getElementById('forecast-panel-sim');
-  if (realPanel) realPanel.hidden = (mode !== 'real');
-  if (simPanel)  simPanel.hidden  = (mode !== 'sim');
-}
+      const cfg = State.runtime.simConfig || {};
+      const res = State.runtime.simResult;
 
-// Only update the REAL panel content
-function updateForecastRealPanel(data, message) {
-  const panel = document.getElementById('forecast-panel-real');
-  if (!panel) return;
+      if (!res) {
+        host.innerHTML = `
+          <div class="forecast-help-title">📘 Attribute-based simulator</div>
+          <p>
+            Enter <strong>number of goblins</strong> and your total
+            <strong>SPD / RES / LOOT / ACC</strong>, then click
+            <strong>Run simulation</strong>.
+          </p>
+          <p style="margin-top:4px;font-size:12px;opacity:.85;">
+            The simulation reuses the same internal math as real expeditions,
+            but <strong>does not spend</strong> Daily Power and does not start any on-chain run.
+          </p>
+        `;
+        return;
+      }
 
-  panel.innerHTML = renderForecastRealContent(data, message);
-}
+      const sim = res;
 
-// Only update the SIM result (never the inputs)
-function updateForecastSimResult() {
-  const host = document.getElementById('forecast-sim-result');
-  if (!host) return;
+      const duration = toNumber(
+        sim.duration?.effective_minutes ??
+        sim.duration_effective_minutes ??
+        sim.requested_minutes ??
+        cfg.durationMinutes ??
+        30
+      );
+      const goblinsCount = toNumber(
+        sim.selected_count ??
+        sim.goblins_count ??
+        cfg.goblinsCount ??
+        0
+      );
 
-  const cfg = State.runtime.simConfig || {};
-  const res = State.runtime.simResult;
+      const tokensMin  = toNumber(
+        sim.tokens?.min_total ??
+        sim.tokens_min ??
+        sim.tokens_min_total ??
+        0
+      );
+      const tokensMax  = toNumber(
+        sim.tokens?.max_total ??
+        sim.tokens_max ??
+        sim.tokens_max_total ??
+        0
+      );
+      const tokensAvg  = toNumber(
+        sim.tokens?.expected_total ??
+        sim.tokens_expected ??
+        sim.tokens_avg ??
+        sim.tokens_average ??
+        0
+      );
 
-  if (!res) {
-    host.innerHTML = `
-      <div class="forecast-help-title">📘 Simulator</div>
-      <p>Enter your totals and click <strong>Run simulation</strong> to preview an approximate expedition.</p>
-    `;
-    return;
-  }
+      const tokenProbs = sim.tokens?.tier_probs ||
+                         sim.token_tier_probs ||
+                         {};
 
-  const duration = Number(
-    res.duration_minutes ??
-    cfg.durationMinutes ??
-    30
-  );
-  const goblinsCount = Number(
-    res.goblins_count ??
-    cfg.goblinsCount ??
-    0
-  );
+      const nftRewards = Array.isArray(sim.nfts?.rewards)
+        ? sim.nfts.rewards
+        : Array.isArray(sim.nft_rewards)
+        ? sim.nft_rewards
+        : [];
 
-  const tokensMin  = toNumber(res.tokens_min);
-  const tokensMax  = toNumber(res.tokens_max);
-  const tokensAvg  = toNumber(res.tokens_avg ?? res.tokens_average ?? 0);
+      const fmtPct = (v) => `${Math.round((Number(v) || 0) * 100)}%`;
 
-  const tokenProbs = res.token_tier_probs || {};
-  const nftRewards = Array.isArray(res.nft_rewards) ? res.nft_rewards : [];
+      const prettyTierName = (key) => {
+        const k = String(key || '').toLowerCase();
+        if (k.includes('low')) return 'Small token reward';
+        if (k.includes('mid') || k.includes('medium')) return 'Medium token reward';
+        if (k.includes('high') && !k.includes('very')) return 'High token reward';
+        if (k.includes('very') || k.includes('jackpot')) return 'Very high token reward';
+        return key;
+      };
 
-  // helper per percentuali
-  const fmtPct = (v) => `${Math.round((Number(v) || 0) * 100)}%`;
+      const tierClassByIndex = (idx) => {
+        if (idx === 0) return 'sim-chip-token-low';
+        if (idx === 1) return 'sim-chip-token-mid';
+        if (idx === 2) return 'sim-chip-token-high';
+        return 'sim-chip-token-veryhigh';
+      };
 
-  // mapping di alcune chiavi "classiche" in label leggibili
-  const prettyTierName = (key) => {
-    const k = String(key || '').toLowerCase();
-    if (k.includes('low')) return 'Small token reward';
-    if (k.includes('mid') || k.includes('medium')) return 'Medium token reward';
-    if (k.includes('high') && !k.includes('very')) return 'High token reward';
-    if (k.includes('very') || k.includes('jackpot')) return 'Very high token reward';
-    return key; // fallback: mostra il nome così com’è
-  };
+      const tokenProbsHtml = Object.keys(tokenProbs).length
+        ? `
+          <div class="sim-section-title">Token reward probabilities</div>
+          <div class="sim-chips">
+            ${
+              Object.entries(tokenProbs)
+                .sort((a,b) => (b[1]||0) - (a[1]||0))
+                .map(([key, value], idx) => `
+                  <span class="sim-chip ${tierClassByIndex(idx)}">
+                    <span class="sim-chip-label">${safe(prettyTierName(key))}</span>
+                    <span class="sim-chip-value">${fmtPct(value)}</span>
+                  </span>
+                `).join('')
+            }
+          </div>
+        `
+        : `
+          <div class="sim-section-title">Token reward probabilities</div>
+          <p style="font-size:12px;opacity:.85;">No token probability breakdown available for this configuration.</p>
+        `;
 
-  // scegli una classe colore in base all'ordine / "forza"
-  const tierClassByIndex = (idx) => {
-    if (idx === 0) return 'sim-chip-token-low';
-    if (idx === 1) return 'sim-chip-token-mid';
-    if (idx === 2) return 'sim-chip-token-high';
-    return 'sim-chip-token-veryhigh';
-  };
+      const nftChipsHtml = nftRewards.length
+        ? `
+          <div class="sim-section-title">Collectible item chances (NFTs)</div>
+          <div class="sim-chips">
+            ${
+              nftRewards.map((n) => {
+                const name = safe(n.name || n.template_name || 'Unknown item');
+                const cMin = n.chance_min;
+                const cMax = n.chance_max;
+                const cMid = n.chance;
 
-  const tokenProbsHtml = Object.keys(tokenProbs).length
-    ? `
-      <div class="sim-section-title">Token reward probabilities</div>
-      <div class="sim-chips">
-        ${
-          Object.entries(tokenProbs)
-            .sort((a,b) => (b[1]||0) - (a[1]||0))
-            .map(([key, value], idx) => `
-              <span class="sim-chip ${tierClassByIndex(idx)}">
-                <span class="sim-chip-label">${safe(prettyTierName(key))}</span>
-                <span class="sim-chip-value">${fmtPct(value)}</span>
-              </span>
-            `).join('')
-        }
-      </div>
-    `
-    : `
-      <div class="sim-section-title">Token reward probabilities</div>
-      <p style="font-size:12px;opacity:.85;">No token probability breakdown available for this configuration.</p>
-    `;
+                let label;
+                if (cMin != null && cMax != null) label = `${fmtPct(cMin)} – ${fmtPct(cMax)}`;
+                else if (cMid != null)          label = fmtPct(cMid);
+                else                            label = 'rare';
 
-  const nftChipsHtml = nftRewards.length
-    ? `
-      <div class="sim-section-title">Collectible item chances (NFTs)</div>
-      <div class="sim-chips">
-        ${
-          nftRewards.map((n) => {
-            const name = safe(n.name || n.template_name || 'Unknown item');
-            const minC = n.chance_min != null ? fmtPct(n.chance_min) : null;
-            const maxC = n.chance_max != null ? fmtPct(n.chance_max) : null;
-            const midC = n.chance != null ? fmtPct(n.chance) : null;
+                return `
+                  <span class="sim-chip sim-chip-nft">
+                    <span class="sim-chip-label">${name}</span>
+                    <span class="sim-chip-value">${label}</span>
+                  </span>
+                `;
+              }).join('')
+            }
+          </div>
+        `
+        : `
+          <div class="sim-section-title">Collectible item chances (NFTs)</div>
+          <p style="font-size:12px;opacity:.85;">This sample expedition has no specific collectible item chances to display.</p>
+        `;
 
-            let label;
-            if (minC && maxC) label = `${minC} – ${maxC}`;
-            else if (midC)    label = midC;
-            else              label = 'rare';
+      host.innerHTML = `
+        <div class="forecast-help-title">🧪 Simulation result</div>
 
-            return `
-              <span class="sim-chip sim-chip-nft">
-                <span class="sim-chip-label">${name}</span>
-                <span class="sim-chip-value">${label}</span>
-              </span>
-            `;
-          }).join('')
-        }
-      </div>
-    `
-    : `
-      <div class="sim-section-title">Collectible item chances (NFTs)</div>
-      <p style="font-size:12px;opacity:.85;">This sample expedition has no specific collectible item chances to display.</p>
-    `;
+        <div class="sim-grid">
+          <div class="sim-card">
+            <div class="sim-section-title">Expedition setup (simulated)</div>
+            <ul style="margin:0;padding-left:18px;font-size:13px;">
+              <li><strong>Duration:</strong> ${duration || 0} minutes</li>
+              <li><strong>Number of goblins:</strong> ${goblinsCount || 0}</li>
+              ${
+                (tokensMin || tokensMax)
+                  ? `<li><strong>Estimated CHIPS range:</strong> ${tokensMin || '—'} – ${tokensMax || '—'}</li>`
+                  : ''
+              }
+              ${
+                tokensAvg
+                  ? `<li><strong>Estimated average CHIPS:</strong> ${tokensAvg}</li>`
+                  : ''
+              }
+            </ul>
 
-  host.innerHTML = `
-    <div class="forecast-help-title">🧪 Simulation result</div>
+            <p style="margin-top:6px;font-size:12px;opacity:.85;">
+              This simulator uses your total <strong>Speed</strong>, <strong>Resistance</strong>,
+              <strong>Loot Hungry</strong> and <strong>Accuracy</strong> to approximate a single expedition.
+              It never consumes Daily Power and it never starts a real on-chain expedition.
+            </p>
+          </div>
 
-    <div class="sim-grid">
-      <div class="sim-card">
-        <div class="sim-section-title">Expedition setup (simulated)</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;">
-          <li><strong>Duration:</strong> ${duration} minutes</li>
-          <li><strong>Number of goblins:</strong> ${goblinsCount}</li>
-          ${
-            (tokensMin || tokensMax)
-              ? `<li><strong>Estimated CHIPS range:</strong> ${tokensMin || '—'} – ${tokensMax || '—'}</li>`
-              : ''
-          }
-          ${
-            tokensAvg
-              ? `<li><strong>Estimated average CHIPS:</strong> ${tokensAvg}</li>`
-              : ''
-          }
-        </ul>
+          <div class="sim-card">
+            ${tokenProbsHtml}
+            <div style="height:6px;"></div>
+            ${nftChipsHtml}
+          </div>
+        </div>
 
-        <p style="margin-top:6px;font-size:12px;opacity:.85;">
-          This simulator uses your total accuracy, resistance, speed and loot hunger
-          to approximate a single expedition. It does not reserve or spend any real power,
-          and it does not start an on-chain expedition.
+        <p style="margin-top:8px;font-size:12px;opacity:.8;">
+          All values are indicative and based on the same internal logic used by real expeditions.
+          Actual rewards in live runs can be higher or lower due to randomness and per-goblin details.
         </p>
-      </div>
+      `;
+    }
 
-      <div class="sim-card">
-        ${tokenProbsHtml}
-        <div style="height:6px;"></div>
-        ${nftChipsHtml}
-      </div>
-    </div>
+    // ---------- wire simulator form ----------
+    function wireSimForm(host) {
+      const cfg = State.runtime.simConfig;
 
-    <p style="margin-top:8px;font-size:12px;opacity:.8;">
-      All values are indicative and based on the same internal logic used by real expeditions.
-      Actual on-chain rewards can be higher or lower due to randomness.
-    </p>
-  `;
-}
+      const selDuration = host.querySelector('#sim-duration');
+      const inGoblins   = host.querySelector('#sim-goblins');
+      const inAcc       = host.querySelector('#sim-acc');
+      const inRes       = host.querySelector('#sim-res');
+      const inSpd       = host.querySelector('#sim-spd');
+      const inLoot      = host.querySelector('#sim-loot');
+      const btnRun      = host.querySelector('#sim-run');
 
-// Wire simulator inputs so they update State.runtime.simConfig
-function wireSimForm(host) {
-  const cfg = State.runtime.simConfig;
+      // init values
+      if (selDuration) selDuration.value = String(cfg.durationMinutes || 30);
+      if (inGoblins)   inGoblins.value   = String(cfg.goblinsCount || 0);
+      if (inAcc)       inAcc.value       = String(cfg.totalAcc || 0);
+      if (inRes)       inRes.value       = String(cfg.totalRes || 0);
+      if (inSpd)       inSpd.value       = String(cfg.totalSpeed || 0);
+      if (inLoot)      inLoot.value      = String(cfg.totalLoot || 0);
 
-  const selDuration = host.querySelector('#sim-duration');
-  const inGoblins   = host.querySelector('#sim-goblins');
-  const inAcc       = host.querySelector('#sim-acc');
-  const inRes       = host.querySelector('#sim-res');
-  const inSpd       = host.querySelector('#sim-spd');
-  const inLoot      = host.querySelector('#sim-loot');
-  const btnRun      = host.querySelector('#sim-run');
+      if (selDuration) selDuration.addEventListener('change', () => {
+        cfg.durationMinutes = Number(selDuration.value || 30);
+      });
 
-  // Initialize values from cfg
-  if (selDuration) selDuration.value = String(cfg.durationMinutes || 30);
-  if (inGoblins)   inGoblins.value   = String(cfg.goblinsCount || 0);
-  if (inAcc)       inAcc.value       = String(cfg.totalAcc || 0);
-  if (inRes)       inRes.value       = String(cfg.totalRes || 0);
-  if (inSpd)       inSpd.value       = String(cfg.totalSpeed || 0);
-  if (inLoot)      inLoot.value      = String(cfg.totalLoot || 0);
+      const syncNumber = (inputEl, key) => {
+        if (!inputEl) return;
+        inputEl.addEventListener('input', () => {
+          const val = Number(inputEl.value || 0);
+          cfg[key] = isNaN(val) ? 0 : val;
+        });
+      };
 
-  // Update config on input
-  if (selDuration) selDuration.addEventListener('change', () => {
-    cfg.durationMinutes = Number(selDuration.value || 30);
-  });
+      syncNumber(inGoblins, 'goblinsCount');
+      syncNumber(inAcc,     'totalAcc');
+      syncNumber(inRes,     'totalRes');
+      syncNumber(inSpd,     'totalSpeed');
+      syncNumber(inLoot,    'totalLoot');
 
-  const syncNumber = (inputEl, key) => {
-    if (!inputEl) return;
-    inputEl.addEventListener('input', () => {
-      const val = Number(inputEl.value || 0);
-      cfg[key] = isNaN(val) ? 0 : val;
-    });
-  };
+      if (btnRun) {
+        btnRun.addEventListener('click', () => {
+          runSimulationFromForm();
+        });
+      }
+    }
 
-  syncNumber(inGoblins, 'goblinsCount');
-  syncNumber(inAcc,     'totalAcc');
-  syncNumber(inRes,     'totalRes');
-  syncNumber(inSpd,     'totalSpeed');
-  syncNumber(inLoot,    'totalLoot');
+    // ---------- call /2expedition_simulate with TOTALS ----------
+    async function runSimulationFromForm() {
+      const cfg = State.runtime.simConfig || {};
+      const host = document.getElementById('forecast-sim-result');
+      if (!host) return;
 
-  // Run simulation on click
-  if (btnRun) {
-    btnRun.addEventListener('click', () => {
-      runSimulationFromForm();
-    });
-  }
-}
+      const goblinsCount = Number(cfg.goblinsCount || 0);
+      if (!goblinsCount || goblinsCount <= 0) {
+        State.runtime.simResult = null;
+        updateForecastSimResult();
+        return;
+      }
 
-async function runSimulationFromForm() {
-  const cfg = State.runtime.simConfig || {};
-  const host = document.getElementById('forecast-sim-result');
+      host.innerHTML = `
+        <div class="forecast-help-title">🧪 Attribute-based simulator</div>
+        <p>Calculating a sample expedition with your numbers…</p>
+      `;
 
-  if (!host) return;
+      const body = {
+        duration_minutes: Number(cfg.durationMinutes || 30),
+        goblins_count: goblinsCount,
+        total_accuracy: Number(cfg.totalAcc || 0),
+        total_resistance: Number(cfg.totalRes || 0),
+        total_speed: Number(cfg.totalSpeed || 0),
+        total_loot: Number(cfg.totalLoot || 0)
+      };
 
-  // Validazione base lato UI
-  const goblinsCount = Number(cfg.goblinsCount || 0);
-  if (!goblinsCount || goblinsCount <= 0) {
-    State.runtime.simResult = null;
-    host.innerHTML = `
-      <div class="forecast-help-title">🧪 Simulator</div>
-      <p>Please enter at least <strong>one goblin</strong> to run a simulation.</p>
-    `;
-    return;
-  }
+      let res;
+      try {
+        res = await Api.post(SIMULATION_API_PATH, body, 15000);
+      } catch (e) {
+        res = { ok: false, error: e };
+      }
 
-  host.innerHTML = `
-    <div class="forecast-help-title">🧪 Simulator</div>
-    <p>Calculating a sample expedition with your numbers…</p>
-  `;
-  const body = {
-    duration_minutes: Number(cfg.durationMinutes || 30),
-    goblins_count: goblinsCount,
-    total_accuracy: Number(cfg.totalAcc || 0),
-    total_resistance: Number(cfg.totalRes || 0),
-    total_speed: Number(cfg.totalSpeed || 0),
-    total_loot: Number(cfg.totalLoot || 0)
-  };
-  let res;
-  try {
-    res = await Api.post(SIMULATION_API_PATH, body, 15000);
-  } catch (e) {
-    res = { ok: false, error: e };
-  }
-  if (!res.ok || !res.data) {
-    State.runtime.simResult = null;
-    host.innerHTML = `
-      <div class="forecast-help-title">🧪 Simulator</div>
-      <p>Simulation is temporarily unavailable. Please try again in a few seconds.</p>
-    `;
-    return;
-  }
-  State.runtime.simResult = res.data || {};
-  updateForecastSimResult();
-}
+      if (!res.ok || !res.data) {
+        State.runtime.simResult = null;
+        host.innerHTML = `
+          <div class="forecast-help-title">🧪 Attribute-based simulator</div>
+          <p>Simulation is temporarily unavailable. Please try again in a few seconds.</p>
+        `;
+        return;
+      }
 
-// MAIN entry point called by the rest of the code
-function renderForecast(data, message) {
-  const mode = State.runtime.forecastMode || 'real';
-  const host = ensureForecastShell();
-  if (!host) return;
+      // make it tolerant to both “flat” and “nested” backend responses
+      const raw = res.data || {};
 
-  if (!data && !message && mode === 'real') {
-    host.hidden = true;
-    return;
-  }
+      const simResult = {
+        duration_effective_minutes:
+          raw.duration_effective_minutes ??
+          raw.duration?.effective_minutes ??
+          raw.duration?.requested_minutes ??
+          body.duration_minutes,
+        selected_count:
+          raw.selected_count ??
+          raw.goblins_count ??
+          body.goblins_count,
+        tokens_min:
+          raw.tokens_min ??
+          raw.tokens?.min_total ??
+          raw.tokens_min_total,
+        tokens_max:
+          raw.tokens_max ??
+          raw.tokens?.max_total ??
+          raw.tokens_max_total,
+        tokens_avg:
+          raw.tokens_expected ??
+          raw.tokens_avg ??
+          raw.tokens?.expected_total,
+        token_tier_probs:
+          raw.token_tier_probs ??
+          raw.tokens?.tier_probs ??
+          {},
+        nft_rewards:
+          raw.nft_rewards ??
+          (raw.nfts && raw.nfts.rewards) ??
+          [],
+        nfts: raw.nfts || null,   // keep full block if provided
+        tokens: raw.tokens || null
+      };
 
-  host.hidden = false;
-  updateForecastTabs(host);
-  updateForecastRealPanel(data, message);
-  updateForecastSimResult();
-  wireRemoveTiredButton();
-}
+      State.runtime.simResult = simResult;
+      updateForecastSimResult();
+    }
 
+    // MAIN: keep existing renderForecast entry point
+    function renderForecast(data, message) {
+      const mode = State.runtime.forecastMode || 'real';
+      const host = ensureForecastShell();
+      if (!host) return;
 
+      if (!data && !message && mode === 'real') {
+        host.hidden = false; // keep the shell visible
+        updateForecastRealPanel(null, 'Select some goblins and a duration.');
+        updateForecastSimResult();
+        wireRemoveTiredButton();
+        return;
+      }
+
+      host.hidden = false;
+      updateForecastTabs(host);
+      updateForecastRealPanel(data, message);
+      updateForecastSimResult();
+      wireRemoveTiredButton();
+    }
 
     function wireRemoveTiredButton(){
       const btn = document.getElementById('btn-remove-tired');

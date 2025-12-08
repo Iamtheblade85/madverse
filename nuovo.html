@@ -1416,13 +1416,30 @@
       const probs = data.token_tier_probs || {};
       const nftRewards = Array.isArray(data.nft_rewards) ? data.nft_rewards : [];
       const msgs = Array.isArray(data.messages) ? data.messages : [];
-
       const selectedCountBackend = toNumber(data.selected_count);
       const selectedCount = selectedCountBackend || State.selectedGoblinIds.size || 0;
-
       const tierEff = bucketFromMinutes(durEff);
-      const baseNominalPerGoblin = nominalCostPerGoblinForMinutes(durEff);
-      const effAvgPerGoblin = selectedCount ? (powTot / selectedCount) : 0;
+      // nuovo blocco power dal backend
+      const powerBlock = data.power || {};
+      const powTot = toNumber(
+        powerBlock.total_power_effective ??
+        data.power_needed_total ??
+        0
+      );
+      const baseNominalPerGoblin = toNumber(
+        powerBlock.base_cost_nominal_per_goblin ??
+        0
+      );
+      let effAvgPerGoblin = toNumber(
+        powerBlock.base_cost_effective_per_goblin ??
+        0
+      );
+      
+      // fallback difensivo se manca il campo specifico
+      if (!effAvgPerGoblin && powTot && selectedCount) {
+        effAvgPerGoblin = powTot / selectedCount;
+      }
+
 
       const tiredCount = State.runtime.forecastInsufficientIds
         ? State.runtime.forecastInsufficientIds.size
@@ -1450,20 +1467,24 @@
                   <span class="badge-inline">base</span>
                 </b>
               </div>
-
-              <div title="Average effective daily cost per goblin AFTER RES, calculated by the backend.">
-                <span class="label">🛡️ Average effective daily cost / goblin</span>
+              
+              <div title="Average effective daily cost per goblin AFTER RESISTANCE.">
+                <span class="label">🛡️ Effective daily cost / goblin</span>
                 <b>
                   ${selectedCount ? formatDP(effAvgPerGoblin) : '—'} DP
                   <span class="badge-inline">effective</span>
                 </b>
               </div>
-
-              <div title="Sum of all effective daily power costs for this run.">
-                <span class="label">🔋 Total daily power (run)</span>
-                <b>${powTot ? formatDP(powTot) : '—'} DP</b>
+              
+              <div title="Sum of all NOMINAL daily power costs (without RES) for this run.">
+                <span class="label">🔋 Total daily power (nominal)</span>
+                <b>${totalPowerNominal ? formatDP(totalPowerNominal) : '—'} DP</b>
               </div>
-
+              
+              <div title="Sum of all EFFECTIVE daily power costs (with RES) for this run.">
+                <span class="label">🔋 Total daily power (effective)</span>
+                <b>${totalPowerEffective ? formatDP(totalPowerEffective) : '—'} DP</b>
+              </div>
               <div title="Goblins actually used in the forecast (after applying the cap, if exceeded).">
                 <span class="label">🧬 Selected goblins</span>
                 <b>${selectedCount}</b>
@@ -1583,15 +1604,18 @@
     
       // Power block
       const power = sim.power || {};
-      const baseCostPerGoblin = toNumber(
-        power.base_cost_effective_per_goblin ??
-        power.base_cost_nominal_per_goblin ??
-        0
+      const nominalPerGoblin = toNumber(
+        power.base_cost_nominal_per_goblin ?? 0
+      );
+      const effectivePerGoblin = toNumber(
+        power.base_cost_effective_per_goblin ?? 0
+      );
+      
+      const totalPowerNominal = toNumber(
+        power.total_power_nominal ?? (nominalPerGoblin * goblinsCount)
       );
       const totalPowerEffective = toNumber(
-        power.total_power_effective ??
-        power.total_power_nominal ??
-        0
+        power.total_power_effective ?? totalPowerNominal
       );
       const tiredGoblins = toNumber(power.tired_goblins_effective ?? 0);
     
@@ -1748,11 +1772,19 @@
             <div class="sim-section-title">Daily Power usage</div>
             <ul style="margin:0;padding-left:18px;font-size:13px;">
               <li>
-                <strong>Base cost / goblin:</strong>
-                ${formatDP(baseCostPerGoblin)} DP
+                <strong>Nominal cost / goblin (no RES):</strong>
+                ${formatDP(nominalPerGoblin)} DP
               </li>
               <li>
-                <strong>Total effective power:</strong>
+                <strong>Effective cost / goblin (with RES):</strong>
+                ${formatDP(effectivePerGoblin || (totalPowerEffective && goblinsCount ? totalPowerEffective / goblinsCount : 0))} DP
+              </li>
+              <li>
+                <strong>Total DP (nominal):</strong>
+                ${formatDP(totalPowerNominal)} DP
+              </li>
+              <li>
+                <strong>Total DP (effective):</strong>
                 ${formatDP(totalPowerEffective)} DP
               </li>
               <li>

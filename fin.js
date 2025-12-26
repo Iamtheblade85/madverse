@@ -11,17 +11,19 @@ const fmtMonthYear = new Intl.DateTimeFormat("it-IT", { month: "long", year: "nu
    STATE
 ========================= */
 const state = {
-  transactions: [], // {id, date:'YYYY-MM-DD', kind:'income'|'expense', type, category, label, amount:number}
-  calView: "month", // day|week|month|year
-  calCursor: new Date(), // riferimento per calendario
-  chartPeriod: "month", // day|week|month|year
+  transactions: [],
+  calView: "month",
+  calCursor: new Date(),
+
+  chartPeriod: "month",
   chartCursor: new Date(),
+
   editingId: null,
 
-  chart: {
-    instance: null,
-    series: null,
-  }
+  initialBalanceSetting: null, // {date:'YYYY-MM-DD', balance:number} (persistente su backend)
+  balanceCache: new Map(),     // key: ISO date, value: number
+
+  chart: { instance: null, series: null },
 };
 
 /* =========================
@@ -30,12 +32,9 @@ const state = {
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-function setStatus(msg){
-  $("#statusText").textContent = msg;
-}
+function setStatus(msg){ $("#statusText").textContent = msg; }
 
 function isoDate(d){
-  // YYYY-MM-DD in locale-independent
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
@@ -45,45 +44,23 @@ function parseISODate(s){
   const [y,m,d] = s.split("-").map(Number);
   return new Date(y, m-1, d);
 }
-function startOfDay(d){
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
-function addDays(d, n){
-  const x = new Date(d);
-  x.setDate(x.getDate() + n);
-  return x;
-}
+function startOfDay(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function addDays(d, n){ const x = new Date(d); x.setDate(x.getDate() + n); return x; }
 function startOfWeek(d){
-  // week starts Monday (EU)
   const x = startOfDay(d);
-  const day = x.getDay(); // 0 Sun ... 6 Sat
-  const delta = (day === 0 ? -6 : 1 - day);
+  const day = x.getDay(); // 0 Sun .. 6 Sat
+  const delta = (day === 0 ? -6 : 1 - day); // Monday start
   return addDays(x, delta);
 }
-function endOfWeek(d){
-  return addDays(startOfWeek(d), 6);
-}
-function startOfMonth(d){
-  return new Date(d.getFullYear(), d.getMonth(), 1);
-}
-function endOfMonth(d){
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0);
-}
-function startOfYear(d){
-  return new Date(d.getFullYear(), 0, 1);
-}
-function endOfYear(d){
-  return new Date(d.getFullYear(), 11, 31);
-}
-function clampToDay(d){
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
-function sameISO(a, b){
-  return isoDate(a) === isoDate(b);
-}
+function endOfWeek(d){ return addDays(startOfWeek(d), 6); }
+function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
+function startOfYear(d){ return new Date(d.getFullYear(), 0, 1); }
+function endOfYear(d){ return new Date(d.getFullYear(), 11, 31); }
+function clampToDay(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
 
 /* =========================
-   API (FLASK)
+   API
 ========================= */
 async function apiGet(path){
   const res = await fetch(`${API_BASE}${path}`, { headers: { "Accept": "application/json" } });
@@ -94,54 +71,60 @@ async function apiSend(path, method, body){
   const res = await fetch(`${API_BASE}${path}`, {
     method,
     headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body ?? {})
   });
   if(!res.ok) throw new Error(`${method} ${path} failed: ${res.status}`);
   return res.json();
 }
 
+/* ---- Transactions ---- */
 async function loadTransactionsForRange(fromISO, toISO){
-  // Backend: GET /api/transactions?from=YYYY-MM-DD&to=YYYY-MM-DD
-  // Deve restituire array di transactions
   return apiGet(`/api/transactions?from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`);
 }
+async function createTransaction(tx){ return apiSend("/api/transactions", "POST", tx); }
+async function updateTransaction(id, tx){ return apiSend(`/api/transactions/${encodeURIComponent(id)}`, "PUT", tx); }
+async function deleteTransaction(id){ return apiSend(`/api/transactions/${encodeURIComponent(id)}`, "DELETE", {}); }
 
-async function loadAllTransactionsForUI(){
-  // Per semplicità UI: carichiamo un range ampio attorno a "oggi"
-  // (poi, volendo, si può paginare)
-  const today = new Date();
-  const from = isoDate(addDays(today, -370));
-  const to = isoDate(addDays(today, 370));
-  const data = await loadTransactionsForRange(from, to);
-  state.transactions = normalizeTransactions(data);
+/* ---- Initial balance (setting) ----
+   Saldo iniziale persistente:
+   GET /api/settings/initial-balance -> {date, balance} oppure null
+   PUT /api/settings/initial-balance -> body {date, balance} -> {date, balance}
+*/
+async function getInitialBalanceSetting(){
+  return apiGet("/api/settings/initial-balance");
+}
+async function setInitialBalanceSetting(payload){
+  return apiSend("/api/settings/initial-balance", "PUT", payload);
 }
 
-async function createTransaction(tx){
-  // POST /api/transactions
-  return apiSend("/api/transactions", "POST", tx);
-}
-async function updateTransaction(id, tx){
-  // PUT /api/transactions/:id
-  return apiSend(`/api/transactions/${encodeURIComponent(id)}`, "PUT", tx);
-}
-async function deleteTransaction(id){
-  // DELETE /api/transactions/:id
-  return apiSend(`/api/transactions/${encodeURIComponent(id)}`, "DELETE", {});
+/* ---- Balance at date ----
+   Saldo a inizio giornata della data 'at':
+   GET /api/balance?at=YYYY-MM-DD -> { balance: number }
+*/
+async function getBalanceAt(atISO){
+  const cached = state.balanceCache.get(atISO);
+  if(typeof cached === "number") return cached;
+
+  const data = await apiGet(`/api/balance?at=${encodeURIComponent(atISO)}`);
+  const bal = Number(data?.balance ?? 0);
+  state.balanceCache.set(atISO, bal);
+  return bal;
 }
 
 function normalizeTransactions(data){
-  // Accetta varianti del backend, ma produce forma standard
   if(!Array.isArray(data)) return [];
   return data.map(x => ({
     id: x.id ?? x._id ?? x.uuid ?? x.tx_id,
-    date: x.date, // ISO YYYY-MM-DD
-    kind: x.kind, // income|expense
+    date: x.date,
+    kind: x.kind,
     type: x.type ?? "",
     category: x.category ?? "",
     label: x.label ?? "",
     amount: Number(x.amount ?? 0)
   })).filter(x => x.id != null && x.date);
 }
+
+function txSignedAmount(tx){ return tx.kind === "income" ? tx.amount : -tx.amount; }
 
 /* =========================
    TABS
@@ -165,9 +148,9 @@ function initTabs(){
       $(panel).classList.add("active");
 
       if(panel === "#panel-chart"){
-        requestAnimationFrame(() => {
+        requestAnimationFrame(async () => {
           ensureChart();
-          renderChart();
+          await renderChart();
         });
       }
     });
@@ -175,7 +158,7 @@ function initTabs(){
 }
 
 /* =========================
-   CALENDAR RENDERING
+   CALENDAR
 ========================= */
 function setSegmentedActive(containerSel, activeBtn){
   $$(containerSel + " .seg").forEach(b => b.classList.remove("active"));
@@ -191,16 +174,9 @@ function initCalendarControls(){
     });
   });
 
-  $("#btnPrev").addEventListener("click", () => {
-    shiftCalendar(-1);
-  });
-  $("#btnNext").addEventListener("click", () => {
-    shiftCalendar(1);
-  });
-  $("#btnToday").addEventListener("click", () => {
-    state.calCursor = new Date();
-    renderCalendar();
-  });
+  $("#btnPrev").addEventListener("click", () => shiftCalendar(-1));
+  $("#btnNext").addEventListener("click", () => shiftCalendar(1));
+  $("#btnToday").addEventListener("click", () => { state.calCursor = new Date(); renderCalendar(); });
 }
 
 function shiftCalendar(dir){
@@ -208,7 +184,7 @@ function shiftCalendar(dir){
   if(state.calView === "day") c.setDate(c.getDate() + dir);
   else if(state.calView === "week") c.setDate(c.getDate() + 7*dir);
   else if(state.calView === "month") c.setMonth(c.getMonth() + dir);
-  else if(state.calView === "year") c.setFullYear(c.getFullYear() + dir);
+  else c.setFullYear(c.getFullYear() + dir);
   state.calCursor = c;
   renderCalendar();
 }
@@ -221,13 +197,7 @@ function getCalendarRange(){
   return { from: startOfYear(c), to: endOfYear(c) };
 }
 
-function txSignedAmount(tx){
-  return tx.kind === "income" ? tx.amount : -tx.amount;
-}
-
-function txForISO(iso){
-  return state.transactions.filter(t => t.date === iso);
-}
+function txForISO(iso){ return state.transactions.filter(t => t.date === iso); }
 
 function sumForRange(from, to){
   const fromISO = isoDate(from);
@@ -245,20 +215,13 @@ function sumForRange(from, to){
 function renderCalendar(){
   const { from, to } = getCalendarRange();
 
-  // Titolo range
   let title = "";
-  if(state.calView === "day"){
-    title = `Giorno • ${fmtDateIT.format(from)}`;
-  } else if(state.calView === "week"){
-    title = `Settimana • ${fmtDateIT.format(from)} → ${fmtDateIT.format(to)}`;
-  } else if(state.calView === "month"){
-    title = `Mese • ${fmtMonthYear.format(from)}`;
-  } else {
-    title = `Anno • ${from.getFullYear()}`;
-  }
+  if(state.calView === "day") title = `Giorno • ${fmtDateIT.format(from)}`;
+  else if(state.calView === "week") title = `Settimana • ${fmtDateIT.format(from)} → ${fmtDateIT.format(to)}`;
+  else if(state.calView === "month") title = `Mese • ${fmtMonthYear.format(from)}`;
+  else title = `Anno • ${from.getFullYear()}`;
   $("#calRangeTitle").textContent = title;
 
-  // Summary
   const s = sumForRange(from, to);
   $("#sumIncome").textContent = fmtEUR.format(s.inc);
   $("#sumExpense").textContent = fmtEUR.format(s.exp);
@@ -266,21 +229,18 @@ function renderCalendar(){
   $("#sumNet").classList.toggle("pos", s.net > 0);
   $("#sumNet").classList.toggle("neg", s.net < 0);
 
-  // Render grid
   const root = $("#calendar");
   root.innerHTML = "";
 
-  // DOW row only for week/month
   if(state.calView === "week" || state.calView === "month"){
     const dowRow = document.createElement("div");
     dowRow.className = "dow-row";
-    const names = ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"];
-    for(const n of names){
+    ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"].forEach(n => {
       const el = document.createElement("div");
       el.className = "dow";
       el.textContent = n;
       dowRow.appendChild(el);
-    }
+    });
     root.appendChild(dowRow);
   }
 
@@ -294,30 +254,24 @@ function renderCalendar(){
     grid.appendChild(buildDayCard(from, false, todayISO));
     return;
   }
-
   if(state.calView === "week"){
-    for(let i=0;i<7;i++){
-      const d = addDays(from, i);
-      grid.appendChild(buildDayCard(d, false, todayISO));
-    }
+    for(let i=0;i<7;i++) grid.appendChild(buildDayCard(addDays(from,i), false, todayISO));
     return;
   }
-
   if(state.calView === "month"){
     const first = startOfMonth(state.calCursor);
     const last = endOfMonth(state.calCursor);
-
     const gridStart = startOfWeek(first);
     const gridEnd = endOfWeek(last);
 
-    for(let d = gridStart; d <= gridEnd; d = addDays(d, 1)){
+    for(let d = gridStart; d <= gridEnd; d = addDays(d,1)){
       const isOutside = d.getMonth() !== state.calCursor.getMonth();
       grid.appendChild(buildDayCard(d, isOutside, todayISO));
     }
     return;
   }
 
-  // year view: 12 "mini-months"
+  // year view (mini-months)
   for(let m=0; m<12; m++){
     const box = document.createElement("div");
     box.className = "card";
@@ -341,7 +295,6 @@ function renderCalendar(){
     const gridStart = startOfWeek(first);
     const gridEnd = endOfWeek(last);
 
-    // max 6 weeks => 42 cells
     for(let d = gridStart; d <= gridEnd; d = addDays(d,1)){
       const isOutside = d.getMonth() !== m;
       mini.appendChild(buildDayCard(d, isOutside, todayISO, true));
@@ -409,7 +362,6 @@ function buildDayCard(d, muted, todayISO, compact=false){
     list.appendChild(more);
   }
 
-  // Click => vai tab movimenti e prefiltra per quella data
   card.addEventListener("click", () => {
     $("#tab-manage").click();
     $("#txSearch").value = iso;
@@ -434,8 +386,7 @@ function buildTxItem(tx){
 
   const meta = document.createElement("div");
   meta.className = "tx-meta";
-  if(tx.kind === "income") meta.innerHTML += `<span class="chip">Entrata</span>`;
-  else meta.innerHTML += `<span class="chip">Spesa</span>`;
+  meta.innerHTML += `<span class="chip">${tx.kind === "income" ? "Entrata" : "Spesa"}</span>`;
   if(tx.type) meta.innerHTML += `<span class="chip">${escapeHtml(tx.type)}</span>`;
   if(tx.category) meta.innerHTML += `<span class="chip">${escapeHtml(tx.category)}</span>`;
 
@@ -446,11 +397,10 @@ function buildTxItem(tx){
 }
 
 /* =========================
-   MANAGE (CRUD)
+   MANAGE (CRUD + Initial balance setting)
 ========================= */
 function initManage(){
   $("#btnNewTx").addEventListener("click", () => resetForm());
-
   $("#btnCancelEdit").addEventListener("click", () => resetForm());
 
   $("#txForm").addEventListener("submit", async (e) => {
@@ -460,20 +410,21 @@ function initManage(){
 
   $("#btnDeleteTx").addEventListener("click", async () => {
     if(!state.editingId) return;
-    const tx = state.transactions.find(t => t.id === state.editingId);
+    const tx = state.transactions.find(t => String(t.id) === String(state.editingId));
     const ok = confirm(`Eliminare il movimento?\n\n${tx?.date} • ${tx?.label} • ${fmtEUR.format(tx?.amount ?? 0)}`);
     if(!ok) return;
 
     try{
       setStatus("Eliminazione...");
       await deleteTransaction(state.editingId);
-      state.transactions = state.transactions.filter(t => t.id !== state.editingId);
+      state.transactions = state.transactions.filter(t => String(t.id) !== String(state.editingId));
       setStatus("Eliminato.");
       showNotice("Movimento eliminato.");
       resetForm();
       renderTxTable();
       renderCalendar();
-      renderChart();
+      state.balanceCache.clear();
+      await renderChart();
     }catch(err){
       console.error(err);
       setStatus("Errore.");
@@ -493,10 +444,24 @@ function initManage(){
     a.click();
     URL.revokeObjectURL(url);
   });
+
+  // Initial balance setting
+  $("#initBalForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await saveInitBalanceFromUI();
+  });
+  $("#btnReloadInitBal").addEventListener("click", async () => {
+    await loadInitBalanceToUI();
+  });
 }
 
 function showNotice(msg, isError=false){
   const n = $("#formNotice");
+  n.textContent = msg;
+  n.style.color = isError ? "rgba(255,90,107,0.95)" : "rgba(255,255,255,0.70)";
+}
+function showInitBalNotice(msg, isError=false){
+  const n = $("#initBalNotice");
   n.textContent = msg;
   n.style.color = isError ? "rgba(255,90,107,0.95)" : "rgba(255,255,255,0.70)";
 }
@@ -541,24 +506,20 @@ function readForm(){
   if(!label) throw new Error("Label mancante");
   if(!Number.isFinite(amount) || amount < 0) throw new Error("Importo non valido");
 
-  return { date, kind, type, category, label, amount };
+  return { date, kind, type, category, label, amount: Math.round(amount * 100) / 100 };
 }
 
 async function onSaveTx(){
   let tx;
-  try{
-    tx = readForm();
-  }catch(err){
-    showNotice(err.message, true);
-    return;
-  }
+  try{ tx = readForm(); }
+  catch(err){ showNotice(err.message, true); return; }
 
   try{
     if(state.editingId){
       setStatus("Salvataggio modifica...");
       const updated = await updateTransaction(state.editingId, tx);
       const norm = normalizeTransactions([updated])[0] ?? { ...tx, id: state.editingId };
-      state.transactions = state.transactions.map(t => t.id === state.editingId ? norm : t);
+      state.transactions = state.transactions.map(t => String(t.id) === String(state.editingId) ? norm : t);
       setStatus("Aggiornato.");
       showNotice("Movimento aggiornato.");
     }else{
@@ -573,7 +534,8 @@ async function onSaveTx(){
 
     renderTxTable();
     renderCalendar();
-    renderChart();
+    state.balanceCache.clear();
+    await renderChart();
   }catch(err){
     console.error(err);
     setStatus("Errore.");
@@ -586,21 +548,16 @@ function renderTxTable(){
   const f = $("#txFilterKind").value;
 
   let rows = [...state.transactions];
-  rows.sort((a,b) => (a.date < b.date ? 1 : -1)); // desc by date
+  rows.sort((a,b) => (a.date < b.date ? 1 : -1)); // desc
 
-  if(f !== "all"){
-    rows = rows.filter(t => t.kind === f);
-  }
+  if(f !== "all") rows = rows.filter(t => t.kind === f);
   if(q){
-    rows = rows.filter(t => {
-      // supporto: ricerca anche per data iso
-      return (
-        (t.date || "").toLowerCase().includes(q) ||
-        (t.label || "").toLowerCase().includes(q) ||
-        (t.category || "").toLowerCase().includes(q) ||
-        (t.type || "").toLowerCase().includes(q)
-      );
-    });
+    rows = rows.filter(t =>
+      (t.date || "").toLowerCase().includes(q) ||
+      (t.label || "").toLowerCase().includes(q) ||
+      (t.category || "").toLowerCase().includes(q) ||
+      (t.type || "").toLowerCase().includes(q)
+    );
   }
 
   const tbody = $("#txTbody");
@@ -608,11 +565,9 @@ function renderTxTable(){
 
   for(const tx of rows){
     const tr = document.createElement("tr");
-
     const kindTag = tx.kind === "income"
       ? `<span class="tag pos">Entrata</span>`
       : `<span class="tag neg">Spesa</span>`;
-
     const amt = tx.kind === "income"
       ? `<span class="tx-amt pos">+${fmtEUR.format(tx.amount)}</span>`
       : `<span class="tx-amt neg">-${fmtEUR.format(tx.amount)}</span>`;
@@ -632,18 +587,15 @@ function renderTxTable(){
         <button class="btn btn-ghost" data-edit="${escapeAttr(tx.id)}" type="button">Modifica</button>
       </td>
     `;
-
     tbody.appendChild(tr);
   }
 
-  // bind edit
   tbody.querySelectorAll("[data-edit]").forEach(btn => {
     btn.addEventListener("click", () => {
       const id = btn.getAttribute("data-edit");
       const tx = state.transactions.find(t => String(t.id) === String(id));
       if(tx){
         fillForm(tx);
-        // scroll form in vista
         $("#panel-manage").scrollIntoView({ behavior: "smooth", block: "start" });
       }
     });
@@ -651,30 +603,85 @@ function renderTxTable(){
 }
 
 /* =========================
-   CANDLESTICK CHART
+   INITIAL BALANCE UI
+========================= */
+async function loadInitBalanceToUI(){
+  try{
+    setStatus("Carico saldo iniziale...");
+    const data = await getInitialBalanceSetting(); // {date,balance} oppure null
+    state.initialBalanceSetting = (data && data.date) ? { date: data.date, balance: Number(data.balance ?? 0) } : null;
+
+    if(state.initialBalanceSetting){
+      $("#initBalDate").value = state.initialBalanceSetting.date;
+      $("#initBalValue").value = String(state.initialBalanceSetting.balance);
+      showInitBalNotice(`Saldo iniziale attuale: ${state.initialBalanceSetting.date} • ${fmtEUR.format(state.initialBalanceSetting.balance)}`);
+    }else{
+      // default suggerito
+      $("#initBalDate").value = isoDate(new Date(new Date().getFullYear(), 0, 1));
+      $("#initBalValue").value = "0";
+      showInitBalNotice("Nessun saldo iniziale salvato: impostalo per avere grafico accurato.");
+    }
+
+    setStatus("Pronto.");
+  }catch(err){
+    console.error(err);
+    setStatus("Errore.");
+    showInitBalNotice("Errore nel caricamento del saldo iniziale (endpoint mancante?).", true);
+  }
+}
+
+async function saveInitBalanceFromUI(){
+  const date = $("#initBalDate").value;
+  const balance = Number($("#initBalValue").value);
+
+  if(!date){
+    showInitBalNotice("Data saldo iniziale mancante.", true);
+    return;
+  }
+  if(!Number.isFinite(balance)){
+    showInitBalNotice("Saldo iniziale non valido.", true);
+    return;
+  }
+
+  try{
+    setStatus("Salvo saldo iniziale...");
+    const saved = await setInitialBalanceSetting({ date, balance: Math.round(balance * 100) / 100 });
+    state.initialBalanceSetting = { date: saved.date, balance: Number(saved.balance ?? 0) };
+    showInitBalNotice(`Salvato: ${state.initialBalanceSetting.date} • ${fmtEUR.format(state.initialBalanceSetting.balance)}`);
+    state.balanceCache.clear();
+    await renderChart();
+    setStatus("Pronto.");
+  }catch(err){
+    console.error(err);
+    setStatus("Errore.");
+    showInitBalNotice("Errore nel salvataggio (endpoint mancante?).", true);
+  }
+}
+
+/* =========================
+   CANDLESTICK
 ========================= */
 function initChartControls(){
   $$("#panel-chart [data-chart-period]").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       state.chartPeriod = btn.dataset.chartPeriod;
       setSegmentedActive("#panel-chart .segmented", btn);
-      renderChart();
+      await renderChart();
     });
   });
 
-  $("#btnChartPrev").addEventListener("click", () => shiftChart(-1));
-  $("#btnChartNext").addEventListener("click", () => shiftChart(1));
-  $("#btnChartToday").addEventListener("click", () => { state.chartCursor = new Date(); renderChart(); });
+  $("#btnChartPrev").addEventListener("click", async () => { shiftChart(-1); await renderChart(); });
+  $("#btnChartNext").addEventListener("click", async () => { shiftChart(1); await renderChart(); });
+  $("#btnChartToday").addEventListener("click", async () => { state.chartCursor = new Date(); await renderChart(); });
 }
 
 function shiftChart(dir){
   const c = new Date(state.chartCursor);
-  if(state.chartPeriod === "day") c.setDate(c.getDate() + dir*30);      // scorrimento "pagina"
+  if(state.chartPeriod === "day") c.setDate(c.getDate() + dir*30);
   else if(state.chartPeriod === "week") c.setDate(c.getDate() + dir*84);
   else if(state.chartPeriod === "month") c.setMonth(c.getMonth() + dir*12);
   else c.setFullYear(c.getFullYear() + dir*4);
   state.chartCursor = c;
-  renderChart();
 }
 
 function ensureChart(){
@@ -691,13 +698,8 @@ function ensureChart(){
       vertLines: { color: "rgba(255,255,255,0.06)" },
       horzLines: { color: "rgba(255,255,255,0.06)" },
     },
-    rightPriceScale: {
-      borderColor: "rgba(255,255,255,0.10)"
-    },
-    timeScale: {
-      borderColor: "rgba(255,255,255,0.10)",
-      timeVisible: true
-    },
+    rightPriceScale: { borderColor: "rgba(255,255,255,0.10)" },
+    timeScale: { borderColor: "rgba(255,255,255,0.10)", timeVisible: true },
     crosshair: {
       vertLine: { color: "rgba(255,255,255,0.20)" },
       horzLine: { color: "rgba(255,255,255,0.20)" },
@@ -716,136 +718,89 @@ function ensureChart(){
   state.chart.instance = chart;
   state.chart.series = series;
 
-  // Resize
   window.addEventListener("resize", () => {
     const rect = el.getBoundingClientRect();
     chart.applyOptions({ width: Math.floor(rect.width), height: Math.floor(rect.height) });
   });
 
-  // initial sizing
   const rect = el.getBoundingClientRect();
   chart.applyOptions({ width: Math.floor(rect.width), height: Math.floor(rect.height) });
 }
 
 function chartRange(){
-  // range "pagina" in base al periodo (per avere abbastanza candele)
   const c = clampToDay(state.chartCursor);
-
-  if(state.chartPeriod === "day"){
-    const from = addDays(c, -30);
-    const to = addDays(c, 30);
-    return { from, to };
-  }
-  if(state.chartPeriod === "week"){
-    const from = addDays(c, -84);
-    const to = addDays(c, 84);
-    return { from, to };
-  }
+  if(state.chartPeriod === "day") return { from: addDays(c,-30), to: addDays(c,30) };
+  if(state.chartPeriod === "week") return { from: addDays(c,-84), to: addDays(c,84) };
   if(state.chartPeriod === "month"){
-    const from = new Date(c.getFullYear(), c.getMonth() - 12, 1);
-    const to = new Date(c.getFullYear(), c.getMonth() + 12, 0);
-    return { from, to };
+    return { from: new Date(c.getFullYear(), c.getMonth()-12, 1), to: new Date(c.getFullYear(), c.getMonth()+12, 0) };
   }
-  // year
-  const from = new Date(c.getFullYear() - 4, 0, 1);
-  const to = new Date(c.getFullYear() + 4, 11, 31);
-  return { from, to };
+  return { from: new Date(c.getFullYear()-4, 0, 1), to: new Date(c.getFullYear()+4, 11, 31) };
 }
 
+function dateFromBucketKey(key){ return parseISODate(key); }
 function bucketKey(d, period){
   const y = d.getFullYear();
-  if(period === "day"){
-    return isoDate(d);
-  }
-  if(period === "week"){
-    const s = startOfWeek(d);
-    return isoDate(s); // key = monday
-  }
+  if(period === "day") return isoDate(d);
+  if(period === "week") return isoDate(startOfWeek(d)); // monday
   if(period === "month"){
-    const mm = String(d.getMonth() + 1).padStart(2,"0");
+    const mm = String(d.getMonth()+1).padStart(2,"0");
     return `${y}-${mm}-01`;
   }
-  // year
   return `${y}-01-01`;
 }
 
-function dateFromBucketKey(key){
-  return parseISODate(key);
-}
+async function computeCandles(period, from, to){
+  // Base balance: saldo a INIZIO del giorno "from"
+  let balance = 0;
+  try{
+    balance = await getBalanceAt(isoDate(from));
+  }catch{
+    balance = 0; // fallback
+  }
 
-function computeCandles(period, from, to){
-  // Candele sul saldo cumulativo.
-  // Assumiamo saldo iniziale = 0 prima del "from".
-  // Se vuoi correttezza assoluta con storico infinito, aggiungeremo endpoint "initial balance".
   const fromISO = isoDate(from);
   const toISO = isoDate(to);
 
-  // ordina tx per data asc
   const txs = state.transactions
     .filter(t => t.date >= fromISO && t.date <= toISO)
     .slice()
     .sort((a,b) => a.date < b.date ? -1 : 1);
 
-  // costruiamo buckets consecutivi nell'intervallo
   const keys = [];
   if(period === "day"){
-    for(let d = startOfDay(from); d <= to; d = addDays(d,1)){
-      keys.push(isoDate(d));
-    }
+    for(let d = startOfDay(from); d <= to; d = addDays(d,1)) keys.push(isoDate(d));
   } else if(period === "week"){
     let d = startOfWeek(from);
     const end = endOfWeek(to);
-    while(d <= end){
-      keys.push(isoDate(d));
-      d = addDays(d,7);
-    }
+    while(d <= end){ keys.push(isoDate(d)); d = addDays(d,7); }
   } else if(period === "month"){
     let d = new Date(from.getFullYear(), from.getMonth(), 1);
     const end = new Date(to.getFullYear(), to.getMonth(), 1);
-    while(d <= end){
-      keys.push(bucketKey(d, "month"));
-      d = new Date(d.getFullYear(), d.getMonth()+1, 1);
-    }
+    while(d <= end){ keys.push(bucketKey(d,"month")); d = new Date(d.getFullYear(), d.getMonth()+1, 1); }
   } else {
     let d = new Date(from.getFullYear(), 0, 1);
     const end = new Date(to.getFullYear(), 0, 1);
-    while(d <= end){
-      keys.push(bucketKey(d, "year"));
-      d = new Date(d.getFullYear()+1, 0, 1);
-    }
+    while(d <= end){ keys.push(bucketKey(d,"year")); d = new Date(d.getFullYear()+1, 0, 1); }
   }
 
-  // indice tx
   let i = 0;
-  let balance = 0;
-
   const candles = [];
 
   for(const key of keys){
     const bucketStart = dateFromBucketKey(key);
     let bucketEnd;
+    if(period === "day") bucketEnd = bucketStart;
+    else if(period === "week") bucketEnd = endOfWeek(bucketStart);
+    else if(period === "month") bucketEnd = endOfMonth(bucketStart);
+    else bucketEnd = endOfYear(bucketStart);
 
-    if(period === "day"){
-      bucketEnd = bucketStart;
-    } else if(period === "week"){
-      bucketEnd = endOfWeek(bucketStart);
-    } else if(period === "month"){
-      bucketEnd = endOfMonth(bucketStart);
-    } else {
-      bucketEnd = endOfYear(bucketStart);
-    }
-
-    // clamp agli estremi reali
     const bStartISO = isoDate(bucketStart);
     const bEndISO = isoDate(bucketEnd);
 
-    // open
     const open = balance;
-
     let high = balance;
     let low = balance;
 
-    // process all tx in this bucket
     while(i < txs.length && txs[i].date >= bStartISO && txs[i].date <= bEndISO){
       balance += txSignedAmount(txs[i]);
       if(balance > high) high = balance;
@@ -855,44 +810,44 @@ function computeCandles(period, from, to){
 
     const close = balance;
 
-    // time: Lightweight Charts expects { time: 'YYYY-MM-DD' } (string ok)
-    candles.push({
-      time: bStartISO,
-      open,
-      high,
-      low,
-      close
-    });
+    candles.push({ time: bStartISO, open, high, low, close });
   }
 
-  return candles;
+  return { candles, baseBalance: await safeNumber(getBalanceAt(isoDate(from)), 0) };
 }
 
-function renderChart(){
+async function renderChart(){
   ensureChart();
 
   const { from, to } = chartRange();
 
-  // Titolo range
   let title = "";
-  if(state.chartPeriod === "day"){
-    title = `Candele giornaliere • ${fmtDateIT.format(from)} → ${fmtDateIT.format(to)}`;
-  } else if(state.chartPeriod === "week"){
-    title = `Candele settimanali • ${fmtDateIT.format(from)} → ${fmtDateIT.format(to)}`;
-  } else if(state.chartPeriod === "month"){
-    title = `Candele mensili • ${fmtMonthYear.format(from)} → ${fmtMonthYear.format(to)}`;
-  } else {
-    title = `Candele annuali • ${from.getFullYear()} → ${to.getFullYear()}`;
-  }
+  if(state.chartPeriod === "day") title = `Candele giornaliere • ${fmtDateIT.format(from)} → ${fmtDateIT.format(to)}`;
+  else if(state.chartPeriod === "week") title = `Candele settimanali • ${fmtDateIT.format(from)} → ${fmtDateIT.format(to)}`;
+  else if(state.chartPeriod === "month") title = `Candele mensili • ${fmtMonthYear.format(from)} → ${fmtMonthYear.format(to)}`;
+  else title = `Candele annuali • ${from.getFullYear()} → ${to.getFullYear()}`;
   $("#chartRangeTitle").textContent = title;
 
-  const candles = computeCandles(state.chartPeriod, from, to);
-  state.chart.series.setData(candles);
+  // render
+  try{
+    const res = await computeCandles(state.chartPeriod, from, to);
+    state.chart.series.setData(res.candles);
 
-  // footnote: note su saldo iniziale
-  $("#chartFootnote").textContent =
-    "Nota: il grafico calcola il saldo cumulativo partendo da 0 all’inizio dell’intervallo. " +
-    "Per accuratezza assoluta su qualsiasi intervallo, aggiungeremo un endpoint di 'saldo iniziale' (vedi lista endpoints).";
+    // note
+    $("#chartFootnote").textContent =
+      `Saldo usato come base (inizio ${isoDate(from)}): ${fmtEUR.format(res.baseBalance)}. ` +
+      `Il saldo viene calcolato dal backend con saldo iniziale persistente + movimenti precedenti.`;
+  }catch(err){
+    console.error(err);
+    $("#chartFootnote").textContent =
+      "Errore nel caricamento/calcolo saldo (controlla endpoint /api/balance e saldo iniziale).";
+  }
+}
+
+function safeNumber(promiseOrValue, fallback){
+  // helper: se è una Promise, non blocca qui; usato solo in computeCandles via await.
+  // qui teniamo per compatibilità in caso di refactoring.
+  return promiseOrValue;
 }
 
 /* =========================
@@ -901,15 +856,26 @@ function renderChart(){
 async function refreshAll(){
   try{
     setStatus("Caricamento dati...");
-    await loadAllTransactionsForUI();
-    setStatus("Dati aggiornati.");
+
+    // Carichiamo transazioni in range ampio (puoi ottimizzare dopo con paginazione)
+    const today = new Date();
+    const from = isoDate(addDays(today, -370));
+    const to = isoDate(addDays(today, 370));
+    const data = await loadTransactionsForRange(from, to);
+    state.transactions = normalizeTransactions(data);
+
     renderCalendar();
     renderTxTable();
-    renderChart();
+
+    await loadInitBalanceToUI();
+
+    state.balanceCache.clear();
+    await renderChart();
+
+    setStatus("Dati aggiornati.");
   }catch(err){
     console.error(err);
     setStatus("Errore caricamento.");
-    // fallback: resta usabile anche senza backend (vuoto)
   }
 }
 
@@ -921,9 +887,7 @@ function escapeHtml(s){
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-function escapeAttr(s){
-  return escapeHtml(s).replaceAll("`","&#096;");
-}
+function escapeAttr(s){ return escapeHtml(s).replaceAll("`","&#096;"); }
 
 function initHeader(){
   $("#year").textContent = String(new Date().getFullYear());
@@ -932,14 +896,11 @@ function initHeader(){
 }
 
 function initDefaults(){
-  // default calendar view = month (come richiesto "default visualizzazione")
   state.calView = "month";
   state.calCursor = new Date();
-  // chart default
   state.chartPeriod = "month";
   state.chartCursor = new Date();
 
-  // set correct segmented active states
   const calBtn = $(`#panel-calendar [data-cal-view="${state.calView}"]`);
   if(calBtn) setSegmentedActive("#panel-calendar .segmented", calBtn);
 
@@ -957,9 +918,8 @@ function boot(){
   resetForm();
   renderCalendar();
   renderTxTable();
-  // chart will render when chart tab opens, but we can render anyway:
   ensureChart();
-  renderChart();
+  renderChart(); // best-effort
   refreshAll();
 }
 

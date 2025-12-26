@@ -28,7 +28,6 @@
     </header>
 
     <main class="main">
-      <!-- Tabs -->
       <nav class="tabs" role="tablist" aria-label="Dashboard tabs">
         <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-calendar" id="tab-calendar">
           📅 Calendario
@@ -41,7 +40,9 @@
         </button>
       </nav>
 
-      <!-- Panels -->
+      <!-- =========================
+           TAB 1: CALENDARIO
+      ========================== -->
       <section class="panel active" role="tabpanel" id="panel-calendar" aria-labelledby="tab-calendar">
         <div class="panel-header">
           <div class="panel-title">Calendario finanziario</div>
@@ -83,6 +84,9 @@
         <div class="calendar" id="calendar"></div>
       </section>
 
+      <!-- =========================
+           TAB 2: MOVIMENTI + SALDO INIZIALE
+      ========================== -->
       <section class="panel" role="tabpanel" id="panel-manage" aria-labelledby="tab-manage">
         <div class="panel-header">
           <div class="panel-title">Gestione movimenti</div>
@@ -93,7 +97,7 @@
 
         <div class="grid-2">
           <div class="card">
-            <div class="card-title">Inserisci / Modifica</div>
+            <div class="card-title">Inserisci / Modifica movimento</div>
 
             <form id="txForm" class="form">
               <input type="hidden" id="txId" />
@@ -143,37 +147,68 @@
           </div>
 
           <div class="card">
-            <div class="card-title">Lista movimenti</div>
+            <div class="card-title">Saldo iniziale (persistente)</div>
 
-            <div class="table-toolbar">
-              <input id="txSearch" class="search" type="search" placeholder="Cerca per label/categoria/tipo..." />
-              <select id="txFilterKind" class="select">
-                <option value="all">Tutti</option>
-                <option value="income">Solo entrate</option>
-                <option value="expense">Solo spese</option>
-              </select>
-              <button class="btn btn-ghost" id="btnExportJson" type="button" title="Esporta (debug)">⇩ JSON</button>
+            <div class="help" style="margin-top:-6px; margin-bottom:10px;">
+              Definizione usata dal grafico: <b>saldo a inizio giornata</b> della data indicata.
+              (Esempio: saldo valido all’inizio del 2025-01-01.)
             </div>
 
-            <div class="table-wrap">
-              <table class="table" id="txTable">
-                <thead>
-                  <tr>
-                    <th>Data</th>
-                    <th>Mov.</th>
-                    <th>Categoria</th>
-                    <th>Label</th>
-                    <th class="right">Importo</th>
-                    <th class="right">Azioni</th>
-                  </tr>
-                </thead>
-                <tbody id="txTbody"></tbody>
-              </table>
-            </div>
+            <form id="initBalForm" class="form">
+              <div class="form-row">
+                <label for="initBalDate">Data saldo iniziale</label>
+                <input id="initBalDate" type="date" required />
+              </div>
+
+              <div class="form-row">
+                <label for="initBalValue">Saldo iniziale (€)</label>
+                <input id="initBalValue" type="number" step="0.01" required />
+              </div>
+
+              <div class="form-actions">
+                <button class="btn" id="btnSaveInitBal" type="submit">Salva saldo iniziale</button>
+                <button class="btn btn-ghost" id="btnReloadInitBal" type="button">Ricarica</button>
+              </div>
+            </form>
+
+            <div class="notice" id="initBalNotice" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin: 0 12px 12px;">
+          <div class="card-title">Lista movimenti</div>
+
+          <div class="table-toolbar">
+            <input id="txSearch" class="search" type="search" placeholder="Cerca per data/label/categoria/tipo..." />
+            <select id="txFilterKind" class="select">
+              <option value="all">Tutti</option>
+              <option value="income">Solo entrate</option>
+              <option value="expense">Solo spese</option>
+            </select>
+            <button class="btn btn-ghost" id="btnExportJson" type="button" title="Esporta (debug)">⇩ JSON</button>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table" id="txTable">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Mov.</th>
+                  <th>Categoria</th>
+                  <th>Label</th>
+                  <th class="right">Importo</th>
+                  <th class="right">Azioni</th>
+                </tr>
+              </thead>
+              <tbody id="txTbody"></tbody>
+            </table>
           </div>
         </div>
       </section>
 
+      <!-- =========================
+           TAB 3: CANDLESTICK
+      ========================== -->
       <section class="panel" role="tabpanel" id="panel-chart" aria-labelledby="tab-chart">
         <div class="panel-header">
           <div class="panel-title">Andamento saldo (candlestick)</div>

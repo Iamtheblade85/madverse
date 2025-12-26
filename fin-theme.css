@@ -1,7 +1,6 @@
 :root{
   --bg: #0b1020;
   --panel: rgba(255,255,255,0.06);
-  --panel-2: rgba(255,255,255,0.09);
   --border: rgba(255,255,255,0.12);
   --text: rgba(255,255,255,0.92);
   --muted: rgba(255,255,255,0.62);
@@ -13,7 +12,6 @@
   --shadow: 0 12px 30px rgba(0,0,0,0.30);
   --radius: 16px;
   --radius-sm: 12px;
-  --gap: 14px;
 }
 
 *{ box-sizing: border-box; }
@@ -134,10 +132,7 @@ body{
   border-bottom: 1px solid var(--border);
   background: rgba(0,0,0,0.12);
 }
-.panel-title{
-  font-weight: 760;
-  letter-spacing: 0.2px;
-}
+.panel-title{ font-weight: 760; }
 
 .controls{
   display:flex;
@@ -193,16 +188,10 @@ body{
   border-color: rgba(255,90,107,0.35);
   background: rgba(255,90,107,0.14);
 }
-.btn-danger:hover{
-  background: rgba(255,90,107,0.22);
-}
-.btn[disabled]{
-  opacity:0.45;
-  cursor:not-allowed;
-}
+.btn-danger:hover{ background: rgba(255,90,107,0.22); }
+.btn[disabled]{ opacity:0.45; cursor:not-allowed; }
 
-.calendar-header,
-.chart-header{
+.calendar-header, .chart-header{
   padding: 12px 16px;
   display:flex;
   align-items:flex-end;
@@ -214,7 +203,6 @@ body{
 .range-title{
   font-weight: 800;
   font-size: 16px;
-  letter-spacing: 0.2px;
 }
 
 .summary{
@@ -235,26 +223,13 @@ body{
 .metric-value.pos{ color: var(--pos); }
 .metric-value.neg{ color: var(--neg); }
 
-.calendar{
-  padding: 14px;
-}
+.calendar{ padding: 14px; }
 
-.cal-grid{
-  display:grid;
-  gap: 10px;
-}
-.cal-grid.month{
-  grid-template-columns: repeat(7, 1fr);
-}
-.cal-grid.week{
-  grid-template-columns: repeat(7, 1fr);
-}
-.cal-grid.day{
-  grid-template-columns: 1fr;
-}
-.cal-grid.year{
-  grid-template-columns: repeat(3, 1fr);
-}
+.cal-grid{ display:grid; gap: 10px; }
+.cal-grid.month{ grid-template-columns: repeat(7, 1fr); }
+.cal-grid.week{ grid-template-columns: repeat(7, 1fr); }
+.cal-grid.day{ grid-template-columns: 1fr; }
+.cal-grid.year{ grid-template-columns: repeat(3, 1fr); }
 
 .dow{
   color: var(--muted);
@@ -278,13 +253,12 @@ body{
   border-radius: var(--radius-sm);
   padding: 10px;
   min-height: 120px;
-  position:relative;
   overflow:hidden;
 }
 .day-card.muted{ opacity: 0.55; }
 .day-card.today{
   outline: 2px solid rgba(59,130,246,0.40);
-  box-shadow: 0 0 0 4px rgba(59,130,246,0.10);
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.12);
 }
 
 .day-top{
@@ -296,11 +270,8 @@ body{
 }
 .day-num{ font-weight: 900; }
 .day-date{ color: var(--muted); font-size: 12px; }
-.day-badges{
-  display:flex;
-  gap: 6px;
-  align-items:center;
-}
+
+.day-badges{ display:flex; gap: 6px; align-items:center; }
 .badge{
   font-size: 11px;
   padding: 5px 8px;
@@ -346,7 +317,7 @@ body{
 
 .grid-2{
   display:grid;
-  grid-template-columns: 1fr 1.4fr;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
   padding: 12px;
 }
@@ -360,10 +331,7 @@ body{
   border-radius: var(--radius);
   padding: 12px;
 }
-.card-title{
-  font-weight: 800;
-  margin-bottom: 10px;
-}
+.card-title{ font-weight: 800; margin-bottom: 10px; }
 
 .form{ display:flex; flex-direction:column; gap: 10px; }
 .form-row label{
@@ -385,11 +353,7 @@ input:focus, select:focus{
   border-color: rgba(59,130,246,0.45);
   box-shadow: 0 0 0 4px rgba(59,130,246,0.12);
 }
-.help{
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 6px;
-}
+.help{ color: var(--muted); font-size: 12px; margin-top: 6px; }
 
 .form-actions{
   display:flex;
@@ -398,7 +362,6 @@ input:focus, select:focus{
   align-items:center;
   margin-top: 6px;
 }
-
 .notice{
   margin-top: 10px;
   color: var(--muted);
@@ -439,9 +402,7 @@ input:focus, select:focus{
   border-bottom: 1px solid rgba(255,255,255,0.07);
   vertical-align: top;
 }
-.table tbody tr:hover{
-  background: rgba(255,255,255,0.04);
-}
+.table tbody tr:hover{ background: rgba(255,255,255,0.04); }
 .right{ text-align:right; }
 .tag{
   display:inline-flex;
@@ -457,9 +418,7 @@ input:focus, select:focus{
 .tag.pos{ color: rgba(53,208,127,0.95); border-color: rgba(53,208,127,0.24); background: rgba(53,208,127,0.10); }
 .tag.neg{ color: rgba(255,90,107,0.95); border-color: rgba(255,90,107,0.24); background: rgba(255,90,107,0.10); }
 
-.chart-card{
-  padding: 12px;
-}
+.chart-card{ padding: 12px; }
 .chart{
   height: 520px;
   border-radius: var(--radius);
@@ -502,7 +461,6 @@ input:focus, select:focus{
   padding-top: 10px;
   border-top: 1px solid var(--border);
 }
-
 .status{
   padding: 6px 10px;
   border: 1px solid rgba(255,255,255,0.12);

@@ -248,6 +248,7 @@ small.help{color:var(--muted-2);display:block;margin-top:6px;font-size:var(--fs-
   flex-direction:column;
   min-width:0;
   position:relative;
+  max-height:100%;
 }
 
 .sidebar[data-open="false"]{
@@ -288,7 +289,13 @@ small.help{color:var(--muted-2);display:block;margin-top:6px;font-size:var(--fs-
   flex-direction:column;
   min-height:0;
   padding-bottom:0;
+  overflow:auto;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(255,255,255,.18) transparent;
 }
+#statsPanel::-webkit-scrollbar{width:10px}
+#statsPanel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:999px}
+#statsPanel::-webkit-scrollbar-track{background:transparent}
 
 #statsPanel .sidebar__section-title small{
   color:var(--muted);

@@ -3,255 +3,262 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Finance Dashboard</title>
+  <meta name="color-scheme" content="dark light" />
+  <title>Finance Calendar Dashboard</title>
+
+  <!-- CSS theme -->
   <link rel="stylesheet" href="fin-theme.css" />
 
-  <!-- Candlestick chart lib (Lightweight Charts) -->
-  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <!-- Optional: better rendering on mobile -->
+  <meta name="theme-color" content="#0b1220" />
 </head>
 
 <body>
-  <div class="app">
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo">₿</div>
-        <div class="brand-text">
-          <div class="brand-title">Finance Dashboard</div>
-          <div class="brand-subtitle">Calendario • Movimenti • Andamento saldo</div>
-        </div>
+  <!-- APP ROOT -->
+  <div id="app" class="app layout">
+
+    <!-- TOPBAR -->
+    <header id="topbar" class="topbar" role="banner">
+      <div class="topbar__left">
+        <button id="btnSidebarToggle" class="btn btn--ghost" type="button" aria-label="Apri/chiudi pannello filtri">
+          ☰ Filtri
+        </button>
+
+        <button id="btnPrev" class="btn btn--icon" type="button" aria-label="Periodo precedente">‹</button>
+        <button id="btnToday" class="btn btn--ghost" type="button" aria-label="Vai a oggi">Oggi</button>
+        <button id="btnNext" class="btn btn--icon" type="button" aria-label="Periodo successivo">›</button>
+
+        <span id="rangeLabel" class="topbar__range" aria-live="polite">—</span>
       </div>
 
-      <div class="top-actions">
-        <div class="pill" id="pillNow"></div>
-        <button class="btn btn-ghost" id="btnRefresh" type="button" title="Ricarica dati">↻ Aggiorna</button>
+      <div class="topbar__right">
+        <!-- View switch -->
+        <div id="viewSwitch" class="segmented" role="group" aria-label="Cambia vista calendario">
+          <button class="btn btn--seg" type="button" data-view="day" aria-pressed="false">Giorno</button>
+          <button class="btn btn--seg" type="button" data-view="week" aria-pressed="false">Settimana</button>
+          <button class="btn btn--seg" type="button" data-view="month" aria-pressed="true">Mese</button>
+          <button class="btn btn--seg" type="button" data-view="year" aria-pressed="false">Anno</button>
+        </div>
+
+        <!-- Density -->
+        <div id="densitySwitch" class="segmented" role="group" aria-label="Densità visualizzazione">
+          <button class="btn btn--seg" type="button" data-density="comfort" aria-pressed="true">Comfort</button>
+          <button class="btn btn--seg" type="button" data-density="compact" aria-pressed="false">Compatta</button>
+        </div>
+
+        <button id="btnNewEvent" class="btn btn--primary" type="button" aria-label="Crea nuovo evento">
+          ＋ Nuovo
+        </button>
       </div>
     </header>
 
-    <main class="main">
-      <nav class="tabs" role="tablist" aria-label="Dashboard tabs">
-        <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-calendar" id="tab-calendar">
-          📅 Calendario
-        </button>
-        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-manage" id="tab-manage">
-          ✍️ Movimenti
-        </button>
-        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-chart" id="tab-chart">
-          📈 Candlestick
-        </button>
-      </nav>
-
-      <!-- =========================
-           TAB 1: CALENDARIO
-      ========================== -->
-      <section class="panel active" role="tabpanel" id="panel-calendar" aria-labelledby="tab-calendar">
-        <div class="panel-header">
-          <div class="panel-title">Calendario finanziario</div>
-
-          <div class="controls">
-            <div class="segmented" aria-label="Vista calendario">
-              <button class="seg active" data-cal-view="day" type="button">Giorno</button>
-              <button class="seg" data-cal-view="week" type="button">Settimana</button>
-              <button class="seg" data-cal-view="month" type="button">Mese</button>
-              <button class="seg" data-cal-view="year" type="button">Anno</button>
-            </div>
-
-            <div class="nav-controls">
-              <button class="btn btn-ghost" id="btnPrev" type="button">←</button>
-              <button class="btn btn-ghost" id="btnToday" type="button">Oggi</button>
-              <button class="btn btn-ghost" id="btnNext" type="button">→</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="calendar-header">
-          <div class="range-title" id="calRangeTitle"></div>
-          <div class="summary">
-            <div class="metric">
-              <div class="metric-label">Entrate</div>
-              <div class="metric-value pos" id="sumIncome">+0,00</div>
-            </div>
-            <div class="metric">
-              <div class="metric-label">Spese</div>
-              <div class="metric-value neg" id="sumExpense">-0,00</div>
-            </div>
-            <div class="metric">
-              <div class="metric-label">Netto</div>
-              <div class="metric-value" id="sumNet">0,00</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="calendar" id="calendar"></div>
-      </section>
-
-      <!-- =========================
-           TAB 2: MOVIMENTI + SALDO INIZIALE
-      ========================== -->
-      <section class="panel" role="tabpanel" id="panel-manage" aria-labelledby="tab-manage">
-        <div class="panel-header">
-          <div class="panel-title">Gestione movimenti</div>
-          <div class="controls">
-            <button class="btn" id="btnNewTx" type="button">＋ Nuovo movimento</button>
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-title">Inserisci / Modifica movimento</div>
-
-            <form id="txForm" class="form">
-              <input type="hidden" id="txId" />
-
-              <div class="form-row">
-                <label for="txDate">Data</label>
-                <input id="txDate" type="date" required />
-              </div>
-
-              <div class="form-row">
-                <label for="txKind">Movimento</label>
-                <select id="txKind" required>
-                  <option value="income">Entrata</option>
-                  <option value="expense">Spesa</option>
-                </select>
-              </div>
-
-              <div class="form-row">
-                <label for="txType">Tipo</label>
-                <input id="txType" type="text" placeholder="es. ricorrente, una tantum, contanti..." />
-              </div>
-
-              <div class="form-row">
-                <label for="txCategory">Categoria</label>
-                <input id="txCategory" type="text" placeholder="es. affitto, stipendio, spesa..." required />
-              </div>
-
-              <div class="form-row">
-                <label for="txLabel">Label</label>
-                <input id="txLabel" type="text" placeholder="es. 'Stipendio dicembre', 'Supermercato'..." required />
-              </div>
-
-              <div class="form-row">
-                <label for="txAmount">Importo (€)</label>
-                <input id="txAmount" type="number" step="0.01" min="0" required />
-                <div class="help">Inserisci sempre positivo: il segno lo decide “Entrata/Spesa”.</div>
-              </div>
-
-              <div class="form-actions">
-                <button class="btn" id="btnSaveTx" type="submit">Salva</button>
-                <button class="btn btn-ghost" id="btnCancelEdit" type="button">Annulla</button>
-                <button class="btn btn-danger" id="btnDeleteTx" type="button" disabled>Elimina</button>
-              </div>
-            </form>
-
-            <div class="notice" id="formNotice" aria-live="polite"></div>
-          </div>
-
-          <div class="card">
-            <div class="card-title">Saldo iniziale (persistente)</div>
-
-            <div class="help" style="margin-top:-6px; margin-bottom:10px;">
-              Definizione usata dal grafico: <b>saldo a inizio giornata</b> della data indicata.
-              (Esempio: saldo valido all’inizio del 2025-01-01.)
-            </div>
-
-            <form id="initBalForm" class="form">
-              <div class="form-row">
-                <label for="initBalDate">Data saldo iniziale</label>
-                <input id="initBalDate" type="date" required />
-              </div>
-
-              <div class="form-row">
-                <label for="initBalValue">Saldo iniziale (€)</label>
-                <input id="initBalValue" type="number" step="0.01" required />
-              </div>
-
-              <div class="form-actions">
-                <button class="btn" id="btnSaveInitBal" type="submit">Salva saldo iniziale</button>
-                <button class="btn btn-ghost" id="btnReloadInitBal" type="button">Ricarica</button>
-              </div>
-            </form>
-
-            <div class="notice" id="initBalNotice" aria-live="polite"></div>
-          </div>
-        </div>
-
-        <div class="card" style="margin: 0 12px 12px;">
-          <div class="card-title">Lista movimenti</div>
-
-          <div class="table-toolbar">
-            <input id="txSearch" class="search" type="search" placeholder="Cerca per data/label/categoria/tipo..." />
-            <select id="txFilterKind" class="select">
-              <option value="all">Tutti</option>
-              <option value="income">Solo entrate</option>
-              <option value="expense">Solo spese</option>
-            </select>
-            <button class="btn btn-ghost" id="btnExportJson" type="button" title="Esporta (debug)">⇩ JSON</button>
-          </div>
-
-          <div class="table-wrap">
-            <table class="table" id="txTable">
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Mov.</th>
-                  <th>Categoria</th>
-                  <th>Label</th>
-                  <th class="right">Importo</th>
-                  <th class="right">Azioni</th>
-                </tr>
-              </thead>
-              <tbody id="txTbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- =========================
-           TAB 3: CANDLESTICK
-      ========================== -->
-      <section class="panel" role="tabpanel" id="panel-chart" aria-labelledby="tab-chart">
-        <div class="panel-header">
-          <div class="panel-title">Andamento saldo (candlestick)</div>
-
-          <div class="controls">
-            <div class="segmented" aria-label="Periodo grafico">
-              <button class="seg active" data-chart-period="day" type="button">Giornaliero</button>
-              <button class="seg" data-chart-period="week" type="button">Settimanale</button>
-              <button class="seg" data-chart-period="month" type="button">Mensile</button>
-              <button class="seg" data-chart-period="year" type="button">Annuale</button>
-            </div>
-            <div class="nav-controls">
-              <button class="btn btn-ghost" id="btnChartPrev" type="button">←</button>
-              <button class="btn btn-ghost" id="btnChartToday" type="button">Oggi</button>
-              <button class="btn btn-ghost" id="btnChartNext" type="button">→</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="chart-header">
-          <div class="range-title" id="chartRangeTitle"></div>
-          <div class="chart-legend">
-            <span class="dot pos"></span> crescita
-            <span class="dot neg"></span> calo
-            <span class="dot neutral"></span> invariato
-          </div>
-        </div>
-
-        <div class="chart-card">
-          <div id="candlestickChart" class="chart"></div>
-          <div class="chart-footnote" id="chartFootnote"></div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-left">© <span id="year"></span> Finance Dashboard</div>
-      <div class="footer-right">
-        <span class="status" id="statusText">Pronto.</span>
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="sidebar" data-open="true" aria-label="Filtri e impostazioni">
+      <div class="sidebar__header">
+        <h2 class="sidebar__title">Filtri</h2>
       </div>
-    </footer>
+
+      <!-- Search -->
+      <section class="sidebar__section" aria-label="Ricerca">
+        <div class="sidebar__section-title">Ricerca</div>
+        <label class="label" for="searchInput">Cerca titolo / categoria / note</label>
+        <input id="searchInput" type="search" placeholder="Es. affitto, auto, stipendio…" autocomplete="off" />
+      </section>
+
+      <!-- Category -->
+      <section class="sidebar__section" aria-label="Categoria">
+        <div class="sidebar__section-title">Categoria</div>
+        <label class="label" for="categorySelect">Seleziona categoria</label>
+        <select id="categorySelect">
+          <option value="all">Tutte</option>
+        </select>
+        <small class="help">Le categorie vengono generate automaticamente dagli eventi.</small>
+      </section>
+
+      <!-- Type toggles -->
+      <section class="sidebar__section" aria-label="Tipi evento">
+        <div class="sidebar__section-title">Tipi</div>
+
+        <div class="toggle">
+          <span class="toggle__label">Entrate</span>
+          <input id="toggleIncome" type="checkbox" checked />
+        </div>
+
+        <div class="toggle" style="margin-top:10px;">
+          <span class="toggle__label">Uscite</span>
+          <input id="toggleExpense" type="checkbox" checked />
+        </div>
+
+        <div class="toggle" style="margin-top:10px;">
+          <span class="toggle__label">Altro</span>
+          <input id="toggleOther" type="checkbox" checked />
+        </div>
+      </section>
+
+      <!-- Range presets -->
+      <section class="sidebar__section" aria-label="Range date">
+        <div class="sidebar__section-title">Range</div>
+
+        <div id="rangePresets" class="pill-row" role="group" aria-label="Preset range">
+          <button class="btn btn--pill" type="button" data-preset="all" aria-pressed="true">Da inizio</button>
+          <button class="btn btn--pill" type="button" data-preset="from" aria-pressed="false">Da data</button>
+          <button class="btn btn--pill" type="button" data-preset="between" aria-pressed="false">Tra date</button>
+        </div>
+
+        <label class="label" for="fromDate">Da</label>
+        <input id="fromDate" type="date" />
+
+        <label class="label" for="toDate">A</label>
+        <input id="toDate" type="date" />
+      </section>
+
+      <!-- Actions -->
+      <section class="sidebar__section" aria-label="Azioni">
+        <div class="sidebar__section-title">Azioni</div>
+
+        <button id="btnApplyFilters" class="btn btn--primary" type="button">Applica</button>
+        <button id="btnClearFilters" class="btn btn--ghost" type="button" style="margin-top:10px;">Reset</button>
+
+        <hr />
+
+        <button id="btnExport" class="btn btn--ghost" type="button">Esporta JSON</button>
+        <label class="label" for="importFile" style="margin-top:12px;">Importa JSON</label>
+        <input id="importFile" type="file" accept="application/json" />
+      </section>
+
+      <!-- Stats panel -->
+      <section id="statsPanel" class="sidebar__section" aria-label="Statistiche">
+        <div class="sidebar__section-title">
+          <span>Stats</span>
+          <small id="statsMeta">—</small>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card__label">Saldo attuale</div>
+            <div id="statCurrentBalance" class="stat-card__value">—</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card__label">Netto</div>
+            <div id="statNet" class="stat-card__value">—</div>
+            <div class="stat-card__sub">
+              <span id="statIncomeCount">—</span> · <span id="statExpenseCount">—</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card__label">Entrate</div>
+            <div id="statIncome" class="stat-card__value">—</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card__label">Uscite</div>
+            <div id="statExpense" class="stat-card__value">—</div>
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="sidebar__section-title" style="margin-top:6px;">Snapshot (ultimi 14)</div>
+        <div id="snapshotList" class="snapshot-list" role="list"></div>
+      </section>
+    </aside>
+
+    <!-- MAIN -->
+    <main id="main" class="main" role="main">
+      <header class="main__header">
+        <h1 id="calendarTitle">Calendario</h1>
+        <p id="calendarSubtitle">—</p>
+      </header>
+
+      <section id="calendarView" class="calendar" aria-label="Vista calendario"></section>
+    </main>
   </div>
 
-  <script src="fin.js"></script>
+  <!-- EVENT DRAWER (side panel) -->
+  <aside id="eventDrawer" class="drawer" aria-hidden="true" aria-label="Dettaglio evento">
+    <div id="eventDrawerHeader" class="drawer__header">
+      <h2 id="drawerTitle">Evento</h2>
+      <div class="drawer__actions">
+        <button id="btnEditEvent" class="btn" type="button">Modifica</button>
+        <button id="btnDeleteEvent" class="btn" type="button">Elimina</button>
+        <button id="btnCloseDrawer" class="btn btn--icon" type="button" aria-label="Chiudi">✕</button>
+      </div>
+    </div>
+    <div id="eventDetail" class="drawer__body"></div>
+  </aside>
+
+  <!-- EVENT MODAL -->
+  <dialog id="eventModal" aria-label="Crea o modifica evento">
+    <div id="eventModalHeader" class="modal__header">
+      <h2 id="eventModalTitle">Evento</h2>
+      <button id="btnCloseModal" class="btn btn--icon" type="button" aria-label="Chiudi">✕</button>
+    </div>
+
+    <form id="eventForm" method="dialog" autocomplete="off">
+      <div class="form-field">
+        <label class="label" for="evtTitle">Titolo *</label>
+        <input id="evtTitle" type="text" placeholder="Es. Affitto, Stipendio, Assicurazione…" required />
+      </div>
+
+      <div class="form-field">
+        <label class="label" for="evtCategory">Categoria</label>
+        <input id="evtCategory" type="text" list="categoryList" placeholder="Es. Casa, Auto, Lavoro…" />
+        <datalist id="categoryList"></datalist>
+      </div>
+
+      <div class="form-field">
+        <label class="label" for="evtType">Tipo</label>
+        <select id="evtType">
+          <option value="income">Entrata</option>
+          <option value="expense">Uscita</option>
+          <option value="other">Altro</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label class="label" for="evtAmount">Importo</label>
+        <input id="evtAmount" type="number" step="0.01" placeholder="Es. 950" />
+      </div>
+
+      <div class="form-field">
+        <label class="label" for="evtStart">Data *</label>
+        <input id="evtStart" type="date" required />
+      </div>
+
+      <div class="form-field">
+        <label class="label" for="evtTime">Ora</label>
+        <input id="evtTime" type="time" />
+      </div>
+
+      <div class="form-field">
+        <label class="label" for="evtRecurrence">Ricorrenza</label>
+        <select id="evtRecurrence">
+          <option value="none">Nessuna</option>
+          <option value="monthly">Mensile</option>
+          <option value="yearly">Annuale</option>
+        </select>
+      </div>
+
+      <div class="form-field" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <label class="label" for="evtPinned" style="margin:0;">In evidenza</label>
+        <input id="evtPinned" type="checkbox" />
+      </div>
+
+      <div class="form-field" style="grid-column: 1 / -1;">
+        <label class="label" for="evtNotes">Note</label>
+        <textarea id="evtNotes" placeholder="Dettagli, scadenze, note personali…"></textarea>
+      </div>
+    </form>
+
+    <div id="eventModalFooter" class="modal__footer">
+      <button id="btnCancelEvent" class="btn btn--ghost" type="button">Annulla</button>
+      <button class="btn btn--primary" type="submit" form="eventForm">Salva</button>
+    </div>
+  </dialog>
+
+  <!-- JS -->
+  <script src="fin.js" defer></script>
 </body>
 </html>

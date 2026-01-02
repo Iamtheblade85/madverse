@@ -190,7 +190,7 @@ const API = {
     includeOther: true,
     sidebarOpen: true,
     // Balance logic
-    initialBalance: 0,           // you can set later (or load from backend)
+    initialBalance: 3412,
     currency: "EUR"
   };
 

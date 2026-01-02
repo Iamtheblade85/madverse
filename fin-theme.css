@@ -869,32 +869,6 @@ dialog::backdrop{
 .form-field{display:flex;flex-direction:column;gap:6px}
 .form-field[style*="grid-column"]{grid-column:1 / -1}
 
-@media (max-width: 1020px){
-  :root{--sidebar-w:340px}
-}
-@media (max-width: 920px){
-  .app.layout{
-    grid-template-columns:1fr;
-    grid-template-rows: var(--topbar-h) auto 1fr;
-    grid-template-areas:
-      "topbar"
-      "sidebar"
-      "main";
-  }
-  .sidebar{max-height:none}
-  #statsPanel{max-height:none}
-  .calendar{max-height:calc(100vh - var(--topbar-h) - 56vh)}
-}
-@media (max-width: 560px){
-  :root{--topbar-h:auto}
-  .topbar{gap:10px}
-  .btn--icon{width:40px;height:40px}
-  #eventForm{grid-template-columns:1fr}
-  .stats-grid{grid-template-columns:1fr}
-  .kv-row{grid-template-columns:1fr}
-  .event-detail__row{grid-template-columns:1fr}
-}
-
 .calendar::-webkit-scrollbar{height:12px;width:12px}
 .calendar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:999px}
 .calendar::-webkit-scrollbar-track{background:transparent}
@@ -1034,12 +1008,6 @@ input[type="date"],input[type="time"]{
   grid-template-columns:repeat(3,1fr);
   gap:12px;
 }
-@media (max-width: 980px){
-  #viewYearHost .year-grid{grid-template-columns:repeat(2,1fr)}
-}
-@media (max-width: 560px){
-  #viewYearHost .year-grid{grid-template-columns:1fr}
-}
 
 .day-balance{
   border:1px solid var(--border);
@@ -1071,7 +1039,4 @@ input[type="date"],input[type="time"]{
   color:var(--muted);
   font-size:var(--fs-1);
   font-weight:700;
-}
-@media (max-width:560px){
-  .day-balance{min-width:0;text-align:left}
 }

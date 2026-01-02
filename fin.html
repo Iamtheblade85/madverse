@@ -238,7 +238,14 @@
           <option value="none">Nessuna</option>
           <option value="monthly">Mensile</option>
           <option value="yearly">Annuale</option>
+          <option value="custom_days">Ogni N giorni</option>
         </select>
+      </div>
+      
+      <!-- Campo extra: visibile solo se custom_days -->
+      <div id="recDaysField" class="form-field" style="display:none;">
+        <label class="label" for="evtRecurrenceDays">Ogni quanti giorni?</label>
+        <input id="evtRecurrenceDays" type="number" min="1" step="1" placeholder="Es. 7" />
       </div>
 
       <div class="form-field" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">

@@ -5,159 +5,207 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark light" />
   <title>Finance Calendar</title>
-  <link rel="stylesheet" href="fin-theme.css" />  
+  <link rel="stylesheet" href="./fin-theme.css" />
 </head>
 <body>
-  <div id="app">
-    <header id="topbar">
-      <div>
-        <button id="btnSidebarToggle" type="button">☰ Filtri</button>
-        <button id="btnPrev" type="button">‹</button>
-        <button id="btnToday" type="button">Oggi</button>
-        <button id="btnNext" type="button">›</button>
-        <span id="rangeLabel">—</span>
+  <div id="app" class="app layout">
+    <header id="topbar" class="topbar">
+      <div class="topbar__left">
+        <button id="btnSidebarToggle" class="btn btn--ghost" type="button">☰ Filtri</button>
+        <button id="btnPrev" class="btn btn--icon btn--ghost" type="button" aria-label="Precedente">‹</button>
+        <button id="btnToday" class="btn btn--ghost" type="button">Oggi</button>
+        <button id="btnNext" class="btn btn--icon btn--ghost" type="button" aria-label="Successivo">›</button>
+        <span id="rangeLabel" class="topbar__range">—</span>
       </div>
-      <div>
-        <span id="viewSwitch">
-          <button type="button" data-view="day">Giorno</button>
-          <button type="button" data-view="week">Settimana</button>
-          <button type="button" data-view="month">Mese</button>
-          <button type="button" data-view="year">Anno</button>
+
+      <div class="topbar__right">
+        <span id="viewSwitch" class="segmented" aria-label="Vista">
+          <button class="btn btn--seg" type="button" data-view="day" aria-pressed="false">Giorno</button>
+          <button class="btn btn--seg" type="button" data-view="week" aria-pressed="false">Settimana</button>
+          <button class="btn btn--seg" type="button" data-view="month" aria-pressed="true">Mese</button>
+          <button class="btn btn--seg" type="button" data-view="year" aria-pressed="false">Anno</button>
         </span>
-        <span id="densitySwitch">
-          <button type="button" data-density="comfort">Comfort</button>
-          <button type="button" data-density="compact">Compatta</button>
+
+        <span id="densitySwitch" class="segmented" aria-label="Densità">
+          <button class="btn btn--seg" type="button" data-density="comfort" aria-pressed="true">Comfort</button>
+          <button class="btn btn--seg" type="button" data-density="compact" aria-pressed="false">Compatta</button>
         </span>
-        <button id="btnNewEvent" type="button">＋ Nuovo</button>
+
+        <button id="btnNewEvent" class="btn btn--primary" type="button">＋ Nuovo</button>
       </div>
     </header>
 
-    <aside id="sidebar" data-open="true">
-      <h2>Filtri</h2>
+    <aside id="sidebar" class="sidebar" data-open="true">
+      <div class="sidebar__header">
+        <h2 class="sidebar__title">Filtri</h2>
+      </div>
 
-      <section>
-        <label for="searchInput">Cerca</label>
-        <input id="searchInput" type="search" autocomplete="off" />
+      <section class="sidebar__section">
+        <label class="label" for="searchInput">Cerca</label>
+        <input id="searchInput" type="search" autocomplete="off" placeholder="Titolo, categoria, note…" />
       </section>
 
-      <section>
-        <label for="categorySelect">Categoria</label>
+      <section class="sidebar__section">
+        <label class="label" for="categorySelect">Categoria</label>
         <select id="categorySelect">
           <option value="all">Tutte</option>
         </select>
       </section>
 
-      <section>
-        <label><input id="toggleIncome" type="checkbox" checked /> Entrate</label><br />
-        <label><input id="toggleExpense" type="checkbox" checked /> Uscite</label><br />
-        <label><input id="toggleOther" type="checkbox" checked /> Altro</label>
+      <section class="sidebar__section">
+        <div class="toggle">
+          <div class="toggle__label">Entrate</div>
+          <input id="toggleIncome" type="checkbox" checked />
+        </div>
+        <div style="height:10px"></div>
+        <div class="toggle">
+          <div class="toggle__label">Uscite</div>
+          <input id="toggleExpense" type="checkbox" checked />
+        </div>
+        <div style="height:10px"></div>
+        <div class="toggle">
+          <div class="toggle__label">Altro</div>
+          <input id="toggleOther" type="checkbox" checked />
+        </div>
       </section>
 
-      <section>
-        <div id="rangePresets">
-          <button type="button" data-preset="all">Da inizio</button>
-          <button type="button" data-preset="from">Da data</button>
-          <button type="button" data-preset="between">Tra date</button>
+      <section class="sidebar__section">
+        <div class="sidebar__section-title" style="margin-bottom:10px;">
+          <span>Range</span>
+          <small>Filtro date</small>
         </div>
-        <label for="fromDate">Da</label>
+
+        <div id="rangePresets" class="pill-row" style="margin-bottom:10px;">
+          <button class="btn btn--pill" type="button" data-preset="all" aria-pressed="true">Da inizio</button>
+          <button class="btn btn--pill" type="button" data-preset="from" aria-pressed="false">Da data</button>
+          <button class="btn btn--pill" type="button" data-preset="between" aria-pressed="false">Tra date</button>
+        </div>
+
+        <label class="label" for="fromDate">Da</label>
         <input id="fromDate" type="date" />
-        <label for="toDate">A</label>
+
+        <label class="label" for="toDate">A</label>
         <input id="toDate" type="date" />
+
+        <div style="height:12px"></div>
+        <div class="pill-row">
+          <button id="btnApplyFilters" class="btn btn--ghost" type="button">Applica</button>
+          <button id="btnClearFilters" class="btn btn--ghost" type="button">Reset</button>
+        </div>
       </section>
 
-      <section>
-        <button id="btnApplyFilters" type="button">Applica</button>
-        <button id="btnClearFilters" type="button">Reset</button>
-      </section>
+      <section class="sidebar__section">
+        <div class="sidebar__section-title" style="margin-bottom:10px;">
+          <span>Backup</span>
+          <small>Import/Export</small>
+        </div>
 
-      <section>
-        <button id="btnExport" type="button">Esporta JSON</button>
-        <label for="importFile">Importa JSON</label>
+        <div class="pill-row">
+          <button id="btnExport" class="btn btn--ghost" type="button">Esporta JSON</button>
+        </div>
+
+        <div style="height:10px"></div>
+
+        <label class="label" for="importFile">Importa JSON</label>
         <input id="importFile" type="file" accept="application/json" />
+        <small class="help">Import crea eventi via API e ricarica.</small>
       </section>
 
-      <hr />
-
-      <section id="statsPanel">
-        <div>
-          <strong>Stats</strong> <small id="statsMeta">—</small>
+      <section id="statsPanel" class="sidebar__section">
+        <div class="sidebar__section-title">
+          <span>Stats</span>
+          <small id="statsMeta">—</small>
         </div>
 
-        <div>
-          <div>Saldo attuale (fino a oggi)</div>
-          <div id="statCurrentBalance">—</div>
-          <small id="statCurrentBalanceMeta">—</small>
-        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card__label">Saldo attuale (fino a oggi)</div>
+            <div id="statCurrentBalance" class="stat-card__value">—</div>
+            <div id="statCurrentBalanceMeta" class="stat-card__sub">—</div>
+          </div>
 
-        <div style="margin-top:10px;">
-          <div>Saldo alla data</div>
-          <div id="statBalanceAtDate">—</div>
-          <label for="balanceAtDate">Data</label>
-          <input id="balanceAtDate" type="date" />
-        </div>
+          <div class="stat-card">
+            <div class="stat-card__label">Saldo alla data</div>
+            <div id="statBalanceAtDate" class="stat-card__value">—</div>
+            <div class="stat-card__sub" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
+              <span style="color:var(--muted);font-weight:700">Data</span>
+              <input id="balanceAtDate" type="date" />
+            </div>
+          </div>
 
-        <div style="margin-top:10px;">
-          <div>Netto (nel range visibile)</div>
-          <div id="statNet">—</div>
-          <small><span id="statIncomeCount">—</span> · <span id="statExpenseCount">—</span></small>
-        </div>
+          <div class="stat-card">
+            <div class="stat-card__label">Netto (nel range visibile)</div>
+            <div id="statNet" class="stat-card__value">—</div>
+            <div class="stat-card__sub">
+              <span id="statIncomeCount">—</span> · <span id="statExpenseCount">—</span>
+            </div>
+          </div>
 
-        <div style="margin-top:10px;">
-          <div>Entrate (nel range visibile)</div>
-          <div id="statIncome">—</div>
-        </div>
+          <div class="stat-card">
+            <div class="stat-card__label">Entrate (nel range visibile)</div>
+            <div id="statIncome" class="stat-card__value">—</div>
+            <div class="stat-card__sub">Somma entrate nella vista</div>
+          </div>
 
-        <div style="margin-top:10px;">
-          <div>Uscite (nel range visibile)</div>
-          <div id="statExpense">—</div>
+          <div class="stat-card">
+            <div class="stat-card__label">Uscite (nel range visibile)</div>
+            <div id="statExpense" class="stat-card__value">—</div>
+            <div class="stat-card__sub">Somma uscite nella vista</div>
+          </div>
         </div>
 
         <hr />
-        <div>Snapshot (ultimi 14 giorni del range visibile)</div>
-        <div id="snapshotList"></div>
+
+        <div class="sidebar__section-title" style="margin-bottom:10px;">
+          <span>Snapshot</span>
+          <small>ultimi 14 giorni (range visibile)</small>
+        </div>
+
+        <div id="snapshotList" class="snapshot-list" role="list"></div>
       </section>
     </aside>
 
-    <main id="main">
-      <header>
+    <main id="main" class="main">
+      <header class="main__header">
         <h1 id="calendarTitle">Calendario</h1>
         <p id="calendarSubtitle">—</p>
       </header>
-      <section id="calendarView"></section>
+
+      <section id="calendarView" class="calendar" data-view="month" data-density="comfort"></section>
     </main>
 
-    <aside id="eventDrawer" aria-hidden="true">
-      <div>
-        <h2 id="drawerTitle">Evento</h2>
-        <div>
-          <button id="btnEditEvent" type="button">Modifica</button>
-          <button id="btnDeleteEvent" type="button">Elimina</button>
-          <button id="btnCloseDrawer" type="button">✕</button>
+    <aside id="eventDrawer" class="drawer" aria-hidden="true">
+      <div class="drawer__header">
+        <h2 id="drawerTitle" style="margin:0;font-size:var(--fs-5);letter-spacing:.2px;">Evento</h2>
+        <div class="drawer__actions">
+          <button id="btnEditEvent" class="btn btn--ghost" type="button">Modifica</button>
+          <button id="btnDeleteEvent" class="btn btn--ghost" type="button">Elimina</button>
+          <button id="btnCloseDrawer" class="btn btn--icon btn--ghost" type="button" aria-label="Chiudi">✕</button>
         </div>
       </div>
-      <div id="eventDetail"></div>
+      <div id="eventDetail" class="drawer__body"></div>
     </aside>
 
     <dialog id="eventModal">
-      <div>
-        <h2 id="eventModalTitle">Evento</h2>
-        <button id="btnCloseModal" type="button">✕</button>
+      <div class="modal__header">
+        <h2 id="eventModalTitle" style="margin:0;font-size:var(--fs-5);letter-spacing:.2px;">Evento</h2>
+        <button id="btnCloseModal" class="btn btn--icon btn--ghost" type="button" aria-label="Chiudi">✕</button>
       </div>
 
       <form id="eventForm" method="dialog" autocomplete="off">
-        <div>
-          <label for="evtTitle">Titolo *</label>
+        <div class="form-field">
+          <label class="label" for="evtTitle">Titolo *</label>
           <input id="evtTitle" type="text" required />
         </div>
 
-        <div>
-          <label for="evtCategory">Categoria</label>
+        <div class="form-field">
+          <label class="label" for="evtCategory">Categoria</label>
           <input id="evtCategory" type="text" list="categoryList" />
           <datalist id="categoryList"></datalist>
         </div>
 
-        <div>
-          <label for="evtType">Tipo</label>
+        <div class="form-field">
+          <label class="label" for="evtType">Tipo</label>
           <select id="evtType">
             <option value="income">Entrata</option>
             <option value="expense">Uscita</option>
@@ -165,23 +213,23 @@
           </select>
         </div>
 
-        <div>
-          <label for="evtAmount">Importo</label>
+        <div class="form-field">
+          <label class="label" for="evtAmount">Importo</label>
           <input id="evtAmount" type="number" step="0.01" />
         </div>
 
-        <div>
-          <label for="evtStart">Data *</label>
+        <div class="form-field">
+          <label class="label" for="evtStart">Data *</label>
           <input id="evtStart" type="date" required />
         </div>
 
-        <div>
-          <label for="evtTime">Ora</label>
+        <div class="form-field">
+          <label class="label" for="evtTime">Ora</label>
           <input id="evtTime" type="time" />
         </div>
 
-        <div>
-          <label for="evtRecurrence">Ricorrenza</label>
+        <div class="form-field">
+          <label class="label" for="evtRecurrence">Ricorrenza</label>
           <select id="evtRecurrence">
             <option value="none">Nessuna</option>
             <option value="monthly">Mensile</option>
@@ -190,24 +238,27 @@
           </select>
         </div>
 
-        <div id="recDaysField" style="display:none;">
-          <label for="evtRecurrenceDays">Ogni quanti giorni</label>
+        <div id="recDaysField" class="form-field" style="display:none;">
+          <label class="label" for="evtRecurrenceDays">Ogni quanti giorni</label>
           <input id="evtRecurrenceDays" type="number" min="1" step="1" />
         </div>
 
-        <div>
-          <label><input id="evtPinned" type="checkbox" /> In evidenza</label>
+        <div class="form-field" style="grid-column:1 / -1;">
+          <label class="label" style="display:flex;align-items:center;gap:10px;margin:0;">
+            <input id="evtPinned" type="checkbox" />
+            <span>In evidenza</span>
+          </label>
         </div>
 
-        <div>
-          <label for="evtNotes">Note</label>
+        <div class="form-field" style="grid-column:1 / -1;">
+          <label class="label" for="evtNotes">Note</label>
           <textarea id="evtNotes"></textarea>
         </div>
       </form>
 
-      <div>
-        <button id="btnCancelEvent" type="button">Annulla</button>
-        <button type="submit" form="eventForm">Salva</button>
+      <div class="modal__footer">
+        <button id="btnCancelEvent" class="btn btn--ghost" type="button">Annulla</button>
+        <button class="btn btn--primary" type="submit" form="eventForm">Salva</button>
       </div>
     </dialog>
   </div>
@@ -497,7 +548,7 @@
 
       const RECURRENCE_DEFAULTS = { monthlyMonths: 24, yearlyYears: 5, customDaysSpan: 365 };
 
-      const defaultRecurrenceUntilISO = (startISO, mode, recurrenceDays) => {
+      const defaultRecurrenceUntilISO = (startISO, mode) => {
         const start = fromISODate(startISO);
         const anchorDay = start.getDate();
         const anchorMonth = start.getMonth();
@@ -595,7 +646,10 @@
         return node;
       };
 
-      const emptyState = (text) => el("div", { textContent: text || "" });
+      const emptyState = (text, className = "") =>
+        el("div", { className: `empty-state ${className}`.trim() }, [
+          el("div", { className: "empty-state__text", textContent: text || "" })
+        ]);
 
       const categorySlug = (cat) => (cat || "uncategorized").trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9\-_]/g, "");
 
@@ -604,153 +658,212 @@
         const cat = evt.category || "Senza categoria";
         const root = el("button", {
           type: "button",
+          className: [
+            "event-block",
+            `event-block--type-${evt.type}`,
+            `event-block--cat-${categorySlug(cat)}`,
+            evt.pinned ? "is-pinned" : "",
+            state.settings.density === "compact" ? "is-compact" : "is-comfort"
+          ].filter(Boolean).join(" "),
+          id: `evt_${evt.id}`,
           "data-event-id": evt.id,
-          className: `evt evt--${evt.type} evt--cat-${categorySlug(cat)}`
+          "data-category": cat,
+          "data-type": evt.type
         });
-        root.appendChild(el("div", { textContent: evt.title }));
-        root.appendChild(el("div", { textContent: `${cat}${evt.time ? " · " + evt.time : ""}` }));
-        if (amt) root.appendChild(el("div", { textContent: amt }));
-        if (evt.seriesId) root.appendChild(el("div", { textContent: evt.seriesMaster ? "serie: master" : "serie" }));
+
+        const top = el("div", { className: "event-block__top" }, [
+          el("span", { className: "event-block__title", textContent: evt.title }),
+          evt.pinned ? el("span", { className: "event-block__pin", textContent: "★", "aria-hidden": "true" }) : null
+        ].filter(Boolean));
+
+        const meta = el("div", { className: "event-block__meta" }, [
+          el("span", { className: "event-block__cat", textContent: cat }),
+          evt.time ? el("span", { className: "event-block__time", textContent: evt.time }) : null
+        ].filter(Boolean));
+
+        root.append(top, meta);
+        if (amt) root.append(el("div", { className: "event-block__amount", textContent: amt }));
+
         root.addEventListener("click", () => openEventDrawer(evt.id));
         return root;
       };
 
-      const kv = (k, v) => el("div", {}, [el("strong", { textContent: k + ": " }), el("span", { textContent: v })]);
+      const kv = (k, v) => el("div", { className: "kv" }, [
+        el("div", { className: "kv__k", textContent: k }),
+        el("div", { className: "kv__v", textContent: v })
+      ]);
 
       const renderEventDetail = (evt) => {
         const cat = evt.category || "Senza categoria";
         const amt = evt.amount != null && evt.amount !== "" ? formatMoney(Number(evt.amount), state.settings.currency) : "—";
         const rec = evt.recurrence === "custom_days" ? `Ogni ${evt.recurrenceDays || "?"} giorni` : (evt.recurrence || "none");
-        const root = el("div");
-        root.appendChild(kv("Titolo", evt.title));
-        root.appendChild(kv("Categoria", cat));
-        root.appendChild(kv("Tipo", evt.type));
-        root.appendChild(kv("Data", evt.date));
-        root.appendChild(kv("Ora", evt.time || "—"));
-        root.appendChild(kv("Importo", amt));
-        root.appendChild(kv("Ricorrenza", rec));
-        root.appendChild(kv("Serie", evt.seriesId ? (evt.seriesMaster ? "Master" : "Occorrenza") : "—"));
-        root.appendChild(kv("Pinned", evt.pinned ? "sì" : "no"));
-        root.appendChild(kv("Note", evt.notes || "—"));
+
+        const root = el("article", { className: "event-detail" }, [
+          el("div", { className: "event-detail__row" }, [
+            kv("Categoria", cat),
+            kv("Tipo", evt.type),
+            kv("Ricorrenza", rec)
+          ]),
+          el("div", { className: "event-detail__row" }, [
+            kv("Data", evt.date),
+            kv("Ora", evt.time || "—"),
+            kv("Importo", amt)
+          ]),
+          el("div", { className: "event-detail__notes" }, [
+            el("h3", { className: "event-detail__notes-title", textContent: "Note" }),
+            el("p", { className: "event-detail__notes-text", textContent: evt.notes || "—" })
+          ])
+        ]);
+
         return root;
       };
 
       const renderDayView = (events) => {
         const [start] = getEffectiveRangeForView();
         const dayISO = toISODate(start);
-      
-        const wrap = el("div", { className: "view view--day", id: "viewDayHost" });
-      
-        const bal = computeBalanceUpTo(state.events, state.settings.initialBalance, dayISO);
-      
-        const header = el("div", { className: "view__header", id: "dayHeader" }, [
-          el("div", {}, [
-            el("h2", { className: "view__title", id: "dayTitle", textContent: formatDateHuman(start) }),
-            el("div", { className: "view__meta", id: "dayMeta", textContent: "Eventi del giorno" })
-          ]),
-          el("div", { className: "day-balance", id: "dayBalanceCard" }, [
-            el("div", { className: "day-balance__label", textContent: "Saldo fino a questa data" }),
-            el("div", { className: "day-balance__value", textContent: formatMoney(bal, state.settings.currency) }),
-            el("div", { className: "day-balance__meta", textContent: `Fino a ${dayISO}` })
-          ])
-        ]);
-      
-        const list = el("div", { className: "event-list event-list--day", id: "dayEventList", role: "list" });
-      
+        const container = el("div", { className: "view view--day", id: "viewDayHost" });
+
+        const list = el("div", { className: "event-list event-list--day", role: "list" });
         const dayEvents = events.filter(e => e.date === dayISO);
-        if (!dayEvents.length) {
-          list.appendChild(emptyState("Nessun evento in questo giorno."));
-        } else {
-          for (const e of dayEvents) list.appendChild(eventBlock(e));
-        }
-      
-        wrap.append(header, list);
-        return wrap;
+
+        if (!dayEvents.length) list.appendChild(emptyState("Nessun evento in questo giorno.", "event-empty event-empty--day"));
+        else for (const e of dayEvents) list.appendChild(el("div", {}, [eventBlock(e)]));
+
+        container.appendChild(list);
+        return container;
       };
 
       const renderWeekView = (events) => {
-        const [start, end] = getEffectiveRangeForView();
-        const wrap = el("div");
-        wrap.appendChild(el("h3", { textContent: `${formatDateHuman(start)} – ${formatDateHuman(end)}` }));
-        const grid = el("div");
+        const [start] = getEffectiveRangeForView();
+        const container = el("div", { className: "view view--week", id: "viewWeekHost" });
+        const grid = el("div", { className: "calendar-grid calendar-grid--week", id: "weekGrid" });
+
         for (let i = 0; i < 7; i++) {
           const d = addDays(start, i);
           const iso = toISODate(d);
-          const col = el("div");
-          col.appendChild(el("strong", { textContent: new Intl.DateTimeFormat("it-IT", { weekday: "short" }).format(d) + " " + `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}` }));
+
+          const col = el("section", { className: "day-col day-col--week", "data-date": iso });
+          const colHeader = el("header", { className: "day-col__header" }, [
+            el("div", { className: "day-col__dow", textContent: new Intl.DateTimeFormat("it-IT", { weekday: "short" }).format(d) }),
+            el("div", { className: "day-col__date", textContent: `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}` })
+          ]);
+          const colBody = el("div", { className: "day-col__body", role: "list" });
+
           const dayEvents = events.filter(e => e.date === iso);
-          if (!dayEvents.length) col.appendChild(emptyState("—"));
-          else for (const e of dayEvents) col.appendChild(eventBlock(e));
+          if (!dayEvents.length) colBody.appendChild(emptyState("—", "event-empty event-empty--tiny"));
+          else for (const e of dayEvents) colBody.appendChild(eventBlock(e));
+
+          col.append(colHeader, colBody);
           grid.appendChild(col);
         }
-        wrap.appendChild(grid);
-        return wrap;
+
+        container.appendChild(grid);
+        return container;
       };
 
       const renderMonthView = (events) => {
         const [start] = getEffectiveRangeForView();
-        const wrap = el("div");
-        wrap.appendChild(el("h3", { textContent: formatMonthHuman(start) }));
+        const container = el("div", { className: "view view--month", id: "viewMonthHost" });
+        const grid = el("div", { className: "calendar-grid calendar-grid--month", id: "monthGrid" });
 
-        const grid = el("div");
+        const dowRow = el("div", { className: "dow-row", id: "monthDowRow" });
+        for (const name of ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"]) {
+          dowRow.appendChild(el("div", { className: "dow-cell", textContent: name }));
+        }
+        grid.appendChild(dowRow);
+
         const gridStart = startOfWeek(startOfMonth(start));
         const gridEnd = endOfWeek(endOfMonth(start));
 
-        const header = el("div");
-        for (const name of ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"]) header.appendChild(el("strong", { textContent: name }));
-        grid.appendChild(header);
-
         let cur = gridStart;
         while (cur <= gridEnd) {
-          const row = el("div");
+          const weekRow = el("div", { className: "week-row", role: "row" });
+
           for (let i = 0; i < 7; i++) {
             const d = addDays(cur, i);
             const iso = toISODate(d);
-            const cell = el("div");
-            const top = el("div");
-            top.appendChild(el("strong", { textContent: String(d.getDate()) }));
-            const addBtn = el("button", { type: "button", "data-action": "quick-add", "data-date": iso, textContent: "+" });
-            top.appendChild(addBtn);
-            cell.appendChild(top);
+            const inMonth = d.getMonth() === start.getMonth();
 
+            const cell = el("section", {
+              className: `day-cell day-cell--month ${inMonth ? "is-in-month" : "is-out-month"}`,
+              id: `monthDay_${iso}`,
+              "data-date": iso,
+              role: "gridcell"
+            });
+
+            const cellHeader = el("header", { className: "day-cell__header" }, [
+              el("div", { className: "day-cell__num", textContent: String(d.getDate()) }),
+              el("button", {
+                className: "btn btn--icon btn--cell-add",
+                type: "button",
+                "data-action": "quick-add",
+                "data-date": iso,
+                "aria-label": `Aggiungi evento il ${formatDateHuman(d)}`,
+                textContent: "+"
+              })
+            ]);
+
+            const cellBody = el("div", { className: "day-cell__body", role: "list" });
             const dayEvents = events.filter(e => e.date === iso);
-            if (!dayEvents.length) cell.appendChild(emptyState(""));
-            else for (const e of dayEvents) cell.appendChild(eventBlock(e));
-            row.appendChild(cell);
+
+            if (!dayEvents.length) cellBody.appendChild(emptyState("", "event-empty event-empty--month"));
+            else for (const e of dayEvents) cellBody.appendChild(eventBlock(e));
+
+            cell.append(cellHeader, cellBody);
+            weekRow.appendChild(cell);
           }
-          grid.appendChild(row);
+
+          grid.appendChild(weekRow);
           cur = addDays(cur, 7);
         }
 
-        wrap.appendChild(grid);
-        return wrap;
+        container.appendChild(grid);
+        return container;
       };
 
       const renderYearView = (events) => {
         const [start] = getEffectiveRangeForView();
-        const wrap = el("div");
-        wrap.appendChild(el("h3", { textContent: String(start.getFullYear()) }));
-        const grid = el("div");
+        const container = el("div", { className: "view view--year", id: "viewYearHost" });
+        const wrap = el("div", { className: "year-grid", id: "yearGrid" });
+
         for (let m = 0; m < 12; m++) {
           const monthDate = new Date(start.getFullYear(), m, 1);
-          const box = el("button", { type: "button", className: "month-mini", "data-month": String(m), "data-year": String(start.getFullYear()) });
+          const monthBox = el("section", {
+            className: "month-mini",
+            "data-month": String(m),
+            "data-year": String(start.getFullYear()),
+            role: "button",
+            tabindex: "0"
+          });
+
           const inThisMonth = events.filter(e => {
             const d = fromISODate(e.date);
             return d.getFullYear() === start.getFullYear() && d.getMonth() === m;
           });
-          box.appendChild(el("div", { textContent: new Intl.DateTimeFormat("it-IT", { month: "long" }).format(monthDate) }));
-          box.appendChild(el("small", { textContent: `${inThisMonth.length} evt` }));
-          grid.appendChild(box);
+
+          monthBox.append(
+            el("div", { className: "month-mini__header" }, [
+              el("div", { className: "month-mini__title", textContent: new Intl.DateTimeFormat("it-IT", { month: "long" }).format(monthDate) }),
+              el("div", { className: "month-mini__count", textContent: `${inThisMonth.length} evt` })
+            ])
+          );
+
+          wrap.appendChild(monthBox);
         }
-        wrap.appendChild(grid);
-        return wrap;
+
+        container.appendChild(wrap);
+        return container;
       };
 
       const renderCalendar = () => {
         const filtered = getFilteredEvents();
         const view = state.settings.view;
+
         const host = $("#calendarView");
         host.innerHTML = "";
+        host.dataset.view = view;
+        host.dataset.density = state.settings.density;
+
         const [vs, ve] = getEffectiveRangeForView();
         $("#calendarTitle").textContent = `Calendario · ${formatRangeLabel(vs, ve, view)}`;
         $("#calendarSubtitle").textContent = `${filtered.length} eventi (filtrati)`;
@@ -799,33 +912,38 @@
       const renderStats = () => {
         const filtered = getFilteredEvents();
         const vis = computeVisibleStats(filtered);
+
         $("#statsMeta").textContent = `${formatRangeLabel(vis.rangeStart, vis.rangeEnd, "custom")} · visibile`;
+
         $("#statIncome").textContent = formatMoney(vis.incomeSum, state.settings.currency);
         $("#statExpense").textContent = formatMoney(vis.expenseSum, state.settings.currency);
         $("#statNet").textContent = formatMoney(vis.net, state.settings.currency);
         $("#statIncomeCount").textContent = `${vis.incomeCount} eventi`;
         $("#statExpenseCount").textContent = `${vis.expenseCount} eventi`;
 
-        const allEvents = state.events;
         const todayISO = toISODate(new Date());
-        const balToday = computeBalanceUpTo(allEvents, state.settings.initialBalance, todayISO);
+        const balToday = computeBalanceUpTo(state.events, state.settings.initialBalance, todayISO);
         $("#statCurrentBalance").textContent = formatMoney(balToday, state.settings.currency);
         $("#statCurrentBalanceMeta").textContent = `Fino a ${todayISO}`;
 
         const atISO = state.settings.balanceAtDate || todayISO;
-        const balAt = computeBalanceUpTo(allEvents, state.settings.initialBalance, atISO);
+        const balAt = computeBalanceUpTo(state.events, state.settings.initialBalance, atISO);
         $("#statBalanceAtDate").textContent = formatMoney(balAt, state.settings.currency);
+
+        const netEl = $("#statNet");
+        netEl.classList.toggle("positive", vis.net > 0);
+        netEl.classList.toggle("negative", vis.net < 0);
 
         const list = $("#snapshotList");
         list.innerHTML = "";
         const tail = vis.snapshots.slice(-14);
         for (const s of tail) {
-          list.appendChild(el("div", {}, [
-            el("span", { textContent: s.date + " " }),
-            el("strong", { textContent: formatMoney(s.balance, state.settings.currency) })
+          list.appendChild(el("div", { className: "snapshot-item", role: "listitem" }, [
+            el("div", { className: "snapshot-item__date", textContent: s.date }),
+            el("div", { className: "snapshot-item__value", textContent: formatMoney(s.balance, state.settings.currency) })
           ]));
         }
-        if (!tail.length) list.appendChild(emptyState("Nessuno snapshot nel range corrente."));
+        if (!tail.length) list.appendChild(emptyState("Nessuno snapshot nel range corrente.", "snapshot-empty"));
       };
 
       const render = () => {
@@ -939,7 +1057,7 @@
               seriesMaster: true
             });
             const master = normalizeEvent(created?.event || created);
-            const untilISO = defaultRecurrenceUntilISO(master.date, master.recurrence, master.recurrenceDays);
+            const untilISO = defaultRecurrenceUntilISO(master.date, master.recurrence);
             const { children } = await materializeRecurrenceSeries(master, untilISO);
             state.events.push(master, ...children);
           }
@@ -1066,6 +1184,7 @@
         $("#calendarView").addEventListener("click", (e) => {
           const addBtn = e.target.closest("[data-action='quick-add']");
           if (addBtn) openEventModal("new", null, addBtn.getAttribute("data-date"));
+
           const mini = e.target.closest(".month-mini");
           if (mini) {
             const y = Number(mini.dataset.year);

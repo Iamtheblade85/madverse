@@ -1,7 +1,7 @@
 /* Calendar Finance Dashboard
- * - No CSS included (as requested)
- * - Markup has IDs/classes ready for future styling
- * - Outlook-like calendar blocks + filters + views + balance snapshots
+ * - Coerente col backend (events/settings + endpoints series)
+ * - Ricorrenze: soluzione C (materializzazione serie)
+ * - Stats: Saldo attuale = fino a oggi (NO futuri) + Saldo alla data (date picker)
  */
 
 (() => {
@@ -12,79 +12,13 @@
   // -----------------------------
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-
   const pad2 = (n) => String(n).padStart(2, "0");
-const API_BASE = "https://iamemanuele.pythonanywhere.com/api";
-
-const API = {
-  async request(path, { method = "GET", body, headers = {} } = {}) {
-    const url = `${API_BASE}${path}`;
-
-    const opts = {
-      method,
-      headers: {
-        "Accept": "application/json",
-        ...headers,
-      },
-      // IMPORTANTISSIMO:
-      // Con Access-Control-Allow-Origin="*" NON puoi usare cookie/session.
-      // Quindi per evitare blocchi CORS: omit
-      credentials: "omit",
-    };
-
-    if (body !== undefined) {
-      opts.headers["Content-Type"] = "application/json";
-      opts.body = JSON.stringify(body);
-    }
-
-    const res = await fetch(url, opts);
-
-    let data = null;
-    const ct = res.headers.get("content-type") || "";
-    if (ct.includes("application/json")) {
-      data = await res.json().catch(() => null);
-    } else {
-      data = await res.text().catch(() => null);
-    }
-
-    if (!res.ok) {
-      const msg = (data && data.error) ? data.error : `HTTP ${res.status}`;
-      throw new Error(msg);
-    }
-    return data;
-  },
-
-  // --- Events ---
-  listEvents(params = {}) {
-    const qs = new URLSearchParams(params).toString();
-    return this.request(`/events${qs ? `?${qs}` : ""}`);
-  },
-  createEvent(payload) {
-    return this.request(`/events`, { method: "POST", body: payload });
-  },
-  updateEvent(id, payload) {
-    return this.request(`/events/${encodeURIComponent(id)}`, { method: "PUT", body: payload });
-  },
-  deleteEvent(id) {
-    return this.request(`/events/${encodeURIComponent(id)}`, { method: "DELETE" });
-  },
-
-  // --- Settings ---
-  getSettings() {
-    return this.request(`/settings`);
-  },
-  saveSettings(payload) {
-    return this.request(`/settings`, { method: "PUT", body: payload });
-  }
-};
 
   const toISODate = (d) => {
     const dt = (d instanceof Date) ? d : new Date(d);
     return `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}-${pad2(dt.getDate())}`;
   };
-
   const fromISODate = (iso) => {
-    // iso: YYYY-MM-DD
     const [y, m, d] = iso.split("-").map(Number);
     return new Date(y, m - 1, d);
   };
@@ -102,7 +36,6 @@ const API = {
     const x = new Date(d);
     const day = x.getDate();
     x.setMonth(x.getMonth() + n);
-    // fix overflow (e.g. Jan 31 -> Feb)
     while (x.getDate() !== day && x.getDate() > 1) x.setDate(x.getDate() - 1);
     return x;
   };
@@ -135,13 +68,12 @@ const API = {
     return `${formatDateHuman(start)} – ${formatDateHuman(end)}`;
   };
 
-  // Monday as week start (common in EU)
+  // Monday as week start
   const startOfWeek = (d) => {
     const x = startOfDay(d);
-    const day = (x.getDay() + 6) % 7; // Mon=0 ... Sun=6
+    const day = (x.getDay() + 6) % 7;
     return addDays(x, -day);
   };
-
   const endOfWeek = (d) => endOfDay(addDays(startOfWeek(d), 6));
 
   const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
@@ -158,126 +90,139 @@ const API = {
   const uid = () => crypto.randomUUID?.() || `id_${Math.random().toString(16).slice(2)}_${Date.now()}`;
 
   // -----------------------------
-  // Data Model (Events + Settings)
+  // API
   // -----------------------------
-  /**
-   * Event shape:
-   * {
-   *   id: string,
-   *   title: string,
-   *   category: string,
-   *   type: "income" | "expense" | "other",
-   *   amount: number | null,
-   *   date: "YYYY-MM-DD",
-   *   time: "HH:MM" | "",
-   *   notes: string,
-   *   pinned: boolean,
-   *   recurrence: "none" | "monthly" | "yearly" | "custom_days",
-   *   recurrenceDays: number | null // es. 7, 14, 30...
-   * }
-   */
+  const API_BASE = "https://iamemanuele.pythonanywhere.com/api";
 
-  const STORAGE_KEY = "cf_events_v1";
+  const API = {
+    async request(path, { method = "GET", body, headers = {} } = {}) {
+      const url = `${API_BASE}${path}`;
+
+      const opts = {
+        method,
+        headers: {
+          "Accept": "application/json",
+          ...headers,
+        },
+        credentials: "omit",
+      };
+
+      if (body !== undefined) {
+        opts.headers["Content-Type"] = "application/json";
+        opts.body = JSON.stringify(body);
+      }
+
+      const res = await fetch(url, opts);
+
+      let data = null;
+      const ct = res.headers.get("content-type") || "";
+      if (ct.includes("application/json")) data = await res.json().catch(() => null);
+      else data = await res.text().catch(() => null);
+
+      if (!res.ok) {
+        const msg = (data && data.error) ? data.error : `HTTP ${res.status}`;
+        throw new Error(msg);
+      }
+      return data;
+    },
+
+    // --- Events ---
+    listEvents(params = {}) {
+      const qs = new URLSearchParams(params).toString();
+      return this.request(`/events${qs ? `?${qs}` : ""}`);
+    },
+    createEvent(payload) {
+      return this.request(`/events`, { method: "POST", body: payload });
+    },
+    updateEvent(id, payload) {
+      return this.request(`/events/${encodeURIComponent(id)}`, { method: "PUT", body: payload });
+    },
+    deleteEvent(id) {
+      return this.request(`/events/${encodeURIComponent(id)}`, { method: "DELETE" });
+    },
+
+    // --- Series ops (richiede backend aggiornato) ---
+    deleteSeries(seriesId) {
+      return this.request(`/series/${encodeURIComponent(seriesId)}`, { method: "DELETE" });
+    },
+    deleteSeriesFrom(seriesId, fromISO) {
+      return this.request(`/series/${encodeURIComponent(seriesId)}/from/${encodeURIComponent(fromISO)}`, { method: "DELETE" });
+    },
+
+    // --- Settings ---
+    getSettings() {
+      return this.request(`/settings`);
+    },
+    saveSettings(payload) {
+      return this.request(`/settings`, { method: "PUT", body: payload });
+    }
+  };
+
+  // -----------------------------
+  // State & Settings
+  // -----------------------------
   const defaultSettings = {
-    view: "month",               // day | week | month | year
-    density: "comfort",          // comfort | compact
-    rangeMode: "all",            // all | from | between
-    fromDate: "",                // ISO
-    toDate: "",                  // ISO
+    view: "month",
+    density: "comfort",
+    rangeMode: "all",       // all | from | between
+    fromDate: "",
+    toDate: "",
     search: "",
     category: "all",
     includeIncome: true,
     includeExpense: true,
     includeOther: true,
     sidebarOpen: true,
-    // Balance logic
     initialBalance: 3412,
-    currency: "EUR"
+    currency: "EUR",
+
+    // NUOVO: saldo alla data (default oggi)
+    balanceAtDate: ""
   };
 
-const state = {
-  settings: structuredClone(defaultSettings), // verranno poi sovrascritte dal backend se esiste
-  events: [],                                  // verranno caricati dal backend
-  anchorDate: startOfDay(new Date()),
-  selectedEventId: null,
-  draftEventId: null
-};
+  const state = {
+    settings: structuredClone(defaultSettings),
+    events: [],
+    anchorDate: startOfDay(new Date()),
+    selectedEventId: null,
+    draftEventId: null
+  };
 
-
-   async function loadEventsFromBackend() {
-     // Atteso: backend ritorna array eventi (o {events:[...]})
-     const data = await API.listEvents();
-     return Array.isArray(data) ? data : (data?.events || []);
-   }
-
-function saveEvents() {
-  // no-op: events vengono persistiti via API create/update/delete
-}
-
-let settingsTimer = null;
-function saveSettings() {
-  clearTimeout(settingsTimer);
-  settingsTimer = setTimeout(async () => {
-    try {
-      await API.saveSettings(state.settings);
-    } catch (e) {
-      console.warn("Settings non salvati:", e.message);
-    }
-  }, 400);
-}
-
-  // Demo seed: you will replace with real data later.
-  function seedDemoEvents() {
-    const today = startOfDay(new Date());
-    const d1 = toISODate(today);
-    const d2 = toISODate(addDays(today, 2));
-    const d3 = toISODate(addDays(today, 6));
-
-    return [
-      {
-        id: uid(),
-        title: "Stipendio",
-        category: "Lavoro",
-        type: "income",
-        amount: 2555,
-        date: d1,
-        time: "",
-        notes: "Arriva di solito 2 giorni prima di fine mese.",
-        pinned: true,
-        recurrence: "monthly"
-      },
-      {
-        id: uid(),
-        title: "Affitto",
-        category: "Casa",
-        type: "expense",
-        amount: 950,
-        date: d2,
-        time: "",
-        notes: "Scadenza mensile.",
-        pinned: false,
-        recurrence: "monthly"
-      },
-      {
-        id: uid(),
-        title: "Assicurazione Auto",
-        category: "Auto",
-        type: "expense",
-        amount: 540,
-        date: d3,
-        time: "",
-        notes: "Pagamento annuale.",
-        pinned: false,
-        recurrence: "yearly"
+  let settingsTimer = null;
+  function saveSettings() {
+    clearTimeout(settingsTimer);
+    settingsTimer = setTimeout(async () => {
+      try {
+        await API.saveSettings(state.settings);
+      } catch (e) {
+        console.warn("Settings non salvati:", e.message);
       }
-    ];
+    }, 350);
   }
 
   // -----------------------------
-  // Filtering & Range logic
+  // Loaders
+  // -----------------------------
+  async function loadEventsFromBackend() {
+    const data = await API.listEvents();
+    const arr = Array.isArray(data) ? data : (data?.events || []);
+
+    // Normalizza: mantieni compatibilità anche se alcuni campi non ci sono.
+    return arr.map(e => ({
+      ...e,
+      time: e.time || "",
+      notes: e.notes || "",
+      pinned: !!e.pinned,
+      recurrence: e.recurrence || "none",
+      seriesId: e.seriesId ?? null,
+      seriesMaster: !!e.seriesMaster
+    }));
+  }
+
+  // -----------------------------
+  // Filtering & Range
   // -----------------------------
   function getTrackingBounds(events) {
-    // returns [minDate, maxDate] for all events
     const dates = events.map(e => e?.date).filter(Boolean).sort();
     if (!dates.length) {
       const t = startOfDay(new Date());
@@ -298,7 +243,6 @@ function saveSettings() {
   }
 
   function getUserRangeConstraints() {
-    // based on sidebar range preset
     const { rangeMode, fromDate, toDate } = state.settings;
     const [minTrack, maxTrack] = getTrackingBounds(state.events);
 
@@ -346,50 +290,56 @@ function saveSettings() {
     return d >= uStart && d <= uEnd;
   }
 
+  function getFilteredEvents() {
+    // NB: qui NON facciamo più espansioni “virtuali” per le serie materializzate.
+    // Se hai eventi legacy ricorrenti senza seriesId, li vedrai solo nella loro data.
+    // (Se vuoi support legacy, devi migrare o reintrodurre l'espansione SOLO per legacy.)
+    return state.events
+      .filter(e => e?.date)
+      .filter(passesTypeFilter)
+      .filter(passesCategoryFilter)
+      .filter(passesSearchFilter)
+      .filter(passesUserRange)
+      .sort((a, b) => (a.date + (a.time || "")) < (b.date + (b.time || "")) ? -1 : 1);
+  }
+
+  // -----------------------------
+  // Ricorrenze (Materializzazione serie)
+  // -----------------------------
+  const RECURRENCE_DEFAULTS = {
+    monthlyMonths: 24, // 24 mesi
+    yearlyYears: 5     // 5 anni
+  };
+
   function daysInMonth(year, monthIndex0) {
-    // monthIndex0: 0..11
     return new Date(year, monthIndex0 + 1, 0).getDate();
   }
-  
+
   function addMonthsKeepingDay(baseDate, monthsToAdd, anchorDay) {
-    // anchorDay = giorno "originale" dell'evento (1..31)
     const y0 = baseDate.getFullYear();
     const m0 = baseDate.getMonth();
-  
+
     const targetMonth = m0 + monthsToAdd;
     const y = y0 + Math.floor(targetMonth / 12);
     const m = ((targetMonth % 12) + 12) % 12;
-  
+
     const dim = daysInMonth(y, m);
     const day = Math.min(anchorDay, dim);
-  
+
     return new Date(y, m, day);
   }
-  
+
   function addYearsKeepingDay(baseDate, yearsToAdd, anchorMonthIndex0, anchorDay) {
-    // anchorMonthIndex0 = mese originale 0..11, anchorDay = giorno originale 1..31
     const y = baseDate.getFullYear() + yearsToAdd;
     const m = anchorMonthIndex0;
-  
+
     const dim = daysInMonth(y, m);
     const day = Math.min(anchorDay, dim);
-  
+
     return new Date(y, m, day);
   }
 
-    // -----------------------------
-  // Materializzazione ricorrenze (crea eventi reali nel DB)
-  // -----------------------------
-
-  // FINE SERIE di default (solo JS, senza HTML)
-  // Cambia qui i numeri come preferisci:
-  const RECURRENCE_DEFAULTS = {
-    monthlyMonths: 24, // 24 mesi
-    yearlyYears: 5,    // 5 anni
-    customDaysSpan: 365 // 365 giorni
-  };
-
-  function defaultRecurrenceUntilISO(startISO, mode, recurrenceDays) {
+  function defaultRecurrenceUntilISO(startISO, mode) {
     const start = fromISODate(startISO);
     const anchorDay = start.getDate();
     const anchorMonth = start.getMonth();
@@ -400,11 +350,6 @@ function saveSettings() {
     }
     if (mode === "yearly") {
       const end = addYearsKeepingDay(start, RECURRENCE_DEFAULTS.yearlyYears, anchorMonth, anchorDay);
-      return toISODate(end);
-    }
-    if (mode === "custom_days") {
-      const span = Math.max(1, Number(RECURRENCE_DEFAULTS.customDaysSpan || 365));
-      const end = addDays(start, span);
       return toISODate(end);
     }
     return startISO;
@@ -422,22 +367,9 @@ function saveSettings() {
 
     let guard = 0;
 
-    if (mode === "custom_days") {
-      const stepDays = Number(master.recurrenceDays || 0);
-      if (!stepDays || stepDays < 1) return out;
-
-      let cur = addDays(anchor, stepDays);
-      while (cur <= until && guard < 40000) {
-        out.push(toISODate(cur));
-        cur = addDays(cur, stepDays);
-        guard++;
-      }
-      return out;
-    }
-
     if (mode === "monthly") {
       let k = 1;
-      while (guard < 40000) {
+      while (guard < 10000) {
         const cur = addMonthsKeepingDay(anchor, k, anchorDay);
         if (cur > until) break;
         out.push(toISODate(cur));
@@ -449,7 +381,7 @@ function saveSettings() {
 
     if (mode === "yearly") {
       let k = 1;
-      while (guard < 40000) {
+      while (guard < 10000) {
         const cur = addYearsKeepingDay(anchor, k, anchorMonth, anchorDay);
         if (cur > until) break;
         out.push(toISODate(cur));
@@ -462,30 +394,29 @@ function saveSettings() {
     return out;
   }
 
-  async function materializeRecurrenceSeries(createdMasterEvent, untilISO) {
-    // crea occorrenze reali nel DB come eventi separati
-    const seriesId = createdMasterEvent.seriesId || createdMasterEvent.id;
+  async function materializeRecurrenceSeries(masterEvent, untilISO) {
+    const seriesId = masterEvent.seriesId || masterEvent.id;
+    const dates = buildOccurrenceDates(masterEvent, untilISO);
 
-    const dates = buildOccurrenceDates(createdMasterEvent, untilISO);
-
-    // crea in sequenza (più stabile del Promise.all, evita rate-limit)
     const createdChildren = [];
     for (const iso of dates) {
       const payload = {
-        ...createdMasterEvent,
-        id: undefined, // il backend deve generare id
+        title: masterEvent.title,
+        category: masterEvent.category,
+        type: masterEvent.type,
+        amount: masterEvent.amount,
         date: iso,
-        recurrence: "none",
-        recurrenceDays: null,
+        time: masterEvent.time || "",
+        notes: masterEvent.notes || "",
+        pinned: !!masterEvent.pinned,
 
-        // campi extra utili per legare la serie (se il backend li accetta)
+        // figli sono eventi normali
+        recurrence: "none",
+
+        // legame serie
         seriesId,
         seriesMaster: false
       };
-
-      // rimuovi eventuali campi interni
-      delete payload._occurrence;
-      delete payload._sourceId;
 
       const res = await API.createEvent(payload);
       const child = res?.event || res;
@@ -495,179 +426,34 @@ function saveSettings() {
     return { seriesId, children: createdChildren };
   }
 
-  function expandRecurrences(events, rangeStart, rangeEnd) {
-    const out = [];
-  
-    for (const e of events) {
-      if (!e?.date) continue;
-  
-      // include sempre il master (così resta editabile)
-      out.push(e);
-  
-      const mode = e.recurrence || "none";
-      if (mode === "none") continue;
-  
-      const anchor = fromISODate(e.date);
-      const anchorDay = anchor.getDate();
-      const anchorMonth = anchor.getMonth();
-  
-      // Occorrenze
-      let guard = 0;
-  
-      if (mode === "custom_days") {
-        const stepDays = Number(e.recurrenceDays || 0);
-        if (!stepDays || stepDays < 1) continue;
-  
-        let cur = new Date(anchor);
-  
-        // porta cur vicino a rangeStart
-        while (cur < rangeStart && guard < 20000) {
-          cur = addDays(cur, stepDays);
-          guard++;
-        }
-  
-        while (cur <= rangeEnd && guard < 40000) {
-          const iso = toISODate(cur);
-  
-          if (iso !== e.date) {
-            out.push({
-              ...e,
-              id: `${e.id}__occ__${iso}`,
-              date: iso,
-              _occurrence: true,
-              _sourceId: e.id
-            });
-          }
-  
-          cur = addDays(cur, stepDays);
-          guard++;
-        }
-  
-        continue;
-      }
-  
-      if (mode === "monthly") {
-        // Ricorrenza mensile vera: stesso giorno, clamp a fine mese
-        // Strategia: calcolo l'indice mese k rispetto al mese dell'anchor.
-        // Parto da k=1 e genero finché entro nel range.
-        let k = 1;
-  
-        // se l'anchor è molto prima del rangeStart, avanza k in modo grossolano
-        // (evita cicli lunghi) usando la differenza in mesi stimata
-        const approxMonths =
-          (rangeStart.getFullYear() - anchor.getFullYear()) * 12 +
-          (rangeStart.getMonth() - anchor.getMonth());
-  
-        if (approxMonths > 1) k = Math.max(1, approxMonths - 1);
-  
-        while (guard < 40000) {
-          const cur = addMonthsKeepingDay(anchor, k, anchorDay);
-  
-          if (cur > rangeEnd) break;
-  
-          if (cur >= rangeStart) {
-            const iso = toISODate(cur);
-            if (iso !== e.date) {
-              out.push({
-                ...e,
-                id: `${e.id}__occ__${iso}`,
-                date: iso,
-                _occurrence: true,
-                _sourceId: e.id
-              });
-            }
-          }
-  
-          k++;
-          guard++;
-        }
-  
-        continue;
-      }
-  
-      if (mode === "yearly") {
-        // Ricorrenza annuale vera: stesso mese+giorno, clamp per Feb 29 negli anni non bisestili
-        let k = 1;
-  
-        const approxYears = (rangeStart.getFullYear() - anchor.getFullYear());
-        if (approxYears > 1) k = Math.max(1, approxYears - 1);
-  
-        while (guard < 40000) {
-          const cur = addYearsKeepingDay(anchor, k, anchorMonth, anchorDay);
-  
-          if (cur > rangeEnd) break;
-  
-          if (cur >= rangeStart) {
-            const iso = toISODate(cur);
-            if (iso !== e.date) {
-              out.push({
-                ...e,
-                id: `${e.id}__occ__${iso}`,
-                date: iso,
-                _occurrence: true,
-                _sourceId: e.id
-              });
-            }
-          }
-  
-          k++;
-          guard++;
-        }
-  
-        continue;
-      }
-    }
-  
-    return out;
-  }
-
-  function getFilteredEvents() {
-    // range effettivo su cui renderizzi (view ∩ userRange)
-    const [viewStart, viewEnd] = getEffectiveRangeForView();
-    const [userStart, userEnd] = getUserRangeConstraints();
-
-    const rangeStart = new Date(Math.max(viewStart.getTime(), userStart.getTime()));
-    const rangeEnd = new Date(Math.min(viewEnd.getTime(), userEnd.getTime()));
-
-    // 1) Base: eventi reali dal DB
-    let base = state.events.slice();
-
-    // 2) Compatibilità: se ci sono eventi ricorrenti "vecchi" (non materializzati),
-    // li espandiamo solo per mostrarli (altrimenti non li vedresti nei mesi futuri).
-    // Regola: espandi solo se recurrence != none e NON ha seriesId (cioè non è una serie materializzata).
-    const toExpand = base.filter(e => (e.recurrence || "none") !== "none" && !e.seriesId);
-    const plain = base.filter(e => !((e.recurrence || "none") !== "none" && !e.seriesId));
-
-    const expandedLegacy = toExpand.length
-      ? expandRecurrences(toExpand, startOfDay(rangeStart), endOfDay(rangeEnd))
-      : [];
-
-    const merged = plain.concat(expandedLegacy);
-
-    return merged
-      .filter(e => e?.date)
-      .filter(passesTypeFilter)
-      .filter(passesCategoryFilter)
-      .filter(passesSearchFilter)
-      .filter(passesUserRange)
-      .sort((a, b) => (a.date + (a.time || "")) < (b.date + (b.time || "")) ? -1 : 1);
-  }
-
   // -----------------------------
-  // Balance snapshots & Stats
+  // Balance & Stats (NO FUTURI per saldo attuale)
   // -----------------------------
   function signedAmount(evt) {
     const amt = Number(evt.amount || 0);
     if (!amt) return 0;
     if (evt.type === "income") return +amt;
     if (evt.type === "expense") return -amt;
-    return 0; // other doesn't affect balance by default
+    return 0;
+  }
+
+  function computeBalanceUpTo(events, initialBalance, dateISO) {
+    const cutoff = fromISODate(dateISO);
+    let bal = Number(initialBalance || 0);
+
+    for (const e of events) {
+      if (!e?.date) continue;
+      const d = fromISODate(e.date);
+      if (d <= endOfDay(cutoff)) {
+        bal += signedAmount(e);
+      }
+    }
+    return bal;
   }
 
   function computeSnapshots(eventsInRange, initialBalance, rangeStart, rangeEnd) {
-    // build daily snapshots inclusive
     const days = [];
-    const map = new Map(); // dateISO -> sum signed amounts
+    const map = new Map();
 
     for (const e of eventsInRange) {
       const k = e.date;
@@ -675,12 +461,9 @@ function saveSettings() {
     }
 
     let bal = Number(initialBalance || 0);
-    // start from the day before rangeStart? We'll snapshot for each day in range.
     let cur = startOfDay(rangeStart);
     const last = startOfDay(rangeEnd);
 
-    // If you want “balance since tracking start”, you would compute from the earliest tracking day.
-    // Here we compute within chosen range, starting from initialBalance.
     while (cur <= last) {
       const iso = toISODate(cur);
       bal += (map.get(iso) || 0);
@@ -690,15 +473,13 @@ function saveSettings() {
     return days;
   }
 
-  function computeStats(filteredEvents) {
-    // Determine relevant calendar range (view range intersect user range)
+  function computeVisibleStats(filteredEvents) {
     const [viewStart, viewEnd] = getEffectiveRangeForView();
     const [userStart, userEnd] = getUserRangeConstraints();
 
     const rangeStart = new Date(Math.max(viewStart.getTime(), userStart.getTime()));
     const rangeEnd = new Date(Math.min(viewEnd.getTime(), userEnd.getTime()));
 
-    // Events strictly inside visible range
     const inVisible = filteredEvents.filter(e => {
       const d = fromISODate(e.date);
       return d >= startOfDay(rangeStart) && d <= endOfDay(rangeEnd);
@@ -718,24 +499,19 @@ function saveSettings() {
       startOfDay(rangeEnd)
     );
 
-    const currentBalance = snapshots.length ? snapshots[snapshots.length - 1].balance : state.settings.initialBalance;
-
     return {
       rangeStart, rangeEnd,
       incomeSum, expenseSum, net,
       incomeCount: incomeEvents.length,
       expenseCount: expenseEvents.length,
-      currentBalance,
-      snapshots,
-      eventsInVisible: inVisible
+      snapshots
     };
   }
 
   // -----------------------------
-  // Rendering: Calendar Views
+  // Rendering
   // -----------------------------
   function render() {
-    // Update data-driven UI: view label, filters, categories, calendar blocks, stats
     syncControlsFromState();
     renderCategoryOptions();
     renderCalendar();
@@ -743,26 +519,21 @@ function saveSettings() {
   }
 
   function syncControlsFromState() {
-    // sidebar open/close state
     const sidebar = $("#sidebar");
     sidebar.setAttribute("data-open", state.settings.sidebarOpen ? "true" : "false");
 
-    // view buttons
     $$("#viewSwitch .btn--seg").forEach(btn => {
       btn.setAttribute("aria-pressed", btn.dataset.view === state.settings.view ? "true" : "false");
     });
 
-    // density buttons
     $$("#densitySwitch .btn--seg").forEach(btn => {
       btn.setAttribute("aria-pressed", btn.dataset.density === state.settings.density ? "true" : "false");
     });
 
-    // range preset buttons
     $$("#rangePresets .btn--pill").forEach(btn => {
       btn.setAttribute("aria-pressed", btn.dataset.preset === state.settings.rangeMode ? "true" : "false");
     });
 
-    // filters form
     $("#searchInput").value = state.settings.search || "";
     $("#toggleIncome").checked = !!state.settings.includeIncome;
     $("#toggleExpense").checked = !!state.settings.includeExpense;
@@ -771,26 +542,26 @@ function saveSettings() {
     $("#fromDate").value = state.settings.fromDate || "";
     $("#toDate").value = state.settings.toDate || "";
 
-    // calendar view host metadata
     const host = $("#calendarView");
     host.dataset.view = state.settings.view;
     host.dataset.density = state.settings.density;
 
-    // range label in topbar
     const [viewStart, viewEnd] = getEffectiveRangeForView();
     $("#rangeLabel").textContent = formatRangeLabel(viewStart, viewEnd, state.settings.view);
+
+    // balanceAtDate input
+    const balInput = $("#balanceAtDate");
+    if (balInput) balInput.value = state.settings.balanceAtDate || toISODate(new Date());
   }
 
   function getUniqueCategories() {
     const set = new Set(state.events.map(e => (e.category || "").trim()).filter(Boolean));
-    const cats = Array.from(set).sort((a, b) => a.localeCompare(b, "it"));
-    return cats;
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "it"));
   }
 
   function renderCategoryOptions() {
     const cats = getUniqueCategories();
 
-    // Sidebar select
     const sel = $("#categorySelect");
     const prev = state.settings.category || "all";
     sel.innerHTML = "";
@@ -808,7 +579,6 @@ function saveSettings() {
     }
     sel.value = prev;
 
-    // Modal datalist
     const list = $("#categoryList");
     list.innerHTML = "";
     for (const c of cats) {
@@ -825,12 +595,10 @@ function saveSettings() {
     const host = $("#calendarView");
     host.innerHTML = "";
 
-    // Title/subtitle
     const [vs, ve] = getEffectiveRangeForView();
     $("#calendarTitle").textContent = `Calendario · ${formatRangeLabel(vs, ve, view)}`;
 
-    const counts = filtered.length;
-    $("#calendarSubtitle").textContent = `${counts} eventi (filtrati) · range personalizzato applicato`;
+    $("#calendarSubtitle").textContent = `${filtered.length} eventi (filtrati)`;
 
     if (view === "day") host.appendChild(renderDayView(filtered));
     else if (view === "week") host.appendChild(renderWeekView(filtered));
@@ -839,14 +607,14 @@ function saveSettings() {
   }
 
   function renderDayView(events) {
-    const [start, end] = getEffectiveRangeForView();
+    const [start] = getEffectiveRangeForView();
     const container = el("div", { className: "view view--day", id: "viewDayHost" });
 
     const dayISO = toISODate(start);
 
     const header = el("div", { className: "view__header", id: "dayHeader" }, [
       el("h2", { className: "view__title", id: "dayTitle", textContent: formatDateHuman(start) }),
-      el("div", { className: "view__meta", id: "dayMeta", textContent: "Timeline (placeholder) · eventi del giorno" })
+      el("div", { className: "view__meta", id: "dayMeta", textContent: "Eventi del giorno" })
     ]);
 
     const list = el("div", { className: "event-list event-list--day", id: "dayEventList", role: "list" });
@@ -868,7 +636,7 @@ function saveSettings() {
 
     const header = el("div", { className: "view__header", id: "weekHeader" }, [
       el("h2", { className: "view__title", id: "weekTitle", textContent: `${formatDateHuman(start)} – ${formatDateHuman(end)}` }),
-      el("div", { className: "view__meta", id: "weekMeta", textContent: "Griglia settimana (Outlook-like) · blocchi per giorno" })
+      el("div", { className: "view__meta", id: "weekMeta", textContent: "Griglia settimana" })
     ]);
 
     const grid = el("div", { className: "calendar-grid calendar-grid--week", id: "weekGrid" });
@@ -881,7 +649,6 @@ function saveSettings() {
         className: "day-col day-col--week",
         id: `weekDay_${iso}`,
         "data-date": iso,
-        "data-weekday": String((d.getDay() + 6) % 7),
         role: "region",
         "aria-label": `Giorno ${formatDateHuman(d)}`
       });
@@ -909,25 +676,22 @@ function saveSettings() {
   }
 
   function renderMonthView(events) {
-    const [start, end] = getEffectiveRangeForView();
+    const [start] = getEffectiveRangeForView();
     const container = el("div", { className: "view view--month", id: "viewMonthHost" });
 
     const header = el("div", { className: "view__header", id: "monthHeader" }, [
       el("h2", { className: "view__title", id: "monthTitle", textContent: formatMonthHuman(start) }),
-      el("div", { className: "view__meta", id: "monthMeta", textContent: "Griglia mese · blocchi evento per giorno" })
+      el("div", { className: "view__meta", id: "monthMeta", textContent: "Griglia mese" })
     ]);
 
     const grid = el("div", { className: "calendar-grid calendar-grid--month", id: "monthGrid" });
 
-    const gridStart = startOfWeek(startOfMonth(start));   // include leading days
-    const gridEnd = endOfWeek(endOfMonth(start));         // include trailing days
+    const gridStart = startOfWeek(startOfMonth(start));
+    const gridEnd = endOfWeek(endOfMonth(start));
 
-    // weekday header row
     const dowRow = el("div", { className: "dow-row", id: "monthDowRow" });
     const dow = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
-    for (const name of dow) {
-      dowRow.appendChild(el("div", { className: "dow-cell", textContent: name }));
-    }
+    for (const name of dow) dowRow.appendChild(el("div", { className: "dow-cell", textContent: name }));
     grid.appendChild(dowRow);
 
     let cur = gridStart;
@@ -965,7 +729,6 @@ function saveSettings() {
         if (!dayEvents.length) {
           cellBody.appendChild(emptyState("", "event-empty event-empty--month"));
         } else {
-          // show blocks, keep compact list
           for (const e of dayEvents) cellBody.appendChild(eventBlock(e, { density: state.settings.density }));
         }
 
@@ -987,7 +750,7 @@ function saveSettings() {
 
     const header = el("div", { className: "view__header", id: "yearHeader" }, [
       el("h2", { className: "view__title", id: "yearTitle", textContent: String(start.getFullYear()) }),
-      el("div", { className: "view__meta", id: "yearMeta", textContent: "Vista anno · mini mesi (click per entrare)" })
+      el("div", { className: "view__meta", id: "yearMeta", textContent: "Vista anno" })
     ]);
 
     const wrap = el("div", { className: "year-grid", id: "yearGrid" });
@@ -1011,26 +774,15 @@ function saveSettings() {
 
       const body = el("div", { className: "month-mini__body" });
 
-      // small badges per category count (in that month)
       const inThisMonth = events.filter(e => {
         const d = fromISODate(e.date);
         return d.getFullYear() === start.getFullYear() && d.getMonth() === m;
       });
 
-      const byCat = groupBy(inThisMonth, (e) => (e.category || "Senza categoria"));
-      const badges = el("div", { className: "badge-row", id: `miniBadges_${start.getFullYear()}_${pad2(m + 1)}` });
-
-      for (const [cat, arr] of byCat.entries()) {
-        badges.appendChild(el("span", {
-          className: `badge badge--cat js-badge`,
-          "data-category": cat,
-          "data-count": String(arr.length),
-          textContent: `${cat}: ${arr.length}`
-        }));
-      }
-
       title.querySelector(".month-mini__count").textContent = `${inThisMonth.length} evt`;
-      body.appendChild(badges);
+      body.appendChild(el("div", { className: "badge-row" }, [
+        el("span", { className: "badge", textContent: `Tot: ${inThisMonth.length}` })
+      ]));
 
       monthBox.append(title, body);
       wrap.appendChild(monthBox);
@@ -1073,15 +825,9 @@ function saveSettings() {
   }
 
   function eventBlock(evt, { density = "comfort" } = {}) {
-    // Outlook-like block (compact)
     const amt = evt.amount != null && evt.amount !== "" ? formatMoney(Number(evt.amount), state.settings.currency) : "";
     const cat = evt.category || "Senza categoria";
 
-    // IMPORTANT for future CSS:
-    // - .event-block
-    // - .event-block--type-income/expense/other
-    // - .event-block--cat-{slug}
-    // - data-category + data-type for styling
     const root = el("button", {
       className: [
         "event-block",
@@ -1118,7 +864,6 @@ function saveSettings() {
   }
 
   function eventCard(evt) {
-    // Detailed card for Day view / lists
     const amt = evt.amount != null && evt.amount !== "" ? formatMoney(Number(evt.amount), state.settings.currency) : "—";
     const cat = evt.category || "Senza categoria";
 
@@ -1141,24 +886,16 @@ function saveSettings() {
       el("div", { className: "event-card__badges" }, [
         el("span", { className: "badge badge--type", textContent: evt.type }),
         el("span", { className: "badge badge--cat", textContent: cat }),
+        evt.seriesId ? el("span", { className: "badge badge--series", textContent: evt.seriesMaster ? "serie: master" : "serie" }) : null,
         evt.pinned ? el("span", { className: "badge badge--pin", textContent: "★ evidenza" }) : null
       ].filter(Boolean))
     ]);
 
     const body = el("div", { className: "event-card__body" }, [
       el("div", { className: "kv-row" }, [
-        el("div", { className: "kv kv--date" }, [
-          el("div", { className: "kv__k", textContent: "Data" }),
-          el("div", { className: "kv__v", textContent: evt.date })
-        ]),
-        el("div", { className: "kv kv--time" }, [
-          el("div", { className: "kv__k", textContent: "Ora" }),
-          el("div", { className: "kv__v", textContent: evt.time || "—" })
-        ]),
-        el("div", { className: "kv kv--amount" }, [
-          el("div", { className: "kv__k", textContent: "Importo" }),
-          el("div", { className: "kv__v", textContent: amt })
-        ])
+        kv("Data", evt.date),
+        kv("Ora", evt.time || "—"),
+        kv("Importo", amt)
       ]),
       el("div", { className: "event-card__notes", textContent: evt.notes || "" })
     ]);
@@ -1187,14 +924,11 @@ function saveSettings() {
     return root;
   }
 
-  function groupBy(arr, keyFn) {
-    const map = new Map();
-    for (const x of arr) {
-      const k = keyFn(x);
-      if (!map.has(k)) map.set(k, []);
-      map.get(k).push(x);
-    }
-    return map;
+  function kv(k, v) {
+    return el("div", { className: "kv" }, [
+      el("div", { className: "kv__k", textContent: k }),
+      el("div", { className: "kv__v", textContent: v })
+    ]);
   }
 
   // -----------------------------
@@ -1202,25 +936,34 @@ function saveSettings() {
   // -----------------------------
   function renderStats() {
     const filtered = getFilteredEvents();
-    const stats = computeStats(filtered);
 
-    const meta = $("#statsMeta");
-    meta.textContent = `${formatRangeLabel(stats.rangeStart, stats.rangeEnd, "custom")} · visibile`;
+    // (A) Stats “nel range visibile”
+    const vis = computeVisibleStats(filtered);
+    $("#statsMeta").textContent = `${formatRangeLabel(vis.rangeStart, vis.rangeEnd, "custom")} · visibile`;
 
-    $("#statCurrentBalance").textContent = formatMoney(stats.currentBalance, state.settings.currency);
-    $("#statIncome").textContent = formatMoney(stats.incomeSum, state.settings.currency);
-    $("#statExpense").textContent = formatMoney(stats.expenseSum, state.settings.currency);
-    $("#statNet").textContent = formatMoney(stats.net, state.settings.currency);
+    $("#statIncome").textContent = formatMoney(vis.incomeSum, state.settings.currency);
+    $("#statExpense").textContent = formatMoney(vis.expenseSum, state.settings.currency);
+    $("#statNet").textContent = formatMoney(vis.net, state.settings.currency);
+    $("#statIncomeCount").textContent = `${vis.incomeCount} eventi`;
+    $("#statExpenseCount").textContent = `${vis.expenseCount} eventi`;
 
-    $("#statIncomeCount").textContent = `${stats.incomeCount} eventi`;
-    $("#statExpenseCount").textContent = `${stats.expenseCount} eventi`;
+    // (B) Saldo attuale: SEMPRE fino a oggi (no futuri) usando gli eventi filtrati (tipo/categoria/search/range)
+    // Nota: se vuoi ignorare il range e usare TUTTO lo storico filtrato solo per tipo/categoria/search, basta rimuovere passesUserRange da getFilteredEvents.
+    const todayISO = toISODate(new Date());
+    const balToday = computeBalanceUpTo(filtered, state.settings.initialBalance, todayISO);
+    $("#statCurrentBalance").textContent = formatMoney(balToday, state.settings.currency);
+    $("#statCurrentBalanceMeta").textContent = `Calcolato fino a ${todayISO}`;
 
-    // snapshot list (daily)
+    // (C) Saldo alla data selezionata
+    const atISO = state.settings.balanceAtDate || todayISO;
+    const balAt = computeBalanceUpTo(filtered, state.settings.initialBalance, atISO);
+    $("#statBalanceAtDate").textContent = formatMoney(balAt, state.settings.currency);
+
+    // snapshot list (ultimi 14 nel range visibile)
     const list = $("#snapshotList");
     list.innerHTML = "";
 
-    // keep it lightweight: show last 14 days of snapshots in visible range
-    const tail = stats.snapshots.slice(-14);
+    const tail = vis.snapshots.slice(-14);
     for (const s of tail) {
       const item = el("div", { className: "snapshot-item", role: "listitem", "data-date": s.date }, [
         el("div", { className: "snapshot-item__date", textContent: s.date }),
@@ -1228,51 +971,30 @@ function saveSettings() {
       ]);
       list.appendChild(item);
     }
-
-    if (!tail.length) {
-      list.appendChild(emptyState("Nessuno snapshot nel range corrente.", "snapshot-empty"));
-    }
+    if (!tail.length) list.appendChild(emptyState("Nessuno snapshot nel range corrente.", "snapshot-empty"));
   }
 
   // -----------------------------
   // Drawer + Modal
   // -----------------------------
   function getEventForUIById(eventId) {
-    // prima prova tra i master
-    const direct = state.events.find(e => e.id === eventId);
-    if (direct) return direct;
-  
-    // se è un'occurrence virtuale, rigenera gli expanded nel range attuale e cercala lì
-    const [viewStart, viewEnd] = getEffectiveRangeForView();
-    const [userStart, userEnd] = getUserRangeConstraints();
-  
-    const rangeStart = new Date(Math.max(viewStart.getTime(), userStart.getTime()));
-    const rangeEnd = new Date(Math.min(viewEnd.getTime(), userEnd.getTime()));
-  
-    const expanded = expandRecurrences(state.events, startOfDay(rangeStart), endOfDay(rangeEnd));
-    return expanded.find(e => e.id === eventId) || null;
+    return state.events.find(e => e.id === eventId) || null;
   }
-  
+
   function openEventDrawer(eventId) {
     const evt = getEventForUIById(eventId);
     if (!evt) return;
-  
-    // disabilita edit/delete sulle occorrenze virtuali
-    if (evt?._occurrence) {
-      $("#btnEditEvent").disabled = true;
-      $("#btnDeleteEvent").disabled = true;
-    } else {
-      $("#btnEditEvent").disabled = false;
-      $("#btnDeleteEvent").disabled = false;
-    }
-  
+
+    $("#btnEditEvent").disabled = false;
+    $("#btnDeleteEvent").disabled = false;
+
     state.selectedEventId = eventId;
-  
+
     const drawer = $("#eventDrawer");
     drawer.setAttribute("aria-hidden", "false");
-  
+
     $("#drawerTitle").textContent = evt.title;
-  
+
     const detail = $("#eventDetail");
     detail.innerHTML = "";
     detail.appendChild(renderEventDetail(evt));
@@ -1280,8 +1002,7 @@ function saveSettings() {
 
   function closeEventDrawer() {
     state.selectedEventId = null;
-    const drawer = $("#eventDrawer");
-    drawer.setAttribute("aria-hidden", "true");
+    $("#eventDrawer").setAttribute("aria-hidden", "true");
     $("#eventDetail").innerHTML = "";
   }
 
@@ -1302,12 +1023,8 @@ function saveSettings() {
       el("div", { className: "event-detail__row" }, [
         kv("Categoria", cat),
         kv("Tipo", evt.type),
-        kv(
-          "Ricorrenza",
-          (evt.recurrence === "custom_days")
-            ? `Ogni ${evt.recurrenceDays || "?"} giorni`
-            : (evt.recurrence || "none")
-        )
+        kv("Serie", evt.seriesId ? (evt.seriesMaster ? "Master" : "Occorrenza") : "—"),
+        kv("Ricorrenza", evt.recurrence || "none"),
       ]),
       el("div", { className: "event-detail__row" }, [
         kv("Data", evt.date),
@@ -1321,13 +1038,6 @@ function saveSettings() {
     );
 
     return root;
-  }
-
-  function kv(k, v) {
-    return el("div", { className: "kv" }, [
-      el("div", { className: "kv__k", textContent: k }),
-      el("div", { className: "kv__v", textContent: v })
-    ]);
   }
 
   function openEventModal(mode, eventId = null, prefillDateISO = null) {
@@ -1349,31 +1059,18 @@ function saveSettings() {
       $("#evtTime").value = evt.time || "";
       $("#evtNotes").value = evt.notes || "";
       $("#evtRecurrence").value = evt.recurrence || "none";
-      $("#evtRecurrenceDays").value = evt.recurrenceDays != null ? String(evt.recurrenceDays) : "";
       $("#evtPinned").checked = !!evt.pinned;
-      
-      // aggiorna UI ricorrenza
-      if (typeof syncRecurrenceDaysUI === "function") syncRecurrenceDaysUI();
-      else {
-        const wrap = $("#recDaysField");
-        if (wrap) wrap.style.display = ($("#evtRecurrence").value === "custom_days") ? "" : "none";
-      }
     } else {
       title.textContent = "Nuovo evento";
       $("#eventForm").reset();
       $("#evtType").value = "expense";
       $("#evtStart").value = prefillDateISO || toISODate(new Date());
       $("#evtRecurrence").value = "none";
-      $("#evtRecurrenceDays").value = "";
       $("#evtPinned").checked = false;
-      
-      // aggiorna UI ricorrenza
-      const wrap = $("#recDaysField");
-      if (wrap) wrap.style.display = "none";
     }
 
     if (typeof modal.showModal === "function") modal.showModal();
-    else alert("Il browser non supporta <dialog>. (Puoi usare un polyfill in futuro.)");
+    else alert("Il browser non supporta <dialog>.");
   }
 
   function closeEventModal() {
@@ -1381,97 +1078,150 @@ function saveSettings() {
     if (typeof modal.close === "function") modal.close();
   }
 
-async function upsertEventFromForm() {
-  const data = {
-    title: $("#evtTitle").value.trim(),
-    category: $("#evtCategory").value.trim() || "Senza categoria",
-    type: $("#evtType").value,
-    amount: $("#evtAmount").value === "" ? null : Number($("#evtAmount").value),
-    date: $("#evtStart").value,
-    time: $("#evtTime").value,
-    notes: $("#evtNotes").value.trim(),
-    pinned: $("#evtPinned").checked,
-    recurrence: $("#evtRecurrence").value,
-    recurrenceDays: ($("#evtRecurrence").value === "custom_days")
-      ? Math.max(1, parseInt($("#evtRecurrenceDays").value || "0", 10) || 0)
-      : null
-  };
+  async function upsertEventFromForm() {
+    const data = {
+      title: $("#evtTitle").value.trim(),
+      category: $("#evtCategory").value.trim() || "Senza categoria",
+      type: $("#evtType").value,
+      amount: $("#evtAmount").value === "" ? null : Number($("#evtAmount").value),
+      date: $("#evtStart").value,
+      time: $("#evtTime").value,
+      notes: $("#evtNotes").value.trim(),
+      pinned: $("#evtPinned").checked,
+      recurrence: $("#evtRecurrence").value // none|monthly|yearly
+    };
 
-  if (!data.title || !data.date) {
-    alert("Titolo e data sono obbligatori.");
-    return;
-  }
-
-  try {
-    if (state.draftEventId) {
-      const updated = await API.updateEvent(state.draftEventId, data);
-      // backend può ritornare evento aggiornato
-      const evt = updated?.event || updated || { id: state.draftEventId, ...data };
-
-      const idx = state.events.findIndex(e => e.id === state.draftEventId);
-      if (idx >= 0) state.events[idx] = evt;
-    } else {
-      // CREA NUOVO EVENTO (eventualmente con serie ricorrente materializzata)
-      const mode = data.recurrence || "none";
-
-      // 1) crea il master nel DB (lo teniamo con recurrence valorizzata)
-      const seriesId = uid(); // id serie (client). Se il backend non accetta campi extra, vedi nota sotto.
-      const masterPayload = {
-        ...data,
-        seriesId,
-        seriesMaster: true
-      };
-
-      const created = await API.createEvent(masterPayload);
-      const master = created?.event || created;
-
-      if (!master?.id) throw new Error("Backend non ha restituito l'id dell'evento.");
-
-      // 2) se non è ricorrente -> finito
-      if (mode === "none") {
-        state.events.push(master);
-      } else {
-        // 3) calcola fine serie (default solo JS)
-        const untilISO = defaultRecurrenceUntilISO(master.date, mode, master.recurrenceDays);
-
-        // 4) materializza occorrenze nel DB
-        const { children } = await materializeRecurrenceSeries(master, untilISO);
-
-        // 5) aggiorna state
-        state.events.push(master, ...children);
-      }
+    if (!data.title || !data.date) {
+      alert("Titolo e data sono obbligatori.");
+      return;
     }
-    closeEventModal();
-    render();
-  } catch (err) {
-    console.error(err);
-    alert(`Salvataggio fallito: ${err.message}`);
+
+    try {
+      if (state.draftEventId) {
+        // Edit: qui modifichi SOLO l'evento selezionato (non tutta la serie).
+        const updated = await API.updateEvent(state.draftEventId, data);
+        const evt = updated?.event || updated || { id: state.draftEventId, ...data };
+
+        const idx = state.events.findIndex(e => e.id === state.draftEventId);
+        if (idx >= 0) state.events[idx] = evt;
+      } else {
+        // Create
+        const mode = data.recurrence || "none";
+
+        if (mode === "none") {
+          const created = await API.createEvent({
+            ...data,
+            recurrence: "none",
+            seriesId: null,
+            seriesMaster: false
+          });
+          const evt = created?.event || created;
+          state.events.push(evt);
+        } else {
+          // Serie materializzata
+          const seriesId = uid();
+
+          // Master = prima occorrenza (evento reale)
+          // IMPORTANT: per evitare espansioni future, NON creiamo eventi “virtuali”.
+          // Il master può tenere recurrence per info, ma resta un record reale.
+          const masterPayload = {
+            ...data,
+            seriesId,
+            seriesMaster: true
+          };
+
+          const created = await API.createEvent(masterPayload);
+          const master = created?.event || created;
+          if (!master?.id) throw new Error("Backend non ha restituito l'id dell'evento.");
+
+          // Materializza occorrenze future come eventi normali (recurrence none)
+          const untilISO = defaultRecurrenceUntilISO(master.date, mode);
+          const { children } = await materializeRecurrenceSeries(master, untilISO);
+
+          // Per evitare doppioni, assicurati che tutti abbiano seriesId (master incluso)
+          state.events.push(master, ...children);
+        }
+      }
+
+      closeEventModal();
+      render();
+    } catch (err) {
+      console.error(err);
+      alert(`Salvataggio fallito: ${err.message}`);
+    }
   }
-}
 
-async function deleteSelectedEvent() {
-  const id = state.selectedEventId;
-  if (!id) return;
+  async function deleteSelectedEvent() {
+    const id = state.selectedEventId;
+    if (!id) return;
 
-  const evt = state.events.find(e => e.id === id);
-  if (!evt) return;
+    const evt = getEventForUIById(id);
+    if (!evt) return;
 
-  const ok = confirm(`Eliminare "${evt.title}"?`);
-  if (!ok) return;
+    const isSeries = !!evt.seriesId;
+    const seriesId = evt.seriesId;
 
-  try {
-    await API.deleteEvent(id);
-    state.events = state.events.filter(e => e.id !== id);
-    closeEventDrawer();
-    render();
-  } catch (err) {
-    console.error(err);
-    alert(`Eliminazione fallita: ${err.message}`);
+    if (!isSeries) {
+      const ok = confirm(`Eliminare "${evt.title}"?`);
+      if (!ok) return;
+
+      try {
+        await API.deleteEvent(evt.id);
+        state.events = state.events.filter(e => e.id !== evt.id);
+        closeEventDrawer();
+        render();
+      } catch (err) {
+        console.error(err);
+        alert(`Eliminazione fallita: ${err.message}`);
+      }
+      return;
+    }
+
+    const choice = prompt(
+      `Evento in serie.\n` +
+      `Scrivi:\n` +
+      `1 = elimina solo questo evento\n` +
+      `2 = elimina questo e tutti i successivi (da ${evt.date})\n` +
+      `3 = elimina tutta la serie\n\n` +
+      `Annulla per uscire.`,
+      "1"
+    );
+    if (choice == null) return;
+
+    try {
+      if (choice === "1") {
+        const ok = confirm(`Eliminare SOLO "${evt.title}" del ${evt.date}?`);
+        if (!ok) return;
+
+        await API.deleteEvent(evt.id);
+        state.events = state.events.filter(e => e.id !== evt.id);
+      } else if (choice === "2") {
+        const ok = confirm(`Eliminare "${evt.title}" e TUTTI i successivi da ${evt.date}?`);
+        if (!ok) return;
+
+        await API.deleteSeriesFrom(seriesId, evt.date);
+        state.events = state.events.filter(e => !(e.seriesId === seriesId && e.date >= evt.date));
+      } else if (choice === "3") {
+        const ok = confirm(`Eliminare TUTTA la serie di "${evt.title}"?`);
+        if (!ok) return;
+
+        await API.deleteSeries(seriesId);
+        state.events = state.events.filter(e => e.seriesId !== seriesId);
+      } else {
+        alert("Scelta non valida.");
+        return;
+      }
+
+      closeEventDrawer();
+      render();
+    } catch (err) {
+      console.error(err);
+      alert(`Eliminazione fallita: ${err.message}`);
+    }
   }
-}
 
   // -----------------------------
-  // Navigation (Prev/Next/Today)
+  // Navigation
   // -----------------------------
   function moveAnchor(delta) {
     const view = state.settings.view;
@@ -1506,53 +1256,36 @@ async function deleteSelectedEvent() {
     URL.revokeObjectURL(url);
   }
 
-   async function importJSON(file) {
-     const text = await file.text();
-     const payload = JSON.parse(text);
-   
-     const events = Array.isArray(payload.events) ? payload.events : [];
-     if (!events.length) {
-       alert("JSON valido ma senza eventi.");
-       return;
-     }
-   
-     // IMPORT: crea tutti gli eventi via API
-     for (const e of events) {
-       const { id, ...rest } = e; // lascia che l'id lo generi il backend (consigliato)
-       await API.createEvent(rest);
-     }
-   
-     // reload
-     state.events = await loadEventsFromBackend();
-   
-     if (payload.settings) {
-       state.settings = { ...state.settings, ...payload.settings };
-       saveSettings(); // salva sul backend
-     }
-   
-     render();
-   }
-  
-  //Recurrence options
-  const syncRecurrenceDaysUI = () => {
-    const mode = $("#evtRecurrence").value;
-    const wrap = $("#recDaysField");
-    if (!wrap) return;
-    
-    if (mode === "custom_days") {
-      wrap.style.display = "";
-      if (!$("#evtRecurrenceDays").value) $("#evtRecurrenceDays").value = "7";
-    } else {
-      wrap.style.display = "none";
-      $("#evtRecurrenceDays").value = "";
+  async function importJSON(file) {
+    const text = await file.text();
+    const payload = JSON.parse(text);
+
+    const events = Array.isArray(payload.events) ? payload.events : [];
+    if (!events.length) {
+      alert("JSON valido ma senza eventi.");
+      return;
     }
-  };  
-  
+
+    // IMPORT: crea tutti gli eventi via API (id lasciato al backend)
+    for (const e of events) {
+      const { id, ...rest } = e;
+      await API.createEvent(rest);
+    }
+
+    state.events = await loadEventsFromBackend();
+
+    if (payload.settings) {
+      state.settings = { ...state.settings, ...payload.settings };
+      saveSettings();
+    }
+
+    render();
+  }
+
   // -----------------------------
-  // Events wiring
+  // Wiring
   // -----------------------------
   function wireUI() {
-    // Topbar
     $("#btnSidebarToggle").addEventListener("click", () => {
       state.settings.sidebarOpen = !state.settings.sidebarOpen;
       saveSettings();
@@ -1590,8 +1323,7 @@ async function deleteSelectedEvent() {
       });
     });
 
-    $("#btnNewEvent").addEventListener("click", () => openEventModal("new"));   
-    $("#evtRecurrence").addEventListener("change", syncRecurrenceDaysUI);
+    $("#btnNewEvent").addEventListener("click", () => openEventModal("new"));
 
     // Sidebar filters
     $("#searchInput").addEventListener("input", (e) => {
@@ -1624,10 +1356,11 @@ async function deleteSelectedEvent() {
       render();
     });
 
+    // Range presets
     $$("#rangePresets .btn--pill").forEach(btn => {
       btn.addEventListener("click", () => {
         state.settings.rangeMode = btn.dataset.preset;
-        // sensible defaults
+
         const [minTrack, maxTrack] = getTrackingBounds(state.events);
         if (state.settings.rangeMode === "from" && !state.settings.fromDate) {
           state.settings.fromDate = toISODate(minTrack);
@@ -1636,6 +1369,7 @@ async function deleteSelectedEvent() {
           if (!state.settings.fromDate) state.settings.fromDate = toISODate(minTrack);
           if (!state.settings.toDate) state.settings.toDate = toISODate(maxTrack);
         }
+
         saveSettings();
         render();
       });
@@ -1653,19 +1387,34 @@ async function deleteSelectedEvent() {
       render();
     });
 
+    // NUOVO: saldo alla data
+    $("#balanceAtDate").addEventListener("change", (e) => {
+      state.settings.balanceAtDate = e.target.value || toISODate(new Date());
+      saveSettings();
+      renderStats();
+    });
+
     $("#btnClearFilters").addEventListener("click", () => {
       const keepView = state.settings.view;
       const keepDensity = state.settings.density;
       const keepSidebar = state.settings.sidebarOpen;
+      const keepBalanceAt = state.settings.balanceAtDate || toISODate(new Date());
 
-      state.settings = { ...structuredClone(defaultSettings), view: keepView, density: keepDensity, sidebarOpen: keepSidebar };
+      state.settings = {
+        ...structuredClone(defaultSettings),
+        view: keepView,
+        density: keepDensity,
+        sidebarOpen: keepSidebar,
+        balanceAtDate: keepBalanceAt
+      };
+
       saveSettings();
       render();
     });
 
     $("#btnApplyFilters").addEventListener("click", () => render());
 
-    // Calendar interactions (delegation)
+    // Calendar interactions
     $("#calendarView").addEventListener("click", (e) => {
       const btn = e.target.closest("[data-action]");
       if (!btn) return;
@@ -1677,7 +1426,7 @@ async function deleteSelectedEvent() {
       }
     });
 
-    // Year mini months click: go to month view anchored
+    // Year mini months click
     $("#calendarView").addEventListener("click", (e) => {
       const box = e.target.closest(".month-mini");
       if (!box) return;
@@ -1693,18 +1442,15 @@ async function deleteSelectedEvent() {
 
     // Drawer
     $("#btnCloseDrawer").addEventListener("click", closeEventDrawer);
-
     $("#btnEditEvent").addEventListener("click", () => {
       if (!state.selectedEventId) return;
       openEventModal("edit", state.selectedEventId);
     });
-
     $("#btnDeleteEvent").addEventListener("click", deleteSelectedEvent);
 
     // Modal
     $("#btnCloseModal").addEventListener("click", closeEventModal);
     $("#btnCancelEvent").addEventListener("click", closeEventModal);
-
     $("#eventForm").addEventListener("submit", (e) => {
       e.preventDefault();
       upsertEventFromForm();
@@ -1712,7 +1458,6 @@ async function deleteSelectedEvent() {
 
     // Export / Import
     $("#btnExport").addEventListener("click", exportJSON);
-
     $("#importFile").addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -1726,19 +1471,16 @@ async function deleteSelectedEvent() {
       }
     });
 
-    // Keyboard UX basics (escape closes)
+    // ESC closes
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
-        // close drawer first, then modal
         const modal = $("#eventModal");
         if (modal?.open) {
           closeEventModal();
           return;
         }
         const drawer = $("#eventDrawer");
-        if (drawer?.getAttribute("aria-hidden") === "false") {
-          closeEventDrawer();
-        }
+        if (drawer?.getAttribute("aria-hidden") === "false") closeEventDrawer();
       }
     });
   }
@@ -1746,39 +1488,42 @@ async function deleteSelectedEvent() {
   // -----------------------------
   // Boot
   // -----------------------------
-   async function init() {
-     wireUI();
-   
-     try {
-       // settings (optional)
-       try {
-         const s = await API.getSettings();
-         if (s) state.settings = { ...structuredClone(defaultSettings), ...(s.settings || s) };
-         else state.settings = structuredClone(defaultSettings);
-       } catch {
-         state.settings = structuredClone(defaultSettings);
-       }
-   
-       // events
-       state.events = await loadEventsFromBackend();
-   
-       // bounds
-       const [minTrack, maxTrack] = getTrackingBounds(state.events);
-   
-       state.anchorDate = clampDateToRange(startOfDay(new Date()), minTrack, maxTrack);
-   
-       // date inputs defaults
-       if (!state.settings.fromDate) state.settings.fromDate = toISODate(minTrack);
-       if (!state.settings.toDate) state.settings.toDate = toISODate(maxTrack);
-   
-       render();
-     } catch (err) {
-       console.error(err);
-       alert(`Impossibile caricare dati dal backend: ${err.message}`);
-       state.events = [];
-       state.settings = structuredClone(defaultSettings);
-       render();
-     }
-   }
+  async function init() {
+    wireUI();
+
+    try {
+      // settings
+      try {
+        const s = await API.getSettings();
+        const incoming = (s?.settings) ? s.settings : (s || {});
+        state.settings = { ...structuredClone(defaultSettings), ...incoming };
+      } catch {
+        state.settings = structuredClone(defaultSettings);
+      }
+
+      // default balanceAtDate = oggi se non presente
+      if (!state.settings.balanceAtDate) state.settings.balanceAtDate = toISODate(new Date());
+
+      // events
+      state.events = await loadEventsFromBackend();
+
+      // bounds
+      const [minTrack, maxTrack] = getTrackingBounds(state.events);
+      state.anchorDate = clampDateToRange(startOfDay(new Date()), minTrack, maxTrack);
+
+      // date inputs defaults
+      if (!state.settings.fromDate) state.settings.fromDate = toISODate(minTrack);
+      if (!state.settings.toDate) state.settings.toDate = toISODate(maxTrack);
+
+      render();
+    } catch (err) {
+      console.error(err);
+      alert(`Impossibile caricare dati dal backend: ${err.message}`);
+      state.events = [];
+      state.settings = structuredClone(defaultSettings);
+      render();
+    }
+  }
+
   init();
 })();

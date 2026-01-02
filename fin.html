@@ -638,13 +638,33 @@
       const renderDayView = (events) => {
         const [start] = getEffectiveRangeForView();
         const dayISO = toISODate(start);
-        const wrap = el("div");
-        wrap.appendChild(el("h3", { textContent: formatDateHuman(start) }));
-        const list = el("div");
+      
+        const wrap = el("div", { className: "view view--day", id: "viewDayHost" });
+      
+        const bal = computeBalanceUpTo(state.events, state.settings.initialBalance, dayISO);
+      
+        const header = el("div", { className: "view__header", id: "dayHeader" }, [
+          el("div", {}, [
+            el("h2", { className: "view__title", id: "dayTitle", textContent: formatDateHuman(start) }),
+            el("div", { className: "view__meta", id: "dayMeta", textContent: "Eventi del giorno" })
+          ]),
+          el("div", { className: "day-balance", id: "dayBalanceCard" }, [
+            el("div", { className: "day-balance__label", textContent: "Saldo fino a questa data" }),
+            el("div", { className: "day-balance__value", textContent: formatMoney(bal, state.settings.currency) }),
+            el("div", { className: "day-balance__meta", textContent: `Fino a ${dayISO}` })
+          ])
+        ]);
+      
+        const list = el("div", { className: "event-list event-list--day", id: "dayEventList", role: "list" });
+      
         const dayEvents = events.filter(e => e.date === dayISO);
-        if (!dayEvents.length) list.appendChild(emptyState("Nessun evento."));
-        else for (const e of dayEvents) list.appendChild(eventBlock(e));
-        wrap.appendChild(list);
+        if (!dayEvents.length) {
+          list.appendChild(emptyState("Nessun evento in questo giorno."));
+        } else {
+          for (const e of dayEvents) list.appendChild(eventBlock(e));
+        }
+      
+        wrap.append(header, list);
         return wrap;
       };
 

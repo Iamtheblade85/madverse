@@ -881,7 +881,7 @@ dialog::backdrop{
       "sidebar"
       "main";
   }
-  .sidebar{max-height:52vh}
+  .sidebar{max-height:none}
   #statsPanel{max-height:none}
   .calendar{max-height:calc(100vh - var(--topbar-h) - 56vh)}
 }

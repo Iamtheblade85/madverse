@@ -1033,3 +1033,38 @@ input[type="date"],input[type="time"]{
 @media (max-width: 560px){
   #viewYearHost .year-grid{grid-template-columns:1fr}
 }
+
+.day-balance{
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:12px 12px;
+  background:
+    radial-gradient(220px 120px at 20% 20%, rgba(67,209,158,.18), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+  box-shadow:0 10px 22px rgba(0,0,0,.20);
+  min-width:240px;
+  text-align:right;
+}
+.day-balance__label{
+  color:var(--muted);
+  font-size:var(--fs-2);
+  font-weight:800;
+  letter-spacing:.2px;
+}
+.day-balance__value{
+  margin-top:6px;
+  font-size:var(--fs-6);
+  font-weight:950;
+  letter-spacing:.3px;
+  color:var(--good);
+  font-variant-numeric: tabular-nums;
+}
+.day-balance__meta{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:var(--fs-1);
+  font-weight:700;
+}
+@media (max-width:560px){
+  .day-balance{min-width:0;text-align:left}
+}

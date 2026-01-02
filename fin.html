@@ -4,226 +4,212 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark light" />
-  <meta name="theme-color" content="#0b1220" />
-  <title>Finance Calendar Dashboard</title>
-  <link rel="stylesheet" href="fin-theme.css" />
+  <title>Finance Calendar</title>
 </head>
 <body>
-  <div id="app" class="app layout">
-    <header id="topbar" class="topbar" role="banner">
-      <div class="topbar__left">
-        <button id="btnSidebarToggle" class="btn btn--ghost" type="button">☰ Filtri</button>
-        <button id="btnPrev" class="btn btn--icon" type="button">‹</button>
-        <button id="btnToday" class="btn btn--ghost" type="button">Oggi</button>
-        <button id="btnNext" class="btn btn--icon" type="button">›</button>
-        <span id="rangeLabel" class="topbar__range">—</span>
+  <div id="app">
+    <header id="topbar">
+      <div>
+        <button id="btnSidebarToggle" type="button">☰ Filtri</button>
+        <button id="btnPrev" type="button">‹</button>
+        <button id="btnToday" type="button">Oggi</button>
+        <button id="btnNext" type="button">›</button>
+        <span id="rangeLabel">—</span>
       </div>
-      <div class="topbar__right">
-        <div id="viewSwitch" class="segmented" role="group">
-          <button class="btn btn--seg" type="button" data-view="day">Giorno</button>
-          <button class="btn btn--seg" type="button" data-view="week">Settimana</button>
-          <button class="btn btn--seg" type="button" data-view="month">Mese</button>
-          <button class="btn btn--seg" type="button" data-view="year">Anno</button>
-        </div>
-        <div id="densitySwitch" class="segmented" role="group">
-          <button class="btn btn--seg" type="button" data-density="comfort">Comfort</button>
-          <button class="btn btn--seg" type="button" data-density="compact">Compatta</button>
-        </div>
-        <button id="btnNewEvent" class="btn btn--primary" type="button">＋ Nuovo</button>
+      <div>
+        <span id="viewSwitch">
+          <button type="button" data-view="day">Giorno</button>
+          <button type="button" data-view="week">Settimana</button>
+          <button type="button" data-view="month">Mese</button>
+          <button type="button" data-view="year">Anno</button>
+        </span>
+        <span id="densitySwitch">
+          <button type="button" data-density="comfort">Comfort</button>
+          <button type="button" data-density="compact">Compatta</button>
+        </span>
+        <button id="btnNewEvent" type="button">＋ Nuovo</button>
       </div>
     </header>
 
-    <aside id="sidebar" class="sidebar" data-open="true">
-      <div class="sidebar__header">
-        <h2 class="sidebar__title">Filtri</h2>
-      </div>
+    <aside id="sidebar" data-open="true">
+      <h2>Filtri</h2>
 
-      <section class="sidebar__section">
-        <div class="sidebar__section-title">Ricerca</div>
-        <label class="label" for="searchInput">Cerca</label>
-        <input id="searchInput" type="search" placeholder="affitto, auto, stipendio…" autocomplete="off" />
+      <section>
+        <label for="searchInput">Cerca</label>
+        <input id="searchInput" type="search" autocomplete="off" />
       </section>
 
-      <section class="sidebar__section">
-        <div class="sidebar__section-title">Categoria</div>
-        <label class="label" for="categorySelect">Categoria</label>
+      <section>
+        <label for="categorySelect">Categoria</label>
         <select id="categorySelect">
           <option value="all">Tutte</option>
         </select>
       </section>
 
-      <section class="sidebar__section">
-        <div class="sidebar__section-title">Tipi</div>
-        <div class="toggle">
-          <span class="toggle__label">Entrate</span>
-          <input id="toggleIncome" type="checkbox" checked />
-        </div>
-        <div class="toggle" style="margin-top:10px;">
-          <span class="toggle__label">Uscite</span>
-          <input id="toggleExpense" type="checkbox" checked />
-        </div>
-        <div class="toggle" style="margin-top:10px;">
-          <span class="toggle__label">Altro</span>
-          <input id="toggleOther" type="checkbox" checked />
-        </div>
+      <section>
+        <label><input id="toggleIncome" type="checkbox" checked /> Entrate</label><br />
+        <label><input id="toggleExpense" type="checkbox" checked /> Uscite</label><br />
+        <label><input id="toggleOther" type="checkbox" checked /> Altro</label>
       </section>
 
-      <section class="sidebar__section">
-        <div class="sidebar__section-title">Range</div>
-        <div id="rangePresets" class="pill-row" role="group">
-          <button class="btn btn--pill" type="button" data-preset="all">Da inizio</button>
-          <button class="btn btn--pill" type="button" data-preset="from">Da data</button>
-          <button class="btn btn--pill" type="button" data-preset="between">Tra date</button>
+      <section>
+        <div id="rangePresets">
+          <button type="button" data-preset="all">Da inizio</button>
+          <button type="button" data-preset="from">Da data</button>
+          <button type="button" data-preset="between">Tra date</button>
         </div>
-        <label class="label" for="fromDate">Da</label>
+        <label for="fromDate">Da</label>
         <input id="fromDate" type="date" />
-        <label class="label" for="toDate">A</label>
+        <label for="toDate">A</label>
         <input id="toDate" type="date" />
       </section>
 
-      <section class="sidebar__section">
-        <div class="sidebar__section-title">Azioni</div>
-        <button id="btnApplyFilters" class="btn btn--primary" type="button">Applica</button>
-        <button id="btnClearFilters" class="btn btn--ghost" type="button" style="margin-top:10px;">Reset</button>
-        <hr />
-        <button id="btnExport" class="btn btn--ghost" type="button">Esporta JSON</button>
-        <label class="label" for="importFile" style="margin-top:12px;">Importa JSON</label>
+      <section>
+        <button id="btnApplyFilters" type="button">Applica</button>
+        <button id="btnClearFilters" type="button">Reset</button>
+      </section>
+
+      <section>
+        <button id="btnExport" type="button">Esporta JSON</button>
+        <label for="importFile">Importa JSON</label>
         <input id="importFile" type="file" accept="application/json" />
       </section>
 
-      <section id="statsPanel" class="sidebar__section">
-        <div class="sidebar__section-title">
-          <span>Stats</span>
-          <small id="statsMeta">—</small>
+      <hr />
+
+      <section id="statsPanel">
+        <div>
+          <strong>Stats</strong> <small id="statsMeta">—</small>
         </div>
 
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-card__label">Saldo attuale (fino a oggi)</div>
-            <div id="statCurrentBalance" class="stat-card__value">—</div>
-            <div class="stat-card__sub"><small id="statCurrentBalanceMeta">—</small></div>
-          </div>
+        <div>
+          <div>Saldo attuale (fino a oggi)</div>
+          <div id="statCurrentBalance">—</div>
+          <small id="statCurrentBalanceMeta">—</small>
+        </div>
 
-          <div class="stat-card">
-            <div class="stat-card__label">Saldo alla data</div>
-            <div id="statBalanceAtDate" class="stat-card__value">—</div>
-            <div class="stat-card__sub" style="display:flex;gap:8px;align-items:center;justify-content:space-between;">
-              <label class="label" for="balanceAtDate" style="margin:0;">Data</label>
-              <input id="balanceAtDate" type="date" />
-            </div>
-          </div>
+        <div style="margin-top:10px;">
+          <div>Saldo alla data</div>
+          <div id="statBalanceAtDate">—</div>
+          <label for="balanceAtDate">Data</label>
+          <input id="balanceAtDate" type="date" />
+        </div>
 
-          <div class="stat-card">
-            <div class="stat-card__label">Netto (nel range visibile)</div>
-            <div id="statNet" class="stat-card__value">—</div>
-            <div class="stat-card__sub"><span id="statIncomeCount">—</span> · <span id="statExpenseCount">—</span></div>
-          </div>
+        <div style="margin-top:10px;">
+          <div>Netto (nel range visibile)</div>
+          <div id="statNet">—</div>
+          <small><span id="statIncomeCount">—</span> · <span id="statExpenseCount">—</span></small>
+        </div>
 
-          <div class="stat-card">
-            <div class="stat-card__label">Entrate (nel range visibile)</div>
-            <div id="statIncome" class="stat-card__value">—</div>
-          </div>
+        <div style="margin-top:10px;">
+          <div>Entrate (nel range visibile)</div>
+          <div id="statIncome">—</div>
+        </div>
 
-          <div class="stat-card">
-            <div class="stat-card__label">Uscite (nel range visibile)</div>
-            <div id="statExpense" class="stat-card__value">—</div>
-          </div>
+        <div style="margin-top:10px;">
+          <div>Uscite (nel range visibile)</div>
+          <div id="statExpense">—</div>
         </div>
 
         <hr />
-        <div class="sidebar__section-title" style="margin-top:6px;">Snapshot</div>
-        <div id="snapshotList" class="snapshot-list" role="list"></div>
+        <div>Snapshot (ultimi 14 giorni del range visibile)</div>
+        <div id="snapshotList"></div>
       </section>
     </aside>
 
-    <main id="main" class="main" role="main">
-      <header class="main__header">
+    <main id="main">
+      <header>
         <h1 id="calendarTitle">Calendario</h1>
         <p id="calendarSubtitle">—</p>
       </header>
-      <section id="calendarView" class="calendar"></section>
+      <section id="calendarView"></section>
     </main>
+
+    <aside id="eventDrawer" aria-hidden="true">
+      <div>
+        <h2 id="drawerTitle">Evento</h2>
+        <div>
+          <button id="btnEditEvent" type="button">Modifica</button>
+          <button id="btnDeleteEvent" type="button">Elimina</button>
+          <button id="btnCloseDrawer" type="button">✕</button>
+        </div>
+      </div>
+      <div id="eventDetail"></div>
+    </aside>
+
+    <dialog id="eventModal">
+      <div>
+        <h2 id="eventModalTitle">Evento</h2>
+        <button id="btnCloseModal" type="button">✕</button>
+      </div>
+
+      <form id="eventForm" method="dialog" autocomplete="off">
+        <div>
+          <label for="evtTitle">Titolo *</label>
+          <input id="evtTitle" type="text" required />
+        </div>
+
+        <div>
+          <label for="evtCategory">Categoria</label>
+          <input id="evtCategory" type="text" list="categoryList" />
+          <datalist id="categoryList"></datalist>
+        </div>
+
+        <div>
+          <label for="evtType">Tipo</label>
+          <select id="evtType">
+            <option value="income">Entrata</option>
+            <option value="expense">Uscita</option>
+            <option value="other">Altro</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="evtAmount">Importo</label>
+          <input id="evtAmount" type="number" step="0.01" />
+        </div>
+
+        <div>
+          <label for="evtStart">Data *</label>
+          <input id="evtStart" type="date" required />
+        </div>
+
+        <div>
+          <label for="evtTime">Ora</label>
+          <input id="evtTime" type="time" />
+        </div>
+
+        <div>
+          <label for="evtRecurrence">Ricorrenza</label>
+          <select id="evtRecurrence">
+            <option value="none">Nessuna</option>
+            <option value="monthly">Mensile</option>
+            <option value="yearly">Annuale</option>
+            <option value="custom_days">Ogni N giorni</option>
+          </select>
+        </div>
+
+        <div id="recDaysField" style="display:none;">
+          <label for="evtRecurrenceDays">Ogni quanti giorni</label>
+          <input id="evtRecurrenceDays" type="number" min="1" step="1" />
+        </div>
+
+        <div>
+          <label><input id="evtPinned" type="checkbox" /> In evidenza</label>
+        </div>
+
+        <div>
+          <label for="evtNotes">Note</label>
+          <textarea id="evtNotes"></textarea>
+        </div>
+      </form>
+
+      <div>
+        <button id="btnCancelEvent" type="button">Annulla</button>
+        <button type="submit" form="eventForm">Salva</button>
+      </div>
+    </dialog>
   </div>
-
-  <aside id="eventDrawer" class="drawer" aria-hidden="true">
-    <div id="eventDrawerHeader" class="drawer__header">
-      <h2 id="drawerTitle">Evento</h2>
-      <div class="drawer__actions">
-        <button id="btnEditEvent" class="btn" type="button">Modifica</button>
-        <button id="btnDeleteEvent" class="btn" type="button">Elimina</button>
-        <button id="btnCloseDrawer" class="btn btn--icon" type="button">✕</button>
-      </div>
-    </div>
-    <div id="eventDetail" class="drawer__body"></div>
-  </aside>
-
-  <dialog id="eventModal">
-    <div id="eventModalHeader" class="modal__header">
-      <h2 id="eventModalTitle">Evento</h2>
-      <button id="btnCloseModal" class="btn btn--icon" type="button">✕</button>
-    </div>
-
-    <form id="eventForm" method="dialog" autocomplete="off">
-      <div class="form-field">
-        <label class="label" for="evtTitle">Titolo *</label>
-        <input id="evtTitle" type="text" required />
-      </div>
-
-      <div class="form-field">
-        <label class="label" for="evtCategory">Categoria</label>
-        <input id="evtCategory" type="text" list="categoryList" />
-        <datalist id="categoryList"></datalist>
-      </div>
-
-      <div class="form-field">
-        <label class="label" for="evtType">Tipo</label>
-        <select id="evtType">
-          <option value="income">Entrata</option>
-          <option value="expense">Uscita</option>
-          <option value="other">Altro</option>
-        </select>
-      </div>
-
-      <div class="form-field">
-        <label class="label" for="evtAmount">Importo</label>
-        <input id="evtAmount" type="number" step="0.01" />
-      </div>
-
-      <div class="form-field">
-        <label class="label" for="evtStart">Data *</label>
-        <input id="evtStart" type="date" required />
-      </div>
-
-      <div class="form-field">
-        <label class="label" for="evtTime">Ora</label>
-        <input id="evtTime" type="time" />
-      </div>
-
-      <div class="form-field">
-        <label class="label" for="evtRecurrence">Ricorrenza</label>
-        <select id="evtRecurrence">
-          <option value="none">Nessuna</option>
-          <option value="monthly">Mensile</option>
-          <option value="yearly">Annuale</option>
-        </select>
-      </div>
-
-      <div class="form-field" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <label class="label" for="evtPinned" style="margin:0;">In evidenza</label>
-        <input id="evtPinned" type="checkbox" />
-      </div>
-
-      <div class="form-field" style="grid-column:1/-1;">
-        <label class="label" for="evtNotes">Note</label>
-        <textarea id="evtNotes"></textarea>
-      </div>
-    </form>
-
-    <div id="eventModalFooter" class="modal__footer">
-      <button id="btnCancelEvent" class="btn btn--ghost" type="button">Annulla</button>
-      <button class="btn btn--primary" type="submit" form="eventForm">Salva</button>
-    </div>
-  </dialog>
 
   <script>
     (() => {
@@ -231,6 +217,7 @@
 
       const $ = (s, r = document) => r.querySelector(s);
       const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
       const pad2 = (n) => String(n).padStart(2, "0");
       const toISODate = (d) => {
         const dt = (d instanceof Date) ? d : new Date(d);
@@ -259,9 +246,12 @@
         x.setFullYear(x.getFullYear() + n);
         return x;
       };
-      const formatMoney = (val, currency = "EUR") => new Intl.NumberFormat("it-IT", { style: "currency", currency }).format(Number(val || 0));
-      const formatDateHuman = (d) => new Intl.DateTimeFormat("it-IT", { weekday: "short", year: "numeric", month: "long", day: "2-digit" }).format(d);
-      const formatMonthHuman = (d) => new Intl.DateTimeFormat("it-IT", { year: "numeric", month: "long" }).format(d);
+      const formatMoney = (val, currency = "EUR") =>
+        new Intl.NumberFormat("it-IT", { style: "currency", currency }).format(Number(val || 0));
+      const formatDateHuman = (d) =>
+        new Intl.DateTimeFormat("it-IT", { weekday: "short", year: "numeric", month: "long", day: "2-digit" }).format(d);
+      const formatMonthHuman = (d) =>
+        new Intl.DateTimeFormat("it-IT", { year: "numeric", month: "long" }).format(d);
       const formatRangeLabel = (start, end, view) => {
         if (view === "day") return formatDateHuman(start);
         if (view === "week") return `${formatDateHuman(start)} – ${formatDateHuman(end)}`;
@@ -279,7 +269,8 @@
       const endOfMonth = (d) => endOfDay(new Date(d.getFullYear(), d.getMonth() + 1, 0));
       const startOfYear = (d) => new Date(d.getFullYear(), 0, 1);
       const endOfYear = (d) => endOfDay(new Date(d.getFullYear(), 11, 31));
-      const clampDateToRange = (d, min, max) => new Date(Math.min(Math.max(d.getTime(), min.getTime()), max.getTime()));
+      const clampDateToRange = (d, min, max) =>
+        new Date(Math.min(Math.max(d.getTime(), min.getTime()), max.getTime())));
       const uid = () => crypto.randomUUID?.() || `id_${Math.random().toString(16).slice(2)}_${Date.now()}`;
 
       const API_BASE = "https://iamemanuele.pythonanywhere.com/api";
@@ -300,27 +291,13 @@
           const qs = new URLSearchParams(params).toString();
           return this.request(`/events${qs ? `?${qs}` : ""}`);
         },
-        createEvent(payload) {
-          return this.request(`/events`, { method: "POST", body: payload });
-        },
-        updateEvent(id, payload) {
-          return this.request(`/events/${encodeURIComponent(id)}`, { method: "PUT", body: payload });
-        },
-        deleteEvent(id) {
-          return this.request(`/events/${encodeURIComponent(id)}`, { method: "DELETE" });
-        },
-        deleteSeries(seriesId) {
-          return this.request(`/series/${encodeURIComponent(seriesId)}`, { method: "DELETE" });
-        },
-        deleteSeriesFrom(seriesId, fromISO) {
-          return this.request(`/series/${encodeURIComponent(seriesId)}/from/${encodeURIComponent(fromISO)}`, { method: "DELETE" });
-        },
-        getSettings() {
-          return this.request(`/settings`);
-        },
-        saveSettings(payload) {
-          return this.request(`/settings`, { method: "PUT", body: payload });
-        }
+        createEvent(payload) { return this.request(`/events`, { method: "POST", body: payload }); },
+        updateEvent(id, payload) { return this.request(`/events/${encodeURIComponent(id)}`, { method: "PUT", body: payload }); },
+        deleteEvent(id) { return this.request(`/events/${encodeURIComponent(id)}`, { method: "DELETE" }); },
+        deleteSeries(seriesId) { return this.request(`/series/${encodeURIComponent(seriesId)}`, { method: "DELETE" }); },
+        deleteSeriesFrom(seriesId, fromISO) { return this.request(`/series/${encodeURIComponent(seriesId)}/from/${encodeURIComponent(fromISO)}`, { method: "DELETE" }); },
+        getSettings() { return this.request(`/settings`); },
+        saveSettings(payload) { return this.request(`/settings`, { method: "PUT", body: payload }); }
       };
 
       const defaultSettings = {
@@ -354,18 +331,21 @@
         settingsTimer = setTimeout(() => API.saveSettings(state.settings).catch(() => {}), 250);
       };
 
+      const normalizeEvent = (e) => ({
+        ...e,
+        time: e.time || "",
+        notes: e.notes || "",
+        pinned: !!e.pinned,
+        recurrence: e.recurrence || "none",
+        recurrenceDays: e.recurrenceDays ?? null,
+        seriesId: e.seriesId ?? null,
+        seriesMaster: !!e.seriesMaster
+      });
+
       const loadEventsFromBackend = async () => {
         const data = await API.listEvents();
         const arr = Array.isArray(data) ? data : (data?.events || []);
-        return arr.map(e => ({
-          ...e,
-          time: e.time || "",
-          notes: e.notes || "",
-          pinned: !!e.pinned,
-          recurrence: e.recurrence || "none",
-          seriesId: e.seriesId ?? null,
-          seriesMaster: !!e.seriesMaster
-        }));
+        return arr.map(normalizeEvent);
       };
 
       const getTrackingBounds = (events) => {
@@ -440,92 +420,6 @@
           .filter(passesUserRange)
           .sort((a, b) => (a.date + (a.time || "")) < (b.date + (b.time || "")) ? -1 : 1);
 
-      const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
-
-      const addMonthsKeepingDay = (baseDate, monthsToAdd, anchorDay) => {
-        const y0 = baseDate.getFullYear();
-        const m0 = baseDate.getMonth();
-        const targetMonth = m0 + monthsToAdd;
-        const y = y0 + Math.floor(targetMonth / 12);
-        const m = ((targetMonth % 12) + 12) % 12;
-        const dim = daysInMonth(y, m);
-        const day = Math.min(anchorDay, dim);
-        return new Date(y, m, day);
-      };
-
-      const addYearsKeepingDay = (baseDate, yearsToAdd, anchorMonthIndex0, anchorDay) => {
-        const y = baseDate.getFullYear() + yearsToAdd;
-        const m = anchorMonthIndex0;
-        const dim = daysInMonth(y, m);
-        const day = Math.min(anchorDay, dim);
-        return new Date(y, m, day);
-      };
-
-      const RECURRENCE_DEFAULTS = { monthlyMonths: 24, yearlyYears: 5 };
-
-      const defaultRecurrenceUntilISO = (startISO, mode) => {
-        const start = fromISODate(startISO);
-        const anchorDay = start.getDate();
-        const anchorMonth = start.getMonth();
-        if (mode === "monthly") return toISODate(addMonthsKeepingDay(start, RECURRENCE_DEFAULTS.monthlyMonths, anchorDay));
-        if (mode === "yearly") return toISODate(addYearsKeepingDay(start, RECURRENCE_DEFAULTS.yearlyYears, anchorMonth, anchorDay));
-        return startISO;
-      };
-
-      const buildOccurrenceDates = (master, untilISO) => {
-        const out = [];
-        const mode = master.recurrence || "none";
-        if (mode === "none") return out;
-        const anchor = fromISODate(master.date);
-        const anchorDay = anchor.getDate();
-        const anchorMonth = anchor.getMonth();
-        const until = fromISODate(untilISO);
-        let guard = 0;
-        if (mode === "monthly") {
-          let k = 1;
-          while (guard < 10000) {
-            const cur = addMonthsKeepingDay(anchor, k, anchorDay);
-            if (cur > until) break;
-            out.push(toISODate(cur));
-            k++; guard++;
-          }
-        } else if (mode === "yearly") {
-          let k = 1;
-          while (guard < 10000) {
-            const cur = addYearsKeepingDay(anchor, k, anchorMonth, anchorDay);
-            if (cur > until) break;
-            out.push(toISODate(cur));
-            k++; guard++;
-          }
-        }
-        return out;
-      };
-
-      const materializeRecurrenceSeries = async (masterEvent, untilISO) => {
-        const seriesId = masterEvent.seriesId || masterEvent.id;
-        const dates = buildOccurrenceDates(masterEvent, untilISO);
-        const createdChildren = [];
-        for (const iso of dates) {
-          const payload = {
-            title: masterEvent.title,
-            category: masterEvent.category,
-            type: masterEvent.type,
-            amount: masterEvent.amount,
-            date: iso,
-            time: masterEvent.time || "",
-            notes: masterEvent.notes || "",
-            pinned: !!masterEvent.pinned,
-            recurrence: "none",
-            seriesId,
-            seriesMaster: false
-          };
-          const res = await API.createEvent(payload);
-          const child = res?.event || res;
-          if (child?.id) createdChildren.push(child);
-        }
-        return { seriesId, children: createdChildren };
-      };
-
       const signedAmount = (e) => {
         const amt = Number(e.amount || 0);
         if (!amt) return 0;
@@ -538,6 +432,7 @@
         const cutoff = fromISODate(dateISO);
         let bal = Number(initialBalance || 0);
         for (const e of events) {
+          if (!e?.date) continue;
           const d = fromISODate(e.date);
           if (d <= endOfDay(cutoff)) bal += signedAmount(e);
         }
@@ -547,9 +442,7 @@
       const computeSnapshots = (eventsInRange, initialBalance, rangeStart, rangeEnd) => {
         const days = [];
         const map = new Map();
-        for (const e of eventsInRange) {
-          map.set(e.date, (map.get(e.date) || 0) + signedAmount(e));
-        }
+        for (const e of eventsInRange) map.set(e.date, (map.get(e.date) || 0) + signedAmount(e));
         let bal = Number(initialBalance || 0);
         let cur = startOfDay(rangeStart);
         const last = startOfDay(rangeEnd);
@@ -580,6 +473,112 @@
         return { rangeStart, rangeEnd, incomeSum, expenseSum, net, incomeCount: incomeEvents.length, expenseCount: expenseEvents.length, snapshots };
       };
 
+      const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
+
+      const addMonthsKeepingDay = (baseDate, monthsToAdd, anchorDay) => {
+        const y0 = baseDate.getFullYear();
+        const m0 = baseDate.getMonth();
+        const targetMonth = m0 + monthsToAdd;
+        const y = y0 + Math.floor(targetMonth / 12);
+        const m = ((targetMonth % 12) + 12) % 12;
+        const dim = daysInMonth(y, m);
+        const day = Math.min(anchorDay, dim);
+        return new Date(y, m, day);
+      };
+
+      const addYearsKeepingDay = (baseDate, yearsToAdd, anchorMonthIndex0, anchorDay) => {
+        const y = baseDate.getFullYear() + yearsToAdd;
+        const m = anchorMonthIndex0;
+        const dim = daysInMonth(y, m);
+        const day = Math.min(anchorDay, dim);
+        return new Date(y, m, day);
+      };
+
+      const RECURRENCE_DEFAULTS = { monthlyMonths: 24, yearlyYears: 5, customDaysSpan: 365 };
+
+      const defaultRecurrenceUntilISO = (startISO, mode, recurrenceDays) => {
+        const start = fromISODate(startISO);
+        const anchorDay = start.getDate();
+        const anchorMonth = start.getMonth();
+        if (mode === "monthly") return toISODate(addMonthsKeepingDay(start, RECURRENCE_DEFAULTS.monthlyMonths, anchorDay));
+        if (mode === "yearly") return toISODate(addYearsKeepingDay(start, RECURRENCE_DEFAULTS.yearlyYears, anchorMonth, anchorDay));
+        if (mode === "custom_days") return toISODate(addDays(start, Math.max(1, Number(RECURRENCE_DEFAULTS.customDaysSpan || 365))));
+        return startISO;
+      };
+
+      const buildOccurrenceDates = (master, untilISO) => {
+        const out = [];
+        const mode = master.recurrence || "none";
+        if (mode === "none") return out;
+        const anchor = fromISODate(master.date);
+        const anchorDay = anchor.getDate();
+        const anchorMonth = anchor.getMonth();
+        const until = fromISODate(untilISO);
+        let guard = 0;
+
+        if (mode === "custom_days") {
+          const stepDays = Number(master.recurrenceDays || 0);
+          if (!stepDays || stepDays < 1) return out;
+          let cur = addDays(anchor, stepDays);
+          while (cur <= until && guard < 20000) {
+            out.push(toISODate(cur));
+            cur = addDays(cur, stepDays);
+            guard++;
+          }
+          return out;
+        }
+
+        if (mode === "monthly") {
+          let k = 1;
+          while (guard < 20000) {
+            const cur = addMonthsKeepingDay(anchor, k, anchorDay);
+            if (cur > until) break;
+            out.push(toISODate(cur));
+            k++; guard++;
+          }
+          return out;
+        }
+
+        if (mode === "yearly") {
+          let k = 1;
+          while (guard < 20000) {
+            const cur = addYearsKeepingDay(anchor, k, anchorMonth, anchorDay);
+            if (cur > until) break;
+            out.push(toISODate(cur));
+            k++; guard++;
+          }
+          return out;
+        }
+
+        return out;
+      };
+
+      const materializeRecurrenceSeries = async (masterEvent, untilISO) => {
+        const seriesId = masterEvent.seriesId || masterEvent.id;
+        const dates = buildOccurrenceDates(masterEvent, untilISO);
+        const createdChildren = [];
+        for (const iso of dates) {
+          const payload = {
+            title: masterEvent.title,
+            category: masterEvent.category,
+            type: masterEvent.type,
+            amount: masterEvent.amount,
+            date: iso,
+            time: masterEvent.time || "",
+            notes: masterEvent.notes || "",
+            pinned: !!masterEvent.pinned,
+            recurrence: "none",
+            recurrenceDays: null,
+            seriesId,
+            seriesMaster: false
+          };
+          const res = await API.createEvent(payload);
+          const child = normalizeEvent(res?.event || res);
+          if (child?.id) createdChildren.push(child);
+        }
+        return { seriesId, children: createdChildren };
+      };
+
       const el = (tag, attrs = {}, children = []) => {
         const node = document.createElement(tag);
         for (const [k, v] of Object.entries(attrs)) {
@@ -595,232 +594,135 @@
         return node;
       };
 
-      const emptyState = (text, className) => el("div", { className: `empty-state ${className || ""}`.trim() }, [el("div", { className: "empty-state__text", textContent: text })]);
+      const emptyState = (text) => el("div", { textContent: text || "" });
 
       const categorySlug = (cat) => (cat || "uncategorized").trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9\-_]/g, "");
 
-      const eventBlock = (evt, density) => {
+      const eventBlock = (evt) => {
         const amt = evt.amount != null && evt.amount !== "" ? formatMoney(Number(evt.amount), state.settings.currency) : "";
         const cat = evt.category || "Senza categoria";
         const root = el("button", {
-          className: ["event-block", `event-block--type-${evt.type}`, `event-block--cat-${categorySlug(cat)}`, evt.pinned ? "is-pinned" : "", density === "compact" ? "is-compact" : "is-comfort"].filter(Boolean).join(" "),
           type: "button",
-          id: `evt_${evt.id}`,
-          "data-event-id": evt.id
+          "data-event-id": evt.id,
+          className: `evt evt--${evt.type} evt--cat-${categorySlug(cat)}`
         });
-        const top = el("div", { className: "event-block__top" }, [
-          el("span", { className: "event-block__title", textContent: evt.title }),
-          evt.pinned ? el("span", { className: "event-block__pin", textContent: "★" }) : null
-        ]);
-        const meta = el("div", { className: "event-block__meta" }, [
-          el("span", { className: "event-block__cat", textContent: cat }),
-          evt.time ? el("span", { className: "event-block__time", textContent: evt.time }) : null
-        ].filter(Boolean));
-        root.append(top, meta);
-        if (amt) root.append(el("div", { className: "event-block__amount", textContent: amt }));
+        root.appendChild(el("div", { textContent: evt.title }));
+        root.appendChild(el("div", { textContent: `${cat}${evt.time ? " · " + evt.time : ""}` }));
+        if (amt) root.appendChild(el("div", { textContent: amt }));
+        if (evt.seriesId) root.appendChild(el("div", { textContent: evt.seriesMaster ? "serie: master" : "serie" }));
         root.addEventListener("click", () => openEventDrawer(evt.id));
         return root;
       };
 
-      const kv = (k, v) => el("div", { className: "kv" }, [el("div", { className: "kv__k", textContent: k }), el("div", { className: "kv__v", textContent: v })]);
+      const kv = (k, v) => el("div", {}, [el("strong", { textContent: k + ": " }), el("span", { textContent: v })]);
 
       const renderEventDetail = (evt) => {
         const cat = evt.category || "Senza categoria";
         const amt = evt.amount != null && evt.amount !== "" ? formatMoney(Number(evt.amount), state.settings.currency) : "—";
-        const root = el("article", { className: ["event-detail", `event-detail--type-${evt.type}`, `event-detail--cat-${categorySlug(cat)}`].join(" ") });
-        root.append(
-          el("div", { className: "event-detail__row" }, [
-            kv("Categoria", cat),
-            kv("Tipo", evt.type),
-            kv("Serie", evt.seriesId ? (evt.seriesMaster ? "Master" : "Occorrenza") : "—"),
-            kv("Ricorrenza", evt.recurrence || "none")
-          ]),
-          el("div", { className: "event-detail__row" }, [kv("Data", evt.date), kv("Ora", evt.time || "—"), kv("Importo", amt)]),
-          el("div", { className: "event-detail__notes" }, [
-            el("h3", { className: "event-detail__notes-title", textContent: "Note" }),
-            el("p", { className: "event-detail__notes-text", textContent: evt.notes || "—" })
-          ])
-        );
+        const rec = evt.recurrence === "custom_days" ? `Ogni ${evt.recurrenceDays || "?"} giorni` : (evt.recurrence || "none");
+        const root = el("div");
+        root.appendChild(kv("Titolo", evt.title));
+        root.appendChild(kv("Categoria", cat));
+        root.appendChild(kv("Tipo", evt.type));
+        root.appendChild(kv("Data", evt.date));
+        root.appendChild(kv("Ora", evt.time || "—"));
+        root.appendChild(kv("Importo", amt));
+        root.appendChild(kv("Ricorrenza", rec));
+        root.appendChild(kv("Serie", evt.seriesId ? (evt.seriesMaster ? "Master" : "Occorrenza") : "—"));
+        root.appendChild(kv("Pinned", evt.pinned ? "sì" : "no"));
+        root.appendChild(kv("Note", evt.notes || "—"));
         return root;
-      };
-
-      const eventCard = (evt) => {
-        const amt = evt.amount != null && evt.amount !== "" ? formatMoney(Number(evt.amount), state.settings.currency) : "—";
-        const cat = evt.category || "Senza categoria";
-        const root = el("article", { className: ["event-card", `event-card--type-${evt.type}`, `event-card--cat-${categorySlug(cat)}`, evt.pinned ? "is-pinned" : ""].filter(Boolean).join(" "), id: `evtCard_${evt.id}` });
-        root.append(
-          el("header", { className: "event-card__header" }, [
-            el("div", { className: "event-card__title", textContent: evt.title }),
-            el("div", { className: "event-card__badges" }, [
-              el("span", { className: "badge badge--type", textContent: evt.type }),
-              el("span", { className: "badge badge--cat", textContent: cat }),
-              evt.seriesId ? el("span", { className: "badge badge--series", textContent: evt.seriesMaster ? "serie: master" : "serie" }) : null,
-              evt.pinned ? el("span", { className: "badge badge--pin", textContent: "★" }) : null
-            ].filter(Boolean))
-          ]),
-          el("div", { className: "event-card__body" }, [
-            el("div", { className: "kv-row" }, [kv("Data", evt.date), kv("Ora", evt.time || "—"), kv("Importo", amt)]),
-            el("div", { className: "event-card__notes", textContent: evt.notes || "" })
-          ]),
-          el("footer", { className: "event-card__footer" }, [
-            el("button", { className: "btn btn--ghost event-card__btn", type: "button", "data-action": "open", textContent: "Apri" }),
-            el("button", { className: "btn btn--ghost event-card__btn", type: "button", "data-action": "edit", textContent: "Modifica" })
-          ])
-        );
-        root.addEventListener("click", (e) => {
-          const action = e.target?.getAttribute?.("data-action");
-          if (action === "edit") {
-            e.preventDefault();
-            openEventModal("edit", evt.id);
-            return;
-          }
-          if (action === "open") {
-            e.preventDefault();
-            openEventDrawer(evt.id);
-          }
-        });
-        return root;
-      };
-
-      const syncControlsFromState = () => {
-        $("#sidebar").setAttribute("data-open", state.settings.sidebarOpen ? "true" : "false");
-        $$("#viewSwitch .btn--seg").forEach(btn => btn.setAttribute("aria-pressed", btn.dataset.view === state.settings.view ? "true" : "false"));
-        $$("#densitySwitch .btn--seg").forEach(btn => btn.setAttribute("aria-pressed", btn.dataset.density === state.settings.density ? "true" : "false"));
-        $$("#rangePresets .btn--pill").forEach(btn => btn.setAttribute("aria-pressed", btn.dataset.preset === state.settings.rangeMode ? "true" : "false"));
-        $("#searchInput").value = state.settings.search || "";
-        $("#toggleIncome").checked = !!state.settings.includeIncome;
-        $("#toggleExpense").checked = !!state.settings.includeExpense;
-        $("#toggleOther").checked = !!state.settings.includeOther;
-        $("#fromDate").value = state.settings.fromDate || "";
-        $("#toDate").value = state.settings.toDate || "";
-        const [vs, ve] = getEffectiveRangeForView();
-        $("#rangeLabel").textContent = formatRangeLabel(vs, ve, state.settings.view);
-        $("#balanceAtDate").value = state.settings.balanceAtDate || toISODate(new Date());
-      };
-
-      const getUniqueCategories = () => Array.from(new Set(state.events.map(e => (e.category || "").trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, "it"));
-
-      const renderCategoryOptions = () => {
-        const cats = getUniqueCategories();
-        const sel = $("#categorySelect");
-        const prev = state.settings.category || "all";
-        sel.innerHTML = "";
-        sel.appendChild(el("option", { value: "all", textContent: "Tutte" }));
-        for (const c of cats) sel.appendChild(el("option", { value: c.toLowerCase(), textContent: c }));
-        sel.value = prev;
-        const list = $("#categoryList");
-        list.innerHTML = "";
-        for (const c of cats) list.appendChild(el("option", { value: c }));
       };
 
       const renderDayView = (events) => {
         const [start] = getEffectiveRangeForView();
-        const container = el("div", { className: "view view--day" });
         const dayISO = toISODate(start);
-        container.appendChild(el("div", { className: "view__header" }, [
-          el("h2", { className: "view__title", textContent: formatDateHuman(start) }),
-          el("div", { className: "view__meta", textContent: "Eventi del giorno" })
-        ]));
-        const list = el("div", { className: "event-list event-list--day", role: "list" });
+        const wrap = el("div");
+        wrap.appendChild(el("h3", { textContent: formatDateHuman(start) }));
+        const list = el("div");
         const dayEvents = events.filter(e => e.date === dayISO);
-        if (!dayEvents.length) list.appendChild(emptyState("Nessun evento in questo giorno.", "event-empty event-empty--day"));
-        else for (const e of dayEvents) list.appendChild(eventCard(e));
-        container.appendChild(list);
-        return container;
+        if (!dayEvents.length) list.appendChild(emptyState("Nessun evento."));
+        else for (const e of dayEvents) list.appendChild(eventBlock(e));
+        wrap.appendChild(list);
+        return wrap;
       };
 
       const renderWeekView = (events) => {
         const [start, end] = getEffectiveRangeForView();
-        const container = el("div", { className: "view view--week" });
-        container.appendChild(el("div", { className: "view__header" }, [
-          el("h2", { className: "view__title", textContent: `${formatDateHuman(start)} – ${formatDateHuman(end)}` }),
-          el("div", { className: "view__meta", textContent: "Griglia settimana" })
-        ]));
-        const grid = el("div", { className: "calendar-grid calendar-grid--week" });
+        const wrap = el("div");
+        wrap.appendChild(el("h3", { textContent: `${formatDateHuman(start)} – ${formatDateHuman(end)}` }));
+        const grid = el("div");
         for (let i = 0; i < 7; i++) {
           const d = addDays(start, i);
           const iso = toISODate(d);
-          const col = el("section", { className: "day-col day-col--week", "data-date": iso });
-          col.appendChild(el("header", { className: "day-col__header" }, [
-            el("div", { className: "day-col__dow", textContent: new Intl.DateTimeFormat("it-IT", { weekday: "short" }).format(d) }),
-            el("div", { className: "day-col__date", textContent: `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}` })
-          ]));
-          const body = el("div", { className: "day-col__body", role: "list" });
+          const col = el("div");
+          col.appendChild(el("strong", { textContent: new Intl.DateTimeFormat("it-IT", { weekday: "short" }).format(d) + " " + `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}` }));
           const dayEvents = events.filter(e => e.date === iso);
-          if (!dayEvents.length) body.appendChild(emptyState("—", "event-empty event-empty--tiny"));
-          else for (const e of dayEvents) body.appendChild(eventBlock(e, state.settings.density));
-          col.appendChild(body);
+          if (!dayEvents.length) col.appendChild(emptyState("—"));
+          else for (const e of dayEvents) col.appendChild(eventBlock(e));
           grid.appendChild(col);
         }
-        container.appendChild(grid);
-        return container;
+        wrap.appendChild(grid);
+        return wrap;
       };
 
       const renderMonthView = (events) => {
         const [start] = getEffectiveRangeForView();
-        const container = el("div", { className: "view view--month" });
-        container.appendChild(el("div", { className: "view__header" }, [
-          el("h2", { className: "view__title", textContent: formatMonthHuman(start) }),
-          el("div", { className: "view__meta", textContent: "Griglia mese" })
-        ]));
-        const grid = el("div", { className: "calendar-grid calendar-grid--month" });
+        const wrap = el("div");
+        wrap.appendChild(el("h3", { textContent: formatMonthHuman(start) }));
+
+        const grid = el("div");
         const gridStart = startOfWeek(startOfMonth(start));
         const gridEnd = endOfWeek(endOfMonth(start));
-        const dowRow = el("div", { className: "dow-row" });
-        for (const name of ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"]) dowRow.appendChild(el("div", { className: "dow-cell", textContent: name }));
-        grid.appendChild(dowRow);
+
+        const header = el("div");
+        for (const name of ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"]) header.appendChild(el("strong", { textContent: name }));
+        grid.appendChild(header);
+
         let cur = gridStart;
         while (cur <= gridEnd) {
-          const weekRow = el("div", { className: "week-row", role: "row" });
+          const row = el("div");
           for (let i = 0; i < 7; i++) {
             const d = addDays(cur, i);
             const iso = toISODate(d);
-            const inMonth = d.getMonth() === start.getMonth();
-            const cell = el("section", { className: `day-cell day-cell--month ${inMonth ? "is-in-month" : "is-out-month"}`, "data-date": iso });
-            cell.appendChild(el("header", { className: "day-cell__header" }, [
-              el("div", { className: "day-cell__num", textContent: String(d.getDate()) }),
-              el("button", { className: "btn btn--icon btn--cell-add", type: "button", "data-action": "quick-add", "data-date": iso, textContent: "+" })
-            ]));
-            const body = el("div", { className: "day-cell__body", role: "list" });
+            const cell = el("div");
+            const top = el("div");
+            top.appendChild(el("strong", { textContent: String(d.getDate()) }));
+            const addBtn = el("button", { type: "button", "data-action": "quick-add", "data-date": iso, textContent: "+" });
+            top.appendChild(addBtn);
+            cell.appendChild(top);
+
             const dayEvents = events.filter(e => e.date === iso);
-            if (!dayEvents.length) body.appendChild(emptyState("", "event-empty event-empty--month"));
-            else for (const e of dayEvents) body.appendChild(eventBlock(e, state.settings.density));
-            cell.appendChild(body);
-            weekRow.appendChild(cell);
+            if (!dayEvents.length) cell.appendChild(emptyState(""));
+            else for (const e of dayEvents) cell.appendChild(eventBlock(e));
+            row.appendChild(cell);
           }
-          grid.appendChild(weekRow);
+          grid.appendChild(row);
           cur = addDays(cur, 7);
         }
-        container.appendChild(grid);
-        return container;
+
+        wrap.appendChild(grid);
+        return wrap;
       };
 
       const renderYearView = (events) => {
         const [start] = getEffectiveRangeForView();
-        const container = el("div", { className: "view view--year" });
-        container.appendChild(el("div", { className: "view__header" }, [
-          el("h2", { className: "view__title", textContent: String(start.getFullYear()) }),
-          el("div", { className: "view__meta", textContent: "Vista anno" })
-        ]));
-        const wrap = el("div", { className: "year-grid" });
+        const wrap = el("div");
+        wrap.appendChild(el("h3", { textContent: String(start.getFullYear()) }));
+        const grid = el("div");
         for (let m = 0; m < 12; m++) {
           const monthDate = new Date(start.getFullYear(), m, 1);
-          const monthBox = el("section", { className: "month-mini", "data-month": String(m), "data-year": String(start.getFullYear()), role: "button", tabindex: "0" });
+          const box = el("button", { type: "button", className: "month-mini", "data-month": String(m), "data-year": String(start.getFullYear()) });
           const inThisMonth = events.filter(e => {
             const d = fromISODate(e.date);
             return d.getFullYear() === start.getFullYear() && d.getMonth() === m;
           });
-          monthBox.appendChild(el("header", { className: "month-mini__header" }, [
-            el("div", { className: "month-mini__title", textContent: new Intl.DateTimeFormat("it-IT", { month: "long" }).format(monthDate) }),
-            el("div", { className: "month-mini__count", textContent: `${inThisMonth.length} evt` })
-          ]));
-          monthBox.appendChild(el("div", { className: "month-mini__body" }, [
-            el("div", { className: "badge-row" }, [el("span", { className: "badge", textContent: `Tot: ${inThisMonth.length}` })])
-          ]));
-          wrap.appendChild(monthBox);
+          box.appendChild(el("div", { textContent: new Intl.DateTimeFormat("it-IT", { month: "long" }).format(monthDate) }));
+          box.appendChild(el("small", { textContent: `${inThisMonth.length} evt` }));
+          grid.appendChild(box);
         }
-        container.appendChild(wrap);
-        return container;
+        wrap.appendChild(grid);
+        return wrap;
       };
 
       const renderCalendar = () => {
@@ -831,10 +733,46 @@
         const [vs, ve] = getEffectiveRangeForView();
         $("#calendarTitle").textContent = `Calendario · ${formatRangeLabel(vs, ve, view)}`;
         $("#calendarSubtitle").textContent = `${filtered.length} eventi (filtrati)`;
+        $("#rangeLabel").textContent = formatRangeLabel(vs, ve, view);
+
         if (view === "day") host.appendChild(renderDayView(filtered));
         else if (view === "week") host.appendChild(renderWeekView(filtered));
         else if (view === "month") host.appendChild(renderMonthView(filtered));
         else host.appendChild(renderYearView(filtered));
+      };
+
+      const renderCategoryOptions = () => {
+        const set = new Set(state.events.map(e => (e.category || "").trim()).filter(Boolean));
+        const cats = Array.from(set).sort((a, b) => a.localeCompare(b, "it"));
+        const sel = $("#categorySelect");
+        const prev = state.settings.category || "all";
+        sel.innerHTML = "";
+        sel.appendChild(el("option", { value: "all", textContent: "Tutte" }));
+        for (const c of cats) sel.appendChild(el("option", { value: c.toLowerCase(), textContent: c }));
+        sel.value = prev;
+
+        const list = $("#categoryList");
+        list.innerHTML = "";
+        for (const c of cats) list.appendChild(el("option", { value: c }));
+      };
+
+      const syncControlsFromState = () => {
+        $("#sidebar").setAttribute("data-open", state.settings.sidebarOpen ? "true" : "false");
+
+        $$("#viewSwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === state.settings.view ? "true" : "false"));
+        $$("#densitySwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.density === state.settings.density ? "true" : "false"));
+        $$("#rangePresets button").forEach(b => b.setAttribute("aria-pressed", b.dataset.preset === state.settings.rangeMode ? "true" : "false"));
+
+        $("#searchInput").value = state.settings.search || "";
+        $("#toggleIncome").checked = !!state.settings.includeIncome;
+        $("#toggleExpense").checked = !!state.settings.includeExpense;
+        $("#toggleOther").checked = !!state.settings.includeOther;
+
+        $("#fromDate").value = state.settings.fromDate || "";
+        $("#toDate").value = state.settings.toDate || "";
+
+        const todayISO = toISODate(new Date());
+        $("#balanceAtDate").value = state.settings.balanceAtDate || todayISO;
       };
 
       const renderStats = () => {
@@ -847,25 +785,26 @@
         $("#statIncomeCount").textContent = `${vis.incomeCount} eventi`;
         $("#statExpenseCount").textContent = `${vis.expenseCount} eventi`;
 
+        const allEvents = state.events;
         const todayISO = toISODate(new Date());
-        const balToday = computeBalanceUpTo(filtered, state.settings.initialBalance, todayISO);
+        const balToday = computeBalanceUpTo(allEvents, state.settings.initialBalance, todayISO);
         $("#statCurrentBalance").textContent = formatMoney(balToday, state.settings.currency);
         $("#statCurrentBalanceMeta").textContent = `Fino a ${todayISO}`;
 
         const atISO = state.settings.balanceAtDate || todayISO;
-        const balAt = computeBalanceUpTo(filtered, state.settings.initialBalance, atISO);
+        const balAt = computeBalanceUpTo(allEvents, state.settings.initialBalance, atISO);
         $("#statBalanceAtDate").textContent = formatMoney(balAt, state.settings.currency);
 
         const list = $("#snapshotList");
         list.innerHTML = "";
         const tail = vis.snapshots.slice(-14);
         for (const s of tail) {
-          list.appendChild(el("div", { className: "snapshot-item", role: "listitem", "data-date": s.date }, [
-            el("div", { className: "snapshot-item__date", textContent: s.date }),
-            el("div", { className: "snapshot-item__value", textContent: formatMoney(s.balance, state.settings.currency) })
+          list.appendChild(el("div", {}, [
+            el("span", { textContent: s.date + " " }),
+            el("strong", { textContent: formatMoney(s.balance, state.settings.currency) })
           ]));
         }
-        if (!tail.length) list.appendChild(emptyState("Nessuno snapshot nel range corrente.", "snapshot-empty"));
+        if (!tail.length) list.appendChild(emptyState("Nessuno snapshot nel range corrente."));
       };
 
       const render = () => {
@@ -894,9 +833,22 @@
         $("#eventDetail").innerHTML = "";
       };
 
+      const syncRecurrenceDaysUI = () => {
+        const mode = $("#evtRecurrence").value;
+        const wrap = $("#recDaysField");
+        if (mode === "custom_days") {
+          wrap.style.display = "";
+          if (!$("#evtRecurrenceDays").value) $("#evtRecurrenceDays").value = "7";
+        } else {
+          wrap.style.display = "none";
+          $("#evtRecurrenceDays").value = "";
+        }
+      };
+
       const openEventModal = (mode, eventId = null, prefillISO = null) => {
         state.draftEventId = mode === "edit" ? eventId : null;
         $("#eventModalTitle").textContent = mode === "edit" ? "Modifica evento" : "Nuovo evento";
+
         if (mode === "edit") {
           const evt = getEventById(eventId);
           if (!evt) return;
@@ -908,20 +860,28 @@
           $("#evtTime").value = evt.time || "";
           $("#evtNotes").value = evt.notes || "";
           $("#evtRecurrence").value = evt.recurrence || "none";
+          $("#evtRecurrenceDays").value = evt.recurrenceDays != null ? String(evt.recurrenceDays) : "";
           $("#evtPinned").checked = !!evt.pinned;
+          syncRecurrenceDaysUI();
         } else {
           $("#eventForm").reset();
           $("#evtType").value = "expense";
           $("#evtStart").value = prefillISO || toISODate(new Date());
           $("#evtRecurrence").value = "none";
+          $("#evtRecurrenceDays").value = "";
           $("#evtPinned").checked = false;
+          syncRecurrenceDaysUI();
         }
+
         $("#eventModal").showModal();
       };
 
       const closeEventModal = () => $("#eventModal").close();
 
       const upsertEventFromForm = async () => {
+        const rec = $("#evtRecurrence").value;
+        const recDays = rec === "custom_days" ? Math.max(1, parseInt($("#evtRecurrenceDays").value || "0", 10) || 0) : null;
+
         const data = {
           title: $("#evtTitle").value.trim(),
           category: $("#evtCategory").value.trim() || "Senza categoria",
@@ -931,27 +891,36 @@
           time: $("#evtTime").value,
           notes: $("#evtNotes").value.trim(),
           pinned: $("#evtPinned").checked,
-          recurrence: $("#evtRecurrence").value
+          recurrence: rec,
+          recurrenceDays: recDays
         };
 
         if (state.draftEventId) {
           const updated = await API.updateEvent(state.draftEventId, data);
-          const evt = updated?.event || updated || { id: state.draftEventId, ...data };
+          const evt = normalizeEvent(updated?.event || updated || { id: state.draftEventId, ...data });
           const idx = state.events.findIndex(e => e.id === state.draftEventId);
-          if (idx >= 0) state.events[idx] = { ...state.events[idx], ...evt };
+          if (idx >= 0) state.events[idx] = evt;
         } else {
-          const mode = data.recurrence || "none";
-          if (mode === "none") {
-            const created = await API.createEvent({ ...data, recurrence: "none", seriesId: null, seriesMaster: false });
-            const evt = created?.event || created;
-            state.events.push(evt);
+          if ((data.recurrence || "none") === "none") {
+            const created = await API.createEvent({
+              ...data,
+              recurrence: "none",
+              recurrenceDays: null,
+              seriesId: null,
+              seriesMaster: false
+            });
+            state.events.push(normalizeEvent(created?.event || created));
           } else {
             const seriesId = uid();
-            const created = await API.createEvent({ ...data, seriesId, seriesMaster: true });
-            const master = created?.event || created;
-            const untilISO = defaultRecurrenceUntilISO(master.date, mode);
-            const { children } = await materializeRecurrenceSeries({ ...master, seriesId, seriesMaster: true }, untilISO);
-            state.events.push({ ...master, seriesId, seriesMaster: true }, ...children);
+            const created = await API.createEvent({
+              ...data,
+              seriesId,
+              seriesMaster: true
+            });
+            const master = normalizeEvent(created?.event || created);
+            const untilISO = defaultRecurrenceUntilISO(master.date, master.recurrence, master.recurrenceDays);
+            const { children } = await materializeRecurrenceSeries(master, untilISO);
+            state.events.push(master, ...children);
           }
         }
 
@@ -973,7 +942,7 @@
           return;
         }
 
-        const c = prompt(`1=Solo questo\n2=Da questa data in poi\n3=Tutta la serie`, "1");
+        const c = prompt("1=Solo questo\n2=Da questa data in poi\n3=Tutta la serie", "1");
         if (c === "1") {
           await API.deleteEvent(evt.id);
           state.events = state.events.filter(e => e.id !== evt.id);
@@ -986,6 +955,7 @@
         } else {
           return;
         }
+
         closeEventDrawer();
         render();
       };
@@ -1032,17 +1002,19 @@
         $("#btnNext").addEventListener("click", () => { moveAnchor(1); render(); });
         $("#btnToday").addEventListener("click", () => { state.anchorDate = startOfDay(new Date()); render(); });
 
-        $$("#viewSwitch .btn--seg").forEach(btn => btn.addEventListener("click", () => { state.settings.view = btn.dataset.view; saveSettings(); render(); }));
-        $$("#densitySwitch .btn--seg").forEach(btn => btn.addEventListener("click", () => { state.settings.density = btn.dataset.density; saveSettings(); render(); }));
+        $$("#viewSwitch button").forEach(btn => btn.addEventListener("click", () => { state.settings.view = btn.dataset.view; saveSettings(); render(); }));
+        $$("#densitySwitch button").forEach(btn => btn.addEventListener("click", () => { state.settings.density = btn.dataset.density; saveSettings(); render(); }));
 
         $("#btnNewEvent").addEventListener("click", () => openEventModal("new"));
+        $("#evtRecurrence").addEventListener("change", syncRecurrenceDaysUI);
+
         $("#searchInput").addEventListener("input", (e) => { state.settings.search = e.target.value; saveSettings(); render(); });
         $("#categorySelect").addEventListener("change", (e) => { state.settings.category = e.target.value; saveSettings(); render(); });
         $("#toggleIncome").addEventListener("change", (e) => { state.settings.includeIncome = e.target.checked; saveSettings(); render(); });
         $("#toggleExpense").addEventListener("change", (e) => { state.settings.includeExpense = e.target.checked; saveSettings(); render(); });
         $("#toggleOther").addEventListener("change", (e) => { state.settings.includeOther = e.target.checked; saveSettings(); render(); });
 
-        $$("#rangePresets .btn--pill").forEach(btn => btn.addEventListener("click", () => {
+        $$("#rangePresets button").forEach(btn => btn.addEventListener("click", () => {
           state.settings.rangeMode = btn.dataset.preset;
           const [minTrack, maxTrack] = getTrackingBounds(state.events);
           if (state.settings.rangeMode === "from" && !state.settings.fromDate) state.settings.fromDate = toISODate(minTrack);
@@ -1064,14 +1036,15 @@
           const keepSidebar = state.settings.sidebarOpen;
           const keepBalance = state.settings.balanceAtDate || toISODate(new Date());
           state.settings = { ...structuredClone(defaultSettings), view: keepView, density: keepDensity, sidebarOpen: keepSidebar, balanceAtDate: keepBalance };
-          saveSettings(); render();
+          saveSettings();
+          render();
         });
 
         $("#btnApplyFilters").addEventListener("click", () => render());
 
         $("#calendarView").addEventListener("click", (e) => {
-          const btn = e.target.closest("[data-action]");
-          if (btn && btn.getAttribute("data-action") === "quick-add") openEventModal("new", null, btn.getAttribute("data-date"));
+          const addBtn = e.target.closest("[data-action='quick-add']");
+          if (addBtn) openEventModal("new", null, addBtn.getAttribute("data-date"));
           const mini = e.target.closest(".month-mini");
           if (mini) {
             const y = Number(mini.dataset.year);
@@ -1106,15 +1079,23 @@
 
       const init = async () => {
         wireUI();
+
         const s = await API.getSettings().catch(() => null);
         const incoming = s?.settings ? s.settings : (s || {});
         state.settings = { ...structuredClone(defaultSettings), ...incoming };
-        if (!state.settings.balanceAtDate) state.settings.balanceAtDate = toISODate(new Date());
+
+        const todayISO = toISODate(new Date());
+        if (!state.settings.balanceAtDate) state.settings.balanceAtDate = todayISO;
+
         state.events = await loadEventsFromBackend();
+
         const [minTrack, maxTrack] = getTrackingBounds(state.events);
         state.anchorDate = clampDateToRange(startOfDay(new Date()), minTrack, maxTrack);
+
         if (!state.settings.fromDate) state.settings.fromDate = toISODate(minTrack);
         if (!state.settings.toDate) state.settings.toDate = toISODate(maxTrack);
+
+        syncRecurrenceDaysUI();
         render();
       };
 

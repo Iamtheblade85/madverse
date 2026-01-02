@@ -172,7 +172,8 @@ const API = {
    *   time: "HH:MM" | "",
    *   notes: string,
    *   pinned: boolean,
-   *   recurrence: "none" | "monthly" | "yearly"
+   *   recurrence: "none" | "monthly" | "yearly" | "custom_days",
+   *   recurrenceDays: number | null // es. 7, 14, 30...
    * }
    */
 
@@ -345,8 +346,305 @@ function saveSettings() {
     return d >= uStart && d <= uEnd;
   }
 
+  function daysInMonth(year, monthIndex0) {
+    // monthIndex0: 0..11
+    return new Date(year, monthIndex0 + 1, 0).getDate();
+  }
+  
+  function addMonthsKeepingDay(baseDate, monthsToAdd, anchorDay) {
+    // anchorDay = giorno "originale" dell'evento (1..31)
+    const y0 = baseDate.getFullYear();
+    const m0 = baseDate.getMonth();
+  
+    const targetMonth = m0 + monthsToAdd;
+    const y = y0 + Math.floor(targetMonth / 12);
+    const m = ((targetMonth % 12) + 12) % 12;
+  
+    const dim = daysInMonth(y, m);
+    const day = Math.min(anchorDay, dim);
+  
+    return new Date(y, m, day);
+  }
+  
+  function addYearsKeepingDay(baseDate, yearsToAdd, anchorMonthIndex0, anchorDay) {
+    // anchorMonthIndex0 = mese originale 0..11, anchorDay = giorno originale 1..31
+    const y = baseDate.getFullYear() + yearsToAdd;
+    const m = anchorMonthIndex0;
+  
+    const dim = daysInMonth(y, m);
+    const day = Math.min(anchorDay, dim);
+  
+    return new Date(y, m, day);
+  }
+
+    // -----------------------------
+  // Materializzazione ricorrenze (crea eventi reali nel DB)
+  // -----------------------------
+
+  // FINE SERIE di default (solo JS, senza HTML)
+  // Cambia qui i numeri come preferisci:
+  const RECURRENCE_DEFAULTS = {
+    monthlyMonths: 24, // 24 mesi
+    yearlyYears: 5,    // 5 anni
+    customDaysSpan: 365 // 365 giorni
+  };
+
+  function defaultRecurrenceUntilISO(startISO, mode, recurrenceDays) {
+    const start = fromISODate(startISO);
+    const anchorDay = start.getDate();
+    const anchorMonth = start.getMonth();
+
+    if (mode === "monthly") {
+      const end = addMonthsKeepingDay(start, RECURRENCE_DEFAULTS.monthlyMonths, anchorDay);
+      return toISODate(end);
+    }
+    if (mode === "yearly") {
+      const end = addYearsKeepingDay(start, RECURRENCE_DEFAULTS.yearlyYears, anchorMonth, anchorDay);
+      return toISODate(end);
+    }
+    if (mode === "custom_days") {
+      const span = Math.max(1, Number(RECURRENCE_DEFAULTS.customDaysSpan || 365));
+      const end = addDays(start, span);
+      return toISODate(end);
+    }
+    return startISO;
+  }
+
+  function buildOccurrenceDates(master, untilISO) {
+    const out = [];
+    const mode = master.recurrence || "none";
+    if (mode === "none") return out;
+
+    const anchor = fromISODate(master.date);
+    const anchorDay = anchor.getDate();
+    const anchorMonth = anchor.getMonth();
+    const until = fromISODate(untilISO);
+
+    let guard = 0;
+
+    if (mode === "custom_days") {
+      const stepDays = Number(master.recurrenceDays || 0);
+      if (!stepDays || stepDays < 1) return out;
+
+      let cur = addDays(anchor, stepDays);
+      while (cur <= until && guard < 40000) {
+        out.push(toISODate(cur));
+        cur = addDays(cur, stepDays);
+        guard++;
+      }
+      return out;
+    }
+
+    if (mode === "monthly") {
+      let k = 1;
+      while (guard < 40000) {
+        const cur = addMonthsKeepingDay(anchor, k, anchorDay);
+        if (cur > until) break;
+        out.push(toISODate(cur));
+        k++;
+        guard++;
+      }
+      return out;
+    }
+
+    if (mode === "yearly") {
+      let k = 1;
+      while (guard < 40000) {
+        const cur = addYearsKeepingDay(anchor, k, anchorMonth, anchorDay);
+        if (cur > until) break;
+        out.push(toISODate(cur));
+        k++;
+        guard++;
+      }
+      return out;
+    }
+
+    return out;
+  }
+
+  async function materializeRecurrenceSeries(createdMasterEvent, untilISO) {
+    // crea occorrenze reali nel DB come eventi separati
+    const seriesId = createdMasterEvent.seriesId || createdMasterEvent.id;
+
+    const dates = buildOccurrenceDates(createdMasterEvent, untilISO);
+
+    // crea in sequenza (più stabile del Promise.all, evita rate-limit)
+    const createdChildren = [];
+    for (const iso of dates) {
+      const payload = {
+        ...createdMasterEvent,
+        id: undefined, // il backend deve generare id
+        date: iso,
+        recurrence: "none",
+        recurrenceDays: null,
+
+        // campi extra utili per legare la serie (se il backend li accetta)
+        seriesId,
+        seriesMaster: false
+      };
+
+      // rimuovi eventuali campi interni
+      delete payload._occurrence;
+      delete payload._sourceId;
+
+      const res = await API.createEvent(payload);
+      const child = res?.event || res;
+      if (child?.id) createdChildren.push(child);
+    }
+
+    return { seriesId, children: createdChildren };
+  }
+
+  function expandRecurrences(events, rangeStart, rangeEnd) {
+    const out = [];
+  
+    for (const e of events) {
+      if (!e?.date) continue;
+  
+      // include sempre il master (così resta editabile)
+      out.push(e);
+  
+      const mode = e.recurrence || "none";
+      if (mode === "none") continue;
+  
+      const anchor = fromISODate(e.date);
+      const anchorDay = anchor.getDate();
+      const anchorMonth = anchor.getMonth();
+  
+      // Occorrenze
+      let guard = 0;
+  
+      if (mode === "custom_days") {
+        const stepDays = Number(e.recurrenceDays || 0);
+        if (!stepDays || stepDays < 1) continue;
+  
+        let cur = new Date(anchor);
+  
+        // porta cur vicino a rangeStart
+        while (cur < rangeStart && guard < 20000) {
+          cur = addDays(cur, stepDays);
+          guard++;
+        }
+  
+        while (cur <= rangeEnd && guard < 40000) {
+          const iso = toISODate(cur);
+  
+          if (iso !== e.date) {
+            out.push({
+              ...e,
+              id: `${e.id}__occ__${iso}`,
+              date: iso,
+              _occurrence: true,
+              _sourceId: e.id
+            });
+          }
+  
+          cur = addDays(cur, stepDays);
+          guard++;
+        }
+  
+        continue;
+      }
+  
+      if (mode === "monthly") {
+        // Ricorrenza mensile vera: stesso giorno, clamp a fine mese
+        // Strategia: calcolo l'indice mese k rispetto al mese dell'anchor.
+        // Parto da k=1 e genero finché entro nel range.
+        let k = 1;
+  
+        // se l'anchor è molto prima del rangeStart, avanza k in modo grossolano
+        // (evita cicli lunghi) usando la differenza in mesi stimata
+        const approxMonths =
+          (rangeStart.getFullYear() - anchor.getFullYear()) * 12 +
+          (rangeStart.getMonth() - anchor.getMonth());
+  
+        if (approxMonths > 1) k = Math.max(1, approxMonths - 1);
+  
+        while (guard < 40000) {
+          const cur = addMonthsKeepingDay(anchor, k, anchorDay);
+  
+          if (cur > rangeEnd) break;
+  
+          if (cur >= rangeStart) {
+            const iso = toISODate(cur);
+            if (iso !== e.date) {
+              out.push({
+                ...e,
+                id: `${e.id}__occ__${iso}`,
+                date: iso,
+                _occurrence: true,
+                _sourceId: e.id
+              });
+            }
+          }
+  
+          k++;
+          guard++;
+        }
+  
+        continue;
+      }
+  
+      if (mode === "yearly") {
+        // Ricorrenza annuale vera: stesso mese+giorno, clamp per Feb 29 negli anni non bisestili
+        let k = 1;
+  
+        const approxYears = (rangeStart.getFullYear() - anchor.getFullYear());
+        if (approxYears > 1) k = Math.max(1, approxYears - 1);
+  
+        while (guard < 40000) {
+          const cur = addYearsKeepingDay(anchor, k, anchorMonth, anchorDay);
+  
+          if (cur > rangeEnd) break;
+  
+          if (cur >= rangeStart) {
+            const iso = toISODate(cur);
+            if (iso !== e.date) {
+              out.push({
+                ...e,
+                id: `${e.id}__occ__${iso}`,
+                date: iso,
+                _occurrence: true,
+                _sourceId: e.id
+              });
+            }
+          }
+  
+          k++;
+          guard++;
+        }
+  
+        continue;
+      }
+    }
+  
+    return out;
+  }
+
   function getFilteredEvents() {
-    return state.events
+    // range effettivo su cui renderizzi (view ∩ userRange)
+    const [viewStart, viewEnd] = getEffectiveRangeForView();
+    const [userStart, userEnd] = getUserRangeConstraints();
+
+    const rangeStart = new Date(Math.max(viewStart.getTime(), userStart.getTime()));
+    const rangeEnd = new Date(Math.min(viewEnd.getTime(), userEnd.getTime()));
+
+    // 1) Base: eventi reali dal DB
+    let base = state.events.slice();
+
+    // 2) Compatibilità: se ci sono eventi ricorrenti "vecchi" (non materializzati),
+    // li espandiamo solo per mostrarli (altrimenti non li vedresti nei mesi futuri).
+    // Regola: espandi solo se recurrence != none e NON ha seriesId (cioè non è una serie materializzata).
+    const toExpand = base.filter(e => (e.recurrence || "none") !== "none" && !e.seriesId);
+    const plain = base.filter(e => !((e.recurrence || "none") !== "none" && !e.seriesId));
+
+    const expandedLegacy = toExpand.length
+      ? expandRecurrences(toExpand, startOfDay(rangeStart), endOfDay(rangeEnd))
+      : [];
+
+    const merged = plain.concat(expandedLegacy);
+
+    return merged
       .filter(e => e?.date)
       .filter(passesTypeFilter)
       .filter(passesCategoryFilter)
@@ -939,17 +1237,42 @@ function saveSettings() {
   // -----------------------------
   // Drawer + Modal
   // -----------------------------
+  function getEventForUIById(eventId) {
+    // prima prova tra i master
+    const direct = state.events.find(e => e.id === eventId);
+    if (direct) return direct;
+  
+    // se è un'occurrence virtuale, rigenera gli expanded nel range attuale e cercala lì
+    const [viewStart, viewEnd] = getEffectiveRangeForView();
+    const [userStart, userEnd] = getUserRangeConstraints();
+  
+    const rangeStart = new Date(Math.max(viewStart.getTime(), userStart.getTime()));
+    const rangeEnd = new Date(Math.min(viewEnd.getTime(), userEnd.getTime()));
+  
+    const expanded = expandRecurrences(state.events, startOfDay(rangeStart), endOfDay(rangeEnd));
+    return expanded.find(e => e.id === eventId) || null;
+  }
+  
   function openEventDrawer(eventId) {
-    const evt = state.events.find(e => e.id === eventId);
+    const evt = getEventForUIById(eventId);
     if (!evt) return;
-
+  
+    // disabilita edit/delete sulle occorrenze virtuali
+    if (evt?._occurrence) {
+      $("#btnEditEvent").disabled = true;
+      $("#btnDeleteEvent").disabled = true;
+    } else {
+      $("#btnEditEvent").disabled = false;
+      $("#btnDeleteEvent").disabled = false;
+    }
+  
     state.selectedEventId = eventId;
-
+  
     const drawer = $("#eventDrawer");
     drawer.setAttribute("aria-hidden", "false");
-
+  
     $("#drawerTitle").textContent = evt.title;
-
+  
     const detail = $("#eventDetail");
     detail.innerHTML = "";
     detail.appendChild(renderEventDetail(evt));
@@ -979,7 +1302,12 @@ function saveSettings() {
       el("div", { className: "event-detail__row" }, [
         kv("Categoria", cat),
         kv("Tipo", evt.type),
-        kv("Ricorrenza", evt.recurrence || "none")
+        kv(
+          "Ricorrenza",
+          (evt.recurrence === "custom_days")
+            ? `Ogni ${evt.recurrenceDays || "?"} giorni`
+            : (evt.recurrence || "none")
+        )
       ]),
       el("div", { className: "event-detail__row" }, [
         kv("Data", evt.date),
@@ -1021,14 +1349,27 @@ function saveSettings() {
       $("#evtTime").value = evt.time || "";
       $("#evtNotes").value = evt.notes || "";
       $("#evtRecurrence").value = evt.recurrence || "none";
+      $("#evtRecurrenceDays").value = evt.recurrenceDays != null ? String(evt.recurrenceDays) : "";
       $("#evtPinned").checked = !!evt.pinned;
+      
+      // aggiorna UI ricorrenza
+      if (typeof syncRecurrenceDaysUI === "function") syncRecurrenceDaysUI();
+      else {
+        const wrap = $("#recDaysField");
+        if (wrap) wrap.style.display = ($("#evtRecurrence").value === "custom_days") ? "" : "none";
+      }
     } else {
       title.textContent = "Nuovo evento";
       $("#eventForm").reset();
       $("#evtType").value = "expense";
       $("#evtStart").value = prefillDateISO || toISODate(new Date());
       $("#evtRecurrence").value = "none";
+      $("#evtRecurrenceDays").value = "";
       $("#evtPinned").checked = false;
+      
+      // aggiorna UI ricorrenza
+      const wrap = $("#recDaysField");
+      if (wrap) wrap.style.display = "none";
     }
 
     if (typeof modal.showModal === "function") modal.showModal();
@@ -1050,7 +1391,10 @@ async function upsertEventFromForm() {
     time: $("#evtTime").value,
     notes: $("#evtNotes").value.trim(),
     pinned: $("#evtPinned").checked,
-    recurrence: $("#evtRecurrence").value
+    recurrence: $("#evtRecurrence").value,
+    recurrenceDays: ($("#evtRecurrence").value === "custom_days")
+      ? Math.max(1, parseInt($("#evtRecurrenceDays").value || "0", 10) || 0)
+      : null
   };
 
   if (!data.title || !data.date) {
@@ -1067,14 +1411,36 @@ async function upsertEventFromForm() {
       const idx = state.events.findIndex(e => e.id === state.draftEventId);
       if (idx >= 0) state.events[idx] = evt;
     } else {
-      const created = await API.createEvent(data);
-      const evt = created?.event || created || { id: created?.id, ...data };
+      // CREA NUOVO EVENTO (eventualmente con serie ricorrente materializzata)
+      const mode = data.recurrence || "none";
 
-      // se backend non manda id, qui sarebbe un problema: deve mandarlo
-      if (!evt.id) throw new Error("Backend non ha restituito l'id dell'evento.");
-      state.events.push(evt);
+      // 1) crea il master nel DB (lo teniamo con recurrence valorizzata)
+      const seriesId = uid(); // id serie (client). Se il backend non accetta campi extra, vedi nota sotto.
+      const masterPayload = {
+        ...data,
+        seriesId,
+        seriesMaster: true
+      };
+
+      const created = await API.createEvent(masterPayload);
+      const master = created?.event || created;
+
+      if (!master?.id) throw new Error("Backend non ha restituito l'id dell'evento.");
+
+      // 2) se non è ricorrente -> finito
+      if (mode === "none") {
+        state.events.push(master);
+      } else {
+        // 3) calcola fine serie (default solo JS)
+        const untilISO = defaultRecurrenceUntilISO(master.date, mode, master.recurrenceDays);
+
+        // 4) materializza occorrenze nel DB
+        const { children } = await materializeRecurrenceSeries(master, untilISO);
+
+        // 5) aggiorna state
+        state.events.push(master, ...children);
+      }
     }
-
     closeEventModal();
     render();
   } catch (err) {
@@ -1166,6 +1532,22 @@ async function deleteSelectedEvent() {
    
      render();
    }
+  
+  //Recurrence options
+  const syncRecurrenceDaysUI = () => {
+    const mode = $("#evtRecurrence").value;
+    const wrap = $("#recDaysField");
+    if (!wrap) return;
+    
+    if (mode === "custom_days") {
+      wrap.style.display = "";
+      if (!$("#evtRecurrenceDays").value) $("#evtRecurrenceDays").value = "7";
+    } else {
+      wrap.style.display = "none";
+      $("#evtRecurrenceDays").value = "";
+    }
+  };  
+  
   // -----------------------------
   // Events wiring
   // -----------------------------
@@ -1208,7 +1590,8 @@ async function deleteSelectedEvent() {
       });
     });
 
-    $("#btnNewEvent").addEventListener("click", () => openEventModal("new"));
+    $("#btnNewEvent").addEventListener("click", () => openEventModal("new"));   
+    $("#evtRecurrence").addEventListener("change", syncRecurrenceDaysUI);
 
     // Sidebar filters
     $("#searchInput").addEventListener("input", (e) => {

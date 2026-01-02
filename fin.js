@@ -14,17 +14,22 @@
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   const pad2 = (n) => String(n).padStart(2, "0");
-const API_BASE = "https://iamemanuele.pythonanywhere.com";
+const API_BASE = "https://iamemanuele.pythonanywhere.com/api";
+
 const API = {
   async request(path, { method = "GET", body, headers = {} } = {}) {
     const url = `${API_BASE}${path}`;
+
     const opts = {
       method,
       headers: {
         "Accept": "application/json",
         ...headers,
       },
-      credentials: "include", // utile se userai cookie/session; se no puoi mettere "omit"
+      // IMPORTANTISSIMO:
+      // Con Access-Control-Allow-Origin="*" NON puoi usare cookie/session.
+      // Quindi per evitare blocchi CORS: omit
+      credentials: "omit",
     };
 
     if (body !== undefined) {
@@ -34,7 +39,6 @@ const API = {
 
     const res = await fetch(url, opts);
 
-    // Prova a leggere JSON anche su errori (molti backend ritornano {error:...})
     let data = null;
     const ct = res.headers.get("content-type") || "";
     if (ct.includes("application/json")) {
@@ -53,24 +57,24 @@ const API = {
   // --- Events ---
   listEvents(params = {}) {
     const qs = new URLSearchParams(params).toString();
-    return this.request(`/api/events${qs ? `?${qs}` : ""}`);
+    return this.request(`/events${qs ? `?${qs}` : ""}`);
   },
   createEvent(payload) {
-    return this.request(`/api/events`, { method: "POST", body: payload });
+    return this.request(`/events`, { method: "POST", body: payload });
   },
   updateEvent(id, payload) {
-    return this.request(`/api/events/${encodeURIComponent(id)}`, { method: "PUT", body: payload });
+    return this.request(`/events/${encodeURIComponent(id)}`, { method: "PUT", body: payload });
   },
   deleteEvent(id) {
-    return this.request(`/api/events/${encodeURIComponent(id)}`, { method: "DELETE" });
+    return this.request(`/events/${encodeURIComponent(id)}`, { method: "DELETE" });
   },
 
   // --- Settings ---
   getSettings() {
-    return this.request(`/api/settings`);
+    return this.request(`/settings`);
   },
   saveSettings(payload) {
-    return this.request(`/api/settings`, { method: "PUT", body: payload });
+    return this.request(`/settings`, { method: "PUT", body: payload });
   }
 };
 

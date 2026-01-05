@@ -562,16 +562,46 @@
         return new Date(y, m, day);
       };
 
-      const RECURRENCE_DEFAULTS = { monthlyMonths: 24, yearlyYears: 5, customDaysSpan: 365 };
+      // Default UI se l'utente NON compila la durata
+      const RECURRENCE_DEFAULTS = {
+        monthly: { count: 2, unit: "months" },  // 2 mesi
+        yearly:  { count: 2,  unit: "years"  },  // 2 anni
+        custom_days: { count: 2, unit: "days" } // 2 giorni
+      };
 
-      const defaultRecurrenceUntilISO = (startISO, mode) => {
+      const addSpan = (startDate, count, unit) => {
+        const n = Math.max(1, Number(count || 1));
+        if (unit === "weeks") return addDays(startDate, n * 7);
+        if (unit === "months") return addMonths(startDate, n);
+        if (unit === "years") return addYears(startDate, n);
+        return addDays(startDate, n); // days
+      };
+      
+      const getSpanFromUIForMode = (mode) => {
+        const spanEl = $("#evtRecurrenceSpan");
+        const unitEl = $("#evtRecurrenceSpanUnit");
+      
+        const rawCount = spanEl ? Number(spanEl.value || 0) : 0;
+        const rawUnit = unitEl ? (unitEl.value || "") : "";
+      
+        // se l'utente ha compilato (>=1) e unit valida, usa UI
+        if (rawCount >= 1 && ["days", "weeks", "months", "years"].includes(rawUnit)) {
+          return { count: rawCount, unit: rawUnit };
+        }
+      
+        // altrimenti default per modalità
+        const def = RECURRENCE_DEFAULTS[mode];
+        if (def) return { count: def.count, unit: def.unit };
+      
+        // fallback super-safe
+        return { count: 1, unit: "days" };
+      };
+      
+      const recurrenceUntilISO = (startISO, mode) => {
         const start = fromISODate(startISO);
-        const anchorDay = start.getDate();
-        const anchorMonth = start.getMonth();
-        if (mode === "monthly") return toISODate(addMonthsKeepingDay(start, RECURRENCE_DEFAULTS.monthlyMonths, anchorDay));
-        if (mode === "yearly") return toISODate(addYearsKeepingDay(start, RECURRENCE_DEFAULTS.yearlyYears, anchorMonth, anchorDay));
-        if (mode === "custom_days") return toISODate(addDays(start, Math.max(1, Number(RECURRENCE_DEFAULTS.customDaysSpan || 365))));
-        return startISO;
+        const span = getSpanFromUIForMode(mode);
+        const end = addSpan(start, span.count, span.unit);
+        return toISODate(end);
       };
 
       const buildOccurrenceDates = (master, untilISO) => {
@@ -988,15 +1018,50 @@
         $("#eventDetail").innerHTML = "";
       };
 
-      const syncRecurrenceDaysUI = () => {
+      const syncRecurrenceUI = () => {
         const mode = $("#evtRecurrence").value;
-        const wrap = $("#recDaysField");
+      
+        const recDaysWrap = $("#recDaysField");
+        const spanWrap = $("#recSpanField");
+      
+        const daysInput = $("#evtRecurrenceDays");
+        const spanInput = $("#evtRecurrenceSpan");
+        const unitSelect = $("#evtRecurrenceSpanUnit");
+      
+        // --- Ogni N giorni (solo custom_days)
         if (mode === "custom_days") {
-          wrap.style.display = "";
-          if (!$("#evtRecurrenceDays").value) $("#evtRecurrenceDays").value = "7";
+          recDaysWrap.style.display = "";
+          if (!daysInput.value) daysInput.value = "7";
         } else {
-          wrap.style.display = "none";
-          $("#evtRecurrenceDays").value = "";
+          recDaysWrap.style.display = "none";
+          daysInput.value = "";
+        }
+      
+        // --- Durata ricorrenza (tutte tranne none)
+        if (mode !== "none") {
+          spanWrap.style.display = "";
+      
+          const def = RECURRENCE_DEFAULTS[mode] || { count: 6, unit: "months" };
+      
+          // se count non valido, metti default coerente
+          const count = Number(spanInput.value || 0);
+          if (!(count >= 1)) spanInput.value = String(def.count);
+      
+          // se unit non valida, metti default coerente
+          const unit = unitSelect.value;
+          if (!["days", "weeks", "months", "years"].includes(unit)) {
+            unitSelect.value = def.unit;
+          }
+      
+          // se unit è "days" ma modalità è monthly/yearly e l'utente non ha mai scritto nulla,
+          // forziamo unit coerente (evita "mensile" con "giorni" per default)
+          const userHasTypedCount = String(spanInput.value || "").trim() !== "";
+          if (!userHasTypedCount) unitSelect.value = def.unit;
+      
+        } else {
+          spanWrap.style.display = "none";
+          spanInput.value = "";
+          unitSelect.value = "days";
         }
       };
 
@@ -1017,7 +1082,8 @@
           $("#evtRecurrence").value = evt.recurrence || "none";
           $("#evtRecurrenceDays").value = evt.recurrenceDays != null ? String(evt.recurrenceDays) : "";
           $("#evtPinned").checked = !!evt.pinned;
-          syncRecurrenceDaysUI();
+          syncRecurrenceUI();
+
         } else {
           $("#eventForm").reset();
           $("#evtType").value = "expense";
@@ -1025,7 +1091,7 @@
           $("#evtRecurrence").value = "none";
           $("#evtRecurrenceDays").value = "";
           $("#evtPinned").checked = false;
-          syncRecurrenceDaysUI();
+          syncRecurrenceUI();
         }
 
         $("#eventModal").showModal();
@@ -1073,7 +1139,7 @@
               seriesMaster: true
             });
             const master = normalizeEvent(created?.event || created);
-            const untilISO = defaultRecurrenceUntilISO(master.date, master.recurrence);
+            const untilISO = recurrenceUntilISO(master.date, master.recurrence);
             const { children } = await materializeRecurrenceSeries(master, untilISO);
             state.events.push(master, ...children);
           }
@@ -1161,7 +1227,10 @@
         $$("#densitySwitch button").forEach(btn => btn.addEventListener("click", () => { state.settings.density = btn.dataset.density; saveSettings(); render(); }));
 
         $("#btnNewEvent").addEventListener("click", () => openEventModal("new"));
-        $("#evtRecurrence").addEventListener("change", syncRecurrenceDaysUI);
+        $("#evtRecurrence").addEventListener("change", syncRecurrenceUI);
+        $("#evtRecurrenceSpan").addEventListener("input", syncRecurrenceUI);
+        $("#evtRecurrenceSpanUnit").addEventListener("change", syncRecurrenceUI);
+        $("#evtRecurrenceDays").addEventListener("input", syncRecurrenceUI);
 
         $("#searchInput").addEventListener("input", (e) => { state.settings.search = e.target.value; saveSettings(); render(); });
         $("#categorySelect").addEventListener("change", (e) => { state.settings.category = e.target.value; saveSettings(); render(); });
@@ -1251,7 +1320,7 @@
         if (!state.settings.fromDate) state.settings.fromDate = toISODate(minTrack);
         if (!state.settings.toDate) state.settings.toDate = toISODate(maxTrack);
 
-        syncRecurrenceDaysUI();
+        syncRecurrenceUI();
         render();
       };
 

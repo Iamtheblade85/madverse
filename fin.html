@@ -242,6 +242,22 @@
           <label class="label" for="evtRecurrenceDays">Ogni quanti giorni</label>
           <input id="evtRecurrenceDays" type="number" min="1" step="1" />
         </div>
+        
+        <div id="recSpanField" class="form-field" style="display:none;">
+          <label class="label">Durata ricorrenza</label>
+        
+          <div style="display:flex; gap:10px; align-items:center;">
+            <input id="evtRecurrenceSpan" type="number" min="1" step="1" placeholder="Es. 6" />
+            <select id="evtRecurrenceSpanUnit">
+              <option value="days">Giorni</option>
+              <option value="weeks">Settimane</option>
+              <option value="months">Mesi</option>
+              <option value="years">Anni</option>
+            </select>
+          </div>
+        
+          <small class="help">Esempio: 6 mesi, 1 anno, 12 settimane…</small>
+        </div>
 
         <div class="form-field" style="grid-column:1 / -1;">
           <label class="label" style="display:flex;align-items:center;gap:10px;margin:0;">

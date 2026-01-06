@@ -16202,14 +16202,14 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
       bodyData.receiver = receiver;
     } else if (action === "stake") {
       if (!window.tokenPoolsData || window.tokenPoolsData.length === 0) {
-        console.info("[🧰] Caricamento dati delle staking pools...");
+        //console.info("[🧰] Caricamento dati delle staking pools...");
         await fetchAndRenderTokenPools(false);
         if (!window.tokenPoolsData || window.tokenPoolsData.length === 0) throw new Error("No staking pools data available after loading.");
       }
       const poolData = window.tokenPoolsData.find(pool => pool.deposit_token.symbol.toLowerCase() === token.toLowerCase());
       if (!poolData) throw new Error(`No staking pool found for token ${token}`);
       bodyData.pool_id = poolData.pool_id;
-      console.info(`[📤] Pool ID per ${token}: ${poolData.pool_id}`);
+      //console.info(`[📤] Pool ID per ${token}: ${poolData.pool_id}`);
     } else if (action === "bridge_to") {
       bodyData = {
         wax_account: wax_account,
@@ -16228,7 +16228,7 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
     });
 
     const data = await response.json();
-    console.info("[🔵] Risposta server:", data);
+    //console.info("[🔵] Risposta server:", data);
 
     if (interimFeedbackDiv) interimFeedbackDiv.remove();
 

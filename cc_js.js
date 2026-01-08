@@ -6114,7 +6114,226 @@ function sumExpeditionStats(assetIds = []){
       #cv-right { min-height: 420px; }
       #cv-rotator .cv-rot-panel { will-change: opacity; }
       /* --- Staking Boost panel --- */
-      #cv-staking .small-muted{opacity:.8;font-size:12px;line-height:1.25}
+/* --- Staking Boost panel (v2) --- */
+#cv-staking{
+  position:relative;
+  margin-top: 12px;
+  margin-bottom: 280px; /* ✅ fondamentale: evita che lo sticky #cv-summary lo “copra” */
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: linear-gradient(180deg, rgba(16,22,26,.92), rgba(10,12,14,.92));
+  box-shadow: 0 10px 28px rgba(0,0,0,.40), inset 0 0 18px rgba(0,255,255,.06);
+  overflow:hidden;
+}
+
+/* glow frame */
+#cv-staking::before{
+  content:"";
+  position:absolute; inset:-2px;
+  background: conic-gradient(from 180deg,
+    rgba(0,255,163,.0),
+    rgba(0,255,163,.22),
+    rgba(0,163,255,.22),
+    rgba(255,224,102,.18),
+    rgba(0,255,163,.0)
+  );
+  filter: blur(12px);
+  opacity: .55;
+  animation: stakeGlow 3.8s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes stakeGlow{
+  0%,100%{ transform:rotate(0deg); opacity:.45; }
+  50%{ transform:rotate(20deg); opacity:.70; }
+}
+
+#cv-staking .stake-top{
+  position:relative;
+  display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+  padding: 14px 14px 10px;
+}
+#cv-staking .stake-title{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  font-family: Orbitron, system-ui, sans-serif;
+  letter-spacing:.2px;
+}
+#cv-staking .stake-ico{
+  width:40px; height:40px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  background: rgba(0,255,163,.10);
+  border: 1px solid rgba(0,255,163,.22);
+  box-shadow: 0 0 18px rgba(0,255,163,.12);
+  font-size: 20px;
+}
+#cv-staking .stake-title strong{
+  font-size: 1.05rem; color:#cffff6;
+}
+#cv-staking .stake-sub{
+  margin-top:4px;
+  font-size: 0.92rem;
+  color: rgba(230,230,230,.88);
+  line-height: 1.35;
+}
+#cv-staking .stake-sub b{ color:#ffe066; }
+
+#cv-staking .token-pill{
+  display:inline-flex; align-items:center; gap:6px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+#cv-staking .token-pill.lux{ border-color: rgba(255,224,102,.28); background: rgba(255,224,102,.10); color:#ffe9a6; }
+#cv-staking .token-pill.chips{ border-color: rgba(0,255,163,.28); background: rgba(0,255,163,.10); color:#bfffe9; }
+#cv-staking .token-pill.alcor{ border-color: rgba(0,163,255,.28); background: rgba(0,163,255,.10); color:#bfe7ff; }
+#cv-staking .token-pill.taco{ border-color: rgba(255,140,0,.25); background: rgba(255,140,0,.10); color:#ffd6a1; }
+
+#cv-staking .stake-pill{
+  position:relative;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 0.95rem;
+  color:#0b0f10;
+  background: linear-gradient(180deg, #00ffa3, #00a3ff);
+  box-shadow: 0 10px 24px rgba(0,255,163,.18);
+  overflow:hidden;
+  white-space:nowrap;
+}
+#cv-staking .stake-pill::after{
+  content:"";
+  position:absolute; inset:0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+  transform: translateX(-120%);
+  animation: stakeShine 2.1s linear infinite;
+}
+@keyframes stakeShine{ to{ transform: translateX(120%);} }
+
+/* metrics */
+#cv-staking .staking-grid{
+  position:relative;
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 0 14px 10px;
+}
+#cv-staking .staking-metric{
+  border-radius: 14px;
+  padding: 10px 10px 9px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: inset 0 0 18px rgba(0,0,0,.25);
+}
+#cv-staking .staking-metric .k{
+  font-size: 0.80rem;
+  color: rgba(190,190,190,.92);
+  margin-bottom: 4px;
+  letter-spacing:.2px;
+}
+#cv-staking .staking-metric .v{
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #eafcff;
+}
+#cv-staking .staking-metric .v.emph{ color:#ffe066; }
+
+/* progress */
+#cv-staking .staking-progress{
+  position:relative;
+  height: 12px;
+  margin: 6px 14px 8px;
+  border-radius: 999px;
+  overflow:hidden;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.10);
+}
+#cv-staking .staking-progress-bar{
+  height:100%;
+  width:0%;
+  background: linear-gradient(90deg, #00ffa3, #00a3ff);
+  position:relative;
+}
+#cv-staking .staking-progress-bar::after{
+  content:"";
+  position:absolute; inset:0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.30), transparent);
+  transform: translateX(-120%);
+  animation: stakeShine 1.6s linear infinite;
+  opacity:.8;
+}
+
+#cv-staking .stake-hint{
+  padding: 0 14px 12px;
+  font-size: 0.88rem;
+  color: rgba(220,220,220,.85);
+  line-height: 1.3;
+}
+#cv-staking .stake-hint .dot{
+  display:inline-block; width:6px; height:6px; border-radius:999px; margin:0 8px 1px 8px;
+  background: rgba(0,255,163,.85);
+  box-shadow: 0 0 10px rgba(0,255,163,.35);
+}
+
+/* details breakdown */
+#cv-staking details{
+  margin: 0 14px 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  border-radius: 14px;
+  padding: 10px 10px;
+}
+#cv-staking details summary{
+  cursor:pointer;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-weight: 900;
+  color:#d8ffff;
+}
+#cv-staking details summary::-webkit-details-marker{ display:none; }
+#cv-staking .muted{ opacity:.78; font-size: .82rem; }
+
+#cv-staking .stake-venue-body{ margin-top:10px; display:flex; flex-direction:column; gap:10px; }
+#cv-staking .stake-pool{ padding: 8px 8px; }
+#cv-staking .stake-pool-body{ margin-top:10px; display:flex; flex-direction:column; gap:8px; }
+
+#cv-staking .stake-row{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.08);
+}
+#cv-staking .stake-pair{ font-weight: 900; color:#fff; }
+#cv-staking .stake-amounts{
+  opacity:.90;
+  font-size: .85rem;
+  margin-top: 4px;
+  display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+}
+#cv-staking .stake-pts{ font-weight: 900; color:#bfffe9; }
+
+#cv-staking .stake-summary-right{ display:flex; align-items:center; gap:10px; }
+#cv-staking .stake-summary-chip{
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(0,255,163,.10);
+  border: 1px solid rgba(0,255,163,.22);
+  color:#bfffe9;
+  font-weight: 900;
+}
+#cv-staking .stake-summary-dim{ opacity:.78; font-size: .85rem; }
+
+@media (max-width: 720px){
+  #cv-staking{ margin-bottom: 320px; }
+  #cv-staking .staking-grid{ grid-template-columns: 1fr; }
+  #cv-staking .stake-pill{ font-size: .92rem; }
+}
+
       #cv-staking .pill{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.08);font-weight:700}
       #cv-staking .staking-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
       #cv-staking .staking-metric{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px}
@@ -8870,49 +9089,61 @@ function hydrateGoblinUI(allNfts) {
 			Limit: <b>50</b> goblins per expedition. Each Reinforcement NFT adds <b>+5</b>, up to <b>250 Goblins for each expedition</b>.
 		  </div>
 		</div>
-    <div class="canvas-box" id="cv-staking">
-              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
-                <div>
-                  <div class="box-title">Staking Boost</div>
-                  <div class="small-muted">
-                    <span class="token-pill">LUX</span> + <span class="token-pill">CHIPS</span> staked on
-                    <span class="token-pill">ALCOR</span> (and <span class="token-pill">TACO</span> for CHIPS)
-                    = <b>bonus CHIPS</b> on every expedition.
-                  </div>
-                </div>
-                <div class="pill" id="cv-staking-pill">+0%</div>
-              </div>
+<div class="canvas-box" id="cv-staking">
+  <div class="stake-top">
+    <div>
+      <div class="stake-title">
+        <div class="stake-ico">⚡</div>
+        <strong>Staking Boost</strong>
+        <span class="token-pill lux">LUX</span>
+        <span class="token-pill chips">CHIPS</span>
+        <span class="token-pill alcor">ALCOR</span>
+        <span class="token-pill taco">TACO</span>
+      </div>
 
-              <div class="staking-grid">
-                <div class="staking-metric">
-                  <div class="k">Staking Points</div>
-                  <div class="v" id="cv-staking-points">0 pts</div>
-                </div>
-                <div class="staking-metric">
-                  <div class="k">Bonus</div>
-                  <div class="v" id="cv-staking-bonus">+0%</div>
-                </div>
-                <div class="staking-metric">
-                  <div class="k">Multiplier</div>
-                  <div class="v" id="cv-staking-mult">x1.00</div>
-                </div>
-              </div>
+      <div class="stake-sub">
+        Stake <b>LUX</b> (Alcor) and <b>CHIPS</b> (Alcor or Taco) to earn
+        <b>extra CHIPS every expedition</b> — on top of normal rewards.
+      </div>
+    </div>
 
-              <div class="staking-progress">
-                <div class="staking-progress-bar" id="cv-staking-progress"></div>
-              </div>
-              <div class="small-muted" id="cv-staking-hint">
-                10 pts = 1% • 1000 pts = 100% (linear). Boost applies to CHIPS rewards, not NFTs.
-              </div>
+    <div class="stake-pill" id="cv-staking-pill">+0%</div>
+  </div>
 
-              <details class="staking-details" open>
-                <summary>
-                  <span>Breakdown by exchange → pool</span>
-                  <span class="muted">tap to collapse</span>
-                </summary>
-                <div id="cv-staking-breakdown" class="staking-breakdown"></div>
-              </details>
-            </div>
+  <div class="staking-grid">
+    <div class="staking-metric">
+      <div class="k">Staking Points</div>
+      <div class="v" id="cv-staking-points">0 pts</div>
+    </div>
+    <div class="staking-metric">
+      <div class="k">Bonus</div>
+      <div class="v emph" id="cv-staking-bonus">+0%</div>
+    </div>
+    <div class="staking-metric">
+      <div class="k">Multiplier</div>
+      <div class="v" id="cv-staking-mult">x1.00</div>
+    </div>
+  </div>
+
+  <div class="staking-progress">
+    <div class="staking-progress-bar" id="cv-staking-progress"></div>
+  </div>
+
+  <div class="stake-hint" id="cv-staking-hint">
+    <span class="dot"></span><b>10 pts = +1%</b>
+    <span class="dot"></span><b>1000 pts = +100%</b> (linear cap)
+    <span class="dot"></span>Boost applies to <b>CHIPS</b> rewards (not NFTs)
+  </div>
+
+  <details class="staking-details" open>
+    <summary>
+      <span>Breakdown by exchange → pool</span>
+      <span class="muted">tap to collapse</span>
+    </summary>
+    <div id="cv-staking-breakdown" class="staking-breakdown"></div>
+  </details>
+</div>
+
 
 <div class="canvas-box" id="cv-summary">
   <div id="cv-selection-summary"></div>

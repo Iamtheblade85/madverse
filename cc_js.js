@@ -6355,113 +6355,108 @@ function sumExpeditionStats(assetIds = []){
     return venueBlocks.join("") || `<div class="muted">No pools found.</div>`;
   }
 
-	function renderStakingPanel(payload) {
-	  const pointsEl = qs("#cv-staking-points");
-	  const bonusEl = qs("#cv-staking-bonus");
-	  const multEl = qs("#cv-staking-mult");
-	  const pillEl = qs("#cv-staking-pill");
-	  const barEl = qs("#cv-staking-progress");
-	  const breakdownEl = qs("#cv-staking-breakdown");
-	  if (!pointsEl || !bonusEl || !multEl || !pillEl || !barEl || !breakdownEl) return;
-	
-	  // Normalize payload shape (supports wrapped responses)
-	  const p =
-	    (payload?.bonus && payload?.report) ? payload :
-	    (payload?.data?.bonus && payload?.data?.report) ? payload.data :
-	    (payload?.result?.bonus && payload?.result?.report) ? payload.result :
-	    payload;
-	
-	  let points = 0;
-	  let bonusPercent = 0;
-	  let multiplier = 1;
-	
-	  const toNum = (v) => {
-	    const n = parseFloat(v);
-	    return Number.isFinite(n) ? n : 0;
-	  };
-	
-	  const toInt = (v) => {
-	    const n = parseInt(v, 10);
-	    return Number.isFinite(n) ? n : 0;
-	  };
-	
-	  // Main (staking_report shape)
-	  if (p?.bonus && p?.report) {
-	    points = toNum(p.report?.grand_totals?.points);
-	    bonusPercent = toInt(p.bonus?.percent);
-	    multiplier = toNum(p.bonus?.multiplier) || (1 + bonusPercent / 100);
-	    breakdownEl.innerHTML = buildStakingBreakdownHtml(p.report);
-	  }
-	  // Secondary (start/end expedition v2 shape)
-	  else if (p?.staking) {
-	    points = toNum(p.staking?.points);
-	    bonusPercent = toInt(p.staking?.bonus_percent);
-	    multiplier = toNum(p.staking?.multiplier) || (1 + bonusPercent / 100);
-	
-	    // If we already have a report cached, show breakdown anyway
-	    if (Cave.staking?.data?.report) {
-	      breakdownEl.innerHTML = buildStakingBreakdownHtml(Cave.staking.data.report);
-	    } else {
-	      breakdownEl.innerHTML = "";
-	    }
-	  }
-	  // Fallback to cached staking report
-	  else if (Cave.staking?.data?.report) {
-	    points = toNum(Cave.staking.data.report?.grand_totals?.points);
-	    bonusPercent = toInt(Cave.staking.data.bonus?.percent);
-	    multiplier = toNum(Cave.staking.data.bonus?.multiplier) || (1 + bonusPercent / 100);
-	    breakdownEl.innerHTML = buildStakingBreakdownHtml(Cave.staking.data.report);
-	  } else {
-	    breakdownEl.innerHTML = "";
-	  }
-	
-	  bonusPercent = clampNumber(bonusPercent, 0, 100);
-	  multiplier = Math.max(1, multiplier);
-	
-	  pointsEl.textContent = `${formatNumber(points, 2)} pts`;
-	  bonusEl.textContent = `+${bonusPercent}%`;
-	  multEl.textContent = `x${formatNumber(multiplier, 2)}`;
-	  pillEl.textContent = `+${bonusPercent}%`;
-	  barEl.style.width = `${bonusPercent}%`;
-	}
-	
+function renderStakingPanel(payload) {
+  const pointsEl = qs("#cv-staking-points");
+  const bonusEl = qs("#cv-staking-bonus");
+  const multEl = qs("#cv-staking-mult");
+  const pillEl = qs("#cv-staking-pill");
+  const barEl = qs("#cv-staking-progress");
+  const breakdownEl = qs("#cv-staking-breakdown");
+  if (!pointsEl || !bonusEl || !multEl || !pillEl || !barEl || !breakdownEl) return;
+
+  // Helper: backend returns big decimals as strings
+  const toNum = (v) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const toInt = (v) => {
+    const n = parseInt(v, 10);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  // Normalize payload shape:
+  // - staking_report -> { ok, bonus, report }
+  // - API wrapper might return { ok, data: {...} }
+  // - expedition endpoints -> { ..., staking: {...} }
+  const p =
+    (payload && payload.bonus && payload.report) ? payload :
+    (payload && payload.data && payload.data.bonus && payload.data.report) ? payload.data :
+    (payload && payload.result && payload.result.bonus && payload.result.report) ? payload.result :
+    payload;
+
+  let points = 0;
+  let bonusPercent = 0;
+  let multiplier = 1;
+
+  // Case A: /staking_report response
+  if (p && p.bonus && p.report) {
+    points = toNum(p.report?.grand_totals?.points);
+    bonusPercent = toInt(p.bonus?.percent);
+    multiplier = toNum(p.bonus?.multiplier) || (1 + bonusPercent / 100);
+    breakdownEl.innerHTML = buildStakingBreakdownHtml(p.report);
+  }
+  // Case B: /start_expedition_v2 or /end_expedition_v2 response
+  else if (p && p.staking) {
+    points = toNum(p.staking?.points);
+    bonusPercent = toInt(p.staking?.bonus_percent);
+    multiplier = toNum(p.staking?.multiplier) || (1 + bonusPercent / 100);
+
+    // If we already cached a report, render the breakdown from cache
+    if (Cave?.staking?.data?.report) {
+      breakdownEl.innerHTML = buildStakingBreakdownHtml(Cave.staking.data.report);
+    }
+  }
+  // Case C: fallback to cache
+  else if (Cave?.staking?.data?.report) {
+    points = toNum(Cave.staking.data.report?.grand_totals?.points);
+    bonusPercent = toInt(Cave.staking.data.bonus?.percent);
+    multiplier = toNum(Cave.staking.data.bonus?.multiplier) || (1 + bonusPercent / 100);
+    breakdownEl.innerHTML = buildStakingBreakdownHtml(Cave.staking.data.report);
+  }
+
+  bonusPercent = clampNumber(bonusPercent, 0, 100);
+
+  pointsEl.textContent = `${formatNumber(points, 2)} pts`;
+  bonusEl.textContent = `+${bonusPercent}%`;
+  multEl.textContent = `x${formatNumber(multiplier, 2)}`;
+  pillEl.textContent = `+${bonusPercent}%`;
+  barEl.style.width = `${bonusPercent}%`;
+}
+
 async function fetchStakingReport(force = false) {
   const wax = (window.userData?.wax_account || "").trim().toLowerCase();
   if (!wax) return null;
 
   const now = Date.now();
-  if (!force && Cave.staking?.lastFetchMs && now - Cave.staking.lastFetchMs < 30_000) {
+  if (!force && Cave?.staking?.lastFetchMs && now - Cave.staking.lastFetchMs < 30_000) {
+    // Always refresh panel from cache (in case UI got remounted)
+    renderStakingPanel(Cave.staking.data);
     return Cave.staking.data;
   }
-  if (Cave.staking.loading) return Cave.staking.data;
+  if (Cave?.staking?.loading) return Cave.staking.data;
 
+  if (!Cave.staking) Cave.staking = { data: null, lastFetchMs: 0, loading: false };
   Cave.staking.loading = true;
 
   try {
     const raw = await API.post("/staking_report", { wax_account: wax });
 
-    // Normalize: support {ok, bonus, report} OR {data:{...}} OR {result:{...}}
+    // Normalize (API wrapper could return {ok:true,data:{...}})
     const resp =
-      (raw?.ok && raw?.bonus && raw?.report) ? raw :
-      (raw?.data?.ok && raw?.data?.bonus && raw?.data?.report) ? raw.data :
-      (raw?.result?.ok && raw?.result?.bonus && raw?.result?.report) ? raw.result :
+      (raw && raw.ok && raw.bonus && raw.report) ? raw :
+      (raw && raw.ok && raw.data && raw.data.bonus && raw.data.report) ? raw.data :
+      (raw && raw.data && raw.data.ok && raw.data.bonus && raw.data.report) ? raw.data :
       null;
 
     if (resp?.ok) {
       Cave.staking.data = resp;
       Cave.staking.lastFetchMs = now;
-
       renderStakingPanel(resp);
-
-      // Optional debug (remove later)
-      // console.log("staking_report_UI_payload", resp);
-
       return resp;
     }
 
     console.warn("staking_report_unexpected_shape", raw);
     return null;
-
   } catch (err) {
     console.warn("staking_report_failed", err);
     return null;
@@ -8229,6 +8224,10 @@ function hydrateGoblinUI(allNfts) {
 
   // --- filtra i goblin (case-insensitive, per massima compatibilità) ---
   const goblins = all.filter(n => String(n?.type || "").toLowerCase() === "goblin");
+	if (!Cave?.el?.goblinList) {
+	  console.warn("cv-goblin-list not found (UI not mounted yet?)");
+	  return;
+	}
 
   // --- indicizza per asset_id (sempre stringa) ---
   Cave.nftIndex.clear();
@@ -8579,7 +8578,10 @@ function hydrateGoblinUI(allNfts) {
     `;
 
     // 5) Render
-    Cave.el.selectionSummary.innerHTML = infoCardHTML + selectorRowHTML;
+	// Render SOLO dentro #cv-selection-summary (non distruggere la lista)
+	if (Cave.el.selectionSummary) {
+	  Cave.el.selectionSummary.innerHTML = infoCardHTML + selectorRowHTML;
+	}
 
     // 6) Bind start action (limite gestito QUI, non fuori)
     qs("#cv-start").onclick = async () => {
@@ -8912,10 +8914,12 @@ function hydrateGoblinUI(allNfts) {
               </details>
             </div>
 
-        <div class="canvas-box" id="cv-summary">
-          <div id="cv-active-filters" class="cv-row" style="justify-content:flex-start; flex-wrap:wrap; gap:.4rem; margin:.35rem 0;"></div>
-          <div id="cv-goblin-list" style="display:flex; flex-direction:column; gap:.5rem;"></div>
-        </div>
+<div class="canvas-box" id="cv-summary">
+  <div id="cv-selection-summary"></div>
+  <div id="cv-active-filters" class="cv-row"
+       style="justify-content:flex-start; flex-wrap:wrap; gap:.4rem; margin:.55rem 0 .35rem;"></div>
+  <div id="cv-goblin-list" style="display:flex; flex-direction:column; gap:.5rem;"></div>
+</div>
       </div>
     `;
 
@@ -8927,8 +8931,9 @@ function hydrateGoblinUI(allNfts) {
     Cave.el.globalList = qs("#cv-global-list", container);
     Cave.el.recentList = qs("#cv-recent-list", container);
     Cave.el.bonusList = qs("#cv-bonus-list", container);
-    Cave.el.selectionSummary = qs("#cv-summary", container);
-    Cave.el.goblinList = qs("#cv-goblin-list", container);
+Cave.el.selectionSummary = qs("#cv-selection-summary", container);
+Cave.el.goblinList       = qs("#cv-goblin-list", container);
+Cave.el.activeFilters    = qs("#cv-active-filters", container);
     Cave.el.chestPerkBtn = qs("#cv-chest-btn", container);
     renderSkeletons("#cv-bonus-grid", 6, 72);
     // assets

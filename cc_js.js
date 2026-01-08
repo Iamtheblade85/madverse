@@ -9143,8 +9143,7 @@ function hydrateGoblinUI(allNfts) {
     <div id="cv-staking-breakdown" class="staking-breakdown"></div>
   </details>
 </div>
-
-
+ 
 <div class="canvas-box" id="cv-summary">
   <div id="cv-selection-summary"></div>
   <div id="cv-active-filters" class="cv-row"

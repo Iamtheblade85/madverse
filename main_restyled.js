@@ -5741,6 +5741,12 @@ async function refreshCurrentLimit() {
       chestPerkBtn: null,
     }
   };
+  // Staking state (filled by /staking_report)
+  Cave.staking = {
+    data: null,
+    lastFetchMs: 0,
+    loading: false,
+  };
   const inFlightClaims = new Set(); // set di String(chest_id)
   
   // ========= UTILITIES =========
@@ -5988,7 +5994,7 @@ function sumExpeditionStats(assetIds = []){
         100%{ box-shadow:0 0 35px #ffcc00, inset 0 0 14px #ffcc00; opacity:1; }
       }
       #cv-summary{
-        position: sticky; bottom: 12px; z-index: 40;
+        bottom: 12px; z-index: 80;
         backdrop-filter: blur(6px);
         background: linear-gradient(180deg, rgba(20,20,20,.9), rgba(12,12,12,.9));
         border: 1px solid var(--cv-border);
@@ -6107,6 +6113,226 @@ function sumExpeditionStats(assetIds = []){
       
       #cv-right { min-height: 420px; }
       #cv-rotator .cv-rot-panel { will-change: opacity; }
+      /* --- Staking Boost panel --- */
+/* --- Staking Boost panel (v2) --- */
+#cv-staking{
+  position:relative;
+  margin-top: 12px;
+  margin-bottom: 10px; /* ✅ fondamentale: evita che lo sticky #cv-summary lo “copra” */
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: linear-gradient(180deg, rgba(16,22,26,.92), rgba(10,12,14,.92));
+  box-shadow: 0 10px 28px rgba(0,0,0,.40), inset 0 0 18px rgba(0,255,255,.06);
+  overflow:hidden;
+}
+
+/* glow frame */
+#cv-staking::before{
+  content:"";
+  position:absolute; inset:-2px;
+  background: conic-gradient(from 180deg,
+    rgba(0,255,163,.0),
+    rgba(0,255,163,.22),
+    rgba(0,163,255,.22),
+    rgba(255,224,102,.18),
+    rgba(0,255,163,.0)
+  );
+  filter: blur(12px);
+  opacity: .55;
+  animation: stakeGlow 3.8s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes stakeGlow{
+  0%,100%{ transform:rotate(0deg); opacity:.45; }
+  50%{ transform:rotate(20deg); opacity:.70; }
+}
+
+#cv-staking .stake-top{
+  position:relative;
+  display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+  padding: 14px 14px 10px;
+}
+#cv-staking .stake-title{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  font-family: Orbitron, system-ui, sans-serif;
+  letter-spacing:.2px;
+}
+#cv-staking .stake-ico{
+  width:40px; height:40px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  background: rgba(0,255,163,.10);
+  border: 1px solid rgba(0,255,163,.22);
+  box-shadow: 0 0 18px rgba(0,255,163,.12);
+  font-size: 20px;
+}
+#cv-staking .stake-title strong{
+  font-size: 1.05rem; color:#cffff6;
+}
+#cv-staking .stake-sub{
+  margin-top:4px;
+  font-size: 0.92rem;
+  color: rgba(230,230,230,.88);
+  line-height: 1.35;
+}
+#cv-staking .stake-sub b{ color:#ffe066; }
+
+#cv-staking .token-pill{
+  display:inline-flex; align-items:center; gap:6px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+#cv-staking .token-pill.lux{ border-color: rgba(255,224,102,.28); background: rgba(255,224,102,.10); color:#ffe9a6; }
+#cv-staking .token-pill.chips{ border-color: rgba(0,255,163,.28); background: rgba(0,255,163,.10); color:#bfffe9; }
+#cv-staking .token-pill.alcor{ border-color: rgba(0,163,255,.28); background: rgba(0,163,255,.10); color:#bfe7ff; }
+#cv-staking .token-pill.taco{ border-color: rgba(255,140,0,.25); background: rgba(255,140,0,.10); color:#ffd6a1; }
+
+#cv-staking .stake-pill{
+  position:relative;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 0.95rem;
+  color:#0b0f10;
+  background: linear-gradient(180deg, #00ffa3, #00a3ff);
+  box-shadow: 0 10px 24px rgba(0,255,163,.18);
+  overflow:hidden;
+  white-space:nowrap;
+}
+#cv-staking .stake-pill::after{
+  content:"";
+  position:absolute; inset:0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+  transform: translateX(-120%);
+  animation: stakeShine 2.1s linear infinite;
+}
+@keyframes stakeShine{ to{ transform: translateX(120%);} }
+
+/* metrics */
+#cv-staking .staking-grid{
+  position:relative;
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 0 14px 10px;
+}
+#cv-staking .staking-metric{
+  border-radius: 14px;
+  padding: 10px 10px 9px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: inset 0 0 18px rgba(0,0,0,.25);
+}
+#cv-staking .staking-metric .k{
+  font-size: 0.80rem;
+  color: rgba(190,190,190,.92);
+  margin-bottom: 4px;
+  letter-spacing:.2px;
+}
+#cv-staking .staking-metric .v{
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #eafcff;
+}
+#cv-staking .staking-metric .v.emph{ color:#ffe066; }
+
+/* progress */
+#cv-staking .staking-progress{
+  position:relative;
+  height: 12px;
+  margin: 6px 14px 8px;
+  border-radius: 999px;
+  overflow:hidden;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.10);
+}
+#cv-staking .staking-progress-bar{
+  height:100%;
+  width:0%;
+  background: linear-gradient(90deg, #00ffa3, #00a3ff);
+  position:relative;
+}
+#cv-staking .staking-progress-bar::after{
+  content:"";
+  position:absolute; inset:0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.30), transparent);
+  transform: translateX(-120%);
+  animation: stakeShine 1.6s linear infinite;
+  opacity:.8;
+}
+
+#cv-staking .stake-hint{
+  padding: 0 14px 12px;
+  font-size: 0.88rem;
+  color: rgba(220,220,220,.85);
+  line-height: 1.3;
+}
+#cv-staking .stake-hint .dot{
+  display:inline-block; width:6px; height:6px; border-radius:999px; margin:0 8px 1px 8px;
+  background: rgba(0,255,163,.85);
+  box-shadow: 0 0 10px rgba(0,255,163,.35);
+}
+
+/* details breakdown */
+#cv-staking details{
+  margin: 0 14px 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  border-radius: 14px;
+  padding: 10px 10px;
+}
+#cv-staking details summary{
+  cursor:pointer;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-weight: 900;
+  color:#d8ffff;
+}
+#cv-staking details summary::-webkit-details-marker{ display:none; }
+#cv-staking .muted{ opacity:.78; font-size: .82rem; }
+
+#cv-staking .stake-venue-body{ margin-top:10px; display:flex; flex-direction:column; gap:10px; }
+#cv-staking .stake-pool{ padding: 8px 8px; }
+#cv-staking .stake-pool-body{ margin-top:10px; display:flex; flex-direction:column; gap:8px; }
+
+#cv-staking .stake-row{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.08);
+}
+#cv-staking .stake-pair{ font-weight: 900; color:#fff; }
+#cv-staking .stake-amounts{
+  opacity:.90;
+  font-size: .85rem;
+  margin-top: 4px;
+  display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+}
+#cv-staking .stake-pts{ font-weight: 900; color:#bfffe9; }
+
+#cv-staking .stake-summary-right{ display:flex; align-items:center; gap:10px; }
+#cv-staking .stake-summary-chip{
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(0,255,163,.10);
+  border: 1px solid rgba(0,255,163,.22);
+  color:#bfffe9;
+  font-weight: 900;
+}
+#cv-staking .stake-summary-dim{ opacity:.78; font-size: .85rem; }
+
+@media (max-width: 720px){
+  #cv-staking{ margin-bottom: 320px; }
+  #cv-staking .staking-grid{ grid-template-columns: 1fr; }
+  #cv-staking .stake-pill{ font-size: .92rem; }
+}     
     `;
     document.head.appendChild(st);
   }
@@ -6192,6 +6418,245 @@ function sumExpeditionStats(assetIds = []){
     get: (path, t=15000) =>
       fetchJSON(`${BASE_URL}${path}`, {}, t),
   };
+
+    // =======================================================
+  // Staking report helpers (UX: points, bonus %, breakdown)
+  // =======================================================
+
+  function clampNumber(x, min, max) {
+    const n = Number(x);
+    if (!Number.isFinite(n)) return min;
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function formatNumber(x, digits = 2) {
+    const n = Number(x);
+    if (!Number.isFinite(n)) return "0";
+    return n.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: digits,
+    });
+  }
+
+  function formatDurationShort(seconds) {
+    const s = Math.max(0, Number(seconds) || 0);
+    const m = Math.round(s / 60);
+    const presets = [
+      { min: 5, label: "5m" },
+      { min: 30, label: "30m" },
+      { min: 60, label: "1h" },
+      { min: 120, label: "2h" },
+      { min: 360, label: "6h" },
+      { min: 1440, label: "24h" },
+    ];
+    let best = presets[0];
+    let bestDiff = Infinity;
+    for (const p of presets) {
+      const diff = Math.abs(m - p.min);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        best = p;
+      }
+    }
+    return best.label;
+  }
+
+  function buildStakingBreakdownHtml(report) {
+    if (!report || !report.venues) {
+      return `<div class="muted">No staking data yet. Connect your WAX account and try again.</div>`;
+    }
+
+    const venues = report.venues;
+    const venueOrder = ["ALCOR", "TACO"];
+    const venueKeys = venueOrder
+      .filter((k) => venues[k])
+      .concat(Object.keys(venues).filter((k) => !venueOrder.includes(k)));
+
+    const venueBlocks = venueKeys.map((venueKey) => {
+      const v = venues[venueKey] || {};
+      const rows = Array.isArray(v.rows) ? v.rows : [];
+      const subt = v.subtotals || {};
+      const venuePoints = Number(v.points || 0);
+
+      const poolMap = new Map();
+      for (const r of rows) {
+        const pid = String(r.pool_id ?? "");
+        if (!poolMap.has(pid)) poolMap.set(pid, []);
+        poolMap.get(pid).push(r);
+      }
+
+      const poolBlocks = Array.from(poolMap.entries())
+        .map(([poolId, poolRows]) => {
+          let poolPoints = 0;
+          const poolPair = poolRows[0]?.pair || "Pool";
+          for (const r of poolRows) poolPoints += Number(r.points || 0);
+
+          const rowLines = poolRows
+            .map((r) => {
+              const a0 = formatNumber(r.amount0, 6);
+              const a1 = formatNumber(r.amount1, 6);
+              const pts = formatNumber(r.points, 2);
+              return `
+            <div class="stake-row">
+              <div class="stake-row-left">
+                <div class="stake-pair">${r.pair || ""}</div>
+                <div class="stake-amounts">
+                  <span class="token-pill">${r.token0}</span> ${a0}
+                  <span class="token-pill">${r.token1}</span> ${a1}
+                </div>
+              </div>
+              <div class="stake-row-right">
+                <div class="stake-pts">${pts} pts</div>
+              </div>
+            </div>
+          `;
+            })
+            .join("");
+
+          return `
+          <details class="stake-pool" open>
+            <summary>
+              <span>${poolPair}</span>
+              <span class="stake-summary-right">
+                <span class="stake-summary-chip">${formatNumber(poolPoints, 2)} pts</span>
+                <span class="stake-summary-dim">#${poolId}</span>
+              </span>
+            </summary>
+            <div class="stake-pool-body">${rowLines}</div>
+          </details>
+        `;
+        })
+        .join("");
+
+      return `
+        <details class="stake-venue" open>
+          <summary>
+            <span class="stake-venue-title">${venueKey}</span>
+            <span class="stake-summary-right">
+              <span class="stake-summary-chip">${formatNumber(venuePoints, 2)} pts</span>
+              <span class="stake-summary-dim">
+                LUX ${formatNumber(subt.LUX || 0, 4)} • CHIPS ${formatNumber(subt.CHIPS || 0, 4)}
+              </span>
+            </span>
+          </summary>
+          <div class="stake-venue-body">${poolBlocks || `<div class="muted">No pools found.</div>`}</div>
+        </details>
+      `;
+    });
+
+    return venueBlocks.join("") || `<div class="muted">No pools found.</div>`;
+  }
+
+function renderStakingPanel(payload) {
+  const pointsEl = qs("#cv-staking-points");
+  const bonusEl = qs("#cv-staking-bonus");
+  const multEl = qs("#cv-staking-mult");
+  const pillEl = qs("#cv-staking-pill");
+  const barEl = qs("#cv-staking-progress");
+  const breakdownEl = qs("#cv-staking-breakdown");
+  if (!pointsEl || !bonusEl || !multEl || !pillEl || !barEl || !breakdownEl) return;
+
+  // Helper: backend returns big decimals as strings
+  const toNum = (v) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const toInt = (v) => {
+    const n = parseInt(v, 10);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  // Normalize payload shape:
+  // - staking_report -> { ok, bonus, report }
+  // - API wrapper might return { ok, data: {...} }
+  // - expedition endpoints -> { ..., staking: {...} }
+  const p =
+    (payload && payload.bonus && payload.report) ? payload :
+    (payload && payload.data && payload.data.bonus && payload.data.report) ? payload.data :
+    (payload && payload.result && payload.result.bonus && payload.result.report) ? payload.result :
+    payload;
+
+  let points = 0;
+  let bonusPercent = 0;
+  let multiplier = 1;
+
+  // Case A: /staking_report response
+  if (p && p.bonus && p.report) {
+    points = toNum(p.report?.grand_totals?.points);
+    bonusPercent = toInt(p.bonus?.percent);
+    multiplier = toNum(p.bonus?.multiplier) || (1 + bonusPercent / 100);
+    breakdownEl.innerHTML = buildStakingBreakdownHtml(p.report);
+  }
+  // Case B: /start_expedition_v2 or /end_expedition_v2 response
+  else if (p && p.staking) {
+    points = toNum(p.staking?.points);
+    bonusPercent = toInt(p.staking?.bonus_percent);
+    multiplier = toNum(p.staking?.multiplier) || (1 + bonusPercent / 100);
+
+    // If we already cached a report, render the breakdown from cache
+    if (Cave?.staking?.data?.report) {
+      breakdownEl.innerHTML = buildStakingBreakdownHtml(Cave.staking.data.report);
+    }
+  }
+  // Case C: fallback to cache
+  else if (Cave?.staking?.data?.report) {
+    points = toNum(Cave.staking.data.report?.grand_totals?.points);
+    bonusPercent = toInt(Cave.staking.data.bonus?.percent);
+    multiplier = toNum(Cave.staking.data.bonus?.multiplier) || (1 + bonusPercent / 100);
+    breakdownEl.innerHTML = buildStakingBreakdownHtml(Cave.staking.data.report);
+  }
+
+  bonusPercent = clampNumber(bonusPercent, 0, 100);
+
+  pointsEl.textContent = `${formatNumber(points, 2)} pts`;
+  bonusEl.textContent = `+${bonusPercent}%`;
+  multEl.textContent = `x${formatNumber(multiplier, 2)}`;
+  pillEl.textContent = `+${bonusPercent}%`;
+  barEl.style.width = `${bonusPercent}%`;
+}
+
+async function fetchStakingReport(force = false) {
+  const wax = (window.userData?.wax_account || "").trim().toLowerCase();
+  if (!wax) return null;
+
+  const now = Date.now();
+  if (!force && Cave?.staking?.lastFetchMs && now - Cave.staking.lastFetchMs < 30_000) {
+    // Always refresh panel from cache (in case UI got remounted)
+    renderStakingPanel(Cave.staking.data);
+    return Cave.staking.data;
+  }
+  if (Cave?.staking?.loading) return Cave.staking.data;
+
+  if (!Cave.staking) Cave.staking = { data: null, lastFetchMs: 0, loading: false };
+  Cave.staking.loading = true;
+
+  try {
+    const raw = await API.post("/staking_report", { wax_account: wax });
+
+    // Normalize (API wrapper could return {ok:true,data:{...}})
+    const resp =
+      (raw && raw.ok && raw.bonus && raw.report) ? raw :
+      (raw && raw.ok && raw.data && raw.data.bonus && raw.data.report) ? raw.data :
+      (raw && raw.data && raw.data.ok && raw.data.bonus && raw.data.report) ? raw.data :
+      null;
+
+    if (resp?.ok) {
+      Cave.staking.data = resp;
+      Cave.staking.lastFetchMs = now;
+      renderStakingPanel(resp);
+      return resp;
+    }
+
+    console.warn("staking_report_unexpected_shape", raw);
+    return null;
+  } catch (err) {
+    console.warn("staking_report_failed", err);
+    return null;
+  } finally {
+    Cave.staking.loading = false;
+  }
+}
+
   async function fetchUserNFTsOnce(timeoutMs = 15000) {
     syncUserInto(Cave.user);
     assertAuthOrThrow(Cave.user);
@@ -7841,7 +8306,7 @@ async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
         }, 12000);
         if (!status.ok) throw new Error(`Status ${status.status}`);
 
-        const result = await API.post("/end_expedition", {
+        const result = await API.post("/end_expedition_v2", {
           wax_account: wax,
           user_id: Cave.user.user_id,
           usx_token: Cave.user.usx_token,
@@ -7852,12 +8317,16 @@ async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
           window.expeditionTimersRunning[wax] = false;
           return;
         }
-
         await renderRecentList();
         await renderGlobalExpeditions();
         prependRecentFromResult(result.data, wax);
-
-        timerEl.textContent = "✅ Expedition complete!";
+        const tokens = result.data?.stats?.tokens || {};
+        const total = Number(tokens.CHIPS || 0);
+        const bonus = Number(tokens.CHIPS_BONUS || 0);
+        const nftCount = Array.isArray(result.data?.nfts) ? result.data.nfts.length : Number(result.data?.stats?.total_nfts || 0);
+        const durLabel = formatDurationShort(result.data?.duration_seconds);
+        const msg = `${wax} completed a ${durLabel} expedition and got ${formatNumber(total, 4)} CHIPS and ${nftCount} NFTs + ${formatNumber(bonus, 4)} CHIPS Bonus from Staking Points`;
+        timerEl.textContent = msg;
         // (non rimuovo il box: le instructions restano visibili)
       } catch (e) {
         timerEl.textContent = "⚠️ Expedition fetch error.";
@@ -7947,6 +8416,10 @@ function hydrateGoblinUI(allNfts) {
 
   // --- filtra i goblin (case-insensitive, per massima compatibilità) ---
   const goblins = all.filter(n => String(n?.type || "").toLowerCase() === "goblin");
+	if (!Cave?.el?.goblinList) {
+	  console.warn("cv-goblin-list not found (UI not mounted yet?)");
+	  return;
+	}
 
   // --- indicizza per asset_id (sempre stringa) ---
   Cave.nftIndex.clear();
@@ -8297,7 +8770,10 @@ function hydrateGoblinUI(allNfts) {
     `;
 
     // 5) Render
-    Cave.el.selectionSummary.innerHTML = infoCardHTML + selectorRowHTML;
+	// Render SOLO dentro #cv-selection-summary (non distruggere la lista)
+	if (Cave.el.selectionSummary) {
+	  Cave.el.selectionSummary.innerHTML = infoCardHTML + selectorRowHTML;
+	}
 
     // 6) Bind start action (limite gestito QUI, non fuori)
     qs("#cv-start").onclick = async () => {
@@ -8344,7 +8820,7 @@ function hydrateGoblinUI(allNfts) {
         assertAuthOrThrow(Cave.user);
 
         // invia anche duration_seconds
-        const r = await API.post("/start_expedition", {
+        const r = await API.post("/start_expedition_v2", {
           wax_account: Cave.user.wax_account,
           user_id:     Cave.user.user_id,
           usx_token:   Cave.user.usx_token,
@@ -8356,12 +8832,17 @@ function hydrateGoblinUI(allNfts) {
           toast(r.data?.error || "Already in expedition.", "warn");
         } else if (r.ok) {
           toast("Expedition started!", "ok");
+          
           try { triggerLogoGoblin(Cave.user.wax_account || 'guest'); } catch {}
           try { showLogoToast(`${safe(Cave.user.wax_account)} just joined the band! Good hunting!`); } catch {}
 
           // usa la durata restituita dal backend
           await renderUserCountdown(r.data.expedition_id, r.data.duration_seconds, ids);
           await renderGlobalExpeditions();
+          // Show Staking Boost snapshot frozen at expedition start
+          if (r.data?.staking) {
+            renderStakingPanel({ staking: r.data.staking });
+          }
         } else {
           toast("Something went wrong.", "err");
         }
@@ -8373,6 +8854,8 @@ function hydrateGoblinUI(allNfts) {
         btn.textContent = "🚀 Start Expedition";
       }
     };
+    // Refresh staking boost (debounced)
+    try { await fetchStakingReport(false); } catch (e) {}
   }
 
   // --- selezione automatica "Best" con cap sicuro ---
@@ -8579,11 +9062,67 @@ function hydrateGoblinUI(allNfts) {
 			Limit: <b>50</b> goblins per expedition. Each Reinforcement NFT adds <b>+5</b>, up to <b>250 Goblins for each expedition</b>.
 		  </div>
 		</div>
+<div class="canvas-box" id="cv-staking">
+  <div class="stake-top">
+    <div>
+      <div class="stake-title">
+        <div class="stake-ico">⚡</div>
+        <strong>Staking Boost</strong>
+        <span class="token-pill lux">LUX</span>
+        <span class="token-pill chips">CHIPS</span>
+        <span class="token-pill alcor">ALCOR</span>
+        <span class="token-pill taco">TACO</span>
+      </div>
 
-        <div id="cv-summary" class="cv-card" style="text-align:center;"></div>
-        <div id="cv-active-filters" class="cv-row" style="justify-content:flex-start; flex-wrap:wrap; gap:.4rem; margin:.35rem 0;"></div>
-        <div id="cv-goblin-list" style="display:flex; flex-direction:column; gap:.5rem;"></div>
-        </div>
+      <div class="stake-sub">
+        Stake <b>LUX</b> (Alcor) and <b>CHIPS</b> (Alcor or Taco) to earn
+        <b>extra CHIPS every expedition</b> — on top of normal rewards.
+      </div>
+    </div>
+
+    <div class="stake-pill" id="cv-staking-pill">+0%</div>
+  </div>
+
+  <div class="staking-grid">
+    <div class="staking-metric">
+      <div class="k">Staking Points</div>
+      <div class="v" id="cv-staking-points">0 pts</div>
+    </div>
+    <div class="staking-metric">
+      <div class="k">Bonus</div>
+      <div class="v emph" id="cv-staking-bonus">+0%</div>
+    </div>
+    <div class="staking-metric">
+      <div class="k">Multiplier</div>
+      <div class="v" id="cv-staking-mult">x1.00</div>
+    </div>
+  </div>
+
+  <div class="staking-progress">
+    <div class="staking-progress-bar" id="cv-staking-progress"></div>
+  </div>
+
+  <div class="stake-hint" id="cv-staking-hint">
+    <span class="dot"></span><b>10 pts = +1%</b>
+    <span class="dot"></span><b>1000 pts = +100%</b> (linear cap)
+    <span class="dot"></span>Boost applies to <b>CHIPS</b> rewards (not NFTs)
+  </div>
+
+  <details class="staking-details" open>
+    <summary>
+      <span>Breakdown by exchange → pool</span>
+      <span class="muted">tap to collapse</span>
+    </summary>
+    <div id="cv-staking-breakdown" class="staking-breakdown"></div>
+  </details>
+</div>
+ 
+<div class="canvas-box" id="cv-summary">
+  <div id="cv-selection-summary"></div>
+  <div id="cv-active-filters" class="cv-row"
+       style="justify-content:flex-start; flex-wrap:wrap; gap:.4rem; margin:.55rem 0 .35rem;"></div>
+  <div id="cv-goblin-list" style="display:flex; flex-direction:column; gap:.5rem;"></div>
+</div>
       </div>
     `;
 
@@ -8595,8 +9134,9 @@ function hydrateGoblinUI(allNfts) {
     Cave.el.globalList = qs("#cv-global-list", container);
     Cave.el.recentList = qs("#cv-recent-list", container);
     Cave.el.bonusList = qs("#cv-bonus-list", container);
-    Cave.el.selectionSummary = qs("#cv-summary", container);
-    Cave.el.goblinList = qs("#cv-goblin-list", container);
+Cave.el.selectionSummary = qs("#cv-selection-summary", container);
+Cave.el.goblinList       = qs("#cv-goblin-list", container);
+Cave.el.activeFilters    = qs("#cv-active-filters", container);
     Cave.el.chestPerkBtn = qs("#cv-chest-btn", container);
     renderSkeletons("#cv-bonus-grid", 6, 72);
     // assets

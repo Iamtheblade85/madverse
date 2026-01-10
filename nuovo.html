@@ -696,6 +696,87 @@
 
 .stk-token b{ font-weight:900; }
 .stk-subtle{ opacity:.85; font-size:12px; }
+/* =========================
+   STAKING BONUS — HERO + PROGRESS
+========================= */
+.stk-hero{
+  padding:14px 14px;
+  border-radius:14px;
+  border:1px solid rgba(250,204,21,0.55);
+  background: radial-gradient(circle at top left, rgba(250,204,21,0.18), rgba(15,23,42,0.96));
+  box-shadow: 0 0 18px rgba(250,204,21,0.20);
+  margin-bottom:10px;
+}
+
+.stk-hero .top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.stk-hero .big{
+  font-family:'Orbitron', system-ui, sans-serif;
+  font-weight:900;
+  letter-spacing:.03em;
+  font-size:22px;
+  line-height:1.15;
+}
+
+.stk-hero .sub{
+  opacity:.9;
+  font-size:13px;
+  line-height:1.45;
+  margin-top:6px;
+  max-width: 56ch;
+}
+
+.stk-hero .pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid rgba(250,204,21,0.65);
+  background: rgba(15,23,42,0.88);
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.stk-hero .bar{
+  margin-top:10px;
+  height:10px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,0.45);
+  background: rgba(15,23,42,0.9);
+  overflow:hidden;
+}
+
+.stk-hero .bar > i{
+  display:block;
+  height:100%;
+  width:0%;
+  background: linear-gradient(90deg, rgba(250,204,21,0.95), rgba(249,115,22,0.95));
+}
+
+.stk-hero .barline{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:6px;
+  font-size:12px;
+  opacity:.9;
+  flex-wrap:wrap;
+}
+
+.stk-note{
+  opacity:.9;
+  font-size:12px;
+  line-height:1.45;
+  margin-top:8px;
+}
 
   </style>
 </head>
@@ -1351,13 +1432,29 @@ function renderStakingReport(report){
   const venues = report?.venues || {};
   const scoring = report?.scoring || {};
 
-  // grand totals may be large but still safe to show as strings
-  const grandChips = grand?.CHIPS ?? '0';
-  const grandLux   = grand?.LUX ?? '0';
-  const grandPts   = grand?.points ?? '0';
-
   const venueNames = Object.keys(venues || {});
   const targets = Array.isArray(report?.targets) ? report.targets : [];
+
+  // --- Points -> Bonus mapping (stessa logica del tuo Copy summary attuale)
+  // +1% ogni 10 punti, cap a 100%
+  function parsePoints(x){
+    const n = Number(x);
+    return Number.isFinite(n) ? n : 0;
+  }
+  function pointsToBonus(points){
+    const p = Math.max(0, points);
+    const pct = clamp(Math.floor(p / 10), 0, 100);
+    const mult = 1 + pct / 100;
+    const nextPct = Math.min(100, pct + 1);
+    const nextAt = nextPct * 10;
+    const missing = Math.max(0, nextAt - p);
+    const progress = pct >= 100 ? 100 : clamp((p - pct*10) / 10 * 100, 0, 100);
+    return { pct, mult, nextPct, nextAt, missing, progress };
+  }
+
+  const grandPtsRaw = grand?.points ?? '0';
+  const pointsNum = parsePoints(grandPtsRaw);
+  const bonus = pointsToBonus(pointsNum);
 
   const renderPool = (row)=>{
     const pair = row?.pair || `${row?.token0||'?'} / ${row?.token1||'?'}`;
@@ -1375,7 +1472,10 @@ function renderStakingReport(report){
         <div class="row1">
           <div>
             <div class="pair">${safe(pair)}</div>
-            <div class="stk-subtle">Pool: <b>${safe(poolId)}</b> · Positions: <b>${safe(pos)}</b> · Points: <b>${safe(fmtDecStr(pts))}</b></div>
+            <div class="stk-subtle">
+              Pool: <b>${safe(poolId)}</b> · Positions: <b>${safe(pos)}</b> ·
+              Points: <b>${safe(fmtDecStr(pts))}</b>
+            </div>
           </div>
           ${meta ? `<div class="meta" title="${safe(meta)}">${safe(meta)}</div>` : `<div class="meta"></div>`}
         </div>
@@ -1396,7 +1496,6 @@ function renderStakingReport(report){
     const lux = subt?.LUX ?? '0';
     const chips = subt?.CHIPS ?? '0';
 
-    // open first venue by default
     const openAttr = (name === venueNames[0]) ? 'open' : '';
 
     return `
@@ -1404,12 +1503,15 @@ function renderStakingReport(report){
         <details class="stk-acc" ${openAttr}>
           <summary>
             <div class="left">
-              <div>${safe(name)} <span class="staking-pill" style="margin-left:6px">points ${safe(fmtDecStr(vPts))}</span></div>
-              <div class="stk-subtle">Subtotals: CHIPS <b>${safe(fmtDecStr(chips))}</b> · LUX <b>${safe(fmtDecStr(lux))}</b> · Pools <b>${rows.length}</b></div>
+              <div>
+                ${safe(name)}
+                <span class="staking-pill" style="margin-left:6px">points ${safe(fmtDecStr(vPts))}</span>
+              </div>
+              <div class="stk-subtle">
+                Pools <b>${rows.length}</b> · Subtotals: CHIPS <b>${safe(fmtDecStr(chips))}</b> · LUX <b>${safe(fmtDecStr(lux))}</b>
+              </div>
             </div>
-            <div class="right">
-              <span class="chev">›</span>
-            </div>
+            <div class="right"><span class="chev">›</span></div>
           </summary>
           <div class="body">
             ${rows.length ? rows.map(renderPool).join('') : `<div class="stk-subtle">No pools found in this venue.</div>`}
@@ -1419,35 +1521,52 @@ function renderStakingReport(report){
     `;
   };
 
+  // Hero copy super-chiara: +X% CHIPS per run
+  const bonusText = bonus.pct >= 100
+    ? `You are at the maximum bonus cap.`
+    : `Add more token liquidity to gain more points and reach +${bonus.nextPct}% (need ~${Math.ceil(bonus.missing)} more points).`;
+
   host.innerHTML = `
+    <div class="stk-hero">
+      <div class="top">
+        <div>
+          <div class="big">+${bonus.pct}% CHIPS per expedition</div>
+          <div class="sub">
+            Your staking positions generate <b>${safe(fmtDecStr(grandPtsRaw))}</b> total points.
+            Every expedition’s CHIPS rewards are multiplied by <b>x${bonus.mult.toFixed(2)}</b>.
+          </div>
+          <div class="stk-note">
+            ${safe(bonusText)}
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+          <span class="pill">Total points: ${safe(fmtDecStr(grandPtsRaw))}</span>
+          <span class="pill">Multiplier: x${bonus.mult.toFixed(2)}</span>
+          <span class="pill">Targets: ${targets.length ? targets.map(safe).join(', ') : '—'}</span>
+        </div>
+      </div>
+
+      <div class="bar" title="Progress to the next +1% tier">
+        <i style="width:${bonus.progress}%"></i>
+      </div>
+
+      <div class="barline">
+        <span>Current tier: <b>+${bonus.pct}%</b></span>
+        <span>${bonus.pct >= 100 ? '<b>Maxed</b>' : `Next tier: <b>+${bonus.nextPct}%</b> at <b>${bonus.nextAt}</b> points`}</span>
+      </div>
+    </div>
+
     <div class="staking-card">
       <div class="title">
-        <span>🧾 Staking overview</span>
-        <span class="staking-pill" title="Total points from all venues">points ${safe(fmtDecStr(grandPts))}</span>
+        <span>🏦 Open staking positions (pools)</span>
+        <span class="staking-pill">${venueNames.length} venues</span>
       </div>
-
-      <div class="staking-kv">
-        <div>
-          <div class="k">Total CHIPS</div>
-          <div class="v">${safe(fmtDecStr(grandChips))}</div>
-        </div>
-        <div>
-          <div class="k">Total LUX</div>
-          <div class="v">${safe(fmtDecStr(grandLux))}</div>
-        </div>
-        <div>
-          <div class="k">Targets</div>
-          <div class="v">${targets.length ? targets.map(safe).join(', ') : '—'}</div>
-        </div>
-        <div>
-          <div class="k">Base token</div>
-          <div class="v">${safe(report?.points_base_token || '—')}</div>
-        </div>
+      <div style="opacity:.9;font-size:12px;line-height:1.45;margin-bottom:8px">
+        Expand a venue to see each pool, the token amounts in staking, and how many <b>points</b> each position generates.
+        Increasing token amounts in these pools increases points → increases your <b>+% CHIPS per expedition</b>.
       </div>
-
-      <div style="margin-top:10px;opacity:.9;font-size:12px;line-height:1.45">
-        Points are computed from your active liquidity positions across venues. Expand a venue to see pools and token amounts in staking.
-      </div>
+      ${venueNames.length ? venueNames.map(renderVenue).join('') : `<div class="stk-subtle">No venues in report.</div>`}
     </div>
 
     <div style="height:10px"></div>
@@ -1457,7 +1576,6 @@ function renderStakingReport(report){
         <span>⚙️ Scoring engine</span>
         <span class="staking-pill">params</span>
       </div>
-
       <div class="staking-kv">
         <div>
           <div class="k">wax_per_chips</div>
@@ -1476,16 +1594,6 @@ function renderStakingReport(report){
           <div class="v">${safe(report?.quote_token || '—')}</div>
         </div>
       </div>
-    </div>
-
-    <div style="height:10px"></div>
-
-    <div class="staking-card">
-      <div class="title">
-        <span>🏦 Venues</span>
-        <span class="staking-pill">${venueNames.length} venues</span>
-      </div>
-      ${venueNames.length ? venueNames.map(renderVenue).join('') : `<div class="stk-subtle">No venues in report.</div>`}
     </div>
   `;
 }
@@ -4056,19 +4164,40 @@ function ensureStakingReportLoaded(){
             const cachedRaw = localStorage.getItem(stakingCacheKey(wax));
             const cached = cachedRaw ? JSON.parse(cachedRaw) : null;
             const data = cached?.report || null;
-
+        
             if (!data){
               toast('No staking report loaded yet.');
               return;
             }
-            const pts = toNumber(data?.grand_totals?.points);
-            const pct = clamp(Math.floor(pts/10), 0, 100);
-            const mult = (1 + pct/100).toFixed(2);
-            const text = `Staking report for ${wax}\nPoints: ${pts}\nBonus: +${pct}% (x${mult})\nLUX: ${data?.grand_totals?.LUX}\nCHIPS: ${data?.grand_totals?.CHIPS}\nGenerated: ${data?.started_at_utc}`;
+        
+            const ptsNum = Number(data?.grand_totals?.points) || 0;
+            const pct = clamp(Math.floor(Math.max(0, ptsNum) / 10), 0, 100);
+            const mult = (1 + pct/100);
+        
+            // Conta posizioni/pool totali
+            const venues = data?.venues || {};
+            const venueNames = Object.keys(venues);
+            let pools = 0;
+            for (const name of venueNames){
+              const rows = Array.isArray(venues[name]?.rows) ? venues[name].rows : [];
+              pools += rows.length;
+            }
+        
+            const text =
+        `Staking bonus for ${wax}
+        Bonus per expedition: +${pct}% (x${mult.toFixed(2)} CHIPS)
+        Total points: ${ptsNum}
+        Open pools: ${pools} across ${venueNames.length} venues
+        Generated (UTC): ${data?.started_at_utc || '—'}
+        
+        Tip: Add more liquidity to your staking pools to increase points → increase bonus %.`;
+        
             if (navigator.clipboard?.writeText){
-              navigator.clipboard.writeText(text).then(()=>toast('Copied staking summary')).catch(()=>prompt('Copy staking summary:', text));
+              navigator.clipboard.writeText(text)
+                .then(()=>toast('Copied staking bonus summary'))
+                .catch(()=>prompt('Copy staking bonus summary:', text));
             } else {
-              prompt('Copy staking summary:', text);
+              prompt('Copy staking bonus summary:', text);
             }
           } catch {
             toast('Could not copy summary.');

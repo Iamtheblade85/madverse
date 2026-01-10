@@ -418,7 +418,177 @@
     background: rgba(52,211,153,0.95);
     color:#022c22;
     font-weight: 800;
-  }    
+  }
+  /* =========================
+     STAKING REPORT — UI
+  ========================= */
+  #tab-staking h3{
+    margin-bottom:10px;
+  }
+  
+  .staking-toolbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(148,163,184,0.55);
+    background: radial-gradient(circle at top left, rgba(168,85,247,0.14), rgba(15,23,42,0.96));
+    box-shadow: 0 0 16px rgba(168,85,247,0.18);
+    margin-bottom:10px;
+  }
+  
+  .staking-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  
+  .staking-chip{
+    display:inline-flex;
+    flex-direction:column;
+    gap:2px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(148,163,184,0.65);
+    background: rgba(15,23,42,0.92);
+    min-width: 140px;
+  }
+  
+  .staking-chip .lbl{
+    font-size:11px;
+    opacity:.85;
+    letter-spacing:.02em;
+  }
+  
+  .staking-chip b{
+    font-size:13px;
+    font-weight:900;
+  }
+  
+  .staking-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  
+  #staking-host .staking-grid{
+    display:grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap:10px;
+  }
+  @media (max-width: 900px){
+    #staking-host .staking-grid{ grid-template-columns: minmax(0,1fr); }
+  }
+  
+  .staking-card{
+    padding:12px 12px;
+    border-radius:12px;
+    border:1px solid rgba(148,163,184,0.55);
+    background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,64,175,0.78));
+    box-shadow: 0 0 18px rgba(56,189,248,0.12);
+  }
+  
+  .staking-card .title{
+    font-weight:900;
+    letter-spacing:.03em;
+    margin-bottom:8px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  
+  .staking-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:3px 10px;
+    border-radius:999px;
+    border:1px solid rgba(56,189,248,0.75);
+    background: rgba(15,23,42,0.88);
+    font-size:12px;
+    font-weight:800;
+  }
+  
+  .staking-kv{
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap:8px 10px;
+  }
+  
+  .staking-kv .k{
+    font-size:12px;
+    opacity:.88;
+  }
+  
+  .staking-kv .v{
+    font-size:14px;
+    font-weight:900;
+  }
+  
+  .staking-table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    overflow:hidden;
+    border-radius:12px;
+    border:1px solid rgba(148,163,184,0.55);
+    background: rgba(15,23,42,0.92);
+  }
+  
+  .staking-table th, .staking-table td{
+    padding:10px 10px;
+    font-size:12px;
+    border-bottom:1px solid rgba(148,163,184,0.18);
+    text-align:left;
+    vertical-align:top;
+  }
+  
+  .staking-table th{
+    font-size:11px;
+    opacity:.9;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+  
+  .staking-table tr:last-child td{
+    border-bottom:none;
+  }
+  
+  .staking-row-muted{
+    opacity:.85;
+  }
+  
+  .staking-skeleton{
+    border-radius:12px;
+    border:1px solid rgba(148,163,184,0.55);
+    background: rgba(15,23,42,0.88);
+    padding:12px;
+    overflow:hidden;
+    position:relative;
+  }
+  
+  .staking-skeleton::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background: linear-gradient(90deg,
+      rgba(255,255,255,0.02),
+      rgba(255,255,255,0.08),
+      rgba(255,255,255,0.02));
+    transform: translateX(-60%);
+    animation: stakingShimmer 1.1s infinite;
+  }
+  
+  @keyframes stakingShimmer{
+    0%{ transform:translateX(-60%); }
+    100%{ transform:translateX(60%); }
+  }
+
   </style>
 </head>
 
@@ -486,10 +656,17 @@
                   aria-controls="tab-my" data-panel="tab-my" title="Build your expedition">
             My Goblins
           </button>
+        
+          <button id="tab-btn-staking" class="btn-primary" role="tab" aria-selected="false" tabindex="-1"
+                  aria-controls="tab-staking" data-panel="tab-staking" title="View your staking points and bonuses">
+            Staking
+          </button>
+        
           <button id="tab-btn-global" class="btn-primary" role="tab" aria-selected="false" tabindex="-1"
                   aria-controls="tab-global" data-panel="tab-global" title="Live view of all expeditions">
             Global
           </button>
+        
           <button id="tab-btn-recent" class="btn-primary" role="tab" aria-selected="false" tabindex="-1"
                   aria-controls="tab-recent" data-panel="tab-recent" title="Expeditions completed in the last 24h">
             Recent
@@ -526,6 +703,36 @@
               <span id="gas-rarity-rare"      class="gas-chip gas-chip--rarity">Rare: <strong>0</strong></span>
               <span id="gas-rarity-common"    class="gas-chip gas-chip--rarity">Common: <strong>0</strong></span>
             </div>
+          </section>
+
+          <!-- Staking Tab -->
+          <section id="tab-staking" role="tabpanel" aria-labelledby="tab-btn-staking" tabindex="0"
+                   aria-label="Staking Report" hidden>
+            <h3>🧾 Staking Report</h3>
+          
+            <div class="staking-toolbar">
+              <div class="staking-meta">
+                <div class="staking-chip">
+                  <span class="lbl">Account</span>
+                  <b id="staking-account">—</b>
+                </div>
+                <div class="staking-chip" title="When this report was generated on the server (UTC).">
+                  <span class="lbl">Generated</span>
+                  <b id="staking-started-at">—</b>
+                </div>
+                <div class="staking-chip" title="Cached on this device for fast switching.">
+                  <span class="lbl">Cache</span>
+                  <b id="staking-cache">—</b>
+                </div>
+              </div>
+          
+              <div class="staking-actions">
+                <button id="btn-staking-refresh" class="btn-primary" type="button">🔄 Refresh</button>
+                <button id="btn-staking-copy" class="btn-primary" type="button">📋 Copy summary</button>
+              </div>
+            </div>
+          
+            <div id="staking-host" aria-live="polite"></div>
           </section>
 
           <!-- Panoramica + bottone manuale per fetch goblins -->
@@ -704,6 +911,14 @@
         goblinStatAvg: null,
         goblinStatUpdated: null,
         btnLoadGoblins: null,
+
+        // staking tab
+        stakingHost: null,
+        stakingAccount: null,
+        stakingStartedAt: null,
+        stakingCache: null,
+        btnStakingRefresh: null,
+        btnStakingCopy: null,
       },
 
       user: { wax_account:'', user_id:'', usx_token:'' },
@@ -931,6 +1146,273 @@
       if (!State.user.wax_account || !State.user.user_id || !State.user.usx_token){
         throw new Error('Not authenticated');
       }
+    }
+    
+    // ============================================================
+    // STAKING REPORT — UX/UI + FETCH
+    // ============================================================
+    
+    function fmtUtc(iso){
+      if (!iso) return '—';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return String(iso);
+      // show local time but indicate it's UTC source
+      return `${timeHM(d)} · ${d.toLocaleDateString()} (UTC src)`;
+    }
+    
+    function stakingCacheKey(wax){
+      return `staking_report_cache::${String(wax||'').toLowerCase()}`;
+    }
+    
+    function setStakingMeta({account, startedAtUtc, cacheLabel}){
+      if (State.ui.stakingAccount) State.ui.stakingAccount.textContent = account || '—';
+      if (State.ui.stakingStartedAt) State.ui.stakingStartedAt.textContent = startedAtUtc ? fmtUtc(startedAtUtc) : '—';
+      if (State.ui.stakingCache) State.ui.stakingCache.textContent = cacheLabel || '—';
+    }
+    
+    function renderStakingSkeleton(){
+      const host = State.ui.stakingHost;
+      if (!host) return;
+      host.innerHTML = `
+        <div class="staking-grid">
+          <div class="staking-skeleton" style="height:140px"></div>
+          <div class="staking-skeleton" style="height:140px"></div>
+        </div>
+        <div style="height:10px"></div>
+        <div class="staking-skeleton" style="height:220px"></div>
+      `;
+    }
+    
+    function renderStakingError(message){
+      const host = State.ui.stakingHost;
+      if (!host) return;
+      host.innerHTML = `
+        <div class="staking-card">
+          <div class="title">⚠️ Staking report unavailable</div>
+          <div style="opacity:.9;line-height:1.45">
+            ${safe(message || 'Could not load staking report right now.')}
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-primary" type="button" id="btn-staking-retry">🔄 Try again</button>
+          </div>
+        </div>
+      `;
+      const btn = document.getElementById('btn-staking-retry');
+      if (btn) btn.onclick = ()=> fetchAndRenderStakingReport({force:true});
+    }
+    
+    function renderStakingReport(data){
+      const host = State.ui.stakingHost;
+      if (!host) return;
+    
+      const grand = data?.grand_totals || {};
+      const venues = data?.venues || {};
+      const scoring = data?.scoring || {};
+      const timing = data?.timing_ms || {};
+    
+      const lux = toNumber(grand.LUX);
+      const chips = toNumber(grand.CHIPS);
+      const points = toNumber(grand.points);
+    
+      // same rule you use elsewhere: percent = points/10 capped 100
+      const bonusPct = clamp(Math.floor(points / 10), 0, 100);
+      const mult = (1 + bonusPct/100);
+    
+      const venueRows = (name)=>{
+        const v = venues?.[name] || {};
+        const subt = v.subtotals || {};
+        const pts = toNumber(v.points);
+        const rows = Array.isArray(v.rows) ? v.rows : [];
+        return { rows, subt, pts };
+      };
+    
+      const A = venueRows('ALCOR');
+      const T = venueRows('TACO');
+    
+      const tokenList = Array.isArray(data?.targets) ? data.targets : [];
+    
+      host.innerHTML = `
+        <div class="staking-grid">
+          <div class="staking-card">
+            <div class="title">
+              <span>⭐ Your staking power</span>
+              <span class="staking-pill" title="Bonus applied to game rewards based on points.">
+                +${bonusPct}% · ×${mult.toFixed(2)}
+              </span>
+            </div>
+    
+            <div class="staking-kv">
+              <div>
+                <div class="k">Grand points</div>
+                <div class="v">${formatCompact(points)}</div>
+              </div>
+              <div>
+                <div class="k">Bonus rule</div>
+                <div class="v">points ÷ 10 (cap 100%)</div>
+              </div>
+    
+              <div>
+                <div class="k">Total LUX</div>
+                <div class="v">${formatDP(lux)}</div>
+              </div>
+              <div>
+                <div class="k">Total CHIPS</div>
+                <div class="v">${formatDP(chips)}</div>
+              </div>
+            </div>
+    
+            <div style="margin-top:10px;opacity:.9;font-size:12px;line-height:1.45">
+              This panel aggregates your liquidity / staking positions and converts them into <b>points</b>.
+              Higher points increase your in-game bonus multiplier.
+            </div>
+          </div>
+    
+          <div class="staking-card">
+            <div class="title">
+              <span>⚙️ Scoring parameters</span>
+              <span class="staking-pill" title="How values are converted to points.">engine</span>
+            </div>
+    
+            <div class="staking-kv">
+              <div>
+                <div class="k">WAX per LUX</div>
+                <div class="v">${formatDP(scoring.wax_per_lux)}</div>
+              </div>
+              <div>
+                <div class="k">WAX per CHIPS</div>
+                <div class="v">${formatDP(scoring.wax_per_chips)}</div>
+              </div>
+              <div>
+                <div class="k">× points / CHIPS</div>
+                <div class="v">${formatDP(scoring.x_points_per_chips)}</div>
+              </div>
+              <div>
+                <div class="k">Quote token</div>
+                <div class="v">${safe(data.quote_token || '—')}</div>
+              </div>
+            </div>
+    
+            <div style="margin-top:10px;opacity:.9;font-size:12px;line-height:1.45">
+              Targets: <b>${tokenList.length ? tokenList.map(safe).join(', ') : '—'}</b><br>
+              Base token: <b>${safe(data.points_base_token || '—')}</b>
+            </div>
+          </div>
+        </div>
+    
+        <div style="height:10px"></div>
+    
+        <div class="staking-card">
+          <div class="title">
+            <span>🏦 Venues breakdown</span>
+            <span class="staking-pill" title="Points per venue.">ALCOR ${formatCompact(A.pts)} · TACO ${formatCompact(T.pts)}</span>
+          </div>
+    
+          <table class="staking-table" aria-label="Venues breakdown table">
+            <thead>
+              <tr>
+                <th>Venue</th>
+                <th>Rows</th>
+                <th>LUX</th>
+                <th>CHIPS</th>
+                <th>Points</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>ALCOR</b></td>
+                <td class="staking-row-muted">${A.rows.length}</td>
+                <td>${formatDP(A.subt?.LUX)}</td>
+                <td>${formatDP(A.subt?.CHIPS)}</td>
+                <td><b>${formatCompact(A.pts)}</b></td>
+              </tr>
+              <tr>
+                <td><b>TACO</b></td>
+                <td class="staking-row-muted">${T.rows.length}</td>
+                <td>${formatDP(T.subt?.LUX)}</td>
+                <td>${formatDP(T.subt?.CHIPS)}</td>
+                <td><b>${formatCompact(T.pts)}</b></td>
+              </tr>
+              <tr>
+                <td><b>GRAND</b></td>
+                <td class="staking-row-muted">${A.rows.length + T.rows.length}</td>
+                <td><b>${formatDP(lux)}</b></td>
+                <td><b>${formatDP(chips)}</b></td>
+                <td><b>${formatCompact(points)}</b></td>
+              </tr>
+            </tbody>
+          </table>
+    
+          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;opacity:.9;font-size:12px;line-height:1.45">
+            <span class="staking-pill" title="Backend timing: where time is spent.">Timing ms: ${Object.keys(timing).length ? safe(JSON.stringify(timing)) : '—'}</span>
+          </div>
+        </div>
+      `;
+    }
+    
+    async function fetchAndRenderStakingReport({force=false} = {}){
+      syncUserFromStorage();
+      try { assertAuth(); } catch {
+        setStakingMeta({account:'—', startedAtUtc:null, cacheLabel:'—'});
+        renderStakingError('Not authenticated. Please connect your account first.');
+        return;
+      }
+    
+      const wax = (State.user.wax_account || '').trim().toLowerCase();
+      const key = stakingCacheKey(wax);
+    
+      // show cached instantly (fast UX) unless force refresh
+      if (!force){
+        try{
+          const cachedRaw = localStorage.getItem(key);
+          if (cachedRaw){
+            const cached = JSON.parse(cachedRaw);
+            if (cached && cached.data){
+              setStakingMeta({
+                account: wax,
+                startedAtUtc: cached.data.started_at_utc,
+                cacheLabel: `hit · ${new Date(cached.savedAt).toLocaleTimeString()}`
+              });
+              renderStakingReport(cached.data);
+              // still do a silent refresh if cache is old
+              const ageMs = Date.now() - (cached.savedAt || 0);
+              if (ageMs < 60_000) return; // 60s fresh enough
+            }
+          }
+        } catch {/* ignore */}
+      }
+    
+      setStakingMeta({account:wax, startedAtUtc:null, cacheLabel: force ? 'refresh…' : 'miss…'});
+      renderStakingSkeleton();
+    
+      const res = await Api.post('/staking_report', {
+        wax_account: wax,
+        user_id: State.user.user_id,
+        usx_token: State.user.usx_token
+      }, 60000);
+    
+      if (!res || !res.ok || !res.data){
+        renderStakingError(res?.data?.error || 'Network / server error while generating the report.');
+        setStakingMeta({account:wax, startedAtUtc:null, cacheLabel:'error'});
+        return;
+      }
+    
+      const data = res.data;
+      // cache it
+      try{
+        localStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), data }));
+      } catch {/* ignore */}
+    
+      setStakingMeta({
+        account: wax,
+        startedAtUtc: data.started_at_utc,
+        cacheLabel: 'fresh'
+      });
+      renderStakingReport(data);
+    }
+    
+    function ensureStakingReportLoaded(){
+      // load once when entering tab (or if user presses refresh)
+      fetchAndRenderStakingReport({force:false});
     }
 
     // ------------------------------------------------------------
@@ -2774,14 +3256,15 @@
     function setTabsBehavior(){
       const tabs = document.getElementById('tabs');
       const my = document.getElementById('tab-my');
+      const staking = document.getElementById('tab-staking');
       const global = document.getElementById('tab-global');
       const recent = document.getElementById('tab-recent');
 
       function activate(panelName){
         my.hidden = panelName !== 'tab-my';
+        if (staking) staking.hidden = panelName !== 'tab-staking';
         global.hidden = panelName !== 'tab-global';
         recent.hidden = panelName !== 'tab-recent';
-
         tabs.querySelectorAll('button[role="tab"]').forEach(b=>{
           b.setAttribute('aria-selected', String(b.dataset.panel === panelName));
           b.tabIndex = (b.dataset.panel === panelName) ? 0 : -1;
@@ -2789,6 +3272,7 @@
 
         if (panelName === 'tab-global') renderGlobalPanel();
         if (panelName === 'tab-recent') renderRecentPanel();
+        if (panelName === 'tab-staking') ensureStakingReportLoaded();
       }
 
       tabs.querySelectorAll('button[role="tab"]').forEach(btn=>{
@@ -3196,8 +3680,24 @@
         toast('Simulator tab active: expedition will still use your real selected goblins.');
       }
 
-      const ids = Array.from(State.selectedGoblinIds);
-      if (!ids.length){ toast('Select at least one goblin'); return; }
+      const idsAll = Array.from(State.selectedGoblinIds);
+      
+      // Se il forecast ha marcato dei goblin come "tired", li escludiamo dallo start
+      const tiredSet = State.runtime.forecastInsufficientIds || new Set();
+      const ids = idsAll.filter(id => !tiredSet.has(String(id)));
+      
+      const skipped = idsAll.length - ids.length;
+      
+      if (!ids.length){
+        toast(skipped
+          ? 'All selected goblins are tired for this duration. Remove tired goblins or choose a shorter duration.'
+          : 'Select at least one goblin');
+        return;
+      }
+      
+      if (skipped > 0){
+        toast(`Skipping ${skipped} tired goblin${skipped>1?'s':''}. Starting with ${ids.length}.`);
+      }
 
       const cap = getSendCap();
       if (ids.length > cap){
@@ -3232,12 +3732,10 @@
       const endAt = new Date(Date.now() + durSec*1000);
 
       toast(`⛏️ Expedition started! ${ids.length}/${cap} goblins · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`);
-      pushCanvasMsg(`⛏️ ${State.user.wax_account} started an expedition`);
-
+      pushCanvasMsg(`⛏️ ${State.user.wax_account} started an expedition with ${ids.length}/${cap} goblins · ETA ${fmtHMS(durSec*1000)}`);
       State.runtime.expeditionInProgress = true;
       State.runtime.forecastPowerByAsset = {};
       State.runtime.forecastInsufficientIds = new Set();
-     
       const rf = document.getElementById('run-forecast');
       if (rf){
         rf.replaceChildren();
@@ -3364,6 +3862,13 @@
       State.ui.goblinStatAvg     = document.getElementById('stat-goblins-power-avg');
       State.ui.goblinStatUpdated = document.getElementById('stat-goblins-updated');
       State.ui.btnLoadGoblins    = document.getElementById('btn-load-goblins');
+      // staking tab elements
+      State.ui.stakingHost = document.getElementById('staking-host');
+      State.ui.stakingAccount = document.getElementById('staking-account');
+      State.ui.stakingStartedAt = document.getElementById('staking-started-at');
+      State.ui.stakingCache = document.getElementById('staking-cache');
+      State.ui.btnStakingRefresh = document.getElementById('btn-staking-refresh');
+      State.ui.btnStakingCopy = document.getElementById('btn-staking-copy');
 
       applyOverlayMode();
       setTabsBehavior();
@@ -3394,6 +3899,34 @@
 
       if (State.ui.btnLoadGoblins) {
         State.ui.btnLoadGoblins.onclick = fetchUserNFTs;
+      }
+      if (State.ui.btnStakingRefresh){
+        State.ui.btnStakingRefresh.onclick = ()=> fetchAndRenderStakingReport({force:true});
+      }
+      if (State.ui.btnStakingCopy){
+        State.ui.btnStakingCopy.onclick = ()=>{
+          try{
+            const wax = (State.user.wax_account || '').trim().toLowerCase();
+            const cachedRaw = localStorage.getItem(stakingCacheKey(wax));
+            const cached = cachedRaw ? JSON.parse(cachedRaw) : null;
+            const data = cached?.data || null;
+            if (!data){
+              toast('No staking report loaded yet.');
+              return;
+            }
+            const pts = toNumber(data?.grand_totals?.points);
+            const pct = clamp(Math.floor(pts/10), 0, 100);
+            const mult = (1 + pct/100).toFixed(2);
+            const text = `Staking report for ${wax}\nPoints: ${pts}\nBonus: +${pct}% (x${mult})\nLUX: ${data?.grand_totals?.LUX}\nCHIPS: ${data?.grand_totals?.CHIPS}\nGenerated: ${data?.started_at_utc}`;
+            if (navigator.clipboard?.writeText){
+              navigator.clipboard.writeText(text).then(()=>toast('Copied staking summary')).catch(()=>prompt('Copy staking summary:', text));
+            } else {
+              prompt('Copy staking summary:', text);
+            }
+          } catch {
+            toast('Could not copy summary.');
+          }
+        };
       }
 
       State.engine = new GameEngine(State.ui.canvas);

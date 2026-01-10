@@ -589,6 +589,114 @@
     100%{ transform:translateX(60%); }
   }
 
+/* =========================
+   STAKING REPORT — EXPAND/COLLAPSE + POOLS
+========================= */
+.stk-venue{
+  margin-top:10px;
+}
+
+.stk-acc{
+  border-radius:12px;
+  border:1px solid rgba(148,163,184,0.55);
+  background: rgba(15,23,42,0.92);
+  overflow:hidden;
+}
+
+.stk-acc summary{
+  list-style:none;
+  cursor:pointer;
+  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-weight:900;
+}
+
+.stk-acc summary::-webkit-details-marker{ display:none; }
+
+.stk-acc summary .left{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+.stk-acc summary .right{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.stk-acc .chev{
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  border:1px solid rgba(56,189,248,0.75);
+  background: rgba(15,23,42,0.88);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  transition: transform .12s ease-out;
+}
+
+.stk-acc[open] summary .chev{
+  transform: rotate(90deg);
+}
+
+.stk-acc .body{
+  padding:10px 12px 12px;
+  border-top:1px solid rgba(148,163,184,0.18);
+}
+
+.stk-pool{
+  border-radius:12px;
+  border:1px solid rgba(148,163,184,0.22);
+  background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,64,175,0.40));
+  padding:10px 10px;
+  margin-top:8px;
+}
+
+.stk-pool .row1{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.stk-pool .pair{
+  font-weight:900;
+  letter-spacing:.02em;
+}
+
+.stk-pool .meta{
+  opacity:.85;
+  font-size:12px;
+}
+
+.stk-tokens{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+
+.stk-token{
+  padding:5px 10px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,0.55);
+  background: rgba(15,23,42,0.88);
+  font-size:12px;
+  white-space:nowrap;
+}
+
+.stk-token b{ font-weight:900; }
+.stk-subtle{ opacity:.85; font-size:12px; }
+
   </style>
 </head>
 
@@ -788,7 +896,7 @@
   <!-- ========================= -->
   <section id="tab-staking" role="tabpanel" aria-labelledby="tab-btn-staking" tabindex="0"
            aria-label="Staking Report" hidden>
-    <h3>🧾 Staking Report</h3>
+    <h3>🧾 Staking Pools</h3>
 
     <div class="staking-toolbar">
       <div class="staking-meta">
@@ -1168,15 +1276,14 @@
     }
     
 // ============================================================
-// STAKING REPORT — UX/UI + FETCH  (FIXED for wrapped response)
+// STAKING REPORT — UX/UI + FETCH  (POOLS + EXPAND/COLLAPSE)
 // ============================================================
 
 function fmtUtc(iso){
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return String(iso);
-  // show local time but indicate it's UTC source
-  return `${timeHM(d)} · ${d.toLocaleDateString()} (UTC src)`;
+  return `${timeHM(d)} · ${d.toLocaleDateString()}`;
 }
 
 function stakingCacheKey(wax){
@@ -1193,12 +1300,9 @@ function renderStakingSkeleton(){
   const host = State.ui.stakingHost;
   if (!host) return;
   host.innerHTML = `
-    <div class="staking-grid">
-      <div class="staking-skeleton" style="height:140px"></div>
-      <div class="staking-skeleton" style="height:140px"></div>
-    </div>
+    <div class="staking-skeleton" style="height:120px"></div>
     <div style="height:10px"></div>
-    <div class="staking-skeleton" style="height:220px"></div>
+    <div class="staking-skeleton" style="height:320px"></div>
   `;
 }
 
@@ -1208,9 +1312,7 @@ function renderStakingError(message){
   host.innerHTML = `
     <div class="staking-card">
       <div class="title">⚠️ Staking report unavailable</div>
-      <div style="opacity:.9;line-height:1.45">
-        ${safe(message || 'Could not load staking report right now.')}
-      </div>
+      <div style="opacity:.9;line-height:1.45">${safe(message || 'Could not load staking report right now.')}</div>
       <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn-primary" type="button" id="btn-staking-retry">🔄 Try again</button>
       </div>
@@ -1220,22 +1322,25 @@ function renderStakingError(message){
   if (btn) btn.onclick = ()=> fetchAndRenderStakingReport({force:true});
 }
 
-// Normalize backend response: it may be { ok:true, report:{...} } or directly {...}
+// unwrap { ok:true, report:{...}, bonus:{...} } -> report
 function normalizeStakingPayload(raw){
   if (!raw || typeof raw !== 'object') return null;
-
-  // If wrapped like your devtools example
-  if (raw.report && typeof raw.report === 'object'){
-    return raw.report;
-  }
-
-  // Some backends might send { ok:true, data:{...} }
-  if (raw.data && typeof raw.data === 'object'){
-    return raw.data;
-  }
-
-  // Already the report object
+  if (raw.report && typeof raw.report === 'object') return raw.report;
+  if (raw.data && typeof raw.data === 'object') return raw.data;
   return raw;
+}
+
+// IMPORTANT: scoring fields are LONG decimal strings -> don't Number() them
+function fmtDecStr(x){
+  if (x == null) return '—';
+  const s = String(x);
+  // keep it readable: if very long, truncate but preserve meaning
+  if (s.length > 18){
+    // show first 10 + '…' + last 4 only if it has many decimals
+    const head = s.slice(0, 12);
+    return head + '…';
+  }
+  return s;
 }
 
 function renderStakingReport(report){
@@ -1245,103 +1350,130 @@ function renderStakingReport(report){
   const grand = report?.grand_totals || {};
   const venues = report?.venues || {};
   const scoring = report?.scoring || {};
-  const timing = report?.timing_ms || report?.timing || null;
 
-  const lux = toNumber(grand.LUX);
-  const chips = toNumber(grand.CHIPS);
-  const points = toNumber(grand.points);
+  // grand totals may be large but still safe to show as strings
+  const grandChips = grand?.CHIPS ?? '0';
+  const grandLux   = grand?.LUX ?? '0';
+  const grandPts   = grand?.points ?? '0';
 
-  // same rule you use elsewhere: percent = points/10 capped 100
-  const bonusPct = clamp(Math.floor(points / 10), 0, 100);
-  const mult = (1 + bonusPct/100);
+  const venueNames = Object.keys(venues || {});
+  const targets = Array.isArray(report?.targets) ? report.targets : [];
 
-  const venueRows = (name)=>{
-    const v = venues?.[name] || {};
-    const subt = v.subtotals || {};
-    const pts = toNumber(v.points);
-    const rows = Array.isArray(v.rows) ? v.rows : [];
-    return { rows, subt, pts };
+  const renderPool = (row)=>{
+    const pair = row?.pair || `${row?.token0||'?'} / ${row?.token1||'?'}`;
+    const a0 = row?.amount0 ?? '0';
+    const a1 = row?.amount1 ?? '0';
+    const t0 = row?.token0 || '';
+    const t1 = row?.token1 || '';
+    const meta = row?.meta || '';
+    const poolId = row?.pool_id != null ? String(row.pool_id) : '—';
+    const pos = row?.positions != null ? String(row.positions) : '—';
+    const pts = row?.points ?? '0';
+
+    return `
+      <div class="stk-pool">
+        <div class="row1">
+          <div>
+            <div class="pair">${safe(pair)}</div>
+            <div class="stk-subtle">Pool: <b>${safe(poolId)}</b> · Positions: <b>${safe(pos)}</b> · Points: <b>${safe(fmtDecStr(pts))}</b></div>
+          </div>
+          ${meta ? `<div class="meta" title="${safe(meta)}">${safe(meta)}</div>` : `<div class="meta"></div>`}
+        </div>
+
+        <div class="stk-tokens">
+          <span class="stk-token">${safe(t0)} <b>${safe(fmtDecStr(a0))}</b></span>
+          <span class="stk-token">${safe(t1)} <b>${safe(fmtDecStr(a1))}</b></span>
+        </div>
+      </div>
+    `;
   };
 
-  const A = venueRows('ALCOR');
-  const T = venueRows('TACO');
+  const renderVenue = (name)=>{
+    const v = venues?.[name] || {};
+    const vPts = v?.points ?? '0';
+    const subt = v?.subtotals || {};
+    const rows = Array.isArray(v?.rows) ? v.rows : [];
+    const lux = subt?.LUX ?? '0';
+    const chips = subt?.CHIPS ?? '0';
 
-  const tokenList = Array.isArray(report?.targets) ? report.targets : [];
+    // open first venue by default
+    const openAttr = (name === venueNames[0]) ? 'open' : '';
 
-  // pretty timing
-  let timingHtml = '—';
-  if (Array.isArray(timing) && timing.length){
-    timingHtml = timing
-      .map(t => `${safe(t.step)}=${formatDP(t.ms)}ms`)
-      .join(' · ');
-  } else if (timing && typeof timing === 'object' && Object.keys(timing).length){
-    timingHtml = safe(JSON.stringify(timing));
-  }
+    return `
+      <div class="stk-venue">
+        <details class="stk-acc" ${openAttr}>
+          <summary>
+            <div class="left">
+              <div>${safe(name)} <span class="staking-pill" style="margin-left:6px">points ${safe(fmtDecStr(vPts))}</span></div>
+              <div class="stk-subtle">Subtotals: CHIPS <b>${safe(fmtDecStr(chips))}</b> · LUX <b>${safe(fmtDecStr(lux))}</b> · Pools <b>${rows.length}</b></div>
+            </div>
+            <div class="right">
+              <span class="chev">›</span>
+            </div>
+          </summary>
+          <div class="body">
+            ${rows.length ? rows.map(renderPool).join('') : `<div class="stk-subtle">No pools found in this venue.</div>`}
+          </div>
+        </details>
+      </div>
+    `;
+  };
 
   host.innerHTML = `
-    <div class="staking-grid">
-      <div class="staking-card">
-        <div class="title">
-          <span>⭐ Your staking power</span>
-          <span class="staking-pill" title="Bonus applied to game rewards based on points.">
-            +${bonusPct}% · ×${mult.toFixed(2)}
-          </span>
+    <div class="staking-card">
+      <div class="title">
+        <span>🧾 Staking overview</span>
+        <span class="staking-pill" title="Total points from all venues">points ${safe(fmtDecStr(grandPts))}</span>
+      </div>
+
+      <div class="staking-kv">
+        <div>
+          <div class="k">Total CHIPS</div>
+          <div class="v">${safe(fmtDecStr(grandChips))}</div>
         </div>
-
-        <div class="staking-kv">
-          <div>
-            <div class="k">Grand points</div>
-            <div class="v">${formatCompact(points)}</div>
-          </div>
-          <div>
-            <div class="k">Bonus rule</div>
-            <div class="v">points ÷ 10 (cap 100%)</div>
-          </div>
-
-          <div>
-            <div class="k">Total LUX</div>
-            <div class="v">${formatDP(lux)}</div>
-          </div>
-          <div>
-            <div class="k">Total CHIPS</div>
-            <div class="v">${formatDP(chips)}</div>
-          </div>
+        <div>
+          <div class="k">Total LUX</div>
+          <div class="v">${safe(fmtDecStr(grandLux))}</div>
         </div>
-
-        <div style="margin-top:10px;opacity:.9;font-size:12px;line-height:1.45">
-          This panel aggregates your liquidity / staking positions and converts them into <b>points</b>.
-          Higher points increase your in-game bonus multiplier.
+        <div>
+          <div class="k">Targets</div>
+          <div class="v">${targets.length ? targets.map(safe).join(', ') : '—'}</div>
+        </div>
+        <div>
+          <div class="k">Base token</div>
+          <div class="v">${safe(report?.points_base_token || '—')}</div>
         </div>
       </div>
 
-      <div class="staking-card">
-        <div class="title">
-          <span>⚙️ Scoring parameters</span>
-          <span class="staking-pill" title="How values are converted to points.">engine</span>
-        </div>
+      <div style="margin-top:10px;opacity:.9;font-size:12px;line-height:1.45">
+        Points are computed from your active liquidity positions across venues. Expand a venue to see pools and token amounts in staking.
+      </div>
+    </div>
 
-        <div class="staking-kv">
-          <div>
-            <div class="k">WAX per LUX</div>
-            <div class="v">${formatDP(scoring.wax_per_lux)}</div>
-          </div>
-          <div>
-            <div class="k">WAX per CHIPS</div>
-            <div class="v">${formatDP(scoring.wax_per_chips)}</div>
-          </div>
-          <div>
-            <div class="k">× points / CHIPS</div>
-            <div class="v">${formatDP(scoring.x_points_per_chips)}</div>
-          </div>
-          <div>
-            <div class="k">Quote token</div>
-            <div class="v">${safe(report.quote_token || '—')}</div>
-          </div>
-        </div>
+    <div style="height:10px"></div>
 
-        <div style="margin-top:10px;opacity:.9;font-size:12px;line-height:1.45">
-          Targets: <b>${tokenList.length ? tokenList.map(safe).join(', ') : '—'}</b><br>
-          Base token: <b>${safe(report.points_base_token || '—')}</b>
+    <div class="staking-card">
+      <div class="title">
+        <span>⚙️ Scoring engine</span>
+        <span class="staking-pill">params</span>
+      </div>
+
+      <div class="staking-kv">
+        <div>
+          <div class="k">wax_per_chips</div>
+          <div class="v">${safe(fmtDecStr(scoring?.wax_per_chips))}</div>
+        </div>
+        <div>
+          <div class="k">wax_per_lux</div>
+          <div class="v">${safe(fmtDecStr(scoring?.wax_per_lux))}</div>
+        </div>
+        <div>
+          <div class="k">x_points_per_chips</div>
+          <div class="v">${safe(fmtDecStr(scoring?.x_points_per_chips))}</div>
+        </div>
+        <div>
+          <div class="k">quote_token</div>
+          <div class="v">${safe(report?.quote_token || '—')}</div>
         </div>
       </div>
     </div>
@@ -1350,48 +1482,10 @@ function renderStakingReport(report){
 
     <div class="staking-card">
       <div class="title">
-        <span>🏦 Venues breakdown</span>
-        <span class="staking-pill" title="Points per venue.">ALCOR ${formatCompact(A.pts)} · TACO ${formatCompact(T.pts)}</span>
+        <span>🏦 Venues</span>
+        <span class="staking-pill">${venueNames.length} venues</span>
       </div>
-
-      <table class="staking-table" aria-label="Venues breakdown table">
-        <thead>
-          <tr>
-            <th>Venue</th>
-            <th>Rows</th>
-            <th>LUX</th>
-            <th>CHIPS</th>
-            <th>Points</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><b>ALCOR</b></td>
-            <td class="staking-row-muted">${A.rows.length}</td>
-            <td>${formatDP(A.subt?.LUX)}</td>
-            <td>${formatDP(A.subt?.CHIPS)}</td>
-            <td><b>${formatCompact(A.pts)}</b></td>
-          </tr>
-          <tr>
-            <td><b>TACO</b></td>
-            <td class="staking-row-muted">${T.rows.length}</td>
-            <td>${formatDP(T.subt?.LUX)}</td>
-            <td>${formatDP(T.subt?.CHIPS)}</td>
-            <td><b>${formatCompact(T.pts)}</b></td>
-          </tr>
-          <tr>
-            <td><b>GRAND</b></td>
-            <td class="staking-row-muted">${A.rows.length + T.rows.length}</td>
-            <td><b>${formatDP(lux)}</b></td>
-            <td><b>${formatDP(chips)}</b></td>
-            <td><b>${formatCompact(points)}</b></td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;opacity:.9;font-size:12px;line-height:1.45">
-        <span class="staking-pill" title="Backend timing: where time is spent.">Timing: ${timingHtml}</span>
-      </div>
+      ${venueNames.length ? venueNames.map(renderVenue).join('') : `<div class="stk-subtle">No venues in report.</div>`}
     </div>
   `;
 }
@@ -1407,7 +1501,6 @@ async function fetchAndRenderStakingReport({force=false} = {}){
   const wax = (State.user.wax_account || '').trim().toLowerCase();
   const key = stakingCacheKey(wax);
 
-  // show cached instantly (fast UX) unless force refresh
   if (!force){
     try{
       const cachedRaw = localStorage.getItem(key);
@@ -1421,9 +1514,8 @@ async function fetchAndRenderStakingReport({force=false} = {}){
           });
           renderStakingReport(cached.report);
 
-          // still do a silent refresh if cache is old
           const ageMs = Date.now() - (cached.savedAt || 0);
-          if (ageMs < 60_000) return; // 60s fresh enough
+          if (ageMs < 60_000) return;
         }
       }
     } catch {/* ignore */}
@@ -1444,17 +1536,14 @@ async function fetchAndRenderStakingReport({force=false} = {}){
     return;
   }
 
-  // ✅ FIX: unwrap report
   const report = normalizeStakingPayload(res.data);
 
-  if (!report || !report.grand_totals){
-    // If backend returned ok:true but structure unexpected
+  if (!report || !report.venues){
     renderStakingError('Staking report response has an unexpected format.');
     setStakingMeta({account:wax, startedAtUtc:null, cacheLabel:'bad format'});
     return;
   }
 
-  // cache it
   try{
     localStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), report }));
   } catch {/* ignore */}
@@ -1469,7 +1558,6 @@ async function fetchAndRenderStakingReport({force=false} = {}){
 }
 
 function ensureStakingReportLoaded(){
-  // load once when entering tab (or if user presses refresh)
   fetchAndRenderStakingReport({force:false});
 }
 
@@ -3967,7 +4055,8 @@ function ensureStakingReportLoaded(){
             const wax = (State.user.wax_account || '').trim().toLowerCase();
             const cachedRaw = localStorage.getItem(stakingCacheKey(wax));
             const cached = cachedRaw ? JSON.parse(cachedRaw) : null;
-            const data = cached?.data || null;
+            const data = cached?.report || null;
+
             if (!data){
               toast('No staking report loaded yet.');
               return;

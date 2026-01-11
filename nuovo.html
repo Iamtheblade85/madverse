@@ -1066,8 +1066,18 @@
       trailBaseMaxAgeMs: 1400,
       trailMinPointDist: 0.10,
       trailMaxPoints: 60,
+      drop: {
+        pollGraceMs: 2500,
+        clickRadiusCells: 1.35,
+        openingMs: 1100,
+        hologramMs: 1200,
+        doneHoldMs: 900,
+        maxLifeFallbackMs: 90_000
+      },
     };
     const SIMULATION_API_PATH = '/2expedition_simulate';
+    const ACTIVE_DROP_API_PATH = '/2active_drop';
+    const CLAIM_DROP_API_PATH  = '/2claim_drop';
     const QS = new URLSearchParams(location.search);
     const OVERLAY_MODE =
       QS.get('overlay') === '1' ||
@@ -1169,12 +1179,79 @@
           totalLoot: 0
         },      
         simResult: null                  // last simulation result
-      }
+      },
+      drop: {
+        current: null,
+        serverKey: '',
+        lastSeenEventId: '',
+        claimBusy: false,
+        claimedEventId: '',
+        claimedBy: '',
+        fx: {
+          phase: 'idle',               // idle|visible|claiming|opening|hologram|done|expired
+          startedAtMs: 0,
+          openAtMs: 0,
+          holoAtMs: 0,
+          doneAtMs: 0,
+          shakePower: 0,
+          pulsePhase: 0,
+          particles: [],
+          shockwaves: []
+        }
+      },
     };
 
     // ------------------------------------------------------------
     // UTILS + API + HELPERS (reintrodotti)
     // ------------------------------------------------------------
+    function parseUtcMs(iso){
+      if (!iso) return null;
+      const d = new Date(iso);
+      const t = d.getTime();
+      return Number.isFinite(t) ? t : null;
+    }
+    
+    function normalizeDrop(d){
+      if (!d || typeof d !== 'object') return null;
+    
+      const drop_id  = String(d.drop_id ?? d.id ?? '');
+      if (!drop_id) return null;
+    
+      const event_id = String(d.event_id ?? d.eid ?? '');
+    
+      // world position (cells)
+      const wx = toNumber(d.world?.x ?? d.x ?? d.world_x);
+      const wy = toNumber(d.world?.y ?? d.y ?? d.world_y);
+    
+      // expiry
+      const expiresAtMs =
+        parseUtcMs(d.expires_at_utc ?? d.expires_at ?? d.expiresAtUtc) ??
+        (d.ttl_ms ? (Date.now() + toNumber(d.ttl_ms)) : null) ??
+        (d.claim_window_ms ? (Date.now() + toNumber(d.claim_window_ms)) : null) ??
+        (Date.now() + (CONFIG.drop?.maxLifeFallbackMs || 90_000));
+    
+      const spawnedAtMs =
+        parseUtcMs(d.spawned_at_utc ?? d.spawned_at ?? d.spawnedAtUtc) ??
+        (Date.now() - 500); // fallback
+    
+      return {
+        drop_id,
+        event_id,
+        status: String(d.status ?? 'active'),
+        rarity: String(d.rarity ?? ''),
+        world: { x: wx, y: wy },
+        spawnedAtMs,
+        expiresAtMs,
+        claimed: !!(d.claimed ?? false),
+        claimedBy: d.claimed_by ? String(d.claimed_by) : '',
+        reward_preview: d.reward_preview || null
+      };
+    }
+    
+    function dropTimeLeftMs(drop){
+      if (!drop) return null;
+      return Math.max(0, (drop.expiresAtMs || 0) - Date.now());
+    }
 
     // --- debounce ---
 
@@ -1811,7 +1888,7 @@ function ensureStakingReportLoaded(){
     // ASSETS (background + goblin sprite)
     // ------------------------------------------------------------
 
-    const Assets = { bg:null, goblin:null };
+    const Assets = { bg:null, goblin:null, chest:null };
 
     function loadImage(src){
       return new Promise(resolve => {
@@ -1823,12 +1900,14 @@ function ensureStakingReportLoaded(){
     }
 
     async function loadAssets(){
-      const [bg, gob] = await Promise.all([
+      const [bg, gob, chest] = await Promise.all([
         loadImage('cave-grid.gif'),
-        loadImage('goblin.png')
+        loadImage('goblin.png'),
+        loadImage('chest_sprite.png')
       ]);
       if (bg) Assets.bg = bg;
       if (gob) Assets.goblin = gob;
+      if (chest) Assets.chest = chest;
     }
 
     // ------------------------------------------------------------
@@ -3017,27 +3096,46 @@ function ensureStakingReportLoaded(){
 
         this.gaitPhase += dt * 3.0;
         const gait = 0.78 + 0.20*Math.sin(this.gaitPhase) + 0.10*Math.sin(this.gaitPhase*0.55 + 1.8);
-
         const desiredSpeed = this.maxSpeed * gait;
-
         const fTarget = this._arrive(this.tx, this.ty, desiredSpeed, 4.6);
         const fWander = this._wander();
         const fWall = this._wallAvoid(engine);
         const fSep  = this._separation(engine);
-
+        
+        let fChest = {x:0, y:0};
+        if (engine.drop && State.drop.fx.phase === 'visible') {
+          const dx = engine.drop.world.x - this.x;
+          const dy = engine.drop.world.y - this.y;
+          const dist = Math.hypot(dx, dy);
+        
+          if (dist > 3 && dist < 11) {
+            const pull = (1 - clamp((dist-3)/(11-3), 0, 1));
+            fChest = this._seek(engine.drop.world.x, engine.drop.world.y, this.maxSpeed * (0.85 + 0.35*pull));
+            this.trailHue = 170 + 60*pull;
+          } else {
+            this.trailHue = 165;
+          }
+        } else {
+          this.trailHue = 165;
+        }
+        
         this.ax = 0; this.ay = 0;
-
         this.ax += fTarget.x * 1.10;
         this.ay += fTarget.y * 1.10;
-
+        
         this.ax += fWall.x   * 1.00;
         this.ay += fWall.y   * 1.00;
-
+        
         this.ax += fSep.x    * 0.75;
         this.ay += fSep.y    * 0.75;
-
+        
         this.ax += fWander.x * 0.40;
         this.ay += fWander.y * 0.40;
+        
+        // ✅ chest force
+        this.ax += fChest.x * 0.22;
+        this.ay += fChest.y * 0.22;
+
 
         const aLim = this._limitVec(this.ax,this.ay,this.maxForce);
         this.ax=aLim.x; this.ay=aLim.y;
@@ -3125,6 +3223,11 @@ function ensureStakingReportLoaded(){
       constructor(canvas){
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
+        this.drop = null;              // normalized drop
+        this.dropFx = State.drop.fx;   // reference
+        this._shake = { x:0, y:0 };    // camera shake
+        this._bindPointer = this._bindPointer.bind(this);
+        this._bindPointer();
 
         this.world = { width: CONFIG.worldCols, height: CONFIG.worldRows };
 
@@ -3147,6 +3250,46 @@ function ensureStakingReportLoaded(){
         this.handleResize = this.handleResize.bind(this);
         window.addEventListener('resize', this.handleResize, { passive:true });
         this.handleResize();
+      }
+      
+      _bindPointer(){
+        const c = this.canvas;
+        if (!c) return;
+      
+        c.addEventListener('pointerdown', (e)=>{
+          if (!this.drop) return;
+          if (State.drop.claimBusy) return;
+      
+          // se scaduta → ignora
+          const left = dropTimeLeftMs(this.drop);
+          if (left != null && left <= 0) return;
+      
+          // hit test in world cells
+          const rect = c.getBoundingClientRect();
+          const sx = (e.clientX - rect.left);
+          const sy = (e.clientY - rect.top);
+          const w = this.screenToWorld(sx, sy);
+          if (!w) return;
+      
+          const dx = (w.x - this.drop.world.x);
+          const dy = (w.y - this.drop.world.y);
+          const r  = (CONFIG.drop?.clickRadiusCells || 1.35);
+          if ((dx*dx + dy*dy) <= r*r) {
+            // trigger claim
+            claimActiveDrop();
+          }
+        }, { passive:true });
+      }
+
+      screenToWorld(sx, sy){
+        const tr = this.transform;
+        const x = (sx - tr.offsetX) / Math.max(1e-6, tr.cellSizeX);
+        const y = (sy - tr.offsetY) / Math.max(1e-6, tr.cellSizeY);
+        return { x, y };
+      }
+
+      setDrop(drop){
+        this.drop = drop || null;
       }
 
       destroy(){
@@ -3272,12 +3415,189 @@ function ensureStakingReportLoaded(){
         }
       }
 
+      drawDropHud(ctx, x, y, size, leftMs){
+        const total = (State.drop.current?.expiresAtMs && State.drop.current?.spawnedAtMs)
+          ? (State.drop.current.expiresAtMs - State.drop.current.spawnedAtMs)
+          : (CONFIG.drop.maxLifeFallbackMs || 90_000);
+      
+        const t = total > 0 ? clamp(leftMs / total, 0, 1) : 0;
+      
+        // ring
+        ctx.save();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(56,189,248,0.75)';
+        ctx.beginPath();
+        ctx.arc(x, y, size*0.92, -Math.PI/2, -Math.PI/2 + Math.PI*2*t);
+        ctx.stroke();
+        ctx.restore();
+      
+        // hint text
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.font = '12px sans-serif';
+        ctx.fillStyle = 'rgba(226,232,240,0.95)';
+        ctx.fillText('CLICK TO CLAIM', x, y + size*0.72);
+        ctx.restore();
+      }
+
+      updateDropParticles(ctx, x, y, size){
+        const fx = State.drop.fx;
+        if (!fx) return;
+      
+        // spawn particles gradually while visible
+        if (fx.phase === 'visible' && fx.particles.length < 120 && Math.random() < 0.55) {
+          fx.particles.push({
+            x: x + (Math.random()*2-1)*size*0.4,
+            y: y + (Math.random()*2-1)*size*0.4,
+            vx: (Math.random()*2-1)*0.35,
+            vy: -Math.random()*0.55 - 0.15,
+            life: 1.0,
+            r: 1 + Math.random()*2.5
+          });
+        }
+      
+        // update/draw
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        for (const p of fx.particles){
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= 0.015;
+          p.vy  -= 0.01;
+          ctx.globalAlpha = Math.max(0, p.life) * 0.65;
+          ctx.fillStyle = 'rgba(56,189,248,1)';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          ctx.fill();
+        }
+        fx.particles = fx.particles.filter(p => p.life > 0);
+        ctx.restore();
+      }
+
+
+      drawDropChest(ctx){
+        const d = this.drop;
+        if (!d) return;
+      
+        // auto-expire visuals (client-side)
+        const left = dropTimeLeftMs(d);
+        if (left != null && left <= 0) {
+          if (State.drop.fx.phase !== 'expired' && State.drop.fx.phase !== 'idle'){
+            State.drop.fx.phase = 'expired';
+            State.drop.fx.doneAtMs = performance.now();
+            pushCanvasMsg('⌛ Chest expired.');
+          }
+          return;
+        }
+      
+        const tr = this.transform;
+        const p  = tr.toScreen(d.world.x, d.world.y);
+      
+        // sizing
+        const size = Math.min(tr.cellSizeX, tr.cellSizeY) * 2.3;
+      
+        // pulse + rarity glow
+        State.drop.fx.pulsePhase += 0.06;
+        const pulse = 0.65 + 0.35*Math.sin(State.drop.fx.pulsePhase);
+      
+        // rarity color
+        const rarity = (d.rarity || '').toLowerCase();
+        const glow =
+          rarity === 'mythic'    ? 'rgba(168,85,247,0.85)' :
+          rarity === 'legendary' ? 'rgba(250,204,21,0.85)' :
+          rarity === 'epic'      ? 'rgba(56,189,248,0.85)' :
+          rarity === 'rare'      ? 'rgba(34,197,94,0.80)' :
+                                   'rgba(148,163,184,0.60)';
+      
+        // base glow ring
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, size*0.78, 0, Math.PI*2);
+        ctx.fillStyle = glow;
+        ctx.globalAlpha = 0.18 * pulse;
+        ctx.fill();
+        ctx.restore();
+      
+        // chest sprite (frame anim)
+        ctx.save();
+        const phase = State.drop.fx.phase || 'visible';
+      
+        // opening animation scale/tilt
+        let scale = 1.0;
+        let lift  = 0;
+        if (phase === 'opening'){
+          const t = clamp((performance.now() - State.drop.fx.openAtMs) / (CONFIG.drop.openingMs||1100), 0, 1);
+          scale = 1.0 + 0.18*Math.sin(t*Math.PI);
+          lift  = -size*0.18 * t;
+        }
+        if (phase === 'hologram'){
+          const t = clamp((performance.now() - State.drop.fx.holoAtMs) / (CONFIG.drop.hologramMs||1200), 0, 1);
+          lift  = -size*0.22;
+          scale = 1.08;
+          // hologram scanlines
+          ctx.globalAlpha = 0.25*(1-t);
+          ctx.fillStyle = 'rgba(56,189,248,0.8)';
+          for (let i=0;i<8;i++){
+            const yy = p.y - size*0.65 + i*(size*0.17);
+            ctx.fillRect(p.x - size*0.55, yy, size*1.10, 2);
+          }
+        }
+      
+        // draw sprite (fallback: rect)
+        if (Assets.chest){
+          // assume sprite sheet 4 frames horizontal (0 closed … 3 open)
+          const frames = 4;
+          const frameW = Assets.chest.width / frames;
+          const frameH = Assets.chest.height;
+      
+          let fi = 0;
+          if (phase === 'opening' || phase === 'hologram' || d.claimed) fi = 3;
+      
+          ctx.translate(p.x, p.y + lift);
+          ctx.scale(scale, scale);
+          ctx.drawImage(
+            Assets.chest,
+            fi*frameW, 0, frameW, frameH,
+            -size/2, -size/2, size, size
+          );
+        } else {
+          ctx.fillStyle = '#fbbf24';
+          ctx.fillRect(p.x - size/2, p.y - size/2, size, size);
+        }
+        ctx.restore();
+      
+        // timer ring + “CLICK” hint
+        this.drawDropHud(ctx, p.x, p.y, size, left);
+        this.updateDropParticles(ctx, p.x, p.y, size);
+      }
+
       draw(){
         this.clear();
+      
+        // camera shake (dipende da State.drop.fx.shakePower)
+        const sp = State.drop?.fx?.shakePower || 0;
+        const shakeAmp = sp > 0 ? (sp * 6.0) : 0;
+        const sx = shakeAmp ? (Math.random()*2-1)*shakeAmp : 0;
+        const sy = shakeAmp ? (Math.random()*2-1)*shakeAmp : 0;
+      
+        // background
         this.drawBackground();
+      
+        // apply shake by translating everything that is drawn in world space
+        this.ctx.save();
+        this.ctx.translate(sx, sy);
+      
+        // goblins
         for (const g of this.goblinById.values()){
           g.draw(this.ctx, this.transform);
         }
+      
+        // chest on top
+        this.drawDropChest(this.ctx);
+      
+        this.ctx.restore();
       }
 
       syncExpeditions(exps=[]){
@@ -3477,6 +3797,30 @@ function ensureStakingReportLoaded(){
             `<span class="ticker-tag">${nominal}</span> expedition ` +
             `<span class="ticker-eff">eff: ${effective}</span> ` +
             `→ <span class="ticker-rew">+${chips} CHIPS${nftPart}</span>`;
+          return;
+        }
+        if (ev.event_type === 'drop_spawned'){
+          el.innerHTML =
+            `<span class="ticker-time">[${when}]</span> ` +
+            `🎁 <strong>Chest spawned</strong> ` +
+            (ev.rarity ? `<span class="ticker-tag">${safe(ev.rarity)}</span>` : '') +
+            (ev.drop_id ? `<span class="ticker-extra">(${safe(ev.drop_id)})</span>` : '');
+          return;
+        }
+        
+        if (ev.event_type === 'drop_claimed'){
+          const chips = ev.chips != null ? formatCompact(ev.chips) : '';
+          el.innerHTML =
+            `<span class="ticker-time">[${when}]</span> ` +
+            `🏴‍☠️ <strong>${account}</strong> claimed a chest ` +
+            (chips ? `→ <span class="ticker-rew">+${chips} CHIPS</span>` : '');
+          return;
+        }
+        
+        if (ev.event_type === 'drop_expired'){
+          el.innerHTML =
+            `<span class="ticker-time">[${when}]</span> ` +
+            `⌛ <strong>Chest expired</strong>`;
           return;
         }
 
@@ -4000,6 +4344,97 @@ function ensureStakingReportLoaded(){
       fetchGlobalSnapshot();
     }
 
+    async function claimActiveDrop(){
+      const drop = State.drop.current;
+      if (!drop) return;
+    
+      // lifecycle guard
+      const left = dropTimeLeftMs(drop);
+      if (left != null && left <= 0) {
+        toast('Chest expired.');
+        return;
+      }
+      if (State.drop.claimBusy) return;
+    
+      syncUserFromStorage();
+      try { assertAuth(); } catch { toast('Please log in first'); return; }
+    
+      State.drop.claimBusy = true;
+      State.drop.fx.phase = 'claiming';
+      State.drop.fx.shakePower = 0.95; // micro-shake immediato
+    
+      // UI feedback near canvas
+      pushCanvasMsg('🧤 Claiming chest…');
+    
+      const body = {
+        wax_account: State.user.wax_account,
+        user_id: State.user.user_id,
+        usx_token: State.user.usx_token,
+        drop_id: drop.drop_id,
+        event_id: drop.event_id
+      };
+    
+      const res = await Api.post(CLAIM_DROP_API_PATH, body, 15000).catch(()=>({ok:false}));
+    
+      State.drop.claimBusy = false;
+      
+      // conflict: already claimed
+      if (res.status === 409 || res.data.ok === false) {
+        const by = res.data.claimed_by || updated?.claimedBy || 'someone';
+        toast(`Too late — claimed by ${by}.`);
+        pushCanvasMsg(`💨 Chest claimed by ${by}.`);
+        State.drop.fx.phase = 'done';
+        State.drop.fx.doneAtMs = performance.now();
+        State.drop.fx.shakePower = 0.15;
+        return;
+      }
+      
+      if (!res || !res.ok || !res.data) {
+        toast('Claim failed.');
+        State.drop.fx.phase = 'visible';
+        State.drop.fx.shakePower = 0.45;
+        return;
+      }
+    
+      // server truth
+      const updated = normalizeDrop(res.data.drop || res.data);
+      if (updated) {
+        State.drop.current = updated;
+        if (State.engine) State.engine.setDrop(updated);
+      }
+        
+      // success
+      State.drop.fx.phase = 'opening';
+      State.drop.fx.openAtMs = performance.now();
+      State.drop.fx.shakePower = 1.25;
+      State.drop.fx.shockwaves.push({ t:0, x: drop.world.x, y: drop.world.y });
+    
+      // optional reward feedback
+      const chips = res.data.reward?.chips;
+      const nft   = res.data.reward?.nft;
+      if (chips != null) toast(`🎉 +${formatCompact(chips)} CHIPS!`);
+      if (nft) toast(`🎁 NFT drop: ${nft.name || 'item'}`);
+    
+      // schedule hologram
+      setTimeout(()=>{
+        State.drop.fx.phase = 'hologram';
+        State.drop.fx.holoAtMs = performance.now();
+        State.drop.fx.shakePower = 0.45;
+        pushCanvasMsg('📡 Reward hologram online');
+      }, CONFIG.drop.openingMs || 1100);
+    
+      // schedule done cleanup
+      setTimeout(()=>{
+        State.drop.fx.phase = 'done';
+        State.drop.fx.doneAtMs = performance.now();
+        State.drop.fx.shakePower = 0.12;
+      }, (CONFIG.drop.openingMs||1100) + (CONFIG.drop.hologramMs||1200));
+    
+      // IMPORTANT: non “sparire” subito lato client.
+      // Aspetta che il backend tolga il drop da /2active_drop,
+      // così tutti i browser restano coerenti col polling.
+    }
+
     // ------------------------------------------------------------
     // SNAPSHOTS / POLLING (NO SSE)
     // ------------------------------------------------------------
@@ -4009,10 +4444,11 @@ function ensureStakingReportLoaded(){
 
       const t0 = performance.now();
       try {
-        const [expRes, recentRes, logRes] = await Promise.all([
+        const [expRes, recentRes, logRes, dropRes] = await Promise.all([
           Api.post('/2all_expeditions', {}, CONFIG.snapshotTimeoutMs),
           Api.get('/2recent_expeditions', CONFIG.recentTimeoutMs),
           Api.get('/2global_log', CONFIG.recentTimeoutMs),
+          Api.get(ACTIVE_DROP_API_PATH, CONFIG.recentTimeoutMs),
         ]);
 
         // Expeditions in corso
@@ -4043,6 +4479,38 @@ function ensureStakingReportLoaded(){
           State.globalLogEvents = logRes.data;
         } else if (logRes && logRes.ok && Array.isArray(logRes.data?.items)) {
           State.globalLogEvents = logRes.data.items;
+        }
+        // Active drop chest (normalize + dedup + lifecycle)
+        if (dropRes && dropRes.ok && dropRes.data) {
+          const raw = dropRes.data.drop || null;
+          const normalized = normalizeDrop(raw);
+          const nextKey = normalized ? `${normalized.drop_id}|${normalized.event_id || ''}` : '';
+        
+          const prevKey = State.drop.serverKey || '';
+          State.drop.current = normalized;
+          State.drop.serverKey = nextKey;
+        
+          // 1) se drop nuovo → FX spawn
+          if (normalized && nextKey && nextKey !== prevKey) {
+            State.drop.fx.phase = 'visible';
+            State.drop.fx.startedAtMs = performance.now();
+            State.drop.fx.pulsePhase = 0;
+            State.drop.fx.shakePower = 0.65;
+            State.drop.fx.particles = [];
+            State.drop.fx.shockwaves = [];
+            // facoltativo: messaggio canvas
+            pushCanvasMsg(`🎁 A chest has appeared!`);
+          }
+        
+          // 2) se drop sparito → stop/cleanup
+          if (!normalized && prevKey) {
+            State.drop.fx.phase = 'idle';
+            State.drop.fx.particles = [];
+            State.drop.fx.shockwaves = [];
+          }
+        
+          // 3) sync engine
+          if (State.engine) State.engine.setDrop(normalized);
         }
 
         updateTicker();

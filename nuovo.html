@@ -777,6 +777,51 @@
   line-height:1.45;
   margin-top:8px;
 }
+/* Ticker NON deve coprire il canvas: forzalo fuori overlay */
+#ticker{
+  position: static !important;
+  width: min(20%, 420px);
+  max-width: 20%;
+  margin-top: 10px;
+}
+
+/* Su mobile */
+@media (max-width: 500px){
+  #ticker{
+    width: 100%;
+    max-width: 100%;
+  }
+}
+/* ---------- GLOBAL TICKER (pretty, non-invasive) ---------- */
+#ticker{
+  border: 1px solid rgba(56,189,248,0.45);
+  background: radial-gradient(circle at top left, rgba(56,189,248,0.10), rgba(15,23,42,0.96));
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+#ticker .ticker-time{ opacity:.85; margin-right:6px; }
+#ticker .ticker-cta{
+  display:block;
+  margin-top:6px;
+  font-size:12px;
+  opacity:.9;
+  line-height:1.45;
+}
+#ticker .ticker-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:2px 8px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,0.6);
+  background:rgba(15,23,42,0.85);
+  font-weight:800;
+  font-size:11px;
+  letter-spacing:.03em;
+  text-transform:uppercase;
+  margin-left:6px;
+}
 
   </style>
 </head>
@@ -1066,14 +1111,15 @@
       trailBaseMaxAgeMs: 1400,
       trailMinPointDist: 0.10,
       trailMaxPoints: 60,
-      drop: {
-        pollGraceMs: 2500,
-        clickRadiusCells: 1.35,
-        openingMs: 1100,
-        hologramMs: 1200,
-        doneHoldMs: 900,
-        maxLifeFallbackMs: 90_000
-      },
+drop: {
+  pollGraceMs: 2500,
+  clickRadiusCells: 1.35,
+  openingMs: 1100,
+  hologramMs: 1200,
+  doneHoldMs: 900,
+  dissolveMs: 650,
+  maxLifeFallbackMs: 90_000
+},
     };
     const SIMULATION_API_PATH = '/2expedition_simulate';
     const ACTIVE_DROP_API_PATH = '/2active_drop';
@@ -1187,8 +1233,10 @@
         claimBusy: false,
         claimedEventId: '',
         claimedBy: '',
+        lastLocalTickerHtml: '',
+        lastLocalTickerUntilMs: 0,
         fx: {
-          phase: 'idle',               // idle|visible|claiming|opening|hologram|done|expired
+          phase: 'idle',               // idle|visible|claiming|opening|hologram|dissolve|done|expired
           startedAtMs: 0,
           openAtMs: 0,
           holoAtMs: 0,
@@ -3549,10 +3597,23 @@ function ensureStakingReportLoaded(){
         // chest sprite (frame anim)
         ctx.save();
         const phase = State.drop.fx.phase || 'visible';
+// dissolve alpha + slight shrink
+let alpha = 1.0;
+if (phase === 'dissolve'){
+  const t = clamp((performance.now() - State.drop.fx.doneAtMs) / (CONFIG.drop.dissolveMs||650), 0, 1);
+  alpha = 1 - t;
+}
+ctx.globalAlpha = alpha;
       
-        // opening animation scale/tilt
-        let scale = 1.0;
-        let lift  = 0;
+// opening animation scale/tilt
+let scale = 1.0;
+let lift  = 0;
+
+if (phase === 'dissolve'){
+  const t = clamp((performance.now() - State.drop.fx.doneAtMs) / (CONFIG.drop.dissolveMs||650), 0, 1);
+  scale = 1.0 - 0.12*t;
+  lift  = -size*0.10*t;
+}
         if (phase === 'opening'){
           const t = clamp((performance.now() - State.drop.fx.openAtMs) / (CONFIG.drop.openingMs||1100), 0, 1);
           scale = 1.0 + 0.18*Math.sin(t*Math.PI);
@@ -3595,8 +3656,11 @@ function ensureStakingReportLoaded(){
         ctx.restore();
       
         // timer ring + “CLICK” hint
-        this.drawDropHud(ctx, p.x, p.y, size, left);
+        if (phase !== 'dissolve') {
+          this.drawDropHud(ctx, p.x, p.y, size, left);
+        }
         this.updateDropParticles(ctx, p.x, p.y, size);
+
       }
 
       draw(){
@@ -3779,85 +3843,102 @@ function ensureStakingReportLoaded(){
     // ------------------------------------------------------------
     // TICKER
     // ------------------------------------------------------------
-    function updateTicker(){
-      const el = State.ui.ticker;
-      if (!el) return;
+function updateTicker(){
+  const el = State.ui.ticker;
+  if (!el) return;
 
-      // 1) Prima scelta: eventi dal /2global_log (start + completed)
-      const ev = (State.globalLogEvents && State.globalLogEvents[0]) || null;
-      if (ev){
-        const when = timeHM(ev.timestamp);
-        const account = safe(ev.wax_account || 'unknown');
-        const nominal = formatMinutesShort(ev.nominal_minutes || 0);
-        const effective = formatEffectiveDurationShort(ev.effective_seconds || 0);
-        const goblins = ev.goblins_count != null ? Number(ev.goblins_count) : null;
+  const ev = (State.globalLogEvents && State.globalLogEvents[0]) || null;
 
-        if (ev.event_type === 'started'){
-          el.innerHTML =
-            `<span class="ticker-time">[${when}]</span> ` +
-            `<strong>${account}</strong> started ` +
-            `<span class="ticker-tag">${nominal}</span> expedition ` +
-            (goblins ? `<span class="ticker-extra">(${goblins} goblins)</span> ` : '') +
-            `<span class="ticker-eff">eff: ${effective}</span>`;
-          return;
-        }
+  // se abbiamo un messaggio "local" appena claimato, lo preferiamo per qualche secondo
+  if (State.drop && State.drop.lastLocalTickerHtml && State.drop.lastLocalTickerUntilMs) {
+    if (Date.now() < State.drop.lastLocalTickerUntilMs) {
+      el.innerHTML = State.drop.lastLocalTickerHtml;
+      return;
+    }
+  }
 
-        if (ev.event_type === 'completed'){
-          const chips = ev.chips != null ? formatCompact(ev.chips) : '0';
-          const nftPart = ev.nfts_count ? ` · ${ev.nfts_count} NFT` : '';
-          el.innerHTML =
-            `<span class="ticker-time">[${when}]</span> ` +
-            `<strong>${account}</strong> completed ` +
-            `<span class="ticker-tag">${nominal}</span> expedition ` +
-            `<span class="ticker-eff">eff: ${effective}</span> ` +
-            `→ <span class="ticker-rew">+${chips} CHIPS${nftPart}</span>`;
-          return;
-        }
-        
-        if (ev.event_type === 'drop') {
-          const st = String(ev.status || '').toLowerCase();
-          const when = timeHM(ev.timestamp);
-          const id = ev.event_id ? ` (${safe(ev.event_id)})` : '';
-          const by = ev.claimed_by ? safe(ev.claimed_by) : '';
-          const chips = (ev.chips != null) ? formatCompact(ev.chips) : '';
-        
-          if (st === 'spawned') {
-            el.innerHTML = `<span class="ticker-time">[${when}]</span> 🎁 <strong>Chest spawned</strong>${id}`;
-            return;
-          }
-          if (st === 'claimed') {
-            el.innerHTML = `<span class="ticker-time">[${when}]</span> 🏴‍☠️ <strong>${safe(by || (ev.wax_account||'someone'))}</strong> claimed a chest ${chips ? `→ <span class="ticker-rew">+${chips} CHIPS</span>` : ''}`;
-            return;
-          }
-          if (st === 'expired') {
-            el.innerHTML = `<span class="ticker-time">[${when}]</span> ⌛ <strong>Chest expired</strong>${id}`;
-            return;
-          }
-        }
+  if (ev){
+    const when = timeHM(ev.timestamp);
+    const account = safe(ev.wax_account || 'unknown');
+    const nominal = formatMinutesShort(ev.nominal_minutes || 0);
+    const effective = formatEffectiveDurationShort(ev.effective_seconds || 0);
+    const goblins = ev.goblins_count != null ? Number(ev.goblins_count) : null;
 
-        // altri tipi eventuali: fallback a testo grezzo
-        el.textContent = `[${when}] ${account}`;
-        return;
-      }
+    // Expeditions
+    if (ev.event_type === 'started'){
+      el.innerHTML =
+        `<span class="ticker-time">[${when}]</span> ` +
+        `<strong>${account}</strong> started ` +
+        `<span class="ticker-tag">${nominal}</span> expedition ` +
+        (goblins ? `<span class="ticker-extra">(${goblins} goblins)</span> ` : '') +
+        `<span class="ticker-eff">eff: ${effective}</span>`;
+      return;
+    }
 
-      // 2) Fallback: se per qualsiasi motivo /2global_log non risponde,
-      //    usa comunque l'ultima spedizione completata come prima
-      const latest = State.recentExpeditions?.[0];
-      if (latest){
-        const when = timeHM(latest.timestamp || latest.created_at);
-        const account = safe(latest.wax_account || 'unknown');
-        const chips = formatCompact(latest.chips);
-        const nftPart = latest.nfts_count ? ` · ${latest.nfts_count} NFT` : '';
+    if (ev.event_type === 'completed'){
+      const chips = ev.chips != null ? formatCompact(ev.chips) : '0';
+      const nftPart = ev.nfts_count ? ` · ${ev.nfts_count} NFT` : '';
+      el.innerHTML =
+        `<span class="ticker-time">[${when}]</span> ` +
+        `<strong>${account}</strong> completed ` +
+        `<span class="ticker-tag">${nominal}</span> expedition ` +
+        `<span class="ticker-eff">eff: ${effective}</span> ` +
+        `→ <span class="ticker-rew">+${chips} CHIPS${nftPart}</span>`;
+      return;
+    }
+
+    // DROPS
+    if (ev.event_type === 'drop' || ev.event_type === 'drop_claimed'){
+      const st = String(ev.status || '').toLowerCase();
+      const by = safe(ev.claimed_by || ev.wax_account || 'someone');
+
+      if (st === 'spawned' && ev.event_type === 'drop'){
         el.innerHTML =
           `<span class="ticker-time">[${when}]</span> ` +
-          `<strong>${account}</strong> finished: ` +
-          `<span class="ticker-rew">+${chips} CHIPS${nftPart}</span>`;
+          `✨ <strong>A chest has spawned!</strong> ` +
+          `<span class="ticker-extra">Click it on the map to claim.</span>` +
+          `<span class="ticker-eff">Use Twitch chat commands to spawn more.</span>`;
         return;
       }
 
-      // 3) Nessun evento
-      el.textContent = 'Waiting for events…';
+      if (st === 'claimed' || ev.event_type === 'drop_claimed'){
+        // dal /2global_log NON arriva amount → CTA only
+        el.innerHTML =
+          `<span class="ticker-time">[${when}]</span> ` +
+          `🏴‍☠️ <strong>${by}</strong> claimed a chest ` +
+          `<span class="ticker-eff">Use Twitch chat commands to spawn more chests and win prizes.</span>`;
+        return;
+      }
+
+      if (st === 'expired'){
+        el.innerHTML =
+          `<span class="ticker-time">[${when}]</span> ` +
+          `⌛ <strong>A chest expired.</strong> ` +
+          `<span class="ticker-eff">Stay active in chat—new chests can spawn anytime.</span>`;
+        return;
+      }
     }
+
+    el.textContent = `[${when}] ${account}`;
+    return;
+  }
+
+  const latest = State.recentExpeditions?.[0];
+  if (latest){
+    const when = timeHM(latest.timestamp || latest.created_at);
+    const account = safe(latest.wax_account || 'unknown');
+    const chips = formatCompact(latest.chips);
+    const nftPart = latest.nfts_count ? ` · ${latest.nfts_count} NFT` : '';
+    el.innerHTML =
+      `<span class="ticker-time">[${when}]</span> ` +
+      `<strong>${account}</strong> finished: ` +
+      `<span class="ticker-rew">+${chips} CHIPS${nftPart}</span>`;
+    return;
+  }
+
+  el.textContent = 'Waiting for events…';
+}
+
 
     // ------------------------------------------------------------
     // TABS / LAYOUT / OVERLAY
@@ -4355,118 +4436,132 @@ function ensureStakingReportLoaded(){
       fetchGlobalSnapshot();
     }
 
-    async function claimActiveDrop(){
-      const drop = State.drop.current;
-      if (!drop) return;
-    
-      // lifecycle guard
-      const left = dropTimeLeftMs(drop);
-      if (left != null && left <= 0) {
-        toast('Chest expired.');
-        return;
-      }
-      if (State.drop.claimBusy) return;
-    
-      syncUserFromStorage();
-      try { assertAuth(); } catch { toast('Please log in first'); return; }
-    
-      State.drop.claimBusy = true;
-      State.drop.fx.phase = 'claiming';
-      State.drop.fx.shakePower = 0.95; // micro-shake immediato
-    
-      // UI feedback near canvas
-      pushCanvasMsg('🧤 Claiming chest…');
-    
-      const body = {
-        wax_account: State.user.wax_account,
-        user_id: State.user.user_id,
-        usx_token: State.user.usx_token,
-        drop_id: drop.drop_id,
-        event_id: drop.event_id
-      };
-    
-      const res = await Api.post(CLAIM_DROP_API_PATH, body, 15000).catch(()=>({ok:false}));
-    
-      State.drop.claimBusy = false;
+async function claimActiveDrop(){
+  const drop = State.drop.current;
+  if (!drop) return;
 
-      // conflict: already claimed (server says "too late")
-      const serverDropMaybe = normalizeDrop(res.data?.drop || res.data);
+  const left = dropTimeLeftMs(drop);
+  if (left != null && left <= 0) {
+    toast('Chest expired.');
+    return;
+  }
+  if (State.drop.claimBusy) return;
 
-      const alreadyClaimed =
-        res.status === 409 ||
-        res.data?.ok === false ||
-        (serverDropMaybe && (serverDropMaybe.claimed || String(serverDropMaybe.status).toLowerCase() === 'claimed'));
+  syncUserFromStorage();
+  try { assertAuth(); } catch { toast('Please log in first'); return; }
 
-      if (alreadyClaimed) {
-        // prefer server "claimed_by", then cached info, then generic fallback
-        const by =
-          res.data?.claimed_by ||
-          res.data?.drop?.claimed_by ||
-          serverDropMaybe?.claimedBy ||
-          State.drop.current?.claimedBy ||
-          'someone';
+  State.drop.claimBusy = true;
+  State.drop.fx.phase = 'claiming';
+  State.drop.fx.shakePower = 0.95;
 
-        // if server provided updated drop, keep local state aligned
-        if (serverDropMaybe) {
-          State.drop.current = serverDropMaybe;
-          if (State.engine) State.engine.setDrop(serverDropMaybe);
-        }
+  pushCanvasMsg('🧤 Claiming chest…');
 
-        toast(`Too late — claimed by ${by}.`);
-        pushCanvasMsg(`💨 Chest claimed by ${by}.`);
+  const body = {
+    wax_account: State.user.wax_account,
+    user_id: State.user.user_id,
+    usx_token: State.user.usx_token,
+    drop_id: drop.drop_id,
+    event_id: drop.event_id
+  };
 
-        State.drop.fx.phase = 'done';
-        State.drop.fx.doneAtMs = performance.now();
-        State.drop.fx.shakePower = 0.15;
-        return;
-      }
+  const res = await Api.post(CLAIM_DROP_API_PATH, body, 15000).catch(()=>({ok:false, status:0, data:null}));
 
-      
-      if (!res || !res.ok || !res.data) {
-        toast('Claim failed.');
-        State.drop.fx.phase = 'visible';
-        State.drop.fx.shakePower = 0.45;
-        return;
-      }
-    
-      // server truth
-      const updated = normalizeDrop(res.data.drop || res.data);
-      if (updated) {
-        State.drop.current = updated;
-        if (State.engine) State.engine.setDrop(updated);
-      }
-        
-      // success
-      State.drop.fx.phase = 'opening';
-      State.drop.fx.openAtMs = performance.now();
-      State.drop.fx.shakePower = 1.25;
-      State.drop.fx.shockwaves.push({ t:0, x: drop.world.x, y: drop.world.y });
-    
-      // optional reward feedback
-      const chips = res.data.reward?.chips;
-      const nft   = res.data.reward?.nft;
-      if (chips != null) toast(`🎉 +${formatCompact(chips)} CHIPS!`);
-      if (nft) toast(`🎁 NFT drop: ${nft.name || 'item'}`);
-    
-      // schedule hologram
-      setTimeout(()=>{
-        State.drop.fx.phase = 'hologram';
-        State.drop.fx.holoAtMs = performance.now();
-        State.drop.fx.shakePower = 0.45;
-        pushCanvasMsg('📡 Reward hologram online');
-      }, CONFIG.drop.openingMs || 1100);
-    
-      // schedule done cleanup
-      setTimeout(()=>{
-        State.drop.fx.phase = 'done';
-        State.drop.fx.doneAtMs = performance.now();
-        State.drop.fx.shakePower = 0.12;
-      }, (CONFIG.drop.openingMs||1100) + (CONFIG.drop.hologramMs||1200));
-    
-      // IMPORTANT: non “sparire” subito lato client.
-      // Aspetta che il backend tolga il drop da /2active_drop,
-      // così tutti i browser restano coerenti col polling.
+  State.drop.claimBusy = false;
+
+  // backend: se expired -> 409 con {"ok":false,"error":"expired"} (o simili)
+  if (!res || !res.data) {
+    toast('Claim failed.');
+    State.drop.fx.phase = 'visible';
+    State.drop.fx.shakePower = 0.45;
+    return;
+  }
+
+  // Se non ok o 409 => qualcuno ha già claimato / scaduto
+  if (!res.ok || res.status === 409 || res.data.ok === false) {
+    const by = (res.data && (res.data.claimed_by || res.data.claimedBy)) || 'someone';
+    const err = res.data?.error;
+
+    if (err === 'expired') {
+      toast('Chest expired.');
+      pushCanvasMsg('⌛ Chest expired.');
+      State.drop.fx.phase = 'expired';
+      State.drop.fx.doneAtMs = performance.now();
+      State.drop.fx.shakePower = 0.10;
+      return;
     }
+
+    toast(`Too late — claimed by ${by}.`);
+    pushCanvasMsg(`💨 Chest claimed by ${by}.`);
+    State.drop.fx.phase = 'done';
+    State.drop.fx.doneAtMs = performance.now();
+    State.drop.fx.shakePower = 0.10;
+    return;
+  }
+
+  // SUCCESS (your backend /2drop_claim):
+  // res.data.reward.amount (string), res.data.reward.symbol, res.data.reward.tx_id
+  const claimedBy = res.data?.claimed_by || State.user.wax_account;
+  const amtStr = res.data?.reward?.amount;
+  const sym = res.data?.reward?.symbol || 'CHIPS';
+  const amtNum = (amtStr != null) ? Number(amtStr) : null;
+
+  if (amtNum != null && Number.isFinite(amtNum)) {
+    toast(`🎉 You found +${formatCompact(amtNum)} ${sym} in the chest!`);
+  } else {
+    toast('🎉 Chest claimed!');
+  }
+
+  // ticker local bello (per qualche secondo), include amount perché arriva da /2drop_claim
+  const when = timeHM(new Date());
+  State.drop.lastLocalTickerHtml =
+    `<span class="ticker-time">[${when}]</span> ` +
+    `🏴‍☠️ <strong>${safe(claimedBy)}</strong> claimed a chest ` +
+    (amtNum != null && Number.isFinite(amtNum)
+      ? `→ <span class="ticker-rew">+${formatCompact(amtNum)} ${safe(sym)}</span>`
+      : '') +
+    `<span class="ticker-eff">Use Twitch chat commands to spawn more chests and win prizes.</span>`;
+  State.drop.lastLocalTickerUntilMs = Date.now() + 12_000;
+  updateTicker();
+
+  // aggiorna lo state drop (opzionale)
+  const updated = normalizeDrop(res.data.drop || res.data);
+  if (updated) {
+    State.drop.current = updated;
+    if (State.engine) State.engine.setDrop(updated);
+  }
+
+  // FX: opening -> hologram -> dissolve -> remove from canvas
+  State.drop.fx.phase = 'opening';
+  State.drop.fx.openAtMs = performance.now();
+  State.drop.fx.shakePower = 1.15;
+  State.drop.fx.shockwaves.push({ t:0, x: drop.world.x, y: drop.world.y });
+
+  setTimeout(()=>{
+    if (!State.drop.current) return;
+    State.drop.fx.phase = 'hologram';
+    State.drop.fx.holoAtMs = performance.now();
+    State.drop.fx.shakePower = 0.40;
+    pushCanvasMsg('📡 Reward unlocked!');
+  }, CONFIG.drop.openingMs || 1100);
+
+  setTimeout(()=>{
+    if (!State.drop.current) return;
+    State.drop.fx.phase = 'dissolve';
+    State.drop.fx.doneAtMs = performance.now();
+    State.drop.fx.shakePower = 0.12;
+  }, (CONFIG.drop.openingMs||1100) + (CONFIG.drop.hologramMs||1200));
+
+  setTimeout(()=>{
+    // remove immediately from canvas/state (as you requested)
+    State.drop.current = null;
+    State.drop.serverKey = '';
+    if (State.engine) State.engine.setDrop(null);
+    State.drop.fx.phase = 'idle';
+    State.drop.fx.particles = [];
+    State.drop.fx.shockwaves = [];
+  }, (CONFIG.drop.openingMs||1100) + (CONFIG.drop.hologramMs||1200) + (CONFIG.drop.dissolveMs||650));
+}
+
 
     // ------------------------------------------------------------
     // SNAPSHOTS / POLLING (NO SSE)

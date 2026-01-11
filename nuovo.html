@@ -14,8 +14,8 @@
 
   <style>
     #panels [role="tabpanel"][hidden]{ display:none !important; }
-    #canvas-feedback{ pointer-events:none; }
-    #canvas-feedback .msg{ margin:6px 0; }
+    #canvas-feedback{ pointer-events:none; width:auto; height:auto; max-width: 250px;max-height:100px; }
+    #canvas-feedback .msg{ margin:120px 0; }
 
     /* Piccola classe per “disabilitare” visualmente il builder finché non ci sono goblin */
     .builder-disabled{
@@ -780,8 +780,8 @@
 /* Ticker NON deve coprire il canvas: forzalo fuori overlay */
 #ticker{
   position: static !important;
-  width: min(20%, 420px);
-  max-width: 20%;
+  width: min(50%, 420px);
+  max-width: 80%;
   margin-top: 10px;
 }
 

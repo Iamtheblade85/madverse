@@ -1349,6 +1349,33 @@
       const s = total % 60;
       return `${m}m ${s.toString().padStart(2,'0')}s`;
     }
+// ------------------------------------------------------------
+// RESPONSE NORMALIZERS (backend shape changes safe)
+// ------------------------------------------------------------
+function pickArrayFromPayload(payload, ...keys){
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload;
+
+  // try common wrappers
+  for (const k of keys){
+    if (payload && Array.isArray(payload[k])) return payload[k];
+  }
+
+  // other common patterns
+  if (payload && payload.data && Array.isArray(payload.data)) return payload.data;
+  if (payload && payload.result && Array.isArray(payload.result)) return payload.result;
+  if (payload && payload.results && Array.isArray(payload.results)) return payload.results;
+
+  return [];
+}
+
+function pickObject(payload, ...keys){
+  if (!payload || typeof payload !== 'object') return null;
+  for (const k of keys){
+    if (payload[k] && typeof payload[k] === 'object') return payload[k];
+  }
+  return payload;
+}
 
     // --- durata / costo nominale ---
 
@@ -4441,7 +4468,7 @@ function ensureStakingReportLoaded(){
     async function fetchGlobalSnapshot(){
       if (State.net.busySnapshot) return;
       State.net.busySnapshot = true;
-
+    
       const t0 = performance.now();
       try {
         const [expRes, recentRes, logRes, dropRes] = await Promise.all([
@@ -4450,47 +4477,67 @@ function ensureStakingReportLoaded(){
           Api.get('/2global_log', CONFIG.recentTimeoutMs),
           Api.get(ACTIVE_DROP_API_PATH, CONFIG.recentTimeoutMs),
         ]);
-
-        // Expeditions in corso
+    
+        // ---------------------------
+        // 1) ALL EXPEDITIONS SNAPSHOT
+        // ---------------------------
         if (expRes.ok && expRes.data){
-          const exps = Array.isArray(expRes.data) ? expRes.data :
-                       (Array.isArray(expRes.data.items) ? expRes.data.items : []);
+          // backend now returns { drop:{...}, expeditions:[...], goblins:[...] , ... }
+          const snap = expRes.data;
+    
+          // ✅ FIX: read "expeditions" first (your backend shape)
+          const exps = pickArrayFromPayload(snap, 'expeditions', 'items', 'active_expeditions');
+    
           const snapAt = Date.now();
           State.globalExpeditions = exps.map(e => (e && typeof e === 'object')
-            ? Object.assign(e, {_snapAt:snapAt})
-            : e);
-
+            ? Object.assign({}, e, { _snapAt: snapAt })
+            : e
+          );
+    
+          // optional: if you ever want to use goblins list globally
+          State.runtime.lastSnapshotGoblins = pickArrayFromPayload(snap, 'goblins');
+    
           if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
           renderGlobalPanel();
           ensureGlobalTimers();
           recalcMyExpeditionFlagAndUI();
         }
-
-        // Recent completate (tab "Recent")
+    
+        // ---------------------------
+        // 2) RECENT EXPEDITIONS
+        // ---------------------------
         if (recentRes.ok && recentRes.data){
-          const arr = Array.isArray(recentRes.data) ? recentRes.data :
-                      (Array.isArray(recentRes.data.items) ? recentRes.data.items : []);
+          // support: array OR {items:[...]} OR {recent:[...]} OR {expeditions:[...]}
+          const arr = pickArrayFromPayload(recentRes.data, 'items', 'recent', 'expeditions');
           State.recentExpeditions = arr;
           renderRecentPanel();
         }
-
-        // Global log (start + completed per ticker)
-        if (logRes && logRes.ok && Array.isArray(logRes.data)){
-          State.globalLogEvents = logRes.data;
-        } else if (logRes && logRes.ok && Array.isArray(logRes.data?.items)) {
-          State.globalLogEvents = logRes.data.items;
+    
+        // ---------------------------
+        // 3) GLOBAL LOG
+        // ---------------------------
+        if (logRes && logRes.ok && logRes.data){
+          // support: array OR {items:[...]} OR {events:[...]} OR {log:[...]}
+          const logArr = pickArrayFromPayload(logRes.data, 'items', 'events', 'log');
+          State.globalLogEvents = logArr;
         }
-        // Active drop chest (normalize + dedup + lifecycle)
+    
+        // ---------------------------
+        // 4) ACTIVE DROP
+        // ---------------------------
         if (dropRes && dropRes.ok && dropRes.data) {
-          const raw = dropRes.data.drop || null;
+          // support: {drop:{...}} OR direct drop object
+          const raw = (dropRes.data && typeof dropRes.data === 'object' && 'drop' in dropRes.data)
+            ? dropRes.data.drop
+            : dropRes.data;
+    
           const normalized = normalizeDrop(raw);
           const nextKey = normalized ? `${normalized.drop_id}|${normalized.event_id || ''}` : '';
-        
+    
           const prevKey = State.drop.serverKey || '';
           State.drop.current = normalized;
           State.drop.serverKey = nextKey;
-        
-          // 1) se drop nuovo → FX spawn
+    
           if (normalized && nextKey && nextKey !== prevKey) {
             State.drop.fx.phase = 'visible';
             State.drop.fx.startedAtMs = performance.now();
@@ -4498,23 +4545,20 @@ function ensureStakingReportLoaded(){
             State.drop.fx.shakePower = 0.65;
             State.drop.fx.particles = [];
             State.drop.fx.shockwaves = [];
-            // facoltativo: messaggio canvas
             pushCanvasMsg(`🎁 A chest has appeared!`);
           }
-        
-          // 2) se drop sparito → stop/cleanup
+    
           if (!normalized && prevKey) {
             State.drop.fx.phase = 'idle';
             State.drop.fx.particles = [];
             State.drop.fx.shockwaves = [];
           }
-        
-          // 3) sync engine
+    
           if (State.engine) State.engine.setDrop(normalized);
         }
-
+    
         updateTicker();
-
+    
         const latency = Math.round(performance.now() - t0);
         if (State.ui.latency) State.ui.latency.textContent = `${latency} ms · synced`;
       } catch {
@@ -4523,8 +4567,6 @@ function ensureStakingReportLoaded(){
         State.net.busySnapshot = false;
       }
     }
-
-
     function setPollingInterval(ms){
       const v = clamp(ms, 2500, 60000);
       if (State.net.pollMs === v && State.net.pollTimer) return;

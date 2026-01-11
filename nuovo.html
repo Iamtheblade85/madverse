@@ -1224,6 +1224,7 @@ drop: {
           totalSpeed: 0,
           totalLoot: 0
         },      
+        ticker: { idx: 0, timer: null },
         simResult: null                  // last simulation result
       },
       drop: {
@@ -3847,7 +3848,10 @@ function updateTicker(){
   const el = State.ui.ticker;
   if (!el) return;
 
-  const ev = (State.globalLogEvents && State.globalLogEvents[0]) || null;
+  const list = State.globalLogEvents || [];
+  const i = (State.runtime?.ticker?.idx || 0);
+  const ev = list.length ? list[i % list.length] : null;
+
 
   // se abbiamo un messaggio "local" appena claimato, lo preferiamo per qualche secondo
   if (State.drop && State.drop.lastLocalTickerHtml && State.drop.lastLocalTickerUntilMs) {
@@ -4523,12 +4527,14 @@ async function claimActiveDrop(){
   State.drop.lastLocalTickerUntilMs = Date.now() + 12_000;
   updateTicker();
 
-  // aggiorna lo state drop (opzionale)
-  const updated = normalizeDrop(res.data.drop || res.data);
-  if (updated) {
-    State.drop.current = updated;
-    if (State.engine) State.engine.setDrop(updated);
-  }
+// ✅ NON sovrascrivere con res.data (manca x/y), tieni posizione e marca claimed
+if (State.drop.current) {
+  State.drop.current.claimed = true;
+  State.drop.current.status = 'claimed';
+  State.drop.current.claimedBy = claimedBy;
+  if (State.engine) State.engine.setDrop(State.drop.current);
+}
+
 
   // FX: opening -> hologram -> dissolve -> remove from canvas
   State.drop.fx.phase = 'opening';
@@ -4621,6 +4627,8 @@ async function claimActiveDrop(){
           // support: array OR {items:[...]} OR {events:[...]} OR {log:[...]}
           const logArr = pickArrayFromPayload(logRes.data, 'items', 'events', 'log');
           State.globalLogEvents = logArr;
+          if (State.runtime?.ticker) State.runtime.ticker.idx = 0;
+
         }
     
         // ---------------------------
@@ -4821,6 +4829,14 @@ async function claimActiveDrop(){
 
       fetchGlobalSnapshot();
       startPolling();
+// ✅ ticker rotator: cambia evento ogni 2 secondi
+if (State.runtime?.ticker?.timer) clearInterval(State.runtime.ticker.timer);
+State.runtime.ticker.timer = setInterval(() => {
+  const list = State.globalLogEvents || [];
+  if (!list.length) return;
+  State.runtime.ticker.idx = (State.runtime.ticker.idx + 1) % list.length;
+  updateTicker();
+}, 2000);
 
       window.addEventListener('orientationchange', ()=>{
         State.engine && State.engine.handleResize();

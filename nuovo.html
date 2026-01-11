@@ -3602,18 +3602,8 @@ function ensureStakingReportLoaded(){
       draw(){
         this.clear();
       
-        // camera shake (dipende da State.drop.fx.shakePower)
-        const sp = State.drop?.fx?.shakePower || 0;
-        const shakeAmp = sp > 0 ? (sp * 6.0) : 0;
-        const sx = shakeAmp ? (Math.random()*2-1)*shakeAmp : 0;
-        const sy = shakeAmp ? (Math.random()*2-1)*shakeAmp : 0;
-      
-        // background
+        // ✅ NO camera shake
         this.drawBackground();
-      
-        // apply shake by translating everything that is drawn in world space
-        this.ctx.save();
-        this.ctx.translate(sx, sy);
       
         // goblins
         for (const g of this.goblinById.values()){
@@ -3622,8 +3612,6 @@ function ensureStakingReportLoaded(){
       
         // chest on top
         this.drawDropChest(this.ctx);
-      
-        this.ctx.restore();
       }
 
       syncExpeditions(exps=[]){
@@ -4400,17 +4388,39 @@ function ensureStakingReportLoaded(){
       const res = await Api.post(CLAIM_DROP_API_PATH, body, 15000).catch(()=>({ok:false}));
     
       State.drop.claimBusy = false;
-      
-      // conflict: already claimed
-      if (res.status === 409 || res.data.ok === false) {
-        const by = res.data.claimed_by || updated?.claimedBy || 'someone';
+
+      // conflict: already claimed (server says "too late")
+      const serverDropMaybe = normalizeDrop(res.data?.drop || res.data);
+
+      const alreadyClaimed =
+        res.status === 409 ||
+        res.data?.ok === false ||
+        (serverDropMaybe && (serverDropMaybe.claimed || String(serverDropMaybe.status).toLowerCase() === 'claimed'));
+
+      if (alreadyClaimed) {
+        // prefer server "claimed_by", then cached info, then generic fallback
+        const by =
+          res.data?.claimed_by ||
+          res.data?.drop?.claimed_by ||
+          serverDropMaybe?.claimedBy ||
+          State.drop.current?.claimedBy ||
+          'someone';
+
+        // if server provided updated drop, keep local state aligned
+        if (serverDropMaybe) {
+          State.drop.current = serverDropMaybe;
+          if (State.engine) State.engine.setDrop(serverDropMaybe);
+        }
+
         toast(`Too late — claimed by ${by}.`);
         pushCanvasMsg(`💨 Chest claimed by ${by}.`);
+
         State.drop.fx.phase = 'done';
         State.drop.fx.doneAtMs = performance.now();
         State.drop.fx.shakePower = 0.15;
         return;
       }
+
       
       if (!res || !res.ok || !res.data) {
         toast('Claim failed.');

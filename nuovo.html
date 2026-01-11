@@ -1214,16 +1214,15 @@
     function normalizeDrop(d){
       if (!d || typeof d !== 'object') return null;
     
-      const drop_id  = String(d.drop_id ?? d.id ?? '');
+      // ✅ accept backend shape: sometimes only event_id exists
+      const event_id = String(d.event_id ?? d.eid ?? '');
+      const drop_id  = String(d.drop_id ?? d.id ?? event_id ?? '');
+    
       if (!drop_id) return null;
     
-      const event_id = String(d.event_id ?? d.eid ?? '');
-    
-      // world position (cells)
       const wx = toNumber(d.world?.x ?? d.x ?? d.world_x);
       const wy = toNumber(d.world?.y ?? d.y ?? d.world_y);
     
-      // expiry
       const expiresAtMs =
         parseUtcMs(d.expires_at_utc ?? d.expires_at ?? d.expiresAtUtc) ??
         (d.ttl_ms ? (Date.now() + toNumber(d.ttl_ms)) : null) ??
@@ -1231,23 +1230,23 @@
         (Date.now() + (CONFIG.drop?.maxLifeFallbackMs || 90_000));
     
       const spawnedAtMs =
-        parseUtcMs(d.spawned_at_utc ?? d.spawned_at ?? d.spawnedAtUtc) ??
-        (Date.now() - 500); // fallback
+        parseUtcMs(d.spawned_at_utc ?? d.spawned_at ?? d.spawnedAtUtc ?? d.created_at) ??
+        (Date.now() - 500);
     
       return {
         drop_id,
         event_id,
-        status: String(d.status ?? 'active'),
+        status: String(d.status ?? 'spawned'),
         rarity: String(d.rarity ?? ''),
         world: { x: wx, y: wy },
         spawnedAtMs,
         expiresAtMs,
-        claimed: !!(d.claimed ?? false),
-        claimedBy: d.claimed_by ? String(d.claimed_by) : '',
+        claimed: !!(d.claimed ?? (d.status === 'claimed')),
+        claimedBy: d.claimed_by ? String(d.claimed_by) : (d.claimed_by === '' ? '' : ''),
         reward_preview: d.reward_preview || null
       };
     }
-    
+
     function dropTimeLeftMs(drop){
       if (!drop) return null;
       return Math.max(0, (drop.expiresAtMs || 0) - Date.now());
@@ -3826,29 +3825,26 @@ function ensureStakingReportLoaded(){
             `→ <span class="ticker-rew">+${chips} CHIPS${nftPart}</span>`;
           return;
         }
-        if (ev.event_type === 'drop_spawned'){
-          el.innerHTML =
-            `<span class="ticker-time">[${when}]</span> ` +
-            `🎁 <strong>Chest spawned</strong> ` +
-            (ev.rarity ? `<span class="ticker-tag">${safe(ev.rarity)}</span>` : '') +
-            (ev.drop_id ? `<span class="ticker-extra">(${safe(ev.drop_id)})</span>` : '');
-          return;
-        }
         
-        if (ev.event_type === 'drop_claimed'){
-          const chips = ev.chips != null ? formatCompact(ev.chips) : '';
-          el.innerHTML =
-            `<span class="ticker-time">[${when}]</span> ` +
-            `🏴‍☠️ <strong>${account}</strong> claimed a chest ` +
-            (chips ? `→ <span class="ticker-rew">+${chips} CHIPS</span>` : '');
-          return;
-        }
+        if (ev.event_type === 'drop') {
+          const st = String(ev.status || '').toLowerCase();
+          const when = timeHM(ev.timestamp);
+          const id = ev.event_id ? ` (${safe(ev.event_id)})` : '';
+          const by = ev.claimed_by ? safe(ev.claimed_by) : '';
+          const chips = (ev.chips != null) ? formatCompact(ev.chips) : '';
         
-        if (ev.event_type === 'drop_expired'){
-          el.innerHTML =
-            `<span class="ticker-time">[${when}]</span> ` +
-            `⌛ <strong>Chest expired</strong>`;
-          return;
+          if (st === 'spawned') {
+            el.innerHTML = `<span class="ticker-time">[${when}]</span> 🎁 <strong>Chest spawned</strong>${id}`;
+            return;
+          }
+          if (st === 'claimed') {
+            el.innerHTML = `<span class="ticker-time">[${when}]</span> 🏴‍☠️ <strong>${safe(by || (ev.wax_account||'someone'))}</strong> claimed a chest ${chips ? `→ <span class="ticker-rew">+${chips} CHIPS</span>` : ''}`;
+            return;
+          }
+          if (st === 'expired') {
+            el.innerHTML = `<span class="ticker-time">[${when}]</span> ⌛ <strong>Chest expired</strong>${id}`;
+            return;
+          }
         }
 
         // altri tipi eventuali: fallback a testo grezzo
@@ -4532,8 +4528,7 @@ function ensureStakingReportLoaded(){
             : dropRes.data;
     
           const normalized = normalizeDrop(raw);
-          const nextKey = normalized ? `${normalized.drop_id}|${normalized.event_id || ''}` : '';
-    
+          const nextKey = normalized ? (normalized.event_id || normalized.drop_id) : ''; 
           const prevKey = State.drop.serverKey || '';
           State.drop.current = normalized;
           State.drop.serverKey = nextKey;

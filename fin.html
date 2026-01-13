@@ -162,6 +162,64 @@
         </div>
 
         <div id="snapshotList" class="snapshot-list" role="list"></div>
+        <hr />
+        
+        <div class="sidebar__section-title" style="margin-bottom:10px;">
+          <span>Forecast</span>
+          <small id="forecastMeta">—</small>
+        </div>
+        
+        <div class="pill-row" style="gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
+          <label class="label" style="margin:0;">
+            Target
+            <input id="forecastTo" type="date" />
+          </label>
+        
+          <label class="label" style="margin:0;">
+            Mode
+            <select id="forecastMode">
+              <option value="daily">Giornaliero</option>
+              <option value="monthly">Mensile</option>
+            </select>
+          </label>
+        
+          <button id="btnForecast" class="btn btn--ghost" type="button">Calcola</button>
+        </div>
+        
+        <div class="stats-grid" style="margin-bottom:12px;">
+          <div class="stat-card">
+            <div class="stat-card__label">Saldo previsto alla data</div>
+            <div id="forecastBalanceAtTo" class="stat-card__value">—</div>
+            <div id="forecastBalanceMeta" class="stat-card__sub">—</div>
+          </div>
+        
+          <div class="stat-card">
+            <div class="stat-card__label">Entrate totali (fino a target)</div>
+            <div id="forecastTotalIncome" class="stat-card__value">—</div>
+            <div class="stat-card__sub">Somma entrate</div>
+          </div>
+        
+          <div class="stat-card">
+            <div class="stat-card__label">Uscite totali (fino a target)</div>
+            <div id="forecastTotalExpense" class="stat-card__value">—</div>
+            <div class="stat-card__sub">Somma uscite</div>
+          </div>
+        
+          <div class="stat-card">
+            <div class="stat-card__label">Netto totale</div>
+            <div id="forecastTotalNet" class="stat-card__value">—</div>
+            <div class="stat-card__sub">Entrate − Uscite</div>
+          </div>
+        </div>
+        
+        <canvas id="forecastChart" width="720" height="220" style="width:100%; height:220px; border:1px solid var(--border); border-radius:12px;"></canvas>
+        
+        <div style="height:12px"></div>
+        
+        <div id="forecastTableWrap" style="overflow:auto; max-height:240px; border:1px solid var(--border); border-radius:12px;"></div>
+        
+        <div id="forecastError" class="help" style="color:crimson; margin-top:10px; display:none;"></div>
+                
       </section>
     </aside>
 
@@ -316,6 +374,66 @@
       };
       const formatMoney = (val, currency = "EUR") =>
         new Intl.NumberFormat("it-IT", { style: "currency", currency }).format(Number(val || 0));
+      const drawForecastChart = (canvas, series, currency) => {
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+      
+        const W = canvas.width;
+        const H = canvas.height;
+      
+        ctx.clearRect(0, 0, W, H);
+      
+        if (!series || !series.length) {
+          ctx.fillStyle = "#888";
+          ctx.font = "14px system-ui";
+          ctx.fillText("Nessun dato forecast.", 12, 24);
+          return;
+        }
+      
+        const pad = 28;
+        const xs = series.map((_, i) => i);
+        const ys = series.map(p => Number(p.balance || 0));
+      
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
+        const spanY = (maxY - minY) || 1;
+      
+        const xTo = (i) => pad + (i / Math.max(1, xs.length - 1)) * (W - pad * 2);
+        const yTo = (v) => (H - pad) - ((v - minY) / spanY) * (H - pad * 2);
+      
+        // axes
+        ctx.strokeStyle = "rgba(128,128,128,0.35)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(pad, pad);
+        ctx.lineTo(pad, H - pad);
+        ctx.lineTo(W - pad, H - pad);
+        ctx.stroke();
+      
+        // line
+        ctx.strokeStyle = "rgba(80,160,255,0.9)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        series.forEach((p, i) => {
+          const x = xTo(i);
+          const y = yTo(Number(p.balance || 0));
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      
+        // labels (min/max + last)
+        ctx.fillStyle = "rgba(200,200,200,0.9)";
+        ctx.font = "12px system-ui";
+        const fmt = (v) => formatMoney(v, currency);
+      
+        ctx.fillText(`min ${fmt(minY)}`, pad + 6, pad + 6);
+        ctx.fillText(`max ${fmt(maxY)}`, pad + 6, pad + 20);
+      
+        const last = series[series.length - 1];
+        ctx.fillText(`${last.date}: ${fmt(last.balance)}`, pad + 6, H - 10);
+      };
+
       const formatDateHuman = (d) =>
         new Intl.DateTimeFormat("it-IT", { weekday: "short", year: "numeric", month: "long", day: "2-digit" }).format(d);
       const formatMonthHuman = (d) =>
@@ -365,7 +483,11 @@
         deleteSeries(seriesId) { return this.request(`/series/${encodeURIComponent(seriesId)}`, { method: "DELETE" }); },
         deleteSeriesFrom(seriesId, fromISO) { return this.request(`/series/${encodeURIComponent(seriesId)}/from/${encodeURIComponent(fromISO)}`, { method: "DELETE" }); },
         getSettings() { return this.request(`/settings`); },
-        saveSettings(payload) { return this.request(`/settings`, { method: "PUT", body: payload }); }
+        saveSettings(payload) { return this.request(`/settings`, { method: "PUT", body: payload }); },
+        forecast(params = {}) {
+          const qs = new URLSearchParams(params).toString();
+          return this.request(`/forecast${qs ? `?${qs}` : ""}`);
+        }
       };
 
       const defaultSettings = {
@@ -382,7 +504,10 @@
         sidebarOpen: true,
         initialBalance: 3412,
         currency: "EUR",
-        balanceAtDate: ""
+        balanceAtDate: "",
+        forecastTo: "",
+        forecastMode: "daily",
+        forecastStart: "2025-12-26"
       };
 
       const state = {
@@ -390,7 +515,8 @@
         events: [],
         anchorDate: startOfDay(new Date()),
         selectedEventId: null,
-        draftEventId: null
+        draftEventId: null,
+        forecast: null
       };
 
       let settingsTimer = null;
@@ -763,6 +889,101 @@
 
         return root;
       };
+    
+      const renderForecastTable = (wrapEl, perMonth, currency) => {
+        wrapEl.innerHTML = "";
+        if (!perMonth || !perMonth.length) {
+          wrapEl.appendChild(emptyState("Nessun riepilogo mensile."));
+          return;
+        }
+      
+        const table = el("table", { style: "width:100%; border-collapse:collapse;" });
+        const thead = el("thead");
+        thead.appendChild(el("tr", {}, [
+          el("th", { style:"text-align:left; padding:8px; border-bottom:1px solid var(--border);" }, "Mese"),
+          el("th", { style:"text-align:left; padding:8px; border-bottom:1px solid var(--border);" }, "Entrate"),
+          el("th", { style:"text-align:left; padding:8px; border-bottom:1px solid var(--border);" }, "Uscite"),
+          el("th", { style:"text-align:left; padding:8px; border-bottom:1px solid var(--border);" }, "Netto"),
+        ]));
+      
+        const tbody = el("tbody");
+        for (const m of perMonth) {
+          tbody.appendChild(el("tr", {}, [
+            el("td", { style:"padding:8px; border-bottom:1px solid rgba(128,128,128,0.15);" }, m.month),
+            el("td", { style:"padding:8px; border-bottom:1px solid rgba(128,128,128,0.15);" }, formatMoney(m.income, currency)),
+            el("td", { style:"padding:8px; border-bottom:1px solid rgba(128,128,128,0.15);" }, formatMoney(m.expense, currency)),
+            el("td", { style:"padding:8px; border-bottom:1px solid rgba(128,128,128,0.15);" }, formatMoney(m.net, currency)),
+          ]));
+        }
+      
+        table.append(thead, tbody);
+        wrapEl.appendChild(table);
+      };
+
+      const loadForecastFromBackend = async () => {
+        const todayISO = toISODate(new Date());
+      
+        const toISO = state.settings.forecastTo || state.settings.toDate || todayISO;
+        const mode = state.settings.forecastMode || "daily";
+        const start = state.settings.forecastStart || "2025-12-26";
+      
+        const params = {
+          to: toISO,
+          mode,
+          start,
+          initialBalance: String(state.settings.initialBalance || 0)
+        };
+      
+        return API.forecast(params);
+      };
+      
+      const renderForecast = () => {
+        const errEl = $("#forecastError");
+        errEl.style.display = "none";
+        errEl.textContent = "";
+      
+        const f = state.forecast;
+        if (!f) {
+          $("#forecastMeta").textContent = "—";
+          $("#forecastBalanceAtTo").textContent = "—";
+          $("#forecastBalanceMeta").textContent = "—";
+          $("#forecastTotalIncome").textContent = "—";
+          $("#forecastTotalExpense").textContent = "—";
+          $("#forecastTotalNet").textContent = "—";
+          renderForecastTable($("#forecastTableWrap"), [], state.settings.currency);
+          drawForecastChart($("#forecastChart"), [], state.settings.currency);
+          return;
+        }
+      
+        const cur = state.settings.currency;
+      
+        $("#forecastMeta").textContent =
+          `storico ${f.meta?.historyWindow?.from || "?"} → ${f.meta?.historyWindow?.to || "?"} · real=${f.components?.realCount ?? "?"} · rec=${f.components?.futureRecurringCount ?? "?"} · stima=${f.components?.estimatedCount ?? "?"}`;
+      
+        $("#forecastBalanceAtTo").textContent = formatMoney(f.totals?.balanceAtTo, cur);
+        $("#forecastBalanceMeta").textContent = `Target ${f.meta?.to || ""} · init ${formatMoney(f.meta?.initialBalance, cur)}`;
+      
+        $("#forecastTotalIncome").textContent = formatMoney(f.totals?.income, cur);
+        $("#forecastTotalExpense").textContent = formatMoney(f.totals?.expense, cur);
+        $("#forecastTotalNet").textContent = formatMoney(f.totals?.net, cur);
+      
+        drawForecastChart($("#forecastChart"), f.series || [], cur);
+        renderForecastTable($("#forecastTableWrap"), f.perMonth || [], cur);
+      };
+      
+      const refreshForecast = async () => {
+        try {
+          state.forecast = null;
+          renderForecast();
+          const data = await loadForecastFromBackend();
+          state.forecast = data;
+          renderForecast();
+        } catch (e) {
+          const errEl = $("#forecastError");
+          errEl.style.display = "";
+          errEl.textContent = (e && e.message) ? e.message : "Errore forecast";
+        }
+      };
 
       const renderDayView = (events) => {
         const [start] = getEffectiveRangeForView();
@@ -938,48 +1159,39 @@
 
       const syncControlsFromState = () => {
         $("#sidebar").setAttribute("data-open", state.settings.sidebarOpen ? "true" : "false");
-
         $$("#viewSwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === state.settings.view ? "true" : "false"));
         $$("#densitySwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.density === state.settings.density ? "true" : "false"));
         $$("#rangePresets button").forEach(b => b.setAttribute("aria-pressed", b.dataset.preset === state.settings.rangeMode ? "true" : "false"));
-
         $("#searchInput").value = state.settings.search || "";
         $("#toggleIncome").checked = !!state.settings.includeIncome;
         $("#toggleExpense").checked = !!state.settings.includeExpense;
         $("#toggleOther").checked = !!state.settings.includeOther;
-
         $("#fromDate").value = state.settings.fromDate || "";
         $("#toDate").value = state.settings.toDate || "";
-
         const todayISO = toISODate(new Date());
+        $("#forecastTo").value = state.settings.forecastTo || state.settings.toDate || todayISO;
+        $("#forecastMode").value = state.settings.forecastMode || "daily";
         $("#balanceAtDate").value = state.settings.balanceAtDate || todayISO;
       };
-
       const renderStats = () => {
         const filtered = getFilteredEvents();
         const vis = computeVisibleStats(filtered);
-
         $("#statsMeta").textContent = `${formatRangeLabel(vis.rangeStart, vis.rangeEnd, "custom")} · visibile`;
-
         $("#statIncome").textContent = formatMoney(vis.incomeSum, state.settings.currency);
         $("#statExpense").textContent = formatMoney(vis.expenseSum, state.settings.currency);
         $("#statNet").textContent = formatMoney(vis.net, state.settings.currency);
         $("#statIncomeCount").textContent = `${vis.incomeCount} eventi`;
         $("#statExpenseCount").textContent = `${vis.expenseCount} eventi`;
-
         const todayISO = toISODate(new Date());
         const balToday = computeBalanceUpTo(state.events, state.settings.initialBalance, todayISO);
         $("#statCurrentBalance").textContent = formatMoney(balToday, state.settings.currency);
         $("#statCurrentBalanceMeta").textContent = `Fino a ${todayISO}`;
-
         const atISO = state.settings.balanceAtDate || todayISO;
         const balAt = computeBalanceUpTo(state.events, state.settings.initialBalance, atISO);
         $("#statBalanceAtDate").textContent = formatMoney(balAt, state.settings.currency);
-
         const netEl = $("#statNet");
         netEl.classList.toggle("positive", vis.net > 0);
         netEl.classList.toggle("negative", vis.net < 0);
-
         const list = $("#snapshotList");
         list.innerHTML = "";
         const tail = vis.snapshots.slice(-14);
@@ -991,16 +1203,14 @@
         }
         if (!tail.length) list.appendChild(emptyState("Nessuno snapshot nel range corrente.", "snapshot-empty"));
       };
-
       const render = () => {
         syncControlsFromState();
         renderCategoryOptions();
         renderCalendar();
         renderStats();
+        renderForecast();
       };
-
       const getEventById = (id) => state.events.find(e => e.id === id) || null;
-
       const openEventDrawer = (id) => {
         const evt = getEventById(id);
         if (!evt) return;
@@ -1011,23 +1221,18 @@
         detail.innerHTML = "";
         detail.appendChild(renderEventDetail(evt));
       };
-
       const closeEventDrawer = () => {
         state.selectedEventId = null;
         $("#eventDrawer").setAttribute("aria-hidden", "true");
         $("#eventDetail").innerHTML = "";
       };
-
       const syncRecurrenceUI = () => {
         const mode = $("#evtRecurrence").value;
-      
         const recDaysWrap = $("#recDaysField");
         const spanWrap = $("#recSpanField");
-      
         const daysInput = $("#evtRecurrenceDays");
         const spanInput = $("#evtRecurrenceSpan");
         const unitSelect = $("#evtRecurrenceSpanUnit");
-      
         // --- Ogni N giorni (solo custom_days)
         if (mode === "custom_days") {
           recDaysWrap.style.display = "";
@@ -1036,39 +1241,31 @@
           recDaysWrap.style.display = "none";
           daysInput.value = "";
         }
-      
         // --- Durata ricorrenza (tutte tranne none)
         if (mode !== "none") {
           spanWrap.style.display = "";
-      
           const def = RECURRENCE_DEFAULTS[mode] || { count: 6, unit: "months" };
-      
           // se count non valido, metti default coerente
           const count = Number(spanInput.value || 0);
           if (!(count >= 1)) spanInput.value = String(def.count);
-      
           // se unit non valida, metti default coerente
           const unit = unitSelect.value;
           if (!["days", "weeks", "months", "years"].includes(unit)) {
             unitSelect.value = def.unit;
           }
-      
           // se unit è "days" ma modalità è monthly/yearly e l'utente non ha mai scritto nulla,
           // forziamo unit coerente (evita "mensile" con "giorni" per default)
           const userHasTypedCount = String(spanInput.value || "").trim() !== "";
           if (!userHasTypedCount) unitSelect.value = def.unit;
-      
         } else {
           spanWrap.style.display = "none";
           spanInput.value = "";
           unitSelect.value = "days";
         }
       };
-
       const openEventModal = (mode, eventId = null, prefillISO = null) => {
         state.draftEventId = mode === "edit" ? eventId : null;
         $("#eventModalTitle").textContent = mode === "edit" ? "Modifica evento" : "Nuovo evento";
-
         if (mode === "edit") {
           const evt = getEventById(eventId);
           if (!evt) return;
@@ -1083,7 +1280,6 @@
           $("#evtRecurrenceDays").value = evt.recurrenceDays != null ? String(evt.recurrenceDays) : "";
           $("#evtPinned").checked = !!evt.pinned;
           syncRecurrenceUI();
-
         } else {
           $("#eventForm").reset();
           $("#evtType").value = "expense";
@@ -1093,16 +1289,12 @@
           $("#evtPinned").checked = false;
           syncRecurrenceUI();
         }
-
         $("#eventModal").showModal();
       };
-
       const closeEventModal = () => $("#eventModal").close();
-
       const upsertEventFromForm = async () => {
         const rec = $("#evtRecurrence").value;
         const recDays = rec === "custom_days" ? Math.max(1, parseInt($("#evtRecurrenceDays").value || "0", 10) || 0) : null;
-
         const data = {
           title: $("#evtTitle").value.trim(),
           category: $("#evtCategory").value.trim() || "Senza categoria",
@@ -1115,7 +1307,6 @@
           recurrence: rec,
           recurrenceDays: recDays
         };
-
         if (state.draftEventId) {
           const updated = await API.updateEvent(state.draftEventId, data);
           const evt = normalizeEvent(updated?.event || updated || { id: state.draftEventId, ...data });
@@ -1144,9 +1335,9 @@
             state.events.push(master, ...children);
           }
         }
-
         closeEventModal();
         render();
+        refreshForecast();
       };
 
       const deleteSelectedEvent = async () => {
@@ -1287,6 +1478,17 @@
         $("#btnCloseModal").addEventListener("click", closeEventModal);
         $("#btnCancelEvent").addEventListener("click", closeEventModal);
         $("#eventForm").addEventListener("submit", (e) => { e.preventDefault(); upsertEventFromForm(); });
+        $("#forecastTo").addEventListener("change", (e) => {
+          state.settings.forecastTo = e.target.value || "";
+          saveSettings();
+        });
+        
+        $("#forecastMode").addEventListener("change", (e) => {
+          state.settings.forecastMode = e.target.value || "daily";
+          saveSettings();
+        });
+        
+        $("#btnForecast").addEventListener("click", () => refreshForecast());
 
         $("#btnExport").addEventListener("click", exportJSON);
         $("#importFile").addEventListener("change", async (e) => {
@@ -1319,9 +1521,14 @@
 
         if (!state.settings.fromDate) state.settings.fromDate = toISODate(minTrack);
         if (!state.settings.toDate) state.settings.toDate = toISODate(maxTrack);
-
+        if (!state.settings.forecastTo) state.settings.forecastTo = state.settings.toDate || todayISO;
+        if (!state.settings.forecastMode) state.settings.forecastMode = "daily";
+        if (!state.settings.forecastStart) state.settings.forecastStart = "2025-12-26";
         syncRecurrenceUI();
+        // prima render normale
         render();
+        // poi forecast
+        refreshForecast();
       };
 
       init();

@@ -152,8 +152,7 @@ if (FIX_GOBLIN_FLIP_X) {
     this.model.add(this.label);
 
      
-    this.mixer = new THREE.AnimationMixer(this.root);
-
+    this.mixer = new THREE.AnimationMixer(this.model);
     this.actions = {};
     clips.forEach(c => {
       const a = this.mixer.clipAction(c.clip);

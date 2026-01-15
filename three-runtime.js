@@ -1,6 +1,7 @@
-import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
-import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
-import { SkeletonUtils } from 'https://unpkg.com/three@0.160.0/examples/jsm/utils/SkeletonUtils.js';
+// Resolved via <script type="importmap"> in nuovo.html
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { SkeletonUtils } from 'three/addons/utils/SkeletonUtils.js';
 
 /* =========================
    CONFIGURAZIONE FINALE

@@ -21,7 +21,7 @@ const WANDER_MAX_MS = 1600;        // massimo tempo prima di cambiare target
 const WANDER_MARGIN = 1.2;         // margine dal bordo (celle)
 const DIG_DURATION_MS = 1200;       // quanto dura il "digging" prima di consumare
 const CHEST_Y_OFFSET = 0.15;        // altezza sopra il plot
-const LABEL_Y_OFFSET = 3.2;         // altezza badge sopra goblin
+const LABEL_Y_OFFSET = -0.85;
 const FIX_GOBLIN_FLIP_X = Math.PI;  // ✅ 180°: testa su, piedi giù
 
 const GOBLIN_Y_OFFSET = 0.05;       // piccolo offset sopra il plot
@@ -76,6 +76,7 @@ function makeLabelSprite(text) {
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.needsUpdate = true;
+tex.colorSpace = THREE.SRGBColorSpace;
 
    const mat = new THREE.SpriteMaterial({
      map: tex,
@@ -258,7 +259,12 @@ class Goblin {
       }
     }
 
+    // ✅ non farli mai uscire dal plot (specialmente dopo tab-switch)
+    this.cell.x = THREE.MathUtils.clamp(this.cell.x, WANDER_MARGIN, GRID_WIDTH - WANDER_MARGIN);
+    this.cell.y = THREE.MathUtils.clamp(this.cell.y, WANDER_MARGIN, GRID_HEIGHT - WANDER_MARGIN);
+
     this.mixer.update(dt);
+
   }
 
   worldPosition() {
@@ -287,6 +293,13 @@ export class ThreeRuntime {
       antialias: true,
       alpha: false
     });
+// ✅ colori corretti (sRGB) + resa più “viva”
+this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+this.renderer.toneMappingExposure = 1.1;
+
+// (opzionale ma consigliato per nitidezza)
+this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
     this.scene = new THREE.Scene();
 
@@ -302,7 +315,17 @@ export class ThreeRuntime {
     this.camera.position.set(0, 20, 0);
     this.camera.lookAt(0, 0, 0);
 
-    this.scene.add(new THREE.AmbientLight(0xffffff, 1));
+// ✅ luci migliori: colori più fedeli e goblin “leggibili”
+this.scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+
+const hemi = new THREE.HemisphereLight(0xffffff, 0x223344, 0.75);
+hemi.position.set(0, 50, 0);
+this.scene.add(hemi);
+
+const dir = new THREE.DirectionalLight(0xffffff, 1.15);
+dir.position.set(20, 40, 10);
+this.scene.add(dir);
+
 
     this.clock = new THREE.Clock();
     this.loader = new GLTFLoader();
@@ -335,6 +358,7 @@ this.MISSING_TICKS_BEFORE_REMOVE = 6; // es: 6 sync consecutivi
 
   _loadChest() {
     const tex = new THREE.TextureLoader().load('/madverse/chest_sprite.png');
+     tex.colorSpace = THREE.SRGBColorSpace;
     const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
     const spr = new THREE.Sprite(mat);
 
@@ -347,7 +371,9 @@ this.MISSING_TICKS_BEFORE_REMOVE = 6; // es: 6 sync consecutivi
   }
    
   _loadPlot() {
-    const tex = new THREE.TextureLoader().load('/madverse/assets/plot.png');
+const tex = new THREE.TextureLoader().load('/madverse/assets/plot.png');
+tex.colorSpace = THREE.SRGBColorSpace;
+
     const plane = new THREE.Mesh(
      new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT),
      new THREE.MeshBasicMaterial({
@@ -387,7 +413,10 @@ this.MISSING_TICKS_BEFORE_REMOVE = 6; // es: 6 sync consecutivi
         const g = new Goblin(
           this.template,
           this.clips,
-          { x: Math.random() * GRID_WIDTH, y: Math.random() * GRID_HEIGHT },
+          {
+            x: WANDER_MARGIN + Math.random() * (GRID_WIDTH - 2 * WANDER_MARGIN),
+            y: WANDER_MARGIN + Math.random() * (GRID_HEIGHT - 2 * WANDER_MARGIN)
+          },
           owner,
           (goblin, chest) => this._onGoblinDigComplete(goblin, chest)
         );
@@ -446,7 +475,14 @@ this.goblins.forEach((g, id) => {
   _loop() {
     requestAnimationFrame(() => this._loop());
 
-    const dt = this.clock.getDelta();
+   let dt = this.clock.getDelta();
+   
+   // ✅ se il tab è stato in background o c'è un hitch, evita il "teletrasporto"
+   if (dt > 0.12) dt = 0;
+   
+   // ✅ clamp ulteriore (max ~30 FPS step)
+   dt = Math.min(dt, 1 / 30);
+
     const liveDrop = this.drop || GameState.drop?.current || null;
     const chest =
       liveDrop && GameState.drop.fx?.phase === 'visible'

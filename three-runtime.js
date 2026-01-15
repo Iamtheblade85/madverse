@@ -13,8 +13,12 @@ const CELL_SIZE = 1;
 
 const GOBLIN_SPEED = 3.5;          // celle / secondo
 const CHEST_TRIGGER_RANGE = 3;     // 3x3
-const SURPRISE_DURATION_MS = 700;
+const SURPRISE_DURATION_MS = 1700;
 const VICTORY_VISIBLE_MS = 5000;
+const WANDER_REACH_EPS = 0.35;     // quanto vicino deve arrivare al target (celle)
+const WANDER_MIN_MS = 700;         // minimo tempo prima di cambiare target
+const WANDER_MAX_MS = 1600;        // massimo tempo prima di cambiare target
+const WANDER_MARGIN = 1.2;         // margine dal bordo (celle)
 
 /* =========================
    ACCESSO STATO GIOCO
@@ -62,6 +66,8 @@ class Goblin {
 
     this.cell = { ...startCell };
     this.target = { ...startCell };
+    this.nextWanderAt = 0;
+    this._pickRandomTarget();
 
     this.lastChestKey = null;
     this.visible = true;
@@ -78,6 +84,22 @@ class Goblin {
     this.currentAction = name;
   }
 
+   _pickRandomTarget() {
+     // target casuale dentro i limiti della griglia
+     const minX = WANDER_MARGIN;
+     const maxX = GRID_WIDTH - WANDER_MARGIN;
+     const minY = WANDER_MARGIN;
+     const maxY = GRID_HEIGHT - WANDER_MARGIN;
+   
+     this.target = {
+       x: minX + Math.random() * (maxX - minX),
+       y: minY + Math.random() * (maxY - minY),
+     };
+   
+     const now = performance.now();
+     this.nextWanderAt = now + (WANDER_MIN_MS + Math.random() * (WANDER_MAX_MS - WANDER_MIN_MS));
+   }
+      
   update(dt, chest) {
     if (!this.visible) return;
 
@@ -117,13 +139,25 @@ class Goblin {
         this.state = 'MOVING_TO_CHEST';
         this._play('RUNNING');
       }
-    } else {
-      this.lastChestKey = null;
-      if (this.state !== 'RUNNING') {
-        this.state = 'RUNNING';
-        this._play('RUNNING');
-      }
-    }
+   } else {
+     this.lastChestKey = null;
+   
+     if (this.state !== 'RUNNING') {
+       this.state = 'RUNNING';
+       this._play('RUNNING');
+     }
+   
+     // ✅ WANDER: se non c'è chest, cammina verso target casuali
+     const now = performance.now();
+     const dx = this.target.x - this.cell.x;
+     const dy = this.target.y - this.cell.y;
+     const dist = Math.hypot(dx, dy);
+   
+     // se sono arrivato vicino al target oppure è scaduto il timer => nuovo target
+     if (dist <= WANDER_REACH_EPS || now >= this.nextWanderAt) {
+       this._pickRandomTarget();
+     }
+   }
 
     /* ====== MOVEMENT ====== */
     if (this.state === 'RUNNING' || this.state === 'MOVING_TO_CHEST') {

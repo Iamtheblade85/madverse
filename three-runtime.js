@@ -205,7 +205,7 @@ export class ThreeRuntime {
   }
 
   _loadPlot() {
-    const tex = new THREE.TextureLoader().load('/assets/plot.png');
+    const tex = new THREE.TextureLoader().load('/madverse/madverse/assets/plot.png');
     const plane = new THREE.Mesh(
       new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT),
       new THREE.MeshBasicMaterial({ map: tex })
@@ -215,14 +215,14 @@ export class ThreeRuntime {
   }
 
   async _loadGoblinAssets() {
-    const base = await this.loader.loadAsync('/assets/goblin_run.glb');
+    const base = await this.loader.loadAsync('/madverse/assets/goblin_run.glb');
     this.template = base.scene;
 
     this.clips = [
       { name: 'RUNNING', clip: base.animations[0] },
-      { name: 'SURPRISED', clip: (await this.loader.loadAsync('/assets/goblin_surprised.glb')).animations[0], once: true },
-      { name: 'DIGGING', clip: (await this.loader.loadAsync('/assets/goblin_digging.glb')).animations[0] },
-      { name: 'VICTORY', clip: (await this.loader.loadAsync('/assets/goblin_victory.glb')).animations[0], once: true }
+      { name: 'SURPRISED', clip: (await this.loader.loadAsync('/madverse/assets/goblin_surprised.glb')).animations[0], once: true },
+      { name: 'DIGGING', clip: (await this.loader.loadAsync('/madverse/assets/goblin_digging.glb')).animations[0] },
+      { name: 'VICTORY', clip: (await this.loader.loadAsync('/madverse/assets/goblin_victory.glb')).animations[0], once: true }
     ];
   }
 

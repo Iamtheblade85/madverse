@@ -21,7 +21,7 @@ const WANDER_MAX_MS = 1600;        // massimo tempo prima di cambiare target
 const WANDER_MARGIN = 1.2;         // margine dal bordo (celle)
 const DIG_DURATION_MS = 1200;       // quanto dura il "digging" prima di consumare
 const CHEST_Y_OFFSET = 0.15;        // altezza sopra il plot
-const LABEL_Y_OFFSET = 2.2;         // altezza badge sopra goblin
+const LABEL_Y_OFFSET = 3.2;         // altezza badge sopra goblin
 const FIX_GOBLIN_FLIP_X = 0;  // prova 0 oppure Math.PI se è capovolto
 const GOBLIN_Y_OFFSET = 0.05;       // piccolo offset sopra il plot
 
@@ -76,15 +76,21 @@ function makeLabelSprite(text) {
   const tex = new THREE.CanvasTexture(canvas);
   tex.needsUpdate = true;
 
-  const mat = new THREE.SpriteMaterial({
-    map: tex,
-    transparent: true,
-    depthTest: false
-  });
+   const mat = new THREE.SpriteMaterial({
+     map: tex,
+     transparent: true,
+     depthTest: true,     // ✅ rispetta la profondità (non copre sempre il goblin)
+     depthWrite: false    // ✅ non “scrive” nello z-buffer (evita artefatti)
+   });
+   
+   const spr = new THREE.Sprite(mat);
+   
+   // ✅ molto più piccolo: (prima era 8x2 = enorme)
+   spr.scale.set(2.6, 0.65, 1);
+   
+   spr.renderOrder = 50;  // ✅ sopra il plot, ma non “sempre sopra” il goblin grazie al depthTest
+   return spr;
 
-  const spr = new THREE.Sprite(mat);
-  spr.scale.set(8, 2, 1); // dimensione in “celle”
-  return spr;
 }
 
 /* =========================
@@ -93,6 +99,7 @@ function makeLabelSprite(text) {
 class Goblin {
   constructor(template, clips, startCell, owner, onDigComplete) {
     this.root = SkeletonUtils.clone(template);
+     this.root.scale.setScalar(1.5);
     // se è "girato" rispetto alla mappa, usa Y (non X)
     //this.root.rotation.y += Math.PI;
     this.owner = owner || 'player';

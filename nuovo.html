@@ -4105,15 +4105,17 @@ State.runtime.ticker.timer = setInterval(() => {
     }
     if (!window.GOBLIN_DEX_NO_AUTO_MOUNT) mount();
     window.GoblinDex = { mount };
+    window.__GOBLIN_DEX_STATE__ = State;
+window.State = State;
+
   })();
   </script>
 <script type="module">
   import { ThreeRuntime } from './three-runtime.js';
 
-  window.__GOBLIN_DEX_STATE__ = State;
-
+  const State = window.__GOBLIN_DEX_STATE__;
   State.engine = new ThreeRuntime(State.ui.canvas);
-  State.engine.init();
+  await State.engine.init?.() ?? State.engine.init();
 </script>
 
   <script>

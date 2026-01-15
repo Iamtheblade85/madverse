@@ -3717,134 +3717,134 @@ function updateTicker(){
       fetchGlobalSnapshot();
     }
 
-async function claimActiveDrop(){
-  const drop = State.drop.current;
-  if (!drop) return;
-
-  const left = dropTimeLeftMs(drop);
-  if (left != null && left <= 0) {
-    toast('Chest expired.');
-    return;
-  }
-  if (State.drop.claimBusy) return;
-
-  syncUserFromStorage();
-  try { assertAuth(); } catch { toast('Please log in first'); return; }
-
-  State.drop.claimBusy = true;
-  State.drop.fx.phase = 'claiming';
-  State.drop.fx.shakePower = 0.95;
-
-  pushCanvasMsg('🧤 Claiming chest…');
-
-  const body = {
-    wax_account: State.user.wax_account,
-    user_id: State.user.user_id,
-    usx_token: State.user.usx_token,
-    drop_id: drop.drop_id,
-    event_id: drop.event_id
-  };
-
-  const res = await Api.post(CLAIM_DROP_API_PATH, body, 15000).catch(()=>({ok:false, status:0, data:null}));
-
-  State.drop.claimBusy = false;
-
-  // backend: se expired -> 409 con {"ok":false,"error":"expired"} (o simili)
-  if (!res || !res.data) {
-    toast('Claim failed.');
-    State.drop.fx.phase = 'visible';
-    State.drop.fx.shakePower = 0.45;
-    return;
-  }
-
-  // Se non ok o 409 => qualcuno ha già claimato / scaduto
-  if (!res.ok || res.status === 409 || res.data.ok === false) {
-    const by = (res.data && (res.data.claimed_by || res.data.claimedBy)) || 'someone';
-    const err = res.data?.error;
-
-    if (err === 'expired') {
-      toast('Chest expired.');
-      pushCanvasMsg('⌛ Chest expired.');
-      State.drop.fx.phase = 'expired';
-      State.drop.fx.doneAtMs = performance.now();
-      State.drop.fx.shakePower = 0.10;
-      return;
-    }
-
-    toast(`Too late — claimed by ${by}.`);
-    pushCanvasMsg(`💨 Chest claimed by ${by}.`);
-    State.drop.fx.phase = 'done';
-    State.drop.fx.doneAtMs = performance.now();
-    State.drop.fx.shakePower = 0.10;
-    return;
-  }
-
-  // SUCCESS (your backend /2drop_claim):
-  // res.data.reward.amount (string), res.data.reward.symbol, res.data.reward.tx_id
-  const claimedBy = res.data?.claimed_by || State.user.wax_account;
-  const amtStr = res.data?.reward?.amount;
-  const sym = res.data?.reward?.symbol || 'CHIPS';
-  const amtNum = (amtStr != null) ? Number(amtStr) : null;
-
-  if (amtNum != null && Number.isFinite(amtNum)) {
-    toast(`🎉 You found +${formatCompact(amtNum)} ${sym} in the chest!`);
-  } else {
-    toast('🎉 Chest claimed!');
-  }
-
-  // ticker local bello (per qualche secondo), include amount perché arriva da /2drop_claim
-  const when = timeHM(new Date());
-  State.drop.lastLocalTickerHtml =
-    `<span class="ticker-time">[${when}]</span> ` +
-    `🏴‍☠️ <strong>${safe(claimedBy)}</strong> claimed a chest ` +
-    (amtNum != null && Number.isFinite(amtNum)
-      ? `→ <span class="ticker-rew">+${formatCompact(amtNum)} ${safe(sym)}</span>`
-      : '') +
-    `<span class="ticker-eff">Use Twitch chat commands to spawn more chests and win prizes.</span>`;
-  State.drop.lastLocalTickerUntilMs = Date.now() + 12_000;
-  updateTicker();
-
-// ✅ NON sovrascrivere con res.data (manca x/y), tieni posizione e marca claimed
-if (State.drop.current) {
-  State.drop.current.claimed = true;
-  State.drop.current.status = 'claimed';
-  State.drop.current.claimedBy = claimedBy;
-  if (State.engine) State.engine.setDrop(State.drop.current);
-}
-
-
-  // FX: opening -> hologram -> dissolve -> remove from canvas
-  State.drop.fx.phase = 'opening';
-  State.drop.fx.openAtMs = performance.now();
-  State.drop.fx.shakePower = 1.15;
-  State.drop.fx.shockwaves.push({ t:0, x: drop.world.x, y: drop.world.y });
-
-  setTimeout(()=>{
-    if (!State.drop.current) return;
-    State.drop.fx.phase = 'hologram';
-    State.drop.fx.holoAtMs = performance.now();
-    State.drop.fx.shakePower = 0.40;
-    pushCanvasMsg('📡 Reward unlocked!');
-  }, CONFIG.drop.openingMs || 1100);
-
-  setTimeout(()=>{
-    if (!State.drop.current) return;
-    State.drop.fx.phase = 'dissolve';
-    State.drop.fx.doneAtMs = performance.now();
-    State.drop.fx.shakePower = 0.12;
-  }, (CONFIG.drop.openingMs||1100) + (CONFIG.drop.hologramMs||1200));
-
-  setTimeout(()=>{
-    // remove immediately from canvas/state (as you requested)
-    State.drop.current = null;
-    State.drop.serverKey = '';
-    if (State.engine) State.engine.setDrop(null);
-    State.drop.fx.phase = 'idle';
-    State.drop.fx.particles = [];
-    State.drop.fx.shockwaves = [];
-  }, (CONFIG.drop.openingMs||1100) + (CONFIG.drop.hologramMs||1200) + (CONFIG.drop.dissolveMs||650));
-}
-
+	async function claimActiveDrop(){
+	  const drop = State.drop.current;
+	  if (!drop) return;
+	
+	  const left = dropTimeLeftMs(drop);
+	  if (left != null && left <= 0) {
+	    toast('Chest expired.');
+	    return;
+	  }
+	  if (State.drop.claimBusy) return;
+	
+	  syncUserFromStorage();
+	  try { assertAuth(); } catch { toast('Please log in first'); return; }
+	
+	  State.drop.claimBusy = true;
+	  State.drop.fx.phase = 'claiming';
+	  State.drop.fx.shakePower = 0.95;
+	
+	  pushCanvasMsg('🧤 Claiming chest…');
+	
+	  const body = {
+	    wax_account: State.user.wax_account,
+	    user_id: State.user.user_id,
+	    usx_token: State.user.usx_token,
+	    drop_id: drop.drop_id,
+	    event_id: drop.event_id
+	  };
+	
+	  const res = await Api.post(CLAIM_DROP_API_PATH, body, 15000).catch(()=>({ok:false, status:0, data:null}));
+	
+	  State.drop.claimBusy = false;
+	
+	  // backend: se expired -> 409 con {"ok":false,"error":"expired"} (o simili)
+	  if (!res || !res.data) {
+	    toast('Claim failed.');
+	    State.drop.fx.phase = 'visible';
+	    State.drop.fx.shakePower = 0.45;
+	    return;
+	  }
+	
+	  // Se non ok o 409 => qualcuno ha già claimato / scaduto
+	  if (!res.ok || res.status === 409 || res.data.ok === false) {
+	    const by = (res.data && (res.data.claimed_by || res.data.claimedBy)) || 'someone';
+	    const err = res.data?.error;
+	
+	    if (err === 'expired') {
+	      toast('Chest expired.');
+	      pushCanvasMsg('⌛ Chest expired.');
+	      State.drop.fx.phase = 'expired';
+	      State.drop.fx.doneAtMs = performance.now();
+	      State.drop.fx.shakePower = 0.10;
+	      return;
+	    }
+	
+	    toast(`Too late — claimed by ${by}.`);
+	    pushCanvasMsg(`💨 Chest claimed by ${by}.`);
+	    State.drop.fx.phase = 'done';
+	    State.drop.fx.doneAtMs = performance.now();
+	    State.drop.fx.shakePower = 0.10;
+	    return;
+	  }
+	
+	  // SUCCESS (your backend /2drop_claim):
+	  // res.data.reward.amount (string), res.data.reward.symbol, res.data.reward.tx_id
+	  const claimedBy = res.data?.claimed_by || State.user.wax_account;
+	  const amtStr = res.data?.reward?.amount;
+	  const sym = res.data?.reward?.symbol || 'CHIPS';
+	  const amtNum = (amtStr != null) ? Number(amtStr) : null;
+	
+	  if (amtNum != null && Number.isFinite(amtNum)) {
+	    toast(`🎉 You found +${formatCompact(amtNum)} ${sym} in the chest!`);
+	  } else {
+	    toast('🎉 Chest claimed!');
+	  }
+	
+	  // ticker local bello (per qualche secondo), include amount perché arriva da /2drop_claim
+	  const when = timeHM(new Date());
+	  State.drop.lastLocalTickerHtml =
+	    `<span class="ticker-time">[${when}]</span> ` +
+	    `🏴‍☠️ <strong>${safe(claimedBy)}</strong> claimed a chest ` +
+	    (amtNum != null && Number.isFinite(amtNum)
+	      ? `→ <span class="ticker-rew">+${formatCompact(amtNum)} ${safe(sym)}</span>`
+	      : '') +
+	    `<span class="ticker-eff">Use Twitch chat commands to spawn more chests and win prizes.</span>`;
+	  State.drop.lastLocalTickerUntilMs = Date.now() + 12_000;
+	  updateTicker();
+	
+	// ✅ NON sovrascrivere con res.data (manca x/y), tieni posizione e marca claimed
+	if (State.drop.current) {
+	  State.drop.current.claimed = true;
+	  State.drop.current.status = 'claimed';
+	  State.drop.current.claimedBy = claimedBy;
+	  if (State.engine) State.engine.setDrop(State.drop.current);
+	}
+	
+	
+	  // FX: opening -> hologram -> dissolve -> remove from canvas
+	  State.drop.fx.phase = 'opening';
+	  State.drop.fx.openAtMs = performance.now();
+	  State.drop.fx.shakePower = 1.15;
+	  State.drop.fx.shockwaves.push({ t:0, x: drop.world.x, y: drop.world.y });
+	
+	  setTimeout(()=>{
+	    if (!State.drop.current) return;
+	    State.drop.fx.phase = 'hologram';
+	    State.drop.fx.holoAtMs = performance.now();
+	    State.drop.fx.shakePower = 0.40;
+	    pushCanvasMsg('📡 Reward unlocked!');
+	  }, CONFIG.drop.openingMs || 1100);
+	
+	  setTimeout(()=>{
+	    if (!State.drop.current) return;
+	    State.drop.fx.phase = 'dissolve';
+	    State.drop.fx.doneAtMs = performance.now();
+	    State.drop.fx.shakePower = 0.12;
+	  }, (CONFIG.drop.openingMs||1100) + (CONFIG.drop.hologramMs||1200));
+	
+	  setTimeout(()=>{
+	    // remove immediately from canvas/state (as you requested)
+	    State.drop.current = null;
+	    State.drop.serverKey = '';
+	    if (State.engine) State.engine.setDrop(null);
+	    State.drop.fx.phase = 'idle';
+	    State.drop.fx.particles = [];
+	    State.drop.fx.shockwaves = [];
+	  }, (CONFIG.drop.openingMs||1100) + (CONFIG.drop.hologramMs||1200) + (CONFIG.drop.dissolveMs||650));
+	}
+	window.claimActiveDrop = claimActiveDrop;
 
     // ------------------------------------------------------------
     // SNAPSHOTS / POLLING (NO SSE)

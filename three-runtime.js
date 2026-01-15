@@ -126,8 +126,14 @@ tex.colorSpace = THREE.SRGBColorSpace;
 ========================= */
 class Goblin {
   constructor(template, clips, startCell, owner, onDigComplete, isWalkable) {
-    this.root = SkeletonUtils.clone(template);
-     this.root.scale.setScalar(1.5);
+   // pivot per rotazioni (yaw)
+   this.root = new THREE.Group();
+   
+   // modello vero e proprio
+   this.model = SkeletonUtils.clone(template);
+   this.root.add(this.model);
+
+     this.model.scale.setScalar(1.5);
     // se è "girato" rispetto alla mappa, usa Y (non X)
     //this.root.rotation.y += Math.PI;
     this.owner = owner || 'player';
@@ -135,14 +141,16 @@ class Goblin {
    this.isWalkable = typeof isWalkable === 'function' ? isWalkable : (() => true);
 
     // ✅ fix orientation (if model appears flipped)
-    if (FIX_GOBLIN_FLIP_X) {
-      this.root.rotation.x += FIX_GOBLIN_FLIP_X;
-    }
+if (FIX_GOBLIN_FLIP_X) {
+  this.model.rotation.x = FIX_GOBLIN_FLIP_X;
+}
+
 
     // ✅ label above head
     this.label = makeLabelSprite(this.owner);
     this.label.position.set(0, LABEL_Y_OFFSET, 0);
-    this.root.add(this.label);
+    this.model.add(this.label);
+
      
     this.mixer = new THREE.AnimationMixer(this.root);
 

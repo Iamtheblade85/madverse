@@ -300,6 +300,9 @@ export class ThreeRuntime {
     this.loader = new GLTFLoader();
 
     this.goblins = new Map();
+this.missingTicks = new Map();   // id -> contatore assenze
+this.MISSING_TICKS_BEFORE_REMOVE = 6; // es: 6 sync consecutivi
+
     this.drop = null;
     this.chestSprite = null;
     this.claimChestKey = null;    
@@ -383,21 +386,35 @@ export class ThreeRuntime {
 
         this.scene.add(g.root);
         this.goblins.set(id, g);
+this.missingTicks.set(id, 0);
+         
       } else {
         // se vuoi aggiornare label quando cambia owner (di solito non cambia)
         const g = this.goblins.get(id);
         if (g && g.owner !== owner) {
           g.owner = owner;
         }
-      }
-    });
+         this.missingTicks.set(id, 0);
 
-    this.goblins.forEach((g, id) => {
-      if (!active.has(id)) {
-        g.finish();
-        this.goblins.delete(id);
       }
     });
+this.goblins.forEach((g, id) => {
+  if (active.has(id)) {
+    this.missingTicks.set(id, 0);
+    return;
+  }
+
+  const n = (this.missingTicks.get(id) || 0) + 1;
+  this.missingTicks.set(id, n);
+
+  // ✅ rimuovi solo se manca per N sync consecutivi
+  if (n >= this.MISSING_TICKS_BEFORE_REMOVE) {
+    g.finish();
+    this.goblins.delete(id);
+    this.missingTicks.delete(id);
+  }
+});
+
   }
 
   _onGoblinDigComplete(goblin, chest) {

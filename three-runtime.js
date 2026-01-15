@@ -1,7 +1,8 @@
 // Resolved via <script type="importmap"> in nuovo.html
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { SkeletonUtils } from 'three/addons/utils/SkeletonUtils.js';
+import * as SkeletonUtils from 'https://unpkg.com/three@0.160.0/examples/jsm/utils/SkeletonUtils.js';
+
 
 /* =========================
    CONFIGURAZIONE FINALE

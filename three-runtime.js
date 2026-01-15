@@ -19,6 +19,10 @@ const WANDER_REACH_EPS = 0.35;     // quanto vicino deve arrivare al target (cel
 const WANDER_MIN_MS = 700;         // minimo tempo prima di cambiare target
 const WANDER_MAX_MS = 1600;        // massimo tempo prima di cambiare target
 const WANDER_MARGIN = 1.2;         // margine dal bordo (celle)
+const DIG_DURATION_MS = 1200;       // quanto dura il "digging" prima di consumare
+const CHEST_Y_OFFSET = 0.15;        // altezza sopra il plot
+const LABEL_Y_OFFSET = 2.2;         // altezza badge sopra goblin
+const FIX_GOBLIN_FLIP_X = Math.PI;  // prova 0 oppure Math.PI se è capovolto
 
 /* =========================
    ACCESSO STATO GIOCO
@@ -43,12 +47,64 @@ function chebyshev(a, b) {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }
 
+function makeLabelSprite(text) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  // dimensioni “fisse” per texture pulita
+  canvas.width = 512;
+  canvas.height = 128;
+
+  // background
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // bordo
+  ctx.strokeStyle = 'rgba(56,189,248,0.9)';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(6, 6, canvas.width - 12, canvas.height - 12);
+
+  // testo
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.font = 'bold 54px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(text || '').slice(0, 20), canvas.width / 2, canvas.height / 2);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+
+  const mat = new THREE.SpriteMaterial({
+    map: tex,
+    transparent: true,
+    depthTest: false
+  });
+
+  const spr = new THREE.Sprite(mat);
+  spr.scale.set(8, 2, 1); // dimensione in “celle”
+  return spr;
+}
+
 /* =========================
    GOBLIN CONTROLLER
 ========================= */
 class Goblin {
-  constructor(template, clips, startCell) {
+  constructor(template, clips, startCell, owner, onDigComplete) {
     this.root = SkeletonUtils.clone(template);
+    this.owner = owner || 'player';
+    this.onDigComplete = onDigComplete;
+
+    // ✅ fix orientation (if model appears flipped)
+    if (FIX_GOBLIN_FLIP_X) {
+      this.root.rotation.x += FIX_GOBLIN_FLIP_X;
+    }
+
+    // ✅ label above head
+    this.label = makeLabelSprite(this.owner);
+    this.label.position.set(0, LABEL_Y_OFFSET, 0);
+    this.root.add(this.label);
+     
     this.mixer = new THREE.AnimationMixer(this.root);
 
     this.actions = {};
@@ -71,6 +127,9 @@ class Goblin {
 
     this.lastChestKey = null;
     this.visible = true;
+    this.digUntil = 0;
+    this.digChestKey = null;
+    this.digFired = false;
 
     this._play('RUNNING');
   }
@@ -133,14 +192,32 @@ class Goblin {
       const dist = chebyshev(this.cell, this.target);
 
       if (dist <= CHEST_TRIGGER_RANGE) {
-        this.state = 'DIGGING';
-        this._play('DIGGING');
+        if (this.state !== 'DIGGING') {
+          this.state = 'DIGGING';
+          this._play('DIGGING');
+
+          // start digging timer (one-shot per chest)
+          this.digChestKey = chestKey;
+          this.digUntil = performance.now() + DIG_DURATION_MS;
+          this.digFired = false;
+        }
+
+        // when digging finishes -> consume chest (auto-claim)
+        if (!this.digFired && this.digChestKey === chestKey && performance.now() >= this.digUntil) {
+          this.digFired = true;
+          if (typeof this.onDigComplete === 'function') {
+            this.onDigComplete(this, chest);
+          }
+        }
       } else {
         this.state = 'MOVING_TO_CHEST';
         this._play('RUNNING');
       }
    } else {
      this.lastChestKey = null;
+     this.digUntil = 0;
+     this.digChestKey = null;
+     this.digFired = false;
    
      if (this.state !== 'RUNNING') {
        this.state = 'RUNNING';
@@ -220,11 +297,15 @@ export class ThreeRuntime {
     this.loader = new GLTFLoader();
 
     this.goblins = new Map();
+    this.drop = null;
+    this.chestSprite = null;
+    this.claimChestKey = null;    
   }
 
   async init() {
     this._initRenderer();
     this._loadPlot();
+    this._loadChest();
     await this._loadGoblinAssets();
     this._loop();
   }
@@ -238,6 +319,19 @@ export class ThreeRuntime {
     window.addEventListener('resize', resize);
   }
 
+  _loadChest() {
+    const tex = new THREE.TextureLoader().load('/madverse/chest_sprite.png');
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+    const spr = new THREE.Sprite(mat);
+
+    spr.visible = false;
+    spr.scale.set(3.0, 3.0, 1.0); // dimensione in celle
+    spr.renderOrder = 10;
+
+    this.chestSprite = spr;
+    this.scene.add(spr);
+  }
+   
   _loadPlot() {
     const tex = new THREE.TextureLoader().load('/madverse/assets/plot.png');
     const plane = new THREE.Mesh(
@@ -261,17 +355,33 @@ export class ThreeRuntime {
   }
 
   syncExpeditions(expeditions) {
-    const active = new Set(expeditions.map(e => e.id));
+    const active = new Set(
+      (expeditions || []).map(e => String(e.expedition_id ?? e.id ?? e.expeditionId ?? ''))
+    );
 
-    expeditions.forEach(e => {
-      if (!this.goblins.has(e.id)) {
+    (expeditions || []).forEach(e => {
+      const id = String(e.expedition_id ?? e.id ?? e.expeditionId ?? '');
+      if (!id) return;
+
+      const owner = e.wax_account || e.owner || 'player';
+
+      if (!this.goblins.has(id)) {
         const g = new Goblin(
           this.template,
           this.clips,
-          { x: Math.random() * GRID_WIDTH, y: Math.random() * GRID_HEIGHT }
+          { x: Math.random() * GRID_WIDTH, y: Math.random() * GRID_HEIGHT },
+          owner,
+          (goblin, chest) => this._onGoblinDigComplete(goblin, chest)
         );
+
         this.scene.add(g.root);
-        this.goblins.set(e.id, g);
+        this.goblins.set(id, g);
+      } else {
+        // se vuoi aggiornare label quando cambia owner (di solito non cambia)
+        const g = this.goblins.get(id);
+        if (g && g.owner !== owner) {
+          g.owner = owner;
+        }
       }
     });
 
@@ -283,15 +393,44 @@ export class ThreeRuntime {
     });
   }
 
+  _onGoblinDigComplete(goblin, chest) {
+    if (!chest) return;
+
+    const chestKey = `${chest.world.x}:${chest.world.y}`;
+    if (this.claimChestKey === chestKey) return; // già tentato
+    this.claimChestKey = chestKey;
+
+    // ✅ modalità reale: chiama la funzione esistente del tuo HTML
+    if (typeof window.claimActiveDrop === 'function') {
+      window.claimActiveDrop();
+    } else {
+      // fallback: se non esiste, almeno nascondiamo la chest visivamente
+      if (window.__GOBLIN_DEX_STATE__?.drop?.fx) {
+        window.__GOBLIN_DEX_STATE__.drop.fx.phase = 'idle';
+      }
+    }
+  }
+
   _loop() {
     requestAnimationFrame(() => this._loop());
 
     const dt = this.clock.getDelta();
+    const liveDrop = this.drop || GameState.drop?.current || null;
     const chest =
-      GameState.drop?.current &&
-      GameState.drop.fx?.phase === 'visible'
-        ? GameState.drop.current
+      liveDrop && GameState.drop.fx?.phase === 'visible'
+        ? liveDrop
         : null;
+
+    // ✅ chest render
+    if (this.chestSprite) {
+      if (chest) {
+        const p = cellToWorld(chest.world.x, chest.world.y);
+        this.chestSprite.position.set(p.x, CHEST_Y_OFFSET, p.z);
+        this.chestSprite.visible = true;
+      } else {
+        this.chestSprite.visible = false;
+      }
+    }
 
     this.goblins.forEach(g => {
       g.update(dt, chest);
@@ -299,5 +438,12 @@ export class ThreeRuntime {
     });
 
     this.renderer.render(this.scene, this.camera);
+  }
+   
+  setDrop(drop) {
+    this.drop = drop || null;
+    if (!drop) {
+      this.claimChestKey = null;
+    }
   }
 }

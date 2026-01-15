@@ -22,7 +22,8 @@ const WANDER_MARGIN = 1.2;         // margine dal bordo (celle)
 const DIG_DURATION_MS = 1200;       // quanto dura il "digging" prima di consumare
 const CHEST_Y_OFFSET = 0.15;        // altezza sopra il plot
 const LABEL_Y_OFFSET = 3.2;         // altezza badge sopra goblin
-const FIX_GOBLIN_FLIP_X = 0;  // prova 0 oppure Math.PI se è capovolto
+const FIX_GOBLIN_FLIP_X = Math.PI;  // ✅ 180°: testa su, piedi giù
+
 const GOBLIN_Y_OFFSET = 0.05;       // piccolo offset sopra il plot
 
 /* =========================

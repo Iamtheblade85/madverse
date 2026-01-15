@@ -25,6 +25,12 @@ const LABEL_Y_OFFSET = -0.85;
 const FIX_GOBLIN_FLIP_X = Math.PI;  // ✅ 180°: testa su, piedi giù
 
 const GOBLIN_Y_OFFSET = 0.05;       // piccolo offset sopra il plot
+// === NAVMASK (bianco = walkable, nero = block) ===
+const NAVMASK_URL = '/madverse/assets/navmask.png'; // <-- metti qui il path
+const NAVMASK_THRESHOLD = 127; // 0..255 (>= soglia => bianco => walkable)
+const NAVMASK_DEBUG = false;   // true se vuoi vedere overlay (facoltativo)
+// orientamento modello: 0 se già “guarda avanti”, prova 0 / Math.PI/2 / -Math.PI/2 / Math.PI
+const GOBLIN_FACING_OFFSET_Y = 0;
 
 /* =========================
    ACCESSO STATO GIOCO
@@ -47,6 +53,26 @@ function cellToWorld(x, y) {
 
 function chebyshev(a, b) {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+}
+
+function cellKey(ix, iy) {
+  return `${ix},${iy}`;
+}
+
+function clampCellToGrid(cell) {
+  cell.x = THREE.MathUtils.clamp(cell.x, 0, GRID_WIDTH - 1e-6);
+  cell.y = THREE.MathUtils.clamp(cell.y, 0, GRID_HEIGHT - 1e-6);
+  return cell;
+}
+
+// converte coordinate float "cell" -> indici cella (0..W-1 / 0..H-1)
+function toCellIndex(x, y) {
+  const ix = Math.floor(x);
+  const iy = Math.floor(y);
+  return {
+    ix: THREE.MathUtils.clamp(ix, 0, GRID_WIDTH - 1),
+    iy: THREE.MathUtils.clamp(iy, 0, GRID_HEIGHT - 1)
+  };
 }
 
 function makeLabelSprite(text) {
@@ -99,13 +125,14 @@ tex.colorSpace = THREE.SRGBColorSpace;
    GOBLIN CONTROLLER
 ========================= */
 class Goblin {
-  constructor(template, clips, startCell, owner, onDigComplete) {
+  constructor(template, clips, startCell, owner, onDigComplete, isWalkable) {
     this.root = SkeletonUtils.clone(template);
      this.root.scale.setScalar(1.5);
     // se è "girato" rispetto alla mappa, usa Y (non X)
     //this.root.rotation.y += Math.PI;
     this.owner = owner || 'player';
     this.onDigComplete = onDigComplete;
+   this.isWalkable = typeof isWalkable === 'function' ? isWalkable : (() => true);
 
     // ✅ fix orientation (if model appears flipped)
     if (FIX_GOBLIN_FLIP_X) {
@@ -142,6 +169,9 @@ class Goblin {
     this.digUntil = 0;
     this.digChestKey = null;
     this.digFired = false;
+// === facing (direzione di movimento) ===
+this.facing = new THREE.Vector2(0, 1); // direzione iniziale "in avanti"
+this.turnSpeed = 10; // rad/sec (più alto = gira più veloce)
 
     this._play('RUNNING');
   }
@@ -156,19 +186,23 @@ class Goblin {
   }
 
    _pickRandomTarget() {
-     // target casuale dentro i limiti della griglia
-     const minX = WANDER_MARGIN;
-     const maxX = GRID_WIDTH - WANDER_MARGIN;
-     const minY = WANDER_MARGIN;
-     const maxY = GRID_HEIGHT - WANDER_MARGIN;
-   
-     this.target = {
-       x: minX + Math.random() * (maxX - minX),
-       y: minY + Math.random() * (maxY - minY),
-     };
-   
      const now = performance.now();
      this.nextWanderAt = now + (WANDER_MIN_MS + Math.random() * (WANDER_MAX_MS - WANDER_MIN_MS));
+   
+     // prova un po’ di tentativi random su celle walkable
+     for (let k = 0; k < 40; k++) {
+       const x = Math.random() * GRID_WIDTH;
+       const y = Math.random() * GRID_HEIGHT;
+   
+       const { ix, iy } = toCellIndex(x, y);
+       if (this.isWalkable(ix, iy)) {
+         this.target = { x, y };
+         return;
+       }
+     }
+   
+     // fallback: resta dove sei (evita target impossibili)
+     this.target = { x: this.cell.x, y: this.cell.y };
    }
       
   update(dt, chest) {
@@ -248,20 +282,53 @@ class Goblin {
      }
    }
 
-    /* ====== MOVEMENT ====== */
-    if (this.state === 'RUNNING' || this.state === 'MOVING_TO_CHEST') {
-      const dx = this.target.x - this.cell.x;
-      const dy = this.target.y - this.cell.y;
-      const len = Math.hypot(dx, dy);
-      if (len > 0.01) {
-        this.cell.x += (dx / len) * GOBLIN_SPEED * dt;
-        this.cell.y += (dy / len) * GOBLIN_SPEED * dt;
-      }
+   /* ====== MOVEMENT + FACING ====== */
+   if (this.state === 'RUNNING' || this.state === 'MOVING_TO_CHEST') {
+     const dx = this.target.x - this.cell.x;
+     const dy = this.target.y - this.cell.y;
+     const len = Math.hypot(dx, dy);
+   
+     if (len > 0.01) {
+       const dirx = dx / len;
+       const diry = dy / len;
+   
+       // salva direzione per orientamento
+       this.facing.set(dirx, diry);
+   
+       const nx = this.cell.x + dirx * GOBLIN_SPEED * dt;
+       const ny = this.cell.y + diry * GOBLIN_SPEED * dt;
+   
+       const { ix, iy } = toCellIndex(nx, ny);
+   
+       if (!this.isWalkable(ix, iy)) {
+         this._pickRandomTarget();
+       } else {
+         this.cell.x = nx;
+         this.cell.y = ny;
+       }
+     }
     }
+/* ====== ROTAZIONE VERSO DIREZIONE ====== */
+// mappa: cell.x -> world X, cell.y -> world Z
+// yaw su Y
+if (this.facing.lengthSq() > 0.0001) {
+  const desiredYaw =
+    Math.atan2(this.facing.x, this.facing.y) +
+    GOBLIN_FACING_OFFSET_Y;
+
+  const currentYaw = this.root.rotation.y;
+
+  this.root.rotation.y = THREE.MathUtils.lerpAngle(
+    currentYaw,
+    desiredYaw,
+    Math.min(1, this.turnSpeed * dt)
+  );
+}
 
     // ✅ non farli mai uscire dal plot (specialmente dopo tab-switch)
-    this.cell.x = THREE.MathUtils.clamp(this.cell.x, WANDER_MARGIN, GRID_WIDTH - WANDER_MARGIN);
-    this.cell.y = THREE.MathUtils.clamp(this.cell.y, WANDER_MARGIN, GRID_HEIGHT - WANDER_MARGIN);
+   this.cell.x = THREE.MathUtils.clamp(this.cell.x, 0, GRID_WIDTH - 1e-6);
+   this.cell.y = THREE.MathUtils.clamp(this.cell.y, 0, GRID_HEIGHT - 1e-6);
+
 
     this.mixer.update(dt);
 
@@ -337,14 +404,23 @@ this.MISSING_TICKS_BEFORE_REMOVE = 6; // es: 6 sync consecutivi
     this.drop = null;
     this.chestSprite = null;
     this.claimChestKey = null;    
+// navmask
+this.walkable = null;        // Uint8Array GRID_WIDTH*GRID_HEIGHT (1=ok,0=block)
+this.walkableReady = false;
+
   }
 
   async init() {
     this._initRenderer();
     this._loadPlot();
     this._loadChest();
-    await this._loadGoblinAssets();
-    this._loop();
+   await Promise.all([
+     this._loadGoblinAssets(),
+     this._loadNavMask()
+   ]);
+   
+   this._loop();
+
   }
 
   _initRenderer() {
@@ -386,6 +462,77 @@ tex.colorSpace = THREE.SRGBColorSpace;
    this.scene.add(plane);
   }
 
+async _loadNavMask() {
+  // fallback: se fallisce, tutto walkable
+  const fallbackAll = () => {
+    this.walkable = new Uint8Array(GRID_WIDTH * GRID_HEIGHT);
+    this.walkable.fill(1);
+    this.walkableReady = true;
+  };
+
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.crossOrigin = 'anonymous';
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = NAVMASK_URL;
+    });
+
+    // leggiamo pixel via canvas
+    const c = document.createElement('canvas');
+    c.width = GRID_WIDTH;
+    c.height = GRID_HEIGHT;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+
+    // stira l’immagine ai 48x24 (se è diversa di dimensione)
+    ctx.drawImage(img, 0, 0, GRID_WIDTH, GRID_HEIGHT);
+
+    const data = ctx.getImageData(0, 0, GRID_WIDTH, GRID_HEIGHT).data;
+
+    this.walkable = new Uint8Array(GRID_WIDTH * GRID_HEIGHT);
+
+    for (let y = 0; y < GRID_HEIGHT; y++) {
+      for (let x = 0; x < GRID_WIDTH; x++) {
+        const idx = (y * GRID_WIDTH + x) * 4;
+        const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+        // luminanza semplice
+        const lum = (r + g + b) / 3;
+        this.walkable[y * GRID_WIDTH + x] = lum >= NAVMASK_THRESHOLD ? 1 : 0;
+      }
+    }
+
+    // sicurezza: se per errore è tutta nera -> fallback
+    let any = 0;
+    for (let i = 0; i < this.walkable.length; i++) any |= this.walkable[i];
+    if (!any) fallbackAll();
+
+    this.walkableReady = true;
+
+    // (facoltativo) debug overlay
+    if (NAVMASK_DEBUG) {
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.35, depthWrite: false });
+      const plane = new THREE.Mesh(new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT), mat);
+      plane.rotation.x = -Math.PI / 2;
+      plane.position.y = 0.01;
+      plane.renderOrder = 5;
+      this.scene.add(plane);
+    }
+  } catch (e) {
+    console.warn('NavMask load failed, using fallback (all walkable)', e);
+    fallbackAll();
+  }
+}
+
+isWalkableCell(ix, iy) {
+  if (!this.walkableReady || !this.walkable) return true;
+  ix = THREE.MathUtils.clamp(ix, 0, GRID_WIDTH - 1);
+  iy = THREE.MathUtils.clamp(iy, 0, GRID_HEIGHT - 1);
+  return this.walkable[iy * GRID_WIDTH + ix] === 1;
+}
+
   async _loadGoblinAssets() {
     const base = await this.loader.loadAsync('/madverse/assets/goblin_run.glb');
     this.template = base.scene;
@@ -410,16 +557,18 @@ tex.colorSpace = THREE.SRGBColorSpace;
       const owner = e.wax_account || e.owner || 'player';
 
       if (!this.goblins.has(id)) {
-        const g = new Goblin(
-          this.template,
-          this.clips,
-          {
-            x: WANDER_MARGIN + Math.random() * (GRID_WIDTH - 2 * WANDER_MARGIN),
-            y: WANDER_MARGIN + Math.random() * (GRID_HEIGHT - 2 * WANDER_MARGIN)
-          },
-          owner,
-          (goblin, chest) => this._onGoblinDigComplete(goblin, chest)
-        );
+         const g = new Goblin(
+           this.template,
+           this.clips,
+           { 
+             x: WANDER_MARGIN + Math.random() * (GRID_WIDTH - 2 * WANDER_MARGIN),
+             y: WANDER_MARGIN + Math.random() * (GRID_HEIGHT - 2 * WANDER_MARGIN)
+           },
+           owner,
+           (goblin, chest) => this._onGoblinDigComplete(goblin, chest),
+           (ix, iy) => this.isWalkableCell(ix, iy)
+         );
+
 
         this.scene.add(g.root);
         this.goblins.set(id, g);

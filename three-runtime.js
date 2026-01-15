@@ -325,11 +325,15 @@ if (this.facing.lengthSq() > 0.0001) {
 
   const currentYaw = this.root.rotation.y;
 
-  this.root.rotation.y = THREE.MathUtils.lerpAngle(
-    currentYaw,
-    desiredYaw,
-    Math.min(1, this.turnSpeed * dt)
-  );
+// interpolazione angolo manuale (compatibile con tutte le versioni di three)
+let delta = desiredYaw - currentYaw;
+
+// normalizza tra -PI e +PI
+delta = ((delta + Math.PI) % (Math.PI * 2)) - Math.PI;
+
+this.root.rotation.y =
+  currentYaw + delta * Math.min(1, this.turnSpeed * dt);
+
 }
 
     // ✅ non farli mai uscire dal plot (specialmente dopo tab-switch)

@@ -205,7 +205,7 @@ export class ThreeRuntime {
   }
 
   _loadPlot() {
-    const tex = new THREE.TextureLoader().load('/madverse/madverse/assets/plot.png');
+    const tex = new THREE.TextureLoader().load('/madverse/assets/plot.png');
     const plane = new THREE.Mesh(
       new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT),
       new THREE.MeshBasicMaterial({ map: tex })

@@ -22,7 +22,8 @@ const WANDER_MARGIN = 1.2;         // margine dal bordo (celle)
 const DIG_DURATION_MS = 1200;       // quanto dura il "digging" prima di consumare
 const CHEST_Y_OFFSET = 0.15;        // altezza sopra il plot
 const LABEL_Y_OFFSET = 2.2;         // altezza badge sopra goblin
-const FIX_GOBLIN_FLIP_X = Math.PI;  // prova 0 oppure Math.PI se è capovolto
+const FIX_GOBLIN_FLIP_X = 0;  // prova 0 oppure Math.PI se è capovolto
+const GOBLIN_Y_OFFSET = 0.05;       // piccolo offset sopra il plot
 
 /* =========================
    ACCESSO STATO GIOCO
@@ -92,6 +93,8 @@ function makeLabelSprite(text) {
 class Goblin {
   constructor(template, clips, startCell, owner, onDigComplete) {
     this.root = SkeletonUtils.clone(template);
+    // se è "girato" rispetto alla mappa, usa Y (non X)
+    //this.root.rotation.y += Math.PI;
     this.owner = owner || 'player';
     this.onDigComplete = onDigComplete;
 
@@ -335,11 +338,15 @@ export class ThreeRuntime {
   _loadPlot() {
     const tex = new THREE.TextureLoader().load('/madverse/assets/plot.png');
     const plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT),
-      new THREE.MeshBasicMaterial({ map: tex })
-    );
-    plane.rotation.x = -Math.PI / 2;
-    this.scene.add(plane);
+     new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT),
+     new THREE.MeshBasicMaterial({
+       map: tex,
+       depthWrite: false   // ✅ IMPORTANTISSIMO: il piano non deve coprire i goblin
+     })
+   );
+   plane.rotation.x = -Math.PI / 2;
+   plane.renderOrder = 0;
+   this.scene.add(plane);
   }
 
   async _loadGoblinAssets() {
@@ -432,11 +439,11 @@ export class ThreeRuntime {
       }
     }
 
-    this.goblins.forEach(g => {
-      g.update(dt, chest);
-      g.root.position.copy(g.worldPosition());
-    });
-
+   this.goblins.forEach(g => {
+     g.update(dt, chest);
+     const p = g.worldPosition();
+     g.root.position.set(p.x, GOBLIN_Y_OFFSET, p.z); // ✅ sempre sopra il plot
+   });
     this.renderer.render(this.scene, this.camera);
   }
    

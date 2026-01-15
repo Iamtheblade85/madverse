@@ -12,6 +12,16 @@
   <link rel="preload" as="style" href="cyberpunktribalV2.css?v=1" onload="this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="cyberpunktribalV2.css?v=1"></noscript>
   <link id="theme-style" rel="stylesheet" href="css013.css"/>
+
+  <!-- ES Modules: allow Three.js example modules (GLTFLoader, SkeletonUtils, ...) to resolve "three" -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
 </head>
 
 <body>
@@ -4113,9 +4123,12 @@ window.State = State;
 <script type="module">
   import { ThreeRuntime } from './three-runtime.js';
 
-  const State = window.__GOBLIN_DEX_STATE__;
-  State.engine = new ThreeRuntime(State.ui.canvas);
-  await State.engine.init?.() ?? State.engine.init();
+	  const State = window.__GOBLIN_DEX_STATE__;
+	  if (!State) throw new Error('State not found on window.__GOBLIN_DEX_STATE__');
+	  const canvas = State.ui?.canvas || document.getElementById('game-canvas');
+	  if (!canvas) throw new Error('Canvas #game-canvas not found');
+	  State.engine = new ThreeRuntime(canvas);
+	  await State.engine.init();
 </script>
 
   <script>

@@ -4090,9 +4090,13 @@ if (State.drop.current) {
         };
       }
 
-      State.engine = new GameEngine(State.ui.canvas);
-      loadAssets().then(()=> State.engine && State.engine.handleResize());
-      State.engine.start();
+import { ThreeRuntime } from 'three-runtime.js';
+
+window.__GOBLIN_DEX_STATE__ = State;
+
+State.engine = new ThreeRuntime(State.ui.canvas);
+State.engine.init();
+
 
       fetchGlobalSnapshot();
       startPolling();

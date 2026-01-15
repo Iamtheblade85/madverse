@@ -3939,7 +3939,9 @@ if (State.drop.current) {
             State.drop.fx.shockwaves = [];
           }
     
-          if (State.engine) State.engine.setDrop(normalized);
+		  if (State.engine && typeof State.engine.setDrop === 'function') {
+			  State.engine.setDrop(normalized);
+		  }
         }
     
         updateTicker();
@@ -4114,10 +4116,10 @@ State.runtime.ticker.timer = setInterval(() => {
       }, { passive:true });
     }
     if (!window.GOBLIN_DEX_NO_AUTO_MOUNT) mount();
-    window.GoblinDex = { mount };
-    window.__GOBLIN_DEX_STATE__ = State;
+window.GoblinDex = { mount };
+window.__GOBLIN_DEX_STATE__ = State;
 window.State = State;
-
+window.claimActiveDrop = claimActiveDrop;
   })();
   </script>
 <script type="module">

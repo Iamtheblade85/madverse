@@ -337,8 +337,15 @@ this.root.rotation.y =
 }
 
     // ✅ non farli mai uscire dal plot (specialmente dopo tab-switch)
-   this.cell.x = THREE.MathUtils.clamp(this.cell.x, 0, GRID_WIDTH - 1e-6);
-   this.cell.y = THREE.MathUtils.clamp(this.cell.y, 0, GRID_HEIGHT - 1e-6);
+this.cell.x = THREE.MathUtils.clamp(this.cell.x, 0, GRID_WIDTH - 1e-6);
+this.cell.y = THREE.MathUtils.clamp(this.cell.y, 0, GRID_HEIGHT - 1e-6);
+
+// 🔒 se per QUALSIASI motivo finisce su una cella nera → rientra
+const { ix, iy } = toCellIndex(this.cell.x, this.cell.y);
+if (!this.isWalkable(ix, iy)) {
+  this._pickRandomTarget();
+}
+
 
 
     this.mixer.update(dt);
@@ -568,17 +575,28 @@ isWalkableCell(ix, iy) {
       const owner = e.wax_account || e.owner || 'player';
 
       if (!this.goblins.has(id)) {
+         // trova una cella walkable per lo spawn
+         let sx = 0, sy = 0;
+         for (let k = 0; k < 100; k++) {
+           const x = Math.random() * GRID_WIDTH;
+           const y = Math.random() * GRID_HEIGHT;
+           const { ix, iy } = toCellIndex(x, y);
+           if (this.isWalkableCell(ix, iy)) {
+             sx = x;
+             sy = y;
+             break;
+           }
+         }
+         
          const g = new Goblin(
            this.template,
            this.clips,
-           { 
-             x: WANDER_MARGIN + Math.random() * (GRID_WIDTH - 2 * WANDER_MARGIN),
-             y: WANDER_MARGIN + Math.random() * (GRID_HEIGHT - 2 * WANDER_MARGIN)
-           },
+           { x: sx, y: sy },
            owner,
            (goblin, chest) => this._onGoblinDigComplete(goblin, chest),
            (ix, iy) => this.isWalkableCell(ix, iy)
          );
+
 
 
         this.scene.add(g.root);

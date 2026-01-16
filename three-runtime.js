@@ -29,7 +29,7 @@ const FIX_GOBLIN_FLIP_X = Math.PI;  // ✅ 180°: testa su, piedi giù
 
 const GOBLIN_Y_OFFSET = 0.05;       // piccolo offset sopra il plot
 // === NAVMASK (bianco = walkable, nero = block) ===
-const NAVMASK_URL = '/madverse/assets/navmask.png'; // <-- metti qui il path
+const NAVMASK_URL = '/madverse/navmask.png'; // <-- metti qui il path
 const NAVMASK_THRESHOLD = 127; // 0..255 (>= soglia => bianco => walkable)
 const NAVMASK_DEBUG = false;   // true se vuoi vedere overlay (facoltativo)
 // orientamento modello: 0 se già “guarda avanti”, prova 0 / Math.PI/2 / -Math.PI/2 / Math.PI
@@ -51,6 +51,17 @@ const SPEED_MIN_MULT = 0.75;
 const SPEED_MAX_MULT = 1.25;
 const ANIM_MIN_MULT  = 0.80;
 const ANIM_MAX_MULT  = 1.35;
+/* =========================
+   LOADING FX (procedurale)
+========================= */
+const LOADING_FX_COUNT = 42;          // quanti "ologrammi"
+const LOADING_FX_AREA_PAD = 1.5;      // margine dentro il plot
+const LOADING_FX_MIN_SPEED = 0.25;
+const LOADING_FX_MAX_SPEED = 0.95;
+const LOADING_FX_MIN_SCALE = 0.7;
+const LOADING_FX_MAX_SCALE = 1.8;
+const LOADING_FX_BASE_Y = 0.10;       // altezza sopra il plot
+const LOADING_FX_Y_WAVE = 0.28;       // ampiezza oscillazione
 
 /* =========================
    ACCESSO STATO GIOCO
@@ -546,19 +557,193 @@ this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       // navmask
       this.walkable = null;        // Uint8Array GRID_WIDTH*GRID_HEIGHT (1=ok,0=block)
       this.walkableReady = false;
+      // ===== LOADING FX =====
+      this.assetsReady = false;     // diventa true quando i GLB+navmask sono pronti
+      this.loadingGroup = null;     // THREE.Group con gli ologrammi
+      this.loadingItems = [];       // metadata per animazione
+      this.loadingTime = 0;    
+  }
+  _startLoadingFx() {
+    // evita doppio init
+    if (this.loadingGroup) return;
+
+    const g = new THREE.Group();
+    g.renderOrder = 999; // sempre sopra
+    this.loadingGroup = g;
+    this.loadingItems = [];
+    this.loadingTime = 0;
+
+    // materiale "olografico" semplice (additive)
+    const makeMat = (opacity = 0.55) =>
+      new THREE.MeshBasicMaterial({
+        color: 0x55ddff,
+        transparent: true,
+        opacity,
+        depthTest: false,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+
+    // geometrie leggere
+    const ringGeo = new THREE.RingGeometry(0.25, 0.42, 28);
+    const planeGeo = new THREE.PlaneGeometry(0.6, 0.22);
+    const barGeo = new THREE.PlaneGeometry(0.9, 0.06);
+
+    // helper: posizione random nel “campo”
+    const randPos = () => {
+      const x = (Math.random() * (GRID_WIDTH - LOADING_FX_AREA_PAD * 2) - (GRID_WIDTH / 2) + LOADING_FX_AREA_PAD);
+      const z = (Math.random() * (GRID_HEIGHT - LOADING_FX_AREA_PAD * 2) - (GRID_HEIGHT / 2) + LOADING_FX_AREA_PAD);
+      return { x, z };
+    };
+
+    for (let i = 0; i < LOADING_FX_COUNT; i++) {
+      const { x, z } = randPos();
+
+      // scegli “tipo” casuale (ring / plane / bar)
+      const r = Math.random();
+      const geo = r < 0.34 ? ringGeo : (r < 0.67 ? planeGeo : barGeo);
+
+      // varia un filo il colore per dare “many holograms”
+      const mat = makeMat(0.35 + Math.random() * 0.35);
+      mat.color.setHSL(0.52 + (Math.random() * 0.12 - 0.06), 0.85, 0.55);
+
+      const m = new THREE.Mesh(geo, mat);
+      m.rotation.x = -Math.PI / 2; // appoggiato sul plot (top-down)
+      m.position.set(x, LOADING_FX_BASE_Y, z);
+
+      const s = LOADING_FX_MIN_SCALE + Math.random() * (LOADING_FX_MAX_SCALE - LOADING_FX_MIN_SCALE);
+      m.scale.setScalar(s);
+
+      // piccoli tilt random per non essere tutti uguali
+      m.rotation.z = (Math.random() * 2 - 1) * 0.9;
+
+      // metadata per animazione indipendente
+      this.loadingItems.push({
+        mesh: m,
+        speed: LOADING_FX_MIN_SPEED + Math.random() * (LOADING_FX_MAX_SPEED - LOADING_FX_MIN_SPEED),
+        phase: Math.random() * Math.PI * 2,
+        spin: (Math.random() * 2 - 1) * 1.2,
+        drift: (Math.random() * 2 - 1) * 0.25,
+        pulse: 0.6 + Math.random() * 1.2
+      });
+
+      g.add(m);
+    }
+
+    // “scanner line” grande che passa (effetto data-stream)
+    const scanMat = new THREE.MeshBasicMaterial({
+      color: 0x88ffff,
+      transparent: true,
+      opacity: 0.18,
+      depthTest: false,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+
+    const scan = new THREE.Mesh(new THREE.PlaneGeometry(GRID_WIDTH * 0.95, 0.35), scanMat);
+    scan.rotation.x = -Math.PI / 2;
+    scan.position.set(0, LOADING_FX_BASE_Y + 0.02, -GRID_HEIGHT / 2 + 1);
+    scan.renderOrder = 1000;
+
+    this.loadingItems.push({
+      mesh: scan,
+      isScan: true,
+      speed: 2.2,
+      phase: 0
+    });
+    g.add(scan);
+
+    this.scene.add(g);
   }
 
-  async init() {
+  _stopLoadingFx() {
+    if (!this.loadingGroup) return;
+
+    // dispose materiali (geometrie le riusa, ma ok così)
+    this.loadingGroup.traverse((o) => {
+      if (o.isMesh) {
+        if (o.material) o.material.dispose?.();
+        // geometrie condivise: se vuoi essere super safe, NON dispose qui.
+      }
+    });
+
+    this.scene.remove(this.loadingGroup);
+    this.loadingGroup = null;
+    this.loadingItems = [];
+  }
+
+  _updateLoadingFx(dt) {
+    if (!this.loadingGroup) return;
+
+    this.loadingTime += dt;
+    const t = this.loadingTime;
+
+    for (let i = 0; i < this.loadingItems.length; i++) {
+      const it = this.loadingItems[i];
+      const m = it.mesh;
+
+      if (!m) continue;
+
+      if (it.isScan) {
+        // scanline che scorre lungo Z
+        m.position.z += it.speed * dt;
+        if (m.position.z > GRID_HEIGHT / 2 - 1) {
+          m.position.z = -GRID_HEIGHT / 2 + 1;
+        }
+        // micro pulsazione
+        m.material.opacity = 0.10 + 0.10 * (0.5 + 0.5 * Math.sin(t * 3.0));
+        continue;
+      }
+
+      // oscillazione “floating hologram”
+      const w = Math.sin(t * (1.2 + it.speed) + it.phase);
+      m.position.y = LOADING_FX_BASE_Y + (0.5 + 0.5 * w) * LOADING_FX_Y_WAVE;
+
+      // rotazione indipendente
+      m.rotation.z += it.spin * dt * 0.45;
+
+      // drift leggero (si muove poco, poi rientra)
+      m.position.x += Math.sin(t * 0.6 + it.phase) * it.drift * dt;
+      m.position.z += Math.cos(t * 0.7 + it.phase) * it.drift * dt;
+
+      // pulse opacity
+      const op = 0.18 + 0.35 * (0.5 + 0.5 * Math.sin(t * it.pulse + it.phase));
+      m.material.opacity = op;
+
+      // clamp dentro l’area (per non scappare)
+      m.position.x = THREE.MathUtils.clamp(
+        m.position.x,
+        -GRID_WIDTH / 2 + LOADING_FX_AREA_PAD,
+        GRID_WIDTH / 2 - LOADING_FX_AREA_PAD
+      );
+      m.position.z = THREE.MathUtils.clamp(
+        m.position.z,
+        -GRID_HEIGHT / 2 + LOADING_FX_AREA_PAD,
+        GRID_HEIGHT / 2 - LOADING_FX_AREA_PAD
+      );
+    }
+  }
+
+    async init() {
     this._initRenderer();
+
+    // renderizza subito plot + chest (anche se le texture arrivano un attimo dopo)
     this._loadPlot();
     this._loadChest();
-   await Promise.all([
-     this._loadGoblinAssets(),
-     this._loadNavMask()
-   ]);
-   
-   this._loop();
 
+    // ✅ avvia fx procedurale immediatamente
+    this._startLoadingFx();
+
+    // ✅ avvia subito il loop (così non hai schermo nero)
+    this._loop();
+
+    // carica assets “pesanti” in parallelo
+    await Promise.all([
+      this._loadGoblinAssets(),
+      this._loadNavMask()
+    ]);
+    this.assetsReady = true;
+    this._stopLoadingFx();
   }
 
   _initRenderer() {
@@ -585,7 +770,7 @@ this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   }
    
   _loadPlot() {
-const tex = new THREE.TextureLoader().load('/madverse/assets/plot01.png');
+const tex = new THREE.TextureLoader().load('/madverse/plot01.png');
 tex.colorSpace = THREE.SRGBColorSpace;
 
     const plane = new THREE.Mesh(
@@ -805,6 +990,15 @@ this.missingTicks.set(id, 0);
         requestAnimationFrame(() => this._loop());
       
         let dt = this.clock.getDelta();
+        // ✅ se non siamo pronti, anima e renderizza SOLO il loading FX
+        if (!this.assetsReady) {
+          if (dt > 0.12) dt = 0;
+          dt = Math.min(dt, 1 / 30);
+
+          this._updateLoadingFx(dt);
+          this.renderer.render(this.scene, this.camera);
+          return;
+        }
       
         // ✅ se il tab è stato in background o c'è un hitch, evita il "teletrasporto"
         if (dt > 0.12) dt = 0;

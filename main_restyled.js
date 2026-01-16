@@ -5572,7 +5572,9 @@ function loadDwarvesGoldCave() {
   const iframe = document.createElement('iframe');
   iframe.src = 'nuovo.html'; // oppure game.html se lo rinomini
   iframe.style.width = '100%';
-  iframe.style.height = '100%';
+  iframe.style.height = 'auto';
+  iframe.style.minHeight = '100vh';
+  iframe.style.display = 'block';	
   iframe.style.border = '0';
   iframe.style.display = 'block';
   host.appendChild(iframe);

@@ -5566,17 +5566,27 @@ function loadDwarvesGoldCave() {
   const host = document.getElementById('goblin-content');
   if (!host) return;
 
-  // pulizia completa
   host.innerHTML = '';
 
   const iframe = document.createElement('iframe');
-  iframe.src = 'nuovo.html'; // oppure game.html se lo rinomini
+  iframe.src = 'nuovo.html';
   iframe.style.width = '100%';
-  iframe.style.height = 'auto';
-  iframe.style.minHeight = '100vh';
-  iframe.style.display = 'block';	
   iframe.style.border = '0';
   iframe.style.display = 'block';
+
+  // meglio così: l’altezza "auto" sugli iframe non funziona come pensi
+  iframe.style.height = '100vh';
+  iframe.style.minHeight = '100vh';
+
+  iframe.onload = () => {
+    const wax = window.userData?.wax_account || null;
+
+    iframe.contentWindow.postMessage(
+      { type: 'CC_AUTH', wax_account: wax },
+      window.location.origin
+    );
+  };
+
   host.appendChild(iframe);
 }
 

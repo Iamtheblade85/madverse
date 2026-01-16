@@ -22,7 +22,7 @@ const WANDER_MARGIN = 1.2;         // margine dal bordo (celle)
 const DIG_DURATION_MS = 4500;       // quanto dura il "digging" prima di consumare
 const CHEST_CLAIM_DELAY_MS = 5000;  // ✅ attesa dopo il primo contatto prima del claim
 const CHEST_Y_OFFSET = 0.15;        // altezza sopra il plot
-const LABEL_Y_OFFSET = -0.85;
+const LABEL_Y_OFFSET = 1.40;
 const FIX_GOBLIN_FLIP_X = Math.PI;  // ✅ 180°: testa su, piedi giù
 
 const GOBLIN_Y_OFFSET = 0.05;       // piccolo offset sopra il plot
@@ -37,6 +37,10 @@ const GOBLIN_RADIUS = 0.55;          // raggio “personaggio” in celle (tunin
 const AVOID_RANGE = 1.4;             // distanza entro cui iniziano ad evitarsi (celle)
 const AVOID_PUSH = 2.2;              // forza repulsione (celle/sec)
 const AVOID_MAX_NEIGHBORS = 8;       // cap per performance
+// === SPACING (anti-ammasso) ===
+const SPREAD_RANGE = 4.2;         // raggio "sociale" (celle) entro cui si sente la pressione folla
+const SPREAD_STRENGTH = 0.26;     // quanto pesa lo spread sulla direzione (0.10..0.35)
+const SPREAD_SPEED_DAMP = 0.15;   // rallenta leggermente se in zona affollata (0..0.30)
 
 // === GAIT / VARIAZIONE ANDATURA ===
 const GAIT_CHANGE_MIN_MS = 5000;
@@ -89,11 +93,10 @@ function toCellIndex(x, y) {
   };
 }
 
-function makeLabelSprite(text) {
+function makeLabelSprite(text, borderColorCss) {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
 
-  // dimensioni “fisse” per texture pulita
   canvas.width = 512;
   canvas.height = 128;
 
@@ -102,8 +105,8 @@ function makeLabelSprite(text) {
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // bordo
-  ctx.strokeStyle = 'rgba(56,189,248,0.9)';
+  // bordo (colore random passato)
+  ctx.strokeStyle = borderColorCss || 'rgba(56,189,248,0.9)';
   ctx.lineWidth = 6;
   ctx.strokeRect(6, 6, canvas.width - 12, canvas.height - 12);
 
@@ -116,23 +119,20 @@ function makeLabelSprite(text) {
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.needsUpdate = true;
-tex.colorSpace = THREE.SRGBColorSpace;
+  tex.colorSpace = THREE.SRGBColorSpace;
 
-   const mat = new THREE.SpriteMaterial({
-     map: tex,
-     transparent: true,
-     depthTest: true,     // ✅ rispetta la profondità (non copre sempre il goblin)
-     depthWrite: false    // ✅ non “scrive” nello z-buffer (evita artefatti)
-   });
-   
-   const spr = new THREE.Sprite(mat);
-   
-   // ✅ molto più piccolo: (prima era 8x2 = enorme)
-   spr.scale.set(2.6, 0.65, 1);
-   
-   spr.renderOrder = 50;  // ✅ sopra il plot, ma non “sempre sopra” il goblin grazie al depthTest
-   return spr;
+  const mat = new THREE.SpriteMaterial({
+    map: tex,
+    transparent: true,
+    depthTest: true,
+    depthWrite: false
+  });
 
+  const spr = new THREE.Sprite(mat);
+  spr.scale.set(2.6, 0.65, 1);
+  spr.renderOrder = 50;
+
+  return spr;
 }
 
 /* =========================
@@ -142,14 +142,10 @@ class Goblin {
   constructor(template, clips, startCell, owner, onDigComplete, isWalkable) {
    // pivot per rotazioni (yaw)
    this.root = new THREE.Group();
-   
    // modello vero e proprio
    this.model = SkeletonUtils.clone(template);
    this.root.add(this.model);
-
      this.model.scale.setScalar(1.5);
-    // se è "girato" rispetto alla mappa, usa Y (non X)
-    //this.root.rotation.y += Math.PI;
     this.owner = owner || 'player';
     this.onDigComplete = onDigComplete;
    this.isWalkable = typeof isWalkable === 'function' ? isWalkable : (() => true);
@@ -159,13 +155,14 @@ if (FIX_GOBLIN_FLIP_X) {
   this.model.rotation.x = FIX_GOBLIN_FLIP_X;
 }
 
-
-    // ✅ label above head
-    this.label = makeLabelSprite(this.owner);
-    this.label.position.set(0, LABEL_Y_OFFSET, 0);
-    this.model.add(this.label);
-
-     
+   // ✅ colore cornice random per questo goblin (stabile: scelto una volta sola)
+   const hue = Math.floor(Math.random() * 360);
+   const borderColor = `hsla(${hue}, 95%, 60%, 0.95)`;
+   
+   // ✅ label sotto i piedi
+   this.label = makeLabelSprite(this.owner, borderColor);
+   this.label.position.set(0, LABEL_Y_OFFSET, 0);
+   this.model.add(this.label);   
     this.mixer = new THREE.AnimationMixer(this.model);
     this.actions = {};
     clips.forEach(c => {
@@ -190,19 +187,27 @@ if (FIX_GOBLIN_FLIP_X) {
     this.digUntil = 0;
     this.digChestKey = null;
     this.digFired = false;
-// === facing (direzione di movimento) ===
-this.facing = new THREE.Vector2(0, 1); // direzione iniziale "in avanti"
-this.turnSpeed = 10; // rad/sec (più alto = gira più veloce)
-// === DNA personale (ogni goblin diverso) ===
-this.baseSpeed = GOBLIN_SPEED * (0.9 + Math.random() * 0.25);   // 0.90..1.15x
-this.speedMult = 1.0;
-
-// animazione: quanto “pompa” l’andatura
-this.animMult = 1.0;
-
-// timer cambio andatura
-this.nextGaitChangeAt = performance.now() + (GAIT_CHANGE_MIN_MS + Math.random() * (GAIT_CHANGE_MAX_MS - GAIT_CHANGE_MIN_MS));
-
+      // === facing (direzione di movimento) ===
+      this.facing = new THREE.Vector2(0, 1); // direzione iniziale "in avanti"
+      this.turnSpeed = 10; // rad/sec (più alto = gira più veloce)
+      // === DNA personale (ogni goblin diverso) ===
+      this.baseSpeed = GOBLIN_SPEED * (0.9 + Math.random() * 0.25); // DNA base
+      this.speedMult = 1.0;
+      this.animMult = 1.0;
+      
+      // ✅ DNA personale per la variazione andatura (ogni goblin diverso)
+      this.gaitMinMs = GAIT_CHANGE_MIN_MS + Math.random() * 2500;      // 5s..7.5s
+      this.gaitMaxMs = GAIT_CHANGE_MAX_MS + Math.random() * 3500;      // 10s..13.5s
+      
+      this.speedMin = SPEED_MIN_MULT + Math.random() * 0.10;           // es: 0.75..0.85
+      this.speedMax = SPEED_MAX_MULT - Math.random() * 0.10;           // es: 1.15..1.25
+      
+      this.animMin  = ANIM_MIN_MULT  + Math.random() * 0.10;           // es: 0.80..0.90
+      this.animMax  = ANIM_MAX_MULT  - Math.random() * 0.10;           // es: 1.25..1.35
+      
+      this.strideBias = 0.85 + Math.random() * 0.35;                   // “pompa” personale
+      
+      this.nextGaitChangeAt = performance.now() + (this.gaitMinMs + Math.random() * (this.gaitMaxMs - this.gaitMinMs));
     this._play('RUNNING');
   }
 
@@ -235,20 +240,16 @@ this.nextGaitChangeAt = performance.now() + (GAIT_CHANGE_MIN_MS + Math.random() 
      this.target = { x: this.cell.x, y: this.cell.y };
    }
    
-_updateGait(now) {
-  if (now < this.nextGaitChangeAt) return;
-
-  this.nextGaitChangeAt =
-    now + (GAIT_CHANGE_MIN_MS + Math.random() * (GAIT_CHANGE_MAX_MS - GAIT_CHANGE_MIN_MS));
-
-  // nuova “mood” casuale
-  this.speedMult = SPEED_MIN_MULT + Math.random() * (SPEED_MAX_MULT - SPEED_MIN_MULT);
-  this.animMult  = ANIM_MIN_MULT  + Math.random() * (ANIM_MAX_MULT  - ANIM_MIN_MULT);
-
-  // applica all’azione corrente (solo RUNNING/DIGGING per non alterare troppo le once)
-  if (this.actions.RUNNING) this.actions.RUNNING.setEffectiveTimeScale(this.animMult * this.speedMult);
-  if (this.actions.DIGGING) this.actions.DIGGING.setEffectiveTimeScale(0.95 + (this.animMult - 1) * 0.4);
-}
+   _updateGait(now) {
+     if (now < this.nextGaitChangeAt) return;
+      this.nextGaitChangeAt =
+        now + (this.gaitMinMs + Math.random() * (this.gaitMaxMs - this.gaitMinMs));
+      this.speedMult = this.speedMin + Math.random() * (this.speedMax - this.speedMin);
+      this.animMult  = this.animMin  + Math.random() * (this.animMax  - this.animMin);
+     // applica all’azione corrente (solo RUNNING/DIGGING per non alterare troppo le once)
+     if (this.actions.RUNNING) this.actions.RUNNING.setEffectiveTimeScale(this.animMult * this.speedMult * this.strideBias);
+     if (this.actions.DIGGING) this.actions.DIGGING.setEffectiveTimeScale(0.95 + (this.animMult - 1) * 0.4);
+   }
       
 update(dt, chest, neighbors) {
   if (!this.visible) return;
@@ -340,58 +341,86 @@ update(dt, chest, neighbors) {
       // velocità effettiva (DNA + mood ogni 5-10s)
       let speed = this.baseSpeed * this.speedMult;
 
-      // === AVOIDANCE: repulsione dai vicini ===
-      let ax = 0, ay = 0;
+      // === AVOIDANCE + SPREAD: repulsione dai vicini (vicina) + tendenza a disperdersi (largo) ===
+      let ax = 0, ay = 0;      // avoidance vicino (forte)
+      let sx = 0, sy = 0;      // spread largo (morbido)
+      let crowd = 0;           // quanto è affollato attorno
       let checked = 0;
-
+      
       if (neighbors && neighbors.length) {
         for (let i = 0; i < neighbors.length; i++) {
           const o = neighbors[i];
           if (!o || o === this || !o.visible) continue;
-
+      
           const rx = this.cell.x - o.cell.x;
           const ry = this.cell.y - o.cell.y;
           const d2 = rx * rx + ry * ry;
-
-          if (d2 > AVOID_RANGE * AVOID_RANGE) continue;
-
-          const d = Math.max(0.0001, Math.sqrt(d2));
-          const t = 1 - (d / AVOID_RANGE);
-
-          ax += (rx / d) * t;
-          ay += (ry / d) * t;
-         // push extra quando sono MOLTO vicini (effetto "non passarsi attraverso")
-         if (d < GOBLIN_RADIUS * 2.0) {
-           ax += (rx / d) * AVOID_PUSH;
-           ay += (ry / d) * AVOID_PUSH;
-         }
-
-          // se l'altro è davanti e molto vicino, rallenta (evita "attraversamento")
-          const forward = dirx * (-rx) + diry * (-ry);
-          if (forward > 0 && d < GOBLIN_RADIUS * 2.0) {
-            speed *= 0.55;
+          if (d2 < 0.000001) continue;
+      
+          const d = Math.sqrt(d2);
+      
+          // 1) avoidance ravvicinato (come prima)
+          if (d <= AVOID_RANGE) {
+            const t = 1 - (d / AVOID_RANGE);
+            ax += (rx / d) * t;
+            ay += (ry / d) * t;
+      
+            // push extra quando sono MOLTO vicini
+            if (d < GOBLIN_RADIUS * 2.0) {
+              ax += (rx / d) * AVOID_PUSH;
+              ay += (ry / d) * AVOID_PUSH;
+            }
+      
+            // se davanti e molto vicino -> rallenta
+            const forward = dirx * (-rx) + diry * (-ry);
+            if (forward > 0 && d < GOBLIN_RADIUS * 2.0) {
+              speed *= 0.55;
+            }
           }
-
+      
+          // 2) spread largo: "pressione folla" entro SPREAD_RANGE
+          if (d <= SPREAD_RANGE) {
+            const t2 = 1 - (d / SPREAD_RANGE);   // 0..1
+            sx += (rx / d) * t2;
+            sy += (ry / d) * t2;
+            crowd += t2;
+          }
+      
           checked++;
           if (checked >= AVOID_MAX_NEIGHBORS) break;
         }
       }
 
-      // mescola direzione target con avoidance
+      // normalizza avoidance vicino (ax,ay)
       const alen = Math.hypot(ax, ay);
-      if (alen > 0.0001) {
-        ax /= alen;
-        ay /= alen;
-
-        const mix = 0.28; // tuning: 0.20..0.40
-        const mx = dirx * (1 - mix) + ax * mix;
-        const my = diry * (1 - mix) + ay * mix;
-        const mlen = Math.hypot(mx, my) || 1;
-
-        this.facing.set(mx / mlen, my / mlen);
-      } else {
-        this.facing.set(dirx, diry);
+      if (alen > 0.0001) { ax /= alen; ay /= alen; } else { ax = 0; ay = 0; }
+      
+      // normalizza spread largo (sx,sy)
+      const slen = Math.hypot(sx, sy);
+      if (slen > 0.0001) { sx /= slen; sy /= slen; } else { sx = 0; sy = 0; }
+      
+      // se zona affollata, rallenta un filo (tende a non accalcarsi)
+      if (crowd > 0.01) {
+        speed *= (1.0 - Math.min(SPREAD_SPEED_DAMP, crowd * 0.12));
       }
+      
+      // mix direzione: target + avoidance vicino + spread largo
+      let mx = dirx;
+      let my = diry;
+      
+      // avoidance vicino: forte e prioritario
+      const avoidMix = (alen > 0.0001) ? 0.28 : 0.0;     // come prima
+      mx = mx * (1 - avoidMix) + ax * avoidMix;
+      my = my * (1 - avoidMix) + ay * avoidMix;
+      
+      // spread largo: morbido, sempre se c’è “pressione”
+      const spreadMix = (slen > 0.0001) ? SPREAD_STRENGTH : 0.0;
+      mx = mx * (1 - spreadMix) + sx * spreadMix;
+      my = my * (1 - spreadMix) + sy * spreadMix;
+      
+      // facing finale
+      const mlen = Math.hypot(mx, my) || 1;
+      this.facing.set(mx / mlen, my / mlen);
 
       // movimento col facing finale
       const nx = this.cell.x + this.facing.x * speed * dt;

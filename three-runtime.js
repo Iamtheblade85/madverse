@@ -787,7 +787,7 @@ this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     const textures = [];
     for (let k = 1; k <= PARTNER_COUNT; k++) {
       // ✅ metti qui i path reali
-      const img = await loadImg(`/madverse/partners/partner_${k}.png`);
+      const img = await loadImg(`/madverse/partner_${k}.png`);
       const tex = makeMaxEllipseTextureFromImage(img, 512);
       textures.push(tex);
     }

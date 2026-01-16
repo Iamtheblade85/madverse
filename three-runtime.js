@@ -68,12 +68,12 @@ const LOADING_FX_Y_WAVE = 0.28;       // ampiezza oscillazione
 const PARTNER_COUNT = 8;                 // partner_1..partner__8
 const PARTNER_SPRITES_PER_TYPE = 1;      // 1 ciascuno (puoi alzare se vuoi duplicati)
 const PARTNER_Y_BASE = 0.22;             // altezza base sopra il plot
-const PARTNER_Y_FLOAT = 0.35;            // ampiezza fluttuazione
+const PARTNER_Y_FLOAT = 3.35;            // ampiezza fluttuazione
 const PARTNER_FLOAT_SPEED_MIN = 0.7;
 const PARTNER_FLOAT_SPEED_MAX = 1.4;
 
-const PARTNER_SCALE_MIN = 1.2;           // in "celle"
-const PARTNER_SCALE_MAX = 2.2;
+const PARTNER_SCALE_MIN = 6;           // in "celle"
+const PARTNER_SCALE_MAX = 11;
 
 const PARTNER_RENDER_ORDER = 120;        // sopra plot e sopra la maggior parte (chest=10, labels=50)
 const PARTNER_BLACK_CELL_TRIES = 3000;   // tentativi per trovare celle nere

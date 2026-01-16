@@ -31,6 +31,19 @@ const NAVMASK_THRESHOLD = 127; // 0..255 (>= soglia => bianco => walkable)
 const NAVMASK_DEBUG = false;   // true se vuoi vedere overlay (facoltativo)
 // orientamento modello: 0 se già “guarda avanti”, prova 0 / Math.PI/2 / -Math.PI/2 / Math.PI
 const GOBLIN_FACING_OFFSET_Y = 0;
+// === AVOIDANCE (goblin vs goblin) ===
+const GOBLIN_RADIUS = 0.55;          // raggio “personaggio” in celle (tuning)
+const AVOID_RANGE = 1.4;             // distanza entro cui iniziano ad evitarsi (celle)
+const AVOID_PUSH = 2.2;              // forza repulsione (celle/sec)
+const AVOID_MAX_NEIGHBORS = 8;       // cap per performance
+
+// === GAIT / VARIAZIONE ANDATURA ===
+const GAIT_CHANGE_MIN_MS = 5000;
+const GAIT_CHANGE_MAX_MS = 10000;
+const SPEED_MIN_MULT = 0.75;
+const SPEED_MAX_MULT = 1.25;
+const ANIM_MIN_MULT  = 0.80;
+const ANIM_MAX_MULT  = 1.35;
 
 /* =========================
    ACCESSO STATO GIOCO
@@ -179,6 +192,15 @@ if (FIX_GOBLIN_FLIP_X) {
 // === facing (direzione di movimento) ===
 this.facing = new THREE.Vector2(0, 1); // direzione iniziale "in avanti"
 this.turnSpeed = 10; // rad/sec (più alto = gira più veloce)
+// === DNA personale (ogni goblin diverso) ===
+this.baseSpeed = GOBLIN_SPEED * (0.9 + Math.random() * 0.25);   // 0.90..1.15x
+this.speedMult = 1.0;
+
+// animazione: quanto “pompa” l’andatura
+this.animMult = 1.0;
+
+// timer cambio andatura
+this.nextGaitChangeAt = performance.now() + (GAIT_CHANGE_MIN_MS + Math.random() * (GAIT_CHANGE_MAX_MS - GAIT_CHANGE_MIN_MS));
 
     this._play('RUNNING');
   }
@@ -211,146 +233,205 @@ this.turnSpeed = 10; // rad/sec (più alto = gira più veloce)
      // fallback: resta dove sei (evita target impossibili)
      this.target = { x: this.cell.x, y: this.cell.y };
    }
-      
-  update(dt, chest) {
-    if (!this.visible) return;
+   
+_updateGait(now) {
+  if (now < this.nextGaitChangeAt) return;
 
-    /* ====== VICTORY ====== */
-    if (this.state === 'VICTORY') {
+  this.nextGaitChangeAt =
+    now + (GAIT_CHANGE_MIN_MS + Math.random() * (GAIT_CHANGE_MAX_MS - GAIT_CHANGE_MIN_MS));
+
+  // nuova “mood” casuale
+  this.speedMult = SPEED_MIN_MULT + Math.random() * (SPEED_MAX_MULT - SPEED_MIN_MULT);
+  this.animMult  = ANIM_MIN_MULT  + Math.random() * (ANIM_MAX_MULT  - ANIM_MIN_MULT);
+
+  // applica all’azione corrente (solo RUNNING/DIGGING per non alterare troppo le once)
+  if (this.actions.RUNNING) this.actions.RUNNING.setEffectiveTimeScale(this.animMult * this.speedMult);
+  if (this.actions.DIGGING) this.actions.DIGGING.setEffectiveTimeScale(0.95 + (this.animMult - 1) * 0.4);
+}
+      
+update(dt, chest, neighbors) {
+  if (!this.visible) return;
+
+  const now = performance.now();
+  this._updateGait(now);
+
+  /* ====== VICTORY ====== */
+  if (this.state === 'VICTORY') {
+    this.mixer.update(dt);
+    return;
+  }
+
+  /* ====== CHEST LOGIC ====== */
+  if (chest) {
+    const chestKey = `${chest.world.x}:${chest.world.y}`;
+
+    if (this.lastChestKey !== chestKey) {
+      this.lastChestKey = chestKey;
+      this.state = 'SURPRISED';
+      this.surpriseUntil = now + SURPRISE_DURATION_MS;
+      this._play('SURPRISED');
+    }
+
+    if (this.state === 'SURPRISED') {
+      if (now >= this.surpriseUntil) {
+        this.state = 'MOVING_TO_CHEST';
+        this._play('RUNNING');
+      }
       this.mixer.update(dt);
       return;
     }
 
-    /* ====== CHEST LOGIC ====== */
-    if (chest) {
-      const chestKey = `${chest.world.x}:${chest.world.y}`;
+    this.target = chest.world;
+    const dist = chebyshev(this.cell, this.target);
 
-      if (this.lastChestKey !== chestKey) {
-        this.lastChestKey = chestKey;
-        this.state = 'SURPRISED';
-        this.surpriseUntil = performance.now() + SURPRISE_DURATION_MS;
-        this._play('SURPRISED');
+    if (dist <= CHEST_TRIGGER_RANGE) {
+      if (this.state !== 'DIGGING') {
+        this.state = 'DIGGING';
+        this._play('DIGGING');
+
+        this.digChestKey = chestKey;
+        this.digUntil = now + DIG_DURATION_MS;
+        this.digFired = false;
       }
 
-      if (this.state === 'SURPRISED') {
-        if (performance.now() >= this.surpriseUntil) {
-          this.state = 'MOVING_TO_CHEST';
-          this._play('RUNNING');
+      if (!this.digFired && this.digChestKey === chestKey && now >= this.digUntil) {
+        this.digFired = true;
+        if (typeof this.onDigComplete === 'function') {
+          this.onDigComplete(this, chest);
         }
-        this.mixer.update(dt);
-        return;
       }
-
-      this.target = chest.world;
-      const dist = chebyshev(this.cell, this.target);
-
-      if (dist <= CHEST_TRIGGER_RANGE) {
-        if (this.state !== 'DIGGING') {
-          this.state = 'DIGGING';
-          this._play('DIGGING');
-
-          // start digging timer (one-shot per chest)
-          this.digChestKey = chestKey;
-          this.digUntil = performance.now() + DIG_DURATION_MS;
-          this.digFired = false;
-        }
-
-        // when digging finishes -> consume chest (auto-claim)
-        if (!this.digFired && this.digChestKey === chestKey && performance.now() >= this.digUntil) {
-          this.digFired = true;
-          if (typeof this.onDigComplete === 'function') {
-            this.onDigComplete(this, chest);
-          }
-        }
-      } else {
-        this.state = 'MOVING_TO_CHEST';
-        this._play('RUNNING');
-      }
-   } else {
-     this.lastChestKey = null;
-     this.digUntil = 0;
-     this.digChestKey = null;
-     this.digFired = false;
-   
-     if (this.state !== 'RUNNING') {
-       this.state = 'RUNNING';
-       this._play('RUNNING');
-     }
-   
-     // ✅ WANDER: se non c'è chest, cammina verso target casuali
-     const now = performance.now();
-     const dx = this.target.x - this.cell.x;
-     const dy = this.target.y - this.cell.y;
-     const dist = Math.hypot(dx, dy);
-   
-     // se sono arrivato vicino al target oppure è scaduto il timer => nuovo target
-     if (dist <= WANDER_REACH_EPS || now >= this.nextWanderAt) {
-       this._pickRandomTarget();
-     }
-   }
-
-   /* ====== MOVEMENT + FACING ====== */
-   if (this.state === 'RUNNING' || this.state === 'MOVING_TO_CHEST') {
-     const dx = this.target.x - this.cell.x;
-     const dy = this.target.y - this.cell.y;
-     const len = Math.hypot(dx, dy);
-   
-     if (len > 0.01) {
-       const dirx = dx / len;
-       const diry = dy / len;
-   
-       // salva direzione per orientamento
-       this.facing.set(dirx, diry);
-   
-       const nx = this.cell.x + dirx * GOBLIN_SPEED * dt;
-       const ny = this.cell.y + diry * GOBLIN_SPEED * dt;
-   
-       const { ix, iy } = toCellIndex(nx, ny);
-   
-       if (!this.isWalkable(ix, iy)) {
-         this._pickRandomTarget();
-       } else {
-         this.cell.x = nx;
-         this.cell.y = ny;
-       }
-     }
+    } else {
+      this.state = 'MOVING_TO_CHEST';
+      this._play('RUNNING');
     }
-/* ====== ROTAZIONE VERSO DIREZIONE ====== */
-// mappa: cell.x -> world X, cell.y -> world Z
-// yaw su Y
-if (this.facing.lengthSq() > 0.0001) {
-  const desiredYaw =
-    Math.atan2(this.facing.x, this.facing.y) +
-    GOBLIN_FACING_OFFSET_Y;
+  } else {
+    this.lastChestKey = null;
+    this.digUntil = 0;
+    this.digChestKey = null;
+    this.digFired = false;
 
-  const currentYaw = this.root.rotation.y;
+    if (this.state !== 'RUNNING') {
+      this.state = 'RUNNING';
+      this._play('RUNNING');
+    }
 
-// interpolazione angolo manuale (compatibile con tutte le versioni di three)
-let delta = desiredYaw - currentYaw;
+    // wander: target scade o raggiunto => nuovo target
+    const dx0 = this.target.x - this.cell.x;
+    const dy0 = this.target.y - this.cell.y;
+    const dist0 = Math.hypot(dx0, dy0);
 
-// normalizza tra -PI e +PI
-delta = ((delta + Math.PI) % (Math.PI * 2)) - Math.PI;
-
-this.root.rotation.y =
-  currentYaw + delta * Math.min(1, this.turnSpeed * dt);
-
-}
-
-    // ✅ non farli mai uscire dal plot (specialmente dopo tab-switch)
-this.cell.x = THREE.MathUtils.clamp(this.cell.x, 0, GRID_WIDTH - 1e-6);
-this.cell.y = THREE.MathUtils.clamp(this.cell.y, 0, GRID_HEIGHT - 1e-6);
-
-// 🔒 se per QUALSIASI motivo finisce su una cella nera → rientra
-const { ix, iy } = toCellIndex(this.cell.x, this.cell.y);
-if (!this.isWalkable(ix, iy)) {
-  this._pickRandomTarget();
-}
-
-
-
-    this.mixer.update(dt);
-
+    if (dist0 <= WANDER_REACH_EPS || now >= this.nextWanderAt) {
+      this._pickRandomTarget();
+    }
   }
+
+  /* ====== MOVEMENT + AVOIDANCE + FACING ====== */
+  if (this.state === 'RUNNING' || this.state === 'MOVING_TO_CHEST') {
+    const dx = this.target.x - this.cell.x;
+    const dy = this.target.y - this.cell.y;
+    const len = Math.hypot(dx, dy);
+
+    if (len > 0.01) {
+      const dirx = dx / len;
+      const diry = dy / len;
+
+      // velocità effettiva (DNA + mood ogni 5-10s)
+      let speed = this.baseSpeed * this.speedMult;
+
+      // === AVOIDANCE: repulsione dai vicini ===
+      let ax = 0, ay = 0;
+      let checked = 0;
+
+      if (neighbors && neighbors.length) {
+        for (let i = 0; i < neighbors.length; i++) {
+          const o = neighbors[i];
+          if (!o || o === this || !o.visible) continue;
+
+          const rx = this.cell.x - o.cell.x;
+          const ry = this.cell.y - o.cell.y;
+          const d2 = rx * rx + ry * ry;
+
+          if (d2 > AVOID_RANGE * AVOID_RANGE) continue;
+
+          const d = Math.max(0.0001, Math.sqrt(d2));
+          const t = 1 - (d / AVOID_RANGE);
+
+          ax += (rx / d) * t;
+          ay += (ry / d) * t;
+         // push extra quando sono MOLTO vicini (effetto "non passarsi attraverso")
+         if (d < GOBLIN_RADIUS * 2.0) {
+           ax += (rx / d) * AVOID_PUSH;
+           ay += (ry / d) * AVOID_PUSH;
+         }
+
+          // se l'altro è davanti e molto vicino, rallenta (evita "attraversamento")
+          const forward = dirx * (-rx) + diry * (-ry);
+          if (forward > 0 && d < GOBLIN_RADIUS * 2.0) {
+            speed *= 0.55;
+          }
+
+          checked++;
+          if (checked >= AVOID_MAX_NEIGHBORS) break;
+        }
+      }
+
+      // mescola direzione target con avoidance
+      const alen = Math.hypot(ax, ay);
+      if (alen > 0.0001) {
+        ax /= alen;
+        ay /= alen;
+
+        const mix = 0.28; // tuning: 0.20..0.40
+        const mx = dirx * (1 - mix) + ax * mix;
+        const my = diry * (1 - mix) + ay * mix;
+        const mlen = Math.hypot(mx, my) || 1;
+
+        this.facing.set(mx / mlen, my / mlen);
+      } else {
+        this.facing.set(dirx, diry);
+      }
+
+      // movimento col facing finale
+      const nx = this.cell.x + this.facing.x * speed * dt;
+      const ny = this.cell.y + this.facing.y * speed * dt;
+
+      const { ix, iy } = toCellIndex(nx, ny);
+
+      if (!this.isWalkable(ix, iy)) {
+        this._pickRandomTarget();
+      } else {
+        this.cell.x = nx;
+        this.cell.y = ny;
+      }
+    }
+  }
+
+  /* ====== ROTAZIONE VERSO DIREZIONE ====== */
+  if (this.facing.lengthSq() > 0.0001) {
+    const desiredYaw =
+      Math.atan2(this.facing.x, this.facing.y) + GOBLIN_FACING_OFFSET_Y;
+
+    const currentYaw = this.root.rotation.y;
+
+    let delta = desiredYaw - currentYaw;
+    delta = ((delta + Math.PI) % (Math.PI * 2)) - Math.PI;
+
+    this.root.rotation.y = currentYaw + delta * Math.min(1, this.turnSpeed * dt);
+  }
+
+  /* ====== CLAMP + NAVMASK SAFETY ====== */
+  this.cell.x = THREE.MathUtils.clamp(this.cell.x, 0, GRID_WIDTH - 1e-6);
+  this.cell.y = THREE.MathUtils.clamp(this.cell.y, 0, GRID_HEIGHT - 1e-6);
+
+  const c = toCellIndex(this.cell.x, this.cell.y);
+  if (!this.isWalkable(c.ix, c.iy)) {
+    this._pickRandomTarget();
+  }
+
+  /* ====== ANIM UPDATE ====== */
+  this.mixer.update(dt);
+}
+
 
   worldPosition() {
     return cellToWorld(this.cell.x, this.cell.y);
@@ -678,11 +759,16 @@ this.goblins.forEach((g, id) => {
       }
     }
 
-   this.goblins.forEach(g => {
-     g.update(dt, chest);
-     const p = g.worldPosition();
-     g.root.position.set(p.x, GOBLIN_Y_OFFSET, p.z); // ✅ sempre sopra il plot
-   });
+const list = Array.from(this.goblins.values());
+
+for (let i = 0; i < list.length; i++) {
+  const g = list[i];
+  g.update(dt, chest, list);
+
+  const p = g.worldPosition();
+  g.root.position.set(p.x, GOBLIN_Y_OFFSET, p.z);
+}
+
     this.renderer.render(this.scene, this.camera);
   }
    

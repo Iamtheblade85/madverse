@@ -585,7 +585,7 @@ this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   }
    
   _loadPlot() {
-const tex = new THREE.TextureLoader().load('/madverse/assets/plot.png');
+const tex = new THREE.TextureLoader().load('/madverse/assets/plot01.png');
 tex.colorSpace = THREE.SRGBColorSpace;
 
     const plane = new THREE.Mesh(

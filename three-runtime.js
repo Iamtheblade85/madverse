@@ -2,7 +2,18 @@
 // Resolved via <script type="importmap"> in nuovo.html
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import * as SkeletonUtils from 'https://unpkg.com/three@0.160.0/examples/jsm/utils/SkeletonUtils.js';
+//import * as SkeletonUtils from 'https://unpkg.com/three@0.160.0/examples/jsm/utils/SkeletonUtils.js';
+import { SkeletonUtils } from 'three/addons/utils/SkeletonUtils.js';
+// ✅ Color management ON (evita look "grigio/lavato")
+THREE.ColorManagement.enabled = true;
+
+// ✅ helper compatibile per sRGB (copre differenze tra versioni)
+function setSRGB(tex) {
+  if (!tex) return;
+  if ('colorSpace' in tex) tex.colorSpace = THREE.SRGBColorSpace;
+  else if ('encoding' in tex) tex.encoding = THREE.sRGBEncoding;
+  tex.needsUpdate = true;
+}
 
 /* =========================
    CONFIGURAZIONE (PROD)
@@ -463,7 +474,12 @@ class Goblin {
    
          // NON forzare emissive “grigia” che rovina i colori
          if ('emissiveIntensity' in m) m.emissiveIntensity = 0.0;
-   
+            // ✅ GLB usa KHR_materials_specular: può "lavare" i colori con ACES + luci forti
+         // abbasso e tolgo la mappa specularColor per evitare desaturazione/sbiancamento
+         if ('specularIntensity' in m) m.specularIntensity = 0.15; // prova 0.0..0.25
+         if ('specularColor' in m && m.specularColor) m.specularColor.setRGB(1, 1, 1);
+         if ('specularColorMap' in m) m.specularColorMap = null;
+
          const nameKey = `${m.name || ''} ${o.name || ''}`;
          const eyes = isEyesName(nameKey);
    
@@ -485,54 +501,50 @@ class Goblin {
          // Mantiene i dettagli della texture e separa vestiti/pelle.
    
          m.onBeforeCompile = (shader) => {
-           // varying per la local position
+           // varying per posizione locale "dopo skinning" (stabile durante animazioni)
            shader.vertexShader = shader.vertexShader.replace(
              'void main() {',
              'varying vec3 vLocalPos;\nvoid main() {'
            );
-   
+         
+           // dopo lo skinning, "transformed" è la posizione corretta
            shader.vertexShader = shader.vertexShader.replace(
-             '#include <begin_vertex>',
-             '#include <begin_vertex>\nvLocalPos = position;'
+             '#include <skinning_vertex>',
+             '#include <skinning_vertex>\nvLocalPos = transformed;'
            );
-   
+         
            shader.fragmentShader = shader.fragmentShader.replace(
              'void main() {',
              'varying vec3 vLocalPos;\nvoid main() {'
            );
-   
-           // Inseriamo la logica DOPO che il colore base è pronto
-           // (così manteniamo texture + luci e aggiungiamo solo una “palette” controllata)
+         
            shader.fragmentShader = shader.fragmentShader.replace(
              '#include <color_fragment>',
              `
-   #include <color_fragment>
-   
-   // ---- Goblin palette bands (boots/pants/tunic/skin) ----
-   // Nota: soglie y dipendono dal tuo modello.
-   // Se le bande non cascano perfette, ti dico sotto come ritoccarle.
-   
-   float y = vLocalPos.y;
-   
-   // colori
-   vec3 boots = vec3(${BOOTS.r.toFixed(4)}, ${BOOTS.g.toFixed(4)}, ${BOOTS.b.toFixed(4)});
-   vec3 pants = vec3(${PANTS.r.toFixed(4)}, ${PANTS.g.toFixed(4)}, ${PANTS.b.toFixed(4)});
-   vec3 tunic = vec3(${TUNIC.r.toFixed(4)}, ${TUNIC.g.toFixed(4)}, ${TUNIC.b.toFixed(4)});
-   vec3 skin  = vec3(${SKIN.r.toFixed(4)},  ${SKIN.g.toFixed(4)},  ${SKIN.b.toFixed(4)});
-   
-   // soglie (basso -> alto)
-   vec3 targetCol = tunic;
-   if (y < -0.28)      targetCol = boots;
-   else if (y < 0.08)  targetCol = pants;
-   else if (y < 0.52)  targetCol = tunic;
-   else                targetCol = skin;
-   
-   // mix controllato: non distrugge texture/ombre
-   diffuseColor.rgb = mix(diffuseColor.rgb, targetCol, 0.78);
-   `
+         #include <color_fragment>
+         
+         // ---- Goblin palette bands (boots/pants/tunic/skin) ----
+         float y = vLocalPos.y;
+         
+         vec3 boots = vec3(${BOOTS.r.toFixed(4)}, ${BOOTS.g.toFixed(4)}, ${BOOTS.b.toFixed(4)});
+         vec3 pants = vec3(${PANTS.r.toFixed(4)}, ${PANTS.g.toFixed(4)}, ${PANTS.b.toFixed(4)});
+         vec3 tunic = vec3(${TUNIC.r.toFixed(4)}, ${TUNIC.g.toFixed(4)}, ${TUNIC.b.toFixed(4)});
+         vec3 skin  = vec3(${SKIN.r.toFixed(4)},  ${SKIN.g.toFixed(4)},  ${SKIN.b.toFixed(4)});
+         
+         vec3 targetCol = tunic;
+         if (y < -0.28)      targetCol = boots;
+         else if (y < 0.08)  targetCol = pants;
+         else if (y < 0.52)  targetCol = tunic;
+         else                targetCol = skin;
+         
+         // mix controllato: conserva texture + luci
+         diffuseColor.rgb = mix(diffuseColor.rgb, targetCol, 0.78);
+         `
            );
          };
-   
+         
+         // ✅ evita cache shader “sbagliata” tra istanze/materiali
+         m.customProgramCacheKey = () => 'goblin_palette_bands_v1'; 
          m.needsUpdate = true;
        }
      });
@@ -811,7 +823,7 @@ export class ThreeRuntime {
     // ✅ color management “giusto” (evita goblin grigi/spenti)
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.25;
+    this.renderer.toneMappingExposure = 1.05;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
     this.scene = new THREE.Scene();
@@ -828,18 +840,18 @@ export class ThreeRuntime {
     this.camera.lookAt(0, 0, 0);
 
     // ✅ luci più leggibili + colori vivi
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.95));
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.45));
 
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x9aa6b2, 1.10);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x9aa6b2, 0.85);
     hemi.position.set(0, 50, 0);
     this.scene.add(hemi);
 
-    const dir = new THREE.DirectionalLight(0xffffff, 2.55);
+    const dir = new THREE.DirectionalLight(0xffffff, 2.00);
     dir.position.set(22, 42, 10);
     this.scene.add(dir);
 
     // piccolo “fill” laterale per staccare volumi
-    const dir2 = new THREE.DirectionalLight(0xffffff, 0.85);
+    const dir2 = new THREE.DirectionalLight(0xffffff, 0.55);
     dir2.position.set(-18, 30, -14);
     this.scene.add(dir2);
 
@@ -898,7 +910,7 @@ export class ThreeRuntime {
 
   _loadPlot() {
     const tex = new THREE.TextureLoader().load('/madverse/assets/plot.png');
-    tex.colorSpace = THREE.SRGBColorSpace;
+    setSRGB(tex);
 
     // plot più “vivo”
     const mat = new THREE.MeshBasicMaterial({
@@ -985,17 +997,17 @@ export class ThreeRuntime {
       if (o.isMesh) console.log(o.name, o.material?.name);
     });
 
-    // ✅ colorSpace per texture (alcuni exporter non lo impostano)
-    this.template.traverse((o) => {
-      if (!o.isMesh) return;
-      const mats = Array.isArray(o.material) ? o.material : [o.material];
-      for (const m of mats) {
-        if (!m) continue;
-        if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
-        if (m.emissiveMap) m.emissiveMap.colorSpace = THREE.SRGBColorSpace;
-        m.needsUpdate = true;
-      }
-    });
+   // ✅ sRGB sulle mappe colore (albedo/emissive) in modo compatibile
+   this.template.traverse((o) => {
+     if (!o.isMesh) return;
+     const mats = Array.isArray(o.material) ? o.material : [o.material];
+     for (const m of mats) {
+       if (!m) continue;
+       if (m.map) setSRGB(m.map);
+       if (m.emissiveMap) setSRGB(m.emissiveMap);
+       m.needsUpdate = true;
+     }
+   });
 
     // clips (animazioni)
     this.clips = [

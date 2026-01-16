@@ -72,8 +72,8 @@ const PARTNER_Y_FLOAT = 3.35;            // ampiezza fluttuazione
 const PARTNER_FLOAT_SPEED_MIN = 0.7;
 const PARTNER_FLOAT_SPEED_MAX = 1.4;
 
-const PARTNER_SCALE_MIN = 6;           // in "celle"
-const PARTNER_SCALE_MAX = 11;
+const PARTNER_SCALE_MIN = 3;           // in "celle"
+const PARTNER_SCALE_MAX = 4;
 
 const PARTNER_RENDER_ORDER = 120;        // sopra plot e sopra la maggior parte (chest=10, labels=50)
 const PARTNER_BLACK_CELL_TRIES = 3000;   // tentativi per trovare celle nere

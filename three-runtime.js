@@ -62,6 +62,21 @@ const LOADING_FX_MIN_SCALE = 0.7;
 const LOADING_FX_MAX_SCALE = 1.8;
 const LOADING_FX_BASE_Y = 0.10;       // altezza sopra il plot
 const LOADING_FX_Y_WAVE = 0.28;       // ampiezza oscillazione
+/* =========================
+   PARTNER HOLOGRAM SPRITES
+========================= */
+const PARTNER_COUNT = 8;                 // partner_1..partner__8
+const PARTNER_SPRITES_PER_TYPE = 1;      // 1 ciascuno (puoi alzare se vuoi duplicati)
+const PARTNER_Y_BASE = 0.22;             // altezza base sopra il plot
+const PARTNER_Y_FLOAT = 0.35;            // ampiezza fluttuazione
+const PARTNER_FLOAT_SPEED_MIN = 0.7;
+const PARTNER_FLOAT_SPEED_MAX = 1.4;
+
+const PARTNER_SCALE_MIN = 1.2;           // in "celle"
+const PARTNER_SCALE_MAX = 2.2;
+
+const PARTNER_RENDER_ORDER = 120;        // sopra plot e sopra la maggior parte (chest=10, labels=50)
+const PARTNER_BLACK_CELL_TRIES = 3000;   // tentativi per trovare celle nere
 
 /* =========================
    ACCESSO STATO GIOCO
@@ -148,6 +163,36 @@ function makeLabelSprite(text, borderColorCss) {
   spr.renderOrder = 50;
 
   return spr;
+}
+
+function makeMaxEllipseTextureFromImage(img, outSize = 512) {
+  const c = document.createElement('canvas');
+  c.width = outSize;
+  c.height = outSize;
+  const ctx = c.getContext('2d');
+
+  // disegna immagine “cover” nel canvas quadrato
+  const iw = img.width, ih = img.height;
+  const scale = Math.max(outSize / iw, outSize / ih);
+  const dw = iw * scale, dh = ih * scale;
+  const dx = (outSize - dw) / 2;
+  const dy = (outSize - dh) / 2;
+
+  ctx.clearRect(0, 0, outSize, outSize);
+  ctx.drawImage(img, dx, dy, dw, dh);
+
+  // maschera ellittica MASSIMA (riempie quasi tutto il canvas)
+  ctx.globalCompositeOperation = 'destination-in';
+  ctx.beginPath();
+  ctx.ellipse(outSize / 2, outSize / 2, outSize * 0.495, outSize * 0.495, 0, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.needsUpdate = true;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
 }
 
 /* =========================
@@ -562,6 +607,10 @@ this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       this.loadingGroup = null;     // THREE.Group con gli ologrammi
       this.loadingItems = [];       // metadata per animazione
       this.loadingTime = 0;    
+      // ===== PARTNERS =====
+      this.partnerGroup = null;
+      this.partnerItems = [];     // { sprite, baseY, amp, speed, phase }
+      this.partnerTextures = [];  // 7 textures     
   }
   _startLoadingFx() {
     // evita doppio init
@@ -724,24 +773,129 @@ this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     }
   }
 
+  async _loadPartnerTextures() {
+    // carica immagini partner1..partner7 e crea CanvasTexture “rotonda”
+    const loadImg = (src) =>
+      new Promise((resolve, reject) => {
+        const i = new Image();
+        i.crossOrigin = 'anonymous';
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = src;
+      });
+
+    const textures = [];
+    for (let k = 1; k <= PARTNER_COUNT; k++) {
+      // ✅ metti qui i path reali
+      const img = await loadImg(`/madverse/partners/partner_${k}.png`);
+      const tex = makeMaxEllipseTextureFromImage(img, 512);
+      textures.push(tex);
+    }
+    this.partnerTextures = textures;
+  }
+
+  _spawnPartnersOnBlackCells() {
+    if (!this.walkableReady || !this.walkable) return;
+    if (!this.partnerTextures || !this.partnerTextures.length) return;
+
+    if (this.partnerGroup) {
+      // già spawnati
+      return;
+    }
+
+    const g = new THREE.Group();
+    g.renderOrder = PARTNER_RENDER_ORDER;
+    this.partnerGroup = g;
+    this.partnerItems = [];
+
+    // raccogli celle nere (walkable=0)
+    const blackCells = [];
+    for (let tries = 0; tries < PARTNER_BLACK_CELL_TRIES; tries++) {
+      const ix = Math.floor(Math.random() * GRID_WIDTH);
+      const iy = Math.floor(Math.random() * GRID_HEIGHT);
+      const idx = iy * GRID_WIDTH + ix;
+
+      if (this.walkable[idx] === 0) {
+        blackCells.push({ ix, iy });
+        if (blackCells.length >= PARTNER_COUNT * PARTNER_SPRITES_PER_TYPE) break;
+      }
+    }
+
+    // se non trova abbastanza nere, non crashare
+    if (!blackCells.length) return;
+
+    for (let t = 0; t < PARTNER_COUNT; t++) {
+      for (let r = 0; r < PARTNER_SPRITES_PER_TYPE; r++) {
+        const cell = blackCells[(t * PARTNER_SPRITES_PER_TYPE + r) % blackCells.length];
+
+        const tex = this.partnerTextures[t];
+        const mat = new THREE.SpriteMaterial({
+          map: tex,
+          transparent: true,
+          depthTest: false,
+          depthWrite: false
+        });
+
+        const spr = new THREE.Sprite(mat);
+        spr.renderOrder = PARTNER_RENDER_ORDER;
+
+        // posizione al centro della cella, con micro random “in-cell”
+        const cx = cell.ix + 0.5 + (Math.random() * 0.30 - 0.15);
+        const cy = cell.iy + 0.5 + (Math.random() * 0.30 - 0.15);
+        const p = cellToWorld(cx, cy);
+
+        const baseY = PARTNER_Y_BASE + Math.random() * 0.06;
+        spr.position.set(p.x, baseY, p.z);
+
+        // scala in “celle”
+        const s = PARTNER_SCALE_MIN + Math.random() * (PARTNER_SCALE_MAX - PARTNER_SCALE_MIN);
+        spr.scale.set(s, s, 1);
+
+        g.add(spr);
+
+        this.partnerItems.push({
+          sprite: spr,
+          baseY,
+          amp: PARTNER_Y_FLOAT * (0.7 + Math.random() * 0.6),
+          speed: PARTNER_FLOAT_SPEED_MIN + Math.random() * (PARTNER_FLOAT_SPEED_MAX - PARTNER_FLOAT_SPEED_MIN),
+          phase: Math.random() * Math.PI * 2
+        });
+      }
+    }
+
+    this.scene.add(g);
+  }
+
+  _updatePartners(dt) {
+    if (!this.partnerItems || !this.partnerItems.length) return;
+
+    const t = performance.now() * 0.001;
+    for (let i = 0; i < this.partnerItems.length; i++) {
+      const it = this.partnerItems[i];
+      const spr = it.sprite;
+      if (!spr) continue;
+      // fluttuazione verticale
+      spr.position.y = it.baseY + (0.5 + 0.5 * Math.sin(t * it.speed + it.phase)) * it.amp;
+    }
+  }
+
     async init() {
     this._initRenderer();
-
     // renderizza subito plot + chest (anche se le texture arrivano un attimo dopo)
     this._loadPlot();
     this._loadChest();
-
     // ✅ avvia fx procedurale immediatamente
     this._startLoadingFx();
-
     // ✅ avvia subito il loop (così non hai schermo nero)
     this._loop();
-
     // carica assets “pesanti” in parallelo
     await Promise.all([
       this._loadGoblinAssets(),
-      this._loadNavMask()
+      this._loadNavMask(),
+      this._loadPartnerTextures()   // ✅ aggiunto
     ]);
+    // ✅ ora possiamo spawnare sulle celle nere del navmask
+    this._spawnPartnersOnBlackCells();
     this.assetsReady = true;
     this._stopLoadingFx();
   }
@@ -996,6 +1150,7 @@ this.missingTicks.set(id, 0);
           dt = Math.min(dt, 1 / 30);
 
           this._updateLoadingFx(dt);
+          this._updatePartners(dt);
           this.renderer.render(this.scene, this.camera);
           return;
         }

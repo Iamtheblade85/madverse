@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Dwarfs Cave – Goblin Expeditions (Polling, No SSE)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="cyberpunktribalV2.css?v=1" onload="this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="cyberpunktribalV2.css?v=1"></noscript>
+  <link id="theme-style" rel="stylesheet" href="css013.css"/>
+</head>
+<body>
+  <div id="app-root">
+    <header id="app-header" aria-label="Application header">
+      <h1>Goblin DEX</h1>
+      <p id="subtitle">Build goblin expeditions, watch the world map update via polling (no SSE).</p>
+      <nav id="action-bar" aria-label="Actions">
+        <div id="duration-switch" aria-label="Expedition Duration">
+          <label for="sel-duration" style="margin-right:8px;font-weight:900;">Duration</label>
+          <select id="sel-duration" title="Choose expedition duration" style="min-width:140px;">
+            <option value="5">5m — Blitz</option>
+            <option value="30" selected>30m — Standard</option>
+            <option value="60">1h — Long</option>
+            <option value="120">2h — Marathon</option>
+            <option value="360">6h — Endurance</option>
+            <option value="1440">24h — Ultra</option>
+          </select>
+          <small id="duration-hint" style="margin-left:10px;opacity:.85;"></small>
+        </div>
+        <div id="cap-line" aria-live="polite">
+          <span id="cap-label" title="Maximum goblins you can send in the current run">Max goblins this run: 50</span> ·
+          <span id="reinf-label" title="Reinforcement adds +5 goblins each, up to +200">Base 50 + 0× Reinforcement (= 0 extra)</span>
+        </div>
+        <div id="action-buttons" role="group" aria-label="Primary actions">
+          <button id="btn-start" class="btn-primary" title="Start an expedition with the selected goblins">🚀 Start Expedition</button>
+          <button id="btn-copy-overlay" class="btn-primary" title="Copy a link to the overlay-only view">🔗 Copy overlay link</button>
+        </div>
+      </nav>
+      <section id="news-banner" aria-label="News & Ads">
+        <strong>Live:</strong> World expeditions map updates every few seconds (HTTP polling only, no SSE).
+      </section>
+      <div id="status-row" aria-live="polite">
+        <span id="latency-label" title="Time to sync the latest snapshot">syncing…</span>
+      </div>
+    </header>
+    <main id="main-layout" aria-label="Main content">
+      <section id="game-area" aria-label="Game Area">
+        <h2>World Expeditions Map</h2>
+        <div id="canvas-wrap" aria-label="Game viewport">
+          <canvas id="game-canvas"></canvas>
+          <div id="canvas-feedback" class="feedback-near-canvas" aria-live="polite"></div>
+        </div>
+        <div id="legend">
+          <span>Legend:</span>
+          <span>Goblin Squad</span>
+        </div>
+        <div id="ticker-row" aria-label="Global log and commands">
+          <div id="ticker" aria-live="polite">
+            <strong>GLOBAL LOG:</strong> <span id="ticker-line">Waiting for events…</span>
+          </div>
+          <aside id="botcommands" aria-label="Bot commands">
+            <div class="bc-head">
+              <strong>BOT COMMANDS</strong>
+              <span class="bc-pill">Twitch chat</span>
+            </div>
+            <div class="bc-list">
+              <div class="bc-item">
+                <span class="bc-cmd">!chest</span>
+                <span class="bc-desc">Spawn a chest inside the Goblin DeX Arena. First click wins!</span>
+              </div>
+            </div>
+            <div class="bc-foot">
+              Use these commands in Twitch chat to trigger arena events. More coming soon.
+            </div>
+          </aside>
+        </div>
+      </section>
+      <aside id="panels" aria-label="Information panels">
+        <nav id="tabs" role="tablist" aria-label="Panels" aria-orientation="horizontal">
+          <button id="tab-btn-my" class="btn-primary" role="tab" aria-selected="true" tabindex="0"
+                  aria-controls="tab-my" data-panel="tab-my" title="Build your expedition">
+            My Goblins
+          </button>
+
+          <button id="tab-btn-staking" class="btn-primary" role="tab" aria-selected="false" tabindex="-1"
+                  aria-controls="tab-staking" data-panel="tab-staking" title="View your staking points and bonuses">
+            Staking
+          </button>
+
+          <button id="tab-btn-global" class="btn-primary" role="tab" aria-selected="false" tabindex="-1"
+                  aria-controls="tab-global" data-panel="tab-global" title="Live view of all expeditions">
+            Global
+          </button>
+
+          <button id="tab-btn-recent" class="btn-primary" role="tab" aria-selected="false" tabindex="-1"
+                  aria-controls="tab-recent" data-panel="tab-recent" title="Expeditions completed in the last 24h">
+            Recent
+          </button>
+        </nav>
+
+        <!-- TAB: MY -->
+        <section id="tab-my" role="tabpanel" aria-labelledby="tab-btn-my" tabindex="0" aria-label="My Goblins">
+          <h3>🧬 Goblin Expedition Builder</h3>
+
+          <div id="my-status" aria-live="polite">
+            Load your goblins to start building an expedition.
+          </div>
+
+          <section id="goblin-account-summary" aria-label="Goblin account stats">
+            <div class="gas-row">
+              <span id="gas-total-count" class="gas-chip gas-chip--power">Goblins: <strong>0</strong></span>
+              <span id="gas-total-power" class="gas-chip gas-chip--power">Total power: <strong>0</strong></span>
+              <span id="gas-avg-power"   class="gas-chip gas-chip--power">Avg power: <strong>0</strong></span>
+            </div>
+
+            <div class="gas-row">
+              <span id="gas-total-res"   class="gas-chip gas-chip--sum">RES Σ: <strong>0</strong></span>
+              <span id="gas-total-acc"   class="gas-chip gas-chip--sum">ACC Σ: <strong>0</strong></span>
+              <span id="gas-total-loot"  class="gas-chip gas-chip--sum">LOOT Σ: <strong>0</strong></span>
+              <span id="gas-total-speed" class="gas-chip gas-chip--sum">SPD Σ: <strong>0</strong></span>
+            </div>
+
+            <div class="gas-row">
+              <span id="gas-avg-res"   class="gas-chip gas-chip--avg">RES μ: <strong>0</strong></span>
+              <span id="gas-avg-acc"   class="gas-chip gas-chip--avg">ACC μ: <strong>0</strong></span>
+              <span id="gas-avg-loot"  class="gas-chip gas-chip--avg">LOOT μ: <strong>0</strong></span>
+              <span id="gas-avg-speed" class="gas-chip gas-chip--avg">SPD μ: <strong>0</strong></span>
+            </div>
+
+            <div class="gas-row">
+              <span id="gas-rarity-mythic"    class="gas-chip gas-chip--rarity">Mythic: <strong>0</strong></span>
+              <span id="gas-rarity-legendary" class="gas-chip gas-chip--rarity">Legendary: <strong>0</strong></span>
+              <span id="gas-rarity-epic"      class="gas-chip gas-chip--rarity">Epic: <strong>0</strong></span>
+              <span id="gas-rarity-rare"      class="gas-chip gas-chip--rarity">Rare: <strong>0</strong></span>
+              <span id="gas-rarity-common"    class="gas-chip gas-chip--rarity">Common: <strong>0</strong></span>
+            </div>
+          </section>
+
+          <section id="goblin-overview" aria-label="Your goblins overview">
+            <div id="goblin-overview-card" class="card"
+                 style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 6px;">
+              <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;">
+                <div>
+                  <div style="font-size:11px;opacity:.8;">Total goblins</div>
+                  <div class="value" id="stat-goblins-count" style="font-weight:900;font-size:20px;">0</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;opacity:.8;">Total daily power</div>
+                  <div class="value" id="stat-goblins-power-total" style="font-weight:900;font-size:20px;">0</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;opacity:.8;">Average daily power</div>
+                  <div class="value" id="stat-goblins-power-avg" style="font-weight:900;font-size:20px;">0</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;opacity:.8;">Goblins data</div>
+                  <div class="value" id="stat-goblins-updated" style="font-size:18px;opacity:.9;">Not loaded yet</div>
+                </div>
+              </div>
+
+              <button id="btn-load-goblins" class="btn-primary" type="button"
+                      title="Fetch your goblins from the API"
+                      style="min-width:230px;padding:9px 16px;font-weight:800;font-size:20px;border-radius:999px;margin-left:auto;display:inline-flex;align-items:center;gap:6px;justify-content:center;">
+                🔄 Load / Refresh goblins
+              </button>
+            </div>
+          </section>
+
+          <section id="filters" aria-label="Filters">
+            <input id="flt-search" type="search" placeholder="Search name or #id…" title="Filter goblins by name or asset id">
+            <select id="flt-rarity" title="Filter by rarity">
+              <option value="">All rarities</option>
+              <option>Common</option>
+              <option>Rare</option>
+              <option>Epic</option>
+              <option>Legendary</option>
+            </select>
+            <label for="flt-power" title="Only show goblins with at least this power">Min power</label>
+            <input id="flt-power" type="range" min="0" max="100" step="5" value="0">
+            <span id="flt-power-label">0</span>
+          </section>
+
+          <section id="builder-controls" aria-label="Expedition controls"></section>
+          <div id="action-hint" aria-live="polite"></div>
+
+          <section id="run-forecast" aria-live="polite" hidden></section>
+
+          <section id="quick-select" aria-label="Quick selection">
+            <button id="qs-first" class="btn-primary" title="Pick the first goblins up to your cap">✅ First 50</button>
+            <button id="qs-best"  class="btn-primary" title="Pick the strongest goblins up to your cap">🏆 Best 50</button>
+            <button id="qs-clear" class="btn-primary" title="Clear the current selection">❌ Clear</button>
+          </section>
+
+          <section id="selection-summary" aria-label="Selection summary">
+            <div id="sel-count">Selected goblins: 0</div>
+            <div id="sel-stats" title="Aggregated attributes of selected goblins">R: 0 · L: 0 · S: 0 · A: 0</div>
+          </section>
+
+          <section id="goblin-list" aria-label="Your goblins list"></section>
+
+          <div id="view-more" aria-label="Pagination">
+            <button id="btn-toggle-more" class="btn-primary" title="Expand or collapse the list" hidden>View more</button>
+          </div>
+
+          <div id="toast-host" aria-live="polite"></div>
+        </section>
+
+        <!-- TAB: STAKING -->
+        <section id="tab-staking" role="tabpanel" aria-labelledby="tab-btn-staking" tabindex="0"
+                 aria-label="Staking Report" hidden>
+          <h3>🧾 Staking Pools</h3>
+
+          <div class="staking-toolbar">
+            <div class="staking-meta">
+              <div class="staking-chip">
+                <span class="lbl">Account</span>
+                <b id="staking-account">—</b>
+              </div>
+              <div class="staking-chip" title="When this report was generated on the server (UTC).">
+                <span class="lbl">Generated</span>
+                <b id="staking-started-at">—</b>
+              </div>
+              <div class="staking-chip" title="Cached on this device for fast switching.">
+                <span class="lbl">Cache</span>
+                <b id="staking-cache">—</b>
+              </div>
+            </div>
+
+            <div class="staking-actions">
+              <button id="btn-staking-refresh" class="btn-primary" type="button">🔄 Refresh</button>
+              <button id="btn-staking-copy" class="btn-primary" type="button">📋 Copy summary</button>
+            </div>
+          </div>
+
+          <div id="staking-host" aria-live="polite"></div>
+        </section>
+
+        <!-- TAB: GLOBAL -->
+        <section id="tab-global" role="tabpanel" aria-labelledby="tab-btn-global" tabindex="0"
+                 aria-label="World Live Expeditions" hidden>
+          <h3>🌍 World Live Expeditions</h3>
+          <div id="global-count">0</div>
+          <div id="global-list" aria-label="Expeditions list"></div>
+        </section>
+
+        <!-- TAB: RECENT -->
+        <section id="tab-recent" role="tabpanel" aria-labelledby="tab-btn-recent" tabindex="0"
+                 aria-label="Last Completed Expeditions" hidden>
+          <h3>🕒 Last Completed Expeditions</h3>
+          <div id="recent-list" aria-label="Recent results"></div>
+        </section>
+      </aside>
+    </main>
+
+    <footer id="app-footer" aria-label="Footer">
+      <small>Overlay-only link available from the top bar. All times are local to your device.</small>
+    </footer>
+  </div>
+
+  <!-- NEW: All JS is now here (module) -->
+  <script type="module" src="game.js?v=1"></script>
+</body>
+</html>

@@ -430,75 +430,113 @@ class Goblin {
     this._play('RUNNING');
   }
 
-  _applyGoblinLook(seed) {
-    // l’asset goblin_run.glb ha 2 materiali (body + eyes).
-    // Qui facciamo:
-    // - SRGB corretto per mappe
-    // - metalness/roughness coerenti
-    // - TINT verde deciso sul body
-    // - Occhi più brillanti/contrastati
-    this.model.traverse((o) => {
-      if (!o.isMesh) return;
-
-      // clone materiali per evitare “tutto grigio” (materiale condiviso)
-      const mats = Array.isArray(o.material) ? o.material : [o.material];
-      const cloned = mats.map(m => (m ? m.clone() : m));
-      o.material = Array.isArray(o.material) ? cloned : cloned[0];
-
-      const arr = Array.isArray(o.material) ? o.material : [o.material];
-
-      for (const m of arr) {
-        if (!m) continue;
-
-        // SRGB maps
-        if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
-        if (m.emissiveMap) m.emissiveMap.colorSpace = THREE.SRGBColorSpace;
-
-        // fisica
-        if ('metalness' in m) m.metalness = 0.0;
-        if ('roughness' in m) m.roughness = Math.min(m.roughness ?? 1.0, 0.92);
-
-        // evita “sbiancare”
-        if ('emissiveIntensity' in m) m.emissiveIntensity = 0.0;
-
-        // decide se è “eyes”
-        const n = String(m.name || o.name || '').toLowerCase();
-        const isEyes = n.includes('eyes');
-
-        if (isEyes) {
-          // occhi più leggibili
-          if (m.color) m.color.setRGB(1.0, 1.0, 1.0);
-          if ('emissive' in m) {
-            m.emissive = m.emissive || new THREE.Color(0x000000);
-            m.emissive.setRGB(0.25, 0.25, 0.25);
-            m.emissiveIntensity = 0.7;
-          }
-          m.roughness = 0.55;
-        } else {
-          // ✅ body: verde deciso ma con texture visibile
-          // tint “moltiplicativa” controllata: colore base + lieve emissive verde
-          if (m.color) {
-            // verde forte (non pastello)
-            const bodyGreen = new THREE.Color(0x1fb84a); // verde goblin
-            // blend: mantiene dettagli texture
-            const mix = 0.78;
-            m.color.lerp(bodyGreen, mix);
-            // leggero boost luminosità
-            m.color.multiplyScalar(1.15);
-          }
-          if ('emissive' in m) {
-            m.emissive = m.emissive || new THREE.Color(0x000000);
-            // un filo di verde nelle ombre, senza “grigiare”
-            m.emissive.setRGB(0.05, 0.11, 0.06);
-            m.emissiveIntensity = 0.55;
-          }
-          m.roughness = Math.min(m.roughness ?? 0.9, 0.9);
-        }
-
-        m.needsUpdate = true;
-      }
-    });
-  }
+   _applyGoblinLook(seed) {
+     // Palette: pelle verde, vestiti distinguibili
+     const SKIN  = new THREE.Color(0x1fb84a); // verde goblin (pelle)
+     const TUNIC = new THREE.Color(0xb84a2b); // rosso/mattone tunica
+     const PANTS = new THREE.Color(0x7a5a2a); // marrone pantaloni
+     const BOOTS = new THREE.Color(0x222222); // stivali scuri
+   
+     // helper: decide "eyes"
+     const isEyesName = (s) => String(s || '').toLowerCase().includes('eye');
+   
+     this.model.traverse((o) => {
+       if (!o.isMesh) return;
+   
+       // ✅ IMPORTANTISSIMO: clona materiali per goblin (evita “sporcamenti” tra istanze)
+       const src = Array.isArray(o.material) ? o.material : [o.material];
+       const cloned = src.map(m => (m ? m.clone() : m));
+       o.material = Array.isArray(o.material) ? cloned : cloned[0];
+   
+       const mats = Array.isArray(o.material) ? o.material : [o.material];
+   
+       for (const m of mats) {
+         if (!m) continue;
+   
+         // SRGB maps (albedo/baseColor)
+         if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
+         if (m.emissiveMap) m.emissiveMap.colorSpace = THREE.SRGBColorSpace;
+   
+         // fisica coerente (evita look metallico “scuro”)
+         if ('metalness' in m) m.metalness = 0.0;
+         if ('roughness' in m) m.roughness = Math.min(m.roughness ?? 1.0, 0.92);
+   
+         // NON forzare emissive “grigia” che rovina i colori
+         if ('emissiveIntensity' in m) m.emissiveIntensity = 0.0;
+   
+         const nameKey = `${m.name || ''} ${o.name || ''}`;
+         const eyes = isEyesName(nameKey);
+   
+         if (eyes) {
+           // occhi più leggibili
+           if (m.color) m.color.setRGB(1, 1, 1);
+           if ('emissive' in m) {
+             m.emissive = m.emissive || new THREE.Color(0x000000);
+             m.emissive.setRGB(0.25, 0.25, 0.25);
+             m.emissiveIntensity = 0.7;
+           }
+           if ('roughness' in m) m.roughness = 0.55;
+           m.needsUpdate = true;
+           continue;
+         }
+   
+         // ✅ QUI la differenza: niente lerp globale al verde.
+         // Applichiamo una palette “a bande” via shader, usando position.y locale del mesh.
+         // Mantiene i dettagli della texture e separa vestiti/pelle.
+   
+         m.onBeforeCompile = (shader) => {
+           // varying per la local position
+           shader.vertexShader = shader.vertexShader.replace(
+             'void main() {',
+             'varying vec3 vLocalPos;\nvoid main() {'
+           );
+   
+           shader.vertexShader = shader.vertexShader.replace(
+             '#include <begin_vertex>',
+             '#include <begin_vertex>\nvLocalPos = position;'
+           );
+   
+           shader.fragmentShader = shader.fragmentShader.replace(
+             'void main() {',
+             'varying vec3 vLocalPos;\nvoid main() {'
+           );
+   
+           // Inseriamo la logica DOPO che il colore base è pronto
+           // (così manteniamo texture + luci e aggiungiamo solo una “palette” controllata)
+           shader.fragmentShader = shader.fragmentShader.replace(
+             '#include <color_fragment>',
+             `
+   #include <color_fragment>
+   
+   // ---- Goblin palette bands (boots/pants/tunic/skin) ----
+   // Nota: soglie y dipendono dal tuo modello.
+   // Se le bande non cascano perfette, ti dico sotto come ritoccarle.
+   
+   float y = vLocalPos.y;
+   
+   // colori
+   vec3 boots = vec3(${BOOTS.r.toFixed(4)}, ${BOOTS.g.toFixed(4)}, ${BOOTS.b.toFixed(4)});
+   vec3 pants = vec3(${PANTS.r.toFixed(4)}, ${PANTS.g.toFixed(4)}, ${PANTS.b.toFixed(4)});
+   vec3 tunic = vec3(${TUNIC.r.toFixed(4)}, ${TUNIC.g.toFixed(4)}, ${TUNIC.b.toFixed(4)});
+   vec3 skin  = vec3(${SKIN.r.toFixed(4)},  ${SKIN.g.toFixed(4)},  ${SKIN.b.toFixed(4)});
+   
+   // soglie (basso -> alto)
+   vec3 targetCol = tunic;
+   if (y < -0.28)      targetCol = boots;
+   else if (y < 0.08)  targetCol = pants;
+   else if (y < 0.52)  targetCol = tunic;
+   else                targetCol = skin;
+   
+   // mix controllato: non distrugge texture/ombre
+   diffuseColor.rgb = mix(diffuseColor.rgb, targetCol, 0.78);
+   `
+           );
+         };
+   
+         m.needsUpdate = true;
+       }
+     });
+   }
 
   _play(name) {
     if (this.currentAction === name) return;
@@ -943,6 +981,9 @@ export class ThreeRuntime {
     // template (mesh + skeleton)
     const base = await this.loader.loadAsync('/madverse/assets/goblin_run.glb');
     this.template = base.scene;
+    this.template.traverse(o => {
+      if (o.isMesh) console.log(o.name, o.material?.name);
+    });
 
     // ✅ colorSpace per texture (alcuni exporter non lo impostano)
     this.template.traverse((o) => {

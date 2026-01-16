@@ -5578,15 +5578,18 @@ function loadDwarvesGoldCave() {
   iframe.style.height = '100vh';
   iframe.style.minHeight = '100vh';
 
-  iframe.onload = () => {
-    const wax = window.userData?.wax_account || null;
-
-    iframe.contentWindow.postMessage(
-      { type: 'CC_AUTH', wax_account: wax },
-      window.location.origin
-    );
-  };
-
+	iframe.onload = () => {
+	  const ud = window.userData || {};
+	  iframe.contentWindow.postMessage(
+	    {
+	      type: 'CC_AUTH',
+	      wax_account: ud.wax_account || null,
+	      user_id: ud.user_id || null,
+	      usx_token: ud.usx_token || null
+	    },
+	    window.location.origin
+	  );
+	};
   host.appendChild(iframe);
 }
 

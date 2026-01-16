@@ -22,7 +22,8 @@ const WANDER_MARGIN = 1.2;         // margine dal bordo (celle)
 const DIG_DURATION_MS = 4500;       // quanto dura il "digging" prima di consumare
 const CHEST_CLAIM_DELAY_MS = 5000;  // ✅ attesa dopo il primo contatto prima del claim
 const CHEST_Y_OFFSET = 0.15;        // altezza sopra il plot
-const LABEL_Y_OFFSET = 1.40;
+// Badge “baseline” a terra (asse Y del mondo/plot)
+const LABEL_Y_OFFSET = -0.035; // prova -0.02 / -0.05 se lo vuoi più su/giù
 const FIX_GOBLIN_FLIP_X = Math.PI;  // ✅ 180°: testa su, piedi giù
 
 const GOBLIN_Y_OFFSET = 0.05;       // piccolo offset sopra il plot
@@ -159,10 +160,11 @@ if (FIX_GOBLIN_FLIP_X) {
    const hue = Math.floor(Math.random() * 360);
    const borderColor = `hsla(${hue}, 95%, 60%, 0.95)`;
    
-   // ✅ label sotto i piedi
+   // ✅ label sotto i piedi (asse Y del mondo/plot, stabile)
+   // La agganciamo al root così resta sempre “a terra” e non segue l’animazione dello scheletro
    this.label = makeLabelSprite(this.owner, borderColor);
    this.label.position.set(0, LABEL_Y_OFFSET, 0);
-   this.model.add(this.label);   
+   this.root.add(this.label);
     this.mixer = new THREE.AnimationMixer(this.model);
     this.actions = {};
     clips.forEach(c => {
@@ -493,7 +495,7 @@ export class ThreeRuntime {
 // ✅ colori corretti (sRGB) + resa più “viva”
 this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-this.renderer.toneMappingExposure = 1.1;
+this.renderer.toneMappingExposure = 1.35;
 
 // (opzionale ma consigliato per nitidezza)
 this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -512,18 +514,16 @@ this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.camera.position.set(0, 20, 0);
     this.camera.lookAt(0, 0, 0);
 
-// ✅ luci migliori: colori più fedeli e goblin “leggibili”
-this.scene.add(new THREE.AmbientLight(0xffffff, 0.35));
-
-const hemi = new THREE.HemisphereLight(0xffffff, 0x223344, 0.75);
-hemi.position.set(0, 50, 0);
-this.scene.add(hemi);
-
-const dir = new THREE.DirectionalLight(0xffffff, 1.15);
-dir.position.set(20, 40, 10);
-this.scene.add(dir);
-
-
+   // ✅ luci più “bright / readable” (top-down) per evitare goblin troppo scuri
+   this.scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+   
+   const hemi = new THREE.HemisphereLight(0xffffff, 0x888888, 1.05);
+   hemi.position.set(0, 50, 0);
+   this.scene.add(hemi);
+   
+   const dir = new THREE.DirectionalLight(0xffffff, 2.25);
+   dir.position.set(20, 40, 10);
+   this.scene.add(dir);
     this.clock = new THREE.Clock();
     this.loader = new GLTFLoader();
 
@@ -597,80 +597,113 @@ tex.colorSpace = THREE.SRGBColorSpace;
    this.scene.add(plane);
   }
 
-async _loadNavMask() {
-  // fallback: se fallisce, tutto walkable
-  const fallbackAll = () => {
-    this.walkable = new Uint8Array(GRID_WIDTH * GRID_HEIGHT);
-    this.walkable.fill(1);
-    this.walkableReady = true;
-  };
-
-  try {
-    const img = await new Promise((resolve, reject) => {
-      const i = new Image();
-      i.crossOrigin = 'anonymous';
-      i.onload = () => resolve(i);
-      i.onerror = reject;
-      i.src = NAVMASK_URL;
-    });
-
-    // leggiamo pixel via canvas
-    const c = document.createElement('canvas');
-    c.width = GRID_WIDTH;
-    c.height = GRID_HEIGHT;
-    const ctx = c.getContext('2d', { willReadFrequently: true });
-
-    // stira l’immagine ai 48x24 (se è diversa di dimensione)
-    ctx.drawImage(img, 0, 0, GRID_WIDTH, GRID_HEIGHT);
-
-    const data = ctx.getImageData(0, 0, GRID_WIDTH, GRID_HEIGHT).data;
-
-    this.walkable = new Uint8Array(GRID_WIDTH * GRID_HEIGHT);
-
-    for (let y = 0; y < GRID_HEIGHT; y++) {
-      for (let x = 0; x < GRID_WIDTH; x++) {
-        const idx = (y * GRID_WIDTH + x) * 4;
-        const r = data[idx], g = data[idx + 1], b = data[idx + 2];
-        // luminanza semplice
-        const lum = (r + g + b) / 3;
-        this.walkable[y * GRID_WIDTH + x] = lum >= NAVMASK_THRESHOLD ? 1 : 0;
-      }
-    }
-
-    // sicurezza: se per errore è tutta nera -> fallback
-    let any = 0;
-    for (let i = 0; i < this.walkable.length; i++) any |= this.walkable[i];
-    if (!any) fallbackAll();
-
-    this.walkableReady = true;
-
-    // (facoltativo) debug overlay
-    if (NAVMASK_DEBUG) {
-      const tex = new THREE.CanvasTexture(c);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.35, depthWrite: false });
-      const plane = new THREE.Mesh(new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT), mat);
-      plane.rotation.x = -Math.PI / 2;
-      plane.position.y = 0.01;
-      plane.renderOrder = 5;
-      this.scene.add(plane);
-    }
-  } catch (e) {
-    console.warn('NavMask load failed, using fallback (all walkable)', e);
-    fallbackAll();
-  }
-}
-
-isWalkableCell(ix, iy) {
-  if (!this.walkableReady || !this.walkable) return true;
-  ix = THREE.MathUtils.clamp(ix, 0, GRID_WIDTH - 1);
-  iy = THREE.MathUtils.clamp(iy, 0, GRID_HEIGHT - 1);
-  return this.walkable[iy * GRID_WIDTH + ix] === 1;
-}
+   async _loadNavMask() {
+     // fallback: se fallisce, tutto walkable
+     const fallbackAll = () => {
+       this.walkable = new Uint8Array(GRID_WIDTH * GRID_HEIGHT);
+       this.walkable.fill(1);
+       this.walkableReady = true;
+     };
+   
+     try {
+       const img = await new Promise((resolve, reject) => {
+         const i = new Image();
+         i.crossOrigin = 'anonymous';
+         i.onload = () => resolve(i);
+         i.onerror = reject;
+         i.src = NAVMASK_URL;
+       });
+   
+       // leggiamo pixel via canvas
+       const c = document.createElement('canvas');
+       c.width = GRID_WIDTH;
+       c.height = GRID_HEIGHT;
+       const ctx = c.getContext('2d', { willReadFrequently: true });
+   
+       // stira l’immagine ai 48x24 (se è diversa di dimensione)
+       ctx.drawImage(img, 0, 0, GRID_WIDTH, GRID_HEIGHT);
+   
+       const data = ctx.getImageData(0, 0, GRID_WIDTH, GRID_HEIGHT).data;
+   
+       this.walkable = new Uint8Array(GRID_WIDTH * GRID_HEIGHT);
+   
+       for (let y = 0; y < GRID_HEIGHT; y++) {
+         for (let x = 0; x < GRID_WIDTH; x++) {
+           const idx = (y * GRID_WIDTH + x) * 4;
+           const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+           // luminanza semplice
+           const lum = (r + g + b) / 3;
+           this.walkable[y * GRID_WIDTH + x] = lum >= NAVMASK_THRESHOLD ? 1 : 0;
+         }
+       }
+   
+       // sicurezza: se per errore è tutta nera -> fallback
+       let any = 0;
+       for (let i = 0; i < this.walkable.length; i++) any |= this.walkable[i];
+       if (!any) fallbackAll();
+   
+       this.walkableReady = true;
+   
+       // (facoltativo) debug overlay
+       if (NAVMASK_DEBUG) {
+         const tex = new THREE.CanvasTexture(c);
+         tex.colorSpace = THREE.SRGBColorSpace;
+         const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.35, depthWrite: false });
+         const plane = new THREE.Mesh(new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT), mat);
+         plane.rotation.x = -Math.PI / 2;
+         plane.position.y = 0.01;
+         plane.renderOrder = 5;
+         this.scene.add(plane);
+       }
+     } catch (e) {
+       console.warn('NavMask load failed, using fallback (all walkable)', e);
+       fallbackAll();
+     }
+   }
+   
+   isWalkableCell(ix, iy) {
+     if (!this.walkableReady || !this.walkable) return true;
+     ix = THREE.MathUtils.clamp(ix, 0, GRID_WIDTH - 1);
+     iy = THREE.MathUtils.clamp(iy, 0, GRID_HEIGHT - 1);
+     return this.walkable[iy * GRID_WIDTH + ix] === 1;
+   }
+   
+   _boostGoblinMaterials(root) {
+     root.traverse((o) => {
+       if (!o.isMesh) return;
+   
+       const mats = Array.isArray(o.material) ? o.material : [o.material];
+       for (const m of mats) {
+         if (!m) continue;
+   
+         // 1) assicura SRGB per texture di colore (albedo/baseColor)
+         if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
+         if (m.emissiveMap) m.emissiveMap.colorSpace = THREE.SRGBColorSpace;
+   
+         // 2) evita look “metallico scuro”
+         if ('metalness' in m) m.metalness = 0.0;
+         if ('roughness' in m) m.roughness = Math.min(m.roughness ?? 1.0, 0.95);
+   
+         // 3) boost colore leggero
+         if (m.color) m.color.multiplyScalar(1.35);
+   
+         // 4) “fill” sulle ombre: emissive leggero (fa emergere i dettagli)
+         if ('emissive' in m) {
+           m.emissive = m.emissive || new THREE.Color(0x000000);
+           m.emissive.setRGB(0.14, 0.14, 0.14);
+           m.emissiveIntensity = 0.85;
+         }
+   
+         m.needsUpdate = true;
+       }
+     });
+   }
 
   async _loadGoblinAssets() {
     const base = await this.loader.loadAsync('/madverse/assets/goblin_run.glb');
     this.template = base.scene;
+      // ✅ rende i materiali del goblin più leggibili e vivi
+      this._boostGoblinMaterials(this.template);
 
     this.clips = [
       { name: 'RUNNING', clip: base.animations[0] },

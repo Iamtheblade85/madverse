@@ -62,6 +62,16 @@ const LOADING_FX_MIN_SCALE = 0.7;
 const LOADING_FX_MAX_SCALE = 1.8;
 const LOADING_FX_BASE_Y = 0.10;       // altezza sopra il plot
 const LOADING_FX_Y_WAVE = 0.28;       // ampiezza oscillazione
+const LOADING_BG_DIM = 0.22;          // quanto scurisce lo sfondo
+const LOADING_FOG_DENSITY = 0.055;    // atmosfera
+const LOADING_PARTICLES = 900;        // più = più ricco (900 ok)
+const LOADING_PARTICLE_AREA_PAD = 0.6;
+const LOADING_PARTICLE_Y_MIN = 0.08;
+const LOADING_PARTICLE_Y_MAX = 1.9;
+const LOADING_PARTICLE_SPEED = 0.22;
+const LOADING_PARTICLE_SWIRL = 0.45;
+const LOADING_RING_COUNT = 6;         // cerchi concentrici
+
 /* =========================
    PARTNER HOLOGRAM SPRITES
 ========================= */
@@ -77,6 +87,7 @@ const PARTNER_SCALE_MAX = 4;
 
 const PARTNER_RENDER_ORDER = 120;        // sopra plot e sopra la maggior parte (chest=10, labels=50)
 const PARTNER_BLACK_CELL_TRIES = 3000;   // tentativi per trovare celle nere
+const PARTNER_EDGE_PAD = 0.2; // celle extra di sicurezza dal bordo
 
 /* =========================
    ACCESSO STATO GIOCO
@@ -611,115 +622,208 @@ this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       this.partnerGroup = null;
       this.partnerItems = [];     // { sprite, baseY, amp, speed, phase }
       this.partnerTextures = [];  // 7 textures     
+      this.loadingBgPlane = null;
+      this.loadingParticles = null;      // THREE.Points
+      this.loadingParticleMeta = null;   // Float32Array speeds
+      this.loadingRings = [];            // mesh rings
+      this.loadingTextSprite = null;     // sprite testo
+      this.loadingProgress = 0;          // 0..1 (fake, ma bello)
+     
   }
-  _startLoadingFx() {
-    // evita doppio init
-    if (this.loadingGroup) return;
+_startLoadingFx() {
+  if (this.loadingGroup) return;
 
-    const g = new THREE.Group();
-    g.renderOrder = 999; // sempre sopra
-    this.loadingGroup = g;
-    this.loadingItems = [];
-    this.loadingTime = 0;
+  // atmosfera: fog leggero
+  this.scene.fog = new THREE.FogExp2(0x00060a, LOADING_FOG_DENSITY);
 
-    // materiale "olografico" semplice (additive)
-    const makeMat = (opacity = 0.55) =>
-      new THREE.MeshBasicMaterial({
-        color: 0x55ddff,
-        transparent: true,
-        opacity,
-        depthTest: false,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending
-      });
+  const g = new THREE.Group();
+  g.renderOrder = 999;
+  this.loadingGroup = g;
+  this.loadingItems = [];
+  this.loadingTime = 0;
+  this.loadingProgress = 0;
 
-    // geometrie leggere
-    const ringGeo = new THREE.RingGeometry(0.25, 0.42, 28);
-    const planeGeo = new THREE.PlaneGeometry(0.6, 0.22);
-    const barGeo = new THREE.PlaneGeometry(0.9, 0.06);
+  // 1) DIM layer (piano scuro sopra al plot)
+  const dimMat = new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    transparent: true,
+    opacity: LOADING_BG_DIM,
+    depthTest: false,
+    depthWrite: false
+  });
+  const dimPlane = new THREE.Mesh(new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT), dimMat);
+  dimPlane.rotation.x = -Math.PI / 2;
+  dimPlane.position.y = 0.012;
+  dimPlane.renderOrder = 998;
+  this.loadingBgPlane = dimPlane;
+  this.scene.add(dimPlane);
 
-    // helper: posizione random nel “campo”
-    const randPos = () => {
-      const x = (Math.random() * (GRID_WIDTH - LOADING_FX_AREA_PAD * 2) - (GRID_WIDTH / 2) + LOADING_FX_AREA_PAD);
-      const z = (Math.random() * (GRID_HEIGHT - LOADING_FX_AREA_PAD * 2) - (GRID_HEIGHT / 2) + LOADING_FX_AREA_PAD);
-      return { x, z };
-    };
-
-    for (let i = 0; i < LOADING_FX_COUNT; i++) {
-      const { x, z } = randPos();
-
-      // scegli “tipo” casuale (ring / plane / bar)
-      const r = Math.random();
-      const geo = r < 0.34 ? ringGeo : (r < 0.67 ? planeGeo : barGeo);
-
-      // varia un filo il colore per dare “many holograms”
-      const mat = makeMat(0.35 + Math.random() * 0.35);
-      mat.color.setHSL(0.52 + (Math.random() * 0.12 - 0.06), 0.85, 0.55);
-
-      const m = new THREE.Mesh(geo, mat);
-      m.rotation.x = -Math.PI / 2; // appoggiato sul plot (top-down)
-      m.position.set(x, LOADING_FX_BASE_Y, z);
-
-      const s = LOADING_FX_MIN_SCALE + Math.random() * (LOADING_FX_MAX_SCALE - LOADING_FX_MIN_SCALE);
-      m.scale.setScalar(s);
-
-      // piccoli tilt random per non essere tutti uguali
-      m.rotation.z = (Math.random() * 2 - 1) * 0.9;
-
-      // metadata per animazione indipendente
-      this.loadingItems.push({
-        mesh: m,
-        speed: LOADING_FX_MIN_SPEED + Math.random() * (LOADING_FX_MAX_SPEED - LOADING_FX_MIN_SPEED),
-        phase: Math.random() * Math.PI * 2,
-        spin: (Math.random() * 2 - 1) * 1.2,
-        drift: (Math.random() * 2 - 1) * 0.25,
-        pulse: 0.6 + Math.random() * 1.2
-      });
-
-      g.add(m);
-    }
-
-    // “scanner line” grande che passa (effetto data-stream)
-    const scanMat = new THREE.MeshBasicMaterial({
-      color: 0x88ffff,
+  // helper materiali “holo”
+  const holoMat = (opacity = 0.5) =>
+    new THREE.MeshBasicMaterial({
+      color: 0x44ddff,
       transparent: true,
-      opacity: 0.18,
+      opacity,
       depthTest: false,
       depthWrite: false,
       blending: THREE.AdditiveBlending
     });
 
-    const scan = new THREE.Mesh(new THREE.PlaneGeometry(GRID_WIDTH * 0.95, 0.35), scanMat);
-    scan.rotation.x = -Math.PI / 2;
-    scan.position.set(0, LOADING_FX_BASE_Y + 0.02, -GRID_HEIGHT / 2 + 1);
-    scan.renderOrder = 1000;
-
-    this.loadingItems.push({
-      mesh: scan,
-      isScan: true,
-      speed: 2.2,
-      phase: 0
-    });
-    g.add(scan);
-
-    this.scene.add(g);
+  // 2) Rings concentrici (impatto!)
+  const ringGeo = new THREE.RingGeometry(0.55, 0.70, 64);
+  for (let i = 0; i < LOADING_RING_COUNT; i++) {
+    const m = holoMat(0.18 + i * 0.03);
+    m.color.setHSL(0.52 + i * 0.02, 0.9, 0.55);
+    const ring = new THREE.Mesh(ringGeo, m);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(0, LOADING_FX_BASE_Y + 0.02 + i * 0.02, 0);
+    ring.scale.setScalar(2.5 + i * 1.65); // cresce
+    ring.renderOrder = 1000 + i;
+    this.loadingRings.push(ring);
+    g.add(ring);
   }
 
-  _stopLoadingFx() {
-    if (!this.loadingGroup) return;
+  // 3) Particelle (Points) = densità + “realismo”
+  const pCount = LOADING_PARTICLES;
+  const pos = new Float32Array(pCount * 3);
+  const spd = new Float32Array(pCount);
 
-    // dispose materiali (geometrie le riusa, ma ok così)
-    this.loadingGroup.traverse((o) => {
-      if (o.isMesh) {
-        if (o.material) o.material.dispose?.();
-        // geometrie condivise: se vuoi essere super safe, NON dispose qui.
-      }
-    });
+  for (let i = 0; i < pCount; i++) {
+    const x = (Math.random() * (GRID_WIDTH - LOADING_PARTICLE_AREA_PAD * 2) - GRID_WIDTH / 2 + LOADING_PARTICLE_AREA_PAD);
+    const z = (Math.random() * (GRID_HEIGHT - LOADING_PARTICLE_AREA_PAD * 2) - GRID_HEIGHT / 2 + LOADING_PARTICLE_AREA_PAD);
+    const y = LOADING_PARTICLE_Y_MIN + Math.random() * (LOADING_PARTICLE_Y_MAX - LOADING_PARTICLE_Y_MIN);
 
-    this.scene.remove(this.loadingGroup);
-    this.loadingGroup = null;
-    this.loadingItems = [];
+    pos[i * 3 + 0] = x;
+    pos[i * 3 + 1] = y;
+    pos[i * 3 + 2] = z;
+
+    spd[i] = (0.35 + Math.random() * 0.9);
   }
+
+  const pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  this.loadingParticleMeta = spd;
+
+  const pMat = new THREE.PointsMaterial({
+    size: 0.07,
+    transparent: true,
+    opacity: 0.55,
+    depthTest: false,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    color: 0x66f2ff
+  });
+
+  const points = new THREE.Points(pGeo, pMat);
+  points.renderOrder = 1100;
+  this.loadingParticles = points;
+  g.add(points);
+
+  // 4) Scan beam (più credibile di un rettangolo piatto)
+  const scanMat = new THREE.MeshBasicMaterial({
+    color: 0x88ffff,
+    transparent: true,
+    opacity: 0.22,
+    depthTest: false,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  const scan = new THREE.Mesh(new THREE.PlaneGeometry(GRID_WIDTH * 0.95, 0.55), scanMat);
+  scan.rotation.x = -Math.PI / 2;
+  scan.position.set(0, LOADING_FX_BASE_Y + 0.03, -GRID_HEIGHT / 2 + 1);
+  scan.renderOrder = 1200;
+  this.loadingItems.push({ mesh: scan, isScan: true, speed: 2.2, phase: 0 });
+  g.add(scan);
+
+  // 5) Testo “Loading…” (sprite canvas)
+  const makeTextSprite = (text) => {
+    const c = document.createElement('canvas');
+    c.width = 1024; c.height = 256;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, c.width, c.height);
+    ctx.fillStyle = 'rgba(0,0,0,0.0)';
+    ctx.fillRect(0, 0, c.width, c.height);
+
+    ctx.font = 'bold 72px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // glow
+    ctx.shadowColor = 'rgba(80,240,255,0.85)';
+    ctx.shadowBlur = 28;
+
+    ctx.fillStyle = 'rgba(220,255,255,0.95)';
+    ctx.fillText(text, c.width / 2, c.height / 2);
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const mat = new THREE.SpriteMaterial({
+      map: tex,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false
+    });
+    const spr = new THREE.Sprite(mat);
+    spr.scale.set(10.5, 2.6, 1);
+    spr.position.set(0, 1.6, 0);
+    spr.renderOrder = 1300;
+    return spr;
+  };
+
+  this.loadingTextSprite = makeTextSprite('Loading assets…');
+  g.add(this.loadingTextSprite);
+
+  this.scene.add(g);
+}
+
+
+_stopLoadingFx() {
+  if (!this.loadingGroup) return;
+
+  // rimuovi fog
+  this.scene.fog = null;
+
+  // dim plane
+  if (this.loadingBgPlane) {
+    this.scene.remove(this.loadingBgPlane);
+    this.loadingBgPlane.material?.dispose?.();
+    this.loadingBgPlane.geometry?.dispose?.();
+    this.loadingBgPlane = null;
+  }
+
+  // particles
+  if (this.loadingParticles) {
+    this.loadingParticles.geometry?.dispose?.();
+    this.loadingParticles.material?.dispose?.();
+    this.loadingParticles = null;
+    this.loadingParticleMeta = null;
+  }
+
+  // rings
+  for (const r of this.loadingRings) {
+    r.geometry?.dispose?.();
+    r.material?.dispose?.();
+  }
+  this.loadingRings = [];
+
+  // text
+  if (this.loadingTextSprite) {
+    this.loadingTextSprite.material?.map?.dispose?.();
+    this.loadingTextSprite.material?.dispose?.();
+    this.loadingTextSprite = null;
+  }
+
+  // il resto come avevi
+  this.loadingGroup.traverse((o) => {
+    if (o.isMesh) {
+      if (o.material) o.material.dispose?.();
+    }
+  });
+
+  this.scene.remove(this.loadingGroup);
+  this.loadingGroup = null;
+  this.loadingItems = [];
+}
 
   _updateLoadingFx(dt) {
     if (!this.loadingGroup) return;
@@ -771,6 +875,55 @@ this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         GRID_HEIGHT / 2 - LOADING_FX_AREA_PAD
       );
     }
+// ---- extra update: rings + particles + fake progress ----
+this.loadingProgress = Math.min(1, this.loadingProgress + dt * 0.12);
+
+const t2 = this.loadingTime;
+
+// rings: pulsano e ruotano
+for (let i = 0; i < this.loadingRings.length; i++) {
+  const r = this.loadingRings[i];
+  const pulse = 0.92 + 0.12 * Math.sin(t2 * (0.9 + i * 0.12));
+  r.scale.setScalar((2.5 + i * 1.65) * pulse);
+  r.rotation.z += dt * (0.15 + i * 0.05);
+  r.material.opacity = 0.10 + 0.18 * (0.5 + 0.5 * Math.sin(t2 * 1.4 + i));
+}
+
+// particles: drift + swirl
+if (this.loadingParticles && this.loadingParticles.geometry) {
+  const pos = this.loadingParticles.geometry.attributes.position.array;
+  const spd = this.loadingParticleMeta;
+  for (let i = 0; i < spd.length; i++) {
+    const ix = i * 3;
+    let x = pos[ix + 0];
+    let y = pos[ix + 1];
+    let z = pos[ix + 2];
+
+    // drift verso +Z con swirl
+    const s = spd[i] * LOADING_PARTICLE_SPEED;
+    z += s * dt;
+    x += Math.sin(t2 * 0.9 + i) * LOADING_PARTICLE_SWIRL * dt * 0.18;
+
+    // wrap
+    if (z > GRID_HEIGHT / 2 - 0.5) z = -GRID_HEIGHT / 2 + 0.5;
+    pos[ix + 0] = x;
+    pos[ix + 1] = y + Math.sin(t2 * 0.6 + i) * dt * 0.02; // micro bob
+    pos[ix + 2] = z;
+  }
+  this.loadingParticles.geometry.attributes.position.needsUpdate = true;
+
+  // shimmer
+  this.loadingParticles.material.opacity = 0.35 + 0.25 * (0.5 + 0.5 * Math.sin(t2 * 1.8));
+}
+
+// scan beam: pulsazione più “energetica”
+for (let i = 0; i < this.loadingItems.length; i++) {
+  const it = this.loadingItems[i];
+  if (it.isScan && it.mesh && it.mesh.material) {
+    it.mesh.material.opacity = 0.12 + 0.18 * (0.5 + 0.5 * Math.sin(t2 * 3.5));
+  }
+}
+     
   }
 
   async _loadPartnerTextures() {
@@ -794,77 +947,107 @@ this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.partnerTextures = textures;
   }
 
-  _spawnPartnersOnBlackCells() {
-    if (!this.walkableReady || !this.walkable) return;
-    if (!this.partnerTextures || !this.partnerTextures.length) return;
-
-    if (this.partnerGroup) {
-      // già spawnati
-      return;
-    }
-
-    const g = new THREE.Group();
-    g.renderOrder = PARTNER_RENDER_ORDER;
-    this.partnerGroup = g;
-    this.partnerItems = [];
-
-    // raccogli celle nere (walkable=0)
-    const blackCells = [];
-    for (let tries = 0; tries < PARTNER_BLACK_CELL_TRIES; tries++) {
-      const ix = Math.floor(Math.random() * GRID_WIDTH);
-      const iy = Math.floor(Math.random() * GRID_HEIGHT);
-      const idx = iy * GRID_WIDTH + ix;
-
-      if (this.walkable[idx] === 0) {
-        blackCells.push({ ix, iy });
-        if (blackCells.length >= PARTNER_COUNT * PARTNER_SPRITES_PER_TYPE) break;
-      }
-    }
-
-    // se non trova abbastanza nere, non crashare
-    if (!blackCells.length) return;
-
-    for (let t = 0; t < PARTNER_COUNT; t++) {
-      for (let r = 0; r < PARTNER_SPRITES_PER_TYPE; r++) {
-        const cell = blackCells[(t * PARTNER_SPRITES_PER_TYPE + r) % blackCells.length];
-
-        const tex = this.partnerTextures[t];
-        const mat = new THREE.SpriteMaterial({
-          map: tex,
-          transparent: true,
-          depthTest: false,
-          depthWrite: false
-        });
-
-        const spr = new THREE.Sprite(mat);
-        spr.renderOrder = PARTNER_RENDER_ORDER;
-
-        // posizione al centro della cella, con micro random “in-cell”
-        const cx = cell.ix + 0.5 + (Math.random() * 0.30 - 0.15);
-        const cy = cell.iy + 0.5 + (Math.random() * 0.30 - 0.15);
-        const p = cellToWorld(cx, cy);
-
-        const baseY = PARTNER_Y_BASE + Math.random() * 0.06;
-        spr.position.set(p.x, baseY, p.z);
-
-        // scala in “celle”
-        const s = PARTNER_SCALE_MIN + Math.random() * (PARTNER_SCALE_MAX - PARTNER_SCALE_MIN);
-        spr.scale.set(s, s, 1);
-
-        g.add(spr);
-
-        this.partnerItems.push({
-          sprite: spr,
-          baseY,
-          amp: PARTNER_Y_FLOAT * (0.7 + Math.random() * 0.6),
-          speed: PARTNER_FLOAT_SPEED_MIN + Math.random() * (PARTNER_FLOAT_SPEED_MAX - PARTNER_FLOAT_SPEED_MIN),
-          phase: Math.random() * Math.PI * 2
-        });
-      }
-    }
-
-    this.scene.add(g);
-  }
+   _spawnPartnersOnBlackCells() {
+     if (!this.walkableReady || !this.walkable) return;
+     if (!this.partnerTextures || !this.partnerTextures.length) return;
+     if (this.partnerGroup) return;
+   
+     const g = new THREE.Group();
+     g.renderOrder = PARTNER_RENDER_ORDER;
+     this.partnerGroup = g;
+     this.partnerItems = [];
+   
+     // posizioni gia' piazzate (in coordinate cella float) + raggio (in celle)
+     const placed = [];
+   
+     const insideBounds = (cx, cy, half) => {
+       return (
+         cx - half >= 0 &&
+         cy - half >= 0 &&
+         cx + half <= GRID_WIDTH &&
+         cy + half <= GRID_HEIGHT
+       );
+     };
+   
+     const farEnoughFromOthers = (cx, cy, minDist) => {
+       for (let i = 0; i < placed.length; i++) {
+         const p = placed[i];
+         if (Math.hypot(cx - p.x, cy - p.y) < (minDist + p.r)) return false;
+       }
+       return true;
+     };
+   
+     const pickSpot = (half, minDist) => {
+       for (let tries = 0; tries < PARTNER_BLACK_CELL_TRIES; tries++) {
+         // scegli un punto random
+         const ix = Math.floor(Math.random() * GRID_WIDTH);
+         const iy = Math.floor(Math.random() * GRID_HEIGHT);
+         const idx = iy * GRID_WIDTH + ix;
+   
+         // solo celle nere (walkable=0)
+         if (this.walkable[idx] !== 0) continue;
+   
+         // centro della cella + jitter
+         const cx = ix + 0.5 + (Math.random() * 0.30 - 0.15);
+         const cy = iy + 0.5 + (Math.random() * 0.30 - 0.15);
+   
+         // 1) deve stare interamente nel grid
+         if (!insideBounds(cx, cy, half)) continue;
+   
+         // 2) non deve sovrapporsi
+         if (!farEnoughFromOthers(cx, cy, minDist)) continue;
+   
+         placed.push({ x: cx, y: cy, r: minDist });
+         return { cx, cy };
+       }
+       return null;
+     };
+   
+     for (let t = 0; t < PARTNER_COUNT; t++) {
+       for (let r = 0; r < PARTNER_SPRITES_PER_TYPE; r++) {
+         const tex = this.partnerTextures[t % this.partnerTextures.length];
+   
+         const mat = new THREE.SpriteMaterial({
+           map: tex,
+           transparent: true,
+           depthTest: false,
+           depthWrite: false
+         });
+   
+         const spr = new THREE.Sprite(mat);
+         spr.renderOrder = PARTNER_RENDER_ORDER;
+   
+         // scala in celle
+         const s = PARTNER_SCALE_MIN + Math.random() * (PARTNER_SCALE_MAX - PARTNER_SCALE_MIN);
+         spr.scale.set(s, s, 1);
+   
+         // "mezzo diametro" in celle: deve stare dentro ai bordi
+         const half = (s * 0.5) + PARTNER_EDGE_PAD;
+   
+         // distanza minima tra centri (tuning)
+         const minDist = s * 1.05;
+   
+         const spot = pickSpot(half, minDist);
+         if (!spot) continue; // niente spazio valido -> salta
+   
+         const p = cellToWorld(spot.cx, spot.cy);
+         const baseY = PARTNER_Y_BASE + Math.random() * 0.06;
+         spr.position.set(p.x, baseY, p.z);
+   
+         g.add(spr);
+   
+         this.partnerItems.push({
+           sprite: spr,
+           baseY,
+           amp: PARTNER_Y_FLOAT * (0.7 + Math.random() * 0.6),
+           speed: PARTNER_FLOAT_SPEED_MIN + Math.random() * (PARTNER_FLOAT_SPEED_MAX - PARTNER_FLOAT_SPEED_MIN),
+           phase: Math.random() * Math.PI * 2
+         });
+       }
+     }
+   
+     this.scene.add(g);
+   }
 
   _updatePartners(dt) {
     if (!this.partnerItems || !this.partnerItems.length) return;

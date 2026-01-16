@@ -454,6 +454,20 @@ drop: {
         }
       },
     };
+	// ------------------------------------------------------------
+	// AUTH (iframe) — receive from parent
+	// ------------------------------------------------------------
+	window.userData = window.userData || {};
+	window.addEventListener('message', (ev) => {
+	  if (ev.origin !== window.location.origin) return;
+	  const msg = ev.data;
+	  if (!msg || msg.type !== 'CC_AUTH') return;
+	  window.userData.wax_account = msg.wax_account || '';
+	  if (msg.user_id != null)   window.userData.user_id = msg.user_id;
+	  if (msg.usx_token != null) window.userData.usx_token = msg.usx_token;
+	  try { syncUserFromStorage(); } catch {}
+	  console.log('[nuovo] auth received', window.userData);
+	});
 
     // ------------------------------------------------------------
     // UTILS + API + HELPERS (reintrodotti)
@@ -3503,7 +3517,7 @@ function updateTicker(){
         btn.textContent = '⏳ Loading goblins…';
       }
       if (statusEl) {
-        statusEl.textContent = 'Loading goblins from the API…';
+        statusEl.textContent = 'Loading goblins from the atomicassets…';
       }
     
       // Controllo auth lato FE

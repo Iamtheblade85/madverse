@@ -3,7 +3,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 //import * as SkeletonUtils from 'https://unpkg.com/three@0.160.0/examples/jsm/utils/SkeletonUtils.js';
-import { SkeletonUtils } from 'three/addons/utils/SkeletonUtils.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+
 // ✅ Color management ON (evita look "grigio/lavato")
 THREE.ColorManagement.enabled = true;
 
@@ -465,8 +466,9 @@ class Goblin {
          if (!m) continue;
    
          // SRGB maps (albedo/baseColor)
-         if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
-         if (m.emissiveMap) m.emissiveMap.colorSpace = THREE.SRGBColorSpace;
+        if (m.map) setSRGB(m.map);
+        if (m.emissiveMap) setSRGB(m.emissiveMap);
+
    
          // fisica coerente (evita look metallico “scuro”)
          if ('metalness' in m) m.metalness = 0.0;
@@ -544,7 +546,7 @@ class Goblin {
          };
          
          // ✅ evita cache shader “sbagliata” tra istanze/materiali
-         m.customProgramCacheKey = () => 'goblin_palette_bands_v1'; 
+        m.customProgramCacheKey = () => `goblin_palette_bands_v1_${seed}`;
          m.needsUpdate = true;
        }
      });
@@ -968,7 +970,7 @@ export class ThreeRuntime {
 
       if (NAVMASK_DEBUG) {
         const t = new THREE.CanvasTexture(c);
-        t.colorSpace = THREE.SRGBColorSpace;
+        setSRGB(t);
         const mat = new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0.35, depthWrite: false });
         const plane = new THREE.Mesh(new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT), mat);
         plane.rotation.x = -Math.PI / 2;

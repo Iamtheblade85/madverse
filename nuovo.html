@@ -12,8 +12,6 @@
   <link rel="preload" as="style" href="cyberpunktribalV2.css?v=1" onload="this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="cyberpunktribalV2.css?v=1"></noscript>
   <link id="theme-style" rel="stylesheet" href="css013.css"/>
-
-  <!-- ES Modules: allow Three.js example modules (GLTFLoader, SkeletonUtils, ...) to resolve "three" -->
   <script type="importmap">
   {
     "imports": {
@@ -23,13 +21,11 @@
   }
   </script>
 </head>
-
 <body>
   <div id="app-root">
     <header id="app-header" aria-label="Application header">
       <h1>Goblin DEX</h1>
-      <p id="subtitle">Build goblin expeditions, watch the world map update via polling (no SSE).</p>
-
+      <p id="subtitle">Build goblin expeditions, watch the world map update exploring worldwide.</p>
       <nav id="action-bar" aria-label="Actions">
         <div id="duration-switch" aria-label="Expedition Duration">
           <label for="sel-duration" style="margin-right:8px;font-weight:900;">Duration</label>
@@ -43,22 +39,18 @@
           </select>
           <small id="duration-hint" style="margin-left:10px;opacity:.85;"></small>
         </div>
-
         <div id="cap-line" aria-live="polite">
           <span id="cap-label" title="Maximum goblins you can send in the current run">Max goblins this run: 50</span> ·
           <span id="reinf-label" title="Reinforcement adds +5 goblins each, up to +200">Base 50 + 0× Reinforcement (= 0 extra)</span>
         </div>
-
         <div id="action-buttons" role="group" aria-label="Primary actions">
           <button id="btn-start" class="btn-primary" title="Start an expedition with the selected goblins">🚀 Start Expedition</button>
           <button id="btn-copy-overlay" class="btn-primary" title="Copy a link to the overlay-only view">🔗 Copy overlay link</button>
         </div>
       </nav>
-
       <section id="news-banner" aria-label="News & Ads">
         <strong>Live:</strong> World expeditions map updates every few seconds (HTTP polling only, no SSE).
       </section>
-
       <div id="status-row" aria-live="polite">
         <span id="latency-label" title="Time to sync the latest snapshot">syncing…</span>
       </div>

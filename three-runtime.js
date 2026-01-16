@@ -19,7 +19,8 @@ const WANDER_REACH_EPS = 0.35;     // quanto vicino deve arrivare al target (cel
 const WANDER_MIN_MS = 700;         // minimo tempo prima di cambiare target
 const WANDER_MAX_MS = 1600;        // massimo tempo prima di cambiare target
 const WANDER_MARGIN = 1.2;         // margine dal bordo (celle)
-const DIG_DURATION_MS = 1200;       // quanto dura il "digging" prima di consumare
+const DIG_DURATION_MS = 4500;       // quanto dura il "digging" prima di consumare
+const CHEST_CLAIM_DELAY_MS = 5000;  // ✅ attesa dopo il primo contatto prima del claim
 const CHEST_Y_OFFSET = 0.15;        // altezza sopra il plot
 const LABEL_Y_OFFSET = -0.85;
 const FIX_GOBLIN_FLIP_X = Math.PI;  // ✅ 180°: testa su, piedi giù
@@ -284,23 +285,24 @@ update(dt, chest, neighbors) {
     this.target = chest.world;
     const dist = chebyshev(this.cell, this.target);
 
-    if (dist <= CHEST_TRIGGER_RANGE) {
-      if (this.state !== 'DIGGING') {
-        this.state = 'DIGGING';
-        this._play('DIGGING');
-
-        this.digChestKey = chestKey;
-        this.digUntil = now + DIG_DURATION_MS;
-        this.digFired = false;
-      }
-
-      if (!this.digFired && this.digChestKey === chestKey && now >= this.digUntil) {
-        this.digFired = true;
-        if (typeof this.onDigComplete === 'function') {
-          this.onDigComplete(this, chest);
+      if (dist <= CHEST_TRIGGER_RANGE) {
+        if (this.state !== 'DIGGING') {
+          this.state = 'DIGGING';
+          this._play('DIGGING');
+      
+          // timer interno solo per “tenere” l’animazione digging un minimo
+          this.digChestKey = chestKey;
+          this.digUntil = now + DIG_DURATION_MS;
+          this.digFired = false;
         }
-      }
-    } else {
+      
+        // ✅ segnala solo che "ho toccato" (una volta per chestKey)
+        if (!this.digFired && this.digChestKey === chestKey && now >= this.digUntil) {
+          this.digFired = true; // “ho completato la fase digging”
+          // NIENTE claim qui: sarà il runtime a decidere winner + delay
+        }
+      } else {
+
       this.state = 'MOVING_TO_CHEST';
       this._play('RUNNING');
     }
@@ -497,16 +499,21 @@ this.scene.add(dir);
     this.loader = new GLTFLoader();
 
     this.goblins = new Map();
-this.missingTicks = new Map();   // id -> contatore assenze
-this.MISSING_TICKS_BEFORE_REMOVE = 6; // es: 6 sync consecutivi
-
-    this.drop = null;
-    this.chestSprite = null;
-    this.claimChestKey = null;    
-// navmask
-this.walkable = null;        // Uint8Array GRID_WIDTH*GRID_HEIGHT (1=ok,0=block)
-this.walkableReady = false;
-
+      this.missingTicks = new Map();   // id -> contatore assenze
+      this.MISSING_TICKS_BEFORE_REMOVE = 6; // es: 6 sync consecutivi
+      
+      this.drop = null;
+      this.chestSprite = null;
+      
+      // claim state
+      this.claimChestKey = null;         // chestKey per cui abbiamo già claimato (anti-doppio)
+      this.pendingClaimKey = null;       // chestKey attualmente in attesa dei 5s
+      this.pendingClaimAt = 0;           // timestamp (ms) quando fare claim
+      this.pendingWinnerId = null;       // expedition id del primo goblin che l’ha toccata
+      
+      // navmask
+      this.walkable = null;        // Uint8Array GRID_WIDTH*GRID_HEIGHT (1=ok,0=block)
+      this.walkableReady = false;
   }
 
   async init() {
@@ -694,84 +701,126 @@ this.missingTicks.set(id, 0);
 
       }
     });
-this.goblins.forEach((g, id) => {
-  if (active.has(id)) {
-    this.missingTicks.set(id, 0);
-    return;
-  }
-
-  const n = (this.missingTicks.get(id) || 0) + 1;
-  this.missingTicks.set(id, n);
-
-  // ✅ rimuovi solo se manca per N sync consecutivi
-  if (n >= this.MISSING_TICKS_BEFORE_REMOVE) {
-    g.finish();
-    this.goblins.delete(id);
-    this.missingTicks.delete(id);
-  }
-});
-
-  }
-
-  _onGoblinDigComplete(goblin, chest) {
-    if (!chest) return;
-
-    const chestKey = `${chest.world.x}:${chest.world.y}`;
-    if (this.claimChestKey === chestKey) return; // già tentato
-    this.claimChestKey = chestKey;
-
-    // ✅ modalità reale: chiama la funzione esistente del tuo HTML
-    if (typeof window.claimActiveDrop === 'function') {
-      window.claimActiveDrop();
-    } else {
-      // fallback: se non esiste, almeno nascondiamo la chest visivamente
-      if (window.__GOBLIN_DEX_STATE__?.drop?.fx) {
-        window.__GOBLIN_DEX_STATE__.drop.fx.phase = 'idle';
+      this.goblins.forEach((g, id) => {
+        if (active.has(id)) {
+          this.missingTicks.set(id, 0);
+          return;
+        }
+      
+        const n = (this.missingTicks.get(id) || 0) + 1;
+        this.missingTicks.set(id, n);
+      
+        // ✅ rimuovi solo se manca per N sync consecutivi
+        if (n >= this.MISSING_TICKS_BEFORE_REMOVE) {
+          g.finish();
+          this.goblins.delete(id);
+          this.missingTicks.delete(id);
+        }
+      });
+      
+        }
+      
+        _onGoblinDigComplete(goblin, chest) {
+         // Il claim lo farà _loop() dopo CHEST_CLAIM_DELAY_MS.
+        }
+      
+      _tryStartDelayedClaim(goblinId, chest) {
+        if (!chest) return;
+      
+        const chestKey = `${chest.world.x}:${chest.world.y}`;
+      
+        // se abbiamo già claimato questa chest, stop
+        if (this.claimChestKey === chestKey) return;
+      
+        // se è già in pending per questa chest, non cambiare winner
+        if (this.pendingClaimKey === chestKey) return;
+      
+        // ✅ primo contatto: fissiamo winner e countdown
+        this.pendingClaimKey = chestKey;
+        this.pendingWinnerId = goblinId;
+        this.pendingClaimAt = performance.now() + CHEST_CLAIM_DELAY_MS;
       }
-    }
-  }
-
-  _loop() {
-    requestAnimationFrame(() => this._loop());
-
-   let dt = this.clock.getDelta();
-   
-   // ✅ se il tab è stato in background o c'è un hitch, evita il "teletrasporto"
-   if (dt > 0.12) dt = 0;
-   
-   // ✅ clamp ulteriore (max ~30 FPS step)
-   dt = Math.min(dt, 1 / 30);
-
-    const liveDrop = this.drop || GameState.drop?.current || null;
-    const chest =
-      liveDrop && GameState.drop.fx?.phase === 'visible'
-        ? liveDrop
-        : null;
-
-    // ✅ chest render
-    if (this.chestSprite) {
-      if (chest) {
-        const p = cellToWorld(chest.world.x, chest.world.y);
-        this.chestSprite.position.set(p.x, CHEST_Y_OFFSET, p.z);
-        this.chestSprite.visible = true;
-      } else {
-        this.chestSprite.visible = false;
+      
+      _loop() {
+        requestAnimationFrame(() => this._loop());
+      
+        let dt = this.clock.getDelta();
+      
+        // ✅ se il tab è stato in background o c'è un hitch, evita il "teletrasporto"
+        if (dt > 0.12) dt = 0;
+      
+        // ✅ clamp ulteriore (max ~30 FPS step)
+        dt = Math.min(dt, 1 / 30);
+      
+        const now = performance.now();
+      
+        const liveDrop = this.drop || GameState.drop?.current || null;
+      
+        // ✅ la chest deve restare visibile anche se lo state passa a non-visible,
+        // finché abbiamo una pendingClaim attiva (i 5 secondi)
+        const chestVisibleFromState = liveDrop && GameState.drop?.fx?.phase === 'visible';
+        const chestVisibleFromPending = !!this.pendingClaimKey;
+      
+        const chest = (chestVisibleFromState || chestVisibleFromPending) ? liveDrop : null;
+      
+        // ✅ chest render
+        if (this.chestSprite) {
+          if (chest) {
+            const p = cellToWorld(chest.world.x, chest.world.y);
+            this.chestSprite.position.set(p.x, CHEST_Y_OFFSET, p.z);
+            this.chestSprite.visible = true;
+          } else {
+            this.chestSprite.visible = false;
+          }
+        }
+      
+        // ---- UPDATE GOBLINS + DETECT FIRST CONTACT (WINNER) ----
+        const pairs = Array.from(this.goblins.entries()); // [id, goblin]
+        const neighbors = pairs.map(p => p[1]);          // per avoidance
+      
+        for (let i = 0; i < pairs.length; i++) {
+          const [id, g] = pairs[i];
+      
+          // update goblin
+          g.update(dt, chest, neighbors);
+      
+          // posizionamento
+          const p = g.worldPosition();
+          g.root.position.set(p.x, GOBLIN_Y_OFFSET, p.z);
+      
+          // ✅ primo goblin che entra nel range -> avvia countdown (5s)
+          // IMPORTANT: solo se non c'è già pendingClaim
+          if (chest && !this.pendingClaimKey) {
+            const dist = chebyshev(g.cell, chest.world);
+            if (dist <= CHEST_TRIGGER_RANGE) {
+              this._tryStartDelayedClaim(id, chest);
+            }
+          }
+        }
+      
+        // ---- DOPO 5s: CLAIM UNA SOLA VOLTA ----
+        if (this.pendingClaimKey && now >= this.pendingClaimAt) {
+          // blocca doppi claim
+          this.claimChestKey = this.pendingClaimKey;
+      
+          // reset pending prima di chiamare (sicurezza)
+          this.pendingClaimKey = null;
+          this.pendingWinnerId = null;
+          this.pendingClaimAt = 0;
+      
+          // ✅ claim reale
+          if (typeof window.claimActiveDrop === 'function') {
+            window.claimActiveDrop();
+          } else {
+            if (window.__GOBLIN_DEX_STATE__?.drop?.fx) {
+              window.__GOBLIN_DEX_STATE__.drop.fx.phase = 'idle';
+            }
+          }
+        }
+      
+        this.renderer.render(this.scene, this.camera);
       }
-    }
-
-const list = Array.from(this.goblins.values());
-
-for (let i = 0; i < list.length; i++) {
-  const g = list[i];
-  g.update(dt, chest, list);
-
-  const p = g.worldPosition();
-  g.root.position.set(p.x, GOBLIN_Y_OFFSET, p.z);
-}
-
-    this.renderer.render(this.scene, this.camera);
-  }
-   
+         
   setDrop(drop) {
     this.drop = drop || null;
     if (!drop) {

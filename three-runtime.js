@@ -498,7 +498,7 @@ export class ThreeRuntime {
 // ✅ colori corretti (sRGB) + resa più “viva”
 this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-this.renderer.toneMappingExposure = 1.35;
+this.renderer.toneMappingExposure = 1.2;
 
 // (opzionale ma consigliato per nitidezza)
 this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -592,6 +592,7 @@ tex.colorSpace = THREE.SRGBColorSpace;
      new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT),
      new THREE.MeshBasicMaterial({
        map: tex,
+       color: 0xffffff,
        depthWrite: false   // ✅ IMPORTANTISSIMO: il piano non deve coprire i goblin
      })
    );
@@ -671,72 +672,35 @@ tex.colorSpace = THREE.SRGBColorSpace;
      return this.walkable[iy * GRID_WIDTH + ix] === 1;
    }
    
-_fixGoblinMaterials(root) {
-  root.traverse((o) => {
-    if (!o.isMesh) return;
-
-    const mats = Array.isArray(o.material) ? o.material : [o.material];
-    for (const m of mats) {
-      if (!m) continue;
-
-      // SRGB per le texture colore (fondamentale)
-      if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
-
-      // Evita look metallico/spento
-      if ('metalness' in m) m.metalness = 0.0;
-      if ('roughness' in m) m.roughness = Math.min(m.roughness ?? 1.0, 0.95);
-
-      // IMPORTANTISSIMO: niente emissive fisso che “sbianca/grigia”
-      if ('emissiveIntensity' in m) m.emissiveIntensity = 0.0;
-
-      m.needsUpdate = true;
-    }
-  });
-}
-
-// Tint per-parti (ogni mesh prende una tinta diversa, ma resta leggibile)
-_tintGoblinParts(root, seed = 1) {
-  const hashStr = (s) => {
-    let h = 2166136261 ^ seed;
-    for (let i = 0; i < s.length; i++) {
-      h ^= s.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return (h >>> 0);
-  };
-
-  root.traverse((o) => {
-    if (!o.isMesh) return;
-
-    const mats = Array.isArray(o.material) ? o.material : [o.material];
-    const key = (o.name || o.uuid);
-    const h = hashStr(key);
-    const hue = (h % 360) / 360;
-
-    // Tinta “forte ma non distruttiva”: saturazione alta, ma luminosità alta
-    const tint = new THREE.Color().setHSL(hue, 0.75, 0.75);
-
-    for (const m of mats) {
-      if (!m) continue;
-
-      // Se c’è una texture, il colore moltiplica la texture: quindi usiamo tinta luminosa
-      if (m.color) {
-        // blend controllato: avvicina il materiale alla tinta senza annullare i dettagli
-        const base = m.color.clone();
-        m.color.copy(base).lerp(tint, 0.65);
-      }
-
-      m.needsUpdate = true;
-    }
-  });
-}
+   _fixGoblinMaterials(root) {
+     root.traverse((o) => {
+       if (!o.isMesh) return;
+   
+       const mats = Array.isArray(o.material) ? o.material : [o.material];
+       for (const m of mats) {
+         if (!m) continue;
+   
+         // SRGB per le texture colore (fondamentale)
+         if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
+   
+         // Evita look metallico/spento
+         if ('metalness' in m) m.metalness = 0.0;
+         if ('roughness' in m) m.roughness = Math.min(m.roughness ?? 1.0, 0.95);
+   
+         // IMPORTANTISSIMO: niente emissive fisso che “sbianca/grigia”
+         if ('emissiveIntensity' in m) m.emissiveIntensity = 0.0;
+   
+         m.needsUpdate = true;
+       }
+     });
+   }
 
   async _loadGoblinAssets() {
     const base = await this.loader.loadAsync('/madverse/assets/goblin_run.glb');
     this.template = base.scene;
       // ✅ rende i materiali del goblin più leggibili e vivi
       this._fixGoblinMaterials(this.template);
-      this._tintGoblinParts(this.template, 1337); // seed fisso: colori stabili
+      //this._tintGoblinParts(this.template, 1337); // seed fisso: colori stabili
 
 
     this.clips = [

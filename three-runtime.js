@@ -3,7 +3,6 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'https://unpkg.com/three@0.160.0/examples/jsm/utils/SkeletonUtils.js';
 
-
 /* =========================
    CONFIGURAZIONE FINALE
 ========================= */
@@ -11,90 +10,84 @@ const GRID_WIDTH = 48;
 const GRID_HEIGHT = 24;
 const CELL_SIZE = 1;
 
-const GOBLIN_SPEED = 3.5;          // celle / secondo
-const CHEST_TRIGGER_RANGE = 3;     // 3x3
+const GOBLIN_SPEED = 3.5; // celle / secondo
+const CHEST_TRIGGER_RANGE = 3; // 3x3
 const SURPRISE_DURATION_MS = 1700;
 const VICTORY_VISIBLE_MS = 5000;
+
 // più “esplorazione”: cambia target molto meno spesso
-const WANDER_REACH_EPS = 0.22;   // deve arrivare più vicino prima di cambiare
-const WANDER_MIN_MS = 2000;      // 2.0s
-const WANDER_MAX_MS = 3500;      // 3.5s
-const WANDER_MARGIN = 1.2;         // margine dal bordo (celle)
-const DIG_DURATION_MS = 4500;       // quanto dura il "digging" prima di consumare
-const CHEST_CLAIM_DELAY_MS = 5000;  // ✅ attesa dopo il primo contatto prima del claim
-const CHEST_Y_OFFSET = 0.15;        // altezza sopra il plot
+const WANDER_REACH_EPS = 0.22; // deve arrivare più vicino prima di cambiare
+const WANDER_MIN_MS = 2000; // 2.0s
+const WANDER_MAX_MS = 3500; // 3.5s
+const WANDER_MARGIN = 1.2; // margine dal bordo (celle)
+
+const DIG_DURATION_MS = 4500; // quanto dura il "digging" prima di consumare
+const CHEST_CLAIM_DELAY_MS = 5000; // ✅ attesa dopo il primo contatto prima del claim
+const CHEST_Y_OFFSET = 0.15; // altezza sopra il plot
+
 // Badge “baseline” a terra (asse Y del mondo/plot)
 const LABEL_Y_OFFSET = 0.95;
-const FIX_GOBLIN_FLIP_X = Math.PI;  // ✅ 180°: testa su, piedi giù
 
-const GOBLIN_Y_OFFSET = 0.05;       // piccolo offset sopra il plot
+const FIX_GOBLIN_FLIP_X = Math.PI; // ✅ 180°: testa su, piedi giù
+const GOBLIN_Y_OFFSET = 0.05; // piccolo offset sopra il plot
+
 // === NAVMASK (bianco = walkable, nero = block) ===
 const NAVMASK_URL = '/madverse/navmask.png'; // <-- metti qui il path
 const NAVMASK_THRESHOLD = 127; // 0..255 (>= soglia => bianco => walkable)
-const NAVMASK_DEBUG = false;   // true se vuoi vedere overlay (facoltativo)
+const NAVMASK_DEBUG = false; // true se vuoi vedere overlay (facoltativo)
+
 // orientamento modello: 0 se già “guarda avanti”, prova 0 / Math.PI/2 / -Math.PI/2 / Math.PI
 const GOBLIN_FACING_OFFSET_Y = 0;
+
 // === AVOIDANCE (goblin vs goblin) ===
-const GOBLIN_RADIUS = 0.55;          // raggio “personaggio” in celle (tuning)
-const AVOID_RANGE = 1.4;             // distanza entro cui iniziano ad evitarsi (celle)
-const AVOID_PUSH = 2.2;              // forza repulsione (celle/sec)
-const AVOID_MAX_NEIGHBORS = 8;       // cap per performance
+const GOBLIN_RADIUS = 0.55; // raggio “personaggio” in celle (tuning)
+const AVOID_RANGE = 1.4; // distanza entro cui iniziano ad evitarsi (celle)
+const AVOID_PUSH = 2.2; // forza repulsione (celle/sec)
+const AVOID_MAX_NEIGHBORS = 8; // cap per performance
+
 // === SPACING (anti-ammasso) ===
-const SPREAD_RANGE = 4.2;         // raggio "sociale" (celle) entro cui si sente la pressione folla
-const SPREAD_STRENGTH = 0.26;     // quanto pesa lo spread sulla direzione (0.10..0.35)
-const SPREAD_SPEED_DAMP = 0.15;   // rallenta leggermente se in zona affollata (0..0.30)
+const SPREAD_RANGE = 4.2; // raggio "sociale" (celle) entro cui si sente la pressione folla
+const SPREAD_STRENGTH = 0.26; // quanto pesa lo spread sulla direzione (0.10..0.35)
+const SPREAD_SPEED_DAMP = 0.15; // rallenta leggermente se in zona affollata (0..0.30)
 
 // === GAIT / VARIAZIONE ANDATURA ===
 const GAIT_CHANGE_MIN_MS = 5000;
 const GAIT_CHANGE_MAX_MS = 10000;
 const SPEED_MIN_MULT = 0.75;
 const SPEED_MAX_MULT = 1.25;
-const ANIM_MIN_MULT  = 0.80;
-const ANIM_MAX_MULT  = 1.35;
+const ANIM_MIN_MULT = 0.8;
+const ANIM_MAX_MULT = 1.35;
+
 /* =========================
    LOADING FX (procedurale)
 ========================= */
-const LOADING_FX_COUNT = 42;          // quanti "ologrammi"
-const LOADING_FX_AREA_PAD = 1.5;      // margine dentro il plot
+const LOADING_FX_COUNT = 42; // quanti "ologrammi"
+const LOADING_FX_AREA_PAD = 1.5; // margine dentro il plot
 const LOADING_FX_MIN_SPEED = 0.25;
 const LOADING_FX_MAX_SPEED = 0.95;
 const LOADING_FX_MIN_SCALE = 0.7;
 const LOADING_FX_MAX_SCALE = 1.8;
-const LOADING_FX_BASE_Y = 0.10;       // altezza sopra il plot
-const LOADING_FX_Y_WAVE = 0.28;       // ampiezza oscillazione
-const LOADING_BG_DIM = 0.22;          // quanto scurisce lo sfondo
-const LOADING_FOG_DENSITY = 0.055;    // atmosfera
-const LOADING_PARTICLES = 900;        // più = più ricco (900 ok)
+const LOADING_FX_BASE_Y = 0.1; // altezza sopra il plot
+const LOADING_FX_Y_WAVE = 0.28; // ampiezza oscillazione
+
+const LOADING_BG_DIM = 0.22; // quanto scurisce lo sfondo
+const LOADING_FOG_DENSITY = 0.055; // atmosfera
+const LOADING_PARTICLES = 900; // più = più ricco (900 ok)
 const LOADING_PARTICLE_AREA_PAD = 0.6;
 const LOADING_PARTICLE_Y_MIN = 0.08;
 const LOADING_PARTICLE_Y_MAX = 1.9;
 const LOADING_PARTICLE_SPEED = 0.22;
 const LOADING_PARTICLE_SWIRL = 0.45;
-const LOADING_RING_COUNT = 6;         // cerchi concentrici
-
-/* =========================
-   PARTNER HOLOGRAM SPRITES
-========================= */
-const PARTNER_COUNT = 8;                 // partner_1..partner__8
-const PARTNER_SPRITES_PER_TYPE = 1;      // 1 ciascuno (puoi alzare se vuoi duplicati)
-const PARTNER_Y_BASE = 0.22;             // altezza base sopra il plot
-const PARTNER_Y_FLOAT = 3.35;            // ampiezza fluttuazione
-const PARTNER_FLOAT_SPEED_MIN = 0.7;
-const PARTNER_FLOAT_SPEED_MAX = 1.4;
-
-const PARTNER_SCALE_MIN = 3;           // in "celle"
-const PARTNER_SCALE_MAX = 4;
-
-const PARTNER_RENDER_ORDER = 120;        // sopra plot e sopra la maggior parte (chest=10, labels=50)
-const PARTNER_BLACK_CELL_TRIES = 3000;   // tentativi per trovare celle nere
-const PARTNER_EDGE_PAD = 0.2; // celle extra di sicurezza dal bordo
+const LOADING_RING_COUNT = 6; // cerchi concentrici
 
 /* =========================
    ACCESSO STATO GIOCO
 ========================= */
 const GameState = window.__GOBLIN_DEX_STATE__;
 if (!GameState) {
-  throw new Error('GameState non trovato: esporre State come window.__GOBLIN_DEX_STATE__');
+  throw new Error(
+    'GameState non trovato: esporre State come window.__GOBLIN_DEX_STATE__'
+  );
 }
 
 /* =========================
@@ -110,10 +103,6 @@ function cellToWorld(x, y) {
 
 function chebyshev(a, b) {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
-}
-
-function cellKey(ix, iy) {
-  return `${ix},${iy}`;
 }
 
 function clampCellToGrid(cell) {
@@ -154,7 +143,11 @@ function makeLabelSprite(text, borderColorCss) {
   ctx.font = 'bold 54px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(String(text || '').slice(0, 20), canvas.width / 2, canvas.height / 2);
+  ctx.fillText(
+    String(text || '').slice(0, 20),
+    canvas.width / 2,
+    canvas.height / 2
+  );
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.needsUpdate = true;
@@ -176,68 +169,43 @@ function makeLabelSprite(text, borderColorCss) {
   return spr;
 }
 
-function makeMaxEllipseTextureFromImage(img, outSize = 512) {
-  const c = document.createElement('canvas');
-  c.width = outSize;
-  c.height = outSize;
-  const ctx = c.getContext('2d');
-
-  // disegna immagine “cover” nel canvas quadrato
-  const iw = img.width, ih = img.height;
-  const scale = Math.max(outSize / iw, outSize / ih);
-  const dw = iw * scale, dh = ih * scale;
-  const dx = (outSize - dw) / 2;
-  const dy = (outSize - dh) / 2;
-
-  ctx.clearRect(0, 0, outSize, outSize);
-  ctx.drawImage(img, dx, dy, dw, dh);
-
-  // maschera ellittica MASSIMA (riempie quasi tutto il canvas)
-  ctx.globalCompositeOperation = 'destination-in';
-  ctx.beginPath();
-  ctx.ellipse(outSize / 2, outSize / 2, outSize * 0.495, outSize * 0.495, 0, 0, Math.PI * 2);
-  ctx.closePath();
-  ctx.fill();
-  ctx.globalCompositeOperation = 'source-over';
-
-  const tex = new THREE.CanvasTexture(c);
-  tex.needsUpdate = true;
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
-
 /* =========================
    GOBLIN CONTROLLER
 ========================= */
 class Goblin {
   constructor(template, clips, startCell, owner, onDigComplete, isWalkable) {
-   // pivot per rotazioni (yaw)
-   this.root = new THREE.Group();
-   // modello vero e proprio
-   this.model = SkeletonUtils.clone(template);
-   this.root.add(this.model);
-     this.model.scale.setScalar(1.5);
+    // pivot per rotazioni (yaw)
+    this.root = new THREE.Group();
+
+    // modello vero e proprio
+    this.model = SkeletonUtils.clone(template);
+    this.root.add(this.model);
+    this.model.scale.setScalar(1.5);
+
     this.owner = owner || 'player';
     this.onDigComplete = onDigComplete;
-   this.isWalkable = typeof isWalkable === 'function' ? isWalkable : (() => true);
+    this.isWalkable =
+      typeof isWalkable === 'function' ? isWalkable : () => true;
 
     // ✅ fix orientation (if model appears flipped)
-if (FIX_GOBLIN_FLIP_X) {
-  this.model.rotation.x = FIX_GOBLIN_FLIP_X;
-}
+    if (FIX_GOBLIN_FLIP_X) {
+      this.model.rotation.x = FIX_GOBLIN_FLIP_X;
+    }
 
-   // ✅ colore cornice random per questo goblin (stabile: scelto una volta sola)
-   const hue = Math.floor(Math.random() * 360);
-   const borderColor = `hsla(${hue}, 95%, 60%, 0.95)`;
-   
-   // ✅ label sotto i piedi (asse Y del mondo/plot, stabile)
-   // La agganciamo al root così resta sempre “a terra” e non segue l’animazione dello scheletro
-   this.label = makeLabelSprite(this.owner, borderColor);
-   this.label.position.set(0, LABEL_Y_OFFSET, 0);
-   this.root.add(this.label);
+    // ✅ colore cornice random per questo goblin (stabile: scelto una volta sola)
+    const hue = Math.floor(Math.random() * 360);
+    const borderColor = `hsla(${hue}, 95%, 60%, 0.95)`;
+
+    // ✅ label sotto i piedi (asse Y del mondo/plot, stabile)
+    // La agganciamo al root così resta sempre “a terra” e non segue l’animazione dello scheletro
+    this.label = makeLabelSprite(this.owner, borderColor);
+    this.label.position.set(0, LABEL_Y_OFFSET, 0);
+    this.root.add(this.label);
+
     this.mixer = new THREE.AnimationMixer(this.model);
     this.actions = {};
-    clips.forEach(c => {
+
+    clips.forEach((c) => {
       const a = this.mixer.clipAction(c.clip);
       if (c.once) {
         a.setLoop(THREE.LoopOnce, 1);
@@ -256,285 +224,313 @@ if (FIX_GOBLIN_FLIP_X) {
 
     this.lastChestKey = null;
     this.visible = true;
+
     this.digUntil = 0;
     this.digChestKey = null;
     this.digFired = false;
-      // === facing (direzione di movimento) ===
-      this.facing = new THREE.Vector2(0, 1); // direzione iniziale "in avanti"
-      this.turnSpeed = 10; // rad/sec (più alto = gira più veloce)
-      // === DNA personale (ogni goblin diverso) ===
-      this.baseSpeed = GOBLIN_SPEED * (0.9 + Math.random() * 0.25); // DNA base
-      this.speedMult = 1.0;
-      this.animMult = 1.0;
-      
-      // ✅ DNA personale per la variazione andatura (ogni goblin diverso)
-      this.gaitMinMs = GAIT_CHANGE_MIN_MS + Math.random() * 2500;      // 5s..7.5s
-      this.gaitMaxMs = GAIT_CHANGE_MAX_MS + Math.random() * 3500;      // 10s..13.5s
-      
-      this.speedMin = SPEED_MIN_MULT + Math.random() * 0.10;           // es: 0.75..0.85
-      this.speedMax = SPEED_MAX_MULT - Math.random() * 0.10;           // es: 1.15..1.25
-      
-      this.animMin  = ANIM_MIN_MULT  + Math.random() * 0.10;           // es: 0.80..0.90
-      this.animMax  = ANIM_MAX_MULT  - Math.random() * 0.10;           // es: 1.25..1.35
-      
-      this.strideBias = 0.85 + Math.random() * 0.35;                   // “pompa” personale
-      
-      this.nextGaitChangeAt = performance.now() + (this.gaitMinMs + Math.random() * (this.gaitMaxMs - this.gaitMinMs));
+
+    // === facing (direzione di movimento) ===
+    this.facing = new THREE.Vector2(0, 1); // direzione iniziale "in avanti"
+    this.turnSpeed = 10; // rad/sec (più alto = gira più veloce)
+
+    // === DNA personale (ogni goblin diverso) ===
+    this.baseSpeed = GOBLIN_SPEED * (0.9 + Math.random() * 0.25); // DNA base
+    this.speedMult = 1.0;
+    this.animMult = 1.0;
+
+    // ✅ DNA personale per la variazione andatura (ogni goblin diverso)
+    this.gaitMinMs = GAIT_CHANGE_MIN_MS + Math.random() * 2500; // 5s..7.5s
+    this.gaitMaxMs = GAIT_CHANGE_MAX_MS + Math.random() * 3500; // 10s..13.5s
+
+    this.speedMin = SPEED_MIN_MULT + Math.random() * 0.1; // es: 0.75..0.85
+    this.speedMax = SPEED_MAX_MULT - Math.random() * 0.1; // es: 1.15..1.25
+
+    this.animMin = ANIM_MIN_MULT + Math.random() * 0.1; // es: 0.80..0.90
+    this.animMax = ANIM_MAX_MULT - Math.random() * 0.1; // es: 1.25..1.35
+
+    this.strideBias = 0.85 + Math.random() * 0.35; // “pompa” personale
+
+    this.nextGaitChangeAt =
+      performance.now() +
+      (this.gaitMinMs + Math.random() * (this.gaitMaxMs - this.gaitMinMs));
+
     this._play('RUNNING');
   }
 
   _play(name) {
     if (this.currentAction === name) return;
+
     if (this.currentAction) {
       this.actions[this.currentAction].fadeOut(0.25);
     }
+
     this.actions[name].reset().fadeIn(0.25).play();
     this.currentAction = name;
   }
 
-   _pickRandomTarget() {
-     const now = performance.now();
-     this.nextWanderAt = now + (WANDER_MIN_MS + Math.random() * (WANDER_MAX_MS - WANDER_MIN_MS));
-   
-     // prova un po’ di tentativi random su celle walkable
-     for (let k = 0; k < 40; k++) {
-       const x = Math.random() * GRID_WIDTH;
-       const y = Math.random() * GRID_HEIGHT;
-   
-       const { ix, iy } = toCellIndex(x, y);
-       if (this.isWalkable(ix, iy)) {
-         this.target = { x, y };
-         return;
-       }
-     }
-   
-     // fallback: resta dove sei (evita target impossibili)
-     this.target = { x: this.cell.x, y: this.cell.y };
-   }
-   
-   _updateGait(now) {
-     if (now < this.nextGaitChangeAt) return;
-      this.nextGaitChangeAt =
-        now + (this.gaitMinMs + Math.random() * (this.gaitMaxMs - this.gaitMinMs));
-      this.speedMult = this.speedMin + Math.random() * (this.speedMax - this.speedMin);
-      this.animMult  = this.animMin  + Math.random() * (this.animMax  - this.animMin);
-     // applica all’azione corrente (solo RUNNING/DIGGING per non alterare troppo le once)
-     if (this.actions.RUNNING) this.actions.RUNNING.setEffectiveTimeScale(this.animMult * this.speedMult * this.strideBias);
-     if (this.actions.DIGGING) this.actions.DIGGING.setEffectiveTimeScale(0.95 + (this.animMult - 1) * 0.4);
-   }
-      
-update(dt, chest, neighbors) {
-  if (!this.visible) return;
+  _pickRandomTarget() {
+    const now = performance.now();
+    this.nextWanderAt =
+      now + (WANDER_MIN_MS + Math.random() * (WANDER_MAX_MS - WANDER_MIN_MS));
 
-  const now = performance.now();
-  this._updateGait(now);
+    // prova un po’ di tentativi random su celle walkable
+    for (let k = 0; k < 40; k++) {
+      const x = Math.random() * GRID_WIDTH;
+      const y = Math.random() * GRID_HEIGHT;
 
-  /* ====== VICTORY ====== */
-  if (this.state === 'VICTORY') {
-    this.mixer.update(dt);
-    return;
-  }
-
-  /* ====== CHEST LOGIC ====== */
-  if (chest) {
-    const chestKey = `${chest.world.x}:${chest.world.y}`;
-
-    if (this.lastChestKey !== chestKey) {
-      this.lastChestKey = chestKey;
-      this.state = 'SURPRISED';
-      this.surpriseUntil = now + SURPRISE_DURATION_MS;
-      this._play('SURPRISED');
+      const { ix, iy } = toCellIndex(x, y);
+      if (this.isWalkable(ix, iy)) {
+        this.target = { x, y };
+        return;
+      }
     }
 
-    if (this.state === 'SURPRISED') {
-      if (now >= this.surpriseUntil) {
-        this.state = 'MOVING_TO_CHEST';
-        this._play('RUNNING');
-      }
+    // fallback: resta dove sei (evita target impossibili)
+    this.target = { x: this.cell.x, y: this.cell.y };
+  }
+
+  _updateGait(now) {
+    if (now < this.nextGaitChangeAt) return;
+
+    this.nextGaitChangeAt =
+      now + (this.gaitMinMs + Math.random() * (this.gaitMaxMs - this.gaitMinMs));
+
+    this.speedMult = this.speedMin + Math.random() * (this.speedMax - this.speedMin);
+    this.animMult = this.animMin + Math.random() * (this.animMax - this.animMin);
+
+    // applica all’azione corrente (solo RUNNING/DIGGING per non alterare troppo le once)
+    if (this.actions.RUNNING) {
+      this.actions.RUNNING.setEffectiveTimeScale(
+        this.animMult * this.speedMult * this.strideBias
+      );
+    }
+    if (this.actions.DIGGING) {
+      this.actions.DIGGING.setEffectiveTimeScale(
+        0.95 + (this.animMult - 1) * 0.4
+      );
+    }
+  }
+
+  update(dt, chest, neighbors) {
+    if (!this.visible) return;
+
+    const now = performance.now();
+    this._updateGait(now);
+
+    /* ====== VICTORY ====== */
+    if (this.state === 'VICTORY') {
       this.mixer.update(dt);
       return;
     }
 
-    this.target = chest.world;
-    const dist = chebyshev(this.cell, this.target);
+    /* ====== CHEST LOGIC ====== */
+    if (chest) {
+      const chestKey = `${chest.world.x}:${chest.world.y}`;
+
+      if (this.lastChestKey !== chestKey) {
+        this.lastChestKey = chestKey;
+        this.state = 'SURPRISED';
+        this.surpriseUntil = now + SURPRISE_DURATION_MS;
+        this._play('SURPRISED');
+      }
+
+      if (this.state === 'SURPRISED') {
+        if (now >= this.surpriseUntil) {
+          this.state = 'MOVING_TO_CHEST';
+          this._play('RUNNING');
+        }
+        this.mixer.update(dt);
+        return;
+      }
+
+      this.target = chest.world;
+      const dist = chebyshev(this.cell, this.target);
 
       if (dist <= CHEST_TRIGGER_RANGE) {
         if (this.state !== 'DIGGING') {
           this.state = 'DIGGING';
           this._play('DIGGING');
-      
+
           // timer interno solo per “tenere” l’animazione digging un minimo
           this.digChestKey = chestKey;
           this.digUntil = now + DIG_DURATION_MS;
           this.digFired = false;
         }
-      
+
         // ✅ segnala solo che "ho toccato" (una volta per chestKey)
         if (!this.digFired && this.digChestKey === chestKey && now >= this.digUntil) {
           this.digFired = true; // “ho completato la fase digging”
           // NIENTE claim qui: sarà il runtime a decidere winner + delay
         }
       } else {
+        this.state = 'MOVING_TO_CHEST';
+        this._play('RUNNING');
+      }
+    } else {
+      this.lastChestKey = null;
+      this.digUntil = 0;
+      this.digChestKey = null;
+      this.digFired = false;
 
-      this.state = 'MOVING_TO_CHEST';
-      this._play('RUNNING');
+      if (this.state !== 'RUNNING') {
+        this.state = 'RUNNING';
+        this._play('RUNNING');
+      }
+
+      // wander: target scade o raggiunto => nuovo target
+      const dx0 = this.target.x - this.cell.x;
+      const dy0 = this.target.y - this.cell.y;
+      const dist0 = Math.hypot(dx0, dy0);
+
+      if (dist0 <= WANDER_REACH_EPS || now >= this.nextWanderAt) {
+        this._pickRandomTarget();
+      }
     }
-  } else {
-    this.lastChestKey = null;
-    this.digUntil = 0;
-    this.digChestKey = null;
-    this.digFired = false;
 
-    if (this.state !== 'RUNNING') {
-      this.state = 'RUNNING';
-      this._play('RUNNING');
-    }
+    /* ====== MOVEMENT + AVOIDANCE + FACING ====== */
+    if (this.state === 'RUNNING' || this.state === 'MOVING_TO_CHEST') {
+      const dx = this.target.x - this.cell.x;
+      const dy = this.target.y - this.cell.y;
+      const len = Math.hypot(dx, dy);
 
-    // wander: target scade o raggiunto => nuovo target
-    const dx0 = this.target.x - this.cell.x;
-    const dy0 = this.target.y - this.cell.y;
-    const dist0 = Math.hypot(dx0, dy0);
+      if (len > 0.01) {
+        const dirx = dx / len;
+        const diry = dy / len;
 
-    if (dist0 <= WANDER_REACH_EPS || now >= this.nextWanderAt) {
-      this._pickRandomTarget();
-    }
-  }
+        // velocità effettiva (DNA + mood ogni 5-10s)
+        let speed = this.baseSpeed * this.speedMult;
 
-  /* ====== MOVEMENT + AVOIDANCE + FACING ====== */
-  if (this.state === 'RUNNING' || this.state === 'MOVING_TO_CHEST') {
-    const dx = this.target.x - this.cell.x;
-    const dy = this.target.y - this.cell.y;
-    const len = Math.hypot(dx, dy);
+        // === AVOIDANCE + SPREAD ===
+        let ax = 0,
+          ay = 0; // avoidance vicino (forte)
+        let sx = 0,
+          sy = 0; // spread largo (morbido)
+        let crowd = 0; // quanto è affollato attorno
+        let checked = 0;
 
-    if (len > 0.01) {
-      const dirx = dx / len;
-      const diry = dy / len;
+        if (neighbors && neighbors.length) {
+          for (let i = 0; i < neighbors.length; i++) {
+            const o = neighbors[i];
+            if (!o || o === this || !o.visible) continue;
 
-      // velocità effettiva (DNA + mood ogni 5-10s)
-      let speed = this.baseSpeed * this.speedMult;
+            const rx = this.cell.x - o.cell.x;
+            const ry = this.cell.y - o.cell.y;
+            const d2 = rx * rx + ry * ry;
+            if (d2 < 0.000001) continue;
 
-      // === AVOIDANCE + SPREAD: repulsione dai vicini (vicina) + tendenza a disperdersi (largo) ===
-      let ax = 0, ay = 0;      // avoidance vicino (forte)
-      let sx = 0, sy = 0;      // spread largo (morbido)
-      let crowd = 0;           // quanto è affollato attorno
-      let checked = 0;
-      
-      if (neighbors && neighbors.length) {
-        for (let i = 0; i < neighbors.length; i++) {
-          const o = neighbors[i];
-          if (!o || o === this || !o.visible) continue;
-      
-          const rx = this.cell.x - o.cell.x;
-          const ry = this.cell.y - o.cell.y;
-          const d2 = rx * rx + ry * ry;
-          if (d2 < 0.000001) continue;
-      
-          const d = Math.sqrt(d2);
-      
-          // 1) avoidance ravvicinato (come prima)
-          if (d <= AVOID_RANGE) {
-            const t = 1 - (d / AVOID_RANGE);
-            ax += (rx / d) * t;
-            ay += (ry / d) * t;
-      
-            // push extra quando sono MOLTO vicini
-            if (d < GOBLIN_RADIUS * 2.0) {
-              ax += (rx / d) * AVOID_PUSH;
-              ay += (ry / d) * AVOID_PUSH;
+            const d = Math.sqrt(d2);
+
+            // 1) avoidance ravvicinato
+            if (d <= AVOID_RANGE) {
+              const t = 1 - d / AVOID_RANGE;
+              ax += (rx / d) * t;
+              ay += (ry / d) * t;
+
+              // push extra quando sono MOLTO vicini
+              if (d < GOBLIN_RADIUS * 2.0) {
+                ax += (rx / d) * AVOID_PUSH;
+                ay += (ry / d) * AVOID_PUSH;
+              }
+
+              // se davanti e molto vicino -> rallenta
+              const forward = dirx * -rx + diry * -ry;
+              if (forward > 0 && d < GOBLIN_RADIUS * 2.0) {
+                speed *= 0.55;
+              }
             }
-      
-            // se davanti e molto vicino -> rallenta
-            const forward = dirx * (-rx) + diry * (-ry);
-            if (forward > 0 && d < GOBLIN_RADIUS * 2.0) {
-              speed *= 0.55;
+
+            // 2) spread largo
+            if (d <= SPREAD_RANGE) {
+              const t2 = 1 - d / SPREAD_RANGE; // 0..1
+              sx += (rx / d) * t2;
+              sy += (ry / d) * t2;
+              crowd += t2;
             }
+
+            checked++;
+            if (checked >= AVOID_MAX_NEIGHBORS) break;
           }
-      
-          // 2) spread largo: "pressione folla" entro SPREAD_RANGE
-          if (d <= SPREAD_RANGE) {
-            const t2 = 1 - (d / SPREAD_RANGE);   // 0..1
-            sx += (rx / d) * t2;
-            sy += (ry / d) * t2;
-            crowd += t2;
-          }
-      
-          checked++;
-          if (checked >= AVOID_MAX_NEIGHBORS) break;
+        }
+
+        // normalizza avoidance vicino (ax,ay)
+        const alen = Math.hypot(ax, ay);
+        if (alen > 0.0001) {
+          ax /= alen;
+          ay /= alen;
+        } else {
+          ax = 0;
+          ay = 0;
+        }
+
+        // normalizza spread largo (sx,sy)
+        const slen = Math.hypot(sx, sy);
+        if (slen > 0.0001) {
+          sx /= slen;
+          sy /= slen;
+        } else {
+          sx = 0;
+          sy = 0;
+        }
+
+        // se zona affollata, rallenta un filo
+        if (crowd > 0.01) {
+          speed *= 1.0 - Math.min(SPREAD_SPEED_DAMP, crowd * 0.12);
+        }
+
+        // mix direzione: target + avoidance vicino + spread largo
+        let mx = dirx;
+        let my = diry;
+
+        const avoidMix = alen > 0.0001 ? 0.28 : 0.0;
+        mx = mx * (1 - avoidMix) + ax * avoidMix;
+        my = my * (1 - avoidMix) + ay * avoidMix;
+
+        const spreadMix = slen > 0.0001 ? SPREAD_STRENGTH : 0.0;
+        mx = mx * (1 - spreadMix) + sx * spreadMix;
+        my = my * (1 - spreadMix) + sy * spreadMix;
+
+        // facing finale
+        const mlen = Math.hypot(mx, my) || 1;
+        this.facing.set(mx / mlen, my / mlen);
+
+        // movimento col facing finale
+        const nx = this.cell.x + this.facing.x * speed * dt;
+        const ny = this.cell.y + this.facing.y * speed * dt;
+
+        const { ix, iy } = toCellIndex(nx, ny);
+
+        if (!this.isWalkable(ix, iy)) {
+          this._pickRandomTarget();
+        } else {
+          this.cell.x = nx;
+          this.cell.y = ny;
         }
       }
-
-      // normalizza avoidance vicino (ax,ay)
-      const alen = Math.hypot(ax, ay);
-      if (alen > 0.0001) { ax /= alen; ay /= alen; } else { ax = 0; ay = 0; }
-      
-      // normalizza spread largo (sx,sy)
-      const slen = Math.hypot(sx, sy);
-      if (slen > 0.0001) { sx /= slen; sy /= slen; } else { sx = 0; sy = 0; }
-      
-      // se zona affollata, rallenta un filo (tende a non accalcarsi)
-      if (crowd > 0.01) {
-        speed *= (1.0 - Math.min(SPREAD_SPEED_DAMP, crowd * 0.12));
-      }
-      
-      // mix direzione: target + avoidance vicino + spread largo
-      let mx = dirx;
-      let my = diry;
-      
-      // avoidance vicino: forte e prioritario
-      const avoidMix = (alen > 0.0001) ? 0.28 : 0.0;     // come prima
-      mx = mx * (1 - avoidMix) + ax * avoidMix;
-      my = my * (1 - avoidMix) + ay * avoidMix;
-      
-      // spread largo: morbido, sempre se c’è “pressione”
-      const spreadMix = (slen > 0.0001) ? SPREAD_STRENGTH : 0.0;
-      mx = mx * (1 - spreadMix) + sx * spreadMix;
-      my = my * (1 - spreadMix) + sy * spreadMix;
-      
-      // facing finale
-      const mlen = Math.hypot(mx, my) || 1;
-      this.facing.set(mx / mlen, my / mlen);
-
-      // movimento col facing finale
-      const nx = this.cell.x + this.facing.x * speed * dt;
-      const ny = this.cell.y + this.facing.y * speed * dt;
-
-      const { ix, iy } = toCellIndex(nx, ny);
-
-      if (!this.isWalkable(ix, iy)) {
-        this._pickRandomTarget();
-      } else {
-        this.cell.x = nx;
-        this.cell.y = ny;
-      }
     }
+
+    /* ====== ROTAZIONE VERSO DIREZIONE ====== */
+    if (this.facing.lengthSq() > 0.0001) {
+      const desiredYaw = Math.atan2(this.facing.x, this.facing.y) + GOBLIN_FACING_OFFSET_Y;
+      const currentYaw = this.root.rotation.y;
+
+      let delta = desiredYaw - currentYaw;
+      delta = ((delta + Math.PI) % (Math.PI * 2)) - Math.PI;
+
+      this.root.rotation.y = currentYaw + delta * Math.min(1, this.turnSpeed * dt);
+    }
+
+    /* ====== CLAMP + NAVMASK SAFETY ====== */
+    this.cell.x = THREE.MathUtils.clamp(this.cell.x, 0, GRID_WIDTH - 1e-6);
+    this.cell.y = THREE.MathUtils.clamp(this.cell.y, 0, GRID_HEIGHT - 1e-6);
+
+    const c = toCellIndex(this.cell.x, this.cell.y);
+    if (!this.isWalkable(c.ix, c.iy)) {
+      this._pickRandomTarget();
+    }
+
+    /* ====== ANIM UPDATE ====== */
+    this.mixer.update(dt);
   }
-
-  /* ====== ROTAZIONE VERSO DIREZIONE ====== */
-  if (this.facing.lengthSq() > 0.0001) {
-    const desiredYaw =
-      Math.atan2(this.facing.x, this.facing.y) + GOBLIN_FACING_OFFSET_Y;
-
-    const currentYaw = this.root.rotation.y;
-
-    let delta = desiredYaw - currentYaw;
-    delta = ((delta + Math.PI) % (Math.PI * 2)) - Math.PI;
-
-    this.root.rotation.y = currentYaw + delta * Math.min(1, this.turnSpeed * dt);
-  }
-
-  /* ====== CLAMP + NAVMASK SAFETY ====== */
-  this.cell.x = THREE.MathUtils.clamp(this.cell.x, 0, GRID_WIDTH - 1e-6);
-  this.cell.y = THREE.MathUtils.clamp(this.cell.y, 0, GRID_HEIGHT - 1e-6);
-
-  const c = toCellIndex(this.cell.x, this.cell.y);
-  if (!this.isWalkable(c.ix, c.iy)) {
-    this._pickRandomTarget();
-  }
-
-  /* ====== ANIM UPDATE ====== */
-  this.mixer.update(dt);
-}
-
 
   worldPosition() {
     return cellToWorld(this.cell.x, this.cell.y);
@@ -562,13 +558,14 @@ export class ThreeRuntime {
       antialias: true,
       alpha: false
     });
-// ✅ colori corretti (sRGB) + resa più “viva”
-this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-this.renderer.toneMappingExposure = 1.2;
 
-// (opzionale ma consigliato per nitidezza)
-this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // ✅ colori corretti (sRGB) + resa più “viva”
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.2;
+
+    // (opzionale ma consigliato per nitidezza)
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
     this.scene = new THREE.Scene();
 
@@ -584,246 +581,308 @@ this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.camera.position.set(0, 20, 0);
     this.camera.lookAt(0, 0, 0);
 
-   // ✅ luci più “bright / readable” (top-down) per evitare goblin troppo scuri
-   this.scene.add(new THREE.AmbientLight(0xffffff, 0.85));
-   
-   const hemi = new THREE.HemisphereLight(0xffffff, 0x888888, 1.05);
-   hemi.position.set(0, 50, 0);
-   this.scene.add(hemi);
-   
-   const dir = new THREE.DirectionalLight(0xffffff, 2.25);
-   dir.position.set(20, 40, 10);
-   this.scene.add(dir);
+    // ✅ luci più “bright / readable” (top-down) per evitare goblin troppo scuri
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x888888, 1.05);
+    hemi.position.set(0, 50, 0);
+    this.scene.add(hemi);
+
+    const dir = new THREE.DirectionalLight(0xffffff, 2.25);
+    dir.position.set(20, 40, 10);
+    this.scene.add(dir);
+
     this.clock = new THREE.Clock();
     this.loader = new GLTFLoader();
 
     this.goblins = new Map();
-      this.missingTicks = new Map();   // id -> contatore assenze
-      this.MISSING_TICKS_BEFORE_REMOVE = 6; // es: 6 sync consecutivi
-      
-      this.drop = null;
-      this.chestSprite = null;
-      
-      // claim state
-      this.claimChestKey = null;         // chestKey per cui abbiamo già claimato (anti-doppio)
-      this.pendingClaimKey = null;       // chestKey attualmente in attesa dei 5s
-      this.pendingClaimAt = 0;           // timestamp (ms) quando fare claim
-      this.pendingWinnerId = null;       // expedition id del primo goblin che l’ha toccata
-      
-      // navmask
-      this.walkable = null;        // Uint8Array GRID_WIDTH*GRID_HEIGHT (1=ok,0=block)
-      this.walkableReady = false;
-      // ===== LOADING FX =====
-      this.assetsReady = false;     // diventa true quando i GLB+navmask sono pronti
-      this.loadingGroup = null;     // THREE.Group con gli ologrammi
-      this.loadingItems = [];       // metadata per animazione
-      this.loadingTime = 0;    
-      // ===== PARTNERS =====
-      this.partnerGroup = null;
-      this.partnerItems = [];     // { sprite, baseY, amp, speed, phase }
-      this.partnerTextures = [];  // 7 textures     
-      this.loadingBgPlane = null;
-      this.loadingParticles = null;      // THREE.Points
-      this.loadingParticleMeta = null;   // Float32Array speeds
-      this.loadingRings = [];            // mesh rings
-      this.loadingTextSprite = null;     // sprite testo
-      this.loadingProgress = 0;          // 0..1 (fake, ma bello)
-     
+    this.missingTicks = new Map(); // id -> contatore assenze
+    this.MISSING_TICKS_BEFORE_REMOVE = 6; // es: 6 sync consecutivi
+
+    this.drop = null;
+    this.chestSprite = null;
+
+    // claim state
+    this.claimChestKey = null; // chestKey per cui abbiamo già claimato (anti-doppio)
+    this.pendingClaimKey = null; // chestKey attualmente in attesa dei 5s
+    this.pendingClaimAt = 0; // timestamp (ms) quando fare claim
+    this.pendingWinnerId = null; // expedition id del primo goblin che l’ha toccata
+
+    // navmask
+    this.walkable = null; // Uint8Array GRID_WIDTH*GRID_HEIGHT (1=ok,0=block)
+    this.walkableReady = false;
+
+    // ===== LOADING FX =====
+    this.assetsReady = false; // diventa true quando i GLB+navmask sono pronti
+    this.loadingGroup = null; // THREE.Group con gli ologrammi
+    this.loadingItems = []; // metadata per animazione
+    this.loadingTime = 0;
+
+    // ===== LOADING ENHANCED =====
+    this.loadingBgPlane = null;
+    this.loadingParticles = null; // THREE.Points
+    this.loadingParticleMeta = null; // Float32Array speeds
+    this.loadingRings = []; // mesh rings
+    this.loadingTextSprite = null; // sprite testo
+    this.loadingProgress = 0; // 0..1 (fake, ma bello)
   }
-_startLoadingFx() {
-  if (this.loadingGroup) return;
 
-  // atmosfera: fog leggero
-  this.scene.fog = new THREE.FogExp2(0x00060a, LOADING_FOG_DENSITY);
+  _startLoadingFx() {
+    if (this.loadingGroup) return;
 
-  const g = new THREE.Group();
-  g.renderOrder = 999;
-  this.loadingGroup = g;
-  this.loadingItems = [];
-  this.loadingTime = 0;
-  this.loadingProgress = 0;
+    // atmosfera: fog leggero
+    this.scene.fog = new THREE.FogExp2(0x00060a, LOADING_FOG_DENSITY);
 
-  // 1) DIM layer (piano scuro sopra al plot)
-  const dimMat = new THREE.MeshBasicMaterial({
-    color: 0x000000,
-    transparent: true,
-    opacity: LOADING_BG_DIM,
-    depthTest: false,
-    depthWrite: false
-  });
-  const dimPlane = new THREE.Mesh(new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT), dimMat);
-  dimPlane.rotation.x = -Math.PI / 2;
-  dimPlane.position.y = 0.012;
-  dimPlane.renderOrder = 998;
-  this.loadingBgPlane = dimPlane;
-  this.scene.add(dimPlane);
+    const g = new THREE.Group();
+    g.renderOrder = 999;
+    this.loadingGroup = g;
+    this.loadingItems = [];
+    this.loadingTime = 0;
+    this.loadingProgress = 0;
 
-  // helper materiali “holo”
-  const holoMat = (opacity = 0.5) =>
-    new THREE.MeshBasicMaterial({
-      color: 0x44ddff,
+    // 1) DIM layer (piano scuro sopra al plot)
+    const dimMat = new THREE.MeshBasicMaterial({
+      color: 0x000000,
       transparent: true,
-      opacity,
+      opacity: LOADING_BG_DIM,
+      depthTest: false,
+      depthWrite: false
+    });
+    const dimPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT),
+      dimMat
+    );
+    dimPlane.rotation.x = -Math.PI / 2;
+    dimPlane.position.y = 0.012;
+    dimPlane.renderOrder = 998;
+    this.loadingBgPlane = dimPlane;
+    this.scene.add(dimPlane);
+
+    // helper materiali “holo”
+    const holoMat = (opacity = 0.5) =>
+      new THREE.MeshBasicMaterial({
+        color: 0x44ddff,
+        transparent: true,
+        opacity,
+        depthTest: false,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+
+      // 1.5) OLOGRAMMI “classici” (usa LOADING_FX_COUNT ecc.)
+      const ringGeoSmall = new THREE.RingGeometry(0.25, 0.42, 28);
+      const planeGeo = new THREE.PlaneGeometry(0.6, 0.22);
+      const barGeo = new THREE.PlaneGeometry(0.9, 0.06);
+      
+      const randPos = () => {
+        const x = Math.random() * (GRID_WIDTH - LOADING_FX_AREA_PAD * 2) - GRID_WIDTH / 2 + LOADING_FX_AREA_PAD;
+        const z = Math.random() * (GRID_HEIGHT - LOADING_FX_AREA_PAD * 2) - GRID_HEIGHT / 2 + LOADING_FX_AREA_PAD;
+        return { x, z };
+      };
+      
+      for (let i = 0; i < LOADING_FX_COUNT; i++) {
+        const { x, z } = randPos();
+      
+        // scegli “tipo” casuale (ring / plane / bar)
+        const r = Math.random();
+        const geo = r < 0.34 ? ringGeoSmall : (r < 0.67 ? planeGeo : barGeo);
+      
+        // varia un filo il colore (molto più “ricco” visivamente)
+        const mat = holoMat(0.20 + Math.random() * 0.35);
+        mat.color.setHSL(0.52 + (Math.random() * 0.12 - 0.06), 0.85, 0.55);
+      
+        const m = new THREE.Mesh(geo, mat);
+        m.rotation.x = -Math.PI / 2; // top-down, appoggiato al plot
+        m.position.set(x, LOADING_FX_BASE_Y, z);
+      
+        const s = LOADING_FX_MIN_SCALE + Math.random() * (LOADING_FX_MAX_SCALE - LOADING_FX_MIN_SCALE);
+        m.scale.setScalar(s);
+      
+        // tilt random per non essere “piatti uguali”
+        m.rotation.z = (Math.random() * 2 - 1) * 0.9;
+      
+        // metadata per animazione indipendente
+        this.loadingItems.push({
+          mesh: m,
+          speed: LOADING_FX_MIN_SPEED + Math.random() * (LOADING_FX_MAX_SPEED - LOADING_FX_MIN_SPEED),
+          phase: Math.random() * Math.PI * 2,
+          spin: (Math.random() * 2 - 1) * 1.2,
+          drift: (Math.random() * 2 - 1) * 0.25,
+          pulse: 0.6 + Math.random() * 1.2
+        });
+      
+        g.add(m);
+      }
+
+    // 2) Rings concentrici (impatto!)
+    const ringGeo = new THREE.RingGeometry(0.55, 0.7, 64);
+    for (let i = 0; i < LOADING_RING_COUNT; i++) {
+      const m = holoMat(0.18 + i * 0.03);
+      m.color.setHSL(0.52 + i * 0.02, 0.9, 0.55);
+      const ring = new THREE.Mesh(ringGeo, m);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(0, LOADING_FX_BASE_Y + 0.02 + i * 0.02, 0);
+      ring.scale.setScalar(2.5 + i * 1.65); // cresce
+      ring.renderOrder = 1000 + i;
+      this.loadingRings.push(ring);
+      g.add(ring);
+    }
+
+    // 3) Particelle (Points) = densità + “realismo”
+    const pCount = LOADING_PARTICLES;
+    const pos = new Float32Array(pCount * 3);
+    const spd = new Float32Array(pCount);
+
+    for (let i = 0; i < pCount; i++) {
+      const x =
+        Math.random() * (GRID_WIDTH - LOADING_PARTICLE_AREA_PAD * 2) -
+        GRID_WIDTH / 2 +
+        LOADING_PARTICLE_AREA_PAD;
+      const z =
+        Math.random() * (GRID_HEIGHT - LOADING_PARTICLE_AREA_PAD * 2) -
+        GRID_HEIGHT / 2 +
+        LOADING_PARTICLE_AREA_PAD;
+      const y =
+        LOADING_PARTICLE_Y_MIN +
+        Math.random() * (LOADING_PARTICLE_Y_MAX - LOADING_PARTICLE_Y_MIN);
+
+      pos[i * 3 + 0] = x;
+      pos[i * 3 + 1] = y;
+      pos[i * 3 + 2] = z;
+
+      spd[i] = 0.35 + Math.random() * 0.9;
+    }
+
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    this.loadingParticleMeta = spd;
+
+    const pMat = new THREE.PointsMaterial({
+      size: 0.07,
+      transparent: true,
+      opacity: 0.55,
+      depthTest: false,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      color: 0x66f2ff
+    });
+
+    const points = new THREE.Points(pGeo, pMat);
+    points.renderOrder = 1100;
+    this.loadingParticles = points;
+    g.add(points);
+
+    // 4) Scan beam (più credibile di un rettangolo piatto)
+    const scanMat = new THREE.MeshBasicMaterial({
+      color: 0x88ffff,
+      transparent: true,
+      opacity: 0.22,
       depthTest: false,
       depthWrite: false,
       blending: THREE.AdditiveBlending
     });
+    const scan = new THREE.Mesh(
+      new THREE.PlaneGeometry(GRID_WIDTH * 0.95, 0.55),
+      scanMat
+    );
+    scan.rotation.x = -Math.PI / 2;
+    scan.position.set(0, LOADING_FX_BASE_Y + 0.03, -GRID_HEIGHT / 2 + 1);
+    scan.renderOrder = 1200;
+    this.loadingItems.push({ mesh: scan, isScan: true, speed: 2.2, phase: 0 });
+    g.add(scan);
 
-  // 2) Rings concentrici (impatto!)
-  const ringGeo = new THREE.RingGeometry(0.55, 0.70, 64);
-  for (let i = 0; i < LOADING_RING_COUNT; i++) {
-    const m = holoMat(0.18 + i * 0.03);
-    m.color.setHSL(0.52 + i * 0.02, 0.9, 0.55);
-    const ring = new THREE.Mesh(ringGeo, m);
-    ring.rotation.x = -Math.PI / 2;
-    ring.position.set(0, LOADING_FX_BASE_Y + 0.02 + i * 0.02, 0);
-    ring.scale.setScalar(2.5 + i * 1.65); // cresce
-    ring.renderOrder = 1000 + i;
-    this.loadingRings.push(ring);
-    g.add(ring);
+    // 5) Testo “Loading…” (sprite canvas)
+    const makeTextSprite = (text) => {
+      const c = document.createElement('canvas');
+      c.width = 1024;
+      c.height = 256;
+      const ctx = c.getContext('2d');
+
+      ctx.clearRect(0, 0, c.width, c.height);
+      ctx.fillStyle = 'rgba(0,0,0,0.0)';
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      ctx.font = 'bold 72px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // glow
+      ctx.shadowColor = 'rgba(80,240,255,0.85)';
+      ctx.shadowBlur = 28;
+
+      ctx.fillStyle = 'rgba(220,255,255,0.95)';
+      ctx.fillText(text, c.width / 2, c.height / 2);
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+
+      const mat = new THREE.SpriteMaterial({
+        map: tex,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false
+      });
+
+      const spr = new THREE.Sprite(mat);
+      spr.scale.set(10.5, 2.6, 1);
+      spr.position.set(0, 1.6, 0);
+      spr.renderOrder = 1300;
+      return spr;
+    };
+
+    this.loadingTextSprite = makeTextSprite('Loading assets…');
+    g.add(this.loadingTextSprite);
+
+    this.scene.add(g);
   }
 
-  // 3) Particelle (Points) = densità + “realismo”
-  const pCount = LOADING_PARTICLES;
-  const pos = new Float32Array(pCount * 3);
-  const spd = new Float32Array(pCount);
+  _stopLoadingFx() {
+    if (!this.loadingGroup) return;
 
-  for (let i = 0; i < pCount; i++) {
-    const x = (Math.random() * (GRID_WIDTH - LOADING_PARTICLE_AREA_PAD * 2) - GRID_WIDTH / 2 + LOADING_PARTICLE_AREA_PAD);
-    const z = (Math.random() * (GRID_HEIGHT - LOADING_PARTICLE_AREA_PAD * 2) - GRID_HEIGHT / 2 + LOADING_PARTICLE_AREA_PAD);
-    const y = LOADING_PARTICLE_Y_MIN + Math.random() * (LOADING_PARTICLE_Y_MAX - LOADING_PARTICLE_Y_MIN);
+    // rimuovi fog
+    this.scene.fog = null;
 
-    pos[i * 3 + 0] = x;
-    pos[i * 3 + 1] = y;
-    pos[i * 3 + 2] = z;
-
-    spd[i] = (0.35 + Math.random() * 0.9);
-  }
-
-  const pGeo = new THREE.BufferGeometry();
-  pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  this.loadingParticleMeta = spd;
-
-  const pMat = new THREE.PointsMaterial({
-    size: 0.07,
-    transparent: true,
-    opacity: 0.55,
-    depthTest: false,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    color: 0x66f2ff
-  });
-
-  const points = new THREE.Points(pGeo, pMat);
-  points.renderOrder = 1100;
-  this.loadingParticles = points;
-  g.add(points);
-
-  // 4) Scan beam (più credibile di un rettangolo piatto)
-  const scanMat = new THREE.MeshBasicMaterial({
-    color: 0x88ffff,
-    transparent: true,
-    opacity: 0.22,
-    depthTest: false,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending
-  });
-  const scan = new THREE.Mesh(new THREE.PlaneGeometry(GRID_WIDTH * 0.95, 0.55), scanMat);
-  scan.rotation.x = -Math.PI / 2;
-  scan.position.set(0, LOADING_FX_BASE_Y + 0.03, -GRID_HEIGHT / 2 + 1);
-  scan.renderOrder = 1200;
-  this.loadingItems.push({ mesh: scan, isScan: true, speed: 2.2, phase: 0 });
-  g.add(scan);
-
-  // 5) Testo “Loading…” (sprite canvas)
-  const makeTextSprite = (text) => {
-    const c = document.createElement('canvas');
-    c.width = 1024; c.height = 256;
-    const ctx = c.getContext('2d');
-    ctx.clearRect(0, 0, c.width, c.height);
-    ctx.fillStyle = 'rgba(0,0,0,0.0)';
-    ctx.fillRect(0, 0, c.width, c.height);
-
-    ctx.font = 'bold 72px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    // glow
-    ctx.shadowColor = 'rgba(80,240,255,0.85)';
-    ctx.shadowBlur = 28;
-
-    ctx.fillStyle = 'rgba(220,255,255,0.95)';
-    ctx.fillText(text, c.width / 2, c.height / 2);
-
-    const tex = new THREE.CanvasTexture(c);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    const mat = new THREE.SpriteMaterial({
-      map: tex,
-      transparent: true,
-      depthTest: false,
-      depthWrite: false
-    });
-    const spr = new THREE.Sprite(mat);
-    spr.scale.set(10.5, 2.6, 1);
-    spr.position.set(0, 1.6, 0);
-    spr.renderOrder = 1300;
-    return spr;
-  };
-
-  this.loadingTextSprite = makeTextSprite('Loading assets…');
-  g.add(this.loadingTextSprite);
-
-  this.scene.add(g);
-}
-
-
-_stopLoadingFx() {
-  if (!this.loadingGroup) return;
-
-  // rimuovi fog
-  this.scene.fog = null;
-
-  // dim plane
-  if (this.loadingBgPlane) {
-    this.scene.remove(this.loadingBgPlane);
-    this.loadingBgPlane.material?.dispose?.();
-    this.loadingBgPlane.geometry?.dispose?.();
-    this.loadingBgPlane = null;
-  }
-
-  // particles
-  if (this.loadingParticles) {
-    this.loadingParticles.geometry?.dispose?.();
-    this.loadingParticles.material?.dispose?.();
-    this.loadingParticles = null;
-    this.loadingParticleMeta = null;
-  }
-
-  // rings
-  for (const r of this.loadingRings) {
-    r.geometry?.dispose?.();
-    r.material?.dispose?.();
-  }
-  this.loadingRings = [];
-
-  // text
-  if (this.loadingTextSprite) {
-    this.loadingTextSprite.material?.map?.dispose?.();
-    this.loadingTextSprite.material?.dispose?.();
-    this.loadingTextSprite = null;
-  }
-
-  // il resto come avevi
-  this.loadingGroup.traverse((o) => {
-    if (o.isMesh) {
-      if (o.material) o.material.dispose?.();
+    // dim plane
+    if (this.loadingBgPlane) {
+      this.scene.remove(this.loadingBgPlane);
+      this.loadingBgPlane.material?.dispose?.();
+      this.loadingBgPlane.geometry?.dispose?.();
+      this.loadingBgPlane = null;
     }
-  });
 
-  this.scene.remove(this.loadingGroup);
-  this.loadingGroup = null;
-  this.loadingItems = [];
-}
+    // particles
+    if (this.loadingParticles) {
+      this.loadingParticles.geometry?.dispose?.();
+      this.loadingParticles.material?.dispose?.();
+      this.loadingParticles = null;
+      this.loadingParticleMeta = null;
+    }
+
+    // rings
+    for (const r of this.loadingRings) {
+      r.geometry?.dispose?.();
+      r.material?.dispose?.();
+    }
+    this.loadingRings = [];
+
+    // text
+    if (this.loadingTextSprite) {
+      this.loadingTextSprite.material?.map?.dispose?.();
+      this.loadingTextSprite.material?.dispose?.();
+      this.loadingTextSprite = null;
+    }
+
+    // il resto come avevi
+    this.loadingGroup.traverse((o) => {
+      if (o.isMesh) {
+        o.material?.dispose?.();
+      }
+    });
+
+    this.scene.remove(this.loadingGroup);
+    this.loadingGroup = null;
+    this.loadingItems = [];
+  }
 
   _updateLoadingFx(dt) {
     if (!this.loadingGroup) return;
@@ -834,7 +893,6 @@ _stopLoadingFx() {
     for (let i = 0; i < this.loadingItems.length; i++) {
       const it = this.loadingItems[i];
       const m = it.mesh;
-
       if (!m) continue;
 
       if (it.isScan) {
@@ -844,26 +902,24 @@ _stopLoadingFx() {
           m.position.z = -GRID_HEIGHT / 2 + 1;
         }
         // micro pulsazione
-        m.material.opacity = 0.10 + 0.10 * (0.5 + 0.5 * Math.sin(t * 3.0));
+        if (m.material) {
+          m.material.opacity = 0.1 + 0.1 * (0.5 + 0.5 * Math.sin(t * 3.0));
+        }
         continue;
       }
 
-      // oscillazione “floating hologram”
+      // Per compatibilità: se in futuro rimetti "items" olografici classici.
       const w = Math.sin(t * (1.2 + it.speed) + it.phase);
       m.position.y = LOADING_FX_BASE_Y + (0.5 + 0.5 * w) * LOADING_FX_Y_WAVE;
 
-      // rotazione indipendente
       m.rotation.z += it.spin * dt * 0.45;
 
-      // drift leggero (si muove poco, poi rientra)
       m.position.x += Math.sin(t * 0.6 + it.phase) * it.drift * dt;
       m.position.z += Math.cos(t * 0.7 + it.phase) * it.drift * dt;
 
-      // pulse opacity
       const op = 0.18 + 0.35 * (0.5 + 0.5 * Math.sin(t * it.pulse + it.phase));
-      m.material.opacity = op;
+      if (m.material) m.material.opacity = op;
 
-      // clamp dentro l’area (per non scappare)
       m.position.x = THREE.MathUtils.clamp(
         m.position.x,
         -GRID_WIDTH / 2 + LOADING_FX_AREA_PAD,
@@ -875,210 +931,76 @@ _stopLoadingFx() {
         GRID_HEIGHT / 2 - LOADING_FX_AREA_PAD
       );
     }
-// ---- extra update: rings + particles + fake progress ----
-this.loadingProgress = Math.min(1, this.loadingProgress + dt * 0.12);
 
-const t2 = this.loadingTime;
+    // ---- extra update: rings + particles + fake progress ----
+    this.loadingProgress = Math.min(1, this.loadingProgress + dt * 0.12);
+    const t2 = this.loadingTime;
 
-// rings: pulsano e ruotano
-for (let i = 0; i < this.loadingRings.length; i++) {
-  const r = this.loadingRings[i];
-  const pulse = 0.92 + 0.12 * Math.sin(t2 * (0.9 + i * 0.12));
-  r.scale.setScalar((2.5 + i * 1.65) * pulse);
-  r.rotation.z += dt * (0.15 + i * 0.05);
-  r.material.opacity = 0.10 + 0.18 * (0.5 + 0.5 * Math.sin(t2 * 1.4 + i));
-}
-
-// particles: drift + swirl
-if (this.loadingParticles && this.loadingParticles.geometry) {
-  const pos = this.loadingParticles.geometry.attributes.position.array;
-  const spd = this.loadingParticleMeta;
-  for (let i = 0; i < spd.length; i++) {
-    const ix = i * 3;
-    let x = pos[ix + 0];
-    let y = pos[ix + 1];
-    let z = pos[ix + 2];
-
-    // drift verso +Z con swirl
-    const s = spd[i] * LOADING_PARTICLE_SPEED;
-    z += s * dt;
-    x += Math.sin(t2 * 0.9 + i) * LOADING_PARTICLE_SWIRL * dt * 0.18;
-
-    // wrap
-    if (z > GRID_HEIGHT / 2 - 0.5) z = -GRID_HEIGHT / 2 + 0.5;
-    pos[ix + 0] = x;
-    pos[ix + 1] = y + Math.sin(t2 * 0.6 + i) * dt * 0.02; // micro bob
-    pos[ix + 2] = z;
-  }
-  this.loadingParticles.geometry.attributes.position.needsUpdate = true;
-
-  // shimmer
-  this.loadingParticles.material.opacity = 0.35 + 0.25 * (0.5 + 0.5 * Math.sin(t2 * 1.8));
-}
-
-// scan beam: pulsazione più “energetica”
-for (let i = 0; i < this.loadingItems.length; i++) {
-  const it = this.loadingItems[i];
-  if (it.isScan && it.mesh && it.mesh.material) {
-    it.mesh.material.opacity = 0.12 + 0.18 * (0.5 + 0.5 * Math.sin(t2 * 3.5));
-  }
-}
-     
-  }
-
-  async _loadPartnerTextures() {
-    // carica immagini partner1..partner7 e crea CanvasTexture “rotonda”
-    const loadImg = (src) =>
-      new Promise((resolve, reject) => {
-        const i = new Image();
-        i.crossOrigin = 'anonymous';
-        i.onload = () => resolve(i);
-        i.onerror = reject;
-        i.src = src;
-      });
-
-    const textures = [];
-    for (let k = 1; k <= PARTNER_COUNT; k++) {
-      // ✅ metti qui i path reali
-      const img = await loadImg(`/madverse/partner_${k}.png`);
-      const tex = makeMaxEllipseTextureFromImage(img, 512);
-      textures.push(tex);
+    // rings: pulsano e ruotano
+    for (let i = 0; i < this.loadingRings.length; i++) {
+      const r = this.loadingRings[i];
+      const pulse = 0.92 + 0.12 * Math.sin(t2 * (0.9 + i * 0.12));
+      r.scale.setScalar((2.5 + i * 1.65) * pulse);
+      r.rotation.z += dt * (0.15 + i * 0.05);
+      r.material.opacity = 0.1 + 0.18 * (0.5 + 0.5 * Math.sin(t2 * 1.4 + i));
     }
-    this.partnerTextures = textures;
-  }
 
-   _spawnPartnersOnBlackCells() {
-     if (!this.walkableReady || !this.walkable) return;
-     if (!this.partnerTextures || !this.partnerTextures.length) return;
-     if (this.partnerGroup) return;
-   
-     const g = new THREE.Group();
-     g.renderOrder = PARTNER_RENDER_ORDER;
-     this.partnerGroup = g;
-     this.partnerItems = [];
-   
-     // posizioni gia' piazzate (in coordinate cella float) + raggio (in celle)
-     const placed = [];
-   
-     const insideBounds = (cx, cy, half) => {
-       return (
-         cx - half >= 0 &&
-         cy - half >= 0 &&
-         cx + half <= GRID_WIDTH &&
-         cy + half <= GRID_HEIGHT
-       );
-     };
-   
-     const farEnoughFromOthers = (cx, cy, minDist) => {
-       for (let i = 0; i < placed.length; i++) {
-         const p = placed[i];
-         if (Math.hypot(cx - p.x, cy - p.y) < (minDist + p.r)) return false;
-       }
-       return true;
-     };
-   
-     const pickSpot = (half, minDist) => {
-       for (let tries = 0; tries < PARTNER_BLACK_CELL_TRIES; tries++) {
-         // scegli un punto random
-         const ix = Math.floor(Math.random() * GRID_WIDTH);
-         const iy = Math.floor(Math.random() * GRID_HEIGHT);
-         const idx = iy * GRID_WIDTH + ix;
-   
-         // solo celle nere (walkable=0)
-         if (this.walkable[idx] !== 0) continue;
-   
-         // centro della cella + jitter
-         const cx = ix + 0.5 + (Math.random() * 0.30 - 0.15);
-         const cy = iy + 0.5 + (Math.random() * 0.30 - 0.15);
-   
-         // 1) deve stare interamente nel grid
-         if (!insideBounds(cx, cy, half)) continue;
-   
-         // 2) non deve sovrapporsi
-         if (!farEnoughFromOthers(cx, cy, minDist)) continue;
-   
-         placed.push({ x: cx, y: cy, r: minDist });
-         return { cx, cy };
-       }
-       return null;
-     };
-   
-     for (let t = 0; t < PARTNER_COUNT; t++) {
-       for (let r = 0; r < PARTNER_SPRITES_PER_TYPE; r++) {
-         const tex = this.partnerTextures[t % this.partnerTextures.length];
-   
-         const mat = new THREE.SpriteMaterial({
-           map: tex,
-           transparent: true,
-           depthTest: false,
-           depthWrite: false
-         });
-   
-         const spr = new THREE.Sprite(mat);
-         spr.renderOrder = PARTNER_RENDER_ORDER;
-   
-         // scala in celle
-         const s = PARTNER_SCALE_MIN + Math.random() * (PARTNER_SCALE_MAX - PARTNER_SCALE_MIN);
-         spr.scale.set(s, s, 1);
-   
-         // "mezzo diametro" in celle: deve stare dentro ai bordi
-         const half = (s * 0.5) + PARTNER_EDGE_PAD;
-   
-         // distanza minima tra centri (tuning)
-         const minDist = s * 1.05;
-   
-         const spot = pickSpot(half, minDist);
-         if (!spot) continue; // niente spazio valido -> salta
-   
-         const p = cellToWorld(spot.cx, spot.cy);
-         const baseY = PARTNER_Y_BASE + Math.random() * 0.06;
-         spr.position.set(p.x, baseY, p.z);
-   
-         g.add(spr);
-   
-         this.partnerItems.push({
-           sprite: spr,
-           baseY,
-           amp: PARTNER_Y_FLOAT * (0.7 + Math.random() * 0.6),
-           speed: PARTNER_FLOAT_SPEED_MIN + Math.random() * (PARTNER_FLOAT_SPEED_MAX - PARTNER_FLOAT_SPEED_MIN),
-           phase: Math.random() * Math.PI * 2
-         });
-       }
-     }
-   
-     this.scene.add(g);
-   }
+    // particles: drift + swirl
+    if (this.loadingParticles && this.loadingParticles.geometry) {
+      const pos = this.loadingParticles.geometry.attributes.position.array;
+      const spd = this.loadingParticleMeta;
 
-  _updatePartners(dt) {
-    if (!this.partnerItems || !this.partnerItems.length) return;
+      for (let i = 0; i < spd.length; i++) {
+        const ix = i * 3;
+        let x = pos[ix + 0];
+        let y = pos[ix + 1];
+        let z = pos[ix + 2];
 
-    const t = performance.now() * 0.001;
-    for (let i = 0; i < this.partnerItems.length; i++) {
-      const it = this.partnerItems[i];
-      const spr = it.sprite;
-      if (!spr) continue;
-      // fluttuazione verticale
-      spr.position.y = it.baseY + (0.5 + 0.5 * Math.sin(t * it.speed + it.phase)) * it.amp;
+        // drift verso +Z con swirl
+        const s = spd[i] * LOADING_PARTICLE_SPEED;
+        z += s * dt;
+        x += Math.sin(t2 * 0.9 + i) * LOADING_PARTICLE_SWIRL * dt * 0.18;
+
+        // wrap
+        if (z > GRID_HEIGHT / 2 - 0.5) z = -GRID_HEIGHT / 2 + 0.5;
+
+        pos[ix + 0] = x;
+        pos[ix + 1] = y + Math.sin(t2 * 0.6 + i) * dt * 0.02; // micro bob
+        pos[ix + 2] = z;
+      }
+
+      this.loadingParticles.geometry.attributes.position.needsUpdate = true;
+
+      // shimmer
+      this.loadingParticles.material.opacity =
+        0.35 + 0.25 * (0.5 + 0.5 * Math.sin(t2 * 1.8));
+    }
+
+    // scan beam: pulsazione più “energetica”
+    for (let i = 0; i < this.loadingItems.length; i++) {
+      const it = this.loadingItems[i];
+      if (it.isScan && it.mesh && it.mesh.material) {
+        it.mesh.material.opacity = 0.12 + 0.18 * (0.5 + 0.5 * Math.sin(t2 * 3.5));
+      }
     }
   }
 
-    async init() {
+  async init() {
     this._initRenderer();
+
     // renderizza subito plot + chest (anche se le texture arrivano un attimo dopo)
     this._loadPlot();
     this._loadChest();
+
     // ✅ avvia fx procedurale immediatamente
     this._startLoadingFx();
+
     // ✅ avvia subito il loop (così non hai schermo nero)
     this._loop();
+
     // carica assets “pesanti” in parallelo
-    await Promise.all([
-      this._loadGoblinAssets(),
-      this._loadNavMask(),
-      this._loadPartnerTextures()   // ✅ aggiunto
-    ]);
-    // ✅ ora possiamo spawnare sulle celle nere del navmask
-    this._spawnPartnersOnBlackCells();
+    await Promise.all([this._loadGoblinAssets(), this._loadNavMask()]);
+
     this.assetsReady = true;
     this._stopLoadingFx();
   }
@@ -1094,8 +1016,14 @@ for (let i = 0; i < this.loadingItems.length; i++) {
 
   _loadChest() {
     const tex = new THREE.TextureLoader().load('/madverse/chest_sprite.png');
-     tex.colorSpace = THREE.SRGBColorSpace;
-    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+    tex.colorSpace = THREE.SRGBColorSpace;
+
+    const mat = new THREE.SpriteMaterial({
+      map: tex,
+      transparent: true,
+      depthTest: false
+    });
+
     const spr = new THREE.Sprite(mat);
 
     spr.visible = false;
@@ -1105,314 +1033,330 @@ for (let i = 0; i < this.loadingItems.length; i++) {
     this.chestSprite = spr;
     this.scene.add(spr);
   }
-   
+
   _loadPlot() {
-const tex = new THREE.TextureLoader().load('/madverse/plot01.png');
-tex.colorSpace = THREE.SRGBColorSpace;
+    const tex = new THREE.TextureLoader().load('/madverse/plot01.png');
+    tex.colorSpace = THREE.SRGBColorSpace;
 
     const plane = new THREE.Mesh(
-     new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT),
-     new THREE.MeshBasicMaterial({
-       map: tex,
-       color: 0xffffff,
-       depthWrite: false   // ✅ IMPORTANTISSIMO: il piano non deve coprire i goblin
-     })
-   );
-   plane.rotation.x = -Math.PI / 2;
-   plane.renderOrder = 0;
-   this.scene.add(plane);
+      new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT),
+      new THREE.MeshBasicMaterial({
+        map: tex,
+        color: 0xffffff,
+        depthWrite: false // ✅ IMPORTANTISSIMO: il piano non deve coprire i goblin
+      })
+    );
+
+    plane.rotation.x = -Math.PI / 2;
+    plane.renderOrder = 0;
+    this.scene.add(plane);
   }
 
-   async _loadNavMask() {
-     // fallback: se fallisce, tutto walkable
-     const fallbackAll = () => {
-       this.walkable = new Uint8Array(GRID_WIDTH * GRID_HEIGHT);
-       this.walkable.fill(1);
-       this.walkableReady = true;
-     };
-   
-     try {
-       const img = await new Promise((resolve, reject) => {
-         const i = new Image();
-         i.crossOrigin = 'anonymous';
-         i.onload = () => resolve(i);
-         i.onerror = reject;
-         i.src = NAVMASK_URL;
-       });
-   
-       // leggiamo pixel via canvas
-       const c = document.createElement('canvas');
-       c.width = GRID_WIDTH;
-       c.height = GRID_HEIGHT;
-       const ctx = c.getContext('2d', { willReadFrequently: true });
-   
-       // stira l’immagine ai 48x24 (se è diversa di dimensione)
-       ctx.drawImage(img, 0, 0, GRID_WIDTH, GRID_HEIGHT);
-   
-       const data = ctx.getImageData(0, 0, GRID_WIDTH, GRID_HEIGHT).data;
-   
-       this.walkable = new Uint8Array(GRID_WIDTH * GRID_HEIGHT);
-   
-       for (let y = 0; y < GRID_HEIGHT; y++) {
-         for (let x = 0; x < GRID_WIDTH; x++) {
-           const idx = (y * GRID_WIDTH + x) * 4;
-           const r = data[idx], g = data[idx + 1], b = data[idx + 2];
-           // luminanza semplice
-           const lum = (r + g + b) / 3;
-           this.walkable[y * GRID_WIDTH + x] = lum >= NAVMASK_THRESHOLD ? 1 : 0;
-         }
-       }
-   
-       // sicurezza: se per errore è tutta nera -> fallback
-       let any = 0;
-       for (let i = 0; i < this.walkable.length; i++) any |= this.walkable[i];
-       if (!any) fallbackAll();
-   
-       this.walkableReady = true;
-   
-       // (facoltativo) debug overlay
-       if (NAVMASK_DEBUG) {
-         const tex = new THREE.CanvasTexture(c);
-         tex.colorSpace = THREE.SRGBColorSpace;
-         const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.35, depthWrite: false });
-         const plane = new THREE.Mesh(new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT), mat);
-         plane.rotation.x = -Math.PI / 2;
-         plane.position.y = 0.01;
-         plane.renderOrder = 5;
-         this.scene.add(plane);
-       }
-     } catch (e) {
-       console.warn('NavMask load failed, using fallback (all walkable)', e);
-       fallbackAll();
-     }
-   }
-   
-   isWalkableCell(ix, iy) {
-     if (!this.walkableReady || !this.walkable) return true;
-     ix = THREE.MathUtils.clamp(ix, 0, GRID_WIDTH - 1);
-     iy = THREE.MathUtils.clamp(iy, 0, GRID_HEIGHT - 1);
-     return this.walkable[iy * GRID_WIDTH + ix] === 1;
-   }
-   
-   _fixGoblinMaterials(root) {
-     root.traverse((o) => {
-       if (!o.isMesh) return;
-   
-       const mats = Array.isArray(o.material) ? o.material : [o.material];
-       for (const m of mats) {
-         if (!m) continue;
-   
-         // SRGB per le texture colore (fondamentale)
-         if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
-   
-         // Evita look metallico/spento
-         if ('metalness' in m) m.metalness = 0.0;
-         if ('roughness' in m) m.roughness = Math.min(m.roughness ?? 1.0, 0.95);
-   
-         // IMPORTANTISSIMO: niente emissive fisso che “sbianca/grigia”
-         if ('emissiveIntensity' in m) m.emissiveIntensity = 0.0;
-   
-         m.needsUpdate = true;
-       }
-     });
-   }
+  async _loadNavMask() {
+    const fallbackAll = () => {
+      this.walkable = new Uint8Array(GRID_WIDTH * GRID_HEIGHT);
+      this.walkable.fill(1);
+      this.walkableReady = true;
+    };
+
+    try {
+      const img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.crossOrigin = 'anonymous';
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = NAVMASK_URL;
+      });
+
+      const c = document.createElement('canvas');
+      c.width = GRID_WIDTH;
+      c.height = GRID_HEIGHT;
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+
+      // stira l’immagine ai 48x24 (se è diversa di dimensione)
+      ctx.drawImage(img, 0, 0, GRID_WIDTH, GRID_HEIGHT);
+
+      const data = ctx.getImageData(0, 0, GRID_WIDTH, GRID_HEIGHT).data;
+      this.walkable = new Uint8Array(GRID_WIDTH * GRID_HEIGHT);
+
+      for (let y = 0; y < GRID_HEIGHT; y++) {
+        for (let x = 0; x < GRID_WIDTH; x++) {
+          const idx = (y * GRID_WIDTH + x) * 4;
+          const r = data[idx],
+            g = data[idx + 1],
+            b = data[idx + 2];
+
+          const lum = (r + g + b) / 3;
+          this.walkable[y * GRID_WIDTH + x] = lum >= NAVMASK_THRESHOLD ? 1 : 0;
+        }
+      }
+
+      // sicurezza: se per errore è tutta nera -> fallback
+      let any = 0;
+      for (let i = 0; i < this.walkable.length; i++) any |= this.walkable[i];
+      if (!any) fallbackAll();
+
+      this.walkableReady = true;
+
+      // (facoltativo) debug overlay
+      if (NAVMASK_DEBUG) {
+        const tex = new THREE.CanvasTexture(c);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        const mat = new THREE.MeshBasicMaterial({
+          map: tex,
+          transparent: true,
+          opacity: 0.35,
+          depthWrite: false
+        });
+        const plane = new THREE.Mesh(new THREE.PlaneGeometry(GRID_WIDTH, GRID_HEIGHT), mat);
+        plane.rotation.x = -Math.PI / 2;
+        plane.position.y = 0.01;
+        plane.renderOrder = 5;
+        this.scene.add(plane);
+      }
+    } catch (e) {
+      console.warn('NavMask load failed, using fallback (all walkable)', e);
+      fallbackAll();
+    }
+  }
+
+  isWalkableCell(ix, iy) {
+    if (!this.walkableReady || !this.walkable) return true;
+    ix = THREE.MathUtils.clamp(ix, 0, GRID_WIDTH - 1);
+    iy = THREE.MathUtils.clamp(iy, 0, GRID_HEIGHT - 1);
+    return this.walkable[iy * GRID_WIDTH + ix] === 1;
+  }
+
+  _fixGoblinMaterials(root) {
+    root.traverse((o) => {
+      if (!o.isMesh) return;
+
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      for (const m of mats) {
+        if (!m) continue;
+
+        // SRGB per le texture colore (fondamentale)
+        if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
+
+        // Evita look metallico/spento
+        if ('metalness' in m) m.metalness = 0.0;
+        if ('roughness' in m) m.roughness = Math.min(m.roughness ?? 1.0, 0.95);
+
+        // IMPORTANTISSIMO: niente emissive fisso che “sbianca/grigia”
+        if ('emissiveIntensity' in m) m.emissiveIntensity = 0.0;
+
+        m.needsUpdate = true;
+      }
+    });
+  }
 
   async _loadGoblinAssets() {
     const base = await this.loader.loadAsync('/madverse/assets/goblin_run.glb');
     this.template = base.scene;
-      // ✅ rende i materiali del goblin più leggibili e vivi
-      this._fixGoblinMaterials(this.template);
-      //this._tintGoblinParts(this.template, 1337); // seed fisso: colori stabili
 
+    // ✅ rende i materiali del goblin più leggibili e vivi
+    this._fixGoblinMaterials(this.template);
+    // this._tintGoblinParts(this.template, 1337); // seed fisso: colori stabili
 
     this.clips = [
       { name: 'RUNNING', clip: base.animations[0] },
-      { name: 'SURPRISED', clip: (await this.loader.loadAsync('/madverse/assets/goblin_surprised.glb')).animations[0], once: true },
-      { name: 'DIGGING', clip: (await this.loader.loadAsync('/madverse/assets/goblin_digging.glb')).animations[0] },
-      { name: 'VICTORY', clip: (await this.loader.loadAsync('/madverse/assets/goblin_victory.glb')).animations[0], once: true }
+      {
+        name: 'SURPRISED',
+        clip: (await this.loader.loadAsync('/madverse/assets/goblin_surprised.glb'))
+          .animations[0],
+        once: true
+      },
+      {
+        name: 'DIGGING',
+        clip: (await this.loader.loadAsync('/madverse/assets/goblin_digging.glb'))
+          .animations[0]
+      },
+      {
+        name: 'VICTORY',
+        clip: (await this.loader.loadAsync('/madverse/assets/goblin_victory.glb'))
+          .animations[0],
+        once: true
+      }
     ];
   }
 
   syncExpeditions(expeditions) {
     const active = new Set(
-      (expeditions || []).map(e => String(e.expedition_id ?? e.id ?? e.expeditionId ?? ''))
+      (expeditions || []).map((e) =>
+        String(e.expedition_id ?? e.id ?? e.expeditionId ?? '')
+      )
     );
 
-    (expeditions || []).forEach(e => {
+    (expeditions || []).forEach((e) => {
       const id = String(e.expedition_id ?? e.id ?? e.expeditionId ?? '');
       if (!id) return;
 
       const owner = e.wax_account || e.owner || 'player';
 
       if (!this.goblins.has(id)) {
-         // trova una cella walkable per lo spawn
-         let sx = 0, sy = 0;
-         for (let k = 0; k < 100; k++) {
-           const x = Math.random() * GRID_WIDTH;
-           const y = Math.random() * GRID_HEIGHT;
-           const { ix, iy } = toCellIndex(x, y);
-           if (this.isWalkableCell(ix, iy)) {
-             sx = x;
-             sy = y;
-             break;
-           }
-         }
-         
-         const g = new Goblin(
-           this.template,
-           this.clips,
-           { x: sx, y: sy },
-           owner,
-           (goblin, chest) => this._onGoblinDigComplete(goblin, chest),
-           (ix, iy) => this.isWalkableCell(ix, iy)
-         );
+        // trova una cella walkable per lo spawn
+        let sx = 0,
+          sy = 0;
+        for (let k = 0; k < 100; k++) {
+          const x = Math.random() * GRID_WIDTH;
+          const y = Math.random() * GRID_HEIGHT;
+          const { ix, iy } = toCellIndex(x, y);
+          if (this.isWalkableCell(ix, iy)) {
+            sx = x;
+            sy = y;
+            break;
+          }
+        }
 
-
+        const g = new Goblin(
+          this.template,
+          this.clips,
+          { x: sx, y: sy },
+          owner,
+          (goblin, chest) => this._onGoblinDigComplete(goblin, chest),
+          (ix, iy) => this.isWalkableCell(ix, iy)
+        );
 
         this.scene.add(g.root);
         this.goblins.set(id, g);
-this.missingTicks.set(id, 0);
-         
+        this.missingTicks.set(id, 0);
       } else {
-        // se vuoi aggiornare label quando cambia owner (di solito non cambia)
         const g = this.goblins.get(id);
         if (g && g.owner !== owner) {
           g.owner = owner;
         }
-         this.missingTicks.set(id, 0);
-
+        this.missingTicks.set(id, 0);
       }
     });
-      this.goblins.forEach((g, id) => {
-        if (active.has(id)) {
-          this.missingTicks.set(id, 0);
-          return;
-        }
-      
-        const n = (this.missingTicks.get(id) || 0) + 1;
-        this.missingTicks.set(id, n);
-      
-        // ✅ rimuovi solo se manca per N sync consecutivi
-        if (n >= this.MISSING_TICKS_BEFORE_REMOVE) {
-          g.finish();
-          this.goblins.delete(id);
-          this.missingTicks.delete(id);
-        }
-      });
-      
-        }
-      
-        _onGoblinDigComplete(goblin, chest) {
-         // Il claim lo farà _loop() dopo CHEST_CLAIM_DELAY_MS.
-        }
-      
-      _tryStartDelayedClaim(goblinId, chest) {
-        if (!chest) return;
-      
-        const chestKey = `${chest.world.x}:${chest.world.y}`;
-      
-        // se abbiamo già claimato questa chest, stop
-        if (this.claimChestKey === chestKey) return;
-      
-        // se è già in pending per questa chest, non cambiare winner
-        if (this.pendingClaimKey === chestKey) return;
-      
-        // ✅ primo contatto: fissiamo winner e countdown
-        this.pendingClaimKey = chestKey;
-        this.pendingWinnerId = goblinId;
-        this.pendingClaimAt = performance.now() + CHEST_CLAIM_DELAY_MS;
-      }
-      
-      _loop() {
-        requestAnimationFrame(() => this._loop());
-      
-        let dt = this.clock.getDelta();
-        // ✅ se non siamo pronti, anima e renderizza SOLO il loading FX
-        if (!this.assetsReady) {
-          if (dt > 0.12) dt = 0;
-          dt = Math.min(dt, 1 / 30);
 
-          this._updateLoadingFx(dt);
-          this._updatePartners(dt);
-          this.renderer.render(this.scene, this.camera);
-          return;
-        }
-      
-        // ✅ se il tab è stato in background o c'è un hitch, evita il "teletrasporto"
-        if (dt > 0.12) dt = 0;
-      
-        // ✅ clamp ulteriore (max ~30 FPS step)
-        dt = Math.min(dt, 1 / 30);
-      
-        const now = performance.now();
-      
-        const liveDrop = this.drop || GameState.drop?.current || null;
-      
-        // ✅ la chest deve restare visibile anche se lo state passa a non-visible,
-        // finché abbiamo una pendingClaim attiva (i 5 secondi)
-        const chestVisibleFromState = liveDrop && GameState.drop?.fx?.phase === 'visible';
-        const chestVisibleFromPending = !!this.pendingClaimKey;
-      
-        const chest = (chestVisibleFromState || chestVisibleFromPending) ? liveDrop : null;
-      
-        // ✅ chest render
-        if (this.chestSprite) {
-          if (chest) {
-            const p = cellToWorld(chest.world.x, chest.world.y);
-            this.chestSprite.position.set(p.x, CHEST_Y_OFFSET, p.z);
-            this.chestSprite.visible = true;
-          } else {
-            this.chestSprite.visible = false;
-          }
-        }
-      
-        // ---- UPDATE GOBLINS + DETECT FIRST CONTACT (WINNER) ----
-        const pairs = Array.from(this.goblins.entries()); // [id, goblin]
-        const neighbors = pairs.map(p => p[1]);          // per avoidance
-      
-        for (let i = 0; i < pairs.length; i++) {
-          const [id, g] = pairs[i];
-      
-          // update goblin
-          g.update(dt, chest, neighbors);
-      
-          // posizionamento
-          const p = g.worldPosition();
-          g.root.position.set(p.x, GOBLIN_Y_OFFSET, p.z);
-      
-          // ✅ primo goblin che entra nel range -> avvia countdown (5s)
-          // IMPORTANT: solo se non c'è già pendingClaim
-          if (chest && !this.pendingClaimKey) {
-            const dist = chebyshev(g.cell, chest.world);
-            if (dist <= CHEST_TRIGGER_RANGE) {
-              this._tryStartDelayedClaim(id, chest);
-            }
-          }
-        }
-      
-        // ---- DOPO 5s: CLAIM UNA SOLA VOLTA ----
-        if (this.pendingClaimKey && now >= this.pendingClaimAt) {
-          // blocca doppi claim
-          this.claimChestKey = this.pendingClaimKey;
-      
-          // reset pending prima di chiamare (sicurezza)
-          this.pendingClaimKey = null;
-          this.pendingWinnerId = null;
-          this.pendingClaimAt = 0;
-      
-          // ✅ claim reale
-          if (typeof window.claimActiveDrop === 'function') {
-            window.claimActiveDrop();
-          } else {
-            if (window.__GOBLIN_DEX_STATE__?.drop?.fx) {
-              window.__GOBLIN_DEX_STATE__.drop.fx.phase = 'idle';
-            }
-          }
-        }
-      
-        this.renderer.render(this.scene, this.camera);
+    this.goblins.forEach((g, id) => {
+      if (active.has(id)) {
+        this.missingTicks.set(id, 0);
+        return;
       }
-         
+
+      const n = (this.missingTicks.get(id) || 0) + 1;
+      this.missingTicks.set(id, n);
+
+      // ✅ rimuovi solo se manca per N sync consecutivi
+      if (n >= this.MISSING_TICKS_BEFORE_REMOVE) {
+        g.finish();
+        this.goblins.delete(id);
+        this.missingTicks.delete(id);
+      }
+    });
+  }
+
+  _onGoblinDigComplete(goblin, chest) {
+    // Il claim lo farà _loop() dopo CHEST_CLAIM_DELAY_MS.
+  }
+
+  _tryStartDelayedClaim(goblinId, chest) {
+    if (!chest) return;
+
+    const chestKey = `${chest.world.x}:${chest.world.y}`;
+
+    // se abbiamo già claimato questa chest, stop
+    if (this.claimChestKey === chestKey) return;
+
+    // se è già in pending per questa chest, non cambiare winner
+    if (this.pendingClaimKey === chestKey) return;
+
+    // ✅ primo contatto: fissiamo winner e countdown
+    this.pendingClaimKey = chestKey;
+    this.pendingWinnerId = goblinId;
+    this.pendingClaimAt = performance.now() + CHEST_CLAIM_DELAY_MS;
+  }
+
+  _loop() {
+    requestAnimationFrame(() => this._loop());
+
+    let dt = this.clock.getDelta();
+
+    // ✅ se non siamo pronti, anima e renderizza SOLO il loading FX
+    if (!this.assetsReady) {
+      if (dt > 0.12) dt = 0;
+      dt = Math.min(dt, 1 / 30);
+
+      this._updateLoadingFx(dt);
+      this.renderer.render(this.scene, this.camera);
+      return;
+    }
+
+    // ✅ se il tab è stato in background o c'è un hitch, evita il "teletrasporto"
+    if (dt > 0.12) dt = 0;
+
+    // ✅ clamp ulteriore (max ~30 FPS step)
+    dt = Math.min(dt, 1 / 30);
+
+    const now = performance.now();
+    const liveDrop = this.drop || GameState.drop?.current || null;
+
+    // ✅ la chest deve restare visibile anche se lo state passa a non-visible,
+    // finché abbiamo una pendingClaim attiva (i 5 secondi)
+    const chestVisibleFromState = liveDrop && GameState.drop?.fx?.phase === 'visible';
+    const chestVisibleFromPending = !!this.pendingClaimKey;
+
+    const chest = chestVisibleFromState || chestVisibleFromPending ? liveDrop : null;
+
+    // ✅ chest render
+    if (this.chestSprite) {
+      if (chest) {
+        const p = cellToWorld(chest.world.x, chest.world.y);
+        this.chestSprite.position.set(p.x, CHEST_Y_OFFSET, p.z);
+        this.chestSprite.visible = true;
+      } else {
+        this.chestSprite.visible = false;
+      }
+    }
+
+    // ---- UPDATE GOBLINS + DETECT FIRST CONTACT (WINNER) ----
+    const pairs = Array.from(this.goblins.entries()); // [id, goblin]
+    const neighbors = pairs.map((p) => p[1]); // per avoidance
+
+    for (let i = 0; i < pairs.length; i++) {
+      const [id, g] = pairs[i];
+
+      // update goblin
+      g.update(dt, chest, neighbors);
+
+      // posizionamento
+      const p = g.worldPosition();
+      g.root.position.set(p.x, GOBLIN_Y_OFFSET, p.z);
+
+      // ✅ primo goblin che entra nel range -> avvia countdown (5s)
+      // IMPORTANT: solo se non c'è già pendingClaim
+      if (chest && !this.pendingClaimKey) {
+        const dist = chebyshev(g.cell, chest.world);
+        if (dist <= CHEST_TRIGGER_RANGE) {
+          this._tryStartDelayedClaim(id, chest);
+        }
+      }
+    }
+
+    // ---- DOPO 5s: CLAIM UNA SOLA VOLTA ----
+    if (this.pendingClaimKey && now >= this.pendingClaimAt) {
+      // blocca doppi claim
+      this.claimChestKey = this.pendingClaimKey;
+
+      // reset pending prima di chiamare (sicurezza)
+      this.pendingClaimKey = null;
+      this.pendingWinnerId = null;
+      this.pendingClaimAt = 0;
+
+      // ✅ claim reale
+      if (typeof window.claimActiveDrop === 'function') {
+        window.claimActiveDrop();
+      } else {
+        if (window.__GOBLIN_DEX_STATE__?.drop?.fx) {
+          window.__GOBLIN_DEX_STATE__.drop.fx.phase = 'idle';
+        }
+      }
+    }
+
+    this.renderer.render(this.scene, this.camera);
+  }
+
   setDrop(drop) {
     this.drop = drop || null;
     if (!drop) {

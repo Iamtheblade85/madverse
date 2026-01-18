@@ -49,7 +49,7 @@
         </div>
       </nav>
       <section id="news-banner" aria-label="News & Ads">
-        <strong>Live:</strong> World expeditions map updates every few seconds (HTTP polling only, no SSE).
+        <strong>Live:</strong> World expeditions
       </section>
       <div id="status-row" aria-live="polite">
         <span id="latency-label" title="Time to sync the latest snapshot">syncing…</span>
@@ -325,10 +325,16 @@ drop: {
   dissolveMs: 650,
   maxLifeFallbackMs: 90_000
 },
+pickups: {
+  maxLifeFallbackMs: 90_000,
+  spawnGraceMs: 2500,
+  maxRender: 220
+},
     };
-    const SIMULATION_API_PATH = '/2expedition_simulate';
-    const ACTIVE_DROP_API_PATH = '/2active_drop';
-    const CLAIM_DROP_API_PATH  = '/2drop_claim';
+const SIMULATION_API_PATH = '/2expedition_simulate';
+const ACTIVE_DROP_API_PATH = '/2active_drop';
+const CLAIM_DROP_API_PATH  = '/2drop_claim';
+const CLAIM_PICKUP_API_PATH = '/2pickup_claim';
     const QS = new URLSearchParams(location.search);
     const OVERLAY_MODE =
       QS.get('overlay') === '1' ||
@@ -453,6 +459,14 @@ drop: {
           shockwaves: []
         }
       },
+		pickups: {
+		  items: [],            // array normalizzato dei pickup (coins)
+		  byId: new Map(),      // cache per diff/lookup
+		  lastSnapshotKey: '',  // per debug/consistenza
+		  claimBusy: false,
+		  lastLocalTickerHtml: '',
+		  lastLocalTickerUntilMs: 0
+		},	
     };
 	// ------------------------------------------------------------
 	// AUTH (iframe) — receive from parent
@@ -514,6 +528,61 @@ drop: {
         reward_preview: d.reward_preview || null
       };
     }
+
+function normalizePickup(p){
+  if (!p || typeof p !== 'object') return null;
+
+  // backend: {id, group_event_id, type, x,y,z, rot_y, tilt_x, tilt_z, variant, status, expires_at, token_symbol, reward_amount, reward_txid, claimed_by}
+  const id = String(p.id ?? p.pickup_id ?? p.drop_id ?? '');
+  if (!id) return null;
+
+  const type = String(p.type ?? 'coin');
+
+  const wx = toNumber(p.world?.x ?? p.x ?? p.world_x);
+  const wy = toNumber(p.world?.y ?? p.y ?? p.world_y);
+  const wz = toNumber(p.world?.z ?? p.z ?? 0);
+
+  const expiresAtMs =
+    parseUtcMs(p.expires_at_utc ?? p.expires_at ?? p.expiresAtUtc) ??
+    (Date.now() + (CONFIG.pickups?.maxLifeFallbackMs || 90_000));
+
+  const spawnedAtMs =
+    parseUtcMs(p.created_at ?? p.spawned_at ?? p.spawned_at_utc) ??
+    (Date.now() - 400);
+
+  const tokenSymbol = String(p.token_symbol ?? p.reward_symbol ?? p.symbol ?? '');
+  const amountStr = (p.reward_amount != null) ? String(p.reward_amount) : null;
+
+  return {
+    id,
+    group_event_id: String(p.group_event_id ?? p.group ?? ''),
+    type,
+    status: String(p.status ?? 'spawned'),
+    world: { x: wx, y: wy, z: wz },
+
+    // pose / render hints (ThreeRuntime li userà)
+    rot_y: toNumber(p.rot_y ?? p.ry ?? 0),
+    tilt_x: toNumber(p.tilt_x ?? p.tx ?? 0),
+    tilt_z: toNumber(p.tilt_z ?? p.tz ?? 0),
+    variant: toNumber(p.variant ?? 0),
+
+    spawnedAtMs,
+    expiresAtMs,
+
+    claimed: (String(p.status||'') === 'claimed') || !!p.claimed,
+    claimed_by: p.claimed_by ? String(p.claimed_by) : '',
+    reward: {
+      symbol: tokenSymbol,
+      amount: amountStr,
+      tx_id: p.reward_txid ? String(p.reward_txid) : null
+    }
+  };
+}
+
+function pickupTimeLeftMs(p){
+  if (!p) return null;
+  return Math.max(0, (p.expiresAtMs || 0) - Date.now());
+}
 
     function dropTimeLeftMs(drop){
       if (!drop) return null;
@@ -3112,13 +3181,22 @@ function updateTicker(){
   const ev = list.length ? list[i % list.length] : null;
 
 
-  // se abbiamo un messaggio "local" appena claimato, lo preferiamo per qualche secondo
-  if (State.drop && State.drop.lastLocalTickerHtml && State.drop.lastLocalTickerUntilMs) {
-    if (Date.now() < State.drop.lastLocalTickerUntilMs) {
-      el.innerHTML = State.drop.lastLocalTickerHtml;
-      return;
-    }
+// se abbiamo un messaggio "local" appena claimato, lo preferiamo per qualche secondo
+if (State.drop && State.drop.lastLocalTickerHtml && State.drop.lastLocalTickerUntilMs) {
+  if (Date.now() < State.drop.lastLocalTickerUntilMs) {
+    el.innerHTML = State.drop.lastLocalTickerHtml;
+    return;
   }
+}
+
+// ✅ NEW: local ticker per pickup/coins
+if (State.pickups && State.pickups.lastLocalTickerHtml && State.pickups.lastLocalTickerUntilMs) {
+  if (Date.now() < State.pickups.lastLocalTickerUntilMs) {
+    el.innerHTML = State.pickups.lastLocalTickerHtml;
+    return;
+  }
+}
+
 
   if (ev){
     const when = timeHM(ev.timestamp);
@@ -3200,10 +3278,44 @@ function updateTicker(){
         return;
       }
     }
+// ✅ PICKUPS / COINS
+if (ev.event_type === 'coin_rain' || ev.event_type === 'pickup_spawned' || ev.event_type === 'pickup'){
+  // ideal: payload { token_symbol, count }
+  const token = safe(ev.token_symbol || ev.reward_symbol || ev.symbol || 'TOKEN');
+  const count = (ev.count != null) ? Number(ev.count) : null;
 
-    el.textContent = `[${when}] ${account}`;
-    return;
-  }
+  el.innerHTML =
+    `<span class="ticker-time">[${when}]</span> ` +
+    `🌧️ <strong>Coin rain spawned!</strong> ` +
+    (count ? `<span class="ticker-extra">${count} coins</span> ` : '') +
+    `<span class="ticker-rew">${token}</span> ` +
+    `<span class="ticker-eff">Goblins can collect them in the arena.</span>`;
+  return;
+}
+
+if (ev.event_type === 'pickup_claimed' || ev.event_type === 'coin_claimed'){
+  const by = safe(ev.claimed_by || ev.wax_account || 'someone');
+  const amtRaw = (ev.reward_amount != null) ? ev.reward_amount : (ev.amount != null ? ev.amount : null);
+  const sym = safe(ev.reward_symbol || ev.token_symbol || 'TOKEN');
+  const txid = ev.reward_txid ? String(ev.reward_txid) : (ev.tx_id ? String(ev.tx_id) : '');
+
+  const amtNum = (amtRaw != null) ? Number(amtRaw) : NaN;
+  const rewardHtml = Number.isFinite(amtNum)
+    ? `→ <span class="ticker-rew">+${formatCompact(amtNum)} ${sym}</span>`
+    : `→ <span class="ticker-rew">${sym}</span>`;
+
+  const txHtml = txid
+    ? ` <span class="ticker-extra" title="${safe(txid)}">tx: ${safe(txid.slice(0, 10))}…</span>`
+    : '';
+
+  el.innerHTML =
+    `<span class="ticker-time">[${when}]</span> ` +
+    `🪙 <strong>${by}</strong> collected a coin ` +
+    rewardHtml +
+    txHtml +
+    `<span class="ticker-eff"> Use Twitch chat commands to spawn more rains.</span>`;
+  return;
+}
 
   const latest = State.recentExpeditions?.[0];
   if (latest){
@@ -3847,6 +3959,131 @@ function updateTicker(){
 	}
 	window.claimActiveDrop = claimActiveDrop;
 
+async function claimPickup(pickupId){
+  const id = String(pickupId || '').trim();
+  if (!id) return;
+
+  // trova pickup in state (idempotente)
+  const p = State.pickups?.byId?.get(id) || (State.pickups?.items || []).find(x => x.id === id);
+  if (!p) return;
+
+  const left = pickupTimeLeftMs(p);
+  if (left != null && left <= 0){
+    toast('Coin expired.');
+    return;
+  }
+
+  if (State.pickups.claimBusy) return;
+
+  syncUserFromStorage();
+  try { assertAuth(); } catch { toast('Please log in first'); return; }
+
+  State.pickups.claimBusy = true;
+
+  // messaggio leggero: l’animazione vera la farà ThreeRuntime
+  pushCanvasMsg('🪙 Claiming coin…');
+
+  const body = {
+    wax_account: State.user.wax_account,
+    user_id: State.user.user_id,
+    usx_token: State.user.usx_token,
+    pickup_id: id
+  };
+
+  const res = await Api.post(CLAIM_PICKUP_API_PATH, body, 15000).catch(()=>({ok:false, status:0, data:null}));
+
+  State.pickups.claimBusy = false;
+
+  if (!res || !res.data){
+    toast('Coin claim failed.');
+    return;
+  }
+
+  // expired / already / too late
+  if (!res.ok || res.status === 409 || res.data.ok === false){
+    const err = res.data?.error;
+    const by  = (res.data && (res.data.claimed_by || res.data.claimedBy)) || 'someone';
+
+    if (err === 'expired'){
+      toast('Coin expired.');
+      pushCanvasMsg('⌛ Coin expired.');
+      return;
+    }
+
+    toast(`Too late — collected by ${by}.`);
+    pushCanvasMsg(`💨 Coin collected by ${by}.`);
+
+    // aggiorna stato locale se il server ci dice chi l’ha presa
+    try{
+      const local = State.pickups.byId.get(id);
+      if (local){
+        local.status = 'claimed';
+        local.claimed = true;
+        local.claimed_by = String(by || '');
+      }
+    } catch {}
+
+    // notifichiamo ThreeRuntime che è stata claimata (se implementato)
+    if (State.engine && typeof State.engine.onPickupClaimResult === 'function'){
+      State.engine.onPickupClaimResult({ pickup_id:id, ok:false, already:true, claimed_by: by, error: err || 'claimed' });
+    }
+
+    return;
+  }
+
+  // success
+  const claimedBy = res.data?.claimed_by || res.data?.claimedBy || '';
+  const amtStr = res.data?.reward?.amount;
+  const sym    = res.data?.reward?.symbol || 'TOKEN';
+  const txid   = res.data?.reward?.tx_id || res.data?.reward?.txid || null;
+
+  const amtNum = (amtStr != null) ? Number(amtStr) : NaN;
+  if (Number.isFinite(amtNum)){
+    toast(`🎉 Coin collected: +${formatCompact(amtNum)} ${sym}`);
+  } else {
+    toast(`🎉 Coin collected: ${sym}`);
+  }
+
+  // ticker local (qualche secondo)
+  const when = timeHM(new Date());
+  State.pickups.lastLocalTickerHtml =
+    `<span class="ticker-time">[${when}]</span> ` +
+    `🪙 <strong>${safe(claimedBy || 'someone')}</strong> collected a coin ` +
+    (Number.isFinite(amtNum)
+      ? `→ <span class="ticker-rew">+${formatCompact(amtNum)} ${safe(sym)}</span>`
+      : `→ <span class="ticker-rew">${safe(sym)}</span>`) +
+    (txid ? ` <span class="ticker-extra" title="${safe(txid)}">tx: ${safe(String(txid).slice(0, 10))}…</span>` : '') +
+    `<span class="ticker-eff"> Coins are spawned by Twitch chat commands.</span>`;
+  State.pickups.lastLocalTickerUntilMs = Date.now() + 10_000;
+  updateTicker();
+
+  // aggiorna stato locale
+  try{
+    const local = State.pickups.byId.get(id);
+    if (local){
+      local.status = 'claimed';
+      local.claimed = true;
+      local.claimed_by = String(claimedBy || '');
+      if (amtStr != null) local.reward.amount = String(amtStr);
+      if (sym) local.reward.symbol = String(sym);
+      if (txid) local.reward.tx_id = String(txid);
+    }
+  } catch {}
+
+  // notifichiamo ThreeRuntime che è ok (per FX + rimozione)
+  if (State.engine && typeof State.engine.onPickupClaimResult === 'function'){
+    State.engine.onPickupClaimResult({
+      pickup_id: id,
+      ok: true,
+      claimed: true,
+      claimed_by: claimedBy,
+      reward: { symbol: sym, amount: amtStr, tx_id: txid }
+    });
+  }
+}
+
+window.claimPickup = claimPickup;
+
     // ------------------------------------------------------------
     // SNAPSHOTS / POLLING (NO SSE)
     // ------------------------------------------------------------
@@ -3867,25 +4104,60 @@ function updateTicker(){
         // 1) ALL EXPEDITIONS SNAPSHOT
         // ---------------------------
         if (expRes.ok && expRes.data){
-          // backend now returns { drop:{...}, expeditions:[...], goblins:[...] , ... }
-          const snap = expRes.data;
-    
-          // ✅ FIX: read "expeditions" first (your backend shape)
-          const exps = pickArrayFromPayload(snap, 'expeditions', 'items', 'active_expeditions');
-    
-          const snapAt = Date.now();
-          State.globalExpeditions = exps.map(e => (e && typeof e === 'object')
-            ? Object.assign({}, e, { _snapAt: snapAt })
-            : e
-          );
-    
-          // optional: if you ever want to use goblins list globally
-          State.runtime.lastSnapshotGoblins = pickArrayFromPayload(snap, 'goblins');
-    
-          if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
-          renderGlobalPanel();
-          ensureGlobalTimers();
-          recalcMyExpeditionFlagAndUI();
+			const snap = expRes.data;
+			
+			// ✅ Expeditions
+			const exps = pickArrayFromPayload(snap, 'expeditions', 'items', 'active_expeditions');
+			
+			const snapAt = Date.now();
+			State.globalExpeditions = exps.map(e => (e && typeof e === 'object')
+			  ? Object.assign({}, e, { _snapAt: snapAt })
+			  : e
+			);
+			
+			// optional: goblins list globally
+			State.runtime.lastSnapshotGoblins = pickArrayFromPayload(snap, 'goblins');
+			
+			// ✅ NEW: world drops / pickups (coins, future items)
+			const rawPickups = pickArrayFromPayload(snap, 'drops', 'world_drops', 'pickups');
+			
+			const normalizedPickups = [];
+			const byId = new Map();
+			
+			for (const it of rawPickups){
+			  const np = normalizePickup(it);
+			  if (!np) continue;
+			  byId.set(np.id, np);
+			  normalizedPickups.push(np);
+			}
+			
+			// Limit render count defensivo
+			const maxRender = CONFIG.pickups?.maxRender || 220;
+			normalizedPickups.sort((a,b)=> (b.spawnedAtMs||0) - (a.spawnedAtMs||0));
+			State.pickups.items = normalizedPickups.slice(0, maxRender);
+			State.pickups.byId = byId;
+			State.pickups.lastSnapshotKey = String(snap.server_time_utc || snap.server_time || '') || String(Date.now());
+			
+			// ✅ Pass to runtime (ThreeRuntime)
+			if (State.engine){
+			  if (typeof State.engine.setPickups === 'function'){
+			    State.engine.setPickups(State.pickups.items);
+			  } else if (typeof State.engine.setWorldDrops === 'function'){
+			    State.engine.setWorldDrops(State.pickups.items);
+			  } else {
+			    // fallback: expose on window for runtime pull
+			    window.__WORLD_DROPS__ = State.pickups.items;
+			  }
+			}
+			
+			// Existing engine sync
+			if (State.engine && typeof State.engine.syncExpeditions === 'function'){
+			  State.engine.syncExpeditions(State.globalExpeditions);
+			}
+			renderGlobalPanel();
+			ensureGlobalTimers();
+			recalcMyExpeditionFlagAndUI();
+
         }
     
         // ---------------------------
@@ -4120,7 +4392,18 @@ State.runtime.ticker.timer = setInterval(() => {
 window.GoblinDex = { mount };
 window.__GOBLIN_DEX_STATE__ = State;
 window.State = State;
+
+// chest claim (legacy)
 window.claimActiveDrop = claimActiveDrop;
+
+// ✅ NEW: coins claim
+window.claimPickup = claimPickup;
+
+// ✅ runtime helpers (ThreeRuntime può pullare invece di ricevere push)
+window.getWorldDrops = () => (State.pickups && Array.isArray(State.pickups.items)) ? State.pickups.items : [];
+window.getActiveChestDrop = () => State.drop ? State.drop.current : null;
+window.getAuthUser = () => ({ ...State.user });
+
   })();
   </script>
 <script type="module">

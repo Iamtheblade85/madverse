@@ -140,14 +140,6 @@ const STORM_CLOUD_ENTER_MS = 5200;
 const STORM_CLOUD_DRIFT = 0.32;
 
 /* =========================
-   ACCESSO STATO GIOCO
-========================= */
-const GameState = window.__GOBLIN_DEX_STATE__;
-if (!GameState) {
-  throw new Error('GameState non trovato: esporre State come window.__GOBLIN_DEX_STATE__');
-}
-
-/* =========================
    UTILS
 ========================= */
 function cellToWorld(x, y) {
@@ -716,9 +708,12 @@ class CoinActor {
    THREE RUNTIME
 ========================= */
 export class ThreeRuntime {
-  constructor(canvas) {
-    this.canvas = canvas;
+  constructor(canvas, state) {
+    if (!canvas) throw new Error('ThreeRuntime: canvas missing');
+    if (!state) throw new Error('ThreeRuntime: state missing');
 
+    this.canvas = canvas;
+    this.state = state;
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
@@ -2319,11 +2314,11 @@ export class ThreeRuntime {
     dt = Math.min(dt, 1 / 30);
 
     const now = performance.now();
-    const liveDrop = this.drop || GameState.drop?.current || null;
+    const liveDrop = this.drop || this.state.drop?.current || null;
 
     // ✅ la chest deve restare visibile anche se lo state passa a non-visible,
     // finché abbiamo una pendingClaim attiva (i 5 secondi)
-    const chestVisibleFromState = liveDrop && GameState.drop?.fx?.phase === 'visible';
+    const chestVisibleFromState = liveDrop && this.state.drop?.fx?.phase === 'visible';
     const chestVisibleFromPending = !!this.pendingClaimKey;
 
     const chest = chestVisibleFromState || chestVisibleFromPending ? liveDrop : null;
@@ -2426,12 +2421,11 @@ export class ThreeRuntime {
       this.pendingClaimKey = null;
       this.pendingWinnerId = null;
       this.pendingClaimAt = 0;
-
       if (typeof window.claimActiveDrop === 'function') {
         window.claimActiveDrop();
       } else {
-        if (window.__GOBLIN_DEX_STATE__?.drop?.fx) {
-          window.__GOBLIN_DEX_STATE__.drop.fx.phase = 'idle';
+        if (this.state?.drop?.fx) {
+          this.state.drop.fx.phase = 'idle';
         }
       }
     }

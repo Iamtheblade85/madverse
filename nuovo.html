@@ -4406,16 +4406,18 @@ window.getAuthUser = () => ({ ...State.user });
 
   })();
   </script>
-<script type="module">
-  import { ThreeRuntime } from './three-runtime.js';
-
+	<script type="module">
 	  const State = window.__GOBLIN_DEX_STATE__;
 	  if (!State) throw new Error('State not found on window.__GOBLIN_DEX_STATE__');
+	
 	  const canvas = State.ui?.canvas || document.getElementById('game-canvas');
 	  if (!canvas) throw new Error('Canvas #game-canvas not found');
+	
+	  const { ThreeRuntime } = await import('./three-runtime.js');   // ✅ IMPORT DOPO
 	  State.engine = new ThreeRuntime(canvas);
 	  await State.engine.init();
-</script>
+	</script>
+
 
   <script>
   (function () {

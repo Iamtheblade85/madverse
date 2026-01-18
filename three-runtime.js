@@ -713,7 +713,12 @@ export class ThreeRuntime {
     if (!state) throw new Error('ThreeRuntime: state missing');
 
     this.canvas = canvas;
-    this.state = state;
+     this._getState =
+       typeof stateOrGetter === 'function'
+         ? stateOrGetter
+         : stateOrGetter?.getState
+           ? () => stateOrGetter.getState()
+           : () => stateOrGetter; // fallback: oggetto normale
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
@@ -2295,6 +2300,8 @@ export class ThreeRuntime {
      - coins solo quando esistono
   ========================= */
   _loop() {
+     const st = this._getState?.() || {};
+
     requestAnimationFrame(() => this._loop());
 
     let dt = this.clock.getDelta();
@@ -2314,11 +2321,11 @@ export class ThreeRuntime {
     dt = Math.min(dt, 1 / 30);
 
     const now = performance.now();
-    const liveDrop = this.drop || this.state.drop?.current || null;
+    const liveDrop = this.drop || st.drop?.current || null;
 
     // ✅ la chest deve restare visibile anche se lo state passa a non-visible,
     // finché abbiamo una pendingClaim attiva (i 5 secondi)
-    const chestVisibleFromState = liveDrop && this.state.drop?.fx?.phase === 'visible';
+    const chestVisibleFromState = liveDrop && st.drop?.fx?.phase === 'visible';
     const chestVisibleFromPending = !!this.pendingClaimKey;
 
     const chest = chestVisibleFromState || chestVisibleFromPending ? liveDrop : null;
@@ -2424,8 +2431,8 @@ export class ThreeRuntime {
       if (typeof window.claimActiveDrop === 'function') {
         window.claimActiveDrop();
       } else {
-        if (this.state?.drop?.fx) {
-          this.state.drop.fx.phase = 'idle';
+        if (st?.drop?.fx) {
+          st.drop.fx.phase = 'idle';
         }
       }
     }

@@ -969,8 +969,8 @@
       // Cash date compute
       // -----------------------------
       const computeCashDate = ({ accrualISO, pm, type }) => {
-        if (type === "income") return toISODate(base);
         const base = fromISODate(accrualISO);
+        if (type === "income") return toISODate(base);
         if (!isFinite(base.getTime())) return "";
 
         // transfers: default same day

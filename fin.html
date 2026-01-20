@@ -616,11 +616,12 @@
           <input id="evtTime" type="time" />
         </div>
 
-        <div class="form-field">
+        <div class="form-field" id="pmField">
           <label class="label" for="evtPaymentMethod">Metodo pagamento</label>
           <select id="evtPaymentMethod"></select>
           <small class="help">Influenza account default e cash date.</small>
         </div>
+        
 
         <div class="form-field">
           <label class="label" for="evtAccount">Account</label>
@@ -968,6 +969,7 @@
       // Cash date compute
       // -----------------------------
       const computeCashDate = ({ accrualISO, pm, type }) => {
+        if (type === "income") return toISODate(base);
         const base = fromISODate(accrualISO);
         if (!isFinite(base.getTime())) return "";
 
@@ -2015,6 +2017,21 @@
       const showTransferFields = (show) => {
         $("#transferFields").style.display = show ? "" : "none";
       };
+const syncPaymentMethodVisibility = () => {
+  const type = $("#evtType").value;
+  const pmField = $("#pmField");
+  if (!pmField) return;
+
+  // Nascondi per income (e consigliato anche per transfer)
+  const hide = (type === "income" || type === "transfer");
+
+  pmField.style.display = hide ? "none" : "";
+
+  // Se lo nascondi, svuota il valore
+  if (hide) {
+    $("#evtPaymentMethod").value = "";
+  }
+};
 
       const syncRecurrenceUI = () => {
         const mode = $("#evtRecurrence").value;
@@ -2146,8 +2163,8 @@
           showTransferFields($("#evtType").value === "transfer");
           syncTitleHeuristic();
           syncRecurrenceUI();
+          syncPaymentMethodVisibility();
           computeAndSetCashDate();
-
         } else {
           $("#eventForm").reset();
           $("#evtType").value = "expense";
@@ -2167,6 +2184,7 @@
           syncRecurrenceUI();
 
           $("#evtCashOverride").checked = false;
+          syncPaymentMethodVisibility();
           computeAndSetCashDate();
         }
 
@@ -2176,8 +2194,12 @@
       const closeEventModal = () => $("#eventModal").close();
 
       const buildEventPayloadFromForm = () => {
-        const type = $("#evtType").value;
-        const pmId = $("#evtPaymentMethod").value || null;
+      const type = $("#evtType").value;
+      const pmId =
+        (type === "income" || type === "transfer")
+          ? null
+          : ($("#evtPaymentMethod").value || null);
+
         const accId = $("#evtAccount").value || null;
 
         const override = $("#evtCashOverride").checked;
@@ -2837,8 +2859,10 @@
         $("#evtRecurrence").addEventListener("change", syncRecurrenceUI);
         $("#evtType").addEventListener("change", () => {
           showTransferFields($("#evtType").value === "transfer");
+          syncPaymentMethodVisibility();
           computeAndSetCashDate();
         });
+
         $("#evtPaymentMethod").addEventListener("change", () => {
           const pm = getPMById($("#evtPaymentMethod").value);
           if (pm?.defaultAccountId && $("#evtType").value !== "transfer") {

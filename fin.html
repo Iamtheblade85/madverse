@@ -4,22 +4,105 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark light" />
-  <title>Finance Calendar</title>
+  <title>Finance Calendar v2</title>
   <link rel="stylesheet" href="./fin-theme.css" />
+  <style>
+    /* Extra v2 minimal UI helpers (keep fin-theme.css as main theme) */
+    .topbar__row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .topbar__group { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .badge {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:2px 8px; border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(128,128,128,0.12);
+      color: var(--text);
+      font-size: 12px; font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge--muted { color: var(--muted); border-color: rgba(128,128,128,0.25); }
+    .badge--warn { border-color: rgba(255, 190, 100, 0.55); background: rgba(255, 190, 100, 0.12); }
+    .badge--ok { border-color: rgba(120, 255, 160, 0.45); background: rgba(120, 255, 160, 0.10); }
+    .badge--bad { border-color: rgba(255, 90, 90, 0.55); background: rgba(255, 90, 90, 0.12); }
+    .mini-help { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.25; }
+    .subnav {
+      display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+      border:1px solid var(--border); border-radius: 14px;
+      padding: 8px; background: rgba(128,128,128,0.06);
+    }
+    .view-host { min-height: 320px; }
+    .panel {
+      border:1px solid var(--border);
+      background: rgba(128,128,128,0.06);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .panel + .panel { margin-top: 12px; }
+    .hstack { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .vstack { display:flex; flex-direction:column; gap:10px; }
+    .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .grid-3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; }
+    .hr { height:1px; background: rgba(128,128,128,0.22); margin: 10px 0; }
+    .pill { padding:6px 10px; border-radius:999px; border:1px solid var(--border); background: rgba(128,128,128,0.08); font-weight:700; }
+    .muted { color: var(--muted); }
+
+    /* Movement table */
+    .movements {
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(128,128,128,0.05);
+    }
+    .movements table { width:100%; border-collapse: collapse; min-width: 980px; }
+    .movements th, .movements td { padding:10px; border-bottom:1px solid rgba(128,128,128,0.15); text-align:left; vertical-align: top; }
+    .movements th { position: sticky; top: 0; background: rgba(30,30,30,0.85); backdrop-filter: blur(8px); z-index: 2; }
+    .amt-pos { font-weight: 800; }
+    .amt-neg { font-weight: 800; }
+    .row-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .kpi {
+      border:1px solid var(--border);
+      border-radius: 16px;
+      padding: 10px;
+      background: rgba(128,128,128,0.07);
+    }
+    .kpi__label { font-size: 12px; color: var(--muted); font-weight: 800; letter-spacing: .2px; }
+    .kpi__value { font-size: 18px; font-weight: 900; margin-top: 4px; }
+    .kpi__sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .btn--tiny { padding: 6px 10px; border-radius: 12px; font-size: 12px; }
+    .hidden { display:none !important; }
+  </style>
 </head>
+
 <body>
   <div id="app" class="app layout">
     <header id="topbar" class="topbar">
-      <div class="topbar__left">
-        <button id="btnSidebarToggle" class="btn btn--ghost" type="button">☰ Filtri</button>
-        <button id="btnPrev" class="btn btn--icon btn--ghost" type="button" aria-label="Precedente">‹</button>
-        <button id="btnToday" class="btn btn--ghost" type="button">Oggi</button>
-        <button id="btnNext" class="btn btn--icon btn--ghost" type="button" aria-label="Successivo">›</button>
-        <span id="rangeLabel" class="topbar__range">—</span>
+      <div class="topbar__left topbar__row">
+        <div class="topbar__group">
+          <button id="btnSidebarToggle" class="btn btn--ghost" type="button">☰ Filtri</button>
+          <button id="btnPrev" class="btn btn--icon btn--ghost" type="button" aria-label="Precedente">‹</button>
+          <button id="btnToday" class="btn btn--ghost" type="button">Oggi</button>
+          <button id="btnNext" class="btn btn--icon btn--ghost" type="button" aria-label="Successivo">›</button>
+          <span id="rangeLabel" class="topbar__range">—</span>
+        </div>
+
+        <div class="topbar__group subnav" aria-label="Basis & Mode">
+          <div class="muted" style="font-weight:800;">Basis</div>
+          <span id="basisSwitch" class="segmented" aria-label="Basis">
+            <button class="btn btn--seg" type="button" data-basis="cash" aria-pressed="true">Cash</button>
+            <button class="btn btn--seg" type="button" data-basis="accrual" aria-pressed="false">Accrual</button>
+          </span>
+
+          <div class="muted" style="font-weight:800;margin-left:6px;">Vista</div>
+          <span id="modeSwitch" class="segmented" aria-label="Modalità">
+            <button class="btn btn--seg" type="button" data-mode="calendar" aria-pressed="true">Calendario</button>
+            <button class="btn btn--seg" type="button" data-mode="movements" aria-pressed="false">Movimenti</button>
+            <button class="btn btn--seg" type="button" data-mode="reports" aria-pressed="false">Report</button>
+            <button class="btn btn--seg" type="button" data-mode="setup" aria-pressed="false">Setup</button>
+          </span>
+        </div>
       </div>
 
-      <div class="topbar__right">
-        <span id="viewSwitch" class="segmented" aria-label="Vista">
+      <div class="topbar__right topbar__row">
+        <span id="calendarViewSwitch" class="segmented" aria-label="Vista calendario">
           <button class="btn btn--seg" type="button" data-view="day" aria-pressed="false">Giorno</button>
           <button class="btn btn--seg" type="button" data-view="week" aria-pressed="false">Settimana</button>
           <button class="btn btn--seg" type="button" data-view="month" aria-pressed="true">Mese</button>
@@ -37,22 +120,59 @@
 
     <aside id="sidebar" class="sidebar" data-open="true">
       <div class="sidebar__header">
-        <h2 class="sidebar__title">Filtri</h2>
+        <h2 class="sidebar__title">Finance v2</h2>
       </div>
 
       <section class="sidebar__section">
-        <label class="label" for="searchInput">Cerca</label>
-        <input id="searchInput" type="search" autocomplete="off" placeholder="Titolo, categoria, note…" />
+        <div class="sidebar__section-title" style="margin-bottom:10px;">
+          <span>Connessione</span>
+          <small>API / Stato</small>
+        </div>
+
+        <div class="vstack">
+          <label class="label" for="apiBaseInput">API Base</label>
+          <input id="apiBaseInput" type="text" placeholder="Es: /api oppure https://example.com/api" />
+          <div class="hstack" style="justify-content:space-between;">
+            <button id="btnPing" class="btn btn--ghost btn--tiny" type="button">Ping</button>
+            <span id="apiStatus" class="badge badge--muted">offline</span>
+          </div>
+          <div class="mini-help">
+            Suggerito: <span class="pill">/api</span> (stesso dominio) oppure il tuo endpoint pubblico.
+          </div>
+        </div>
       </section>
 
       <section class="sidebar__section">
+        <div class="sidebar__section-title" style="margin-bottom:10px;">
+          <span>Filtri</span>
+          <small>Ricerca rapida</small>
+        </div>
+
+        <label class="label" for="searchInput">Cerca</label>
+        <input id="searchInput" type="search" autocomplete="off" placeholder="Titolo, categoria, note…" />
+        <div style="height:10px"></div>
+
         <label class="label" for="categorySelect">Categoria</label>
         <select id="categorySelect">
           <option value="all">Tutte</option>
         </select>
-      </section>
 
-      <section class="sidebar__section">
+        <div style="height:10px"></div>
+
+        <label class="label" for="accountSelect">Account</label>
+        <select id="accountSelect">
+          <option value="all">Tutti</option>
+        </select>
+
+        <div style="height:10px"></div>
+
+        <label class="label" for="paymentMethodSelect">Metodo pagamento</label>
+        <select id="paymentMethodSelect">
+          <option value="all">Tutti</option>
+        </select>
+
+        <div style="height:10px"></div>
+
         <div class="toggle">
           <div class="toggle__label">Entrate</div>
           <input id="toggleIncome" type="checkbox" checked />
@@ -64,15 +184,25 @@
         </div>
         <div style="height:10px"></div>
         <div class="toggle">
+          <div class="toggle__label">Trasferimenti</div>
+          <input id="toggleTransfers" type="checkbox" checked />
+        </div>
+        <div style="height:10px"></div>
+        <div class="toggle">
           <div class="toggle__label">Altro</div>
           <input id="toggleOther" type="checkbox" checked />
+        </div>
+
+        <div class="mini-help">
+          In <b>Cash</b> la data usata per filtri/stats è <b>Cash Date</b>.
+          In <b>Accrual</b> è la data evento (<b>Accrual Date</b>).
         </div>
       </section>
 
       <section class="sidebar__section">
         <div class="sidebar__section-title" style="margin-bottom:10px;">
           <span>Range</span>
-          <small>Filtro date</small>
+          <small>Filtro date (basis-aware)</small>
         </div>
 
         <div id="rangePresets" class="pill-row" style="margin-bottom:10px;">
@@ -108,7 +238,7 @@
 
         <label class="label" for="importFile">Importa JSON</label>
         <input id="importFile" type="file" accept="application/json" />
-        <small class="help">Import crea eventi via API e ricarica.</small>
+        <small class="help">Import crea eventi e (se presenti) meta/accounts/settings.</small>
       </section>
 
       <section id="statsPanel" class="sidebar__section">
@@ -119,7 +249,7 @@
 
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="stat-card__label">Saldo attuale (fino a oggi)</div>
+            <div class="stat-card__label">Saldo attuale (basis)</div>
             <div id="statCurrentBalance" class="stat-card__value">—</div>
             <div id="statCurrentBalanceMeta" class="stat-card__sub">—</div>
           </div>
@@ -134,23 +264,29 @@
           </div>
 
           <div class="stat-card">
-            <div class="stat-card__label">Netto (nel range visibile)</div>
+            <div class="stat-card__label">Netto (range visibile)</div>
             <div id="statNet" class="stat-card__value">—</div>
             <div class="stat-card__sub">
-              <span id="statIncomeCount">—</span> · <span id="statExpenseCount">—</span>
+              <span id="statIncomeCount">—</span> · <span id="statExpenseCount">—</span> · <span id="statTransferCount">—</span>
             </div>
           </div>
 
           <div class="stat-card">
-            <div class="stat-card__label">Entrate (nel range visibile)</div>
+            <div class="stat-card__label">Entrate (range)</div>
             <div id="statIncome" class="stat-card__value">—</div>
-            <div class="stat-card__sub">Somma entrate nella vista</div>
+            <div class="stat-card__sub">Somma entrate in vista</div>
           </div>
 
           <div class="stat-card">
-            <div class="stat-card__label">Uscite (nel range visibile)</div>
+            <div class="stat-card__label">Uscite (range)</div>
             <div id="statExpense" class="stat-card__value">—</div>
-            <div class="stat-card__sub">Somma uscite nella vista</div>
+            <div class="stat-card__sub">Somma uscite in vista</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-card__label">Δ Cash vs Accrual</div>
+            <div id="statDelta" class="stat-card__value">—</div>
+            <div class="stat-card__sub">Differenza saldo alla data</div>
           </div>
         </div>
 
@@ -158,23 +294,53 @@
 
         <div class="sidebar__section-title" style="margin-bottom:10px;">
           <span>Snapshot</span>
-          <small>ultimi 14 giorni (range visibile)</small>
+          <small>ultimi 14 giorni (range)</small>
         </div>
 
         <div id="snapshotList" class="snapshot-list" role="list"></div>
+
         <hr />
-        
+
+        <div class="sidebar__section-title" style="margin-bottom:10px;">
+          <span>Carta di credito</span>
+          <small>Sparkasse / Outstanding</small>
+        </div>
+
+        <div class="stats-grid" style="margin-bottom:10px;">
+          <div class="stat-card">
+            <div class="stat-card__label">Outstanding stimato</div>
+            <div id="ccOutstanding" class="stat-card__value">—</div>
+            <div id="ccOutstandingMeta" class="stat-card__sub">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">Speso mese (Accrual)</div>
+            <div id="ccSpentMonth" class="stat-card__value">—</div>
+            <div class="stat-card__sub">Solo acquisti su carta</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">Pagato mese (Cash)</div>
+            <div id="ccPaidMonth" class="stat-card__value">—</div>
+            <div class="stat-card__sub">Settlement / Transfer</div>
+          </div>
+        </div>
+
+        <div class="mini-help" id="ccHelp">
+          Se non hai ancora configurato account/metodi, vai su <b>Setup</b>.
+        </div>
+
+        <hr />
+
         <div class="sidebar__section-title" style="margin-bottom:10px;">
           <span>Forecast</span>
           <small id="forecastMeta">—</small>
         </div>
-        
+
         <div class="pill-row" style="gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
           <label class="label" style="margin:0;">
             Target
             <input id="forecastTo" type="date" />
           </label>
-        
+
           <label class="label" style="margin:0;">
             Mode
             <select id="forecastMode">
@@ -182,54 +348,212 @@
               <option value="monthly">Mensile</option>
             </select>
           </label>
-        
+
           <button id="btnForecast" class="btn btn--ghost" type="button">Calcola</button>
         </div>
-        
+
         <div class="stats-grid" style="margin-bottom:12px;">
           <div class="stat-card">
-            <div class="stat-card__label">Saldo previsto alla data</div>
+            <div class="stat-card__label">Saldo previsto</div>
             <div id="forecastBalanceAtTo" class="stat-card__value">—</div>
             <div id="forecastBalanceMeta" class="stat-card__sub">—</div>
           </div>
-        
+
           <div class="stat-card">
-            <div class="stat-card__label">Entrate totali (fino a target)</div>
+            <div class="stat-card__label">Entrate totali</div>
             <div id="forecastTotalIncome" class="stat-card__value">—</div>
             <div class="stat-card__sub">Somma entrate</div>
           </div>
-        
+
           <div class="stat-card">
-            <div class="stat-card__label">Uscite totali (fino a target)</div>
+            <div class="stat-card__label">Uscite totali</div>
             <div id="forecastTotalExpense" class="stat-card__value">—</div>
             <div class="stat-card__sub">Somma uscite</div>
           </div>
-        
+
           <div class="stat-card">
             <div class="stat-card__label">Netto totale</div>
             <div id="forecastTotalNet" class="stat-card__value">—</div>
             <div class="stat-card__sub">Entrate − Uscite</div>
           </div>
         </div>
-        
+
         <canvas id="forecastChart" width="720" height="220" style="width:100%; height:220px; border:1px solid var(--border); border-radius:12px;"></canvas>
-        
+
         <div style="height:12px"></div>
-        
         <div id="forecastTableWrap" style="overflow:auto; max-height:240px; border:1px solid var(--border); border-radius:12px;"></div>
-        
         <div id="forecastError" class="help" style="color:crimson; margin-top:10px; display:none;"></div>
-                
       </section>
     </aside>
 
     <main id="main" class="main">
       <header class="main__header">
-        <h1 id="calendarTitle">Calendario</h1>
-        <p id="calendarSubtitle">—</p>
+        <h1 id="mainTitle">Finance v2</h1>
+        <p id="mainSubtitle">—</p>
       </header>
 
-      <section id="calendarView" class="calendar" data-view="month" data-density="comfort"></section>
+      <section id="mainHost" class="view-host">
+        <!-- dynamic views -->
+        <section id="calendarView" class="calendar" data-view="month" data-density="comfort"></section>
+
+        <section id="movementsView" class="hidden">
+          <div class="panel">
+            <div class="hstack" style="justify-content:space-between;">
+              <div>
+                <div style="font-size:18px;font-weight:900;">Movimenti</div>
+                <div class="mini-help">Lista tipo banca · basis = <span id="movBasisLabel" class="pill">—</span></div>
+              </div>
+              <div class="hstack">
+                <button id="btnMovRefresh" class="btn btn--ghost btn--tiny" type="button">Ricarica</button>
+              </div>
+            </div>
+            <div style="height:10px"></div>
+            <div id="movementsTable" class="movements"></div>
+          </div>
+        </section>
+
+        <section id="reportsView" class="hidden">
+          <div class="panel">
+            <div class="hstack" style="justify-content:space-between;">
+              <div>
+                <div style="font-size:18px;font-weight:900;">Report</div>
+                <div class="mini-help">Riepiloghi mensili, categorie, carta di credito</div>
+              </div>
+              <div class="hstack">
+                <label class="label" style="margin:0;">
+                  Mese
+                  <input id="repMonth" type="month" />
+                </label>
+                <button id="btnRepRun" class="btn btn--ghost btn--tiny" type="button">Aggiorna</button>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="grid-3">
+              <div class="kpi">
+                <div class="kpi__label">Entrate mese</div>
+                <div id="repIncome" class="kpi__value">—</div>
+                <div id="repIncomeSub" class="kpi__sub">basis-aware</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi__label">Uscite mese</div>
+                <div id="repExpense" class="kpi__value">—</div>
+                <div id="repExpenseSub" class="kpi__sub">basis-aware</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi__label">Netto mese</div>
+                <div id="repNet" class="kpi__value">—</div>
+                <div id="repNetSub" class="kpi__sub">income − expense</div>
+              </div>
+            </div>
+
+            <div style="height:12px"></div>
+
+            <div class="grid-2">
+              <div class="panel">
+                <div class="hstack" style="justify-content:space-between;">
+                  <div style="font-weight:900;">Top Categorie (mese)</div>
+                  <span id="repCatMeta" class="badge badge--muted">—</span>
+                </div>
+                <div style="height:10px"></div>
+                <div id="repCats"></div>
+                <div class="mini-help">Clic su categoria → filtra movimenti</div>
+              </div>
+
+              <div class="panel">
+                <div class="hstack" style="justify-content:space-between;">
+                  <div style="font-weight:900;">Carta di credito</div>
+                  <span id="repCCMeta" class="badge badge--muted">—</span>
+                </div>
+                <div style="height:10px"></div>
+                <div id="repCCBox" class="vstack">
+                  <div class="kpi">
+                    <div class="kpi__label">Outstanding stimato</div>
+                    <div id="repCCOutstanding" class="kpi__value">—</div>
+                    <div id="repCCOutstandingSub" class="kpi__sub">fino a fine mese</div>
+                  </div>
+                  <div class="grid-2">
+                    <div class="kpi">
+                      <div class="kpi__label">Speso mese</div>
+                      <div id="repCCSpent" class="kpi__value">—</div>
+                      <div class="kpi__sub">acquisti su carta</div>
+                    </div>
+                    <div class="kpi">
+                      <div class="kpi__label">Pagato mese</div>
+                      <div id="repCCPaid" class="kpi__value">—</div>
+                      <div class="kpi__sub">settlement</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mini-help">Tip: gestisci la fattura carta come <b>transfer</b> (bank → credit card).</div>
+              </div>
+            </div>
+
+            <div id="repError" class="help" style="color:crimson; margin-top:10px; display:none;"></div>
+          </div>
+        </section>
+
+        <section id="setupView" class="hidden">
+          <div class="panel">
+            <div style="font-size:18px;font-weight:900;">Setup</div>
+            <div class="mini-help">
+              Qui configuri <b>Accounts</b> e <b>Payment Methods</b>. Se l'API supporta /meta, li vedrai subito.
+              Se non supporta scrittura meta, salviamo in <b>settings</b> come override.
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="grid-2">
+              <div class="panel">
+                <div class="hstack" style="justify-content:space-between;">
+                  <div style="font-weight:900;">Accounts</div>
+                  <button id="btnAddAccount" class="btn btn--ghost btn--tiny" type="button">＋ Aggiungi</button>
+                </div>
+                <div style="height:10px"></div>
+                <div id="setupAccounts"></div>
+              </div>
+
+              <div class="panel">
+                <div class="hstack" style="justify-content:space-between;">
+                  <div style="font-weight:900;">Payment Methods</div>
+                  <button id="btnAddPM" class="btn btn--ghost btn--tiny" type="button">＋ Aggiungi</button>
+                </div>
+                <div style="height:10px"></div>
+                <div id="setupPMs"></div>
+              </div>
+            </div>
+
+            <div style="height:12px"></div>
+
+            <div class="panel">
+              <div class="hstack" style="justify-content:space-between;">
+                <div style="font-weight:900;">Categorie</div>
+                <span class="badge badge--muted" id="setupCatMeta">—</span>
+              </div>
+              <div style="height:10px"></div>
+              <div id="setupCats"></div>
+              <div class="mini-help">
+                Le categorie vengono dedotte dagli eventi + /meta.
+              </div>
+            </div>
+
+            <div style="height:12px"></div>
+
+            <div class="panel">
+              <div class="hstack" style="justify-content:space-between;">
+                <div style="font-weight:900;">Wizard Sparkasse</div>
+                <button id="btnWizardSparkasse" class="btn btn--ghost btn--tiny" type="button">Configura</button>
+              </div>
+              <div class="mini-help">
+                Crea account <b>Bank</b> e <b>Sparkasse Kreditkarte</b>, e un metodo pagamento <b>Credit Card</b> con cashDate “prossimo mese (giorno X)”.
+              </div>
+            </div>
+
+            <div id="setupError" class="help" style="color:crimson; margin-top:10px; display:none;"></div>
+          </div>
+        </section>
+      </section>
     </main>
 
     <aside id="eventDrawer" class="drawer" aria-hidden="true">
@@ -254,12 +578,9 @@
         <div class="form-field">
           <label class="label" for="evtTitle">Titolo *</label>
           <input id="evtTitle" type="text" required />
-        </div>
-
-        <div class="form-field">
-          <label class="label" for="evtCategory">Categoria</label>
-          <input id="evtCategory" type="text" list="categoryList" />
-          <datalist id="categoryList"></datalist>
+          <small class="help" id="evtTitleHint" style="display:none;color:rgba(255,190,100,0.95)">
+            Rilevata “Sparkasse Kreditkartenabrechnung”: consigliato <b>TRANSFER</b> (bank → carta).
+          </small>
         </div>
 
         <div class="form-field">
@@ -267,6 +588,7 @@
           <select id="evtType">
             <option value="income">Entrata</option>
             <option value="expense">Uscita</option>
+            <option value="transfer">Trasferimento</option>
             <option value="other">Altro</option>
           </select>
         </div>
@@ -277,13 +599,55 @@
         </div>
 
         <div class="form-field">
-          <label class="label" for="evtStart">Data *</label>
-          <input id="evtStart" type="date" required />
+          <label class="label" for="evtCategory">Categoria</label>
+          <input id="evtCategory" type="text" list="categoryList" />
+          <datalist id="categoryList"></datalist>
+        </div>
+
+        <div class="form-field">
+          <label class="label" for="evtDate">Accrual Date *</label>
+          <input id="evtDate" type="date" required />
         </div>
 
         <div class="form-field">
           <label class="label" for="evtTime">Ora</label>
           <input id="evtTime" type="time" />
+        </div>
+
+        <div class="form-field">
+          <label class="label" for="evtPaymentMethod">Metodo pagamento</label>
+          <select id="evtPaymentMethod"></select>
+          <small class="help">Influenza account default e cash date.</small>
+        </div>
+
+        <div class="form-field">
+          <label class="label" for="evtAccount">Account</label>
+          <select id="evtAccount"></select>
+          <small class="help">Da dove escono/entrano i soldi (in Cash).</small>
+        </div>
+
+        <div id="transferFields" class="form-field" style="grid-column:1 / -1; display:none;">
+          <div class="grid-2">
+            <div>
+              <label class="label" for="evtFromAccount">From account</label>
+              <select id="evtFromAccount"></select>
+            </div>
+            <div>
+              <label class="label" for="evtToAccount">To account</label>
+              <select id="evtToAccount"></select>
+            </div>
+          </div>
+          <small class="help">Per settlement carta: <b>Bank → Credit Card</b>.</small>
+        </div>
+
+        <div class="form-field">
+          <label class="label" for="evtCashDate">Cash Date</label>
+          <input id="evtCashDate" type="date" disabled />
+          <label class="label" style="display:flex;align-items:center;gap:10px;margin:10px 0 0;">
+            <input id="evtCashOverride" type="checkbox" />
+            <span>Override manuale cash date</span>
+          </label>
+          <small class="help">In Cash basis il saldo cambia su questa data.</small>
         </div>
 
         <div class="form-field">
@@ -300,21 +664,14 @@
           <label class="label" for="evtRecurrenceDays">Ogni quanti giorni</label>
           <input id="evtRecurrenceDays" type="number" min="1" step="1" />
         </div>
-        
+
         <div id="recSpanField" class="form-field" style="display:none;">
-          <label class="label">Durata ricorrenza</label>
-        
-          <div style="display:flex; gap:10px; align-items:center;">
-            <input id="evtRecurrenceSpan" type="number" min="1" step="1" placeholder="Es. 6" />
-            <select id="evtRecurrenceSpanUnit">
-              <option value="days">Giorni</option>
-              <option value="weeks">Settimane</option>
-              <option value="months">Mesi</option>
-              <option value="years">Anni</option>
-            </select>
+          <label class="label">Genera occorrenze (opzionale)</label>
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <input id="evtRecurrenceUntil" type="date" />
+            <button id="btnMaterialize" class="btn btn--ghost btn--tiny" type="button">Materializza fino a data</button>
           </div>
-        
-          <small class="help">Esempio: 6 mesi, 1 anno, 12 settimane…</small>
+          <small class="help">Consigliato: lascia master + forecast. Materializza solo se vuoi eventi “reali”.</small>
         </div>
 
         <div class="form-field" style="grid-column:1 / -1;">
@@ -350,7 +707,8 @@
         return `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}-${pad2(dt.getDate())}`;
       };
       const fromISODate = (iso) => {
-        const [y, m, d] = iso.split("-").map(Number);
+        const [y, m, d] = String(iso || "").split("-").map(Number);
+        if (!y || !m || !d) return new Date(NaN);
         return new Date(y, m - 1, d);
       };
       const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -372,67 +730,9 @@
         x.setFullYear(x.getFullYear() + n);
         return x;
       };
+      const monthKey = (iso) => String(iso || "").slice(0, 7);
       const formatMoney = (val, currency = "EUR") =>
         new Intl.NumberFormat("it-IT", { style: "currency", currency }).format(Number(val || 0));
-      const drawForecastChart = (canvas, series, currency) => {
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-      
-        const W = canvas.width;
-        const H = canvas.height;
-      
-        ctx.clearRect(0, 0, W, H);
-      
-        if (!series || !series.length) {
-          ctx.fillStyle = "#888";
-          ctx.font = "14px system-ui";
-          ctx.fillText("Nessun dato forecast.", 12, 24);
-          return;
-        }
-      
-        const pad = 28;
-        const xs = series.map((_, i) => i);
-        const ys = series.map(p => Number(p.balance || 0));
-      
-        const minY = Math.min(...ys);
-        const maxY = Math.max(...ys);
-        const spanY = (maxY - minY) || 1;
-      
-        const xTo = (i) => pad + (i / Math.max(1, xs.length - 1)) * (W - pad * 2);
-        const yTo = (v) => (H - pad) - ((v - minY) / spanY) * (H - pad * 2);
-      
-        // axes
-        ctx.strokeStyle = "rgba(128,128,128,0.35)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(pad, pad);
-        ctx.lineTo(pad, H - pad);
-        ctx.lineTo(W - pad, H - pad);
-        ctx.stroke();
-      
-        // line
-        ctx.strokeStyle = "rgba(80,160,255,0.9)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        series.forEach((p, i) => {
-          const x = xTo(i);
-          const y = yTo(Number(p.balance || 0));
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-      
-        // labels (min/max + last)
-        ctx.fillStyle = "rgba(200,200,200,0.9)";
-        ctx.font = "12px system-ui";
-        const fmt = (v) => formatMoney(v, currency);
-      
-        ctx.fillText(`min ${fmt(minY)}`, pad + 6, pad + 6);
-        ctx.fillText(`max ${fmt(maxY)}`, pad + 6, pad + 20);
-      
-        const last = series[series.length - 1];
-        ctx.fillText(`${last.date}: ${fmt(last.balance)}`, pad + 6, H - 10);
-      };
 
       const formatDateHuman = (d) =>
         new Intl.DateTimeFormat("it-IT", { weekday: "short", year: "numeric", month: "long", day: "2-digit" }).format(d);
@@ -456,23 +756,87 @@
       const startOfYear = (d) => new Date(d.getFullYear(), 0, 1);
       const endOfYear = (d) => endOfDay(new Date(d.getFullYear(), 11, 31));
       const clampDateToRange = (d, min, max) =>
-        new Date(Math.min(Math.max(d.getTime(), min.getTime()), max.getTime()));
+        new Date(Math.min(Math.max(d.getTime(), min.getTime()), max.getTime())));
+
       const uid = () => crypto.randomUUID?.() || `id_${Math.random().toString(16).slice(2)}_${Date.now()}`;
 
-      const API_BASE = "https://iamemanuele.pythonanywhere.com/api";
+      const defaultSettings = {
+        apiBase: "/api",
+        mode: "calendar",          // calendar | movements | reports | setup
+        view: "month",             // day | week | month | year
+        density: "comfort",        // comfort | compact
+        basis: "cash",             // cash | accrual
+
+        rangeMode: "all",
+        fromDate: "",
+        toDate: "",
+
+        search: "",
+        category: "all",
+        account: "all",
+        paymentMethod: "all",
+
+        includeIncome: true,
+        includeExpense: true,
+        includeOther: true,
+        includeTransfers: true,
+
+        sidebarOpen: true,
+        currency: "EUR",
+        initialBalance: 0,
+
+        balanceAtDate: "",
+
+        forecastTo: "",
+        forecastMode: "daily",
+        forecastStart: "2025-12-26"
+      };
+
+      const state = {
+        settings: structuredClone(defaultSettings),
+        meta: {
+          accounts: [],
+          paymentMethods: [],
+          categories: []
+        },
+        events: [],
+        anchorDate: startOfDay(new Date()),
+        selectedEventId: null,
+        draftEventId: null,
+        forecast: null,
+        apiOnline: false
+      };
+
+      // -----------------------------
+      // API
+      // -----------------------------
       const API = {
+        base() {
+          const b = String(state.settings.apiBase || "/api").trim().replace(/\/+$/, "");
+          return b || "/api";
+        },
         async request(path, { method = "GET", body } = {}) {
-          const res = await fetch(`${API_BASE}${path}`, {
+          const url = `${this.base()}${path}`;
+          const res = await fetch(url, {
             method,
-            headers: body === undefined ? { "Accept": "application/json" } : { "Accept": "application/json", "Content-Type": "application/json" },
+            headers: body === undefined
+              ? { "Accept": "application/json" }
+              : { "Accept": "application/json", "Content-Type": "application/json" },
             credentials: "omit",
             body: body === undefined ? undefined : JSON.stringify(body)
           });
           const ct = res.headers.get("content-type") || "";
-          const data = ct.includes("application/json") ? await res.json().catch(() => null) : await res.text().catch(() => null);
-          if (!res.ok) throw new Error((data && data.error) ? data.error : `HTTP ${res.status}`);
+          const data = ct.includes("application/json")
+            ? await res.json().catch(() => null)
+            : await res.text().catch(() => null);
+          if (!res.ok) {
+            const msg = (data && data.error) ? data.error : `HTTP ${res.status}`;
+            throw new Error(msg);
+          }
           return data;
         },
+        ping() { return this.request(`/meta`); },
+        getMeta() { return this.request(`/meta`); },
         listEvents(params = {}) {
           const qs = new URLSearchParams(params).toString();
           return this.request(`/events${qs ? `?${qs}` : ""}`);
@@ -487,63 +851,160 @@
         forecast(params = {}) {
           const qs = new URLSearchParams(params).toString();
           return this.request(`/forecast${qs ? `?${qs}` : ""}`);
+        },
+        reportMonthly(params = {}) {
+          const qs = new URLSearchParams(params).toString();
+          return this.request(`/reports/monthly${qs ? `?${qs}` : ""}`);
+        },
+        reportCreditCard(params = {}) {
+          const qs = new URLSearchParams(params).toString();
+          return this.request(`/reports/credit-card${qs ? `?${qs}` : ""}`);
         }
       };
 
-      const defaultSettings = {
-        view: "month",
-        density: "comfort",
-        rangeMode: "all",
-        fromDate: "",
-        toDate: "",
-        search: "",
-        category: "all",
-        includeIncome: true,
-        includeExpense: true,
-        includeOther: true,
-        sidebarOpen: true,
-        initialBalance: 3412,
-        currency: "EUR",
-        balanceAtDate: "",
-        forecastTo: "",
-        forecastMode: "daily",
-        forecastStart: "2025-12-26"
-      };
-
-      const state = {
-        settings: structuredClone(defaultSettings),
-        events: [],
-        anchorDate: startOfDay(new Date()),
-        selectedEventId: null,
-        draftEventId: null,
-        forecast: null
-      };
-
+      // -----------------------------
+      // Settings persistence
+      // -----------------------------
       let settingsTimer = null;
       const saveSettings = () => {
         clearTimeout(settingsTimer);
-        settingsTimer = setTimeout(() => API.saveSettings(state.settings).catch(() => {}), 250);
+        settingsTimer = setTimeout(async () => {
+          try {
+            await API.saveSettings(state.settings);
+          } catch (_) {}
+        }, 250);
       };
 
-      const normalizeEvent = (e) => ({
-        ...e,
-        time: e.time || "",
-        notes: e.notes || "",
-        pinned: !!e.pinned,
-        recurrence: e.recurrence || "none",
-        recurrenceDays: e.recurrenceDays ?? null,
-        seriesId: e.seriesId ?? null,
-        seriesMaster: !!e.seriesMaster
+      // -----------------------------
+      // Meta helpers
+      // -----------------------------
+      const safeArr = (x) => Array.isArray(x) ? x : [];
+      const normAccount = (a) => ({
+        id: String(a?.id ?? ""),
+        name: String(a?.name ?? a?.title ?? a?.label ?? "Account"),
+        type: String(a?.type ?? "bank"),        // bank|cash|credit_card|other
+        currency: String(a?.currency ?? state.settings.currency ?? "EUR"),
+        isDefault: !!a?.isDefault
       });
 
-      const loadEventsFromBackend = async () => {
-        const data = await API.listEvents();
-        const arr = Array.isArray(data) ? data : (data?.events || []);
-        return arr.map(normalizeEvent);
+      const normPM = (p) => ({
+        id: String(p?.id ?? ""),
+        name: String(p?.name ?? p?.title ?? p?.label ?? "Metodo"),
+        kind: String(p?.kind ?? p?.type ?? "unknown"), // cash|debit|credit_card|bank_transfer|transfer|unknown
+        defaultAccountId: String(p?.defaultAccountId ?? p?.accountId ?? ""),
+        settlementRule: p?.settlementRule ? String(p.settlementRule) : "", // same_day|lag_days|next_month_day|month_end
+        settlementParam: (p?.settlementParam && typeof p.settlementParam === "object") ? p.settlementParam : {}
+      });
+
+      const getAccountById = (id) => state.meta.accounts.find(a => a.id === id) || null;
+      const getPMById = (id) => state.meta.paymentMethods.find(p => p.id === id) || null;
+
+      const getCreditCardAccounts = () => state.meta.accounts.filter(a => a.type === "credit_card");
+      const getCreditCardPMs = () => state.meta.paymentMethods.filter(pm => pm.kind === "credit_card" || /credit/i.test(pm.name) || /kredit/i.test(pm.name));
+
+      // -----------------------------
+      // Event normalization (v2)
+      // -----------------------------
+      const normalizeEvent = (e) => {
+        const o = { ...(e || {}) };
+
+        // v1 fields
+        o.id = String(o.id ?? "");
+        o.title = String(o.title ?? "");
+        o.category = String(o.category ?? "Senza categoria");
+        o.type = String(o.type ?? "other"); // income|expense|transfer|other
+        o.amount = (o.amount === "" || o.amount == null) ? null : Number(o.amount);
+        o.date = String(o.date ?? "");  // accrual date
+        o.time = String(o.time ?? "");
+        o.notes = String(o.notes ?? "");
+        o.pinned = !!o.pinned;
+
+        // recurrence
+        o.recurrence = String(o.recurrence ?? "none");
+        o.recurrenceDays = (o.recurrenceDays == null || o.recurrenceDays === "") ? null : Number(o.recurrenceDays);
+        o.seriesId = o.seriesId ?? null;
+        o.seriesMaster = !!o.seriesMaster;
+
+        // v2 financial fields
+        o.cashDate = String(o.cashDate ?? o.cash_date ?? "") || "";
+        o.paymentMethodId = String(o.paymentMethodId ?? o.payment_method_id ?? "") || "";
+        o.accountId = String(o.accountId ?? o.account_id ?? "") || "";
+
+        // transfers
+        o.fromAccountId = String(o.fromAccountId ?? o.from_account_id ?? "") || "";
+        o.toAccountId = String(o.toAccountId ?? o.to_account_id ?? "") || "";
+
+        // virtual flags (forecast)
+        o._virtual = !!o._virtual;
+        o._estimated = !!o._estimated;
+
+        return o;
       };
 
+      const eventDateForBasis = (evt, basis) => {
+        const b = basis || state.settings.basis;
+        if (b === "cash") {
+          return evt.cashDate || evt.date || "";
+        }
+        return evt.date || "";
+      };
+
+      const eventSignedAmount = (evt) => {
+        const v = Number(evt.amount || 0);
+        if (!v) return 0;
+        if (evt.type === "income") return +v;
+        if (evt.type === "expense") return -v;
+        // transfer + other -> zero impact on net (net-worth) unless you want otherwise
+        return 0;
+      };
+
+      // -----------------------------
+      // Cash date compute
+      // -----------------------------
+      const computeCashDate = ({ accrualISO, pm, type }) => {
+        const base = fromISODate(accrualISO);
+        if (!isFinite(base.getTime())) return "";
+
+        // transfers: default same day
+        if (type === "transfer") return toISODate(base);
+
+        // if no PM rule -> same day
+        if (!pm || !pm.settlementRule) return toISODate(base);
+
+        const rule = pm.settlementRule;
+        const param = pm.settlementParam || {};
+
+        if (rule === "same_day") return toISODate(base);
+
+        if (rule === "lag_days") {
+          const lag = Math.max(0, Number(param.days || 0));
+          return toISODate(addDays(base, lag));
+        }
+
+        if (rule === "month_end") {
+          const end = new Date(base.getFullYear(), base.getMonth() + 1, 0);
+          return toISODate(end);
+        }
+
+        // Sparkasse-style: next month day X (e.g. 1, 5, 15)
+        if (rule === "next_month_day") {
+          const payDay = Math.min(28, Math.max(1, Number(param.day || 1)));
+          const next = addMonths(new Date(base.getFullYear(), base.getMonth(), 1), 1);
+          const cand = new Date(next.getFullYear(), next.getMonth(), payDay);
+          return toISODate(cand);
+        }
+
+        return toISODate(base);
+      };
+
+      // -----------------------------
+      // Filtering
+      // -----------------------------
       const getTrackingBounds = (events) => {
-        const dates = events.map(e => e?.date).filter(Boolean).sort();
+        const dates = events
+          .map(e => eventDateForBasis(e, state.settings.basis))
+          .filter(Boolean)
+          .sort();
         if (!dates.length) {
           const t = startOfDay(new Date());
           return [t, t];
@@ -583,6 +1044,7 @@
         if (e.type === "income" && !state.settings.includeIncome) return false;
         if (e.type === "expense" && !state.settings.includeExpense) return false;
         if (e.type === "other" && !state.settings.includeOther) return false;
+        if (e.type === "transfer" && !state.settings.includeTransfers) return false;
         return true;
       };
 
@@ -590,6 +1052,23 @@
         const cat = (state.settings.category || "all").toLowerCase();
         if (cat === "all") return true;
         return (e.category || "").toLowerCase() === cat;
+      };
+
+      const passesAccountFilter = (e) => {
+        const acc = state.settings.account || "all";
+        if (acc === "all") return true;
+
+        if (e.type === "transfer") {
+          // for transfers: allow match either side
+          return e.fromAccountId === acc || e.toAccountId === acc;
+        }
+        return e.accountId === acc;
+      };
+
+      const passesPaymentMethodFilter = (e) => {
+        const pm = state.settings.paymentMethod || "all";
+        if (pm === "all") return true;
+        return String(e.paymentMethodId || "") === pm;
       };
 
       const passesSearchFilter = (e) => {
@@ -601,42 +1080,46 @@
 
       const passesUserRange = (e) => {
         const [uStart, uEnd] = getUserRangeConstraints();
-        const d = fromISODate(e.date);
+        const dISO = eventDateForBasis(e, state.settings.basis);
+        const d = fromISODate(dISO);
         return d >= uStart && d <= uEnd;
       };
 
-      const getFilteredEvents = () =>
-        state.events
-          .filter(e => e?.date)
-          .filter(passesTypeFilter)
-          .filter(passesCategoryFilter)
-          .filter(passesSearchFilter)
-          .filter(passesUserRange)
-          .sort((a, b) => (a.date + (a.time || "")) < (b.date + (b.time || "")) ? -1 : 1);
+      const getFilteredEvents = () => state.events
+        .filter(e => eventDateForBasis(e, state.settings.basis))
+        .filter(passesTypeFilter)
+        .filter(passesCategoryFilter)
+        .filter(passesAccountFilter)
+        .filter(passesPaymentMethodFilter)
+        .filter(passesSearchFilter)
+        .filter(passesUserRange)
+        .sort((a, b) => {
+          const da = eventDateForBasis(a, state.settings.basis) + (a.time || "");
+          const db = eventDateForBasis(b, state.settings.basis) + (b.time || "");
+          return da < db ? -1 : 1;
+        });
 
-      const signedAmount = (e) => {
-        const amt = Number(e.amount || 0);
-        if (!amt) return 0;
-        if (e.type === "income") return +amt;
-        if (e.type === "expense") return -amt;
-        return 0;
-      };
-
-      const computeBalanceUpTo = (events, initialBalance, dateISO) => {
-        const cutoff = fromISODate(dateISO);
+      // -----------------------------
+      // Stats computations
+      // -----------------------------
+      const computeBalanceUpTo = (events, initialBalance, cutoffISO, basis) => {
+        const cutoff = fromISODate(cutoffISO);
         let bal = Number(initialBalance || 0);
         for (const e of events) {
-          if (!e?.date) continue;
-          const d = fromISODate(e.date);
-          if (d <= endOfDay(cutoff)) bal += signedAmount(e);
+          const dISO = eventDateForBasis(e, basis);
+          const d = fromISODate(dISO);
+          if (d <= endOfDay(cutoff)) bal += eventSignedAmount(e);
         }
         return bal;
       };
 
-      const computeSnapshots = (eventsInRange, initialBalance, rangeStart, rangeEnd) => {
+      const computeSnapshots = (eventsInRange, initialBalance, rangeStart, rangeEnd, basis) => {
         const days = [];
         const map = new Map();
-        for (const e of eventsInRange) map.set(e.date, (map.get(e.date) || 0) + signedAmount(e));
+        for (const e of eventsInRange) {
+          const iso = eventDateForBasis(e, basis);
+          map.set(iso, (map.get(iso) || 0) + eventSignedAmount(e));
+        }
         let bal = Number(initialBalance || 0);
         let cur = startOfDay(rangeStart);
         const last = startOfDay(rangeEnd);
@@ -655,152 +1138,144 @@
         const rangeStart = new Date(Math.max(viewStart.getTime(), userStart.getTime()));
         const rangeEnd = new Date(Math.min(viewEnd.getTime(), userEnd.getTime()));
         const inVisible = filtered.filter(e => {
-          const d = fromISODate(e.date);
+          const d = fromISODate(eventDateForBasis(e, state.settings.basis));
           return d >= startOfDay(rangeStart) && d <= endOfDay(rangeEnd);
         });
+
         const incomeEvents = inVisible.filter(e => e.type === "income");
         const expenseEvents = inVisible.filter(e => e.type === "expense");
+        const transferEvents = inVisible.filter(e => e.type === "transfer");
+
         const incomeSum = incomeEvents.reduce((s, e) => s + Number(e.amount || 0), 0);
         const expenseSum = expenseEvents.reduce((s, e) => s + Number(e.amount || 0), 0);
         const net = incomeSum - expenseSum;
-        const snapshots = computeSnapshots(inVisible, state.settings.initialBalance, startOfDay(rangeStart), startOfDay(rangeEnd));
-        return { rangeStart, rangeEnd, incomeSum, expenseSum, net, incomeCount: incomeEvents.length, expenseCount: expenseEvents.length, snapshots };
+
+        const snapshots = computeSnapshots(inVisible, state.settings.initialBalance, startOfDay(rangeStart), startOfDay(rangeEnd), state.settings.basis);
+        return {
+          rangeStart, rangeEnd,
+          incomeSum, expenseSum, net,
+          incomeCount: incomeEvents.length,
+          expenseCount: expenseEvents.length,
+          transferCount: transferEvents.length,
+          snapshots
+        };
       };
 
-      const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
+      // Credit card: simple heuristic
+      const computeCreditCardKPIs = ({ monthISO = null } = {}) => {
+        const cur = state.settings.currency;
+        const ccAccs = getCreditCardAccounts();
+        const ccPMs = getCreditCardPMs();
+        const ccAccIds = new Set(ccAccs.map(a => a.id));
+        const ccPMIds = new Set(ccPMs.map(p => p.id));
 
-      const addMonthsKeepingDay = (baseDate, monthsToAdd, anchorDay) => {
-        const y0 = baseDate.getFullYear();
-        const m0 = baseDate.getMonth();
-        const targetMonth = m0 + monthsToAdd;
-        const y = y0 + Math.floor(targetMonth / 12);
-        const m = ((targetMonth % 12) + 12) % 12;
-        const dim = daysInMonth(y, m);
-        const day = Math.min(anchorDay, dim);
-        return new Date(y, m, day);
-      };
+        const todayISO = toISODate(new Date());
+        const month = monthISO || monthKey(todayISO);
+        const isInMonth = (iso) => monthKey(iso) === month;
 
-      const addYearsKeepingDay = (baseDate, yearsToAdd, anchorMonthIndex0, anchorDay) => {
-        const y = baseDate.getFullYear() + yearsToAdd;
-        const m = anchorMonthIndex0;
-        const dim = daysInMonth(y, m);
-        const day = Math.min(anchorDay, dim);
-        return new Date(y, m, day);
-      };
+        let spentMonth = 0;
+        let paidMonth = 0;
 
-      // Default UI se l'utente NON compila la durata
-      const RECURRENCE_DEFAULTS = {
-        monthly: { count: 2, unit: "months" },  // 2 mesi
-        yearly:  { count: 2,  unit: "years"  },  // 2 anni
-        custom_days: { count: 2, unit: "days" } // 2 giorni
-      };
-
-      const addSpan = (startDate, count, unit) => {
-        const n = Math.max(1, Number(count || 1));
-        if (unit === "weeks") return addDays(startDate, n * 7);
-        if (unit === "months") return addMonths(startDate, n);
-        if (unit === "years") return addYears(startDate, n);
-        return addDays(startDate, n); // days
-      };
-      
-      const getSpanFromUIForMode = (mode) => {
-        const spanEl = $("#evtRecurrenceSpan");
-        const unitEl = $("#evtRecurrenceSpanUnit");
-      
-        const rawCount = spanEl ? Number(spanEl.value || 0) : 0;
-        const rawUnit = unitEl ? (unitEl.value || "") : "";
-      
-        // se l'utente ha compilato (>=1) e unit valida, usa UI
-        if (rawCount >= 1 && ["days", "weeks", "months", "years"].includes(rawUnit)) {
-          return { count: rawCount, unit: rawUnit };
-        }
-      
-        // altrimenti default per modalità
-        const def = RECURRENCE_DEFAULTS[mode];
-        if (def) return { count: def.count, unit: def.unit };
-      
-        // fallback super-safe
-        return { count: 1, unit: "days" };
-      };
-      
-      const recurrenceUntilISO = (startISO, mode) => {
-        const start = fromISODate(startISO);
-        const span = getSpanFromUIForMode(mode);
-        const end = addSpan(start, span.count, span.unit);
-        return toISODate(end);
-      };
-
-      const buildOccurrenceDates = (master, untilISO) => {
-        const out = [];
-        const mode = master.recurrence || "none";
-        if (mode === "none") return out;
-        const anchor = fromISODate(master.date);
-        const anchorDay = anchor.getDate();
-        const anchorMonth = anchor.getMonth();
-        const until = fromISODate(untilISO);
-        let guard = 0;
-
-        if (mode === "custom_days") {
-          const stepDays = Number(master.recurrenceDays || 0);
-          if (!stepDays || stepDays < 1) return out;
-          let cur = addDays(anchor, stepDays);
-          while (cur <= until && guard < 20000) {
-            out.push(toISODate(cur));
-            cur = addDays(cur, stepDays);
-            guard++;
+        // accrual spending on credit card
+        for (const e of state.events) {
+          if (e.type === "expense" && ccPMIds.has(String(e.paymentMethodId || "")) && isInMonth(e.date)) {
+            spentMonth += Number(e.amount || 0);
           }
-          return out;
         }
 
-        if (mode === "monthly") {
-          let k = 1;
-          while (guard < 20000) {
-            const cur = addMonthsKeepingDay(anchor, k, anchorDay);
-            if (cur > until) break;
-            out.push(toISODate(cur));
-            k++; guard++;
+        // settlement transfers into credit card account (bank -> cc)
+        for (const e of state.events) {
+          const title = (e.title || "").toLowerCase();
+          const isLikelySettlement = title.includes("kreditkartenabrechnung") || title.includes("sparkasse kreditkartenabrechnung");
+          if (e.type === "transfer") {
+            if (ccAccIds.has(String(e.toAccountId || "")) || isLikelySettlement) {
+              // use cash date for "paid month" because it's real cash movement
+              const dISO = e.cashDate || e.date;
+              if (isInMonth(dISO)) paidMonth += Number(e.amount || 0);
+            }
           }
-          return out;
         }
 
-        if (mode === "yearly") {
-          let k = 1;
-          while (guard < 20000) {
-            const cur = addYearsKeepingDay(anchor, k, anchorMonth, anchorDay);
-            if (cur > until) break;
-            out.push(toISODate(cur));
-            k++; guard++;
+        // outstanding approximate: total CC expenses minus total settlement transfers (all time up to today)
+        let totalCharges = 0;
+        let totalSettlements = 0;
+        for (const e of state.events) {
+          // charges: all CC expenses
+          if (e.type === "expense" && ccPMIds.has(String(e.paymentMethodId || ""))) {
+            totalCharges += Number(e.amount || 0);
           }
-          return out;
+          // settlements: transfers to cc
+          if (e.type === "transfer") {
+            const title = (e.title || "").toLowerCase();
+            const isLikelySettlement = title.includes("kreditkartenabrechnung") || title.includes("sparkasse kreditkartenabrechnung");
+            if (ccAccIds.has(String(e.toAccountId || "")) || isLikelySettlement) {
+              totalSettlements += Number(e.amount || 0);
+            }
+          }
         }
+        const outstanding = Math.max(0, totalCharges - totalSettlements);
 
-        return out;
+        return {
+          month,
+          spentMonth,
+          paidMonth,
+          outstanding,
+          currency: cur
+        };
       };
 
-      const materializeRecurrenceSeries = async (masterEvent, untilISO) => {
-        const seriesId = masterEvent.seriesId || masterEvent.id;
-        const dates = buildOccurrenceDates(masterEvent, untilISO);
-        const createdChildren = [];
-        for (const iso of dates) {
-          const payload = {
-            title: masterEvent.title,
-            category: masterEvent.category,
-            type: masterEvent.type,
-            amount: masterEvent.amount,
-            date: iso,
-            time: masterEvent.time || "",
-            notes: masterEvent.notes || "",
-            pinned: !!masterEvent.pinned,
-            recurrence: "none",
-            recurrenceDays: null,
-            seriesId,
-            seriesMaster: false
-          };
-          const res = await API.createEvent(payload);
-          const child = normalizeEvent(res?.event || res);
-          if (child?.id) createdChildren.push(child);
+      // -----------------------------
+      // Forecast chart + table
+      // -----------------------------
+      const drawForecastChart = (canvas, series, currency) => {
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        const W = canvas.width;
+        const H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+
+        if (!series || !series.length) {
+          ctx.fillStyle = "#888";
+          ctx.font = "14px system-ui";
+          ctx.fillText("Nessun dato forecast.", 12, 24);
+          return;
         }
-        return { seriesId, children: createdChildren };
+
+        const pad = 28;
+        const ys = series.map(p => Number(p.balance || 0));
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
+        const spanY = (maxY - minY) || 1;
+
+        const xTo = (i) => pad + (i / Math.max(1, series.length - 1)) * (W - pad * 2);
+        const yTo = (v) => (H - pad) - ((v - minY) / spanY) * (H - pad * 2);
+
+        ctx.strokeStyle = "rgba(128,128,128,0.35)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(pad, pad);
+        ctx.lineTo(pad, H - pad);
+        ctx.lineTo(W - pad, H - pad);
+        ctx.stroke();
+
+        ctx.strokeStyle = "rgba(80,160,255,0.9)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        series.forEach((p, i) => {
+          const x = xTo(i);
+          const y = yTo(Number(p.balance || 0));
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(200,200,200,0.9)";
+        ctx.font = "12px system-ui";
+        const fmt = (v) => formatMoney(v, currency);
+        ctx.fillText(`min ${fmt(minY)}`, pad + 6, pad + 6);
+        ctx.fillText(`max ${fmt(maxY)}`, pad + 6, pad + 20);
+        const last = series[series.length - 1];
+        ctx.fillText(`${last.date}: ${fmt(last.balance)}`, pad + 6, H - 10);
       };
 
       const el = (tag, attrs = {}, children = []) => {
@@ -823,80 +1298,13 @@
           el("div", { className: "empty-state__text", textContent: text || "" })
         ]);
 
-      const categorySlug = (cat) => (cat || "uncategorized").trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9\-_]/g, "");
-
-      const eventBlock = (evt) => {
-        const amt = evt.amount != null && evt.amount !== "" ? formatMoney(Number(evt.amount), state.settings.currency) : "";
-        const cat = evt.category || "Senza categoria";
-        const root = el("button", {
-          type: "button",
-          className: [
-            "event-block",
-            `event-block--type-${evt.type}`,
-            `event-block--cat-${categorySlug(cat)}`,
-            evt.pinned ? "is-pinned" : "",
-            state.settings.density === "compact" ? "is-compact" : "is-comfort"
-          ].filter(Boolean).join(" "),
-          id: `evt_${evt.id}`,
-          "data-event-id": evt.id,
-          "data-category": cat,
-          "data-type": evt.type
-        });
-
-        const top = el("div", { className: "event-block__top" }, [
-          el("span", { className: "event-block__title", textContent: evt.title }),
-          evt.pinned ? el("span", { className: "event-block__pin", textContent: "★", "aria-hidden": "true" }) : null
-        ].filter(Boolean));
-
-        const meta = el("div", { className: "event-block__meta" }, [
-          el("span", { className: "event-block__cat", textContent: cat }),
-          evt.time ? el("span", { className: "event-block__time", textContent: evt.time }) : null
-        ].filter(Boolean));
-
-        root.append(top, meta);
-        if (amt) root.append(el("div", { className: "event-block__amount", textContent: amt }));
-
-        root.addEventListener("click", () => openEventDrawer(evt.id));
-        return root;
-      };
-
-      const kv = (k, v) => el("div", { className: "kv" }, [
-        el("div", { className: "kv__k", textContent: k }),
-        el("div", { className: "kv__v", textContent: v })
-      ]);
-
-      const renderEventDetail = (evt) => {
-        const cat = evt.category || "Senza categoria";
-        const amt = evt.amount != null && evt.amount !== "" ? formatMoney(Number(evt.amount), state.settings.currency) : "—";
-        const rec = evt.recurrence === "custom_days" ? `Ogni ${evt.recurrenceDays || "?"} giorni` : (evt.recurrence || "none");
-
-        const root = el("article", { className: "event-detail" }, [
-          el("div", { className: "event-detail__row" }, [
-            kv("Categoria", cat),
-            kv("Tipo", evt.type),
-            kv("Ricorrenza", rec)
-          ]),
-          el("div", { className: "event-detail__row" }, [
-            kv("Data", evt.date),
-            kv("Ora", evt.time || "—"),
-            kv("Importo", amt)
-          ]),
-          el("div", { className: "event-detail__notes" }, [
-            el("h3", { className: "event-detail__notes-title", textContent: "Note" }),
-            el("p", { className: "event-detail__notes-text", textContent: evt.notes || "—" })
-          ])
-        ]);
-
-        return root;
-      };
-    
       const renderForecastTable = (wrapEl, perMonth, currency) => {
         wrapEl.innerHTML = "";
         if (!perMonth || !perMonth.length) {
           wrapEl.appendChild(emptyState("Nessun riepilogo mensile."));
           return;
         }
-      
+
         const table = el("table", { style: "width:100%; border-collapse:collapse;" });
         const thead = el("thead");
         thead.appendChild(el("tr", {}, [
@@ -905,7 +1313,7 @@
           el("th", { style:"text-align:left; padding:8px; border-bottom:1px solid var(--border);" }, "Uscite"),
           el("th", { style:"text-align:left; padding:8px; border-bottom:1px solid var(--border);" }, "Netto"),
         ]));
-      
+
         const tbody = el("tbody");
         for (const m of perMonth) {
           tbody.appendChild(el("tr", {}, [
@@ -915,33 +1323,33 @@
             el("td", { style:"padding:8px; border-bottom:1px solid rgba(128,128,128,0.15);" }, formatMoney(m.net, currency)),
           ]));
         }
-      
+
         table.append(thead, tbody);
         wrapEl.appendChild(table);
       };
 
       const loadForecastFromBackend = async () => {
         const todayISO = toISODate(new Date());
-      
         const toISO = state.settings.forecastTo || state.settings.toDate || todayISO;
         const mode = state.settings.forecastMode || "daily";
         const start = state.settings.forecastStart || "2025-12-26";
-      
+        const basis = state.settings.basis || "cash";
+
         const params = {
           to: toISO,
           mode,
           start,
+          basis,
           initialBalance: String(state.settings.initialBalance || 0)
         };
-      
         return API.forecast(params);
       };
-      
+
       const renderForecast = () => {
         const errEl = $("#forecastError");
         errEl.style.display = "none";
         errEl.textContent = "";
-      
+
         const f = state.forecast;
         if (!f) {
           $("#forecastMeta").textContent = "—";
@@ -954,23 +1362,23 @@
           drawForecastChart($("#forecastChart"), [], state.settings.currency);
           return;
         }
-      
+
         const cur = state.settings.currency;
-      
+
         $("#forecastMeta").textContent =
-          `storico ${f.meta?.historyWindow?.from || "?"} → ${f.meta?.historyWindow?.to || "?"} · real=${f.components?.realCount ?? "?"} · rec=${f.components?.futureRecurringCount ?? "?"} · stima=${f.components?.estimatedCount ?? "?"}`;
-      
+          `basis=${state.settings.basis} · storico ${f.meta?.historyWindow?.from || "?"} → ${f.meta?.historyWindow?.to || "?"} · real=${f.components?.realCount ?? "?"} · rec=${f.components?.futureRecurringCount ?? "?"} · stima=${f.components?.estimatedCount ?? "?"}`;
+
         $("#forecastBalanceAtTo").textContent = formatMoney(f.totals?.balanceAtTo, cur);
         $("#forecastBalanceMeta").textContent = `Target ${f.meta?.to || ""} · init ${formatMoney(f.meta?.initialBalance, cur)}`;
-      
+
         $("#forecastTotalIncome").textContent = formatMoney(f.totals?.income, cur);
         $("#forecastTotalExpense").textContent = formatMoney(f.totals?.expense, cur);
         $("#forecastTotalNet").textContent = formatMoney(f.totals?.net, cur);
-      
+
         drawForecastChart($("#forecastChart"), f.series || [], cur);
         renderForecastTable($("#forecastTableWrap"), f.perMonth || [], cur);
       };
-      
+
       const refreshForecast = async () => {
         try {
           state.forecast = null;
@@ -985,13 +1393,99 @@
         }
       };
 
+      // -----------------------------
+      // Calendar Rendering
+      // -----------------------------
+      const categorySlug = (cat) => (cat || "uncategorized")
+        .trim().toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9\-_]/g, "");
+
+      const eventBadges = (evt) => {
+        const pm = getPMById(evt.paymentMethodId);
+        const acc = getAccountById(evt.accountId);
+        const basisISO = eventDateForBasis(evt, state.settings.basis);
+        const accrualISO = evt.date || "";
+        const cashISO = evt.cashDate || "";
+
+        const out = [];
+
+        if (pm?.name) out.push(`<span class="badge badge--muted">💳 ${escapeHtml(pm.name)}</span>`);
+        if (evt.type === "transfer") {
+          const fa = getAccountById(evt.fromAccountId);
+          const ta = getAccountById(evt.toAccountId);
+          if (fa?.name && ta?.name) out.push(`<span class="badge badge--muted">⇄ ${escapeHtml(fa.name)} → ${escapeHtml(ta.name)}</span>`);
+        } else if (acc?.name) {
+          out.push(`<span class="badge badge--muted">🏦 ${escapeHtml(acc.name)}</span>`);
+        }
+
+        if (state.settings.basis === "cash" && accrualISO && cashISO && accrualISO !== cashISO) {
+          out.push(`<span class="badge badge--warn">Cash ${escapeHtml(cashISO)}</span>`);
+        }
+
+        if (evt._virtual) out.push(`<span class="badge badge--muted">virtual</span>`);
+        if (evt._estimated) out.push(`<span class="badge badge--muted">estimated</span>`);
+
+        if (basisISO && basisISO !== accrualISO && state.settings.basis === "cash") {
+          // already shown as Cash badge; keep minimal
+        }
+        return out.join(" ");
+      };
+
+      const escapeHtml = (s) =>
+        String(s || "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;" }[c]));
+
+      const eventBlock = (evt) => {
+        const amt = evt.amount != null && evt.amount !== "" ? formatMoney(Number(evt.amount), state.settings.currency) : "";
+        const cat = evt.category || "Senza categoria";
+        const basisISO = eventDateForBasis(evt, state.settings.basis);
+
+        const root = el("button", {
+          type: "button",
+          className: [
+            "event-block",
+            `event-block--type-${evt.type}`,
+            `event-block--cat-${categorySlug(cat)}`,
+            evt.pinned ? "is-pinned" : "",
+            state.settings.density === "compact" ? "is-compact" : "is-comfort"
+          ].filter(Boolean).join(" "),
+          id: `evt_${evt.id}`,
+          "data-event-id": evt.id,
+          "data-date": basisISO
+        });
+
+        const top = el("div", { className: "event-block__top" }, [
+          el("span", { className: "event-block__title", textContent: evt.title || "(senza titolo)" }),
+          evt.pinned ? el("span", { className: "event-block__pin", textContent: "★", "aria-hidden": "true" }) : null
+        ].filter(Boolean));
+
+        const meta = el("div", { className: "event-block__meta" }, [
+          el("span", { className: "event-block__cat", textContent: cat }),
+          evt.time ? el("span", { className: "event-block__time", textContent: evt.time }) : null
+        ].filter(Boolean));
+
+        root.append(top, meta);
+        if (amt) root.append(el("div", { className: "event-block__amount", textContent: amt }));
+
+        // badges
+        const badgesHTML = eventBadges(evt);
+        if (badgesHTML) {
+          const badgeWrap = el("div", { className: "event-block__meta" });
+          badgeWrap.innerHTML = badgesHTML;
+          root.append(badgeWrap);
+        }
+
+        root.addEventListener("click", () => openEventDrawer(evt.id));
+        return root;
+      };
+
       const renderDayView = (events) => {
         const [start] = getEffectiveRangeForView();
         const dayISO = toISODate(start);
         const container = el("div", { className: "view view--day", id: "viewDayHost" });
 
         const list = el("div", { className: "event-list event-list--day", role: "list" });
-        const dayEvents = events.filter(e => e.date === dayISO);
+        const dayEvents = events.filter(e => eventDateForBasis(e, state.settings.basis) === dayISO);
 
         if (!dayEvents.length) list.appendChild(emptyState("Nessun evento in questo giorno.", "event-empty event-empty--day"));
         else for (const e of dayEvents) list.appendChild(el("div", {}, [eventBlock(e)]));
@@ -1016,7 +1510,7 @@
           ]);
           const colBody = el("div", { className: "day-col__body", role: "list" });
 
-          const dayEvents = events.filter(e => e.date === iso);
+          const dayEvents = events.filter(e => eventDateForBasis(e, state.settings.basis) === iso);
           if (!dayEvents.length) colBody.appendChild(emptyState("—", "event-empty event-empty--tiny"));
           else for (const e of dayEvents) colBody.appendChild(eventBlock(e));
 
@@ -1071,7 +1565,7 @@
             ]);
 
             const cellBody = el("div", { className: "day-cell__body", role: "list" });
-            const dayEvents = events.filter(e => e.date === iso);
+            const dayEvents = events.filter(e => eventDateForBasis(e, state.settings.basis) === iso);
 
             if (!dayEvents.length) cellBody.appendChild(emptyState("", "event-empty event-empty--month"));
             else for (const e of dayEvents) cellBody.appendChild(eventBlock(e));
@@ -1104,7 +1598,7 @@
           });
 
           const inThisMonth = events.filter(e => {
-            const d = fromISODate(e.date);
+            const d = fromISODate(eventDateForBasis(e, state.settings.basis));
             return d.getFullYear() === start.getFullYear() && d.getMonth() === m;
           });
 
@@ -1132,8 +1626,9 @@
         host.dataset.density = state.settings.density;
 
         const [vs, ve] = getEffectiveRangeForView();
-        $("#calendarTitle").textContent = `Calendario · ${formatRangeLabel(vs, ve, view)}`;
-        $("#calendarSubtitle").textContent = `${filtered.length} eventi (filtrati)`;
+        $("#mainTitle").textContent = `Finance v2 · ${state.settings.mode === "calendar" ? "Calendario" : ""}`;
+        $("#mainSubtitle").textContent = `basis=${state.settings.basis} · ${filtered.length} eventi (filtrati)`;
+
         $("#rangeLabel").textContent = formatRangeLabel(vs, ve, view);
 
         if (view === "day") host.appendChild(renderDayView(filtered));
@@ -1142,200 +1637,706 @@
         else host.appendChild(renderYearView(filtered));
       };
 
-      const renderCategoryOptions = () => {
-        const set = new Set(state.events.map(e => (e.category || "").trim()).filter(Boolean));
-        const cats = Array.from(set).sort((a, b) => a.localeCompare(b, "it"));
-        const sel = $("#categorySelect");
-        const prev = state.settings.category || "all";
-        sel.innerHTML = "";
-        sel.appendChild(el("option", { value: "all", textContent: "Tutte" }));
-        for (const c of cats) sel.appendChild(el("option", { value: c.toLowerCase(), textContent: c }));
-        sel.value = prev;
-
-        const list = $("#categoryList");
-        list.innerHTML = "";
-        for (const c of cats) list.appendChild(el("option", { value: c }));
-      };
-
-      const syncControlsFromState = () => {
-        $("#sidebar").setAttribute("data-open", state.settings.sidebarOpen ? "true" : "false");
-        $$("#viewSwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === state.settings.view ? "true" : "false"));
-        $$("#densitySwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.density === state.settings.density ? "true" : "false"));
-        $$("#rangePresets button").forEach(b => b.setAttribute("aria-pressed", b.dataset.preset === state.settings.rangeMode ? "true" : "false"));
-        $("#searchInput").value = state.settings.search || "";
-        $("#toggleIncome").checked = !!state.settings.includeIncome;
-        $("#toggleExpense").checked = !!state.settings.includeExpense;
-        $("#toggleOther").checked = !!state.settings.includeOther;
-        $("#fromDate").value = state.settings.fromDate || "";
-        $("#toDate").value = state.settings.toDate || "";
-        const todayISO = toISODate(new Date());
-        $("#forecastTo").value = state.settings.forecastTo || state.settings.toDate || todayISO;
-        $("#forecastMode").value = state.settings.forecastMode || "daily";
-        $("#balanceAtDate").value = state.settings.balanceAtDate || todayISO;
-      };
-      const renderStats = () => {
+      // -----------------------------
+      // Movements view
+      // -----------------------------
+      const renderMovements = () => {
         const filtered = getFilteredEvents();
-        const vis = computeVisibleStats(filtered);
-        $("#statsMeta").textContent = `${formatRangeLabel(vis.rangeStart, vis.rangeEnd, "custom")} · visibile`;
-        $("#statIncome").textContent = formatMoney(vis.incomeSum, state.settings.currency);
-        $("#statExpense").textContent = formatMoney(vis.expenseSum, state.settings.currency);
-        $("#statNet").textContent = formatMoney(vis.net, state.settings.currency);
-        $("#statIncomeCount").textContent = `${vis.incomeCount} eventi`;
-        $("#statExpenseCount").textContent = `${vis.expenseCount} eventi`;
-        const todayISO = toISODate(new Date());
-        const balToday = computeBalanceUpTo(state.events, state.settings.initialBalance, todayISO);
-        $("#statCurrentBalance").textContent = formatMoney(balToday, state.settings.currency);
-        $("#statCurrentBalanceMeta").textContent = `Fino a ${todayISO}`;
-        const atISO = state.settings.balanceAtDate || todayISO;
-        const balAt = computeBalanceUpTo(state.events, state.settings.initialBalance, atISO);
-        $("#statBalanceAtDate").textContent = formatMoney(balAt, state.settings.currency);
-        const netEl = $("#statNet");
-        netEl.classList.toggle("positive", vis.net > 0);
-        netEl.classList.toggle("negative", vis.net < 0);
-        const list = $("#snapshotList");
-        list.innerHTML = "";
-        const tail = vis.snapshots.slice(-14);
-        for (const s of tail) {
-          list.appendChild(el("div", { className: "snapshot-item", role: "listitem" }, [
-            el("div", { className: "snapshot-item__date", textContent: s.date }),
-            el("div", { className: "snapshot-item__value", textContent: formatMoney(s.balance, state.settings.currency) })
-          ]));
+        $("#movBasisLabel").textContent = state.settings.basis;
+
+        const wrap = $("#movementsTable");
+        wrap.innerHTML = "";
+
+        if (!filtered.length) {
+          wrap.appendChild(emptyState("Nessun movimento nel filtro corrente."));
+          return;
         }
-        if (!tail.length) list.appendChild(emptyState("Nessuno snapshot nel range corrente.", "snapshot-empty"));
+
+        const table = el("table");
+        const thead = el("thead");
+        thead.appendChild(el("tr", {}, [
+          el("th", {}, "Data (Accrual)"),
+          el("th", {}, "Cash Date"),
+          el("th", {}, "Titolo"),
+          el("th", {}, "Categoria"),
+          el("th", {}, "Metodo/Account"),
+          el("th", {}, "Importo"),
+        ]));
+
+        const tbody = el("tbody");
+
+        for (const e of filtered) {
+          const pm = getPMById(e.paymentMethodId);
+          const acc = getAccountById(e.accountId);
+
+          const metaParts = [];
+          if (e.type === "transfer") {
+            const fa = getAccountById(e.fromAccountId);
+            const ta = getAccountById(e.toAccountId);
+            metaParts.push(`⇄ ${fa?.name || "?"} → ${ta?.name || "?"}`);
+          } else {
+            metaParts.push(pm?.name ? `💳 ${pm.name}` : "—");
+            metaParts.push(acc?.name ? `🏦 ${acc.name}` : "—");
+          }
+
+          const signed = eventSignedAmount(e);
+          const amt = (e.amount == null) ? "—" : formatMoney(e.amount, state.settings.currency);
+          const amtClass = signed >= 0 ? "amt-pos" : "amt-neg";
+
+          const tr = el("tr", { style: "cursor:pointer;" });
+          tr.addEventListener("click", () => openEventDrawer(e.id));
+
+          tr.appendChild(el("td", {}, [
+            el("div", { textContent: e.date || "—" }),
+            el("div", { className: "row-sub", textContent: e.type })
+          ]));
+          tr.appendChild(el("td", {}, [
+            el("div", { textContent: e.cashDate || e.date || "—" }),
+            (state.settings.basis === "cash" && e.cashDate && e.date && e.cashDate !== e.date)
+              ? el("div", { className: "row-sub", textContent: "cash≠accrual" })
+              : el("div", { className: "row-sub", textContent: "" })
+          ]));
+          tr.appendChild(el("td", {}, [
+            el("div", { textContent: e.title || "(senza titolo)" }),
+            el("div", { className: "row-sub", textContent: e.notes ? e.notes.slice(0, 80) : "" })
+          ]));
+          tr.appendChild(el("td", {}, e.category || "Senza categoria"));
+          tr.appendChild(el("td", {}, metaParts.join(" · ")));
+          tr.appendChild(el("td", { className: amtClass }, amt));
+
+          tbody.appendChild(tr);
+        }
+
+        table.append(thead, tbody);
+        wrap.appendChild(table);
       };
-      const render = () => {
-        syncControlsFromState();
-        renderCategoryOptions();
-        renderCalendar();
+
+      // -----------------------------
+      // Reports view (client-side fallback + optional API)
+      // -----------------------------
+      const computeMonthlyReportClient = (yyyymm) => {
+        const basis = state.settings.basis;
+        const cur = state.settings.currency;
+
+        const eventsMonth = state.events.filter(e => {
+          const dISO = (basis === "cash") ? (e.cashDate || e.date) : e.date;
+          return monthKey(dISO) === yyyymm;
+        });
+
+        let income = 0, expense = 0;
+        const byCat = new Map();
+
+        for (const e of eventsMonth) {
+          if (e.type === "income") {
+            income += Number(e.amount || 0);
+          } else if (e.type === "expense") {
+            expense += Number(e.amount || 0);
+            const c = (e.category || "Senza categoria").trim();
+            byCat.set(c, (byCat.get(c) || 0) + Number(e.amount || 0));
+          }
+        }
+        const net = income - expense;
+
+        // top cats
+        const topCats = Array.from(byCat.entries())
+          .sort((a,b)=>b[1]-a[1])
+          .slice(0, 8);
+
+        const cc = computeCreditCardKPIs({ monthISO: yyyymm + "-01" });
+
+        return { yyyymm, income, expense, net, topCats, cc, currency: cur, basis };
+      };
+
+      const renderReportCats = (topCats, totalExpense) => {
+        const host = $("#repCats");
+        host.innerHTML = "";
+        if (!topCats.length) {
+          host.appendChild(emptyState("Nessuna uscita per categoria."));
+          return;
+        }
+
+        const max = Math.max(...topCats.map(([,v])=>v), 1);
+
+        for (const [cat, val] of topCats) {
+          const pct = Math.round((val / max) * 100);
+          const row = el("div", { className: "panel", style: "padding:10px; cursor:pointer;" });
+          row.addEventListener("click", () => {
+            // jump to movements view filtered by category
+            state.settings.mode = "movements";
+            state.settings.category = cat.toLowerCase();
+            saveSettings();
+            render();
+          });
+
+          row.appendChild(el("div", { className: "hstack", style: "justify-content:space-between;" }, [
+            el("div", { style:"font-weight:900;" }, cat),
+            el("div", {}, formatMoney(val, state.settings.currency))
+          ]));
+
+          row.appendChild(el("div", { style:"height:8px" }));
+          row.appendChild(el("div", { style:`height:10px;border-radius:999px;border:1px solid var(--border); background: rgba(128,128,128,0.08); overflow:hidden;` }, [
+            el("div", { style:`height:100%; width:${pct}%; background: rgba(80,160,255,0.55);` })
+          ]));
+
+          const share = totalExpense > 0 ? Math.round((val / totalExpense) * 100) : 0;
+          row.appendChild(el("div", { className: "mini-help" }, `${share}% delle uscite del mese`));
+
+          host.appendChild(row);
+        }
+      };
+
+      const runReports = async () => {
+        const errEl = $("#repError");
+        errEl.style.display = "none";
+        errEl.textContent = "";
+
+        const monthVal = $("#repMonth").value; // YYYY-MM
+        if (!monthVal) return;
+
+        // Try API first, fallback to client compute
+        try {
+          let data = null;
+          try {
+            data = await API.reportMonthly({ month: monthVal, basis: state.settings.basis });
+          } catch (_) {
+            data = null;
+          }
+
+          if (!data || typeof data !== "object") {
+            data = computeMonthlyReportClient(monthVal);
+          }
+
+          const income = Number(data.income || 0);
+          const expense = Number(data.expense || 0);
+          const net = Number(data.net || (income - expense));
+
+          $("#repIncome").textContent = formatMoney(income, state.settings.currency);
+          $("#repExpense").textContent = formatMoney(expense, state.settings.currency);
+          $("#repNet").textContent = formatMoney(net, state.settings.currency);
+
+          $("#repIncomeSub").textContent = `basis=${state.settings.basis}`;
+          $("#repExpenseSub").textContent = `basis=${state.settings.basis}`;
+          $("#repNetSub").textContent = "income − expense";
+
+          $("#repCatMeta").textContent = `${(data.topCats || []).length} categorie`;
+          renderReportCats(data.topCats || [], expense);
+
+          const cc = data.cc || computeCreditCardKPIs({ monthISO: monthVal + "-01" });
+          $("#repCCMeta").textContent = `mese ${monthVal}`;
+          $("#repCCOutstanding").textContent = formatMoney(cc.outstanding, state.settings.currency);
+          $("#repCCOutstandingSub").textContent = `stima global (charges−settlement)`;
+          $("#repCCSpent").textContent = formatMoney(cc.spentMonth, state.settings.currency);
+          $("#repCCPaid").textContent = formatMoney(cc.paidMonth, state.settings.currency);
+
+        } catch (e) {
+          errEl.style.display = "";
+          errEl.textContent = e?.message || "Errore report";
+        }
+      };
+
+      // -----------------------------
+      // Setup view (read-only meta + local override)
+      // -----------------------------
+      const renderSetup = () => {
+        $("#setupError").style.display = "none";
+        $("#setupError").textContent = "";
+
+        const accHost = $("#setupAccounts");
+        const pmHost = $("#setupPMs");
+        const catHost = $("#setupCats");
+
+        accHost.innerHTML = "";
+        pmHost.innerHTML = "";
+        catHost.innerHTML = "";
+
+        const accs = state.meta.accounts || [];
+        const pms = state.meta.paymentMethods || [];
+
+        if (!accs.length) accHost.appendChild(emptyState("Nessun account configurato."));
+        else {
+          for (const a of accs) {
+            const row = el("div", { className:"panel", style:"padding:10px;" }, [
+              el("div", { className:"hstack", style:"justify-content:space-between;" }, [
+                el("div", { style:"font-weight:900;" }, a.name),
+                el("span", { className:"badge badge--muted" }, a.type)
+              ]),
+              el("div", { className:"mini-help" }, `id=${a.id} · currency=${a.currency}`)
+            ]);
+            accHost.appendChild(row);
+          }
+        }
+
+        if (!pms.length) pmHost.appendChild(emptyState("Nessun metodo configurato."));
+        else {
+          for (const p of pms) {
+            const row = el("div", { className:"panel", style:"padding:10px;" }, [
+              el("div", { className:"hstack", style:"justify-content:space-between;" }, [
+                el("div", { style:"font-weight:900;" }, p.name),
+                el("span", { className:"badge badge--muted" }, p.kind)
+              ]),
+              el("div", { className:"mini-help" }, `defaultAccount=${p.defaultAccountId || "—"} · rule=${p.settlementRule || "—"}`)
+            ]);
+            pmHost.appendChild(row);
+          }
+        }
+
+        // categories
+        const set = new Set();
+        for (const e of state.events) set.add((e.category || "").trim());
+        for (const c of (state.meta.categories || [])) set.add((c || "").trim());
+        const cats = Array.from(set).filter(Boolean).sort((a,b)=>a.localeCompare(b, "it"));
+        $("#setupCatMeta").textContent = `${cats.length} categorie`;
+        if (!cats.length) catHost.appendChild(emptyState("Nessuna categoria."));
+        else {
+          const wrap = el("div", { className:"hstack", style:"flex-wrap:wrap;" });
+          for (const c of cats) wrap.appendChild(el("span", { className:"badge badge--muted" }, c));
+          catHost.appendChild(wrap);
+        }
+      };
+
+      // Wizard: create simple default meta overrides in settings (doesn't require API meta write)
+      const runWizardSparkasse = () => {
+        // We cannot write /meta reliably from frontend unless API supports it.
+        // We store an override in settings so backend can read it (recommended in v2).
+        const ui = state.settings;
+        const existingAccs = state.meta.accounts.slice();
+        const existingPMs = state.meta.paymentMethods.slice();
+
+        const hasBank = existingAccs.some(a => a.type === "bank");
+        const hasCC = existingAccs.some(a => a.type === "credit_card");
+
+        const bankId = hasBank ? existingAccs.find(a=>a.type==="bank")?.id : `acc_${uid()}`;
+        const ccId = hasCC ? existingAccs.find(a=>a.type==="credit_card")?.id : `acc_${uid()}`;
+
+        const accs = existingAccs.slice();
+        if (!hasBank) accs.push(normAccount({ id: bankId, name:"Bank", type:"bank", currency: ui.currency, isDefault:true }));
+        if (!hasCC) accs.push(normAccount({ id: ccId, name:"Sparkasse Kreditkarte", type:"credit_card", currency: ui.currency, isDefault:false }));
+
+        const hasPM = existingPMs.some(p => p.kind === "credit_card");
+        const pmId = hasPM ? existingPMs.find(p=>p.kind==="credit_card")?.id : `pm_${uid()}`;
+
+        const pms = existingPMs.slice();
+        if (!hasPM) {
+          pms.push(normPM({
+            id: pmId,
+            name: "Credit Card (Sparkasse)",
+            kind: "credit_card",
+            defaultAccountId: ccId,
+            settlementRule: "next_month_day",
+            settlementParam: { day: 1 }
+          }));
+        }
+
+        // apply locally (meta)
+        state.meta.accounts = accs;
+        state.meta.paymentMethods = pms;
+
+        // persist in settings as overrides (backend can choose to accept)
+        state.settings.metaOverride = { accounts: accs, paymentMethods: pms };
+        saveSettings();
+        renderAllSelectors();
+        renderSetup();
         renderStats();
-        renderForecast();
       };
+
+      // -----------------------------
+      // Drawer & modal
+      // -----------------------------
       const getEventById = (id) => state.events.find(e => e.id === id) || null;
+
+      const kv = (k, v) => el("div", { className: "kv" }, [
+        el("div", { className: "kv__k", textContent: k }),
+        el("div", { className: "kv__v", textContent: v })
+      ]);
+
+      const renderEventDetail = (evt) => {
+        const cat = evt.category || "Senza categoria";
+        const amt = evt.amount != null && evt.amount !== "" ? formatMoney(Number(evt.amount), state.settings.currency) : "—";
+
+        const pm = getPMById(evt.paymentMethodId);
+        const acc = getAccountById(evt.accountId);
+
+        const accrual = evt.date || "—";
+        const cash = evt.cashDate || evt.date || "—";
+
+        const root = el("article", { className: "event-detail" }, [
+          el("div", { className: "event-detail__row" }, [
+            kv("Categoria", cat),
+            kv("Tipo", evt.type),
+            kv("Metodo", pm?.name || "—")
+          ]),
+          el("div", { className: "event-detail__row" }, [
+            kv("Accrual Date", accrual),
+            kv("Cash Date", cash),
+            kv("Importo", amt)
+          ]),
+          el("div", { className: "event-detail__row" }, [
+            kv("Account", acc?.name || "—"),
+            kv("Serie", evt.seriesId ? String(evt.seriesId) : "—"),
+            kv("Master", evt.seriesMaster ? "yes" : "no"),
+          ]),
+          evt.type === "transfer" ? el("div", { className: "event-detail__row" }, [
+            kv("From", getAccountById(evt.fromAccountId)?.name || evt.fromAccountId || "—"),
+            kv("To", getAccountById(evt.toAccountId)?.name || evt.toAccountId || "—"),
+            kv("—", "—")
+          ]) : null,
+          el("div", { className: "event-detail__notes" }, [
+            el("h3", { className: "event-detail__notes-title", textContent: "Note" }),
+            el("p", { className: "event-detail__notes-text", textContent: evt.notes || "—" })
+          ])
+        ].filter(Boolean));
+
+        return root;
+      };
+
       const openEventDrawer = (id) => {
         const evt = getEventById(id);
         if (!evt) return;
         state.selectedEventId = id;
         $("#eventDrawer").setAttribute("aria-hidden", "false");
-        $("#drawerTitle").textContent = evt.title;
+        $("#drawerTitle").textContent = evt.title || "Evento";
         const detail = $("#eventDetail");
         detail.innerHTML = "";
         detail.appendChild(renderEventDetail(evt));
       };
+
       const closeEventDrawer = () => {
         state.selectedEventId = null;
         $("#eventDrawer").setAttribute("aria-hidden", "true");
         $("#eventDetail").innerHTML = "";
       };
+
+      const showTransferFields = (show) => {
+        $("#transferFields").style.display = show ? "" : "none";
+      };
+
       const syncRecurrenceUI = () => {
         const mode = $("#evtRecurrence").value;
         const recDaysWrap = $("#recDaysField");
         const spanWrap = $("#recSpanField");
-        const daysInput = $("#evtRecurrenceDays");
-        const spanInput = $("#evtRecurrenceSpan");
-        const unitSelect = $("#evtRecurrenceSpanUnit");
-        // --- Ogni N giorni (solo custom_days)
         if (mode === "custom_days") {
           recDaysWrap.style.display = "";
-          if (!daysInput.value) daysInput.value = "7";
+          if (!$("#evtRecurrenceDays").value) $("#evtRecurrenceDays").value = "7";
         } else {
           recDaysWrap.style.display = "none";
-          daysInput.value = "";
+          $("#evtRecurrenceDays").value = "";
         }
-        // --- Durata ricorrenza (tutte tranne none)
         if (mode !== "none") {
           spanWrap.style.display = "";
-          const def = RECURRENCE_DEFAULTS[mode] || { count: 6, unit: "months" };
-          // se count non valido, metti default coerente
-          const count = Number(spanInput.value || 0);
-          if (!(count >= 1)) spanInput.value = String(def.count);
-          // se unit non valida, metti default coerente
-          const unit = unitSelect.value;
-          if (!["days", "weeks", "months", "years"].includes(unit)) {
-            unitSelect.value = def.unit;
-          }
-          // se unit è "days" ma modalità è monthly/yearly e l'utente non ha mai scritto nulla,
-          // forziamo unit coerente (evita "mensile" con "giorni" per default)
-          const userHasTypedCount = String(spanInput.value || "").trim() !== "";
-          if (!userHasTypedCount) unitSelect.value = def.unit;
+          const today = toISODate(new Date());
+          if (!$("#evtRecurrenceUntil").value) $("#evtRecurrenceUntil").value = today;
         } else {
           spanWrap.style.display = "none";
-          spanInput.value = "";
-          unitSelect.value = "days";
+          $("#evtRecurrenceUntil").value = "";
         }
       };
+
+      const titleLooksLikeCCSettlement = (title) => {
+        const t = String(title || "").toLowerCase();
+        return t.includes("sparkasse kreditkartenabrechnung") || t.includes("kreditkartenabrechnung");
+      };
+
+      const syncTitleHeuristic = () => {
+        const title = $("#evtTitle").value || "";
+        const hint = $("#evtTitleHint");
+        const looks = titleLooksLikeCCSettlement(title);
+        hint.style.display = looks ? "" : "none";
+
+        if (looks) {
+          // suggest transfer
+          $("#evtType").value = "transfer";
+          showTransferFields(true);
+
+          // try best accounts
+          const bank = state.meta.accounts.find(a => a.type === "bank")?.id || "";
+          const cc = state.meta.accounts.find(a => a.type === "credit_card")?.id || "";
+          if (bank) $("#evtFromAccount").value = bank;
+          if (cc) $("#evtToAccount").value = cc;
+        }
+      };
+
+      const fillModalSelectors = () => {
+        // payment methods
+        const pmSel = $("#evtPaymentMethod");
+        pmSel.innerHTML = "";
+        const pms = state.meta.paymentMethods || [];
+        pmSel.appendChild(el("option", { value:"" }, "—"));
+        for (const p of pms) {
+          pmSel.appendChild(el("option", { value:p.id }, p.name));
+        }
+
+        // account selectors
+        const accSel = $("#evtAccount");
+        const fromSel = $("#evtFromAccount");
+        const toSel = $("#evtToAccount");
+        accSel.innerHTML = "";
+        fromSel.innerHTML = "";
+        toSel.innerHTML = "";
+        const accs = state.meta.accounts || [];
+        accSel.appendChild(el("option", { value:"" }, "—"));
+        fromSel.appendChild(el("option", { value:"" }, "—"));
+        toSel.appendChild(el("option", { value:"" }, "—"));
+        for (const a of accs) {
+          const opt = el("option", { value:a.id }, `${a.name} (${a.type})`);
+          const opt2 = el("option", { value:a.id }, `${a.name} (${a.type})`);
+          const opt3 = el("option", { value:a.id }, `${a.name} (${a.type})`);
+          accSel.appendChild(opt);
+          fromSel.appendChild(opt2);
+          toSel.appendChild(opt3);
+        }
+      };
+
+      const computeAndSetCashDate = () => {
+        const accrualISO = $("#evtDate").value;
+        const type = $("#evtType").value;
+        const pmId = $("#evtPaymentMethod").value;
+        const pm = getPMById(pmId);
+
+        const override = $("#evtCashOverride").checked;
+        const cashEl = $("#evtCashDate");
+
+        if (override) {
+          cashEl.disabled = false;
+          return;
+        }
+        cashEl.disabled = true;
+
+        const cashISO = computeCashDate({ accrualISO, pm, type });
+        cashEl.value = cashISO || accrualISO || "";
+      };
+
       const openEventModal = (mode, eventId = null, prefillISO = null) => {
         state.draftEventId = mode === "edit" ? eventId : null;
         $("#eventModalTitle").textContent = mode === "edit" ? "Modifica evento" : "Nuovo evento";
+
+        fillModalSelectors();
+
         if (mode === "edit") {
           const evt = getEventById(eventId);
           if (!evt) return;
+
           $("#evtTitle").value = evt.title || "";
-          $("#evtCategory").value = evt.category || "";
           $("#evtType").value = evt.type || "other";
           $("#evtAmount").value = (evt.amount ?? "");
-          $("#evtStart").value = evt.date || "";
+          $("#evtCategory").value = evt.category || "";
+          $("#evtDate").value = evt.date || "";
           $("#evtTime").value = evt.time || "";
           $("#evtNotes").value = evt.notes || "";
+          $("#evtPinned").checked = !!evt.pinned;
+
+          $("#evtPaymentMethod").value = evt.paymentMethodId || "";
+          $("#evtAccount").value = evt.accountId || "";
+
+          $("#evtFromAccount").value = evt.fromAccountId || "";
+          $("#evtToAccount").value = evt.toAccountId || "";
+
           $("#evtRecurrence").value = evt.recurrence || "none";
           $("#evtRecurrenceDays").value = evt.recurrenceDays != null ? String(evt.recurrenceDays) : "";
-          $("#evtPinned").checked = !!evt.pinned;
+
+          // cash date
+          $("#evtCashOverride").checked = !!(evt.cashDate && evt.cashDate !== computeCashDate({ accrualISO: evt.date, pm: getPMById(evt.paymentMethodId), type: evt.type }));
+          $("#evtCashDate").value = evt.cashDate || evt.date || "";
+
+          showTransferFields($("#evtType").value === "transfer");
+          syncTitleHeuristic();
           syncRecurrenceUI();
+          computeAndSetCashDate();
+
         } else {
           $("#eventForm").reset();
           $("#evtType").value = "expense";
-          $("#evtStart").value = prefillISO || toISODate(new Date());
+          $("#evtDate").value = prefillISO || toISODate(new Date());
           $("#evtRecurrence").value = "none";
-          $("#evtRecurrenceDays").value = "";
           $("#evtPinned").checked = false;
+
+          // try default PM/account
+          const pmDefault = state.meta.paymentMethods.find(p => p.kind === "debit") || state.meta.paymentMethods[0];
+          if (pmDefault?.id) {
+            $("#evtPaymentMethod").value = pmDefault.id;
+            if (pmDefault.defaultAccountId) $("#evtAccount").value = pmDefault.defaultAccountId;
+          }
+
+          showTransferFields(false);
+          syncTitleHeuristic();
           syncRecurrenceUI();
+
+          $("#evtCashOverride").checked = false;
+          computeAndSetCashDate();
         }
+
         $("#eventModal").showModal();
       };
+
       const closeEventModal = () => $("#eventModal").close();
-      const upsertEventFromForm = async () => {
-        const rec = $("#evtRecurrence").value;
-        const recDays = rec === "custom_days" ? Math.max(1, parseInt($("#evtRecurrenceDays").value || "0", 10) || 0) : null;
-        const data = {
+
+      const buildEventPayloadFromForm = () => {
+        const type = $("#evtType").value;
+        const pmId = $("#evtPaymentMethod").value || null;
+        const accId = $("#evtAccount").value || null;
+
+        const override = $("#evtCashOverride").checked;
+        const cashDate = $("#evtCashDate").value || "";
+
+        const payload = {
           title: $("#evtTitle").value.trim(),
-          category: $("#evtCategory").value.trim() || "Senza categoria",
-          type: $("#evtType").value,
+          type,
           amount: $("#evtAmount").value === "" ? null : Number($("#evtAmount").value),
-          date: $("#evtStart").value,
+          category: $("#evtCategory").value.trim() || "Senza categoria",
+          date: $("#evtDate").value,
           time: $("#evtTime").value,
           notes: $("#evtNotes").value.trim(),
           pinned: $("#evtPinned").checked,
-          recurrence: rec,
-          recurrenceDays: recDays
+
+          paymentMethodId: pmId,
+          accountId: accId,
+          cashDate: cashDate,
+
+          // recurrence
+          recurrence: $("#evtRecurrence").value,
+          recurrenceDays: ($("#evtRecurrence").value === "custom_days")
+            ? Math.max(1, parseInt($("#evtRecurrenceDays").value || "0", 10) || 0)
+            : null
         };
+
+        if (type === "transfer") {
+          payload.fromAccountId = $("#evtFromAccount").value || null;
+          payload.toAccountId = $("#evtToAccount").value || null;
+
+          // transfer should use cash date = same day by default
+          if (!override) payload.cashDate = payload.date;
+        }
+
+        return payload;
+      };
+
+      const materializeRecurrenceSeries = async (masterEvent, untilISO) => {
+        const dates = buildOccurrenceDates(masterEvent, untilISO);
+        const createdChildren = [];
+        for (const iso of dates) {
+          const childPayload = {
+            ...masterEvent,
+            date: iso,
+            recurrence: "none",
+            recurrenceDays: null,
+            seriesId: masterEvent.seriesId,
+            seriesMaster: false
+          };
+          // keep cash date in sync for each child
+          const pm = getPMById(masterEvent.paymentMethodId);
+          childPayload.cashDate = computeCashDate({ accrualISO: iso, pm, type: masterEvent.type });
+          const res = await API.createEvent(childPayload);
+          const child = normalizeEvent(res?.event || res);
+          if (child?.id) createdChildren.push(child);
+        }
+        return createdChildren;
+      };
+
+      const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
+
+      const addMonthsKeepingDay = (baseDate, monthsToAdd, anchorDay) => {
+        const y0 = baseDate.getFullYear();
+        const m0 = baseDate.getMonth();
+        const targetMonth = m0 + monthsToAdd;
+        const y = y0 + Math.floor(targetMonth / 12);
+        const m = ((targetMonth % 12) + 12) % 12;
+        const dim = daysInMonth(y, m);
+        const day = Math.min(anchorDay, dim);
+        return new Date(y, m, day);
+      };
+
+      const addYearsKeepingDay = (baseDate, yearsToAdd, anchorMonthIndex0, anchorDay) => {
+        const y = baseDate.getFullYear() + yearsToAdd;
+        const m = anchorMonthIndex0;
+        const dim = daysInMonth(y, m);
+        const day = Math.min(anchorDay, dim);
+        return new Date(y, m, day);
+      };
+
+      const buildOccurrenceDates = (master, untilISO) => {
+        const out = [];
+        const mode = master.recurrence || "none";
+        if (mode === "none") return out;
+        const anchor = fromISODate(master.date);
+        const anchorDay = anchor.getDate();
+        const anchorMonth = anchor.getMonth();
+        const until = fromISODate(untilISO);
+        let guard = 0;
+
+        if (mode === "custom_days") {
+          const stepDays = Number(master.recurrenceDays || 0);
+          if (!stepDays || stepDays < 1) return out;
+          let cur = addDays(anchor, stepDays);
+          while (cur <= until && guard < 20000) {
+            out.push(toISODate(cur));
+            cur = addDays(cur, stepDays);
+            guard++;
+          }
+          return out;
+        }
+
+        if (mode === "monthly") {
+          let k = 1;
+          while (guard < 20000) {
+            const cur = addMonthsKeepingDay(anchor, k, anchorDay);
+            if (cur > until) break;
+            out.push(toISODate(cur));
+            k++; guard++;
+          }
+          return out;
+        }
+
+        if (mode === "yearly") {
+          let k = 1;
+          while (guard < 20000) {
+            const cur = addYearsKeepingDay(anchor, k, anchorMonth, anchorDay);
+            if (cur > until) break;
+            out.push(toISODate(cur));
+            k++; guard++;
+          }
+          return out;
+        }
+
+        return out;
+      };
+
+      const upsertEventFromForm = async () => {
+        const data = buildEventPayloadFromForm();
+
+        // apply meta-driven default account if missing
+        if (!data.accountId && data.paymentMethodId) {
+          const pm = getPMById(data.paymentMethodId);
+          if (pm?.defaultAccountId) data.accountId = pm.defaultAccountId;
+        }
+
+        // auto cashDate if not override
+        if (!$("#evtCashOverride").checked) {
+          const pm = getPMById(data.paymentMethodId || "");
+          data.cashDate = computeCashDate({ accrualISO: data.date, pm, type: data.type });
+          if (data.type === "transfer") data.cashDate = data.date;
+        }
+
+        // series fields (master-only by default)
+        if ((data.recurrence || "none") !== "none") {
+          data.seriesId = data.seriesId || uid();
+          data.seriesMaster = true;
+        } else {
+          data.seriesId = null;
+          data.seriesMaster = false;
+        }
+
         if (state.draftEventId) {
           const updated = await API.updateEvent(state.draftEventId, data);
           const evt = normalizeEvent(updated?.event || updated || { id: state.draftEventId, ...data });
           const idx = state.events.findIndex(e => e.id === state.draftEventId);
           if (idx >= 0) state.events[idx] = evt;
         } else {
-          if ((data.recurrence || "none") === "none") {
-            const created = await API.createEvent({
-              ...data,
-              recurrence: "none",
-              recurrenceDays: null,
-              seriesId: null,
-              seriesMaster: false
-            });
-            state.events.push(normalizeEvent(created?.event || created));
-          } else {
-            const seriesId = uid();
-            const created = await API.createEvent({
-              ...data,
-              seriesId,
-              seriesMaster: true
-            });
-            const master = normalizeEvent(created?.event || created);
-            const untilISO = recurrenceUntilISO(master.date, master.recurrence);
-            const { children } = await materializeRecurrenceSeries(master, untilISO);
-            state.events.push(master, ...children);
-          }
+          const created = await API.createEvent(data);
+          const master = normalizeEvent(created?.event || created);
+          state.events.push(master);
         }
+
         closeEventModal();
+        await reloadEvents();
         render();
         refreshForecast();
       };
@@ -1350,28 +2351,266 @@
           await API.deleteEvent(evt.id);
           state.events = state.events.filter(e => e.id !== evt.id);
           closeEventDrawer();
+          await reloadEvents();
           render();
+          refreshForecast();
           return;
         }
 
         const c = prompt("1=Solo questo\n2=Da questa data in poi\n3=Tutta la serie", "1");
         if (c === "1") {
           await API.deleteEvent(evt.id);
-          state.events = state.events.filter(e => e.id !== evt.id);
         } else if (c === "2") {
           await API.deleteSeriesFrom(evt.seriesId, evt.date);
-          state.events = state.events.filter(e => !(e.seriesId === evt.seriesId && e.date >= evt.date));
         } else if (c === "3") {
           await API.deleteSeries(evt.seriesId);
-          state.events = state.events.filter(e => e.seriesId !== evt.seriesId);
         } else {
           return;
         }
 
         closeEventDrawer();
+        await reloadEvents();
         render();
+        refreshForecast();
       };
 
+      // materialize button handler
+      const onMaterialize = async () => {
+        const rec = $("#evtRecurrence").value;
+        if (rec === "none") return;
+        const untilISO = $("#evtRecurrenceUntil").value;
+        if (!untilISO) return;
+
+        // Need master to exist first: save, then materialize
+        if (!state.draftEventId) {
+          await upsertEventFromForm(); // saves master
+        }
+
+        const master = getEventById(state.draftEventId) || state.events[state.events.length - 1];
+        if (!master) return;
+
+        const children = await materializeRecurrenceSeries(master, untilISO);
+        // push locally; backend already has them
+        state.events.push(...children);
+        await reloadEvents();
+        render();
+        refreshForecast();
+        alert(`Materializzate ${children.length} occorrenze.`);
+      };
+
+      // -----------------------------
+      // Render selectors (sidebar + modal lists)
+      // -----------------------------
+      const renderAllSelectors = () => {
+        // categories from meta + events
+        const catSet = new Set();
+        for (const e of state.events) catSet.add((e.category || "").trim());
+        for (const c of (state.meta.categories || [])) catSet.add((c || "").trim());
+        const cats = Array.from(catSet).filter(Boolean).sort((a,b)=>a.localeCompare(b, "it"));
+
+        const catSel = $("#categorySelect");
+        const prev = state.settings.category || "all";
+        catSel.innerHTML = "";
+        catSel.appendChild(el("option", { value:"all" }, "Tutte"));
+        for (const c of cats) catSel.appendChild(el("option", { value:c.toLowerCase() }, c));
+        catSel.value = prev;
+
+        const list = $("#categoryList");
+        list.innerHTML = "";
+        for (const c of cats) list.appendChild(el("option", { value:c }));
+
+        // accounts sidebar
+        const accSel = $("#accountSelect");
+        const prevAcc = state.settings.account || "all";
+        accSel.innerHTML = "";
+        accSel.appendChild(el("option", { value:"all" }, "Tutti"));
+        for (const a of state.meta.accounts) {
+          accSel.appendChild(el("option", { value:a.id }, `${a.name} (${a.type})`));
+        }
+        accSel.value = prevAcc;
+
+        // payment methods sidebar
+        const pmSel = $("#paymentMethodSelect");
+        const prevPM = state.settings.paymentMethod || "all";
+        pmSel.innerHTML = "";
+        pmSel.appendChild(el("option", { value:"all" }, "Tutti"));
+        for (const p of state.meta.paymentMethods) {
+          pmSel.appendChild(el("option", { value:p.id }, `${p.name}`));
+        }
+        pmSel.value = prevPM;
+      };
+
+      const syncControlsFromState = () => {
+        $("#sidebar").setAttribute("data-open", state.settings.sidebarOpen ? "true" : "false");
+
+        // topbar mode
+        $$("#modeSwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === state.settings.mode ? "true" : "false"));
+        $$("#basisSwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.basis === state.settings.basis ? "true" : "false"));
+        $$("#calendarViewSwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === state.settings.view ? "true" : "false"));
+        $$("#densitySwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.density === state.settings.density ? "true" : "false"));
+        $$("#rangePresets button").forEach(b => b.setAttribute("aria-pressed", b.dataset.preset === state.settings.rangeMode ? "true" : "false"));
+
+        $("#searchInput").value = state.settings.search || "";
+        $("#toggleIncome").checked = !!state.settings.includeIncome;
+        $("#toggleExpense").checked = !!state.settings.includeExpense;
+        $("#toggleTransfers").checked = !!state.settings.includeTransfers;
+        $("#toggleOther").checked = !!state.settings.includeOther;
+
+        $("#fromDate").value = state.settings.fromDate || "";
+        $("#toDate").value = state.settings.toDate || "";
+
+        const todayISO = toISODate(new Date());
+        $("#forecastTo").value = state.settings.forecastTo || state.settings.toDate || todayISO;
+        $("#forecastMode").value = state.settings.forecastMode || "daily";
+        $("#balanceAtDate").value = state.settings.balanceAtDate || todayISO;
+
+        $("#apiBaseInput").value = state.settings.apiBase || "/api";
+        $("#apiStatus").textContent = state.apiOnline ? "online" : "offline";
+        $("#apiStatus").className = state.apiOnline ? "badge badge--ok" : "badge badge--muted";
+
+        // show/hide calendar-specific controls
+        const isCal = state.settings.mode === "calendar";
+        $("#calendarViewSwitch").classList.toggle("hidden", !isCal);
+      };
+
+      const renderStats = () => {
+        const filtered = getFilteredEvents();
+        const vis = computeVisibleStats(filtered);
+        $("#statsMeta").textContent = `${formatRangeLabel(vis.rangeStart, vis.rangeEnd, "custom")} · visibile · basis=${state.settings.basis}`;
+
+        $("#statIncome").textContent = formatMoney(vis.incomeSum, state.settings.currency);
+        $("#statExpense").textContent = formatMoney(vis.expenseSum, state.settings.currency);
+        $("#statNet").textContent = formatMoney(vis.net, state.settings.currency);
+
+        $("#statIncomeCount").textContent = `${vis.incomeCount} entrate`;
+        $("#statExpenseCount").textContent = `${vis.expenseCount} uscite`;
+        $("#statTransferCount").textContent = `${vis.transferCount} transfer`;
+
+        const todayISO = toISODate(new Date());
+
+        const balTodayCash = computeBalanceUpTo(state.events, state.settings.initialBalance, todayISO, "cash");
+        const balTodayAcc = computeBalanceUpTo(state.events, state.settings.initialBalance, todayISO, "accrual");
+
+        const balToday = computeBalanceUpTo(state.events, state.settings.initialBalance, todayISO, state.settings.basis);
+
+        $("#statCurrentBalance").textContent = formatMoney(balToday, state.settings.currency);
+        $("#statCurrentBalanceMeta").textContent = `Fino a ${todayISO}`;
+
+        const atISO = state.settings.balanceAtDate || todayISO;
+
+        const balAtBasis = computeBalanceUpTo(state.events, state.settings.initialBalance, atISO, state.settings.basis);
+        $("#statBalanceAtDate").textContent = formatMoney(balAtBasis, state.settings.currency);
+
+        const delta = balTodayCash - balTodayAcc;
+        $("#statDelta").textContent = formatMoney(delta, state.settings.currency);
+
+        const netEl = $("#statNet");
+        netEl.classList.toggle("positive", vis.net > 0);
+        netEl.classList.toggle("negative", vis.net < 0);
+
+        // snapshots
+        const list = $("#snapshotList");
+        list.innerHTML = "";
+        const tail = vis.snapshots.slice(-14);
+        for (const s of tail) {
+          list.appendChild(el("div", { className: "snapshot-item", role: "listitem" }, [
+            el("div", { className: "snapshot-item__date", textContent: s.date }),
+            el("div", { className: "snapshot-item__value", textContent: formatMoney(s.balance, state.settings.currency) })
+          ]));
+        }
+        if (!tail.length) list.appendChild(emptyState("Nessuno snapshot nel range corrente.", "snapshot-empty"));
+
+        // credit card KPIs
+        const cc = computeCreditCardKPIs();
+        $("#ccOutstanding").textContent = formatMoney(cc.outstanding, state.settings.currency);
+        $("#ccOutstandingMeta").textContent = `charges − settlement (stima)`;
+        $("#ccSpentMonth").textContent = formatMoney(cc.spentMonth, state.settings.currency);
+        $("#ccPaidMonth").textContent = formatMoney(cc.paidMonth, state.settings.currency);
+
+        const ccHelp = $("#ccHelp");
+        const hasCC = getCreditCardAccounts().length > 0 || getCreditCardPMs().length > 0;
+        ccHelp.textContent = hasCC
+          ? "Ok: configurazione carta presente. Le spese carta sono expense (accrual) con cashDate differita."
+          : "Nessuna carta configurata. Vai su Setup → Wizard Sparkasse.";
+      };
+
+      // -----------------------------
+      // App render
+      // -----------------------------
+      const renderModeHost = () => {
+        const m = state.settings.mode;
+
+        $("#calendarView").classList.toggle("hidden", m !== "calendar");
+        $("#movementsView").classList.toggle("hidden", m !== "movements");
+        $("#reportsView").classList.toggle("hidden", m !== "reports");
+        $("#setupView").classList.toggle("hidden", m !== "setup");
+
+        if (m === "calendar") renderCalendar();
+        if (m === "movements") renderMovements();
+        if (m === "reports") runReports();
+        if (m === "setup") renderSetup();
+      };
+
+      const render = () => {
+        syncControlsFromState();
+        renderAllSelectors();
+        renderModeHost();
+        renderStats();
+        renderForecast();
+      };
+
+      // -----------------------------
+      // Data loading
+      // -----------------------------
+      const loadMeta = async () => {
+        try {
+          const raw = await API.getMeta();
+          const meta = raw?.meta || raw || {};
+          // Prefer overrides from settings if provided
+          const override = state.settings.metaOverride;
+
+          const accounts = safeArr(override?.accounts || meta.accounts || meta.Accounts || []);
+          const pms = safeArr(override?.paymentMethods || meta.paymentMethods || meta.payment_methods || meta.methods || []);
+          const cats = safeArr(meta.categories || meta.Categories || []);
+
+          state.meta.accounts = accounts.map(normAccount).filter(a => a.id);
+          state.meta.paymentMethods = pms.map(normPM).filter(p => p.id);
+          state.meta.categories = cats.map(c => String(c)).filter(Boolean);
+
+          state.apiOnline = true;
+        } catch (e) {
+          state.apiOnline = false;
+          // Keep existing meta (maybe override exists)
+          if (state.settings.metaOverride?.accounts) {
+            state.meta.accounts = safeArr(state.settings.metaOverride.accounts).map(normAccount).filter(a => a.id);
+          }
+          if (state.settings.metaOverride?.paymentMethods) {
+            state.meta.paymentMethods = safeArr(state.settings.metaOverride.paymentMethods).map(normPM).filter(p => p.id);
+          }
+        }
+      };
+
+      const reloadEvents = async () => {
+        // Ask server for events (server may ignore unknown params)
+        const params = {
+          basis: state.settings.basis
+        };
+        const data = await API.listEvents(params);
+        const arr = Array.isArray(data) ? data : (data?.events || data?.items || []);
+        state.events = safeArr(arr).map(normalizeEvent);
+
+        // Ensure cashDate exists (client compute fallback)
+        for (const e of state.events) {
+          if (!e.cashDate) {
+            const pm = getPMById(e.paymentMethodId || "");
+            e.cashDate = computeCashDate({ accrualISO: e.date, pm, type: e.type }) || e.date;
+          }
+        }
+      };
+
+      // -----------------------------
+      // Navigation (prev/next) for calendar mode only
+      // -----------------------------
       const moveAnchor = (delta) => {
         const v = state.settings.view;
         if (v === "day") state.anchorDate = addDays(state.anchorDate, delta);
@@ -1380,13 +2619,21 @@
         else state.anchorDate = addYears(state.anchorDate, delta);
       };
 
+      // -----------------------------
+      // Import/Export
+      // -----------------------------
       const exportJSON = () => {
-        const payload = { exportedAt: new Date().toISOString(), settings: state.settings, events: state.events };
+        const payload = {
+          exportedAt: new Date().toISOString(),
+          settings: state.settings,
+          meta: state.meta,
+          events: state.events
+        };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `calendar_finance_export_${Date.now()}.json`;
+        a.download = `finance_v2_export_${Date.now()}.json`;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -1395,38 +2642,122 @@
 
       const importJSON = async (file) => {
         const payload = JSON.parse(await file.text());
-        const events = Array.isArray(payload.events) ? payload.events : [];
-        for (const e of events) {
-          const { id, ...rest } = e;
-          await API.createEvent(rest);
-        }
-        state.events = await loadEventsFromBackend();
-        if (payload.settings) {
+
+        // settings first
+        if (payload.settings && typeof payload.settings === "object") {
           state.settings = { ...state.settings, ...payload.settings };
           saveSettings();
         }
+
+        // meta override (optional)
+        if (payload.meta && typeof payload.meta === "object") {
+          const o = payload.meta;
+          state.settings.metaOverride = {
+            accounts: safeArr(o.accounts).map(normAccount),
+            paymentMethods: safeArr(o.paymentMethods).map(normPM)
+          };
+          saveSettings();
+        }
+
+        // events
+        const events = safeArr(payload.events);
+        for (const e of events) {
+          const { id, ...rest } = e;
+          // normalize payload to API naming
+          const p = normalizeEvent(rest);
+          // remove virtual flags
+          delete p._virtual; delete p._estimated;
+          await API.createEvent(p);
+        }
+
+        await loadMeta();
+        await reloadEvents();
+
         render();
+        refreshForecast();
       };
 
+      // -----------------------------
+      // Wire UI
+      // -----------------------------
       const wireUI = () => {
-        $("#btnSidebarToggle").addEventListener("click", () => { state.settings.sidebarOpen = !state.settings.sidebarOpen; saveSettings(); render(); });
-        $("#btnPrev").addEventListener("click", () => { moveAnchor(-1); render(); });
-        $("#btnNext").addEventListener("click", () => { moveAnchor(1); render(); });
-        $("#btnToday").addEventListener("click", () => { state.anchorDate = startOfDay(new Date()); render(); });
+        $("#btnSidebarToggle").addEventListener("click", () => {
+          state.settings.sidebarOpen = !state.settings.sidebarOpen;
+          saveSettings();
+          render();
+        });
 
-        $$("#viewSwitch button").forEach(btn => btn.addEventListener("click", () => { state.settings.view = btn.dataset.view; saveSettings(); render(); }));
-        $$("#densitySwitch button").forEach(btn => btn.addEventListener("click", () => { state.settings.density = btn.dataset.density; saveSettings(); render(); }));
+        $("#btnPrev").addEventListener("click", () => {
+          if (state.settings.mode !== "calendar") return;
+          moveAnchor(-1);
+          render();
+        });
+        $("#btnNext").addEventListener("click", () => {
+          if (state.settings.mode !== "calendar") return;
+          moveAnchor(1);
+          render();
+        });
+        $("#btnToday").addEventListener("click", () => {
+          state.anchorDate = startOfDay(new Date());
+          render();
+        });
+
+        $$("#modeSwitch button").forEach(btn => btn.addEventListener("click", async () => {
+          state.settings.mode = btn.dataset.mode;
+          saveSettings();
+          render();
+        }));
+
+        $$("#basisSwitch button").forEach(btn => btn.addEventListener("click", async () => {
+          state.settings.basis = btn.dataset.basis;
+          saveSettings();
+          // reload events (server may compute cashDate differently)
+          await reloadEvents();
+          render();
+          refreshForecast();
+        }));
+
+        $$("#calendarViewSwitch button").forEach(btn => btn.addEventListener("click", () => {
+          state.settings.view = btn.dataset.view;
+          saveSettings();
+          render();
+        }));
+
+        $$("#densitySwitch button").forEach(btn => btn.addEventListener("click", () => {
+          state.settings.density = btn.dataset.density;
+          saveSettings();
+          render();
+        }));
 
         $("#btnNewEvent").addEventListener("click", () => openEventModal("new"));
-        $("#evtRecurrence").addEventListener("change", syncRecurrenceUI);
-        $("#evtRecurrenceSpan").addEventListener("input", syncRecurrenceUI);
-        $("#evtRecurrenceSpanUnit").addEventListener("change", syncRecurrenceUI);
-        $("#evtRecurrenceDays").addEventListener("input", syncRecurrenceUI);
 
-        $("#searchInput").addEventListener("input", (e) => { state.settings.search = e.target.value; saveSettings(); render(); });
-        $("#categorySelect").addEventListener("change", (e) => { state.settings.category = e.target.value; saveSettings(); render(); });
+        $("#searchInput").addEventListener("input", (e) => {
+          state.settings.search = e.target.value;
+          saveSettings();
+          render();
+        });
+
+        $("#categorySelect").addEventListener("change", (e) => {
+          state.settings.category = e.target.value;
+          saveSettings();
+          render();
+        });
+
+        $("#accountSelect").addEventListener("change", (e) => {
+          state.settings.account = e.target.value;
+          saveSettings();
+          render();
+        });
+
+        $("#paymentMethodSelect").addEventListener("change", (e) => {
+          state.settings.paymentMethod = e.target.value;
+          saveSettings();
+          render();
+        });
+
         $("#toggleIncome").addEventListener("change", (e) => { state.settings.includeIncome = e.target.checked; saveSettings(); render(); });
         $("#toggleExpense").addEventListener("change", (e) => { state.settings.includeExpense = e.target.checked; saveSettings(); render(); });
+        $("#toggleTransfers").addEventListener("change", (e) => { state.settings.includeTransfers = e.target.checked; saveSettings(); render(); });
         $("#toggleOther").addEventListener("change", (e) => { state.settings.includeOther = e.target.checked; saveSettings(); render(); });
 
         $$("#rangePresets button").forEach(btn => btn.addEventListener("click", () => {
@@ -1437,25 +2768,37 @@
             if (!state.settings.fromDate) state.settings.fromDate = toISODate(minTrack);
             if (!state.settings.toDate) state.settings.toDate = toISODate(maxTrack);
           }
-          saveSettings(); render();
+          saveSettings();
+          render();
         }));
 
         $("#fromDate").addEventListener("change", (e) => { state.settings.fromDate = e.target.value; saveSettings(); render(); });
         $("#toDate").addEventListener("change", (e) => { state.settings.toDate = e.target.value; saveSettings(); render(); });
 
-        $("#balanceAtDate").addEventListener("change", (e) => { state.settings.balanceAtDate = e.target.value || toISODate(new Date()); saveSettings(); renderStats(); });
+        $("#btnApplyFilters").addEventListener("click", () => render());
 
         $("#btnClearFilters").addEventListener("click", () => {
           const keepView = state.settings.view;
           const keepDensity = state.settings.density;
           const keepSidebar = state.settings.sidebarOpen;
+          const keepAPI = state.settings.apiBase;
           const keepBalance = state.settings.balanceAtDate || toISODate(new Date());
-          state.settings = { ...structuredClone(defaultSettings), view: keepView, density: keepDensity, sidebarOpen: keepSidebar, balanceAtDate: keepBalance };
+          const keepMode = state.settings.mode;
+          const keepBasis = state.settings.basis;
+
+          state.settings = {
+            ...structuredClone(defaultSettings),
+            view: keepView,
+            density: keepDensity,
+            sidebarOpen: keepSidebar,
+            apiBase: keepAPI,
+            balanceAtDate: keepBalance,
+            mode: keepMode,
+            basis: keepBasis
+          };
           saveSettings();
           render();
         });
-
-        $("#btnApplyFilters").addEventListener("click", () => render());
 
         $("#calendarView").addEventListener("click", (e) => {
           const addBtn = e.target.closest("[data-action='quick-add']");
@@ -1467,7 +2810,9 @@
             const m = Number(mini.dataset.month);
             state.anchorDate = new Date(y, m, 1);
             state.settings.view = "month";
-            saveSettings(); render();
+            state.settings.mode = "calendar";
+            saveSettings();
+            render();
           }
         });
 
@@ -1477,19 +2822,94 @@
 
         $("#btnCloseModal").addEventListener("click", closeEventModal);
         $("#btnCancelEvent").addEventListener("click", closeEventModal);
-        $("#eventForm").addEventListener("submit", (e) => { e.preventDefault(); upsertEventFromForm(); });
+        $("#eventForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          await upsertEventFromForm();
+        });
+
+        // modal dynamics
+        $("#evtRecurrence").addEventListener("change", syncRecurrenceUI);
+        $("#evtType").addEventListener("change", () => {
+          showTransferFields($("#evtType").value === "transfer");
+          computeAndSetCashDate();
+        });
+        $("#evtPaymentMethod").addEventListener("change", () => {
+          const pm = getPMById($("#evtPaymentMethod").value);
+          if (pm?.defaultAccountId && $("#evtType").value !== "transfer") {
+            $("#evtAccount").value = pm.defaultAccountId;
+          }
+          computeAndSetCashDate();
+        });
+        $("#evtDate").addEventListener("change", computeAndSetCashDate);
+        $("#evtCashOverride").addEventListener("change", () => {
+          const cashEl = $("#evtCashDate");
+          if ($("#evtCashOverride").checked) {
+            cashEl.disabled = false;
+          } else {
+            cashEl.disabled = true;
+            computeAndSetCashDate();
+          }
+        });
+        $("#evtTitle").addEventListener("input", syncTitleHeuristic);
+
+        $("#btnMaterialize").addEventListener("click", async () => {
+          try {
+            await onMaterialize();
+          } catch (e) {
+            alert(e?.message || "Errore materializzazione");
+          }
+        });
+
+        // Forecast
         $("#forecastTo").addEventListener("change", (e) => {
           state.settings.forecastTo = e.target.value || "";
           saveSettings();
         });
-        
         $("#forecastMode").addEventListener("change", (e) => {
           state.settings.forecastMode = e.target.value || "daily";
           saveSettings();
         });
-        
         $("#btnForecast").addEventListener("click", () => refreshForecast());
 
+        // Movements refresh
+        $("#btnMovRefresh").addEventListener("click", async () => {
+          await reloadEvents();
+          renderMovements();
+          renderStats();
+        });
+
+        // Reports
+        $("#btnRepRun").addEventListener("click", () => runReports());
+
+        // Setup
+        $("#btnWizardSparkasse").addEventListener("click", () => {
+          runWizardSparkasse();
+          alert("Wizard completato: meta override salvato in settings.");
+        });
+        $("#btnAddAccount").addEventListener("click", () => {
+          alert("In questa versione: aggiunta completa via API meta non implementata.\nUsa Wizard Sparkasse o configura lato backend /meta.");
+        });
+        $("#btnAddPM").addEventListener("click", () => {
+          alert("In questa versione: aggiunta completa via API meta non implementata.\nUsa Wizard Sparkasse o configura lato backend /meta.");
+        });
+
+        // Settings: API base
+        $("#apiBaseInput").addEventListener("change", async (e) => {
+          state.settings.apiBase = String(e.target.value || "/api").trim().replace(/\/+$/, "") || "/api";
+          saveSettings();
+          await bootstrap();
+        });
+        $("#btnPing").addEventListener("click", async () => {
+          try {
+            await loadMeta();
+            state.apiOnline = true;
+          } catch (_) {
+            state.apiOnline = false;
+          }
+          render();
+        });
+
+        // Export/Import
         $("#btnExport").addEventListener("click", exportJSON);
         $("#importFile").addEventListener("change", async (e) => {
           const f = e.target.files?.[0];
@@ -1497,6 +2917,14 @@
           e.target.value = "";
         });
 
+        // balance at date
+        $("#balanceAtDate").addEventListener("change", (e) => {
+          state.settings.balanceAtDate = e.target.value || toISODate(new Date());
+          saveSettings();
+          renderStats();
+        });
+
+        // Escape
         document.addEventListener("keydown", (e) => {
           if (e.key !== "Escape") return;
           if ($("#eventModal").open) { closeEventModal(); return; }
@@ -1504,31 +2932,51 @@
         });
       };
 
-      const init = async () => {
-        wireUI();
-
+      // -----------------------------
+      // Bootstrap
+      // -----------------------------
+      const bootstrap = async () => {
+        // Load settings
         const s = await API.getSettings().catch(() => null);
         const incoming = s?.settings ? s.settings : (s || {});
         state.settings = { ...structuredClone(defaultSettings), ...incoming };
 
+        // Defaults
         const todayISO = toISODate(new Date());
         if (!state.settings.balanceAtDate) state.settings.balanceAtDate = todayISO;
 
-        state.events = await loadEventsFromBackend();
+        // Load meta + events
+        await loadMeta();
+        await reloadEvents();
 
+        // tracking bounds for date filters
         const [minTrack, maxTrack] = getTrackingBounds(state.events);
         state.anchorDate = clampDateToRange(startOfDay(new Date()), minTrack, maxTrack);
 
         if (!state.settings.fromDate) state.settings.fromDate = toISODate(minTrack);
         if (!state.settings.toDate) state.settings.toDate = toISODate(maxTrack);
+
         if (!state.settings.forecastTo) state.settings.forecastTo = state.settings.toDate || todayISO;
         if (!state.settings.forecastMode) state.settings.forecastMode = "daily";
         if (!state.settings.forecastStart) state.settings.forecastStart = "2025-12-26";
-        syncRecurrenceUI();
-        // prima render normale
+
+        // Reports default month
+        const m = monthKey(todayISO);
+        $("#repMonth").value = m;
+
+        // API status
+        state.apiOnline = true;
+
+        // Render
         render();
-        // poi forecast
-        refreshForecast();
+
+        // Forecast initial
+        refreshForecast().catch(() => {});
+      };
+
+      const init = async () => {
+        wireUI();
+        await bootstrap();
       };
 
       init();

@@ -756,10 +756,8 @@
       const startOfYear = (d) => new Date(d.getFullYear(), 0, 1);
       const endOfYear = (d) => endOfDay(new Date(d.getFullYear(), 11, 31));
       const clampDateToRange = (d, min, max) =>
-        new Date(Math.min(Math.max(d.getTime(), min.getTime()), max.getTime())));
-
+        new Date(Math.min(Math.max(d.getTime(), min.getTime()), max.getTime()));
       const uid = () => crypto.randomUUID?.() || `id_${Math.random().toString(16).slice(2)}_${Date.now()}`;
-
       const defaultSettings = {
         apiBase: "/api",
         mode: "calendar",          // calendar | movements | reports | setup

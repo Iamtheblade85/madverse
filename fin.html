@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark light" />
+  <meta name="fin-api-base" content="https://iamemanuele.pythonanywhere.com/api" />
+
   <title>Finance Calendar v2</title>
   <link rel="stylesheet" href="./fin-theme.css" />
   <style>
@@ -758,8 +760,14 @@
       const clampDateToRange = (d, min, max) =>
         new Date(Math.min(Math.max(d.getTime(), min.getTime()), max.getTime()));
       const uid = () => crypto.randomUUID?.() || `id_${Math.random().toString(16).slice(2)}_${Date.now()}`;
+      const sanitizeApiBase = (s) => String(s || "").trim().replace(/\/+$/, "");
+      const META_API_BASE = sanitizeApiBase(
+        document.querySelector('meta[name="fin-api-base"]')?.content
+      );
+            
       const defaultSettings = {
-        apiBase: "/api",
+        apiBase: META_API_BASE || "/api",
+        mode: "calendar",
         mode: "calendar",          // calendar | movements | reports | setup
         view: "month",             // day | week | month | year
         density: "comfort",        // comfort | compact
@@ -2938,6 +2946,7 @@
         const s = await API.getSettings().catch(() => null);
         const incoming = s?.settings ? s.settings : (s || {});
         state.settings = { ...structuredClone(defaultSettings), ...incoming };
+        if (META_API_BASE) state.settings.apiBase = META_API_BASE;
 
         // Defaults
         const todayISO = toISODate(new Date());

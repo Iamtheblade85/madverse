@@ -1540,6 +1540,33 @@ dialog {
 dialog form {
   overflow: auto;
 }
+/* 1) Layout a 2 colonne: sidebar + main */
+.app.layout{
+  display: grid;
+  grid-template-columns: 360px 1fr;  /* togli la terza colonna */
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "topbar topbar"
+    "sidebar main";
+}
+
+/* 2) Drawer diventa overlay (non parte della grid) */
+#eventDrawer.drawer{
+  position: fixed;
+  top: 72px;               /* metti l'altezza della topbar (o 0 se vuoi full) */
+  right: 0;
+  bottom: 0;
+  width: min(420px, 92vw);
+  z-index: 50;
+
+  transform: translateX(100%);
+  transition: transform 180ms ease;
+}
+
+/* 3) Quando è aperto, entra in vista */
+#eventDrawer.drawer[aria-hidden="false"]{
+  transform: translateX(0);
+}
 
 /* --------------------------------------------------------------------------
    16) Optional Category Color Hooks (safe, scalable)

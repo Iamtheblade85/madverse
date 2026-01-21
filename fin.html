@@ -867,6 +867,12 @@
           const qs = new URLSearchParams(params).toString();
           return this.request(`/reports/credit-card${qs ? `?${qs}` : ""}`);
         }
+        materializeSeries(seriesId, toISO) {
+          return this.request(`/series/${encodeURIComponent(seriesId)}/materialize`, {
+            method: "POST",
+            body: { to: toISO }
+          });
+        }
       };
 
       // -----------------------------
@@ -2033,26 +2039,38 @@ const syncPaymentMethodVisibility = () => {
   }
 };
 
-      const syncRecurrenceUI = () => {
-        const mode = $("#evtRecurrence").value;
-        const recDaysWrap = $("#recDaysField");
-        const spanWrap = $("#recSpanField");
-        if (mode === "custom_days") {
-          recDaysWrap.style.display = "";
-          if (!$("#evtRecurrenceDays").value) $("#evtRecurrenceDays").value = "7";
-        } else {
-          recDaysWrap.style.display = "none";
-          $("#evtRecurrenceDays").value = "";
-        }
-        if (mode !== "none") {
-          spanWrap.style.display = "";
-          const today = toISODate(new Date());
-          if (!$("#evtRecurrenceUntil").value) $("#evtRecurrenceUntil").value = today;
-        } else {
-          spanWrap.style.display = "none";
-          $("#evtRecurrenceUntil").value = "";
-        }
-      };
+const syncRecurrenceUI = () => {
+  const mode = $("#evtRecurrence").value;
+  const recDaysWrap = $("#recDaysField");
+  const spanWrap = $("#recSpanField");
+
+  // campo "ogni N giorni"
+  if (mode === "custom_days") {
+    recDaysWrap.style.display = "";
+    if (!$("#evtRecurrenceDays").value) $("#evtRecurrenceDays").value = "7";
+  } else {
+    recDaysWrap.style.display = "none";
+    $("#evtRecurrenceDays").value = "";
+  }
+
+  // campo "until/materialize"
+  if (mode !== "none") {
+    spanWrap.style.display = "";
+
+    // ✅ default "until" = 12 mesi in avanti dalla data evento (NON oggi)
+    const accrualISO = $("#evtDate").value || toISODate(new Date());
+    const base = fromISODate(accrualISO);
+    const defaultUntil = toISODate(addMonths(base, 12));
+
+    if (!$("#evtRecurrenceUntil").value) {
+      $("#evtRecurrenceUntil").value = defaultUntil;
+    }
+  } else {
+    spanWrap.style.display = "none";
+    $("#evtRecurrenceUntil").value = "";
+  }
+};
+
 
       const titleLooksLikeCCSettlement = (title) => {
         const t = String(title || "").toLowerCase();
@@ -2327,47 +2345,64 @@ const syncPaymentMethodVisibility = () => {
         return out;
       };
 
-      const upsertEventFromForm = async () => {
+      const upsertEventFromForm = async ({ closeModal = true, reloadAfter = true } = {}) => {
         const data = buildEventPayloadFromForm();
-
+      
         // apply meta-driven default account if missing
         if (!data.accountId && data.paymentMethodId) {
           const pm = getPMById(data.paymentMethodId);
           if (pm?.defaultAccountId) data.accountId = pm.defaultAccountId;
         }
-
+      
         // auto cashDate if not override
         if (!$("#evtCashOverride").checked) {
           const pm = getPMById(data.paymentMethodId || "");
           data.cashDate = computeCashDate({ accrualISO: data.date, pm, type: data.type });
           if (data.type === "transfer") data.cashDate = data.date;
         }
-
-        // series fields (master-only by default)
-        if ((data.recurrence || "none") !== "none") {
-          data.seriesId = data.seriesId || uid();
+      
+        // series fields
+        const recMode = (data.recurrence || "none");
+        const current = state.draftEventId ? getEventById(state.draftEventId) : null;
+      
+        if (recMode !== "none") {
+          // ✅ se stai modificando una serie già esistente, NON cambiare seriesId
+          data.seriesId = current?.seriesId || data.seriesId || uid();
           data.seriesMaster = true;
         } else {
           data.seriesId = null;
           data.seriesMaster = false;
         }
-
+      
+        let saved = null;
+      
         if (state.draftEventId) {
           const updated = await API.updateEvent(state.draftEventId, data);
-          const evt = normalizeEvent(updated?.event || updated || { id: state.draftEventId, ...data });
+          saved = normalizeEvent(updated?.event || updated || { id: state.draftEventId, ...data });
+      
           const idx = state.events.findIndex(e => e.id === state.draftEventId);
-          if (idx >= 0) state.events[idx] = evt;
+          if (idx >= 0) state.events[idx] = saved;
         } else {
           const created = await API.createEvent(data);
-          const master = normalizeEvent(created?.event || created);
-          state.events.push(master);
+          saved = normalizeEvent(created?.event || created);
+      
+          state.events.push(saved);
+      
+          // ✅ IMPORTANTISSIMO: salva l'id creato per usarlo subito dopo (materialize)
+          state.draftEventId = saved.id;
         }
-
-        closeEventModal();
-        await reloadEvents();
-        render();
-        refreshForecast();
+      
+        if (closeModal) closeEventModal();
+      
+        if (reloadAfter) {
+          await reloadEvents();
+          render();
+          refreshForecast();
+        }
+      
+        return saved;
       };
+
 
       const deleteSelectedEvent = async () => {
         const id = state.selectedEventId;
@@ -2405,26 +2440,49 @@ const syncPaymentMethodVisibility = () => {
       // materialize button handler
       const onMaterialize = async () => {
         const rec = $("#evtRecurrence").value;
-        if (rec === "none") return;
-        const untilISO = $("#evtRecurrenceUntil").value;
-        if (!untilISO) return;
-
-        // Need master to exist first: save, then materialize
-        if (!state.draftEventId) {
-          await upsertEventFromForm(); // saves master
+        if (rec === "none") {
+          alert("Nessuna ricorrenza selezionata.");
+          return;
         }
-
-        const master = getEventById(state.draftEventId) || state.events[state.events.length - 1];
-        if (!master) return;
-
-        const children = await materializeRecurrenceSeries(master, untilISO);
-        // push locally; backend already has them
-        state.events.push(...children);
+      
+        const untilISO = $("#evtRecurrenceUntil").value;
+        if (!untilISO) {
+          alert("Seleziona una data 'fino a' per la materializzazione.");
+          return;
+        }
+      
+        // ✅ 1) salva prima il master, SENZA chiudere modal e SENZA reload (per non rompere il flusso)
+        const master = await upsertEventFromForm({ closeModal: false, reloadAfter: false });
+        if (!master) {
+          alert("Impossibile salvare il master.");
+          return;
+        }
+      
+        // ✅ 2) materializza con backend
+        const seriesId = master.seriesId || master.id;
+      
+        // debug utile: vedrai questa chiamata in Network
+        console.log("[materialize] calling backend", { seriesId, to: untilISO });
+      
+        const resp = await API.materializeSeries(seriesId, untilISO);
+      
+        // ✅ 3) conta quante create (supporta vari formati di risposta)
+        const createdCount =
+          resp?.created ??
+          resp?.count ??
+          (Array.isArray(resp?.events) ? resp.events.length : null) ??
+          (Array.isArray(resp) ? resp.length : null) ??
+          0;
+      
+        // ✅ 4) ora possiamo chiudere e ricaricare tutto
+        closeEventModal();
         await reloadEvents();
         render();
         refreshForecast();
-        alert(`Materializzate ${children.length} occorrenze.`);
+      
+        alert(`Materializzate ${createdCount} occorrenze (serie=${seriesId}).`);
       };
+
 
       // -----------------------------
       // Render selectors (sidebar + modal lists)

@@ -569,6 +569,7 @@
       </div>
       <div id="eventDetail" class="drawer__body"></div>
     </aside>
+    <div class="drawer-scrim" id="drawerScrim"></div>
 
     <dialog id="eventModal">
       <div class="modal__header">
@@ -1511,29 +1512,45 @@
         const [start] = getEffectiveRangeForView();
         const container = el("div", { className: "view view--week", id: "viewWeekHost" });
         const grid = el("div", { className: "calendar-grid calendar-grid--week", id: "weekGrid" });
-
+      
+        const todayISO = toISODate(new Date());
+      
         for (let i = 0; i < 7; i++) {
           const d = addDays(start, i);
           const iso = toISODate(d);
-
-          const col = el("section", { className: "day-col day-col--week", "data-date": iso });
+      
+          const isToday = iso === todayISO;
+          const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
+      
+          const col = el("section", {
+            className: [
+              "day-col",
+              "day-col--week",
+              isToday ? "is-today" : "",
+              isWeekend ? "is-weekend" : ""
+            ].filter(Boolean).join(" "),
+            "data-date": iso
+          });
+      
           const colHeader = el("header", { className: "day-col__header" }, [
             el("div", { className: "day-col__dow", textContent: new Intl.DateTimeFormat("it-IT", { weekday: "short" }).format(d) }),
             el("div", { className: "day-col__date", textContent: `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}` })
           ]);
+      
           const colBody = el("div", { className: "day-col__body", role: "list" });
-
+      
           const dayEvents = events.filter(e => eventDateForBasis(e, state.settings.basis) === iso);
           if (!dayEvents.length) colBody.appendChild(emptyState("—", "event-empty event-empty--tiny"));
           else for (const e of dayEvents) colBody.appendChild(eventBlock(e));
-
+      
           col.append(colHeader, colBody);
           grid.appendChild(col);
         }
-
+      
         container.appendChild(grid);
         return container;
       };
+
 
       const renderMonthView = (events) => {
         const [start] = getEffectiveRangeForView();
@@ -1550,6 +1567,8 @@
         const gridEnd = endOfWeek(endOfMonth(start));
 
         let cur = gridStart;
+        const todayISO = toISODate(new Date());
+
         while (cur <= gridEnd) {
           const weekRow = el("div", { className: "week-row", role: "row" });
 
@@ -1557,13 +1576,22 @@
             const d = addDays(cur, i);
             const iso = toISODate(d);
             const inMonth = d.getMonth() === start.getMonth();
-
+            const isToday = iso === todayISO;
+            const isWeekend = (d.getDay() === 0 || d.getDay() === 6); // Dom=0, Sab=6
+            
             const cell = el("section", {
-              className: `day-cell day-cell--month ${inMonth ? "is-in-month" : "is-out-month"}`,
+              className: [
+                "day-cell",
+                "day-cell--month",
+                inMonth ? "is-in-month" : "is-out-month",
+                isToday ? "is-today" : "",
+                isWeekend ? "is-weekend" : ""
+              ].filter(Boolean).join(" "),
               id: `monthDay_${iso}`,
               "data-date": iso,
               role: "gridcell"
             });
+
 
             const cellHeader = el("header", { className: "day-cell__header" }, [
               el("div", { className: "day-cell__num", textContent: String(d.getDate()) }),
@@ -2810,6 +2838,8 @@ const syncRecurrenceUI = () => {
         });
 
         $("#btnCloseDrawer").addEventListener("click", closeEventDrawer);
+        $("#drawerScrim").addEventListener("click", closeEventDrawer);
+
         $("#btnEditEvent").addEventListener("click", () => { if (state.selectedEventId) openEventModal("edit", state.selectedEventId); });
         $("#btnDeleteEvent").addEventListener("click", () => deleteSelectedEvent());
 

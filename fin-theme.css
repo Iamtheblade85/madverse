@@ -1568,6 +1568,146 @@ dialog form {
   transform: translateX(0);
 }
 
+/* --- REGIONI: separazione visiva netta --- */
+.topbar{
+  border-bottom: 1px solid rgba(128,128,128,0.22);
+  background: rgba(18,18,18,0.75);
+  backdrop-filter: blur(10px);
+}
+
+.sidebar{
+  border-right: 1px solid rgba(128,128,128,0.22);
+  background: rgba(18,18,18,0.55);
+}
+
+.main{
+  background: rgba(255,255,255,0.02);
+}
+/* --- SIDEBAR: sezioni più distinguibili --- */
+.sidebar__section{
+  padding: 14px;
+  border: 1px solid rgba(128,128,128,0.18);
+  border-radius: 16px;
+  background: rgba(128,128,128,0.05);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+}
+
+.sidebar__section + .sidebar__section{
+  margin-top: 12px;
+}
+
+.sidebar__section-title{
+  display:flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(128,128,128,0.18);
+  margin-bottom: 12px;
+}
+
+.sidebar__section-title span{
+  font-weight: 900;
+  letter-spacing: .2px;
+}
+
+.sidebar__section-title small{
+  color: var(--muted);
+  font-weight: 700;
+}
+/* --- INPUTS: più chiari e con focus visibile --- */
+input, select, textarea{
+  border-radius: 12px;
+  border: 1px solid rgba(128,128,128,0.25);
+  background: rgba(128,128,128,0.06);
+}
+
+input:focus, select:focus, textarea:focus{
+  outline: none;
+  border-color: rgba(80,160,255,0.65);
+  box-shadow: 0 0 0 3px rgba(80,160,255,0.18);
+}
+/* --- CALENDARIO: differenze visive importanti --- */
+.day-cell--month{
+  border: 1px solid rgba(128,128,128,0.16);
+  border-radius: 14px;
+  background: rgba(128,128,128,0.03);
+}
+
+.day-cell--month.is-out-month{
+  opacity: 0.45;
+  background: rgba(128,128,128,0.015);
+}
+
+/* evidenzia oggi */
+.day-cell--month[data-date].is-today{
+  border-color: rgba(80,160,255,0.70);
+  box-shadow: 0 0 0 3px rgba(80,160,255,0.16);
+}
+
+/* weekend (se vuoi differenziarli) */
+.day-cell--month.is-weekend{
+  background: rgba(255,255,255,0.025);
+}
+/* --- EVENTI: più significato visivo --- */
+.event-block{
+  border: 1px solid rgba(128,128,128,0.20);
+  border-radius: 14px;
+  background: rgba(20,20,20,0.45);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+  transition: transform .08s ease, border-color .08s ease;
+}
+
+.event-block:hover{
+  transform: translateY(-1px);
+  border-color: rgba(180,180,180,0.35);
+}
+
+/* “accent bar” per tipo */
+.event-block--type-income{ border-left: 6px solid rgba(120,255,160,0.85); }
+.event-block--type-expense{ border-left: 6px solid rgba(255,90,90,0.85); }
+.event-block--type-transfer{ border-left: 6px solid rgba(255,190,100,0.85); }
+.event-block--type-other{ border-left: 6px solid rgba(160,160,255,0.70); }
+
+/* titolo più leggibile */
+.event-block__title{
+  font-weight: 900;
+  letter-spacing: .1px;
+}
+.event-block__meta{
+  opacity: 0.92;
+}
+/* --- TABLE: più chiara --- */
+.movements table tr:nth-child(even){
+  background: rgba(128,128,128,0.035);
+}
+
+.movements table tr:hover td{
+  background: rgba(80,160,255,0.08);
+}
+/* --- DRAWER: overlay più chiaro e separato --- */
+.drawer{
+  box-shadow: -20px 0 60px rgba(0,0,0,0.45);
+  border-left: 1px solid rgba(128,128,128,0.22);
+  background: rgba(18,18,18,0.92);
+  backdrop-filter: blur(10px);
+}
+
+/* scrim */
+.drawer-scrim{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 49;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.drawer[aria-hidden="false"] ~ .drawer-scrim{
+  opacity: 1;
+  pointer-events: auto;
+}
+
 /* --------------------------------------------------------------------------
    16) Optional Category Color Hooks (safe, scalable)
    You can add CSS rules for categories if you want stable colors.

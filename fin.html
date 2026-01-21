@@ -2371,24 +2371,23 @@ const syncRecurrenceUI = () => {
       
         // debug utile: vedrai questa chiamata in Network
         console.log("[materialize] calling backend", { seriesId, to: untilISO });
-      
-        const resp = await API.materializeSeries(seriesId, untilISO);
-      
         // ✅ 3) conta quante create (supporta vari formati di risposta)
-        const createdCount =
+        const resp = await API.materializeSeries(seriesId, untilISO);
+        const createdCount = Number(
+          resp?.materialized ??
           resp?.created ??
           resp?.count ??
-          (Array.isArray(resp?.events) ? resp.events.length : null) ??
-          (Array.isArray(resp) ? resp.length : null) ??
-          0;
-      
-        // ✅ 4) ora possiamo chiudere e ricaricare tutto
+          (Array.isArray(resp?.events) ? resp.events.length : 0) ??
+          (Array.isArray(resp) ? resp.length : 0) ??
+          0
+        );
+
+        const finalSeriesId = resp?.seriesId || seriesId;
         closeEventModal();
         await reloadEvents();
         render();
         refreshForecast();
-      
-        alert(`Materializzate ${createdCount} occorrenze (serie=${seriesId}).`);
+        alert(`Materializzate ${createdCount} occorrenze (serie=${finalSeriesId}).`);
       };
 
 

@@ -1707,6 +1707,36 @@ input:focus, select:focus, textarea:focus{
   opacity: 1;
   pointer-events: auto;
 }
+/* =========================================================
+   FIX: Drawer leggibile anche in LIGHT mode
+   (il drawer è dark, quindi forziamo token locali chiari)
+   Inserire IN FONDO al file, dopo le regole .drawer overlay
+   ========================================================= */
+
+#eventDrawer.drawer {
+  /* forza i colori “dark drawer” anche se il sistema è light */
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.62);
+  --faint: rgba(255,255,255,0.44);
+
+  --border: rgba(255,255,255,0.16);
+  --border-2: rgba(255,255,255,0.22);
+
+  color: var(--text);
+}
+
+#eventDrawer.drawer .kv__k,
+#eventDrawer.drawer .event-detail__notes-text,
+#eventDrawer.drawer .row-sub,
+#eventDrawer.drawer .muted {
+  color: var(--muted);
+}
+
+#eventDrawer.drawer .kv__v,
+#eventDrawer.drawer .event-detail__notes-title,
+#eventDrawer.drawer #drawerTitle {
+  color: var(--text);
+}
 
 /* --------------------------------------------------------------------------
    16) Optional Category Color Hooks (safe, scalable)

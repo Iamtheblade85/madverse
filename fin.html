@@ -768,7 +768,6 @@
             
       const defaultSettings = {
         apiBase: META_API_BASE || "/api",
-        mode: "calendar",
         mode: "calendar",          // calendar | movements | reports | setup
         view: "month",             // day | week | month | year
         density: "comfort",        // comfort | compact
@@ -866,7 +865,7 @@
         reportCreditCard(params = {}) {
           const qs = new URLSearchParams(params).toString();
           return this.request(`/reports/credit-card${qs ? `?${qs}` : ""}`);
-        }
+        },
         materializeSeries(seriesId, toISO) {
           return this.request(`/series/${encodeURIComponent(seriesId)}/materialize`, {
             method: "POST",
@@ -2254,97 +2253,6 @@ const syncRecurrenceUI = () => {
 
         return payload;
       };
-
-      const materializeRecurrenceSeries = async (masterEvent, untilISO) => {
-        const dates = buildOccurrenceDates(masterEvent, untilISO);
-        const createdChildren = [];
-        for (const iso of dates) {
-          const childPayload = {
-            ...masterEvent,
-            date: iso,
-            recurrence: "none",
-            recurrenceDays: null,
-            seriesId: masterEvent.seriesId,
-            seriesMaster: false
-          };
-          // keep cash date in sync for each child
-          const pm = getPMById(masterEvent.paymentMethodId);
-          childPayload.cashDate = computeCashDate({ accrualISO: iso, pm, type: masterEvent.type });
-          const res = await API.createEvent(childPayload);
-          const child = normalizeEvent(res?.event || res);
-          if (child?.id) createdChildren.push(child);
-        }
-        return createdChildren;
-      };
-
-      const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
-
-      const addMonthsKeepingDay = (baseDate, monthsToAdd, anchorDay) => {
-        const y0 = baseDate.getFullYear();
-        const m0 = baseDate.getMonth();
-        const targetMonth = m0 + monthsToAdd;
-        const y = y0 + Math.floor(targetMonth / 12);
-        const m = ((targetMonth % 12) + 12) % 12;
-        const dim = daysInMonth(y, m);
-        const day = Math.min(anchorDay, dim);
-        return new Date(y, m, day);
-      };
-
-      const addYearsKeepingDay = (baseDate, yearsToAdd, anchorMonthIndex0, anchorDay) => {
-        const y = baseDate.getFullYear() + yearsToAdd;
-        const m = anchorMonthIndex0;
-        const dim = daysInMonth(y, m);
-        const day = Math.min(anchorDay, dim);
-        return new Date(y, m, day);
-      };
-
-      const buildOccurrenceDates = (master, untilISO) => {
-        const out = [];
-        const mode = master.recurrence || "none";
-        if (mode === "none") return out;
-        const anchor = fromISODate(master.date);
-        const anchorDay = anchor.getDate();
-        const anchorMonth = anchor.getMonth();
-        const until = fromISODate(untilISO);
-        let guard = 0;
-
-        if (mode === "custom_days") {
-          const stepDays = Number(master.recurrenceDays || 0);
-          if (!stepDays || stepDays < 1) return out;
-          let cur = addDays(anchor, stepDays);
-          while (cur <= until && guard < 20000) {
-            out.push(toISODate(cur));
-            cur = addDays(cur, stepDays);
-            guard++;
-          }
-          return out;
-        }
-
-        if (mode === "monthly") {
-          let k = 1;
-          while (guard < 20000) {
-            const cur = addMonthsKeepingDay(anchor, k, anchorDay);
-            if (cur > until) break;
-            out.push(toISODate(cur));
-            k++; guard++;
-          }
-          return out;
-        }
-
-        if (mode === "yearly") {
-          let k = 1;
-          while (guard < 20000) {
-            const cur = addYearsKeepingDay(anchor, k, anchorMonth, anchorDay);
-            if (cur > until) break;
-            out.push(toISODate(cur));
-            k++; guard++;
-          }
-          return out;
-        }
-
-        return out;
-      };
-
       const upsertEventFromForm = async ({ closeModal = true, reloadAfter = true } = {}) => {
         const data = buildEventPayloadFromForm();
       

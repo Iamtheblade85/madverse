@@ -1152,8 +1152,34 @@
                 <div class="kpi__label">Suggerimento</div>
                 <div class="kpi__value">Transfer</div>
                 <div class="kpi__sub">Bank → Credit Card</div>
-              </div>
+              </div>           
             </div>
+<div class="panel" style="padding:10px; margin-top:10px;">
+  <div class="panel-title">
+    <b>Amazon Kreditkarte · Rimborso</b>
+    <small>FULL / CUSTOM</small>
+  </div>
+
+  <div class="grid-2">
+    <div class="field">
+      <label for="amzLimit">Plafond (EUR)</label>
+      <input id="amzLimit" type="number" step="1" />
+    </div>
+
+    <div class="field">
+      <label for="amzCustomPay">Custom mensile (EUR)</label>
+      <input id="amzCustomPay" type="number" step="1" />
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+    <button id="btnAmzModeFull" class="btn btn--ghost" type="button">FULL</button>
+    <button id="btnAmzModeCustom" class="btn btn--ghost" type="button">CUSTOM</button>
+    <button id="btnAmzPayNext" class="btn btn--primary" type="button">Registra pagamento prossimo</button>
+  </div>
+
+  <div id="amzPayHint" class="help" style="margin-top:8px;">—</div>
+</div>
 
             <div id="ccHelp" class="help" style="margin-top:10px;">—</div>
           </div>
@@ -1284,6 +1310,56 @@
           <select id="evtPaymentMethod"></select>
           <small class="help">Influenza account default e cash date.</small>
         </div>
+<div id="installmentsBox" class="form-field" style="grid-column:1 / -1; display:none;">
+  <label class="label" style="display:flex;justify-content:space-between;gap:12px;">
+    <span>Amazon Kreditkarte · Rate</span>
+    <span id="ccLimitBadge" class="badge badge--muted">—</span>
+  </label>
+
+  <label class="label" style="display:flex;align-items:center;gap:10px;margin:0;">
+    <input id="evtIsInstallment" type="checkbox" />
+    <span>Pagamento rateale</span>
+  </label>
+
+  <div id="installmentFields" style="display:none; margin-top:10px;">
+    <div class="grid-3">
+      <div class="field">
+        <label for="evtInstCount">Numero rate</label>
+        <input id="evtInstCount" type="number" min="2" step="1" value="3" />
+      </div>
+
+      <div class="field">
+        <label for="evtInstMode">Tipo rate</label>
+        <select id="evtInstMode">
+          <option value="fixed">Importo fisso</option>
+          <option value="custom">Importi variabili</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="evtInstStart">Prima rata (Accrual)</label>
+        <input id="evtInstStart" type="date" />
+      </div>
+    </div>
+
+    <div id="instFixedRow" class="grid-2" style="margin-top:10px;">
+      <div class="field">
+        <label for="evtInstFixedAmt">Importo rata</label>
+        <input id="evtInstFixedAmt" type="number" step="0.01" />
+      </div>
+      <div class="field">
+        <label>Totale calcolato</label>
+        <input id="evtInstTotal" type="text" disabled />
+      </div>
+    </div>
+
+    <div id="instCustomList" style="display:none; margin-top:10px;"></div>
+
+    <div class="help" style="margin-top:8px;">
+      In modalità rateale verranno creati <b>N eventi mensili</b> (uno per rata).
+    </div>
+  </div>
+</div>
 
         <div class="form-field">
           <label class="label" for="evtAccount">Account</label>
@@ -1362,9 +1438,269 @@
   <script>
     (() => {
       "use strict";
+const buildInstCustomInputs = (count) => {
+  const host = $("#instCustomList");
+  host.innerHTML = "";
+  for (let i = 0; i < count; i++) {
+    const row = el("div", { className:"field", style:"margin-bottom:8px;" }, [
+      el("label", {}, `Rata ${i+1}`),
+      el("input", { id:`instAmt_${i}`, type:"number", step:"0.01", value:"" })
+    ]);
+    host.appendChild(row);
+  }
+};
+const getNextDueISOForCard = (cardAccId) => {
+  // prossima cashDate tra le charges della carta
+  const dueDates = new Set();
+
+  for (const e of state.events) {
+    if (e.type !== "expense") continue;
+    const pm = getPMById(e.paymentMethodId);
+    if (!pm || pm.kind !== "credit_card") continue;
+    if ((pm.cardAccountId || "") !== cardAccId) continue;
+
+    const cd = e.cashDate || "";
+    if (cd) dueDates.add(cd);
+  }
+
+  const list = Array.from(dueDates).sort();
+  const today = toISODate(new Date());
+  return list.find(d => d >= today) || list[list.length - 1] || "";
+};
+
+const computeDueAmountForISO = (cardAccId, dueISO) => {
+  let charges = 0;
+  for (const e of state.events) {
+    if (e.type !== "expense") continue;
+    const pm = getPMById(e.paymentMethodId);
+    if (!pm || pm.kind !== "credit_card") continue;
+    if ((pm.cardAccountId || "") !== cardAccId) continue;
+    if ((e.cashDate || "") !== dueISO) continue;
+    charges += Number(e.amount || 0);
+  }
+
+  let alreadyPaid = 0;
+  for (const e of state.events) {
+    if (e.type !== "transfer") continue;
+    if (String(e.toAccountId || "") !== String(cardAccId)) continue;
+    const d = e.cashDate || e.date || "";
+    if (d !== dueISO) continue;
+    alreadyPaid += Number(e.amount || 0);
+  }
+
+  return Math.max(0, charges - alreadyPaid);
+};
+
+const createCardPaymentTransfer = async (cardAccId) => {
+  const cfg = getCCCfg(cardAccId);
+  const dueISO = getNextDueISOForCard(cardAccId);
+  if (!dueISO) { alert("Nessuna scadenza trovata."); return; }
+
+  const dueAmount = computeDueAmountForISO(cardAccId, dueISO);
+  if (dueAmount <= 0) { alert("Nulla da pagare per questa scadenza."); return; }
+
+  let pay = dueAmount;
+  if (cfg.repaymentMode === "custom") {
+    const custom = Number(cfg.customMonthly || 0);
+    if (custom <= 0) { alert("Imposta un custom mensile > 0."); return; }
+    pay = Math.min(custom, dueAmount);
+  }
+
+  // Bank account guess
+  const bankId = guessAccountId({ type: "bank", nameRegex: /(bank|konto|giro|current)/i });
+
+  await API.createEvent({
+    title: `Pagamento ${getAccountById(cardAccId)?.name || "Carta"} · ${dueISO}`,
+    type: "transfer",
+    amount: pay,
+    category: "Credit Card Payment",
+    date: dueISO,
+    time: "",
+    notes: "",
+    pinned: false,
+    cashDate: dueISO,
+    paymentMethodId: "",
+    accountId: "",
+    fromAccountId: bankId,
+    toAccountId: cardAccId,
+    recurrence: "none",
+    recurrenceDays: null
+  });
+};
+
+const readInstCustomAmounts = (count) => {
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    const v = Number($(`#instAmt_${i}`)?.value || 0);
+    out.push(v);
+  }
+  return out;
+};
+
+const computeInstallmentSchedule = ({ startISO, count, mode, fixedAmt, customAmts }) => {
+  const start = fromISODate(startISO);
+  const sched = [];
+  for (let i = 0; i < count; i++) {
+    const d = addMonths(start, i);
+    const iso = toISODate(d);
+    const amt = (mode === "fixed") ? Number(fixedAmt || 0) : Number(customAmts?.[i] || 0);
+    sched.push({ date: iso, amount: amt });
+  }
+  return sched;
+};
+
+const updateInstallmentUI = () => {
+  const pmId = $("#evtPaymentMethod").value || "";
+  const isAmazon = isAmazonPM(pmId);
+  const isTransfer = $("#evtType").value === "transfer";
+
+  const box = $("#installmentsBox");
+  box.style.display = (!isTransfer && isAmazon) ? "" : "none";
+
+  // start date default = accrual date
+  $("#evtInstStart").value = $("#evtInstStart").value || $("#evtDate").value || toISODate(new Date());
+
+  const on = $("#evtIsInstallment").checked;
+  $("#installmentFields").style.display = on ? "" : "none";
+
+  const count = Math.max(2, Number($("#evtInstCount").value || 2));
+  const mode = $("#evtInstMode").value;
+
+  $("#instFixedRow").style.display = (mode === "fixed") ? "" : "none";
+  $("#instCustomList").style.display = (mode === "custom") ? "" : "none";
+
+  if (mode === "custom") buildInstCustomInputs(count);
+
+  // totale calcolato
+  let total = 0;
+  if (on) {
+    if (mode === "fixed") {
+      const a = Number($("#evtInstFixedAmt").value || 0);
+      total = a * count;
+    } else {
+      const arr = readInstCustomAmounts(count);
+      total = arr.reduce((s,v)=>s+Number(v||0), 0);
+    }
+  }
+
+  $("#evtInstTotal").value = total ? formatMoney(total, state.settings.currency) : "—";
+
+  // se rate ON, aggiorna anche il campo importo totale evento
+  if (on && total > 0) $("#evtAmount").value = String(total);
+
+  // plafond badge
+  const cardAccId = getCardAccountIdFromPM(pmId);
+  if (cardAccId) {
+    const k = computeCardAvailable(cardAccId);
+    const after = k.outstanding + (on ? total : Number($("#evtAmount").value || 0));
+    const availAfter = Math.max(0, k.limit - after);
+
+    const badge = $("#ccLimitBadge");
+    badge.textContent = `Plafond: ${formatMoney(k.limit)} · OK: ${formatMoney(k.available)} · dopo: ${formatMoney(availAfter)}`;
+    badge.className = (after > k.limit) ? "badge badge--bad" : "badge badge--ok";
+  }
+};
 
       const $ = (s, r = document) => r.querySelector(s);
       const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+// --- PATCH v3.1: modal touched flags + helpers ---
+let modalAccountTouched = false;
+let modalFromToTouched = false;
+let modalTypeTouched = false;
+
+const optionExists = (sel, value) =>
+  Array.from(sel?.options || []).some(o => String(o.value) === String(value));
+
+const setSelectSafe = (sel, value, fallback = "") => {
+  if (!sel) return;
+  if (value != null && optionExists(sel, value)) sel.value = String(value);
+  else if (fallback != null && optionExists(sel, fallback)) sel.value = String(fallback);
+  else if (sel.options.length) sel.value = sel.options[0].value;
+  else sel.value = "";
+};
+
+// prova a “indovinare” un account usando type e/o regex sul nome
+const guessAccountId = ({ type = null, nameRegex = null } = {}) => {
+  const accs = Array.isArray(state.meta.accounts) ? state.meta.accounts : [];
+  let pool = accs.slice();
+
+  if (type) {
+    const t = String(type).toLowerCase();
+    const byType = pool.filter(a => String(a.type || "").toLowerCase() === t);
+    if (byType.length) pool = byType;
+  }
+
+  if (nameRegex) {
+    const rx = (nameRegex instanceof RegExp) ? nameRegex : new RegExp(String(nameRegex), "i");
+    const byName = pool.filter(a => rx.test(String(a.name || "")) || rx.test(String(a.id || "")));
+    if (byName.length) pool = byName;
+  }
+
+  return pool[0]?.id || accs[0]?.id || "";
+};
+
+const syncModalTypeUI = () => {
+  const type = $("#evtType").value;
+
+  const pmField = $("#pmField"); // wrapper del payment method
+  const accSelect = $("#evtAccount");
+  const accField = accSelect?.closest?.(".form-field");
+  const transferWrap = $("#transferFields");
+
+  const isTransfer = (type === "transfer");
+
+  // show/hide transfer fields
+  transferWrap.style.display = isTransfer ? "" : "none";
+
+  // payment method: hide for transfer
+  if (pmField) pmField.style.display = isTransfer ? "none" : "";
+
+  // account: disable for transfer (e in UI sembra “non applicabile”)
+  if (accSelect) accSelect.disabled = isTransfer;
+  if (accField) accField.style.opacity = isTransfer ? "0.55" : "";
+
+  // cash date always computed unless override
+  recomputeCashDateInModal();
+};
+
+const applyPMDefaultsToModal = ({ forceAccount = false } = {}) => {
+  const type = $("#evtType").value;
+  if (type === "transfer") return;
+
+  const pmId = $("#evtPaymentMethod").value || "";
+  const pm = getPMById(pmId);
+  if (!pm) return;
+
+  // se user ha già scelto manualmente l’account, non sovrascrivere
+  if (!forceAccount && modalAccountTouched) return;
+
+  if (pm.defaultAccountId) {
+    setSelectSafe($("#evtAccount"), pm.defaultAccountId);
+  }
+};
+
+// auto-preset transfer per settlement Sparkasse
+const applySparkasseTransferPresetInModal = () => {
+  // evita override se l’utente ha già toccato type/from-to
+  if (modalTypeTouched || modalFromToTouched) return;
+
+  // prova a trovare un bank e una credit_card
+  const bankId = guessAccountId({ type: "bank", nameRegex: /(bank|konto|giro|current)/i });
+  const ccId = guessAccountId({ type: "credit_card", nameRegex: /(sparkasse|kredit|credit|card|carta|cc)/i });
+
+  // se non li trova, non fare danni
+  if (!bankId || !ccId || bankId === ccId) return;
+
+  $("#evtType").value = "transfer";
+  syncModalTypeUI();
+
+  setSelectSafe($("#evtFromAccount"), bankId);
+  setSelectSafe($("#evtToAccount"), ccId);
+
+  // per transfer non serve PM/Account
+  $("#evtPaymentMethod").value = "";
+  $("#evtAccount").value = "";
+};
 
       const pad2 = (n) => String(n).padStart(2, "0");
       const toISODate = (d) => {
@@ -1443,6 +1779,11 @@
         category: "all",
         account: "all",
         paymentMethod: "all",
+        creditCardConfig: {
+          amazon_cc:    { limit: 3000, repaymentMode: "full", customMonthly: 200 },
+          sparkasse_cc: { limit: 2000, repaymentMode: "full", customMonthly: 0 }
+        },
+                
         includeIncome: true,
         includeExpense: true,
         includeOther: true,
@@ -1458,6 +1799,45 @@
         explorerTab: "calendar",
         insightsTab: "stats"
       };
+const getCCCfg = (cardAccId) => {
+  const cfg = state.settings.creditCardConfig?.[cardAccId];
+  return cfg || { limit: 0, repaymentMode: "full", customMonthly: 0 };
+};
+
+const setCCCfg = (cardAccId, patch) => {
+  state.settings.creditCardConfig = state.settings.creditCardConfig || {};
+  state.settings.creditCardConfig[cardAccId] = { ...getCCCfg(cardAccId), ...patch };
+  saveSettings();
+};
+const computeCardOutstanding = (cardAccId) => {
+  // charges = tutte le expense fatte con PM collegati a questa carta
+  let charges = 0;
+  for (const e of state.events) {
+    if (e.type !== "expense") continue;
+    const pm = getPMById(e.paymentMethodId);
+    if (!pm) continue;
+    if (pm.kind !== "credit_card") continue;
+    if ((pm.cardAccountId || "") !== cardAccId) continue;
+    charges += Number(e.amount || 0);
+  }
+
+  // payments = trasferimenti Bank -> Carta
+  let payments = 0;
+  for (const e of state.events) {
+    if (e.type !== "transfer") continue;
+    if (String(e.toAccountId || "") !== String(cardAccId)) continue;
+    payments += Number(e.amount || 0);
+  }
+
+  return Math.max(0, charges - payments);
+};
+
+const computeCardAvailable = (cardAccId) => {
+  const cfg = getCCCfg(cardAccId);
+  const limit = Number(cfg.limit || 0);
+  const out = computeCardOutstanding(cardAccId);
+  return { limit, outstanding: out, available: Math.max(0, limit - out) };
+};
 
       const state = {
         settings: structuredClone(defaultSettings),
@@ -1550,8 +1930,22 @@
         kind: String(p?.kind ?? p?.type ?? "unknown"),
         defaultAccountId: String(p?.defaultAccountId ?? p?.accountId ?? ""),
         settlementRule: p?.settlementRule ? String(p.settlementRule) : "",
-        settlementParam: (p?.settlementParam && typeof p.settlementParam === "object") ? p.settlementParam : {}
+        settlementParam: (p?.settlementParam && typeof p.settlementParam === "object") ? p.settlementParam : {},
+      
+        // ✅ NEW
+        cardAccountId: String(p?.cardAccountId ?? p?.settlementParam?.cardAccountId ?? "")
       });
+const getCardAccountIdFromPM = (pmId) => {
+  const pm = getPMById(pmId);
+  return pm?.cardAccountId || "";
+};
+
+const isAmazonPM = (pmId) => {
+  const pm = getPMById(pmId);
+  if (!pm) return false;
+  return /amazon/i.test(pm.name) || pm.id === "amazon_card";
+};
+
 
       const getAccountById = (id) => state.meta.accounts.find(a => a.id === id) || null;
       const getPMById = (id) => state.meta.paymentMethods.find(p => p.id === id) || null;
@@ -2604,46 +2998,72 @@ const renderSetup = () => {
         }
       };
 
+      // --- PATCH v3.1: refreshMetaUI non resetta più i select del modal ---
       const refreshMetaUI = () => {
         const cats = collectCategories();
-
+      
+        // salva valori attuali (IMPORTANTISSIMO per non resettare il modal)
+        const prevModalPM = $("#evtPaymentMethod")?.value ?? "";
+        const prevModalAcc = $("#evtAccount")?.value ?? "";
+        const prevModalFrom = $("#evtFromAccount")?.value ?? "";
+        const prevModalTo = $("#evtToAccount")?.value ?? "";
+      
         // Explorer filters selects
-        fillSelect($("#categorySelect"), cats.map(c => ({ value: c.toLowerCase(), label: c })), { addAll:true, allLabel:"Tutte" });
-
-        fillSelect($("#accountSelect"),
-          safeArr(state.meta.accounts).map(a => ({ value: a.id, label: a.name })),
-          { addAll:true, allLabel:"Tutti" }
+        fillSelect(
+          $("#categorySelect"),
+          cats.map(c => ({ value: c.toLowerCase(), label: c })),
+          { addAll: true, allLabel: "Tutte" }
         );
-
-        fillSelect($("#paymentMethodSelect"),
+      
+        fillSelect(
+          $("#accountSelect"),
+          safeArr(state.meta.accounts).map(a => ({ value: a.id, label: a.name })),
+          { addAll: true, allLabel: "Tutti" }
+        );
+      
+        fillSelect(
+          $("#paymentMethodSelect"),
           safeArr(state.meta.paymentMethods).map(p => ({ value: p.id, label: p.name })),
-          { addAll:true, allLabel:"Tutti" }
+          { addAll: true, allLabel: "Tutti" }
         );
-
-        // Modal selects
-        fillSelect($("#evtPaymentMethod"),
-          safeArr(state.meta.paymentMethods).map(p => ({ value: p.id, label: p.name })),
-          { addAll:false }
+      
+        // Modal selects (aggiungo anche possibilità valore vuoto per transfer)
+        fillSelect(
+          $("#evtPaymentMethod"),
+          [
+            { value: "", label: "—" },
+            ...safeArr(state.meta.paymentMethods).map(p => ({ value: p.id, label: p.name }))
+          ],
+          { addAll: false }
         );
-        fillSelect($("#evtAccount"),
+      
+        fillSelect(
+          $("#evtAccount"),
+          [
+            { value: "", label: "—" },
+            ...safeArr(state.meta.accounts).map(a => ({ value: a.id, label: a.name }))
+          ],
+          { addAll: false }
+        );
+      
+        fillSelect(
+          $("#evtFromAccount"),
           safeArr(state.meta.accounts).map(a => ({ value: a.id, label: a.name })),
-          { addAll:false }
+          { addAll: false }
         );
-        fillSelect($("#evtFromAccount"),
+      
+        fillSelect(
+          $("#evtToAccount"),
           safeArr(state.meta.accounts).map(a => ({ value: a.id, label: a.name })),
-          { addAll:false }
+          { addAll: false }
         );
-        fillSelect($("#evtToAccount"),
-          safeArr(state.meta.accounts).map(a => ({ value: a.id, label: a.name })),
-          { addAll:false }
-        );
-
+      
         // Datalist categories
         const dl = $("#categoryList");
         dl.innerHTML = "";
         for (const c of cats) dl.appendChild(el("option", { value: c }));
-
-        // keep selected values if possible
+      
+        // restore selezioni explorer
         if (state.settings.category && state.settings.category !== "all") {
           $("#categorySelect").value = state.settings.category;
         } else {
@@ -2651,7 +3071,14 @@ const renderSetup = () => {
         }
         $("#accountSelect").value = state.settings.account || "all";
         $("#paymentMethodSelect").value = state.settings.paymentMethod || "all";
+      
+        // restore selezioni modal (NON resetta più)
+        setSelectSafe($("#evtPaymentMethod"), prevModalPM, "");
+        setSelectSafe($("#evtAccount"), prevModalAcc, "");
+        setSelectSafe($("#evtFromAccount"), prevModalFrom);
+        setSelectSafe($("#evtToAccount"), prevModalTo);
       };
+
 
       const renderMiniCalendar = () => {
         const host = $("#miniCal");
@@ -2876,6 +3303,16 @@ const renderSetup = () => {
         $("#ccSpentMonth").textContent = formatMoney(cc.spentMonth, cur);
         $("#ccPaidMonth").textContent = formatMoney(cc.paidMonth, cur);
         $("#ccHelp").textContent = `Se il settlement appare come “Sparkasse Kreditkartenabrechnung”, usa TRANSFER Bank → Credit Card (Cash).`;
+        // ✅ Amazon card KPIs
+        const k = computeCardAvailable("amazon_cc");
+        $("#amzLimit").value = String(getCCCfg("amazon_cc").limit || 0);
+        $("#amzCustomPay").value = String(getCCCfg("amazon_cc").customMonthly || 0);
+        
+        const dueISO = getNextDueISOForCard("amazon_cc");
+        const dueAmt = dueISO ? computeDueAmountForISO("amazon_cc", dueISO) : 0;
+        
+        $("#amzPayHint").textContent =
+          `Outstanding: ${formatMoney(k.outstanding)} · Disponibile: ${formatMoney(k.available)} · Prossima scadenza: ${dueISO || "—"} (${formatMoney(dueAmt)})`;
 
         renderForecast();
       };
@@ -2894,19 +3331,30 @@ const renderSetup = () => {
         $("#toDate").disabled = !enableTo;
       };
 
+      // --- PATCH v3.1: openEventModal stabile (no reset select) + touched reset ---
       const openEventModal = ({ dateISO = null, eventId = null } = {}) => {
         const dlg = $("#eventModal");
-
+      
+        // reset touched flags ad ogni apertura modal
+        modalAccountTouched = false;
+        modalFromToTouched = false;
+        modalTypeTouched = false;
+      
         // load event if edit
         let evt = null;
         if (eventId) evt = state.events.find(e => e.id === eventId) || null;
-
+      
+        // set draft ID SUBITO (serve per hint sparkasse)
+        state.draftEventId = evt?.id || null;
+      
+        // IMPORTANT: riempi i select PRIMA di settare valori
+        refreshMetaUI();
+      
         const titleEl = $("#eventModalTitle");
         titleEl.textContent = evt ? "Modifica evento" : "Nuovo evento";
-
-        // defaults
+      
         const baseDate = dateISO || evt?.date || toISODate(state.anchorDate);
-
+      
         $("#evtTitle").value = evt?.title || "";
         $("#evtType").value = evt?.type || "expense";
         $("#evtAmount").value = (evt?.amount == null) ? "" : String(evt.amount);
@@ -2915,48 +3363,49 @@ const renderSetup = () => {
         $("#evtTime").value = evt?.time || "";
         $("#evtNotes").value = evt?.notes || "";
         $("#evtPinned").checked = !!evt?.pinned;
-
-        // payment method + account
-        $("#evtPaymentMethod").value = evt?.paymentMethodId || (state.meta.paymentMethods[0]?.id || "");
-        $("#evtAccount").value = evt?.accountId || (state.meta.accounts[0]?.id || "");
-
-        $("#evtFromAccount").value = evt?.fromAccountId || (state.meta.accounts[0]?.id || "");
-        $("#evtToAccount").value = evt?.toAccountId || (state.meta.accounts[0]?.id || "");
-
+      
+        // payment method + account (per transfer li svuotiamo)
+        const defaultPM = safeArr(state.meta.paymentMethods)[0]?.id || "";
+        const defaultAcc = safeArr(state.meta.accounts)[0]?.id || "";
+      
+        setSelectSafe($("#evtPaymentMethod"), evt?.paymentMethodId || defaultPM, "");
+        setSelectSafe($("#evtAccount"), evt?.accountId || defaultAcc, "");
+      
+        setSelectSafe($("#evtFromAccount"), evt?.fromAccountId || defaultAcc);
+        setSelectSafe($("#evtToAccount"), evt?.toAccountId || defaultAcc);
+      
         $("#evtRecurrence").value = evt?.recurrence || "none";
         $("#evtRecurrenceDays").value = evt?.recurrenceDays == null ? "" : String(evt.recurrenceDays);
         $("#evtRecurrenceUntil").value = "";
-
+      
+        // sync UI (transfer fields, hide pm, disable account ecc)
+        syncModalTypeUI();
+      
+        // se è nuovo evento e PM ha default account, applicalo
+        applyPMDefaultsToModal({ forceAccount: false });
+      
         // cash date logic
         const pm = getPMById($("#evtPaymentMethod").value);
         const type = $("#evtType").value;
         const accrualISO = $("#evtDate").value;
-
+      
         const autoCash = computeCashDate({ accrualISO, pm, type });
         const cashISO = evt?.cashDate || autoCash;
-
+      
         $("#evtCashDate").value = cashISO || "";
         $("#evtCashOverride").checked = !!evt?.cashDate && evt.cashDate !== autoCash;
         $("#evtCashDate").disabled = !$("#evtCashOverride").checked;
-
-        // transfer fields visibility
-        $("#transferFields").style.display = ($("#evtType").value === "transfer") ? "" : "none";
-
-        // recurrence fields
+      
+        // recurrence fields + sparkasse hint
         updateRecurrenceFields();
-
-        // sparkasse hint
         updateSparkasseHint();
+      updateInstallmentUI(); // ✅ NEW
 
-        state.draftEventId = evt?.id || null;
-
-        // open
+        // open dialog
         if (typeof dlg.showModal === "function") dlg.showModal();
         else dlg.setAttribute("open", "");
-
-        // ensure selects filled
-        refreshMetaUI();
       };
+
 
       const closeEventModal = () => {
         const dlg = $("#eventModal");
@@ -3092,12 +3541,26 @@ const renderSetup = () => {
         $("#recSpanField").style.display = (r !== "none") ? "" : "none";
       };
 
+      // --- PATCH v3.1: hint + preset automatico Sparkasse (solo evento nuovo) ---
       const updateSparkasseHint = () => {
         const t = ($("#evtTitle").value || "").toLowerCase();
         const hint = $("#evtTitleHint");
-        const isSpark = t.includes("sparkasse kreditkartenabrechnung") || t.includes("kreditkartenabrechnung");
+      
+        const isSpark =
+          t.includes("sparkasse kreditkartenabrechnung") ||
+          t.includes("kreditkartenabrechnung");
+      
         hint.style.display = isSpark ? "" : "none";
+      
+        // auto preset SOLO se:
+        // - evento nuovo (non editing)
+        // - non hai già toccato type/from-to
+        if (!isSpark) return;
+        if (state.draftEventId) return;
+      
+        applySparkasseTransferPresetInModal();
       };
+      
 
       const recomputeCashDateInModal = () => {
         const override = $("#evtCashOverride").checked;
@@ -3112,82 +3575,148 @@ const renderSetup = () => {
         $("#evtCashDate").value = autoCash || "";
       };
 
-      const readEventFromModal = () => {
-        const title = $("#evtTitle").value.trim();
-        const type = $("#evtType").value;
-        const amountRaw = $("#evtAmount").value;
-        const amount = amountRaw === "" ? null : Number(amountRaw);
-        const category = $("#evtCategory").value.trim() || "Senza categoria";
-        const date = $("#evtDate").value;
-        const time = $("#evtTime").value || "";
-        const notes = $("#evtNotes").value || "";
-        const pinned = !!$("#evtPinned").checked;
+// --- PATCH v3.1: payload clean per transfer (no PM/account) ---
+const readEventFromModal = () => {
+  const title = $("#evtTitle").value.trim();
+  const type = $("#evtType").value;
 
-        const paymentMethodId = $("#evtPaymentMethod").value || "";
-        const accountId = $("#evtAccount").value || "";
-        const fromAccountId = $("#evtFromAccount").value || "";
-        const toAccountId = $("#evtToAccount").value || "";
+  const amountRaw = $("#evtAmount").value;
+  const amount = amountRaw === "" ? null : Number(amountRaw);
 
-        const pm = getPMById(paymentMethodId);
-        const autoCash = computeCashDate({ accrualISO: date, pm, type });
+  const category = $("#evtCategory").value.trim() || "Senza categoria";
+  const date = $("#evtDate").value;
+  const time = $("#evtTime").value || "";
+  const notes = $("#evtNotes").value || "";
+  const pinned = !!$("#evtPinned").checked;
 
-        const cashOverride = $("#evtCashOverride").checked;
-        const cashDate = cashOverride ? ($("#evtCashDate").value || autoCash) : autoCash;
+  const isTransfer = (type === "transfer");
 
-        const recurrence = $("#evtRecurrence").value || "none";
-        const recurrenceDays = recurrence === "custom_days"
-          ? (Number($("#evtRecurrenceDays").value || 0) || null)
-          : null;
+  const paymentMethodId = isTransfer ? "" : ($("#evtPaymentMethod").value || "");
+  const accountId = isTransfer ? "" : ($("#evtAccount").value || "");
 
-        return {
-          title,
-          type,
-          amount,
-          category,
-          date,
-          time,
-          notes,
-          pinned,
+  const fromAccountId = $("#evtFromAccount").value || "";
+  const toAccountId = $("#evtToAccount").value || "";
+
+  const pm = getPMById(paymentMethodId);
+  const autoCash = computeCashDate({ accrualISO: date, pm, type });
+
+  const cashOverride = $("#evtCashOverride").checked;
+  const cashDate = cashOverride ? ($("#evtCashDate").value || autoCash) : autoCash;
+
+  const recurrence = $("#evtRecurrence").value || "none";
+  const recurrenceDays = recurrence === "custom_days"
+    ? (Number($("#evtRecurrenceDays").value || 0) || null)
+    : null;
+
+  return {
+    title,
+    type,
+    amount,
+    category,
+    date,
+    time,
+    notes,
+    pinned,
+    cashDate,
+    paymentMethodId,
+    accountId,
+    fromAccountId: isTransfer ? fromAccountId : "",
+    toAccountId: isTransfer ? toAccountId : "",
+    recurrence,
+    recurrenceDays
+  };
+};
+
+
+const upsertEvent = async () => {
+  const payload = readEventFromModal();
+
+  if (!payload.title) { alert("Titolo obbligatorio."); return; }
+  if (!payload.date) { alert("Data obbligatoria."); return; }
+
+  // ✅ RATE AMAZON
+  const pmId = payload.paymentMethodId || "";
+  const isInst = $("#evtIsInstallment").checked && isAmazonPM(pmId) && payload.type === "expense";
+
+  if (isInst) {
+    if (state.draftEventId) {
+      alert("Per semplicità: modifica rata singola oppure elimina e ricrea il piano rateale.");
+      return;
+    }
+
+    const count = Math.max(2, Number($("#evtInstCount").value || 2));
+    const mode = $("#evtInstMode").value;
+    const startISO = $("#evtInstStart").value || payload.date;
+
+    let sched = [];
+    if (mode === "fixed") {
+      const fixedAmt = Number($("#evtInstFixedAmt").value || 0);
+      if (fixedAmt <= 0) { alert("Importo rata non valido."); return; }
+      sched = computeInstallmentSchedule({ startISO, count, mode, fixedAmt });
+    } else {
+      const arr = readInstCustomAmounts(count);
+      const sum = arr.reduce((s,v)=>s+Number(v||0), 0);
+      if (sum <= 0) { alert("Inserisci importi rate validi."); return; }
+      sched = computeInstallmentSchedule({ startISO, count, mode, customAmts: arr });
+    }
+
+    const total = sched.reduce((s,x)=>s+Number(x.amount||0), 0);
+
+    // ✅ CHECK PLAFOND
+    const cardAccId = getCardAccountIdFromPM(pmId);
+    if (cardAccId) {
+      const k = computeCardAvailable(cardAccId);
+      const after = k.outstanding + total;
+      if (after > k.limit) {
+        const ok = confirm(
+          `ATTENZIONE: superi il plafond!\n` +
+          `Limit: ${formatMoney(k.limit)}\n` +
+          `Outstanding: ${formatMoney(k.outstanding)}\n` +
+          `Nuovo totale: ${formatMoney(total)}\n` +
+          `Dopo: ${formatMoney(after)}\n\nVuoi salvare lo stesso?`
+        );
+        if (!ok) return;
+      }
+    }
+
+    const groupId = uid();
+    const pm = getPMById(pmId);
+
+    try {
+      for (let i = 0; i < sched.length; i++) {
+        const it = sched[i];
+        const cashDate = computeCashDate({ accrualISO: it.date, pm, type: "expense" });
+
+        await API.createEvent({
+          ...payload,
+          title: `${payload.title} · Rata ${i+1}/${sched.length}`,
+          amount: Number(it.amount || 0),
+          date: it.date,
           cashDate,
-          paymentMethodId,
-          accountId,
-          fromAccountId: type === "transfer" ? fromAccountId : "",
-          toAccountId: type === "transfer" ? toAccountId : "",
-          recurrence,
-          recurrenceDays
-        };
-      };
+          notes: `${payload.notes || ""}\n[AMZ_INST:${groupId}]`.trim()
+        });
+      }
 
-      const upsertEvent = async () => {
-        const payload = readEventFromModal();
+      closeEventModal();
+      await reloadAll();
+      return;
+    } catch (e) {
+      alert(e?.message || "Errore salvataggio rate");
+      return;
+    }
+  }
 
-        if (!payload.title) {
-          alert("Titolo obbligatorio.");
-          return;
-        }
-        if (!payload.date) {
-          alert("Data obbligatoria.");
-          return;
-        }
-        if (payload.type === "transfer") {
-          if (!payload.fromAccountId || !payload.toAccountId) {
-            alert("Transfer richiede From/To account.");
-            return;
-          }
-        }
+  // ✅ NORMALE (single)
+  try {
+    if (state.draftEventId) await API.updateEvent(state.draftEventId, payload);
+    else await API.createEvent(payload);
 
-        try {
-          if (state.draftEventId) {
-            await API.updateEvent(state.draftEventId, payload);
-          } else {
-            await API.createEvent(payload);
-          }
-          closeEventModal();
-          await reloadAll();
-        } catch (e) {
-          alert(e?.message || "Errore salvataggio");
-        }
-      };
+    closeEventModal();
+    await reloadAll();
+  } catch (e) {
+    alert(e?.message || "Errore salvataggio");
+  }
+};
 
       const materializeSeriesFlow = async () => {
         if (!state.draftEventId) {
@@ -3293,32 +3822,58 @@ const renderSetup = () => {
         await reloadAll();
       };
 
-      const applyWizardSparkasse = async () => {
-        // Questo wizard NON crea meta sul backend (manca endpoint).
-        // Applichiamo un metaOverride in settings, se vuoi salvarlo.
-        const bankId = "bank";
-        const ccId = "sparkasse_cc";
-        const pmId = "credit_card";
+const applyWizardSparkasse = async () => {
+  const bankId = "bank";
 
-        const metaOverride = {
-          accounts: [
-            { id: bankId, name: "Bank", type: "bank", currency: state.settings.currency, isDefault: true },
-            { id: ccId, name: "Sparkasse Kreditkarte", type: "credit_card", currency: state.settings.currency, isDefault: false }
-          ],
-          paymentMethods: [
-            { id: pmId, name: "Credit Card", kind: "credit_card", defaultAccountId: ccId, settlementRule: "next_month_day", settlementParam: { day: 1 } }
-          ]
-        };
+  const sparkasseAccId = "sparkasse_cc";
+  const sparkassePmId  = "sparkasse_card";
 
-        state.settings.metaOverride = metaOverride;
-        saveSettings();
-        // applica in memoria ora
-        state.meta.accounts = metaOverride.accounts.map(normAccount);
-        state.meta.paymentMethods = metaOverride.paymentMethods.map(normPM);
-        refreshMetaUI();
-        renderSetup();
-        alert("Wizard applicato (metaOverride).");
-      };
+  const amazonAccId = "amazon_cc";
+  const amazonPmId  = "amazon_card";
+
+  const metaOverride = {
+    accounts: [
+      { id: bankId,        name: "Bank",                 type: "bank",        currency: state.settings.currency, isDefault: true },
+
+      { id: sparkasseAccId,name: "Sparkasse Kreditkarte", type: "credit_card", currency: state.settings.currency, isDefault: false },
+
+      { id: amazonAccId,   name: "Amazon Kreditkarte",    type: "credit_card", currency: state.settings.currency, isDefault: false },
+    ],
+    paymentMethods: [
+      // Sparkasse
+      {
+        id: sparkassePmId,
+        name: "Sparkasse CC",
+        kind: "credit_card",
+        defaultAccountId: bankId,
+        settlementRule: "next_month_day",
+        settlementParam: { day: 1, cardAccountId: sparkasseAccId }
+      },
+
+      // Amazon
+      {
+        id: amazonPmId,
+        name: "Amazon CC",
+        kind: "credit_card",
+        defaultAccountId: bankId,
+        settlementRule: "next_month_day",
+        settlementParam: { day: 1, cardAccountId: amazonAccId }
+      }
+    ]
+  };
+
+  state.settings.metaOverride = metaOverride;
+  saveSettings();
+
+  state.meta.accounts = metaOverride.accounts.map(normAccount);
+  state.meta.paymentMethods = metaOverride.paymentMethods.map(normPM);
+
+  refreshMetaUI();
+  renderSetup();
+
+  alert("Wizard applicato (Sparkasse + Amazon Kreditkarte).");
+};
+
 
       const applyMetaOverrideIfAny = () => {
         const mo = state.settings.metaOverride;
@@ -3664,24 +4219,50 @@ const renderSetup = () => {
         $("#btnCancelEvent").addEventListener("click", closeEventModal);
 
         // modal dynamic logic
-        $("#evtTitle").addEventListener("input", updateSparkasseHint);
+        // --- PATCH v3.1: modal dynamic logic (touched + sync + defaults) ---
+        $("#evtTitle").addEventListener("input", () => {
+          updateSparkasseHint();
+        });
+        
         $("#evtType").addEventListener("change", () => {
-          $("#transferFields").style.display = ($("#evtType").value === "transfer") ? "" : "none";
+          modalTypeTouched = true;
+          syncModalTypeUI();
+          // se torno su expense e PM ha defaultAcc e non ho toccato account, applicalo
+          applyPMDefaultsToModal({ forceAccount: false });
+        });
+        
+        $("#evtPaymentMethod").addEventListener("change", () => {
+          // se cambio PM e account non è stato “toccato”, può aggiornare default
+          applyPMDefaultsToModal({ forceAccount: false });
           recomputeCashDateInModal();
         });
-        $("#evtPaymentMethod").addEventListener("change", recomputeCashDateInModal);
-        $("#evtDate").addEventListener("change", recomputeCashDateInModal);
-
+        
+        $("#evtAccount").addEventListener("change", () => {
+          modalAccountTouched = true;
+        });
+        
+        $("#evtFromAccount").addEventListener("change", () => {
+          modalFromToTouched = true;
+        });
+        $("#evtToAccount").addEventListener("change", () => {
+          modalFromToTouched = true;
+        });
+        
+        $("#evtDate").addEventListener("change", () => {
+          recomputeCashDateInModal();
+        });
+        
         $("#evtCashOverride").addEventListener("change", () => {
           $("#evtCashDate").disabled = !$("#evtCashOverride").checked;
           recomputeCashDateInModal();
         });
-
+        
         $("#evtRecurrence").addEventListener("change", () => {
           updateRecurrenceFields();
         });
-
+        
         $("#btnMaterialize").addEventListener("click", materializeSeriesFlow);
+
 
         // handle submit
         $("#eventForm").addEventListener("submit", async (ev) => {
@@ -3696,6 +4277,52 @@ const renderSetup = () => {
           const iso = btn.getAttribute("data-date");
           openEventModal({ dateISO: iso });
         });
+        $("#evtPaymentMethod").addEventListener("change", () => {
+          applyPMDefaultsToModal({ forceAccount: false });
+          recomputeCashDateInModal();
+          updateInstallmentUI(); // ✅ NEW
+        });
+        
+        $("#evtIsInstallment").addEventListener("change", updateInstallmentUI);
+        $("#evtInstCount").addEventListener("input", updateInstallmentUI);
+        $("#evtInstMode").addEventListener("change", updateInstallmentUI);
+        $("#evtInstFixedAmt").addEventListener("input", updateInstallmentUI);
+        $("#evtInstStart").addEventListener("change", updateInstallmentUI);
+        
+        // quando modifichi gli importi custom
+        $("#eventModal").addEventListener("input", (ev) => {
+          if (String(ev.target?.id || "").startsWith("instAmt_")) updateInstallmentUI();
+        });
+const AMAZON_ACC = "amazon_cc";
+
+$("#amzLimit").addEventListener("input", (ev) => {
+  setCCCfg(AMAZON_ACC, { limit: Number(ev.target.value || 0) });
+  refreshInsights();
+});
+
+$("#amzCustomPay").addEventListener("input", (ev) => {
+  setCCCfg(AMAZON_ACC, { customMonthly: Number(ev.target.value || 0) });
+  refreshInsights();
+});
+
+$("#btnAmzModeFull").addEventListener("click", () => {
+  setCCCfg(AMAZON_ACC, { repaymentMode: "full" });
+  refreshInsights();
+});
+
+$("#btnAmzModeCustom").addEventListener("click", () => {
+  setCCCfg(AMAZON_ACC, { repaymentMode: "custom" });
+  refreshInsights();
+});
+
+$("#btnAmzPayNext").addEventListener("click", async () => {
+  try {
+    await createCardPaymentTransfer(AMAZON_ACC);
+    await reloadAll();
+  } catch (e) {
+    alert(e?.message || "Errore pagamento carta");
+  }
+});
 
         // year view month click (delegation)
         $("#calendarView").addEventListener("click", (ev) => {

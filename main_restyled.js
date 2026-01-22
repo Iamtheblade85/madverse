@@ -5009,41 +5009,91 @@ async function renderGoblinInventory() {
 	  const cached = getCache();
 	  if (cached && Date.now() - cached.t < 60_000) return cached.data;
 	
+	  const wax_account = window.userData?.wax_account;
+	  const user_id     = window.userData?.userId || window.userData?.user_id;
+	  const usx_token   = window.userData?.usx_token;
+	
+	  // converte la risposta di /2user_nfts nel formato "legacy" che il FE si aspetta (array flat)
+	  const toLegacyArray = (payload) => {
+	    const nfts = Array.isArray(payload?.nfts) ? payload.nfts : [];
+	    const legacy = nfts.map((n) => ({
+	      // mantiene compatibilità con frontend vecchio
+	      type: n?.type || "goblin",
+	
+	      asset_id: String(n?.asset_id ?? ""),
+	      template_id: Number(n?.template_id ?? 0),
+	      template_mint: n?.template_mint ?? null,
+	
+	      name: n?.name ?? "",
+	      img: n?.img ?? "",
+	      image: n?.img ?? "", // alcune UI vecchie cercano "image"
+	
+	      rarity: n?.rarity ?? "unknown",
+	      edition: Number(n?.edition ?? 0),
+	      description: n?.description ?? "",
+	
+	      level: Number(n?.level ?? 0),
+	      resistance: Number(n?.resistance ?? 0),
+	      accuracy: Number(n?.accuracy ?? 0),
+	      loot_hungry: Number(n?.loot_hungry ?? n?.["loot-hungry"] ?? 0),
+	      speed: Number(n?.speed ?? 0),
+	
+	      daily_power: Number(n?.daily_power ?? n?.["daily-power"] ?? 0),
+	      "daily-power": Number(n?.daily_power ?? n?.["daily-power"] ?? 0),
+	    }));
+	
+	    // se ti servono questi valori altrove nel FE, li metto disponibili
+	    window.__goblinMeta = {
+	      reinforcement_count: Number(payload?.reinforcement_count ?? 0),
+	      total_daily_power: Number(payload?.total_daily_power ?? 0),
+	      avg_daily_power: Number(payload?.avg_daily_power ?? 0),
+	      stats_summary: payload?.stats_summary || null,
+	    };
+	
+	    return legacy;
+	  };
+	
 	  try {
+	    // ======== via wrapper API.post (se esiste) ========
 	    if (typeof API !== "undefined" && API.post) {
-	      const wax_account = window.userData?.wax_account;
-	      const user_id     = window.userData?.userId || window.userData?.user_id;
-	      const usx_token   = window.userData?.usx_token;
-	      const r = await API.post("/user_nfts", { wax_account, user_id, usx_token }, 15000);
+	      const r = await API.post("/2user_nfts", { wax_account, user_id, usx_token }, 15000);
 	      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-	      const arr = Array.isArray(r.data) ? r.data : [];
-	      setCache(arr);
-	      return arr;
+	
+	      const legacyArr = toLegacyArray(r.data);
+	      setCache(legacyArr);
+	      return legacyArr;
 	    }
-	    const res = await fetch(`${BASE_URL}/user_nfts`, {
+	
+	    // ======== fallback fetch standard ========
+	    const res = await fetch(`${BASE_URL}/2user_nfts`, {
 	      method: "POST",
-	      headers: { "Content-Type": "application/json" },
-	      body: JSON.stringify({
-	        wax_account: window.userData?.wax_account,
-	        user_id: window.userData?.userId,
-	        usx_token: window.userData?.usx_token
-	      })
+	      headers: {
+	        "Content-Type": "application/json",
+	        // opzionale: /2user_nfts supporta anche Authorization header
+	        ...(usx_token ? { "Authorization": `Bearer ${usx_token}` } : {}),
+	      },
+	      body: JSON.stringify({ wax_account, user_id, usx_token }),
 	    });
+	
 	    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-	    const arr = await res.json();
-	    const data = Array.isArray(arr) ? arr : [];
-	    setCache(data);
-	    return data;
+	
+	    const payload = await res.json(); // qui è un oggetto { nfts: [...], ... }
+	    const legacyArr = toLegacyArray(payload);
+	
+	    setCache(legacyArr);
+	    return legacyArr;
+	
 	  } catch (e) {
 	    if (!retried) {
 	      retried = true;
-	      await new Promise(r => setTimeout(r, 10_000));
+	      await new Promise((r) => setTimeout(r, 10_000));
 	      return fetchUserNFTs();
 	    }
-	    console.warn("[renderGoblinInventory] /user_nfts error:", e);
+	    console.warn("[renderGoblinInventory] /2user_nfts error:", e);
 	    return [];
 	  }
 	}
+
 
   const all = await fetchUserNFTs();
 

@@ -2505,74 +2505,87 @@
         }
       };
 
-      const renderSetup = () => {
-        $("#setupError").style.display = "none";
-        $("#setupError").textContent = "";
+const renderSetup = () => {
+  $("#setupError").style.display = "none";
+  $("#setupError").textContent = "";
 
-        const accHost = $("#setupAccounts");
-        const pmHost = $("#setupPMs");
-        const catHost = $("#setupCats");
+  const accHost = $("#setupAccounts");
+  const pmHost = $("#setupPMs");
+  const catHost = $("#setupCats");
 
-        accHost.innerHTML = "";
-        pmHost.innerHTML = "";
-        catHost.innerHTML = "";
+  accHost.innerHTML = "";
+  pmHost.innerHTML = "";
+  catHost.innerHTML = "";
 
-        const accs = state.meta.accounts || [];
-        const pms = state.meta.paymentMethods || [];
+  const accs = state.meta.accounts || [];
+  const pms = state.meta.paymentMethods || [];
 
-        $("#setupAccMeta").textContent = `${accs.length} accounts`;
-        $("#setupPMMeta").textContent = `${pms.length} metodi`;
+  $("#setupAccMeta").textContent = `${accs.length} accounts`;
+  $("#setupPMMeta").textContent = `${pms.length} metodi`;
 
-if (!pms.length) pmHost.appendChild(emptyState("Nessun metodo configurato."));
-else {
-  for (const p of pms) {
-    pmHost.appendChild(
-      el("div", { className:"panel", style:"padding:10px;" }, [
-        el("div", { style:"display:flex;justify-content:space-between;align-items:center;gap:10px;" }, [
-          el("div", { style:"display:flex;align-items:center;gap:10px;" }, [
-            el("div", { style:"font-weight:1000;" }, p.name),
-            el("span", { className:"badge badge--muted" }, p.kind || "—")
+  // Accounts
+  if (!accs.length) {
+    accHost.appendChild(emptyState("Nessun account configurato."));
+  } else {
+    for (const a of accs) {
+      accHost.appendChild(
+        el("div", { className: "panel", style: "padding:10px;" }, [
+          el("div", { style: "display:flex;justify-content:space-between;align-items:center;gap:10px;" }, [
+            el("div", { style: "font-weight:1000;" }, a.name),
+            el("span", { className: "badge badge--muted" }, a.type || "—")
           ]),
-          el("div", { className:"help" }, [
-            `id=${p.id || "—"}`,
-            p.defaultAccountId ? ` · defaultAcc=${getAccountById(p.defaultAccountId)?.name || p.defaultAccountId}` : "",
-            p.settlementRule ? ` · rule=${p.settlementRule}` : ""
-          ].join(""))
+          el("div", { className: "help" }, `id=${a.id} · currency=${a.currency || state.settings.currency || "EUR"}`)
         ])
-      ])
-    );
+      );
+    }
   }
-}
 
-        if (!pms.length) pmHost.appendChild(emptyState("Nessun metodo configurato."));
-        else {
-          for (const p of pms) {
-            pmHost.appendChild(el("div", { className:"panel", style:"padding:10px;" }, [
-              el("div", { style:"display:flex;justify-content:space-between;align-items:center;gap:10px;" }, [
-                el("div", { style:"display:flex;justify-content:space-between;align-items:center;gap:10px;" }, [
-                  el("div", { style:"font-weight:1000;" }, p.name),
-                  el("span", { className:"badge badge--muted" }, p.kind || "—")
-                ]),
-                el("div", { className:"help" }, [
-                  `id=${p.id || "—"}`,
-                  p.defaultAccountId ? ` · defaultAcc=${getAccountById(p.defaultAccountId)?.name || p.defaultAccountId}` : "",
-                  p.settlementRule ? ` · rule=${p.settlementRule}` : ""
-                ].join(""))
-              ]));
-            }
-          }
+  // Payment Methods
+  if (!pms.length) {
+    pmHost.appendChild(emptyState("Nessun metodo configurato."));
+  } else {
+    for (const p of pms) {
+      const defaultAccName = p.defaultAccountId
+        ? (getAccountById(p.defaultAccountId)?.name || p.defaultAccountId)
+        : "";
 
-        const cats = collectCategories();
-        $("#setupCatMeta").textContent = `${cats.length} categorie`;
-        if (!cats.length) catHost.appendChild(emptyState("Nessuna categoria rilevata."));
-        else {
-          const wrap = el("div", { style:"display:flex; gap:8px; flex-wrap:wrap;" });
-          for (const c of cats) {
-            wrap.appendChild(el("span", { className:"badge badge--muted", style:"cursor:pointer;" }, c));
-          }
-          catHost.appendChild(wrap);
-        }
-      };
+      const info = [
+        `id=${p.id || "—"}`,
+        p.defaultAccountId ? ` · defaultAcc=${defaultAccName}` : "",
+        p.settlementRule ? ` · rule=${p.settlementRule}` : ""
+      ].join("");
+
+      pmHost.appendChild(
+        el("div", { className: "panel", style: "padding:10px;" }, [
+          el("div", { style: "display:flex;justify-content:space-between;align-items:center;gap:10px;" }, [
+            el("div", { style: "display:flex;align-items:center;gap:10px;" }, [
+              el("div", { style: "font-weight:1000;" }, p.name || "Metodo"),
+              el("span", { className: "badge badge--muted" }, p.kind || "—")
+            ]),
+            el("div", { className: "help" }, info)
+          ])
+        ])
+      );
+    }
+  }
+
+  // Categories
+  const cats = collectCategories();
+  $("#setupCatMeta").textContent = `${cats.length} categorie`;
+
+  if (!cats.length) {
+    catHost.appendChild(emptyState("Nessuna categoria rilevata."));
+  } else {
+    const wrap = el("div", { style: "display:flex;gap:8px;flex-wrap:wrap;" });
+    for (const c of cats) {
+      wrap.appendChild(
+        el("span", { className: "badge badge--muted", style: "cursor:pointer;" }, c)
+      );
+    }
+    catHost.appendChild(wrap);
+  }
+};
+
 
       const collectCategories = () => {
         const set = new Set();

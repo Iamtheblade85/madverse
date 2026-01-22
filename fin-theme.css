@@ -47,7 +47,7 @@ body{
   --rail-w: 90px !important;
   --explorer-w: clamp(280px, 20vw, 360px) !important;
   --insights-w: clamp(320px, 23vw, 460px) !important;
-  --cmd-h: 68px !important;
+  --cmd-h: 68px
 
   /* Radius / Shadow */
   --r-xs: 10px;
@@ -1061,4 +1061,36 @@ dialog#eventModal::backdrop{
   .commandbar{
     border-radius: var(--r-xl);
   }
+}
+
+
+/* ==========================================================
+   TOPBAR FIX — più alta, visibile, senza tagli
+   Incolla in fondo al fin-theme.css
+   ========================================================== */
+
+/* 1) alza la "quota" base della topbar */
+:root{
+  --cmd-h: 250px !important;  
+}
+
+/* 2) la riga header deve poter crescere (non più fissa) */
+.workspace{
+  grid-template-rows: auto 1fr !important;
+}
+
+/* 3) la commandbar deve mostrare tutto (e scrolla solo se serve) */
+.commandbar{
+  min-height: var(--cmd-h) !important;
+  height: auto !important;
+  overflow: auto !important;         /* prima era hidden: tagliava tutto */
+  align-items: flex-start !important; /* meglio se va su 2 righe */
+  padding: 14px 14px !important;
+  row-gap: 10px !important;
+}
+
+/* 4) evita che i blocchi “schiaccino” tutto e forzano wrap elegante */
+.cmd-left, .cmd-right{
+  align-items: flex-start !important;
+  gap: 10px !important;
 }

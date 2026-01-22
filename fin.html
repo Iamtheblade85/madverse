@@ -6,447 +6,924 @@
   <meta name="color-scheme" content="dark light" />
   <meta name="fin-api-base" content="https://iamemanuele.pythonanywhere.com/api" />
 
-  <title>Finance Calendar v2</title>
+  <title>Finance Calendar v3</title>
   <link rel="stylesheet" href="./fin-theme.css" />
+
   <style>
-    /* Extra v2 minimal UI helpers (keep fin-theme.css as main theme) */
-    .topbar__row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .topbar__group { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .badge {
-      display:inline-flex; align-items:center; gap:6px;
-      padding:2px 8px; border-radius:999px;
+    :root{
+      --rail-w: 86px;
+      --explorer-w: 330px;
+      --insights-w: 380px;
+      --cmd-h: 66px;
+      --soft: rgba(128,128,128,0.08);
+      --soft2: rgba(128,128,128,0.06);
+      --soft3: rgba(128,128,128,0.04);
+      --glow: rgba(80,160,255,0.35);
+    }
+    body{ margin:0; }
+    .workspace{
+      min-height:100vh;
+      display:grid;
+      grid-template-columns: var(--rail-w) var(--explorer-w) 1fr var(--insights-w);
+      grid-template-rows: var(--cmd-h) 1fr;
+      grid-template-areas:
+        "rail cmd cmd cmd"
+        "rail explorer main insights";
+      gap:10px;
+      padding:10px;
+      box-sizing:border-box;
+    }
+    .rail{
+      grid-area: rail;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background: var(--soft3);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .rail__brand{
+      padding:14px 12px;
+      font-weight:1000;
+      letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border-bottom:1px solid rgba(128,128,128,0.18);
+    }
+    .rail__brand span{
+      font-size:12px;
+      opacity:.9;
+      display:block;
+      line-height:1.05;
+    }
+    .rail__nav{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      padding:10px;
+      flex:1;
+    }
+    .rail-btn{
+      border:1px solid rgba(128,128,128,0.20);
+      background: rgba(128,128,128,0.06);
+      border-radius:16px;
+      padding:10px 8px;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      font-weight:900;
+      color:var(--text);
+    }
+    .rail-btn[aria-pressed="true"]{
+      border-color: rgba(80,160,255,0.55);
+      background: rgba(80,160,255,0.12);
+      box-shadow: 0 0 0 1px rgba(80,160,255,0.18) inset;
+    }
+    .rail-btn__icon{
+      font-size:18px;
+      line-height:1;
+    }
+    .rail-btn__label{
+      font-size:11px;
+      line-height:1.1;
+      text-align:center;
+      opacity:.95;
+    }
+    .rail__footer{
+      padding:10px;
+      border-top:1px solid rgba(128,128,128,0.18);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .rail-mini{
+      display:flex;
+      gap:8px;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .rail-mini .btn{
+      width:100%;
+      border-radius:14px;
+    }
+
+    .commandbar{
+      grid-area: cmd;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background: rgba(128,128,128,0.05);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 12px;
+      overflow:hidden;
+    }
+    .cmd-left, .cmd-right{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .cmd-block{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border:1px solid rgba(128,128,128,0.18);
+      background: rgba(128,128,128,0.06);
+      border-radius:16px;
+    }
+    .cmd-title{
+      font-weight:1000;
+      letter-spacing:.2px;
+      margin-right:6px;
+      white-space:nowrap;
+    }
+    .cmd-sub{
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .cmd-range{
+      font-weight:1000;
+      white-space:nowrap;
+    }
+    .cmd-search{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border:1px solid rgba(128,128,128,0.18);
+      background: rgba(128,128,128,0.06);
+      border-radius:16px;
+      min-width: 260px;
+      flex: 1;
+    }
+    .cmd-search input{
+      width:100%;
+      background: transparent;
+      border:0;
+      outline:0;
+      color:var(--text);
+      font-weight:800;
+    }
+    .cmd-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(128,128,128,0.24);
+      background: rgba(128,128,128,0.06);
+      font-weight:900;
+      white-space:nowrap;
+      font-size:12px;
+    }
+    .cmd-pill strong{ font-weight:1000; }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:2px 8px;
+      border-radius:999px;
       border:1px solid var(--border);
       background: rgba(128,128,128,0.12);
       color: var(--text);
-      font-size: 12px; font-weight: 700;
+      font-size: 12px;
+      font-weight: 800;
       white-space: nowrap;
     }
-    .badge--muted { color: var(--muted); border-color: rgba(128,128,128,0.25); }
-    .badge--warn { border-color: rgba(255, 190, 100, 0.55); background: rgba(255, 190, 100, 0.12); }
-    .badge--ok { border-color: rgba(120, 255, 160, 0.45); background: rgba(120, 255, 160, 0.10); }
-    .badge--bad { border-color: rgba(255, 90, 90, 0.55); background: rgba(255, 90, 90, 0.12); }
-    .mini-help { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.25; }
-    .subnav {
-      display:flex; gap:8px; align-items:center; flex-wrap:wrap;
-      border:1px solid var(--border); border-radius: 14px;
-      padding: 8px; background: rgba(128,128,128,0.06);
-    }
-    .view-host { min-height: 320px; }
-    .panel {
-      border:1px solid var(--border);
-      background: rgba(128,128,128,0.06);
-      border-radius: 16px;
-      padding: 12px;
-    }
-    .panel + .panel { margin-top: 12px; }
-    .hstack { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .vstack { display:flex; flex-direction:column; gap:10px; }
-    .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    .grid-3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; }
-    .hr { height:1px; background: rgba(128,128,128,0.22); margin: 10px 0; }
-    .pill { padding:6px 10px; border-radius:999px; border:1px solid var(--border); background: rgba(128,128,128,0.08); font-weight:700; }
-    .muted { color: var(--muted); }
+    .badge--muted{ color: var(--muted); border-color: rgba(128,128,128,0.25); }
+    .badge--ok{ border-color: rgba(120, 255, 160, 0.45); background: rgba(120, 255, 160, 0.10); }
+    .badge--warn{ border-color: rgba(255, 190, 100, 0.55); background: rgba(255, 190, 100, 0.12); }
+    .badge--bad{ border-color: rgba(255, 90, 90, 0.55); background: rgba(255, 90, 90, 0.12); }
 
-    /* Movement table */
-    .movements {
-      overflow:auto;
+    .explorer{
+      grid-area: explorer;
       border:1px solid var(--border);
-      border-radius: 14px;
-      background: rgba(128,128,128,0.05);
+      border-radius:18px;
+      background: rgba(128,128,128,0.04);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
     }
-    .movements table { width:100%; border-collapse: collapse; min-width: 980px; }
-    .movements th, .movements td { padding:10px; border-bottom:1px solid rgba(128,128,128,0.15); text-align:left; vertical-align: top; }
-    .movements th { position: sticky; top: 0; background: rgba(30,30,30,0.85); backdrop-filter: blur(8px); z-index: 2; }
-    .amt-pos { font-weight: 800; }
-    .amt-neg { font-weight: 800; }
-    .row-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
-    .kpi {
+    .explorer[data-open="false"]{ display:none; }
+
+    .explorer__head{
+      padding:12px 12px 10px;
+      border-bottom:1px solid rgba(128,128,128,0.18);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .explorer__head-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .explorer__title{
+      font-weight:1000;
+      letter-spacing:.2px;
+      display:flex;
+      flex-direction:column;
+      line-height:1.05;
+    }
+    .explorer__title small{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:900;
+      margin-top:4px;
+    }
+    .explorer__tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .chip{
+      border:1px solid rgba(128,128,128,0.18);
+      background: rgba(128,128,128,0.06);
+      border-radius:999px;
+      padding:6px 10px;
+      font-weight:900;
+      cursor:pointer;
+      color:var(--text);
+      font-size:12px;
+    }
+    .chip[aria-pressed="true"]{
+      border-color: rgba(80,160,255,0.55);
+      background: rgba(80,160,255,0.12);
+    }
+
+    .explorer__body{
+      padding:12px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .panel{
+      border:1px solid rgba(128,128,128,0.18);
+      background: rgba(128,128,128,0.06);
+      border-radius:16px;
+      padding:12px;
+    }
+    .panel-title{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .panel-title b{
+      font-weight:1000;
+      letter-spacing:.2px;
+    }
+    .panel-title small{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+    }
+
+    .grid-2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .grid-3{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .field label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .field input, .field select, .field textarea{
+      width:100%;
+      box-sizing:border-box;
+      border:1px solid rgba(128,128,128,0.20);
+      background: rgba(128,128,128,0.06);
+      color:var(--text);
+      border-radius:14px;
+      padding:10px 10px;
+      font-weight:800;
+      outline:0;
+    }
+    .field textarea{ min-height:90px; resize:vertical; }
+    .toggle-row{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top:6px;
+    }
+    .tog{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 10px;
+      border:1px solid rgba(128,128,128,0.18);
+      border-radius:14px;
+      background: rgba(128,128,128,0.05);
+      font-weight:900;
+    }
+    .tog small{ color:var(--muted); font-weight:900; font-size:12px; }
+    .tog input{ transform: scale(1.1); }
+
+    .help{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+      line-height:1.25;
+      margin-top:6px;
+    }
+
+    .main{
+      grid-area: main;
       border:1px solid var(--border);
-      border-radius: 16px;
-      padding: 10px;
+      border-radius:18px;
+      background: rgba(128,128,128,0.03);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .main__head{
+      padding:12px 14px 10px;
+      border-bottom:1px solid rgba(128,128,128,0.18);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .main__head-left{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width: 280px;
+    }
+    .main__title{
+      font-weight:1000;
+      letter-spacing:.2px;
+      font-size:18px;
+    }
+    .main__subtitle{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .main__actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .segmented{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      padding:4px;
+      border-radius:14px;
+      border:1px solid rgba(128,128,128,0.18);
+      background: rgba(128,128,128,0.06);
+    }
+    .segmented .btn--seg{
+      border-radius:12px;
+      padding:8px 10px;
+      font-weight:1000;
+    }
+
+    .view-host{
+      padding:12px;
+      overflow:auto;
+      flex:1;
+      min-height: 380px;
+    }
+
+    .insights{
+      grid-area: insights;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background: rgba(128,128,128,0.04);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .insights[data-open="false"]{ display:none; }
+
+    .insights__head{
+      padding:12px 12px 10px;
+      border-bottom:1px solid rgba(128,128,128,0.18);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .insights__title{
+      font-weight:1000;
+      letter-spacing:.2px;
+      display:flex;
+      flex-direction:column;
+      line-height:1.05;
+    }
+    .insights__title small{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:900;
+      margin-top:4px;
+    }
+    .insights__tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .insights__body{
+      padding:12px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .kpi{
+      border:1px solid rgba(128,128,128,0.18);
+      border-radius:16px;
+      padding:10px;
       background: rgba(128,128,128,0.07);
     }
-    .kpi__label { font-size: 12px; color: var(--muted); font-weight: 800; letter-spacing: .2px; }
-    .kpi__value { font-size: 18px; font-weight: 900; margin-top: 4px; }
-    .kpi__sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
-    .btn--tiny { padding: 6px 10px; border-radius: 12px; font-size: 12px; }
-    .hidden { display:none !important; }
+    .kpi__label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+    .kpi__value{
+      font-size:18px;
+      font-weight:1000;
+      margin-top:6px;
+    }
+    .kpi__sub{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:4px;
+      font-weight:800;
+      line-height:1.2;
+    }
+
+    .mini-cal{
+      border:1px solid rgba(128,128,128,0.18);
+      background: rgba(128,128,128,0.05);
+      border-radius:16px;
+      overflow:hidden;
+    }
+    .mini-cal__head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      padding:10px;
+      border-bottom:1px solid rgba(128,128,128,0.16);
+    }
+    .mini-cal__head b{
+      font-weight:1000;
+      letter-spacing:.2px;
+      font-size:12px;
+      text-transform:capitalize;
+    }
+    .mini-cal__grid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:4px;
+      padding:10px;
+    }
+    .mini-cal__dow{
+      font-size:11px;
+      color:var(--muted);
+      font-weight:900;
+      text-align:center;
+      padding:4px 0;
+    }
+    .mini-cal__day{
+      border:1px solid rgba(128,128,128,0.14);
+      background: rgba(128,128,128,0.04);
+      border-radius:12px;
+      padding:7px 0;
+      font-weight:1000;
+      font-size:12px;
+      text-align:center;
+      cursor:pointer;
+      color:var(--text);
+      position:relative;
+      user-select:none;
+    }
+    .mini-cal__day.is-out{ opacity:.45; }
+    .mini-cal__day.is-today{
+      border-color: rgba(80,160,255,0.55);
+      box-shadow: 0 0 0 1px rgba(80,160,255,0.18) inset;
+      background: rgba(80,160,255,0.10);
+    }
+    .mini-cal__day.is-anchor{
+      outline:2px solid rgba(255,255,255,0.12);
+      outline-offset:1px;
+    }
+    .mini-cal__dot{
+      position:absolute;
+      bottom:4px;
+      left:50%;
+      transform: translateX(-50%);
+      width:6px;
+      height:6px;
+      border-radius:999px;
+      background: rgba(80,160,255,0.85);
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.25);
+      opacity:.9;
+    }
+
+    .movements{
+      overflow:auto;
+      border:1px solid rgba(128,128,128,0.18);
+      border-radius: 16px;
+      background: rgba(128,128,128,0.05);
+    }
+    .movements table{
+      width:100%;
+      border-collapse: collapse;
+      min-width: 980px;
+    }
+    .movements th, .movements td{
+      padding:10px;
+      border-bottom:1px solid rgba(128,128,128,0.15);
+      text-align:left;
+      vertical-align: top;
+      font-weight:800;
+    }
+    .movements th{
+      position: sticky;
+      top: 0;
+      background: rgba(30,30,30,0.85);
+      backdrop-filter: blur(8px);
+      z-index: 2;
+      font-weight:1000;
+    }
+    .row-sub{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      font-weight:800;
+      line-height:1.2;
+    }
+    .amt-pos{ font-weight:1000; }
+    .amt-neg{ font-weight:1000; }
+
+    .empty-state{
+      border:1px dashed rgba(128,128,128,0.28);
+      background: rgba(128,128,128,0.04);
+      border-radius:16px;
+      padding:14px;
+      color:var(--muted);
+      font-weight:900;
+    }
+
+    .drawer{ z-index:50; }
+    .drawer-scrim{ z-index:49; }
+
+    @media (max-width: 1220px){
+      .workspace{
+        grid-template-columns: var(--rail-w) var(--explorer-w) 1fr;
+        grid-template-areas:
+          "rail cmd cmd"
+          "rail explorer main";
+      }
+      .insights{ display:none; }
+    }
+    @media (max-width: 980px){
+      .workspace{
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        grid-template-areas:
+          "cmd"
+          "main";
+        padding: 8px;
+      }
+      .rail, .explorer, .insights{ display:none; }
+      .commandbar{ position:sticky; top:8px; z-index:20; }
+    }
   </style>
 </head>
 
 <body>
-  <div id="app" class="app layout">
-    <header id="topbar" class="topbar">
-      <div class="topbar__left topbar__row">
-        <div class="topbar__group">
-          <button id="btnSidebarToggle" class="btn btn--ghost" type="button">☰ Filtri</button>
+  <div id="app" class="workspace">
+    <aside class="rail">
+      <div class="rail__brand">
+        <div style="font-size:18px">💼</div>
+        <div>
+          <div style="font-weight:1000">Finance</div>
+          <span>Calendar v3</span>
+        </div>
+      </div>
+
+      <nav id="modeSwitch" class="rail__nav" aria-label="Sezioni">
+        <button class="rail-btn" type="button" data-mode="calendar" aria-pressed="true">
+          <div class="rail-btn__icon">📅</div>
+          <div class="rail-btn__label">Calendario</div>
+        </button>
+        <button class="rail-btn" type="button" data-mode="movements" aria-pressed="false">
+          <div class="rail-btn__icon">📄</div>
+          <div class="rail-btn__label">Movimenti</div>
+        </button>
+        <button class="rail-btn" type="button" data-mode="reports" aria-pressed="false">
+          <div class="rail-btn__icon">📊</div>
+          <div class="rail-btn__label">Report</div>
+        </button>
+        <button class="rail-btn" type="button" data-mode="setup" aria-pressed="false">
+          <div class="rail-btn__icon">⚙️</div>
+          <div class="rail-btn__label">Setup</div>
+        </button>
+      </nav>
+
+      <div class="rail__footer">
+        <div class="rail-mini">
+          <button id="btnSidebarToggle" class="btn btn--ghost" type="button">Explorer</button>
+        </div>
+        <div class="rail-mini">
+          <button id="btnInsightsToggle" class="btn btn--ghost" type="button">Insights</button>
+        </div>
+      </div>
+    </aside>
+
+    <header id="topbar" class="commandbar">
+      <div class="cmd-left">
+        <div class="cmd-block" style="gap:10px">
+          <div class="cmd-title">Data</div>
           <button id="btnPrev" class="btn btn--icon btn--ghost" type="button" aria-label="Precedente">‹</button>
           <button id="btnToday" class="btn btn--ghost" type="button">Oggi</button>
           <button id="btnNext" class="btn btn--icon btn--ghost" type="button" aria-label="Successivo">›</button>
-          <span id="rangeLabel" class="topbar__range">—</span>
+          <span id="rangeLabel" class="cmd-range">—</span>
         </div>
 
-        <div class="topbar__group subnav" aria-label="Basis & Mode">
-          <div class="muted" style="font-weight:800;">Basis</div>
+        <div class="cmd-block">
+          <span class="cmd-pill"><strong>Basis</strong> <span id="basisBadge">Cash</span></span>
           <span id="basisSwitch" class="segmented" aria-label="Basis">
             <button class="btn btn--seg" type="button" data-basis="cash" aria-pressed="true">Cash</button>
             <button class="btn btn--seg" type="button" data-basis="accrual" aria-pressed="false">Accrual</button>
           </span>
+        </div>
 
-          <div class="muted" style="font-weight:800;margin-left:6px;">Vista</div>
-          <span id="modeSwitch" class="segmented" aria-label="Modalità">
-            <button class="btn btn--seg" type="button" data-mode="calendar" aria-pressed="true">Calendario</button>
-            <button class="btn btn--seg" type="button" data-mode="movements" aria-pressed="false">Movimenti</button>
-            <button class="btn btn--seg" type="button" data-mode="reports" aria-pressed="false">Report</button>
-            <button class="btn btn--seg" type="button" data-mode="setup" aria-pressed="false">Setup</button>
-          </span>
+        <div class="cmd-search" aria-label="Ricerca rapida">
+          <span style="font-weight:1000">🔎</span>
+          <input id="searchInput" type="search" autocomplete="off" placeholder="Cerca titolo, categoria, note… (filtra tutto)" />
         </div>
       </div>
 
-      <div class="topbar__right topbar__row">
-        <span id="calendarViewSwitch" class="segmented" aria-label="Vista calendario">
+      <div class="cmd-right">
+        <div id="calendarViewSwitch" class="cmd-block segmented" aria-label="Vista calendario">
           <button class="btn btn--seg" type="button" data-view="day" aria-pressed="false">Giorno</button>
+          <button class="btn btn--seg" type="button" data-view="workweek" aria-pressed="false">Work Week</button>
           <button class="btn btn--seg" type="button" data-view="week" aria-pressed="false">Settimana</button>
           <button class="btn btn--seg" type="button" data-view="month" aria-pressed="true">Mese</button>
+          <button class="btn btn--seg" type="button" data-view="agenda" aria-pressed="false">Agenda</button>
           <button class="btn btn--seg" type="button" data-view="year" aria-pressed="false">Anno</button>
-        </span>
+        </div>
 
-        <span id="densitySwitch" class="segmented" aria-label="Densità">
-          <button class="btn btn--seg" type="button" data-density="comfort" aria-pressed="true">Comfort</button>
-          <button class="btn btn--seg" type="button" data-density="compact" aria-pressed="false">Compatta</button>
-        </span>
+        <div class="cmd-block">
+          <span class="cmd-pill"><strong>Densità</strong></span>
+          <span id="densitySwitch" class="segmented" aria-label="Densità">
+            <button class="btn btn--seg" type="button" data-density="comfort" aria-pressed="true">Comfort</button>
+            <button class="btn btn--seg" type="button" data-density="compact" aria-pressed="false">Compatta</button>
+          </span>
+        </div>
 
-        <button id="btnNewEvent" class="btn btn--primary" type="button">＋ Nuovo</button>
+        <button id="btnNewEvent" class="btn btn--primary" type="button">＋ Nuovo evento</button>
       </div>
     </header>
 
-    <aside id="sidebar" class="sidebar" data-open="true">
-      <div class="sidebar__header">
-        <h2 class="sidebar__title">Finance v2</h2>
+    <aside id="sidebar" class="explorer" data-open="true">
+      <div class="explorer__head">
+        <div class="explorer__head-top">
+          <div class="explorer__title">
+            Explorer
+            <small>Filtri, Range, Connessione, Backup</small>
+          </div>
+          <span id="apiStatus" class="badge badge--muted">offline</span>
+        </div>
+
+        <div class="explorer__tabs" role="tablist" aria-label="Explorer tabs">
+          <button id="tabExplorerCalendar" class="chip" type="button" data-tab="calendar" aria-pressed="true">Calendario</button>
+          <button id="tabExplorerFilters" class="chip" type="button" data-tab="filters" aria-pressed="false">Filtri</button>
+          <button id="tabExplorerRange" class="chip" type="button" data-tab="range" aria-pressed="false">Range</button>
+          <button id="tabExplorerData" class="chip" type="button" data-tab="data" aria-pressed="false">Dati</button>
+        </div>
       </div>
 
-      <section class="sidebar__section">
-        <div class="sidebar__section-title" style="margin-bottom:10px;">
-          <span>Connessione</span>
-          <small>API / Stato</small>
-        </div>
-
-        <div class="vstack">
-          <label class="label" for="apiBaseInput">API Base</label>
-          <input id="apiBaseInput" type="text" placeholder="Es: /api oppure https://example.com/api" />
-          <div class="hstack" style="justify-content:space-between;">
-            <button id="btnPing" class="btn btn--ghost btn--tiny" type="button">Ping</button>
-            <span id="apiStatus" class="badge badge--muted">offline</span>
+      <div class="explorer__body">
+        <section id="explorerCalendarTab" class="panel">
+          <div class="panel-title">
+            <b>Navigazione rapida</b>
+            <small>Clicca un giorno per andare lì</small>
           </div>
-          <div class="mini-help">
-            Suggerito: <span class="pill">/api</span> (stesso dominio) oppure il tuo endpoint pubblico.
+          <div id="miniCal" class="mini-cal"></div>
+          <div class="help">
+            Tip: clic su una data → porta l’anchor su quel giorno. Se sei in <b>Mese</b>, rimani nel mese; se sei in <b>Giorno</b>, apri la giornata.
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="sidebar__section">
-        <div class="sidebar__section-title" style="margin-bottom:10px;">
-          <span>Filtri</span>
-          <small>Ricerca rapida</small>
-        </div>
-
-        <label class="label" for="searchInput">Cerca</label>
-        <input id="searchInput" type="search" autocomplete="off" placeholder="Titolo, categoria, note…" />
-        <div style="height:10px"></div>
-
-        <label class="label" for="categorySelect">Categoria</label>
-        <select id="categorySelect">
-          <option value="all">Tutte</option>
-        </select>
-
-        <div style="height:10px"></div>
-
-        <label class="label" for="accountSelect">Account</label>
-        <select id="accountSelect">
-          <option value="all">Tutti</option>
-        </select>
-
-        <div style="height:10px"></div>
-
-        <label class="label" for="paymentMethodSelect">Metodo pagamento</label>
-        <select id="paymentMethodSelect">
-          <option value="all">Tutti</option>
-        </select>
-
-        <div style="height:10px"></div>
-
-        <div class="toggle">
-          <div class="toggle__label">Entrate</div>
-          <input id="toggleIncome" type="checkbox" checked />
-        </div>
-        <div style="height:10px"></div>
-        <div class="toggle">
-          <div class="toggle__label">Uscite</div>
-          <input id="toggleExpense" type="checkbox" checked />
-        </div>
-        <div style="height:10px"></div>
-        <div class="toggle">
-          <div class="toggle__label">Trasferimenti</div>
-          <input id="toggleTransfers" type="checkbox" checked />
-        </div>
-        <div style="height:10px"></div>
-        <div class="toggle">
-          <div class="toggle__label">Altro</div>
-          <input id="toggleOther" type="checkbox" checked />
-        </div>
-
-        <div class="mini-help">
-          In <b>Cash</b> la data usata per filtri/stats è <b>Cash Date</b>.
-          In <b>Accrual</b> è la data evento (<b>Accrual Date</b>).
-        </div>
-      </section>
-
-      <section class="sidebar__section">
-        <div class="sidebar__section-title" style="margin-bottom:10px;">
-          <span>Range</span>
-          <small>Filtro date (basis-aware)</small>
-        </div>
-
-        <div id="rangePresets" class="pill-row" style="margin-bottom:10px;">
-          <button class="btn btn--pill" type="button" data-preset="all" aria-pressed="true">Da inizio</button>
-          <button class="btn btn--pill" type="button" data-preset="from" aria-pressed="false">Da data</button>
-          <button class="btn btn--pill" type="button" data-preset="between" aria-pressed="false">Tra date</button>
-        </div>
-
-        <label class="label" for="fromDate">Da</label>
-        <input id="fromDate" type="date" />
-
-        <label class="label" for="toDate">A</label>
-        <input id="toDate" type="date" />
-
-        <div style="height:12px"></div>
-        <div class="pill-row">
-          <button id="btnApplyFilters" class="btn btn--ghost" type="button">Applica</button>
-          <button id="btnClearFilters" class="btn btn--ghost" type="button">Reset</button>
-        </div>
-      </section>
-
-      <section class="sidebar__section">
-        <div class="sidebar__section-title" style="margin-bottom:10px;">
-          <span>Backup</span>
-          <small>Import/Export</small>
-        </div>
-
-        <div class="pill-row">
-          <button id="btnExport" class="btn btn--ghost" type="button">Esporta JSON</button>
-        </div>
-
-        <div style="height:10px"></div>
-
-        <label class="label" for="importFile">Importa JSON</label>
-        <input id="importFile" type="file" accept="application/json" />
-        <small class="help">Import crea eventi e (se presenti) meta/accounts/settings.</small>
-      </section>
-
-      <section id="statsPanel" class="sidebar__section">
-        <div class="sidebar__section-title">
-          <span>Stats</span>
-          <small id="statsMeta">—</small>
-        </div>
-
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-card__label">Saldo attuale (basis)</div>
-            <div id="statCurrentBalance" class="stat-card__value">—</div>
-            <div id="statCurrentBalanceMeta" class="stat-card__sub">—</div>
+        <section id="explorerFiltersTab" class="panel" style="display:none;">
+          <div class="panel-title">
+            <b>Filtri</b>
+            <small id="activeFiltersMeta">—</small>
           </div>
 
-          <div class="stat-card">
-            <div class="stat-card__label">Saldo alla data</div>
-            <div id="statBalanceAtDate" class="stat-card__value">—</div>
-            <div class="stat-card__sub" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
-              <span style="color:var(--muted);font-weight:700">Data</span>
-              <input id="balanceAtDate" type="date" />
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-card__label">Netto (range visibile)</div>
-            <div id="statNet" class="stat-card__value">—</div>
-            <div class="stat-card__sub">
-              <span id="statIncomeCount">—</span> · <span id="statExpenseCount">—</span> · <span id="statTransferCount">—</span>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-card__label">Entrate (range)</div>
-            <div id="statIncome" class="stat-card__value">—</div>
-            <div class="stat-card__sub">Somma entrate in vista</div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-card__label">Uscite (range)</div>
-            <div id="statExpense" class="stat-card__value">—</div>
-            <div class="stat-card__sub">Somma uscite in vista</div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-card__label">Δ Cash vs Accrual</div>
-            <div id="statDelta" class="stat-card__value">—</div>
-            <div class="stat-card__sub">Differenza saldo alla data</div>
-          </div>
-        </div>
-
-        <hr />
-
-        <div class="sidebar__section-title" style="margin-bottom:10px;">
-          <span>Snapshot</span>
-          <small>ultimi 14 giorni (range)</small>
-        </div>
-
-        <div id="snapshotList" class="snapshot-list" role="list"></div>
-
-        <hr />
-
-        <div class="sidebar__section-title" style="margin-bottom:10px;">
-          <span>Carta di credito</span>
-          <small>Sparkasse / Outstanding</small>
-        </div>
-
-        <div class="stats-grid" style="margin-bottom:10px;">
-          <div class="stat-card">
-            <div class="stat-card__label">Outstanding stimato</div>
-            <div id="ccOutstanding" class="stat-card__value">—</div>
-            <div id="ccOutstandingMeta" class="stat-card__sub">—</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card__label">Speso mese (Accrual)</div>
-            <div id="ccSpentMonth" class="stat-card__value">—</div>
-            <div class="stat-card__sub">Solo acquisti su carta</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card__label">Pagato mese (Cash)</div>
-            <div id="ccPaidMonth" class="stat-card__value">—</div>
-            <div class="stat-card__sub">Settlement / Transfer</div>
-          </div>
-        </div>
-
-        <div class="mini-help" id="ccHelp">
-          Se non hai ancora configurato account/metodi, vai su <b>Setup</b>.
-        </div>
-
-        <hr />
-
-        <div class="sidebar__section-title" style="margin-bottom:10px;">
-          <span>Forecast</span>
-          <small id="forecastMeta">—</small>
-        </div>
-
-        <div class="pill-row" style="gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
-          <label class="label" style="margin:0;">
-            Target
-            <input id="forecastTo" type="date" />
-          </label>
-
-          <label class="label" style="margin:0;">
-            Mode
-            <select id="forecastMode">
-              <option value="daily">Giornaliero</option>
-              <option value="monthly">Mensile</option>
+          <div class="field">
+            <label for="categorySelect">Categoria</label>
+            <select id="categorySelect">
+              <option value="all">Tutte</option>
             </select>
-          </label>
-
-          <button id="btnForecast" class="btn btn--ghost" type="button">Calcola</button>
-        </div>
-
-        <div class="stats-grid" style="margin-bottom:12px;">
-          <div class="stat-card">
-            <div class="stat-card__label">Saldo previsto</div>
-            <div id="forecastBalanceAtTo" class="stat-card__value">—</div>
-            <div id="forecastBalanceMeta" class="stat-card__sub">—</div>
           </div>
 
-          <div class="stat-card">
-            <div class="stat-card__label">Entrate totali</div>
-            <div id="forecastTotalIncome" class="stat-card__value">—</div>
-            <div class="stat-card__sub">Somma entrate</div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="accountSelect">Account</label>
+              <select id="accountSelect">
+                <option value="all">Tutti</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="paymentMethodSelect">Metodo</label>
+              <select id="paymentMethodSelect">
+                <option value="all">Tutti</option>
+              </select>
+            </div>
           </div>
 
-          <div class="stat-card">
-            <div class="stat-card__label">Uscite totali</div>
-            <div id="forecastTotalExpense" class="stat-card__value">—</div>
-            <div class="stat-card__sub">Somma uscite</div>
+          <div class="toggle-row">
+            <div class="tog">
+              <div>
+                Entrate
+                <small>Include income</small>
+              </div>
+              <input id="toggleIncome" type="checkbox" checked />
+            </div>
+            <div class="tog">
+              <div>
+                Uscite
+                <small>Include expense</small>
+              </div>
+              <input id="toggleExpense" type="checkbox" checked />
+            </div>
+            <div class="tog">
+              <div>
+                Trasferimenti
+                <small>Include transfer</small>
+              </div>
+              <input id="toggleTransfers" type="checkbox" checked />
+            </div>
+            <div class="tog">
+              <div>
+                Altro
+                <small>Include other</small>
+              </div>
+              <input id="toggleOther" type="checkbox" checked />
+            </div>
           </div>
 
-          <div class="stat-card">
-            <div class="stat-card__label">Netto totale</div>
-            <div id="forecastTotalNet" class="stat-card__value">—</div>
-            <div class="stat-card__sub">Entrate − Uscite</div>
+          <div class="grid-2" style="margin-top:10px;">
+            <button id="btnApplyFilters" class="btn btn--ghost" type="button">Applica</button>
+            <button id="btnClearFilters" class="btn btn--ghost" type="button">Reset</button>
           </div>
-        </div>
 
-        <canvas id="forecastChart" width="720" height="220" style="width:100%; height:220px; border:1px solid var(--border); border-radius:12px;"></canvas>
+          <div class="help">
+            In <b>Cash</b> filtri e statistiche usano <b>Cash Date</b>. In <b>Accrual</b> usano la <b>Data evento</b>.
+          </div>
+        </section>
 
-        <div style="height:12px"></div>
-        <div id="forecastTableWrap" style="overflow:auto; max-height:240px; border:1px solid var(--border); border-radius:12px;"></div>
-        <div id="forecastError" class="help" style="color:crimson; margin-top:10px; display:none;"></div>
-      </section>
+        <section id="explorerRangeTab" class="panel" style="display:none;">
+          <div class="panel-title">
+            <b>Range date</b>
+            <small>Controllo globale</small>
+          </div>
+
+          <div id="rangePresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <button class="chip" type="button" data-preset="all" aria-pressed="true">Da inizio</button>
+            <button class="chip" type="button" data-preset="from" aria-pressed="false">Da data</button>
+            <button class="chip" type="button" data-preset="between" aria-pressed="false">Tra date</button>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="fromDate">Da</label>
+              <input id="fromDate" type="date" />
+            </div>
+            <div class="field">
+              <label for="toDate">A</label>
+              <input id="toDate" type="date" />
+            </div>
+          </div>
+
+          <div class="help">
+            Questo range limita ciò che vedi ovunque: calendario, movimenti, report e insights.
+          </div>
+        </section>
+
+        <section id="explorerDataTab" class="panel" style="display:none;">
+          <div class="panel-title">
+            <b>Connessione & Backup</b>
+            <small>API, Import/Export</small>
+          </div>
+
+          <div class="field">
+            <label for="apiBaseInput">API Base <span class="badge badge--muted">/api</span></label>
+            <input id="apiBaseInput" type="text" placeholder="Es: /api oppure https://example.com/api" />
+          </div>
+
+          <div class="grid-2">
+            <button id="btnPing" class="btn btn--ghost" type="button">Ping API</button>
+            <button id="btnExport" class="btn btn--ghost" type="button">Esporta JSON</button>
+          </div>
+
+          <div class="field" style="margin-top:10px;">
+            <label for="importFile">Importa JSON</label>
+            <input id="importFile" type="file" accept="application/json" />
+            <div class="help">
+              Import crea eventi e, se presenti, anche meta/settings.
+            </div>
+          </div>
+        </section>
+      </div>
     </aside>
 
     <main id="main" class="main">
-      <header class="main__header">
-        <h1 id="mainTitle">Finance v2</h1>
-        <p id="mainSubtitle">—</p>
+      <header class="main__head">
+        <div class="main__head-left">
+          <div id="mainTitle" class="main__title">—</div>
+          <div id="mainSubtitle" class="main__subtitle">—</div>
+        </div>
+
+        <div class="main__actions">
+          <span class="badge badge--muted" id="viewMetaBadge">—</span>
+          <span class="badge badge--muted" id="filtersMetaBadge">—</span>
+        </div>
       </header>
 
       <section id="mainHost" class="view-host">
-        <!-- dynamic views -->
         <section id="calendarView" class="calendar" data-view="month" data-density="comfort"></section>
 
-        <section id="movementsView" class="hidden">
+        <section id="movementsView" style="display:none;">
           <div class="panel">
-            <div class="hstack" style="justify-content:space-between;">
-              <div>
-                <div style="font-size:18px;font-weight:900;">Movimenti</div>
-                <div class="mini-help">Lista tipo banca · basis = <span id="movBasisLabel" class="pill">—</span></div>
-              </div>
-              <div class="hstack">
-                <button id="btnMovRefresh" class="btn btn--ghost btn--tiny" type="button">Ricarica</button>
-              </div>
+            <div class="panel-title">
+              <b>Movimenti</b>
+              <small>Vista tipo banca · basis <span id="movBasisLabel" class="badge badge--muted">—</span></small>
             </div>
-            <div style="height:10px"></div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-bottom:10px;">
+              <button id="btnMovRefresh" class="btn btn--ghost" type="button">Ricarica</button>
+            </div>
             <div id="movementsTable" class="movements"></div>
           </div>
         </section>
 
-        <section id="reportsView" class="hidden">
+        <section id="reportsView" style="display:none;">
           <div class="panel">
-            <div class="hstack" style="justify-content:space-between;">
-              <div>
-                <div style="font-size:18px;font-weight:900;">Report</div>
-                <div class="mini-help">Riepiloghi mensili, categorie, carta di credito</div>
-              </div>
-              <div class="hstack">
-                <label class="label" style="margin:0;">
-                  Mese
-                  <input id="repMonth" type="month" />
-                </label>
-                <button id="btnRepRun" class="btn btn--ghost btn--tiny" type="button">Aggiorna</button>
-              </div>
+            <div class="panel-title">
+              <b>Report</b>
+              <small>Mensile · categorie · carta</small>
             </div>
 
-            <div class="hr"></div>
+            <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+              <div class="field" style="max-width:220px;">
+                <label for="repMonth">Mese</label>
+                <input id="repMonth" type="month" />
+              </div>
+              <button id="btnRepRun" class="btn btn--ghost" type="button">Aggiorna report</button>
+            </div>
+
+            <div style="height:12px"></div>
 
             <div class="grid-3">
               <div class="kpi">
                 <div class="kpi__label">Entrate mese</div>
                 <div id="repIncome" class="kpi__value">—</div>
-                <div id="repIncomeSub" class="kpi__sub">basis-aware</div>
+                <div id="repIncomeSub" class="kpi__sub">—</div>
               </div>
               <div class="kpi">
                 <div class="kpi__label">Uscite mese</div>
                 <div id="repExpense" class="kpi__value">—</div>
-                <div id="repExpenseSub" class="kpi__sub">basis-aware</div>
+                <div id="repExpenseSub" class="kpi__sub">—</div>
               </div>
               <div class="kpi">
                 <div class="kpi__label">Netto mese</div>
                 <div id="repNet" class="kpi__value">—</div>
-                <div id="repNetSub" class="kpi__sub">income − expense</div>
+                <div id="repNetSub" class="kpi__sub">—</div>
               </div>
             </div>
 
@@ -454,41 +931,40 @@
 
             <div class="grid-2">
               <div class="panel">
-                <div class="hstack" style="justify-content:space-between;">
-                  <div style="font-weight:900;">Top Categorie (mese)</div>
-                  <span id="repCatMeta" class="badge badge--muted">—</span>
+                <div class="panel-title">
+                  <b>Top Categorie</b>
+                  <small id="repCatMeta">—</small>
                 </div>
-                <div style="height:10px"></div>
                 <div id="repCats"></div>
-                <div class="mini-help">Clic su categoria → filtra movimenti</div>
+                <div class="help">Clic su una categoria → apre Movimenti filtrati</div>
               </div>
 
               <div class="panel">
-                <div class="hstack" style="justify-content:space-between;">
-                  <div style="font-weight:900;">Carta di credito</div>
-                  <span id="repCCMeta" class="badge badge--muted">—</span>
+                <div class="panel-title">
+                  <b>Carta di credito</b>
+                  <small id="repCCMeta">—</small>
                 </div>
-                <div style="height:10px"></div>
-                <div id="repCCBox" class="vstack">
+
+                <div class="kpi" style="margin-bottom:10px;">
+                  <div class="kpi__label">Outstanding stimato</div>
+                  <div id="repCCOutstanding" class="kpi__value">—</div>
+                  <div id="repCCOutstandingSub" class="kpi__sub">—</div>
+                </div>
+
+                <div class="grid-2">
                   <div class="kpi">
-                    <div class="kpi__label">Outstanding stimato</div>
-                    <div id="repCCOutstanding" class="kpi__value">—</div>
-                    <div id="repCCOutstandingSub" class="kpi__sub">fino a fine mese</div>
+                    <div class="kpi__label">Speso mese</div>
+                    <div id="repCCSpent" class="kpi__value">—</div>
+                    <div class="kpi__sub">acquisti su carta</div>
                   </div>
-                  <div class="grid-2">
-                    <div class="kpi">
-                      <div class="kpi__label">Speso mese</div>
-                      <div id="repCCSpent" class="kpi__value">—</div>
-                      <div class="kpi__sub">acquisti su carta</div>
-                    </div>
-                    <div class="kpi">
-                      <div class="kpi__label">Pagato mese</div>
-                      <div id="repCCPaid" class="kpi__value">—</div>
-                      <div class="kpi__sub">settlement</div>
-                    </div>
+                  <div class="kpi">
+                    <div class="kpi__label">Pagato mese</div>
+                    <div id="repCCPaid" class="kpi__value">—</div>
+                    <div class="kpi__sub">settlement</div>
                   </div>
                 </div>
-                <div class="mini-help">Tip: gestisci la fattura carta come <b>transfer</b> (bank → credit card).</div>
+
+                <div class="help">Tip: fattura carta = <b>transfer</b> Bank → Credit Card</div>
               </div>
             </div>
 
@@ -496,32 +972,34 @@
           </div>
         </section>
 
-        <section id="setupView" class="hidden">
+        <section id="setupView" style="display:none;">
           <div class="panel">
-            <div style="font-size:18px;font-weight:900;">Setup</div>
-            <div class="mini-help">
-              Qui configuri <b>Accounts</b> e <b>Payment Methods</b>. Se l'API supporta /meta, li vedrai subito.
-              Se non supporta scrittura meta, salviamo in <b>settings</b> come override.
+            <div class="panel-title">
+              <b>Setup</b>
+              <small>Accounts · Payment Methods · Wizard</small>
             </div>
 
-            <div class="hr"></div>
+            <div class="help">
+              Qui controlli la configurazione. Se l’API espone /meta li vedrai subito.  
+              Se non c’è scrittura meta, useremo <b>metaOverride</b> in settings (wizard incluso).
+            </div>
+
+            <div style="height:12px"></div>
 
             <div class="grid-2">
               <div class="panel">
-                <div class="hstack" style="justify-content:space-between;">
-                  <div style="font-weight:900;">Accounts</div>
-                  <button id="btnAddAccount" class="btn btn--ghost btn--tiny" type="button">＋ Aggiungi</button>
+                <div class="panel-title">
+                  <b>Accounts</b>
+                  <small id="setupAccMeta">—</small>
                 </div>
-                <div style="height:10px"></div>
                 <div id="setupAccounts"></div>
               </div>
 
               <div class="panel">
-                <div class="hstack" style="justify-content:space-between;">
-                  <div style="font-weight:900;">Payment Methods</div>
-                  <button id="btnAddPM" class="btn btn--ghost btn--tiny" type="button">＋ Aggiungi</button>
+                <div class="panel-title">
+                  <b>Payment Methods</b>
+                  <small id="setupPMMeta">—</small>
                 </div>
-                <div style="height:10px"></div>
                 <div id="setupPMs"></div>
               </div>
             </div>
@@ -529,26 +1007,29 @@
             <div style="height:12px"></div>
 
             <div class="panel">
-              <div class="hstack" style="justify-content:space-between;">
-                <div style="font-weight:900;">Categorie</div>
-                <span class="badge badge--muted" id="setupCatMeta">—</span>
+              <div class="panel-title">
+                <b>Categorie</b>
+                <small id="setupCatMeta">—</small>
               </div>
-              <div style="height:10px"></div>
               <div id="setupCats"></div>
-              <div class="mini-help">
-                Le categorie vengono dedotte dagli eventi + /meta.
-              </div>
+              <div class="help">Deduciamo categorie da eventi + /meta</div>
             </div>
 
             <div style="height:12px"></div>
 
             <div class="panel">
-              <div class="hstack" style="justify-content:space-between;">
-                <div style="font-weight:900;">Wizard Sparkasse</div>
-                <button id="btnWizardSparkasse" class="btn btn--ghost btn--tiny" type="button">Configura</button>
+              <div class="panel-title">
+                <b>Wizard Sparkasse</b>
+                <small>Configura Bank + Sparkasse Kreditkarte</small>
               </div>
-              <div class="mini-help">
-                Crea account <b>Bank</b> e <b>Sparkasse Kreditkarte</b>, e un metodo pagamento <b>Credit Card</b> con cashDate “prossimo mese (giorno X)”.
+
+              <div class="grid-2">
+                <button id="btnWizardSparkasse" class="btn btn--ghost" type="button">Esegui Wizard</button>
+                <button id="btnMetaReload" class="btn btn--ghost" type="button">Ricarica Meta</button>
+              </div>
+
+              <div class="help">
+                Crea account <b>Bank</b> + <b>Sparkasse Kreditkarte</b>, metodo <b>Credit Card</b> con cashDate “next month day”.
               </div>
             </div>
 
@@ -557,6 +1038,187 @@
         </section>
       </section>
     </main>
+
+    <aside id="insights" class="insights" data-open="true">
+      <div class="insights__head">
+        <div class="insights__title">
+          Insights
+          <small>Saldo · Snapshot · Carta · Forecast</small>
+        </div>
+
+        <div class="insights__tabs" role="tablist" aria-label="Insights tabs">
+          <button id="tabInsightsStats" class="chip" type="button" data-tab="stats" aria-pressed="true">Stats</button>
+          <button id="tabInsightsCard" class="chip" type="button" data-tab="card" aria-pressed="false">Carta</button>
+          <button id="tabInsightsForecast" class="chip" type="button" data-tab="forecast" aria-pressed="false">Forecast</button>
+        </div>
+      </div>
+
+      <div class="insights__body">
+        <section id="insightsStatsTab">
+          <div class="panel">
+            <div class="panel-title">
+              <b>Saldo & Range</b>
+              <small id="statsMeta">—</small>
+            </div>
+
+            <div class="grid-2">
+              <div class="kpi">
+                <div class="kpi__label">Saldo attuale (basis)</div>
+                <div id="statCurrentBalance" class="kpi__value">—</div>
+                <div id="statCurrentBalanceMeta" class="kpi__sub">—</div>
+              </div>
+
+              <div class="kpi">
+                <div class="kpi__label">Saldo alla data</div>
+                <div id="statBalanceAtDate" class="kpi__value">—</div>
+                <div class="kpi__sub">
+                  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
+                    <span style="color:var(--muted);font-weight:900">Data</span>
+                    <input id="balanceAtDate" type="date" style="max-width:170px;" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="kpi">
+                <div class="kpi__label">Netto (visibile)</div>
+                <div id="statNet" class="kpi__value">—</div>
+                <div class="kpi__sub">
+                  <span id="statIncomeCount">—</span> · <span id="statExpenseCount">—</span> · <span id="statTransferCount">—</span>
+                </div>
+              </div>
+
+              <div class="kpi">
+                <div class="kpi__label">Δ Cash vs Accrual</div>
+                <div id="statDelta" class="kpi__value">—</div>
+                <div class="kpi__sub">Differenza saldo alla data</div>
+              </div>
+            </div>
+
+            <div style="height:12px"></div>
+
+            <div class="grid-2">
+              <div class="kpi">
+                <div class="kpi__label">Entrate (range)</div>
+                <div id="statIncome" class="kpi__value">—</div>
+                <div class="kpi__sub">Somma entrate in vista</div>
+              </div>
+
+              <div class="kpi">
+                <div class="kpi__label">Uscite (range)</div>
+                <div id="statExpense" class="kpi__value">—</div>
+                <div class="kpi__sub">Somma uscite in vista</div>
+              </div>
+            </div>
+
+            <div style="height:12px"></div>
+
+            <div class="panel" style="padding:10px;">
+              <div class="panel-title" style="margin-bottom:8px;">
+                <b>Snapshot</b>
+                <small>ultimi 14 giorni (range)</small>
+              </div>
+              <div id="snapshotList" role="list" style="display:flex;flex-direction:column;gap:8px;"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="insightsCardTab" style="display:none;">
+          <div class="panel">
+            <div class="panel-title">
+              <b>Carta di credito</b>
+              <small>Sparkasse / Outstanding</small>
+            </div>
+
+            <div class="grid-2">
+              <div class="kpi">
+                <div class="kpi__label">Outstanding stimato</div>
+                <div id="ccOutstanding" class="kpi__value">—</div>
+                <div id="ccOutstandingMeta" class="kpi__sub">—</div>
+              </div>
+
+              <div class="kpi">
+                <div class="kpi__label">Speso mese (Accrual)</div>
+                <div id="ccSpentMonth" class="kpi__value">—</div>
+                <div class="kpi__sub">Solo acquisti su carta</div>
+              </div>
+
+              <div class="kpi">
+                <div class="kpi__label">Pagato mese (Cash)</div>
+                <div id="ccPaidMonth" class="kpi__value">—</div>
+                <div class="kpi__sub">Settlement / Transfer</div>
+              </div>
+
+              <div class="kpi">
+                <div class="kpi__label">Suggerimento</div>
+                <div class="kpi__value">Transfer</div>
+                <div class="kpi__sub">Bank → Credit Card</div>
+              </div>
+            </div>
+
+            <div id="ccHelp" class="help" style="margin-top:10px;">—</div>
+          </div>
+        </section>
+
+        <section id="insightsForecastTab" style="display:none;">
+          <div class="panel">
+            <div class="panel-title">
+              <b>Forecast</b>
+              <small id="forecastMeta">—</small>
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px;">
+              <div class="field" style="max-width:180px;">
+                <label for="forecastTo">Target</label>
+                <input id="forecastTo" type="date" />
+              </div>
+
+              <div class="field" style="max-width:160px;">
+                <label for="forecastMode">Mode</label>
+                <select id="forecastMode">
+                  <option value="daily">Giornaliero</option>
+                  <option value="monthly">Mensile</option>
+                </select>
+              </div>
+
+              <button id="btnForecast" class="btn btn--ghost" type="button">Calcola</button>
+            </div>
+
+            <div class="grid-2" style="margin-bottom:12px;">
+              <div class="kpi">
+                <div class="kpi__label">Saldo previsto</div>
+                <div id="forecastBalanceAtTo" class="kpi__value">—</div>
+                <div id="forecastBalanceMeta" class="kpi__sub">—</div>
+              </div>
+
+              <div class="kpi">
+                <div class="kpi__label">Netto totale</div>
+                <div id="forecastTotalNet" class="kpi__value">—</div>
+                <div class="kpi__sub">Entrate − Uscite</div>
+              </div>
+
+              <div class="kpi">
+                <div class="kpi__label">Entrate totali</div>
+                <div id="forecastTotalIncome" class="kpi__value">—</div>
+                <div class="kpi__sub">Somma entrate</div>
+              </div>
+
+              <div class="kpi">
+                <div class="kpi__label">Uscite totali</div>
+                <div id="forecastTotalExpense" class="kpi__value">—</div>
+                <div class="kpi__sub">Somma uscite</div>
+              </div>
+            </div>
+
+            <canvas id="forecastChart" width="720" height="220" style="width:100%; height:220px; border:1px solid rgba(128,128,128,0.18); border-radius:14px; background: rgba(128,128,128,0.03);"></canvas>
+
+            <div style="height:12px"></div>
+
+            <div id="forecastTableWrap" style="overflow:auto; max-height:260px; border:1px solid rgba(128,128,128,0.18); border-radius:14px; background: rgba(128,128,128,0.03);"></div>
+            <div id="forecastError" class="help" style="color:crimson; margin-top:10px; display:none;"></div>
+          </div>
+        </section>
+      </div>
+    </aside>
 
     <aside id="eventDrawer" class="drawer" aria-hidden="true">
       <div class="drawer__header">
@@ -581,8 +1243,8 @@
         <div class="form-field">
           <label class="label" for="evtTitle">Titolo *</label>
           <input id="evtTitle" type="text" required />
-          <small class="help" id="evtTitleHint" style="display:none;color:rgba(255,190,100,0.95)">
-            Rilevata “Sparkasse Kreditkartenabrechnung”: consigliato <b>TRANSFER</b> (bank → carta).
+          <small class="help" id="evtTitleHint" style="display:none;color:rgba(255,190,100,0.95);font-weight:900;">
+            Rilevata “Sparkasse Kreditkartenabrechnung”: consigliato <b>TRANSFER</b> (Bank → Carta).
           </small>
         </div>
 
@@ -622,12 +1284,11 @@
           <select id="evtPaymentMethod"></select>
           <small class="help">Influenza account default e cash date.</small>
         </div>
-        
 
         <div class="form-field">
           <label class="label" for="evtAccount">Account</label>
           <select id="evtAccount"></select>
-          <small class="help">Da dove escono/entrano i soldi (in Cash).</small>
+          <small class="help">Da dove escono/entrano i soldi (Cash).</small>
         </div>
 
         <div id="transferFields" class="form-field" style="grid-column:1 / -1; display:none;">
@@ -742,13 +1403,7 @@
         new Intl.DateTimeFormat("it-IT", { weekday: "short", year: "numeric", month: "long", day: "2-digit" }).format(d);
       const formatMonthHuman = (d) =>
         new Intl.DateTimeFormat("it-IT", { year: "numeric", month: "long" }).format(d);
-      const formatRangeLabel = (start, end, view) => {
-        if (view === "day") return formatDateHuman(start);
-        if (view === "week") return `${formatDateHuman(start)} – ${formatDateHuman(end)}`;
-        if (view === "month") return formatMonthHuman(start);
-        if (view === "year") return String(start.getFullYear());
-        return `${formatDateHuman(start)} – ${formatDateHuman(end)}`;
-      };
+
       const startOfWeek = (d) => {
         const x = startOfDay(d);
         const day = (x.getDay() + 6) % 7;
@@ -763,49 +1418,50 @@
         new Date(Math.min(Math.max(d.getTime(), min.getTime()), max.getTime()));
       const uid = () => crypto.randomUUID?.() || `id_${Math.random().toString(16).slice(2)}_${Date.now()}`;
       const sanitizeApiBase = (s) => String(s || "").trim().replace(/\/+$/, "");
-      const META_API_BASE = sanitizeApiBase(
-        document.querySelector('meta[name="fin-api-base"]')?.content
-      );
-            
+      const META_API_BASE = sanitizeApiBase(document.querySelector('meta[name="fin-api-base"]')?.content);
+
+      const formatRangeLabel = (start, end, view) => {
+        if (view === "day") return formatDateHuman(start);
+        if (view === "workweek") return `${formatDateHuman(start)} – ${formatDateHuman(end)}`;
+        if (view === "week") return `${formatDateHuman(start)} – ${formatDateHuman(end)}`;
+        if (view === "month") return formatMonthHuman(start);
+        if (view === "agenda") return `${formatDateHuman(start)} – ${formatDateHuman(end)}`;
+        if (view === "year") return String(start.getFullYear());
+        return `${formatDateHuman(start)} – ${formatDateHuman(end)}`;
+      };
+
       const defaultSettings = {
         apiBase: META_API_BASE || "/api",
-        mode: "calendar",          // calendar | movements | reports | setup
-        view: "month",             // day | week | month | year
-        density: "comfort",        // comfort | compact
-        basis: "cash",             // cash | accrual
-
+        mode: "calendar",
+        view: "month",
+        density: "comfort",
+        basis: "cash",
         rangeMode: "all",
         fromDate: "",
         toDate: "",
-
         search: "",
         category: "all",
         account: "all",
         paymentMethod: "all",
-
         includeIncome: true,
         includeExpense: true,
         includeOther: true,
         includeTransfers: true,
-
         sidebarOpen: true,
+        insightsOpen: true,
         currency: "EUR",
         initialBalance: 0,
-
         balanceAtDate: "",
-
         forecastTo: "",
         forecastMode: "daily",
-        forecastStart: "2025-12-26"
+        forecastStart: "2025-12-26",
+        explorerTab: "calendar",
+        insightsTab: "stats"
       };
 
       const state = {
         settings: structuredClone(defaultSettings),
-        meta: {
-          accounts: [],
-          paymentMethods: [],
-          categories: []
-        },
+        meta: { accounts: [], paymentMethods: [], categories: [] },
         events: [],
         anchorDate: startOfDay(new Date()),
         selectedEventId: null,
@@ -814,9 +1470,6 @@
         apiOnline: false
       };
 
-      // -----------------------------
-      // API
-      // -----------------------------
       const API = {
         base() {
           const b = String(state.settings.apiBase || "/api").trim().replace(/\/+$/, "");
@@ -875,37 +1528,28 @@
         }
       };
 
-      // -----------------------------
-      // Settings persistence
-      // -----------------------------
       let settingsTimer = null;
       const saveSettings = () => {
         clearTimeout(settingsTimer);
         settingsTimer = setTimeout(async () => {
-          try {
-            await API.saveSettings(state.settings);
-          } catch (_) {}
+          try { await API.saveSettings(state.settings); } catch (_) {}
         }, 250);
       };
 
-      // -----------------------------
-      // Meta helpers
-      // -----------------------------
       const safeArr = (x) => Array.isArray(x) ? x : [];
       const normAccount = (a) => ({
         id: String(a?.id ?? ""),
         name: String(a?.name ?? a?.title ?? a?.label ?? "Account"),
-        type: String(a?.type ?? "bank"),        // bank|cash|credit_card|other
+        type: String(a?.type ?? "bank"),
         currency: String(a?.currency ?? state.settings.currency ?? "EUR"),
         isDefault: !!a?.isDefault
       });
-
       const normPM = (p) => ({
         id: String(p?.id ?? ""),
         name: String(p?.name ?? p?.title ?? p?.label ?? "Metodo"),
-        kind: String(p?.kind ?? p?.type ?? "unknown"), // cash|debit|credit_card|bank_transfer|transfer|unknown
+        kind: String(p?.kind ?? p?.type ?? "unknown"),
         defaultAccountId: String(p?.defaultAccountId ?? p?.accountId ?? ""),
-        settlementRule: p?.settlementRule ? String(p.settlementRule) : "", // same_day|lag_days|next_month_day|month_end
+        settlementRule: p?.settlementRule ? String(p.settlementRule) : "",
         settlementParam: (p?.settlementParam && typeof p.settlementParam === "object") ? p.settlementParam : {}
       });
 
@@ -915,50 +1559,34 @@
       const getCreditCardAccounts = () => state.meta.accounts.filter(a => a.type === "credit_card");
       const getCreditCardPMs = () => state.meta.paymentMethods.filter(pm => pm.kind === "credit_card" || /credit/i.test(pm.name) || /kredit/i.test(pm.name));
 
-      // -----------------------------
-      // Event normalization (v2)
-      // -----------------------------
       const normalizeEvent = (e) => {
         const o = { ...(e || {}) };
-
-        // v1 fields
         o.id = String(o.id ?? "");
         o.title = String(o.title ?? "");
         o.category = String(o.category ?? "Senza categoria");
-        o.type = String(o.type ?? "other"); // income|expense|transfer|other
+        o.type = String(o.type ?? "other");
         o.amount = (o.amount === "" || o.amount == null) ? null : Number(o.amount);
-        o.date = String(o.date ?? "");  // accrual date
+        o.date = String(o.date ?? "");
         o.time = String(o.time ?? "");
         o.notes = String(o.notes ?? "");
         o.pinned = !!o.pinned;
-
-        // recurrence
         o.recurrence = String(o.recurrence ?? "none");
         o.recurrenceDays = (o.recurrenceDays == null || o.recurrenceDays === "") ? null : Number(o.recurrenceDays);
         o.seriesId = o.seriesId ?? null;
         o.seriesMaster = !!o.seriesMaster;
-
-        // v2 financial fields
         o.cashDate = String(o.cashDate ?? o.cash_date ?? "") || "";
         o.paymentMethodId = String(o.paymentMethodId ?? o.payment_method_id ?? "") || "";
         o.accountId = String(o.accountId ?? o.account_id ?? "") || "";
-
-        // transfers
         o.fromAccountId = String(o.fromAccountId ?? o.from_account_id ?? "") || "";
         o.toAccountId = String(o.toAccountId ?? o.to_account_id ?? "") || "";
-
-        // virtual flags (forecast)
         o._virtual = !!o._virtual;
         o._estimated = !!o._estimated;
-
         return o;
       };
 
       const eventDateForBasis = (evt, basis) => {
         const b = basis || state.settings.basis;
-        if (b === "cash") {
-          return evt.cashDate || evt.date || "";
-        }
+        if (b === "cash") return evt.cashDate || evt.date || "";
         return evt.date || "";
       };
 
@@ -967,22 +1595,14 @@
         if (!v) return 0;
         if (evt.type === "income") return +v;
         if (evt.type === "expense") return -v;
-        // transfer + other -> zero impact on net (net-worth) unless you want otherwise
         return 0;
       };
 
-      // -----------------------------
-      // Cash date compute
-      // -----------------------------
       const computeCashDate = ({ accrualISO, pm, type }) => {
         const base = fromISODate(accrualISO);
         if (type === "income") return toISODate(base);
         if (!isFinite(base.getTime())) return "";
-
-        // transfers: default same day
         if (type === "transfer") return toISODate(base);
-
-        // if no PM rule -> same day
         if (!pm || !pm.settlementRule) return toISODate(base);
 
         const rule = pm.settlementRule;
@@ -1000,7 +1620,6 @@
           return toISODate(end);
         }
 
-        // Sparkasse-style: next month day X (e.g. 1, 5, 15)
         if (rule === "next_month_day") {
           const payDay = Math.min(28, Math.max(1, Number(param.day || 1)));
           const next = addMonths(new Date(base.getFullYear(), base.getMonth(), 1), 1);
@@ -1011,9 +1630,6 @@
         return toISODate(base);
       };
 
-      // -----------------------------
-      // Filtering
-      // -----------------------------
       const getTrackingBounds = (events) => {
         const dates = events
           .map(e => eventDateForBasis(e, state.settings.basis))
@@ -1030,8 +1646,14 @@
         const v = state.settings.view;
         const a = state.anchorDate;
         if (v === "day") return [startOfDay(a), endOfDay(a)];
+        if (v === "workweek") {
+          const s = startOfWeek(a);
+          const e = endOfDay(addDays(s, 4));
+          return [s, e];
+        }
         if (v === "week") return [startOfWeek(a), endOfWeek(a)];
         if (v === "month") return [startOfMonth(a), endOfMonth(a)];
+        if (v === "agenda") return [startOfWeek(a), endOfWeek(a)];
         if (v === "year") return [startOfYear(a), endOfYear(a)];
         return [startOfMonth(a), endOfMonth(a)];
       };
@@ -1071,11 +1693,7 @@
       const passesAccountFilter = (e) => {
         const acc = state.settings.account || "all";
         if (acc === "all") return true;
-
-        if (e.type === "transfer") {
-          // for transfers: allow match either side
-          return e.fromAccountId === acc || e.toAccountId === acc;
-        }
+        if (e.type === "transfer") return e.fromAccountId === acc || e.toAccountId === acc;
         return e.accountId === acc;
       };
 
@@ -1113,9 +1731,6 @@
           return da < db ? -1 : 1;
         });
 
-      // -----------------------------
-      // Stats computations
-      // -----------------------------
       const computeBalanceUpTo = (events, initialBalance, cutoffISO, basis) => {
         const cutoff = fromISODate(cutoffISO);
         let bal = Number(initialBalance || 0);
@@ -1175,7 +1790,6 @@
         };
       };
 
-      // Credit card: simple heuristic
       const computeCreditCardKPIs = ({ monthISO = null } = {}) => {
         const cur = state.settings.currency;
         const ccAccs = getCreditCardAccounts();
@@ -1190,35 +1804,29 @@
         let spentMonth = 0;
         let paidMonth = 0;
 
-        // accrual spending on credit card
         for (const e of state.events) {
           if (e.type === "expense" && ccPMIds.has(String(e.paymentMethodId || "")) && isInMonth(e.date)) {
             spentMonth += Number(e.amount || 0);
           }
         }
 
-        // settlement transfers into credit card account (bank -> cc)
         for (const e of state.events) {
           const title = (e.title || "").toLowerCase();
           const isLikelySettlement = title.includes("kreditkartenabrechnung") || title.includes("sparkasse kreditkartenabrechnung");
           if (e.type === "transfer") {
             if (ccAccIds.has(String(e.toAccountId || "")) || isLikelySettlement) {
-              // use cash date for "paid month" because it's real cash movement
               const dISO = e.cashDate || e.date;
               if (isInMonth(dISO)) paidMonth += Number(e.amount || 0);
             }
           }
         }
 
-        // outstanding approximate: total CC expenses minus total settlement transfers (all time up to today)
         let totalCharges = 0;
         let totalSettlements = 0;
         for (const e of state.events) {
-          // charges: all CC expenses
           if (e.type === "expense" && ccPMIds.has(String(e.paymentMethodId || ""))) {
             totalCharges += Number(e.amount || 0);
           }
-          // settlements: transfers to cc
           if (e.type === "transfer") {
             const title = (e.title || "").toLowerCase();
             const isLikelySettlement = title.includes("kreditkartenabrechnung") || title.includes("sparkasse kreditkartenabrechnung");
@@ -1229,18 +1837,9 @@
         }
         const outstanding = Math.max(0, totalCharges - totalSettlements);
 
-        return {
-          month,
-          spentMonth,
-          paidMonth,
-          outstanding,
-          currency: cur
-        };
+        return { month, spentMonth, paidMonth, outstanding, currency: cur };
       };
 
-      // -----------------------------
-      // Forecast chart + table
-      // -----------------------------
       const drawForecastChart = (canvas, series, currency) => {
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
@@ -1307,9 +1906,9 @@
         return node;
       };
 
-      const emptyState = (text, className = "") =>
-        el("div", { className: `empty-state ${className}`.trim() }, [
-          el("div", { className: "empty-state__text", textContent: text || "" })
+      const emptyState = (text) =>
+        el("div", { className: "empty-state" }, [
+          el("div", { textContent: text || "" })
         ]);
 
       const renderForecastTable = (wrapEl, perMonth, currency) => {
@@ -1322,19 +1921,19 @@
         const table = el("table", { style: "width:100%; border-collapse:collapse;" });
         const thead = el("thead");
         thead.appendChild(el("tr", {}, [
-          el("th", { style:"text-align:left; padding:8px; border-bottom:1px solid var(--border);" }, "Mese"),
-          el("th", { style:"text-align:left; padding:8px; border-bottom:1px solid var(--border);" }, "Entrate"),
-          el("th", { style:"text-align:left; padding:8px; border-bottom:1px solid var(--border);" }, "Uscite"),
-          el("th", { style:"text-align:left; padding:8px; border-bottom:1px solid var(--border);" }, "Netto"),
+          el("th", { style:"text-align:left; padding:10px; border-bottom:1px solid rgba(128,128,128,0.18);" }, "Mese"),
+          el("th", { style:"text-align:left; padding:10px; border-bottom:1px solid rgba(128,128,128,0.18);" }, "Entrate"),
+          el("th", { style:"text-align:left; padding:10px; border-bottom:1px solid rgba(128,128,128,0.18);" }, "Uscite"),
+          el("th", { style:"text-align:left; padding:10px; border-bottom:1px solid rgba(128,128,128,0.18);" }, "Netto"),
         ]));
 
         const tbody = el("tbody");
         for (const m of perMonth) {
           tbody.appendChild(el("tr", {}, [
-            el("td", { style:"padding:8px; border-bottom:1px solid rgba(128,128,128,0.15);" }, m.month),
-            el("td", { style:"padding:8px; border-bottom:1px solid rgba(128,128,128,0.15);" }, formatMoney(m.income, currency)),
-            el("td", { style:"padding:8px; border-bottom:1px solid rgba(128,128,128,0.15);" }, formatMoney(m.expense, currency)),
-            el("td", { style:"padding:8px; border-bottom:1px solid rgba(128,128,128,0.15);" }, formatMoney(m.net, currency)),
+            el("td", { style:"padding:10px; border-bottom:1px solid rgba(128,128,128,0.12); font-weight:1000;" }, m.month),
+            el("td", { style:"padding:10px; border-bottom:1px solid rgba(128,128,128,0.12);" }, formatMoney(m.income, currency)),
+            el("td", { style:"padding:10px; border-bottom:1px solid rgba(128,128,128,0.12);" }, formatMoney(m.expense, currency)),
+            el("td", { style:"padding:10px; border-bottom:1px solid rgba(128,128,128,0.12);" }, formatMoney(m.net, currency)),
           ]));
         }
 
@@ -1407,9 +2006,9 @@
         }
       };
 
-      // -----------------------------
-      // Calendar Rendering
-      // -----------------------------
+      const escapeHtml = (s) =>
+        String(s || "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;" }[c]));
+
       const categorySlug = (cat) => (cat || "uncategorized")
         .trim().toLowerCase()
         .replace(/\s+/g, "-")
@@ -1418,10 +2017,8 @@
       const eventBadges = (evt) => {
         const pm = getPMById(evt.paymentMethodId);
         const acc = getAccountById(evt.accountId);
-        const basisISO = eventDateForBasis(evt, state.settings.basis);
         const accrualISO = evt.date || "";
         const cashISO = evt.cashDate || "";
-
         const out = [];
 
         if (pm?.name) out.push(`<span class="badge badge--muted">💳 ${escapeHtml(pm.name)}</span>`);
@@ -1440,14 +2037,8 @@
         if (evt._virtual) out.push(`<span class="badge badge--muted">virtual</span>`);
         if (evt._estimated) out.push(`<span class="badge badge--muted">estimated</span>`);
 
-        if (basisISO && basisISO !== accrualISO && state.settings.basis === "cash") {
-          // already shown as Cash badge; keep minimal
-        }
         return out.join(" ");
       };
-
-      const escapeHtml = (s) =>
-        String(s || "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;" }[c]));
 
       const eventBlock = (evt) => {
         const amt = evt.amount != null && evt.amount !== "" ? formatMoney(Number(evt.amount), state.settings.currency) : "";
@@ -1481,7 +2072,6 @@
         root.append(top, meta);
         if (amt) root.append(el("div", { className: "event-block__amount", textContent: amt }));
 
-        // badges
         const badgesHTML = eventBadges(evt);
         if (badgesHTML) {
           const badgeWrap = el("div", { className: "event-block__meta" });
@@ -1501,56 +2091,56 @@
         const list = el("div", { className: "event-list event-list--day", role: "list" });
         const dayEvents = events.filter(e => eventDateForBasis(e, state.settings.basis) === dayISO);
 
-        if (!dayEvents.length) list.appendChild(emptyState("Nessun evento in questo giorno.", "event-empty event-empty--day"));
+        if (!dayEvents.length) list.appendChild(emptyState("Nessun evento in questo giorno."));
         else for (const e of dayEvents) list.appendChild(el("div", {}, [eventBlock(e)]));
 
         container.appendChild(list);
         return container;
       };
 
-      const renderWeekView = (events) => {
+      const renderWeekColumns = (events, { workweek = false } = {}) => {
         const [start] = getEffectiveRangeForView();
-        const container = el("div", { className: "view view--week", id: "viewWeekHost" });
-        const grid = el("div", { className: "calendar-grid calendar-grid--week", id: "weekGrid" });
-      
+        const container = el("div", { className: "view view--week", id: workweek ? "viewWorkWeekHost" : "viewWeekHost" });
+        const grid = el("div", { className: "calendar-grid calendar-grid--week", id: workweek ? "workWeekGrid" : "weekGrid" });
+
         const todayISO = toISODate(new Date());
-      
-        for (let i = 0; i < 7; i++) {
+        const cols = workweek ? 5 : 7;
+
+        for (let i = 0; i < cols; i++) {
           const d = addDays(start, i);
           const iso = toISODate(d);
-      
+
           const isToday = iso === todayISO;
           const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
-      
+
           const col = el("section", {
             className: [
               "day-col",
               "day-col--week",
               isToday ? "is-today" : "",
-              isWeekend ? "is-weekend" : ""
+              (!workweek && isWeekend) ? "is-weekend" : ""
             ].filter(Boolean).join(" "),
             "data-date": iso
           });
-      
+
           const colHeader = el("header", { className: "day-col__header" }, [
             el("div", { className: "day-col__dow", textContent: new Intl.DateTimeFormat("it-IT", { weekday: "short" }).format(d) }),
             el("div", { className: "day-col__date", textContent: `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}` })
           ]);
-      
+
           const colBody = el("div", { className: "day-col__body", role: "list" });
-      
+
           const dayEvents = events.filter(e => eventDateForBasis(e, state.settings.basis) === iso);
-          if (!dayEvents.length) colBody.appendChild(emptyState("—", "event-empty event-empty--tiny"));
+          if (!dayEvents.length) colBody.appendChild(emptyState("—"));
           else for (const e of dayEvents) colBody.appendChild(eventBlock(e));
-      
+
           col.append(colHeader, colBody);
           grid.appendChild(col);
         }
-      
+
         container.appendChild(grid);
         return container;
       };
-
 
       const renderMonthView = (events) => {
         const [start] = getEffectiveRangeForView();
@@ -1577,8 +2167,8 @@
             const iso = toISODate(d);
             const inMonth = d.getMonth() === start.getMonth();
             const isToday = iso === todayISO;
-            const isWeekend = (d.getDay() === 0 || d.getDay() === 6); // Dom=0, Sab=6
-            
+            const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
+
             const cell = el("section", {
               className: [
                 "day-cell",
@@ -1591,7 +2181,6 @@
               "data-date": iso,
               role: "gridcell"
             });
-
 
             const cellHeader = el("header", { className: "day-cell__header" }, [
               el("div", { className: "day-cell__num", textContent: String(d.getDate()) }),
@@ -1608,7 +2197,7 @@
             const cellBody = el("div", { className: "day-cell__body", role: "list" });
             const dayEvents = events.filter(e => eventDateForBasis(e, state.settings.basis) === iso);
 
-            if (!dayEvents.length) cellBody.appendChild(emptyState("", "event-empty event-empty--month"));
+            if (!dayEvents.length) cellBody.appendChild(el("div"));
             else for (const e of dayEvents) cellBody.appendChild(eventBlock(e));
 
             cell.append(cellHeader, cellBody);
@@ -1657,6 +2246,47 @@
         return container;
       };
 
+      const renderAgendaView = (events) => {
+        const [vs, ve] = getEffectiveRangeForView();
+        const container = el("div", { className: "view view--agenda", id: "viewAgendaHost" });
+        const box = el("div", { className: "panel", style: "padding:12px;" });
+
+        const days = [];
+        let cur = startOfDay(vs);
+        const last = startOfDay(ve);
+        while (cur <= last) {
+          days.push(toISODate(cur));
+          cur = addDays(cur, 1);
+        }
+
+        if (!events.length) {
+          box.appendChild(emptyState("Nessun evento nel range Agenda."));
+          container.appendChild(box);
+          return container;
+        }
+
+        for (const dISO of days) {
+          const dayEvents = events.filter(e => eventDateForBasis(e, state.settings.basis) === dISO);
+          const head = el("div", { style: "display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:10px 0 8px;" }, [
+            el("div", { style:"font-weight:1000;letter-spacing:.2px;" }, dISO),
+            el("span", { className:"badge badge--muted" }, `${dayEvents.length} evt`)
+          ]);
+
+          box.appendChild(head);
+
+          if (!dayEvents.length) {
+            box.appendChild(el("div", { className:"empty-state", style:"padding:10px;margin-bottom:8px;" }, "—"));
+          } else {
+            const list = el("div", { style:"display:flex;flex-direction:column;gap:8px;margin-bottom:10px;" });
+            for (const e of dayEvents) list.appendChild(eventBlock(e));
+            box.appendChild(list);
+          }
+        }
+
+        container.appendChild(box);
+        return container;
+      };
+
       const renderCalendar = () => {
         const filtered = getFilteredEvents();
         const view = state.settings.view;
@@ -1667,23 +2297,34 @@
         host.dataset.density = state.settings.density;
 
         const [vs, ve] = getEffectiveRangeForView();
-        $("#mainTitle").textContent = `Finance v2 · ${state.settings.mode === "calendar" ? "Calendario" : ""}`;
-        $("#mainSubtitle").textContent = `basis=${state.settings.basis} · ${filtered.length} eventi (filtrati)`;
-
         $("#rangeLabel").textContent = formatRangeLabel(vs, ve, view);
 
+        $("#mainTitle").textContent = "Calendario";
+        $("#mainSubtitle").innerHTML = [
+          `<span class="badge badge--muted">basis: <b>${escapeHtml(state.settings.basis)}</b></span>`,
+          `<span class="badge badge--muted">vista: <b>${escapeHtml(view)}</b></span>`,
+          `<span class="badge badge--muted">filtrati: <b>${filtered.length}</b></span>`
+        ].join(" ");
+
         if (view === "day") host.appendChild(renderDayView(filtered));
-        else if (view === "week") host.appendChild(renderWeekView(filtered));
+        else if (view === "workweek") host.appendChild(renderWeekColumns(filtered, { workweek: true }));
+        else if (view === "week") host.appendChild(renderWeekColumns(filtered, { workweek: false }));
         else if (view === "month") host.appendChild(renderMonthView(filtered));
+        else if (view === "agenda") host.appendChild(renderAgendaView(filtered));
         else host.appendChild(renderYearView(filtered));
+
+        $("#viewMetaBadge").textContent = `Vista: ${view}`;
       };
 
-      // -----------------------------
-      // Movements view
-      // -----------------------------
       const renderMovements = () => {
         const filtered = getFilteredEvents();
         $("#movBasisLabel").textContent = state.settings.basis;
+
+        $("#mainTitle").textContent = "Movimenti";
+        $("#mainSubtitle").innerHTML = [
+          `<span class="badge badge--muted">basis: <b>${escapeHtml(state.settings.basis)}</b></span>`,
+          `<span class="badge badge--muted">righe: <b>${filtered.length}</b></span>`
+        ].join(" ");
 
         const wrap = $("#movementsTable");
         wrap.innerHTML = "";
@@ -1728,18 +2369,18 @@
           tr.addEventListener("click", () => openEventDrawer(e.id));
 
           tr.appendChild(el("td", {}, [
-            el("div", { textContent: e.date || "—" }),
+            el("div", { textContent: e.date || "—", style:"font-weight:1000;" }),
             el("div", { className: "row-sub", textContent: e.type })
           ]));
           tr.appendChild(el("td", {}, [
-            el("div", { textContent: e.cashDate || e.date || "—" }),
+            el("div", { textContent: e.cashDate || e.date || "—", style:"font-weight:1000;" }),
             (state.settings.basis === "cash" && e.cashDate && e.date && e.cashDate !== e.date)
               ? el("div", { className: "row-sub", textContent: "cash≠accrual" })
               : el("div", { className: "row-sub", textContent: "" })
           ]));
           tr.appendChild(el("td", {}, [
-            el("div", { textContent: e.title || "(senza titolo)" }),
-            el("div", { className: "row-sub", textContent: e.notes ? e.notes.slice(0, 80) : "" })
+            el("div", { textContent: e.title || "(senza titolo)", style:"font-weight:1000;" }),
+            el("div", { className: "row-sub", textContent: e.notes ? e.notes.slice(0, 90) : "" })
           ]));
           tr.appendChild(el("td", {}, e.category || "Senza categoria"));
           tr.appendChild(el("td", {}, metaParts.join(" · ")));
@@ -1752,9 +2393,6 @@
         wrap.appendChild(table);
       };
 
-      // -----------------------------
-      // Reports view (client-side fallback + optional API)
-      // -----------------------------
       const computeMonthlyReportClient = (yyyymm) => {
         const basis = state.settings.basis;
         const cur = state.settings.currency;
@@ -1768,20 +2406,19 @@
         const byCat = new Map();
 
         for (const e of eventsMonth) {
-          if (e.type === "income") {
-            income += Number(e.amount || 0);
-          } else if (e.type === "expense") {
+          if (e.type === "income") income += Number(e.amount || 0);
+          else if (e.type === "expense") {
             expense += Number(e.amount || 0);
             const c = (e.category || "Senza categoria").trim();
             byCat.set(c, (byCat.get(c) || 0) + Number(e.amount || 0));
           }
         }
+
         const net = income - expense;
 
-        // top cats
         const topCats = Array.from(byCat.entries())
           .sort((a,b)=>b[1]-a[1])
-          .slice(0, 8);
+          .slice(0, 10);
 
         const cc = computeCreditCardKPIs({ monthISO: yyyymm + "-01" });
 
@@ -1802,25 +2439,24 @@
           const pct = Math.round((val / max) * 100);
           const row = el("div", { className: "panel", style: "padding:10px; cursor:pointer;" });
           row.addEventListener("click", () => {
-            // jump to movements view filtered by category
             state.settings.mode = "movements";
             state.settings.category = cat.toLowerCase();
             saveSettings();
             render();
           });
 
-          row.appendChild(el("div", { className: "hstack", style: "justify-content:space-between;" }, [
-            el("div", { style:"font-weight:900;" }, cat),
-            el("div", {}, formatMoney(val, state.settings.currency))
+          row.appendChild(el("div", { style:"display:flex;gap:10px;justify-content:space-between;align-items:center;" }, [
+            el("div", { style:"font-weight:1000;" }, cat),
+            el("div", { style:"font-weight:1000;" }, formatMoney(val, state.settings.currency))
           ]));
 
           row.appendChild(el("div", { style:"height:8px" }));
-          row.appendChild(el("div", { style:`height:10px;border-radius:999px;border:1px solid var(--border); background: rgba(128,128,128,0.08); overflow:hidden;` }, [
+          row.appendChild(el("div", { style:`height:10px;border-radius:999px;border:1px solid rgba(128,128,128,0.18); background: rgba(128,128,128,0.08); overflow:hidden;` }, [
             el("div", { style:`height:100%; width:${pct}%; background: rgba(80,160,255,0.55);` })
           ]));
 
           const share = totalExpense > 0 ? Math.round((val / totalExpense) * 100) : 0;
-          row.appendChild(el("div", { className: "mini-help" }, `${share}% delle uscite del mese`));
+          row.appendChild(el("div", { className: "help", style:"margin-top:6px;" }, `${share}% delle uscite del mese`));
 
           host.appendChild(row);
         }
@@ -1831,21 +2467,15 @@
         errEl.style.display = "none";
         errEl.textContent = "";
 
-        const monthVal = $("#repMonth").value; // YYYY-MM
+        const monthVal = $("#repMonth").value;
         if (!monthVal) return;
 
-        // Try API first, fallback to client compute
         try {
           let data = null;
-          try {
-            data = await API.reportMonthly({ month: monthVal, basis: state.settings.basis });
-          } catch (_) {
-            data = null;
-          }
+          try { data = await API.reportMonthly({ month: monthVal, basis: state.settings.basis }); }
+          catch (_) { data = null; }
 
-          if (!data || typeof data !== "object") {
-            data = computeMonthlyReportClient(monthVal);
-          }
+          if (!data || typeof data !== "object") data = computeMonthlyReportClient(monthVal);
 
           const income = Number(data.income || 0);
           const expense = Number(data.expense || 0);
@@ -1865,7 +2495,7 @@
           const cc = data.cc || computeCreditCardKPIs({ monthISO: monthVal + "-01" });
           $("#repCCMeta").textContent = `mese ${monthVal}`;
           $("#repCCOutstanding").textContent = formatMoney(cc.outstanding, state.settings.currency);
-          $("#repCCOutstandingSub").textContent = `stima global (charges−settlement)`;
+          $("#repCCOutstandingSub").textContent = `charges−settlement`;
           $("#repCCSpent").textContent = formatMoney(cc.spentMonth, state.settings.currency);
           $("#repCCPaid").textContent = formatMoney(cc.paidMonth, state.settings.currency);
 
@@ -1875,9 +2505,6 @@
         }
       };
 
-      // -----------------------------
-      // Setup view (read-only meta + local override)
-      // -----------------------------
       const renderSetup = () => {
         $("#setupError").style.display = "none";
         $("#setupError").textContent = "";
@@ -1893,757 +2520,679 @@
         const accs = state.meta.accounts || [];
         const pms = state.meta.paymentMethods || [];
 
+        $("#setupAccMeta").textContent = `${accs.length} accounts`;
+        $("#setupPMMeta").textContent = `${pms.length} metodi`;
+
         if (!accs.length) accHost.appendChild(emptyState("Nessun account configurato."));
         else {
           for (const a of accs) {
-            const row = el("div", { className:"panel", style:"padding:10px;" }, [
-              el("div", { className:"hstack", style:"justify-content:space-between;" }, [
-                el("div", { style:"font-weight:900;" }, a.name),
+            accHost.appendChild(el("div", { className:"panel", style:"padding:10px;" }, [
+              el("div", { style:"display:flex;justify-content:space-between;align-items:center;gap:10px;" }, [
+                el("div", { style:"font-weight:1000;" }, a.name),
                 el("span", { className:"badge badge--muted" }, a.type)
               ]),
-              el("div", { className:"mini-help" }, `id=${a.id} · currency=${a.currency}`)
-            ]);
-            accHost.appendChild(row);
+              el("div", { className:"help" }, `id=${a.id} · currency=${a.currency}`)
+            ]));
           }
         }
 
         if (!pms.length) pmHost.appendChild(emptyState("Nessun metodo configurato."));
         else {
           for (const p of pms) {
-            const row = el("div", { className:"panel", style:"padding:10px;" }, [
-              el("div", { className:"hstack", style:"justify-content:space-between;" }, [
-                el("div", { style:"font-weight:900;" }, p.name),
-                el("span", { className:"badge badge--muted" }, p.kind)
-              ]),
-              el("div", { className:"mini-help" }, `defaultAccount=${p.defaultAccountId || "—"} · rule=${p.settlementRule || "—"}`)
-            ]);
-            pmHost.appendChild(row);
+            pmHost.appendChild(el("div", { className:"panel", style:"padding:10px;" }, [
+              el("div", { style:"display:flex;justify-content:space-between;align-items:center;gap:10px;" }, [
+                el("div", { style:"display:flex;justify-content:space-between;align-items:center;gap:10px;" }, [
+                  el("div", { style:"font-weight:1000;" }, p.name),
+                  el("span", { className:"badge badge--muted" }, p.kind || "—")
+                ]),
+                el("div", { className:"help" }, [
+                  `id=${p.id || "—"}`,
+                  p.defaultAccountId ? ` · defaultAcc=${getAccountById(p.defaultAccountId)?.name || p.defaultAccountId}` : "",
+                  p.settlementRule ? ` · rule=${p.settlementRule}` : ""
+                ].join(""))
+              ]));
+            }
           }
-        }
 
-        // categories
-        const set = new Set();
-        for (const e of state.events) set.add((e.category || "").trim());
-        for (const c of (state.meta.categories || [])) set.add((c || "").trim());
-        const cats = Array.from(set).filter(Boolean).sort((a,b)=>a.localeCompare(b, "it"));
+        const cats = collectCategories();
         $("#setupCatMeta").textContent = `${cats.length} categorie`;
-        if (!cats.length) catHost.appendChild(emptyState("Nessuna categoria."));
+        if (!cats.length) catHost.appendChild(emptyState("Nessuna categoria rilevata."));
         else {
-          const wrap = el("div", { className:"hstack", style:"flex-wrap:wrap;" });
-          for (const c of cats) wrap.appendChild(el("span", { className:"badge badge--muted" }, c));
+          const wrap = el("div", { style:"display:flex; gap:8px; flex-wrap:wrap;" });
+          for (const c of cats) {
+            wrap.appendChild(el("span", { className:"badge badge--muted", style:"cursor:pointer;" }, c));
+          }
           catHost.appendChild(wrap);
         }
       };
 
-      // Wizard: create simple default meta overrides in settings (doesn't require API meta write)
-      const runWizardSparkasse = () => {
-        // We cannot write /meta reliably from frontend unless API supports it.
-        // We store an override in settings so backend can read it (recommended in v2).
-        const ui = state.settings;
-        const existingAccs = state.meta.accounts.slice();
-        const existingPMs = state.meta.paymentMethods.slice();
-
-        const hasBank = existingAccs.some(a => a.type === "bank");
-        const hasCC = existingAccs.some(a => a.type === "credit_card");
-
-        const bankId = hasBank ? existingAccs.find(a=>a.type==="bank")?.id : `acc_${uid()}`;
-        const ccId = hasCC ? existingAccs.find(a=>a.type==="credit_card")?.id : `acc_${uid()}`;
-
-        const accs = existingAccs.slice();
-        if (!hasBank) accs.push(normAccount({ id: bankId, name:"Bank", type:"bank", currency: ui.currency, isDefault:true }));
-        if (!hasCC) accs.push(normAccount({ id: ccId, name:"Sparkasse Kreditkarte", type:"credit_card", currency: ui.currency, isDefault:false }));
-
-        const hasPM = existingPMs.some(p => p.kind === "credit_card");
-        const pmId = hasPM ? existingPMs.find(p=>p.kind==="credit_card")?.id : `pm_${uid()}`;
-
-        const pms = existingPMs.slice();
-        if (!hasPM) {
-          pms.push(normPM({
-            id: pmId,
-            name: "Credit Card (Sparkasse)",
-            kind: "credit_card",
-            defaultAccountId: ccId,
-            settlementRule: "next_month_day",
-            settlementParam: { day: 1 }
-          }));
-        }
-
-        // apply locally (meta)
-        state.meta.accounts = accs;
-        state.meta.paymentMethods = pms;
-
-        // persist in settings as overrides (backend can choose to accept)
-        state.settings.metaOverride = { accounts: accs, paymentMethods: pms };
-        saveSettings();
-        renderAllSelectors();
-        renderSetup();
-        renderStats();
+      const collectCategories = () => {
+        const set = new Set();
+        for (const c of safeArr(state.meta.categories)) set.add(String(c).trim()).delete("");
+        for (const e of state.events) set.add(String(e.category || "").trim()).delete("");
+        const out = Array.from(set).filter(Boolean);
+        out.sort((a,b)=>a.localeCompare(b, "it", { sensitivity:"base" }));
+        return out;
       };
 
-      // -----------------------------
-      // Drawer & modal
-      // -----------------------------
-      const getEventById = (id) => state.events.find(e => e.id === id) || null;
-
-      const kv = (k, v) => el("div", { className: "kv" }, [
-        el("div", { className: "kv__k", textContent: k }),
-        el("div", { className: "kv__v", textContent: v })
-      ]);
-
-      const renderEventDetail = (evt) => {
-        const cat = evt.category || "Senza categoria";
-        const amt = evt.amount != null && evt.amount !== "" ? formatMoney(Number(evt.amount), state.settings.currency) : "—";
-
-        const pm = getPMById(evt.paymentMethodId);
-        const acc = getAccountById(evt.accountId);
-
-        const accrual = evt.date || "—";
-        const cash = evt.cashDate || evt.date || "—";
-
-        const root = el("article", { className: "event-detail" }, [
-          el("div", { className: "event-detail__row" }, [
-            kv("Categoria", cat),
-            kv("Tipo", evt.type),
-            kv("Metodo", pm?.name || "—")
-          ]),
-          el("div", { className: "event-detail__row" }, [
-            kv("Accrual Date", accrual),
-            kv("Cash Date", cash),
-            kv("Importo", amt)
-          ]),
-          el("div", { className: "event-detail__row" }, [
-            kv("Account", acc?.name || "—"),
-            kv("Serie", evt.seriesId ? String(evt.seriesId) : "—"),
-            kv("Master", evt.seriesMaster ? "yes" : "no"),
-          ]),
-          evt.type === "transfer" ? el("div", { className: "event-detail__row" }, [
-            kv("From", getAccountById(evt.fromAccountId)?.name || evt.fromAccountId || "—"),
-            kv("To", getAccountById(evt.toAccountId)?.name || evt.toAccountId || "—"),
-            kv("—", "—")
-          ]) : null,
-          el("div", { className: "event-detail__notes" }, [
-            el("h3", { className: "event-detail__notes-title", textContent: "Note" }),
-            el("p", { className: "event-detail__notes-text", textContent: evt.notes || "—" })
-          ])
-        ].filter(Boolean));
-
-        return root;
-      };
-
-      const openEventDrawer = (id) => {
-        const evt = getEventById(id);
-        if (!evt) return;
-        state.selectedEventId = id;
-        $("#eventDrawer").setAttribute("aria-hidden", "false");
-        $("#drawerTitle").textContent = evt.title || "Evento";
-        const detail = $("#eventDetail");
-        detail.innerHTML = "";
-        detail.appendChild(renderEventDetail(evt));
-      };
-
-      const closeEventDrawer = () => {
-        state.selectedEventId = null;
-        $("#eventDrawer").setAttribute("aria-hidden", "true");
-        $("#eventDetail").innerHTML = "";
-      };
-
-      const showTransferFields = (show) => {
-        $("#transferFields").style.display = show ? "" : "none";
-      };
-const syncPaymentMethodVisibility = () => {
-  const type = $("#evtType").value;
-  const pmField = $("#pmField");
-  if (!pmField) return;
-
-  // Nascondi per income (e consigliato anche per transfer)
-  const hide = (type === "income" || type === "transfer");
-
-  pmField.style.display = hide ? "none" : "";
-
-  // Se lo nascondi, svuota il valore
-  if (hide) {
-    $("#evtPaymentMethod").value = "";
-  }
-};
-
-const syncRecurrenceUI = () => {
-  const mode = $("#evtRecurrence").value;
-  const recDaysWrap = $("#recDaysField");
-  const spanWrap = $("#recSpanField");
-
-  // campo "ogni N giorni"
-  if (mode === "custom_days") {
-    recDaysWrap.style.display = "";
-    if (!$("#evtRecurrenceDays").value) $("#evtRecurrenceDays").value = "7";
-  } else {
-    recDaysWrap.style.display = "none";
-    $("#evtRecurrenceDays").value = "";
-  }
-
-  // campo "until/materialize"
-  if (mode !== "none") {
-    spanWrap.style.display = "";
-
-    // ✅ default "until" = 12 mesi in avanti dalla data evento (NON oggi)
-    const accrualISO = $("#evtDate").value || toISODate(new Date());
-    const base = fromISODate(accrualISO);
-    const defaultUntil = toISODate(addMonths(base, 12));
-
-    if (!$("#evtRecurrenceUntil").value) {
-      $("#evtRecurrenceUntil").value = defaultUntil;
-    }
-  } else {
-    spanWrap.style.display = "none";
-    $("#evtRecurrenceUntil").value = "";
-  }
-};
-
-
-      const titleLooksLikeCCSettlement = (title) => {
-        const t = String(title || "").toLowerCase();
-        return t.includes("sparkasse kreditkartenabrechnung") || t.includes("kreditkartenabrechnung");
-      };
-
-      const syncTitleHeuristic = () => {
-        const title = $("#evtTitle").value || "";
-        const hint = $("#evtTitleHint");
-        const looks = titleLooksLikeCCSettlement(title);
-        hint.style.display = looks ? "" : "none";
-
-        if (looks) {
-          // suggest transfer
-          $("#evtType").value = "transfer";
-          showTransferFields(true);
-
-          // try best accounts
-          const bank = state.meta.accounts.find(a => a.type === "bank")?.id || "";
-          const cc = state.meta.accounts.find(a => a.type === "credit_card")?.id || "";
-          if (bank) $("#evtFromAccount").value = bank;
-          if (cc) $("#evtToAccount").value = cc;
+      const fillSelect = (sel, items, { addAll = false, allLabel = "Tutti" } = {}) => {
+        sel.innerHTML = "";
+        if (addAll) sel.appendChild(el("option", { value:"all" }, allLabel));
+        for (const it of items) {
+          sel.appendChild(el("option", { value: it.value }, it.label));
         }
       };
 
-      const fillModalSelectors = () => {
-        // payment methods
-        const pmSel = $("#evtPaymentMethod");
-        pmSel.innerHTML = "";
-        const pms = state.meta.paymentMethods || [];
-        pmSel.appendChild(el("option", { value:"" }, "—"));
-        for (const p of pms) {
-          pmSel.appendChild(el("option", { value:p.id }, p.name));
-        }
+      const refreshMetaUI = () => {
+        const cats = collectCategories();
 
-        // account selectors
-        const accSel = $("#evtAccount");
-        const fromSel = $("#evtFromAccount");
-        const toSel = $("#evtToAccount");
-        accSel.innerHTML = "";
-        fromSel.innerHTML = "";
-        toSel.innerHTML = "";
-        const accs = state.meta.accounts || [];
-        accSel.appendChild(el("option", { value:"" }, "—"));
-        fromSel.appendChild(el("option", { value:"" }, "—"));
-        toSel.appendChild(el("option", { value:"" }, "—"));
-        for (const a of accs) {
-          const opt = el("option", { value:a.id }, `${a.name} (${a.type})`);
-          const opt2 = el("option", { value:a.id }, `${a.name} (${a.type})`);
-          const opt3 = el("option", { value:a.id }, `${a.name} (${a.type})`);
-          accSel.appendChild(opt);
-          fromSel.appendChild(opt2);
-          toSel.appendChild(opt3);
-        }
-      };
+        // Explorer filters selects
+        fillSelect($("#categorySelect"), cats.map(c => ({ value: c.toLowerCase(), label: c })), { addAll:true, allLabel:"Tutte" });
 
-      const computeAndSetCashDate = () => {
-        const accrualISO = $("#evtDate").value;
-        const type = $("#evtType").value;
-        const pmId = $("#evtPaymentMethod").value;
-        const pm = getPMById(pmId);
-
-        const override = $("#evtCashOverride").checked;
-        const cashEl = $("#evtCashDate");
-
-        if (override) {
-          cashEl.disabled = false;
-          return;
-        }
-        cashEl.disabled = true;
-
-        const cashISO = computeCashDate({ accrualISO, pm, type });
-        cashEl.value = cashISO || accrualISO || "";
-      };
-
-      const openEventModal = (mode, eventId = null, prefillISO = null) => {
-        state.draftEventId = mode === "edit" ? eventId : null;
-        $("#eventModalTitle").textContent = mode === "edit" ? "Modifica evento" : "Nuovo evento";
-
-        fillModalSelectors();
-
-        if (mode === "edit") {
-          const evt = getEventById(eventId);
-          if (!evt) return;
-
-          $("#evtTitle").value = evt.title || "";
-          $("#evtType").value = evt.type || "other";
-          $("#evtAmount").value = (evt.amount ?? "");
-          $("#evtCategory").value = evt.category || "";
-          $("#evtDate").value = evt.date || "";
-          $("#evtTime").value = evt.time || "";
-          $("#evtNotes").value = evt.notes || "";
-          $("#evtPinned").checked = !!evt.pinned;
-
-          $("#evtPaymentMethod").value = evt.paymentMethodId || "";
-          $("#evtAccount").value = evt.accountId || "";
-
-          $("#evtFromAccount").value = evt.fromAccountId || "";
-          $("#evtToAccount").value = evt.toAccountId || "";
-
-          $("#evtRecurrence").value = evt.recurrence || "none";
-          $("#evtRecurrenceDays").value = evt.recurrenceDays != null ? String(evt.recurrenceDays) : "";
-
-          // cash date
-          $("#evtCashOverride").checked = !!(evt.cashDate && evt.cashDate !== computeCashDate({ accrualISO: evt.date, pm: getPMById(evt.paymentMethodId), type: evt.type }));
-          $("#evtCashDate").value = evt.cashDate || evt.date || "";
-
-          showTransferFields($("#evtType").value === "transfer");
-          syncTitleHeuristic();
-          syncRecurrenceUI();
-          syncPaymentMethodVisibility();
-          computeAndSetCashDate();
-        } else {
-          $("#eventForm").reset();
-          $("#evtType").value = "expense";
-          $("#evtDate").value = prefillISO || toISODate(new Date());
-          $("#evtRecurrence").value = "none";
-          $("#evtPinned").checked = false;
-
-          // try default PM/account
-          const pmDefault = state.meta.paymentMethods.find(p => p.kind === "debit") || state.meta.paymentMethods[0];
-          if (pmDefault?.id) {
-            $("#evtPaymentMethod").value = pmDefault.id;
-            if (pmDefault.defaultAccountId) $("#evtAccount").value = pmDefault.defaultAccountId;
-          }
-
-          showTransferFields(false);
-          syncTitleHeuristic();
-          syncRecurrenceUI();
-
-          $("#evtCashOverride").checked = false;
-          syncPaymentMethodVisibility();
-          computeAndSetCashDate();
-        }
-
-        $("#eventModal").showModal();
-      };
-
-      const closeEventModal = () => $("#eventModal").close();
-
-      const buildEventPayloadFromForm = () => {
-      const type = $("#evtType").value;
-      const pmId =
-        (type === "income" || type === "transfer")
-          ? null
-          : ($("#evtPaymentMethod").value || null);
-
-        const accId = $("#evtAccount").value || null;
-
-        const override = $("#evtCashOverride").checked;
-        const cashDate = $("#evtCashDate").value || "";
-
-        const payload = {
-          title: $("#evtTitle").value.trim(),
-          type,
-          amount: $("#evtAmount").value === "" ? null : Number($("#evtAmount").value),
-          category: $("#evtCategory").value.trim() || "Senza categoria",
-          date: $("#evtDate").value,
-          time: $("#evtTime").value,
-          notes: $("#evtNotes").value.trim(),
-          pinned: $("#evtPinned").checked,
-
-          paymentMethodId: pmId,
-          accountId: accId,
-          cashDate: cashDate,
-
-          // recurrence
-          recurrence: $("#evtRecurrence").value,
-          recurrenceDays: ($("#evtRecurrence").value === "custom_days")
-            ? Math.max(1, parseInt($("#evtRecurrenceDays").value || "0", 10) || 0)
-            : null
-        };
-
-        if (type === "transfer") {
-          payload.fromAccountId = $("#evtFromAccount").value || null;
-          payload.toAccountId = $("#evtToAccount").value || null;
-
-          // transfer should use cash date = same day by default
-          if (!override) payload.cashDate = payload.date;
-        }
-
-        return payload;
-      };
-      const upsertEventFromForm = async ({ closeModal = true, reloadAfter = true } = {}) => {
-        const data = buildEventPayloadFromForm();
-      
-        // apply meta-driven default account if missing
-        if (!data.accountId && data.paymentMethodId) {
-          const pm = getPMById(data.paymentMethodId);
-          if (pm?.defaultAccountId) data.accountId = pm.defaultAccountId;
-        }
-      
-        // auto cashDate if not override
-        if (!$("#evtCashOverride").checked) {
-          const pm = getPMById(data.paymentMethodId || "");
-          data.cashDate = computeCashDate({ accrualISO: data.date, pm, type: data.type });
-          if (data.type === "transfer") data.cashDate = data.date;
-        }
-      
-        // series fields
-        const recMode = (data.recurrence || "none");
-        const current = state.draftEventId ? getEventById(state.draftEventId) : null;
-      
-        if (recMode !== "none") {
-          // ✅ se stai modificando una serie già esistente, NON cambiare seriesId
-          data.seriesId = current?.seriesId || data.seriesId || uid();
-          data.seriesMaster = true;
-        } else {
-          data.seriesId = null;
-          data.seriesMaster = false;
-        }
-      
-        let saved = null;
-      
-        if (state.draftEventId) {
-          const updated = await API.updateEvent(state.draftEventId, data);
-          saved = normalizeEvent(updated?.event || updated || { id: state.draftEventId, ...data });
-      
-          const idx = state.events.findIndex(e => e.id === state.draftEventId);
-          if (idx >= 0) state.events[idx] = saved;
-        } else {
-          const created = await API.createEvent(data);
-          saved = normalizeEvent(created?.event || created);
-      
-          state.events.push(saved);
-      
-          // ✅ IMPORTANTISSIMO: salva l'id creato per usarlo subito dopo (materialize)
-          state.draftEventId = saved.id;
-        }
-      
-        if (closeModal) closeEventModal();
-      
-        if (reloadAfter) {
-          await reloadEvents();
-          render();
-          refreshForecast();
-        }
-      
-        return saved;
-      };
-
-
-      const deleteSelectedEvent = async () => {
-        const id = state.selectedEventId;
-        if (!id) return;
-        const evt = getEventById(id);
-        if (!evt) return;
-
-        if (!evt.seriesId) {
-          await API.deleteEvent(evt.id);
-          state.events = state.events.filter(e => e.id !== evt.id);
-          closeEventDrawer();
-          await reloadEvents();
-          render();
-          refreshForecast();
-          return;
-        }
-
-        const c = prompt("1=Solo questo\n2=Da questa data in poi\n3=Tutta la serie", "1");
-        if (c === "1") {
-          await API.deleteEvent(evt.id);
-        } else if (c === "2") {
-          await API.deleteSeriesFrom(evt.seriesId, evt.date);
-        } else if (c === "3") {
-          await API.deleteSeries(evt.seriesId);
-        } else {
-          return;
-        }
-
-        closeEventDrawer();
-        await reloadEvents();
-        render();
-        refreshForecast();
-      };
-
-      // materialize button handler
-      const onMaterialize = async () => {
-        const rec = $("#evtRecurrence").value;
-        if (rec === "none") {
-          alert("Nessuna ricorrenza selezionata.");
-          return;
-        }
-      
-        const untilISO = $("#evtRecurrenceUntil").value;
-        if (!untilISO) {
-          alert("Seleziona una data 'fino a' per la materializzazione.");
-          return;
-        }
-      
-        // ✅ 1) salva prima il master, SENZA chiudere modal e SENZA reload (per non rompere il flusso)
-        const master = await upsertEventFromForm({ closeModal: false, reloadAfter: false });
-        if (!master) {
-          alert("Impossibile salvare il master.");
-          return;
-        }
-      
-        // ✅ 2) materializza con backend
-        const seriesId = master.seriesId || master.id;
-      
-        // debug utile: vedrai questa chiamata in Network
-        console.log("[materialize] calling backend", { seriesId, to: untilISO });
-        // ✅ 3) conta quante create (supporta vari formati di risposta)
-        const resp = await API.materializeSeries(seriesId, untilISO);
-        const createdCount = Number(
-          resp?.materialized ??
-          resp?.created ??
-          resp?.count ??
-          (Array.isArray(resp?.events) ? resp.events.length : 0) ??
-          (Array.isArray(resp) ? resp.length : 0) ??
-          0
+        fillSelect($("#accountSelect"),
+          safeArr(state.meta.accounts).map(a => ({ value: a.id, label: a.name })),
+          { addAll:true, allLabel:"Tutti" }
         );
 
-        const finalSeriesId = resp?.seriesId || seriesId;
-        closeEventModal();
-        await reloadEvents();
-        render();
-        refreshForecast();
-        alert(`Materializzate ${createdCount} occorrenze (serie=${finalSeriesId}).`);
+        fillSelect($("#paymentMethodSelect"),
+          safeArr(state.meta.paymentMethods).map(p => ({ value: p.id, label: p.name })),
+          { addAll:true, allLabel:"Tutti" }
+        );
+
+        // Modal selects
+        fillSelect($("#evtPaymentMethod"),
+          safeArr(state.meta.paymentMethods).map(p => ({ value: p.id, label: p.name })),
+          { addAll:false }
+        );
+        fillSelect($("#evtAccount"),
+          safeArr(state.meta.accounts).map(a => ({ value: a.id, label: a.name })),
+          { addAll:false }
+        );
+        fillSelect($("#evtFromAccount"),
+          safeArr(state.meta.accounts).map(a => ({ value: a.id, label: a.name })),
+          { addAll:false }
+        );
+        fillSelect($("#evtToAccount"),
+          safeArr(state.meta.accounts).map(a => ({ value: a.id, label: a.name })),
+          { addAll:false }
+        );
+
+        // Datalist categories
+        const dl = $("#categoryList");
+        dl.innerHTML = "";
+        for (const c of cats) dl.appendChild(el("option", { value: c }));
+
+        // keep selected values if possible
+        if (state.settings.category && state.settings.category !== "all") {
+          $("#categorySelect").value = state.settings.category;
+        } else {
+          $("#categorySelect").value = "all";
+        }
+        $("#accountSelect").value = state.settings.account || "all";
+        $("#paymentMethodSelect").value = state.settings.paymentMethod || "all";
       };
 
+      const renderMiniCalendar = () => {
+        const host = $("#miniCal");
+        host.innerHTML = "";
 
-      // -----------------------------
-      // Render selectors (sidebar + modal lists)
-      // -----------------------------
-      const renderAllSelectors = () => {
-        // categories from meta + events
-        const catSet = new Set();
-        for (const e of state.events) catSet.add((e.category || "").trim());
-        for (const c of (state.meta.categories || [])) catSet.add((c || "").trim());
-        const cats = Array.from(catSet).filter(Boolean).sort((a,b)=>a.localeCompare(b, "it"));
+        const anchor = state.anchorDate;
+        const monthStart = startOfMonth(anchor);
+        const gridStart = startOfWeek(monthStart);
 
-        const catSel = $("#categorySelect");
-        const prev = state.settings.category || "all";
-        catSel.innerHTML = "";
-        catSel.appendChild(el("option", { value:"all" }, "Tutte"));
-        for (const c of cats) catSel.appendChild(el("option", { value:c.toLowerCase() }, c));
-        catSel.value = prev;
+        const head = el("div", { className:"mini-cal__head" }, [
+          el("button", { className:"btn btn--icon btn--ghost", type:"button", id:"miniPrev", "aria-label":"Mese precedente" }, "‹"),
+          el("b", { textContent: formatMonthHuman(monthStart) }),
+          el("button", { className:"btn btn--icon btn--ghost", type:"button", id:"miniNext", "aria-label":"Mese successivo" }, "›")
+        ]);
 
-        const list = $("#categoryList");
-        list.innerHTML = "";
-        for (const c of cats) list.appendChild(el("option", { value:c }));
+        const grid = el("div", { className:"mini-cal__grid" });
 
-        // accounts sidebar
-        const accSel = $("#accountSelect");
-        const prevAcc = state.settings.account || "all";
-        accSel.innerHTML = "";
-        accSel.appendChild(el("option", { value:"all" }, "Tutti"));
-        for (const a of state.meta.accounts) {
-          accSel.appendChild(el("option", { value:a.id }, `${a.name} (${a.type})`));
+        // dow
+        for (const n of ["L", "M", "M", "G", "V", "S", "D"]) {
+          grid.appendChild(el("div", { className:"mini-cal__dow", textContent:n }));
         }
-        accSel.value = prevAcc;
-
-        // payment methods sidebar
-        const pmSel = $("#paymentMethodSelect");
-        const prevPM = state.settings.paymentMethod || "all";
-        pmSel.innerHTML = "";
-        pmSel.appendChild(el("option", { value:"all" }, "Tutti"));
-        for (const p of state.meta.paymentMethods) {
-          pmSel.appendChild(el("option", { value:p.id }, `${p.name}`));
-        }
-        pmSel.value = prevPM;
-      };
-
-      const syncControlsFromState = () => {
-        $("#sidebar").setAttribute("data-open", state.settings.sidebarOpen ? "true" : "false");
-
-        // topbar mode
-        $$("#modeSwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === state.settings.mode ? "true" : "false"));
-        $$("#basisSwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.basis === state.settings.basis ? "true" : "false"));
-        $$("#calendarViewSwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === state.settings.view ? "true" : "false"));
-        $$("#densitySwitch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.density === state.settings.density ? "true" : "false"));
-        $$("#rangePresets button").forEach(b => b.setAttribute("aria-pressed", b.dataset.preset === state.settings.rangeMode ? "true" : "false"));
-
-        $("#searchInput").value = state.settings.search || "";
-        $("#toggleIncome").checked = !!state.settings.includeIncome;
-        $("#toggleExpense").checked = !!state.settings.includeExpense;
-        $("#toggleTransfers").checked = !!state.settings.includeTransfers;
-        $("#toggleOther").checked = !!state.settings.includeOther;
-
-        $("#fromDate").value = state.settings.fromDate || "";
-        $("#toDate").value = state.settings.toDate || "";
 
         const todayISO = toISODate(new Date());
-        $("#forecastTo").value = state.settings.forecastTo || state.settings.toDate || todayISO;
-        $("#forecastMode").value = state.settings.forecastMode || "daily";
-        $("#balanceAtDate").value = state.settings.balanceAtDate || todayISO;
+        const anchorISO = toISODate(anchor);
 
-        $("#apiBaseInput").value = state.settings.apiBase || "/api";
-        $("#apiStatus").textContent = state.apiOnline ? "online" : "offline";
-        $("#apiStatus").className = state.apiOnline ? "badge badge--ok" : "badge badge--muted";
-
-        // show/hide calendar-specific controls
-        const isCal = state.settings.mode === "calendar";
-        $("#calendarViewSwitch").classList.toggle("hidden", !isCal);
-      };
-
-      const renderStats = () => {
+        // map days with events (filtered by current global filters/range)
         const filtered = getFilteredEvents();
-        const vis = computeVisibleStats(filtered);
-        $("#statsMeta").textContent = `${formatRangeLabel(vis.rangeStart, vis.rangeEnd, "custom")} · visibile · basis=${state.settings.basis}`;
+        const byDay = new Map();
+        for (const e of filtered) {
+          const iso = eventDateForBasis(e, state.settings.basis);
+          byDay.set(iso, (byDay.get(iso) || 0) + 1);
+        }
 
-        $("#statIncome").textContent = formatMoney(vis.incomeSum, state.settings.currency);
-        $("#statExpense").textContent = formatMoney(vis.expenseSum, state.settings.currency);
-        $("#statNet").textContent = formatMoney(vis.net, state.settings.currency);
+        for (let i = 0; i < 42; i++) {
+          const d = addDays(gridStart, i);
+          const iso = toISODate(d);
+          const inMonth = d.getMonth() === monthStart.getMonth();
 
-        $("#statIncomeCount").textContent = `${vis.incomeCount} entrate`;
-        $("#statExpenseCount").textContent = `${vis.expenseCount} uscite`;
-        $("#statTransferCount").textContent = `${vis.transferCount} transfer`;
+          const dayBtn = el("button", {
+            type:"button",
+            className: [
+              "mini-cal__day",
+              inMonth ? "" : "is-out",
+              iso === todayISO ? "is-today" : "",
+              iso === anchorISO ? "is-anchor" : ""
+            ].filter(Boolean).join(" "),
+            "data-date": iso
+          }, String(d.getDate()));
 
+          if (byDay.get(iso)) dayBtn.appendChild(el("span", { className:"mini-cal__dot", "aria-hidden":"true" }));
+
+          dayBtn.addEventListener("click", () => {
+            state.anchorDate = fromISODate(iso);
+            // se sei in day, resta in day e vai lì; in month resta in month
+            if (state.settings.view === "day") {
+              // no-op
+            }
+            saveSettings();
+            render();
+          });
+
+          grid.appendChild(dayBtn);
+        }
+
+        host.append(head, grid);
+
+        $("#miniPrev").addEventListener("click", () => {
+          state.anchorDate = addMonths(state.anchorDate, -1);
+          renderMiniCalendar();
+        });
+        $("#miniNext").addEventListener("click", () => {
+          state.anchorDate = addMonths(state.anchorDate, +1);
+          renderMiniCalendar();
+        });
+      };
+
+      const setMode = (mode) => {
+        state.settings.mode = mode;
+        saveSettings();
+        render();
+      };
+
+      const setView = (view) => {
+        state.settings.view = view;
+        saveSettings();
+        render();
+      };
+
+      const setBasis = (basis) => {
+        state.settings.basis = basis;
+        $("#basisBadge").textContent = basis === "cash" ? "Cash" : "Accrual";
+        saveSettings();
+        render();
+      };
+
+      const setDensity = (density) => {
+        state.settings.density = density;
+        saveSettings();
+        render();
+      };
+
+      const setExplorerTab = (tab) => {
+        state.settings.explorerTab = tab;
+        saveSettings();
+        // tabs visibility
+        $("#explorerCalendarTab").style.display = (tab === "calendar") ? "" : "none";
+        $("#explorerFiltersTab").style.display = (tab === "filters") ? "" : "none";
+        $("#explorerRangeTab").style.display = (tab === "range") ? "" : "none";
+        $("#explorerDataTab").style.display = (tab === "data") ? "" : "none";
+        // pressed chips
+        $$("#sidebar .chip").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.tab === tab)));
+      };
+
+      const setInsightsTab = (tab) => {
+        state.settings.insightsTab = tab;
+        saveSettings();
+        $("#insightsStatsTab").style.display = tab === "stats" ? "" : "none";
+        $("#insightsCardTab").style.display = tab === "card" ? "" : "none";
+        $("#insightsForecastTab").style.display = tab === "forecast" ? "" : "none";
+        $$("#insights .chip").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.tab === tab)));
+      };
+
+      const showModeView = () => {
+        const mode = state.settings.mode;
+        $("#calendarView").style.display = (mode === "calendar") ? "" : "none";
+        $("#movementsView").style.display = (mode === "movements") ? "" : "none";
+        $("#reportsView").style.display = (mode === "reports") ? "" : "none";
+        $("#setupView").style.display = (mode === "setup") ? "" : "none";
+
+        // calendar view switch visible solo in calendario
+        $("#calendarViewSwitch").style.display = (mode === "calendar") ? "" : "none";
+
+        $$("#modeSwitch .rail-btn").forEach(b => {
+          b.setAttribute("aria-pressed", String(b.dataset.mode === mode));
+        });
+      };
+
+      const setSidebarOpen = (open) => {
+        state.settings.sidebarOpen = !!open;
+        $("#sidebar").dataset.open = open ? "true" : "false";
+        saveSettings();
+      };
+
+      const setInsightsOpen = (open) => {
+        state.settings.insightsOpen = !!open;
+        $("#insights").dataset.open = open ? "true" : "false";
+        saveSettings();
+      };
+
+      const updateApiStatusBadge = () => {
+        const badge = $("#apiStatus");
+        if (state.apiOnline) {
+          badge.className = "badge badge--ok";
+          badge.textContent = "online";
+        } else {
+          badge.className = "badge badge--muted";
+          badge.textContent = "offline";
+        }
+      };
+
+      const updateFilterBadges = () => {
+        const parts = [];
+        if ((state.settings.category || "all") !== "all") parts.push(`cat:${state.settings.category}`);
+        if ((state.settings.account || "all") !== "all") parts.push(`acc:${state.settings.account}`);
+        if ((state.settings.paymentMethod || "all") !== "all") parts.push(`pm:${state.settings.paymentMethod}`);
+        if (!(state.settings.includeIncome && state.settings.includeExpense && state.settings.includeTransfers && state.settings.includeOther)) parts.push("type:custom");
+        if ((state.settings.search || "").trim()) parts.push("search");
+        $("#filtersMetaBadge").textContent = parts.length ? `Filtri: ${parts.join(" · ")}` : "Filtri: nessuno";
+
+        $("#activeFiltersMeta").textContent = parts.length ? parts.join(" · ") : "nessun filtro attivo";
+      };
+
+      const refreshInsights = () => {
+        const filtered = getFilteredEvents();
+        const stats = computeVisibleStats(filtered);
+
+        const cur = state.settings.currency;
         const todayISO = toISODate(new Date());
 
-        const balTodayCash = computeBalanceUpTo(state.events, state.settings.initialBalance, todayISO, "cash");
-        const balTodayAcc = computeBalanceUpTo(state.events, state.settings.initialBalance, todayISO, "accrual");
+        $("#statsMeta").textContent = `${toISODate(stats.rangeStart)} → ${toISODate(stats.rangeEnd)} · basis=${state.settings.basis}`;
 
-        const balToday = computeBalanceUpTo(state.events, state.settings.initialBalance, todayISO, state.settings.basis);
+        const curBal = computeBalanceUpTo(filtered, state.settings.initialBalance, todayISO, state.settings.basis);
+        $("#statCurrentBalance").textContent = formatMoney(curBal, cur);
+        $("#statCurrentBalanceMeta").textContent = `oggi ${todayISO} · init ${formatMoney(state.settings.initialBalance, cur)}`;
 
-        $("#statCurrentBalance").textContent = formatMoney(balToday, state.settings.currency);
-        $("#statCurrentBalanceMeta").textContent = `Fino a ${todayISO}`;
+        const balAtISO = state.settings.balanceAtDate || todayISO;
+        $("#balanceAtDate").value = balAtISO;
+        const balAt = computeBalanceUpTo(filtered, state.settings.initialBalance, balAtISO, state.settings.basis);
+        $("#statBalanceAtDate").textContent = formatMoney(balAt, cur);
 
-        const atISO = state.settings.balanceAtDate || todayISO;
+        $("#statIncome").textContent = formatMoney(stats.incomeSum, cur);
+        $("#statExpense").textContent = formatMoney(stats.expenseSum, cur);
+        $("#statNet").textContent = formatMoney(stats.net, cur);
 
-        const balAtBasis = computeBalanceUpTo(state.events, state.settings.initialBalance, atISO, state.settings.basis);
-        $("#statBalanceAtDate").textContent = formatMoney(balAtBasis, state.settings.currency);
+        $("#statIncomeCount").textContent = `income ${stats.incomeCount}`;
+        $("#statExpenseCount").textContent = `expense ${stats.expenseCount}`;
+        $("#statTransferCount").textContent = `transfer ${stats.transferCount}`;
 
-        const delta = balTodayCash - balTodayAcc;
-        $("#statDelta").textContent = formatMoney(delta, state.settings.currency);
+        // delta cash vs accrual (balance at date)
+        const balCash = computeBalanceUpTo(filtered, state.settings.initialBalance, balAtISO, "cash");
+        const balAccrual = computeBalanceUpTo(filtered, state.settings.initialBalance, balAtISO, "accrual");
+        $("#statDelta").textContent = formatMoney(balCash - balAccrual, cur);
 
-        const netEl = $("#statNet");
-        netEl.classList.toggle("positive", vis.net > 0);
-        netEl.classList.toggle("negative", vis.net < 0);
-
-        // snapshots
-        const list = $("#snapshotList");
-        list.innerHTML = "";
-        const tail = vis.snapshots.slice(-14);
-        for (const s of tail) {
-          list.appendChild(el("div", { className: "snapshot-item", role: "listitem" }, [
-            el("div", { className: "snapshot-item__date", textContent: s.date }),
-            el("div", { className: "snapshot-item__value", textContent: formatMoney(s.balance, state.settings.currency) })
-          ]));
+        // snapshot list last 14 days within visible range
+        const snapHost = $("#snapshotList");
+        snapHost.innerHTML = "";
+        const snaps = stats.snapshots.slice(-14);
+        if (!snaps.length) snapHost.appendChild(emptyState("Nessun dato snapshot."));
+        else {
+          for (const s of snaps) {
+            snapHost.appendChild(el("div", { className:"panel", style:"padding:10px; display:flex; justify-content:space-between; gap:10px; align-items:center;" }, [
+              el("div", { style:"font-weight:1000;" }, s.date),
+              el("div", { style:"font-weight:1000;" }, formatMoney(s.balance, cur))
+            ]));
+          }
         }
-        if (!tail.length) list.appendChild(emptyState("Nessuno snapshot nel range corrente.", "snapshot-empty"));
 
         // credit card KPIs
-        const cc = computeCreditCardKPIs();
-        $("#ccOutstanding").textContent = formatMoney(cc.outstanding, state.settings.currency);
-        $("#ccOutstandingMeta").textContent = `charges − settlement (stima)`;
-        $("#ccSpentMonth").textContent = formatMoney(cc.spentMonth, state.settings.currency);
-        $("#ccPaidMonth").textContent = formatMoney(cc.paidMonth, state.settings.currency);
+        const cc = computeCreditCardKPIs({ monthISO: monthKey(todayISO) + "-01" });
+        $("#ccOutstanding").textContent = formatMoney(cc.outstanding, cur);
+        $("#ccOutstandingMeta").textContent = `charges−settlement · basis mix`;
+        $("#ccSpentMonth").textContent = formatMoney(cc.spentMonth, cur);
+        $("#ccPaidMonth").textContent = formatMoney(cc.paidMonth, cur);
+        $("#ccHelp").textContent = `Se il settlement appare come “Sparkasse Kreditkartenabrechnung”, usa TRANSFER Bank → Credit Card (Cash).`;
 
-        const ccHelp = $("#ccHelp");
-        const hasCC = getCreditCardAccounts().length > 0 || getCreditCardPMs().length > 0;
-        ccHelp.textContent = hasCC
-          ? "Ok: configurazione carta presente. Le spese carta sono expense (accrual) con cashDate differita."
-          : "Nessuna carta configurata. Vai su Setup → Wizard Sparkasse.";
-      };
-
-      // -----------------------------
-      // App render
-      // -----------------------------
-      const renderModeHost = () => {
-        const m = state.settings.mode;
-
-        $("#calendarView").classList.toggle("hidden", m !== "calendar");
-        $("#movementsView").classList.toggle("hidden", m !== "movements");
-        $("#reportsView").classList.toggle("hidden", m !== "reports");
-        $("#setupView").classList.toggle("hidden", m !== "setup");
-
-        if (m === "calendar") renderCalendar();
-        if (m === "movements") renderMovements();
-        if (m === "reports") runReports();
-        if (m === "setup") renderSetup();
-      };
-
-      const render = () => {
-        syncControlsFromState();
-        renderAllSelectors();
-        renderModeHost();
-        renderStats();
         renderForecast();
       };
 
-      // -----------------------------
-      // Data loading
-      // -----------------------------
-      const loadMeta = async () => {
+      const applyRangeControls = () => {
+        $("#fromDate").value = state.settings.fromDate || "";
+        $("#toDate").value = state.settings.toDate || "";
+
+        const mode = state.settings.rangeMode || "all";
+        $$("#rangePresets .chip").forEach(ch => ch.setAttribute("aria-pressed", String(ch.dataset.preset === mode)));
+
+        // enable/disable
+        const enableFrom = (mode === "from" || mode === "between");
+        const enableTo = (mode === "between");
+        $("#fromDate").disabled = !enableFrom;
+        $("#toDate").disabled = !enableTo;
+      };
+
+      const openEventModal = ({ dateISO = null, eventId = null } = {}) => {
+        const dlg = $("#eventModal");
+
+        // load event if edit
+        let evt = null;
+        if (eventId) evt = state.events.find(e => e.id === eventId) || null;
+
+        const titleEl = $("#eventModalTitle");
+        titleEl.textContent = evt ? "Modifica evento" : "Nuovo evento";
+
+        // defaults
+        const baseDate = dateISO || evt?.date || toISODate(state.anchorDate);
+
+        $("#evtTitle").value = evt?.title || "";
+        $("#evtType").value = evt?.type || "expense";
+        $("#evtAmount").value = (evt?.amount == null) ? "" : String(evt.amount);
+        $("#evtCategory").value = evt?.category || "";
+        $("#evtDate").value = evt?.date || baseDate;
+        $("#evtTime").value = evt?.time || "";
+        $("#evtNotes").value = evt?.notes || "";
+        $("#evtPinned").checked = !!evt?.pinned;
+
+        // payment method + account
+        $("#evtPaymentMethod").value = evt?.paymentMethodId || (state.meta.paymentMethods[0]?.id || "");
+        $("#evtAccount").value = evt?.accountId || (state.meta.accounts[0]?.id || "");
+
+        $("#evtFromAccount").value = evt?.fromAccountId || (state.meta.accounts[0]?.id || "");
+        $("#evtToAccount").value = evt?.toAccountId || (state.meta.accounts[0]?.id || "");
+
+        $("#evtRecurrence").value = evt?.recurrence || "none";
+        $("#evtRecurrenceDays").value = evt?.recurrenceDays == null ? "" : String(evt.recurrenceDays);
+        $("#evtRecurrenceUntil").value = "";
+
+        // cash date logic
+        const pm = getPMById($("#evtPaymentMethod").value);
+        const type = $("#evtType").value;
+        const accrualISO = $("#evtDate").value;
+
+        const autoCash = computeCashDate({ accrualISO, pm, type });
+        const cashISO = evt?.cashDate || autoCash;
+
+        $("#evtCashDate").value = cashISO || "";
+        $("#evtCashOverride").checked = !!evt?.cashDate && evt.cashDate !== autoCash;
+        $("#evtCashDate").disabled = !$("#evtCashOverride").checked;
+
+        // transfer fields visibility
+        $("#transferFields").style.display = ($("#evtType").value === "transfer") ? "" : "none";
+
+        // recurrence fields
+        updateRecurrenceFields();
+
+        // sparkasse hint
+        updateSparkasseHint();
+
+        state.draftEventId = evt?.id || null;
+
+        // open
+        if (typeof dlg.showModal === "function") dlg.showModal();
+        else dlg.setAttribute("open", "");
+
+        // ensure selects filled
+        refreshMetaUI();
+      };
+
+      const closeEventModal = () => {
+        const dlg = $("#eventModal");
+        if (typeof dlg.close === "function") dlg.close();
+        else dlg.removeAttribute("open");
+        state.draftEventId = null;
+      };
+
+      const openEventDrawer = (eventId) => {
+        const evt = state.events.find(e => e.id === eventId) || null;
+        if (!evt) return;
+
+        state.selectedEventId = evt.id;
+
+        const drawer = $("#eventDrawer");
+        drawer.setAttribute("aria-hidden", "false");
+        $("#drawerScrim").style.display = "";
+        $("#drawerTitle").textContent = evt.title || "Evento";
+
+        const pm = getPMById(evt.paymentMethodId);
+        const acc = getAccountById(evt.accountId);
+        const fa = getAccountById(evt.fromAccountId);
+        const ta = getAccountById(evt.toAccountId);
+
+        const signed = eventSignedAmount(evt);
+        const amt = evt.amount == null ? "—" : formatMoney(evt.amount, state.settings.currency);
+
+        const parts = [];
+
+        parts.push(el("div", { className:"panel", style:"padding:12px;" }, [
+          el("div", { style:"display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;" }, [
+            el("div", {}, [
+              el("div", { style:"font-weight:1000;font-size:16px;" }, evt.title || "(senza titolo)"),
+              el("div", { className:"help" }, `${evt.type} · ${evt.category || "Senza categoria"}`),
+              el("div", { style:"height:6px" }),
+              el("div", { className:"help" }, `Accrual: ${evt.date || "—"} ${evt.time || ""}`.trim()),
+              el("div", { className:"help" }, `Cash: ${evt.cashDate || evt.date || "—"}`)
+            ]),
+            el("div", { style:"text-align:right;" }, [
+              el("div", { style:`font-weight:1000;font-size:18px;` }, amt),
+              el("div", { className:"help" }, signed >= 0 ? "saldo ↑" : "saldo ↓")
+            ])
+          ]),
+        ]));
+
+        parts.push(el("div", { className:"panel", style:"padding:12px;" }, [
+          el("div", { style:"font-weight:1000;letter-spacing:.2px;margin-bottom:8px;" }, "Dettagli"),
+          el("div", { className:"help" }, evt.notes ? evt.notes : "—"),
+          el("div", { style:"height:10px" }),
+          el("div", { className:"help" }, [
+            pm?.name ? `Metodo: ${pm.name}` : "Metodo: —",
+            evt.type === "transfer"
+              ? ` · Transfer: ${fa?.name || "?"} → ${ta?.name || "?"}`
+              : ` · Account: ${acc?.name || "—"}`
+          ].join(""))
+        ]));
+
+        if (evt.seriesId) {
+          parts.push(el("div", { className:"panel", style:"padding:12px;" }, [
+            el("div", { style:"font-weight:1000;letter-spacing:.2px;margin-bottom:8px;" }, "Serie"),
+            el("div", { className:"help" }, `seriesId=${evt.seriesId} · master=${evt.seriesMaster ? "yes" : "no"}`),
+            el("div", { style:"height:10px" }),
+            el("div", { style:"display:flex;gap:10px;flex-wrap:wrap;" }, [
+              el("button", { className:"btn btn--ghost", type:"button", id:"btnDelSeriesAll" }, "Elimina serie"),
+              el("button", { className:"btn btn--ghost", type:"button", id:"btnDelSeriesFrom" }, "Elimina da qui in poi")
+            ])
+          ]));
+        }
+
+        const detail = $("#eventDetail");
+        detail.innerHTML = "";
+        parts.forEach(p => detail.appendChild(p));
+
+        // actions
+        $("#btnEditEvent").onclick = () => openEventModal({ eventId: evt.id });
+        $("#btnDeleteEvent").onclick = () => deleteEventFlow(evt);
+
+        // series actions (if present)
+        const bAll = $("#btnDelSeriesAll");
+        const bFrom = $("#btnDelSeriesFrom");
+        if (bAll) {
+          bAll.onclick = async () => {
+            if (!evt.seriesId) return;
+            if (!confirm("Eliminare tutta la serie?")) return;
+            try {
+              await API.deleteSeries(evt.seriesId);
+              await reloadAll();
+              closeDrawer();
+            } catch (e) {
+              alert(e?.message || "Errore elimina serie");
+            }
+          };
+        }
+        if (bFrom) {
+          bFrom.onclick = async () => {
+            if (!evt.seriesId) return;
+            const fromISO = eventDateForBasis(evt, state.settings.basis) || evt.date;
+            if (!confirm(`Eliminare la serie da ${fromISO} in poi?`)) return;
+            try {
+              await API.deleteSeriesFrom(evt.seriesId, fromISO);
+              await reloadAll();
+              closeDrawer();
+            } catch (e) {
+              alert(e?.message || "Errore elimina serie da data");
+            }
+          };
+        }
+      };
+
+      const closeDrawer = () => {
+        $("#eventDrawer").setAttribute("aria-hidden", "true");
+        $("#drawerScrim").style.display = "none";
+        state.selectedEventId = null;
+      };
+
+      const deleteEventFlow = async (evt) => {
+        if (!evt) return;
+        const ok = confirm("Eliminare questo evento?");
+        if (!ok) return;
+
         try {
-          const raw = await API.getMeta();
-          const meta = raw?.meta || raw || {};
-          // Prefer overrides from settings if provided
-          const override = state.settings.metaOverride;
-
-          const accounts = safeArr(override?.accounts || meta.accounts || meta.Accounts || []);
-          const pms = safeArr(override?.paymentMethods || meta.paymentMethods || meta.payment_methods || meta.methods || []);
-          const cats = safeArr(meta.categories || meta.Categories || []);
-
-          state.meta.accounts = accounts.map(normAccount).filter(a => a.id);
-          state.meta.paymentMethods = pms.map(normPM).filter(p => p.id);
-          state.meta.categories = cats.map(c => String(c)).filter(Boolean);
-
-          state.apiOnline = true;
+          await API.deleteEvent(evt.id);
+          await reloadAll();
+          closeDrawer();
         } catch (e) {
-          state.apiOnline = false;
-          // Keep existing meta (maybe override exists)
-          if (state.settings.metaOverride?.accounts) {
-            state.meta.accounts = safeArr(state.settings.metaOverride.accounts).map(normAccount).filter(a => a.id);
-          }
-          if (state.settings.metaOverride?.paymentMethods) {
-            state.meta.paymentMethods = safeArr(state.settings.metaOverride.paymentMethods).map(normPM).filter(p => p.id);
-          }
+          alert(e?.message || "Errore eliminazione");
         }
       };
 
-      const reloadEvents = async () => {
-        // Ask server for events (server may ignore unknown params)
-        const params = {
-          basis: state.settings.basis
+      const updateRecurrenceFields = () => {
+        const r = $("#evtRecurrence").value;
+        $("#recDaysField").style.display = (r === "custom_days") ? "" : "none";
+        $("#recSpanField").style.display = (r !== "none") ? "" : "none";
+      };
+
+      const updateSparkasseHint = () => {
+        const t = ($("#evtTitle").value || "").toLowerCase();
+        const hint = $("#evtTitleHint");
+        const isSpark = t.includes("sparkasse kreditkartenabrechnung") || t.includes("kreditkartenabrechnung");
+        hint.style.display = isSpark ? "" : "none";
+      };
+
+      const recomputeCashDateInModal = () => {
+        const override = $("#evtCashOverride").checked;
+        $("#evtCashDate").disabled = !override;
+
+        if (override) return;
+
+        const accrualISO = $("#evtDate").value;
+        const type = $("#evtType").value;
+        const pm = getPMById($("#evtPaymentMethod").value);
+        const autoCash = computeCashDate({ accrualISO, pm, type });
+        $("#evtCashDate").value = autoCash || "";
+      };
+
+      const readEventFromModal = () => {
+        const title = $("#evtTitle").value.trim();
+        const type = $("#evtType").value;
+        const amountRaw = $("#evtAmount").value;
+        const amount = amountRaw === "" ? null : Number(amountRaw);
+        const category = $("#evtCategory").value.trim() || "Senza categoria";
+        const date = $("#evtDate").value;
+        const time = $("#evtTime").value || "";
+        const notes = $("#evtNotes").value || "";
+        const pinned = !!$("#evtPinned").checked;
+
+        const paymentMethodId = $("#evtPaymentMethod").value || "";
+        const accountId = $("#evtAccount").value || "";
+        const fromAccountId = $("#evtFromAccount").value || "";
+        const toAccountId = $("#evtToAccount").value || "";
+
+        const pm = getPMById(paymentMethodId);
+        const autoCash = computeCashDate({ accrualISO: date, pm, type });
+
+        const cashOverride = $("#evtCashOverride").checked;
+        const cashDate = cashOverride ? ($("#evtCashDate").value || autoCash) : autoCash;
+
+        const recurrence = $("#evtRecurrence").value || "none";
+        const recurrenceDays = recurrence === "custom_days"
+          ? (Number($("#evtRecurrenceDays").value || 0) || null)
+          : null;
+
+        return {
+          title,
+          type,
+          amount,
+          category,
+          date,
+          time,
+          notes,
+          pinned,
+          cashDate,
+          paymentMethodId,
+          accountId,
+          fromAccountId: type === "transfer" ? fromAccountId : "",
+          toAccountId: type === "transfer" ? toAccountId : "",
+          recurrence,
+          recurrenceDays
         };
-        const data = await API.listEvents(params);
-        const arr = Array.isArray(data) ? data : (data?.events || data?.items || []);
-        state.events = safeArr(arr).map(normalizeEvent);
+      };
 
-        // Ensure cashDate exists (client compute fallback)
-        for (const e of state.events) {
-          if (!e.cashDate) {
-            const pm = getPMById(e.paymentMethodId || "");
-            e.cashDate = computeCashDate({ accrualISO: e.date, pm, type: e.type }) || e.date;
+      const upsertEvent = async () => {
+        const payload = readEventFromModal();
+
+        if (!payload.title) {
+          alert("Titolo obbligatorio.");
+          return;
+        }
+        if (!payload.date) {
+          alert("Data obbligatoria.");
+          return;
+        }
+        if (payload.type === "transfer") {
+          if (!payload.fromAccountId || !payload.toAccountId) {
+            alert("Transfer richiede From/To account.");
+            return;
           }
+        }
+
+        try {
+          if (state.draftEventId) {
+            await API.updateEvent(state.draftEventId, payload);
+          } else {
+            await API.createEvent(payload);
+          }
+          closeEventModal();
+          await reloadAll();
+        } catch (e) {
+          alert(e?.message || "Errore salvataggio");
         }
       };
 
-      // -----------------------------
-      // Navigation (prev/next) for calendar mode only
-      // -----------------------------
-      const moveAnchor = (delta) => {
-        const v = state.settings.view;
-        if (v === "day") state.anchorDate = addDays(state.anchorDate, delta);
-        else if (v === "week") state.anchorDate = addDays(state.anchorDate, 7 * delta);
-        else if (v === "month") state.anchorDate = addMonths(state.anchorDate, delta);
-        else state.anchorDate = addYears(state.anchorDate, delta);
+      const materializeSeriesFlow = async () => {
+        if (!state.draftEventId) {
+          alert("Prima salva l'evento (master).");
+          return;
+        }
+        const evt = state.events.find(e => e.id === state.draftEventId) || null;
+        if (!evt?.seriesId) {
+          alert("Questo evento non è una serie.");
+          return;
+        }
+        const toISO = $("#evtRecurrenceUntil").value;
+        if (!toISO) {
+          alert("Scegli una data target.");
+          return;
+        }
+        try {
+          await API.materializeSeries(evt.seriesId, toISO);
+          await reloadAll();
+          alert("Occorrenze materializzate.");
+        } catch (e) {
+          alert(e?.message || "Errore materializzazione");
+        }
       };
 
-      // -----------------------------
-      // Import/Export
-      // -----------------------------
-      const exportJSON = () => {
+      const exportJson = () => {
         const payload = {
           exportedAt: new Date().toISOString(),
           settings: state.settings,
@@ -2651,361 +3200,519 @@ const syncRecurrenceUI = () => {
           events: state.events
         };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href = url;
-        a.download = `finance_v2_export_${Date.now()}.json`;
-        document.body.appendChild(a);
+        a.href = URL.createObjectURL(blob);
+        a.download = `finance-calendar-v3-export-${toISODate(new Date())}.json`;
         a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(a.href), 2500);
       };
 
-      const importJSON = async (file) => {
-        const payload = JSON.parse(await file.text());
+      const importJson = async (file) => {
+        if (!file) return;
+        const text = await file.text();
+        const data = JSON.parse(text);
 
-        // settings first
-        if (payload.settings && typeof payload.settings === "object") {
-          state.settings = { ...state.settings, ...payload.settings };
+        if (!data || typeof data !== "object") {
+          alert("JSON non valido.");
+          return;
+        }
+
+        // settings
+        if (data.settings && typeof data.settings === "object") {
+          state.settings = { ...state.settings, ...data.settings };
           saveSettings();
         }
 
-        // meta override (optional)
-        if (payload.meta && typeof payload.meta === "object") {
-          const o = payload.meta;
-          state.settings.metaOverride = {
-            accounts: safeArr(o.accounts).map(normAccount),
-            paymentMethods: safeArr(o.paymentMethods).map(normPM)
-          };
-          saveSettings();
+        // meta (solo in memoria)
+        if (data.meta && typeof data.meta === "object") {
+          // normalize
+          state.meta.accounts = safeArr(data.meta.accounts).map(normAccount);
+          state.meta.paymentMethods = safeArr(data.meta.paymentMethods).map(normPM);
+          state.meta.categories = safeArr(data.meta.categories).map(String);
         }
 
-        // events
-        const events = safeArr(payload.events);
-        for (const e of events) {
-          const { id, ...rest } = e;
-          // normalize payload to API naming
-          const p = normalizeEvent(rest);
-          // remove virtual flags
-          delete p._virtual; delete p._estimated;
-          await API.createEvent(p);
+        // events: create on backend
+        const evts = safeArr(data.events).map(normalizeEvent);
+        if (!evts.length) {
+          alert("Import ok (nessun evento).");
+          await reloadAll();
+          return;
         }
 
+        if (!confirm(`Importare ${evts.length} eventi? Verranno creati via API.`)) return;
+
+        let ok = 0, fail = 0;
+        for (const e of evts) {
+          try {
+            const payload = {
+              title: e.title,
+              type: e.type,
+              amount: e.amount,
+              category: e.category,
+              date: e.date,
+              time: e.time,
+              notes: e.notes,
+              pinned: e.pinned,
+              cashDate: e.cashDate || e.date,
+              paymentMethodId: e.paymentMethodId,
+              accountId: e.accountId,
+              fromAccountId: e.fromAccountId,
+              toAccountId: e.toAccountId,
+              recurrence: e.recurrence,
+              recurrenceDays: e.recurrenceDays
+            };
+            await API.createEvent(payload);
+            ok++;
+          } catch (_) {
+            fail++;
+          }
+        }
+
+        alert(`Import completato. OK=${ok} · FAIL=${fail}`);
+        await reloadAll();
+      };
+
+      const applyWizardSparkasse = async () => {
+        // Questo wizard NON crea meta sul backend (manca endpoint).
+        // Applichiamo un metaOverride in settings, se vuoi salvarlo.
+        const bankId = "bank";
+        const ccId = "sparkasse_cc";
+        const pmId = "credit_card";
+
+        const metaOverride = {
+          accounts: [
+            { id: bankId, name: "Bank", type: "bank", currency: state.settings.currency, isDefault: true },
+            { id: ccId, name: "Sparkasse Kreditkarte", type: "credit_card", currency: state.settings.currency, isDefault: false }
+          ],
+          paymentMethods: [
+            { id: pmId, name: "Credit Card", kind: "credit_card", defaultAccountId: ccId, settlementRule: "next_month_day", settlementParam: { day: 1 } }
+          ]
+        };
+
+        state.settings.metaOverride = metaOverride;
+        saveSettings();
+        // applica in memoria ora
+        state.meta.accounts = metaOverride.accounts.map(normAccount);
+        state.meta.paymentMethods = metaOverride.paymentMethods.map(normPM);
+        refreshMetaUI();
+        renderSetup();
+        alert("Wizard applicato (metaOverride).");
+      };
+
+      const applyMetaOverrideIfAny = () => {
+        const mo = state.settings.metaOverride;
+        if (!mo || typeof mo !== "object") return;
+        const accs = safeArr(mo.accounts).map(normAccount);
+        const pms = safeArr(mo.paymentMethods).map(normPM);
+        if (accs.length) state.meta.accounts = accs;
+        if (pms.length) state.meta.paymentMethods = pms;
+      };
+
+      const loadSettings = async () => {
+        try {
+          const data = await API.getSettings();
+          if (data && typeof data === "object") {
+            state.settings = { ...state.settings, ...data };
+          }
+        } catch (_) {
+          // ignore
+        }
+
+        // normalize booleans/defaults
+        state.settings.sidebarOpen = (state.settings.sidebarOpen !== false);
+        state.settings.insightsOpen = (state.settings.insightsOpen !== false);
+        state.settings.includeIncome = (state.settings.includeIncome !== false);
+        state.settings.includeExpense = (state.settings.includeExpense !== false);
+        state.settings.includeTransfers = (state.settings.includeTransfers !== false);
+        state.settings.includeOther = (state.settings.includeOther !== false);
+
+        // anchor date from today
+        state.anchorDate = startOfDay(new Date());
+
+        // apply UI values
+        $("#apiBaseInput").value = state.settings.apiBase || API.base();
+        $("#searchInput").value = state.settings.search || "";
+        $("#forecastTo").value = state.settings.forecastTo || "";
+        $("#forecastMode").value = state.settings.forecastMode || "daily";
+        $("#repMonth").value = $("#repMonth").value || monthKey(toISODate(new Date()));
+
+        applyRangeControls();
+        setSidebarOpen(state.settings.sidebarOpen);
+        setInsightsOpen(state.settings.insightsOpen);
+        setExplorerTab(state.settings.explorerTab || "calendar");
+        setInsightsTab(state.settings.insightsTab || "stats");
+      };
+
+      const loadMeta = async () => {
+        try {
+          const data = await API.getMeta();
+          state.apiOnline = true;
+          updateApiStatusBadge();
+
+          const accs = safeArr(data?.accounts).map(normAccount);
+          const pms = safeArr(data?.paymentMethods).map(normPM);
+          const cats = safeArr(data?.categories).map(String);
+
+          state.meta.accounts = accs;
+          state.meta.paymentMethods = pms;
+          state.meta.categories = cats;
+
+          applyMetaOverrideIfAny();
+        } catch (_) {
+          state.apiOnline = false;
+          updateApiStatusBadge();
+          applyMetaOverrideIfAny();
+        }
+      };
+
+      const loadEvents = async () => {
+        try {
+          const data = await API.listEvents();
+          const arr = safeArr(data?.events ?? data);
+          state.events = arr.map(normalizeEvent);
+          state.apiOnline = true;
+          updateApiStatusBadge();
+        } catch (_) {
+          state.events = [];
+          state.apiOnline = false;
+          updateApiStatusBadge();
+        }
+      };
+
+      const reloadAll = async () => {
         await loadMeta();
-        await reloadEvents();
-
+        await loadEvents();
+        refreshMetaUI();
         render();
-        refreshForecast();
       };
 
-      // -----------------------------
-      // Wire UI
-      // -----------------------------
-      const wireUI = () => {
+      const render = () => {
+        // mode view
+        showModeView();
+
+        // basis switch pressed
+        $$("#basisSwitch .btn--seg").forEach(b => {
+          b.setAttribute("aria-pressed", String(b.dataset.basis === state.settings.basis));
+        });
+        $("#basisBadge").textContent = state.settings.basis === "cash" ? "Cash" : "Accrual";
+
+        // view switch pressed
+        $$("#calendarViewSwitch .btn--seg").forEach(b => {
+          b.setAttribute("aria-pressed", String(b.dataset.view === state.settings.view));
+        });
+
+        // density pressed
+        $$("#densitySwitch .btn--seg").forEach(b => {
+          b.setAttribute("aria-pressed", String(b.dataset.density === state.settings.density));
+        });
+
+        updateFilterBadges();
+        renderMiniCalendar();
+
+        // title area depends on mode
+        if (state.settings.mode === "calendar") renderCalendar();
+        if (state.settings.mode === "movements") renderMovements();
+        if (state.settings.mode === "reports") {
+          $("#mainTitle").textContent = "Report";
+          $("#mainSubtitle").textContent = "Mensile · categorie · carta";
+          runReports();
+        }
+        if (state.settings.mode === "setup") {
+          $("#mainTitle").textContent = "Setup";
+          $("#mainSubtitle").textContent = "Accounts · Payment Methods · Wizard";
+          renderSetup();
+        }
+
+        // insights always refresh (if visible)
+        refreshInsights();
+
+        // forecast input reflect
+        $("#forecastTo").value = state.settings.forecastTo || "";
+        $("#forecastMode").value = state.settings.forecastMode || "daily";
+
+        // range controls reflect
+        applyRangeControls();
+      };
+
+      const bindUI = () => {
+        // rail mode switch
+        $$("#modeSwitch .rail-btn").forEach(btn => {
+          btn.addEventListener("click", () => setMode(btn.dataset.mode));
+        });
+
+        // sidebar toggle
         $("#btnSidebarToggle").addEventListener("click", () => {
-          state.settings.sidebarOpen = !state.settings.sidebarOpen;
-          saveSettings();
+          const open = $("#sidebar").dataset.open !== "true";
+          setSidebarOpen(open);
+        });
+
+        // insights toggle
+        $("#btnInsightsToggle").addEventListener("click", () => {
+          const open = $("#insights").dataset.open !== "true";
+          setInsightsOpen(open);
+        });
+
+        // date nav
+        $("#btnPrev").addEventListener("click", () => {
+          const v = state.settings.view;
+          if (v === "day") state.anchorDate = addDays(state.anchorDate, -1);
+          else if (v === "workweek" || v === "week" || v === "agenda") state.anchorDate = addDays(state.anchorDate, -7);
+          else if (v === "month") state.anchorDate = addMonths(state.anchorDate, -1);
+          else if (v === "year") state.anchorDate = addYears(state.anchorDate, -1);
           render();
         });
 
-        $("#btnPrev").addEventListener("click", () => {
-          if (state.settings.mode !== "calendar") return;
-          moveAnchor(-1);
-          render();
-        });
         $("#btnNext").addEventListener("click", () => {
-          if (state.settings.mode !== "calendar") return;
-          moveAnchor(1);
+          const v = state.settings.view;
+          if (v === "day") state.anchorDate = addDays(state.anchorDate, +1);
+          else if (v === "workweek" || v === "week" || v === "agenda") state.anchorDate = addDays(state.anchorDate, +7);
+          else if (v === "month") state.anchorDate = addMonths(state.anchorDate, +1);
+          else if (v === "year") state.anchorDate = addYears(state.anchorDate, +1);
           render();
         });
+
         $("#btnToday").addEventListener("click", () => {
           state.anchorDate = startOfDay(new Date());
           render();
         });
 
-        $$("#modeSwitch button").forEach(btn => btn.addEventListener("click", async () => {
-          state.settings.mode = btn.dataset.mode;
-          saveSettings();
-          render();
-        }));
+        // basis switch
+        $$("#basisSwitch .btn--seg").forEach(b => {
+          b.addEventListener("click", () => setBasis(b.dataset.basis));
+        });
 
-        $$("#basisSwitch button").forEach(btn => btn.addEventListener("click", async () => {
-          state.settings.basis = btn.dataset.basis;
-          saveSettings();
-          // reload events (server may compute cashDate differently)
-          await reloadEvents();
-          render();
-          refreshForecast();
-        }));
+        // view switch
+        $$("#calendarViewSwitch .btn--seg").forEach(b => {
+          b.addEventListener("click", () => setView(b.dataset.view));
+        });
 
-        $$("#calendarViewSwitch button").forEach(btn => btn.addEventListener("click", () => {
-          state.settings.view = btn.dataset.view;
-          saveSettings();
-          render();
-        }));
+        // density switch
+        $$("#densitySwitch .btn--seg").forEach(b => {
+          b.addEventListener("click", () => setDensity(b.dataset.density));
+        });
 
-        $$("#densitySwitch button").forEach(btn => btn.addEventListener("click", () => {
-          state.settings.density = btn.dataset.density;
-          saveSettings();
-          render();
-        }));
-
-        $("#btnNewEvent").addEventListener("click", () => openEventModal("new"));
-
-        $("#searchInput").addEventListener("input", (e) => {
-          state.settings.search = e.target.value;
+        // search
+        $("#searchInput").addEventListener("input", (ev) => {
+          state.settings.search = ev.target.value || "";
           saveSettings();
           render();
         });
 
-        $("#categorySelect").addEventListener("change", (e) => {
-          state.settings.category = e.target.value;
+        // explorer tabs
+        $$("#sidebar .chip").forEach(ch => {
+          ch.addEventListener("click", () => setExplorerTab(ch.dataset.tab));
+        });
+
+        // insights tabs
+        $$("#insights .chip").forEach(ch => {
+          ch.addEventListener("click", () => setInsightsTab(ch.dataset.tab));
+        });
+
+        // filters
+        $("#btnApplyFilters").addEventListener("click", () => {
+          state.settings.category = $("#categorySelect").value || "all";
+          state.settings.account = $("#accountSelect").value || "all";
+          state.settings.paymentMethod = $("#paymentMethodSelect").value || "all";
+
+          state.settings.includeIncome = $("#toggleIncome").checked;
+          state.settings.includeExpense = $("#toggleExpense").checked;
+          state.settings.includeTransfers = $("#toggleTransfers").checked;
+          state.settings.includeOther = $("#toggleOther").checked;
+
           saveSettings();
           render();
         });
-
-        $("#accountSelect").addEventListener("change", (e) => {
-          state.settings.account = e.target.value;
-          saveSettings();
-          render();
-        });
-
-        $("#paymentMethodSelect").addEventListener("change", (e) => {
-          state.settings.paymentMethod = e.target.value;
-          saveSettings();
-          render();
-        });
-
-        $("#toggleIncome").addEventListener("change", (e) => { state.settings.includeIncome = e.target.checked; saveSettings(); render(); });
-        $("#toggleExpense").addEventListener("change", (e) => { state.settings.includeExpense = e.target.checked; saveSettings(); render(); });
-        $("#toggleTransfers").addEventListener("change", (e) => { state.settings.includeTransfers = e.target.checked; saveSettings(); render(); });
-        $("#toggleOther").addEventListener("change", (e) => { state.settings.includeOther = e.target.checked; saveSettings(); render(); });
-
-        $$("#rangePresets button").forEach(btn => btn.addEventListener("click", () => {
-          state.settings.rangeMode = btn.dataset.preset;
-          const [minTrack, maxTrack] = getTrackingBounds(state.events);
-          if (state.settings.rangeMode === "from" && !state.settings.fromDate) state.settings.fromDate = toISODate(minTrack);
-          if (state.settings.rangeMode === "between") {
-            if (!state.settings.fromDate) state.settings.fromDate = toISODate(minTrack);
-            if (!state.settings.toDate) state.settings.toDate = toISODate(maxTrack);
-          }
-          saveSettings();
-          render();
-        }));
-
-        $("#fromDate").addEventListener("change", (e) => { state.settings.fromDate = e.target.value; saveSettings(); render(); });
-        $("#toDate").addEventListener("change", (e) => { state.settings.toDate = e.target.value; saveSettings(); render(); });
-
-        $("#btnApplyFilters").addEventListener("click", () => render());
 
         $("#btnClearFilters").addEventListener("click", () => {
-          const keepView = state.settings.view;
-          const keepDensity = state.settings.density;
-          const keepSidebar = state.settings.sidebarOpen;
-          const keepAPI = state.settings.apiBase;
-          const keepBalance = state.settings.balanceAtDate || toISODate(new Date());
-          const keepMode = state.settings.mode;
-          const keepBasis = state.settings.basis;
-
-          state.settings = {
-            ...structuredClone(defaultSettings),
-            view: keepView,
-            density: keepDensity,
-            sidebarOpen: keepSidebar,
-            apiBase: keepAPI,
-            balanceAtDate: keepBalance,
-            mode: keepMode,
-            basis: keepBasis
-          };
+          state.settings.category = "all";
+          state.settings.account = "all";
+          state.settings.paymentMethod = "all";
+          state.settings.includeIncome = true;
+          state.settings.includeExpense = true;
+          state.settings.includeTransfers = true;
+          state.settings.includeOther = true;
+          $("#categorySelect").value = "all";
+          $("#accountSelect").value = "all";
+          $("#paymentMethodSelect").value = "all";
+          $("#toggleIncome").checked = true;
+          $("#toggleExpense").checked = true;
+          $("#toggleTransfers").checked = true;
+          $("#toggleOther").checked = true;
           saveSettings();
           render();
         });
 
-        $("#calendarView").addEventListener("click", (e) => {
-          const addBtn = e.target.closest("[data-action='quick-add']");
-          if (addBtn) openEventModal("new", null, addBtn.getAttribute("data-date"));
-
-          const mini = e.target.closest(".month-mini");
-          if (mini) {
-            const y = Number(mini.dataset.year);
-            const m = Number(mini.dataset.month);
-            state.anchorDate = new Date(y, m, 1);
-            state.settings.view = "month";
-            state.settings.mode = "calendar";
+        // range presets
+        $$("#rangePresets .chip").forEach(ch => {
+          ch.addEventListener("click", () => {
+            const preset = ch.dataset.preset;
+            state.settings.rangeMode = preset;
+            if (preset === "all") {
+              state.settings.fromDate = "";
+              state.settings.toDate = "";
+            } else if (preset === "from") {
+              state.settings.fromDate = state.settings.fromDate || toISODate(new Date());
+              state.settings.toDate = "";
+            } else if (preset === "between") {
+              const t = toISODate(new Date());
+              state.settings.fromDate = state.settings.fromDate || t;
+              state.settings.toDate = state.settings.toDate || t;
+            }
             saveSettings();
+            applyRangeControls();
             render();
-          }
+          });
         });
 
-        $("#btnCloseDrawer").addEventListener("click", closeEventDrawer);
-        $("#drawerScrim").addEventListener("click", closeEventDrawer);
-
-        $("#btnEditEvent").addEventListener("click", () => { if (state.selectedEventId) openEventModal("edit", state.selectedEventId); });
-        $("#btnDeleteEvent").addEventListener("click", () => deleteSelectedEvent());
-
-        $("#btnCloseModal").addEventListener("click", closeEventModal);
-        $("#btnCancelEvent").addEventListener("click", closeEventModal);
-        $("#eventForm").addEventListener("submit", async (e) => {
-          e.preventDefault();
-          await upsertEventFromForm();
+        $("#fromDate").addEventListener("change", (ev) => {
+          state.settings.fromDate = ev.target.value || "";
+          saveSettings();
+          render();
+        });
+        $("#toDate").addEventListener("change", (ev) => {
+          state.settings.toDate = ev.target.value || "";
+          saveSettings();
+          render();
         });
 
-        // modal dynamics
-        $("#evtRecurrence").addEventListener("change", syncRecurrenceUI);
-        $("#evtType").addEventListener("change", () => {
-          showTransferFields($("#evtType").value === "transfer");
-          syncPaymentMethodVisibility();
-          computeAndSetCashDate();
-        });
-
-        $("#evtPaymentMethod").addEventListener("change", () => {
-          const pm = getPMById($("#evtPaymentMethod").value);
-          if (pm?.defaultAccountId && $("#evtType").value !== "transfer") {
-            $("#evtAccount").value = pm.defaultAccountId;
-          }
-          computeAndSetCashDate();
-        });
-        $("#evtDate").addEventListener("change", computeAndSetCashDate);
-        $("#evtCashOverride").addEventListener("change", () => {
-          const cashEl = $("#evtCashDate");
-          if ($("#evtCashOverride").checked) {
-            cashEl.disabled = false;
-          } else {
-            cashEl.disabled = true;
-            computeAndSetCashDate();
-          }
-        });
-        $("#evtTitle").addEventListener("input", syncTitleHeuristic);
-
-        $("#btnMaterialize").addEventListener("click", async () => {
-          try {
-            await onMaterialize();
-          } catch (e) {
-            alert(e?.message || "Errore materializzazione");
-          }
-        });
-
-        // Forecast
-        $("#forecastTo").addEventListener("change", (e) => {
-          state.settings.forecastTo = e.target.value || "";
+        // data tab
+        $("#apiBaseInput").addEventListener("change", (ev) => {
+          state.settings.apiBase = sanitizeApiBase(ev.target.value || "/api") || "/api";
           saveSettings();
         });
-        $("#forecastMode").addEventListener("change", (e) => {
-          state.settings.forecastMode = e.target.value || "daily";
-          saveSettings();
-        });
-        $("#btnForecast").addEventListener("click", () => refreshForecast());
 
-        // Movements refresh
-        $("#btnMovRefresh").addEventListener("click", async () => {
-          await reloadEvents();
-          renderMovements();
-          renderStats();
-        });
-
-        // Reports
-        $("#btnRepRun").addEventListener("click", () => runReports());
-
-        // Setup
-        $("#btnWizardSparkasse").addEventListener("click", () => {
-          runWizardSparkasse();
-          alert("Wizard completato: meta override salvato in settings.");
-        });
-        $("#btnAddAccount").addEventListener("click", () => {
-          alert("In questa versione: aggiunta completa via API meta non implementata.\nUsa Wizard Sparkasse o configura lato backend /meta.");
-        });
-        $("#btnAddPM").addEventListener("click", () => {
-          alert("In questa versione: aggiunta completa via API meta non implementata.\nUsa Wizard Sparkasse o configura lato backend /meta.");
-        });
-
-        // Settings: API base
-        $("#apiBaseInput").addEventListener("change", async (e) => {
-          state.settings.apiBase = String(e.target.value || "/api").trim().replace(/\/+$/, "") || "/api";
-          saveSettings();
-          await bootstrap();
-        });
         $("#btnPing").addEventListener("click", async () => {
           try {
-            await loadMeta();
+            await API.ping();
             state.apiOnline = true;
-          } catch (_) {
+            updateApiStatusBadge();
+            alert("API OK (/meta)");
+          } catch (e) {
             state.apiOnline = false;
+            updateApiStatusBadge();
+            alert(e?.message || "API offline");
           }
+        });
+
+        $("#btnExport").addEventListener("click", exportJson);
+        $("#importFile").addEventListener("change", async (ev) => {
+          const file = ev.target.files?.[0];
+          if (!file) return;
+          await importJson(file);
+          ev.target.value = "";
+        });
+
+        // new event
+        $("#btnNewEvent").addEventListener("click", () => openEventModal({ dateISO: toISODate(state.anchorDate) }));
+
+        // movements refresh
+        $("#btnMovRefresh").addEventListener("click", reloadAll);
+
+        // reports refresh
+        $("#btnRepRun").addEventListener("click", runReports);
+        $("#repMonth").addEventListener("change", runReports);
+
+        // setup wizard buttons
+        $("#btnWizardSparkasse").addEventListener("click", applyWizardSparkasse);
+        $("#btnMetaReload").addEventListener("click", reloadAll);
+
+        // insights inputs
+        $("#balanceAtDate").addEventListener("change", (ev) => {
+          state.settings.balanceAtDate = ev.target.value || "";
+          saveSettings();
+          refreshInsights();
+        });
+
+        // forecast controls
+        $("#forecastTo").addEventListener("change", (ev) => {
+          state.settings.forecastTo = ev.target.value || "";
+          saveSettings();
+        });
+        $("#forecastMode").addEventListener("change", (ev) => {
+          state.settings.forecastMode = ev.target.value || "daily";
+          saveSettings();
+        });
+        $("#btnForecast").addEventListener("click", refreshForecast);
+
+        // drawer close/scrim
+        $("#btnCloseDrawer").addEventListener("click", closeDrawer);
+        $("#drawerScrim").addEventListener("click", closeDrawer);
+
+        // modal close/cancel
+        $("#btnCloseModal").addEventListener("click", closeEventModal);
+        $("#btnCancelEvent").addEventListener("click", closeEventModal);
+
+        // modal dynamic logic
+        $("#evtTitle").addEventListener("input", updateSparkasseHint);
+        $("#evtType").addEventListener("change", () => {
+          $("#transferFields").style.display = ($("#evtType").value === "transfer") ? "" : "none";
+          recomputeCashDateInModal();
+        });
+        $("#evtPaymentMethod").addEventListener("change", recomputeCashDateInModal);
+        $("#evtDate").addEventListener("change", recomputeCashDateInModal);
+
+        $("#evtCashOverride").addEventListener("change", () => {
+          $("#evtCashDate").disabled = !$("#evtCashOverride").checked;
+          recomputeCashDateInModal();
+        });
+
+        $("#evtRecurrence").addEventListener("change", () => {
+          updateRecurrenceFields();
+        });
+
+        $("#btnMaterialize").addEventListener("click", materializeSeriesFlow);
+
+        // handle submit
+        $("#eventForm").addEventListener("submit", async (ev) => {
+          ev.preventDefault();
+          await upsertEvent();
+        });
+
+        // quick-add in month cells (event delegation)
+        $("#calendarView").addEventListener("click", (ev) => {
+          const btn = ev.target?.closest?.("button[data-action='quick-add']");
+          if (!btn) return;
+          const iso = btn.getAttribute("data-date");
+          openEventModal({ dateISO: iso });
+        });
+
+        // year view month click (delegation)
+        $("#calendarView").addEventListener("click", (ev) => {
+          const box = ev.target?.closest?.(".month-mini");
+          if (!box) return;
+          const year = Number(box.getAttribute("data-year"));
+          const month = Number(box.getAttribute("data-month"));
+          if (!Number.isFinite(year) || !Number.isFinite(month)) return;
+          state.anchorDate = new Date(year, month, 1);
+          state.settings.view = "month";
+          saveSettings();
           render();
         });
-
-        // Export/Import
-        $("#btnExport").addEventListener("click", exportJSON);
-        $("#importFile").addEventListener("change", async (e) => {
-          const f = e.target.files?.[0];
-          if (f) await importJSON(f);
-          e.target.value = "";
-        });
-
-        // balance at date
-        $("#balanceAtDate").addEventListener("change", (e) => {
-          state.settings.balanceAtDate = e.target.value || toISODate(new Date());
-          saveSettings();
-          renderStats();
-        });
-
-        // Escape
-        document.addEventListener("keydown", (e) => {
-          if (e.key !== "Escape") return;
-          if ($("#eventModal").open) { closeEventModal(); return; }
-          if ($("#eventDrawer").getAttribute("aria-hidden") === "false") closeEventDrawer();
-        });
       };
 
-      // -----------------------------
-      // Bootstrap
-      // -----------------------------
-      const bootstrap = async () => {
-        // Load settings
-        const s = await API.getSettings().catch(() => null);
-        const incoming = s?.settings ? s.settings : (s || {});
-        state.settings = { ...structuredClone(defaultSettings), ...incoming };
-        if (META_API_BASE) state.settings.apiBase = META_API_BASE;
+      const boot = async () => {
+        bindUI();
+        await loadSettings();
+        await reloadAll();
 
-        // Defaults
-        const todayISO = toISODate(new Date());
-        if (!state.settings.balanceAtDate) state.settings.balanceAtDate = todayISO;
+        // restore toggles and inputs
+        $("#toggleIncome").checked = state.settings.includeIncome !== false;
+        $("#toggleExpense").checked = state.settings.includeExpense !== false;
+        $("#toggleTransfers").checked = state.settings.includeTransfers !== false;
+        $("#toggleOther").checked = state.settings.includeOther !== false;
 
-        // Load meta + events
-        await loadMeta();
-        await reloadEvents();
+        // apply explorer & insights initial tabs
+        setExplorerTab(state.settings.explorerTab || "calendar");
+        setInsightsTab(state.settings.insightsTab || "stats");
 
-        // tracking bounds for date filters
-        const [minTrack, maxTrack] = getTrackingBounds(state.events);
-        state.anchorDate = clampDateToRange(startOfDay(new Date()), minTrack, maxTrack);
-
-        if (!state.settings.fromDate) state.settings.fromDate = toISODate(minTrack);
-        if (!state.settings.toDate) state.settings.toDate = toISODate(maxTrack);
-
-        if (!state.settings.forecastTo) state.settings.forecastTo = state.settings.toDate || todayISO;
-        if (!state.settings.forecastMode) state.settings.forecastMode = "daily";
-        if (!state.settings.forecastStart) state.settings.forecastStart = "2025-12-26";
-
-        // Reports default month
-        const m = monthKey(todayISO);
-        $("#repMonth").value = m;
-
-        // API status
-        state.apiOnline = true;
-
-        // Render
+        // initial render
         render();
 
-        // Forecast initial
-        refreshForecast().catch(() => {});
+        // auto forecast init once (optional)
+        // refreshForecast();
       };
 
-      const init = async () => {
-        wireUI();
-        await bootstrap();
-      };
-
-      init();
+      boot();
     })();
   </script>
 </body>

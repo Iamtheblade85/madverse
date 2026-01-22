@@ -661,6 +661,66 @@ dialog#eventModal::backdrop{
 }
 .amt-pos{ color: rgba(72,255,156,0.95); }
 .amt-neg{ color: rgba(255,92,92,0.95); }
+/* ================================
+   FIX: Event Modal (dialog) text colors on dark theme
+   (no HTML changes)
+================================== */
+
+#eventModal{
+  color: var(--text);
+  background: rgba(18,18,18,0.96);
+  border: 1px solid rgba(128,128,128,0.20);
+  border-radius: 18px;
+  box-shadow: 0 20px 80px rgba(0,0,0,0.55);
+}
+
+/* backdrop più “night mode” */
+#eventModal::backdrop{
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+}
+
+/* Labels e testi del form */
+#eventModal label,
+#eventModal .label{
+  color: var(--muted);
+}
+
+/* Input / Select / Textarea in modal */
+#eventModal input,
+#eventModal select,
+#eventModal textarea{
+  color: var(--text);
+  background: rgba(128,128,128,0.06);
+  border: 1px solid rgba(128,128,128,0.22);
+}
+
+/* Placeholder più leggibile */
+#eventModal input::placeholder,
+#eventModal textarea::placeholder{
+  color: rgba(220,220,220,0.45);
+}
+
+/* Help text */
+#eventModal .help,
+#eventModal small{
+  color: var(--muted);
+}
+
+/* Dropdown: alcune UI rendono le option scure/illeggibili */
+#eventModal option{
+  background: rgba(18,18,18,0.98);
+  color: var(--text);
+}
+
+/* Focus più visibile */
+#eventModal input:focus,
+#eventModal select:focus,
+#eventModal textarea:focus{
+  border-color: rgba(80,160,255,0.55);
+  box-shadow: 0 0 0 3px rgba(80,160,255,0.15);
+  outline: none;
+}
 
 /* ==========================================================
    RESPONSIVE

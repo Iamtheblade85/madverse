@@ -1,0 +1,1612 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>💼 Controllo Finanze</title>
+
+  <style>
+    :root{
+      --bg: #0b0f14;
+      --panel: #101722;
+      --panel-2: #0f1620;
+      --text: #e8eef7;
+      --muted: #9fb0c3;
+      --border: rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.25);
+
+      --ok: #1db954;       /* entrata */
+      --bad: #ff4d4f;      /* uscita */
+      --card: #ff9f1a;     /* acquisto carta */
+      --due: #ffd60a;      /* quota dovuta */
+      --repay: #3aa6ff;    /* rimborso carta */
+
+      --radius: 14px;
+      --radius-sm: 10px;
+
+      --topbar-h: 64px;
+      --nav-w: 240px;
+      --sidebar-w: 380px;
+
+      --gap: 14px;
+      --pad: 14px;
+
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg: #f5f7fb;
+        --panel: #ffffff;
+        --panel-2: #ffffff;
+        --text: #122033;
+        --muted: #5a6b80;
+        --border: rgba(15,30,55,.14);
+        --shadow: 0 10px 28px rgba(10,20,40,.10);
+      }
+    }
+
+    *{ box-sizing: border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    a{ color: inherit; }
+    button, input, select, textarea{ font: inherit; }
+
+    /* ============ Utility ============ */
+    .row{ display:flex; gap: var(--gap); align-items:center; }
+    .col{ display:flex; flex-direction:column; gap: var(--gap); }
+    .grow{ flex:1; }
+    .wrap{ flex-wrap: wrap; }
+    .muted{ color: var(--muted); }
+    .hide{ display:none !important; }
+
+    .panel{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .panel--flat{
+      box-shadow: none;
+      background: var(--panel-2);
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      cursor:pointer;
+      user-select:none;
+      text-decoration:none;
+      white-space:nowrap;
+    }
+    .btn:hover{ filter: brightness(1.05); }
+    .btn:active{ transform: translateY(1px); }
+    .btn[disabled]{ opacity:.6; cursor:not-allowed; }
+    .btn--primary{
+      background: rgba(58,166,255,.18);
+      border-color: rgba(58,166,255,.30);
+    }
+    .btn--danger{
+      background: rgba(255,77,79,.16);
+      border-color: rgba(255,77,79,.30);
+    }
+    .btn--ghost{
+      background: transparent;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width: 220px;
+    }
+    .label{
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .input, .select, .textarea{
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      padding: 10px 12px;
+      outline: none;
+    }
+    .textarea{ min-height: 96px; resize: vertical; }
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      font-size: 12px;
+      color: var(--text);
+      white-space:nowrap;
+    }
+    .dot{
+      width: 10px; height:10px; border-radius: 50%;
+      background: var(--muted);
+      display:inline-block;
+    }
+    .dot--ok{ background: var(--ok); }
+    .dot--bad{ background: var(--bad); }
+    .dot--card{ background: var(--card); }
+    .dot--due{ background: var(--due); }
+    .dot--repay{ background: var(--repay); }
+
+    .kpi{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .kpi > div{
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+    }
+    .kpi .k{ font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .kpi .v{ font-size: 16px; font-weight: 700; }
+
+    .toast-area{
+      position: fixed;
+      top: calc(var(--topbar-h) + 10px);
+      right: 16px;
+      z-index: 80;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      max-width: 360px;
+      pointer-events:none;
+    }
+    .toast{
+      pointer-events:auto;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.25);
+      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
+    }
+    @media (prefers-color-scheme: light){
+      .toast{ background: rgba(255,255,255,.85); }
+    }
+    .toast .t{ font-weight: 800; margin-bottom: 4px; }
+    .toast .m{ color: var(--muted); font-size: 13px; }
+
+    /* ============ App Shell ============ */
+    .app{
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      height: var(--topbar-h);
+      display:flex;
+      align-items:center;
+      gap: var(--gap);
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in oklab, var(--panel) 88%, transparent);
+      backdrop-filter: blur(10px);
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      font-weight: 900;
+      font-size: 16px;
+      white-space:nowrap;
+    }
+    .refdate{
+      display:flex;
+      flex-direction:column;
+      line-height:1.05;
+    }
+    .refdate .small{ font-size: 12px; color: var(--muted); }
+    .refdate .big{ font-weight: 800; }
+
+    .search{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      height: 40px;
+      padding: 0 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      min-width: 220px;
+      flex: 1;
+      max-width: 520px;
+    }
+    .search input{
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      width: 100%;
+    }
+
+    .main{
+      display:grid;
+      grid-template-columns: var(--nav-w) minmax(0,1fr) var(--sidebar-w);
+      gap: var(--gap);
+      padding: var(--gap);
+      align-items: start;
+    }
+
+    .nav{
+      position: sticky;
+      top: calc(var(--topbar-h) + var(--gap));
+      height: calc(100vh - var(--topbar-h) - (var(--gap) * 2));
+      padding: 10px;
+      overflow:auto;
+    }
+    .nav .tabbtn{
+      width: 100%;
+      justify-content: flex-start;
+      height: 44px;
+      margin-bottom: 8px;
+      border-radius: 12px;
+      background: transparent;
+    }
+    .nav .tabbtn[aria-selected="true"]{
+      background: rgba(58,166,255,.14);
+      border-color: rgba(58,166,255,.30);
+    }
+
+    .content{
+      padding: 0;
+      overflow: visible;
+      min-height: calc(100vh - var(--topbar-h) - (var(--gap) * 2));
+    }
+    .content-inner{
+      padding: var(--pad);
+    }
+
+    .sidebar{
+      position: sticky;
+      top: calc(var(--topbar-h) + var(--gap));
+      height: calc(100vh - var(--topbar-h) - (var(--gap) * 2));
+      overflow:auto;
+      padding: var(--pad);
+    }
+
+    /* Mobile layout */
+    .bottom-nav{
+      display:none;
+      position: fixed;
+      bottom: 0;
+      left:0;
+      right:0;
+      z-index: 60;
+      border-top: 1px solid var(--border);
+      background: color-mix(in oklab, var(--panel) 90%, transparent);
+      backdrop-filter: blur(10px);
+      padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+      gap: 10px;
+    }
+    .bottom-nav .tabbtn{
+      flex: 1;
+      height: 44px;
+      border-radius: 14px;
+      justify-content:center;
+      font-size: 12px;
+      padding: 0 8px;
+    }
+
+    @media (max-width: 1023px){
+      :root{ --nav-w: 0px; --sidebar-w: 0px; }
+      .main{
+        grid-template-columns: 1fr;
+        padding-bottom: 84px; /* spazio bottom nav */
+      }
+      .nav{ display:none; }
+      .bottom-nav{ display:flex; }
+
+      /* Sidebar sotto al calendario (solo nella tab Calendario) */
+      body[data-active-tab="calendario"] .sidebar{
+        position: relative;
+        top: unset;
+        height: auto;
+        order: 3;
+      }
+      .sidebar{
+        display:none;
+      }
+      body[data-active-tab="calendario"] .sidebar{
+        display:block;
+      }
+    }
+
+    /* ============ Tab Panels ============ */
+    .tab-panel{ display:none; }
+    body[data-active-tab="calendario"]   #tab-calendario{ display:block; }
+    body[data-active-tab="nuovo"]        #tab-nuovo{ display:block; }
+    body[data-active-tab="rimborsi"]     #tab-rimborsi{ display:block; }
+    body[data-active-tab="wallets"]      #tab-wallets{ display:block; }
+    body[data-active-tab="impostazioni"] #tab-impostazioni{ display:block; }
+
+    /* ============ Calendar ============ */
+    .cal-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: var(--gap);
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cal-title{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      font-weight: 900;
+    }
+    .cal-filters{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    .cal-grid{
+      padding: 12px;
+      display:grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .dow{
+      font-size: 12px;
+      color: var(--muted);
+      padding: 4px 6px;
+      text-align: center;
+      user-select:none;
+    }
+    .day{
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      padding: 10px;
+      min-height: 106px;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .day:hover{ filter: brightness(1.04); }
+    .day[aria-selected="true"]{
+      outline: 2px solid rgba(58,166,255,.35);
+      background: rgba(58,166,255,.10);
+    }
+    .day-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 8px;
+    }
+    .day-num{ font-weight: 900; }
+    .day-count{ font-size: 12px; color: var(--muted); }
+
+    .event-line{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      font-size: 12px;
+      padding: 6px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .event-line .title{
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex:1;
+    }
+    .event-line .amt{ font-weight: 800; }
+    .event-line--entrata{ border-color: color-mix(in oklab, var(--ok) 35%, var(--border)); }
+    .event-line--uscita{ border-color: color-mix(in oklab, var(--bad) 35%, var(--border)); }
+    .event-line--acquisto{ border-color: color-mix(in oklab, var(--card) 35%, var(--border)); }
+    .event-line--quota{ border-color: color-mix(in oklab, var(--due) 35%, var(--border)); }
+    .event-line--rimborso{ border-color: color-mix(in oklab, var(--repay) 35%, var(--border)); }
+
+    /* ============ Sidebar Snapshot ============ */
+    .sidebar h3{
+      margin: 0 0 10px 0;
+      font-size: 16px;
+    }
+    .wallet-card{
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      margin-bottom: 12px;
+    }
+    .wallet-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .wallet-name{
+      font-weight: 900;
+      line-height: 1.2;
+    }
+    .wallet-type{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .wallet-next{
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .wallet-cats{
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+    }
+    .cat-row{
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      font-size: 13px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .cat-row:last-child{ border-bottom: none; }
+
+    /* ============ Forms / Pages ============ */
+    .page-title{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: var(--gap);
+      margin-bottom: 12px;
+    }
+    .page-title h2{
+      margin: 0;
+      font-size: 18px;
+    }
+    .page-sub{
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
+      align-items:start;
+    }
+    @media (max-width: 820px){
+      .form-grid{ grid-template-columns: 1fr; }
+    }
+    .form-section{
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+    }
+    .section-title{
+      font-weight: 900;
+      margin: 0 0 10px 0;
+      font-size: 14px;
+    }
+
+    .type-cards{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    @media (max-width: 900px){
+      .type-cards{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .type-card{
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      padding: 12px;
+      cursor:pointer;
+      user-select:none;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .type-card:hover{ filter: brightness(1.04); }
+    .type-card[aria-checked="true"]{
+      outline: 2px solid rgba(58,166,255,.35);
+      background: rgba(58,166,255,.10);
+    }
+    .type-card .t{ font-weight: 900; }
+    .type-card .d{ font-size: 13px; color: var(--muted); line-height:1.3; }
+
+    .hr{ height:1px; background: var(--border); margin: 12px 0; border:0; }
+
+    /* ============ Tables ============ */
+    table{ width:100%; border-collapse: collapse; }
+    th, td{
+      text-align:left;
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      vertical-align: top;
+    }
+    th{ color: var(--muted); font-size: 12px; font-weight: 800; }
+    td{ font-size: 13px; }
+    .table-actions{ display:flex; gap: 8px; flex-wrap:wrap; }
+
+    /* ============ Dettaglio evento / Modifica ============ */
+    .event-overlay{
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 16px;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(8px);
+    }
+    .event-overlay--open{
+      display:flex;
+    }
+    .event-card{
+      width: min(640px, 100%);
+      max-height: calc(100vh - 40px);
+      overflow:auto;
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .event-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .event-meta{
+      font-size:13px;
+      color: var(--muted);
+      line-height:1.4;
+    }
+    .event-quote-list{
+      margin-top:10px;
+      border-top:1px dashed var(--border);
+      padding-top:10px;
+    }
+    .event-quote-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:6px 0;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      font-size:13px;
+    }
+    .event-quote-row:last-child{
+      border-bottom:none;
+    }
+
+    /* ============ Small print ============ */
+    .footnote{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+  </style>
+</head>
+
+<body class="app" data-active-tab="calendario">
+  <!-- Area notifiche (toast) -->
+  <div class="toast-area" id="toastArea" aria-live="polite" aria-atomic="true">
+    <!-- Toast generati via JS (finv2.js) -->
+  </div>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="brand" aria-label="Titolo applicazione">💼 Controllo Finanze</div>
+
+    <div class="refdate" aria-label="Data di riferimento">
+      <span class="small">Riferimento:</span>
+      <span class="big" id="refDateLabel">—</span>
+    </div>
+
+    <div class="row" style="gap:10px;">
+      <button class="btn" id="btnOggi" type="button">Oggi</button>
+      <button class="btn btn--primary" id="btnNuovo" type="button">+ Nuovo</button>
+      <button class="btn" id="btnRicarica" type="button">Ricarica</button>
+    </div>
+
+    <div class="search" role="search" aria-label="Ricerca globale">
+      <span class="muted" aria-hidden="true">🔎</span>
+      <input id="globalSearch" type="search" placeholder="Cerca (titolo, categoria, note)…" />
+    </div>
+
+    <div class="row" style="gap:10px;">
+      <span class="badge" id="apiStatusBadge" title="Stato API">
+        <span class="dot" id="apiStatusDot"></span>
+        <span id="apiStatusText">API: sconosciuto</span>
+      </span>
+    </div>
+  </header>
+
+  <!-- Layout 3 aree: nav sinistra + contenuto + sidebar -->
+  <div class="main">
+    <!-- Colonna sinistra (tabs) -->
+    <nav class="nav panel" aria-label="Navigazione">
+      <button class="btn tabbtn" type="button" data-tab="calendario" aria-selected="true">📅 Calendario</button>
+      <button class="btn tabbtn" type="button" data-tab="nuovo" aria-selected="false">➕ Nuovo evento</button>
+      <button class="btn tabbtn" type="button" data-tab="rimborsi" aria-selected="false">💳 Rimborsi carte</button>
+      <button class="btn tabbtn" type="button" data-tab="wallets" aria-selected="false">👛 Wallet &amp; Metodi</button>
+      <button class="btn tabbtn" type="button" data-tab="impostazioni" aria-selected="false">⚙️ Impostazioni</button>
+
+      <hr class="hr" />
+
+      <div class="footnote">
+        <strong>Nota UX:</strong> “Acquisto su carta” ≠ “Quota dovuta” ≠ “Rimborso carta”.<br/>
+        Tutti gli importi sono sempre in <strong>EUR</strong>. Le date sono salvate come <strong>YYYY-MM-DD</strong> e mostrate con label tipo “23 Gen 2026”.
+      </div>
+    </nav>
+
+    <!-- Area centrale (contenuto tab) -->
+    <main class="content panel" aria-label="Contenuto">
+      <!-- TAB 1: CALENDARIO -->
+      <section class="tab-panel" id="tab-calendario" aria-label="Calendario">
+        <div class="cal-header">
+          <div class="cal-title">
+            <button class="btn btn--ghost" id="btnPrevMonth" type="button" aria-label="Mese precedente">‹ mese precedente</button>
+            <span id="monthLabel" style="font-size:16px;">—</span>
+            <button class="btn btn--ghost" id="btnNextMonth" type="button" aria-label="Mese successivo">mese successivo ›</button>
+          </div>
+
+          <div class="cal-filters" aria-label="Filtri calendario">
+            <div class="field" style="min-width:220px;">
+              <label class="label" for="filterWallet">Filtro Wallet</label>
+              <select class="select" id="filterWallet">
+                <option value="">Tutti</option>
+                <!-- Popolato via JS: GET /wallets -->
+              </select>
+            </div>
+
+            <div class="field" style="min-width:240px;">
+              <label class="label" for="filterType">Filtro Tipo evento</label>
+              <select class="select" id="filterType">
+                <option value="">Tutti</option>
+                <option value="income">Entrate</option>
+                <option value="expense">Uscite</option>
+                <option value="card_purchase">Acquisti carta</option>
+                <option value="card_due">Quote carta</option>
+                <option value="card_repayment">Rimborsi carta</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-inner">
+          <!-- Intestazioni giorni settimana -->
+          <div class="cal-grid" style="padding-bottom:0;">
+            <div class="dow">Lun</div><div class="dow">Mar</div><div class="dow">Mer</div><div class="dow">Gio</div><div class="dow">Ven</div><div class="dow">Sab</div><div class="dow">Dom</div>
+          </div>
+
+          <!-- Griglia calendario (celle giorno) -->
+          <div class="cal-grid" id="calendarGrid" aria-label="Griglia calendario">
+            <!-- Celle generate via JS (finv2.js) -->
+            <!-- Placeholder statico: verrà sostituito con rendering reale -->
+            <div class="day" aria-selected="false" data-date="2026-01-01">
+              <div class="day-top">
+                <div class="day-num">1</div>
+                <div class="day-count">0 eventi</div>
+              </div>
+              <div class="hint">—</div>
+            </div>
+
+            <div class="day" aria-selected="false" data-date="2026-01-02">
+              <div class="day-top">
+                <div class="day-num">2</div>
+                <div class="day-count">1 evento</div>
+              </div>
+              <div class="event-line event-line--uscita" title="Uscita · Banca · 13,99 €">
+                <span class="dot dot--bad" aria-hidden="true"></span>
+                <span class="title">Netflix</span>
+                <span class="amt">13,99€</span>
+                <span class="muted">· Banca</span>
+              </div>
+            </div>
+
+            <div class="day" aria-selected="true" data-date="2026-01-23">
+              <div class="day-top">
+                <div class="day-num">23</div>
+                <div class="day-count">3 eventi</div>
+              </div>
+              <div class="event-line event-line--entrata" title="Entrata · Banca · 1.800,00 €">
+                <span class="dot dot--ok" aria-hidden="true"></span>
+                <span class="title">Stipendio</span>
+                <span class="amt">1.800,00€</span>
+                <span class="muted">· Banca</span>
+              </div>
+              <div class="event-line event-line--acquisto" title="Acquisto su carta · Carta Amazon · 120,00 €">
+                <span class="dot dot--card" aria-hidden="true"></span>
+                <span class="title">Spesa</span>
+                <span class="amt">120,00€</span>
+                <span class="muted">· Carta</span>
+              </div>
+              <div class="event-line event-line--quota" title="Quota dovuta · Carta Amazon · 40,00 €">
+                <span class="dot dot--due" aria-hidden="true"></span>
+                <span class="title">Quota dovuta</span>
+                <span class="amt">40,00€</span>
+                <span class="muted">· Carta</span>
+              </div>
+            </div>
+
+            <!-- (altre celle verranno generate dal JS) -->
+          </div>
+
+          <hr class="hr" />
+
+          <div class="row wrap" style="justify-content:space-between;">
+            <div class="row wrap" style="gap:10px;">
+              <span class="badge"><span class="dot dot--ok"></span> Entrata</span>
+              <span class="badge"><span class="dot dot--bad"></span> Uscita</span>
+              <span class="badge"><span class="dot dot--card"></span> Acquisto carta</span>
+              <span class="badge"><span class="dot dot--due"></span> Quota carta</span>
+              <span class="badge"><span class="dot dot--repay"></span> Rimborso carta</span>
+            </div>
+            <div class="muted" style="font-size:13px;">
+              Clicca un giorno per aggiornare “Stato al giorno selezionato”.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: NUOVO EVENTO -->
+      <section class="tab-panel" id="tab-nuovo" aria-label="Nuovo evento">
+        <div class="content-inner">
+          <div class="page-title">
+            <div>
+              <h2>Nuovo evento</h2>
+              <div class="page-sub">
+                Inserimento guidato e coerente: <strong>Entrata</strong>, <strong>Uscita</strong>, <strong>Acquisto su carta</strong>, <strong>Rimborso carta (pagamento reale)</strong>.
+                Tutto sarà sempre modificabile e cancellabile, incluse le serie.
+              </div>
+            </div>
+            <div class="row wrap">
+              <button class="btn" id="btnResetNewEvent" type="button">Reset campi</button>
+              <button class="btn btn--primary" id="btnSaveEvent" type="button">Salva</button>
+            </div>
+          </div>
+
+          <!-- Scelta tipo evento -->
+          <div class="form-section">
+            <p class="section-title">1) Tipo evento</p>
+            <div class="type-cards" id="eventTypeCards" role="radiogroup" aria-label="Scelta tipo evento">
+              <div class="type-card" role="radio" tabindex="0" aria-checked="true" data-event-type="income">
+                <div class="t">Entrata</div>
+                <div class="d">Movimento reale: aumenta il saldo del wallet scelto.</div>
+              </div>
+              <div class="type-card" role="radio" tabindex="0" aria-checked="false" data-event-type="expense">
+                <div class="t">Uscita</div>
+                <div class="d">Movimento reale: diminuisce il saldo del wallet scelto.</div>
+              </div>
+              <div class="type-card" role="radio" tabindex="0" aria-checked="false" data-event-type="card_purchase">
+                <div class="t">Acquisto su carta</div>
+                <div class="d">Consuma plafond subito; genera quote/debiti, non muove soldi.</div>
+              </div>
+              <div class="type-card" role="radio" tabindex="0" aria-checked="false" data-event-type="card_repayment">
+                <div class="t">Rimborso carta (pagamento reale)</div>
+                <div class="d">Movimento reale: wallet sorgente → carta; recupera plafond; sempre editabile.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <!-- Campi comuni -->
+          <div class="form-section">
+            <p class="section-title">2) Campi comuni</p>
+            <div class="form-grid">
+              <div class="field">
+                <label class="label" for="fTitle">Titolo <span class="muted">(obbligatorio)</span></label>
+                <input class="input" id="fTitle" type="text" placeholder="Esempio: Netflix / Spesa / Stipendio" />
+              </div>
+
+              <div class="field">
+                <label class="label" for="fAmount">Importo (EUR) <span class="muted">(obbligatorio, &gt; 0)</span></label>
+                <input class="input" id="fAmount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0,00" />
+              </div>
+
+              <div class="field">
+                <label class="label" for="fCategory">Categoria <span class="muted">(obbligatoria)</span></label>
+                <select class="select" id="fCategory">
+                  <option value="">Seleziona categoria…</option>
+                  <!-- Popolato via JS (categorie globali) -->
+                </select>
+                <div class="hint">Suggerimenti rapidi e lista categorie gestita in “Impostazioni”.</div>
+              </div>
+
+              <div class="field">
+                <label class="label" for="fCalendarDate">Data nel calendario <span class="muted">(YYYY-MM-DD)</span></label>
+                <input class="input" id="fCalendarDate" type="date" />
+                <div class="hint">È la data che vedrai nel calendario per questo evento.</div>
+              </div>
+
+              <div class="field" style="grid-column: 1 / -1;">
+                <label class="label" for="fNotes">Note <span class="muted">(opzionale)</span></label>
+                <textarea class="textarea" id="fNotes" placeholder="Dettagli utili…"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <!-- Sezioni specifiche (mostrate/nascoste via JS) -->
+          <div class="form-grid">
+            <!-- Entrata/Uscita -->
+            <div class="form-section" id="sectionRealMovement">
+              <p class="section-title">3) Entrata / Uscita (movimento reale)</p>
+              <div class="field">
+                <label class="label" for="fWallet">Wallet (conto) <span class="muted">(obbligatorio)</span></label>
+                <select class="select" id="fWallet">
+                  <option value="">Seleziona wallet…</option>
+                  <!-- Popolato via JS: GET /wallets -->
+                </select>
+                <div class="hint">La data nel calendario coincide con la data di impatto sul saldo.</div>
+              </div>
+            </div>
+
+            <!-- Acquisto su carta -->
+            <div class="form-section" id="sectionCardPurchase">
+              <p class="section-title">3) Acquisto su carta</p>
+
+              <div class="field">
+                <label class="label" for="fCardWallet">Carta (wallet di tipo carta) <span class="muted">(obbligatorio)</span></label>
+                <select class="select" id="fCardWallet">
+                  <option value="">Seleziona carta…</option>
+                  <!-- Popolato via JS: wallet type=carta -->
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="label" for="fPurchaseDate">Data acquisto reale <span class="muted">(quando hai comprato davvero?)</span></label>
+                <input class="input" id="fPurchaseDate" type="date" />
+              </div>
+
+              <div class="field">
+                <label class="label" for="fMethod">Metodo per costruire le quote <span class="muted">(obbligatorio)</span></label>
+                <select class="select" id="fMethod">
+                  <option value="">Seleziona metodo…</option>
+                  <option value="one_shot">Unica soluzione</option>
+                  <option value="monthly_installments">Rate mensili</option>
+                  <option value="custom_installments">Rate personalizzate</option>
+                  <option value="revolving">Revolving</option>
+                </select>
+                <div class="hint">Questi metodi NON sono il rimborso reale. Servono solo a costruire le quote del debito.</div>
+              </div>
+
+              <!-- Metodo: unica soluzione -->
+              <div class="form-section panel--flat" id="methodOneShot">
+                <p class="section-title">Unica soluzione</p>
+                <div class="field">
+                  <label class="label" for="fDueDateOneShot">Data quota dovuta</label>
+                  <input class="input" id="fDueDateOneShot" type="date" />
+                  <div class="hint">Il backend creerà 1 acquisto (purchase) + 1 quota dovuta (due line).</div>
+                </div>
+              </div>
+
+              <!-- Metodo: rate mensili -->
+              <div class="form-section panel--flat" id="methodMonthly">
+                <p class="section-title">Rate mensili</p>
+                <div class="form-grid">
+                  <div class="field">
+                    <label class="label" for="fInstN">Numero rate (N)</label>
+                    <input class="input" id="fInstN" type="number" min="2" step="1" placeholder="3" />
+                  </div>
+                  <div class="field">
+                    <label class="label" for="fFirstDueMonthly">Prima quota dovuta</label>
+                    <input class="input" id="fFirstDueMonthly" type="date" />
+                  </div>
+                  <div class="field" style="grid-column: 1 / -1;">
+                    <label class="label" for="fInstAmount">Importo rata (auto + modificabile)</label>
+                    <input class="input" id="fInstAmount" type="number" min="0" step="0.01" placeholder="0,00" />
+                    <div class="hint">Il backend creerà N quote dovute (modificabili singolarmente in modifica evento).</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Metodo: rate personalizzate -->
+              <div class="form-section panel--flat" id="methodCustom">
+                <p class="section-title">Rate personalizzate</p>
+                <div class="hint" style="margin-bottom:10px;">
+                  Inserisci righe con <strong>Data</strong> e <strong>Importo</strong>. Il totale dovrebbe corrispondere all’importo dell’acquisto.
+                </div>
+                <div class="row wrap" style="justify-content:space-between; margin-bottom:10px;">
+                  <button class="btn" type="button" id="btnAddCustomRow">+ Aggiungi quota</button>
+                  <span class="muted" style="font-size:13px;">Totale quote: <strong id="customTotal">0,00€</strong></span>
+                </div>
+                <table aria-label="Tabella rate personalizzate">
+                  <thead>
+                    <tr>
+                      <th style="width: 200px;">Data quota</th>
+                      <th style="width: 200px;">Importo</th>
+                      <th>Azioni</th>
+                    </tr>
+                  </thead>
+                  <tbody id="customRows">
+                    <tr>
+                      <td><input class="input" type="date" /></td>
+                      <td><input class="input" type="number" step="0.01" min="0" placeholder="0,00" /></td>
+                      <td class="table-actions">
+                        <button class="btn btn--danger" type="button">Rimuovi</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Metodo: revolving -->
+              <div class="form-section panel--flat" id="methodRevolving">
+                <p class="section-title">Revolving</p>
+                <div class="form-grid">
+                  <div class="field">
+                    <label class="label" for="fMinMonthly">Minimo mensile</label>
+                    <input class="input" id="fMinMonthly" type="number" step="0.01" min="0" placeholder="0,00" />
+                  </div>
+                  <div class="field">
+                    <label class="label" for="fInterestPct">Interessi % mensile</label>
+                    <input class="input" id="fInterestPct" type="number" step="0.01" min="0" placeholder="0,00" />
+                  </div>
+                  <div class="field" style="grid-column: 1 / -1;">
+                    <label class="label" for="fRevolvingMode">Modalità calcolo</label>
+                    <select class="select" id="fRevolvingMode">
+                      <option value="simple">Semplice (v1)</option>
+                      <option value="interest_on_remaining">Interessi sul residuo</option>
+                    </select>
+                    <div class="hint">In v1 la logica può essere semplice ma deve essere chiara e prevedibile.</div>
+                  </div>
+                </div>
+              </div>
+
+              <hr class="hr" />
+
+              <!-- Opzione cloni mese prossimo -->
+              <div class="form-section panel--flat">
+                <p class="section-title">Opzione: Clona nel prossimo mese (stesso giorno)</p>
+
+                <div class="row wrap" style="align-items:flex-start;">
+                  <label class="row" style="gap:10px; cursor:pointer;">
+                    <input id="fCloneNextMonth" type="checkbox" />
+                    <span><strong>Crea copie nel mese prossimo</strong></span>
+                  </label>
+                </div>
+
+                <div class="form-grid" style="margin-top:10px;">
+                  <div class="field">
+                    <label class="label" for="fCloneN">Numero copie (N)</label>
+                    <input class="input" id="fCloneN" type="number" min="1" step="1" placeholder="1" />
+                  </div>
+                  <div class="field">
+                    <label class="label" for="fCloneSpacing">Spaziatura</label>
+                    <select class="select" id="fCloneSpacing">
+                      <option value="same_day">Stesso giorno</option>
+                      <option value="consecutive_days">Giorni consecutivi</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="hint" style="margin-top:10px;">
+                  Il frontend genererà N richieste POST (cloni indipendenti). Se un giorno non esiste (es. 31 → Febbraio),
+                  si sposta automaticamente all’ultimo giorno valido del mese e si mostra una label chiara (es. “Febbraio non ha 31 → salvato al 28/29”).
+                </div>
+
+                <div class="badge" id="cloneInfoBadge" style="margin-top:10px;">
+                  <span class="dot"></span> Nessun clone configurato
+                </div>
+              </div>
+            </div>
+
+            <!-- Rimborso carta -->
+            <div class="form-section" id="sectionCardRepayment">
+              <p class="section-title">3) Rimborso carta (movimento reale)</p>
+              <div class="form-grid">
+                <div class="field">
+                  <label class="label" for="fFromWallet">Da wallet (sorgente)</label>
+                  <select class="select" id="fFromWallet">
+                    <option value="">Seleziona sorgente…</option>
+                    <!-- Popolato via JS: wallet non-carta (o comunque sorgenti ammesse) -->
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="label" for="fToCard">A carta (wallet carta)</label>
+                  <select class="select" id="fToCard">
+                    <option value="">Seleziona carta…</option>
+                    <!-- Popolato via JS: wallet type=carta -->
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="label" for="fPaymentDate">Data pagamento reale</label>
+                  <input class="input" id="fPaymentDate" type="date" />
+                </div>
+                <div class="field">
+                  <label class="label" for="fRepayAmount">Importo (EUR)</label>
+                  <input class="input" id="fRepayAmount" type="number" step="0.01" min="0" placeholder="0,00" />
+                </div>
+              </div>
+
+              <div class="hint" style="margin-top:10px;">
+                Effetto: diminuisce wallet sorgente, aumenta plafond disponibile della carta. È sempre editabile.
+              </div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <!-- Serie / contratti ricorrenti -->
+          <div class="form-section">
+            <p class="section-title">4) Serie / Contratto ricorrente</p>
+
+            <label class="row" style="gap:10px; cursor:pointer; align-items:flex-start;">
+              <input id="fIsSeries" type="checkbox" />
+              <span>
+                <strong>Questo è un contratto ricorrente</strong><br/>
+                <span class="hint">Frequenza mensile, con durata “Per sempre” o “Per N mesi”.</span>
+              </span>
+            </label>
+
+            <div class="form-grid" style="margin-top:10px;">
+              <div class="field">
+                <label class="label" for="fSeriesFrequency">Frequenza</label>
+                <select class="select" id="fSeriesFrequency" disabled>
+                  <option value="monthly">Mensile</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="label" for="fSeriesDurationMode">Durata</label>
+                <select class="select" id="fSeriesDurationMode">
+                  <option value="forever">Per sempre</option>
+                  <option value="n_months">Per N mesi</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="label" for="fSeriesMonths">N mesi</label>
+                <input class="input" id="fSeriesMonths" type="number" min="1" step="1" placeholder="12" />
+              </div>
+              <div class="field">
+                <label class="label" for="fSeriesFirstDate">Data prima occorrenza</label>
+                <input class="input" id="fSeriesFirstDate" type="date" />
+              </div>
+            </div>
+
+            <div class="hint" style="margin-top:10px;">
+              Gli eventi generati avranno <code>seriesId</code> e <code>seriesIndex</code>. In modifica evento sarà possibile: modificare solo uno,
+              modificare questa + future, cancellare uno (salto), cancellare future, cancellare tutta la serie.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: RIMBORSI CARTE -->
+      <section class="tab-panel" id="tab-rimborsi" aria-label="Rimborsi carte">
+        <div class="content-inner">
+          <div class="page-title">
+            <div>
+              <h2>Rimborsi carte</h2>
+              <div class="page-sub">
+                Cruscotto per ogni carta: debito attuale, quote dovute nel mese, rimborsi già inseriti nel mese, differenza.
+                Azioni rapide: nuovo rimborso, modifica, cancella, suggerisci importo.
+              </div>
+            </div>
+            <div class="row wrap">
+              <button class="btn" id="btnNewRepayment" type="button">+ Nuovo rimborso</button>
+              <button class="btn" id="btnSuggestRepayment" type="button">Suggerisci importo</button>
+              <button class="btn btn--primary" id="btnRefreshCards" type="button">Ricarica dati</button>
+            </div>
+          </div>
+
+          <div id="cardsDashboard" class="col">
+            <!-- Card carta generate via JS: GET /dashboard?asOf=... -->
+            <div class="form-section">
+              <p class="section-title">Carta (esempio)</p>
+              <div class="kpi">
+                <div><div class="k">Debito totale attuale</div><div class="v">—</div></div>
+                <div><div class="k">Quote dovute entro fine mese</div><div class="v">—</div></div>
+                <div><div class="k">Rimborsi effettuati nel mese</div><div class="v">—</div></div>
+                <div><div class="k">Differenza</div><div class="v">—</div></div>
+              </div>
+
+              <div class="hr"></div>
+
+              <table aria-label="Elenco rimborsi del mese">
+                <thead>
+                  <tr>
+                    <th>Data pagamento reale</th>
+                    <th>Da wallet</th>
+                    <th>Importo</th>
+                    <th>Azioni</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td class="table-actions">
+                      <button class="btn" type="button" disabled>Modifica</button>
+                      <button class="btn btn--danger" type="button" disabled>Cancella</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="hint" style="margin-top:10px;">
+                “Suggerisci importo” è solo un suggerimento (nessuna azione automatica).
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: WALLET & METODI -->
+      <section class="tab-panel" id="tab-wallets" aria-label="Wallet e metodi">
+        <div class="content-inner">
+          <div class="page-title">
+            <div>
+              <h2>Wallet &amp; Metodi</h2>
+              <div class="page-sub">
+                Configura la struttura: wallet (conto) e metodi associati per gli acquisti (soprattutto carte).
+                I metodi definiscono <strong>come si costruiscono le quote del debito</strong> (non sono rimborsi).
+              </div>
+            </div>
+            <div class="row wrap">
+              <button class="btn" id="btnAddWallet" type="button">+ Aggiungi wallet</button>
+              <button class="btn btn--primary" id="btnReloadWallets" type="button">Ricarica</button>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <p class="section-title">Lista wallet</p>
+            <table aria-label="Tabella wallet">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Tipo</th>
+                  <th>Saldo iniziale</th>
+                  <th>(Carta) Limite</th>
+                  <th>(Carta) Wallet sorgente default</th>
+                  <th>Azioni</th>
+                </tr>
+              </thead>
+              <tbody id="walletTableBody">
+                <tr>
+                  <td>—</td>
+                  <td>—</td>
+                  <td>—</td>
+                  <td>—</td>
+                  <td>—</td>
+                  <td class="table-actions">
+                    <button class="btn" type="button" disabled>Modifica</button>
+                    <button class="btn btn--danger" type="button" disabled>Elimina</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="hint" style="margin-top:10px;">
+              API: <code>GET/POST/PUT/DELETE /wallets</code>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="form-section">
+            <div class="row wrap" style="justify-content:space-between;">
+              <p class="section-title" style="margin:0;">Metodi disponibili per questo wallet</p>
+              <div class="row wrap">
+                <div class="field" style="min-width:260px;">
+                  <label class="label" for="methodsWalletSelect">Seleziona wallet</label>
+                  <select class="select" id="methodsWalletSelect">
+                    <option value="">Seleziona…</option>
+                    <!-- Popolato via JS -->
+                  </select>
+                </div>
+                <button class="btn" id="btnAddMethod" type="button">Aggiungi metodo</button>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <table aria-label="Tabella metodi per wallet">
+              <thead>
+                <tr>
+                  <th>Metodo</th>
+                  <th>Regola</th>
+                  <th>Azioni</th>
+                </tr>
+              </thead>
+              <tbody id="methodsTableBody">
+                <tr>
+                  <td>—</td>
+                  <td class="muted">Seleziona un wallet per vedere i metodi</td>
+                  <td class="table-actions">
+                    <button class="btn" type="button" disabled>Modifica</button>
+                    <button class="btn btn--danger" type="button" disabled>Elimina</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="hint" style="margin-top:10px;">
+              API: <code>GET /wallets/:id/methods</code>, <code>POST /wallets/:id/methods</code>, <code>PUT /methods/:id</code>, <code>DELETE /methods/:id</code>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: IMPOSTAZIONI -->
+      <section class="tab-panel" id="tab-impostazioni" aria-label="Impostazioni">
+        <div class="content-inner">
+          <div class="page-title">
+            <div>
+              <h2>Impostazioni</h2>
+              <div class="page-sub">
+                Impostazioni di sistema: categorie globali, valori predefiniti, export/import (facoltativo), reset UI (solo UI, NON DB).
+              </div>
+            </div>
+            <div class="row wrap">
+              <button class="btn" id="btnExport" type="button">Export (facoltativo)</button>
+              <button class="btn" id="btnImport" type="button">Import (facoltativo)</button>
+              <button class="btn btn--danger" id="btnResetUI" type="button">Reset UI</button>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-section">
+              <p class="section-title">Categorie globali</p>
+              <div class="hint" style="margin-bottom:10px;">
+                Gestisci la lista categorie (usata nei suggerimenti e nel campo “Categoria” del Nuovo evento).
+              </div>
+              <div class="row wrap" style="justify-content:space-between;">
+                <button class="btn" id="btnAddCategory" type="button">+ Aggiungi categoria</button>
+                <button class="btn btn--primary" id="btnReloadCategories" type="button">Ricarica</button>
+              </div>
+
+              <div class="hr"></div>
+
+              <table aria-label="Tabella categorie">
+                <thead>
+                  <tr>
+                    <th>Categoria</th>
+                    <th>Azioni</th>
+                  </tr>
+                </thead>
+                <tbody id="categoriesTableBody">
+                  <tr>
+                    <td>—</td>
+                    <td class="table-actions">
+                      <button class="btn" type="button" disabled>Modifica</button>
+                      <button class="btn btn--danger" type="button" disabled>Elimina</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="form-section">
+              <p class="section-title">Valori predefiniti</p>
+              <div class="field">
+                <label class="label" for="defaultWallet">Wallet predefinito per nuove uscite/entrate</label>
+                <select class="select" id="defaultWallet">
+                  <option value="">Nessuno</option>
+                  <!-- Popolato via JS -->
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="label" for="defaultCard">Carta predefinita per acquisti</label>
+                <select class="select" id="defaultCard">
+                  <option value="">Nessuna</option>
+                  <!-- Popolato via JS -->
+                </select>
+              </div>
+
+              <div class="hr"></div>
+
+              <div class="hint">
+                Reset UI: cancella solo preferenze/interfaccia (es. filtri, tab attiva, token), senza toccare il database.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Sidebar destra: snapshot live (solo nella tab Calendario) -->
+    <aside class="sidebar panel" aria-label="Stato al giorno selezionato">
+      <h3 id="snapshotTitle">📌 Stato al: —</h3>
+      <div class="muted" style="font-size:13px; margin-bottom:12px;">
+        Valori calcolati <strong>fino al giorno selezionato</strong>: saldi per wallet, progressi del mese, confronto mese scorso, prossimi eventi, categorie principali.
+      </div>
+
+      <div id="snapshotWalletCards">
+        <!-- Card wallet generate via JS: GET /dashboard?asOf=YYYY-MM-DD&month=YYYY-MM -->
+        <div class="wallet-card">
+          <div class="wallet-head">
+            <div>
+              <div class="wallet-name">Banca (esempio)</div>
+              <div class="wallet-type">Tipo: banca</div>
+            </div>
+            <span class="badge"><span class="dot"></span> EUR</span>
+          </div>
+
+          <div class="kpi">
+            <div><div class="k">Saldo al giorno selezionato</div><div class="v">—</div></div>
+            <div><div class="k">Spese mese (fatte fino a data)</div><div class="v">—</div></div>
+            <div><div class="k">Spese mese (ancora da fare nel mese)</div><div class="v">—</div></div>
+            <div><div class="k">Entrate mese (fatte fino a data)</div><div class="v">—</div></div>
+            <div><div class="k">Entrate mese (ancora previste)</div><div class="v">—</div></div>
+            <div><div class="k">Spese: confronto mese scorso</div><div class="v">—</div></div>
+            <div><div class="k">Entrate: confronto mese scorso</div><div class="v">—</div></div>
+          </div>
+
+          <div class="wallet-next">
+            <strong>Prossimo evento:</strong> <span id="nextEventExample">—</span>
+          </div>
+
+          <div class="wallet-cats">
+            <div class="muted" style="font-size:12px; margin-bottom:6px;"><strong>Categorie principali del mese</strong> (top 3 + max 10)</div>
+            <div class="cat-row"><span>Spesa</span><strong>—</strong></div>
+            <div class="cat-row"><span>Bollette</span><strong>—</strong></div>
+            <div class="cat-row"><span>Trasporti</span><strong>—</strong></div>
+          </div>
+        </div>
+
+        <div class="wallet-card">
+          <div class="wallet-head">
+            <div>
+              <div class="wallet-name">Carta (esempio)</div>
+              <div class="wallet-type">Tipo: carta</div>
+            </div>
+            <span class="badge"><span class="dot dot--card"></span> Carta</span>
+          </div>
+
+          <div class="kpi">
+            <div><div class="k">Limite carta</div><div class="v">—</div></div>
+            <div><div class="k">Plafond disponibile</div><div class="v">—</div></div>
+            <div><div class="k">Debito totale attuale</div><div class="v">—</div></div>
+            <div><div class="k">Debito dovuto entro fine mese</div><div class="v">—</div></div>
+            <div><div class="k">Rimborsi effettuati nel mese</div><div class="v">—</div></div>
+            <div><div class="k">Saldo al giorno selezionato</div><div class="v">—</div></div>
+          </div>
+
+          <div class="wallet-next">
+            <strong>Prossimo evento:</strong> <span>—</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Bottom tabs (mobile) -->
+  <nav class="bottom-nav" aria-label="Navigazione mobile">
+    <button class="btn tabbtn" type="button" data-tab="calendario" aria-selected="true">📅<br/>Calendario</button>
+    <button class="btn tabbtn" type="button" data-tab="nuovo" aria-selected="false">➕<br/>Nuovo</button>
+    <button class="btn tabbtn" type="button" data-tab="rimborsi" aria-selected="false">💳<br/>Rimborsi</button>
+    <button class="btn tabbtn" type="button" data-tab="wallets" aria-selected="false">👛<br/>Wallet</button>
+    <button class="btn tabbtn" type="button" data-tab="impostazioni" aria-selected="false">⚙️<br/>Impost.</button>
+  </nav>
+
+  <!-- Template: riga evento (per rendering calendario/lista) -->
+  <template id="tplEventLine">
+    <div class="event-line">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="title"></span>
+      <span class="amt"></span>
+      <span class="muted"></span>
+    </div>
+  </template>
+
+  <!-- Template: card wallet snapshot -->
+  <template id="tplWalletCard">
+    <div class="wallet-card">
+      <div class="wallet-head">
+        <div>
+          <div class="wallet-name"></div>
+          <div class="wallet-type"></div>
+        </div>
+        <span class="badge"><span class="dot"></span> EUR</span>
+      </div>
+
+      <div class="kpi">
+        <div><div class="k">Saldo al giorno selezionato</div><div class="v" data-kpi="balance">—</div></div>
+        <div><div class="k">Spese mese (fatte fino a data)</div><div class="v" data-kpi="spentSoFar">—</div></div>
+        <div><div class="k">Spese mese (ancora da fare nel mese)</div><div class="v" data-kpi="spentRemaining">—</div></div>
+        <div><div class="k">Entrate mese (fatte fino a data)</div><div class="v" data-kpi="incomeSoFar">—</div></div>
+        <div><div class="k">Entrate mese (ancora previste)</div><div class="v" data-kpi="incomeRemaining">—</div></div>
+        <div><div class="k">Spese: confronto mese scorso</div><div class="v" data-kpi="compareLastMonthExpenses">—</div></div>
+        <div><div class="k">Entrate: confronto mese scorso</div><div class="v" data-kpi="compareLastMonthIncome">—</div></div>
+      </div>
+
+      <div class="wallet-next">
+        <strong>Prossimo evento:</strong> <span data-kpi="nextEvent">—</span>
+      </div>
+
+      <div class="wallet-cats">
+        <div class="muted" style="font-size:12px; margin-bottom:6px;"><strong>Categorie principali del mese</strong></div>
+        <div data-slot="categories"></div>
+      </div>
+
+      <!-- Se carta: area extra (mostrata via JS) -->
+      <div data-slot="cardExtras" class="hide" style="margin-top:10px;">
+        <div class="hr"></div>
+        <div class="kpi">
+          <div><div class="k">Limite carta</div><div class="v" data-kpi="cardLimit">—</div></div>
+          <div><div class="k">Plafond disponibile</div><div class="v" data-kpi="availableCredit">—</div></div>
+          <div><div class="k">Debito totale attuale</div><div class="v" data-kpi="outstanding">—</div></div>
+          <div><div class="k">Debito dovuto entro fine mese</div><div class="v" data-kpi="dueByEom">—</div></div>
+          <div><div class="k">Rimborsi effettuati nel mese</div><div class="v" data-kpi="repaymentsThisMonth">—</div></div>
+          <div><div class="k">Wallet sorgente default</div><div class="v" data-kpi="defaultSourceWallet">—</div></div>
+        </div>
+      </div>
+    </div>
+  </template>
+  <!-- Overlay: dettaglio / modifica evento -->
+  <div class="event-overlay" id="eventOverlay" role="dialog" aria-modal="true" aria-labelledby="eventDialogTitle">
+    <div class="event-card">
+      <div class="event-header">
+        <div>
+          <div class="badge" id="eventTypeBadge">
+            <span class="dot"></span>
+            <span id="eventTypeLabel">Tipo evento</span>
+          </div>
+          <h2 id="eventDialogTitle" style="margin:8px 0 4px 0; font-size:18px;">Dettaglio evento</h2>
+          <div class="event-meta" id="eventMeta">
+            <!-- Popolato via JS: wallet collegato, impatto su saldo/debito/plafond, date -->
+          </div>
+        </div>
+        <div class="row wrap">
+          <button class="btn" type="button" id="btnEditSingle">Modifica solo questo</button>
+          <button class="btn" type="button" id="btnEditThisAndFuture">Modifica questa + future</button>
+          <button class="btn btn--danger" type="button" id="btnDeleteSingle">Elimina solo questo</button>
+          <button class="btn btn--danger" type="button" id="btnDeleteThisAndFuture">Elimina questa + future</button>
+          <button class="btn btn--danger" type="button" id="btnDeleteSeries">Elimina tutta la serie</button>
+          <button class="btn btn--ghost" type="button" id="btnCloseEventOverlay">Chiudi</button>
+        </div>
+      </div>
+
+      <!-- Info serie (mostrata solo se l'evento appartiene a una serie) -->
+      <div class="form-section panel--flat" id="eventSeriesInfo">
+        <p class="section-title">Evento in serie</p>
+        <div class="hint">
+          Questo evento fa parte di un contratto ricorrente (<code>seriesId</code> e <code>seriesIndex</code>).
+          In base ai pulsanti sopra puoi modificare solo questo evento, oppure anche quelli futuri, o cancellarli.
+        </div>
+      </div>
+
+      <!-- Sezione quote generate (solo per acquisto su carta) -->
+      <div class="form-section panel--flat" id="eventQuotesSection">
+        <p class="section-title">Quote generate</p>
+        <div class="hint" style="margin-bottom:8px;">
+          Elenco delle quote dovute create da questo acquisto su carta. Puoi modificare o saltare singole quote.
+        </div>
+        <div class="event-quote-list" id="eventQuotesList">
+          <!-- Righe create via JS -->
+          <!-- Esempio:
+          <div class="event-quote-row">
+            <span>2026-02-10 · 40,00€</span>
+            <span class="muted">Stato: attiva</span>
+            <span class="table-actions">
+              <button class="btn" type="button">Modifica</button>
+              <button class="btn btn--danger" type="button">Salta quota</button>
+            </span>
+          </div>
+          -->
+        </div>
+      </div>
+
+      <!-- Sezione rimborso carta (semplice, solo quando l'evento è un rimborso) -->
+      <div class="form-section panel--flat" id="eventRepaymentSection">
+        <p class="section-title">Rimborso carta (modifica)</p>
+        <div class="form-grid">
+          <div class="field">
+            <label class="label" for="editRepayFromWallet">Da wallet (sorgente)</label>
+            <select class="select" id="editRepayFromWallet">
+              <!-- Popolato via JS -->
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="editRepayToCard">A carta (wallet carta)</label>
+            <select class="select" id="editRepayToCard">
+              <!-- Popolato via JS -->
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="editRepayDate">Data pagamento reale</label>
+            <input class="input" id="editRepayDate" type="date" />
+          </div>
+          <div class="field">
+            <label class="label" for="editRepayAmount">Importo (EUR)</label>
+            <input class="input" id="editRepayAmount" type="number" min="0" step="0.01" />
+          </div>
+        </div>
+        <div class="hint" style="margin-top:8px;">
+          Effetto: diminuisce il wallet sorgente e aumenta il plafond disponibile della carta. Rimane sempre modificabile.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script principale -->
+  <script src="finv2.js" defer></script>
+
+  <!-- Mini bootstrap UI (solo per far vedere struttura e tab; logica reale in finv2.js) -->
+  <script>
+    (function(){
+      // Default: mostra una data di riferimento leggibile (placeholder).
+      const ref = document.getElementById('refDateLabel');
+      const snap = document.getElementById('snapshotTitle');
+      const todayISO = new Date().toISOString().slice(0,10);
+      ref.textContent = todayISO;
+      snap.textContent = "📌 Stato al: " + todayISO;
+
+      // Tab switching (solo UI). La logica dati sarà in finv2.js.
+      function setActiveTab(tab){
+        document.body.dataset.activeTab = tab;
+        document.querySelectorAll('[data-tab]').forEach(b=>{
+          b.setAttribute('aria-selected', b.dataset.tab === tab ? 'true' : 'false');
+        });
+      }
+      document.addEventListener('click', (e)=>{
+        const btn = e.target.closest('[data-tab]');
+        if(btn) setActiveTab(btn.dataset.tab);
+      });
+
+      // CTA “+ Nuovo” porta alla tab “Nuovo evento”
+      const btnNuovo = document.getElementById('btnNuovo');
+      if(btnNuovo) btnNuovo.addEventListener('click', ()=> setActiveTab('nuovo'));
+
+      // NOTA: la logica reale (API, snapshot, calendario, ecc.) verrà implementata in finv2.js.
+      // Qui c'è solo il wiring base delle tab e dei pulsanti.
+
+    })();
+  </script>
+</body>
+</html>

@@ -1310,3 +1310,106 @@ body {
 .muted {
   color: #9ca3af !important;
 }
+/* ================== CONTRAST FIX: SIDEBAR & SNAPSHOT ================== */
+
+/* Sidebar sempre dark e testo chiaro */
+.sidebar {
+  background: #020617 !important;              /* slate 950 */
+  color: #e5e7eb !important;                   /* testo chiaro */
+}
+
+/* Titolo snapshot e testi generali nella sidebar */
+.sidebar h3,
+.sidebar p,
+.sidebar span,
+.sidebar .hint,
+.sidebar .footnote {
+  color: #e5e7eb !important;
+}
+
+/* Card dei wallet nella sidebar */
+.wallet-card {
+  background: #020617 !important;
+  border-color: rgba(148, 163, 184, 0.7) !important;  /* slate 400 */
+  color: #e5e7eb !important;
+}
+
+/* Header della card (nome wallet, tipo, badge) */
+.wallet-card .wallet-name {
+  color: #f9fafb !important;
+}
+
+.wallet-card .wallet-type {
+  color: #9ca3af !important;
+}
+
+.wallet-card .badge {
+  background: #020617 !important;
+  color: #e5e7eb !important;
+  border-color: rgba(148,163,184,0.9) !important;
+}
+
+/* Box KPI dentro le card (saldo, spese, ecc.) */
+.wallet-card .kpi > div {
+  background: #020617 !important;
+  border-color: rgba(51, 65, 85, 1) !important;  /* slate 700 */
+}
+
+.wallet-card .kpi .k {
+  color: #9ca3af !important;                    /* label più chiara */
+}
+
+.wallet-card .kpi .v {
+  color: #f9fafb !important;                    /* valore (importi) ben visibile */
+  font-weight: 800;
+}
+
+/* Prossimo evento / testo sotto */
+.wallet-card .wallet-next {
+  color: #e5e7eb !important;
+}
+
+/* Sezione categorie nella sidebar */
+.wallet-card .wallet-cats,
+.wallet-card .wallet-cats .muted {
+  color: #9ca3af !important;
+}
+
+/* Riga categoria + importo */
+.wallet-card .cat-row {
+  border-color: rgba(51, 65, 85, 1) !important;
+}
+
+.wallet-card .cat-row span {
+  color: #e5e7eb !important;
+}
+
+/* Importi delle categorie: risalto forte */
+.wallet-card .cat-row strong {
+  color: #facc15 !important;  /* giallo acceso su sfondo scuro */
+  font-weight: 800;
+}
+
+/* ================== CONTRAST FIX: TABELLE IN SIDEBAR (SE PRESENTI) ================== */
+
+.sidebar table {
+  background: #020617 !important;
+  color: #e5e7eb !important;
+}
+
+.sidebar th,
+.sidebar td {
+  background: transparent !important;
+  color: #e5e7eb !important;
+  border-bottom-color: rgba(51, 65, 85, 1) !important;
+}
+
+.sidebar th {
+  color: #9ca3af !important;
+  font-weight: 700 !important;
+}
+
+/* Just in case: qualsiasi .muted dentro la sidebar leggermente più chiaro */
+.sidebar .muted {
+  color: #9ca3af !important;
+}

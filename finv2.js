@@ -196,6 +196,180 @@ function mapEventTypeToDotClass(t) {
   return "dot"
 }
 
+function computeDayTotals(events) {
+  let totalIncome = 0
+  let totalOut = 0          // uscite reali (expense + card_repayment)
+  let totalCardPurchase = 0 // acquisti su carta
+  let totalCardDue = 0      // quote dovute
+
+  events.forEach(ev => {
+    const amt = ev.amount || 0
+    switch (ev.type) {
+      case "income":
+        totalIncome += amt
+        break
+      case "expense":
+      case "card_repayment":
+        totalOut += amt
+        break
+      case "card_purchase":
+        totalCardPurchase += amt
+        break
+      case "card_due":
+        totalCardDue += amt
+        break
+      default:
+        break
+    }
+  })
+
+  const net = totalIncome - totalOut
+  return { totalIncome, totalOut, totalCardPurchase, totalCardDue, net }
+}
+
+function openDayEventsModal(isoDate) {
+  const modal = el("dayEventsModal")
+  if (!modal) return
+
+  const headerDate = el("dayModalDate")
+  const headerSummary = el("dayModalSummary")
+  const content = el("dayModalContent")
+
+  // Eventi del giorno (usa la Map, con fallback su filtro classico)
+  let events = state.eventsByDate.get(isoDate)
+  if (!events) {
+    events = state.events.filter(ev => {
+      const d = ev.calendarDate || ev.date
+      return d === isoDate
+    })
+  }
+
+  events = Array.isArray(events) ? [...events] : []
+  events.sort((a,b)=>{
+    const da = (a.calendarDate || a.date || "")
+    const db = (b.calendarDate || b.date || "")
+    return da.localeCompare(db)
+  })
+
+  // Header
+  if (headerDate) headerDate.textContent = formatDateHuman(isoDate)
+
+  if (headerSummary) {
+    const t = computeDayTotals(events)
+    let summary = `Entrate: ${formatEuro(t.totalIncome)} · Uscite reali: ${formatEuro(t.totalOut)} · Netto: ${formatEuro(t.net)}`
+    if (t.totalCardPurchase || t.totalCardDue) {
+      summary += ` · Carta: acquisti ${formatEuro(t.totalCardPurchase)} / quote ${formatEuro(t.totalCardDue)}`
+    }
+    headerSummary.textContent = summary
+  }
+
+  // Contenuto
+  if (content) {
+    content.innerHTML = ""
+
+    if (!events.length) {
+      const noEv = document.createElement("div")
+      noEv.className = "hint"
+      noEv.style.marginTop = "4px"
+      noEv.textContent = "Nessun evento registrato per questo giorno."
+      content.appendChild(noEv)
+    } else {
+      events.forEach(ev => {
+        const row = document.createElement("button")
+        row.type = "button"
+        row.dataset.eventId = ev.id
+        row.className = "day-modal-row " + (mapEventTypeToClass(ev.type) || "")
+        row.style.cssText = `
+          width:100%;
+          border-radius:10px;
+          border:1px solid rgba(148,163,184,0.45);
+          padding:7px 9px;
+          display:flex;
+          flex-direction:column;
+          gap:2px;
+          background:rgba(15,23,42,0.95);
+          cursor:pointer;
+          text-align:left;
+          transition:background 0.12s ease, transform 0.06s ease, box-shadow 0.12s ease;
+        `
+        row.addEventListener("mouseover", () => {
+          row.style.background = "rgba(30,64,175,0.55)"
+          row.style.transform = "translateY(-1px)"
+          row.style.boxShadow = "0 8px 24px rgba(15,23,42,0.7)"
+        })
+        row.addEventListener("mouseout", () => {
+          row.style.background = "rgba(15,23,42,0.95)"
+          row.style.transform = "none"
+          row.style.boxShadow = "none"
+        })
+
+        // Riga TOP: dot + titolo + importo
+        const top = document.createElement("div")
+        top.style.cssText = `
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:8px;
+        `
+        const left = document.createElement("div")
+        left.style.cssText = "display:flex;align-items:center;gap:6px;min-width:0;"
+
+        const dot = document.createElement("span")
+        dot.className = mapEventTypeToDotClass(ev.type)
+        dot.style.marginRight = "0"
+
+        const title = document.createElement("span")
+        title.style.cssText = "font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+        title.textContent = ev.title || mapEventTypeToLabel(ev.type)
+
+        left.appendChild(dot)
+        left.appendChild(title)
+
+        const amt = document.createElement("span")
+        amt.style.cssText = "font-size:13px;font-weight:600;white-space:nowrap;"
+        amt.textContent = formatEuro(ev.amount || 0)
+
+        top.appendChild(left)
+        top.appendChild(amt)
+
+        // Riga BOTTOM: tipo + wallet
+        const bottom = document.createElement("div")
+        bottom.style.cssText = "font-size:11px;color:#9ca3af;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"
+
+        const typeLabel = document.createElement("span")
+        typeLabel.textContent = mapEventTypeToLabel(ev.type)
+
+        const wallet = getWalletById(ev.walletId || ev.cardWalletId || ev.fromWalletId || ev.toCardWalletId)
+        const walletSpan = document.createElement("span")
+        walletSpan.style.cssText = "text-align:right;flex:1;"
+        walletSpan.textContent = wallet ? wallet.name : ""
+
+        bottom.appendChild(typeLabel)
+        bottom.appendChild(walletSpan)
+
+        row.appendChild(top)
+        row.appendChild(bottom)
+
+        // Clic su riga evento ⇒ apre modale evento
+        row.addEventListener("click", () => {
+          const full = state.events.find(x => String(x.id) === String(ev.id)) || ev
+          closeDayEventsModal()
+          openEventOverlay(full)
+        })
+
+        content.appendChild(row)
+      })
+    }
+  }
+
+  modal.style.display = "flex"
+}
+
+function closeDayEventsModal() {
+  const modal = el("dayEventsModal")
+  if (modal) modal.style.display = "none"
+}
+
 function getWalletById(id) {
   if (!id) return null
   return state.wallets.find(w=>String(w.id) === String(id)) || null
@@ -1871,16 +2045,23 @@ function initEventListeners() {
   if (btnSave) btnSave.addEventListener("click",saveEvent)
   const grid = el("calendarGrid")
   if (grid) {
-    grid.addEventListener("click",e=>{
+    grid.addEventListener("click", e => {
+      // 1) Se ho cliccato su un evento, apro direttamente il modale evento
+      const evLine = e.target.closest(".event-line")
+      if (evLine && evLine.dataset.eventId) {
+        const evt = state.events.find(x => String(x.id) === String(evLine.dataset.eventId))
+        if (evt) openEventOverlay(evt)
+        return
+      }
+  
+      // 2) Altrimenti ho cliccato sul giorno ⇒ seleziono e apro il modale giorno
       const day = e.target.closest(".day")
       if (day) {
         const iso = day.getAttribute("data-date")
-        if (iso) setSelectedDate(iso)
-      }
-      const evLine = e.target.closest(".event-line")
-      if (evLine && evLine.dataset.eventId) {
-        const evt = state.events.find(x=>String(x.id) === String(evLine.dataset.eventId))
-        if (evt) openEventOverlay(evt)
+        if (iso) {
+          setSelectedDate(iso)
+          openDayEventsModal(iso)
+        }
       }
     })
   }
@@ -1996,6 +2177,22 @@ function initEventListeners() {
   if (btnSuggestRepaymentTop) btnSuggestRepaymentTop.addEventListener("click",suggestRepayment)
   const btnRefreshCards = el("btnRefreshCards")
   if (btnRefreshCards) btnRefreshCards.addEventListener("click",loadCardsDashboard)
+  const dayModal = el("dayEventsModal")
+  const dayModalClose = el("dayModalClose")
+  if (dayModalClose) {
+    dayModalClose.addEventListener("click", () => {
+      closeDayEventsModal()
+    })
+  }
+  if (dayModal) {
+    dayModal.addEventListener("click", e => {
+      // chiudi cliccando sul backdrop scuro
+      if (e.target === dayModal) {
+        closeDayEventsModal()
+      }
+    })
+  }
+  
 }
 
 async function init() {

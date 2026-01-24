@@ -61,6 +61,8 @@
         <h2>World Expeditions Map</h2>
         <div id="canvas-wrap" aria-label="Game viewport">
           <canvas id="game-canvas"></canvas>
+		  <div id="my-exp-overlay"></div>
+
           <div id="canvas-feedback" class="feedback-near-canvas" aria-live="polite"></div>
         </div>
 
@@ -4151,7 +4153,7 @@ function updateTicker(){
         }
     
         updateTicker();
-    
+    	recalcMyExpeditionFlagAndUI();
         const latency = Math.round(performance.now() - t0);
         if (State.ui.latency) State.ui.latency.textContent = `${latency} ms · synced`;
       } catch {
@@ -4174,6 +4176,33 @@ function updateTicker(){
         State.net.pollTimer = null;
       }
     }
+function initMyExpOverlayHost(){
+  const host = document.getElementById('my-exp-overlay');
+  if (!host) return;
+
+  // importante: canvas-wrap deve poter “contenere” overlay
+  const wrap = document.getElementById('canvas-wrap');
+  if (wrap) wrap.style.position = 'relative';
+
+  host.style.cssText = [
+    'position:absolute',
+    'top:14px',
+    'right:14px',
+    'width:min(360px, 92vw)',
+    'z-index:9999',
+    'display:none',
+    'pointer-events:auto',
+    'border-radius:14px',
+    'padding:14px 14px 12px 14px',
+    'background:rgba(10,14,22,0.78)',
+    'backdrop-filter: blur(10px)',
+    '-webkit-backdrop-filter: blur(10px)',
+    'border:1px solid rgba(120,200,255,0.25)',
+    'box-shadow: 0 10px 30px rgba(0,0,0,0.35)',
+    'color:#eaf2ff',
+    'font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial',
+  ].join(';');
+}
 
     // ------------------------------------------------------------
     // MOUNT
@@ -4226,7 +4255,7 @@ function updateTicker(){
       State.ui.stakingCache = document.getElementById('staking-cache');
       State.ui.btnStakingRefresh = document.getElementById('btn-staking-refresh');
       State.ui.btnStakingCopy = document.getElementById('btn-staking-copy');
-
+	  initMyExpOverlayHost();
       applyOverlayMode();
       setTabsBehavior();
 

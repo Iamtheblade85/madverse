@@ -489,14 +489,24 @@ function renderSnapshot() {
     setKpi("incomeRemaining", w.incomeRemaining)
     if (w.compareLastMonthExpenses) {
       const c = w.compareLastMonthExpenses
-      const txt = `${c.percent > 0 ? "+" : ""}${c.percent || 0}% (${c.amount >= 0 ? "+" : ""}${formatEuro(c.amount || 0)})`
+      const pct = c.percent || 0
+      // arrotonda a 2 decimali e usa la virgola
+      const pctStr = `${pct > 0 ? "+" : ""}${pct.toFixed(2).replace(".", ",")}`
+      const amt = c.amount || 0
+      const amtStr = `${amt >= 0 ? "+" : ""}${formatEuro(amt)}`
+      const txt = `${pctStr}% (${amtStr})`
       setKpi("compareLastMonthExpenses", txt)
     }
     if (w.compareLastMonthIncome) {
       const c = w.compareLastMonthIncome
-      const txt = `${c.percent > 0 ? "+" : ""}${c.percent || 0}% (${c.amount >= 0 ? "+" : ""}${formatEuro(c.amount || 0)})`
+      const pct = c.percent || 0
+      const pctStr = `${pct > 0 ? "+" : ""}${pct.toFixed(2).replace(".", ",")}`
+      const amt = c.amount || 0
+      const amtStr = `${amt >= 0 ? "+" : ""}${formatEuro(amt)}`
+      const txt = `${pctStr}% (${amtStr})`
       setKpi("compareLastMonthIncome", txt)
     }
+
     const nextEl = clone.querySelector('[data-kpi="nextEvent"]')
     if (nextEl) {
       if (w.nextEvent && w.nextEvent.date) {

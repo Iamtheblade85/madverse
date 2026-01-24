@@ -3025,14 +3025,14 @@ function formatAttrs(exp){
 
   return rows;
 }
+State.ui = State.ui || {};
+State.ui.myOverlayCollapsed = State.ui.myOverlayCollapsed ?? false;
 
 function renderMyExpeditionOverlay(){
   const host = document.getElementById('my-exp-overlay');
   if (!host) return;
 
   const exp = getMyActiveExpedition();
-
-  // mostra solo se l’utente ha una spedizione in corso
   if (!exp){
     host.style.display = 'none';
     host.innerHTML = '';
@@ -3041,142 +3041,161 @@ function renderMyExpeditionOverlay(){
 
   host.style.display = 'block';
 
-  // tempo rimanente / fine (riuso funzioni che hai già nel file)
-  const sr = fromSecondsRemaining(exp); // nel tuo file esiste già :contentReference[oaicite:3]{index=3}
+  // ---- dati (usi le tue funzioni già presenti) ----
+  const sr = fromSecondsRemaining(exp); // tua funzione
   const leftMs = sr ? sr.leftMs(Date.now()) : getTimeLeftMs(exp, new Date());
   const endAt  = sr ? sr.endsAt() : getEndsAt(exp);
 
   const left = (leftMs != null) ? fmtHMS(leftMs) : '--:--:--';
-  const endLabel = endAt ? `${endAt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : '—';
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
+  const endLabel = endAt
+    ? endAt.toLocaleString(undefined, { hour:'2-digit', minute:'2-digit', second:'2-digit' }) + ` (${tz})`
+    : '—';
 
-  // nominal/effective duration
-  const nominalMin =
-    Number(exp.nominal_minutes ?? exp.duration_minutes ?? exp.durationMinutes ?? 0) || 0;
-
-  const effSeconds =
-    Number(exp.effective_seconds ?? exp.duration_seconds ?? exp.effectiveSeconds ?? 0) || 0;
-
-  const effLabel = effSeconds ? fmtHMS(effSeconds * 1000) : '—';
-
-  // goblins count
+  const nominalMin = Number(exp.nominal_minutes ?? exp.duration_minutes ?? 0) || 0;
   const gcount =
     Number(exp.total_goblins ?? exp.goblins_count ?? 0) ||
     (Array.isArray(exp.goblin_ids) ? exp.goblin_ids.length : 0);
 
-  const owner = safe(exp.wax_account || exp.owner || ''); // safe() già nel tuo file :contentReference[oaicite:4]{index=4}
-  const attrs = formatAttrs(exp);
+  const owner = safe(exp.wax_account || exp.owner || '');
 
-  // inline CSS moderno + contrasto alto
+  const collapsed = !!State.ui.myOverlayCollapsed;
+
+  // ---- layout + stile (collassato vs espanso) ----
+  const panelW = 360;
+  const collapsedW = 26; // “striscia” sottile
+  const panelStyle = `
+    position:absolute;
+    top:0;
+    right:0;
+    height:auto;
+    width:${collapsed ? collapsedW : panelW}px;
+    transition: width 180ms ease, transform 180ms ease, opacity 180ms ease;
+    overflow:hidden;
+    border-radius: ${collapsed ? '999px' : '16px'};
+    background: ${collapsed
+      ? 'linear-gradient(180deg, rgba(245,245,245,0.85), rgba(170,170,170,0.65))'
+      : 'linear-gradient(180deg, rgba(7,12,18,.86), rgba(7,12,18,.72))'
+    };
+    border: 1px solid ${collapsed ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,.10)'};
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  `;
+
   host.innerHTML = `
-    <div style="
-      position:fixed; right:16px; top:96px; z-index:9999;
-      width:min(360px, calc(100vw - 32px));
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color: rgba(255,255,255,.92);
-    ">
-      <div style="
-        border-radius:16px;
-        background: linear-gradient(180deg, rgba(7,12,18,.86), rgba(7,12,18,.72));
-        border: 1px solid rgba(255,255,255,.10);
-        box-shadow: 0 12px 34px rgba(0,0,0,.45);
-        overflow:hidden;
-        backdrop-filter: blur(8px);
-      ">
-        <!-- Header -->
-        <div style="padding:14px 14px 10px 14px; border-bottom:1px solid rgba(255,255,255,.08);">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+    <div style="position:absolute; top:0; right:0; width:${panelW}px; max-width:min(${panelW}px, calc(100vw - 28px));">
+      <div id="myExpPanel" style="${panelStyle}">
+        
+        <!-- STRISCIA / HANDLE (sempre visibile) -->
+        <div id="myExpHandle" title="${collapsed ? 'Expand' : 'Collapse'}" style="
+          position:absolute;
+          top:0;
+          right:0;
+          width:${collapsedW}px;
+          height:100%;
+          cursor:pointer;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          user-select:none;
+        ">
+          <div style="
+            width: 10px;
+            height: 42px;
+            border-radius: 999px;
+            background: ${collapsed ? 'rgba(80,80,80,0.55)' : 'rgba(255,255,255,0.12)'};
+            border: 1px solid ${collapsed ? 'rgba(40,40,40,0.35)' : 'rgba(255,255,255,0.18)'};
+          "></div>
+        </div>
+
+        <!-- CONTENUTO (nascosto quando collassato) -->
+        <div style="
+          padding: 14px 14px 14px 14px;
+          padding-right: 42px;
+          opacity: ${collapsed ? 0 : 1};
+          transform: ${collapsed ? 'translateX(12px)' : 'translateX(0)'};
+          transition: opacity 160ms ease, transform 160ms ease;
+          pointer-events: ${collapsed ? 'none' : 'auto'};
+          color: rgba(255,255,255,.92);
+        ">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
             <div style="min-width:0;">
               <div style="font-size:12px; letter-spacing:.08em; text-transform:uppercase; opacity:.8;">
                 My Expedition
               </div>
-              <div style="font-weight:800; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+              <div style="font-weight:900; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                 ${owner}
               </div>
             </div>
 
-            <div style="
-              flex:0 0 auto;
-              padding:8px 10px;
-              border-radius:999px;
-              background: rgba(34,197,94,.16);
-              border: 1px solid rgba(34,197,94,.35);
-              color: rgba(214,255,232,.95);
+            <button id="myExpToggleBtn" type="button" style="
+              background: rgba(255,255,255,0.06);
+              border: 1px solid rgba(255,255,255,0.12);
+              color: rgba(255,255,255,0.9);
               font-weight:800;
               font-size:12px;
-              white-space:nowrap;
-            ">
-              Expedition running • to finish: ${left}
-            </div>
+              border-radius: 12px;
+              padding: 8px 10px;
+              cursor:pointer;
+            ">Collapse</button>
+          </div>
+
+          <div style="
+            margin-top:12px;
+            padding: 10px 10px;
+            border-radius: 999px;
+            background: rgba(34,197,94,.16);
+            border: 1px solid rgba(34,197,94,.35);
+            color: rgba(214,255,232,.95);
+            font-weight:900;
+            font-size:12px;
+            white-space:nowrap;
+          ">
+            Expedition running • to finish: ${left}
           </div>
 
           <div style="margin-top:10px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <div style="padding:10px 10px; border-radius:12px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);">
+            <div style="padding:10px; border-radius:12px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);">
               <div style="font-size:11px; opacity:.8;">Nominal duration</div>
-              <div style="font-size:16px; font-weight:900; margin-top:2px;">${nominalMin ? `${nominalMin} min` : '—'}</div>
+              <div style="font-size:16px; font-weight:950; margin-top:2px;">${nominalMin ? `${nominalMin} min` : '—'}</div>
             </div>
-            <div style="padding:10px 10px; border-radius:12px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);">
-              <div style="font-size:11px; opacity:.8;">Ends (your timezone)</div>
-              <div style="font-size:16px; font-weight:900; margin-top:2px;">${endLabel}</div>
+            <div style="padding:10px; border-radius:12px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);">
+              <div style="font-size:11px; opacity:.8;">Ends (local)</div>
+              <div style="font-size:13px; font-weight:900; margin-top:4px; line-height:1.15;">${endLabel}</div>
             </div>
           </div>
-        </div>
 
-        <!-- Body -->
-        <div style="padding:12px 14px 14px 14px;">
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
             <div style="
               padding:8px 10px; border-radius:999px;
               background: rgba(56,189,248,.14);
               border: 1px solid rgba(56,189,248,.30);
               color: rgba(210,245,255,.95);
-              font-weight:800;
+              font-weight:900;
               font-size:12px;
-            ">
-              🧬 Goblins sent: ${gcount || 0}
-            </div>
-
-            <div style="
-              padding:8px 10px; border-radius:999px;
-              background: rgba(168,85,247,.14);
-              border: 1px solid rgba(168,85,247,.30);
-              color: rgba(243,230,255,.95);
-              font-weight:800;
-              font-size:12px;
-            ">
-              ⚡ Effective duration: ${effLabel}
-            </div>
-          </div>
-
-          ${
-            attrs.length ? `
-              <div style="margin-top:12px;">
-                <div style="font-size:12px; font-weight:900; opacity:.9; margin-bottom:8px;">
-                  Your expedition attributes
-                </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                  ${attrs.map(a => `
-                    <div style="padding:10px; border-radius:12px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);">
-                      <div style="font-size:11px; opacity:.78;">${safe(a.k)}</div>
-                      <div style="font-size:18px; font-weight:950; margin-top:2px;">${formatDP(a.v)}</div>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            ` : `
-              <div style="margin-top:12px; font-size:12px; opacity:.75;">
-                Attributes not available in this expedition payload (no totals found).
-              </div>
-            `
-          }
-
-          <div style="margin-top:12px; font-size:11px; opacity:.65;">
-            Live summary updates automatically while the expedition is active.
+            ">🧬 Goblins: ${gcount || 0}</div>
           </div>
         </div>
       </div>
     </div>
   `;
+
+  // ---- binding toggle (senza duplicare listener) ----
+  const handle = host.querySelector('#myExpHandle');
+  const btn = host.querySelector('#myExpToggleBtn');
+
+  const toggle = (ev)=>{
+    ev?.preventDefault?.();
+    ev?.stopPropagation?.();
+    State.ui.myOverlayCollapsed = !State.ui.myOverlayCollapsed;
+    renderMyExpeditionOverlay();
+  };
+
+  if (handle) handle.onclick = toggle;
+  if (btn) btn.onclick = toggle;
 }
+
 
 // tick “leggero”: aggiorna solo il countdown senza rifare tutto quando possibile
 function startMyOverlayTicker(){
@@ -4180,7 +4199,6 @@ function initMyExpOverlayHost(){
   const host = document.getElementById('my-exp-overlay');
   if (!host) return;
 
-  // importante: canvas-wrap deve poter “contenere” overlay
   const wrap = document.getElementById('canvas-wrap');
   if (wrap) wrap.style.position = 'relative';
 
@@ -4188,21 +4206,13 @@ function initMyExpOverlayHost(){
     'position:absolute',
     'top:14px',
     'right:14px',
-    'width:min(360px, 92vw)',
     'z-index:9999',
     'display:none',
     'pointer-events:auto',
-    'border-radius:14px',
-    'padding:14px 14px 12px 14px',
-    'background:rgba(10,14,22,0.78)',
-    'backdrop-filter: blur(10px)',
-    '-webkit-backdrop-filter: blur(10px)',
-    'border:1px solid rgba(120,200,255,0.25)',
-    'box-shadow: 0 10px 30px rgba(0,0,0,0.35)',
-    'color:#eaf2ff',
     'font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial',
   ].join(';');
 }
+
 
     // ------------------------------------------------------------
     // MOUNT

@@ -3163,13 +3163,17 @@ function renderMyExpeditionOverlay(){
 	          line-height: 1.2;
 	        ">
 	          Expedition running<br>
-	          <span style="opacity:.92;">to finish:</span> <span style="font-size:13px;">${left}</span>
+	          <span style="opacity:.92;">to finish:</span> <span id="myExpLeft" style="font-size:13px;">${left}</span>
+
 	        </div>
 	
 	        <div style="margin-top:10px; display:grid; grid-template-columns: 1fr; gap:8px;">
 	          <div style="padding:10px; border-radius:12px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);">
 	            <div style="font-size:11px; opacity:.8;">Ends (local)</div>
-	            <div style="font-size:13px; font-weight:950; margin-top:4px; line-height:1.2;">${endLabel}</div>
+				<div style="font-size:13px; font-weight:950; margin-top:4px; line-height:1.2;">
+				  <span id="myExpEnd">${endLabel}</span>
+				</div>
+
 	          </div>
 	
 	          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
@@ -3211,14 +3215,36 @@ function startMyOverlayTicker(){
   if (State.runtime._myOverlayTicking) return;
   State.runtime._myOverlayTicking = true;
 
-  const tick = ()=>{
-    // se overlay nascosto, non spendiamo molto
-    renderMyExpeditionOverlay();
-    requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-}
+  // evita doppi timer se viene richiamata più volte
+  if (State.runtime._myOverlayInterval) clearInterval(State.runtime._myOverlayInterval);
 
+  State.runtime._myOverlayInterval = setInterval(() => {
+    const host = document.getElementById('my-exp-overlay');
+    if (!host || host.style.display === 'none') return;
+
+    const exp = getMyActiveExpedition();
+    if (!exp) return;
+
+    // stesso calcolo usato nel render (v9)
+    const sr = fromSecondsRemaining(exp);
+    const leftMs = sr ? sr.leftMs(Date.now()) : getTimeLeftMs(exp, new Date());
+    const endAt  = sr ? sr.endsAt() : getEndsAt(exp);
+
+    const left = (leftMs != null) ? fmtHMS(leftMs) : '--:--:--';
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
+    const endLabel = endAt
+      ? endAt.toLocaleString(undefined, { hour:'2-digit', minute:'2-digit', second:'2-digit' }) + ` (${tz})`
+      : '—';
+
+    // ✅ aggiorna SOLO testo (non innerHTML)
+    const leftEl = host.querySelector('#myExpLeft');
+    if (leftEl) leftEl.textContent = left;
+
+    const endEl = host.querySelector('#myExpEnd');
+    if (endEl) endEl.textContent = endLabel;
+
+  }, 250); // 4 volte/sec: fluido e non rompe i click
+}
     function renderGlobalPanel(){
       const host = State.ui.globalList, label = State.ui.globalCount;
       if (!host || !label) return;

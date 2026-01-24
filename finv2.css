@@ -1,53 +1,54 @@
-/* =========================================================
-   Controllo Finanze – finv2.css (v2)
-   Design high-contrast, fintech style, dark/light,
-   gerarchie visive forti e stati evento ben separati
-   ========================================================= */
+/* ==========================================================================
+   DESIGN SYSTEM – Controllo Finanze
+   ========================================================================== */
 
-/* ---------- Root & Theme Tokens ---------- */
+/* 1) Token base (dark + light automatico) */
 
 :root {
-  /* Background & surfaces */
-  --bg: #020617;            /* page background */
-  --bg-elevated: #050816;   /* generic elevated */
-  --panel: #0b1220;         /* main panel */
-  --panel-soft: #020617;    /* softer panel */
+  /* Layer / superfici */
+  --bg-body: #050816;
+  --bg-elevated: #0b1220;
+  --bg-elevated-soft: #0b1020;
+  --bg-subtle: #020617;
 
-  /* Text */
-  --text: #e5e7eb;
-  --text-strong: #f9fafb;
-  --muted: #9ca3af;
-  --muted-soft: #6b7280;
+  /* Testo */
+  --text-primary: #e5e7eb;
+  --text-muted: #9ca3af;
+  --text-soft: #6b7280;
 
-  /* Borders & shadows */
-  --border-subtle: rgba(148, 163, 184, 0.4);
-  --border: rgba(148, 163, 184, 0.6);
-  --border-strong: rgba(148, 163, 184, 0.85);
-  --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.55);
-  --shadow-strong: 0 28px 80px rgba(0, 0, 0, 0.85);
+  /* Bordi / separatori */
+  --border-subtle: rgba(148, 163, 184, 0.45);
+  --border-strong: rgba(148, 163, 184, 0.75);
 
-  /* Accent & semantic colors */
-  --accent: #3b82f6;
-  --accent-soft: rgba(59, 130, 246, 0.15);
-  --accent-strong: rgba(59, 130, 246, 0.35);
+  /* Ombre */
+  --shadow-soft: 0 12px 35px rgba(15, 23, 42, 0.55);
+  --shadow-strong: 0 24px 70px rgba(0, 0, 0, 0.85);
 
-  --ok: #22c55e;       /* Entrata */
-  --bad: #f97373;      /* Uscita */
-  --card: #fb923c;     /* Acquisto carta */
-  --due: #facc15;      /* Quota dovuta */
-  --repay: #38bdf8;    /* Rimborso carta */
+  /* Accent principale (app) */
+  --accent: #38bdf8; /* sky-400 */
+  --accent-soft: rgba(56, 189, 248, 0.15);
+  --accent-strong: rgba(56, 189, 248, 0.9);
 
-  /* Complementari (non usate per testo su text) */
-  --info: #0ea5e9;
-  --warning: #f97316;
-  --danger: #ef4444;
+  /* Stato eventi */
+  --ok: #22c55e;         /* entrata */
+  --ok-soft: rgba(34, 197, 94, 0.14);
 
-  /* Radii & spacing */
-  --radius-xl: 22px;
+  --bad: #f97373;        /* uscita */
+  --bad-soft: rgba(248, 113, 113, 0.16);
+
+  --card: #fbbf24;       /* acquisto carta */
+  --card-soft: rgba(251, 191, 36, 0.16);
+
+  --due: #facc15;        /* quota dovuta */
+  --due-soft: rgba(250, 204, 21, 0.16);
+
+  --repay: #60a5fa;      /* rimborso carta */
+  --repay-soft: rgba(96, 165, 250, 0.18);
+
+  /* Layout tokens */
   --radius-lg: 18px;
-  --radius: 14px;
+  --radius-md: 14px;
   --radius-sm: 10px;
-  --radius-pill: 999px;
 
   --topbar-h: 64px;
   --nav-w: 240px;
@@ -56,38 +57,45 @@
   --gap: 14px;
   --pad: 14px;
 
-  --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-           "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  /* Tipografia */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
 
-  --transition-fast: 120ms ease-out;
-  --transition-med: 170ms ease-out;
+  /* Aree (per aiutare l’occhio a separare le sezioni) */
+  --area-calendario: #38bdf8;
+  --area-nuovo: #a855f7;
+  --area-rimborsi: #f97316;
+  --area-wallets: #22c55e;
+  --area-impostazioni: #facc15;
 }
 
+/* Tema chiaro opzionale (se l’utente lo preferisce) */
 @media (prefers-color-scheme: light) {
   :root {
-    --bg: #edf2ff;
-    --bg-elevated: #f5f7ff;
-    --panel: #ffffff;
-    --panel-soft: #ffffff;
+    --bg-body: #f5f7fb;
+    --bg-elevated: #ffffff;
+    --bg-elevated-soft: #f9fafb;
+    --bg-subtle: #eef2ff;
 
-    --text: #111827;
-    --text-strong: #020617;
-    --muted: #6b7280;
-    --muted-soft: #9ca3af;
+    --text-primary: #111827;
+    --text-muted: #6b7280;
+    --text-soft: #9ca3af;
 
-    --border-subtle: rgba(148, 163, 184, 0.4);
-    --border: rgba(148, 163, 184, 0.75);
-    --border-strong: rgba(30, 64, 175, 0.9);
+    --border-subtle: rgba(15, 23, 42, 0.12);
+    --border-strong: rgba(15, 23, 42, 0.18);
 
-    --shadow-soft: 0 14px 40px rgba(15, 23, 42, 0.16);
-    --shadow-strong: 0 30px 90px rgba(15, 23, 42, 0.18);
+    --shadow-soft: 0 10px 26px rgba(15, 23, 42, 0.10);
+    --shadow-strong: 0 18px 50px rgba(15, 23, 42, 0.20);
 
-    --accent-soft: rgba(37, 99, 235, 0.11);
-    --accent-strong: rgba(37, 99, 235, 0.4);
+    --accent-soft: rgba(56, 189, 248, 0.12);
   }
 }
 
-/* ---------- Base & Reset ---------- */
+/* ==========================================================================
+   RESET MINIMO
+   ========================================================================== */
 
 *,
 *::before,
@@ -98,64 +106,31 @@
 html,
 body {
   height: 100%;
-  margin: 0;
-  padding: 0;
 }
 
 body {
-  font-family: var(--font);
-  background:
-    radial-gradient(circle at top left, #1d2538 0, transparent 52%),
-    radial-gradient(circle at bottom right, #020617 0, transparent 55%),
-    var(--bg);
-  color: var(--text);
+  margin: 0;
+  font-family: var(--font-sans);
+  background: radial-gradient(circle at top left, #0f172a 0, var(--bg-body) 40%, #020617 100%);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Links */
 a {
-  color: var(--accent);
+  color: inherit;
   text-decoration: none;
 }
-a:hover {
-  text-decoration: underline;
-}
 
-/* Forms base */
 button,
 input,
 select,
 textarea {
   font: inherit;
-  color: inherit;
 }
 
-/* Focus ring forte (accessibile) */
-:where(button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* Scrollbars */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-subtle) transparent;
-}
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-*::-webkit-scrollbar-thumb {
-  background: var(--border-subtle);
-  border-radius: 999px;
-}
-
-/* =========================================================
-   Utilities
-   ========================================================= */
+/* ==========================================================================
+   UTILITY / GENERALI
+   ========================================================================== */
 
 .row {
   display: flex;
@@ -169,52 +144,61 @@ textarea {
   gap: var(--gap);
 }
 
-.grow {
-  flex: 1;
-}
-
 .wrap {
   flex-wrap: wrap;
 }
 
+.grow {
+  flex: 1;
+}
+
 .muted {
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 .hide {
   display: none !important;
 }
 
-.text-right {
-  text-align: right;
-}
-.text-center {
-  text-align: center;
+.code {
+  font-family: var(--font-mono);
+  font-size: 12px;
 }
 
-/* =========================================================
-   Surfaces & Panels
-   ========================================================= */
+/* Superfici principali */
 
 .panel {
   background: linear-gradient(
-    140deg,
-    var(--panel) 0%,
-    color-mix(in oklab, var(--panel-soft) 60%, #020617) 100%
+    145deg,
+    color-mix(in oklab, var(--bg-elevated) 88%, #020617),
+    color-mix(in oklab, var(--bg-elevated-soft) 88%, #020617)
   );
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-soft);
 }
 
 .panel--flat {
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--bg-elevated-soft) 92%, #020617);
   box-shadow: none;
-  background: color-mix(in oklab, var(--panel-soft) 90%, #020617);
 }
 
-/* =========================================================
-   Buttons
-   ========================================================= */
+/* Text helpers */
+
+strong {
+  font-weight: 700;
+}
+
+.footnote {
+  font-size: 12px;
+  color: var(--text-soft);
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   BOTTONI
+   ========================================================================== */
 
 .btn {
   display: inline-flex;
@@ -223,81 +207,66 @@ textarea {
   gap: 8px;
   height: 40px;
   padding: 0 14px;
-  border-radius: var(--radius-pill);
+  border-radius: 999px;
   border: 1px solid var(--border-subtle);
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.06), transparent 60%),
-    rgba(15, 23, 42, 0.96);
-  color: var(--text);
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.75),
+    rgba(15, 23, 42, 0.85)
+  );
+  color: var(--text-primary);
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
-  font-size: 13px;
-  letter-spacing: 0.01em;
   transition:
-    background var(--transition-med),
-    transform var(--transition-fast),
-    box-shadow var(--transition-med),
-    border-color var(--transition-fast),
-    filter var(--transition-fast);
+    background 130ms ease-out,
+    border-color 130ms ease-out,
+    transform 80ms ease-out,
+    box-shadow 130ms ease-out,
+    filter 130ms ease-out;
 }
+
 .btn:hover {
-  filter: brightness(1.05);
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.8);
-  border-color: var(--border);
+  filter: brightness(1.08);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.55);
 }
+
 .btn:active {
   transform: translateY(1px) scale(0.99);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+  box-shadow: none;
 }
+
 .btn[disabled] {
   opacity: 0.55;
   cursor: not-allowed;
   box-shadow: none;
-  filter: none;
 }
 
-/* Primary */
 .btn--primary {
-  background:
-    radial-gradient(circle at top left, rgba(59, 130, 246, 0.35), transparent 60%),
-    rgba(15, 23, 42, 0.98);
+  background: radial-gradient(circle at top left, var(--accent-soft), rgba(15, 23, 42, 0.95));
   border-color: var(--accent-strong);
 }
 
-/* Danger */
 .btn--danger {
-  background:
-    radial-gradient(circle at top left, rgba(239, 68, 68, 0.32), transparent 60%),
-    rgba(15, 23, 42, 0.98);
-  border-color: rgba(239, 68, 68, 0.7);
+  background: radial-gradient(circle at top left, rgba(248, 113, 113, 0.22), rgba(15, 23, 42, 0.95));
+  border-color: rgba(248, 113, 113, 0.8);
 }
 
-/* Ghost */
 .btn--ghost {
   background: transparent;
-  border-color: transparent;
-  box-shadow: none;
-}
-.btn--ghost:hover {
-  background: rgba(148, 163, 184, 0.15);
+  border-color: rgba(148, 163, 184, 0.5);
 }
 
-/* Tabs (nav & bottom-nav) */
-.tabbtn {
-  justify-content: flex-start;
-  font-weight: 500;
-}
-.tabbtn[aria-selected="true"] {
-  background:
-    radial-gradient(circle at top left, var(--accent-soft), transparent 70%),
-    rgba(15, 23, 42, 0.98);
-  border-color: var(--accent-strong);
+/* Piccola pill per chiusura modali etc. */
+.btn--pill {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
 }
 
-/* =========================================================
-   Inputs & Form Fields
-   ========================================================= */
+/* ==========================================================================
+   CAMPI – LABEL / INPUT / TEXTAREA
+   ========================================================================== */
 
 .field {
   display: flex;
@@ -307,47 +276,46 @@ textarea {
 }
 
 .label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted-soft);
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.label span.muted {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
 }
 
 .input,
 .select,
 .textarea {
   width: 100%;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
-  background: linear-gradient(
-    135deg,
-    rgba(15, 23, 42, 0.98),
-    rgba(15, 23, 42, 0.95)
-  );
-  color: var(--text);
-  padding: 9px 11px;
+  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.98));
+  color: var(--text-primary);
+  padding: 9px 12px;
   outline: none;
   font-size: 13px;
   transition:
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    background var(--transition-fast);
+    border-color 120ms ease-out,
+    box-shadow 120ms ease-out,
+    background 120ms ease-out;
 }
 
 .input::placeholder,
 .textarea::placeholder {
-  color: rgba(148, 163, 184, 0.75);
+  color: var(--text-soft);
 }
 
 .input:focus,
 .select:focus,
 .textarea:focus {
   border-color: var(--accent-strong);
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
-  background:
-    radial-gradient(circle at top, rgba(37, 99, 235, 0.22), transparent 60%),
-    rgba(15, 23, 42, 0.98);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
 }
 
 .textarea {
@@ -356,88 +324,96 @@ textarea {
 }
 
 .hint {
-  font-size: 11px;
-  color: var(--muted-soft);
-  line-height: 1.4;
+  font-size: 12px;
+  color: var(--text-soft);
+  line-height: 1.35;
 }
 
-/* =========================================================
-   Badges, Dots, KPI
-   ========================================================= */
+/* ==========================================================================
+   BADGE / DOT / KPI
+   ========================================================================== */
 
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 4px 10px;
-  border-radius: var(--radius-pill);
+  border-radius: 999px;
   border: 1px solid var(--border-subtle);
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.03), transparent 60%),
-    rgba(15, 23, 42, 0.96);
+  background: linear-gradient(
+    120deg,
+    rgba(15, 23, 42, 0.9),
+    rgba(15, 23, 42, 0.7)
+  );
   font-size: 11px;
-  color: var(--text);
-  white-space: nowrap;
+  color: var(--text-primary);
 }
 
-/* Dots per tipo */
 .dot {
   width: 9px;
   height: 9px;
   border-radius: 999px;
-  background: var(--muted-soft);
-  display: inline-block;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.8);
+  background: var(--text-soft);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.7);
 }
+
 .dot--ok {
   background: var(--ok);
 }
+
 .dot--bad {
   background: var(--bad);
 }
+
 .dot--card {
   background: var(--card);
 }
+
 .dot--due {
   background: var(--due);
 }
+
 .dot--repay {
   background: var(--repay);
 }
+
+/* KPI blocchi */
 
 .kpi {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
+
 .kpi > div {
   padding: 9px 11px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
-  background: linear-gradient(
-    145deg,
-    rgba(15, 23, 42, 0.98),
-    rgba(15, 23, 42, 1)
-  );
+  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.8));
 }
+
 .kpi .k {
   font-size: 11px;
-  color: var(--muted-soft);
-  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-soft);
+  margin-bottom: 3px;
 }
+
 .kpi .v {
   font-size: 15px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
-/* =========================================================
-   Toast Notifications
-   ========================================================= */
+/* ==========================================================================
+   TOAST
+   ========================================================================== */
 
 .toast-area {
   position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + var(--topbar-h) + 8px);
-  right: 16px;
+  top: calc(var(--topbar-h) + 12px);
+  right: 18px;
   z-index: 80;
   display: flex;
   flex-direction: column;
@@ -448,31 +424,33 @@ textarea {
 
 .toast {
   pointer-events: auto;
-  padding: 11px 13px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: rgba(15, 23, 42, 0.96);
-  box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(10px);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), rgba(15, 23, 42, 0.95));
+  box-shadow: var(--shadow-strong);
 }
+
 @media (prefers-color-scheme: light) {
   .toast {
-    background: rgba(255, 255, 255, 0.92);
+    background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), #ffffff);
   }
 }
+
 .toast .t {
   font-weight: 800;
   margin-bottom: 3px;
   font-size: 13px;
 }
+
 .toast .m {
-  color: var(--muted-soft);
+  color: var(--text-soft);
   font-size: 12px;
 }
 
-/* =========================================================
-   App Shell
-   ========================================================= */
+/* ==========================================================================
+   APP SHELL (topbar / main layout / sidebar / nav)
+   ========================================================================== */
 
 .app {
   min-height: 100vh;
@@ -481,6 +459,7 @@ textarea {
 }
 
 /* Topbar */
+
 .topbar {
   position: sticky;
   top: 0;
@@ -489,63 +468,66 @@ textarea {
   display: flex;
   align-items: center;
   gap: var(--gap);
-  padding: 10px 14px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--border-subtle);
-  background:
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.9));
-  backdrop-filter: blur(12px);
+  background: color-mix(in oklab, var(--bg-elevated) 88%, transparent);
+  backdrop-filter: blur(18px);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   font-weight: 900;
   font-size: 16px;
   white-space: nowrap;
 }
 
-/* Ref date */
 .refdate {
   display: flex;
   flex-direction: column;
   line-height: 1.05;
 }
+
 .refdate .small {
   font-size: 11px;
-  color: var(--muted-soft);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-}
-.refdate .big {
-  font-weight: 800;
-  font-size: 13px;
+  color: var(--text-soft);
 }
 
-/* Search bar */
+.refdate .big {
+  font-weight: 800;
+  font-size: 14px;
+}
+
+/* Search globale */
+
 .search {
   display: flex;
   align-items: center;
   gap: 8px;
   height: 40px;
   padding: 0 12px;
-  border-radius: var(--radius-pill);
+  border-radius: 999px;
   border: 1px solid var(--border-subtle);
-  background: rgba(15, 23, 42, 0.96);
+  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.98));
   min-width: 220px;
-  flex: 1;
   max-width: 520px;
+  flex: 1;
 }
+
 .search input {
   border: none;
   outline: none;
   background: transparent;
-  color: var(--text);
+  color: var(--text-primary);
   width: 100%;
   font-size: 13px;
 }
 
-/* Layout colonne */
+/* Layout 3 colonne */
+
 .main {
   display: grid;
   grid-template-columns: var(--nav-w) minmax(0, 1fr) var(--sidebar-w);
@@ -555,6 +537,7 @@ textarea {
 }
 
 /* Nav sinistra */
+
 .nav {
   position: sticky;
   top: calc(var(--topbar-h) + var(--gap));
@@ -562,22 +545,36 @@ textarea {
   padding: 10px;
   overflow: auto;
 }
+
 .nav .tabbtn {
   width: 100%;
+  justify-content: flex-start;
   height: 44px;
   margin-bottom: 8px;
+  border-radius: 12px;
+  background: transparent;
+  border-color: transparent;
+}
+
+.nav .tabbtn[aria-selected="true"] {
+  border-color: var(--accent-strong);
+  background: radial-gradient(circle at top left, var(--accent-soft), rgba(15, 23, 42, 0.9));
 }
 
 /* Content centrale */
+
 .content {
-  min-height: calc(100vh - var(--topbar-h) - (var(--gap) * 2));
+  padding: 0;
   overflow: visible;
+  min-height: calc(100vh - var(--topbar-h) - (var(--gap) * 2));
 }
+
 .content-inner {
   padding: var(--pad);
 }
 
 /* Sidebar destra */
+
 .sidebar {
   position: sticky;
   top: calc(var(--topbar-h) + var(--gap));
@@ -587,100 +584,131 @@ textarea {
 }
 
 /* Bottom nav (mobile) */
+
 .bottom-nav {
   display: none;
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
+  inset-inline: 0;
   z-index: 60;
   border-top: 1px solid var(--border-subtle);
-  background:
-    linear-gradient(to top, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
-  backdrop-filter: blur(14px);
+  background: color-mix(in oklab, var(--bg-elevated) 92%, transparent);
+  backdrop-filter: blur(16px);
   padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
-  gap: 10px;
+  gap: 8px;
 }
+
 .bottom-nav .tabbtn {
   flex: 1;
   height: 44px;
-  border-radius: 16px;
+  border-radius: 14px;
   justify-content: center;
   font-size: 11px;
-  text-align: center;
-  padding-inline: 6px;
+  padding: 0 6px;
 }
 
 /* Responsive */
+
 @media (max-width: 1023px) {
   :root {
     --nav-w: 0px;
     --sidebar-w: 0px;
   }
+
   .main {
     grid-template-columns: 1fr;
-    padding-bottom: 84px;
+    padding-bottom: 86px;
   }
+
   .nav {
     display: none;
   }
+
   .bottom-nav {
     display: flex;
   }
+
   .sidebar {
     display: none;
   }
+
   body[data-active-tab="calendario"] .sidebar {
+    display: block;
     position: relative;
-    top: 0;
+    top: auto;
     height: auto;
     order: 3;
-    display: block;
   }
 }
 
-/* =========================================================
-   Tab Panels
-   ========================================================= */
+/* ==========================================================================
+   TAB PANELS – visibilità
+   ========================================================================== */
 
 .tab-panel {
   display: none;
 }
-body[data-active-tab="calendario"] #tab-calendario {
-  display: block;
-}
-body[data-active-tab="nuovo"] #tab-nuovo {
-  display: block;
-}
-body[data-active-tab="rimborsi"] #tab-rimborsi {
-  display: block;
-}
-body[data-active-tab="wallets"] #tab-wallets {
-  display: block;
-}
+
+body[data-active-tab="calendario"] #tab-calendario,
+body[data-active-tab="nuovo"] #tab-nuovo,
+body[data-active-tab="rimborsi"] #tab-rimborsi,
+body[data-active-tab="wallets"] #tab-wallets,
 body[data-active-tab="impostazioni"] #tab-impostazioni {
   display: block;
 }
 
-/* =========================================================
-   Calendar
-   ========================================================= */
+/* Bordo colorato per area attiva */
+
+body[data-active-tab="calendario"] .content.panel {
+  border-color: color-mix(in oklab, var(--area-calendario) 55%, var(--border-subtle));
+}
+
+body[data-active-tab="nuovo"] .content.panel {
+  border-color: color-mix(in oklab, var(--area-nuovo) 55%, var(--border-subtle));
+}
+
+body[data-active-tab="rimborsi"] .content.panel {
+  border-color: color-mix(in oklab, var(--area-rimborsi) 55%, var(--border-subtle));
+}
+
+body[data-active-tab="wallets"] .content.panel {
+  border-color: color-mix(in oklab, var(--area-wallets) 55%, var(--border-subtle));
+}
+
+body[data-active-tab="impostazioni"] .content.panel {
+  border-color: color-mix(in oklab, var(--area-impostazioni) 55%, var(--border-subtle));
+}
+
+/* ==========================================================================
+   CALENDARIO
+   ========================================================================== */
 
 .cal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--gap);
-  padding: 12px 14px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .cal-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   font-weight: 900;
-  font-size: 15px;
+}
+
+#monthLabel {
+  font-size: 16px;
+}
+
+/* Pulsanti mese precedente/successivo un po’ più “link” */
+#btnPrevMonth,
+#btnNextMonth {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .cal-filters {
@@ -691,9 +719,10 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
   justify-content: flex-end;
 }
 
-/* Header giorni */
+/* Griglia */
+
 .cal-grid {
-  padding: 12px;
+  padding: 10px 12px;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 10px;
@@ -701,44 +730,45 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
 
 .dow {
   font-size: 11px;
-  color: var(--muted-soft);
+  color: var(--text-soft);
   padding: 4px 6px;
   text-align: center;
-  user-select: none;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  user-select: none;
 }
 
-/* Celle giorno */
+/* Cella giorno */
+
 .day {
+  border: 1px solid rgba(148, 163, 184, 0.45);
   border-radius: 14px;
-  border: 1px solid var(--border-subtle);
-  background:
-    radial-gradient(circle at top, rgba(15, 23, 42, 0.96), transparent 60%),
-    rgba(15, 23, 42, 0.98);
-  padding: 8px 9px;
+  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.88));
+  padding: 8px 8px 9px;
   min-height: 106px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   cursor: pointer;
   transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    transform var(--transition-fast),
-    box-shadow var(--transition-med);
+    border-color 120ms ease-out,
+    box-shadow 120ms ease-out,
+    transform 60ms ease-out,
+    background 120ms ease-out;
 }
+
 .day:hover {
   border-color: var(--accent-strong);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.85);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.75);
   transform: translateY(-1px);
 }
+
 .day[aria-selected="true"] {
-  outline: 2px solid var(--accent-strong);
-  background:
-    radial-gradient(circle at top, rgba(37, 99, 235, 0.25), transparent 70%),
-    rgba(15, 23, 42, 0.98);
+  border-color: var(--accent-strong);
+  background: radial-gradient(circle at top left, var(--accent-soft), rgba(15, 23, 42, 0.96));
 }
+
+/* Testata giorno */
 
 .day-top {
   display: flex;
@@ -746,16 +776,19 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
   align-items: center;
   gap: 8px;
 }
+
 .day-num {
   font-weight: 900;
   font-size: 14px;
 }
+
 .day-count {
   font-size: 11px;
-  color: var(--muted-soft);
+  color: var(--text-soft);
 }
 
-/* Riga evento nella cella */
+/* Riga evento nel calendario */
+
 .event-line {
   display: flex;
   align-items: center;
@@ -763,62 +796,70 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
   font-size: 11px;
   padding: 5px 7px;
   border-radius: 999px;
-  border: 1px solid var(--border-subtle);
-  background: rgba(15, 23, 42, 0.98);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.9);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
+
 .event-line .title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
 }
+
 .event-line .amt {
   font-weight: 800;
 }
+
 .event-line .muted {
   font-size: 10px;
 }
 
-/* Stati evento: solo bordo/glow, testo sempre chiaro */
+/* Varianti tipo evento */
+
 .event-line--entrata {
-  border-color: color-mix(in oklab, var(--ok) 45%, var(--border-subtle));
-  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.18);
-}
-.event-line--uscita {
-  border-color: color-mix(in oklab, var(--bad) 45%, var(--border-subtle));
-  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.2);
-}
-.event-line--acquisto {
-  border-color: color-mix(in oklab, var(--card) 45%, var(--border-subtle));
-  box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.22);
-}
-.event-line--quota {
-  border-color: color-mix(in oklab, var(--due) 50%, var(--border-subtle));
-  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.22);
-}
-.event-line--rimborso {
-  border-color: color-mix(in oklab, var(--repay) 50%, var(--border-subtle));
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.22);
+  border-color: color-mix(in oklab, var(--ok) 55%, var(--border-subtle));
+  background: linear-gradient(120deg, var(--ok-soft), rgba(15, 23, 42, 0.95));
 }
 
-/* =========================================================
-   Sidebar Snapshot
-   ========================================================= */
+.event-line--uscita {
+  border-color: color-mix(in oklab, var(--bad) 60%, var(--border-subtle));
+  background: linear-gradient(120deg, var(--bad-soft), rgba(15, 23, 42, 0.95));
+}
+
+.event-line--acquisto {
+  border-color: color-mix(in oklab, var(--card) 60%, var(--border-subtle));
+  background: linear-gradient(120deg, var(--card-soft), rgba(15, 23, 42, 0.95));
+}
+
+.event-line--quota {
+  border-color: color-mix(in oklab, var(--due) 60%, var(--border-subtle));
+  background: linear-gradient(120deg, var(--due-soft), rgba(15, 23, 42, 0.95));
+}
+
+.event-line--rimborso {
+  border-color: color-mix(in oklab, var(--repay) 60%, var(--border-subtle));
+  background: linear-gradient(120deg, var(--repay-soft), rgba(15, 23, 42, 0.95));
+}
+
+/* ==========================================================================
+   SIDEBAR – Snapshot
+   ========================================================================== */
 
 .sidebar h3 {
-  margin: 0 0 8px 0;
-  font-size: 15px;
-  font-weight: 800;
+  margin: 0 0 10px;
+  font-size: 16px;
 }
 
 .wallet-card {
-  padding: 11px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background: radial-gradient(circle at top left, rgba(15, 23, 42, 1), rgba(15, 23, 42, 0.95));
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid var(--border-subtle);
+  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9));
   margin-bottom: 12px;
 }
 
@@ -827,33 +868,31 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .wallet-name {
   font-weight: 900;
-  font-size: 14px;
   line-height: 1.2;
-  color: var(--text-strong);
 }
 
 .wallet-type {
-  font-size: 11px;
-  color: var(--muted-soft);
-  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-soft);
+  margin-top: 1px;
 }
 
 .wallet-next {
   margin-top: 9px;
-  padding-top: 8px;
+  padding-top: 9px;
   border-top: 1px dashed var(--border-subtle);
   font-size: 12px;
-  color: var(--muted-soft);
+  color: var(--text-muted);
 }
 
 .wallet-cats {
   margin-top: 9px;
-  padding-top: 8px;
+  padding-top: 9px;
   border-top: 1px dashed var(--border-subtle);
 }
 
@@ -862,16 +901,17 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
   justify-content: space-between;
   gap: 10px;
   font-size: 12px;
-  padding: 5px 0;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
 }
+
 .cat-row:last-child {
   border-bottom: none;
 }
 
-/* =========================================================
-   Pages / Sections / Forms
-   ========================================================= */
+/* ==========================================================================
+   FORM / PAGINE GENERICHE
+   ========================================================================== */
 
 .page-title {
   display: flex;
@@ -880,15 +920,16 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
   gap: var(--gap);
   margin-bottom: 12px;
 }
+
 .page-title h2 {
   margin: 0;
   font-size: 18px;
-  letter-spacing: 0.02em;
 }
+
 .page-sub {
-  margin-top: 6px;
-  color: var(--muted-soft);
-  font-size: 12px;
+  margin-top: 5px;
+  color: var(--text-muted);
+  font-size: 13px;
   line-height: 1.4;
 }
 
@@ -898,6 +939,7 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
   gap: 12px;
   align-items: flex-start;
 }
+
 @media (max-width: 820px) {
   .form-grid {
     grid-template-columns: 1fr;
@@ -905,117 +947,123 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
 }
 
 .form-section {
-  padding: 11px 12px;
-  border-radius: 16px;
+  padding: 12px;
+  border-radius: 18px;
   border: 1px solid var(--border-subtle);
-  background: linear-gradient(
-    145deg,
-    rgba(15, 23, 42, 0.98),
-    rgba(15, 23, 42, 1)
-  );
-}
-.section-title {
-  font-weight: 800;
-  margin: 0 0 8px 0;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted-soft);
+  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.88));
 }
 
-/* Cards tipo evento */
+.section-title {
+  font-weight: 900;
+  margin: 0 0 10px 0;
+  font-size: 14px;
+}
+
+/* Type cards (scelta tipo evento) */
+
 .type-cards {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
+
 @media (max-width: 900px) {
   .type-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
 .type-card {
   border-radius: 16px;
   border: 1px solid var(--border-subtle);
-  background:
-    radial-gradient(circle at top left, rgba(15, 23, 42, 0.98), transparent 70%),
-    rgba(15, 23, 42, 1);
-  padding: 12px;
+  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+  padding: 10px 11px;
   cursor: pointer;
   user-select: none;
   display: flex;
   flex-direction: column;
   gap: 8px;
   transition:
-    background var(--transition-med),
-    border-color var(--transition-med),
-    transform var(--transition-fast),
-    box-shadow var(--transition-med);
-}
-.type-card:hover {
-  border-color: var(--accent-strong);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.9);
-  transform: translateY(-1px);
-}
-.type-card[aria-checked="true"] {
-  outline: 2px solid var(--accent-strong);
-  background:
-    radial-gradient(circle at top left, rgba(59, 130, 246, 0.25), transparent 68%),
-    rgba(15, 23, 42, 1);
-}
-.type-card .t {
-  font-weight: 800;
-  font-size: 13px;
-}
-.type-card .d {
-  font-size: 12px;
-  color: var(--muted-soft);
-  line-height: 1.35;
+    border-color 140ms ease-out,
+    background 140ms ease-out,
+    transform 80ms ease-out,
+    box-shadow 140ms ease-out;
 }
 
-/* Separator */
+.type-card:hover {
+  border-color: var(--accent-strong);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.7);
+  transform: translateY(-1px);
+}
+
+.type-card[aria-checked="true"] {
+  border-color: var(--accent-strong);
+  background: radial-gradient(circle at top left, var(--accent-soft), rgba(15, 23, 42, 0.96));
+}
+
+.type-card .t {
+  font-weight: 900;
+  font-size: 13px;
+}
+
+.type-card .d {
+  font-size: 12px;
+  color: var(--text-soft);
+  line-height: 1.3;
+}
+
+/* Separatore */
+
 .hr {
   height: 1px;
-  background: var(--border-subtle);
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(148, 163, 184, 0.7),
+    transparent
+  );
   margin: 12px 0;
   border: 0;
 }
 
-/* =========================================================
-   Tables
-   ========================================================= */
+/* ==========================================================================
+   TABELLE
+   ========================================================================== */
 
 table {
   width: 100%;
   border-collapse: collapse;
 }
+
 th,
 td {
   text-align: left;
-  padding: 8px 8px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 9px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.3);
   vertical-align: top;
+  font-size: 12px;
 }
+
 th {
-  color: var(--muted-soft);
-  font-size: 11px;
-  font-weight: 800;
+  color: var(--text-soft);
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  font-weight: 700;
 }
+
 td {
   font-size: 13px;
 }
 
 .table-actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-/* =========================================================
-   Event Overlay (dettaglio evento)
-   ========================================================= */
+/* ==========================================================================
+   EVENT OVERLAY (dettaglio evento)
+   ========================================================================== */
 
 .event-overlay {
   position: fixed;
@@ -1025,9 +1073,10 @@ td {
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(12px);
+  background: radial-gradient(circle at top, rgba(15, 23, 42, 0.90), rgba(15, 23, 42, 0.96));
+  backdrop-filter: blur(16px);
 }
+
 .event-overlay--open {
   display: flex;
 }
@@ -1036,12 +1085,10 @@ td {
   width: min(640px, 100%);
   max-height: calc(100vh - 40px);
   overflow: auto;
-  padding: 14px;
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  background:
-    radial-gradient(circle at top left, rgba(15, 23, 42, 1), transparent 70%),
-    rgba(15, 23, 42, 0.98);
+  padding: 16px 16px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border-strong);
+  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.10), var(--bg-elevated));
   box-shadow: var(--shadow-strong);
 }
 
@@ -1050,172 +1097,197 @@ td {
   justify-content: space-between;
   align-items: flex-start;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
+
 .event-meta {
   font-size: 12px;
-  color: var(--muted-soft);
+  color: var(--text-soft);
   line-height: 1.4;
 }
 
 .event-quote-list {
-  margin-top: 8px;
+  margin-top: 9px;
   border-top: 1px dashed var(--border-subtle);
   padding-top: 8px;
 }
+
 .event-quote-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
   font-size: 12px;
 }
+
 .event-quote-row:last-child {
   border-bottom: none;
 }
 
-/* =========================================================
-   Day Events Modal (lista eventi di un giorno)
-   ========================================================= */
+/* ==========================================================================
+   MODALE "EVENTI DEL GIORNO"
+   ========================================================================== */
 
-/* Backdrop */
+/* Wrapper modale */
 #dayEventsModal {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.78);
-  display: none; /* JS -> flex */
+  display: none; /* JS: style.display = "flex" per aprire */
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: 95;
+  background: radial-gradient(circle at top, rgba(15, 23, 42, 0.90), rgba(15, 23, 42, 0.96));
+  backdrop-filter: blur(18px);
 }
 
-/* Card container */
+/* Contenitore principale (figlio diretto) */
 #dayEventsModal > div {
-  background: radial-gradient(circle at top left, #020617, #020617);
-  color: #e5e7eb;
-  width: min(600px, 92vw);
+  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), #020617);
+  color: var(--text-primary);
+  width: min(620px, 92vw);
   max-height: 82vh;
-  border-radius: 18px;
+  border-radius: 20px;
   box-shadow: var(--shadow-strong);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.55);
+  border: 1px solid var(--border-strong);
 }
 
 /* Header modale giorno */
-#dayEventsModal .day-modal-header {
+#dayEventsModal > div > div:first-child {
   padding: 10px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(51, 65, 85, 0.9);
-  background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.6);
+  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.20), rgba(15, 23, 42, 0.95));
 }
 
-/* Se usi gli ID dal tuo HTML */
 #dayModalDate {
   font-weight: 600;
   font-size: 15px;
   letter-spacing: 0.03em;
 }
+
 #dayModalSummary {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--text-soft);
   margin-top: 2px;
 }
 
+/* Contenuto scrollabile */
 #dayModalContent {
-  padding: 8px 13px 11px;
+  padding: 10px 14px 12px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-/* Righe evento nel modale */
-.day-modal-row {
-  width: 100%;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.45);
+/* Riga evento dentro il modale giorno – più ricca del calendario */
+
+.day-modal-event {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: center;
   padding: 7px 9px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  background: rgba(15, 23, 42, 0.98);
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(15, 23, 42, 0.95);
   cursor: pointer;
-  text-align: left;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
   transition:
-    background var(--transition-med),
-    transform var(--transition-fast),
-    box-shadow var(--transition-med),
-    border-color var(--transition-fast);
-}
-.day-modal-row:hover {
-  background: rgba(37, 99, 235, 0.6);
-  transform: translateY(-1px);
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 1);
-  border-color: var(--accent-strong);
+    background 120ms ease-out,
+    border-color 120ms ease-out,
+    transform 60ms ease-out;
 }
 
-.day-modal-row-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.day-modal-event:hover {
+  background: color-mix(in oklab, rgba(15, 23, 42, 0.95) 70%, var(--accent-soft));
+  border-color: var(--accent-strong);
+  transform: translateY(-1px);
 }
-.day-modal-row-left {
-  display: flex;
+
+.day-modal-event-type {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-width: 0;
+  gap: 4px;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.8);
 }
-.day-modal-row-title {
-  font-size: 13px;
-  font-weight: 500;
+
+.day-modal-event-main {
+  overflow: hidden;
+}
+
+.day-modal-event-title {
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.day-modal-row-amt {
-  font-size: 13px;
+
+.day-modal-event-meta {
+  font-size: 11px;
+  color: var(--text-soft);
+  margin-top: 1px;
+}
+
+.day-modal-event-amount {
   font-weight: 700;
-  white-space: nowrap;
-}
-.day-modal-row-bottom {
-  font-size: 11px;
-  color: #9ca3af;
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
-/* Ricicliamo le classi evento per i bordi */
-.day-modal-row.event-line--entrata {
-  border-color: color-mix(in oklab, var(--ok) 45%, var(--border-subtle));
+/* Colore type badge in modale */
+.day-modal-event--income .day-modal-event-type {
+  border-color: var(--ok);
 }
-.day-modal-row.event-line--uscita {
-  border-color: color-mix(in oklab, var(--bad) 45%, var(--border-subtle));
+.day-modal-event--expense .day-modal-event-type {
+  border-color: var(--bad);
 }
-.day-modal-row.event-line--acquisto {
-  border-color: color-mix(in oklab, var(--card) 45%, var(--border-subtle));
+.day-modal-event--card_purchase .day-modal-event-type {
+  border-color: var(--card);
 }
-.day-modal-row.event-line--quota {
-  border-color: color-mix(in oklab, var(--due) 45%, var(--border-subtle));
+.day-modal-event--card_due .day-modal-event-type {
+  border-color: var(--due);
 }
-.day-modal-row.event-line--rimborso {
-  border-color: color-mix(in oklab, var(--repay) 45%, var(--border-subtle));
+.day-modal-event--card_repayment .day-modal-event-type {
+  border-color: var(--repay);
 }
 
-/* =========================================================
-   Footnote
-   ========================================================= */
+/* Pulsante chiudi nel modale giorno */
+#dayModalClose {
+  min-width: auto;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+}
 
-.footnote {
-  font-size: 11px;
-  color: var(--muted-soft);
-  line-height: 1.4;
+/* ==========================================================================
+   TAB SPECIFICHE: RIMBORSI / WALLET / IMPOSTAZIONI
+   (solo tocchi mirati, tutto usa già i componenti generici)
+   ========================================================================== */
+
+/* Rimborsi carte – evidenzia KPI differenza */
+
+#tab-rimborsi .kpi > div:last-child .v {
+  color: var(--accent-strong);
+}
+
+/* Wallet & Metodi: righe metodi più compatte */
+
+#methodsTableBody td {
+  font-size: 12px;
+}
+
+/* Impostazioni – griglia */
+
+#tab-impostazioni .form-section {
+  min-height: 0;
 }

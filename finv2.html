@@ -165,6 +165,9 @@
             </div>
             <div class="muted" style="font-size:13px;">
               Clicca un giorno per aggiornare “Stato al giorno selezionato”.
+              Le <strong>Quote carta</strong> che risultano già coperte da un
+              <strong>rimborso</strong> non sono più considerate debito residuo
+              e, nella vista definitiva, non verranno più mostrate nel calendario.
             </div>
           </div>
         </div>
@@ -733,9 +736,12 @@
     <aside class="sidebar panel" aria-label="Stato al giorno selezionato">
       <h3 id="snapshotTitle">📌 Stato al: —</h3>
       <div class="muted" style="font-size:13px; margin-bottom:12px;">
-        Valori calcolati <strong>fino al giorno selezionato</strong>: saldi per wallet, progressi del mese, confronto mese scorso, prossimi eventi, categorie principali.
+        Valori calcolati <strong>fino al giorno selezionato</strong>.
+        <br>
+        Per le <strong>carte</strong>:
+        <br>– il <strong>debito dovuto entro fine mese</strong> è già <strong>al netto</strong> dei rimborsi registrati;
+        <br>– le <strong>quote carta già coperte</strong> non devono più essere mostrate nel calendario, per non sporcare la vista.
       </div>
-
       <div id="snapshotWalletCards">
         <!-- Card wallet generate via JS: GET /dashboard?asOf=YYYY-MM-DD&month=YYYY-MM -->
         <div class="wallet-card">
@@ -821,43 +827,114 @@
         <div>
           <div class="wallet-name"></div>
           <div class="wallet-type"></div>
+          <!-- Riassunto breve per questo wallet/carta -->
+          <div class="hint" data-kpi="walletShortSummary" style="margin-top:4px;">
+            <!-- Es.: "Tutto pagato per questo mese" / "Ancora 240,00 € da rimborsare" -->
+          </div>
         </div>
         <span class="badge"><span class="dot"></span> EUR</span>
       </div>
-
+  
+      <!-- KPI base (valide per tutti i wallet) -->
       <div class="kpi">
-        <div><div class="k">Saldo al giorno selezionato</div><div class="v" data-kpi="balance">—</div></div>
-        <div><div class="k">Spese mese (fatte fino a data)</div><div class="v" data-kpi="spentSoFar">—</div></div>
-        <div><div class="k">Spese mese (ancora da fare nel mese)</div><div class="v" data-kpi="spentRemaining">—</div></div>
-        <div><div class="k">Entrate mese (fatte fino a data)</div><div class="v" data-kpi="incomeSoFar">—</div></div>
-        <div><div class="k">Entrate mese (ancora previste)</div><div class="v" data-kpi="incomeRemaining">—</div></div>
-        <div><div class="k">Spese: confronto mese scorso</div><div class="v" data-kpi="compareLastMonthExpenses">—</div></div>
-        <div><div class="k">Entrate: confronto mese scorso</div><div class="v" data-kpi="compareLastMonthIncome">—</div></div>
+        <div>
+          <div class="k">Saldo al giorno selezionato</div>
+          <div class="v" data-kpi="balance">—</div>
+        </div>
+        <div>
+          <div class="k">Spese mese (fatte fino a data)</div>
+          <div class="v" data-kpi="spentSoFar">—</div>
+        </div>
+        <div>
+          <div class="k">Spese mese (ancora da fare nel mese)</div>
+          <div class="v" data-kpi="spentRemaining">—</div>
+        </div>
+        <div>
+          <div class="k">Entrate mese (fatte fino a data)</div>
+          <div class="v" data-kpi="incomeSoFar">—</div>
+        </div>
+        <div>
+          <div class="k">Entrate mese (ancora previste)</div>
+          <div class="v" data-kpi="incomeRemaining">—</div>
+        </div>
+        <div>
+          <div class="k">Spese: confronto mese scorso</div>
+          <div class="v" data-kpi="compareLastMonthExpenses">—</div>
+        </div>
+        <div>
+          <div class="k">Entrate: confronto mese scorso</div>
+          <div class="v" data-kpi="compareLastMonthIncome">—</div>
+        </div>
       </div>
-
+  
+      <!-- Prossimo evento collegato a questo wallet -->
       <div class="wallet-next">
-        <strong>Prossimo evento:</strong> <span data-kpi="nextEvent">—</span>
+        <strong>Prossimo evento:</strong>
+        <span data-kpi="nextEvent">—</span>
       </div>
-
+  
+      <!-- Categorie principali -->
       <div class="wallet-cats">
-        <div class="muted" style="font-size:12px; margin-bottom:6px;"><strong>Categorie principali del mese</strong></div>
+        <div class="muted" style="font-size:12px; margin-bottom:6px;">
+          <strong>Categorie principali del mese</strong>
+        </div>
         <div data-slot="categories"></div>
       </div>
-
-      <!-- Se carta: area extra (mostrata via JS) -->
+  
+      <!-- Se carta: area extra (mostrata via JS, solo per wallet di tipo "carta") -->
       <div data-slot="cardExtras" class="hide" style="margin-top:10px;">
         <div class="hr"></div>
+  
+        <p class="section-title" style="margin-top:0;">
+          Carta: stato debito e rimborsi
+        </p>
+  
         <div class="kpi">
-          <div><div class="k">Limite carta</div><div class="v" data-kpi="cardLimit">—</div></div>
-          <div><div class="k">Plafond disponibile</div><div class="v" data-kpi="availableCredit">—</div></div>
-          <div><div class="k">Debito totale attuale</div><div class="v" data-kpi="outstanding">—</div></div>
-          <div><div class="k">Debito dovuto entro fine mese</div><div class="v" data-kpi="dueByEom">—</div></div>
-          <div><div class="k">Rimborsi effettuati nel mese</div><div class="v" data-kpi="repaymentsThisMonth">—</div></div>
-          <div><div class="k">Wallet sorgente default</div><div class="v" data-kpi="defaultSourceWallet">—</div></div>
+          <div>
+            <div class="k">Limite carta</div>
+            <div class="v" data-kpi="cardLimit">—</div>
+          </div>
+          <div>
+            <div class="k">Plafond disponibile</div>
+            <div class="v" data-kpi="availableCredit">—</div>
+          </div>
+          <div>
+            <div class="k">Debito totale attuale</div>
+            <div class="v" data-kpi="outstanding">—</div>
+          </div>
+          <div>
+            <div class="k">
+              Debito dovuto entro fine mese
+              <span class="muted" style="display:block;font-size:11px;">
+                al netto dei rimborsi registrati
+              </span>
+            </div>
+            <div class="v" data-kpi="dueByEom">—</div>
+          </div>
+          <div>
+            <div class="k">
+              Rimborsi effettuati nel mese
+              <span class="muted" style="display:block;font-size:11px;">
+                considerati fino alla data di riferimento
+              </span>
+            </div>
+            <div class="v" data-kpi="repaymentsThisMonth">—</div>
+          </div>
+          <div>
+            <div class="k">Wallet sorgente default</div>
+            <div class="v" data-kpi="defaultSourceWallet">—</div>
+          </div>
+        </div>
+  
+        <div class="hint" style="margin-top:8px;">
+          Se i rimborsi coprono tutte le quote dovute del mese,
+          questo riquadro mostrerà <strong>0,00€</strong> come debito dovuto
+          e le relative <strong>“Quote carta”</strong> possono essere rimosse dalla vista del calendario.
         </div>
       </div>
     </div>
   </template>
+
   <!-- Overlay: dettaglio / modifica evento -->
   <div class="event-overlay" id="eventOverlay" role="dialog" aria-modal="true" aria-labelledby="eventDialogTitle">
     <div class="event-card">

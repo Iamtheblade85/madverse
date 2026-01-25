@@ -1413,3 +1413,91 @@ body {
 .sidebar .muted {
   color: #9ca3af !important;
 }
+/* ================= FIX 1: CONTRASTO AREA "NUOVO EVENTO" ================= */
+
+/* Contenitore principale della tab Nuovo evento */
+#tab-nuovo,
+#tab-nuovo .content-inner {
+  background: #020617 !important;
+  color: #e5e7eb !important;
+}
+
+/* Pannelli/sezioni all'interno del Nuovo evento */
+#tab-nuovo .form-section,
+#tab-nuovo .form-section.panel--flat {
+  background: #020617 !important;
+  color: #e5e7eb !important;
+  border-color: rgba(51, 65, 85, 1) !important; /* slate 700 */
+}
+
+/* Titolo pagina e sottotitolo */
+#tab-nuovo .page-title h2 {
+  color: #f9fafb !important;
+}
+
+#tab-nuovo .page-sub {
+  color: #cbd5f5 !important; /* chiaro ma non bianco pieno */
+}
+
+/* Label, hint, testi "muted" nella tab Nuovo */
+#tab-nuovo .label,
+#tab-nuovo .hint,
+#tab-nuovo .muted {
+  color: #9ca3af !important;
+}
+
+/* Campi input/select/textarea – sfondo scuro, testo chiaro */
+#tab-nuovo .input,
+#tab-nuovo .select,
+#tab-nuovo .textarea {
+  background: #020617 !important;
+  color: #f9fafb !important;
+  border-color: rgba(148, 163, 184, 0.9) !important; /* slate 400 */
+}
+
+/* Placeholder leggibili ma non troppo invasivi */
+#tab-nuovo .input::placeholder,
+#tab-nuovo .textarea::placeholder {
+  color: #6b7280 !important; /* gray 500 */
+}
+
+/* Card di scelta tipo evento: testo sempre leggibile */
+#tab-nuovo .type-card {
+  background: #020617 !important;
+  color: #e5e7eb !important;
+  border-color: rgba(51, 65, 85, 1) !important;
+}
+
+#tab-nuovo .type-card[aria-checked="true"] {
+  background: #0f172a !important;
+  border-color: #38bdf8 !important; /* accent */
+}
+
+#tab-nuovo .type-card .t {
+  color: #f9fafb !important;
+}
+
+#tab-nuovo .type-card .d {
+  color: #9ca3af !important;
+}
+/* ================= FIX 2: CALENDARIO – EVENTI ADATTABILI ================= */
+
+/* La cella del giorno deve potersi espandere in altezza */
+.cal-grid .day {
+  height: auto !important;
+  min-height: 106px; /* manteniamo comunque un minimo per i giorni vuoti */
+}
+
+/* Le righe evento devono potere andare a capo */
+.event-line {
+  white-space: normal !important;      /* permette il wrap su più righe */
+  align-items: flex-start !important;  /* allinea il testo in alto se alto > 1 riga */
+  line-height: 1.3;
+}
+
+/* Il titolo può andare a capo dentro il suo spazio */
+.event-line .title {
+  white-space: normal !important;
+  overflow: hidden;        /* se proprio è lunghissimo, taglia solo l'eccesso */
+  text-overflow: ellipsis; /* ma solo quando necessario */
+}

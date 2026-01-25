@@ -389,8 +389,7 @@ async function finalizeAppLoad() {
   await loadAvailableTokens();
 
   window.dispatchEvent(new CustomEvent('user:loggedin', { detail: window.userData }));
-  loadSection('loadLatestNews');
-
+  loadSection('goblin-dex');
   document.querySelectorAll('.menu-button, .menu-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const section = e.target.getAttribute('data-section');
@@ -4827,11 +4826,11 @@ function loadGoblinDex() {
         gap: 1.5rem;
         margin-bottom: 2rem;
       ">
-        <button class="goblin-menu-btn active-tab" data-menu="inventory"
+        <button class="goblin-menu-btn" data-menu="inventory"
           style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
           Goblin Inventory
         </button>
-        <button class="goblin-menu-btn" data-menu="dwarf-cave"
+        <button class="goblin-menu-btn active-tab" data-menu="dwarf-cave"
           style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
           Dwarfen Gold Cave
         </button>
@@ -4889,7 +4888,7 @@ function loadGoblinDex() {
   });
 
   // Carica la sezione di default (Goblin Inventory)
-  renderGoblinInventory();
+  loadDwarvesGoldCave();
 }
 
 /* =========================

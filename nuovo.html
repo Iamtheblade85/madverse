@@ -4575,6 +4575,17 @@ function initMyExpOverlayHost(){
           }
         };
       }
+	  document.addEventListener('DOMContentLoaded', () => {
+		  setTimeout(() => {
+		    try {
+		      syncUserFromStorage();
+		      assertAuth();
+		      fetchUserNFTs();
+		    } catch (_) {
+		    }
+		  }, 1200);
+	  });
+				
       fetchGlobalSnapshot();
       startPolling();
 		// ✅ ticker rotator: cambia evento ogni 2 secondi

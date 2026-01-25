@@ -1163,3 +1163,66 @@ td {
   font-size: 12px;
   border-radius: 999px;
 }
+/* ================== LAYOUT EVENTI CALENDARIO – FIX DEFINITIVO ================== */
+
+/* Ogni giorno può crescere in altezza quanto serve */
+.cal-grid .day {
+  height: auto;            /* niente altezza fissa */
+  min-height: 106px;       /* stessa base per i giorni vuoti */
+}
+
+/* Righe evento: layout a griglia, 2 righe ben strutturate */
+.event-line {
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* dot | titolo | importo */
+  grid-template-rows: auto auto;        /* riga 1: titolo+importo, riga 2: meta */
+  column-gap: 6px;
+  row-gap: 2px;
+  align-items: center;
+
+  padding: 6px 8px;
+  border-radius: 10px;                   /* pill morbida, non “salsiccia infinita” */
+  white-space: normal;                   /* il testo può andare a capo */
+  line-height: 1.3;
+}
+
+/* Dot colorato a sinistra, centrato su due righe */
+.event-line .dot {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  margin-top: 1px;
+}
+
+/* Titolo: riga sopra, prende tutto lo spazio centrale */
+.event-line .title {
+  grid-column: 2;
+  grid-row: 1;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;  /* solo se davvero lunghissimo */
+  white-space: normal;
+}
+
+/* Importo: riga sopra, allineato a destra, sempre ben visibile */
+.event-line .amt {
+  grid-column: 3;
+  grid-row: 1;
+  font-weight: 700;
+  text-align: right;
+  margin-left: 4px;
+  color: #f9fafb;          /* importo ben contrastato */
+}
+
+/* Metadati (wallet, tipo, ecc): seconda riga sotto il titolo */
+.event-line .muted {
+  grid-column: 2 / 4;
+  grid-row: 2;
+  font-size: 10px;
+  color: var(--text-soft);
+  white-space: normal;
+}
+
+/* Giusto per sicurezza: niente clipping della cella giorno */
+.day {
+  overflow: visible;
+}

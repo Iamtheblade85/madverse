@@ -139,19 +139,31 @@ function getMonthRange() {
 
 function setSelectedDate(iso) {
   state.selectedDate = iso
+
+  // Ricostruisce la mappa eventi in base alla nuova data di riferimento
+  // (serve per capire quali quote carta sono già coperte dai rimborsi)
+  buildEventsByDate()
+  renderCalendar()
+
   const ref = el("refDateLabel")
   if (ref) ref.textContent = formatDateHuman(iso)
+
   const snap = el("snapshotTitle")
   if (snap) snap.textContent = "📌 Stato al: " + iso
+
+  // Evidenzia il giorno selezionato nella griglia (dopo il re-render)
   const grid = el("calendarGrid")
   if (grid) {
-    grid.querySelectorAll(".day").forEach(day=>{
+    grid.querySelectorAll(".day").forEach(day => {
       const d = day.getAttribute("data-date")
       day.setAttribute("aria-selected", d === iso ? "true" : "false")
     })
   }
+
+  // Aggiorna la dashboard / sidebar con gli importi calcolati alla nuova data
   loadDashboard()
 }
+
 function setActiveTabUI(tab){
   document.body.dataset.activeTab = tab
   document.querySelectorAll('[data-tab]').forEach(b=>{
@@ -160,12 +172,91 @@ function setActiveTabUI(tab){
 }
 
 function buildEventsByDate() {
+  // Mappa data ISO -> eventi mostrati in calendario
   state.eventsByDate = new Map()
-  state.events.forEach(ev=>{
-    const d = ev.calendarDate || ev.date
+
+  if (!Array.isArray(state.events) || !state.events.length) return
+
+  const asOfIso = state.selectedDate || formatISODate(new Date())
+  const asOfDate = parseISODate(asOfIso)
+
+  // Se per qualche motivo la data non è valida, fallback “stupido” come prima
+  if (!asOfDate) {
+    state.events.forEach(ev => {
+      const d = ev.calendarDate || ev.date
+      if (!d) return
+      if (!state.eventsByDate.has(d)) state.eventsByDate.set(d, [])
+      state.eventsByDate.get(d).push(ev)
+    })
+    return
+  }
+
+  const asOfYear  = asOfDate.getFullYear()
+  const asOfMonth = asOfDate.getMonth()
+  const asOfTime  = asOfDate.getTime()
+
+  // Aggregato per carta nel mese corrente
+  // cardId -> { dueMonth: totale quote dovute nel mese, repUpTo: rimborsi nel mese fino alla data di riferimento }
+  const cardAgg = new Map()
+  const ensureAgg = (cardId) => {
+    if (!cardAgg.has(cardId)) cardAgg.set(cardId, { dueMonth: 0, repUpTo: 0 })
+    return cardAgg.get(cardId)
+  }
+
+  // 1) Calcola, per ogni carta, il totale quote del mese e rimborsi fino alla data di riferimento
+  state.events.forEach(ev => {
+    const dStr = ev.calendarDate || ev.date
+    if (!dStr) return
+    const d = parseISODate(dStr)
     if (!d) return
-    if (!state.eventsByDate.has(d)) state.eventsByDate.set(d,[])
-    state.eventsByDate.get(d).push(ev)
+
+    // Ci interessa solo il mese della data di riferimento
+    if (d.getFullYear() !== asOfYear || d.getMonth() !== asOfMonth) return
+
+    if (ev.type === "card_due") {
+      // Quote dovute del mese (tutte le date del mese)
+      const cardId = ev.cardWalletId || ev.walletId || null
+      if (!cardId) return
+      const agg = ensureAgg(cardId)
+      agg.dueMonth += ev.amount || 0
+    } else if (ev.type === "card_repayment") {
+      // Rimborsi del mese, solo fino alla data di riferimento
+      const cardId = ev.toCardWalletId || ev.cardWalletId || null
+      if (!cardId) return
+      if (d.getTime() > asOfTime) return
+      const agg = ensureAgg(cardId)
+      agg.repUpTo += ev.amount || 0
+    }
+  })
+
+  // 2) Determina quali carte hanno il mese completamente coperto
+  const fullyPaidCards = new Set()
+  cardAgg.forEach((v, cardId) => {
+    if (v.dueMonth > 0 && v.repUpTo >= v.dueMonth - 0.01) {
+      // mese coperto per questa carta → quote “dovute” possono sparire dal calendario
+      fullyPaidCards.add(cardId)
+    }
+  })
+
+  // 3) Popola eventsByDate, saltando le card_due delle carte completamente coperte
+  state.events.forEach(ev => {
+    const dStr = ev.calendarDate || ev.date
+    if (!dStr) return
+
+    if (ev.type === "card_due") {
+      const d = parseISODate(dStr)
+      if (d && d.getFullYear() === asOfYear && d.getMonth() === asOfMonth) {
+        const cardId = ev.cardWalletId || ev.walletId || null
+        if (cardId && fullyPaidCards.has(cardId)) {
+          // Questa quota è relativa a una carta che, nel mese, è già completamente coperta dai rimborsi:
+          // non la mostriamo nel calendario per non sporcare la vista.
+          return
+        }
+      }
+    }
+
+    if (!state.eventsByDate.has(dStr)) state.eventsByDate.set(dStr, [])
+    state.eventsByDate.get(dStr).push(ev)
   })
 }
 
@@ -433,34 +524,40 @@ function renderCalendar() {
 }
 
 async function loadEvents() {
-  const {start,end} = getMonthRange()
+  const {start, end} = getMonthRange()
   const from = formatISODate(start)
   const to = formatISODate(end)
   const walletId = el("filterWallet") ? el("filterWallet").value : ""
   const type = el("filterType") ? el("filterType").value : ""
   const q = el("globalSearch") ? el("globalSearch").value.trim() : ""
+
   const params = new URLSearchParams()
   params.set("from", from)
   params.set("to", to)
   if (walletId) params.set("walletId", walletId)
   if (type) params.set("type", type)
   if (q) params.set("q", q)
+
   let data = []
   try {
-    data = await apiFetch("/events?" + params.toString(),{method:"GET"})
-  } catch(e) {
+    data = await apiFetch("/events?" + params.toString(), { method: "GET" })
+  } catch (e) {
     data = []
   }
   state.events = Array.isArray(data) ? data : []
-  buildEventsByDate()
+
+  // Se non c'è ancora una data selezionata, scegli:
+  // - oggi se è nel mese mostrato
+  // - altrimenti il primo giorno del mese
   if (!state.selectedDate) {
     const todayISO = formatISODate(new Date())
-    const {start:ms,end:me} = getMonthRange()
+    const { start: ms, end: me } = getMonthRange()
     const t = parseISODate(todayISO)
     if (t && t >= ms && t <= me) state.selectedDate = todayISO
     else state.selectedDate = formatISODate(ms)
   }
-  renderCalendar()
+
+  // Questo chiamerà buildEventsByDate(), renderCalendar() e loadDashboard()
   setSelectedDate(state.selectedDate)
 }
 
@@ -468,35 +565,49 @@ function renderSnapshot() {
   const container = el("snapshotWalletCards")
   if (!container) return
   container.innerHTML = ""
+
   const tpl = el("tplWalletCard")
   if (!state.dashboard || !Array.isArray(state.dashboard.wallets)) return
-  state.dashboard.wallets.forEach(w=>{
+
+  state.dashboard.wallets.forEach(w => {
     const clone = tpl.content.firstElementChild.cloneNode(true)
+
+    // Nome e tipo wallet
     const nameEl = clone.querySelector(".wallet-name")
     const typeEl = clone.querySelector(".wallet-type")
     if (nameEl) nameEl.textContent = w.name || ""
     if (typeEl) typeEl.textContent = w.typeLabel || ("Tipo: " + (w.type || ""))
+
+    // Helper per scrivere i KPI
     const setKpi = (key, value) => {
       const elv = clone.querySelector(`[data-kpi="${key}"]`)
       if (!elv) return
-      if (value == null) elv.textContent = "—"
-      else elv.textContent = typeof value === "number" ? formatEuro(value) : String(value)
+      if (value == null) {
+        elv.textContent = "—"
+      } else if (typeof value === "number") {
+        elv.textContent = formatEuro(value)
+      } else {
+        elv.textContent = String(value)
+      }
     }
+
+    // KPI base (validi per tutti i wallet)
     setKpi("balance", w.balance)
     setKpi("spentSoFar", w.spentSoFar)
     setKpi("spentRemaining", w.spentRemaining)
     setKpi("incomeSoFar", w.incomeSoFar)
     setKpi("incomeRemaining", w.incomeRemaining)
+
     if (w.compareLastMonthExpenses) {
       const c = w.compareLastMonthExpenses
       const pct = c.percent || 0
-      // arrotonda a 2 decimali e usa la virgola
       const pctStr = `${pct > 0 ? "+" : ""}${pct.toFixed(2).replace(".", ",")}`
       const amt = c.amount || 0
       const amtStr = `${amt >= 0 ? "+" : ""}${formatEuro(amt)}`
       const txt = `${pctStr}% (${amtStr})`
       setKpi("compareLastMonthExpenses", txt)
     }
+
     if (w.compareLastMonthIncome) {
       const c = w.compareLastMonthIncome
       const pct = c.percent || 0
@@ -507,16 +618,21 @@ function renderSnapshot() {
       setKpi("compareLastMonthIncome", txt)
     }
 
+    // Prossimo evento
     const nextEl = clone.querySelector('[data-kpi="nextEvent"]')
     if (nextEl) {
       if (w.nextEvent && w.nextEvent.date) {
         const txt = `${w.nextEvent.date} · ${w.nextEvent.title || ""} (${formatEuro(w.nextEvent.amount || 0)})`
         nextEl.textContent = txt
-      } else nextEl.textContent = "—"
+      } else {
+        nextEl.textContent = "—"
+      }
     }
+
+    // Categorie principali
     const catSlot = clone.querySelector('[data-slot="categories"]')
     if (catSlot) {
-      const cats = Array.isArray(w.categories) ? w.categories.slice(0,10) : []
+      const cats = Array.isArray(w.categories) ? w.categories.slice(0, 10) : []
       if (!cats.length) {
         const row = document.createElement("div")
         row.className = "cat-row"
@@ -528,7 +644,7 @@ function renderSnapshot() {
         row.appendChild(v)
         catSlot.appendChild(row)
       } else {
-        cats.forEach(c=>{
+        cats.forEach(c => {
           const row = document.createElement("div")
           row.className = "cat-row"
           const n = document.createElement("span")
@@ -541,17 +657,75 @@ function renderSnapshot() {
         })
       }
     }
+
+    // Se è una carta: sezione extra con debito netto dovuto nel mese
     const cardExtras = clone.querySelector('[data-slot="cardExtras"]')
+    let netDue = null
     if (w.card && cardExtras) {
       cardExtras.classList.remove("hide")
-      setKpi("cardLimit", w.card.limit)
-      setKpi("availableCredit", w.card.availableCredit)
-      setKpi("outstanding", w.card.outstanding)
-      setKpi("dueByEom", w.card.dueByEom)
-      setKpi("repaymentsThisMonth", w.card.repaymentsThisMonth)
+
+      const limitVal       = typeof w.card.limit === "number" ? w.card.limit : null
+      const availVal       = typeof w.card.availableCredit === "number" ? w.card.availableCredit : null
+      const outstandingVal = typeof w.card.outstanding === "number" ? w.card.outstanding : null
+      const dueRaw         = typeof w.card.dueByEom === "number" ? w.card.dueByEom : 0
+      const repRaw         = typeof w.card.repaymentsThisMonth === "number" ? w.card.repaymentsThisMonth : 0
+
+      // Debito dovuto entro fine mese AL NETTO dei rimborsi registrati
+      netDue = Math.max(0, dueRaw - repRaw)
+
+      setKpi("cardLimit", limitVal)
+      setKpi("availableCredit", availVal)
+      setKpi("outstanding", outstandingVal)
+      setKpi("dueByEom", netDue)
+      setKpi("repaymentsThisMonth", repRaw)
+
       const df = clone.querySelector('[data-kpi="defaultSourceWallet"]')
       if (df) df.textContent = w.card.defaultSourceWalletName || "—"
     }
+
+    // Riassunto breve in alto (walletShortSummary)
+    const shortEl = clone.querySelector('[data-kpi="walletShortSummary"]')
+    if (shortEl) {
+      let txt = ""
+
+      if (w.card) {
+        const outstandingVal = typeof w.card.outstanding === "number" ? w.card.outstanding : null
+
+        if (netDue == null) {
+          // fallback: ricalcola da raw in caso non sia stato impostato sopra
+          const dueRaw = typeof w.card.dueByEom === "number" ? w.card.dueByEom : 0
+          const repRaw = typeof w.card.repaymentsThisMonth === "number" ? w.card.repaymentsThisMonth : 0
+          netDue = Math.max(0, dueRaw - repRaw)
+        }
+
+        if (netDue <= 0.0001) {
+          if (outstandingVal && outstandingVal > 0) {
+            txt = `Nessun debito dovuto entro fine mese. Debito totale attuale: ${formatEuro(outstandingVal)}.`
+          } else {
+            txt = "Tutto pagato per questo mese."
+          }
+        } else {
+          txt = `Ancora ${formatEuro(netDue)} da rimborsare entro fine mese.`
+        }
+      } else {
+        const bal    = typeof w.balance === "number" ? w.balance : null
+        const spent  = typeof w.spentSoFar === "number" ? w.spentSoFar : null
+        const income = typeof w.incomeSoFar === "number" ? w.incomeSoFar : null
+
+        if (bal != null && spent != null && income != null) {
+          const net = income - spent
+          const dir = net >= 0 ? "avanza" : "manca"
+          txt = `Saldo: ${formatEuro(bal)} · Nel mese ${dir} ${formatEuro(Math.abs(net))}.`
+        } else if (bal != null) {
+          txt = `Saldo al giorno selezionato: ${formatEuro(bal)}.`
+        } else {
+          txt = ""
+        }
+      }
+
+      shortEl.textContent = txt
+    }
+
     container.appendChild(clone)
   })
 }

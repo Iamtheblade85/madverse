@@ -882,54 +882,192 @@
       </div>
   
       <!-- Se carta: area extra (mostrata via JS, solo per wallet di tipo "carta") -->
-      <div data-slot="cardExtras" class="hide" style="margin-top:10px;">
-        <div class="hr"></div>
-  
-        <p class="section-title" style="margin-top:0;">
-          Carta: stato debito e rimborsi
-        </p>
-  
-        <div class="kpi">
-          <div>
-            <div class="k">Limite carta</div>
-            <div class="v" data-kpi="cardLimit">—</div>
+      <div data-slot="cardExtras" style="display:none;">
+        <div class="grid cardExtras" style="margin-top:10px; gap:10px;">
+      
+          <!-- KPI legacy (NON rimuovere: il frontend vecchio continua a funzionare) -->
+          <div class="kpi">
+            <div class="kpi-label">Limite</div>
+            <div class="kpi-value" data-kpi="cardLimit">—</div>
           </div>
-          <div>
-            <div class="k">Plafond disponibile</div>
-            <div class="v" data-kpi="availableCredit">—</div>
+          <div class="kpi">
+            <div class="kpi-label">Credito disponibile</div>
+            <div class="kpi-value" data-kpi="availableCredit">—</div>
           </div>
-          <div>
-            <div class="k">Debito totale attuale</div>
-            <div class="v" data-kpi="outstanding">—</div>
+          <div class="kpi">
+            <div class="kpi-label">Outstanding</div>
+            <div class="kpi-value" data-kpi="outstanding">—</div>
           </div>
-          <div>
-            <div class="k">
-              Debito dovuto entro fine mese
-              <span class="muted" style="display:block;font-size:11px;">
-                al netto dei rimborsi registrati
-              </span>
+          <div class="kpi">
+            <div class="kpi-label">Dovuto entro fine mese (netto)</div>
+            <div class="kpi-value" data-kpi="dueByEom">—</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Rimborsi mese</div>
+            <div class="kpi-value" data-kpi="repaymentsThisMonth">—</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Conto predefinito</div>
+            <div class="kpi-value" data-kpi="defaultSourceWallet">—</div>
+          </div>
+      
+          <!-- NEW: ciclo e statement Amazon-like -->
+          <div class="cardBox" style="grid-column: 1 / -1; padding:12px; border:1px solid rgba(255,255,255,.08); border-radius:10px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+              <div style="font-weight:600;">Ciclo carta (Amazon-like)</div>
+              <div style="opacity:.8; font-size:12px;">
+                <span data-kpi="cycleStart">—</span> → <span data-kpi="cycleEnd">—</span>
+                • Addebito: <span data-kpi="cycleDebitDate">—</span>
+              </div>
             </div>
-            <div class="v" data-kpi="dueByEom">—</div>
-          </div>
-          <div>
-            <div class="k">
-              Rimborsi effettuati nel mese
-              <span class="muted" style="display:block;font-size:11px;">
-                considerati fino alla data di riferimento
-              </span>
+      
+            <div style="margin-top:10px; display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:10px;">
+              <div class="kpi">
+                <div class="kpi-label">Totale statement</div>
+                <div class="kpi-value" data-kpi="statementTotal">—</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Capitale (rate nel ciclo)</div>
+                <div class="kpi-value" data-kpi="statementDueCapital">—</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Charges</div>
+                <div class="kpi-value" data-kpi="statementCharges">—</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Credits</div>
+                <div class="kpi-value" data-kpi="statementCredits">—</div>
+              </div>
             </div>
-            <div class="v" data-kpi="repaymentsThisMonth">—</div>
+      
+            <div style="margin-top:10px; display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px;">
+              <div class="kpi">
+                <div class="kpi-label">Interessi carta</div>
+                <div class="kpi-value" data-kpi="statementInterestCard">—</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Fee carta</div>
+                <div class="kpi-value" data-kpi="statementFeeCard">—</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Interessi finanziamenti</div>
+                <div class="kpi-value" data-kpi="statementInterestFinancing">—</div>
+              </div>
+            </div>
           </div>
-          <div>
-            <div class="k">Wallet sorgente default</div>
-            <div class="v" data-kpi="defaultSourceWallet">—</div>
+      
+          <!-- NEW: scheduled repayment (virtuale) + override -->
+          <div class="cardBox" style="grid-column: 1 / -1; padding:12px; border:1px solid rgba(255,255,255,.08); border-radius:10px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+              <div style="font-weight:600;">Rimborso programmato (virtuale)</div>
+              <div style="opacity:.8; font-size:12px;">
+                Data addebito: <span data-kpi="schedPaymentDate">—</span>
+              </div>
+            </div>
+      
+            <div style="margin-top:10px; display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px;">
+              <div class="kpi">
+                <div class="kpi-label">Baseline (statement)</div>
+                <div class="kpi-value" data-kpi="schedBaseline">—</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Suggerito</div>
+                <div class="kpi-value" data-kpi="schedSuggested">—</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Evento rimborso</div>
+                <div class="kpi-value" data-kpi="schedExists">—</div>
+              </div>
+            </div>
+      
+            <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+              <div style="min-width:220px;">
+                <label style="display:block; font-size:12px; opacity:.8;">Importo rimborso (puoi cambiarlo)</label>
+                <input class="input" type="number" step="0.01" data-input="schedUserAmount" placeholder="es. 200.00" />
+              </div>
+      
+              <div style="min-width:220px;">
+                <label style="display:block; font-size:12px; opacity:.8;">Se differenza vs baseline</label>
+                <select class="input" data-input="schedDeltaMode">
+                  <option value="fee">Fee (costo)</option>
+                  <option value="prepayment">Prepayment (estinzione)</option>
+                </select>
+              </div>
+      
+              <button class="btn" data-action="cardCreateScheduledRepayment">Crea rimborso</button>
+              <button class="btn" data-action="cardOverrideScheduledRepayment">Applica override</button>
+      
+              <div style="font-size:12px; opacity:.75; margin-left:auto;">
+                Usa “Crea rimborso” se non esiste; “Override” se esiste già.
+              </div>
+            </div>
           </div>
-        </div>
-  
-        <div class="hint" style="margin-top:8px;">
-          Se i rimborsi coprono tutte le quote dovute del mese,
-          questo riquadro mostrerà <strong>0,00€</strong> come debito dovuto
-          e le relative <strong>“Quote carta”</strong> possono essere rimosse dalla vista del calendario.
+      
+          <!-- NEW: settings card -->
+          <div class="cardBox" style="grid-column: 1 / -1; padding:12px; border:1px solid rgba(255,255,255,.08); border-radius:10px;">
+            <div style="font-weight:600;">Impostazioni carta</div>
+      
+            <div style="margin-top:10px; display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:10px;">
+              <div>
+                <label style="display:block; font-size:12px; opacity:.8;">Teilzahlung (€)</label>
+                <input class="input" type="number" step="0.01" data-input="csTeilzahlung" />
+              </div>
+              <div>
+                <label style="display:block; font-size:12px; opacity:.8;">Sollzins annuo</label>
+                <input class="input" type="number" step="0.000001" data-input="csSollzins" />
+              </div>
+              <div>
+                <label style="display:block; font-size:12px; opacity:.8;">Effektivzins annuo</label>
+                <input class="input" type="number" step="0.000001" data-input="csEffektivzins" />
+              </div>
+              <div>
+                <label style="display:block; font-size:12px; opacity:.8;">Kreditlimit override</label>
+                <input class="input" type="number" step="0.01" data-input="csKreditlimit" />
+              </div>
+            </div>
+      
+            <div style="margin-top:10px; display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:10px;">
+              <div>
+                <label style="display:block; font-size:12px; opacity:.8;">Cycle start day</label>
+                <input class="input" type="number" min="1" max="31" data-input="csCycleStartDay" />
+              </div>
+              <div>
+                <label style="display:block; font-size:12px; opacity:.8;">Cycle end day</label>
+                <input class="input" type="number" min="1" max="31" data-input="csCycleEndDay" />
+              </div>
+              <div>
+                <label style="display:block; font-size:12px; opacity:.8;">Debit day</label>
+                <input class="input" type="number" min="1" max="31" data-input="csDebitDay" />
+              </div>
+              <div>
+                <label style="display:block; font-size:12px; opacity:.8;">Effective from</label>
+                <input class="input" type="date" data-input="csEffectiveFrom" />
+              </div>
+            </div>
+      
+            <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+              <button class="btn" data-action="cardSaveSettings">Salva impostazioni</button>
+              <div style="font-size:12px; opacity:.75;">
+                Valori attuali: Teilzahlung <span data-kpi="csTeilzahlungLabel">—</span> • Effective <span data-kpi="csEffectiveFromLabel">—</span>
+              </div>
+            </div>
+          </div>
+      
+          <!-- NEW: estinzione anticipata -->
+          <div class="cardBox" style="grid-column: 1 / -1; padding:12px; border:1px solid rgba(255,255,255,.08); border-radius:10px;">
+            <div style="font-weight:600;">Estinzione anticipata finanziamento</div>
+            <div style="opacity:.8; font-size:12px; margin-top:4px;">
+              Seleziona una <b>card_purchase</b> (finanziamento) dal calendario/lista eventi e poi clicca “Apri estinzione”.
+            </div>
+      
+            <div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <div style="font-size:12px; opacity:.8;">
+                Finanziamento selezionato: <span data-kpi="payoffSelectedPurchase">—</span>
+              </div>
+              <button class="btn" data-action="openPayoffModal">Apri estinzione</button>
+            </div>
+          </div>
+      
         </div>
       </div>
     </div>
@@ -1090,6 +1228,54 @@
       <div class="hint" style="margin-top:4px;">
         Nessun evento registrato per questo giorno.
       </div>
+    </div>
+  </div>
+</div>
+<!-- Payoff Modal -->
+<div class="modal hide" id="payoffModal">
+  <div class="modal-content" style="max-width:720px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+      <h3 style="margin:0;">Estinzione anticipata</h3>
+      <button class="btn" id="payoffCloseBtn">Chiudi</button>
+    </div>
+
+    <div style="margin-top:10px; font-size:12px; opacity:.85;">
+      Purchase ID: <span id="payoffPurchaseIdLabel">—</span> • Carta: <span id="payoffCardWalletIdLabel">—</span>
+    </div>
+
+    <div style="margin-top:12px; display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px;">
+      <div>
+        <label style="display:block; font-size:12px; opacity:.8;">Da wallet (fromWalletId)</label>
+        <select class="input" id="payoffFromWalletId"></select>
+      </div>
+      <div>
+        <label style="display:block; font-size:12px; opacity:.8;">Payment date</label>
+        <input class="input" type="date" id="payoffPaymentDate" />
+      </div>
+      <div>
+        <label style="display:block; font-size:12px; opacity:.8;">Calendar date (statement date)</label>
+        <input class="input" type="date" id="payoffCalendarDate" />
+      </div>
+      <div></div>
+
+      <div>
+        <label style="display:block; font-size:12px; opacity:.8;">Payoff principal (netto)</label>
+        <input class="input" type="number" step="0.01" id="payoffPrincipal" placeholder="es. 1200.00" />
+      </div>
+      <div>
+        <label style="display:block; font-size:12px; opacity:.8;">Payoff interest (zinsen)</label>
+        <input class="input" type="number" step="0.01" id="payoffInterest" placeholder="es. 35.20" />
+      </div>
+
+      <div style="grid-column:1 / -1;">
+        <label style="display:block; font-size:12px; opacity:.8;">Note</label>
+        <textarea class="input" id="payoffNotes" rows="3" placeholder="Opzionale"></textarea>
+      </div>
+    </div>
+
+    <div style="margin-top:12px; display:flex; gap:10px; align-items:center;">
+      <button class="btn" id="payoffSubmitBtn">Esegui estinzione</button>
+      <div id="payoffResult" style="font-size:12px; opacity:.85;"></div>
     </div>
   </div>
 </div>

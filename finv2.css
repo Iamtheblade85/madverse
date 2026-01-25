@@ -1,47 +1,48 @@
 /* ==========================================================================
-   DESIGN SYSTEM – Controllo Finanze (FOCUS: CONTRASTO & LEGGIBILITÀ)
+   DESIGN SYSTEM v3 – Controllo Finanze
+   Focus: leggibilità, gerarchia chiara, layout coerente (tema scuro fisso)
    ========================================================================== */
 
-/* ===================== 1) Token base (dark) ===================== */
+/* ===================== 1) DESIGN TOKEN (DARK) ===================== */
 
 :root {
-  /* Background principali */
-  --bg-body: #020617;       /* slate 950 */
-  --bg-panel: #020617;      /* pannelli principali */
-  --bg-panel-soft: #020617; /* sezioni interne */
-  --bg-subtle: #020617;
+  /* Background */
+  --bg-body: #020617;        /* slate 950 */
+  --bg-panel: #020617;       /* pannelli principali */
+  --bg-panel-soft: #020617;  /* sezioni interne */
+  --bg-subtle: #0b1220;      /* leggere differenze interne */
 
   /* Testo */
-  --text-primary: #f9fafb;  /* quasi bianco */
-  --text-muted: #e5e7eb;    /* grigio molto chiaro */
-  --text-soft: #cbd5f5;     /* per hint piccoli ma ancora leggibile */
+  --text-primary: #f9fafb;   /* quasi bianco */
+  --text-muted: #e5e7eb;     /* grigio molto chiaro */
+  --text-soft: #9ca3af;      /* grigio leggibile ma secondario */
 
   /* Bordi */
-  --border-subtle: #1f2937; /* slate 800 */
-  --border-strong: #334155; /* slate 700 */
+  --border-subtle: #1f2937;  /* slate 800 */
+  --border-strong: #334155;  /* slate 700 */
 
   /* Ombre */
   --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.7);
   --shadow-strong: 0 18px 50px rgba(0, 0, 0, 0.85);
 
   /* Accent / stati */
-  --accent: #38bdf8;        /* sky 400 */
-  --accent-strong: #0ea5e9; /* sky 500 */
+  --accent: #38bdf8;         /* sky 400 */
+  --accent-strong: #0ea5e9;  /* sky 500 */
 
-  --ok: #22c55e;            /* green 500 */
-  --ok-bg: #064e3b;         /* emerald 900 */
+  --ok: #22c55e;             /* green 500 */
+  --ok-bg: #064e3b;          /* emerald 900 */
 
-  --bad: #ef4444;           /* red 500 */
-  --bad-bg: #7f1d1d;        /* red 900 */
+  --bad: #ef4444;            /* red 500 */
+  --bad-bg: #7f1d1d;         /* red 900 */
 
-  --card: #f59e0b;          /* amber 500 */
-  --card-bg: #78350f;       /* amber 900 */
+  --card: #f59e0b;           /* amber 500 */
+  --card-bg: #78350f;        /* amber 900 */
 
-  --due: #eab308;           /* yellow 500 */
-  --due-bg: #713f12;        /* yellow 900 */
+  --due: #eab308;            /* yellow 500 */
+  --due-bg: #713f12;         /* yellow 900 */
 
-  --repay: #60a5fa;         /* blue 400 */
-  --repay-bg: #1e3a8a;      /* blue 900 */
+  --repay: #60a5fa;          /* blue 400 */
+  --repay-bg: #1e3a8a;       /* blue 900 */
 
   /* Layout / radius */
   --radius-lg: 18px;
@@ -62,35 +63,7 @@
     "Liberation Mono", "Courier New", monospace;
 }
 
-/* ===================== 2) Tema chiaro (se richiesto) ===================== */
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg-body: #f3f4f6;        /* grigio chiaro */
-    --bg-panel: #ffffff;
-    --bg-panel-soft: #f9fafb;
-    --bg-subtle: #eef2ff;
-
-    --text-primary: #0f172a;   /* navy quasi nero */
-    --text-muted: #111827;     /* molto scuro per leggibilità */
-    --text-soft: #4b5563;      /* grigio ma ancora forte */
-
-    --border-subtle: #e5e7eb;
-    --border-strong: #cbd5f5;
-
-    --shadow-soft: 0 8px 20px rgba(15, 23, 42, 0.12);
-    --shadow-strong: 0 14px 40px rgba(15, 23, 42, 0.20);
-
-    /* Stati chiari ma leggibili */
-    --ok-bg: #dcfce7;      /* testo scuro su sfondo chiaro */
-    --bad-bg: #fee2e2;
-    --card-bg: #fef3c7;
-    --due-bg: #fef9c3;
-    --repay-bg: #dbeafe;
-  }
-}
-
-/* ===================== 3) Reset / base ===================== */
+/* ===================== 2) RESET / BASE ===================== */
 
 *,
 *::before,
@@ -123,7 +96,16 @@ textarea {
   font: inherit;
 }
 
-/* ===================== 4) Utility ===================== */
+/* Focus accessibile */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+
+/* ===================== 3) UTILITY ===================== */
 
 .row {
   display: flex;
@@ -146,7 +128,7 @@ textarea {
 }
 
 .muted {
-  color: var(--text-muted);
+  color: var(--text-soft);
 }
 
 .hide {
@@ -182,7 +164,7 @@ textarea {
   line-height: 1.4;
 }
 
-/* ===================== 5) Bottoni ===================== */
+/* ===================== 4) BOTTONI ===================== */
 
 .btn {
   display: inline-flex;
@@ -193,8 +175,8 @@ textarea {
   padding: 0 14px;
   border-radius: 999px;
   border: 1px solid var(--border-subtle);
-  background: #111827;
-  color: #f9fafb;
+  background: #111827;              /* slate 900 */
+  color: #f9fafb;                    /* quasi bianco */
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
@@ -235,7 +217,7 @@ textarea {
 .btn--danger {
   background: #b91c1c;
   border-color: #7f1d1d;
-  color: #f9fafb;
+  color: #fef2f2;
 }
 
 .btn--danger:hover {
@@ -248,7 +230,7 @@ textarea {
   color: var(--text-primary);
 }
 
-/* ===================== 6) Campi / Label ===================== */
+/* ===================== 5) CAMPI / LABEL ===================== */
 
 .field {
   display: flex;
@@ -307,7 +289,7 @@ textarea {
   line-height: 1.35;
 }
 
-/* ===================== 7) Badge / Dot / KPI ===================== */
+/* ===================== 6) BADGE / DOT / KPI ===================== */
 
 .badge {
   display: inline-flex;
@@ -373,9 +355,10 @@ textarea {
   font-size: 15px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  color: #f9fafb;
 }
 
-/* ===================== 8) Toast ===================== */
+/* ===================== 7) TOAST ===================== */
 
 .toast-area {
   position: fixed;
@@ -409,7 +392,7 @@ textarea {
   font-size: 12px;
 }
 
-/* ===================== 9) App shell ===================== */
+/* ===================== 8) APP SHELL / LAYOUT ===================== */
 
 .app {
   min-height: 100vh;
@@ -485,6 +468,10 @@ textarea {
   font-size: 13px;
 }
 
+.search input::placeholder {
+  color: var(--text-soft);
+}
+
 /* Layout 3 colonne */
 
 .main {
@@ -532,7 +519,7 @@ textarea {
   padding: var(--pad);
 }
 
-/* Sidebar */
+/* Sidebar destra */
 
 .sidebar {
   position: sticky;
@@ -564,6 +551,11 @@ textarea {
   justify-content: center;
   font-size: 11px;
   padding: 0 6px;
+}
+
+.bottom-nav .tabbtn[aria-selected="true"] {
+  background: #111827;
+  border-color: var(--accent-strong);
 }
 
 /* Responsive */
@@ -600,7 +592,7 @@ textarea {
   }
 }
 
-/* ===================== 10) Tab panels ===================== */
+/* ===================== 9) TAB PANELS ===================== */
 
 .tab-panel {
   display: none;
@@ -614,7 +606,7 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
   display: block;
 }
 
-/* ===================== 11) Calendario ===================== */
+/* ===================== 10) CALENDARIO ===================== */
 
 .cal-header {
   display: flex;
@@ -711,35 +703,35 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
 
 .event-line {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   font-size: 11px;
   padding: 5px 7px;
   border-radius: 999px;
   border: 1px solid var(--border-subtle);
   background: #020617;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  white-space: normal;           /* può andare a capo */
+  line-height: 1.3;
 }
 
 .event-line .title {
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
+  white-space: normal;
 }
 
 .event-line .amt {
   font-weight: 800;
+  color: #f9fafb;
 }
 
 .event-line .muted {
   font-size: 10px;
 }
 
-/* Varianti tipo evento (dark mode – alto contrasto) */
+/* Varianti tipo evento (tint + testo chiaro) */
 
 .event-line--entrata {
   background: var(--ok-bg);
@@ -771,41 +763,7 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
   color: #eff6ff;
 }
 
-/* Varianti tipo evento (light mode) */
-
-@media (prefers-color-scheme: light) {
-  .event-line--entrata {
-    background: var(--ok-bg);
-    border-color: var(--ok);
-    color: #064e3b;
-  }
-
-  .event-line--uscita {
-    background: var(--bad-bg);
-    border-color: var(--bad);
-    color: #7f1d1d;
-  }
-
-  .event-line--acquisto {
-    background: var(--card-bg);
-    border-color: var(--card);
-    color: #78350f;
-  }
-
-  .event-line--quota {
-    background: var(--due-bg);
-    border-color: var(--due);
-    color: #713f12;
-  }
-
-  .event-line--rimborso {
-    background: var(--repay-bg);
-    border-color: var(--repay);
-    color: #1e3a8a;
-  }
-}
-
-/* ===================== 12) Sidebar snapshot ===================== */
+/* ===================== 11) SIDEBAR SNAPSHOT ===================== */
 
 .sidebar h3 {
   margin: 0 0 10px;
@@ -831,6 +789,7 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
 .wallet-name {
   font-weight: 900;
   line-height: 1.2;
+  color: #f9fafb;
 }
 
 .wallet-type {
@@ -866,7 +825,12 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
   border-bottom: none;
 }
 
-/* ===================== 13) Form / sezioni ===================== */
+.cat-row strong {
+  color: #facc15;
+  font-weight: 800;
+}
+
+/* ===================== 12) FORM / SEZIONI ===================== */
 
 .page-title {
   display: flex;
@@ -969,7 +933,7 @@ body[data-active-tab="impostazioni"] #tab-impostazioni {
   border: 0;
 }
 
-/* ===================== 14) Tabelle ===================== */
+/* ===================== 13) TABELLE ===================== */
 
 table {
   width: 100%;
@@ -1003,7 +967,7 @@ td {
   flex-wrap: wrap;
 }
 
-/* ===================== 15) Event overlay (dettaglio) ===================== */
+/* ===================== 14) EVENT OVERLAY (DETTAGLIO) ===================== */
 
 .event-overlay {
   position: fixed;
@@ -1066,7 +1030,7 @@ td {
   border-bottom: none;
 }
 
-/* ===================== 16) Modale "Eventi del giorno" ===================== */
+/* ===================== 15) MODALE "EVENTI DEL GIORNO" ===================== */
 
 #dayEventsModal {
   position: fixed;
@@ -1198,306 +1162,4 @@ td {
   padding: 4px 10px;
   font-size: 12px;
   border-radius: 999px;
-}
-/* ================= CONTRAST FIX OVERRIDES ================= */
-
-/* Forzo tema scuro leggibile ovunque */
-body {
-  background: #020617 !important;   /* slate 950 */
-  color: #e5e7eb !important;        /* testo chiaro */
-}
-
-/* --- Bottoni topbar & generali (.btn) --- */
-.btn {
-  background: #111827 !important;   /* slate 900, scuro ma non nero */
-  color: #f9fafb !important;        /* quasi bianco */
-  border-color: rgba(148, 163, 184, 0.9) !important; /* slate 400 */
-}
-
-.btn:hover {
-  background: #1f2937 !important;   /* leggermente più chiaro */
-}
-
-.btn--primary {
-  background: #2563eb !important;   /* blu pieno */
-  border-color: #1d4ed8 !important;
-  color: #f9fafb !important;
-}
-
-.btn--danger {
-  background: #b91c1c !important;   /* rosso pieno */
-  border-color: #7f1d1d !important;
-  color: #fef2f2 !important;
-}
-
-/* --- Badge “Stato API” e altre .badge --- */
-.badge {
-  background: #020617 !important;
-  color: #e5e7eb !important;
-  border-color: rgba(148, 163, 184, 0.9) !important;
-}
-
-/* --- Barra di ricerca --- */
-.search {
-  background: #020617 !important;
-  color: #e5e7eb !important;
-  border-color: rgba(148, 163, 184, 0.9) !important;
-}
-
-.search input {
-  color: #e5e7eb !important;
-}
-
-.search input::placeholder {
-  color: #9ca3af !important;
-}
-
-/* --- Celle calendario ed eventi --- */
-.day {
-  background: #020617 !important;
-  border-color: rgba(31, 41, 55, 1) !important; /* slate 800 */
-  color: #e5e7eb !important;
-}
-
-.day[aria-selected="true"] {
-  border-color: #38bdf8 !important; /* sky 400 */
-}
-
-.day-count {
-  color: #9ca3af !important;
-}
-
-/* Riga evento generica: sfondo scuro + testo chiaro */
-.event-line {
-  background: #020617 !important;
-  color: #e5e7eb !important;
-  border-color: rgba(51, 65, 85, 1) !important; /* slate 700 */
-}
-
-/* Importi eventi – SEMPRE chiari e ben visibili */
-.event-line .amt {
-  color: #f9fafb !important;
-  font-weight: 800;
-}
-
-/* Eventi per tipo: mantengo il “bordo” colorato, non il testo scuro */
-.event-line--entrata {
-  border-color: #22c55e !important; /* green 500 */
-}
-
-.event-line--uscita {
-  border-color: #ef4444 !important; /* red 500 */
-}
-
-.event-line--acquisto {
-  border-color: #f59e0b !important; /* amber 500 */
-}
-
-.event-line--quota {
-  border-color: #eab308 !important; /* yellow 500 */
-}
-
-.event-line--rimborso {
-  border-color: #60a5fa !important; /* blue 400 */
-}
-
-/* --- Label dei campi (per essere SEMPRE leggibili) --- */
-.label {
-  color: #9ca3af !important;        /* grigio chiaro, non troppo spento */
-}
-
-/* Testo "muted" un po' più chiaro per leggibilità */
-.muted {
-  color: #9ca3af !important;
-}
-/* ================== CONTRAST FIX: SIDEBAR & SNAPSHOT ================== */
-
-/* Sidebar sempre dark e testo chiaro */
-.sidebar {
-  background: #020617 !important;              /* slate 950 */
-  color: #e5e7eb !important;                   /* testo chiaro */
-}
-
-/* Titolo snapshot e testi generali nella sidebar */
-.sidebar h3,
-.sidebar p,
-.sidebar span,
-.sidebar .hint,
-.sidebar .footnote {
-  color: #e5e7eb !important;
-}
-
-/* Card dei wallet nella sidebar */
-.wallet-card {
-  background: #020617 !important;
-  border-color: rgba(148, 163, 184, 0.7) !important;  /* slate 400 */
-  color: #e5e7eb !important;
-}
-
-/* Header della card (nome wallet, tipo, badge) */
-.wallet-card .wallet-name {
-  color: #f9fafb !important;
-}
-
-.wallet-card .wallet-type {
-  color: #9ca3af !important;
-}
-
-.wallet-card .badge {
-  background: #020617 !important;
-  color: #e5e7eb !important;
-  border-color: rgba(148,163,184,0.9) !important;
-}
-
-/* Box KPI dentro le card (saldo, spese, ecc.) */
-.wallet-card .kpi > div {
-  background: #020617 !important;
-  border-color: rgba(51, 65, 85, 1) !important;  /* slate 700 */
-}
-
-.wallet-card .kpi .k {
-  color: #9ca3af !important;                    /* label più chiara */
-}
-
-.wallet-card .kpi .v {
-  color: #f9fafb !important;                    /* valore (importi) ben visibile */
-  font-weight: 800;
-}
-
-/* Prossimo evento / testo sotto */
-.wallet-card .wallet-next {
-  color: #e5e7eb !important;
-}
-
-/* Sezione categorie nella sidebar */
-.wallet-card .wallet-cats,
-.wallet-card .wallet-cats .muted {
-  color: #9ca3af !important;
-}
-
-/* Riga categoria + importo */
-.wallet-card .cat-row {
-  border-color: rgba(51, 65, 85, 1) !important;
-}
-
-.wallet-card .cat-row span {
-  color: #e5e7eb !important;
-}
-
-/* Importi delle categorie: risalto forte */
-.wallet-card .cat-row strong {
-  color: #facc15 !important;  /* giallo acceso su sfondo scuro */
-  font-weight: 800;
-}
-
-/* ================== CONTRAST FIX: TABELLE IN SIDEBAR (SE PRESENTI) ================== */
-
-.sidebar table {
-  background: #020617 !important;
-  color: #e5e7eb !important;
-}
-
-.sidebar th,
-.sidebar td {
-  background: transparent !important;
-  color: #e5e7eb !important;
-  border-bottom-color: rgba(51, 65, 85, 1) !important;
-}
-
-.sidebar th {
-  color: #9ca3af !important;
-  font-weight: 700 !important;
-}
-
-/* Just in case: qualsiasi .muted dentro la sidebar leggermente più chiaro */
-.sidebar .muted {
-  color: #9ca3af !important;
-}
-/* ================= FIX 1: CONTRASTO AREA "NUOVO EVENTO" ================= */
-
-/* Contenitore principale della tab Nuovo evento */
-#tab-nuovo,
-#tab-nuovo .content-inner {
-  background: #020617 !important;
-  color: #e5e7eb !important;
-}
-
-/* Pannelli/sezioni all'interno del Nuovo evento */
-#tab-nuovo .form-section,
-#tab-nuovo .form-section.panel--flat {
-  background: #020617 !important;
-  color: #e5e7eb !important;
-  border-color: rgba(51, 65, 85, 1) !important; /* slate 700 */
-}
-
-/* Titolo pagina e sottotitolo */
-#tab-nuovo .page-title h2 {
-  color: #f9fafb !important;
-}
-
-#tab-nuovo .page-sub {
-  color: #cbd5f5 !important; /* chiaro ma non bianco pieno */
-}
-
-/* Label, hint, testi "muted" nella tab Nuovo */
-#tab-nuovo .label,
-#tab-nuovo .hint,
-#tab-nuovo .muted {
-  color: #9ca3af !important;
-}
-
-/* Campi input/select/textarea – sfondo scuro, testo chiaro */
-#tab-nuovo .input,
-#tab-nuovo .select,
-#tab-nuovo .textarea {
-  background: #020617 !important;
-  color: #f9fafb !important;
-  border-color: rgba(148, 163, 184, 0.9) !important; /* slate 400 */
-}
-
-/* Placeholder leggibili ma non troppo invasivi */
-#tab-nuovo .input::placeholder,
-#tab-nuovo .textarea::placeholder {
-  color: #6b7280 !important; /* gray 500 */
-}
-
-/* Card di scelta tipo evento: testo sempre leggibile */
-#tab-nuovo .type-card {
-  background: #020617 !important;
-  color: #e5e7eb !important;
-  border-color: rgba(51, 65, 85, 1) !important;
-}
-
-#tab-nuovo .type-card[aria-checked="true"] {
-  background: #0f172a !important;
-  border-color: #38bdf8 !important; /* accent */
-}
-
-#tab-nuovo .type-card .t {
-  color: #f9fafb !important;
-}
-
-#tab-nuovo .type-card .d {
-  color: #9ca3af !important;
-}
-/* ================= FIX 2: CALENDARIO – EVENTI ADATTABILI ================= */
-
-/* La cella del giorno deve potersi espandere in altezza */
-.cal-grid .day {
-  height: auto !important;
-  min-height: 106px; /* manteniamo comunque un minimo per i giorni vuoti */
-}
-
-/* Le righe evento devono potere andare a capo */
-.event-line {
-  white-space: normal !important;      /* permette il wrap su più righe */
-  align-items: flex-start !important;  /* allinea il testo in alto se alto > 1 riga */
-  line-height: 1.3;
-}
-
-/* Il titolo può andare a capo dentro il suo spazio */
-.event-line .title {
-  white-space: normal !important;
-  overflow: hidden;        /* se proprio è lunghissimo, taglia solo l'eccesso */
-  text-overflow: ellipsis; /* ma solo quando necessario */
 }

@@ -4584,7 +4584,7 @@ function initMyExpOverlayHost(){
 		  if (!list.length) return;
 		  State.runtime.ticker.idx = (State.runtime.ticker.idx + 1) % list.length;
 		  updateTicker();
-		}, 2000);
+		}, 6000);
 			  window.addEventListener('orientationchange', ()=>{
 				State.engine && State.engine.handleResize();
 			  }, { passive:true });

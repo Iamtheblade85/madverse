@@ -12,6 +12,118 @@
   <link rel="preload" as="style" href="cyberpunktribalV2.css?v=1" onload="this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="cyberpunktribalV2.css?v=1"></noscript>
   <link id="theme-style" rel="stylesheet" href="css013.css"/>
+<style>
+  /* =========================================================
+     UI OVERLAY (central modal notifications)
+     - responsive, readable, click-outside close
+     ========================================================= */
+
+  .ui-overlay{
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(0,0,0,.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .ui-overlay.is-open{ display:flex; }
+
+  .ui-overlay__card{
+    width: min(92vw, 560px);
+    max-height: min(82vh, 720px);
+    overflow: hidden;
+    border-radius: 18px;
+
+    background: linear-gradient(180deg, rgba(16,18,22,.94), rgba(10,12,16,.92));
+    border: 1px solid rgba(255,255,255,.14);
+    box-shadow: 0 18px 60px rgba(0,0,0,.55);
+
+    color: #eaf2ff;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  }
+
+  .ui-overlay__header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 12px;
+    padding: 14px 14px 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.10);
+  }
+  .ui-overlay__title{
+    font-weight: 900;
+    letter-spacing: .4px;
+    font-size: clamp(16px, 2.2vw, 18px);
+    font-family: Orbitron, ui-sans-serif, system-ui, sans-serif;
+    color: #ffe08a;
+    text-shadow: 0 0 12px rgba(255,220,120,.18);
+  }
+  .ui-overlay__close{
+    border: 1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.06);
+    color: #eaf2ff;
+    border-radius: 12px;
+    width: 40px;
+    height: 36px;
+    cursor: pointer;
+    font-weight: 900;
+  }
+  .ui-overlay__close:hover{ background: rgba(255,255,255,.10); }
+
+  .ui-overlay__body{
+    padding: 14px 16px 10px 16px;
+    overflow:auto;
+    max-height: calc(min(82vh, 720px) - 120px);
+    font-size: clamp(14px, 2vw, 16px);
+    line-height: 1.45;
+    color: #d6e4ff;
+  }
+  .ui-overlay__body p{ margin: 0 0 10px 0; }
+  .ui-overlay__body code{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: .95em;
+    color: #b7ffdf;
+  }
+
+  .ui-overlay__actions{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 16px 16px 16px;
+    border-top: 1px solid rgba(255,255,255,.08);
+  }
+  .ui-overlay__btn{
+    cursor:pointer;
+    border:none;
+    border-radius: 14px;
+    padding: 10px 12px;
+    font-weight: 900;
+    font-size: 14px;
+    letter-spacing: .2px;
+    min-width: 120px;
+  }
+  .ui-overlay__btn.primary{
+    background: linear-gradient(180deg, #22c55e, #159a45);
+    color: #07130b;
+  }
+  .ui-overlay__btn.ghost{
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.14);
+    color: #eaf2ff;
+  }
+  .ui-overlay__btn.danger{
+    background: linear-gradient(180deg, #ef4444, #b91c1c);
+    color: #fff;
+  }
+
+  /* opzionale: se vuoi che i vecchi toast NON compaiano più */
+  #toast-host{ display:none; }
+</style>
+	
   <script type="importmap">
   {
     "imports": {
@@ -469,6 +581,16 @@
       <small>Overlay-only link available from the top bar. All times are local to your device.</small>
     </footer>
   </div>
+<div id="ui-overlay" class="ui-overlay" aria-hidden="true">
+  <div class="ui-overlay__card" role="dialog" aria-modal="true" aria-labelledby="ui-overlay-title">
+    <div class="ui-overlay__header">
+      <div id="ui-overlay-title" class="ui-overlay__title">Notice</div>
+      <button class="ui-overlay__close" aria-label="Close">✕</button>
+    </div>
+    <div id="ui-overlay-body" class="ui-overlay__body"></div>
+    <div id="ui-overlay-actions" class="ui-overlay__actions"></div>
+  </div>
+</div>
 
   <script>
 
@@ -1392,16 +1514,116 @@ function ensureStakingReportLoaded(){
     // TOAST / MESSAGGI VICINO AL CANVAS
     // ------------------------------------------------------------
 
-    function toast(msg){
-      const host = State.ui.toastHost;
-      if (!host) return;
-      const div = document.createElement('div');
-      div.textContent = msg;
-      div.className = 'toast';
-      div.style.marginTop = '6px';
-      host.appendChild(div);
-      setTimeout(() => div.remove(), 4000);
+// ------------------------------------------------------------
+// UI OVERLAY (central notifications modal)
+// ------------------------------------------------------------
+const UINotify = (function(){
+  let root, card, titleEl, bodyEl, actionsEl, closeBtn;
+  let autoTimer = null;
+
+  function init(){
+    root = document.getElementById('ui-overlay');
+    if (!root) return;
+    card = root.querySelector('.ui-overlay__card');
+    titleEl = document.getElementById('ui-overlay-title');
+    bodyEl = document.getElementById('ui-overlay-body');
+    actionsEl = document.getElementById('ui-overlay-actions');
+    closeBtn = root.querySelector('.ui-overlay__close');
+
+    const close = () => hide();
+
+    if (closeBtn) closeBtn.addEventListener('click', close);
+
+    // click outside card => close
+    root.addEventListener('mousedown', (e)=>{
+      if (e.target === root) close();
+    });
+
+    // ESC => close
+    window.addEventListener('keydown', (e)=>{
+      if (e.key === 'Escape' && root.classList.contains('is-open')) close();
+    });
+  }
+
+  function hide(){
+    if (!root) return;
+    root.classList.remove('is-open');
+    root.setAttribute('aria-hidden', 'true');
+    if (autoTimer){ clearTimeout(autoTimer); autoTimer = null; }
+  }
+
+  function show(opts){
+    if (!root) init();
+    if (!root) return;
+
+    const o = opts || {};
+    const ttl = String(o.title || 'Notice');
+    const text = o.text != null ? String(o.text) : '';
+    const html = o.html != null ? String(o.html) : '';
+
+    titleEl.textContent = ttl;
+
+    // body: prefer html if provided, else text
+    bodyEl.innerHTML = '';
+    if (html){
+      bodyEl.innerHTML = html;
+    } else {
+      const p = document.createElement('p');
+      p.textContent = text;
+      bodyEl.appendChild(p);
     }
+
+    // actions
+    actionsEl.innerHTML = '';
+    const actions = Array.isArray(o.actions) ? o.actions : [];
+    actions.forEach(a=>{
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `ui-overlay__btn ${a.variant || 'ghost'}`; // primary|ghost|danger
+      btn.textContent = a.label || 'OK';
+      btn.addEventListener('click', ()=>{
+        try { a.onClick && a.onClick(); } finally {
+          if (!a.keepOpen) hide();
+        }
+      });
+      actionsEl.appendChild(btn);
+    });
+
+    // default action if none
+    if (!actions.length){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ui-overlay__btn primary';
+      btn.textContent = 'OK';
+      btn.addEventListener('click', hide);
+      actionsEl.appendChild(btn);
+    }
+
+    root.classList.add('is-open');
+    root.setAttribute('aria-hidden', 'false');
+
+    // auto close after 10 seconds (unless disabled)
+    if (autoTimer){ clearTimeout(autoTimer); autoTimer = null; }
+    const autoMs = (o.autoCloseMs == null) ? 10000 : Number(o.autoCloseMs);
+    if (Number.isFinite(autoMs) && autoMs > 0){
+      autoTimer = setTimeout(()=> hide(), autoMs);
+    }
+  }
+
+  return { init, show, hide };
+})();
+
+// ------------------------------------------------------------
+// toast() now routes to the central overlay
+// ------------------------------------------------------------
+function toast(msg){
+  UINotify.show({
+    title: 'Notice',
+    text: String(msg || ''),
+    autoCloseMs: 10000
+  });
+}
+
 
     function pushCanvasMsg(msg){
       const host = document.getElementById('canvas-feedback');
@@ -2304,7 +2526,18 @@ function ensureStakingReportLoaded(){
         }
         const after = State.selectedGoblinIds.size;
         hydrateGoblinBuilder();
-        toast(`Removed tired goblins: ${before - after}`);
+			UINotify.show({
+			  title: 'Tired goblins removed',
+			  html: `
+			    <p><strong>${before - after}</strong> goblin(s) removed from your selection.</p>
+			    <p style="opacity:.9">Tip: choose a shorter duration to include more goblins.</p>
+			  `,
+			  actions: [
+			    { label:'OK', variant:'primary' }
+			  ],
+			  autoCloseMs: 10000
+			});
+
       };
     }
 
@@ -4156,6 +4389,32 @@ function updateTicker(){
       const endAt = new Date(Date.now() + durSec*1000);
 
       toast(`⛏️ Expedition started! ${ids.length}/${cap} goblins · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`);
+		// If backend had to skip extra tired goblins (race condition), show an explicit modal
+		const skippedByBackend = (res.data && Array.isArray(res.data.skipped_tired)) ? res.data.skipped_tired : [];
+		if (skippedByBackend.length){
+		  UINotify.show({
+		    title: 'Some goblins were too tired',
+		    html: `
+		      <p>The expedition started, but <strong>${skippedByBackend.length}</strong> goblin(s) had insufficient daily power at the moment of start.</p>
+		      <p style="margin-top:10px;opacity:.95">Skipped IDs:</p>
+		      <p><code>${skippedByBackend.map(x=>String(x)).join(', ')}</code></p>
+		      <p style="opacity:.9">You can remove them from your current selection to avoid confusion.</p>
+		    `,
+		    actions: [
+		      {
+		        label: 'Remove skipped from selection',
+		        variant: 'primary',
+		        onClick: ()=>{
+		          for (const id of skippedByBackend) State.selectedGoblinIds.delete(String(id));
+		          hydrateGoblinBuilder();
+		        }
+		      },
+		      { label:'Keep selection', variant:'ghost' }
+		    ],
+		    autoCloseMs: 10000
+		  });
+		}
+		
       pushCanvasMsg(`⛏️ ${State.user.wax_account} started an expedition with ${ids.length}/${cap} goblins · ETA ${fmtHMS(durSec*1000)}`);
       State.runtime.expeditionInProgress = true;
 		renderMyExpeditionOverlay();
@@ -4585,6 +4844,7 @@ function initMyExpOverlayHost(){
 		    }
 		  }, 1200);
 	  });
+		UINotify.init();
 				
       fetchGlobalSnapshot();
       startPolling();

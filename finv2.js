@@ -440,6 +440,46 @@ function openDayEventsModal(isoDate) {
 
         row.appendChild(top)
         row.appendChild(bottom)
+        // Pulsante selezione estinzione anticipata (solo per card_purchase)
+        if (ev.type === "card_purchase") {
+          const act = document.createElement("div")
+          act.style.cssText = "margin-top:6px; display:flex; gap:8px; flex-wrap:wrap;"
+        
+          const bSel = document.createElement("button")
+          bSel.type = "button"
+          bSel.className = "btn"
+          bSel.textContent = "Seleziona per estinzione"
+          bSel.addEventListener("click", (e2) => {
+            e2.stopPropagation()
+        
+            payoffState.purchaseEventId = Number(ev.id)
+            payoffState.purchaseTitle = ev.title || `Purchase #${ev.id}`
+            payoffState.cardWalletId = Number(ev.cardWalletId || ev.walletId || 0)
+        
+            // aggiorna label dentro tutte le card
+            document.querySelectorAll('[data-kpi="payoffSelectedPurchase"]').forEach(x => {
+              x.textContent = `${payoffState.purchaseTitle} (id:${payoffState.purchaseEventId})`
+            })
+        
+            // prefill labels nel modal
+            const pid = document.getElementById("payoffPurchaseIdLabel")
+            const cid = document.getElementById("payoffCardWalletIdLabel")
+            if (pid) pid.textContent = String(payoffState.purchaseEventId)
+            if (cid) cid.textContent = payoffState.cardWalletId ? String(payoffState.cardWalletId) : "—"
+        
+            // prefill date odierna se vuote
+            const today = new Date().toISOString().slice(0,10)
+            const pd = document.getElementById("payoffPaymentDate")
+            const cd = document.getElementById("payoffCalendarDate")
+            if (pd && !pd.value) pd.value = today
+            if (cd && !cd.value) cd.value = today
+        
+            showToast("Finanziamento selezionato", "Ora apri “Apri estinzione” nella carta.")
+          })
+        
+          act.appendChild(bSel)
+          row.appendChild(act)
+        }
 
         // Clic su riga evento ⇒ apre modale evento
         row.addEventListener("click", () => {
@@ -660,7 +700,7 @@ function renderSnapshot() {
 
     // Se è una carta: sezione extra con debito netto dovuto nel mese
     const cardExtras = clone.querySelector('[data-slot="cardExtras"]')
-    let netDue = null
+let netDue = null
     if (w.card && cardExtras) {
       cardExtras.classList.remove("hide")
 
@@ -670,7 +710,7 @@ function renderSnapshot() {
       const dueRaw         = typeof w.card.dueByEom === "number" ? w.card.dueByEom : 0
       const repRaw         = typeof w.card.repaymentsThisMonth === "number" ? w.card.repaymentsThisMonth : 0
 
-      // Debito dovuto entro fine mese AL NETTO dei rimborsi registrati
+      // Debito dovuto entro fine mese AL NETTO dei rimborsi registrati (legacy)
       netDue = Math.max(0, dueRaw - repRaw)
 
       setKpi("cardLimit", limitVal)
@@ -681,7 +721,83 @@ function renderSnapshot() {
 
       const df = clone.querySelector('[data-kpi="defaultSourceWallet"]')
       if (df) df.textContent = w.card.defaultSourceWalletName || "—"
+
+      // -------------------------
+      // NEW: cycle + statement
+      // -------------------------
+      const cycle = w.card.cycle || {}
+      const stmt  = w.card.statement || {}
+
+      const setTxt = (k, v) => {
+        const el = clone.querySelector(`[data-kpi="${k}"]`)
+        if (!el) return
+        el.textContent = (v === null || v === undefined || v === "") ? "—" : String(v)
+      }
+
+      setTxt("cycleStart", cycle.start || "—")
+      setTxt("cycleEnd", cycle.end || "—")
+      setTxt("cycleDebitDate", cycle.debitDate || "—")
+
+      setKpi("statementTotal", typeof stmt.total === "number" ? stmt.total : null)
+      setKpi("statementDueCapital", typeof stmt.dueCapital === "number" ? stmt.dueCapital : null)
+      setKpi("statementCharges", typeof stmt.charges === "number" ? stmt.charges : null)
+      setKpi("statementCredits", typeof stmt.credits === "number" ? stmt.credits : null)
+
+      setKpi("statementInterestCard", typeof stmt.interestCard === "number" ? stmt.interestCard : null)
+      setKpi("statementFeeCard", typeof stmt.feeCard === "number" ? stmt.feeCard : null)
+      setKpi("statementInterestFinancing", typeof stmt.interestFinancing === "number" ? stmt.interestFinancing : null)
+
+      // -------------------------
+      // NEW: scheduled repayment box
+      // -------------------------
+      const sr = w.card.scheduledRepayment || null
+
+      setTxt("schedPaymentDate", sr ? (sr.paymentDate || "—") : "—")
+      setKpi("schedBaseline", sr && typeof sr.baselineAmount === "number" ? sr.baselineAmount : null)
+      setKpi("schedSuggested", sr && typeof sr.suggestedAmount === "number" ? sr.suggestedAmount : null)
+      setTxt("schedExists", sr ? (sr.exists ? "Esiste" : "Manca") : "—")
+
+      // prefill input suggested
+      const inpAmt = clone.querySelector('[data-input="schedUserAmount"]')
+      if (inpAmt && sr && typeof sr.suggestedAmount === "number") {
+        if (!inpAmt.value) inpAmt.value = String(sr.suggestedAmount.toFixed(2))
+      }
+
+      // -------------------------
+      // NEW: settings (prefill)
+      // -------------------------
+      const cs = w.card.settings || {}
+      const setInput = (sel, val) => {
+        const el = clone.querySelector(sel)
+        if (!el) return
+        if (val === null || val === undefined) return
+        el.value = String(val)
+      }
+
+      setInput('[data-input="csTeilzahlung"]', (typeof cs.teilzahlungAmount === "number") ? cs.teilzahlungAmount : "")
+      setInput('[data-input="csSollzins"]', (typeof cs.sollzinsAnnual === "number") ? cs.sollzinsAnnual : "")
+      setInput('[data-input="csEffektivzins"]', (typeof cs.effektivzinsAnnual === "number") ? cs.effektivzinsAnnual : "")
+      setInput('[data-input="csKreditlimit"]', (typeof w.card.limit === "number") ? w.card.limit : "")
+      setInput('[data-input="csEffectiveFrom"]', cs.effectiveFrom || "")
+
+      // cycle days / debit day non sono nel card.settings: li leggiamo dalla GET settings endpoint quando serve.
+      // però etichetta rapida:
+      setTxt("csTeilzahlungLabel", (typeof cs.teilzahlungAmount === "number") ? cs.teilzahlungAmount.toFixed(2) : "—")
+      setTxt("csEffectiveFromLabel", cs.effectiveFrom || "—")
+
+      // payoff selected label init
+      const payoffSel = clone.querySelector('[data-kpi="payoffSelectedPurchase"]')
+      if (payoffSel && !payoffSel.textContent.trim()) payoffSel.textContent = "—"
+
+      // attach wallet id to actions
+      const tagWalletActions = () => {
+        clone.querySelectorAll("[data-action]").forEach(btn => {
+          btn.dataset.walletId = String(w.id)
+        })
+      }
+      tagWalletActions()
     }
+
 
     // Riassunto breve in alto (walletShortSummary)
     const shortEl = clone.querySelector('[data-kpi="walletShortSummary"]')
@@ -734,18 +850,26 @@ async function loadDashboard() {
   const asOf = state.selectedDate || formatISODate(new Date())
   const d = parseISODate(asOf)
   const month = d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}` : asOf.slice(0,7)
+
   const params = new URLSearchParams()
   params.set("asOf", asOf)
   params.set("month", month)
+
   let data = null
   try {
-    data = await apiFetch("/dashboard?" + params.toString(),{method:"GET"})
-  } catch(e) {
+    data = await apiFetch("/dashboard?" + params.toString(), { method: "GET" })
+  } catch (e) {
     data = null
   }
+
+  // Fonte unica di verità per snapshot UI
   state.dashboard = data
+
+  // Fonte unica di verità per le azioni carta (save settings / scheduled repayment / override)
+  // NON usare una variabile globale separata: usa sempre state.dashboard
   renderSnapshot()
 }
+
 
 async function loadWallets() {
   let data = []
@@ -755,6 +879,9 @@ async function loadWallets() {
     data = []
   }
   state.wallets = Array.isArray(data) ? data : []
+  walletsCache = state.wallets
+  fillPayoffFromWalletSelect()
+
   const filterWallet = el("filterWallet")
   if (filterWallet) {
     const current = filterWallet.value
@@ -2401,3 +2528,260 @@ if (document.readyState === "loading") {
 } else {
   init()
 }
+// ------------------------------
+// NEW: Card actions (delegation)
+// ------------------------------
+let payoffState = { purchaseEventId: null, cardWalletId: null, purchaseTitle: null }
+let walletsCache = []
+
+function fillPayoffFromWalletSelect() {
+  const sel = document.getElementById("payoffFromWalletId")
+  if (!sel) return
+  sel.innerHTML = ""
+
+  const opts = (walletsCache || []).filter(w => w.type !== "card")
+  if (!opts.length) {
+    const o = document.createElement("option")
+    o.value = ""
+    o.textContent = "—"
+    sel.appendChild(o)
+    return
+  }
+
+  for (const w of opts) {
+    const o = document.createElement("option")
+    o.value = w.id
+    o.textContent = `${w.name} (id:${w.id})`
+    sel.appendChild(o)
+  }
+}
+
+function findWalletInDashboard(walletId) {
+  const d = state.dashboard
+  if (!d || !Array.isArray(d.wallets)) return null
+  return d.wallets.find(w => String(w.id) === String(walletId)) || null
+}
+
+
+function moneyOrNull(v) {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : null
+}
+
+function openPayoffModal() {
+  const m = document.getElementById("payoffModal")
+  if (!m) return
+  m.classList.remove("hide")
+}
+function closePayoffModal() {
+  const m = document.getElementById("payoffModal")
+  if (!m) return
+  m.classList.add("hide")
+}
+
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-action]")
+  if (!btn) return
+
+  const action = btn.dataset.action
+  const walletId = btn.dataset.walletId
+
+  // helper: refresh dashboard after ops
+  const refresh = async () => {
+    // usa le tue funzioni esistenti di reload (qui assumo loadDashboard/refreshSnapshot; se non esiste, dimmelo e lo adatto)
+    if (typeof loadDashboard === "function") await loadDashboard()
+  }
+
+  if (action === "cardSaveSettings") {
+    const w = findWalletInDashboard(walletId)
+    if (!w) return
+
+    const root = btn.closest('[data-slot="cardExtras"]') || btn.closest(".walletCard") || document
+
+    const payload = {
+      teilzahlungAmount: moneyOrNull(root.querySelector('[data-input="csTeilzahlung"]')?.value),
+      sollzinsAnnual: moneyOrNull(root.querySelector('[data-input="csSollzins"]')?.value),
+      effektivzinsAnnual: moneyOrNull(root.querySelector('[data-input="csEffektivzins"]')?.value),
+      kreditlimit: moneyOrNull(root.querySelector('[data-input="csKreditlimit"]')?.value),
+      effectiveFrom: root.querySelector('[data-input="csEffectiveFrom"]')?.value || null,
+      cycleStartDay: moneyOrNull(root.querySelector('[data-input="csCycleStartDay"]')?.value),
+      cycleEndDay: moneyOrNull(root.querySelector('[data-input="csCycleEndDay"]')?.value),
+      debitDay: moneyOrNull(root.querySelector('[data-input="csDebitDay"]')?.value),
+    }
+
+    // pulizia: rimuovi chiavi null/undefined non inviate
+    Object.keys(payload).forEach(k => {
+      if (payload[k] === null || payload[k] === "" || payload[k] === undefined) delete payload[k]
+    })
+
+    await apiFetch(`/cards/${w.id}/settings`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+
+    await refresh()
+    return
+  }
+
+  if (action === "cardCreateScheduledRepayment") {
+    const w = findWalletInDashboard(walletId)
+    if (!w || !w.card) return
+
+    const sr = w.card.scheduledRepayment
+    if (!sr) {
+      alert("scheduledRepayment non disponibile (backend).")
+      return
+    }
+    if (sr.exists) {
+      alert("Esiste già un rimborso su quella data. Usa Override.")
+      return
+    }
+
+    const root = btn.closest('[data-slot="cardExtras"]') || btn.closest(".walletCard") || document
+    const userAmount = moneyOrNull(root.querySelector('[data-input="schedUserAmount"]')?.value)
+    if (!userAmount || userAmount <= 0) {
+      alert("Inserisci un importo valido.")
+      return
+    }
+
+    // fromWalletId: usa defaultSourceWalletId del wallet (non in w.card), quindi leggiamo da wallets list se presente
+    const fromWalletId =
+      w.defaultSourceWalletId ||
+      (state.wallets.find(x => String(x.id) === String(w.id)) || {}).defaultSourceWalletId ||
+      null
+
+    if (!fromWalletId) {
+      alert("Manca defaultSourceWalletId sul wallet. Impostalo dalla UI wallet.")
+      return
+    }
+
+    const newEvent = {
+      type: "card_repayment",
+      title: "Rimborso carta (scheduled)",
+      amount: userAmount,
+      category: "Card Repayment",
+      calendarDate: sr.paymentDate,
+      paymentDate: sr.paymentDate,
+      fromWalletId: fromWalletId,
+      toCardWalletId: w.id,
+      notes: "",
+    }
+
+    await apiFetch(`/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newEvent)
+    })
+
+    await refresh()
+    return
+  }
+
+  if (action === "cardOverrideScheduledRepayment") {
+    const w = findWalletInDashboard(walletId)
+    if (!w || !w.card) return
+
+    const sr = w.card.scheduledRepayment
+    if (!sr) {
+      alert("scheduledRepayment non disponibile (backend).")
+      return
+    }
+    if (!sr.exists) {
+      alert("Non esiste ancora un rimborso su quella data. Prima crealo.")
+      return
+    }
+
+    // trova l'evento reale di rimborso su debit date: lo cerchiamo dai dati già caricati nel frontend (dayEvents/list).
+    // Se non hai cache eventi globale, facciamo una query events di quel giorno e wallet.
+    const day = sr.paymentDate
+    const events = await apiFetch(`/events?from=${day}&to=${day}&walletId=${w.id}`)
+    const repay = (events || []).find(ev => ev.type === "card_repayment" && String(ev.toCardWalletId) === String(w.id) && (ev.paymentDate === day || ev.calendarDate === day))
+    if (!repay) {
+      alert("Non riesco a trovare l'evento rimborso. Apri il giorno e verifica.")
+      return
+    }
+
+    const root = btn.closest('[data-slot="cardExtras"]') || btn.closest(".walletCard") || document
+    const userAmount = moneyOrNull(root.querySelector('[data-input="schedUserAmount"]')?.value)
+    if (!userAmount || userAmount <= 0) {
+      alert("Inserisci un importo valido.")
+      return
+    }
+    const deltaMode = root.querySelector('[data-input="schedDeltaMode"]')?.value || "fee"
+
+    const payload = {
+      userAmount: userAmount,
+      baselineAmount: typeof sr.baselineAmount === "number" ? sr.baselineAmount : (typeof w.card.statement?.total === "number" ? w.card.statement.total : userAmount),
+      deltaMode: deltaMode,
+      allocations: []
+    }
+
+    await apiFetch(`/events/${repay.id}/repayment_override`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+
+    await refresh()
+    return
+  }
+
+  if (action === "openPayoffModal") {
+    // apre modal se è stato selezionato un purchase financing
+    if (!payoffState.purchaseEventId) {
+      alert("Seleziona prima una card_purchase (finanziamento) dal calendario/lista eventi.")
+      return
+    }
+    openPayoffModal()
+    return
+  }
+})
+
+// Payoff modal controls
+document.addEventListener("DOMContentLoaded", () => {
+  const closeBtn = document.getElementById("payoffCloseBtn")
+  const submitBtn = document.getElementById("payoffSubmitBtn")
+  if (closeBtn) closeBtn.addEventListener("click", closePayoffModal)
+
+  if (submitBtn) submitBtn.addEventListener("click", async () => {
+    const resEl = document.getElementById("payoffResult")
+    const purchaseId = payoffState.purchaseEventId
+    if (!purchaseId) return
+
+    const fromWalletId = document.getElementById("payoffFromWalletId")?.value
+    const paymentDate = document.getElementById("payoffPaymentDate")?.value
+    const calendarDate = document.getElementById("payoffCalendarDate")?.value
+    const payoffPrincipal = document.getElementById("payoffPrincipal")?.value
+    const payoffInterest = document.getElementById("payoffInterest")?.value
+    const notes = document.getElementById("payoffNotes")?.value || ""
+
+    if (!fromWalletId || !paymentDate || !calendarDate || !payoffPrincipal) {
+      alert("Compila: fromWalletId, paymentDate, calendarDate, payoffPrincipal.")
+      return
+    }
+
+    const payload = {
+      fromWalletId: Number(fromWalletId),
+      paymentDate,
+      calendarDate,
+      payoffPrincipal: Number(payoffPrincipal),
+      payoffInterest: payoffInterest ? Number(payoffInterest) : 0,
+      notes
+    }
+
+    const out = await apiFetch(`/financings/${purchaseId}/payoff`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+
+    if (resEl) {
+      resEl.textContent = out?.warning ? `OK. Warning: ${out.warning}` : "OK. Estinzione registrata."
+    }
+
+    // refresh dashboard
+    if (typeof loadDashboard === "function") await loadDashboard()
+  })
+})
+

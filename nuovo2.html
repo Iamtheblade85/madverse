@@ -4329,9 +4329,8 @@ function renderForecastRealContent(data, message){
 		      host.appendChild(row1);
 		      host.appendChild(row2);
 		      buildDurationPresetButtons();
-		      // Optional: hide the old select UI in the dock area (logic still uses it)
-		      const durSwitch = document.getElementById('duration-switch');
-		      //if (durSwitch) durSwitch.style.display = 'none';
+			const sel = document.getElementById('sel-duration');
+			if (sel) sel.style.display = 'none';  // preset-only: nascondo il select, non i bottoni
 		      if (hintBox){
 		        hintBox.style.cssText = 'margin-top:8px;opacity:.85;font-size:12px;line-height:1.35;';
 		      }
@@ -4424,7 +4423,10 @@ function renderForecastRealContent(data, message){
 			  listHost.innerHTML = '';
 			  listHost.classList.add('goblin-grid');
 			
-			  const powerMap = State.runtime.forecastPowerByAsset || {};
+			  const powerMap = State.runtime.forecastPowerByAsset || null; // null => “not available yet”
+			  const baseNeedMap = State.runtime.baselineNeedByAsset || {};
+			  const baseMissingMap = State.runtime.baselineMissingByAsset || {};
+
 			
 			  visible.forEach(g=>{
 			    const id = String(g.asset_id);
@@ -4433,25 +4435,33 @@ function renderForecastRealContent(data, message){
 			
 			    const sel = State.selectedGoblinIds.has(id);
 			    const tired = isGoblinTired(g);
-			
 			    const stats = goblinStatsFromIndex(id);
-			
-			    const have = toNumber(g.daily_power_num || 0);
-			    const need = toNumber(powerMap[id] || 0);
-			    const missing = need ? Math.max(0, need - have) : 0;
-			
+				const have = toNumber(g.daily_power_num || 0);
+				// Prefer forecast (effective) when available, else baseline from /2user_nfts
+				const hasForecastNeed = !!(powerMap && powerMap[id] != null);
+				const need = toNumber(
+				  hasForecastNeed
+				    ? powerMap[id]
+				    : (g.need_daily_power_num ?? baseNeedMap[id] ?? 0)
+				);
+				let missing;
+				if (hasForecastNeed){
+				  // forecast: missing = max(0, need - have)
+				  missing = Math.max(0, need - have);
+				} else {
+				  // baseline: use backend-provided missing_daily_power if present
+				  const baseMissing = toNumber(g.missing_daily_power_num ?? baseMissingMap[id] ?? 0);
+				  missing = (baseMissing > 0) ? baseMissing : Math.max(0, need - have);
+				}
 			    const expanded = (State.runtime.openDetailsId === id);
-			
 			    let statusLabel = tired ? 'TIRED' : (sel ? 'SELECTED' : 'READY');
 			    let statusClass = tired ? 'tired' : (sel ? 'sel' : 'ready');
-			
 			    const card = document.createElement('div');
 			    card.classList.add('gob-card');
 			    card.setAttribute('role','button');
 			    card.setAttribute('tabindex','0');
 			    card.setAttribute('aria-pressed', sel ? 'true' : 'false');
 			    card.setAttribute('data-id', id);
-			
 			    card.innerHTML = `
 			      <div class="gob-top">
 			        <div class="gob-title">
@@ -4736,7 +4746,8 @@ function renderForecastRealContent(data, message){
 			    {
 			      wax_account: State.user.wax_account,
 			      user_id: State.user.user_id,
-			      usx_token: State.user.usx_token
+			      usx_token: State.user.usx_token,
+				  duration_minutes: State.expedition.durationMinutes
 			    },
 			    CONFIG.userNftsTimeoutMs
 			  );
@@ -4779,29 +4790,38 @@ function renderForecastRealContent(data, message){
 			      n.strength ??
 			      n.stats?.power
 			    ) || 0;
-			
+			    const needDP = toNumber(n.need_daily_power ?? 0);
+			    const missingDP = toNumber(n.missing_daily_power ?? 0);
+			    const isTiredBaseline = !!(n.is_tired);
 			    return {
 			      asset_id: id,
 			      name: n.name || n.title || `Goblin #${id}`,
 			      rarity: n.rarity || n.tier || '',
-			      daily_power_num: dailyPower
+			      daily_power_num: dailyPower,
+			      need_daily_power_num: needDP,
+			      missing_daily_power_num: missingDP,
+			      is_tired_baseline: isTiredBaseline
 			    };
 			  });
-			
 			  State.goblinsUser = goblins;
-			
-			  // Reinforcement per il cap
+			  State.runtime = State.runtime || {};
+			  State.runtime.baselineNeedByAsset = {};
+			  State.runtime.baselineMissingByAsset = {};
+			  State.runtime.baselineTiredIds = new Set();
+			  for (const g of goblins){
+			    const id = String(g.asset_id);
+			    State.runtime.baselineNeedByAsset[id] = toNumber(g.need_daily_power_num || 0);
+			    State.runtime.baselineMissingByAsset[id] = toNumber(g.missing_daily_power_num || 0);
+			    if (g.is_tired_baseline) State.runtime.baselineTiredIds.add(id);
+			  }
 			  const reinfRaw =
 			    toNumber(payload.reinforcement_count) ||
 			    toNumber(payload.troop_reinforcement) ||
 			    0;
 			  State.expedition.reinforcementCount = clamp(reinfRaw, 0, 40);
-			
-			  // Messaggio di stato base
 			  if (statusEl) {
 			    statusEl.textContent = `Loaded ${goblins.length} goblins for ${State.user.wax_account}.`;
 			  }
-			
 			  // ---- NUOVA PARTE: uso dei totali/medie/rarity_counts dal backend ----
 			  const statsSummary = payload.stats_summary || null;
 			  if (typeof updateGoblinGlobalStats === 'function') {

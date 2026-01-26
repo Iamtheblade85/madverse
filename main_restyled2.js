@@ -40,7 +40,6 @@ window.expeditionTimersRunning = window.expeditionTimersRunning || {};
 function getTokenDecimals(symbol) {
   const sym = (symbol || '').toUpperCase();
 
-  // 1) cerca nei token disponibili (preferito)
   const list = window.availableTokensDetailed || [];
   const official = (window.OFFICIAL_TOKENS || []).find(o => o.symbol === sym);
   if (official) {
@@ -50,11 +49,9 @@ function getTokenDecimals(symbol) {
   const m2 = list.find(t => (t.symbol || '').toUpperCase() === sym && Number.isInteger(t.precision));
   if (m2) return m2.precision;
 
-  // 2) fallback: staking pools (se presente)
   const p = (window.stakingPools || []).find(p => (p.deposit_token?.symbol || '').toUpperCase() === sym);
   if (p && Number.isInteger(p.deposit_token?.decimals)) return p.deposit_token.decimals;
 
-  // 3) default ragionevole
   return 8;
 }
 
@@ -69,6 +66,57 @@ function truncToDecimals(value, dec) {
 
 function fmtAmount(value, dec) {
   return truncToDecimals(value, dec).toFixed(dec);
+}
+
+function onDomReady(fn) {
+  if (document.readyState === "complete" || document.readyState === "interactive") fn();
+  else document.addEventListener("DOMContentLoaded", fn);
+}
+
+function isLoggedIn() {
+  const { userId, usx_token, wax_account } = window.userData || {};
+  return !!(userId && usx_token && wax_account);
+}
+
+function ensureNCFarmsLoaded(cb) {
+  if (typeof window.initManageNFTsFarm === "function") return cb();
+  if (window.__NCFARMS_LOADING__) {
+    window.addEventListener("__ncfarms_ready__", cb, { once: true });
+    return;
+  }
+  window.__NFTF_AUTO_DISABLED__ = true;
+  window.__NCFARMS_LOADING__ = true;
+
+  const build = window.__APP_BUILD__ || "dev";
+  const selfSrc = Array.from(document.scripts).map(s => s.src).find(u => /main_restyled\.js/.test(u)) || "";
+  const base = selfSrc ? selfSrc.replace(/[^\/?#]+(\?.*)?$/, "") : "";
+  const candidates = [
+    base + `noncustodial_farms.js?v=${build}`,
+    `/js/noncustodial_farms.js?v=${build}`,
+  ];
+
+  const s = document.createElement("script");
+  s.defer = true;
+
+  let i = 0;
+  const tryNext = () => {
+    if (i >= candidates.length) {
+      window.__NCFARMS_LOADING__ = false;
+      console.error("Caricamento noncustodial_farms.js fallito");
+      return;
+    }
+    s.src = candidates[i++];
+    s.onerror = tryNext;
+    document.head.appendChild(s);
+  };
+
+  s.onload = () => {
+    window.__NCFARMS_LOADING__ = false;
+    window.dispatchEvent(new Event("__ncfarms_ready__"));
+    cb();
+  };
+
+  tryNext();
 }
 
 /**
@@ -255,13 +303,18 @@ function saveUserData(data, remember = false) {
   window.userData = {
     email: data.email,
     password: data.password,
-    user_id: data.user_id ?? data.userId,   // <-- NEW
-    userId: data.user_id ?? data.userId,    // <-- NEW (compat)
+    user_id: data.user_id ?? data.userId,
+    userId: data.user_id ?? data.userId,
     usx_token: data.usx_token,
     wax_account: data.wax_account
   };
   if (remember) {
     localStorage.setItem('userData', JSON.stringify(window.userData));
+  }
+
+  // 👇 mostra/nasconde il bottone Creator Dashboard in base al wax_account
+  if (window.updateCreatorDashboardVisibility) {
+    window.updateCreatorDashboardVisibility();
   }
 }
 
@@ -293,25 +346,32 @@ async function initApp() {
     }
   }
 
-  // 2. Fallback login: user_id + usx_token da URL
-  const urlParams = getUrlParams();
-  if (urlParams.userId && urlParams.usx_token) {
-    try {
-      const res = await fetch(`${BASE_URL}/main_door?user_id=${encodeURIComponent(urlParams.userId)}&usx_token=${encodeURIComponent(urlParams.usx_token)}`);
-      const data = await res.json();
+	// 2. Fallback login: user_id + usx_token da URL
+	const urlParams = getUrlParams();
+	if (urlParams.userId && urlParams.usx_token) {
+	  try {
+	    const res = await fetch(
+	      `${BASE_URL}/main_door?user_id=${encodeURIComponent(urlParams.userId)}&usx_token=${encodeURIComponent(urlParams.usx_token)}`
+	    );
+	    const data = await res.json();
+	
+	    if (data.user_id && data.wax_account) {
+	      // usa la stessa logica di saveUserData così abbiamo SEMPRE
+	      // sia user_id che userId nello state
+	      saveUserData({
+	        user_id: data.user_id,
+	        userId: data.user_id,
+	        usx_token: urlParams.usx_token,
+	        wax_account: data.wax_account
+	      }, false);
+	
+	      return finalizeAppLoad();
+	    }
+	  } catch (err) {
+	    console.error("[❌] Error in fallback login:", err);
+	  }
+	}
 
-      if (data.user_id && data.wax_account) {
-        window.userData = {
-          user_id: data.user_id,
-          usx_token: urlParams.usx_token,
-          wax_account: data.wax_account
-        };
-        return finalizeAppLoad();
-      } 
-    } catch (err) {
-      console.error("[❌] Error in fallback login:", err);
-    }
-  }
 
   // 3. Nessun login valido → mostra login/registrazione
   renderAuthButton(false);
@@ -320,13 +380,17 @@ async function initApp() {
 
 async function finalizeAppLoad() {
   renderAuthButton(true);
+
+  // 👇 assicurati che il bottone sia aggiornato anche dopo auto-login
+  if (window.updateCreatorDashboardVisibility) {
+    window.updateCreatorDashboardVisibility();
+  }
+
   await loadAvailableTokens();
 
-  // Caricamento iniziale sezione principale
-  loadSection('loadLatestNews');
-
-  // Collega pulsanti menu
-  document.querySelectorAll('.menu-btn').forEach(btn => {
+  window.dispatchEvent(new CustomEvent('user:loggedin', { detail: window.userData }));
+  loadSection('goblin-dex');
+  document.querySelectorAll('.menu-button, .menu-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const section = e.target.getAttribute('data-section');
       loadSection(section);
@@ -379,6 +443,26 @@ function sanitizeHandle(v) {
   return v.trim().replace(/^@+/, ""); 
 }
 
+function centerAuthModal() {
+  const modal = document.getElementById('modal');
+  if (!modal) return;
+  const modalContent = modal.querySelector('.modal-content');
+  if (!modalContent) return;
+
+  // Aspetta il layout, poi calcola il centro verticale
+  requestAnimationFrame(() => {
+    const viewportHeight =
+      window.innerHeight || document.documentElement.clientHeight || 0;
+    const rect = modalContent.getBoundingClientRect();
+
+    // Spazio sopra: metà dello schermo meno metà dell’altezza del contenuto
+    const offset = Math.max((viewportHeight - rect.height) / 2, 24);
+
+    modalContent.style.marginTop = offset + 'px';
+    modalContent.style.marginBottom = '24px'; // un po’ di respiro sotto
+  });
+}
+
 function openResetPwdModal() {
   const modal = document.getElementById('modal');
   const body = document.getElementById('modal-body');
@@ -422,6 +506,7 @@ function openResetPwdModal() {
   modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
+  centerAuthModal();
 
   // Pre-compila wax/email se già note
   if (window.userData?.wax_account) {
@@ -560,7 +645,7 @@ function openLoginModal() {
   modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
-
+  centerAuthModal(); 
   document.getElementById('submit-login').onclick = async () => {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value.trim();
@@ -649,7 +734,7 @@ function openRegisterModal() {
   modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
-
+  centerAuthModal();
   document.getElementById('submit-register').onclick = async () => {
     const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value.trim();
@@ -2449,248 +2534,296 @@ window.openEditRewards = openEditRewards;
 // Funzione per caricare dinamicamente sezioni
 async function loadSection(section) {
   const app = document.getElementById('app');
-  const { userId, usx_token, wax_account } = window.userData;
-  if (section === 'c2e-twitch') {
-    app.innerHTML = `
-      <div class="section-container">
-        <h2 class="section-title text-center">C2E - Twitch</h2>
-          <div class="c2e-menu">
-            <button class="c2e-menu-btn" data-menu="log-reward-activity"
-              style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-              Log Reward Activity
-            </button>
-            <button class="c2e-menu-btn" data-menu="log-storms-giveaways"
-              style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-              Twitch Storms
-            </button>
-            <button class="c2e-menu-btn" data-menu="twitch-nfts-giveaways"
-              style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-              Twitch NFTs Giveaways(NEW!)
-            </button>
-            <button class="c2e-menu-btn" data-menu="twitch-game"
-              style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
-              Twitch Game(!soon!)
-            </button>
-          </div>
-        <div id="c2e-content" class="c2e-content">Loading last activity...</div>
-      </div>
-    `;
 
-    loadLogRewardActivity();
+  // ⛑ fallback safe: se window.userData non esiste ancora (utente non loggato)
+  const { userId, usx_token, wax_account } = window.userData || {};
+	if (section === 'twitch-nfts-giveaways' || section === 'log-storms-giveaways') {
+	  window.__C2E_DEFAULT_TAB__ = section;      // memorizza quale tab aprire
+	  return loadSection('c2e-twitch');          // entra nella sezione madre
+	}
 
-    document.querySelectorAll('.c2e-menu-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.c2e-menu-btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-
-        const menu = e.target.getAttribute('data-menu');
-        switch(menu) {
-          case 'log-reward-activity': loadLogRewardActivity(); break;
-          case 'log-storms-giveaways': loadLogStormsGiveaways(); break;
-          case 'twitch-nfts-giveaways': loadTwitchNftsGiveaways(); break;
-          case 'twitch-game': loadTwitchGame(); break;
-        }
-      });
-    });
-  } else if (section === 'wallet') {
-      app.innerHTML = `
-        <div class="section-container">
-          <h2 class="section-title">Wallet</h2>
-          <div id="wallet-table">Loading Wallet...</div>
-        </div>
-      `;
-    loadWallet();
-  } else if (section === 'goblin-dex') {
-      app.innerHTML = `
-        <div class="section-container">
-          <h2 class="section-title">Goblin Dex</h2>
-          <div id="goblin-dex">Loading character...</div>
-        </div>
-      `;
-    loadGoblinDex();
-  } else if (section === 'lp-league') {
-      app.innerHTML = `
-        <div class="section-container">
-          <h2 class="section-title">LP LEAGUE : are you ready for it?</h2>
-        </div>
-      `;
-    loadLpLeague();
-  }  else if (section === 'nfts') {
-    app.innerHTML = `
-    <div class="section-container">
-      <h2 class="section-title">My NFTs</h2>
-      <div class="filters-group">
-        <label for="search-template">Template:</label>
-        <input type="text" id="search-template" placeholder="Search by Template Name..." class="form-input">
-      
-        <label for="filter-status">Status:</label>
-        <select id="filter-status" class="form-select">
-          <option value="">All</option>
-          <option value="Staked">Staked</option>
-          <option value="Not Staked">Not Staked</option>
-        </select>
-      
-        <label for="filter-stakable">Stakable:</label>
-        <select id="filter-stakable" class="form-select">
-          <option value="">All</option>
-          <option value="Stakable">Stakable</option>
-          <option value="Not Stakable">Not Stakable</option>
-        </select>
-      
-        <label for="filter-for-sale">For Sale:</label>
-        <select id="filter-for-sale" class="form-select">
-          <option value="">All</option>
-          <option value="Yes">For Sale</option>
-          <option value="No">Not For Sale</option>
-        </select>
-      
-        <label for="filter-collection">Collection:</label>
-        <select id="filter-collection" class="form-select">
-          <option value="">All</option>
-        </select>
-      
-        <label for="sort-by">Sort By:</label>
-        <select id="sort-by" class="form-select">
-          <option value="created_at_desc">Newest</option>
-          <option value="created_at_asc">Oldest</option>
-          <option value="template_name_asc">Template (A-Z)</option>
-          <option value="template_name_desc">Template (Z-A)</option>
-        </select>
-      </div>
-
-
-      <div id="bulk-actions" class="bulk-actions hidden">
-        <button id="bulk-withdraw" class="btn btn-secondary">Withdraw Selected</button>
-        <button id="bulk-send" class="btn btn-primary">Send Selected</button>
-      </div>
-
-      <div id="nfts-loading" class="nfts-loading">🔄 Loading NFTs...</div>
-      <div id="nfts-count" class="nfts-count"></div>
-
-      <div id="nfts-list" class="nfts-grid"></div>
-
-      <div id="pagination" class="pagination"></div>
-      <div id="modal-nft" class="modal-backdrop hidden">
-        <div class="modal-content">
-          <button class="modal-close">X</button>
-          <div id="modal-content"></div>
-        </div>
-      </div>
-      </div>
-    `;
-    loadNFTs();
-  }
-else if (section === 'token-staking') {
+if (section === 'c2e-twitch') {
   app.innerHTML = `
     <div class="section-container">
-      <h2 class="section-title">Token Staking</h2>
-
-      <!-- Toolbar: Tabs + Distribution -->
-      <div class="token-toolbar" style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; justify-content:space-between; margin-bottom:12px;">
-        <div class="tabs" role="tablist" aria-label="Token staking tabs" style="display:flex; gap:6px;">
-          <button id="tab-pools" class="tab active" role="tab" aria-selected="true" aria-controls="tab-pools-content">Pools</button>
-          <button id="tab-earnings" class="tab" role="tab" aria-selected="false" aria-controls="tab-earnings-content">Earning History</button>
-        </div>
-        
-        <div class="actions" id="dist-actions" style="display:none; align-items:center; gap:.5rem; margin: .5rem 0 1rem;">
-          <label style="display:flex; align-items:center; gap:.35rem; font-size:.95rem;">
-            <input type="checkbox" id="dist-dry" checked>
-            Dry run
-          </label>
-          <button id="btn-distribute"
-                  class="btn btn-primary"
-                  style="display:inline-flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border:1px solid #2b2b2b;border-radius:8px;background:#0d6efd;color:#fff;font-weight:600;cursor:pointer;">
-            <span id="dist-spinner"
-                  class="spin"
-                  style="display:none;width:14px;height:14px;border:2px solid rgba(255,255,255,.6);border-top-color:#fff;border-radius:50%;"></span>
-            <span id="dist-label">Run Distribution</span>
-          </button>
-        </div>
+      <h2 class="section-title text-center">C2E - Twitch</h2>
+      <div class="c2e-menu">
+        <button class="c2e-menu-btn" data-menu="log-reward-activity"
+          style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          Log Reward Activity
+        </button>
+        <button class="c2e-menu-btn" data-menu="log-storms-giveaways"
+          style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          Twitch Storms
+        </button>
+        <button class="c2e-menu-btn" data-menu="twitch-nfts-giveaways"
+          style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          Twitch NFTs Giveaways(NEW!)
+        </button>
+        <button class="c2e-menu-btn" data-menu="twitch-game"
+          style="font-size: 2em; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
+          Twitch Game(!soon!)
+        </button>
       </div>
-      <style>
-      @keyframes spin { to { transform: rotate(360deg); } }
-      .spin { animation: spin .8s linear infinite; }
-      </style>
-
-      <!-- Tabs content -->
-      <div id="tab-content">
-        <!-- Pools tab -->
-        <div id="tab-pools-content" role="tabpanel" aria-labelledby="tab-pools">
-          <input type="text" id="search-pools" placeholder="Search token pool name" class="form-input search-token-pool" style="margin-bottom:10px;">
-          <div id="pool-buttons" class="pool-buttons"></div>
-          <div id="selected-pool-details">
-            <div class="loading-message">Loading pool data...</div>
-          </div>
-        </div>
-
-        <!-- Earnings tab -->
-        <div id="tab-earnings-content" role="tabpanel" aria-labelledby="tab-earnings" hidden>
-          <div class="card" style="margin-bottom:12px;">
-            <h3 class="card-title">Earning History</h3>
-            <div style="display:flex; gap:.5rem; align-items:flex-end; flex-wrap:wrap;">
-              <div>
-                <label class="label">From</label>
-                <input type="date" id="eh-start" class="form-input" />
-              </div>
-              <div>
-                <label class="label">To</label>
-                <input type="date" id="eh-end" class="form-input" />
-              </div>
-              <div>
-                <label class="label">Quick</label>
-                <select id="eh-quick" class="form-input">
-                  <option value="7">Last 7 days</option>
-                  <option value="14">Last 14 days</option>
-                  <option value="30">Last 30 days</option>
-                </select>
-              </div>
-              <button id="eh-refresh" class="btn btn-secondary">Refresh</button>
-            </div>
-          </div>
-
-          <div id="eh-summary" class="card" style="margin-bottom:12px;">
-            <h4 class="card-title">Summary</h4>
-            <div id="eh-summary-body" class="label">Select a range and click Refresh.</div>
-          </div>
-
-          <div id="eh-days"></div>
-        </div>
-      </div>
+      <div id="c2e-content" class="c2e-content">Loading…</div>
     </div>
   `;
 
-  // init tabs
-  initTokenStakingTabs();
+  // Scegli il tab iniziale (proviene da scorciatoie esterne) e resetta il flag
+  const firstTab = window.__C2E_DEFAULT_TAB__ || 'log-reward-activity';
+  window.__C2E_DEFAULT_TAB__ = null;
 
-  // 🔐 mostra il blocco solo se il wallet è quello autorizzato
-  try {
-    const allowedDist = (window.userData?.wax_account === 'agoscry4ever');
-    const distActions = document.getElementById('dist-actions');
-    if (distActions) distActions.style.display = allowedDist ? 'flex' : 'none';
+  // Evidenzia il bottone del tab scelto
+  const defaultBtn =
+    document.querySelector(`.c2e-menu-btn[data-menu="${firstTab}"]`) ||
+    document.querySelector(`.c2e-menu-btn[data-menu="log-reward-activity"]`);
+  if (defaultBtn) defaultBtn.classList.add('active');
 
-    // singolo hook sul click
-    const btn = document.getElementById('btn-distribute');
-    if (btn && allowedDist) {
-      btn.addEventListener('click', runTokenDistribution);
-    }
-  } catch (e) {
-    console.warn('dist-actions init error', e);
+  // Carica UNA SOLA VOLTA il contenuto del tab iniziale
+  switch (firstTab) {
+    case 'log-storms-giveaways':  loadLogStormsGiveaways();  break;
+    case 'twitch-nfts-giveaways': loadTwitchNftsGiveaways(); break;
+    default:                      loadLogRewardActivity();   break;
   }
 
-  // load pools tab una sola volta
-  loadStakingPools();
+  // Listener per i click dei tab
+  document.querySelectorAll('.c2e-menu-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.c2e-menu-btn').forEach(b => b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
 
-  // init earning history defaults
-  initEarningHistoryControls();
-} else if (section === 'nfts-staking') {
+      const menu = e.currentTarget.getAttribute('data-menu');
+      switch (menu) {
+        case 'log-reward-activity':    loadLogRewardActivity();    break;
+        case 'log-storms-giveaways':   loadLogStormsGiveaways();   break;
+        case 'twitch-nfts-giveaways':  loadTwitchNftsGiveaways();  break;
+        case 'twitch-game':            loadTwitchGame();           break;
+      }
+    });
+  });
+} else if (section === 'noncustodialfarms') {
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title text-center">Manage not-custodial NFTs Farm</h2>
+        <div id="manage-nft-farm-page"></div>
+      </div>
+    `;
+
+    ensureNCFarmsLoaded(() => {
+      if (window.__NFTF_MOUNTED__) return;
+      const API_BASE = BASE_URL;
+      window.initManageNFTsFarm({
+        apiBaseUrl: API_BASE,
+        containerId: "manage-nft-farm-page",
+      });
+      window.__NFTF_MOUNTED__ = true;
+
+      if (!window.__NFTF_REWARD_LISTENER__) {
+        window.addEventListener("nftFarm:rewardsDraft", (e) => {
+          const draft = e.detail;
+          console.log("Rewards draft:", draft);
+        });
+        window.__NFTF_REWARD_LISTENER__ = true;
+      }
+    });
+
+    return;
+
+  } else if (section === 'wallet') {
+
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">Wallet</h2>
+        <div id="wallet-table">Loading Wallet...</div>
+      </div>
+    `;
+    loadWallet();
+
+  } else if (section === 'goblin-dex') {
+
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">Goblin Dex</h2>
+        <div id="goblin-dex">Loading character...</div>
+      </div>
+    `;
+    loadGoblinDex();
+
+  } else if (section === 'nfts') {
+
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">My NFTs</h2>
+        <div class="filters-group">
+          <label for="search-template">Template:</label>
+          <input type="text" id="search-template" placeholder="Search by Template Name..." class="form-input">
+        
+          <label for="filter-status">Status:</label>
+          <select id="filter-status" class="form-select">
+            <option value="">All</option>
+            <option value="Staked">Staked</option>
+            <option value="Not Staked">Not Staked</option>
+          </select>
+        
+          <label for="filter-stakable">Stakable:</label>
+          <select id="filter-stakable" class="form-select">
+            <option value="">All</option>
+            <option value="Stakable">Stakable</option>
+            <option value="Not Stakable">Not Stakable</option>
+          </select>
+        
+          <label for="filter-for-sale">For Sale:</label>
+          <select id="filter-for-sale" class="form-select">
+            <option value="">All</option>
+            <option value="Yes">For Sale</option>
+            <option value="No">Not For Sale</option>
+          </select>
+        
+          <label for="filter-collection">Collection:</label>
+          <select id="filter-collection" class="form-select">
+            <option value="">All</option>
+          </select>
+        
+          <label for="sort-by">Sort By:</label>
+          <select id="sort-by" class="form-select">
+            <option value="created_at_desc">Newest</option>
+            <option value="created_at_asc">Oldest</option>
+            <option value="template_name_asc">Template (A-Z)</option>
+            <option value="template_name_desc">Template (Z-A)</option>
+          </select>
+        </div>
+
+        <div id="bulk-actions" class="bulk-actions hidden">
+          <button id="bulk-withdraw" class="btn btn-secondary">Withdraw Selected</button>
+          <button id="bulk-send" class="btn btn-primary">Send Selected</button>
+        </div>
+
+        <div id="nfts-loading" class="nfts-loading">🔄 Loading NFTs...</div>
+        <div id="nfts-count" class="nfts-count"></div>
+
+        <div id="nfts-list" class="nfts-grid"></div>
+
+        <div id="pagination" class="pagination"></div>
+        <div id="modal-nft" class="modal-backdrop hidden">
+          <div class="modal-content">
+            <button class="modal-close">X</button>
+            <div id="modal-content"></div>
+          </div>
+        </div>
+      </div>
+    `;
+    loadNFTs();
+
+  } else if (section === 'token-staking') {
+
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">Token Staking</h2>
+
+        <!-- Toolbar: Tabs + Distribution -->
+        <div class="token-toolbar" style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; justify-content:space-between; margin-bottom:12px;">
+          <div class="tabs" role="tablist" aria-label="Token staking tabs" style="display:flex; gap:6px;">
+            <button id="tab-pools" class="tab active" role="tab" aria-selected="true" aria-controls="tab-pools-content">Pools</button>
+            <button id="tab-earnings" class="tab" role="tab" aria-selected="false" aria-controls="tab-earnings-content">Earning History</button>
+          </div>
+          
+          <div class="actions" id="dist-actions" style="display:none; align-items:center; gap:.5rem; margin: .5rem 0 1rem;">
+            <label style="display:flex; align-items:center; gap:.35rem; font-size:.95rem;">
+              <input type="checkbox" id="dist-dry" checked>
+              Dry run
+            </label>
+            <button id="btn-distribute"
+                    class="btn btn-primary"
+                    style="display:inline-flex;align-items:center;gap:.5rem;padding:.5rem .9rem;border:1px solid #2b2b2b;border-radius:8px;background:#0d6efd;color:#fff;font-weight:600;cursor:pointer;">
+              <span id="dist-spinner"
+                    class="spin"
+                    style="display:none;width:14px;height:14px;border:2px solid rgba(255,255,255,.6);border-top-color:#fff;border-radius:50%;"></span>
+              <span id="dist-label">Run Distribution</span>
+            </button>
+          </div>
+        </div>
+        <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin .8s linear infinite; }
+        </style>
+
+        <!-- Tabs content -->
+        <div id="tab-content">
+          <!-- Pools tab -->
+          <div id="tab-pools-content" role="tabpanel" aria-labelledby="tab-pools">
+            <input type="text" id="search-pools" placeholder="Search token pool name" class="form-input search-token-pool" style="margin-bottom:10px;">
+            <div id="pool-buttons" class="pool-buttons"></div>
+            <div id="selected-pool-details">
+              <div class="loading-message">Loading pool data...</div>
+            </div>
+          </div>
+
+          <!-- Earnings tab -->
+          <div id="tab-earnings-content" role="tabpanel" aria-labelledby="tab-earnings" hidden>
+            <div class="card" style="margin-bottom:12px;">
+              <h3 class="card-title">Earning History</h3>
+              <div style="display:flex; gap:.5rem; align-items:flex-end; flex-wrap:wrap;">
+                <div>
+                  <label class="label">From</label>
+                  <input type="date" id="eh-start" class="form-input" />
+                </div>
+                <div>
+                  <label class="label">To</label>
+                  <input type="date" id="eh-end" class="form-input" />
+                </div>
+                <div>
+                  <label class="label">Quick</label>
+                  <select id="eh-quick" class="form-input">
+                    <option value="7">Last 7 days</option>
+                    <option value="14">Last 14 days</option>
+                    <option value="30">Last 30 days</option>
+                  </select>
+                </div>
+                <button id="eh-refresh" class="btn btn-secondary">Refresh</button>
+              </div>
+            </div>
+
+            <div id="eh-summary" class="card" style="margin-bottom:12px;">
+              <h4 class="card-title">Summary</h4>
+              <div id="eh-summary-body" class="label">Select a range and click Refresh.</div>
+            </div>
+
+            <div id="eh-days"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // init tabs
+    initTokenStakingTabs();
+
+    // blocco admin per distribuzione manuale
+    try {
+      const allowedDist = (window.userData?.wax_account || '').toLowerCase() === 'agoscry4ever';
+      const distActions = document.getElementById('dist-actions');
+      if (distActions) distActions.style.display = allowedDist ? 'flex' : 'none';
+
+      const btn = document.getElementById('btn-distribute');
+      if (btn && allowedDist) {
+        btn.addEventListener('click', runTokenDistribution);
+      }
+    } catch (e) {
+      console.warn('dist-actions init error', e);
+    }
+
+    // carica pools
+    loadStakingPools();
+    // init earning history defaults
+    initEarningHistoryControls();
+
+  } else if (section === 'nfts-staking') {
+
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title">NFT Staking</h2>
   
-        <!-- Toolbar con inline CSS -->
         <div id="farm-tools" style="
           display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-          background:#0f172a; /* slate-900 */
+          background:#0f172a;
           border:1px solid rgba(255,255,255,0.08);
           padding:12px;border-radius:10px;margin-bottom:14px;
         ">
@@ -2700,7 +2833,6 @@ else if (section === 'token-staking') {
             box-shadow:0 1px 1px rgba(0,0,0,0.15);
           ">📜 Earning History</button>
   
-          <!-- Container Admin visibile solo per agoscry4ever -->
           <div id="admin-distribute-container" style="
             display:none;align-items:center;gap:10px;margin-left:auto;
             background:#0b1220;border:1px dashed rgba(255,255,255,0.12);
@@ -2720,21 +2852,17 @@ else if (section === 'token-staking') {
           </div>
         </div>
   
-        <!-- Feedback dinamico per la distribuzione -->
         <div id="distribution-feedback" style="margin:-6px 0 16px 0;"></div>
   
         <div id="nft-farms-container" class="vertical-list">Loading NFT farms...</div>
       </div>
     `;
   
-    // Inizializza la toolbar (visibilità admin, listeners)
     initFarmToolsControls();
-  
-    // Carica le farm
     loadNFTFarms();
-  }
-  
-  else if (section === 'create-nfts-farm') {
+
+  } else if (section === 'create-nfts-farm') {
+
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title">Create NFTs Staking Farm</h2>
@@ -2742,8 +2870,9 @@ else if (section === 'token-staking') {
       </div>
     `;
     loadCreateNFTFarm();
-  }
-   else if (section === 'create-token-pool') {
+
+  } else if (section === 'create-token-pool') {
+
     app.innerHTML = `
       <div class="section-container">
         <h2 class="section-title">Create Token Staking Pool</h2>
@@ -2751,66 +2880,68 @@ else if (section === 'token-staking') {
       </div>
     `;
     loadCreateTokenStaking();
+
   } else if (section === 'daily') {
-  app.innerHTML = `
-    <div class="section-container">
-      <h2 class="section-title">Daily Chest</h2>
-      <div id="daily-box">Loading...</div>
-    </div>
-  `;
 
-  try {
-    const dailyBoxRes = await fetch(`${BASE_URL}/daily_chest_open`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId,
-        usx_token,
-        wax_account
-      })
-    });
-
-    const dailyBoxData = await dailyBoxRes.json();
-    window.accountData = {
-      ...window.accountData,
-      dailyBox: dailyBoxData
-    };
-
-    renderDailyBox(dailyBoxData);
-  } catch (err) {
-    console.error("[❌] Failed to fetch daily box:", err);
-    document.getElementById('daily-box').innerText = "Failed to load Daily Chest.";
-  }
-}  else if (section === 'account') {
     app.innerHTML = `
       <div class="section-container">
-      
+        <h2 class="section-title">Daily Chest</h2>
+        <div id="daily-box">Loading...</div>
+      </div>
+    `;
+
+    try {
+      const dailyBoxRes = await fetch(`${BASE_URL}/daily_chest_open`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          usx_token,
+          wax_account
+        })
+      });
+
+      const dailyBoxData = await dailyBoxRes.json();
+      window.accountData = {
+        ...window.accountData,
+        dailyBox: dailyBoxData
+      };
+
+      renderDailyBox(dailyBoxData);
+    } catch (err) {
+      console.error("[❌] Failed to fetch Daily Chest:", err);
+      document.getElementById('daily-box').innerText = "Failed to load Daily Chest.";
+    }
+
+  } else if (section === 'account') {
+
+    app.innerHTML = `
+      <div class="section-container">
         <h2 class="section-title2">💠 Account Overview</h2>
-        
         <p style="
-        font-family: 'Rock Salt', cursive;
-        text-transform: uppercase;
-        font-size: 1rem;
-        color: #ffe600;
-        margin-top: 1rem;
-        white-space: nowrap;
-        overflow: hidden;
-        border-right: 2px solid #ffe600;
-        display: inline-block;
-        animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
-        position: relative;
-      ">
-        Why not peek behind the scenes?
-        <span style="
-          position: absolute;
-          left: 0;
-          bottom: -4px;
-          height: 2px;
-          width: 0;
-          background: #f39c12;
-          animation: underlineSlide 2.5s ease-in-out 3s forwards;
-        "></span>
-      </p>
+          font-family: 'Rock Salt', cursive;
+          text-transform: uppercase;
+          font-size: 1rem;
+          color: #ffe600;
+          margin-top: 1rem;
+          white-space: nowrap;
+          overflow: hidden;
+          border-right: 2px solid #ffe600;
+          display: inline-block;
+          animation: typing 3.5s steps(50, end), blink 1s step-end infinite;
+          position: relative;
+        ">
+          Why not peek behind the scenes?
+          <span style="
+            position: absolute;
+            left: 0;
+            bottom: -4px;
+            height: 2px;
+            width: 0;
+            background: #f39c12;
+            animation: underlineSlide 2.5s ease-in-out 3s forwards;
+          "></span>
+        </p>
 
         <div class="loading-message typing-loader">
           <div class="typing-text">⌛ Loading blockchain data... please wait. </div>
@@ -2835,23 +2966,1679 @@ else if (section === 'token-staking') {
             <img class="block-deco left" src="https://aquamarine-aggregate-hawk-978.mypinata.cloud/ipfs/bafybeicmgskdkv7l7zinxbmolfbwt36375h54gjss2sp4wrcynrvn4trsu" alt="decor-left">
             <div id="recent-activity"></div>
           </details>
-  
         </div>
       </div>
     `;
-  
     loadAccountSection();
-  }
-  else if (section === 'loadLatestNews') {
-      app.innerHTML = `
-        <div class="section-container">
-          <h2 class="section-title">Guides and Infos</h2>  
-          <div id="main-wrapper"></div>
+
+  } else if (section === 'loadLatestNews') {
+
+    app.innerHTML = `
+      <div class="section-container">
+        <h2 class="section-title">Guides and Infos</h2>  
+        <div id="main-wrapper"></div>
+      </div>
+    `;
+    showNewsSection();
+
+  } else if (section === 'creator-dashboard') {
+
+    // ❗ NON ridichiarare const app: ce l'abbiamo già in alto.
+
+    // mount point per la dashboard dinamica
+    app.innerHTML = `
+      <div class="section-wrapper" id="creator-dashboard-root" style="padding:1rem 0;">
+        <div style="color:#ccc;font-size:.9rem;">Loading Creator Dashboard…</div>
+      </div>
+    `;
+
+    // dati auth
+    const { userId, usx_token, wax_account } = window.userData || {};
+
+    if (!userId || !usx_token || !wax_account) {
+      const mountPoint = document.getElementById('creator-dashboard-root');
+      mountPoint.innerHTML = `
+        <div class="account-card2" style="padding:16px;background:#1f2937;border-radius:12px;color:#fff;">
+          <div style="font-weight:700;font-size:1rem;color:#fff;">Not logged in</div>
+          <div style="color:#9ca3af;font-size:.9rem;margin-top:4px;">
+            Please login to view your creator dashboard.
+          </div>
         </div>
-     `;
-      showNewsSection()
+      `;
+      return;
+    }
+
+    // monta dashboard creator
+    window.CreatorDash.mount({
+      rootEl: document.getElementById('creator-dashboard-root'),
+      baseUrl: BASE_URL,
+      userId,
+      usx_token,
+      wax_account
+    });
+
+  }
+}
+
+// ======================================================
+// =============== CREATOR DASHBOARD MODULE =============
+// ======================================================
+
+window.CreatorDash = (() => {
+  // ---------- UI SCALES ----------
+  const FS = {
+    xs: '1.01rem',
+    sm: '1.25rem',
+    md: '1.45rem',
+    lg: '1.65rem',
+  };
+
+  // ---------- STATE ----------
+  const st = {
+    loading: true,
+    error: null,
+    activeTab: 'overview', // 'overview' | 'rewards' | 'ads' | 'history'
+
+    // auth / identity
+    baseUrl: '',
+    userId: '',
+    usx_token: '',
+    wax_account: '',
+
+    // channel & subscription
+    channel: '',
+    subscription: null,
+    subscription_status: '',           // "active" | "expired" | "unknown"
+    rewards_active: false,
+    rewards_status_message: '',
+	// chat-rewards switch
+	channelRewardsSwitch: { status: 'active', readonly: false, updated_at: null },
+
+    // rewards data
+  rewardsMap: {},                    // (retrocompat) NON più usato per la UI
+  rewardsGlobal: {},                 // {SYM: number}
+  rewardsChannel: {},                // {SYM: number}
+    effectiveRewards: [],              // [{token, per_message, remaining, messages_left, reward_source}, ...]
+    depositsMap: {},                   // token -> remaining
+    fetched_at: '',
+	twitchBalances: {},     // {SYM: number} da user_tokens
+	telegramBalances: {},   // {SYM: number} da chips_wallet_user_tokens
+	balancesFetchedAt: { twitch: null, telegram: null },
+
+    // ads config
+    ads_global: {                      // channel='chipsmasterbot'
+      list: [],
+      interval_seconds: 900,
+      rotation_mode: 'sequential',
+      updated_at: null
+    },
+    ads_channel: {                     // channel override/config
+      list: [],
+      interval_seconds: 900,
+      rotation_mode: 'sequential',
+      enabled: true,
+      updated_at: null
+    },
+	// dentro st (ads config)
+	global_injection: {
+	  rotation_mode: 'sequential',         // mode unico per i Global Ads
+	  default_interval_seconds: 900,       // default per gli ad globali nel canale
+	  items: [],                           // [{id, message, enabled, interval_seconds, effective_interval_seconds}]
+	  updated_at: null
+	},
+
+// inside st:
+historySection: 'chat', // 'chat' | 'giveaways' | 'storms'
+
+// Chat rewards history (with filters + pagination)
+chatHistory: {
+  items: [],
+  nextCursor: null,
+  loading: false,
+  error: null,
+  filters: {
+    token: '',
+    user: '',
+    source: 'all',   // 'all' | 'global' | 'channel'
+    range: '30d'     // '7d' | '30d' | '90d' | 'all'
+  }
+},
+
+    // history
+    giveaways: [],
+    storms: [],
+
+    // DOM root
+    rootEl: null
+  };
+
+  // ---------- HELPERS ----------
+  const esc = (s) => s == null ? '' : String(s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+  function chip(v, dp = 4) {
+    if (v === null || v === undefined || isNaN(v)) return '-';
+    return Number(v).toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: dp
+    });
+  }
+
+function whoOffered(s) {
+  const u = (s?.offered_by_username || '').trim();
+  const w = (s?.offered_by_wax || '').trim();
+  const disp = (s?.offered_by || '').trim();  // già calcolato dal backend
+  if (u && w) return `${esc(u)} · <span style="opacity:.85">${esc(w)}</span>`;
+  if (disp)   return esc(disp);
+  if (u)      return esc(u);
+  if (w)      return esc(w);
+  return '-';
+}
+
+function fmtUTC(ts) {
+  if (!ts) return '-';
+  try {
+    // normalizza e mostra sempre in UTC
+    const d = new Date(ts);
+    return d.toISOString().replace('T', ' ').replace('Z', ' UTC');
+  } catch (_) {
+    return String(ts) + ' UTC';
+  }
+}
+
+	// === Wide fixes confined to Creator Dashboard ===
+function ensureWideShellStyles() {
+  if (document.getElementById('cd-wide-fixes')) return;
+  const css = `
+    /* Contenitore dashboard: riempi orizzontale ovunque */
+    #cd-shell{width:100% !important; max-width:100% !important; margin:0 !important; padding-left:5vw; padding-right:5vw;}
+    /* Evita qualunque max-width o centratura sui blocchi interni */
+    #cd-shell .account-card2,
+    #cd-shell .w-full,
+    #cd-shell [style*="max-width"]{
+      max-width:none !important; width:100% !important; margin-left:0 !important; margin-right:0 !important;
+    }
+    /* Le tabelle devono adattarsi al contenitore senza allargare la pagina */
+    #cd-shell table{width:100% !important; table-layout:fixed !important; border-collapse:collapse !important;}
+    #cd-shell thead th, #cd-shell tbody td{overflow:hidden !important; text-overflow:ellipsis !important; white-space:nowrap !important;}
+    /* Permetti agli elementi flessibili di comprimersi davvero */
+    #cd-shell [style*="flex:1;min-width:0"]{min-width:0 !important;}
+    /* Wrapper helper per scroll orizzontale controllato */
+    #cd-shell .scroll-x{overflow-x:auto !important; -webkit-overflow-scrolling:touch;}
+  `;
+  const el = document.createElement('style');
+  el.id = 'cd-wide-fixes';
+  el.textContent = css;
+  document.head.appendChild(el);
+}
+
+function renderGiveawaysPanel() {
+  const rows = st.giveaways.map(g => `
+    <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
+      <td style="${tdHist()}">${esc(g.id)}</td>
+      <td style="${tdHist()}">${esc(g.scheduled_time||'-')}</td>
+      <td style="${tdHist()}">${esc(g.channel_name||'-')}</td>
+      <td style="${tdHist()}">${esc(g.collection_name||'-')}</td>
+      <td style="${tdHist()}">${esc(g.template_names||g.template_id||'-')}</td>
+      <td style="${tdHist()}">${esc(g.offered_by || g.sponsor || '-')}</td>
+      <td style="${tdHist()}">${esc(g.status||'-')}</td>
+      <td style="${tdHist()}">${esc(g.winner||'-')}</td>
+      <td style="${tdHist()}">${esc(g.timeframe||'-')}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="9" style="${tdHist('center','#94a3b8')}">No NFT giveaways found.</td></tr>`;
+
+  return `
+    <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:18px;color:#fff;max-width:100% !important; width:100% !important;">
+      <div style="font-size:${FS.sm};font-weight:900;margin-bottom:.6rem;">NFT Giveaways</div>
+      <div class="scroll-x" style="max-width:100% !important;">
+        <table style="width:100%; table-layout:fixed !important; border-collapse:collapse;">
+          <!-- colonne con larghezze ragionevoli + campi lunghi ellissati -->
+          <colgroup>
+            <col style="width:8%">
+            <col style="width:14%">
+            <col style="width:14%">
+            <col style="width:14%">
+            <col style="width:20%">  <!-- Template(s) (più lungo) -->
+            <col style="width:14%">
+            <col style="width:8%">
+            <col style="width:8%">
+            <col style="width:10%">
+          </colgroup>
+          <thead>
+            <tr style="background:#111827;color:#fff;text-align:left;">
+              <th style="${thHist()}">ID</th>
+              <th style="${thHist()}">Scheduled</th>
+              <th style="${thHist()}">Channel</th>
+              <th style="${thHist()}">Collection</th>
+              <th style="${thHist()}">Template(s)</th>
+              <th style="${thHist()}">Offered by</th>
+              <th style="${thHist()}">Status</th>
+              <th style="${thHist()}">Winner</th>
+              <th style="${thHist()}">Timeframe</th>
+            </tr>
+          </thead>
+          <tbody style="overflow-wrap:anywhere;">${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderStormsPanel() {
+  const rows = st.storms.map(s => `
+    <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
+      <td style="${tdHist()}">${esc(s.id)}</td>
+      <td style="${tdHist()}">${esc(s.scheduled_time||'-')}</td>
+      <td style="${tdHist()}">${esc(s.channel_name||'-')}</td>
+      <td style="${tdHist()}">${whoOffered(s)}</td>
+      <td style="${tdHist('right')}">${chip(s.amount,6)} ${esc(s.token_symbol||'')}</td>
+      <td style="${tdHist()}">${esc(s.timeframe||'-')}</td>
+      <td style="${tdHist()}">${esc(s.status||'-')}</td>
+      <td style="${tdHist()}">${esc(s.winners_display||'-')}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="8" style="${tdHist('center','#94a3b8')}">No storms found.</td></tr>`;
+
+  return `
+    <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;max-width:100% !important; width:100% !important;">
+      <div style="font-size:${FS.sm};font-weight:900;margin-bottom:.6rem;">Token Storms</div>
+      <div class="scroll-x" style="max-width:100% !important;">
+        <table style="width:100%; table-layout:fixed !important; border-collapse:collapse;">
+          <colgroup>
+            <col style="width:10%">  <!-- ID -->
+            <col style="width:14%">  <!-- Scheduled -->
+            <col style="width:16%">  <!-- Channel -->
+            <col style="width:18%">  <!-- Offered by -->
+            <col style="width:14%">  <!-- Amount -->
+            <col style="width:10%">  <!-- Timeframe -->
+            <col style="width:9%">   <!-- Status -->
+            <col style="width:9%">   <!-- Winners -->
+          </colgroup>
+          <thead>
+            <tr style="background:#1f2937;color:#fff;text-align:left;">
+              <th style="${thHist()}">ID</th>
+              <th style="${thHist()}">Scheduled</th>
+              <th style="${thHist()}">Channel</th>
+              <th style="${thHist()}">Offered by</th>
+              <th style="${thHist('right')}">Amount</th>
+              <th style="${thHist()}">Timeframe</th>
+              <th style="${thHist()}">Status</th>
+              <th style="${thHist()}">Winners</th>
+            </tr>
+          </thead>
+          <tbody style="overflow-wrap:anywhere;">${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+async function loadChatRewardsHistory({ reset = false } = {}) {
+  st.chatHistory.loading = true;
+  st.chatHistory.error = null;
+  if (reset) {
+    st.chatHistory.items = [];
+    st.chatHistory.nextCursor = null;
+  }
+  render(); // optional: per mostrare spinner
+
+  const { token, user, source, range } = st.chatHistory.filters;
+  const qs = new URLSearchParams({
+    user_id: st.userId,
+    usx_token: st.usx_token,
+    wax_account: st.wax_account,
+    limit: '50',
+    range
+  });
+  if (token)  qs.set('token', token.toUpperCase());
+  if (user)   qs.set('user', user);
+  if (source && source !== 'all') qs.set('source', source);
+  if (!reset && st.chatHistory.nextCursor) qs.set('cursor_id', String(st.chatHistory.nextCursor));
+
+  try {
+    const data = await fetchJSON(`${st.baseUrl}/chat_rewards/history?${qs.toString()}`);
+    const newItems = Array.isArray(data.items) ? data.items : [];
+    st.chatHistory.items = reset ? newItems : st.chatHistory.items.concat(newItems);
+    st.chatHistory.nextCursor = data.next_cursor || null;
+  } catch (err) {
+    console.error('chat history load error', err);
+    st.chatHistory.error = err.message || 'Unknown error';
+  }
+  st.chatHistory.loading = false;
+  render();
+}
+
+  async function fetchJSON(url, opts = {}) {
+    const res = await fetch(url, opts);
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok) {
+      const msg = data?.error || data?.message || (`HTTP ${res.status}`);
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  function renderSubStatusBadge() {
+    const base = `
+      display:inline-block;font-size:${FS.xs};font-weight:800;
+      padding:6px 10px;border-radius:8px;line-height:1;
+    `;
+    if (st.subscription_status === 'active') {
+      return `<span style="${base}background:#16a34a;color:#03130a;border:1px solid rgba(0,0,0,.4);">ACTIVE</span>`;
+    }
+    if (st.subscription_status === 'expired') {
+      return `<span style="${base}background:#dc2626;color:#fff;border:1px solid rgba(0,0,0,.4);">EXPIRED</span>`;
+    }
+    return `<span style="${base}background:#6b7280;color:#fff;border:1px solid rgba(0,0,0,.4);">UNKNOWN</span>`;
+  }
+
+ function splitRewardsBySource() {
+   const toRows = (mapObj) =>
+     Object.entries(mapObj || {})
+       .map(([sym, val]) => ({ token: sym, per_message: (val ?? null) }))
+       .sort((a,b) => a.token.localeCompare(b.token));
+   return {
+     global: toRows(st.rewardsGlobal),
+     channel: toRows(st.rewardsChannel),
+   };
+ }
+
+  // ---------- DATA LOAD ----------
+  async function loadAllData() {
+    st.loading = true;
+    st.error   = null;
+    render();
+
+    const qs = new URLSearchParams({
+      user_id: st.userId,
+      usx_token: st.usx_token,
+      wax_account: st.wax_account
+    }).toString();
+
+    try {
+      // 1) token rewards + deposits + subscription
+      const rewardsPayload = await fetchJSON(`${st.baseUrl}/get_channel_token_rewards?${qs}`);
+      st.channel                 = rewardsPayload.channel || '';
+      st.subscription            = rewardsPayload.subscription || null;
+      st.subscription_status     = rewardsPayload.subscription?.status || '';
+      st.rewards_active          = !!rewardsPayload.rewards_active;
+      st.rewards_status_message  = rewardsPayload.rewards_status_message || '';
+	 st.rewardsMap              = rewardsPayload.rewards || {};          // legacy (se serve altrove)
+	 st.rewardsGlobal           = rewardsPayload.rewards?.global || {};
+	 st.rewardsChannel          = rewardsPayload.rewards?.channel || {};
+      st.effectiveRewards        = rewardsPayload.effective || [];
+      st.depositsMap             = rewardsPayload.deposits || {};
+      st.fetched_at              = rewardsPayload.fetched_at || '';
+		// chat-rewards switch (chipsmasterbot = readonly+active)
+		st.channelRewardsSwitch = rewardsPayload.channel_rewards_switch || {
+		  status: 'active',
+		  readonly: (rewardsPayload.channel || '').toLowerCase() === 'chipsmasterbot',
+		  updated_at: null
+		};
+
+      // 2) ads config (global + channel)
+      const adsPayload = await fetchJSON(`${st.baseUrl}/get_channel_ads_by_wax?${qs}`);
+		st.ads_global = {
+		  list: adsPayload?.ads_global?.ads_list || [],
+		  interval_seconds: adsPayload?.ads_global?.interval_seconds ?? 900,
+		  rotation_mode: adsPayload?.ads_global?.rotation_mode || 'sequential',
+		  updated_at: adsPayload?.ads_global?.updated_at || null
+		};
+		
+		st.global_injection = {
+		  rotation_mode: adsPayload?.global_injection?.rotation_mode || 'sequential',
+		  default_interval_seconds: adsPayload?.global_injection?.default_interval_seconds ?? (st.ads_global.interval_seconds ?? 900),
+		  items: Array.isArray(adsPayload?.global_injection?.items) ? adsPayload.global_injection.items : [],
+		  updated_at: adsPayload?.global_injection?.updated_at || null
+		};
+		
+		st.ads_channel = {
+		  list: adsPayload?.ads_channel?.ads_list || [],
+		  interval_seconds: adsPayload?.ads_channel?.interval_seconds ?? 900,
+		  rotation_mode: adsPayload?.ads_channel?.rotation_mode || 'sequential',
+		  enabled: !!adsPayload?.ads_channel?.enabled,
+		  updated_at: adsPayload?.ads_channel?.updated_at || null
+		};
+
+
+
+      // 3) storms history
+      const stormsPayload = await fetchJSON(
+        `${st.baseUrl}/scheduled_storms_by_wax?usx_token=${encodeURIComponent(st.usx_token)}&wax_account=${encodeURIComponent(st.wax_account)}`
+      );
+      st.storms = Array.isArray(stormsPayload) ? stormsPayload : [];
+
+      // 4) giveaways history
+      const givsPayload = await fetchJSON(
+        `${st.baseUrl}/get_scheduled_nft_giveaways_by_wax?usx_token=${encodeURIComponent(st.usx_token)}&wax_account=${encodeURIComponent(st.wax_account)}`
+      );
+      st.giveaways = Array.isArray(givsPayload) ? givsPayload : [];
+		// 5) balances per Top-Up (Twitch & Telegram)
+		const balancesPayload = await fetchJSON(`${st.baseUrl}/wallet_balances?${qs}`);
+		st.twitchBalances   = balancesPayload?.twitch?.balances   || {};
+		st.telegramBalances = balancesPayload?.telegram?.balances || {};
+		st.balancesFetchedAt = {
+		  twitch:   balancesPayload?.twitch?.updated_at   || null,
+		  telegram: balancesPayload?.telegram?.updated_at || null,
+		};
+
+    } catch (err) {
+      console.error("❌ CreatorDash loadAllData error:", err);
+      st.error = err.message || String(err || 'Unknown error');
+    }
+
+    st.loading = false;
+    render();
+  }
+
+  // ---------- RENDER ----------
+  function render() {
+    const root = st.rootEl;
+    if (!root) return;
+	ensureWideShellStyles();
+    if (st.loading) {
+      root.innerHTML = `
+        <div class="account-card2" style="padding:18px;background:#1f2937;border-radius:12px;color:#fff;">
+          <div style="font-weight:800;font-size:${FS.sm};color:#fff;margin-bottom:6px;">
+            Loading Creator Dashboard…
+          </div>
+          <div style="color:#cbd5e1;font-size:${FS.xs};">
+            Please wait while we fetch your channel data.
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    if (st.error) {
+      root.innerHTML = `
+        <div class="account-card2" style="padding:18px;background:#1f2937;border-radius:12px;color:#fff;border:1px solid #7f1d1d;">
+          <div style="font-weight:800;font-size:${FS.sm};color:#fca5a5;margin-bottom:8px;">
+            Error loading dashboard
+          </div>
+          <div style="color:#e5e7eb;font-size:${FS.xs};margin-bottom:12px;">${esc(st.error)}</div>
+          <button id="cd-retry" class="btn btn-secondary" style="padding:10px 14px;border-radius:10px;background:#374151;">
+            Retry
+          </button>
+        </div>
+      `;
+      const retryBtn = root.querySelector('#cd-retry');
+      if (retryBtn) retryBtn.addEventListener('click', () => loadAllData());
+      return;
+    }
+
+	root.innerHTML = `
+	  <div id="cd-shell" style="width:100% !important; max-width:none !important; margin:0 auto; padding:0 5vw;">
+	    <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:1rem 1.5rem;margin-bottom:1rem;">
+	      <div style="flex-grow:1;min-width:240px;">
+	        <div style="font-size:${FS.md};font-weight:900;color:#fff;display:flex;align-items:center;gap:.6rem;">
+	          <span>Creator Dashboard</span>
+	          ${renderSubStatusBadge()}
+	        </div>
+	        <div style="font-size:${FS.xs};color:#cbd5e1;line-height:1.45;margin-top:4px;">
+	          Channel: <span style="color:#fff;font-weight:700;">${esc(st.channel)}</span><br/>
+	          WAX Account: <span style="color:#fff;font-weight:700;">${esc(st.wax_account)}</span><br/>
+	          ${st.rewards_active
+	            ? `<span style="color:#86efac;font-weight:700;">${esc(st.rewards_status_message)}</span>`
+	            : `<span style="color:#fca5a5;font-weight:700;">${esc(st.rewards_status_message)}</span>`
+	          }
+	        </div>
+	      </div>
+	
+	      <div style="display:flex;flex-direction:column;gap:.6rem;min-width:260px;">
+	        <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+	          ${tabBtn('overview','Overview')}
+	          ${tabBtn('rewards','Rewards')}
+	          ${tabBtn('ads','Ads Manager')}
+	          ${tabBtn('history','History')}
+	        </div>
+	
+	        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+	          <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('twitch-nfts-giveaways')">🎁 NFT Giveaways</button>
+	          <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('log-storms-giveaways')">🌪 Storms</button>
+	          <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('noncustodialfarms')">🌱 NFT Farms</button>
+	          <button class="btn btn-secondary" style="${miniLinkBtnStyle()}" onclick="loadSection('create-token-pool')">💰 Token Farms</button>
+	        </div>
+	      </div>
+	    </div>
+	
+	    <div id="cd-body">
+	      ${renderActiveTab()}
+	    </div>
+	  </div>
+	`;
+
+
+    bindTabSwitcher();
+
+    if (st.activeTab === 'ads')      bindAdsEditor();
+    if (st.activeTab === 'rewards')  bindRewardsEditor();
+	if (st.activeTab === 'history') bindHistory();
+
+  }
+
+  function tabBtn(tab, label){
+    const active = st.activeTab === tab;
+    return `
+      <button class="cd-tab-btn ${active?'cd-tab-active':''}" data-tab="${tab}"
+        style="
+          cursor:pointer;border:none;border-radius:10px;
+          padding:10px 14px;
+          font-size:${FS.xs};font-weight:800;line-height:1;
+          ${active ? 'background:#22c55e;color:#0a0f0a;'
+                   : 'background:#1f2937;color:#e5e7eb;border:1px solid rgba(255,255,255,.12);'}
+        ">
+        ${label}
+      </button>
+    `;
+  }
+
+  function miniLinkBtnStyle(){
+    return `
+      cursor:pointer;border:none;border-radius:10px;
+      padding:8px 12px;font-size:${FS.xs};font-weight:700;line-height:1;
+      background:#111827;color:#f1f5f9;border:1px solid rgba(255,255,255,.14);
+      box-shadow:0 0 12px rgba(0,255,200,.12);
+    `;
+  }
+
+function bindTabSwitcher() {
+  const btns = st.rootEl.querySelectorAll('.cd-tab-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      st.activeTab = btn.getAttribute('data-tab');
+      render();
+      if (st.activeTab === 'history' && st.historySection === 'chat' && st.chatHistory.items.length === 0) {
+        await loadChatRewardsHistory({ reset: true });
+      }
+    });
+  });
+}
+
+
+  function renderActiveTab() {
+    if (st.activeTab === 'rewards') return renderRewardsTab();
+    if (st.activeTab === 'ads')     return renderAdsTab();
+    if (st.activeTab === 'history') return renderHistoryTab();
+    return renderOverviewTab();
+  }
+
+  // ---------- TAB: OVERVIEW ----------
+  function renderOverviewTab() {
+    const sub = st.subscription || {};
+    const daysLeft = (sub.days_left ?? null) !== null ? `${sub.days_left} days` : "-";
+
+    // compact effective reward cards
+// ---- Effective + (Global/Channel) per token ----
+const effBySym = Object.fromEntries((st.effectiveRewards || []).map(r => [r.token, r]));
+
+// unione di tutti i token noti (global, channel, effective)
+const allSyms = Array.from(new Set([
+  ...Object.keys(st.rewardsGlobal || {}),
+  ...Object.keys(st.rewardsChannel || {}),
+  ...Object.keys(effBySym || {})
+])).sort((a,b)=> a.localeCompare(b));
+
+const cards = allSyms.map(sym => {
+  const eff = effBySym[sym] || {};
+  const g   = (st.rewardsGlobal  || {})[sym];
+  const ch  = (st.rewardsChannel || {})[sym];
+
+  const effVal   = ch ?? g; // regola "effective"
+  const src      = ch != null ? 'channel' : (g != null ? 'global' : '-');
+  const srcColor = src === 'channel' ? '#fde68a' : '#93c5fd';
+
+  return `
+    <div style="
+      flex:1 1 180px;min-width:180px;
+      background:#0b1220;border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      padding:14px;color:#fff;box-shadow:0 0 12px rgba(0,255,200,.08);
+    ">
+      <div style="font-size:${FS.xs};color:#cbd5e1;display:flex;justify-content:space-between;gap:6px;">
+        <span>${esc(sym)}</span>
+        <span style="color:${srcColor};font-weight:800;text-transform:uppercase;">${esc(src)}</span>
+      </div>
+
+      <div style="margin-top:6px;font-size:${FS.sm};font-weight:900;">
+        ${chip(effVal,6)} /msg
+      </div>
+
+      <div style="margin-top:6px;font-size:${FS.xs};color:#cbd5e1;line-height:1.35;">
+        ${g  != null ? `Global: <strong style="color:#fff;">${chip(g,6)}</strong><br/>` : ``}
+        ${ch != null ? `Channel: <strong style="color:#fff;">${chip(ch,6)}</strong><br/>` : ``}
+        Remaining: <strong style="color:#fff;">${chip(eff.remaining,6)}</strong><br/>
+        Messages left: <strong style="color:#fff;">${eff.messages_left == null ? '-' : chip(eff.messages_left,0)}</strong>
+      </div>
+    </div>
+  `;
+}).join('');
+
+
+    return `
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+
+        <!-- Subscription -->
+        <div class="account-card2" style="background:#1f2937;border-radius:12px;padding:18px;color:#fff;">
+          <div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;">
+            <div style="min-width:240px;flex:1;">
+              <div style="font-size:${FS.xs};color:#cbd5e1;">Plan</div>
+              <div style="font-size:${FS.sm};font-weight:900;">
+                ${esc(sub.plan_id ?? '-')}
+                ${sub.type ? `<span style="font-size:${FS.xs};font-weight:700;color:#a5b4fc;">(${esc(sub.type)})</span>` : ''}
+              </div>
+
+              <div style="margin-top:10px;font-size:${FS.xs};color:#cbd5e1;">Started</div>
+              <div style="font-size:${FS.xs};font-weight:700;">${esc(sub.start_date || '-')}</div>
+
+              <div style="margin-top:10px;font-size:${FS.xs};color:#cbd5e1;">Expires</div>
+              <div style="font-size:${FS.xs};font-weight:700;">${esc(sub.expiry_date || '-')} (${daysLeft} left)</div>
+            </div>
+
+            <div style="min-width:240px;flex:1;">
+              <div style="font-size:${FS.xs};color:#cbd5e1;">Paid WAX</div>
+              <div style="font-size:${FS.xs};font-weight:700;">${chip(sub.paid_wax_amount,4)} ${esc(sub.token_symbol||'WAX')}</div>
+
+              <div style="margin-top:10px;font-size:${FS.xs};color:#cbd5e1;">USD est.</div>
+              <div style="font-size:${FS.xs};font-weight:700;">$${chip(sub.usd_value_estimated,2)}</div>
+
+              <div style="margin-top:10px;font-size:${FS.xs};color:#cbd5e1;">Memo</div>
+              <div style="font-size:${FS.xs};color:#f8fafc;">${esc(sub.memo || '-')}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Effective Chat Rewards -->
+        <div class="account-card2" style="background:#0b1220;border-radius:12px;padding:18px;color:#fff;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+            <div style="min-width:200px;flex:1;">
+              <div style="font-size:${FS.sm};font-weight:900;">Effective Chat Rewards</div>
+              <div style="color:${st.rewards_active ? '#86efac' : '#fca5a5'};font-size:${FS.xs};font-weight:700;margin-top:6px;">
+                ${esc(st.rewards_status_message)}
+              </div>
+              <div style="font-size:${FS.xs};color:#94a3b8;margin-top:8px;">
+                Last sync: ${esc(st.fetched_at || '-')}
+              </div>
+            </div>
+
+            <div style="flex:3;display:flex;flex-wrap:wrap;gap:.9rem;">
+              ${cards || `<div style="color:#cbd5e1;font-size:${FS.xs};">No rewards data.</div>`}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+// ---------- TAB: REWARDS (GLOBAL vs CHANNEL + editor) ----------
+function renderRewardsTab() {
+  const { global, channel } = splitRewardsBySource();
+
+  // --- Chat-Rewards switch card (status + controls) ---
+  const isReadonlySwitch = !!st.channelRewardsSwitch.readonly;
+  const isPaused = (st.channelRewardsSwitch.status || 'active') !== 'active';
+
+  const switchBadge = (() => {
+    const base = `
+      display:inline-block;font-size:${FS.xs};font-weight:900;line-height:1;
+      padding:6px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.4);
+    `;
+    if (isPaused) return `<span style="${base}background:#6b7280;color:#fff;">PAUSED</span>`;
+    return `<span style="${base}background:#16a34a;color:#03130a;">ACTIVE</span>`;
+  })();
+
+  const switchControls = `
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+      <button id="rw-activate" class="btn btn-primary"
+        ${!isPaused ? 'disabled' : ''} ${isReadonlySwitch ? 'disabled title="Global channel is always active"' : ''}
+        style="${actionBtnStyle('#22c55e','#0a0f0a')}">▶ Activate</button>
+      <button id="rw-pause" class="btn btn-secondary"
+        ${isPaused ? 'disabled' : ''} ${isReadonlySwitch ? 'disabled title="Global channel is read-only"' : ''}
+        style="${actionBtnStyle('#1f2937','#fff')}">⏸ Pause</button>
+    </div>
+  `;
+
+  const pausedNotice = isPaused ? `
+    <div style="margin-top:8px;padding:8px 10px;border:1px dashed rgba(252,165,165,.6);
+                background:rgba(127,29,29,.25);color:#fecaca;border-radius:10px;
+                font-size:${FS.xs};font-weight:700;">
+      Channel chat-rewards are paused → only <strong>Global Rewards</strong> will apply until you activate again.
+    </div>
+  ` : '';
+
+  const chatSwitchCard = `
+    <div class="account-card2" style="background:#0b1220;border-radius:12px;padding:18px;color:#fff;">
+      <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;">
+        <div style="min-width:260px;flex:1;">
+          <div style="font-size:${FS.sm};font-weight:900;">
+            Chat-Rewards Status — <span style="color:#fde68a;">${esc(st.channel)}</span>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:.6rem;align-items:center;">
+            ${switchBadge}
+            <span style="font-size:${FS.xs};color:#94a3b8;">
+              Last change: <strong style="color:#fff;">${fmtUTC(st.channelRewardsSwitch.updated_at)}</strong>
+              ${isReadonlySwitch ? ' · read-only' : ''}
+            </span>
+          </div>
+          ${pausedNotice}
+        </div>
+        <div style="min-width:240px;display:flex;justify-content:flex-end;align-items:center;">
+          ${switchControls}
+        </div>
+      </div>
+    </div>
+  `;
+
+  // --- Global list (read-only)
+  const globalHTML = global.map(r => `
+    <div style="
+      border:1px solid rgba(255,255,255,.10);border-radius:10px;
+      background:#102038;padding:12px;color:#fff;font-size:${FS.xs};
+      display:flex;justify-content:space-between;align-items:center;gap:.8rem;
+    ">
+      <div style="font-weight:800;display:flex;align-items:center;gap:.6rem;">
+        <span>${esc(r.token)}</span>
+        <span title="Global rewards do not consume a channel pool" style="opacity:.8;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:2px 6px;">Remaining: -</span>
+      </div>
+      <div style="opacity:.9;">${chip(r.per_message,6)} /msg</div>
+    </div>
+  `).join('') || `<div style="font-size:${FS.xs};color:#94a3b8;">No global rewards.</div>`;
+
+  // --- Channel editable table
+  const channelRows = channel.map((r, i) => rewardRowHTML(i, r.token, r.per_message)).join('') ||
+    rewardRowHTML(0, '', '');
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+
+      ${chatSwitchCard}
+
+      <!-- Global (read-only) -->
+      <div class="account-card2" style="background:#0f172a;border-radius:12px;padding:18px;color:#fff;">
+        <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:flex-start;">
+          <div style="min-width:260px;flex:1;">
+            <div style="font-size:${FS.sm};font-weight:900;">Global Rewards (read-only)</div>
+            <div style="font-size:${FS.xs};color:#94a3b8;margin-top:6px;line-height:1.45;">
+              These are default per-message rewards applied platform-wide by <strong>ChipsMasterBot</strong>.
+              Channel overrides below will take precedence for your channel.
+            </div>
+          </div>
+          <div style="flex:2;display:flex;flex-direction:column;gap:.6rem;min-width:260px;">
+            ${globalHTML}
+          </div>
+        </div>
+      </div>
+
+      <!-- Channel (editable) -->
+      <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+          <div style="font-size:${FS.sm};font-weight:900;">Channel Rewards — <span style="color:#fde68a;">${esc(st.channel)}</span></div>
+          <div style="font-size:${FS.xs};color:#94a3b8;">Define per-message rewards specific to your channel</div>
+        </div>
+
+        <div style="margin-top:12px;overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;min-width:640px;">
+            <thead>
+              <tr style="background:#0b1220;color:#fff;text-align:left;">
+                <th style="${thCell()}">Token</th>
+                <th style="${thCell()}">Per message</th>
+                <th style="${thCell()}">Pool remaining</th>
+                <th style="${thCell()}">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody id="rw-rows">
+              ${channelRows}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:.6rem;flex-wrap:wrap;">
+          <button id="rw-add"  class="btn btn-secondary" style="${actionBtnStyle('#1e40af','#fff')}">➕ Add token</button>
+          <button id="rw-save" class="btn btn-primary"   style="${actionBtnStyle('#22c55e','#0a0f0a')}">💾 Save changes</button>
+          <div id="rw-feedback" style="font-size:${FS.xs};color:#94a3b8;align-self:center;"></div>
+        </div>
+
+        <!-- TOP-UP / FUNDING -->
+        <div class="account-card2" style="background:#0f172a;border-radius:12px;padding:18px;color:#fff;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+            <div style="min-width:260px;flex:1;">
+              <div style="font-size:${FS.sm};font-weight:900;">Top-Up (Wallets)</div>
+              <div style="font-size:${FS.xs};color:#94a3b8;margin-top:6px;line-height:1.45;">
+                Use this panel to fund your rewards pools. Hover the <span title="More info" style="border:1px solid rgba(255,255,255,.3);padding:0 6px;border-radius:8px;">?</span> for instructions.
+              </div>
+            </div>
+            <div style="min-width:200px;text-align:right;font-size:${FS.xs};color:#94a3b8;">
+              Last sync — Twitch: <strong style="color:#fff;">${esc(st.balancesFetchedAt.twitch || '-')}</strong><br/>
+              Last sync — Telegram: <strong style="color:#fff;">${esc(st.balancesFetchedAt.telegram || '-')}</strong>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:12px;">
+            <!-- Twitch balances -->
+            <div style="flex:1;min-width:280px;background:#0b1220;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-weight:900;">Twitch Balances</div>
+                <div title="To top up your Twitch wallet: send an on-chain transfer to 'xcryptochips' with memo: 'deposit twitch'. You can use waxblock.io, AtomicHub, Taco, Alcor, NeftyBlocks or waxonedge."
+                     style="cursor:help;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:2px 6px;font-size:${FS.xs};">?</div>
+              </div>
+              ${balancesTableHTML(st.twitchBalances)}
+            </div>
+
+            <!-- Telegram balances -->
+            <div style="flex:1;min-width:280px;background:#0b1220;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-weight:900;">Telegram Balances</div>
+                <div title="To top up your Telegram wallet: send an on-chain transfer to 'xcryptochips' with memo: 'deposit token'. You can use waxblock.io, AtomicHub, Taco, Alcor, NeftyBlocks or waxonedge."
+                     style="cursor:help;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:2px 6px;font-size:${FS.xs};">?</div>
+              </div>
+              ${balancesTableHTML(st.telegramBalances)}
+            </div>
+          </div>
+
+          <div style="margin-top:10px;font-size:${FS.xs};color:#94a3b8;">
+            Tip: after topping up, hit <strong>Refresh</strong> on this page if balances don’t update automatically within a minute.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+function rewardRowHTML(idx, token = '', per = '') {
+  const remaining = token ? st.depositsMap?.[token] : null; // totale residuo del pool per questo canale
+  return `
+    <tr class="rw-row" data-idx="${idx}" style="border-bottom:1px solid rgba(255,255,255,.1);">
+      <td style="${tdCell()}">
+        <input class="rw-token" value="${esc(token)}" placeholder="e.g. CHIPS" style="${inputStyle('uppercase')}" />
+      </td>
+      <td style="${tdCell()}">
+        <input class="rw-per" type="number" step="0.00000001" min="0" value="${per === '' ? '' : esc(per)}" placeholder="0.0" style="${inputStyle()}" />
+      </td>
+      <td style="${tdCell()}">
+        <span title="Total remaining in this channel pool">${chip(remaining,6)}</span>
+      </td>
+      <td style="${tdCell()}">
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <button class="rw-topup" style="${miniIconBtnStyle()}">⬆️ Top-Up</button>
+          <button class="rw-del"   style="${miniIconBtnStyle()}">🗑 Remove</button>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+
+
+  function thCell(){
+    return `
+      padding:10px 12px;color:#fff;border-bottom:1px solid rgba(255,255,255,.15);
+      font-size:${FS.xs};font-weight:800;white-space:nowrap;
+    `;
+  }
+  function tdCell(){
+    return `
+      padding:10px 12px;color:#e5e7eb;font-size:${FS.xs};white-space:nowrap;
+    `;
+  }
+
+	function balancesTableHTML(map) {
+	  const rows = Object.entries(map || {}).sort((a,b)=> a[0].localeCompare(b[0]));
+	  if (!rows.length) {
+	    return `<div style="color:#94a3b8;font-size:${FS.xs};margin-top:8px;">No balances found.</div>`;
+	  }
+	  return `
+	    <div style="margin-top:10px;overflow-x:auto;">
+	      <table style="width:100%;border-collapse:collapse;min-width:320px;">
+	        <thead>
+	          <tr style="background:#101828;color:#fff;text-align:left;">
+	            <th style="${thCell()}">Token</th>
+	            <th style="${thCell()}">Balance</th>
+	          </tr>
+	        </thead>
+	        <tbody>
+	          ${rows.map(([sym, amt]) => `
+	            <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
+	              <td style="${tdCell()}">${esc(sym)}</td>
+	              <td style="${tdCell()}">${chip(amt,6)}</td>
+	            </tr>
+	          `).join('')}
+	        </tbody>
+	      </table>
+	    </div>
+	  `;
+	}
+	
+  function inputStyle(tt='none'){
+    return `
+      width:100%;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.18);
+      border-radius:10px;padding:10px 12px;font-size:${FS.xs};font-weight:700;outline:none;
+      text-transform:${tt};
+    `;
+  }
+  function miniIconBtnStyle() {
+    return `
+      cursor:pointer;background:#1f2937;border:1px solid rgba(255,255,255,.18);
+      border-radius:8px;padding:8px 10px;font-size:${FS.xs};color:#fff;
+    `;
+  }
+  function actionBtnStyle(bg,fg){
+    return `
+      cursor:pointer;border:none;border-radius:10px;padding:10px 14px;font-size:${FS.xs};
+      line-height:1;font-weight:900;background:${bg || '#1f2937'};color:${fg || '#fff'};
+      box-shadow:0 0 12px rgba(0,255,200,.12);
+    `;
+  }
+
+function bindRewardsEditor(){
+  const tbody    = st.rootEl.querySelector('#rw-rows');
+  const addBtn   = st.rootEl.querySelector('#rw-add');
+  const saveBtn  = st.rootEl.querySelector('#rw-save');
+  const feedback = st.rootEl.querySelector('#rw-feedback');
+
+  // Toggle ON/OFF chat-rewards (switch buttons may exist even if table elements are missing)
+  const btnActivate = st.rootEl.querySelector('#rw-activate');
+  const btnPause    = st.rootEl.querySelector('#rw-pause');
+
+  async function postSwitch(nextStatus) {
+    const a = btnActivate, p = btnPause;
+    try {
+      if (a) a.disabled = true;
+      if (p) p.disabled = true;
+      await fetchJSON(`${st.baseUrl}/channel_rewards/status`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          user_id:   st.userId,
+          usx_token: st.usx_token,
+          channel:   st.channel,
+          status:    nextStatus   // 'active' | 'paused'
+        })
+      });
+      // Soft feedback
+      if (feedback) {
+        feedback.style.color = '#22c55e';
+        feedback.textContent = nextStatus === 'active' ? 'Chat-rewards activated ✔' : 'Chat-rewards paused ✔';
+      }
+      await loadAllData();
+    } catch (err) {
+      console.error('switch toggle error', err);
+      alert('Failed to change chat-rewards status: ' + (err.message || 'unknown error'));
+    } finally {
+      if (a) a.disabled = false;
+      if (p) p.disabled = false;
     }
   }
+
+  if (btnActivate) btnActivate.addEventListener('click', () => postSwitch('active'));
+  if (btnPause)    btnPause.addEventListener('click',   () => postSwitch('paused'));
+
+  // If table controls aren’t present, stop here (switch buttons were already bound)
+  if (!tbody || !addBtn || !saveBtn) return;
+
+  // Remove row
+  tbody.querySelectorAll('.rw-del').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const tr = btn.closest('tr');
+      tr?.remove();
+    });
+  });
+
+  // Add row
+  addBtn.addEventListener('click', ()=>{
+    const idx = tbody.querySelectorAll('tr').length;
+    tbody.insertAdjacentHTML('beforeend', rewardRowHTML(idx,'',''));
+    const last = tbody.querySelector('tr:last-child .rw-del');
+    if (last) last.addEventListener('click', ()=> last.closest('tr')?.remove());
+  });
+
+  // Save rows
+  saveBtn.addEventListener('click', async ()=>{
+    feedback.style.color = '#94a3b8';
+    feedback.textContent = 'Saving…';
+
+    const rows = [];
+    tbody.querySelectorAll('tr').forEach(tr=>{
+      const token = (tr.querySelector('.rw-token')?.value || '').trim().toUpperCase();
+      const per   = tr.querySelector('.rw-per')?.value;
+      if (!token) return;
+      const num = Number(per);
+      if (!isFinite(num) || num < 0) return;
+      rows.push({ token_symbol: token, per_message: num });
+    });
+
+    try {
+      await fetchJSON(`${st.baseUrl}/channel_rewards/save`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          user_id:      st.userId,
+          usx_token:    st.usx_token,
+          wax_account:  st.wax_account,
+          channel:      st.channel,
+          rewards:      rows
+        })
+      });
+
+      await loadAllData();
+      feedback.style.color = '#22c55e';
+      feedback.textContent = 'Saved ✔';
+
+    } catch (err) {
+      console.error('save channel rewards error', err);
+      feedback.style.color = '#f87171';
+      feedback.textContent = 'Save failed: ' + (err.message || 'unknown error');
+    }
+  });
+
+  // Top-Up (delegated)
+  tbody.addEventListener('click', async (ev) => {
+    const topBtn = ev.target.closest('.rw-topup');
+    if (!topBtn) return;
+
+    const tr    = topBtn.closest('tr');
+    const token = (tr.querySelector('.rw-token')?.value || '').trim().toUpperCase();
+    if (!token) { alert('Please enter/select a token symbol first.'); return; }
+
+    const twitchAvail   = Number(st.twitchBalances?.[token]   || 0);
+    const telegramAvail = Number(st.telegramBalances?.[token] || 0);
+
+    const src = (window.prompt(
+      `Top-Up ${token}\n\nChoose source wallet: type "twitch" or "telegram"\n\nAvailable:\n- Twitch: ${chip(twitchAvail,6)}\n- Telegram: ${chip(telegramAvail,6)}`
+    ) || '').trim().toLowerCase();
+
+    if (src !== 'twitch' && src !== 'telegram') {
+      if (src) alert('Source must be "twitch" or "telegram".');
+      return;
+    }
+
+    const maxAvail = src === 'twitch' ? twitchAvail : telegramAvail;
+    if (maxAvail <= 0) { alert(`No available ${token} in ${src} wallet.`); return; }
+
+    const amtStr = (window.prompt(`Amount of ${token} to top up (max ${chip(maxAvail,6)}):`) || '').trim();
+    const amt = Number(amtStr);
+    if (!isFinite(amt) || amt <= 0) { alert('Invalid amount.'); return; }
+    if (amt > maxAvail) { alert(`Amount exceeds available balance in ${src} wallet.`); return; }
+
+    topBtn.disabled = true;
+    const origText = topBtn.textContent;
+    topBtn.textContent = '⏳';
+
+    try {
+      await fetchJSON(`${st.baseUrl}/channel_rewards/topup`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          user_id:       st.userId,
+          usx_token:     st.usx_token,
+          wax_account:   st.wax_account,
+          channel:       st.channel,      // optional
+          token_symbol:  token,
+          amount:        amt,
+          source_wallet: src              // 'twitch' | 'telegram'
+        })
+      });
+
+      await loadAllData();
+      alert(`Top-Up OK: ${token} +${chip(amt,6)} from ${src} wallet`);
+
+    } catch (err) {
+      console.error('topup error', err);
+      alert('Top-Up failed: ' + (err.message || 'unknown error'));
+    } finally {
+      try { topBtn.disabled = false; topBtn.textContent = origText; } catch(_) {}
+    }
+  });
+}
+
+
+  // ---------- TAB: ADS ----------
+function renderAdsTab() {
+  const isGlobalChannel = (st.channel || '').toLowerCase() === 'chipsmasterbot';
+
+  const giRows = (st.global_injection.items || []).map((it, i) => `
+    <tr data-idx="${i}" data-id="${it.id}" style="border-bottom:1px solid rgba(255,255,255,.1);">
+      <td style="${tdCell()}">
+        <label style="display:flex;align-items:center;gap:.6rem;">
+          <input type="checkbox" class="gi-enabled" ${it.enabled ? 'checked' : ''} />
+          <span style="color:#fff;font-weight:700;">#${i+1}</span>
+        </label>
+      </td>
+      <td style="${tdCell()}">
+        <div style="color:#fff;white-space:pre-wrap;">${esc(it.message)}</div>
+      </td>
+      <td style="${tdCell()}">
+        <input class="gi-interval" type="number" min="30" step="30"
+               value="${it.interval_seconds == null ? '' : esc(it.interval_seconds)}"
+               placeholder="${esc(st.global_injection.default_interval_seconds)}"
+               style="${inputStyle()}">
+        <div style="font-size:${FS.xs};color:#94a3b8;margin-top:4px;">
+          Effective: ${chip(it.effective_interval_seconds || st.global_injection.default_interval_seconds,0)}s
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  const channelListHTML = (st.ads_channel.list || []).map((msg, idx) => `
+    <div class="cd-ad-row" data-idx="${idx}" style="
+      border:1px solid rgba(255,255,255,.10);border-radius:10px;background:#0f172a;
+      padding:12px;color:#fff;font-size:${FS.xs};line-height:1.45;position:relative;">
+      <div style="font-weight:800;color:#facc15;font-size:${FS.xs};margin-bottom:6px;">CHANNEL #${idx+1}</div>
+      <div class="cd-ad-text" style="white-space:pre-wrap;">${esc(msg)}</div>
+      ${isGlobalChannel ? '' : `
+      <div style="position:absolute;top:10px;right:10px;display:flex;gap:6px;">
+        <button class="cd-edit-ad btn btn-secondary" style="${miniIconBtnStyle()}">✏️ Edit</button>
+        <button class="cd-del-ad btn btn-secondary" style="${miniIconBtnStyle()}">🗑 Delete</button>
+      </div>
+      `}
+    </div>
+  `).join('') || `<div style="font-size:${FS.xs};color:#94a3b8;">No custom channel ads yet. Click “Add message”.</div>`;
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+
+      <!-- GLOBAL INJECTION (per-ad, unico blocco per i globali) -->
+      ${isGlobalChannel ? '' : `
+      <div class="account-card2" style="background:#0f172a;border-radius:12px;padding:18px;color:#fff;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;">
+          <div style="min-width:240px;flex:1;">
+            <div style="font-size:${FS.sm};font-weight:900;">Global Ads in Your Channel</div>
+            <div style="font-size:${FS.xs};color:#94a3b8;margin-top:6px;">
+              Enable/disable specific global ads and set a per-ad interval (leave blank to use the default interval below).
+              Messages content is managed globally and cannot be edited here.
+            </div>
+
+            <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Default interval (seconds)</div>
+            <input id="cd-gi-default-interval" type="number" min="30" step="30"
+                   value="${esc(st.global_injection.default_interval_seconds)}" style="${inputStyle()}">
+
+            <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Rotation Mode (for global ads in your channel)</div>
+            <select id="cd-gi-rotation" style="${inputStyle()}">
+              <option value="sequential" ${st.global_injection.rotation_mode==='sequential'?'selected':''}>Sequential</option>
+              <option value="random" ${st.global_injection.rotation_mode==='random'?'selected':''}>Random</option>
+            </select>
+
+            <div style="margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap;">
+              <button id="cd-save-globalinj" class="btn btn-primary" style="${actionBtnStyle('#22c55e','#0a0f0a')}">💾 Save Global Injection</button>
+              <div id="cd-gi-feedback" style="font-size:${FS.xs};color:#94a3b8;align-self:center;"></div>
+            </div>
+
+            <div style="margin-top:.6rem;font-size:${FS.xs};color:#94a3b8;">
+              Last update: ${esc(st.global_injection.updated_at || '-')}
+            </div>
+          </div>
+
+          <div style="flex:2;min-width:320px;overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;min-width:720px;">
+              <thead>
+                <tr style="background:#101828;color:#fff;text-align:left;">
+                  <th style="${thCell()}">Enabled</th>
+                  <th style="${thCell()}">Message</th>
+                  <th style="${thCell()}">Interval (seconds)</th>
+                </tr>
+              </thead>
+              <tbody id="cd-gi-rows">
+                ${giRows || `<tr><td colspan="3" style="${tdCell()}color:#94a3b8;">No global ads found.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      `}
+
+      <!-- CHANNEL ADS (custom) -->
+      <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;">
+        <div style="font-size:${FS.sm};font-weight:900;display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+          <div>Channel Ads — <span style="color:#fde68a;">${esc(st.channel)}</span></div>
+          <div style="font-size:${FS.xs};color:${isGlobalChannel ? '#fca5a5' : '#94a3b8'};">
+            Last update: ${esc(st.ads_channel.updated_at || '-')}
+            ${isGlobalChannel ? ' · Global channel is read-only' : ''}
+          </div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:1rem;">
+          <div style="min-width:240px;flex:1;">
+            <label style="display:flex;align-items:center;gap:.6rem;font-size:${FS.xs};color:#fff;font-weight:800;">
+              <input id="cd-channel-enabled" type="checkbox" ${st.ads_channel.enabled?'checked':''} ${isGlobalChannel?'disabled':''}
+                style="accent-color:#22c55e;cursor:pointer;width:18px;height:18px;">
+              Enable Channel Ads
+            </label>
+
+            <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Interval (seconds)</div>
+            <input id="cd-channel-interval" type="number" min="30" step="30" value="${esc(st.ads_channel.interval_seconds)}" style="${inputStyle()}" ${isGlobalChannel?'disabled':''}>
+
+            <div style="margin-top:.9rem;font-size:${FS.xs};color:#cbd5e1;">Rotation Mode (for your channel ads)</div>
+            <select id="cd-channel-rotation" style="${inputStyle()}" ${isGlobalChannel?'disabled':''}>
+              <option value="sequential" ${st.ads_channel.rotation_mode==='sequential'?'selected':''}>Sequential</option>
+              <option value="random" ${st.ads_channel.rotation_mode==='random'?'selected':''}>Random</option>
+            </select>
+
+            <div style="margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap;">
+              <button id="cd-add-ad" class="btn btn-secondary" style="${actionBtnStyle('#1e40af','#fff')}" ${isGlobalChannel?'disabled title="Global channel is read-only"':''}>➕ Add message</button>
+              <button id="cd-save-ads" class="btn btn-primary" style="${actionBtnStyle('#22c55e','#0a0f0a')}" ${isGlobalChannel?'disabled title="Global channel is read-only"':''}>💾 Save</button>
+            </div>
+
+            <div id="cd-save-feedback" style="font-size:${FS.xs};color:#94a3b8;margin-top:.6rem;"></div>
+          </div>
+
+          <div style="flex:2;min-width:260px;display:flex;flex-direction:column;gap:.75rem;" id="cd-channel-ads-list">
+            ${channelListHTML}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+function bindAdsEditor() {
+  const isGlobalChannel = (st.channel || '').toLowerCase() === 'chipsmasterbot';
+
+  const listEl = st.rootEl.querySelector('#cd-channel-ads-list');
+  const addBtn = st.rootEl.querySelector('#cd-add-ad');
+  const saveBtn= st.rootEl.querySelector('#cd-save-ads');
+  const intervalInput  = st.rootEl.querySelector('#cd-channel-interval');
+  const rotationSelect = st.rootEl.querySelector('#cd-channel-rotation');
+  const enabledCheck   = st.rootEl.querySelector('#cd-channel-enabled');
+  const feedbackEl     = st.rootEl.querySelector('#cd-save-feedback');
+
+  const giDefaultInterval = st.rootEl.querySelector('#cd-gi-default-interval');
+  const giRotation        = st.rootEl.querySelector('#cd-gi-rotation');
+  const giSaveBtn         = st.rootEl.querySelector('#cd-save-globalinj');
+  const giFeedback        = st.rootEl.querySelector('#cd-gi-feedback');
+  const giRowsTbody       = st.rootEl.querySelector('#cd-gi-rows');
+
+  if (!listEl) return;
+
+  // ---------- Global Injection (per-ad) ----------
+  if (!isGlobalChannel && giSaveBtn && giDefaultInterval && giRotation && giRowsTbody && giFeedback) {
+    giSaveBtn.addEventListener('click', async () => {
+      giFeedback.style.color = '#94a3b8';
+      giFeedback.textContent = 'Saving…';
+
+      const items = [];
+      giRowsTbody.querySelectorAll('tr[data-id]').forEach(tr => {
+        const id = Number(tr.getAttribute('data-id'));
+        const en = tr.querySelector('.gi-enabled')?.checked ? true : false;
+        const ivRaw = (tr.querySelector('.gi-interval')?.value || '').trim();
+        const iv = ivRaw === '' ? null : Math.max(30, Number(ivRaw) || 0);
+        items.push({ id, enabled: en, interval_seconds: iv });
+      });
+
+      const payload = {
+        user_id: st.userId,
+        usx_token: st.usx_token,
+        channel: st.channel,
+        global_injection: {
+          rotation_mode: giRotation.value || 'sequential',
+          default_interval_seconds: Math.max(30, Number(giDefaultInterval.value) || 900),
+          items
+        }
+      };
+
+      try {
+        const res = await fetchJSON(`${st.baseUrl}/channel_ads_config/save`, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        // update local state (effective intervals)
+        st.global_injection.rotation_mode = payload.global_injection.rotation_mode;
+        st.global_injection.default_interval_seconds = payload.global_injection.default_interval_seconds;
+        st.global_injection.items = st.global_injection.items.map((it) => {
+          const upd = items.find(x => x.id === it.id);
+          if (!upd) return it;
+          const eff = (upd.interval_seconds == null ? st.global_injection.default_interval_seconds : upd.interval_seconds);
+          return {
+            ...it,
+            enabled: !!upd.enabled,
+            interval_seconds: upd.interval_seconds,
+            effective_interval_seconds: eff
+          };
+        });
+        st.global_injection.updated_at = (res && (res.global_injection_updated_at || res.updated_at)) || new Date().toISOString();
+
+        giFeedback.style.color = '#22c55e';
+        giFeedback.textContent = 'Saved ✔';
+      } catch (err) {
+        console.error('save global injection error', err);
+        giFeedback.style.color = '#f87171';
+        giFeedback.textContent = 'Save failed: ' + (err.message || 'unknown error');
+      }
+    });
+  }
+
+  // ---------- Channel Ads (custom) ----------
+  if (isGlobalChannel) return;
+
+  const addBtnExists = !!addBtn && !!saveBtn && !!intervalInput && !!rotationSelect && !!enabledCheck && !!feedbackEl;
+  if (!addBtnExists) return;
+
+  let workingList = [...(st.ads_channel.list || [])];
+
+  function rerenderWorkingList() {
+    listEl.innerHTML = workingList.map((msg, idx) => `
+      <div class="cd-ad-row" data-idx="${idx}" style="
+        border:1px solid rgba(255,255,255,.10);border-radius:10px;background:#0f172a;
+        padding:12px;color:#fff;font-size:${FS.xs};line-height:1.45;position:relative;">
+        <div style="font-weight:800;color:#facc15;font-size:${FS.xs};margin-bottom:6px;">CHANNEL #${idx+1}</div>
+        <div class="cd-ad-text" style="white-space:pre-wrap;">${esc(msg)}</div>
+        <div style="position:absolute;top:10px;right:10px;display:flex;gap:6px;">
+          <button class="cd-edit-ad btn btn-secondary" style="${miniIconBtnStyle()}">✏️ Edit</button>
+          <button class="cd-del-ad btn btn-secondary" style="${miniIconBtnStyle()}">🗑 Delete</button>
+        </div>
+      </div>
+    `).join('') || `<div style="color:#94a3b8;font-size:${FS.xs};">No custom channel ads yet. Click “Add message”.</div>`;
+
+    listEl.querySelectorAll('.cd-edit-ad').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const parent = btn.closest('.cd-ad-row');
+        const idx = Number(parent?.getAttribute('data-idx'));
+        const currentText = workingList[idx] || '';
+        const next = window.prompt('Edit message:', currentText);
+        if (next !== null && next.trim() !== '') {
+          workingList[idx] = next.trim();
+          rerenderWorkingList();
+        }
+      });
+    });
+    listEl.querySelectorAll('.cd-del-ad').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const parent = btn.closest('.cd-ad-row');
+        const idx = Number(parent?.getAttribute('data-idx'));
+        if (window.confirm('Delete this ad message?')) {
+          workingList.splice(idx,1);
+          rerenderWorkingList();
+        }
+      });
+    });
+  }
+
+  rerenderWorkingList();
+
+  addBtn.addEventListener('click', () => {
+    const txt = window.prompt('New ad message:');
+    if (txt && txt.trim() !== '') {
+      workingList.push(txt.trim());
+      rerenderWorkingList();
+    }
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    feedbackEl.style.color = '#94a3b8';
+    feedbackEl.textContent = 'Saving…';
+
+    const payload = {
+      user_id: st.userId,
+      usx_token: st.usx_token,
+      channel: st.channel,
+      enabled: !!enabledCheck.checked,
+      interval_seconds: Number(intervalInput.value) || 900,
+      rotation_mode: rotationSelect.value || 'sequential',
+      ads_list: workingList
+    };
+
+    try {
+      const res = await fetchJSON(`${st.baseUrl}/channel_ads_config/save`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      st.ads_channel.enabled          = payload.enabled;
+      st.ads_channel.interval_seconds = payload.interval_seconds;
+      st.ads_channel.rotation_mode    = payload.rotation_mode;
+      st.ads_channel.list             = [...workingList];
+      st.ads_channel.updated_at       = (res && res.updated_at) || new Date().toISOString();
+
+      feedbackEl.style.color = '#22c55e';
+      feedbackEl.textContent = 'Saved ✔';
+
+    } catch (err) {
+      console.error("save channel ads error", err);
+      feedbackEl.style.color = '#f87171';
+      feedbackEl.textContent = 'Save failed: ' + (err.message || 'unknown error');
+    }
+  });
+}
+
+  // ---------- TAB: HISTORY ----------
+function renderHistoryTab() {
+  const leftMenu = `
+    <div style="width:220px;min-width:220px;background:#0b1220;border:1px solid rgba(255,255,255,.1);
+                border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:.4rem;">
+      ${historyMenuBtn('chat','💬 Chat Rewards')}
+      ${historyMenuBtn('giveaways','🎁 NFT Giveaways')}
+      ${historyMenuBtn('storms','🌪 Token Storms')}
+    </div>
+  `;
+
+  const rightPanel = `
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1rem;">
+      ${st.historySection === 'chat' ? renderChatRewardsPanel()
+        : st.historySection === 'giveaways' ? renderGiveawaysPanel()
+        : renderStormsPanel()}
+    </div>
+  `;
+
+	return `
+	  <div style="display:flex;gap:1rem;align-items:flex-start;max-width:100% !important;">
+	    ${leftMenu}
+	    <div class="hist-right" style="flex:1;min-width:0;max-width:100%;">
+	      ${rightPanel}
+	    </div>
+	  </div>
+	`;
+}
+
+function historyMenuBtn(key, label) {
+  const active = st.historySection === key;
+  return `
+    <button class="hist-nav" data-key="${key}"
+      style="
+        text-align:left;border:none;border-radius:10px;padding:10px 12px;font-size:${FS.xs};font-weight:800;
+        ${active ? 'background:#22c55e;color:#0a0f0a;' : 'background:#111827;color:#e5e7eb;border:1px solid rgba(255,255,255,.12);'}
+      ">
+      ${label}
+    </button>
+  `;
+}
+
+function renderChatRewardsPanel() {
+  const h = st.chatHistory;
+  // totals per token (current view)
+  const tokenTotals = h.items.reduce((acc, r) => {
+    const k = r.token_symbol || '-';
+    acc[k] = (acc[k] || 0) + (Number(r.amount) || 0);
+    return acc;
+  }, {});
+
+  const totalChips = Object.entries(tokenTotals).map(([sym, amt]) =>
+    `<span style="border:1px solid rgba(255,255,255,.15);padding:2px 8px;border-radius:8px;">${esc(sym)}: <strong>${chip(amt,6)}</strong></span>`
+  ).join(' ');
+
+  const rows = (h.items || []).map(r => `
+    <tr style="border-bottom:1px solid rgba(255,255,255,.12);">
+      <td style="${tdHist()}">${esc(r.created_at || '-')}</td>
+      <td style="${tdHist()}">${esc(r.username || '-')}</td>
+      <td style="${tdHist()}">${esc(r.token_symbol || '-')}</td>
+      <td style="${tdHist('right')}">${chip(r.amount,6)}</td>
+      <td style="${tdHist()}">${esc((r.reward_source || '-').toUpperCase())}</td>
+      <td style="${tdHist('right')}">${r.per_message != null ? chip(r.per_message,6) : '-'}</td>
+      <td style="${tdHist()}">${esc(r.message_id || '-')}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="7" style="${tdHist('center','#94a3b8')}">No chat rewards found.</td></tr>`;
+
+  return `
+    <div class="account-card2" style="background:#111827;border-radius:12px;padding:18px;color:#fff;">
+      <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;">
+        <div style="font-size:${FS.sm};font-weight:900;">Chat Rewards — ${esc(st.channel)}</div>
+        <div style="font-size:${FS.xs};color:#94a3b8;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+          Totals (page): ${totalChips || '-'}
+          <button id="chat-export" class="btn btn-secondary" style="${miniIconBtnStyle()}">⬇ Export CSV</button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div style="margin-top:10px;display:flex;gap:.6rem;flex-wrap:wrap;">
+        <input id="f-user" placeholder="Filter by user" value="${esc(st.chatHistory.filters.user)}" style="${inputStyle()};max-width:220px;">
+        <input id="f-token" placeholder="Filter by token (e.g. CHIPS)" value="${esc(st.chatHistory.filters.token)}" style="${inputStyle('uppercase')};max-width:180px;">
+        <select id="f-source" style="${inputStyle()};max-width:180px;">
+          <option value="all"     ${st.chatHistory.filters.source==='all'?'selected':''}>Source: All</option>
+          <option value="global"  ${st.chatHistory.filters.source==='global'?'selected':''}>Source: Global</option>
+          <option value="channel" ${st.chatHistory.filters.source==='channel'?'selected':''}>Source: Channel</option>
+        </select>
+        <select id="f-range" style="${inputStyle()};max-width:160px;">
+          <option value="7d"  ${st.chatHistory.filters.range==='7d'?'selected':''}>Last 7d</option>
+          <option value="30d" ${st.chatHistory.filters.range==='30d'?'selected':''}>Last 30d</option>
+          <option value="90d" ${st.chatHistory.filters.range==='90d'?'selected':''}>Last 90d</option>
+          <option value="all" ${st.chatHistory.filters.range==='all'?'selected':''}>All</option>
+        </select>
+        <button id="f-apply" class="btn btn-primary" style="${actionBtnStyle('#22c55e','#0a0f0a')}">Apply</button>
+        <button id="f-reset" class="btn btn-secondary" style="${actionBtnStyle('#1f2937','#fff')}">Reset</button>
+      </div>
+
+      <!-- Table -->
+      <div style="overflow-x:auto;margin-top:12px;">
+        <table style="width:100%;border-collapse:collapse;min-width:760px;">
+          <thead>
+            <tr style="background:#1f2937;color:#fff;text-align:left;">
+              <th style="${thHist()}">Date (UTC)</th>
+              <th style="${thHist()}">User</th>
+              <th style="${thHist()}">Token</th>
+              <th style="${thHist('right')}">Amount</th>
+              <th style="${thHist()}">Source</th>
+              <th style="${thHist('right')}">Per msg</th>
+              <th style="${thHist()}">Msg ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:${FS.xs};color:#94a3b8;">
+          ${st.chatHistory.loading ? 'Loading…' : (st.chatHistory.error ? '<span style="color:#f87171;">'+esc(st.chatHistory.error)+'</span>' : '')}
+        </div>
+        <button id="chat-load-more" class="btn btn-secondary"
+                ${st.chatHistory.nextCursor ? '' : 'disabled'}
+                style="${actionBtnStyle('#1f2937','#fff')}">Load more</button>
+      </div>
+    </div>
+  `;
+}
+
+function bindHistory() {
+  // left menu
+  st.rootEl.querySelectorAll('.hist-nav').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      st.historySection = btn.getAttribute('data-key');
+      render();
+      if (st.historySection === 'chat' && st.chatHistory.items.length === 0) {
+        await loadChatRewardsHistory({ reset: true });
+      }
+    });
+  });
+
+  if (st.historySection === 'chat') {
+    const fUser   = st.rootEl.querySelector('#f-user');
+    const fToken  = st.rootEl.querySelector('#f-token');
+    const fSource = st.rootEl.querySelector('#f-source');
+    const fRange  = st.rootEl.querySelector('#f-range');
+    const fApply  = st.rootEl.querySelector('#f-apply');
+    const fReset  = st.rootEl.querySelector('#f-reset');
+    const btnMore = st.rootEl.querySelector('#chat-load-more');
+    const btnCsv  = st.rootEl.querySelector('#chat-export');
+
+    if (fApply) fApply.addEventListener('click', () => {
+      st.chatHistory.filters.user   = (fUser.value || '').trim();
+      st.chatHistory.filters.token  = (fToken.value || '').trim().toUpperCase();
+      st.chatHistory.filters.source = fSource.value || 'all';
+      st.chatHistory.filters.range  = fRange.value || '30d';
+      loadChatRewardsHistory({ reset: true });
+    });
+
+    if (fReset) fReset.addEventListener('click', () => {
+      st.chatHistory.filters = { token:'', user:'', source:'all', range:'30d' };
+      loadChatRewardsHistory({ reset: true });
+    });
+
+    if (btnMore) btnMore.addEventListener('click', () => loadChatRewardsHistory({ reset: false }));
+
+    if (btnCsv) btnCsv.addEventListener('click', () => {
+      const rows = st.chatHistory.items || [];
+      const header = ['id','created_at','username','user_wax_account','token_symbol','amount','reward_source','per_message','message_id','message_ts'];
+      const csv = [header.join(',')].concat(
+        rows.map(r => [
+          r.id, `"${(r.created_at||'').replace(/"/g,'""')}"`,
+          `"${(r.username||'').replace(/"/g,'""')}"`,
+          `"${(r.user_wax_account||'').replace(/"/g,'""')}"`,
+          r.token_symbol, r.amount, r.reward_source,
+          (r.per_message != null ? r.per_message : ''),
+          `"${(r.message_id||'').replace(/"/g,'""')}"`,
+          `"${(r.message_ts||'').replace(/"/g,'""')}"`
+        ].join(','))
+      ).join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `chat_rewards_${(st.channel||'channel')}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+}
+
+function thHist(align='left'){
+  return `
+    font-weight:900;padding:10px 12px;color:#fff;border-bottom:1px solid rgba(255,255,255,.16);
+    font-size:${FS.xs};white-space:nowrap;text-align:${align};
+  `;
+}
+
+  function tdHist(align='left',color='#e5e7eb'){
+    return `
+      padding:10px 12px;color:${color};font-size:${FS.xs};white-space:nowrap;text-align:${align};
+    `;
+  }
+
+	// ---------- PUBLIC API ----------
+	function mount({ rootEl, baseUrl, userId, usx_token, wax_account }) {
+	  st.rootEl      = rootEl;
+	  st.baseUrl     = baseUrl;
+	  st.userId      = userId;
+	  st.usx_token   = usx_token;
+	  st.wax_account = wax_account;
+	  st.activeTab   = 'overview';
+	
+	  // Forza contenitore fluido (evita "larghezza molto ridotta")
+	  try {
+	    const p = rootEl.parentElement;
+	    if (p) {
+	      p.style.maxWidth = 'none';
+	      p.style.width    = '100%';
+	    }
+	    rootEl.style.maxWidth = 'none';
+	    rootEl.style.width    = '100%';
+	    rootEl.style.margin   = '0';
+	    rootEl.style.padding  = '0';
+	  } catch(_) {}
+	
+	  loadAllData();
+	}
+
+
+  return { mount };
+})();
 
 function showNewsSection() {
   loadNewsList({ page: 1 });
@@ -3039,11 +4826,11 @@ function loadGoblinDex() {
         gap: 1.5rem;
         margin-bottom: 2rem;
       ">
-        <button class="goblin-menu-btn active-tab" data-menu="inventory"
+        <button class="goblin-menu-btn" data-menu="inventory"
           style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
           Goblin Inventory
         </button>
-        <button class="goblin-menu-btn" data-menu="dwarf-cave"
+        <button class="goblin-menu-btn active-tab" data-menu="dwarf-cave"
           style="padding: 1rem 2rem; font-size: 1.3rem; font-weight: bold; text-shadow: -1px -1px 0 red, 1px -1px 0 red, -1px 1px 0 red, 1px 1px 0 red;">
           Dwarfen Gold Cave
         </button>
@@ -3079,9 +4866,9 @@ function loadGoblinDex() {
         case 'inventory':
           renderGoblinInventory();
           break;
-        case 'dwarf-cave':
-          renderDwarfsCave();
-          break;
+		case 'dwarf-cave':
+		  loadDwarvesGoldCave();
+		  break;
         case 'blend':
           renderGoblinBlend();
           break;
@@ -3101,7 +4888,7 @@ function loadGoblinDex() {
   });
 
   // Carica la sezione di default (Goblin Inventory)
-  renderGoblinInventory();
+  loadDwarvesGoldCave();
 }
 
 /* =========================
@@ -3214,48 +5001,98 @@ async function renderGoblinInventory() {
     try { sessionStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), data })); } catch {}
   };
 
-  // Fetch /user_nfts with a single retry (and cache)
-  let retried = false;
-  async function fetchUserNFTs() {
-    // short-lived cache (60s)
-    const cached = getCache();
-    if (cached && Date.now() - cached.t < 60_000) return cached.data;
+	// Fetch /user_nfts (FULL) with a single retry (and cache)
+	let retried = false;
+	async function fetchUserNFTs() {
+	  // short-lived cache (60s)
+	  const cached = getCache();
+	  if (cached && Date.now() - cached.t < 60_000) return cached.data;
+	
+	  const wax_account = window.userData?.wax_account;
+	  const user_id     = window.userData?.userId || window.userData?.user_id;
+	  const usx_token   = window.userData?.usx_token;
+	
+	  // converte la risposta di /2user_nfts nel formato "legacy" che il FE si aspetta (array flat)
+	  const toLegacyArray = (payload) => {
+	    const nfts = Array.isArray(payload?.nfts) ? payload.nfts : [];
+	    const legacy = nfts.map((n) => ({
+	      // mantiene compatibilità con frontend vecchio
+	      type: n?.type || "goblin",
+	
+	      asset_id: String(n?.asset_id ?? ""),
+	      template_id: Number(n?.template_id ?? 0),
+	      template_mint: n?.template_mint ?? null,
+	
+	      name: n?.name ?? "",
+	      img: n?.img ?? "",
+	      image: n?.img ?? "", // alcune UI vecchie cercano "image"
+	
+	      rarity: n?.rarity ?? "unknown",
+	      edition: Number(n?.edition ?? 0),
+	      description: n?.description ?? "",
+	
+	      level: Number(n?.level ?? 0),
+	      resistance: Number(n?.resistance ?? 0),
+	      accuracy: Number(n?.accuracy ?? 0),
+	      loot_hungry: Number(n?.loot_hungry ?? n?.["loot-hungry"] ?? 0),
+	      speed: Number(n?.speed ?? 0),
+	
+	      daily_power: Number(n?.daily_power ?? n?.["daily-power"] ?? 0),
+	      "daily-power": Number(n?.daily_power ?? n?.["daily-power"] ?? 0),
+	    }));
+	
+	    // se ti servono questi valori altrove nel FE, li metto disponibili
+	    window.__goblinMeta = {
+	      reinforcement_count: Number(payload?.reinforcement_count ?? 0),
+	      total_daily_power: Number(payload?.total_daily_power ?? 0),
+	      avg_daily_power: Number(payload?.avg_daily_power ?? 0),
+	      stats_summary: payload?.stats_summary || null,
+	    };
+	
+	    return legacy;
+	  };
+	
+	  try {
+	    // ======== via wrapper API.post (se esiste) ========
+	    if (typeof API !== "undefined" && API.post) {
+	      const r = await API.post("/2user_nfts", { wax_account, user_id, usx_token }, 15000);
+	      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+	
+	      const legacyArr = toLegacyArray(r.data);
+	      setCache(legacyArr);
+	      return legacyArr;
+	    }
+	
+	    // ======== fallback fetch standard ========
+	    const res = await fetch(`${BASE_URL}/2user_nfts`, {
+	      method: "POST",
+	      headers: {
+	        "Content-Type": "application/json",
+	        // opzionale: /2user_nfts supporta anche Authorization header
+	        ...(usx_token ? { "Authorization": `Bearer ${usx_token}` } : {}),
+	      },
+	      body: JSON.stringify({ wax_account, user_id, usx_token }),
+	    });
+	
+	    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+	
+	    const payload = await res.json(); // qui è un oggetto { nfts: [...], ... }
+	    const legacyArr = toLegacyArray(payload);
+	
+	    setCache(legacyArr);
+	    return legacyArr;
+	
+	  } catch (e) {
+	    if (!retried) {
+	      retried = true;
+	      await new Promise((r) => setTimeout(r, 10_000));
+	      return fetchUserNFTs();
+	    }
+	    console.warn("[renderGoblinInventory] /2user_nfts error:", e);
+	    return [];
+	  }
+	}
 
-    try {
-      if (typeof API !== "undefined" && API.post) {
-        const wax_account = window.userData?.wax_account;
-        const user_id     = window.userData?.userId || window.userData?.user_id;
-        const usx_token   = window.userData?.usx_token;
-        const r = await API.post("/user_nfts", { wax_account, user_id, usx_token }, 15000);
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const arr = Array.isArray(r.data) ? r.data : [];
-        setCache(arr);
-        return arr;
-      }
-      const res = await fetch(`${BASE_URL}/user_nfts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          wax_account: window.userData?.wax_account,
-          user_id: window.userData?.userId,
-          usx_token: window.userData?.usx_token
-        })
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const arr = await res.json();
-      const data = Array.isArray(arr) ? arr : [];
-      setCache(data);
-      return data;
-    } catch (e) {
-      if (!retried) {
-        retried = true;
-        await new Promise(r => setTimeout(r, 10_000));
-        return fetchUserNFTs();
-      }
-      console.warn("[renderGoblinInventory] /user_nfts error:", e);
-      return [];
-    }
-  }
 
   const all = await fetchUserNFTs();
 
@@ -3769,3786 +5606,35 @@ async function renderGoblinInventory() {
   }
   tabG.addEventListener("click", () => selectTab("goblins"));
   tabM.addEventListener("click", () => selectTab("materials"));
-
   // Default tab
   selectTab("goblins");
 }
-
-/* =========================================================
-   Dwarfs Cave — Full Rebuild (UX/UI/Perf tuned)
-   - Single RAF loop (no multiple initializations)
-   - Visibility-aware polling with cleanup
-   - Perk speed reduced by 50%
-   - Chest dedup + correct removal after claim
-   - Robust error handling & safe DOM updates
-   - Improved layout and proportions
-   - Recent lists with dedup & capped length
-   - No duplicate element IDs
-   ========================================================= */
-
-(() => {
-  "use strict";
-
-  // ========= CONFIG =========
-  // Mostra il bottone "Copy to stream on Twitch" solo a questi WAX account
-  const COPY_BTN_WHITELIST = new Set(
-    ['agoscry4ever','welshdanft55','ksgbk.wam'].map(s => s.toLowerCase())
-  );
-
-  if (!window.BASE_URL) window.BASE_URL = "https://iamemanuele.pythonanywhere.com";
-  const BASE_URL = window.BASE_URL;
-  const GRID_COLS = 90;
-  const GRID_ROWS = Math.round(GRID_COLS * 9 / 16); // ~51
-  // Back-compat per codice che usa ancora GRID_SIZE:
-  const GRID_SIZE = GRID_COLS;
-  // === Retry state for /user_nfts ===
-  let userNFTsLoaded = false;          // diventa true al primo successo
-  let userNFTsRetryScheduled = false;  // garantisce UN SOLO retry per sessione/sezione
-  
-  function sectionIsStillMounted() {
-    // evita update se l’utente è uscito dalla sezione
-    return !!document.getElementById("goblin-content");
-  }
-
-  const GLOBAL_REFRESH_MS = 23000; // 23s
-  const COMMAND_POLL_MS = 31000;   // 31s
-  const MAX_RECENT_EXPEDITIONS = 10;
-  const MAX_BONUS_ROWS = 10;        // visible rows in bonus list (excluding header)
-  const DEBUG = false;
-  // --- trail config ---
-  const TRAIL_LEN = 16;        // quanti segmenti massimo
-  const TRAIL_MIN_DIST = 0.6;  // distanza minima (in celle) per aggiungere un punto
-  const MARGIN_PCT = 0.15; // 15% di distanza dai bordi
-
-  function getBounds(){
-    // coordinate in CELLE (non pixel)
-    const minX = Math.floor(GRID_COLS * MARGIN_PCT);
-    const maxX = Math.ceil(GRID_COLS * (1 - MARGIN_PCT)) - 1;
-    const minY = Math.floor(GRID_ROWS * MARGIN_PCT);
-    const maxY = Math.ceil(GRID_ROWS * (1 - MARGIN_PCT)) - 1;
-    return { minX, maxX, minY, maxY };
-  }
-  // ========= CONFIG OVERLAY =========
-  const QS = new URLSearchParams(location.search);
-  const OVERLAY_MODE =
-    /\/overlay\.html$/i.test(location.pathname)
-    || QS.get('overlay') === '1'
-    || (document.body && document.body.getAttribute('data-overlay') === '1');
-  
-  const READONLY = OVERLAY_MODE || QS.get('readonly') === '1';
-  const OVERLAY_START_URL = (window.START_URL || `${location.origin}/madverse/start.html`);
-
-  // === OBS/ROTATION/NON-TICKER ===
-  const OBS_MODE  = QS.get('obs') === '1';
-  const ROT_SECS  = Math.max(5, Number(QS.get('rot') || 12)); // default 12s
-  const NOTICKER  = OBS_MODE || OVERLAY_MODE || QS.get('noticker') === '1';
-// Reinforcement limit: +5 per each 900338 owned
-const BASE_LIMIT = 50;
-const MAX_LIMIT = 250;
-const REINFORCEMENT_TEMPLATE_ID = "900338"; // <- align with backend
-let reinforcementCount = 0;
-let CURRENT_LIMIT = BASE_LIMIT;
-
-async function fetchReinforcementCount(wax) {
-  if (!wax) return 0;
-  try {
-    const r = await API.post("/reinforcement_count", { wax_account: wax }, 10000);
-    if (r?.ok && typeof r.data?.count === "number") return r.data.count;
-  } catch (e) {
-    console.warn("[reinforcement] backend count failed:", e);
-  }
-  return 0; // safe default
-}
-
-async function refreshCurrentLimit() {
-  try {
-    const wax = Cave?.user?.wax_account;
-    if (!wax) return;
-    reinforcementCount = await fetchReinforcementCount(wax);
-    CURRENT_LIMIT = Math.min(MAX_LIMIT, BASE_LIMIT + (reinforcementCount * 5));
-
-    // Reflect on UI
-    const btnFirst = document.querySelector("#cv-select-50");
-    const btnBest  = document.querySelector("#cv-select-best");
-    if (btnFirst) btnFirst.textContent = `✅ First ${CURRENT_LIMIT}`;
-    if (btnBest)  btnBest.textContent  = `🏆 Best ${CURRENT_LIMIT}`;
-    // If you print a “Selected: x / limit” anywhere, update it too
-    if (typeof updateSummary === "function") updateSummary();
-  } catch (e) {
-    console.warn("[reinforcement] unable to refresh limit", e);
-  }
-}
-  // ========= STATE (single source of truth) =========
-  const Cave = {
-    canvas: null,
-    lastAllExpeditions: [],
-    ctx: null,
-    rafId: null,
-    running: false,
-    dpr: 1,
-    bgCache: null,
-    bgCacheCtx: null,
-    observers: { io: null, ro: null },  
-    // griglia
-    cell: 10, 
-    cellX: 10, 
-    cellY: 10,
-    offsetX: 0,   // nuovo
-    offsetY: 0,   // nuovo
-    gridW: 0,     // nuovo
-    gridH: 0,     // nuovo
-  
-    assets: {
-      loaded: false,
-      goblin: null,
-      shovel: null,
-      chest: null,
-      bg: null,
-      perks: { dragon: null, dwarf: null, skeleton: null, black_cat: null },
-      //decor: { rock: null, skull: null, spider: null, bush: null },
-
-    },
-  
-    goblins: [],
-    perks: [],
-    chests: new Map(),
-    decors: [],
-    // timers/intervals
-    intervals: { global: null, globalCountdown: null, command: null, winners: null },
-
-    // dedup sets
-    recentExpKeys: new Set(),
-    bonusKeys: new Set(),
-
-    // visibility
-    visible: !document.hidden,
-    // ticker cache
-    tickerRecent: [],
-    tickerWinners: [],
-
-    // user context provided by the app
-    user: {
-      wax_account: window.userData?.wax_account || "",
-      user_id: window.userData?.userId || "",
-      usx_token: window.userData?.usx_token || ""
-    },
-
-    // UI elements cache
-    el: {
-      container: null,
-      toast: null,
-      videoOrCanvas: null,
-      globalList: null,
-      recentList: null,
-      bonusList: null,
-      selectionSummary: null,
-      goblinList: null,
-      chestPerkBtn: null,
-    }
-  };
-  const inFlightClaims = new Set(); // set di String(chest_id)
-  
-  // === LAYERED CANVAS ===
-Cave.layers = {
-  wrap: null,
-  bg: null, trails: null, dyn: null, ui: null,
-  ctxBg: null, ctxTrails: null, ctxDyn: null, ctxUi: null,
-};
-
-function ensureLayersFromSingleCanvas(single) {
-  // single = canvas attuale (diventerà il layer DYN)
-  if (!single || !single.parentElement) {
-    console.warn("[ensureLayersFromSingleCanvas] canvas mancante o non nel DOM");
-    return;
-  }
-
-  // Evita di creare doppi wrapper
-  if (Cave?.layers?.wrap && Cave.layers.dyn === single) {
-    return; // già inizializzato
-  }
-
-  const parent = single.parentElement;
-
-  // Crea un wrapper posizionato
-  const wrap = document.createElement('div');
-  wrap.style.position = 'relative';
-  wrap.style.width = single.style.width || '100%';
-  wrap.style.height = single.style.height || 'auto';
-  wrap.style.aspectRatio = '16/9';
-
-  // Inserisci il wrapper PRIMA del canvas esistente
-  parent.insertBefore(wrap, single);
-
-  // Crea i nuovi canvas per i layer
-  const bg = document.createElement('canvas');
-  const trails = document.createElement('canvas');
-  const dyn = single; // riutilizziamo il canvas esistente
-  const ui = document.createElement('canvas');
-
-  // Stili comuni ai 3 nuovi layer
-  [bg, trails, ui].forEach((c) => {
-    c.style.position = 'absolute';
-    c.style.left = '0';
-    c.style.top = '0';
-    c.style.width = '100%';
-    c.style.height = '100%';
-    c.style.display = 'block';
-  });
-
-  // Prepara anche il canvas esistente (dyn)
-  dyn.style.position = 'absolute';
-  dyn.style.left = '0';
-  dyn.style.top = '0';
-  dyn.style.width = '100%';
-  dyn.style.height = '100%';
-  dyn.style.display = 'block';
-
-  // z-index espliciti: BG=0, TRAILS=1, DYN=2, UI=3
-  bg.style.zIndex = '0';
-  trails.style.zIndex = '1';
-  dyn.style.zIndex = '2';
-  ui.style.zIndex = '3';
-
-  // Appendi SOLO nodi validi (nessun null)
-  wrap.appendChild(bg);
-  wrap.appendChild(trails);
-  wrap.appendChild(dyn);
-  wrap.appendChild(ui);
-
-  // Salva i riferimenti
-  Cave.layers = {
-    wrap,
-    bg, trails, dyn, ui,
-    ctxBg: bg.getContext('2d', { alpha: false }),
-    ctxTrails: trails.getContext('2d'),
-    ctxDyn: dyn.getContext('2d'),
-    ctxUi: ui.getContext('2d'),
-  };
-
-  // Compat: mantieni Cave.canvas/Cave.ctx puntati al DYN
-  Cave.canvas = dyn;
-  Cave.ctx = Cave.layers.ctxDyn;
-}
-
-function resizeAllLayers(cssW, cssH, dpr) {
-  const L = Cave.layers;
-  [L.bg, L.trails, L.dyn, L.ui].forEach(c => {
-    c.style.width = cssW + 'px';
-    c.style.height = cssH + 'px';
-    c.width = Math.floor(cssW * dpr);
-    c.height = Math.floor(cssH * dpr);
-  });
-  [L.ctxBg, L.ctxTrails, L.ctxDyn, L.ctxUi].forEach(ctx => {
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.imageSmoothingEnabled = false;
-    if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'low';
-  });
-}
-// === DIRTY RECT ENGINE ===
-const Dirty = {
-  pad: 6, // margine extra in px
-  rects: [],
-  add(x, y, w, h){
-    if (!isFinite(x) || !isFinite(y) || !isFinite(w) || !isFinite(h)) return;
-    this.rects.push({
-      x: Math.max(0, Math.floor(x) - this.pad),
-      y: Math.max(0, Math.floor(y) - this.pad),
-      w: Math.ceil(w) + this.pad*2,
-      h: Math.ceil(h) + this.pad*2
-    });
-  },
-  addBBox(b){ if (b) this.add(b.x, b.y, b.w, b.h); },
-  clear(){ this.rects.length = 0; },
-  // Unione grossolana O(n^2) (basta: liste piccole)
-  merged(){
-    const out = [];
-    for (const r of this.rects){
-      let merged = false;
-      for (const o of out){
-        if (!(r.x>o.x+o.w || o.x>r.x+r.w || r.y>o.y+o.h || o.y>r.y+r.h)){
-          const nx = Math.min(o.x, r.x);
-          const ny = Math.min(o.y, r.y);
-          const ex = Math.max(o.x+o.w, r.x+r.w);
-          const ey = Math.max(o.y+o.h, r.y+r.h);
-          o.x=nx; o.y=ny; o.w=ex-nx; o.h=ey-ny; merged=true; break;
-        }
-      }
-      if (!merged) out.push({ ...r });
-    }
-    return out.slice(0, 64); // evita esplosione
-  }
-};
-
-function rectsIntersect(a,b){
-  return !(a.x>a2(b) || b.x>a2(a) || a.y>b2(b) || b.y>b2(a));
-  function a2(r){return r.x+r.w} function b2(r){return r.y+r.h}
-}
-function goblinBBox(g){
-  const cell = Math.min(Cave.cellX, Cave.cellY);
-  const px = Cave.offsetX + g.x * Cave.cellX;
-  const py = Cave.offsetY + g.y * Cave.cellY + (g.walkBob||0)*cell;
-  const gSize = cell * 5, gOff = (gSize - cell) / 2;
-
-  // Goblin sprite
-  let x = px - gOff, y = py - gOff, w = gSize, h = gSize;
-
-  // Label sotto ai piedi (come nel tuo draw) :contentReference[oaicite:4]{index=4}
-  const labelW = cell * 2.2;
-  const labelH = cell * 0.8;
-  const footY  = py + (gSize / 2);
-  const margin = cell * 0.25;
-  let boxX = Math.max(0, Math.min(px - labelW/2, Cave.gridW - labelW));
-  let boxY = Math.max(0, Math.min(footY + margin, Cave.gridH - labelH));
-
-  // Unisci col bounding sprite
-  const minX = Math.min(x, boxX), maxX = Math.max(x+w, boxX+labelW);
-  const minY = Math.min(y, boxY), maxY = Math.max(y+h, boxY+labelH);
-
-  // Pala (quando digging) — stessa logica tua :contentReference[oaicite:5]{index=5}
-  if (g.digging && Cave.assets.shovel?.complete){
-    const sSize = 24;
-    const goblinTop = py - (gSize / 2);
-    const dx = px - (sSize / 2);
-    const dy = goblinTop - 2 - sSize;
-    return { x: Math.min(minX, dx), y: Math.min(minY, dy),
-             w: Math.max(maxX, dx+sSize) - Math.min(minX, dx),
-             h: Math.max(maxY, dy+sSize) - Math.min(minY, dy) };
-  }
-
-  return { x: minX, y: minY, w: maxX-minX, h: maxY-minY };
-}
-function drawTrailSegment(g, a, b){
-  const tctx = Cave.layers.ctxTrails;
-  const w = Math.max(1, Math.min(Cave.cellX, Cave.cellY) * 0.20);
-  tctx.save();
-  tctx.lineCap = "round";
-  tctx.lineWidth = w;
-  tctx.strokeStyle = hexToRgba(g.color || "#ffe600", 0.8);
-  tctx.beginPath();
-  tctx.moveTo(Cave.offsetX + a.x * Cave.cellX, Cave.offsetY + a.y * Cave.cellY);
-  tctx.lineTo(Cave.offsetX + b.x * Cave.cellX, Cave.offsetY + b.y * Cave.cellY);
-  tctx.stroke();
-  tctx.restore();
-}
-
-function clearTrailSegment(a, b){
-  const pad = 6, x1 = Cave.offsetX + a.x * Cave.cellX, y1 = Cave.offsetY + a.y * Cave.cellY;
-  const x2 = Cave.offsetX + b.x * Cave.cellX, y2 = Cave.offsetY + b.y * Cave.cellY;
-  const rx = Math.min(x1,x2)-pad, ry = Math.min(y1,y2)-pad;
-  const rw = Math.abs(x2-x1)+pad*2, rh = Math.abs(y2-y1)+pad*2;
-  Cave.layers.ctxTrails.clearRect(rx, ry, rw, rh);
-}
-	
-function clearGoblinTrail(g){
-  if (!g?.trail || g.trail.length < 2) return;
-  for (let i = 0; i < g.trail.length - 1; i++) {
-    clearTrailSegment(g.trail[i], g.trail[i+1]);
-  }
-}
-
-function chestBBox(ch){
-  // usi scale ~0.45 della sprite chest :contentReference[oaicite:6]{index=6}
-  const scale = 0.45, img = Cave.assets.chest;
-  if (!img?.complete) return null;
-  const cx = Cave.offsetX + ch.x * Cave.cellX;
-  const cy = Cave.offsetY + ch.y * Cave.cellY;
-  const w = img.width * scale, h = img.height * scale;
-  return { x: cx - w/2, y: cy - h/2, w, h };
-}
-
-function perkBBox(p){
-  // sprite 32x32 in px canvas (già usata in drawPerks) :contentReference[oaicite:7]{index=7}
-  const px = Cave.offsetX + p.x * Cave.cellX;
-  const py = Cave.offsetY + p.waveY(p.x) * Cave.cellY;
-  return { x: px - 16, y: py - 16, w: 32, h: 32 };
-}
-
-  // ========= UTILITIES =========
-  const log = (...a) => DEBUG && console.log("[CAVE]", ...a);
-  const qs = (s, r = document) => r.querySelector(s);
-  const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
-  const clamp  = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-  const randInt = (lo, hi) => Math.floor(Math.random() * (hi - lo + 1)) + lo;
-  const safe = (v) => {
-    if (v == null) return "";
-    return String(v).replace(/[&<>"'`]/g, (m) => ({
-      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;"
-    }[m]));
-  };
-
-  // === Index NFT e normalizzazione attributi ===
-Cave.nftIndex = new Map();   // asset_id (string) -> NFT intero
-
-function toNumber(x){
-  if (x == null) return 0;
-  if (typeof x === 'number' && Number.isFinite(x)) return x;
-  // estrae la prima cifra dal testo (gestisce "12", "12.5", "12%", " +12 ")
-  const m = String(x).match(/-?\d+(\.\d+)?/);
-  return m ? Number(m[0]) : 0;
-}
-
-/** Ritorna un attributo numerico provando vari percorsi/casi.
- *  Esempi chiave: 'resistance', 'loot_hungry' (o 'loothungry'), 'speed', 'accuracy'
- */
-function getStat(nft, key){
-  if (!nft) return 0;
-
-  const tryKeys = [key];
-  // alias comuni
-  if (key === 'loot_hungry') tryKeys.push('loothungry','lootHungry','loot-hungry');
-  if (key === 'resistance') tryKeys.push('resist','stamina');
-
-  // 1) livello piatto
-  for (const k of tryKeys){
-    if (nft[k] != null) return toNumber(nft[k]);
-  }
-
-  // 2) oggetti annidati tipici
-  const buckets = [nft.attributes, nft.attrs, nft.stats, nft.data, nft.mutable_data, nft.immutable_data];
-  for (const b of buckets){
-    if (!b) continue;
-    // a) come mappa
-    for (const k of tryKeys){
-      if (b && typeof b === 'object' && !Array.isArray(b) && b[k] != null) return toNumber(b[k]);
-    }
-    // b) come array [{trait_type,value}] (AtomicAssets-like)
-    if (Array.isArray(b)){
-      for (const ent of b){
-        const trait = String(ent.trait_type || ent.trait || ent.key || '').toLowerCase();
-        if (tryKeys.some(k => k.toLowerCase() === trait)){
-          return toNumber(ent.value ?? ent.val);
-        }
-      }
-    }
-  }
-  return 0;
-}
-
-/** Somma attributi per una lista di asset_id */
-function sumExpeditionStats(assetIds = []){
-  const sums = { resistance:0, loot_hungry:0, speed:0, accuracy:0 };
-  assetIds.forEach(id => {
-    const nft = Cave.nftIndex.get(String(id));
-    if (!nft) return;
-    sums.resistance  += getStat(nft, 'resistance');
-    sums.loot_hungry += getStat(nft, 'loot_hungry');
-    sums.speed       += getStat(nft, 'speed');
-    sums.accuracy    += getStat(nft, 'accuracy');
-  });
-  return sums;
-}
-
-  function rarityBg(r="") {
-    const k = String(r).toLowerCase();
-    return ({
-      common:"#202225", uncommon:"#15341d", rare:"#0d263a",
-      epic:"#2a0f33", legendary:"#332406", mythic:"#33170a"
-    }[k] || "#1a1a1a");
-  }
-  function rarityFg(r="") {
-    const k = String(r).toLowerCase();
-    return ({
-      common:"#c9d1d9", uncommon:"#4ade80", rare:"#60a5fa",
-      epic:"#c084fc", legendary:"#fbbf24", mythic:"#fb923c"
-    }[k] || "#e5e7eb");
-  }
-  function rarityBorder(r="") {
-    const k = String(r).toLowerCase();
-    return ({
-      common:"#2f3238", uncommon:"#2a5e39", rare:"#1f3e5f",
-      epic:"#4a1f59", legendary:"#5b4715", mythic:"#5a2b17"
-    }[k] || "#2a2a2a");
-  }
-  
-  const timeHM = (d = new Date()) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-  // numeri compatti: 12500 -> 12.5k, 1000000 -> 1.0M
-  function fmtNumCompact(n){
-    n = Number(n||0);
-    if (n < 1000) return String(n);
-    if (n < 10000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
-    if (n < 1000000) return Math.round(n/1000) + 'k';
-    if (n < 10000000) return (n/1e6).toFixed(1).replace(/\.0$/,'') + 'M';
-    return Math.round(n/1e6) + 'M';
-  }
-  
-  // estrai i totali dal payload di all_expeditions (fallback su goblins[])
-  function totalsFromExpeditionItem(e){
-    // helper: legge il primo campo disponibile tra i nomi indicati (case-insensitive)
-    const pick = (obj, names) => {
-      if (!obj) return 0;
-      for (const n of names){
-        if (obj[n] != null) return toNumber(obj[n]);
-        const kk = Object.keys(obj).find(k => k.toLowerCase() === String(n).toLowerCase());
-        if (kk && obj[kk] != null) return toNumber(obj[kk]);
-      }
-      return 0;
-    };
-  
-    // 1) preferisci i totali già calcolati dal backend (supporta alias)
-    const src = e?.stats_totals || e?.attr_totals || e?.totals || e?.stats || null;
-    if (src){
-      return {
-        res:  pick(src, ['resistance','res','R']),
-        loot: pick(src, ['loot_hungry','loothungry','loot','L']),
-        spd:  pick(src, ['speed','spd','S']),
-        acc:  pick(src, ['accuracy','acc','A']),
-      };
-    }
-  
-    // 2) fallback: somma da e.goblins (senza MAI usare user_nfts)
-    const gl = Array.isArray(e?.goblins) ? e.goblins : [];
-    if (gl.length){
-      return gl.reduce((a,g)=>{
-        const A = g?.attributes || g?.attr || g?.stats || g || {};
-        a.res  += pick(A, ['resistance','res','R']);
-        a.loot += pick(A, ['loot_hungry','loothungry','loot','L']);
-        a.spd  += pick(A, ['speed','spd','S']);
-        a.acc  += pick(A, ['accuracy','acc','A']);
-        return a;
-      }, {res:0, loot:0, spd:0, acc:0});
-    }
-  
-    // 3) niente dati → zeri
-    return {res:0, loot:0, spd:0, acc:0};
-  }
-
-
-
-  function styleOnce() {
-    if (qs("#cave-rebuilt-style")) return;
-    const st = document.createElement("style");
-    st.id = "cave-rebuilt-style";
-    st.textContent = `
-      :root{
-        --cv-bg:#111; --cv-elev:#1a1a1a; --cv-border:#2b2b2b; --cv-soft:#141414;
-        --cv-amber:#ffcc66; --cv-cyan:#7ff6ff; --cv-green:#78ff78; --cv-chip:#ffe600;
-      }
-    
-      .cv-card{ background:var(--cv-bg); border-radius:14px; padding:1rem; color:#fff;
-                box-shadow:0 0 12px rgba(0,255,255,.24); border:1px solid var(--cv-border); }
-      .cv-card--amber{ box-shadow:0 0 12px rgba(255,165,0,.24); }
-      .cv-card--green{ box-shadow:0 0 12px rgba(0,255,0,.24); }
-      .cv-title{ color:var(--cv-chip); font-family: Orbitron, system-ui, sans-serif; margin:0 0 .5rem 0; }
-    
-      .cv-btn{ background:#1c1c1c; border:1px solid #444; color:var(--cv-chip);
-               padding:.5rem .75rem; border-radius:10px; cursor:pointer; }
-      .cv-btn:disabled{ opacity:.6; cursor:not-allowed; }
-    
-      .cv-toast{ margin:.5rem 0; padding:.8rem; background:#222; border-left:5px solid #0ff;
-                 border-radius:8px; color:#fff; font-family:Orbitron, system-ui, sans-serif; }
-      .cv-toast.ok{ border-left-color:#0f0; } .cv-toast.warn{ border-left-color:#ffa500; }
-      .cv-toast.err{ border-left-color:#ff4d4d; }
-    
-      /* Utilities */
-      .cv-row{ display:flex; align-items:center; justify-content:space-between; gap:.6rem; }
-      .cv-soft-sep{ height:1px; background:rgba(255,255,255,.06); margin:.45rem 0; }
-      .cv-badge{ display:inline-flex; align-items:center; gap:.35rem; font-size:.72rem;
-                 padding:.18rem .55rem; border-radius:999px; border:1px solid #2a7f2a;
-                 background:linear-gradient(180deg,#173e17,#0f2a0f); color:#9dff9d;
-                 box-shadow:0 0 10px rgba(0,255,0,.12); }
-      .cv-time{ font-size:.78rem; color:#b7ffb7; opacity:.85; }
-      .cv-chip-key{ font-size:.78rem; color:#9aa0a6; letter-spacing:.3px; }
-      .cv-chip-val{ font-weight:800; color:#eaeaea; }
-      .cv-pill{ flex:1 1 0; background:#131313; border:1px solid var(--cv-border);
-                border-radius:10px; padding:.35rem .55rem; }
-      .cv-meter{ flex:1 1 auto; background:#141414; border:1px solid var(--cv-border);
-                 border-radius:999px; height:9px; overflow:hidden; }
-      .cv-meter > div{ height:100%; background:linear-gradient(90deg,#ffe600,#ff9d00);
-                       box-shadow:inset 0 0 10px rgba(255,255,255,.25), 0 0 8px rgba(255,214,0,.35); }
-                       
-      /* --- Goblin card: prevent overflow, allow wrapping --- */
-      .cv-gob-card,
-      .cv-gob-card * { box-sizing: border-box; }
-      
-      .cv-gob-card { overflow: hidden; } /* contiene ribbon e qualsiasi assoluto */
-      .cv-gob-card .cv-name { overflow-wrap: anywhere; word-break: break-word; }
-      
-      /* riga dei “pill” che può andare a capo senza uscire dalla card */
-      .cv-gob-pillrow { display:flex; flex-wrap:wrap; gap:.45rem; }
-      .cv-gob-pillrow .cv-pill { min-width:110px; flex:1 1 110px; }
-          
-      /* Grid helpers */
-      .cv-cards{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:.75rem; align-items:stretch; }
-      .cv-item{ background:var(--cv-elev); border:1px solid var(--cv-border); border-radius:12px; padding:.7rem .8rem; }
-      .cv-item .cv-when{ opacity:.8; font-size:.9rem; }
-      .cv-item .cv-line{ margin-top:.35rem; }
-      
-      /* --- Title row: keep name + rarity on one line --- */
-      .cv-gob-head{ display:flex; align-items:center; gap:.5rem; min-width:0; }
-      .cv-gob-head .cv-name{
-        flex:1 1 auto; min-width:0;
-        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-        overflow-wrap:normal; word-break:normal;   /* override del precedente */
-      }
-      .cv-gob-head .cv-rarity{ flex:0 0 auto; white-space:nowrap; }
-
-      /* Bonus grid: 30% più compatto rispetto a prima (230px -> ~160px) */
-      #cv-bonus-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-                      gap:.65rem; align-items:stretch; }
-    
-      /* Rarity tag */
-      .cv-rarity{ font-size:.72rem; padding:.16rem .55rem; border-radius:999px;
-                  border:1px solid #333; box-shadow:0 0 10px rgba(255,255,255,.05), inset 0 0 8px rgba(255,255,255,.06); }
-    
-      /* Compact card layout for “recent expeditions” */
-      .cv-compact{ display:flex; flex-direction:column; gap:.35rem; padding:.65rem .7rem; border-radius:12px;
-                   background:linear-gradient(180deg,#141414,#0f0f0f); border:1px solid var(--cv-border);
-                   box-shadow:0 2px 8px rgba(0,0,0,.35); }
-      .cv-compact .cv-head{ display:flex; align-items:center; justify-content:space-between; gap:.5rem; }
-      .cv-compact .cv-name{ color:var(--cv-chip); font-weight:700; font-size:.95rem; max-width:60%;
-                            white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-      .cv-kv{ display:flex; gap:.45rem; }
-      .cv-kv .kv{ flex:1 1 0; background:#0f0f0f; border:1px solid var(--cv-border); border-radius:10px; padding:.35rem .5rem; }
-      .kv .k{ font-size:.72rem; color:#9aa0a6; } .kv .v{ font-weight:800; font-size:1.02rem; }
-    
-      @keyframes flick {
-        0%{ box-shadow:0 0 15px #ffb800, inset 0 0 6px #ffa500; opacity:0.95; }
-        100%{ box-shadow:0 0 35px #ffcc00, inset 0 0 14px #ffcc00; opacity:1; }
-      }
-      #cv-summary{
-        position: sticky; bottom: 12px; z-index: 40;
-        backdrop-filter: blur(6px);
-        background: linear-gradient(180deg, rgba(20,20,20,.9), rgba(12,12,12,.9));
-        border: 1px solid var(--cv-border);
-        box-shadow: 0 8px 24px rgba(0,0,0,.35);
-      }
-      .cv-skel{
-        position:relative; overflow:hidden;
-        background:#141414; border:1px solid var(--cv-border); border-radius:12px;
-      }
-      .cv-skel::after{
-        content:""; position:absolute; inset:0;
-        background:linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
-        transform:translateX(-100%); animation:skel 1.2s infinite;
-      }
-      @keyframes skel{ to { transform:translateX(100%);} }
-      .cv-btn:focus-visible,
-      .cv-gob-card:focus-visible{
-        outline:2px solid var(--cv-chip); outline-offset:2px;
-      }
-      @media (prefers-reduced-motion: reduce){
-        *{ transition:none !important; animation:none !important; }
-      }
-      /* --- Overlay ticker (marquee) --- */
-      #cv-ticker{
-        position:absolute; left:0; right:0; bottom:0; height:60px;
-        background:linear-gradient(180deg, rgba(0,0,0,.6), rgba(0,0,0,.85));
-        border-top:1px solid rgba(255,255,255,.08);
-        overflow:hidden; pointer-events:none;
-        display:flex; flex-direction:column; gap:2px; padding:2px 0;
-      }
-      #cv-ticker .row{
-        flex:1 1 0; overflow:hidden;
-      }
-      #cv-ticker .track{
-        display:flex; gap:2rem; white-space:nowrap; will-change:transform;
-        animation:cv-marquee linear infinite;
-        padding:0 .75rem;
-      }
-      #cv-ticker .item{
-        font-family:Orbitron, system-ui, sans-serif;
-        font-size:.9rem;
-        color:#ffe600; /* fallback */
-        text-shadow:0 1px 2px rgba(0,0,0,.6);
-        display:inline-flex; align-items:center; gap:.35rem;
-      }
-      #cv-ticker .dot{ opacity:.4; margin:0 .65rem; }
-      
-      /* palette tokenizzata per elementi */
-      #cv-ticker .tk-user{ font-weight:900; filter:drop-shadow(0 0 6px rgba(255,255,255,.08)); }
-      #cv-ticker .tk-chips{ color:#78ff78; font-weight:800; }
-      #cv-ticker .tk-nfts{ color:#ffb74d; font-weight:800; }
-      #cv-ticker .tk-goblins{ color:#7dd3fc; }
-      #cv-ticker .tk-timer{ color:#a7f3d0; }
-      
-      /* attributi */
-      #cv-ticker .tk-R{ color:#f87171; }
-      #cv-ticker .tk-L{ color:#fde047; }
-      #cv-ticker .tk-S{ color:#60a5fa; }
-      #cv-ticker .tk-A{ color:#c084fc; }
-      /* pill dei totali attributi: colori e wrapping */
-      .cv-attr-grid .cv-chip-val{ white-space:normal; } /* consenti capo riga in card strette */
-      
-      .cv-pill.attr-R{ border-color:#4c1e1e; background:linear-gradient(180deg,#1b0d0d,#130909); }
-      .cv-pill.attr-L{ border-color:#4a3a12; background:linear-gradient(180deg,#2a2211,#1c160a); }
-      .cv-pill.attr-S{ border-color:#0f3a4a; background:linear-gradient(180deg,#0f1a1c,#0a1214); }
-      .cv-pill.attr-A{ border-color:#3a124a; background:linear-gradient(180deg,#1a0f1c,#120a14); }
-      
-      .cv-pill.attr-R .cv-chip-key{ color:#fca5a5; }
-      .cv-pill.attr-L .cv-chip-key{ color:#fde68a; }
-      .cv-pill.attr-S .cv-chip-key{ color:#7dd3fc; }
-      .cv-pill.attr-A .cv-chip-key{ color:#d8b4fe; }
-
-      @keyframes cv-marquee{
-        from{ transform:translateX(0) }
-        to  { transform:translateX(-50%) }
-      }
-      .cv-pill{ min-width:0; }
-      .cv-chip-val{
-        font-weight:800; color:#eaeaea;
-        overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-        font-size: clamp(.78rem, 2.1vw, .95rem); /* evita di “uscire a destra” */
-      }
-      
-      /* === Goblin DeX — Canvas Logo (top bar) === */
-      .cv-logo-wrap{
-        position:relative; margin:-.25rem 0 .5rem 0; height:120px;
-        display:flex; align-items:flex-end; justify-content:center; overflow:visible;
-      }
-      #cv-logo-canvas{
-        width:100%; height:100%; display:block;
-        filter:drop-shadow(0 8px 18px rgba(0,0,0,.45));
-        animation:logoDrop .9s cubic-bezier(.25,1.25,.35,1) 1 both;
-      }
-      .cv-logo-toast{
-        position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
-        pointer-events:none; color:#fff; font-family:Orbitron,system-ui,sans-serif; font-weight:900;
-        text-shadow:0 2px 10px rgba(0,0,0,.8), 0 0 18px rgba(255,230,0,.55);
-        white-space:nowrap; opacity:0; font-size: clamp(.9rem, 2.2vw, 1.2rem);
-      }
-      .cv-logo-toast.show{
-        animation:popIn .25s ease-out forwards, messageGlow 1.8s ease-in-out 3 alternate;
-      }
-      @keyframes logoDrop{
-        0%{ transform:translateY(-140px) scale(1.04) rotate(-2deg); opacity:.0 }
-        70%{ transform:translateY(8px) scale(1.0) rotate(0deg); opacity:1 }
-        100%{ transform:translateY(0) }
-      }
-      @keyframes popIn{
-        from{ transform:translate(-50%,15px) scale(.85); opacity:0 }
-        to  { transform:translate(-50%,0)   scale(1);    opacity:1 }
-      }
-      @keyframes messageGlow{
-        0%  { text-shadow:0 2px 10px rgba(0,0,0,.8), 0 0 8px rgba(255,230,0,.35) }
-        100%{ text-shadow:0 2px 10px rgba(0,0,0,.8), 0 0 24px rgba(0,255,170,.75), 0 0 40px rgba(0,160,255,.45) }
-      }
-      
-      #cv-right { min-height: 420px; }
-      #cv-rotator .cv-rot-panel { will-change: opacity; }
-    `;
-    document.head.appendChild(st);
-  }
-
-  function clearCanvas() {
-    const { ctx, canvas } = Cave;
-    // azzera la trasformazione per pulire in pixel nativi
-    ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.restore(); // ripristina la trasformazione HiDPI impostata in resizeCanvas()
-  }
-
-  function hexToRgba(hex, alpha = 1) {
-    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || "#ffe600");
-    const r = m ? parseInt(m[1], 16) : 255;
-    const g = m ? parseInt(m[2], 16) : 230;
-    const b = m ? parseInt(m[3], 16) : 0;
-    return `rgba(${r},${g},${b},${alpha})`;
-  }
-  const toastCache = new Map(); // msg -> timestamp (per anti-flood)
-
-  function toast(msg, type = "ok", ttl = 6000) {
-    const now = Date.now();
-    const last = toastCache.get(msg) || 0;
-    if (now - last < 1200) return; // evita flood dello stesso messaggio in <1.2s
-    toastCache.set(msg, now);
-  
-    const host = Cave.el.toast;
-    if (!host) return;
-    const div = document.createElement("div");
-    div.className = `cv-toast ${type}`;
-    div.textContent = msg;
-    host.appendChild(div);
-    setTimeout(() => div.remove(), ttl);
-  }
-
-  
-  function renderSkeletons(hostSel, count=6, height=74){
-    const host = qs(hostSel); if(!host) return;
-    host.innerHTML = Array.from({length:count})
-      .map(()=> `<div class="cv-skel" style="height:${height}px; margin-bottom:.6rem;"></div>`).join("");
-  }
-    
-  function syncUserInto(caveUser) {
-    const mem = window.userData || JSON.parse(localStorage.getItem('userData') || '{}');
-    caveUser.wax_account = mem?.wax_account || "";
-    caveUser.user_id     = (mem?.user_id ?? mem?.userId) || "";  // accetta entrambe, preferisci userId
-    caveUser.usx_token   = mem?.usx_token || "";
-  }
-  
-  function assertAuthOrThrow(caveUser) {
-    if (!caveUser.wax_account || !caveUser.user_id || !caveUser.usx_token) {
-      throw new Error("Missing auth data. Please log in.");
-    }
-  }
-
-  // fetch helpers with timeout
-  async function fetchJSON(url, opts = {}, timeout = 15000) {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort("timeout"), timeout); // 👈 reason
-    try {
-      const res = await fetch(url, { ...opts, signal: ctrl.signal });
-      const text = await res.text();
-      let data;
-      try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
-      return { ok: res.ok, status: res.status, data };
-    } catch (err) {
-      if (err?.name === "AbortError") {
-        // risposta standardizzata per i caller
-        return { ok: false, status: 499, aborted: true, data: { error: "timeout" } };
-      }
-      throw err;
-    } finally {
-      clearTimeout(t);
-    }
-  }
-
-
-  const API = {
-    post: (path, body, t=15000) =>
-      fetchJSON(`${BASE_URL}${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body||{}) }, t),
-    get: (path, t=15000) =>
-      fetchJSON(`${BASE_URL}${path}`, {}, t),
-  };
-  async function fetchUserNFTsOnce(timeoutMs = 15000) {
-    syncUserInto(Cave.user);
-    assertAuthOrThrow(Cave.user);
-    const payload = {
-      wax_account: Cave.user.wax_account,
-      user_id: Cave.user.user_id,
-      usx_token: Cave.user.usx_token
-    };
-    return API.post("/user_nfts", payload, timeoutMs);
-  }
-
-
-  // Chiama /user_nfts; se fallisce, schedula UN SOLO retry tra 10s.
-  // Al successo, chiama hydrateGoblinUI(data) e blocca altri retry finché la sezione non viene ricaricata.
-  async function loadUserNFTsWithSingleRetry() {
-    try {
-      const r = await fetchUserNFTsOnce(15000);
-      if (!r.ok || !Array.isArray(r.data)) throw new Error(`HTTP ${r.status}`);
-      if (!sectionIsStillMounted()) return;
-      userNFTsLoaded = true;
-      // Notifica che probabilmente abbiamo userData aggiornato
-      document.dispatchEvent(new CustomEvent('cv:userdata-maybe-updated'));
-
-      hydrateGoblinUI(r.data);
-    } catch (err) {
-      if (!userNFTsRetryScheduled) {
-        userNFTsRetryScheduled = true;
-        toast("⚠️ Goblins not loaded, i will retry again in 10s…", "warn", 4000);
-        setTimeout(async () => {
-          if (userNFTsLoaded || !sectionIsStillMounted()) return;
-          try {
-            const r2 = await fetchUserNFTsOnce(20000);
-            if (r2.ok && Array.isArray(r2.data) && sectionIsStillMounted()) {
-              userNFTsLoaded = true;
-              // Notifica che probabilmente abbiamo userData aggiornato
-              document.dispatchEvent(new CustomEvent('cv:userdata-maybe-updated'));
-                            
-              hydrateGoblinUI(r2.data);
-              toast("✅ Goblins loaded", "ok", 2500);
-            } else {
-              toast("❌ Goblins not available at the moment. Please reload the page.", "err", 4000);
-            }
-          } catch (e2) {
-            if (sectionIsStillMounted()) toast("❌ Goblins not available at the moment.", "err", 4000);
-          }
-        }, 10000);
-      }
-    }
-  }
-
-  // ========= ASSETS =========
-  function loadImg(src) {
-    return new Promise((resolve, reject) => { const i = new Image(); i.onload = () => resolve(i); i.onerror = reject; i.src = src; });
-  }
-  async function loadAssets() {
-    if (Cave.assets.loaded) return;
-    const [goblin, shovel, chest, bg, dragon, dwarf, skeleton, black_cat] = await Promise.all([
-      loadImg("goblin.png"),
-      loadImg("shovel_sprite.png"),
-      loadImg("chest.png"),
-      loadImg("cave-grid.gif"),
-      loadImg("perk_dragon.png"),
-      loadImg("perk_dwarf.png"),
-      loadImg("perk_skeleton.png"),
-      loadImg("perk_blackcat.png")
-    ]);
-      //loadImg("rock.png"),
-      //loadImg("skull.png"),
-      //loadImg("spider.png"),
-      //loadImg("bush.png")        
-    Cave.assets.goblin = goblin;
-    Cave.assets.shovel = shovel;
-    Cave.assets.chest = chest;
-    Cave.assets.bg = bg;
-    Cave.assets.perks.dragon = dragon;
-    Cave.assets.perks.dwarf = dwarf;
-    Cave.assets.perks.skeleton = skeleton;
-    Cave.assets.perks.black_cat = black_cat;
-    // Cave.assets.decor = { rock, skull, spider, bush };
-    Cave.assets.loaded = true;
-
-    // costruisci cache se il canvas è già pronto
-    buildBGCache();
-  }
-  
-  function buildBGCache(){
-    if (!Cave.canvas || !Cave.assets.bg?.complete) return;
-    const w = Math.max(1, Math.floor(Cave.gridW));
-    const h = Math.max(1, Math.floor(Cave.gridH));
-  
-    // usa OffscreenCanvas se disponibile
-    try{
-      const can = ('OffscreenCanvas' in window) ? new OffscreenCanvas(w, h) : document.createElement('canvas');
-      can.width = w; can.height = h;
-      const cx = can.getContext('2d');
-      cx.imageSmoothingEnabled = false;
-      cx.drawImage(Cave.assets.bg, 0, 0, Cave.assets.bg.width, Cave.assets.bg.height, 0, 0, w, h);
-      Cave.bgCache = can;
-      Cave.bgCacheCtx = cx;
-    }catch{ Cave.bgCache = null; Cave.bgCacheCtx = null; }
-  }
-
-    function initDecorations() {
-    Cave.decors = [];
-    const pack = Cave.assets.decor || {};
-    // prendi solo quelle effettivamente caricate
-    const entries = Object.entries(pack).filter(([_, img]) => img && img.complete);
-    if (!entries.length) return;
-  
-    const { minX, maxX, minY, maxY } = getBounds();
-  
-    const COUNT_PER_TYPE = 6;    // quante per tipo (regola a piacere)
-    const FRAME_DELAY    = 12;   // velocità animazione (tick)
-    for (const [type, image] of entries) {
-      for (let i = 0; i < COUNT_PER_TYPE; i++) {
-        const x = randInt(minX, maxX);
-        const y = randInt(minY, maxY);
-        Cave.decors.push({
-          type,
-          image,
-          frames: 2,
-          frame: 0,
-          tick: 0,
-          frameDelay: FRAME_DELAY,
-          x, y
-        });
-      }
-    }
-  }
-
-  function drawDecorations() {
-    if (!Cave.decors || !Cave.decors.length) return;
-  
-    const destSize = 16; // 16x16 pixel sul canvas
-    const { ctx } = Cave;
-  
-    for (const d of Cave.decors) {
-      if (!d.image?.complete) continue;
-  
-      // avanza frame
-      d.tick++;
-      if (d.tick >= d.frameDelay) {
-        d.tick = 0;
-        d.frame = (d.frame + 1) % d.frames;
-      }
-  
-      const srcW = d.image.width / d.frames; // 4 frame affiancati orizzontali
-      const srcH = d.image.height;           // atteso 16
-      const sx   = Math.floor(d.frame) * srcW;
-  
-      // posiziona al centro della cella (in px canvas)
-      const dx = Cave.offsetX + d.x * Cave.cellX - destSize / 2;
-      const dy = Cave.offsetY + d.y * Cave.cellY - destSize / 2;
-  
-      ctx.drawImage(d.image, sx, 0, srcW, srcH, dx, dy, destSize, destSize);
-    }
-  }
-  
-  function handleRealtimeMessage(msg){
-    if (!msg || typeof msg !== "object") return;
-    if (msg.type === "chest_spawned") {
-      const { minX, maxX, minY, maxY } = getBounds();
-      upsertChest({
-        id: String(msg.chest_id),
-        x: clamp(msg.x, minX, maxX),
-        y: clamp(msg.y, minY, maxY),
-        from: msg.perk_type || "unknown",
-        wax_account: msg.wax_account || "",
-        taken: false, claimable: true, pending: false
-      });
-      toast(`Chest #${msg.chest_id} spawned by ${msg.wax_account}`, "ok");
-    }
-	if (msg.type === "chest_claimed") {
-	  deleteChestById(String(msg.chest_id));   // rimuove e sporca l’area coerentemente
-	  toast(`Chest #${msg.chest_id} claimed by ${msg.claimed_by}`, "warn");
-	}
-  }
-  
-  let _pollTimer = null, _lastEventId = 0;
-  
-  function startRealtimePolling(){
-    if (_pollTimer) return;
-    const FRONT_BUILD = window.__FRONT_BUILD__ || "dev";
-    const poll = async () => {
-      try {
-        const r = await fetch(`${BASE_URL}/events/poll?since=${_lastEventId}`, { method:"GET" });
-        const j = await r.json();
-        if (Array.isArray(j.events)) {
-          for (const e of j.events) handleRealtimeMessage(e);
-        }
-        _lastEventId = j.next_id || _lastEventId;
-      } catch(_) {}
-      _pollTimer = setTimeout(poll, 4000);
-    };
-    _pollTimer = setTimeout(poll, 0);
-  }
-  
-  function stopRealtimePolling(){
-    if (_pollTimer) { clearTimeout(_pollTimer); _pollTimer = null; }
-  }
-  
-  function initRealtimeSSE(){
-    if (Cave._es) return;
-    try {
-      const FRONT_BUILD = window.__FRONT_BUILD__ || "dev";
-      const es = new EventSource(`${BASE_URL}/events?cv=${encodeURIComponent(FRONT_BUILD)}`);
-      es.onopen = () => log("SSE connected");
-      es.onmessage = (ev) => {
-        let msg; try { msg = JSON.parse(ev.data); } catch { return; }
-        handleRealtimeMessage(msg);
-      };
-      es.onerror = (ev) => { log("SSE error/reconnect", ev); };
-      Cave._es = es;
-      window.addEventListener("beforeunload", () => es.close(), { once: true });
-    } catch (e) { log("SSE init failed", e); }
-  }
-  
-  function closeRealtimeSSE(){
-    if (Cave._es) { try { Cave._es.close(); } catch {} Cave._es = null; }
-  }
-  
-  function bootRealtime(){
-    const isOverlay = !!(window.CAVE_OVERLAY || document.body?.getAttribute('data-overlay') === '1');
-    if (isOverlay || document.hidden) {
-      closeRealtimeSSE();
-      startRealtimePolling();
-    } else {
-      stopRealtimePolling();
-      initRealtimeSSE();
-    }
-  }
-
-  // ========= CANVAS =========
-function setupCanvas(c) {
-  ensureLayersFromSingleCanvas(c);
-  resizeCanvas();
-  observeCanvasVisibility();
-  observeContainerResize();
-  window.addEventListener("resize", resizeCanvas, { passive: true });
-}
-
-function resizeCanvas() {
-  const c = Cave.canvas; if (!c || !c.parentElement) return;
-  const cssW = c.parentElement.clientWidth;
-  const cssH = Math.floor(cssW * 9 / 16);
-  const dpr = Cave.dpr;
-  resizeAllLayers(cssW, cssH, dpr);
-
-  Cave.gridW = cssW; Cave.gridH = cssH;
-  Cave.offsetX = 0; Cave.offsetY = 0;
-  Cave.cellX = Cave.gridW / GRID_COLS;
-  Cave.cellY = Cave.gridH / GRID_ROWS;
-  Cave.cell  = Math.min(Cave.cellX, Cave.cellY);
-
-  buildBGCache();
-  drawBGOnce();
-}
-
-  function teardownCanvas() {
-    window.removeEventListener("resize", resizeCanvas);
-    Cave.canvas = null;
-    Cave.ctx = null;
-    Cave.observers.io?.disconnect?.();
-    Cave.observers.ro?.disconnect?.();
-    Cave.observers.io = null;
-    Cave.observers.ro = null;
-  }
-  function observeCanvasVisibility(){
-    if (!('IntersectionObserver' in window) || !Cave.canvas) return;
-    Cave.observers.io?.disconnect?.();
-    const io = new IntersectionObserver((entries)=>{
-      entries.forEach(e=>{
-       if (e.isIntersecting){
-         startRAF(); startCommandPolling(); bootRealtime();
-       } else {
-         stopRAF(); stopCommandPolling();
-         // chiudi canale realtime se esce dal viewport
-         stopRealtimePolling?.();   // se hai implementato il polling
-         closeRealtimeSSE?.();      // se l’SSE è attivo
-       }
-      });
-    }, { root: null, threshold: 0.01 });
-    io.observe(Cave.canvas);
-    Cave.observers.io = io;
-  }
-  
-  function observeContainerResize(){
-    const host = Cave.canvas?.parentElement;
-    if (!('ResizeObserver' in window) || !host) return;
-    Cave.observers.ro?.disconnect?.();
-    const ro = new ResizeObserver(()=> resizeCanvas());
-    ro.observe(host);
-    Cave.observers.ro = ro;
-  }
-
-  function observeContainerRemoval(){
-    const mo = new MutationObserver(()=>{
-      if(!document.getElementById("goblin-content")){
-        stopRAF();
-        stopCommandPolling();
-        if (Cave.intervals.global){ clearInterval(Cave.intervals.global); Cave.intervals.global = null; }
-        if (Cave.intervals.globalCountdown){ clearInterval(Cave.intervals.globalCountdown); Cave.intervals.globalCountdown = null; }
-        if (Cave._es) { try { Cave._es.close(); } catch {} Cave._es = null; }
-        userNFTsLoaded = false;
-        userNFTsRetryScheduled = false;
-        teardownCanvas();
-        mo.disconnect();
-      }
-    });
-    mo.observe(document.body, {childList:true, subtree:true});
-  }
-
-  function startRAF() {
-    if (Cave.running || !Cave.canvas) return;
-    Cave.running = true;
-    lastTS = performance.now();
-    Cave.rafId = requestAnimationFrame(tick);
-  }
-  function stopRAF() {
-    Cave.running = false;
-    if (Cave.rafId) cancelAnimationFrame(Cave.rafId);
-    Cave.rafId = null;
-  }
-
-  // ========= LOGO CANVAS (title "Goblin DeX") =========
-Cave.logo = {
-  canvas: null, ctx: null, dpr: Math.max(1, window.devicePixelRatio||1),
-  rafId: null, running: false, w: 0, h: 0, baseY: 0,
-  title: 'GOblin DeX',
-  eyes: { next: performance.now() + 1000 + Math.random()*2000, t:0, closing:false },
-  eyes2:{ next: performance.now() +  800 + Math.random()*2200, t:0, closing:false },
-  goblins: []
-};
-
-function setupLogoCanvas(c){
-  Cave.logo.canvas = c;
-  Cave.logo.ctx = c.getContext('2d');
-  resizeLogoCanvas();
-  window.addEventListener('resize', resizeLogoCanvas, { passive:true });
-  startLogoRAF();
-}
-function resizeLogoCanvas(){
-  const c = Cave.logo.canvas; if(!c || !c.parentElement) return;
-  const cssW = c.parentElement.clientWidth, cssH = 120;
-  const dpr = Cave.logo.dpr = Math.max(1, window.devicePixelRatio||1);
-  c.style.width = cssW+'px'; c.style.height = cssH+'px';
-  c.width = Math.floor(cssW*dpr); c.height = Math.floor(cssH*dpr);
-  const ctx = Cave.logo.ctx; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.imageSmoothingEnabled = false;
-  Cave.logo.w = cssW; Cave.logo.h = cssH; Cave.logo.baseY = Math.round(cssH * 0.68);
-}
-function startLogoRAF(){ if (Cave.logo.running) return; Cave.logo.running = true; logoLast = performance.now(); requestAnimationFrame(logoTick); }
-function stopLogoRAF(){ Cave.logo.running = false; if (Cave.logo.rafId) cancelAnimationFrame(Cave.logo.rafId); Cave.logo.rafId = null; }
-
-let logoLast = performance.now();
-function logoTick(ts){
-  if (!Cave.logo.running) return;
-  const dt = ts - logoLast; logoLast = ts;
-  drawLogo(dt);
-  Cave.logo.rafId = requestAnimationFrame(logoTick);
-}
-
-function drawLogo(dt){
-  const { ctx } = Cave.logo; if(!ctx) return;
-  const w=Cave.logo.w, h=Cave.logo.h; ctx.clearRect(0,0,w,h);
-
-  // sottile fascia luminosa di sfondo
-  const gbg = ctx.createLinearGradient(0,0,0,h);
-  gbg.addColorStop(0,'rgba(255,255,255,.02)'); gbg.addColorStop(1,'rgba(0,0,0,.0)');
-  ctx.fillStyle = gbg; ctx.fillRect(0,0,w,h);
-
-  // Titolo stilizzato
-  const title = Cave.logo.title;
-  ctx.save();
-  ctx.font = '900 64px Orbitron, system-ui, sans-serif';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  const centerX = w/2, baseY = Cave.logo.baseY;
-
-  const grad = ctx.createLinearGradient(0, baseY-50, 0, baseY+18);
-  grad.addColorStop(0, '#fff2a8'); grad.addColorStop(.35,'#ffd34d'); grad.addColorStop(.7,'#c58a0a'); grad.addColorStop(1,'#6b4700');
-  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.65)';
-  ctx.fillStyle  = grad;
-  ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 6;
-  ctx.fillText(title, centerX, baseY);
-  ctx.shadowColor = 'transparent';
-  ctx.strokeText(title, centerX, baseY);
-
-  // Occhi nell' "O" (se non presente, usa la "o")
-  const idxO = title.indexOf('O') >= 0 ? title.indexOf('O') : title.indexOf('o');
-  const pre  = title.slice(0, Math.max(0, idxO));
-  const wFull = ctx.measureText(title).width;
-  const wPre  = ctx.measureText(pre).width;
-  const wCh   = ctx.measureText(title[idxO] || 'o').width;
-  const oCx   = centerX - wFull/2 + wPre + wCh/2;
-  const oCy   = baseY - 34;
-  const oR    = Math.max(14, wCh*0.42);
-  drawBlinkingEyes(ctx, oCx, oCy, oR, dt);
-
-  ctx.restore();
-
-  // Goblin che attraversano il logo
-  drawLogoGoblins(dt);
-}
-
-function drawBlinkingEyes(ctx, cx, cy, r, dt){
-  // aggiorna stato blink per i due occhi (intervallo 1–3s, indipendenti)
-  [Cave.logo.eyes, Cave.logo.eyes2].forEach(st=>{
-    st.next ??= performance.now()+1000+Math.random()*2000;
-    if (performance.now() >= st.next && !st.closing) st.closing = true;
-    const spd = 0.008; // velocità chiusura/apertura
-    if (st.closing){ st.t += dt*spd; if (st.t>=1){ st.t=1; st.closing=false; st.next = performance.now()+1000+Math.random()*2000; } }
-    else if (st.t>0){ st.t -= dt*spd; if (st.t<0) st.t=0; }
-  });
-
-  const t = Cave.logo.eyes.t || 0; // uso lo stesso per la resa (ammiccamenti sfalsati restano, ma resa coerente)
-  const eyeOffset = r*0.32, eyeR = r*0.22;
-
-  function paintOne(x){
-    ctx.save();
-    // bulbo
-    ctx.fillStyle = '#111';
-    ctx.beginPath(); ctx.arc(x, cy, eyeR, 0, Math.PI*2); ctx.fill();
-    // pupilla (si “stringe” quando t → 1)
-    const pupilR = eyeR*0.55*(1 - 0.85*t);
-    ctx.fillStyle = '#00ffd5';
-    ctx.beginPath(); ctx.arc(x, cy, Math.max(0,pupilR), 0, Math.PI*2); ctx.fill();
-    // palpebre
-    const lidH = eyeR*2*t; ctx.fillStyle = '#553a00';
-    ctx.fillRect(x - eyeR - 1, cy - eyeR, eyeR*2 + 2, lidH);
-    ctx.restore();
-  }
-  paintOne(cx - eyeOffset);
-  paintOne(cx + eyeOffset);
-}
-
-function drawLogoGoblins(dt){
-  const list = Cave.logo.goblins; if (!list.length) return;
-  const ctx = Cave.logo.ctx, img = Cave.assets.goblin;
-  for (const g of list){
-    if (!g.diving){
-      g.t += dt * g.speed;
-      const p = followPath(g.path, g.t);
-      g.x = p.x; g.y = p.y;
-      if (p.done){ g.diving = true; g.vx = 0; g.vy = 0.15; g.xd = g.x; g.yd = g.y; }
-    } else {
-      g.vy += dt * 0.0006;        // gravità
-      g.xd += dt * 0.02;          // lieve drift in avanti
-      g.yd += g.vy * dt;
-      g.x = g.xd; g.y = g.yd;
-      if (g.y > Cave.logo.h + 12){ // è uscito dal logo → entra nel canvas di gioco
-        spawnGoblinIntoCaveFromLogo(g.wax, g.x / Cave.logo.w);
-        g.done = true;
-      }
-    }
-    if (img?.complete){
-      const s = 64 * 0.45, off = s * .5;
-      ctx.drawImage(img, g.x - off, g.y - off, s, s);
-    } else {
-      ctx.fillStyle = '#ffe600'; ctx.beginPath(); ctx.arc(g.x, g.y, 8, 0, Math.PI*2); ctx.fill();
-    }
-  }
-  for (let i=list.length-1;i>=0;i--) if (list[i].done) list.splice(i,1);
-}
-
-function followPath(pts, t){
-  if (!pts || pts.length<2) return {x:0,y:0,done:true};
-  const seg = Math.min(pts.length-1, Math.floor(t));
-  const f   = t - seg;
-  const a = pts[seg], b = pts[Math.min(seg+1, pts.length-1)];
-  return { x: a.x + (b.x-a.x)*f, y: a.y + (b.y-a.y)*f, done: seg >= pts.length-2 && f>=1 };
-}
-
-function computeLogoPath(){
-  const ctx = Cave.logo.ctx, w=Cave.logo.w, baseY=Cave.logo.baseY;
-  ctx.save(); ctx.font='900 64px Orbitron, system-ui, sans-serif'; ctx.textBaseline='alphabetic'; ctx.textAlign='left';
-  const text = Cave.logo.title;
-  const fullW = ctx.measureText(text).width;
-  const left  = (w - fullW)/2;
-
-  const way = [];
-  let y = baseY - 6;          // linea di cammino bassa
-  way.push({ x: -80, y });    // entra da sinistra
-
-  // “scalata” stilizzata: bordo sinistro su / giù per ogni lettera
-  let cursor = left;
-  for (const ch of text){
-    const cw = ctx.measureText(ch).width;
-    const topY = baseY - 56;
-    way.push({ x: cursor + cw*0.15, y });       // avvicinati al bordo lettera
-    way.push({ x: cursor + cw*0.15, y: topY }); // arrampica
-    way.push({ x: cursor + cw*0.85, y: topY }); // cammina sul tetto
-    way.push({ x: cursor + cw*0.95, y: topY+6 });// scendi un filo tra lettere
-    cursor += cw;
-  }
-  way.push({ x: left + fullW + 20, y: baseY - 10 }); // zona tuffo
-  ctx.restore();
-  return way;
-}
-
-function triggerLogoGoblin(wax){
-  const path = computeLogoPath();
-  Cave.logo.goblins.push({ t:0, speed: 0.002 + Math.random()*0.001, path, wax, diving:false });
-}
-
-function showLogoToast(msg){
-  const host = document.getElementById('cv-logo-toast'); if (!host) return;
-  host.textContent = msg;
-  host.classList.remove('show'); void host.offsetWidth; // reset anim
-  host.classList.add('show');
-  setTimeout(()=> host.classList.remove('show'), 3200);
-}
-
-function spawnGoblinIntoCaveFromLogo(wax, xNorm){ // xNorm: 0..1 relativo al logo
-  const { minX, maxX, minY, maxY } = getBounds();
-  const gx = clamp(Math.round(minX + xNorm * (maxX - minX)), minX, maxX);
-  const gy = minY + 1;
-  const color = colorByIndex(Math.abs(hashCode(wax||'')));
-  Cave.goblins.push({
-    x: gx, y: gy, wax_account: wax || 'guest',
-    path: [], trail: [], _lastTrailX: gx, _lastTrailY: gy,
-    digging:false, shovelFrame:0, frameTimer:0, color,
-    // seed minimi per il movimento
-    speed: 0.9, turnRate: 2.0, heading: Math.random()*Math.PI*2,
-    // 👇 evita il crash: crea subito un target valido
-    target: { x: randInt(minX, maxX), y: randInt(minY, maxY) },
-    pauseTil: 0, speedBoostUntil: 0, walkPhase: Math.random()*Math.PI*2, walkBob: 0
-  });
-}
-
-  function hashCode(str=''){ let h=0; for(let i=0;i<str.length;i++){ h=((h<<5)-h)+str.charCodeAt(i); h|=0; } return h; }
-  function hueFromString(str=''){ const h = Math.abs(hashCode(str)); return h % 360; }
-
-  // ========= DRAWING =========
-function drawBGOnce() {
-  const { ctxBg } = Cave.layers;
-  const { bg, complete } = Cave.assets.bg || {};
-  if (Cave.bgCache) {
-    ctxBg.clearRect(0,0,Cave.gridW,Cave.gridH);
-    ctxBg.drawImage(Cave.bgCache, 0, 0); // Offscreen cache già scalata
-  } else if (bg && complete) {
-    ctxBg.clearRect(0,0,Cave.gridW,Cave.gridH);
-    ctxBg.drawImage(bg, 0, 0, bg.width, bg.height, 0, 0, Cave.gridW, Cave.gridH);
-  } else {
-    ctxBg.fillStyle = '#0b0b0b';
-    ctxBg.fillRect(0,0,Cave.gridW,Cave.gridH);
-  }
-}
-  
-	function drawGoblinTrail(g) {
-	  const t = g.trail;
-	  if (!t || t.length < 2) return;
-
-	  const tctx = Cave.layers.ctxTrails;
-	  tctx.save();
-	  tctx.lineCap = "round";
-	  const w = Math.max(1, Math.min(Cave.cellX, Cave.cellY) * 0.20);
-	  tctx.lineWidth = w;
-	  for (let i = 0; i < t.length - 1; i++) {
-		const a = t[i], b = t[i + 1];
-		const alpha = (1 - i / t.length) * 0.80;
-		tctx.strokeStyle = hexToRgba(g.color || "#ffe600", alpha);
-		tctx.beginPath();
-		tctx.moveTo(Cave.offsetX + a.x * Cave.cellX, Cave.offsetY + a.y * Cave.cellY);
-		tctx.lineTo(Cave.offsetX + b.x * Cave.cellX, Cave.offsetY + b.y * Cave.cellY);
-		tctx.stroke();
-	  }
-	  tctx.restore();
-	}
-
-  
-  function drawGoblin(g) {
-    const { ctx, assets } = Cave;
-    const cell = Math.min(Cave.cellX, Cave.cellY);
-    const px = Cave.offsetX + g.x * Cave.cellX;
-    const bobPx = (g.walkBob || 0) * Math.min(Cave.cellX, Cave.cellY);
-    const py = Cave.offsetY + g.y * Cave.cellY + bobPx;
-  
-    // scia prima
-    drawGoblinTrail(g);
-  
-    const gScale = 5, sScale = 3;
-    const gSize = cell * gScale;
-    const gOff  = (gSize - cell) / 2;
-  
-    if (assets.goblin?.complete) {
-      ctx.drawImage(assets.goblin, px - gOff, py - gOff, gSize, gSize);
-    }
-    // label
-    ctx.font = `${Math.max(10, cell * 0.9)}px Orbitron, system-ui, sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    
-    const labelW = cell * 2.2;
-    const labelH = cell * 0.8;
-    const footY  = py + (gSize / 2);
-    const margin = cell * 0.25;
-    let boxX = px - (labelW / 2);
-    let boxY = footY + margin;
-    
-    // clamp per non uscire dal canvas
-    boxX = Math.max(0, Math.min(boxX, Cave.gridW - labelW));
-    boxY = Math.max(0, Math.min(boxY, Cave.gridH - labelH));
-    ctx.fillStyle = "rgba(0,0,0,0.65)";
-    ctx.fillRect(boxX, boxY, labelW, labelH);    
-    ctx.fillStyle = g.color || "#ffe600";
-    ctx.fillText(g.wax_account, boxX + labelW / 2, boxY + labelH / 2);
-    // shovel: 8x8 px, sopra la testa (no overlap)
-    if (g.digging && assets.shovel?.complete) {
-      const frames = 6;
-      const fw = assets.shovel.width / frames;
-      const fh = assets.shovel.height;
-      const sx = g.shovelFrame * fw;
-    
-      const sSize  = 24;   // 8x8 pixel sul canvas
-      const margin = 2;   // distanzina dalla testa
-    
-      // top del goblin in px canvas
-      const goblinTop = py - (gSize / 2);
-    
-      // centra la pala orizzontalmente sul goblin e mettila sopra la testa
-      const dx = px - (sSize / 2);
-      const dy = goblinTop - margin - sSize;
-    
-      ctx.drawImage(assets.shovel, sx, 0, fw, fh, dx, dy, sSize, sSize);
-    }
-  }
-
-// Avanza lo stato dei perks e marca i dirty-rect.
-// NON disegna: il rendering avviene in paintDirtyNow().
-function drawPerksAndAdvance() {
-  if (!Cave.perks || Cave.perks.length === 0) return;
-
-  const { minX, maxX, minY, maxY } = getBounds(); // bounds della safe-area
-
-  for (const p of Cave.perks) {
-    if (!p?.image?.complete) continue;
-
-    // BBox prima dell'update (per dirty-rect)
-    const prev = perkBBox(p);
-
-    // ---- Avanzamento animazione sprite ----
-    p.tick = (p.tick || 0) + 1;
-    const frameDelay = p.frameDelay ?? 8;
-    const totalFrames = p.frames ?? 1;
-    if (p.tick >= frameDelay) {
-      p.tick = 0;
-      p.frame = ((p.frame || 0) + 1) % totalFrames;
-    }
-
-    // ---- Avanzamento posizione ----
-    const speed = p.speed ?? 0.3; // unità "celle" per frame
-    p.x += (p.dir === "left-to-right" ? +speed : -speed);
-
-    // y "ondulata" lungo la traiettoria
-    const wy = p.waveY(p.x);
-
-    // ---- Drop chest una sola volta dentro la safe-area ----
-    if (!p.hasDropped && p.x > minX && p.x < maxX && wy > minY && wy < maxY && Math.random() < 0.25) {
-      p.hasDropped = true;
-
-      const dx = randInt(minX, maxX);
-      const dy = randInt(minY, maxY);
-
-      const chest = {
-        id: null,
-        x: dx, y: dy, destX: dx, destY: dy,
-        from: p.perkName,
-        wax_account: p.wax_account,
-        taken: false,
-        claimable: false,
-        pending: true
-      };
-
-      // prova lo spawn sul backend; se ok, inserisce la chest e sporca l'area
-      try {
-        syncUserInto(Cave.user);
-        assertAuthOrThrow(Cave.user);
-      } catch {
-        // non autenticato: semplicemente salta lo spawn remoto
-        console.warn("[spawn_chest] skipped: not authenticated");
-      }
-
-      API.post("/spawn_chest", {
-        wax_account: p.wax_account,
-        perk_type: p.perkName,
-        x: dx, y: dy
-      }, 12000).then(r => {
-        if (r.ok && r?.data?.chest_id != null) {
-          chest.id = String(r.data.chest_id);
-          chest.pending = false;
-          chest.claimable = true;
-          upsertChest(chest);            // upsert marca anche la zona dirty
-        } else {
-          chest.pending = false;
-          chest.claimable = false;
-          console.warn("[spawn_chest] risposta non valida:", r);
-        }
-      }).catch(e => {
-        chest.pending = false;
-        chest.claimable = false;
-        console.warn("[spawn_chest] errore:", e);
-      });
-    }
-
-    // ---- Uscita dai limiti → marca come finito ----
-    if (p.x < minX - 1 || p.x > maxX + 1 || wy < minY - 1 || wy > maxY + 1) {
-      p.done = true;
-    }
-
-    // BBox dopo l'update (per dirty-rect)
-    const next = perkBBox(p);
-    Dirty.addBBox(prev);
-    Dirty.addBBox(next);
-  }
-
-  // Rimuovi i perk terminati
-  Cave.perks = Cave.perks.filter(p => !p.done);
-}
-
-
-  // ========= GAME LOGIC =========
-  function colorByIndex(i) {
-    const palette = ['#ffd700','#00ffff','#ff69b4','#7fff00','#ffa500','#00ff7f','#ff4500'];
-    return palette[i % palette.length];
-  }
-  function genPath(x1,y1,x2,y2) {
-    const path = []; let cx=x1, cy=y1;
-    while (cx!==x2 || cy!==y2) {
-      if (cx!==x2) cx += x2 > cx ? 1 : -1;
-      else if (cy!==y2) cy += y2 > cy ? 1 : -1;
-      path.push([cx,cy]);
-    }
-    return path;
-  }
-  function tryClaimNearby(g){
-    Cave.chests.forEach((ch, key) => {
-      const inside2x2 = (g.x >= ch.x && g.x <= ch.x + 1) && (g.y >= ch.y && g.y <= ch.y + 1);
-  
-      if (g.digging && inside2x2 && ch.claimable && !ch.taken && !ch.claiming) {
-        if (ch.id != null) {
-          const cid = String(ch.id);
-          if (inFlightClaims.has(cid)) return;
-          inFlightClaims.add(cid);
-        }
-  
-        ch.claiming = true;           // mostra spinner logico, ma non nascondere la chest
-        // NON impostare taken/taken_by finché non ho conferma
-  
-        (async () => {
-          try {
-            syncUserInto(Cave.user);
-            assertAuthOrThrow(Cave.user);
-  
-            if (!ch.id || isNaN(Number(ch.id))) { console.warn("[claim_chest] invalid id"); return; }
-            if (!g.wax_account) { console.warn("[claim_chest] missing wax_account"); return; }
-  
-            const payload = { wax_account: g.wax_account, chest_id: Number(ch.id) };
-            const rs = await API.post("/claim_chest", payload, 15000);
-  
-            if (rs.status === 409) {
-              Cave.chests.delete(key);
-              const by = rs.data?.claimed_by ? ` by ${safe(rs.data.claimed_by)}` : "";
-              toast(`Chest #${safe(ch.id)} already claimed${by}.`, "warn");
-              return;
-            }
-            if (!rs.ok) return;  // fallimento silenzioso
-  
-            const reward  = rs.data;
-            const chestId = reward?.chest_id ?? ch.id;
-            const chips   = reward?.stats?.tokens?.CHIPS ?? 0;
-            const nfts    = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
-            ch.taken = true;         
-            ch.taken_by = g.wax_account;
-            
-            if (chips === 0 && nfts === 0) {
-              toast(`${g.wax_account} opened Chest #${safe(chestId)} from ${ch.from}… it was empty.`, "warn");
-            } else {
-              toast(`${g.wax_account} won ${chips} CHIPS and ${nfts} NFTs from Chest #${safe(chestId)} (${ch.from})!`, "ok");
-            }
-  
-            if (Array.isArray(reward?.winners)) renderBonusListFromBackend(reward.winners);
-			else appendBonusReward({ ...reward, chest_id: chestId }, g.wax_account, ch.from);
-
-            Cave.chests.delete(key);
-          } catch (e) {
-            ch.claiming = false;
-          } finally {
-            if (ch.id != null) inFlightClaims.delete(String(ch.id));
-          }
-        })();
-      }
-    });
-  }
-  
-  function moveGoblin(g, dt) {
-	const prevBox = goblinBBox(g);
-	const prevPos = { x:g.x, y:g.y };	  
-    const dtSec = Math.min(0.05, Math.max(0.001, dt/1000)); // 1–50 ms
-    if (g.digging) { tryClaimNearby(g); return; }
-  
-    const { minX, maxX, minY, maxY } = getBounds();
-    if (!g.target) g.target = { x: randInt(minX, maxX), y: randInt(minY, maxY) };
-    // seed on first run (retrocompat)
-    if (g.speed == null) {
-      g.speed    = 7.6 + Math.random()*0.6;     // celle/sec
-      g.turnRate = 9.9 + Math.random()*0.9;     // rad/sec
-      g.heading  = Math.random() * Math.PI * 2; // rad
-      g.target   = { x: randInt(minX, maxX), y: randInt(minY, maxY) };
-      g.walkPhase = Math.random() * Math.PI * 2;
-      g.walkBob   = 0;
-      g.pauseTil  = 0;
-      g.speedBoostUntil = 0;
-    }
-  
-    // micro-pause casuale
-    if (performance.now() < g.pauseTil) { g.walkBob *= 0.9; return; }
-  
-    // nuovo waypoint ogni tanto o quando arrivato
-    const distToTarget = Math.hypot(g.target.x - g.x, g.target.y - g.y);
-    if (distToTarget < 1.0 || Math.random() < 0.002) {
-      g.target.x = randInt(minX, maxX);
-      g.target.y = randInt(minY, maxY);
-      if (Math.random() < 0.02) g.pauseTil = performance.now() + (100 + Math.random()*200);
-    }
-    // cerca chest più vicina per bias della direzione
-    let seek = null, seekD2 = 999;
-    Cave.chests.forEach(ch => {
-      if (ch.taken || !ch.claimable) return;
-      const dx = g.x - ch.x, dy = g.y - ch.y;
-      const d2 = dx*dx + dy*dy;
-      if (d2 < seekD2) { seekD2 = d2; seek = ch; }
-    });
-
-    // vira verso il target, con un po' di wander noise
-    let desired_path = Math.atan2(g.target.y - g.y, g.target.x - g.x);
-    const CHEST_SEEK_R = 3.0; // celle
-    if (seek && seekD2 < CHEST_SEEK_R*CHEST_SEEK_R) {
-      const toChest = Math.atan2(seek.y - g.y, seek.x - g.x);
-      desired_path = desired_path*0.65 + toChest*0.35;          // piega la rotta verso la chest
-      if (seekD2 < 1.8*1.8) g.speedBoostUntil = performance.now() + 1200; // sprint 1.2s
-    }
-    let delta = ((desired_path - g.heading + Math.PI*3) % (Math.PI*2)) - Math.PI;
-    const maxTurn = g.turnRate * dtSec;
-    if (delta >  maxTurn) delta =  maxTurn;
-    if (delta < -maxTurn) delta = -maxTurn;
-    g.heading += delta;
-    g.heading += (Math.random() - 0.5) * 0.2 * dtSec; // wander
-  
-    // separazione (anti-ammasso)
-    let sepX = 0, sepY = 0, seen = 0;
-    const SEP_RADIUS = 1.6; // celle
-    for (const o of Cave.goblins) {
-      if (o === g) continue;
-      const dx = g.x - o.x, dy = g.y - o.y;
-      const d2 = dx*dx + dy*dy;
-      if (d2 > SEP_RADIUS*SEP_RADIUS || d2 === 0) continue;
-      const d = Math.sqrt(d2);
-      const push = (SEP_RADIUS - d) / SEP_RADIUS;
-      sepX += dx / (d || 0.0001) * push;
-      sepY += dy / (d || 0.0001) * push;
-      seen++;
-    }
-    if (seen) {
-      const ang = Math.atan2(sepY, sepX);
-      g.heading = g.heading * 0.8 + ang * 0.2;  // blend lontano dal gruppo
-    }
-  
-    // steering per restare in safe-area
-    if (g.x < minX+0.5 || g.x > maxX-0.5 || g.y < minY+0.5 || g.y > maxY-0.5) {
-      const back = Math.atan2(
-        clamp(g.y, minY+1, maxY-1) - g.y,
-        clamp(g.x, minX+1, maxX-1) - g.x
-      );
-      g.heading = g.heading * 0.6 + back * 0.4;
-    }
-  
-    // avanza
-    const boost = (g.speedBoostUntil && performance.now() < g.speedBoostUntil) ? 1.35 : 1.0;
-    const vx = Math.cos(g.heading) * g.speed * boost;
-    const vy = Math.sin(g.heading) * g.speed * boost;
-    g.x = clamp(g.x + vx * dtSec, minX, maxX);
-    g.y = clamp(g.y + vy * dtSec, minY, maxY);
-  
-
-  // aggiorna trail incrementale
-  if (!g.trail) g.trail = [];
-  const last = g.trail[g.trail.length-1] || { x: prevPos.x, y: prevPos.y };
-  const dist = Math.hypot(g.x-last.x, g.y-last.y);
-  if (dist >= (TRAIL_MIN_DIST || 0.6)) {          // usi già TRAIL_MIN_DIST :contentReference[oaicite:8]{index=8}
-    drawTrailSegment(g, last, { x:g.x, y:g.y });
-    g.trail.push({ x:g.x, y:g.y });
-    if (g.trail.length > (TRAIL_LEN || 16)) {
-      const tailA = g.trail.shift();
-      const tailB = g.trail[0] || tailA;
-      clearTrailSegment(tailA, tailB);
-    }
-  }
-
-  // sporca vecchio e nuovo bbox per il layer DYN
-  const nextBox = goblinBBox(g);
-  Dirty.addBBox(prevBox); Dirty.addBBox(nextBox);
-
-  // digging → potenziale claim su chest (già lo fai)
-  if (g.digging) tryClaimNearby(g);
-    // bobbing di camminata (effetto “passi”)
-    const stepHz = clamp(g.speed * 0.8, 0.4, 1.6); // 0.4–1.6 passi/sec
-    g.walkPhase += stepHz * dtSec * Math.PI * 2;
-    g.walkBob = Math.sin(g.walkPhase) * 0.12; // in "celle"
-  
-    // se una chest è molto vicina → scava
-    let nearest = null, bestD2 = 99;
-    Cave.chests.forEach(ch => {
-      if (ch.taken || !ch.claimable) return;
-      const dx = g.x - ch.x, dy = g.y - ch.y;
-      const d2 = dx*dx + dy*dy;
-      if (d2 < bestD2) { bestD2 = d2; nearest = ch; }
-    });
-    if (nearest && bestD2 < 1.2*1.2 && !g.digging) {
-      g.digging = true;
-      g.shovelFrame = 0; g.frameTimer = 0;
-      g.trail = g.trail.slice(0, Math.ceil(TRAIL_LEN/2));
-      tryClaimNearby(g);
-      setTimeout(() => g.digging = false, 1800 + Math.random()*800);
-    }
-  }
-
-function updateGoblinAnim(delta) {
-  Cave.goblins.forEach(g => {
-    if (!g.digging) return;
-    const before = goblinBBox(g);   // bbox include area pala
-    g.frameTimer += delta;
-    if (g.frameTimer >= 100) {
-      g.shovelFrame = (g.shovelFrame + 1) % 6;
-      g.frameTimer = 0;
-      const after = goblinBBox(g);
-      Dirty.addBBox(before); Dirty.addBBox(after);
-    }
-  });
-}
-
-
-  // ========= CHESTS HELPERS =========
-  function synthChestKey(ch) {
-    return `${ch.wax_account}|${ch.from}|${ch.x}|${ch.y}`;
-  }
-function upsertChest(ch) {
-  const key = ch.id ? String(ch.id) : synthChestKey(ch);
-  const ex = Cave.chests.get(key);
-  Cave.chests.set(key, ex ? { ...ex, ...ch } : ch);
-  const box = chestBBox(ch); Dirty.addBBox(box);   // <-- sporca zona
-}
-
-function deleteChestById(idOrKey){
-  const key = String(idOrKey);
-  const ex = Cave.chests.get(key);
-  if (ex){ Dirty.addBBox(chestBBox(ex)); Cave.chests.delete(key); }
-}
-
-  function clearChests() { Cave.chests.clear(); }
-
-  // ========= PERKS =========
-  function triggerPerk(perkName, wax_account) {
-    if (!Cave.assets.loaded || !Cave.canvas) return;
-
-    const sprite = {
-      dragon: { img: Cave.assets.perks.dragon, frames:6 },
-      dwarf: { img: Cave.assets.perks.dwarf, frames:6 },
-      skeleton: { img: Cave.assets.perks.skeleton, frames:6 },
-      black_cat: { img: Cave.assets.perks.black_cat, frames:6 },
-    }[perkName] || { img: Cave.assets.perks.dragon, frames:6 };
-
-    if (!sprite.img?.complete) return;
-
-    const dir = Math.random() < 0.5 ? "left-to-right" : "right-to-left";
-    const { minX, maxX, minY, maxY } = getBounds();
-    const amp  = 3 + Math.random()*4;
-    const freq = 0.15 + Math.random()*0.15;
-    
-    // parti dal bordo interno della safe-area
-    const startX = dir === "left-to-right" ? minX : maxX;
-    
-    // baseY scelto in modo che baseY ± amp resti dentro i limiti
-    const baseY  = randInt(minY + Math.ceil(amp), maxY - Math.ceil(amp));
-
-    // 50% slower than original (0.3–0.6)
-    const speed = (0.3 + Math.random()*0.3) * 0.5;
-
-    Cave.perks.push({
-      image: sprite.img,
-      frames: sprite.frames,
-      frame: 0, tick: 0, frameDelay: 8,
-      x: startX, y: baseY,
-      dir, speed,
-      waveY: (xPos) => clamp(baseY + Math.sin(xPos * freq) * amp, minY, maxY),
-      perkName, wax_account,
-      hasDropped: false, done: false
-    });
-  }
-
-  // ========= LISTS / UI PANELS =========
-  function appendBonusReward(reward, wax_account, source) {
-    const c = Cave.el.bonusList; if (!c) return;
-  
-    let grid = qs("#cv-bonus-grid", c);
-    if (!grid) {
-      c.insertAdjacentHTML("beforeend",
-        `<div id="cv-bonus-grid"
-              style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-                     gap:.75rem; align-items:stretch;"></div>`);
-
-      grid = qs("#cv-bonus-grid", c);
-    }
-  
-    const chips = reward?.stats?.tokens?.CHIPS ?? 0;
-    const nfts  = Array.isArray(reward?.nfts) ? reward.nfts.length : 0;
-    const chestId = reward?.chest_id; // 👈 dal backend
-  
-    // dedup forte per chest_id; fallback soft con firma
-    const dedupKey = chestId ? `ch:${chestId}` :
-      `${wax_account}|${source}|${chips}|${nfts}|${new Date().getHours()}${new Date().getMinutes()}`;
-  
-    if (Cave.bonusKeys.has(dedupKey)) return;
-    Cave.bonusKeys.add(dedupKey);
-    if (Cave.bonusKeys.size > 64) {
-      Cave.bonusKeys = new Set(Array.from(Cave.bonusKeys).slice(-32));
-    }
-  
-    const card = document.createElement("div");
-    card.className = "cv-item";
-    card.style.cssText = `
-      position:relative; background:linear-gradient(180deg,#0f150f,#0b110b);
-      border:1px solid #1f4d1f; border-radius:14px; padding:.8rem .9rem;
-      box-shadow:0 6px 16px rgba(0,0,0,.35), inset 0 0 12px rgba(0,255,0,.08);
-      transition:transform .12s ease, box-shadow .12s ease;
-    `;
-    card.innerHTML = `
-      <div class="cv-row" style="margin-bottom:.4rem;">
-        ${chestId ? `<span class="cv-badge">Chest #${safe(chestId)}</span>` : `<span></span>`}
-        <span class="cv-time" title="${new Date().toLocaleString()}">${timeHM()}</span>
-      </div>
-    
-      <div class="cv-row" style="gap:.5rem;">
-        <strong style="color:#9dff9d; font-family:Orbitron,system-ui,sans-serif; font-size:.95rem;">
-          ${safe(wax_account)}
-        </strong>
-        <span style="font-size:.8rem; color:#c9e7c9; opacity:.9;">opened a <strong style="color:#78ff78;">${safe(source)}</strong> chest</span>
-      </div>
-    
-      <div class="cv-kv" style="margin-top:.55rem;">
-        <div class="kv">
-          <div class="k">CHIPS</div>
-          <div class="v" style="color:#78ff78;">${chips}</div>
-        </div>
-        <div class="kv">
-          <div class="k">NFTs</div>
-          <div class="v" style="color:#ffb74d;">${nfts}</div>
-        </div>
-      </div>
-    `;
-
-    card.addEventListener("mouseover",()=> card.style.transform="translateY(-2px)");
-    card.addEventListener("mouseout", ()=> card.style.transform="translateY(0)");
-  
-    grid.prepend(card);
-  
-    // Cap visivo
-    while (grid.children.length > MAX_BONUS_ROWS) grid.lastElementChild?.remove();
-  }
-    
-  async function renderRecentList(preloadedData = null) {
-    try {
-      const c = Cave.el.recentList; 
-      if (!c || !Cave.visible) return;
-  
-      // Header + contenitore griglia + skeleton
-      c.innerHTML = `
-        <h4 style="color:#ffa500;">🕒 Recent Expedition Results</h4>
-        <div id="cv-recent-grid" class="cv-cards"></div>
-      `;
-      renderSkeletons("#cv-recent-grid", 6, 72);
-      Cave.recentExpKeys.clear();
-  
-      // ── ottieni i dati ──
-      let arr = [];
-      if (preloadedData) {
-        arr = Array.isArray(preloadedData) ? preloadedData
-            : Array.isArray(preloadedData?.items) ? preloadedData.items
-            : Array.isArray(preloadedData?.results) ? preloadedData.results
-            : [];
-      } else {
-        const r = await API.get("/recent_expeditions", 12000);
-        if (r.aborted) return;
-        if (!r.ok) {
-          c.insertAdjacentHTML("beforeend",
-            `<div class="cv-toast warn">Could not load recent expeditions (HTTP ${r.status}).</div>`);
-          return;
-        }
-        arr = Array.isArray(r.data) ? r.data
-            : Array.isArray(r.data?.items) ? r.data.items
-            : Array.isArray(r.data?.results) ? r.data.results
-            : [];
-      }
-  
-      const list = arr.slice(0, MAX_RECENT_EXPEDITIONS);
-      const grid = qs("#cv-recent-grid", c);
-      const frag = document.createDocumentFragment();
-  
-      list.forEach(item => {
-        const ts = item.timestamp ?? item.created_at ?? item.time;
-        const dt = ts ? new Date(ts) : null;
-        const chips = item.chips ?? item.stats?.tokens?.CHIPS ?? 0;
-        const nftsCount = item.nfts_count ?? (Array.isArray(item.nfts) ? item.nfts.length : 0);
-        const key = `${item.wax_account}|${ts}|${chips}|${nftsCount}`;
-        if (Cave.recentExpKeys.has(key)) return;
-        Cave.recentExpKeys.add(key);
-  
-        const card = document.createElement("div");
-        card.className = "cv-compact";
-        card.innerHTML = `
-          <div class="cv-head">
-            <div class="cv-name">${safe(item.wax_account)}</div>
-            ${dt ? `<span class="cv-time" title="${new Date(ts).toLocaleString()}">${timeHM(dt)}</span>` : ""}
-          </div>
-          <div style="font-size:.85rem; color:#ddd; opacity:.9;">Expedition result</div>
-          <div class="cv-kv">
-            <div class="kv">
-              <div class="k">CHIPS</div>
-              <div class="v" style="color:#78ff78;">${safe(chips)}</div>
-            </div>
-            <div class="kv">
-              <div class="k">NFTs</div>
-              <div class="v" style="color:#ffb74d;">${safe(nftsCount)}</div>
-            </div>
-          </div>
-        `;
-        frag.appendChild(card);
-      });
-  
-      grid.innerHTML = "";         // <-- rimuove gli skeleton
-      grid.appendChild(frag);
-      // === ticker: salva e aggiorna
-      Cave.tickerRecent = list;
-      updateTickerFromArrays(Cave.tickerRecent, Cave.tickerWinners, Cave.lastAllExpeditions||[]);
-    } catch (e) {
-      if (e?.name === "AbortError") return;
-      console.warn("Recent list failed:", e);
-      const c2 = Cave.el.recentList;
-      if (c2) c2.insertAdjacentHTML("beforeend",
-        `<div class="cv-toast err">Error loading recent expeditions.</div>`);
-    }
-  }
-
-  function prependRecentFromResult(result, wax_account) {
-    const c = Cave.el.recentList; if (!c) return;
-    const grid = qs("#cv-recent-grid", c) || c; // fallback
-  
-    const chips = result?.stats?.tokens?.CHIPS ?? 0;
-    const nfts = Array.isArray(result?.nfts) ? result.nfts.length : 0;
-    const k = `${wax_account}|${new Date().getHours()}${new Date().getMinutes()}|${chips}|${nfts}`;
-    if (Cave.recentExpKeys.has(k)) return;
-    Cave.recentExpKeys.add(k);
-  
-    const card = document.createElement("div");
-    card.className = "cv-item";
-    card.innerHTML = `
-      <div class="cv-head">
-        <div class="cv-name">${safe(wax_account)}</div>
-        <span class="cv-time" title="${new Date().toLocaleString()}">${timeHM()}</span>
-      </div>
-      <div style="font-size:.85rem; color:#ddd; opacity:.9;">Expedition result</div>
-      <div class="cv-kv">
-        <div class="kv"><div class="k">CHIPS</div><div class="v" style="color:#78ff78;">${chips}</div></div>
-        <div class="kv"><div class="k">NFTs</div><div class="v" style="color:#ffb74d;">${nfts}</div></div>
-      </div>
-    `;
-
-    grid.prepend(card);
-  
-    // Cap a MAX_RECENT_EXPEDITIONS
-    while (grid.children.length > MAX_RECENT_EXPEDITIONS) {
-      grid.lastElementChild?.remove();
-    }
-  }
-
-  function renderBonusListFromBackend(winners = []) {
-    const c = Cave.el.bonusList; if (!c) return;
-  
-    c.innerHTML = `
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-bottom:.6rem;">
-        <h4 style="color:#78ff78; margin:0; font-family:Orbitron,system-ui,sans-serif;">🎁 Latest Chest Rewards</h4>
-        <span style="font-size:.72rem; background:#133113; color:#b7ffb7; border:1px solid #1f5220; padding:.15rem .45rem; border-radius:999px;">live</span>
-      </div>
-      <div id="cv-bonus-grid"
-        style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:.75rem; align-items:stretch;"></div>
-    `;
-    const grid = qs("#cv-bonus-grid", c);
-  
-    const frag = document.createDocumentFragment();
-    winners.forEach(w => {
-      // dedup per chest_id se disponibile
-      const dk = w.chest_id ? `ch:${w.chest_id}` :
-        `${w.wax_account}|${w.perk_type}|${w.chips}|${w.nfts_count}|${w.created_at}`;
-      if (Cave.bonusKeys.has(dk)) return;
-      Cave.bonusKeys.add(dk);
-  
-      const card = document.createElement("div");
-      card.className = "cv-item";
-      card.style.cssText = `
-        position:relative; background:linear-gradient(180deg,#0f150f,#0b110b);
-        border:1px solid #1f4d1f; border-radius:14px; padding:.8rem .9rem;
-        box-shadow:0 6px 16px rgba(0,0,0,.35), inset 0 0 12px rgba(0,255,0,.08);
-        transition:transform .12s ease, box-shadow .12s ease;
-      `;
-      card.innerHTML = `
-        <div class="cv-row" style="margin-bottom:.4rem;">
-          ${w.chest_id ? `<span class="cv-badge">Chest #${safe(w.chest_id)}</span>` : `<span></span>`}
-          <span class="cv-time" title="${new Date(w.created_at).toLocaleString()}">${timeHM(new Date(w.created_at))}</span>
-        </div>
-      
-        <div class="cv-row" style="gap:.5rem;">
-          <strong style="color:#9dff9d; font-family:Orbitron,system-ui,sans-serif; font-size:.95rem;">
-            ${safe(w.wax_account)}
-          </strong>
-          <span style="font-size:.8rem; color:#c9e7c9; opacity:.9;">opened a <strong style="color:#78ff78;">${safe(w.perk_type)}</strong> chest</span>
-        </div>
-      
-        <div class="cv-kv" style="margin-top:.55rem;">
-          <div class="kv">
-            <div class="k">CHIPS</div>
-            <div class="v" style="color:#78ff78;">${safe(w.chips)}</div>
-          </div>
-          <div class="kv">
-            <div class="k">NFTs</div>
-            <div class="v" style="color:#ffb74d;">${safe(w.nfts_count)}</div>
-          </div>
-        </div>
-      `;
-
-      card.addEventListener("mouseover",()=> card.style.transform="translateY(-2px)");
-      card.addEventListener("mouseout", ()=> card.style.transform="translateY(0)");
-  
-      frag.appendChild(card);
-    });
-    grid.appendChild(frag);
-    // === ticker: salva e aggiorna
-    Cave.tickerWinners = winners;
-    updateTickerFromArrays(Cave.tickerRecent, Cave.tickerWinners, Cave.lastAllExpeditions||[]);       
-  }
-
-  // --- Rotatore pannelli destri (OBS) ---
-function startRightPanelRotator(options = {}) {
-  // seconds: da ?rot=.. oppure ROT_SECS globale oppure 12
-  const rotSec = Math.max(5, Math.min(60, Number(options.seconds || (typeof ROT_SECS !== 'undefined' ? ROT_SECS : 12))));
-  const panels = [
-    document.getElementById('cv-panel-live'),
-    document.getElementById('cv-panel-recent'),
-    document.getElementById('cv-panel-bonus'),
-  ].filter(Boolean);
-
-  if (!panels.length) return;
-
-  // setup iniziale (mostra solo il primo)
-  panels.forEach((p, i) => {
-    p.hidden = i !== 0;
-    p.style.opacity = i === 0 ? '1' : '0';
-    p.style.transition = 'opacity .35s ease';
-  });
-
-  // namespace per gli interval del progetto
-  window.Cave = window.Cave || {};
-  Cave.intervals = Cave.intervals || {};
-  if (Cave.intervals.panelRot) clearInterval(Cave.intervals.panelRot);
-
-  // indice corrente (persistito su Cave per poterlo rileggere al refresh dati)
-  Cave._activePanelIndex = Cave._activePanelIndex ?? 0;
-  Cave._activePanelIndex = Cave._activePanelIndex % panels.length;
-
-  // avvio rotazione
-  Cave.intervals.panelRot = setInterval(() => {
-    const cur = panels[Cave._activePanelIndex % panels.length];
-    Cave._activePanelIndex = (Cave._activePanelIndex + 1) % panels.length;
-    const nxt = panels[Cave._activePanelIndex];
-
-    if (cur) {
-      cur.style.opacity = '0';
-      setTimeout(() => { cur.hidden = true; }, 350);
-    }
-    if (nxt) {
-      nxt.hidden = false;
-      requestAnimationFrame(() => { nxt.style.opacity = '1'; });
-    }
-  }, rotSec * 1000);
-}
-
-function stopRightPanelRotator() {
-  if (window.Cave?.intervals?.panelRot) {
-    clearInterval(Cave.intervals.panelRot);
-    Cave.intervals.panelRot = null;
-  }
-}
-
-  function ensureTicker(){
-    if (typeof NOTICKER !== 'undefined' && NOTICKER) return null;
-    let t = qs('#cv-ticker'); if (t) return t;
-    const wrap = Cave.el.videoOrCanvas; if (!wrap) return null;
-    wrap.style.position = 'relative';
-    t = document.createElement('div');
-    t.id = 'cv-ticker';
-    t.innerHTML = `
-      <div class="row"><div class="track" id="cv-ticker-top"></div></div>
-      <div class="row"><div class="track" id="cv-ticker-bottom"></div></div>
-    `;
-    wrap.appendChild(t);
-    return t;
-  }
-
-  // velocità: più grande è il contenuto, più lungo è il giro (ma non oltre i 26s)
-  const TICKER_MIN_S = 12, TICKER_MAX_S = 26, TICKER_PX_PER_SEC = 160;
-  
-  function updateTickerFromArrays(recent = [], winners = [], live = []) {
-    if (typeof NOTICKER !== 'undefined' && NOTICKER) return;
-    const t = ensureTicker(); if (!t) return;
-    const top = qs('#cv-ticker-top', t);
-    const bottom = qs('#cv-ticker-bottom', t);
-  
-    const userHTML = (name) => {
-      const h = hueFromString(name||'');
-      // colore per-utente via HSL
-      return `<span class="tk-user" style="color:hsl(${h},78%,62%)">${safe(name)}</span>`;
-    };
-  
-    // Riga TOP = recent
-    const topHTML = recent.map(r => {
-      const chips = r.chips ?? r.stats?.tokens?.CHIPS ?? 0;
-      const nfts  = r.nfts_count ?? (Array.isArray(r.nfts) ? r.nfts.length : 0);
-      return (
-        `<span class="item">` +
-        `⛏️ ${userHTML(r.wax_account)}` +
-        ` <span class="tk-chips">+${safe(chips)} CHIPS</span>` +
-        ` <span class="tk-nfts">${safe(nfts)} NFT</span>` +
-        `</span>`
-      );
-    });
-  
-    // Riga BOTTOM = live
-    const bottomHTML = live.map(e => {
-      const goblins = e.total_goblins ?? (Array.isArray(e.goblins) ? e.goblins.length : 0);
-      const mm = Math.max(0, Math.floor((e.seconds_remaining ?? 0)/60));
-      const ss = Math.max(0, Math.floor((e.seconds_remaining ?? 0)%60));
-      const tots = totalsFromExpeditionItem(e);
-      return (
-        `<span class="item">` +
-        `🚶 ${userHTML(e.wax_account)}` +
-        ` <span class="tk-goblins">${safe(goblins)} goblins</span>` +
-        ` <span class="tk-timer">${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}</span>` +
-        ` <span class="tk-R">R:${fmtNumCompact(tots.res)}</span>` +
-        ` <span class="tk-L">L:${fmtNumCompact(tots.loot)}</span>` +
-        ` <span class="tk-S">S:${fmtNumCompact(tots.spd)}</span>` +
-        ` <span class="tk-A">A:${fmtNumCompact(tots.acc)}</span>` +
-        `</span>`
-      );
-    });
-  
-    function fillTrackHTML(trackEl, htmlArr, delay = '0s'){
-      // reset pulito
-      trackEl.style.animation = 'none';
-      trackEl.innerHTML = '';
-    
-      // un solo HTML e due gruppi identici per un loop senza accumuli
-      const inner = htmlArr.join('<span class="dot">·</span>');
-      const spacer = '<span class="spacer" style="display:inline-block;width:48px"></span>';
-      const innerWithSpacer = inner + spacer;      
-      trackEl.innerHTML =
-        `<div class="group">${innerWithSpacer}</div><div class="group" aria-hidden="true">${innerWithSpacer}</div>`;
-    
-      // misura SOLO il primo gruppo (larghezza reale del contenuto)
-      void trackEl.offsetWidth; // reflow
-      const g = trackEl.querySelector('.group');
-      const contentW = Math.ceil(g ? g.scrollWidth : trackEl.scrollWidth/2);   
-      trackEl.style.width = (contentW * 2) + 'px';
-      const seconds = Math.max(12, Math.min(26, contentW / 160));
-      trackEl.style.setProperty('--tkd', `${seconds}s`);
-      trackEl.style.animation = `cv-marquee var(--tkd) linear infinite`;
-      trackEl.style.animationDelay = delay;
-    }
-    fillTrackHTML(top,    topHTML,    '0s');
-    fillTrackHTML(bottom, bottomHTML, '-2s');
-  }
-
-  function renderOverlayGeneralStats(data = []){
-    const host = document.getElementById('cv-general-stats'); if (!host) return;
-    const totalExp = data.length;
-    let totalGobs = 0, tot = { res:0, loot:0, spd:0, acc:0 }, sumSec = 0;
-  
-    data.forEach(e=>{
-      totalGobs += e.total_goblins ?? (Array.isArray(e.goblins) ? e.goblins.length :
-                   Array.isArray(e.goblin_ids) ? e.goblin_ids.length : 0);
-      const s = totalsFromExpeditionItem(e);
-      tot.res  += s.res; tot.loot += s.loot; tot.spd  += s.spd; tot.acc  += s.acc;
-      sumSec   += Number(e.seconds_remaining)||0;
-    });
-  
-    const avgSec = totalExp ? Math.round(sumSec / totalExp) : 0;
-    const mm = String(Math.floor(avgSec/60)).padStart(2,'0');
-    const ss = String(Math.floor(avgSec%60)).padStart(2,'0');
-  
-    host.innerHTML = `
-      <div class="cv-row" style="gap:.8rem; flex-wrap:wrap;">
-        <div class="cv-item" style="flex:1 1 110px;"><div>Expeditions</div><div style="font-family:Orbitron,system-ui,sans-serif; font-weight:900; font-size:1.1rem;">${totalExp}</div></div>
-        <div class="cv-item" style="flex:1 1 110px;"><div>Goblins</div><div style="font-family:Orbitron,system-ui,sans-serif; font-weight:900; font-size:1.1rem;">${totalGobs}</div></div>
-        <div class="cv-item" style="flex:1 1 110px;"><div>⏳ Avg time</div><div style="font-family:Orbitron,system-ui,sans-serif; font-weight:900; font-size:1.1rem;">${mm}:${ss}</div></div>
-      </div>
-      <div class="cv-row" style="gap:.4rem; margin-top:.45rem; flex-wrap:wrap;">
-        <div class="cv-pill attr-R"><div class="cv-chip-key">R</div><div class="cv-chip-val">${fmtNumCompact(tot.res)}</div></div>
-        <div class="cv-pill attr-L"><div class="cv-chip-key">L</div><div class="cv-chip-val">${fmtNumCompact(tot.loot)}</div></div>
-        <div class="cv-pill attr-S"><div class="cv-chip-key">S</div><div class="cv-chip-val">${fmtNumCompact(tot.spd)}</div></div>
-        <div class="cv-pill attr-A"><div class="cv-chip-key">A</div><div class="cv-chip-val">${fmtNumCompact(tot.acc)}</div></div>
-      </div>
-    `;
-  }
-
-  // ========= GLOBAL EXPEDITIONS & CANVAS DATA ========= 
-  let globalFetchBusy = false;
-  Cave._liveUsersPrev = new Set();
-  
-  async function renderGlobalExpeditions(preloadedData = null) {
-    if (!preloadedData) { if (globalFetchBusy) return; globalFetchBusy = true; }
-  
-    if (!Cave.visible || !Cave.el.globalList || !Cave.el.videoOrCanvas) {
-      if (!preloadedData) globalFetchBusy = false;
-      return;
-    }
-  
-    try {
-      // ===== dati =====
-      let data;
-      if (preloadedData) {
-        data = Array.isArray(preloadedData) ? preloadedData : [];
-      } else {
-        const r = READONLY ? await API.get('/public_all_expeditions', 12000)
-                           : await API.post('/all_expeditions', {}, 12000);
-        if (r.aborted || !r.ok) { if (!preloadedData) globalFetchBusy = false; return; }
-        data = Array.isArray(r.data) ? r.data : [];
-      }
-  
-      // ===== canvas seed + chest sync (come tua versione) =====
-      Cave.el.globalList.innerHTML = "";
-      if (!qs("#caveCanvas", Cave.el.videoOrCanvas)) {
-        Cave.el.videoOrCanvas.innerHTML = `<canvas id="caveCanvas"></canvas>`;
-        setupCanvas(qs("#caveCanvas", Cave.el.videoOrCanvas));
-        startRAF();
-      }
-  
-		if (data.length === 0) {
-		  // sporca e pulisci correttamente i layer prima di svuotare gli array
-		  for (const g of Cave.goblins) {
-		    Dirty.addBBox(goblinBBox(g)); // pulizia dinamica del goblin su DYN
-		    if (g.trail && g.trail.length > 1) {
-		      for (let i = 0; i < g.trail.length - 1; i++) {
-		        clearTrailSegment(g.trail[i], g.trail[i+1]); // pulizia TRAILS
-		      }
-		    }
-		  }
-		  clearChests();
-		  Cave.goblins = [];
-		
-		  Cave.lastAllExpeditions = [];
-		  qs('#cv-general-stats').innerHTML = `
-		    <div class="cv-row">
-		      <div><strong>Expeditions:</strong> 0</div>
-		      <div><strong>Goblins:</strong> 0</div>
-		    </div>`;
-		  updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[], []);
-		  return;
-		}
-
-  
-	// goblin reconcile (no reset: add/remove only)
-	const { minX, maxX, minY, maxY } = getBounds();
-	
-	// 1) set degli utenti “live” dal backend
-	const liveUsers = new Set(data.map(e => e.wax_account));
-	
-	// 2) rimuovi goblin non più live (e pulisci le loro aree/scie)
-	const removed = [];
-	Cave.goblins = Cave.goblins.filter(g => {
-	  const keep = liveUsers.has(g.wax_account);
-	  if (!keep) removed.push(g);
-	  return keep;
-	});
-	for (const g of removed) {
-	  // sporca l’ultimo bbox sul layer DYN così si ripulisce
-	  const b = goblinBBox(g);
-	  Dirty.addBBox(b);
-	  // pulisci la scia di quel goblin dal layer TRAILS
-	  if (g.trail && g.trail.length > 1) {
-	    for (let i = 0; i < g.trail.length - 1; i++) {
-	      clearTrailSegment(g.trail[i], g.trail[i+1]);
-	    }
-	  }
-	}
-	
-	// 3) aggiungi nuovi goblin per gli utenti arrivati ora
-	const present = new Set(Cave.goblins.map(g => g.wax_account));
-	data.forEach((e, i) => {
-	  if (present.has(e.wax_account)) return;
-	  const gx = Math.floor(Math.random() * (maxX - minX + 1)) + minX;
-	  const gy = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
-	  Cave.goblins.push({
-	    x: gx, y: gy, wax_account: e.wax_account,
-	    path: [],
-	    trail: [{ x: gx, y: gy }],
-	    _lastTrailX: gx, _lastTrailY: gy,
-	    digging: false, shovelFrame: 0, frameTimer: 0,
-	    color: colorByIndex(i),
-	    // parametri di movimento coerenti con il resto del file
-	    speed: 0.9, turnRate: 2.0, heading: Math.random()*Math.PI*2,
-	    target: { x: gx, y: gy },
-	    pauseTil: 0, speedBoostUntil: 0, walkPhase: Math.random()*Math.PI*2, walkBob: 0
-	  });
-	});
-
-  
-      // chests live
-      const liveIds = new Set();
-      data.forEach(e => {
-        if (!Array.isArray(e.chests)) return;
-        e.chests.forEach(ch => {
-          const hasId = ch.id != null && !isNaN(Number(ch.id));
-          if (!hasId) return;
-          const id = String(ch.id); liveIds.add(id);
-          const cx = clamp(ch.x, minX, maxX), cy = clamp(ch.y, minY, maxY);
-          upsertChest({ id, x:cx, y:cy, from: ch.from || "unknown", wax_account: e.wax_account, taken:false, claimable:true, pending:false });
-        });
-      });
-      Cave.chests.forEach((ch, key) => {
-        if (ch.id != null && !liveIds.has(String(ch.id))) Cave.chests.delete(key);
-      });
-  
-      // salva per ticker e general stats
-      Cave.lastAllExpeditions = data;
-      renderOverlayGeneralStats(data);
-  
-      // ===== feedback start/end (diff) =====
-      const nowUsers = new Set(data.map(e => e.wax_account));
-      // new -> started
-      nowUsers.forEach(u => { if (!Cave._liveUsersPrev.has(u)) toast(`${u} started an expedition — good hunt, goblins!`, "ok", 3500); });
-      // ended -> missing
-      Cave._liveUsersPrev.forEach(u => { if (!nowUsers.has(u)) toast(`${u}'s expedition ended.`, "warn", 3000); });
-      Cave._liveUsersPrev = nowUsers;
-  
-      // ===== cards list (compact, con attributi R/L/S/A) =====
-      const list = Cave.el.globalList;
-      list.style.display = "grid";
-      list.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
-      list.style.gap = ".6rem";
-  
-      const timers = [];
-      data.forEach((e,i)=>{
-        const end = Date.now() + (Number(e.seconds_remaining)||0) * 1000;
-        const id = `cv-timer-${i}`;
-        const sums = totalsFromExpeditionItem(e);
-        const gobCount =
-          e.total_goblins ??
-          (Array.isArray(e.goblins) ? e.goblins.length :
-           Array.isArray(e.goblin_ids) ? e.goblin_ids.length : 0);
-  
-        const card = document.createElement("div");
-        card.className = "cv-compact";
-        card.innerHTML = `
-          <div class="cv-row">
-            <strong style="color:var(--cv-chip); font-family:Orbitron,system-ui,sans-serif; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:62%;">${safe(e.wax_account)}</strong>
-            <span id="${id}" style="color:#0f0; font-family:Orbitron,system-ui,sans-serif;">⏳ --:--</span>
-          </div>
-          <div style="font-size:.85rem; color:#7ff6ff;">Goblins: <strong>${gobCount}</strong></div>
-          <div style="display:flex; flex-wrap:wrap; gap:.25rem; margin-top:.3rem;">
-            <div class="cv-pill attr-R"><div class="cv-chip-key">R</div><div class="cv-chip-val">${fmtNumCompact(sums.res)}</div></div>
-            <div class="cv-pill attr-L"><div class="cv-chip-key">L</div><div class="cv-chip-val">${fmtNumCompact(sums.loot)}</div></div>
-            <div class="cv-pill attr-S"><div class="cv-chip-key">S</div><div class="cv-chip-val">${fmtNumCompact(sums.spd)}</div></div>
-            <div class="cv-pill attr-A"><div class="cv-chip-key">A</div><div class="cv-chip-val">${fmtNumCompact(sums.acc)}</div></div>
-          </div>
-        `;
-        list.appendChild(card);
-        timers.push({ id, end });
-      });
-  
-      if (Cave.intervals.globalCountdown) clearInterval(Cave.intervals.globalCountdown);
-      Cave.intervals.globalCountdown = setInterval(()=>{
-        const now = Date.now();
-        timers.forEach(t=>{
-          const el = document.getElementById(t.id); if (!el) return;
-          const rem = t.end - now;
-          if (rem <= 0) el.textContent = "✅ Done";
-          else {
-            const m = Math.floor(rem/60000), s = Math.floor((rem%60000)/1000);
-            el.textContent = `⏳ ${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
-          }
-        });
-      }, 1000);
-  
-      // ticker: top = recent, bottom = live
-      updateTickerFromArrays(Cave.tickerRecent||[], Cave.tickerWinners||[], data);
-    } catch (e) {
-      if (e?.name !== "AbortError") console.warn("Global expeditions failed:", e);
-    } finally {
-      if (!preloadedData) globalFetchBusy = false;
-    }
-  }
-
-
-  // ========= USER COUNTDOWN =========
-// ========= USER COUNTDOWN (timer + instructions) =========
-async function renderUserCountdown(expedition_id, seconds, assetIds = []) {
-  const host = qs("#expedition-summary-block"); if (!host) return;
-  const wax = Cave.user.wax_account; if (!wax) return;
-
-  // evita doppio timer per lo stesso utente
-  window.expeditionTimersRunning = window.expeditionTimersRunning || {};
-  if (window.expeditionTimersRunning[wax]) return;
-  window.expeditionTimersRunning[wax] = true;
-
-  // rimuovi eventuale countdown precedente
-  const prev = qs("#user-exp-countdown");
-  if (prev) prev.remove();
-
-  // crea il contenitore countdown
-  const box = document.createElement("div");
-  box.id = "user-exp-countdown";
-  box.style.cssText = "margin-top:1rem; font-family:Orbitron,system-ui,sans-serif; color:#e8f6ff;";
-  host.appendChild(box);
-
-  // struttura: TIMER (in alto) + INSTRUCTIONS (sotto, con wrapping forzato)
-  box.innerHTML = `
-    <div id="cv-countdown-timer"
-         style="font-size:1.2rem; color:#00e6ff; text-align:center; margin-bottom:.5rem;">
-      ⏳ Time Left: --:--
-    </div>
-
-    <div id="cv-instructions" class="cv-card"
-         style="margin-top:.4rem; padding:1rem; border:1px solid #2b2b2b;
-                background:linear-gradient(180deg,#141414,#0d0d0d);
-                border-radius:14px; box-shadow:0 0 14px rgba(0,0,0,.45), inset 0 0 16px rgba(0,255,255,.08);
-                white-space:normal; overflow-wrap:anywhere; word-break:break-word;
-                max-width:100%; overflow:hidden;">
-      <h3 class="cv-title" style="font-size:1.05rem; margin:0 0 .5rem;">📜 Welcome to the Dwarf’s Gold Cave</h3>
-      <p style="margin:.35rem 0;">
-        💥 Choose up to <strong>50 goblins</strong> to raid the cave.
-        Each <strong>Troops Reinforcement NFT</strong> you own adds <strong>+5 slots</strong>,
-        up to a maximum of <strong>250</strong>.
-      </p>
-      <p style="margin:.35rem 0;">
-        ⏳ You can now <strong>choose the duration</strong> of your expedition — from quick
-        <strong>5 minutes</strong> to <strong>24 hours</strong>. Faster teams reduce the final time.
-      </p>
-      <p style="margin:.35rem 0;">
-        💰 Earn variable <strong>CHIPS</strong> and <strong>NFT</strong> rewards.
-        Your squad’s <strong>accuracy</strong> increases the chance to find NFTs.
-      </p>
-      <p style="margin:.35rem 0;">🏆 Use <strong>Best Goblins</strong> to auto-pick your elite team!</p>
-      <div style="background:#2a2a2a; border-left:4px solid #ffe600; padding:.7rem; margin-top:.6rem;
-                  font-weight:bold; color:#ffd700;">
-        ⚠️ After an expedition, goblins must rest in the <strong>Tavern</strong> for <strong>5 minutes</strong>.
-      </div>
-    </div>
-  `;
-
-  const timerEl = qs("#cv-countdown-timer", box);
-
-  // countdown loop (aggiorna solo il timer, non tocca le instructions)
-  let end = Date.now() + seconds * 1000;
-  const t = setInterval(async () => {
-    const rem = end - Date.now();
-    if (rem <= 0) {
-      clearInterval(t);
-      timerEl.textContent = "⏳ Expedition completed! Checking status...";
-      try {
-        syncUserInto(Cave.user);
-        assertAuthOrThrow(Cave.user);
-
-        const status = await API.post("/expedition_status", {
-          wax_account: wax,
-          user_id: Cave.user.user_id,
-          usx_token: Cave.user.usx_token
-        }, 12000);
-        if (!status.ok) throw new Error(`Status ${status.status}`);
-
-        const result = await API.post("/end_expedition", {
-          wax_account: wax,
-          user_id: Cave.user.user_id,
-          usx_token: Cave.user.usx_token,
-          expedition_id
-        }, 15000);
-        if (!result.ok) {
-          timerEl.textContent = "❌ Failed to retrieve expedition result.";
-          window.expeditionTimersRunning[wax] = false;
-          return;
-        }
-
-        await renderRecentList();
-        await renderGlobalExpeditions();
-        prependRecentFromResult(result.data, wax);
-
-        timerEl.textContent = "✅ Expedition complete!";
-        // (non rimuovo il box: le instructions restano visibili)
-      } catch (e) {
-        timerEl.textContent = "⚠️ Expedition fetch error.";
-        console.warn("end_expedition error:", e);
-      } finally {
-        window.expeditionTimersRunning[wax] = false;
-      }
-    } else {
-      const m = Math.floor(rem / 60000);
-      const s = Math.floor((rem % 60000) / 1000);
-      timerEl.textContent = `⏳ Time Left: ${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
-    }
-  }, 1000);
-}
-
-
-  // ========= POLLING (Perk commands) =========
-  function startCommandPolling() {
-    if (READONLY) return;
-    if (Cave.intervals.command) return;
-    Cave.intervals.command = setInterval(async ()=>{
-      if (!Cave.visible) return;
-      if (!Cave.canvas) return;
-      try {
-        syncUserInto(Cave.user);
-        assertAuthOrThrow(Cave.user);          
-        const r = await API.post("/check_perk_command", { wax_account: Cave.user.wax_account }, 12000);
-        if (!r.ok) return;
-        const perk = r.data;
-        if (perk && perk.perk) {
-          triggerPerk(perk.perk, perk.wax_account);
-          toast(`${safe(perk.wax_account)} triggered ${perk.perk}`, "ok", 4000);
-        }
-      } catch (e) {
-        log("perk polling err", e);
-      }
-    }, COMMAND_POLL_MS);
-  }
-  function stopCommandPolling() {
-    if (Cave.intervals.command) {
-      clearInterval(Cave.intervals.command);
-      Cave.intervals.command = null;
-    }
-  }
-
-// ========= RAF LOOP =========
-let lastTS = performance.now();
-function tick(ts) {
-  if (!Cave.running) return;
-  const dt = ts - lastTS; 
-  lastTS = ts;
-  // 1) avanza solo lo stato e marca le aree sporche
-  drawPerksAndAdvance();
-  Cave.goblins.forEach(g => moveGoblin(g, dt));
-  if (window.GoblinCrash?.onAfterMove) GoblinCrash.onAfterMove();
-  updateGoblinAnim(dt);
-  // 2) ridisegna SOLO i rettangoli sporchi sul layer dinamico
-  paintDirtyNow();
-  // 3) overlay UI su layer separato
-  if (window.GoblinCrash?.draw) {
-    const u = Cave.layers.ctxUi;
-    u.clearRect(0, 0, Cave.gridW, Cave.gridH);
-    GoblinCrash.draw(u);
-  }
-  Cave.rafId = requestAnimationFrame(tick);
-}
-
-function paintDirtyNow() {
-  const rects = Dirty.merged();
-  if (!rects.length) return;
-
-  const ctx = Cave.layers.ctxDyn;
-
-  for (const r of rects) {
-    // Pulisci solo la regione su DYN: sotto BG/TRAILS restano
-    ctx.clearRect(r.x, r.y, r.w, r.h);
-
-    // Z-order: perks -> chests -> goblins
-    // Per ciascuno, disegna SOLO se bbox intersect(r)
-
-    // PERKS
-    for (const p of Cave.perks) {
-      const b = perkBBox(p);
-      if (!b || !rectsIntersect(r, b) || !p.image?.complete) continue;
-
-      const frames = p.frames || 1;
-      const frame  = (p.frame || 0) % frames;
-      const srcW   = p.image.width / frames;
-      const srcH   = p.image.height;
-      const sx     = frame * srcW;
-
-      const px = Cave.offsetX + p.x * Cave.cellX;
-      const py = Cave.offsetY + p.waveY(p.x) * Cave.cellY;
-
-      ctx.drawImage(p.image, sx, 0, srcW, srcH, px - 16, py - 16, 32, 32);
-    }
-
-    // CHESTS
-    Cave.chests.forEach(ch => {
-      if (ch.taken) return;
-      const b = chestBBox(ch);
-      if (!b || !rectsIntersect(r, b) || !Cave.assets.chest?.complete) return;
-      ctx.drawImage(Cave.assets.chest, b.x, b.y, b.w, b.h);
-    });
-
-    // GOBLINS
-    for (const g of Cave.goblins) {
-      const b = goblinBBox(g);
-      if (!b || !rectsIntersect(r, b)) continue;
-
-      // drawGoblin "inline", SENZA trail (trail è su layer TRAILS)
-      const cell  = Math.min(Cave.cellX, Cave.cellY);
-      const px    = Cave.offsetX + g.x * Cave.cellX;
-      const py    = Cave.offsetY + g.y * Cave.cellY + (g.walkBob || 0) * cell;
-      const gSize = cell * 5;
-      const gOff  = (gSize - cell) / 2;
-
-      if (Cave.assets.goblin?.complete) {
-        ctx.drawImage(Cave.assets.goblin, px - gOff, py - gOff, gSize, gSize);
-      }
-
-      // label
-      ctx.font = `${Math.max(10, cell * 0.9)}px Orbitron, system-ui, sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      const labelW = cell * 2.2;
-      const labelH = cell * 0.8;
-      const footY  = py + gSize / 2;
-      const margin = cell * 0.25;
-      let boxX = Math.max(0, Math.min(px - labelW / 2, Cave.gridW - labelW));
-      let boxY = Math.max(0, Math.min(footY + margin, Cave.gridH - labelH));
-      ctx.fillStyle = "rgba(0,0,0,0.65)";
-      ctx.fillRect(boxX, boxY, labelW, labelH);
-      ctx.fillStyle = g.color || "#ffe600";
-      ctx.fillText(g.wax_account, boxX + labelW / 2, boxY + labelH / 2);
-
-      // pala (se digging)
-      if (g.digging && Cave.assets.shovel?.complete) {
-        const frames = 6;
-        const fw = Cave.assets.shovel.width / frames;
-        const fh = Cave.assets.shovel.height;
-        const sx = (g.shovelFrame || 0) * fw;
-        const sSize = 24;
-        const goblinTop = py - gSize / 2;
-        const dx = px - sSize / 2;
-        const dy = goblinTop - 2 - sSize;
-        ctx.drawImage(Cave.assets.shovel, sx, 0, fw, fh, dx, dy, sSize, sSize);
-      }
-    }
-  }
-
-  Dirty.clear();
-}
-
-  function hydrateGoblinUI(allNfts) {
-    // 1) filtra i goblin dall’array completo /user_nfts
-    const goblins = (Array.isArray(allNfts) ? allNfts : []).filter(n => n.type === "goblin");
-    // indicizza per asset_id (sempre stringa!)
-    Cave.nftIndex.clear();
-    goblins.forEach(n => Cave.nftIndex.set(String(n.asset_id), n));
-     
-    if (!goblins.length) {
-      if (Cave.el.selectionSummary) {
-        Cave.el.selectionSummary.innerHTML = `<div class="cv-toast">No goblins available for expedition.</div>`;
-      }
-      return;
-    }
-
-    const specialCount = (Array.isArray(allNfts) ? allNfts : [])
-      .filter(n => String(n.template_id) === '905202')
-      .length;
-    
-    const BASE_LIMIT = 50;
-    const EXTRA_PER_ASSET = 5;      
-    const HARD_CAP = 250;
-    const DYN_LIMIT = Math.min(HARD_CAP, BASE_LIMIT + specialCount * EXTRA_PER_ASSET);
-    
-    // esponi in scope locale della selection UI
-    let CURRENT_LIMIT = DYN_LIMIT;
-
-    // ====== selection UI (copiata dalla tua renderDwarfsCave) ======
-    let selected = new Set();
-    let sortBy = "rarity";
-    const num = (v) => Number(v ?? 0) || 0;
-    let filterQuery = "";
-    let filterRarity = "";
-    let minPower = 0;
-  
-    function saveFilters(){
-      localStorage.setItem("caveFilters", JSON.stringify({ filterQuery, filterRarity, minPower, sortBy }));
-    }
-    function loadFilters(){
-      try{
-        const s = JSON.parse(localStorage.getItem("caveFilters") || "{}");
-        filterQuery   = s.filterQuery   || "";
-        filterRarity  = s.filterRarity  || "";
-        minPower      = Number(s.minPower || 0);
-        sortBy        = s.sortBy        || "rarity";
-        // Sync UI
-        const $q = qs("#cv-search"), $r = qs("#cv-rarity"), $p = qs("#cv-power"), $pv = qs("#cv-power-val");
-        if ($q)  $q.value         = filterQuery;
-        if ($r)  $r.value         = filterRarity;
-        if ($p)  $p.value         = String(minPower);
-        if ($pv) $pv.textContent  = String(minPower);
-      }catch{}
-    }
-    function applyFilters(src){
-      const q = filterQuery.trim().toLowerCase();
-      return src.filter(g=>{
-        const okQuery  = !q || `${g.name||""}`.toLowerCase().includes(q) || String(g.asset_id).includes(q);
-        const okRarity = !filterRarity || String(g.rarity||"").toLowerCase() === filterRarity.toLowerCase();
-        const okPower  = num(g.daily_power) >= minPower;
-        return okQuery && okRarity && okPower;
-      });
-    }
-  
-    // ripristina filtri e evidenzia sort
-    loadFilters();
-    qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background="#1a1a1a");
-    const activeSortBtn = qs(`#cv-sort-segment .cv-btn[data-sort="${sortBy}"]`);
-    if (activeSortBtn) activeSortBtn.style.background = "#2a2a2a";
-    const sortSeg = qs("#cv-sort-segment");
-    if (sortSeg) {
-      sortSeg.addEventListener("click", (e)=>{
-        const btn = e.target.closest('.cv-btn[data-sort]');
-        if (!btn) return;
-        sortBy = btn.dataset.sort || "rarity";
-        qsa("#cv-sort-segment .cv-btn").forEach(b => b.style.background = "#1a1a1a");
-        btn.style.background = "#2a2a2a";
-        saveFilters();
-        renderList();
-      });
-    }
-  
-    function renderList(list = goblins) {
-      const filtered = applyFilters(list);
-      const sorted = [...filtered].sort((a,b) => num(b[sortBy]) - num(a[sortBy]));
-      const af = qs("#cv-active-filters");
-      if (af){
-        af.innerHTML = [
-          filterQuery   ? `<span class="cv-badge" style="border-color:#20444a;background:linear-gradient(180deg,#152024,#0f1a1c);color:#7ff6ff;">🔎 ${safe(filterQuery)}</span>` : "",
-          filterRarity  ? `<span class="cv-badge">${safe(filterRarity)}</span>` : "",
-          minPower > 0  ? `<span class="cv-badge" style="border-color:#665200;background:linear-gradient(180deg,#2a2211,#1c160a);color:#ffcc66;">⚡ ≥ ${minPower}</span>` : ""
-        ].filter(Boolean).join("");
-      }
-  
-      Cave.el.goblinList.style.cssText = `
-        display:grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap:12px;
-        align-items:stretch;
-      `;
-  
-      const maxPower = Math.max(1, ...sorted.map(g => num(g.daily_power)));
-      const html = sorted.map(g => {
-        const tired = num(g.daily_power) < 5;
-        const sel = selected.has(g.asset_id);
-        const dp  = num(g.daily_power);
-        const pct = Math.max(6, Math.round(dp / maxPower * 100)); // min 6% per visibilità
-  
-        const ribbon = tired ? `
-          <div style="
-            position:absolute; top:8px; right:8px; transform:rotate(0deg);
-            background:linear-gradient(135deg,#d32f2f,#b71c1c); color:#fff;
-            font-weight:700; font-size:.7rem; padding:.25rem .5rem; border-radius:8px;
-            box-shadow:0 0 8px rgba(255,0,0,.5); letter-spacing:.5px;">RESTING</div>` : "";
-  
-        return `
-          <div class="cv-gob-card" data-id="${safe(g.asset_id)}" data-disabled="${tired?1:0}"
-               role="checkbox" tabindex="0" aria-checked="${sel ? 'true':'false'}"
-               aria-label="Select goblin ${safe(g.name)}"
-               style="
-            display:flex; flex-direction:column; gap:.6rem;
-            background:linear-gradient(180deg,#151515,#0f0f0f);
-            border:1px solid ${sel ? "rgba(255,230,0,.6)" : "var(--cv-border)"};
-            box-shadow:${sel ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset" : "0 2px 12px rgba(0,0,0,.35)"};
-            border-radius:14px; padding:.75rem; transition:transform .12s, box-shadow .12s, border-color .12s;
-            cursor:${tired ? "not-allowed" : "pointer"}; position:relative; overflow:hidden; ${tired ? "opacity:.78; filter:grayscale(10%) brightness(.95);" : ""}
-          ">
-            <div style="display:flex; align-items:center; gap:.8rem; min-width:0;">
-              <div style="position:relative; flex:0 0 auto;">
-                <img src="${safe(g.img)}" alt="" loading="lazy"
-                     style="width:68px; height:68px; border-radius:14px; object-fit:cover; outline:1px solid var(--cv-border); box-shadow:0 3px 10px rgba(0,0,0,.35);">
-                ${ribbon}
-              </div>
-  
-              <div style="flex:1 1 auto; min-width:0;">
-                <div class="cv-gob-head" style="display:flex; align-items:center; gap:.5rem; min-width:0;">
-                  <strong class="cv-name" style="color:var(--cv-chip); font-family:Orbitron,system-ui,sans-serif; font-size:1rem;">
-                    ${safe(g.name)}
-                  </strong>
-                  <span class="cv-rarity" style="
-                    background:${rarityBg(g.rarity)}; color:${rarityFg(g.rarity)}; border-color:${rarityBorder(g.rarity)};">
-                    ${safe(g.rarity)}
-                  </span>
-                </div>
-  
-                <div class="cv-gob-pillrow" style="display:flex; flex-wrap:wrap; gap:.45rem; margin-top:.45rem;">
-                  <div class="cv-pill"><div class="cv-chip-key">LEVEL</div><div class="cv-chip-val">${safe(g.level)}</div></div>
-                  <div class="cv-pill">
-                    <div class="cv-chip-key">ABILITY</div>
-                    <div class="cv-chip-val" style="white-space:normal; overflow-wrap:anywhere;">${safe(g.main_attr)}</div>
-                  </div>
-                  <div class="cv-pill"><div class="cv-chip-key">POWER</div><div class="cv-chip-val" style="color:#7efcff;">${dp}</div></div>
-                </div>
-              </div>
-  
-            <input type="checkbox" class="cv-sel" ${sel ? "checked" : ""} ${tired ? "disabled" : ""}
-                   style="transform:scale(1.25); accent-color:#ffe600; flex:0 0 auto; align-self:flex-start;">
-            </div>
-  
-            <div style="display:flex; align-items:center; gap:.6rem; margin-top:.55rem;">
-              <div class="cv-meter"><div style="width:${pct}%;"></div></div>
-              <div style="min-width:56px; text-align:right; font-size:.82rem; font-weight:800; color:#7efcff;">${dp}</div>
-            </div>
-  
-            <div class="cv-row" style="opacity:.85; margin-top:.25rem;">
-              <div style="font-size:.74rem; color:#9aa0a6; white-space:normal; overflow-wrap:anywhere;">
-                ID: <span style="color:#cfcfcf; font-weight:600;">${safe(g.asset_id)}</span>
-              </div>
-              <div style="font-size:.94rem; color:#9aa0a6;">Power</div>
-            </div>
-          </div>
-        `;
-      }).join("");
-  
-      Cave.el.goblinList.innerHTML = html;
-  
-      // Delegation una sola volta
-      if (!Cave._goblinListDelegated) {
-        Cave._goblinListDelegated = true;
-  
-        Cave.el.goblinList.addEventListener("click", (e) => {
-          const card = e.target.closest(".cv-gob-card");
-          if (!card) return;
-          let checkbox = e.target.closest(".cv-sel");
-          if (card.dataset.disabled === "1") return;
-          if (!checkbox) {
-            checkbox = card.querySelector(".cv-sel");
-            if (!checkbox) return;
-            checkbox.checked = !checkbox.checked;
-          }
-          const id = card.dataset.id;
-          const checked = checkbox.checked;
-          if (checked) selected.add(id); else selected.delete(id);
-          card.style.border = checked ? "1px solid rgba(255,230,0,.6)" : "1px solid #2a2a2a";
-          card.style.boxShadow = checked
-            ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset"
-            : "0 2px 12px rgba(0,0,0,.35)";
-          updateSummary();
-        });
-  
-        Cave.el.goblinList.addEventListener("mouseover", (e) => {
-          const card = e.target.closest(".cv-gob-card");
-          if (!card || card.dataset.disabled === "1") return;
-          card.style.transform = "translateY(-2px)";
-        });
-        Cave.el.goblinList.addEventListener("mouseout", (e) => {
-          const card = e.target.closest(".cv-gob-card");
-          if (!card || card.dataset.disabled === "1") return;
-          card.style.transform = "translateY(0)";
-        });
-        Cave.el.goblinList.addEventListener("keydown", (e) => {
-          const card = e.target.closest(".cv-gob-card");
-          if (!card || card.dataset.disabled === "1") return;
-          if (e.key === " " || e.key === "Enter"){
-            e.preventDefault();
-            const cb = card.querySelector(".cv-sel");
-            cb.checked = !cb.checked;
-            const id = card.dataset.id;
-            if (cb.checked) selected.add(id); else selected.delete(id);
-            card.setAttribute("aria-checked", cb.checked ? "true":"false");
-            card.style.border = cb.checked ? "1px solid rgba(255,230,0,.6)" : "1px solid #2a2a2a";
-            card.style.boxShadow = cb.checked
-              ? "0 0 16px rgba(255,230,0,.35), 0 0 0 1px rgba(255,230,0,.25) inset"
-              : "0 2px 12px rgba(0,0,0,.35)";
-            updateSummary();
-          }
-        });
-		// Duration select → keep current value in memory
-		Cave.ui = Cave.ui || {};
-		Cave.ui.getDurationSeconds = function(){
-		  const el = qs("#cv-duration", container);
-		  const sec = Number(el?.value || 3600);
-		  // clamp lato UI (il backend clampa comunque 5m..24h)
-		  return Math.max(300, Math.min(86400, sec));
-		};
-      }
-    }
-  
-	// Shows a structured, inline-styled info card about Troops Reinforcement
-	// and keeps the existing summary + duration + start flow.
-	// Brief, youthful, goblin-themed copy in EN, minimal emojis.
-	async function updateSummary() {
-	  const wax = Cave?.user?.wax_account;
-	  if (!wax || !Cave?.el?.selectionSummary) return;
-	
-	  // 1) Fetch Troops Reinforcement ownership (fallback safe)
-	  let ownedReinforcements = 0;
-	  try {
-	    ownedReinforcements = Number(await fetchReinforcementCount(wax)) || 0;
-	  } catch (_) {
-	    ownedReinforcements = 0;
-	  }
-	  // make it visible globally if the rest of the app expects it
-	  try { window.reinforcementCount = ownedReinforcements; } catch {}
-	
-	  // 2) Compute limits
-	  const MAX_REINFORCEMENTS_USABLE = 40;       // you can use up to 40
-	  const HARD_CAP                     = 250;   // 50 base + 40*5 = 250
-	  const baseLimit                    = Number(typeof BASE_LIMIT !== "undefined" ? BASE_LIMIT : 50) || 50;
-	  const maxLimit                     = Number(typeof MAX_LIMIT  !== "undefined" ? MAX_LIMIT  : HARD_CAP) || HARD_CAP;
-	
-	  const appliedReinforcements = Math.min(ownedReinforcements, MAX_REINFORCEMENTS_USABLE);
-	  const computedLimit = Math.min(maxLimit, baseLimit + appliedReinforcements * 5);
-	
-	  try { window.CURRENT_LIMIT = computedLimit; } catch {}
-	
-	  // 3) Build the inline “designed” message (always shown; displays 0 if none)
-	  const boosted = computedLimit > baseLimit;
-	
-	  const infoCardHTML = `
-	    <div style="
-	      width:100%; max-width:980px; margin:.5rem auto 0;
-	      background: linear-gradient(180deg, #1c1c1c 0%, #121212 100%);
-	      border: 1px solid ${boosted ? '#3ce281' : '#2a2a2a'};
-	      border-radius: 14px; padding: 12px 14px;
-	      color:#eaeaea; box-shadow: 0 6px 18px rgba(0,0,0,.35);
-	      display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
-	    ">
-	      <div style="display:flex; gap:10px; align-items:flex-start;">
-	        <div style="
-	          width:38px; height:38px; flex:0 0 38px;
-	          border-radius:10px; display:flex; align-items:center; justify-content:center;
-	          background:${boosted ? '#183622' : '#222'}; border:1px solid ${boosted ? '#2c7a4b' : '#333'};
-	          font-size:20px;">🗡️</div>
-	        <div>
-	          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-	            <strong style="font-size:1rem; letter-spacing:.2px;">Troops Reinforcement</strong>
-	            <span style="
-	              font-size:.75rem; padding:2px 8px; border-radius:999px;
-	              border:1px solid ${boosted ? '#3ce281' : '#525252'};
-	              background:${boosted ? 'rgba(60,226,129,.10)' : 'rgba(82,82,82,.10)'}; color:${boosted ? '#9ff7c0' : '#bdbdbd'};
-	            ">
-	              ${boosted ? 'Boost Active' : 'No Boost'}
-	            </span>
-	          </div>
-	
-	          <div style="margin-top:4px; font-size:.92rem; line-height:1.35;">
-	            <div style="opacity:.95;">
-	              You own <b>${ownedReinforcements}</b> Troops Reinforcement NFT${ownedReinforcements===1?'':'s'}.
-	              Each NFT adds <b>+5 goblins</b> per expedition.
-	            </div>
-	            <div style="opacity:.9;">
-	              You can use up to <b>${MAX_REINFORCEMENTS_USABLE}</b> (that’s <b>+200</b> max) — raising the cap to <b>${HARD_CAP}</b> goblins per expedition.
-	            </div>
-	          </div>
-	        </div>
-	      </div>
-	
-	      <div style="text-align:right; min-width:180px;">
-	        <div style="font-size:.8rem; color:#b5b5b5; margin-bottom:2px;">Current sending cap</div>
-	        <div style="
-	          font-size:1.1rem; font-weight:700; letter-spacing:.3px;
-	          color:${boosted ? '#a6f3c9' : '#e6e6e6'};
-	        ">
-	          ${computedLimit} / ${HARD_CAP}
-	        </div>
-	        <div style="font-size:.78rem; color:#9c9c9c; margin-top:6px;">
-	          Base: ${baseLimit} • Applied NFTs: ${appliedReinforcements}/${MAX_REINFORCEMENTS_USABLE}
-	        </div>
-	      </div>
-	    </div>
-	  `;
-	
-	  // 4) Build the selector row (unchanged behavior)
-	  const selectorRowHTML = `
-	    <div style="display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; justify-content:center; margin-top:.6rem;">
-	      <span style="color:#ffe600;">
-	        Selected: ${selected.size} / ${computedLimit}
-	      </span>
-	
-	      <label for="cv-duration" style="color:#cfcfcf; font-size:.9rem;">Duration</label>
-		<select id="cv-duration" required
-		  style="background:#1a1a1a; color:#fff; border:1px solid #444; border-radius:8px; padding:.35rem .5rem;">
-		  <option value="">-- choose --</option>
-		  <option value="300">5 min</option>
-		  <option value="1800">30 min</option>
-		  <option value="3600">60 min</option>
-		  <option value="7200">2 hours</option>
-		  <option value="21600">6 hours</option>
-		  <option value="86400">24 hours</option>
-		</select>
-		
-		<span id="cv-duration-hint" style="color:#9ad1ff; font-size:.85rem; margin-left:.25rem;"></span>
-		
-		<button class="cv-btn" id="cv-start" style="margin-left:.25rem;">🚀 Start Expedition</button>
-		
-		<!-- avviso contestuale (si popola via JS) -->
-		<div id="cv-start-hint"
-		     style="width:100%; text-align:center; color:#ffb74d; font-size:.9rem; margin-top:.35rem; display:none;">
-		</div>
-
-	    </div>
-	  `;
-	
-	  // 5) Render
-	  Cave.el.selectionSummary.innerHTML = infoCardHTML + selectorRowHTML;
-	// === REGOLE COSTO POWER PER DURATA (UI) ===
-	// valori base per goblin, arrotondati a 2 decimali
-	const DURATION_COST = {
-	  300:   0.52,   // 5m
-	  1800:  2.50,   // 30m (baseline)
-	  3600:  4.80,   // 60m
-	  7200:  9.20,   // 120m
-	  21600: 26.50,  // 360m (6h)
-	  86400: 100.00  // 1440m (24h)
+function loadDwarvesGoldCave() {
+  const host = document.getElementById('goblin-content');
+  if (!host) return;
+  host.innerHTML = '';
+  const iframe = document.createElement('iframe');
+  iframe.src = 'nuovo2.html';
+  iframe.style.width = '100%';
+  iframe.style.border = '0';
+  iframe.style.display = 'block';
+  // meglio così: l’altezza "auto" sugli iframe non funziona come pensi
+  iframe.style.height = '100vh';
+  iframe.style.minHeight = '100vh';
+	iframe.onload = () => {
+	  const ud = window.userData || {};
+	  iframe.contentWindow.postMessage(
+	    {
+	      type: 'CC_AUTH',
+	      wax_account: ud.wax_account || null,
+	      user_id: ud.user_id || null,
+	      usx_token: ud.usx_token || null
+	    },
+	    window.location.origin
+	  );
 	};
-	
-	// ammorbidimento con resistenza (max 35% di sconto a res=100)
-	// se 'resistance' fosse 0..8, il getStat restituirà 0..8: normalizziamo a 0..100.
-	function effectiveCostFor(goblin, sec){
-	  const base = Number(DURATION_COST[sec] || DURATION_COST[3600]); // default 60m
-	  let res = Number(getStat(goblin, 'resistance') || 0);
-	  // normalizza: se piccolo (0..8), scala a 0..100
-	  if (res <= 8) res = (res / 8) * 100;
-	  const cap = 0.35; // 35%
-	  const reduction = Math.max(0, Math.min(cap, (res/100) * cap));
-	  const eff = base * (1 - reduction);
-	  return Math.round(eff * 100) / 100; // max 2 decimali
-	}
-	
-	function fmt2(n){ return (Math.round(Number(n)*100)/100).toFixed(2); }
-	
-	const durSel   = qs("#cv-duration");
-	const hintEl   = qs("#cv-duration-hint");
-	const warnEl   = qs("#cv-start-hint");
-	
-	// riesegue il controllo eleggibilità; se applyFilter=true, deseleziona i non idonei
-	function recomputeEligibility(applyFilter = true){
-	  const sec = Number(durSel?.value || 0);
-	  if (!sec){
-	    if (hintEl){ hintEl.textContent = ""; }
-	    if (warnEl){ warnEl.style.display = "none"; warnEl.textContent = ""; }
-	    return;
-	  }
-	
-	  // calcola costi effettivi per i selezionati
-	  let excluded = 0, kept = 0;
-	  let minEff = Infinity, maxEff = 0;
-	
-	  // Copia per iterare in modo stabile
-	  const selIds = Array.from(selected);
-	
-	  for (const id of selIds){
-	    const g = Cave.nftIndex.get(String(id));
-	    if (!g) continue;
-	    const eff = effectiveCostFor(g, sec);
-	    minEff = Math.min(minEff, eff);
-	    maxEff = Math.max(maxEff, eff);
-	    const dp = Number(g.daily_power || 0);
-	
-	    const ok = dp >= eff;
-	    if (!ok){
-	      excluded++;
-	      if (applyFilter){
-	        // rimuove dalla Set
-	        selected.delete(id);
-	        // aggiorna UI card (checkbox + stile)
-	        const card = document.querySelector(`.cv-gob-card[data-id="${CSS.escape(String(id))}"]`);
-	        if (card){
-	          const cb = card.querySelector(".cv-sel");
-	          if (cb) cb.checked = false;
-	          card.style.border = "1px solid #2a2a2a";
-	          card.style.boxShadow = "0 2px 12px rgba(0,0,0,.35)";
-	        }
-	      }
-	    } else {
-	      kept++;
-	    }
-	  }
-	
-	  // hint: costo base + range effettivo sui selezionati
-	  if (hintEl){
-	    const base = DURATION_COST[sec];
-	    const range = (minEff !== Infinity) ? ` • eff: ${fmt2(minEff)}–${fmt2(maxEff)}` : "";
-	    hintEl.textContent = `Cost per goblin: ${fmt2(base)}${range}`;
-	  }
-	
-	  // avviso: chi è stato escluso e quanti ne restano
-	  if (warnEl){
-	    if (excluded > 0){
-	      warnEl.style.display = "";
-	      warnEl.textContent = `⚠️ ${excluded} goblin esclusi: power insufficiente per la durata scelta (considerando resistance). Rimasti: ${kept}.`;
-	    } else {
-	      warnEl.style.display = "none";
-	      warnEl.textContent = "";
-	    }
-	  }
-	
-	  // se abbiamo modificato la selezione, ridisegna il riepilogo (aggiorna contatore "Selected:")
-	  if (applyFilter && excluded > 0){
-	    updateSummary(); // safe: viene richiamato solo quando abbiamo cambiato 'selected'
-	  }
-	}
-	
-	// trigger iniziale (solo hint) e su cambio durata (con filtro attivo)
-	recomputeEligibility(false);
-	durSel?.addEventListener("change", () => recomputeEligibility(true));
-
-	  // 6) Bind start action (kept identical in logic, with limit computed here)
-	  qs("#cv-start").onclick = async () => {
-	    if (READONLY) { toast("Overlay read-mode only.", "warn"); return; }
-	
-	    const btn = qs("#cv-start");
-	    const durSel = qs("#cv-duration");
-	    const durSec = Number(durSel?.value || 0);
-	
-	    btn.disabled = true;
-	    btn.textContent = "⏳ Starting...";
-	
-	    if (!selected.size) {
-	      toast("Select at least 1 goblin to start.", "warn");
-	      btn.disabled = false; btn.textContent = "🚀 Start Expedition";
-	      return;
-	    }
-	    if (!durSec) {
-	      toast("Please choose a duration.", "warn");
-	      btn.disabled = false; btn.textContent = "🚀 Start Expedition";
-	      return;
-	    }
-	
-		// Eleggibilità per durata + rispetto del computedLimit
-		const ids = [];
-		let excludedNow = 0;
-		const sec = Number(durSel?.value || 0);
-		
-		for (const id of selected) {
-		  const g = Cave.nftIndex.get(String(id));
-		  if (!g) continue;
-		  const eff = (typeof effectiveCostFor === "function") ? effectiveCostFor(g, sec) : 9999;
-		  if (num(g.daily_power) >= eff) {
-		    ids.push(String(id));
-		    if (ids.length === computedLimit) break;
-		  } else {
-		    excludedNow++;
-		  }
-		}
-		
-		if (excludedNow > 0) {
-		  const warnEl = qs("#cv-start-hint");
-		  if (warnEl){
-		    warnEl.style.display = "";
-		    warnEl.textContent = `⚠️ ${excludedNow} goblin esclusi al momento dello start per power insufficiente.`;
-		  }
-		}
-		
-		if (!ids.length) {
-		  toast("No eligible goblins for the selected duration.", "warn");
-		  btn.disabled = false; btn.textContent = "🚀 Start Expedition";
-		  return;
-		}
-		if (selected.size > computedLimit) {
-		  toast(`Selected ${selected.size} goblins — sending only the first ${computedLimit}.`, "warn");
-		}
-
-	
-	    try {
-	      syncUserInto(Cave.user);
-	      assertAuthOrThrow(Cave.user);
-	
-	      // Send duration_seconds to the backend along with goblin_ids
-	      const r = await API.post("/start_expedition", {
-	        wax_account: Cave.user.wax_account,
-	        user_id:     Cave.user.user_id,
-	        usx_token:   Cave.user.usx_token,
-	        goblin_ids:  ids,
-	        duration_seconds: durSec
-	      }, 20000);
-	
-	      if (r.status === 409) {
-	        toast(r.data?.error || "Already in expedition.", "warn");
-	      } else if (r.ok) {
-	        toast("Expedition started!", "ok");
-	        try { triggerLogoGoblin(Cave.user.wax_account || 'guest'); } catch {}
-	        try { showLogoToast(`${safe(Cave.user.wax_account)} just joined the band! Good hunting!`); } catch {}
-	
-	        // Always use the duration returned by the backend
-	        await renderUserCountdown(r.data.expedition_id, r.data.duration_seconds, ids);
-	        await renderGlobalExpeditions();
-	      } else {
-	        toast("Something went wrong.", "err");
-	      }
-	    } catch (e) {
-	      toast("Failed to start expedition.", "err");
-	      console.error(e);
-	    } finally {
-	      btn.disabled = false;
-	      btn.textContent = "🚀 Start Expedition";
-	    }
-	  };
-	}
-
-	function isEligibleForDuration(g){
-	  const sec = Number(qs("#cv-duration")?.value || 0) || 3600;
-	  if (!sec) return num(g.daily_power) >= 5; // fallback
-	  const eff = (typeof effectiveCostFor === "function") ? effectiveCostFor(g, sec) : 9999;
-	  return num(g.daily_power) >= eff;
-	}
-	
-	function autoBest() {
-	  selected.clear();
-	  const scored = goblins
-	    .filter(g => isEligibleForDuration(g))
-	    .map(g => ({ id: g.asset_id, score: num(g.level) + num(g[g.main_attr]) }))
-	    .sort((a,b) => b.score - a.score)
-	    .slice(0, CURRENT_LIMIT);
-	  scored.forEach(s => selected.add(s.id));
-	  renderList(); updateSummary();
-	}
-	
-	qs("#cv-select-50").onclick = () => {
-	  selected.clear();
-	  goblins
-	    .filter(g => isEligibleForDuration(g))
-	    .slice(0, CURRENT_LIMIT)
-	    .forEach(g => selected.add(g.asset_id));
-	  renderList(); updateSummary();
-	};
-
-    qs("#cv-deselect").onclick = () => { selected.clear(); renderList(); updateSummary(); };
-    qs("#cv-select-best").onclick = () => autoBest();
-    qs("#cv-search").addEventListener("input", e => { filterQuery = e.target.value; renderList(); saveFilters(); });
-    qs("#cv-rarity").addEventListener("change", e => { filterRarity = e.target.value; renderList(); saveFilters(); });
-
-    const btnFirst = qs("#cv-select-50");
-    const btnBest  = qs("#cv-select-best");
-    if (btnFirst) btnFirst.textContent = `✅ First ${CURRENT_LIMIT}`;
-    if (btnBest)  btnBest.textContent  = `🏆 Best ${CURRENT_LIMIT}`;
-    const powerRange = qs("#cv-power");
-    const powerVal = qs("#cv-power-val");
-    if (powerRange && powerVal){
-      powerRange.addEventListener("input", e => {
-        minPower = Number(e.target.value)||0;
-        powerVal.textContent = String(minPower);
-        renderList(); saveFilters();
-      });
-    }
-  
-    // render iniziale
-    renderList(); updateSummary();
-  }
-  
-  // ========= MAIN RENDER =========
-  async function renderDwarfsCave() {
-    styleOnce();
-
-    const container = document.getElementById("goblin-content");
-    if (!container) return;
-    Cave.el.container = container;
-
-    container.innerHTML = `
-      <div id="expedition-summary-block" style="margin-bottom:1.2rem; display:flex; gap:1.5rem; align-items:flex-start; flex-wrap:wrap;">
-        <div style="flex:1 1 56%; min-width:320px;">
-          <h3 class="cv-title">⛏️ Global Expeditions in Progress</h3>
-          <div id="cv-toast-host" role="status" aria-live="polite"></div>
-          <!-- 🔰 Canvas-Logo -->
-          <div id="cv-logo-wrap" class="cv-logo-wrap">
-            <canvas id="cv-logo-canvas"></canvas>
-            <div id="cv-logo-toast" class="cv-logo-toast"></div>
-          </div>
-          <div id="cv-video-or-canvas" style="width:100%; margin-top:.5rem;">
-            <canvas id="caveCanvas" style="width:80%; height:auto; display:block; border-radius:12px; box-shadow:0 0 10px #ffe600;"></canvas>
-          </div>
-        </div>
-        <div style="flex:1 1 44%; min-width:280px;">
-          <!-- 🌍 LIVE EXPEDITIONS -->
-          <div id="cv-global-list" class="cv-card"
-               style="margin-bottom:1rem; padding:1rem; border:1px solid #2b2b2b;
-                      background:linear-gradient(180deg,#141414,#0d0d0d);
-                      border-radius:14px; box-shadow:0 0 14px rgba(0,0,0,.45), inset 0 0 16px rgba(0,255,255,.08);">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-bottom:.6rem;">
-              <h4 style="color:#00e6ff; margin:0; font-family:Orbitron,system-ui,sans-serif;">🌍 Live Expeditions (in progress)</h4>
-              <span title="Aggiornamento automatico"
-                    style="font-size:.72rem; background:#152024; color:#7ff6ff; border:1px solid #20444a;
-                           padding:.15rem .45rem; border-radius:999px;">auto refresh</span>
-            </div>
-            <!-- Le card delle spedizioni in corso vengono inserite via JS -->
-          </div>
-        
-          <!-- ⛏️ RECENT RESULTS -->
-          <div id="cv-recent-list" class="cv-card cv-card--amber"
-               style="padding:1rem; border:1px solid #3a2e10; background:linear-gradient(180deg,#1a1405,#120d03); border-radius:14px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-bottom:.6rem;">
-              <h4 style="color:#ffcc66; margin:0; font-family:Orbitron,system-ui,sans-serif;">⛏️ Latest Expedition Results</h4>
-              <span style="font-size:.72rem; background:#2a2211; color:#ffcc66; border:1px solid #4a3a12; padding:.15rem .45rem; border-radius:999px;">last 10</span>
-            </div>
-            <div id="cv-recent-grid"
-                 style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:.75rem; align-items:stretch;"></div>
-            <div id="cv-recent-empty" style="display:none; margin-top:.5rem; color:#caa;">No results yet.</div>
-          </div>
-        
-          <!-- 🎁 BONUS REWARDS -->
-          <div id="cv-bonus-list" class="cv-card cv-card--green"
-               style="margin-top:1rem; padding:1rem; border:1px solid #124a12; background:linear-gradient(180deg,#0d180d,#0a130a); border-radius:14px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-bottom:.6rem;">
-              <h4 style="color:#78ff78; margin:0; font-family:Orbitron,system-ui,sans-serif;">🎁 Latest Chest Rewards</h4>
-              <span style="font-size:.72rem; background:#133113; color:#b7ffb7; border:1px solid #1f5220; padding:.15rem .45rem; border-radius:999px;">live</span>
-            </div>
-            <div id="cv-bonus-grid"
-                 style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:.75rem; align-items:stretch;"></div>
-          </div>
-        
-          <!-- ℹ️ INFO + CTA -->
-          <div style="margin:.9rem 0 .2rem; text-align:center; color:#e9e3bf; font-size:.92rem;">
-            ⏱️ <strong>Perk attempt:</strong> 1 every <strong>10 min</strong> per WAX account ·
-            <span style="opacity:.9;">~50% chance to spawn a chest</span>
-          </div>
-        
-          <div style="text-align:center; margin-bottom:1rem;">
-            <button id="cv-chest-btn" class="cv-btn"
-                    aria-label="Try to trigger a perk and drop a chest"
-                    style="display:inline-flex; align-items:center; gap:.5rem; padding:.72rem 1.05rem; border-radius:12px;
-                           border:1px solid #665200; background:linear-gradient(180deg,#ffe066,#ffbf00);
-                           color:#1a1200; font-weight:800; letter-spacing:.2px;
-                           box-shadow:0 4px 14px rgba(255,200,0,.25), inset 0 0 8px rgba(255,255,255,.35);
-                           transition:transform .08s ease, box-shadow .2s ease; cursor:pointer;">
-              <span>🎁 Try a Perk Drop</span>
-            </button>
-
-            <span id="cv-copy-overlay-wrap" style="display:none;">
-              <button id="cv-copy-overlay" class="cv-btn" style="margin-left:.6rem; padding:.72rem 1.05rem;">
-                📋 Copy to stream on Twitch
-              </button>
-            </span>
-          
-            <div style="font-size:.82rem; color:#cdbb7a; margin-top:.35rem;">Cooldown applies automatically.</div>
-          </div>
-
-          <!-- micro-hover inline senza CSS globali -->
-          <script>
-            (function(){
-              const b = document.getElementById('cv-chest-btn');
-              if(!b) return;
-              b.addEventListener('mouseenter', ()=>{ b.style.transform='translateY(-1px)'; b.style.boxShadow='0 6px 20px rgba(255,200,0,.35), inset 0 0 10px rgba(255,255,255,.5)'; });
-              b.addEventListener('mouseleave', ()=>{ b.style.transform='translateY(0)';      b.style.boxShadow='0 4px 14px rgba(255,200,0,.25), inset 0 0 8px rgba(255,255,255,.35)'; });
-              b.addEventListener('mousedown',  ()=>{ b.style.transform='translateY(1px)';  });
-              b.addEventListener('mouseup',    ()=>{ b.style.transform='translateY(-1px)'; });
-            })();
-          </script>
-        </div>
-      </div>
-
-      <div class="cv-card" style="background:linear-gradient(135deg,#3e1f05,#140b02);
-           border:2px solid #ffd700; color:#ffeabf; font-family:'Papyrus','Fantasy',cursive;
-           font-size:1.05rem; line-height:1.6; box-shadow:0 0 25px #ffb800, inset 0 0 12px #ffa500;
-           text-align:center; animation:flick 2s infinite alternate; letter-spacing:1px; text-shadow:1px 1px 2px #000;">
-        🔥 Want to change your Goblin for another one with a different Ability?<br>
-        <strong>Great!</strong> The next evolution is <u>coming THIS WEEK!!!</u>! #RotationPower
-      </div>
-
-      <div style="margin:1.2rem 0;"><p class="subtitle2">Select your goblins and start the expedition!</p></div>
-
-      <div style="display:flex; flex-wrap:wrap; gap:1.5rem;">
-        <div style="flex:1 1 76%; min-width:320px;">
-		<div style="margin-bottom:1rem; display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; justify-content:center;">
-
-		  <input id="cv-search" placeholder="Search name or ID…" 
-				 style="background:#151515; border:1px solid #333; color:#eee; padding:.55rem .7rem; border-radius:10px; width:220px;">
-
-		  <select id="cv-rarity" class="cv-btn" style="min-width:160px;">
-			<option value="">All Rarities</option>
-			<option>Common</option><option>Uncommon</option><option>Rare</option>
-			<option>Epic</option><option>Legendary</option><option>Mythic</option>
-		  </select>
-
-		  <div style="display:flex; align-items:center; gap:.45rem;">
-			<label for="cv-power" style="color:#ccc; font-size:.9rem;">Min Power</label>
-			<input id="cv-power" type="range" min="0" max="100" step="1" value="0">
-			<span id="cv-power-val" style="color:#0ff; font-size:.9rem;">0</span>
-		  </div>
-
-		  <div id="cv-sort-segment" style="display:flex; background:#1a1a1a; border:1px solid #333; border-radius:10px; overflow:hidden;">
-			<button class="cv-btn" data-sort="rarity" style="border:none; border-right:1px solid #333;">Rarity</button>
-			<button class="cv-btn" data-sort="level"  style="border:none; border-right:1px solid #333;">Level</button>
-			<button class="cv-btn" data-sort="daily_power" style="border:none;">Power</button>
-		  </div>
-
-		  <!-- ⏳ NEW: Duration selector (5m → 24h) --><button class="cv-btn" id="cv-select-50">✅ First ${CURRENT_LIMIT}</button>
-		  <button class="cv-btn" id="cv-select-best">🏆 Best ${CURRENT_LIMIT}</button>
-		  <button class="cv-btn" id="cv-deselect">❌ Clear</button>
-
-		  <!-- ℹ️ NEW: dynamic limit hint -->
-		  <div id="cv-limit-hint" style="width:100%; text-align:center; margin-top:.35rem; color:#cdbb7a; font-size:.9rem;">
-			Limit: <b>50</b> goblins per expedition. Each Reinforcement NFT adds <b>+5</b>, up to <b>250 Goblins for each expedition</b>.
-		  </div>
-		</div>
-
-        <div id="cv-summary" class="cv-card" style="text-align:center;"></div>
-        <div id="cv-active-filters" class="cv-row" style="justify-content:flex-start; flex-wrap:wrap; gap:.4rem; margin:.35rem 0;"></div>
-        <div id="cv-goblin-list" style="display:flex; flex-direction:column; gap:.5rem;"></div>
-        </div>
-      </div>
-    `;
-
-    // cache elements
-    Cave.el.toast = qs("#cv-toast-host", container);
-    Cave.el.videoOrCanvas = qs("#cv-video-or-canvas", container);
-    Cave.el.logoCanvas = qs("#cv-logo-canvas", container);
-    if (Cave.el.logoCanvas) setupLogoCanvas(Cave.el.logoCanvas);
-    Cave.el.globalList = qs("#cv-global-list", container);
-    Cave.el.recentList = qs("#cv-recent-list", container);
-    Cave.el.bonusList = qs("#cv-bonus-list", container);
-    Cave.el.selectionSummary = qs("#cv-summary", container);
-    Cave.el.goblinList = qs("#cv-goblin-list", container);
-    Cave.el.chestPerkBtn = qs("#cv-chest-btn", container);
-    renderSkeletons("#cv-bonus-grid", 6, 72);
-    // assets
-    loadAssets();
-    //initDecorations();
-    requestAnimationFrame(() => { bootRealtime(); });
-    
-    const initialCanvas = qs("#caveCanvas", Cave.el.videoOrCanvas);
-    if (initialCanvas) {
-      setupCanvas(initialCanvas);
-      startRAF();
-      startCommandPolling();
-      if (window.GoblinCrash) GoblinCrash.init(Cave);
-    }
-
-    // ── BOOTSTRAP: fetch in parallelo, no blocchi tra loro ──
-    const pAll    = API.post("/all_expeditions", {}, 10000);  // timeout più corto
-    const pRecent = API.get("/recent_expeditions", 10000);
-
-    // placeholder UI subito
-    renderSkeletons("#cv-goblin-list", 8, 96);
-    
-    // risolvi senza bloccare la pagina se uno scade
-    const [rAll, rRecent] = await Promise.allSettled([pAll, pRecent]);
-    
-    // 1) Live expeditions
-    if (rAll.status === "fulfilled" && rAll.value?.ok) {
-      await renderGlobalExpeditions(rAll.value.data); // <-- passiamo dati pre-caricati
-    } else {
-      // fallback: crea canvas e avvia loop comunque
-      if (!qs("#caveCanvas", Cave.el.videoOrCanvas)) {
-        Cave.el.videoOrCanvas.innerHTML = `<canvas id="caveCanvas" style="width:80%; height:auto; display:block; border-radius:12px; box-shadow:0 0 10px #ffe600;"></canvas>`;
-        setupCanvas(qs("#caveCanvas", Cave.el.videoOrCanvas));
-        startRAF();
-        startCommandPolling();
-        bootRealtime();
-      }
-    }
-    
-    // avvia refresh periodico (fetch “normale” come prima)
-    if (Cave.intervals.global) clearInterval(Cave.intervals.global);
-    Cave.intervals.global = setInterval(async ()=>{
-      await renderGlobalExpeditions(); // userà il proprio fetch
-    }, GLOBAL_REFRESH_MS);
-    
-    // 2) Recent expeditions
-    if (rRecent.status === "fulfilled" && rRecent.value?.ok) {
-      await renderRecentList(rRecent.value.data); // <-- passiamo dati pre-caricati
-    } else {
-      await renderRecentList(); // farà il proprio fetch con timeout ridotto
-    }
-
-    // 3) Goblin dell’utente (con retry singolo su /user_nfts)
-    await loadUserNFTsWithSingleRetry();
-	await refreshCurrentLimit();
-
-    // chest perk button
-    Cave.el.chestPerkBtn.onclick = async () => {
-      if (READONLY) { toast("Overlay read-mode only.", "warn"); return; }
-
-      const btn = Cave.el.chestPerkBtn; btn.disabled = true; btn.textContent = "Checking...";
-      try {
-        syncUserInto(Cave.user);
-        assertAuthOrThrow(Cave.user);          
-        const r = await API.post("/try_chest_perk", {
-          wax_account: Cave.user.wax_account,
-          user_id: Cave.user.user_id,
-          usx_token: Cave.user.usx_token
-        }, 12000);
-
-        if (r.status === 429) toast(`⏳ Wait: ${r.data?.seconds_remaining}s until next perk try.`,"warn");
-        else if (r.ok && r.data?.perk_awarded) {
-          toast(`🎉 Perk "${r.data.perk_type.toUpperCase()}" dropped!`,"ok");
-          triggerPerk(r.data.perk_type, Cave.user.wax_account);
-        } else toast("😢 No perk awarded.","warn");
-      } catch (e) {
-        toast("❌ Error trying chest drop.","err");
-      } finally { btn.disabled=false; btn.textContent="🎁 Try a Perk Drop"; }
-    };
-    
-    function ensureCopyButtonVisibility(){
-      // sincronizza i dati utente dalla memoria del sito (come fai altrove)
-      syncUserInto(Cave.user);
-      const wax = (Cave.user.wax_account || '').toLowerCase();
-    
-      const wrap = qs('#cv-copy-overlay-wrap', container);
-      const btn  = qs('#cv-copy-overlay', container);
-      if (!wrap || !btn) return;
-    
-      // mostra solo se in whitelist
-      const allowed = COPY_BTN_WHITELIST.has(wax);
-      wrap.style.display = 'inline-block'; //allowed ? 'inline-block' : 'none';
-    
-      // bind click una sola volta
-      if (!btn._bound){ //allowed && !btn._bound
-        btn._bound = true;
-        btn.onclick = async () => {
-          syncUserInto(Cave.user);
-          const ud={wax_account:Cave.user.wax_account,user_id:Cave.user.user_id,usx_token:Cave.user.usx_token};
-          const ud64=btoa(unescape(encodeURIComponent(JSON.stringify(ud))));
-          const url = `${location.origin}/madverse/goblin_dex.html?overlay=1&readonly=1&obs=1&noticker=1&rot=12&ud=${ud64}`;
-          try{
-            await navigator.clipboard.writeText(url);
-            toast('✅ Overlay URL copied. Paste it in OBS StreamLab ➜ Browser Source.', 'ok', 4000);
-          }catch{
-            prompt('Copy this URL to your StreamLab Overlay:', url);
-          }
-        };
-      }
-    }
-    
-    // 1) prova subito (se l'utente è già loggato verrà mostrato)
-    ensureCopyButtonVisibility();
-    
-    // 2) riprova dopo il bootstrap dei dati utente/NFT (quando finiscono di caricarsi)
-    setTimeout(ensureCopyButtonVisibility, 1500);
-    
-    // 3) riprova anche dopo il retry di /user_nfts (quando usi loadUserNFTsWithSingleRetry)
-    document.addEventListener('cv:userdata-maybe-updated', ensureCopyButtonVisibility);
-    // Quando /user_nfts popola Cave.nftIndex, rifaccio le cards live
-    document.addEventListener('cv:userdata-maybe-updated', () => {
-      try {
-        if (Array.isArray(Cave.lastAllExpeditions) && Cave.lastAllExpeditions.length) {
-          // Rerender immediato senza aspettare un nuovo fetch
-          renderGlobalExpeditions(Cave.lastAllExpeditions);
-        } else {
-          // Se non ho cache locale, faccio il fetch normale
-          renderGlobalExpeditions();
-        }
-      } catch (e) {
-        console.warn('[cv:userdata-maybe-updated] rerender failed:', e);
-      }
-    });
-
-    // Hydrate global winners (ultimi 10)
-    try {
-      const rw = await API.get("/recent_winners", 10000);
-      if (rw.ok && Array.isArray(rw.data)) {
-        renderBonusListFromBackend(rw.data);
-      }
-    } catch (e) {
-      console.warn("recent_winners failed:", e);
-    }
-    // Copy overlay URL
-    const copyBtn = qs('#cv-copy-overlay', container);
-    if (copyBtn){
-      copyBtn.onclick = async () => {
-        syncUserInto(Cave.user);
-        const ud={wax_account:Cave.user.wax_account,user_id:Cave.user.user_id,usx_token:Cave.user.usx_token};
-        const ud64=btoa(unescape(encodeURIComponent(JSON.stringify(ud))));
-        const url=`${location.origin}/madverse/goblin_dex.html?overlay=1&readonly=1&obs=1&noticker=1&rot=12&ud=${ud64}`;
-        try{
-          await navigator.clipboard.writeText(url);
-          toast('✅ Overlay URL copied. Paste it in OBS StreamLab ➜ Browser Source.', 'ok', 4000);
-        }catch{
-          prompt('Copy this URL to your StreamLab Overlay:', url);
-        }
-      };
-    }
-
-    // if user expedition in progress
-    try {
-      syncUserInto(Cave.user);
-      assertAuthOrThrow(Cave.user);        
-      const s = await API.post("/expedition_status", {
-        wax_account: Cave.user.wax_account,
-        user_id: Cave.user.user_id,
-        usx_token: Cave.user.usx_token
-      }, 12000);
-      if (s.status === 200) {
-		refreshCurrentLimit();
-        await renderUserCountdown(s.data.expedition_id, s.data.seconds_remaining, s.data.goblin_ids || []);
-      }
-    } catch {}
-    observeContainerRemoval();
-  }
-  
-  async function renderDwarfsCaveOverlay(){
-    styleOnce();
-    (function(){
-      try{
-        const qs=new URLSearchParams(location.search);
-        const ud64=qs.get('ud');
-        if(!ud64) return;
-        const ud=JSON.parse(decodeURIComponent(escape(atob(ud64))));
-        if(ud&&ud.wax_account&&ud.user_id&&ud.usx_token){
-          window.userData=ud;
-          localStorage.setItem('userData',JSON.stringify(ud));
-          document.dispatchEvent(new CustomEvent('cv:userdata-ready'));
-        }
-      }catch{}
-    })();
-
-    const root = document.getElementById('overlay-root') || document.body;
-    root.innerHTML = `
-      <div id="overlay-shell">
-        <div style="grid-column:1 / -1;">
-          <div id="cv-logo-wrap" class="cv-logo-wrap">
-            <canvas id="cv-logo-canvas"></canvas>
-            <div id="cv-logo-toast" class="cv-logo-toast"></div>
-          </div>
-        </div>
-    
-        <div id="cv-video-or-canvas" class="cv-card" style="position:relative;">
-          <div id="cv-toast-host" role="status" aria-live="polite"></div>
-          <canvas id="caveCanvas"></canvas>
-        </div>
-    
-        <aside id="cv-right" class="cv-card">
-          <div id="cv-rotator">
-            <section id="cv-panel-live" class="cv-rot-panel">
-              <h4 class="cv-title" style="margin-top:0;">🌍 Live Expeditions</h4>
-              <div id="cv-global-list"></div>
-            </section>
-    
-            <section id="cv-panel-recent" class="cv-rot-panel" hidden>
-              <div id="cv-recent-list">
-                <div id="cv-recent-grid" class="cv-cards"></div>
-              </div>
-            </section>
-    
-            <section id="cv-panel-bonus" class="cv-rot-panel" hidden>
-              <div id="cv-bonus-list"></div>
-            </section>
-          </div>
-        </aside>
-      </div>
-    `;
-
-    // cache UI minime
-    Cave.el.toast        = qs('#cv-toast-host');
-    Cave.el.videoOrCanvas= qs('#cv-video-or-canvas');
-    const logoCanvas     = qs('#cv-logo-canvas');
-    if (logoCanvas) setupLogoCanvas(logoCanvas);
-    Cave.el.globalList   = qs('#cv-global-list');
-    Cave.el.bonusList    = qs('#cv-bonus-list');
-    Cave.el.recentList   = qs('#cv-recent-list');
-    Cave.visible = true;
-
-    // canvas
-    setupCanvas(qs('#caveCanvas'));
-    if (window.GoblinCrash) GoblinCrash.init(Cave);
-    loadAssets();
-    startRAF();
-    bootRealtime()
-    startRightPanelRotator();
-    // primo fetch (overlay usa public se disponibile)
-    const fetchAll = READONLY
-      ? API.get('/public_all_expeditions', 12000)
-      : API.post('/all_expeditions', {}, 12000);
-  
-    const [rAll, rRecent, rWin] = await Promise.allSettled([
-      fetchAll,
-      API.get('/recent_expeditions', 12000),
-      API.get('/recent_winners', 12000)
-    ]);
-  
-    if (rAll.status==='fulfilled' && rAll.value?.ok) await renderGlobalExpeditions(rAll.value.data);
-    if (rWin.status==='fulfilled' && rWin.value?.ok)  renderBonusListFromBackend(rWin.value.data);
-    if (rRecent.status==='fulfilled' && rRecent.value?.ok) await renderRecentList(rRecent.value.data);
-  
-    // aggiorna ticker righe
-    Cave.tickerRecent  = (rRecent.status==='fulfilled' && rRecent.value?.ok && Array.isArray(rRecent.value.data)) ? rRecent.value.data : [];
-    Cave.tickerWinners = (rWin.status==='fulfilled'    && rWin.value?.ok    && Array.isArray(rWin.value.data))    ? rWin.value.data    : [];
-    updateTickerFromArrays(Cave.tickerRecent, Cave.tickerWinners, Cave.lastAllExpeditions||[]);
-  
-    // refresh periodico
-    if (Cave.intervals.global) clearInterval(Cave.intervals.global);
-    Cave.intervals.global = setInterval(async ()=>{
-      try{
-        const all = READONLY ? await API.get('/public_all_expeditions', 12000)
-                             : await API.post('/all_expeditions', {}, 12000);
-        const rec = await API.get('/recent_expeditions', 12000);
-        const win = await API.get('/recent_winners', 12000);
-        if (all.ok) await renderGlobalExpeditions(all.data);
-        if (win.ok) { renderBonusListFromBackend(win.data); Cave.tickerWinners = win.data; }
-        if (rec.ok) { await renderRecentList(rec.data); Cave.tickerRecent = rec.data; }
-        updateTickerFromArrays(Cave.tickerRecent, Cave.tickerWinners, Cave.lastAllExpeditions||[]);
-      }catch{}
-    }, GLOBAL_REFRESH_MS);
-  }
-
-
-  // ========= VISIBILITY =========
-  document.addEventListener("visibilitychange", () => {
-    Cave.visible = !document.hidden;
-    if (Cave.visible) {
-      startCommandPolling();
-      bootRealtime();
-    } else {
-      stopCommandPolling();
-      stopRealtimePolling?.();     // ferma polling se presente
-      closeRealtimeSSE?.();      
-      // opzionale: accorcia le scie per evitare burst al rientro
-      Cave.goblins.forEach(g => {
-        if (Array.isArray(g.trail)) g.trail = g.trail.slice(0, 4);
-      });
-    }
-  });
-  
-  document.addEventListener("visibilitychange", () => {
-    bootRealtime();
-  });
-
-  // ========= EXPOSE =========
-  window.renderDwarfsCave = renderDwarfsCave;
-  window.renderDwarfsCaveOverlay = renderDwarfsCaveOverlay;
-  
-  // Avvio auto se siamo in overlay (richiede le costanti del Punto 1)
-  if (OVERLAY_MODE) {
-    renderDwarfsCaveOverlay();
-  } else {
-    renderDwarfsCave();
-  }
-
-})();
-
-
-
-
-
+  host.appendChild(iframe);
+}
 
 async function renderGoblinBlend() {
   const container = document.getElementById("goblin-content");
@@ -8459,481 +6545,10 @@ function changePage2(page) {
   renderPaginationControls2();
 }
 
-
 function setActiveTab(tabId) {
   document.querySelectorAll('.lp-tab').forEach(tab => tab.classList.remove('active'));
   document.getElementById(tabId).classList.add('active');
 }
-
-async function loadLpLeague() {
-  const container = document.querySelector('.section-container');
-
-  if (!window.userData || !window.userData.userId || !window.userData.usx_token || !window.userData.wax_account) {
-    container.innerHTML += `<div class="error-message">User data is missing. Please log in again.</div>`;
-    return;
-  }
-
-  const { userId, usx_token, wax_account } = window.userData;
-
-  container.innerHTML = `
-    <div class="lp-tabs">
-      <button id="tab-instructions" class="lp-tab active">Instructions</button>
-      <button id="tab-leaderboard" class="lp-tab">Leaderboard</button>
-      <button id="tab-badges" class="lp-tab">Badge-Points Leaderboard</button>
-    </div>
-    <div id="lp-content" class="lp-content">
-      <div class="info-message">Click on "Leaderboard" to view rankings.</div>
-    </div>
-  `;
-
-  document.getElementById('tab-instructions').addEventListener('click', () => {
-    document.getElementById('lp-content').innerHTML = `
-      <div class="instructions" style="
-        font-family: 'Papyrus', 'Courier New', cursive;
-        font-size: 1.1rem;
-        color: #39ff14;
-        text-shadow: 0 0 3px #00ffcc, 0 0 7px #00ffcc;
-        padding: 2rem;
-        border: 2px solid #00ffcc;
-        border-radius: 14px;
-        box-shadow: 0 0 20px #00ffcc, 0 0 40px #ff00ff;
-        animation: fade-slide 1s ease-in-out;
-        background: rgba(0, 0, 0, 0.6);
-        max-width: 900px;
-        margin: 0 auto;
-      ">
-        <h3 style="
-          font-size: 1.7rem;
-          color: #FFD700;
-          text-shadow: 0 0 5px #FFD700, 0 0 15px #FFE600;
-          animation: glow-pulse 2s infinite;
-          text-align: center;
-          margin-bottom: 1.5rem;
-        ">How to Participate in LP League</h3>
-    
-        <ul style="
-          list-style-type: square;
-          padding-left: 1.8rem;
-          line-height: 1.7;
-          font-size: 1.15rem;
-          margin-bottom: 1.8rem;
-        ">
-          <li>Stake LP tokens on supported pools (Taco CHIPS/WAX, Taco CHIPS/SQJ, ALCOR CHIPS/WAX, ALCOR CHIPS/SQJ, ALCOR SQJ/WAX).</li>
-          <li>Earn Points based on LP delta and token value (in WAX).</li>
-          <li>Top performers earn WAX rewards from the <strong>15,000 WAX</strong> prize pool.</li>
-          <li>Daily activity boosts score and earns you Badges!</li>
-        </ul>
-    
-        <hr style="border-color: #00ffcc; margin: 1.8rem 0;">
-    
-        <h4 style="
-          font-size: 1.4rem;
-          color: #1affd5;
-          text-shadow: 0 0 3px #00f0ff, 0 0 10px #00f0ff;
-          margin-bottom: 0.8rem;
-          animation: glow-pulse 2s infinite;
-        ">Badge System & Extra Rewards</h4>
-    
-        <p style="margin-bottom: 1.2rem; line-height: 1.6;">
-          Earn badges by completing various achievements during the LP League. Each badge grants you extra points (1 to 3). The <b>Top 5 players with the highest Badge Points</b> will receive a share of <span style="color: #FFD700; font-weight: bold;">2,000,000 $CHIPS tokens</span> as extra bonus rewards, in addition to the LP League rewards.
-        </p>
-    
-        <div style="
-          border: 2px dashed #FFD700;
-          border-radius: 12px;
-          padding: 1rem;
-          box-shadow: 0 0 15px #FFD700, 0 0 25px #FFD700;
-          margin-bottom: 1.5rem;
-          font-size: 1rem;
-          background: rgba(0, 0, 0, 0.4);
-        ">
-          <p style="margin-bottom: 0.8rem; text-align: center; font-weight: bold; color: #FFD700;">Top 5 Badge Points Holders will receive:</p>
-          <ul style="
-            list-style: none;
-            padding-left: 0;
-            text-align: center;
-            line-height: 1.6;
-          ">
-            <li style="color: #FFD700;">🥇 1st place → 1,000,000 $CHIPS</li>
-            <li style="color: #C0C0C0;">🥈 2nd place → 500,000 $CHIPS</li>
-            <li style="color: #CD7F32;">🥉 3rd place → 300,000 $CHIPS</li>
-            <li style="color: #00ffcc;">4th place → 150,000 $CHIPS</li>
-            <li style="color: #1affd5;">5th place → 50,000 $CHIPS</li>
-          </ul>
-        </div>
-    
-        <div style="
-          display: flex;
-          flex-direction: column;
-          gap: 0.8rem;
-          font-size: 1rem;
-        ">
-          <div style="border: 1px solid #FFD700; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #FFD700;">
-            <b>🏆 Top 3</b> → Place in Top 3. <span style="color: #FFD700;">(+3 Points)</span>
-          </div>
-          <div style="border: 1px solid #C0C0C0; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #C0C0C0;">
-            <b>🥈 Top 10</b> → Place in Top 10. <span style="color: #C0C0C0;">(+2 Points)</span>
-          </div>
-          <div style="border: 1px solid #4CAF50; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #4CAF50;">
-            <b>Volume Hunter</b> → Reach 1,000+ Points. <span style="color: #4CAF50;">(+1 Point)</span>
-          </div>
-          <div style="border: 1px solid #FF5722; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #FF5722;">
-            <b>Heavy Hitter</b> → Reach 5,000+ Points. <span style="color: #FF5722;">(+2 Points)</span>
-          </div>
-          <div style="border: 1px solid #2196F3; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #2196F3;">
-            <b>Consistency</b> → 5+ Activity Movements. <span style="color: #2196F3;">(+1 Point)</span>
-          </div>
-          <div style="border: 1px solid #9C27B0; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #9C27B0;">
-            <b>Ultra Consistent</b> → 20+ Activity Movements. <span style="color: #9C27B0;">(+3 Points)</span>
-          </div>
-          <div style="border: 1px solid #795548; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #795548;">
-            <b>Daily Grinder</b> → 3+ Daily Deltas. <span style="color: #795548;">(+2 Points)</span>
-          </div>
-          <div style="border: 1px solid #E91E63; border-radius: 10px; padding: 0.7rem; box-shadow: 0 0 12px #E91E63;">
-            <b>First Mover</b> → Active since Day 1. <span style="color: #E91E63;">(+3 Points)</span>
-          </div>
-        </div>
-    
-        <p style="margin-top: 1.2rem; font-style: italic; color: #1affd5;">
-          The Badge Points Leaderboard is visible in the "Badge-Points Leaderboard" tab.
-        </p>
-      </div>
-    `;
-
-    setActiveTab('tab-instructions');
-    document.getElementById('tab-instructions').click();
-  });
-
-  document.getElementById('tab-leaderboard').addEventListener('click', async () => {
-    document.getElementById('lp-content').innerHTML = `<div class="loading">Loading LP League data...</div>`;
-    setActiveTab('tab-leaderboard');
-    await loadLpLeagueData(userId, usx_token, wax_account);
-  });
-  
-  document.getElementById('tab-badges').addEventListener('click', () => {
-    document.getElementById('lp-content').innerHTML = `<div class="loading">Loading Badge-Points Leaderboard...</div>`;
-    setActiveTab('tab-badges');
-    displayBadgePointsLeaderboard(originalData);
-  });
-}
-function displayBadgePointsLeaderboard(data) {
-  const container = document.getElementById('lp-content');
-
-  const badgePointsMap = {
-    'Top 3': 3,
-    'Top 10': 2,
-    'Volume Hunter': 2,
-    'Heavy Hitter': 3,
-    'Consistency': 1,
-    'Ultra Consistent': 2,
-    'Daily Grinder': 2,
-    'First Mover': 1
-  };
-
-  const badgePointsData = data.map(record => {
-    const totalBadgePoints = record.badges.reduce((sum, badge) => {
-      return sum + (badgePointsMap[badge] || 0);
-    }, 0);
-
-    return {
-      username: record.username,
-      totalBadgePoints,
-      badges: record.badges
-    };
-  });
-
-  badgePointsData.sort((a, b) => b.totalBadgePoints - a.totalBadgePoints);
-
-  const prizeMap = {
-    1: '1,000,000 $CHIPS',
-    2: '500,000 $CHIPS',
-    3: '300,000 $CHIPS',
-    4: '150,000 $CHIPS',
-    5: '50,000 $CHIPS'
-  };
-
-  container.innerHTML = `
-    <div style="
-      font-family: 'Papyrus', 'Courier New', cursive;
-      color: #39ff14;
-      text-shadow: 0 0 3px #00ffcc, 0 0 7px #00ffcc;
-      padding: 1.5rem;
-      border: 2px solid #00ffcc;
-      border-radius: 14px;
-      box-shadow: 0 0 20px #00ffcc, 0 0 40px #ff00ff;
-      animation: fade-slide 1s ease-in-out;
-      background: rgba(0, 0, 0, 0.6);
-      max-width: 1000px;
-      margin: 0 auto;
-    ">
-      <h3 style="
-        font-size: 1.6rem;
-        color: #FFD700;
-        text-shadow: 0 0 5px #FFD700, 0 0 15px #FFE600;
-        animation: glow-pulse 2s infinite;
-        text-align: center;
-        margin-bottom: 1.5rem;
-      ">Badge Points Leaderboard</h3>
-
-      <table class="reward-table badge-points-table" style="width: 100%; border-collapse: collapse;">
-        <thead>
-          <tr style="background-color: rgba(0,255,255,0.1);">
-            <th style="padding: 8px; border-bottom: 2px solid #00ffcc;">#</th>
-            <th style="padding: 8px; border-bottom: 2px solid #00ffcc;">Username</th>
-            <th style="padding: 8px; border-bottom: 2px solid #00ffcc;">Badge Points</th>
-            <th style="padding: 8px; border-bottom: 2px solid #00ffcc;">Badges</th>
-            <th style="padding: 8px; border-bottom: 2px solid #00ffcc;">Prize</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${badgePointsData.map((record, index) => `
-            <tr class="${index < 5 ? 'top5-animate' : ''}" style="
-              text-align: center;
-              border-bottom: 1px solid rgba(0,255,255,0.2);
-              ${index < 5 ? 'font-weight:bold; color: #FFD700;' : ''}
-            ">
-              <td style="padding: 8px;">${index + 1}</td>
-              <td style="padding: 8px;">${record.username}</td>
-              <td style="padding: 8px;">${record.totalBadgePoints}</td>
-              <td style="padding: 8px;">${record.badges.map(b => `
-                <span class="badge-animated" style="
-                  display: inline-block;
-                  padding: 6px 10px;
-                  margin: 3px;
-                  border-radius: 12px;
-                  font-size: 12px;
-                  font-weight: bold;
-                  color: white;
-                  background-color: ${getBadgeColor(b)};
-                  text-shadow: 0 0 2px #000, 0 0 5px #000;
-                  animation: fadeInBadge 0.6s ease-in-out;
-                  transition: transform 0.2s ease-in-out;
-                " onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'"
-                >${b}</span>
-              `).join(' ')}</td>
-              <td style="padding: 8px;">
-                ${prizeMap[index + 1] ? `<span style="color: #FFD700;">${prizeMap[index + 1]}</span>` : '-'}
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-
-      <div class="badge-reward-glow" style="
-        margin-top: 2rem;
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: #FFD700;
-        text-align: center;
-        animation: glowText 2s infinite;
-      ">
-        ✨ The Top 5 players will receive a total of 2,000,000 $CHIPS tokens as extra rewards! ✨
-      </div>
-    </div>
-  `;
-}
-
-// Reuse your getBadgeColor function:
-function getBadgeColor(badgeName) {
-  switch (badgeName) {
-    case 'Top 3': return '#FFD700';
-    case 'Top 10': return '#C0C0C0';
-    case 'Volume Hunter': return '#4CAF50';
-    case 'Heavy Hitter': return '#FF5722';
-    case 'Consistency': return '#2196F3';
-    case 'Ultra Consistent': return '#9C27B0';
-    case 'Daily Grinder': return '#795548';
-    case 'First Mover': return '#E91E63';
-    default: return '#607D8B';
-  }
-}
-
-async function loadLpLeagueData(userId, usx_token, wax_account) {
-  const container = document.getElementById('lp-content');
-
-  try {
-    const res = await fetch(`${BASE_URL}/lp_league?userId=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}&wax_account=${encodeURIComponent(wax_account)}`);
-
-    if (!res.ok) throw new Error('Failed to fetch LP League data');
-
-    const json = await res.json();
-    const data = json.users;
-
-    if (!Array.isArray(data) || data.length === 0) {
-      container.innerHTML = '<div class="info-message">No LP League data available.</div>';
-      return;
-    }
-
-    originalData = data;
-    currentSort = { key: '', direction: 'asc' };
-
-    displayLpLeagueData(data);
-
-  } catch (err) {
-    container.innerHTML = `<div class="error-message">Error: ${err.message}</div>`;
-  }
-}
-
-function displayLpLeagueData(data) {
-  const container = document.getElementById('lp-content');
-
-  const getUnique = (arr, key) => [...new Set(arr.map(item => item[key]).filter(Boolean))].sort();
-  const createOptions = values => `<option value="">All</option>` + values.map(v => `<option value="${v}">${v}</option>`).join('');
-  const sortArrow = key => currentSort.key === key ? (currentSort.direction === 'asc' ? ' ↑' : ' ↓') : '';
-
-  const usernames = getUnique(data, 'username');
-  const topPools = getUnique(data, 'top_pool');
-
-  container.innerHTML = `
-    <div class="filter-toolbar">
-      <select id="filter-username" class="filter-select">${createOptions(usernames)}</select>
-      <select id="filter-pool" class="filter-select">${createOptions(topPools)}</select>
-      <button id="refresh-leaderboard" class="btn btn-primary">Refresh</button>
-    </div>
-
-    <table class="reward-table">
-      <thead>
-        <tr>
-          <th onclick="sortLpTable('rank')">#${sortArrow('rank')}</th>
-          <th onclick="sortLpTable('username')">User${sortArrow('username')}</th>
-          <th>Badges</th>
-          <th onclick="sortLpTable('total_points')">Points${sortArrow('total_points')}</th>
-          <th onclick="sortLpTable('reward')">Reward (WAX)${sortArrow('reward')}</th>
-          <th onclick="sortLpTable('lp_activity_score')">Total Movements${sortArrow('lp_activity_score')}</th>
-          <th>24h Movements</th>
-          <th>Top Pool</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  `;
-
-  renderLpTable(data);
-
-  document.getElementById('filter-username').addEventListener('change', applyLpFiltersAndSort);
-  document.getElementById('filter-pool').addEventListener('change', applyLpFiltersAndSort);
-  document.getElementById('refresh-leaderboard').addEventListener('click', () =>
-    loadLpLeagueData(window.userData.userId, window.userData.usx_token, window.userData.wax_account)
-  );
-}
-
-function renderLpTable(data) {
-  const tbody = document.querySelector('#lp-content tbody');
-  let rows = '';
-  
-  const currentUser = window.userData.wax_account;
-  
-  data.forEach((record, index) => {
-    const rowClass = index % 2 === 0 ? 'row-even' : 'row-odd';
-    const isCurrentUser = record.username === currentUser;
-  
-    const highlightStyle = isCurrentUser ? `
-      border: 3px solid gold;
-      box-shadow: 0 0 20px gold;
-      transform: scale(1.2);
-      transition: all 0.3s ease-in-out;
-      z-index: 1;
-      position: relative;
-    ` : '';
-  
-    const badgeStyle = `
-      display: inline-block;
-      padding: 6px 10px;
-      margin: 4px 0;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: bold;
-      color: red;
-      text-shadow:
-        -1px -1px 0 #000,
-         1px -1px 0 #000,
-        -1px  1px 0 #000,
-         1px  1px 0 #000;
-      animation: fadeIn 0.6s ease-in-out;
-      text-align: center;
-      width: 100%;
-      box-sizing: border-box;
-    `;
-  
-    const getBadgeColor = (badgeName) => {
-      switch (badgeName) {
-        case 'Top 3': return '#FFD700';
-        case 'Top 10': return '#C0C0C0';
-        case 'Volume Hunter': return '#4CAF50';
-        case 'Heavy Hitter': return '#FF5722';
-        case 'Consistency': return '#2196F3';
-        case 'Ultra Consistent': return '#9C27B0';
-        case 'Daily Grinder': return '#795548';
-        case 'First Mover': return '#E91E63';
-        default: return '#607D8B';
-      }
-    };
-  
-    const badgeDisplay = record.badges.length
-      ? record.badges.map(b => `
-        <span class="badge" style="${badgeStyle}; background-color: ${getBadgeColor(b)};" title="${b}">
-          ${b}
-        </span>
-      `).join('<br>')
-      : '';
-  
-    const topPool = record.top_pool || '';
-    rows += `
-      <tr class="${rowClass}" style="${highlightStyle}">
-        <td>${record.rank}</td>
-        <td>${record.username}</td>
-        <td>${badgeDisplay}</td>
-        <td>${record.total_points.toFixed(2)}</td>
-        <td>${record.reward.toFixed(2)}</td>
-        <td>${record.lp_activity_score}</td>
-        <td>${record.daily_delta}</td>
-        <td>${topPool}</td>
-      </tr>
-    `;
-  });
-  
-  tbody.innerHTML = rows;
-
-}
-
-function applyLpFiltersAndSort() {
-  const username = document.getElementById('filter-username').value;
-  const pool = document.getElementById('filter-pool').value;
-
-  let filtered = originalData.filter(record =>
-    (!username || record.username === username) &&
-    (!pool || record.top_pool === pool)
-  );
-
-  if (currentSort.key) {
-    filtered.sort((a, b) => {
-      const aVal = a[currentSort.key];
-      const bVal = b[currentSort.key];
-
-      if (typeof aVal === 'string') {
-        return currentSort.direction === 'asc'
-          ? aVal.localeCompare(bVal)
-          : bVal.localeCompare(aVal);
-      }
-
-      return currentSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
-    });
-  }
-
-  renderLpTable(filtered);
-}
-
-function sortLpTable(key) {
-  if (currentSort.key === key) {
-    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-  } else {
-    currentSort.key = key;
-    currentSort.direction = 'asc';
-  }
-
-  applyLpFiltersAndSort();
-}
-
 
 async function loadAccountSection() {
   const { userId, usx_token } = window.userData;
@@ -9433,6 +7048,93 @@ function showEmailEditForm(currentEmail) {
   });
 }
 
+function showTwitchEditForm(currentTwitch) {
+  const twitchBlock = document.getElementById('twitch-block');
+  if (!twitchBlock) return;
+
+  twitchBlock.innerHTML = `
+    <form id="twitch-form">
+      <label for="new-twitch" class="label">🎮 New Twitch Username:</label>
+      <input
+        type="text"
+        id="new-twitch"
+        value="${currentTwitch || ''}"
+        required
+        placeholder="Enter new Twitch username..."
+      />
+      <p style="font-size: 0.8rem; color: #9ca3af; margin-top: 4px;">
+        Please enter your Twitch nickname <strong>without</strong> the @.
+      </p>
+      <button type="submit" class="small-btn">💾 Save</button>
+      <button type="button" class="small-btn cancel" id="cancel-twitch-btn">✖ Cancel</button>
+      <div id="twitch-feedback" class="form-feedback" style="margin-top: 8px;"></div>
+    </form>
+  `;
+
+  const feedbackEl = document.getElementById('twitch-feedback');
+
+  document.getElementById('cancel-twitch-btn').addEventListener('click', () => {
+    // Ripristina tutta la card Personal Info
+    renderPersonalInfo(window.accountData.userInfo);
+  });
+
+  document.getElementById('twitch-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const raw = document.getElementById('new-twitch').value || '';
+    // riutilizziamo la stessa helper usata nella registrazione
+    const newTwitch = sanitizeHandle(raw);
+
+    if (!newTwitch) {
+      feedbackEl.textContent = '❌ Please enter a valid Twitch username.';
+      feedbackEl.style.color = 'crimson';
+      return;
+    }
+
+    feedbackEl.textContent = '⏳ Updating...';
+    feedbackEl.style.color = '#888';
+
+    try {
+      const { userId, usx_token } = window.userData || {};
+
+      const res = await fetch(`${BASE_URL}/account/update_twitch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          usx_token: usx_token,
+          new_twitch_username: newTwitch
+        })
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        feedbackEl.textContent = '✅ Twitch username updated successfully!';
+        feedbackEl.style.color = 'limegreen';
+
+        // aggiorna localmente il dato che usi nella card
+        if (window.accountData && window.accountData.userInfo) {
+          window.accountData.userInfo.twitch_username = newTwitch;
+        }
+
+        // dopo un breve delay, ricarica la sezione
+        setTimeout(() => {
+          renderPersonalInfo(window.accountData.userInfo);
+        }, 1500);
+      } else {
+        feedbackEl.textContent = `❌ ${result.error || 'Unknown error.'}`;
+        feedbackEl.style.color = 'crimson';
+      }
+    } catch (err) {
+      feedbackEl.textContent = `❌ Failed to update Twitch username: ${err.message}`;
+      feedbackEl.style.color = 'crimson';
+    }
+  });
+}
+
 function renderPersonalInfo(info) {
   const container = document.getElementById('personal-info');
 
@@ -9461,8 +7163,15 @@ function renderPersonalInfo(info) {
 
   container.innerHTML = `
     <div class="card-glow">
-      <h2 class="glow-text">👤 ${info.telegram_username || 'Unknown'}</h2>
-      <p><span class="label">🎮 Twitch:</span> ${info.twitch_username || 'N/A'}</p>
+      <h2 class="glow-text">👤 Telegram username: ${info.telegram_username || 'Unknown'}</h2>
+      <div id="twitch-block">
+        <p>
+          <span class="label">🎮 Twitch username:</span>
+          <span id="twitch-text">${info.twitch_username || 'N/A'}</span>
+        </p>
+        <button class="small-btn" id="change-twitch-btn">✏️ Change Twitch Username</button>
+      </div>
+
       <p><span class="label">🔑 Wax Account:</span> <code>${info.wax_account}</code></p>
       <p><span class="label">🏅 Role:</span> <span class="role-tag">${info.role}</span></p>
       <p><span class="label">📈 Chips Staking Rank:</span> ${info.staking_rank ? `#${info.staking_rank}` : 'Out of Top 50'}</p>
@@ -9477,10 +7186,20 @@ function renderPersonalInfo(info) {
     </div>
   `;
 
-  const btn = document.getElementById('change-email-btn');
-  btn.addEventListener('click', () => {
-    showEmailEditForm(info.email || '');
-  });
+  const emailBtn = document.getElementById('change-email-btn');
+  if (emailBtn) {
+    emailBtn.addEventListener('click', () => {
+      showEmailEditForm(info.email || '');
+    });
+  }
+
+  const twitchBtn = document.getElementById('change-twitch-btn');
+  if (twitchBtn) {
+    twitchBtn.addEventListener('click', () => {
+      // passiamo il valore attuale, così l'input è precompilato
+      showTwitchEditForm(info.twitch_username || '');
+    });
+  }
 }
 
 function renderChatRewards(telegram, twitch) {
@@ -13127,6 +10846,7 @@ async function loadWallet(preferredTab = 'twitch', force = false) {
   window.currentWalletTab = desired;
   setActive(desired);
   renderWalletView(desired);
+  setupWalletPriceSidebar();
 }
 
 function renderWalletView(type) {
@@ -13257,220 +10977,166 @@ function renderWalletView(type) {
     // Build grouping key:
     //  - prefer tx_id
     //  - else compose from (reference_type, reference_id, channel, from/to) + minute bucket
-    function txKeyFor(it) {
-      const et  = String(it.event_type||'').toLowerCase();
-      const rt  = String(it.reference_type||'').toLowerCase();
-      const id  = it.id && String(it.id);
-      const txid= it.tx_id || it.metadata?.tx_id;
-    
-      if (txid) return `tx::${txid}`;
-    
-      // 🔒 NON aggregare transfer/bridge (mostra ogni riga separata)
-      if (rt === 'internal_transfer' || et.startsWith('transfer') || et.startsWith('bridge')) {
-        return `row::${id || crypto?.randomUUID?.() || Math.random()}`;
-      }
-    
-      // 🏧 Withdraw: gruppo "initiated + send" per simbolo+destinatario su bucket 20'
-      if (rt === 'withdraw' || et.startsWith('withdraw') || et === 'send') {
-        const sym = (it.symbol||'').toUpperCase();
-        const to  = (it.to_account||'').toLowerCase();
-        const tms = it.created_at ? new Date(it.created_at).getTime() : Date.now();
-        const bucket = Math.floor(tms / (20*60*1000)); // 20 minuti
-        return `wd::${sym}|${to}|${bucket}`;
-      }
-    
-      // 🔄 Swap: raggruppa per pair + canale + importo input su bucket 5'
-      if (rt === 'swap' || et.startsWith('swap')) {
-        const ref = String(it.reference_id||'').toUpperCase(); // es: FROM->TO
-        const ch  = String(it.channel||'').toLowerCase();
-        const ain = (it.amount!=null) ? Number(it.amount).toFixed(6) : '0';
-        const tms = it.created_at ? new Date(it.created_at).getTime() : Date.now();
-        const bucket = Math.floor(tms / (5*60*1000));
-        return `sw::${ref}|${ch}|${ain}|${bucket}`;
-      }
-    
-      // fallback: non aggregare
-      return `row::${id || crypto?.randomUUID?.() || Math.random()}`;
-    }
+	function txKeyFor(it) {
+	  const et  = String(it.event_type||'').toLowerCase();
+	  const rt  = String(it.reference_type||'').toLowerCase();
+	  const id  = it.id && String(it.id);
+	  const txid= it.tx_id || it.metadata?.tx_id;
+	
+	  // se c'è un tx_id, quello è il grouping key
+	  if (txid) return `tx::${txid}`;
+	
+	  // non raggruppare transfer/bridge (mostra ogni riga)
+	  if (rt === 'internal_transfer' || rt === 'bridge' || et.startsWith('transfer') || et.startsWith('bridge')) {
+	    return `row::${id || crypto?.randomUUID?.() || Math.random()}`;
+	  }
+	
+	  // withdraw: raggruppa initiated+completed per symbol+destinatario su bucket 20'
+	  if (rt === 'withdraw' || et.includes('withdraw') || et === 'send') {
+	    const sym = (it.symbol||'').toUpperCase();
+	    const to  = (it.to_account||'').toLowerCase();
+	    const tms = it.created_at ? new Date(it.created_at).getTime() : Date.now();
+	    const bucket = Math.floor(tms / (20*60*1000));
+	    return `wd::${sym}|${to}|${bucket}`;
+	  }
+	
+	  // swap: raggruppa per coppia + canale + importo input su bucket 5'
+	  if (rt === 'swap' || et.startsWith('swap')) {
+	    const ref = String(it.reference_id||'').toUpperCase(); // es: FROM->TO
+	    const ch  = String(it.channel||'').toLowerCase();
+	    const ain = (it.amount!=null) ? Number(it.amount).toFixed(6) : '0';
+	    const tms = it.created_at ? new Date(it.created_at).getTime() : Date.now();
+	    const bucket = Math.floor(tms / (5*60*1000));
+	    return `sw::${ref}|${ch}|${ain}|${bucket}`;
+	  }
+	
+	  // fallback: non raggruppare
+	  return `row::${id || crypto?.randomUUID?.() || Math.random()}`;
+	}
 
-
-    function upsertTx(it) {
-      const et = String(it.event_type||'').toLowerCase();
-      if (et === 'network_fee' || et === 'fee_collected') return; // hide fees always
-
-      // Infer primary type for UI
-      const primaryType = (() => {
-        const rt = String(it.reference_type||'').toLowerCase();
-        if (rt === 'swap') return 'swap';
-        if (rt === 'internal_transfer') return 'transfer';
-        if (rt === 'bridge') return 'bridge';
-        // withdraw flow tags:
-        if (['withdraw_initiated','withdraw_completed','withdraw_failed','send'].includes(et)) return 'withdraw';
-        return rt || (it.object_type || 'tx');
-      })();
-
-      const key = txKeyFor(it);
-      const cur = th.txMap.get(key) || {
-        key,
-        type: primaryType,                 // withdraw|swap|transfer|bridge
-        status: 'pending',                 // pending|success|failed
-        created_at: it.created_at || null,
-        updated_at: it.created_at || null,
-        channel: (it.channel || '').toLowerCase(),
-        from_account: it.from_account || '',
-        to_account: it.to_account || '',
-        tx_id: it.tx_id || it.metadata?.tx_id || null,
-        memo: it.memo || '',
-        // amounts (we show net / received and/or spent)
-        amount_in: null,   // e.g., swap debit / withdraw requested
-        symbol_in: null,
-        amount_out: null,  // e.g., swap credit / withdraw sent / transfer net / bridge net
-        symbol_out: null,
-        // swap pair parsing (FROM->TO)
-        pair: null,
-        meta: it.metadata || {}
-      };
-
-      // time bounds
-      if (it.created_at) {
-        if (!cur.created_at || new Date(it.created_at) < new Date(cur.created_at)) cur.created_at = it.created_at;
-        if (!cur.updated_at || new Date(it.created_at) > new Date(cur.updated_at)) cur.updated_at = it.created_at;
-      }
-      // memo (keep the latest meaningful)
-      if (it.memo && (!cur.memo || it.memo.length > cur.memo.length)) cur.memo = it.memo;
-
-      // Populate amounts/status by event type
-      switch (et) {
-        // ---------- WITHDRAW ----------
-        case 'withdraw_initiated': {
-          // tentative net (if provided via metadata), but keep pending
-          cur.status = (cur.status === 'success' || cur.status === 'failed') ? cur.status : 'pending';
-          if (cur.amount_out == null) cur.amount_out = Number(it.metadata?.net_on_chain || it.amount || 0);
-          if (!cur.symbol_out) cur.symbol_out = it.symbol || cur.symbol_out;
-          break;
-        }
-        case 'send':
-        case 'withdraw_completed': {
-          cur.status = 'success';
-          cur.amount_out = Number(it.amount || cur.amount_out || 0); // show net sent
-          cur.symbol_out = it.symbol || cur.symbol_out;
-          if (!cur.tx_id && it.tx_id) cur.tx_id = it.tx_id;
-          if (it.to_account) cur.to_account = it.to_account;
-          break;
-        }
-        case 'withdraw_failed': {
-          if (cur.status !== 'success') cur.status = 'failed';
-          break;
-        }
-
-        // ---------- SWAP ----------
-        case 'swap': {
-          cur.type = 'swap';
-        
-          // pair FROM->TO
-          const ref = it.reference_id || '';
-          const parts = ref.split('->');
-          if (parts.length === 2) {
-            cur.pair = `${parts[0].toUpperCase()}→${parts[1].toUpperCase()}`;
-            if (!cur.symbol_in)  cur.symbol_in  = parts[0].toUpperCase();
-            if (!cur.symbol_out) cur.symbol_out = parts[1].toUpperCase();
-          }
-        
-          // input: amount + symbol dal record principale
-          if (it.amount != null)  cur.amount_in  = Number(it.amount);
-          if (it.symbol)          cur.symbol_in  = it.symbol.toUpperCase();
-        
-          // output netto: ricavalo dalle metadata (real_output_before_fees - commission_dynamic)
-          const md = it.metadata || {};
-          const outNet = (md.real_output_before_fees!=null && md.commission_dynamic!=null)
-            ? (Number(md.real_output_before_fees) - Number(md.commission_dynamic))
-            : (md.quoted_output!=null && md.commission_total!=null)
-              ? (Number(md.quoted_output) - Number(md.commission_total))
-              : null;
-          if (outNet != null) {
-            cur.amount_out = outNet;
-            if (!cur.symbol_out && parts.length === 2) cur.symbol_out = parts[1].toUpperCase();
-          }
-        
-          // stato: usa il flag success nelle metadata, altrimenti resta pending; 'swap_failed' lo imposterà a failed
-          if (md.success === true) cur.status = 'success';
-          else if (md.success === false && cur.status !== 'success') cur.status = 'failed';
-          break;
-        }
-
-        case 'debit': { // from_token spent
-          cur.type = 'swap';
-          cur.amount_in = Number(it.amount || cur.amount_in || 0);
-          cur.symbol_in = it.symbol || cur.symbol_in;
-          break;
-        }
-        case 'credit': { // to_token received (net!)
-          cur.type = 'swap';
-          cur.status = 'success';
-          cur.amount_out = Number(it.amount || cur.amount_out || 0);
-          cur.symbol_out = it.symbol || cur.symbol_out;
-          break;
-        }
-        case 'swap_failed': {
-          if (cur.status !== 'success') cur.status = 'failed';
-          break;
-        }
-
-        // ---------- TRANSFER ----------
-        case 'transfer': { // success; amount already net of fee
-          cur.type = 'transfer';
-          cur.status = 'success';
-          cur.amount_out = Number(it.amount || cur.amount_out || 0);
-          cur.symbol_out = it.symbol || cur.symbol_out;
-          break;
-        }
-        case 'transfer_denied':
-        case 'transfer_failed': {
-          cur.type = 'transfer';
-          if (cur.status !== 'success') cur.status = 'failed';
-          if (cur.amount_out == null && it.amount != null) {
-            cur.amount_out = Number(it.amount); cur.symbol_out = it.symbol || cur.symbol_out;
-          }
-          break;
-        }
-
-        // ---------- BRIDGE ----------
-        case 'bridge_success': {
-          cur.type = 'bridge';
-          cur.status = 'success';
-          // amount: gross; net amount in metadata.net_amount (prefer net display)
-          if (it.metadata?.net_amount != null) {
-            cur.amount_out = Number(it.metadata.net_amount);
-            cur.symbol_out = it.symbol || cur.symbol_out;
-          } else {
-            cur.amount_out = Number(it.amount || cur.amount_out || 0);
-            cur.symbol_out = it.symbol || cur.symbol_out;
-          }
-          break;
-        }
-        case 'bridge_failed':
-        case 'bridge_denied': {
-          cur.type = 'bridge';
-          if (cur.status !== 'success') cur.status = 'failed';
-          if (cur.amount_out == null && it.amount != null) {
-            cur.amount_out = Number(it.amount); cur.symbol_out = it.symbol || cur.symbol_out;
-          }
-          break;
-        }
-
-        default: {
-          // fallback: keep whatever; do not expose fees
-          break;
-        }
-      }
-
-      // keep channel/from/to if provided later
-      if (it.channel && !cur.channel) cur.channel = String(it.channel||'').toLowerCase();
-      if (it.from_account && !cur.from_account) cur.from_account = it.from_account;
-      if (it.to_account && !cur.to_account) cur.to_account = it.to_account;
-
-      th.txMap.set(key, cur);
-    }
+	function upsertTx(it) {
+	  const et = String(it.event_type||'').toLowerCase();
+	  const rt = String(it.reference_type||'').toLowerCase();
+	
+	  // non mostrare mai righe fee
+	  if (et === 'network_fee' || et === 'fee_collected') return;
+	
+	  // tipo primario per UI
+	  const primaryType = (() => {
+	    if (rt === 'swap' || et.startsWith('swap')) return 'swap';
+	    if (rt === 'bridge' || et.startsWith('bridge')) return 'bridge';
+	    if (rt === 'internal_transfer' || et.startsWith('transfer')) return 'transfer';
+	    if (rt === 'withdraw' || et.includes('withdraw') || et === 'send') return 'withdraw';
+	    return rt || (it.object_type || 'tx');
+	  })();
+	
+	  const key = txKeyFor(it);
+	  const cur = th.txMap.get(key) || {
+	    key,
+	    type: primaryType,                 // withdraw|swap|transfer|bridge
+	    status: 'pending',                 // pending|success|failed
+	    created_at: it.created_at || null,
+	    updated_at: it.created_at || null,
+	    channel: (it.channel || '').toLowerCase(),
+	    from_account: it.from_account || '',
+	    to_account: it.to_account || '',
+	    tx_id: it.tx_id || it.metadata?.tx_id || null,
+	    memo: it.memo || '',
+	    amount_in: null,   // per swap: quanto addebitato (token di partenza)
+	    symbol_in: null,
+	    amount_out: null,  // valore da mostrare (netto ricevuto per swap; importo inviato per withdraw/bridge/transfer)
+	    symbol_out: null,
+	    pair: null,
+	    meta: it.metadata || {}
+	  };
+	
+	  // date bounds
+	  if (it.created_at) {
+	    if (!cur.created_at || new Date(it.created_at) < new Date(cur.created_at)) cur.created_at = it.created_at;
+	    if (!cur.updated_at || new Date(it.created_at) > new Date(cur.updated_at)) cur.updated_at = it.created_at;
+	  }
+	
+	  // memo (mantieni il più informativo)
+	  if (it.memo && (!cur.memo || it.memo.length > cur.memo.length)) cur.memo = it.memo;
+	
+	  // status dal top-level (preferito), con priorità: success > failed > pending
+	  const topStatus = String(it.status||'').toLowerCase();
+	  if (topStatus === 'completed' || topStatus === 'success') cur.status = 'success';
+	  else if (topStatus === 'failed' && cur.status !== 'success') cur.status = 'failed';
+	
+	  // popolamento campi per tipo
+	  if (cur.type === 'swap') {
+	    // pair FROM->TO
+	    const ref = it.reference_id || '';
+	    const parts = ref.split('->');
+	    if (parts.length === 2) {
+	      cur.pair = `${parts[0].toUpperCase()}→${parts[1].toUpperCase()}`;
+	      if (!cur.symbol_in)  cur.symbol_in  = parts[0].toUpperCase();
+	      if (!cur.symbol_out) cur.symbol_out = parts[1].toUpperCase();
+	    }
+	
+	    // input: amount + symbol dal record principale (amount = speso on-chain lato custodial)
+	    if (it.amount != null)  cur.amount_in  = Number(it.amount);
+	    if (it.symbol)          cur.symbol_in  = it.symbol.toUpperCase();
+	
+	    // output NETTO: prendere direttamente il valore computato dal backend
+	    const md = it.metadata || {};
+	    if (md.net_out != null) {
+	      cur.amount_out = Number(md.net_out);
+	    } else if (md.received_amount_net != null) {
+	      cur.amount_out = Number(md.received_amount_net);
+	    }
+	    if (!cur.symbol_out && parts.length === 2) cur.symbol_out = parts[1].toUpperCase();
+	
+	    // in assenza di top-level, valuta md.success
+	    if (!topStatus) {
+	      if (md.success === true) cur.status = 'success';
+	      else if (md.success === false && cur.status !== 'success') cur.status = 'failed';
+	    }
+	  }
+	
+	  else if (cur.type === 'withdraw') {
+	    // withdraw: mostra l'importo inviato on-chain (netto). Di solito it.amount è già quello effettivo.
+	    if (it.amount != null && cur.amount_out == null) cur.amount_out = Number(it.amount);
+	    if (it.symbol && !cur.symbol_out) cur.symbol_out = it.symbol.toUpperCase();
+	
+	    // tx_id e destinazione
+	    if (!cur.tx_id && it.tx_id) cur.tx_id = it.tx_id;
+	    if (it.to_account) cur.to_account = it.to_account;
+	
+	    // se l'evento è withdraw_initiated e non abbiamo completed, resta pending
+	    if (!topStatus && et === 'withdraw_initiated' && cur.status !== 'success' && cur.status !== 'failed') {
+	      cur.status = 'pending';
+	    }
+	  }
+	
+	  else if (cur.type === 'bridge') {
+	    // bridge interno: mostra il NET spostato (preferisci metadata.net_amount)
+	    if (it.metadata?.net_amount != null) {
+	      cur.amount_out = Number(it.metadata.net_amount);
+	    } else if (it.amount != null) {
+	      cur.amount_out = Number(it.amount);
+	    }
+	    if (it.symbol && !cur.symbol_out) cur.symbol_out = it.symbol.toUpperCase();
+	
+	    // canale: trattalo come "internal" se non specificato
+	    if (!cur.channel) cur.channel = 'internal';
+	  }
+	
+	  else if (cur.type === 'transfer') {
+	    // transfer interno: importo già netto
+	    if (it.amount != null) cur.amount_out = Number(it.amount);
+	    if (it.symbol && !cur.symbol_out) cur.symbol_out = it.symbol.toUpperCase();
+	    cur.status = topStatus ? cur.status : 'success';
+	  }
+	
+	  // conserva channel/from/to se arrivano dopo
+	  if (it.channel && !cur.channel) cur.channel = String(it.channel||'').toLowerCase();
+	  if (it.from_account && !cur.from_account) cur.from_account = it.from_account;
+	  if (it.to_account && !cur.to_account) cur.to_account = it.to_account;
+	
+	  th.txMap.set(key, cur);
+	}
 
     function aggregateItems(items) {
       for (const it of items) upsertTx(it);
@@ -13555,19 +11221,39 @@ function renderWalletView(type) {
       return '-';
     }
 
-    function rowDetails(r){
-      // No fees shown; only helpful info
-      const lines = [];
-      if (r.pair) lines.push(`<div><strong>Pair</strong>: ${esc(r.pair)}</div>`);
-      if (r.memo) lines.push(`<div><strong>Note</strong>: ${esc(r.memo)}</div>`);
-      if (r.from_account) lines.push(`<div><strong>From</strong>: ${esc(r.from_account)}</div>`);
-      if (r.to_account)   lines.push(`<div><strong>To</strong>: ${esc(r.to_account)}</div>`);
-      if (r.meta?.execution_price != null) lines.push(`<div><strong>Execution price</strong>: ${esc(r.meta.execution_price)}</div>`);
-      if (r.meta?.quoted_output != null)   lines.push(`<div><strong>Quoted output</strong>: ${esc(r.meta.quoted_output)}</div>`);
-      if (r.type==='bridge' && r.meta?.net_amount != null) lines.push(`<div><strong>Net bridged</strong>: ${fmtAmt(r.meta.net_amount)} ${esc(r.symbol_out||'')}</div>`);
-      return lines.join('') || `<div style="opacity:.8;">No extra details.</div>`;
-    }
-    
+	function rowDetails(r){
+	  const lines = [];
+	  if (r.pair) lines.push(`<div><strong>Pair</strong>: ${esc(r.pair)}</div>`);
+	  if (r.memo) lines.push(`<div><strong>Note</strong>: ${esc(r.memo)}</div>`);
+	
+	  // origine/destinazione (se utili)
+	  if (r.from_account) lines.push(`<div><strong>From</strong>: ${esc(r.from_account)}</div>`);
+	  if (r.to_account)   lines.push(`<div><strong>To</strong>: ${esc(r.to_account)}</div>`);
+	
+	  // prezzo di esecuzione (se presente nelle metadata)
+	  if (r.meta?.execution_price != null) {
+	    lines.push(`<div><strong>Execution price</strong>: ${esc(r.meta.execution_price)}</div>`);
+	  }
+	
+	  // NON mostrare quoted output negli swap (irrilevante per l’utente)
+	  if (r.type!=='swap' && r.meta?.quoted_output != null) {
+	    lines.push(`<div><strong>Quoted output</strong>: ${esc(r.meta.quoted_output)}</div>`);
+	  }
+	
+	  // bridge: mostra anche il netto (se presente)
+	  if (r.type==='bridge' && r.meta?.net_amount != null) {
+	    lines.push(`<div><strong>Net bridged</strong>: ${fmtAmt(r.meta.net_amount)} ${esc(r.symbol_out||'')}</div>`);
+	  }
+	
+	  // canale (wallet) esplicito
+	  if (r.channel) {
+	    const ch = r.channel.charAt(0).toUpperCase()+r.channel.slice(1);
+	    lines.push(`<div><strong>Wallet</strong>: ${esc(ch)}</div>`);
+	  }
+	
+	  return lines.join('') || `<div style="opacity:.8;">No extra details.</div>`;
+	}
+
     function toneFor(r){
       const t=(r.type||'').toLowerCase();
       const s=r.status;
@@ -13624,7 +11310,7 @@ function renderWalletView(type) {
 
       el.list.innerHTML = rows.map((r,i)=>{
         const waxLike = r.tx_id && /^[a-f0-9]{64}$/i.test(r.tx_id);
-        const txUrl = waxLike ? `https://waxblock.io/transaction/${esc(r.tx_id)}` : '';
+        const txUrl = (waxLike && r.type==='withdraw') ? `https://waxblock.io/transaction/${esc(r.tx_id)}` : '';
         const subtitle = [
           r.type ? r.type.toUpperCase() : 'TX',
           r.pair ? `• ${r.pair}` : (r.symbol_out || r.symbol_in ? `• ${esc(r.symbol_out||r.symbol_in)}`:''),
@@ -15233,14 +12919,14 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
       bodyData.receiver = receiver;
     } else if (action === "stake") {
       if (!window.tokenPoolsData || window.tokenPoolsData.length === 0) {
-        console.info("[🧰] Caricamento dati delle staking pools...");
+        //console.info("[🧰] Caricamento dati delle staking pools...");
         await fetchAndRenderTokenPools(false);
         if (!window.tokenPoolsData || window.tokenPoolsData.length === 0) throw new Error("No staking pools data available after loading.");
       }
       const poolData = window.tokenPoolsData.find(pool => pool.deposit_token.symbol.toLowerCase() === token.toLowerCase());
       if (!poolData) throw new Error(`No staking pool found for token ${token}`);
       bodyData.pool_id = poolData.pool_id;
-      console.info(`[📤] Pool ID per ${token}: ${poolData.pool_id}`);
+      //console.info(`[📤] Pool ID per ${token}: ${poolData.pool_id}`);
     } else if (action === "bridge_to") {
       bodyData = {
         wax_account: wax_account,
@@ -15259,7 +12945,7 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
     });
 
     const data = await response.json();
-    console.info("[🔵] Risposta server:", data);
+    //console.info("[🔵] Risposta server:", data);
 
     if (interimFeedbackDiv) interimFeedbackDiv.remove();
 
@@ -15309,9 +12995,9 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
           animation: fadeIn 0.4s ease-in-out;
         ">
           <strong>Swap Completed</strong><br>
-          ${details.amount} ${details.from_token} ➡️ ${details.received_amount.toFixed(9)} ${details.to_token}<br>
+          ${details.amount_spent} ${details.from_token} ➡️ ${Number(details.received_amount_net).toFixed(8)} ${details.to_token}<br>
           <em>Price:</em> ${details.execution_price}<br>
-          <em>Fee:</em> ${details.commission.toFixed(9)}
+          <em>Fee:</em> ${Number(details.commission_total).toFixed(9)}
         </div>
       `;
     } else if (action === "bridge_to" && data.net_amount && data.fee_applied !== undefined) {
@@ -15540,7 +13226,7 @@ function showModal({ title = '', body = '', footer = '' }) {
   modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
-
+  centerAuthModal(); 
   // 💡 Aspetta che il browser calcoli dimensioni visibili
   setTimeout(() => {
     const scrollY = window.scrollY || window.pageYOffset;
@@ -15550,4 +13236,408 @@ function showModal({ title = '', body = '', footer = '' }) {
     const top = scrollY + (viewportHeight - modalHeight) / 2;
     modal.style.top = `${Math.max(top, 40)}px`;
   }, 0);
+}
+
+/* -----------------------------------------------------------
+ * WALLETS — Price Checker Sidebar (English UI, /preview_swap)
+ * - Safe amount input (no scientific notation, no +/-)
+ * - Uses /preview_swap; estimate net-of-fees via router_sub_pf=true
+ * ----------------------------------------------------------- */
+async function setupWalletPriceSidebar() {
+  const main = document.getElementById('wallet-content');
+  if (!main) return;
+  if (document.getElementById('wallet-price-sidebar')) return; // already mounted
+
+  // Two-column wrapper (main + sidebar)
+  const wrap = document.createElement('div');
+  wrap.id = 'wallet-2col';
+  wrap.style.display = 'grid';
+  wrap.style.gridTemplateColumns = '1fr 340px';
+  wrap.style.gap = '12px';
+  wrap.style.alignItems = 'start';
+
+  const parent = main.parentNode;
+  parent.insertBefore(wrap, main);
+  wrap.appendChild(main);
+
+  const aside = document.createElement('aside');
+  aside.id = 'wallet-price-sidebar';
+  wrap.appendChild(aside);
+
+  await mountPriceFetchWidget(aside);
+}
+
+async function mountPriceFetchWidget(aside) {
+  if (!aside) return;
+
+  // Ensure tokens list
+  try { await loadAvailableTokens(); } catch (_) {}
+  const TOKENS = Array.isArray(window.availableTokensDetailed) ? window.availableTokensDetailed : [];
+
+  // UI
+  aside.innerHTML = `
+    <div style="
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      background:linear-gradient(145deg, rgba(0,255,200,.08), rgba(255,0,255,.06));
+      padding:14px; box-shadow:0 0 14px rgba(0,255,200,.12);
+      position:sticky; top:10px;
+    ">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <h3 style="margin:0;color:#e7fffa;font-weight:900;letter-spacing:.2px;">💱 Price checker</h3>
+        <small style="opacity:.75;color:#e7fffa;">beta</small>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <label for="pw-amount" style="display:block;color:#bfeee4;font-size:12px;margin-bottom:6px;">Amount</label>
+          <input id="pw-amount" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="0" style="
+            width:100%;background:#0b1220;border:1px solid rgba(255,255,255,.14);
+            color:#e7fffa;padding:10px;border-radius:10px;box-shadow:inset 0 0 8px rgba(0,255,200,.08);
+          ">
+        </div>
+
+        <div id="pw-cb1"></div>
+        <div id="pw-cb2"></div>
+
+        <div id="pw-actions" style="display:flex;gap:8px;margin-top:2px;">
+          <button id="pw-swap" title="Swap tokens" style="
+            cursor:pointer;border:1px solid rgba(255,255,255,.18);
+            border-radius:10px;background:transparent;color:#e7fffa;font-weight:800;padding:8px 10px;flex:0 0 auto;
+          ">⇄</button>
+          <button id="pw-refresh" style="
+            cursor:pointer;border:1px solid rgba(0,255,200,.35);
+            border-radius:10px;background:linear-gradient(135deg, rgba(0,255,200,.20), rgba(255,0,255,.14));
+            color:#00150f;font-weight:900;padding:8px 12px;box-shadow:0 0 12px rgba(0,255,200,.25);
+          ">Refresh</button>
+        </div>
+
+        <div id="pw-output" style="
+          margin-top:6px;border:1px solid rgba(255,255,255,.12);border-radius:10px;
+          background:rgba(0,0,0,.35);padding:10px;color:#e7fffa;min-height:64px;
+        ">
+          <div style="opacity:.8;">Enter an amount and pick tokens…</div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .pw-combo{position:relative;}
+      .pw-combo > label{
+        display:block;color:#bfeee4;font-size:12px;margin:6px 0 6px 0;
+      }
+      .pw-combo input[type="text"]{
+        width:100%;background:#0b1220;border:1px solid rgba(255,255,255,.14);
+        color:#e7fffa;padding:10px;border-radius:10px;box-shadow:inset 0 0 8px rgba(0,255,200,.08);
+      }
+      .pw-list{
+        position:absolute;left:0;right:0;top:100%;z-index:40;
+        max-height:260px;overflow:auto;margin-top:6px;padding:6px;border-radius:10px;
+        background:#0b1220;border:1px solid rgba(255,255,255,.14);box-shadow:0 12px 18px rgba(0,0,0,.35);
+      }
+      .pw-item{
+        display:flex;justify-content:space-between;align-items:center;
+        padding:8px;border-radius:8px;cursor:pointer;color:#e7fffa;
+      }
+      .pw-item:hover,.pw-item[aria-selected="true"]{background:rgba(0,255,200,.08);}
+      .pw-meta{opacity:.65;font-size:12px;}
+      .pw-pill{
+        display:inline-flex;gap:6px;align-items:center;
+        background:linear-gradient(135deg, rgba(0,255,200,.16), rgba(255,0,255,.12));
+        border:1px solid rgba(255,255,255,.14);border-radius:999px;color:#e7fffa;
+        font-size:12px;font-weight:800;padding:4px 8px;margin-top:6px;
+      }
+      @keyframes pwspin{to{transform:rotate(360deg)}}
+    </style>
+  `;
+
+  // Comboboxes with integrated search
+  const cb1 = createTokenCombobox(
+    document.getElementById('pw-cb1'),
+    { id:'from', label:'From token', tokens: TOKENS }
+  );
+  const cb2 = createTokenCombobox(
+    document.getElementById('pw-cb2'),
+    { id:'to', label:'To token', tokens: TOKENS }
+  );
+
+  // Smart defaults (CHIPS → WAX, when available)
+  const pick = (sym) => TOKENS.find(t => t.symbol === sym);
+  cb1.select(pick('CHIPS') || TOKENS[0]);
+  cb2.select(pick('WAX')   || TOKENS.find(t=>t.symbol !== cb1.value?.symbol) || TOKENS[1] || TOKENS[0]);
+
+  // Inputs & actions
+  const $amount  = document.getElementById('pw-amount');
+  const $swap    = document.getElementById('pw-swap');
+  const $refresh = document.getElementById('pw-refresh');
+  const $out     = document.getElementById('pw-output');
+
+  // -------- Helpers (local fallbacks if your project helpers are absent)
+  function stepFromDecimalsLocal(dec){
+    try{ return (typeof stepFromDecimals==='function') ? stepFromDecimals(dec) : String(Math.pow(10, -Math.max(0, Number(dec)||0))); }
+    catch(_){ return '0.0001'; }
+  }
+  function getTokenDecimalsLocal(sym){
+    try{ return (typeof getTokenDecimals==='function') ? getTokenDecimals(sym) : 4; }
+    catch(_){ return 4; }
+  }
+  function fmtAmount(n, max=8){
+    const num = Number(n);
+    if (!isFinite(num)) return String(n);
+    const s = num.toFixed(Math.min(max, 12));
+    return s.replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.$/,'');
+  }
+  function sanitizeAmountStr(str, maxDecimals = 8) {
+    let s = String(str || '');
+    s = s.replace(/\s+/g, '');     // remove spaces
+    s = s.replace(/,/g, '.');      // locale: comma → dot
+    s = s.replace(/[eE\+\-]/g, ''); // block scientific notation and signs
+    s = s.replace(/[^0-9.]/g, ''); // keep only digits and dot
+    const firstDot = s.indexOf('.');
+    if (firstDot !== -1) {
+      s = s.slice(0, firstDot + 1) + s.slice(firstDot + 1).replace(/\./g, '');
+    }
+    if (maxDecimals >= 0 && s.includes('.')) {
+      const [i, d] = s.split('.');
+      s = i + '.' + d.slice(0, maxDecimals);
+    }
+    if (s.startsWith('.')) s = '0' + s;
+    return s;
+  }
+  function getMaxDecimalsForToken(sym) {
+    const dec = getTokenDecimalsLocal(sym);
+    return Number.isFinite(dec) ? Math.max(0, Math.min(12, dec)) : 8;
+  }
+
+  // Amount placeholder adapted to token decimals (no HTML step on text input)
+  function updateAmountStep() {
+    const dec = getMaxDecimalsForToken(cb1.value?.symbol || '');
+    if (!$amount.value) {
+      $amount.placeholder = dec > 0 ? `0.${'0'.repeat(Math.min(2, dec))}` : '0';
+    }
+  }
+
+  // Debounce helper
+  const debounceLocal = (fn, ms=450) => (window.debounce ? window.debounce(fn, ms) : (()=>{
+    let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); };
+  })());
+
+  const update = debounceLocal(async () => {
+    const from = cb1.value, to = cb2.value;
+    const maxDec = getMaxDecimalsForToken(cb1.value?.symbol || '');
+    const clean = sanitizeAmountStr($amount.value, maxDec);
+    const amt   = clean ? Number(clean) : 0;
+
+    if (!from || !to || !(amt > 0)) {
+      $out.innerHTML = `<div style="opacity:.8;">Enter an amount and pick tokens…</div>`;
+      return;
+    }
+    $out.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#22c55e;border-radius:50%;animation:pwspin .9s linear infinite;"></div>
+        <div style="opacity:.85;">Fetching quote…</div>
+      </div>`;
+
+    try {
+      const quote = await fetchPreviewSwap({ amount: amt, from, to });
+      renderQuote($out, { amount: amt, from, to, quote });
+    } catch (err) {
+      $out.innerHTML = `
+        <div style="border-left:3px solid #f87171;background:rgba(248,113,113,.08);color:#fecaca;padding:10px;border-radius:8px;">
+          <div style="font-weight:900;margin-bottom:4px;">Error</div>
+          <div>${String(err.message || err)}</div>
+        </div>`;
+    }
+  }, 420);
+
+  function renderQuote(container, { amount, from, to, quote }) {
+    // /preview_swap returns:
+    //  - minReceived (float, in "to" token units) — conservative
+    //  - priceImpact (float, bps)
+    // Optional:
+    //  - estimate (float) — best expected out (we request it net-of-fees)
+    const minOut = Number(quote?.minReceived);
+    const estOut = ('estimate' in (quote||{})) ? Number(quote.estimate) : NaN;
+    const rateMin = (minOut > 0 && amount > 0) ? (minOut / amount) : NaN;
+    const rateEst = (estOut > 0 && amount > 0) ? (estOut / amount) : NaN;
+    const impactBps = Number(quote?.priceImpact ?? 0);
+    const impactPct = isFinite(impactBps) ? (impactBps / 100) : NaN;
+
+    if (isFinite(minOut) && minOut > 0) {
+      container.innerHTML = `
+        <div style="border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:10px;background:rgba(0,0,0,.25);display:grid;gap:6px;">
+          <div style="font-size:14px;opacity:.8;">
+            ${isFinite(rateEst) ? `1 ${from.symbol} ≈ <b>${fmtAmount(rateEst, 8)}</b> ${to.symbol} (est)` :
+            isFinite(rateMin) ? `1 ${from.symbol} ≈ <b>${fmtAmount(rateMin, 8)}</b> ${to.symbol} (min)` :
+            `Quote ready`}
+          </div>
+
+          <div style="font-size:18px;font-weight:900;">
+            ${amount} ${from.symbol} → <span style="color:#9afbd9">${fmtAmount(minOut, 8)} ${to.symbol}</span> <span style="opacity:.75">(min)</span>
+          </div>
+
+          ${isFinite(estOut) && estOut > 0 ? `
+            <div style="font-size:14px;opacity:.9;">
+              Best estimate: <b>${fmtAmount(estOut, 8)} ${to.symbol}</b>
+            </div>` : ''}
+
+          <div style="font-size:13px;opacity:.9;">
+            Price impact: <b>${fmtAmount(impactBps, 2)} bps</b>${isFinite(impactPct) ? ` (~${fmtAmount(impactPct, 2)}%)` : ''}
+          </div>
+        </div>
+      `;
+    } else {
+      // Fallback: show raw JSON
+      container.innerHTML = `
+        <div style="font-size:13px;opacity:.85;margin-bottom:6px;">Backend response:</div>
+        <pre style="white-space:pre-wrap;background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:8px;color:#e7fffa;max-height:260px;overflow:auto;">${escapeHtml(JSON.stringify(quote, null, 2))}</pre>
+      `;
+    }
+  }
+
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+  // Listeners (block unwanted keys and sanitize on the fly)
+  $amount.addEventListener('keydown', (e) => {
+    if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+  });
+  $amount.addEventListener('input', () => {
+    const maxDec = getMaxDecimalsForToken(cb1.value?.symbol || '');
+    const clean = sanitizeAmountStr($amount.value, maxDec);
+    if ($amount.value !== clean) $amount.value = clean;
+    update();
+  });
+
+  cb1.onChange(() => { updateAmountStep(); update(); });
+  cb2.onChange(() => { update(); });
+  $swap.addEventListener('click', () => {
+    const a = cb1.value, b = cb2.value; if (!a || !b) return;
+    cb1.select(b); cb2.select(a); updateAmountStep(); update();
+  });
+  $refresh.addEventListener('click', () => update());
+
+  updateAmountStep(); // initial setup
+}
+
+function createTokenCombobox(container, { id, label, tokens }) {
+  container.className = 'pw-combo';
+  container.innerHTML = `
+    <label for="pw-search-${id}">${label}</label>
+    <input id="pw-search-${id}" type="text" autocomplete="off" placeholder="Search token…">
+    <div class="pw-pill" id="pw-pill-${id}" style="display:none;"></div>
+    <div class="pw-list" id="pw-list-${id}" style="display:none;"></div>
+  `;
+
+  const $input = container.querySelector(`#pw-search-${id}`);
+  const $list  = container.querySelector(`#pw-list-${id}`);
+  const $pill  = container.querySelector(`#pw-pill-${id}`);
+
+  const OFFICIAL = Array.isArray(window.OFFICIAL_TOKENS) ? window.OFFICIAL_TOKENS : [];
+  const isOfficial = (t) => OFFICIAL.some(o => o.symbol === t.symbol && o.contract === t.contract);
+
+  let selected = null;
+
+  function renderList(q = '') {
+    const n = (s)=>String(s||'').toLowerCase();
+    const qq = n(q);
+    const scored = tokens.map(t => {
+      let s = isOfficial(t) ? 2000 : 0;
+      if (!qq) return { t, s };
+      if (n(t.symbol) === qq) s += 1000;
+      else if (n(t.symbol).startsWith(qq)) s += 750;
+      else if (n(t.name).startsWith(qq)) s += 500;
+      else if (n(t.symbol).includes(qq)) s += 300;
+      if (n(t.contract).includes(qq)) s += 100;
+      return { t, s };
+    }).sort((a,b)=>b.s-a.s).slice(0, 80);
+
+    $list.innerHTML = scored.map(({t}) => `
+      <div class="pw-item" data-symbol="${t.symbol}" data-contract="${t.contract}">
+        <div>
+          <div style="font-weight:900;">${t.symbol} ${isOfficial(t) ? '✅' : ''}</div>
+          <div class="pw-meta">${t.name || ''}</div>
+        </div>
+        <div class="pw-meta">${t.contract}</div>
+      </div>
+    `).join('');
+
+    $list.style.display = 'block';
+    $list.querySelectorAll('.pw-item').forEach(it=>{
+      it.addEventListener('click', ()=>{
+        const sym = it.getAttribute('data-symbol');
+        const con = it.getAttribute('data-contract');
+        const tok = tokens.find(x => x.symbol===sym && x.contract===con);
+        if (tok) select(tok);
+      });
+    });
+  }
+
+  function select(tok){
+    selected = tok || null;
+    if (selected) {
+      $pill.style.display = 'inline-flex';
+      $pill.textContent = `${selected.symbol} • ${selected.contract}`;
+      $input.value = `${selected.symbol}`;
+    } else {
+      $pill.style.display = 'none';
+      $input.value = '';
+    }
+    $list.style.display = 'none';
+    emit();
+  }
+
+  const listeners = new Set();
+  function onChange(fn){ listeners.add(fn); }
+  function emit(){ listeners.forEach(fn=>fn(selected)); }
+
+  $input.addEventListener('focus', ()=> renderList($input.value));
+  $input.addEventListener('input', ()=> renderList($input.value));
+  document.addEventListener('click', (e)=>{
+    if (!container.contains(e.target)) $list.style.display = 'none';
+  });
+
+  return {
+    onChange,
+    get value(){ return selected; },
+    select
+  };
+}
+
+// Call your backend: POST /preview_swap (JSON body)
+// NOTE: We set router_sub_pf=true so estimate is net of platform fees.
+// The backend should include "estimate" if you want to show it (minReceived is always used).
+async function fetchPreviewSwap({ amount, from, to }) {
+  const user = (window.userData || {});
+  const wax_account = (user.wax_account || '').trim();
+  if (!wax_account) throw new Error('Wallet not connected: wax_account is missing.');
+
+  const body = {
+    wax_account,
+    from_token: String(from.symbol).toUpperCase(),
+    to_token:   String(to.symbol).toUpperCase(),
+    amount:     Number(amount),
+    chain:      (window.DEFAULT_CHAIN || 'WAX'),
+    router_sub_pf: true
+    // slip_bps: 60,
+    // split: 10,
+    // extra_cushion_bps: 0
+  };
+
+  const base = (typeof BASE_URL === 'string' && BASE_URL) ? BASE_URL : '';
+  const url  = base.replace(/\/$/,'') + '/preview_swap';
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  let data = {};
+  try { data = await res.json(); } catch (_) {}
+
+  if (!res.ok) {
+    const msg = data?.error || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return data;
 }

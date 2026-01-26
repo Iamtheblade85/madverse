@@ -1,4 +1,4 @@
-<!doctype html>
+<!doctype html> 
 <html lang="en">
 <head>
   	<meta charset="utf-8">
@@ -611,17 +611,13 @@
 		    const CONFIG = {
 		      worldCols: 48,
 		      worldRows: 24,
-		
 		      pollIntervalMs: 3500,
 		      userNftsTimeoutMs: 60000,
 		      snapshotTimeoutMs: 10000,
 		      recentTimeoutMs: 12000,
-		
 		      apiBase: (window.CAVE_API_BASE || '').replace(/\/$/, ''),
-		
 		      goblinSpeedMin: 4.8 * 3,
 		      goblinSpeedMax: 7.8 * 3,
-		
 		      trailBaseMaxAgeMs: 1400,
 		      trailMinPointDist: 0.10,
 		      trailMaxPoints: 60,
@@ -2084,273 +2080,287 @@
 		      panel.innerHTML = renderForecastRealContent(data, message);
 		    }
 		
-		    function renderForecastRealContent(data, message){
-		      if (message){
-				return `
-				  <div class="rf-grid">
-				    <div class="rf-card">
-				      <h4>Setup</h4>
-				      <div class="rf-kv">
-				        <div class="rf-row" title="Minutes chosen in the duration selector.">
-				          <span class="k">Nominal duration</span>
-				          <span class="v">${fmt3Smart(durNominal)} min</span>
-				        </div>
-				
-				        <div class="rf-row" title="Estimated duration after the total SPEED bonus is applied.">
-				          <span class="k">Effective duration</span>
-				          <span class="v">${formatDurationMinSecFromSeconds(durEffSeconds)} · tier ${tierEff}m</span>
-				        </div>
-				
-				        <div class="rf-row" title="Goblins actually used in the forecast (after applying the cap, if exceeded).">
-				          <span class="k">Selected goblins</span>
-				          <span class="v">${selectedCount}</span>
-				        </div>
-				      </div>
-				
-				      <div class="rf-badges">
-				        <span class="rf-badge ${tiredCount ? 'warn' : 'ok'}">
-				          💤 Tired: <b>${tiredCount}</b>
-				        </span>
-				        <span class="rf-badge ok">
-				          ✅ Ready: <b>${Math.max(0, selectedCount - tiredCount)}</b>
-				        </span>
-				      </div>
-				
-				      ${tiredCount ? `
-				        <div class="rf-actions">
-				          <button id="btn-remove-tired" class="btn-primary" type="button">
-				            💤 Remove tired (${tiredCount})
-				          </button>
-				          <span style="font-size:12px;opacity:.85;">
-				            Removes tired goblins from your current selection.
-				          </span>
-				        </div>
-				      ` : ''}
-				
-				      <div class="rf-note">
-				        <b>Tip:</b> Resistance reduces <b>Daily Power</b> cost per goblin. Speed reduces <b>effective duration</b>.
-				      </div>
-				    </div>
-				
-				    <div class="rf-card">
-				      <h4>Daily Power</h4>
-				      <div class="rf-kv">
-				        <div class="rf-row" title="Base daily cost per goblin BEFORE RESISTANCE is applied, for this duration tier.">
-				          <span class="k">Nominal cost / goblin</span>
-				          <span class="v">${fmt3Smart(baseNominalPerGoblin)} DP</span>
-				        </div>
-				
-				        <div class="rf-row" title="Average effective daily cost per goblin AFTER RESISTANCE.">
-				          <span class="k">Effective cost / goblin</span>
-				          <span class="v">${selectedCount ? fmt3Smart(effAvgPerGoblin) : '—'} DP</span>
-				        </div>
-				
-				        <div class="rf-row" title="Sum of all NOMINAL daily power costs (without RES) for this run.">
-				          <span class="k">Total (nominal)</span>
-				          <span class="v">${Number.isFinite(totalPowerNominal) ? fmt3Smart(totalPowerNominal) : '—'} DP</span>
-				        </div>
-				
-				        <div class="rf-row" title="Sum of all EFFECTIVE daily power costs (with RES) for this run.">
-				          <span class="k">Total (effective)</span>
-				          <span class="v">${Number.isFinite(totalPowerEffective) ? fmt3Smart(totalPowerEffective) : '—'} DP</span>
-				        </div>
-				      </div>
-				
-				      <div class="rf-note">
-				        “Need” on each goblin card already includes Resistance. If a goblin’s remaining Daily Power is below that value, it becomes <b>TIRED</b>.
-				      </div>
-				    </div>
-				
-				    <div class="rf-card" style="grid-column:1/-1;">
-				      <h4>Rewards</h4>
-				      <div class="rf-kv">
-				        <div class="rf-row" title="Expected CHIPS reward range for this run.">
-				          <span class="k">Chips (min–max)</span>
-				          <span class="v">${Number.isFinite(tMin) ? fmt3Smart(tMin) : '—'} – ${Number.isFinite(tMax) ? fmt3Smart(tMax) : '—'}</span>
-				        </div>
-				
-				        ${Object.keys(probs).length ? `
-				        <div class="rf-row" title="Relative probability of token reward tiers based on average ACC.">
-				          <span class="k">Token tier probabilities</span>
-				          <span class="v" style="font-family:inherit;font-weight:900;">
-				            ${Object.entries(probs).map(([k,v]) => `${safe(k)} ${Math.round(v * 100)}%`).join(' · ')}
-				          </span>
-				        </div>` : ''}
-				
-				        ${nftRewards.length ? `
-				        <div class="rf-row" title="Approximate chance of receiving each NFT template in a single run.">
-				          <span class="k">NFT chances</span>
-				          <span class="v" style="font-family:inherit;font-weight:900;">
-				            ${nftRewards.map(it => `${safe(it.name)} ${Math.round((it.chance || 0) * 100)}%`).join(' · ')}
-				          </span>
-				        </div>` : ''}
-				      </div>
-				
-				      ${msgs.length ? `
-				        <div class="rf-note">ℹ️ ${msgs.map(safe).join(' · ')}</div>
-				      ` : ''}
-				    </div>
-				  </div>
-				`;
-		      }
-		      if (!data){
-		        return '';
-		      }
-		      const durNominal = State.expedition.durationMinutes || 0;
-		      const durEff = toNumber(data.duration_effective_minutes) || durNominal;
-		      const durEffSeconds = toNumber(
-		        data.duration?.effective_seconds ??
-		        data.duration_effective_seconds ??
-		        durEff * 60
-		      );
-		      const tMin = toNumber(data.tokens_min);
-		      const tMax = toNumber(data.tokens_max);
-		      const probs = data.token_tier_probs || {};
-		      const nftRewards = Array.isArray(data.nft_rewards) ? data.nft_rewards : [];
-		      const msgs = Array.isArray(data.messages) ? data.messages : [];
-		      const selectedCountBackend = toNumber(data.selected_count);
-		      const selectedCount = selectedCountBackend || State.selectedGoblinIds.size || 0;
-		      const tierEff = bucketFromMinutes(durEff);
-		      // nuovo blocco power dal backend
-		      const powerBlock = data.power || {};
-		      const powTot = toNumber(
-		        powerBlock.total_power_effective ??
-		        data.power_needed_total ??
-		        0
-		      );
-		      const baseNominalPerGoblin = toNumber(
-		        powerBlock.base_cost_nominal_per_goblin ??
-		        0
-		      );
-		      let effAvgPerGoblin = toNumber(
-		        powerBlock.base_cost_effective_per_goblin ??
-		        0
-		      );
-		      const totalPowerNominal = toNumber(
-		        powerBlock.total_power_nominal ??
-		        (baseNominalPerGoblin * selectedCount)
-		      );
-		
-		      const totalPowerEffective = toNumber(
-		        powerBlock.total_power_effective ??
-		        data.power_needed_total ??
-		        totalPowerNominal
-		      );
-		      
-		      // fallback difensivo se manca il campo specifico
-		      if (!effAvgPerGoblin && powTot && selectedCount) {
-		        effAvgPerGoblin = powTot / selectedCount;
-		      }
-		
-		      // tired goblins: prima usiamo il dato del backend, poi il set locale come fallback
-		      const tiredFromBackend = toNumber(powerBlock.tired_goblins_effective);
-		      const tiredCount = tiredFromBackend ||
-		        (State.runtime.forecastInsufficientIds
-		          ? State.runtime.forecastInsufficientIds.size
-		          : 0);
-		
-		
-		      return `
-		        <div class="grid">
-		          <div class="card">
-		            <div class="kv">
-		              <div title="Minutes chosen in the duration selector.">
-		                <span class="label">⏱ Nominal duration</span>
-		                <b>${durNominal} min</b>
-		              </div>
-		              <div title="Estimated duration after the total SPEED bonus is applied.">
-		                <span class="label">⚡ Effective duration</span>
-		                <b>
-		                  ${formatDurationMinSecFromSeconds(durEffSeconds)}
-		                  <span class="badge-inline">tier ${tierEff}m</span>
-		                </b>
-		              </div>
-		              <div title="Base daily cost per goblin BEFORE RESISTANCE is applied, for this duration tier.">
-		                <span class="label">💰 Nominal daily cost / goblin</span>
-		                <b>
-		                  ${formatDP(baseNominalPerGoblin)} DP
-		                  <span class="badge-inline">base</span>
-		                </b>
-		              </div>
-		              
-		              <div title="Average effective daily cost per goblin AFTER RESISTANCE.">
-		                <span class="label">🛡️ Effective daily cost / goblin</span>
-		                <b>
-		                  ${selectedCount ? formatDP(effAvgPerGoblin) : '—'} DP
-		                  <span class="badge-inline">effective</span>
-		                </b>
-		              </div>
-		              
-		              <div title="Sum of all NOMINAL daily power costs (without RES) for this run.">
-		                <span class="label">🔋 Total daily power (nominal)</span>
-		                <b>${Number.isFinite(totalPowerNominal) ? formatDP(totalPowerNominal) : '—'} DP</b>
-		              </div>
-		              
-		              <div title="Sum of all EFFECTIVE daily power costs (with RES) for this run.">
-		                <span class="label">🔋 Total daily power (effective)</span>
-		                <b>${Number.isFinite(totalPowerEffective) ? formatDP(totalPowerEffective) : '—'} DP</b>
-		              </div>
-		
-		              <div title="Goblins actually used in the forecast (after applying the cap, if exceeded).">
-		                <span class="label">🧬 Selected goblins</span>
-		                <b>${selectedCount}</b>
-		              </div>
-		            </div>
-		          </div>
-		
-		          <div class="card">
-		            <div class="kv">
-		              <div title="Expected CHIPS reward range for this run.">
-		                <span class="label">💎 Chips (min–max)</span>
-		                <b>
-		                  ${Number.isFinite(tMin) ? tMin : '—'} – ${Number.isFinite(tMax) ? tMax : '—'}
-		                  <span class="badge-inline">reward</span>
-		                </b>
-		              </div>
-		              ${Object.keys(probs).length ? `
-		              <div title="Relative probability of token reward tiers based on average ACC.">
-		                <span class="label">📊 Token tier probabilities</span>
-		                <b>${
-		                  Object.entries(probs)
-		                    .map(([k,v]) => `${safe(k)} ${Math.round(v * 100)}%`)
-		                    .join(' · ')
-		                }</b>
-		              </div>` : ''}
-		
-		              ${nftRewards.length ? `
-		              <div title="Approximate chance of receiving each NFT template in a single run.">
-		                <span class="label">🎁 NFT drop chances</span>
-		                <b>${
-		                  nftRewards
-		                    .map(it => `${safe(it.name)} ${Math.round((it.chance || 0) * 100)}%`)
-		                    .join(' · ')
-		                }</b>
-		              </div>` : ''}
-		
-		              ${tiredCount ? `
-		              <div style="margin-top:6px;">
-		                <button id="btn-remove-tired" class="btn-primary" type="button">
-		                  💤 Remove ${tiredCount} tired goblin${tiredCount > 1 ? 's' : ''} from selection
-		                </button>
-		              </div>` : ''}
-		            </div>
-		          </div>
-		        </div>
-		
-		        <div class="card forecast-help">
-		          <div class="forecast-help-title">📘 How your attributes affect this run</div>
-		          <ul>
-		            <li><strong>Speed (SPD)</strong> makes the run <em>finish faster</em> by reducing effective duration.</li>
-		            <li><strong>Resistance (RES)</strong> <em>reduces Daily Power cost</em> per goblin, making runs cheaper.</li>
-		            <li><strong>Loot Hungry (LOOT)</strong> scales how many <em>CHIPS</em> you can loot on average.</li>
-		            <li><strong>Accuracy (ACC)</strong> improves <em>reward quality</em>: better token tiers and higher NFT drop chances.</li>
-		          </ul>
-		        </div>
-		
-		        ${msgs.length ? `<div class="hint">ℹ️ ${msgs.map(safe).join(' · ')}</div>` : ''}
-		      `;
-		    }
-		
+function renderForecastRealContent(data, message){
+  // Precompute values used by BOTH: message panel and real-data panel (avoid TDZ).
+  const durNominal = State.expedition.durationMinutes || 0;
+
+  const durEff = toNumber(data?.duration_effective_minutes) || durNominal;
+  const durEffSeconds = toNumber(
+    data?.duration?.effective_seconds ??
+    data?.duration_effective_seconds ??
+    durEff * 60
+  );
+
+  const tMin = toNumber(data?.tokens_min);
+  const tMax = toNumber(data?.tokens_max);
+
+  const probs = (data && data.token_tier_probs) ? data.token_tier_probs : {};
+  const nftRewards = Array.isArray(data?.nft_rewards) ? data.nft_rewards : [];
+  const msgs = Array.isArray(data?.messages) ? data.messages : [];
+
+  const selectedCountBackend = toNumber(data?.selected_count);
+  const selectedCount = selectedCountBackend || State.selectedGoblinIds.size || 0;
+
+  const tierEff = bucketFromMinutes(durEff);
+
+  // power block from backend (defensive)
+  const powerBlock = data?.power || {};
+  const powTot = toNumber(
+    powerBlock.total_power_effective ??
+    data?.power_needed_total ??
+    0
+  );
+
+  const baseNominalPerGoblin = toNumber(
+    powerBlock.base_cost_nominal_per_goblin ?? 0
+  );
+
+  let effAvgPerGoblin = toNumber(
+    powerBlock.base_cost_effective_per_goblin ?? 0
+  );
+
+  const totalPowerNominal = toNumber(
+    powerBlock.total_power_nominal ??
+    (baseNominalPerGoblin * selectedCount)
+  );
+
+  const totalPowerEffective = toNumber(
+    powerBlock.total_power_effective ??
+    data?.power_needed_total ??
+    totalPowerNominal
+  );
+
+  // fallback: if backend didn't provide avg per goblin
+  if (!effAvgPerGoblin && powTot && selectedCount) {
+    effAvgPerGoblin = powTot / selectedCount;
+  }
+
+  // tired goblins: backend first, then local set fallback
+  const tiredFromBackend = toNumber(powerBlock.tired_goblins_effective);
+  const tiredCount = tiredFromBackend ||
+    (State.runtime.forecastInsufficientIds
+      ? State.runtime.forecastInsufficientIds.size
+      : 0);
+
+  // 1) Message-mode panel (shown while waiting / errors / “no selection”)
+  if (message){
+    return `
+      <div class="rf-grid">
+        <div class="rf-card">
+          <h4>Setup</h4>
+          <div class="rf-kv">
+            <div class="rf-row" title="Minutes chosen in the duration selector.">
+              <span class="k">Nominal duration</span>
+              <span class="v">${fmt3Smart(durNominal)} min</span>
+            </div>
+
+            <div class="rf-row" title="Estimated duration after the total SPEED bonus is applied.">
+              <span class="k">Effective duration</span>
+              <span class="v">${formatDurationMinSecFromSeconds(durEffSeconds)} · tier ${tierEff}m</span>
+            </div>
+
+            <div class="rf-row" title="Goblins actually used in the forecast (after applying the cap, if exceeded).">
+              <span class="k">Selected goblins</span>
+              <span class="v">${selectedCount}</span>
+            </div>
+          </div>
+
+          <div class="rf-badges">
+            <span class="rf-badge ${tiredCount ? 'warn' : 'ok'}">
+              💤 Tired: <b>${tiredCount}</b>
+            </span>
+            <span class="rf-badge ok">
+              ✅ Ready: <b>${Math.max(0, selectedCount - tiredCount)}</b>
+            </span>
+          </div>
+
+          ${tiredCount ? `
+            <div class="rf-actions">
+              <button id="btn-remove-tired" class="btn-primary" type="button">
+                💤 Remove tired (${tiredCount})
+              </button>
+              <span style="font-size:12px;opacity:.85;">
+                Removes tired goblins from your current selection.
+              </span>
+            </div>
+          ` : ''}
+
+          <div class="rf-note">
+            <b>Tip:</b> Resistance reduces <b>Daily Power</b> cost per goblin. Speed reduces <b>effective duration</b>.
+          </div>
+        </div>
+
+        <div class="rf-card">
+          <h4>Daily Power</h4>
+          <div class="rf-kv">
+            <div class="rf-row" title="Base daily cost per goblin BEFORE RESISTANCE is applied, for this duration tier.">
+              <span class="k">Nominal cost / goblin</span>
+              <span class="v">${fmt3Smart(baseNominalPerGoblin)} DP</span>
+            </div>
+
+            <div class="rf-row" title="Average effective daily cost per goblin AFTER RESISTANCE.">
+              <span class="k">Effective cost / goblin</span>
+              <span class="v">${selectedCount ? fmt3Smart(effAvgPerGoblin) : '—'} DP</span>
+            </div>
+
+            <div class="rf-row" title="Sum of all NOMINAL daily power costs (without RES) for this run.">
+              <span class="k">Total (nominal)</span>
+              <span class="v">${Number.isFinite(totalPowerNominal) ? fmt3Smart(totalPowerNominal) : '—'} DP</span>
+            </div>
+
+            <div class="rf-row" title="Sum of all EFFECTIVE daily power costs (with RES) for this run.">
+              <span class="k">Total (effective)</span>
+              <span class="v">${Number.isFinite(totalPowerEffective) ? fmt3Smart(totalPowerEffective) : '—'} DP</span>
+            </div>
+          </div>
+
+          <div class="rf-note">
+            “Need” on each goblin card already includes Resistance. If a goblin’s remaining Daily Power is below that value, it becomes <b>TIRED</b>.
+          </div>
+        </div>
+
+        <div class="rf-card" style="grid-column:1/-1;">
+          <h4>Rewards</h4>
+          <div class="rf-kv">
+            <div class="rf-row" title="Expected CHIPS reward range for this run.">
+              <span class="k">Chips (min–max)</span>
+              <span class="v">${Number.isFinite(tMin) ? fmt3Smart(tMin) : '—'} – ${Number.isFinite(tMax) ? fmt3Smart(tMax) : '—'}</span>
+            </div>
+
+            ${Object.keys(probs).length ? `
+            <div class="rf-row" title="Relative probability of token reward tiers based on average ACC.">
+              <span class="k">Token tier probabilities</span>
+              <span class="v" style="font-family:inherit;font-weight:900;">
+                ${Object.entries(probs).map(([k,v]) => `${safe(k)} ${Math.round(v * 100)}%`).join(' · ')}
+              </span>
+            </div>` : ''}
+
+            ${nftRewards.length ? `
+            <div class="rf-row" title="Approximate chance of receiving each NFT template in a single run.">
+              <span class="k">NFT chances</span>
+              <span class="v" style="font-family:inherit;font-weight:900;">
+                ${nftRewards.map(it => `${safe(it.name)} ${Math.round((it.chance || 0) * 100)}%`).join(' · ')}
+              </span>
+            </div>` : ''}
+          </div>
+
+          ${msgs.length ? `
+            <div class="rf-note">ℹ️ ${msgs.map(safe).join(' · ')}</div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // 2) No data mode
+  if (!data){
+    return '';
+  }
+
+  // 3) Real forecast panel (full content)
+  return `
+    <div class="grid">
+      <div class="card">
+        <div class="kv">
+          <div title="Minutes chosen in the duration selector.">
+            <span class="label">⏱ Nominal duration</span>
+            <b>${fmt3Smart(durNominal)} min</b>
+          </div>
+
+          <div title="Estimated duration after the total SPEED bonus is applied.">
+            <span class="label">⚡ Effective duration</span>
+            <b>
+              ${formatDurationMinSecFromSeconds(durEffSeconds)}
+              <span class="badge-inline">tier ${tierEff}m</span>
+            </b>
+          </div>
+
+          <div title="Base daily cost per goblin BEFORE RESISTANCE is applied, for this duration tier.">
+            <span class="label">💰 Nominal daily cost / goblin</span>
+            <b>
+              ${fmt3Smart(baseNominalPerGoblin)} DP
+              <span class="badge-inline">base</span>
+            </b>
+          </div>
+
+          <div title="Average effective daily cost per goblin AFTER RESISTANCE.">
+            <span class="label">🛡️ Effective daily cost / goblin</span>
+            <b>
+              ${selectedCount ? fmt3Smart(effAvgPerGoblin) : '—'} DP
+              <span class="badge-inline">effective</span>
+            </b>
+          </div>
+
+          <div title="Sum of all NOMINAL daily power costs (without RES) for this run.">
+            <span class="label">🔋 Total daily power (nominal)</span>
+            <b>${Number.isFinite(totalPowerNominal) ? fmt3Smart(totalPowerNominal) : '—'} DP</b>
+          </div>
+
+          <div title="Sum of all EFFECTIVE daily power costs (with RES) for this run.">
+            <span class="label">🔋 Total daily power (effective)</span>
+            <b>${Number.isFinite(totalPowerEffective) ? fmt3Smart(totalPowerEffective) : '—'} DP</b>
+          </div>
+
+          <div title="Goblins actually used in the forecast (after applying the cap, if exceeded).">
+            <span class="label">🧬 Selected goblins</span>
+            <b>${selectedCount}</b>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="kv">
+          <div title="Expected CHIPS reward range for this run.">
+            <span class="label">💎 Chips (min–max)</span>
+            <b>
+              ${Number.isFinite(tMin) ? fmt3Smart(tMin) : '—'} – ${Number.isFinite(tMax) ? fmt3Smart(tMax) : '—'}
+              <span class="badge-inline">reward</span>
+            </b>
+          </div>
+
+          ${Object.keys(probs).length ? `
+          <div title="Relative probability of token reward tiers based on average ACC.">
+            <span class="label">📊 Token tier probabilities</span>
+            <b>${
+              Object.entries(probs)
+                .map(([k,v]) => `${safe(k)} ${Math.round(v * 100)}%`)
+                .join(' · ')
+            }</b>
+          </div>` : ''}
+
+          ${nftRewards.length ? `
+          <div title="Approximate chance of receiving each NFT template in a single run.">
+            <span class="label">🎁 NFT drop chances</span>
+            <b>${
+              nftRewards
+                .map(it => `${safe(it.name)} ${Math.round((it.chance || 0) * 100)}%`)
+                .join(' · ')
+            }</b>
+          </div>` : ''}
+
+          ${tiredCount ? `
+          <div style="margin-top:6px;">
+            <button id="btn-remove-tired" class="btn-primary" type="button">
+              💤 Remove ${tiredCount} tired goblin${tiredCount > 1 ? 's' : ''} from selection
+            </button>
+          </div>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="card forecast-help">
+      <div class="forecast-help-title">📘 How your attributes affect this run</div>
+      <ul>
+        <li><strong>Speed (SPD)</strong> makes the run <em>finish faster</em> by reducing effective duration.</li>
+        <li><strong>Resistance (RES)</strong> <em>reduces Daily Power cost</em> per goblin, making runs cheaper.</li>
+        <li><strong>Loot Hungry (LOOT)</strong> scales how many <em>CHIPS</em> you can loot on average.</li>
+        <li><strong>Accuracy (ACC)</strong> improves <em>reward quality</em>: better token tiers and higher NFT drop chances.</li>
+      </ul>
+    </div>
+
+    ${msgs.length ? `<div class="hint">ℹ️ ${msgs.map(safe).join(' · ')}</div>` : ''}
+  `;
+}	
 		    // ---------- SIMULATOR result panel ----------
 		    function updateForecastSimResult() {
 		      const host = document.getElementById('forecast-sim-result');

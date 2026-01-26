@@ -5618,7 +5618,7 @@ function loadDwarvesGoldCave() {
   host.innerHTML = '';
 
   const iframe = document.createElement('iframe');
-  iframe.src = 'nuovo.html';
+  iframe.src = 'nuovo2.html';
   iframe.style.width = '100%';
   iframe.style.border = '0';
   iframe.style.display = 'block';

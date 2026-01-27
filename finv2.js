@@ -1772,18 +1772,13 @@ function buildEventPayloadFromForm(isEditing) {
       return null
     }
     base.cardWalletId = Number(cardId)
-
     base.purchaseDate = purchaseDate
-    const schedule = {method}
     let schedule = { method }
     if (method === "one_shot") {
       const dd = el("fDueDateOneShot") ? el("fDueDateOneShot").value : ""
-      if (!dd || !parseISODate(dd)) {
-        showToast("Data non valida","Data quota dovuta non valida")
-        return null
-      }
+      if (!dd || !parseISODate(dd)) { ... }
       schedule.kind = "instant"
-
+      schedule.dueDate = dd // <- SOLO se il backend la usa
     }
     if (method === "monthly_installments") {
       const instN = el("fInstN") ? parseInt(el("fInstN").value || "0",10) : 0
@@ -1814,6 +1809,7 @@ function buildEventPayloadFromForm(isEditing) {
         showToast("Campo obbligatorio","Inserisci almeno una quota personalizzata")
         return null
       }
+    
       const list = []
       for (const tr of rows) {
         const dInp = tr.querySelector('input[type="date"]')
@@ -1828,12 +1824,16 @@ function buildEventPayloadFromForm(isEditing) {
           showToast("Importo non valido","Importo quota personalizzata non valido")
           return null
         }
-        list.push({date: dd, amount: aa})
+        list.push({ date: dd, amount: aa })
       }
+    
+      // ordina per data per sicurezza
+      list.sort((a,b)=> String(a.date).localeCompare(String(b.date)))
+    
       schedule.customInstallments = list
       schedule.kind = "financing"
-      schedule.count = instN
-      schedule.firstStatementMonth = firstDue.slice(0, 7) // "YYYY-MM"      
+      schedule.count = list.length
+      schedule.firstStatementMonth = String(list[0].date).slice(0, 7)
     }
     if (method === "revolving") {
       const minM = parseNumberInput(el("fMinMonthly") ? el("fMinMonthly").value : "")

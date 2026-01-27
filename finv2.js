@@ -637,8 +637,20 @@ function renderSnapshot() {
     setKpi("balance", w.balance)
     setKpi("spentSoFar", w.spentSoFar)
     setKpi("spentRemaining", w.spentRemaining)
-    setKpi("incomeSoFar", w.incomeSoFar)
-    setKpi("incomeRemaining", w.incomeRemaining)
+    
+    // ✅ OPZIONE 2: per le carte "incomeSoFar" = rimborsi (credits) dello statement
+    if (w.card) {
+      const credits = (typeof w.card.statement?.credits === "number")
+        ? w.card.statement.credits
+        : 0
+      setKpi("incomeSoFar", credits)
+    
+      // "incomeRemaining" per la carta spesso non ha senso: lo metto a 0 (o — se preferisci)
+      setKpi("incomeRemaining", 0)
+    } else {
+      setKpi("incomeSoFar", w.incomeSoFar)
+      setKpi("incomeRemaining", w.incomeRemaining)
+    }
 
     if (w.compareLastMonthExpenses) {
       const c = w.compareLastMonthExpenses
@@ -842,13 +854,17 @@ function renderSnapshot() {
     if (shortEl) {
       let txt = "N.A."
       if (w.card) {
+        const credits = (typeof w.card.statement?.credits === "number")
+          ? w.card.statement.credits
+          : 0
+      
         const sr = w.card.scheduledRepayment || null
         if (!sr) {
-          txt = "N.A."
+          txt = `Rimborsi mese: ${formatEuro(credits)}.`
         } else if (sr.exists) {
-          txt = "Rimborso programmato già presente sulla data di addebito."
+          txt = `Rimborsi mese: ${formatEuro(credits)} · Rimborso programmato già presente su ${sr.paymentDate || "—"}.`
         } else {
-          txt = `Rimborso programmato mancante: suggerito ${formatEuro(sr.suggestedAmount || 0)} al ${sr.paymentDate || "—"}.`
+          txt = `Rimborsi mese: ${formatEuro(credits)} · Rimborso programmato mancante: suggerito ${formatEuro(sr.suggestedAmount || 0)} al ${sr.paymentDate || "—"}.`
         }
       } else {
         const bal    = typeof w.balance === "number" ? w.balance : null

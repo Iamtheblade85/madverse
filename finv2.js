@@ -1,4 +1,4 @@
-const apiBase = "https://iamemanuele.pythonanywhere.com"
+const apiBase = "https://iamemanuele.pythonanywhere.com";
 const state = {
   wallets: [],
   events: [],
@@ -441,7 +441,7 @@ function openDayEventsModal(isoDate) {
         row.appendChild(top)
         row.appendChild(bottom)
         // Pulsante selezione estinzione anticipata (solo per card_purchase)
-        if (ev.type === "card_purchase") {
+        if (ev.type === "card_purchase" && ev.schedule && ev.schedule.kind === "financing") {
           const act = document.createElement("div")
           act.style.cssText = "margin-top:6px; display:flex; gap:8px; flex-wrap:wrap;"
         
@@ -699,53 +699,89 @@ function renderSnapshot() {
     }
 
     // Se è una carta: sezione extra con debito netto dovuto nel mese
-    const cardExtras = clone.querySelector('[data-slot="cardExtras"]')
-let netDue = null
+    const cardExtras = clone.querySelector('[data-slot="cardExtras"]');
+    let netDue = null;
+
     if (w.card && cardExtras) {
       cardExtras.classList.remove("hide")
 
       const limitVal       = typeof w.card.limit === "number" ? w.card.limit : null
       const availVal       = typeof w.card.availableCredit === "number" ? w.card.availableCredit : null
       const outstandingVal = typeof w.card.outstanding === "number" ? w.card.outstanding : null
-      const dueRaw         = typeof w.card.dueByEom === "number" ? w.card.dueByEom : 0
-      const repRaw         = typeof w.card.repaymentsThisMonth === "number" ? w.card.repaymentsThisMonth : 0
-
-      // Debito dovuto entro fine mese AL NETTO dei rimborsi registrati (legacy)
-      netDue = Math.max(0, dueRaw - repRaw)
-
+      // Backend nuovo: non inventiamo "netto".
+      // dueByEom UI = statement.baselineAmount (baseline statement del mese)
+      const stmtB = (w.card.statement && typeof w.card.statement.baselineAmount === "number")
+        ? w.card.statement.baselineAmount
+        : null
+      setKpi("dueByEom", stmtB)
+      // repaymentsThisMonth non arriva da /dashboard (nuovo backend) → mostra —
+      setKpi("repaymentsThisMonth", null)
+      // netDue lo usavamo solo per frasi di riepilogo: lo disattiviamo
+      netDue = null
       setKpi("cardLimit", limitVal)
       setKpi("availableCredit", availVal)
       setKpi("outstanding", outstandingVal)
-      setKpi("dueByEom", netDue)
-      setKpi("repaymentsThisMonth", repRaw)
-
       const df = clone.querySelector('[data-kpi="defaultSourceWallet"]')
       if (df) df.textContent = w.card.defaultSourceWalletName || "—"
 
       // -------------------------
-      // NEW: cycle + statement
+      // NEW: statement (backend-aligned)
       // -------------------------
-      const cycle = w.card.cycle || {}
-      const stmt  = w.card.statement || {}
-
+      const stmt = w.card.statement || {}
+      
       const setTxt = (k, v) => {
-        const el = clone.querySelector(`[data-kpi="${k}"]`)
-        if (!el) return
-        el.textContent = (v === null || v === undefined || v === "") ? "—" : String(v)
+        const elx = clone.querySelector(`[data-kpi="${k}"]`)
+        if (!elx) return
+        elx.textContent = (v === null || v === undefined || v === "") ? "—" : String(v)
       }
-
-      setTxt("cycleStart", cycle.start || "—")
-      setTxt("cycleEnd", cycle.end || "—")
-      setTxt("cycleDebitDate", cycle.debitDate || "—")
-
-      setKpi("statementTotal", typeof stmt.total === "number" ? stmt.total : null)
-      setKpi("statementDueCapital", typeof stmt.dueCapital === "number" ? stmt.dueCapital : null)
-      setKpi("statementCharges", typeof stmt.charges === "number" ? stmt.charges : null)
-      setKpi("statementCredits", typeof stmt.credits === "number" ? stmt.credits : null)
-
-      setKpi("statementInterestCard", typeof stmt.interestCard === "number" ? stmt.interestCard : null)
-      setKpi("statementFeeCard", typeof stmt.feeCard === "number" ? stmt.feeCard : null)
-      setKpi("statementInterestFinancing", typeof stmt.interestFinancing === "number" ? stmt.interestFinancing : null)
+      
+      // window start/end
+      setTxt("statementWindowStart", stmt.window?.start || "—")
+      setTxt("statementWindowEnd", stmt.window?.end || "—")
+      
+      // baseline + counts + sums
+      setKpi("statementBaselineAmount", (typeof stmt.baselineAmount === "number") ? stmt.baselineAmount : null)
+      setTxt("statementInstantCount", (stmt.instantPurchasesCount ?? "—"))
+      
+      setKpi("statementCharges", (typeof stmt.charges === "number") ? stmt.charges : null)
+      setKpi("statementCredits", (typeof stmt.credits === "number") ? stmt.credits : null)
+      
+      // installments list slot
+      const instSlot = clone.querySelector('[data-slot="statementInstallments"]')
+      if (instSlot) {
+        instSlot.innerHTML = ""
+        const inst = Array.isArray(stmt.installments) ? stmt.installments : []
+        if (!inst.length) {
+          const h = document.createElement("div")
+          h.className = "hint"
+          h.textContent = "Nessuna rata nel mese selezionato."
+          instSlot.appendChild(h)
+        } else {
+          inst.forEach(line => {
+            const row = document.createElement("div")
+            row.style.cssText = "display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 8px; border:1px solid rgba(148,163,184,.22); border-radius:10px; background:rgba(2,6,23,.35);"
+            const left = document.createElement("div")
+            left.style.cssText = "display:flex; flex-direction:column; gap:2px;"
+            const t = document.createElement("div")
+            t.style.fontWeight = "600"
+            t.style.fontSize = "12px"
+            t.textContent = (line.title || "Rata")
+            const meta = document.createElement("div")
+            meta.style.cssText = "font-size:12px; opacity:.75;"
+            meta.textContent = (line.category ? String(line.category) : "")
+            left.appendChild(t)
+            left.appendChild(meta)
+      
+            const right = document.createElement("div")
+            right.style.fontWeight = "700"
+            right.textContent = formatEuro(line.amount)
+      
+            row.appendChild(left)
+            row.appendChild(right)
+            instSlot.appendChild(row)
+          })
+        }
+      }
 
       // -------------------------
       // NEW: scheduled repayment box
@@ -802,32 +838,20 @@ let netDue = null
     // Riassunto breve in alto (walletShortSummary)
     const shortEl = clone.querySelector('[data-kpi="walletShortSummary"]')
     if (shortEl) {
-      let txt = ""
-
+      let txt = "N.A."
       if (w.card) {
-        const outstandingVal = typeof w.card.outstanding === "number" ? w.card.outstanding : null
-
-        if (netDue == null) {
-          // fallback: ricalcola da raw in caso non sia stato impostato sopra
-          const dueRaw = typeof w.card.dueByEom === "number" ? w.card.dueByEom : 0
-          const repRaw = typeof w.card.repaymentsThisMonth === "number" ? w.card.repaymentsThisMonth : 0
-          netDue = Math.max(0, dueRaw - repRaw)
-        }
-
-        if (netDue <= 0.0001) {
-          if (outstandingVal && outstandingVal > 0) {
-            txt = `Nessun debito dovuto entro fine mese. Debito totale attuale: ${formatEuro(outstandingVal)}.`
-          } else {
-            txt = "Tutto pagato per questo mese."
-          }
+        const sr = w.card.scheduledRepayment || null
+        if (!sr) {
+          txt = "N.A."
+        } else if (sr.exists) {
+          txt = "Rimborso programmato già presente sulla data di addebito."
         } else {
-          txt = `Ancora ${formatEuro(netDue)} da rimborsare entro fine mese.`
+          txt = `Rimborso programmato mancante: suggerito ${formatEuro(sr.suggestedAmount || 0)} al ${sr.paymentDate || "—"}.`
         }
       } else {
         const bal    = typeof w.balance === "number" ? w.balance : null
         const spent  = typeof w.spentSoFar === "number" ? w.spentSoFar : null
         const income = typeof w.incomeSoFar === "number" ? w.incomeSoFar : null
-
         if (bal != null && spent != null && income != null) {
           const net = income - spent
           const dir = net >= 0 ? "avanza" : "manca"
@@ -835,13 +859,11 @@ let netDue = null
         } else if (bal != null) {
           txt = `Saldo al giorno selezionato: ${formatEuro(bal)}.`
         } else {
-          txt = ""
+          txt = "N.A."
         }
       }
-
       shortEl.textContent = txt
     }
-
     container.appendChild(clone)
   })
 }
@@ -1616,7 +1638,8 @@ function buildEventPayloadFromForm(isEditing) {
       showToast("Campo obbligatorio","Seleziona un wallet")
       return null
     }
-    base.walletId = wId
+    base.walletId = Number(wId)
+
   }
   if (type === "card_purchase") {
     const cardId = el("fCardWallet") ? el("fCardWallet").value : ""
@@ -1634,7 +1657,8 @@ function buildEventPayloadFromForm(isEditing) {
       showToast("Campo obbligatorio","Seleziona un metodo per costruire le quote")
       return null
     }
-    base.cardWalletId = cardId
+    base.cardWalletId = Number(cardId)
+
     base.purchaseDate = purchaseDate
     const schedule = {method}
     if (method === "one_shot") {
@@ -1726,8 +1750,9 @@ function buildEventPayloadFromForm(isEditing) {
       showToast("Importo non valido","Importo rimborso non valido")
       return null
     }
-    base.fromWalletId = fromWalletId
-    base.toCardWalletId = toCardWalletId
+    base.fromWalletId = Number(fromWalletId)
+    base.toCardWalletId = Number(toCardWalletId)
+
     base.paymentDate = paymentDate
     base.amount = repayAmount
   }
@@ -2087,187 +2112,11 @@ async function deleteSeriesAll(evt) {
 }
 
 async function loadCardsDashboard() {
-  const container = el("cardsDashboard")
-  if (!container) return
-  container.innerHTML = ""
-  const asOf = state.selectedDate || formatISODate(new Date())
-  const d = parseISODate(asOf)
-  const month = d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}` : asOf.slice(0,7)
-  const params = new URLSearchParams()
-  params.set("asOf", asOf)
-  params.set("month", month)
-  let data = null
-  try {
-    data = await apiFetch("/dashboard?" + params.toString(),{method:"GET"})
-  } catch(e) {
-    data = null
-  }
-  state.lastCardsDashboard = data
-  if (!data || !Array.isArray(data.wallets)) {
-    const fs = document.createElement("div")
-    fs.className = "form-section"
-    const p = document.createElement("p")
-    p.className = "section-title"
-    p.textContent = "Nessuna carta"
-    fs.appendChild(p)
-    container.appendChild(fs)
-    return
-  }
-  const cards = data.wallets.filter(w=>w.type === "card" || (w.card && (w.card.outstanding != null || w.card.dueByEom != null)))
-  if (!cards.length) {
-    const fs = document.createElement("div")
-    fs.className = "form-section"
-    const p = document.createElement("p")
-    p.className = "section-title"
-    p.textContent = "Nessuna carta"
-    fs.appendChild(p)
-    container.appendChild(fs)
-    return
-  }
-  cards.forEach(c=>{
-    const fs = document.createElement("div")
-    fs.className = "form-section"
-    const title = document.createElement("p")
-    title.className = "section-title"
-    title.textContent = c.name || "Carta"
-    fs.appendChild(title)
-    const kpi = document.createElement("div")
-    kpi.className = "kpi"
-    const addKpi = (label,val) => {
-      const dWrap = document.createElement("div")
-      const k = document.createElement("div")
-      k.className = "k"
-      k.textContent = label
-      const v = document.createElement("div")
-      v.className = "v"
-      v.textContent = val
-      dWrap.appendChild(k)
-      dWrap.appendChild(v)
-      kpi.appendChild(dWrap)
-    }
-    const cardData = c.card || {}
-    addKpi("Debito totale attuale", formatEuro(cardData.outstanding || 0))
-    addKpi("Quote dovute entro fine mese", formatEuro(cardData.dueByEom || 0))
-    addKpi("Rimborsi effettuati nel mese", formatEuro(cardData.repaymentsThisMonth || 0))
-    const diff = (cardData.dueByEom || 0) - (cardData.repaymentsThisMonth || 0)
-    addKpi("Differenza", formatEuro(diff))
-    fs.appendChild(kpi)
-    const hr = document.createElement("div")
-    hr.className = "hr"
-    fs.appendChild(hr)
-    const table = document.createElement("table")
-    table.setAttribute("aria-label","Elenco rimborsi del mese")
-    const thead = document.createElement("thead")
-    const trH = document.createElement("tr")
-    ;["Data pagamento reale","Da wallet","Importo","Azioni"].forEach(h=>{
-      const th = document.createElement("th")
-      th.textContent = h
-      trH.appendChild(th)
-    })
-    thead.appendChild(trH)
-    table.appendChild(thead)
-    const tbody = document.createElement("tbody")
-    const repayments = Array.isArray(cardData.repayments) ? cardData.repayments : []
-    if (!repayments.length) {
-      const tr = document.createElement("tr")
-      const td1 = document.createElement("td")
-      td1.textContent = "—"
-      const td2 = document.createElement("td")
-      td2.textContent = "—"
-      const td3 = document.createElement("td")
-      td3.textContent = "—"
-      const td4 = document.createElement("td")
-      td4.className = "table-actions"
-      const bE = document.createElement("button")
-      bE.className = "btn"
-      bE.type = "button"
-      bE.disabled = true
-      bE.textContent = "Modifica"
-      const bD = document.createElement("button")
-      bD.className = "btn btn--danger"
-      bD.type = "button"
-      bD.disabled = true
-      bD.textContent = "Cancella"
-      td4.appendChild(bE)
-      td4.appendChild(bD)
-      tr.appendChild(td1)
-      tr.appendChild(td2)
-      tr.appendChild(td3)
-      tr.appendChild(td4)
-      tbody.appendChild(tr)
-    } else {
-      repayments.forEach(r=>{
-        const tr = document.createElement("tr")
-        const td1 = document.createElement("td")
-        td1.textContent = r.paymentDate || r.calendarDate || "—"
-        const td2 = document.createElement("td")
-        const w = getWalletById(r.fromWalletId)
-        td2.textContent = w ? w.name : "—"
-        const td3 = document.createElement("td")
-        td3.textContent = formatEuro(r.amount || 0)
-        const td4 = document.createElement("td")
-        td4.className = "table-actions"
-        const bE = document.createElement("button")
-        bE.className = "btn"
-        bE.type = "button"
-        bE.textContent = "Modifica"
-        bE.addEventListener("click",()=>startEditEvent(r.id,"single"))
-        const bD = document.createElement("button")
-        bD.className = "btn btn--danger"
-        bD.type = "button"
-        bD.textContent = "Cancella"
-        bD.addEventListener("click",()=>deleteSingleEvent(r.id))
-        td4.appendChild(bE)
-        td4.appendChild(bD)
-        tr.appendChild(td1)
-        tr.appendChild(td2)
-        tr.appendChild(td3)
-        tr.appendChild(td4)
-        tbody.appendChild(tr)
-      })
-    }
-    table.appendChild(tbody)
-    fs.appendChild(table)
-    const hint = document.createElement("div")
-    hint.className = "hint"
-    hint.style.marginTop = "10px"
-    hint.textContent = "“Suggerisci importo” è solo un suggerimento (nessuna azione automatica)."
-    fs.appendChild(hint)
-    container.appendChild(fs)
-  })
+  showToast("Info", "Cards dashboard legacy disattivata: usa lo Snapshot.")
 }
 
 function suggestRepayment() {
-  const data = state.lastCardsDashboard
-  if (!data || !Array.isArray(data.wallets)) {
-    showToast("Suggerimento non disponibile","Carica prima i dati delle carte")
-    return
-  }
-  const cards = data.wallets.filter(w=>w.type === "card" || w.card)
-  if (!cards.length) {
-    showToast("Suggerimento non disponibile","Nessuna carta trovata")
-    return
-  }
-  if (cards.length === 1) {
-    const c = cards[0]
-    const cardData = c.card || {}
-    const diff = (cardData.dueByEom || 0) - (cardData.repaymentsThisMonth || 0)
-    const sug = diff > 0 ? diff : 0
-    showToast("Suggerimento importo",`Per ${c.name} è consigliabile pagare almeno ${formatEuro(sug)} (debito entro fine mese meno rimborsi già effettuati).`)
-    return
-  }
-  const names = cards.map(c=>c.name || "").filter(Boolean)
-  const chosen = prompt("Per quale carta vuoi il suggerimento?\n" + names.join(", "))
-  if (!chosen) return
-  const card = cards.find(c=>c.name === chosen)
-  if (!card) {
-    showToast("Suggerimento non disponibile","Carta non trovata")
-    return
-  }
-  const cardData = card.card || {}
-  const diff = (cardData.dueByEom || 0) - (cardData.repaymentsThisMonth || 0)
-  const sug = diff > 0 ? diff : 0
-  showToast("Suggerimento importo",`Per ${card.name} è consigliabile pagare almeno ${formatEuro(sug)}.`)
+  showToast("Info", "Suggerimento legacy disattivato: usa scheduledRepayment nello Snapshot.")
 }
 
 function exportConfig() {
@@ -2485,9 +2334,15 @@ function initEventListeners() {
     setSelectedEventType("card_repayment")
   })
   const btnSuggestRepaymentTop = el("btnSuggestRepayment")
-  if (btnSuggestRepaymentTop) btnSuggestRepaymentTop.addEventListener("click",suggestRepayment)
+  if (btnSuggestRepaymentTop) btnSuggestRepaymentTop.addEventListener("click", () => {
+    showToast("Info", "Suggerimento legacy disattivato: guarda Scheduled Repayment nello Snapshot.")
+  })
+
   const btnRefreshCards = el("btnRefreshCards")
-  if (btnRefreshCards) btnRefreshCards.addEventListener("click",loadCardsDashboard)
+  if (btnRefreshCards) btnRefreshCards.addEventListener("click", () => {
+    showToast("Info", "Cards dashboard legacy disattivata: usa lo Snapshot.")
+  })
+
   const dayModal = el("dayEventsModal")
   const dayModalClose = el("dayModalClose")
   if (dayModalClose) {
@@ -2531,8 +2386,8 @@ if (document.readyState === "loading") {
 // ------------------------------
 // NEW: Card actions (delegation)
 // ------------------------------
-let payoffState = { purchaseEventId: null, cardWalletId: null, purchaseTitle: null }
-let walletsCache = []
+let payoffState = { purchaseEventId: null, cardWalletId: null, purchaseTitle: null };
+let walletsCache = [];
 
 function fillPayoffFromWalletSelect() {
   const sel = document.getElementById("payoffFromWalletId")
@@ -2562,10 +2417,13 @@ function findWalletInDashboard(walletId) {
   return d.wallets.find(w => String(w.id) === String(walletId)) || null
 }
 
-
-function moneyOrNull(v) {
+function numberOrNull(v) {
   const n = Number(v)
   return Number.isFinite(n) ? n : null
+}
+function intOrNull(v) {
+  const n = Number(v)
+  return Number.isInteger(n) ? n : null
 }
 
 function openPayoffModal() {
@@ -2590,44 +2448,40 @@ document.addEventListener("click", async (e) => {
   const refresh = async () => {
     // usa le tue funzioni esistenti di reload (qui assumo loadDashboard/refreshSnapshot; se non esiste, dimmelo e lo adatto)
     if (typeof loadDashboard === "function") await loadDashboard()
+    if (typeof loadEvents === "function") await loadEvents()
   }
 
   if (action === "cardSaveSettings") {
     const w = findWalletInDashboard(walletId)
     if (!w) return
-
     const root = btn.closest('[data-slot="cardExtras"]') || btn.closest(".walletCard") || document
-
     const payload = {
-      teilzahlungAmount: moneyOrNull(root.querySelector('[data-input="csTeilzahlung"]')?.value),
-      sollzinsAnnual: moneyOrNull(root.querySelector('[data-input="csSollzins"]')?.value),
-      effektivzinsAnnual: moneyOrNull(root.querySelector('[data-input="csEffektivzins"]')?.value),
-      kreditlimit: moneyOrNull(root.querySelector('[data-input="csKreditlimit"]')?.value),
+      teilzahlungAmount: numberOrNull(root.querySelector('[data-input="csTeilzahlung"]')?.value),
+      sollzinsAnnual: numberOrNull(root.querySelector('[data-input="csSollzins"]')?.value),
+      effektivzinsAnnual: numberOrNull(root.querySelector('[data-input="csEffektivzins"]')?.value),
+      // backend-aligned: è "limit" (UI legge w.card.limit)
+      limit: numberOrNull(root.querySelector('[data-input="csKreditlimit"]')?.value),
       effectiveFrom: root.querySelector('[data-input="csEffectiveFrom"]')?.value || null,
-      cycleStartDay: moneyOrNull(root.querySelector('[data-input="csCycleStartDay"]')?.value),
-      cycleEndDay: moneyOrNull(root.querySelector('[data-input="csCycleEndDay"]')?.value),
-      debitDay: moneyOrNull(root.querySelector('[data-input="csDebitDay"]')?.value),
+      // days: interi
+      cycleStartDay: intOrNull(root.querySelector('[data-input="csCycleStartDay"]')?.value),
+      cycleEndDay: intOrNull(root.querySelector('[data-input="csCycleEndDay"]')?.value),
+      debitDay: intOrNull(root.querySelector('[data-input="csDebitDay"]')?.value),
     }
-
     // pulizia: rimuovi chiavi null/undefined non inviate
     Object.keys(payload).forEach(k => {
       if (payload[k] === null || payload[k] === "" || payload[k] === undefined) delete payload[k]
     })
-
     await apiFetch(`/cards/${w.id}/settings`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     })
-
     await refresh()
     return
   }
-
   if (action === "cardCreateScheduledRepayment") {
     const w = findWalletInDashboard(walletId)
     if (!w || !w.card) return
-
     const sr = w.card.scheduledRepayment
     if (!sr) {
       alert("scheduledRepayment non disponibile (backend).")
@@ -2647,9 +2501,8 @@ document.addEventListener("click", async (e) => {
 
     // fromWalletId: usa defaultSourceWalletId del wallet (non in w.card), quindi leggiamo da wallets list se presente
     const fromWalletId =
-      w.defaultSourceWalletId ||
-      (state.wallets.find(x => String(x.id) === String(w.id)) || {}).defaultSourceWalletId ||
-      null
+      (state.wallets.find(x => String(x.id) === String(w.id)) || {}).defaultSourceWalletId || null
+
 
     if (!fromWalletId) {
       alert("Manca defaultSourceWalletId sul wallet. Impostalo dalla UI wallet.")
@@ -2695,7 +2548,7 @@ document.addEventListener("click", async (e) => {
     // trova l'evento reale di rimborso su debit date: lo cerchiamo dai dati già caricati nel frontend (dayEvents/list).
     // Se non hai cache eventi globale, facciamo una query events di quel giorno e wallet.
     const day = sr.paymentDate
-    const events = await apiFetch(`/events?from=${day}&to=${day}&walletId=${w.id}`)
+    const events = await apiFetch(`/events?from=${day}&to=${day}`)
     const repay = (events || []).find(ev => ev.type === "card_repayment" && String(ev.toCardWalletId) === String(w.id) && (ev.paymentDate === day || ev.calendarDate === day))
     if (!repay) {
       alert("Non riesco a trovare l'evento rimborso. Apri il giorno e verifica.")
@@ -2709,24 +2562,28 @@ document.addEventListener("click", async (e) => {
       return
     }
     const deltaMode = root.querySelector('[data-input="schedDeltaMode"]')?.value || "fee"
-
+    const baseline = (typeof sr.baselineAmount === "number")
+      ? sr.baselineAmount
+      : (w.card.statement && typeof w.card.statement.baselineAmount === "number")
+        ? w.card.statement.baselineAmount
+        : userAmount
     const payload = {
       userAmount: userAmount,
-      baselineAmount: typeof sr.baselineAmount === "number" ? sr.baselineAmount : (typeof w.card.statement?.total === "number" ? w.card.statement.total : userAmount),
-      deltaMode: deltaMode,
+      baselineAmount: baseline,
       allocations: []
     }
-
+    const delta = userAmount - baseline
+    if (Math.abs(delta) >= 1e-9) {
+      payload.deltaMode = deltaMode
+    }
     await apiFetch(`/events/${repay.id}/repayment_override`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     })
-
     await refresh()
     return
   }
-
   if (action === "openPayoffModal") {
     // apre modal se è stato selezionato un purchase financing
     if (!payoffState.purchaseEventId) {
@@ -2737,7 +2594,6 @@ document.addEventListener("click", async (e) => {
     return
   }
 })
-
 // Payoff modal controls
 document.addEventListener("DOMContentLoaded", () => {
   const closeBtn = document.getElementById("payoffCloseBtn")
@@ -2784,4 +2640,3 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof loadDashboard === "function") await loadDashboard()
   })
 })
-

@@ -311,6 +311,7 @@ function mapEventTypeToClass(t) {
   if (t === "card_purchase") return "event-line--acquisto"
   if (t === "card_due") return "event-line--quota"
   if (t === "card_repayment") return "event-line--rimborso"
+  if (t === "card_credit") return "event-line--entrata"
   return ""
 }
 
@@ -320,6 +321,7 @@ function mapEventTypeToLabel(t) {
   if (t === "card_purchase") return "Acquisto su carta"
   if (t === "card_due") return "Quota dovuta"
   if (t === "card_repayment") return "Rimborso carta"
+  if (t === "card_credit") return "Entrata su carta"
   return t || ""
 }
 
@@ -329,6 +331,7 @@ function mapEventTypeToDotClass(t) {
   if (t === "card_purchase") return "dot dot--card"
   if (t === "card_due") return "dot dot--due"
   if (t === "card_repayment") return "dot dot--repay"
+  if (t === "card_credit") return "dot dot--ok"
   return "dot"
 }
 
@@ -342,6 +345,7 @@ function computeDayTotals(events) {
     const amt = ev.amount || 0
     switch (ev.type) {
       case "income":
+      case "card_credit":
         totalIncome += amt
         break
       case "expense":
@@ -588,7 +592,8 @@ function renderCalendar() {
     } else {
       events.slice(0,3).forEach(ev=>{
         const clone = tpl.content.firstElementChild.cloneNode(true)
-        clone.classList.add(mapEventTypeToClass(ev.type))
+        const cls = mapEventTypeToClass(ev.type)
+        if (cls) clone.classList.add(cls)
         const dot = clone.querySelector(".dot")
         if (dot) dot.className = mapEventTypeToDotClass(ev.type)
         const title = clone.querySelector(".title")

@@ -899,7 +899,7 @@
             <div class="kpi-value" data-kpi="outstanding">—</div>
           </div>
           <div class="kpi">
-            <div class="kpi-label">Dovuto entro fine mese (netto)</div>
+            <div class="kpi-label">Baseline statement (mese)</div>
             <div class="kpi-value" data-kpi="dueByEom">—</div>
           </div>
           <div class="kpi">
@@ -911,50 +911,44 @@
             <div class="kpi-value" data-kpi="defaultSourceWallet">—</div>
           </div>
       
-          <!-- NEW: ciclo e statement Amazon-like -->
+          <!-- NEW: statement (backend-aligned) -->
           <div class="cardBox" style="grid-column: 1 / -1; padding:12px; border:1px solid rgba(255,255,255,.08); border-radius:10px;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-              <div style="font-weight:600;">Ciclo carta (Amazon-like)</div>
+              <div style="font-weight:600;">Statement (cutoff 16 → 15)</div>
               <div style="opacity:.8; font-size:12px;">
-                <span data-kpi="cycleStart">—</span> → <span data-kpi="cycleEnd">—</span>
-                • Addebito: <span data-kpi="cycleDebitDate">—</span>
+                Finestra: <span data-kpi="statementWindowStart">—</span> → <span data-kpi="statementWindowEnd">—</span>
               </div>
             </div>
-      
+          
             <div style="margin-top:10px; display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:10px;">
               <div class="kpi">
-                <div class="kpi-label">Totale statement</div>
-                <div class="kpi-value" data-kpi="statementTotal">—</div>
+                <div class="kpi-label">Baseline statement</div>
+                <div class="kpi-value" data-kpi="statementBaselineAmount">—</div>
               </div>
               <div class="kpi">
-                <div class="kpi-label">Capitale (rate nel ciclo)</div>
-                <div class="kpi-value" data-kpi="statementDueCapital">—</div>
+                <div class="kpi-label">Instant purchases (count)</div>
+                <div class="kpi-value" data-kpi="statementInstantCount">—</div>
               </div>
               <div class="kpi">
-                <div class="kpi-label">Charges</div>
+                <div class="kpi-label">Charges (somma)</div>
                 <div class="kpi-value" data-kpi="statementCharges">—</div>
               </div>
               <div class="kpi">
-                <div class="kpi-label">Credits</div>
+                <div class="kpi-label">Credits (somma)</div>
                 <div class="kpi-value" data-kpi="statementCredits">—</div>
               </div>
             </div>
-      
-            <div style="margin-top:10px; display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px;">
-              <div class="kpi">
-                <div class="kpi-label">Interessi carta</div>
-                <div class="kpi-value" data-kpi="statementInterestCard">—</div>
+          
+            <div style="margin-top:10px;">
+              <div style="font-size:12px; opacity:.8; margin-bottom:6px;">
+                Rate (installments) nel mese selezionato
               </div>
-              <div class="kpi">
-                <div class="kpi-label">Fee carta</div>
-                <div class="kpi-value" data-kpi="statementFeeCard">—</div>
-              </div>
-              <div class="kpi">
-                <div class="kpi-label">Interessi finanziamenti</div>
-                <div class="kpi-value" data-kpi="statementInterestFinancing">—</div>
+              <div data-slot="statementInstallments" style="display:flex; flex-direction:column; gap:6px;">
+                <div class="hint">—</div>
               </div>
             </div>
           </div>
+
       
           <!-- NEW: scheduled repayment (virtuale) + override -->
           <div class="cardBox" style="grid-column: 1 / -1; padding:12px; border:1px solid rgba(255,255,255,.08); border-radius:10px;">

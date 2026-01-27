@@ -1776,9 +1776,10 @@ function buildEventPayloadFromForm(isEditing) {
     let schedule = { method }
     if (method === "one_shot") {
       const dd = el("fDueDateOneShot") ? el("fDueDateOneShot").value : ""
-      if (!dd || !parseISODate(dd)) { ... }
-      schedule.kind = "instant"
-      schedule.dueDate = dd // <- SOLO se il backend la usa
+      if (!dd || !parseISODate(dd)) { /* errore */ }
+    
+      purchaseDate = dd;              // <-- QUI (campo evento)
+      schedule = { kind: "instant" }; // <-- SOLO QUESTO
     }
     if (method === "monthly_installments") {
       const instN = el("fInstN") ? parseInt(el("fInstN").value || "0",10) : 0

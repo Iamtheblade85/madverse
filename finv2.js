@@ -77,6 +77,35 @@ function parseISODate(str) {
   return dt
 }
 
+function normalizeScheduleForBackend(schedule) {
+  if (!schedule || typeof schedule !== "object") return schedule
+
+  // Se è già nel formato backend, lascialo così
+  if (typeof schedule.kind === "string" && (schedule.kind === "instant" || schedule.kind === "financing")) {
+    return schedule
+  }
+
+  const method = (schedule.method || "").trim()
+
+  // monthly_installments -> financing
+  if (method === "monthly_installments") {
+    const mi = schedule.monthlyInstallments || {}
+    const cnt = parseInt(mi.count || 0, 10)
+    const firstDue = (mi.firstDueDate || "").trim()
+    const fsm = firstDue && firstDue.length >= 7 ? firstDue.slice(0, 7) : null
+
+    const out = { ...schedule }
+    out.kind = "financing"
+    if (Number.isFinite(cnt) && cnt > 0) out.count = cnt
+    if (fsm) out.firstStatementMonth = fsm
+
+    return out
+  }
+
+  // Tutto il resto lo consideriamo "instant" (non genera rate nello statement)
+  return { ...schedule, kind: "instant" }
+}
+
 function formatDateHuman(iso) {
   const d = parseISODate(iso)
   if (!d) return iso || "—"
@@ -635,6 +664,11 @@ async function loadEvents() {
     data = []
   }
   state.events = Array.isArray(data) ? data : []
+  state.events.forEach(ev => {
+    if (ev.type === "card_purchase" && ev.schedule) {
+      ev.schedule = normalizeScheduleForBackend(ev.schedule)
+    }
+  })
 
   // Se non c'è ancora una data selezionata, scegli:
   // - oggi se è nel mese mostrato
@@ -1741,13 +1775,15 @@ function buildEventPayloadFromForm(isEditing) {
 
     base.purchaseDate = purchaseDate
     const schedule = {method}
+    let schedule = { method }
     if (method === "one_shot") {
       const dd = el("fDueDateOneShot") ? el("fDueDateOneShot").value : ""
       if (!dd || !parseISODate(dd)) {
         showToast("Data non valida","Data quota dovuta non valida")
         return null
       }
-      schedule.oneShot = {dueDate: dd}
+      schedule.kind = "instant"
+
     }
     if (method === "monthly_installments") {
       const instN = el("fInstN") ? parseInt(el("fInstN").value || "0",10) : 0
@@ -1766,6 +1802,9 @@ function buildEventPayloadFromForm(isEditing) {
         return null
       }
       schedule.monthlyInstallments = {count: instN, firstDueDate: firstDue, installmentAmount: instAmount}
+      schedule.kind = "financing"
+      schedule.count = instN
+      schedule.firstStatementMonth = firstDue.slice(0, 7) // "YYYY-MM"      
     }
     if (method === "custom_installments") {
       const tbody = el("customRows")
@@ -1792,6 +1831,9 @@ function buildEventPayloadFromForm(isEditing) {
         list.push({date: dd, amount: aa})
       }
       schedule.customInstallments = list
+      schedule.kind = "financing"
+      schedule.count = instN
+      schedule.firstStatementMonth = firstDue.slice(0, 7) // "YYYY-MM"      
     }
     if (method === "revolving") {
       const minM = parseNumberInput(el("fMinMonthly") ? el("fMinMonthly").value : "")
@@ -1807,6 +1849,7 @@ function buildEventPayloadFromForm(isEditing) {
       }
       schedule.revolving = {minMonthly: minM, interestPercent: pct, mode}
     }
+    schedule = normalizeScheduleForBackend(schedule)
     base.schedule = schedule
   }
   if (type === "card_repayment") {
@@ -2124,12 +2167,48 @@ function startEditEvent(eventId, mode) {
   if (evt.type === "card_purchase") {
     const cw = el("fCardWallet")
     const pd = el("fPurchaseDate")
-    const m = el("fMethod")
+    const m  = el("fMethod")
+  
     if (cw) cw.value = evt.cardWalletId || ""
     if (pd) pd.value = evt.purchaseDate || ""
-    if (m && evt.schedule && evt.schedule.method) m.value = evt.schedule.method
+  
+    const sch = evt.schedule || null
+  
+    // Determina method da schedule:
+    let method = sch && sch.method ? sch.method : ""
+  
+    // Se manca method ma è financing, assumiamo monthly_installments
+    if (!method && sch && sch.kind === "financing") method = "monthly_installments"
+  
+    if (m) m.value = method || ""
     updateMethodSections()
+  
+    // Prefill campi specifici
+    if (method === "monthly_installments") {
+      const instNEl = el("fInstN")
+      const firstDueEl = el("fFirstDueMonthly")
+      const instAmountEl = el("fInstAmount")
+  
+      const mi = (sch && sch.monthlyInstallments) ? sch.monthlyInstallments : {}
+  
+      // count: preferisci sch.count, fallback mi.count
+      const cnt = Number.isFinite(Number(sch?.count)) ? Number(sch.count) : Number(mi.count)
+      if (instNEl && Number.isFinite(cnt) && cnt > 0) instNEl.value = String(cnt)
+  
+      // firstDueDate: se c'è mi.firstDueDate, usa quello; altrimenti ricostruisci un fallback dal firstStatementMonth
+      let fd = (mi.firstDueDate || "").trim()
+      if (!fd && sch?.firstStatementMonth) {
+        // fallback: mettiamo il 01 del mese (l’utente potrà correggere)
+        fd = String(sch.firstStatementMonth) + "-01"
+      }
+      if (firstDueEl && fd) firstDueEl.value = fd
+  
+      // installmentAmount: se c’è lo mostriamo
+      const ia = Number(mi.installmentAmount)
+      if (instAmountEl && Number.isFinite(ia) && ia > 0) instAmountEl.value = String(ia)
+    }
   }
+
   if (evt.type === "card_repayment") {
     const fw = el("fFromWallet")
     const tw = el("fToCard")

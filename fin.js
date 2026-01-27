@@ -128,9 +128,11 @@
 
     // --- Events ---
     listEvents(params = {}) {
+      // params MUST include from, to
       const qs = new URLSearchParams(params).toString();
       return this.request(`/events${qs ? `?${qs}` : ""}`);
     },
+
     createEvent(payload) {
       return this.request(`/events`, { method: "POST", body: payload });
     },
@@ -146,7 +148,11 @@
       return this.request(`/series/${encodeURIComponent(seriesId)}`, { method: "DELETE" });
     },
     deleteSeriesFrom(seriesId, fromISO) {
-      return this.request(`/series/${encodeURIComponent(seriesId)}/from/${encodeURIComponent(fromISO)}`, { method: "DELETE" });
+      return this.request(`/series/${encodeURIComponent(seriesId)}/future?from=${encodeURIComponent(fromISO)}`, { method: "DELETE" });
+    },
+    getDashboard(params = {}) {
+      const qs = new URLSearchParams(params).toString();
+      return this.request(`/dashboard${qs ? `?${qs}` : ""}`);
     },
 
     // --- Settings ---
@@ -183,6 +189,7 @@
   const state = {
     settings: structuredClone(defaultSettings),
     events: [],
+    wallets: [],
     anchorDate: startOfDay(new Date()),
     selectedEventId: null,
     draftEventId: null
@@ -203,21 +210,10 @@
   // -----------------------------
   // Loaders
   // -----------------------------
-  async function loadEventsFromBackend() {
-    const data = await API.listEvents();
-    const arr = Array.isArray(data) ? data : (data?.events || []);
-
-    // Normalizza: mantieni compatibilità anche se alcuni campi non ci sono.
-    return arr.map(e => ({
-      ...e,
-      time: e.time || "",
-      notes: e.notes || "",
-      pinned: !!e.pinned,
-      recurrence: e.recurrence || "none",
-      recurrenceDays: e.recurrenceDays ?? null,
-      seriesId: e.seriesId ?? null,
-      seriesMaster: !!e.seriesMaster
-    }));
+  async function loadEventsFromBackend(fromISO, toISO) {
+    const data = await API.listEvents({ from: fromISO, to: toISO });
+    const arr = Array.isArray(data) ? data : [];
+    return arr.map(normalizeEventForUI);
   }
 
   // -----------------------------
@@ -546,9 +542,11 @@
   function render() {
     syncControlsFromState();
     renderCategoryOptions();
+    renderWalletOptions();
     renderCalendar();
-    renderStats();
+    renderStats(); // async, ok chiamarla senza await
   }
+
 
   function syncControlsFromState() {
     const sidebar = $("#sidebar");
@@ -966,45 +964,50 @@
   // -----------------------------
   // Stats rendering
   // -----------------------------
-  function renderStats() {
-    const filtered = getFilteredEvents();
+async function renderStats() {
+  const todayISO = toISODate(new Date());
+  const asOf = state.settings.balanceAtDate || todayISO;
 
-    // (A) Stats “nel range visibile”
-    const vis = computeVisibleStats(filtered);
-    $("#statsMeta").textContent = `${formatRangeLabel(vis.rangeStart, vis.rangeEnd, "custom")} · visibile`;
+  // month=YYYY-MM (prendo dal asOf)
+  const ym = asOf.slice(0, 7);
 
-    $("#statIncome").textContent = formatMoney(vis.incomeSum, state.settings.currency);
-    $("#statExpense").textContent = formatMoney(vis.expenseSum, state.settings.currency);
-    $("#statNet").textContent = formatMoney(vis.net, state.settings.currency);
-    $("#statIncomeCount").textContent = `${vis.incomeCount} eventi`;
-    $("#statExpenseCount").textContent = `${vis.expenseCount} eventi`;
+  try {
+    const dash = await API.getDashboard({ asOf, month: ym });
+    const wallets = dash?.wallets || [];
 
-    // (B) Saldo attuale: SEMPRE fino a oggi (no futuri) usando gli eventi filtrati (tipo/categoria/search/range)
-    // Nota: se vuoi ignorare il range e usare TUTTO lo storico filtrato solo per tipo/categoria/search, basta rimuovere passesUserRange da getFilteredEvents.
-    const todayISO = toISODate(new Date());
-    const balToday = computeBalanceUpTo(filtered, state.settings.initialBalance, todayISO);
-    $("#statCurrentBalance").textContent = formatMoney(balToday, state.settings.currency);
-    $("#statCurrentBalanceMeta").textContent = `Calcolato fino a ${todayISO}`;
+    // opzionale: se hai un wallet selezionato in UI, filtra
+    const selectedWalletId = Number($("#walletSelect")?.value || 0);
+    const scope = selectedWalletId ? wallets.filter(w => w.id === selectedWalletId) : wallets;
 
-    // (C) Saldo alla data selezionata
-    const atISO = state.settings.balanceAtDate || todayISO;
-    const balAt = computeBalanceUpTo(filtered, state.settings.initialBalance, atISO);
-    $("#statBalanceAtDate").textContent = formatMoney(balAt, state.settings.currency);
+    const sum = (k) => scope.reduce((s, w) => s + Number(w[k] || 0), 0);
 
-    // snapshot list (ultimi 14 nel range visibile)
+    // Qui mappo i tuoi box ai dati dashboard
+    // - current balance: somma balance
+    $("#statCurrentBalance").textContent = formatMoney(sum("balance"), state.settings.currency);
+    $("#statCurrentBalanceMeta").textContent = `As of ${asOf}`;
+
+    // “income/expense nel range visibile” del tuo vecchio calendario NON coincide col backend,
+    // quindi qui metto i valori del mese selezionato (month=ym) dal dashboard:
+    $("#statIncome").textContent = formatMoney(sum("incomeSoFar") + sum("incomeRemaining"), state.settings.currency);
+    $("#statExpense").textContent = formatMoney(sum("spentSoFar") + sum("spentRemaining"), state.settings.currency);
+
+    const net = (sum("incomeSoFar") + sum("incomeRemaining")) - (sum("spentSoFar") + sum("spentRemaining"));
+    $("#statNet").textContent = formatMoney(net, state.settings.currency);
+
+    // “Saldo alla data” = stesso asOf (dashboard già calcolato asOf)
+    $("#statBalanceAtDate").textContent = formatMoney(sum("balance"), state.settings.currency);
+
+    // snapshotList: lascialo vuoto (backend non manda serie giornaliera)
     const list = $("#snapshotList");
     list.innerHTML = "";
+    list.appendChild(emptyState("Snapshot non disponibile via /dashboard.", "snapshot-empty"));
 
-    const tail = vis.snapshots.slice(-14);
-    for (const s of tail) {
-      const item = el("div", { className: "snapshot-item", role: "listitem", "data-date": s.date }, [
-        el("div", { className: "snapshot-item__date", textContent: s.date }),
-        el("div", { className: "snapshot-item__value", textContent: formatMoney(s.balance, state.settings.currency) })
-      ]);
-      list.appendChild(item);
-    }
-    if (!tail.length) list.appendChild(emptyState("Nessuno snapshot nel range corrente.", "snapshot-empty"));
+    $("#statsMeta").textContent = `Mese ${ym} · As of ${asOf}`;
+  } catch (e) {
+    console.error(e);
+    $("#statsMeta").textContent = "Stats non disponibili.";
   }
+}
 
   // -----------------------------
   // Drawer + Modal
@@ -1141,82 +1144,102 @@
     if (typeof modal.close === "function") modal.close();
   }
 
-  async function upsertEventFromForm() {
-    const recMode = $("#evtRecurrence").value;
-    const data = {
-      title: $("#evtTitle").value.trim(),
-      category: $("#evtCategory").value.trim() || "Senza categoria",
-      type: $("#evtType").value,
-      amount: $("#evtAmount").value === "" ? null : Number($("#evtAmount").value),
-      date: $("#evtStart").value,
-      time: $("#evtTime").value,
-      notes: $("#evtNotes").value.trim(),
-      pinned: $("#evtPinned").checked,
-      recurrence: recMode,
-      recurrenceDays: (recMode === "custom_days")
-        ? Math.max(1, parseInt($("#evtRecurrenceDays").value || "0", 10) || 0)
-        : null
-    };
+async function upsertEventFromForm() {
+  // FIX 2: disabilita ricorrenze (backend non compatibile con la tua C)
+  const recMode = "none";
 
-    if (!data.title || !data.date) {
-      alert("Titolo e data sono obbligatori.");
-      return;
-    }
+  // dati dal form (UI)
+  const ui = {
+    title: $("#evtTitle").value.trim(),
+    category: $("#evtCategory").value.trim() || "Senza categoria",
+    type: $("#evtType").value, // "income" | "expense" (se tieni UI semplice)
+    amount: $("#evtAmount").value === "" ? null : Number($("#evtAmount").value),
+    date: $("#evtStart").value, // ISO yyyy-mm-dd
+    notes: $("#evtNotes").value.trim(),
+  };
 
-    try {
-      if (state.draftEventId) {
-        // Edit: qui modifichi SOLO l'evento selezionato (non tutta la serie).
-        const updated = await API.updateEvent(state.draftEventId, data);
-        const evt = updated?.event || updated || { id: state.draftEventId, ...data };
-
-        const idx = state.events.findIndex(e => e.id === state.draftEventId);
-        if (idx >= 0) state.events[idx] = evt;
-      } else {
-        // Create
-        const mode = data.recurrence || "none";
-
-        if (mode === "none") {
-          const created = await API.createEvent({
-            ...data,
-            recurrence: "none",
-            seriesId: null,
-            seriesMaster: false
-          });
-          const evt = created?.event || created;
-          state.events.push(evt);
-        } else {
-          // Serie materializzata
-          const seriesId = uid();
-
-          // Master = prima occorrenza (evento reale)
-          // IMPORTANT: per evitare espansioni future, NON creiamo eventi “virtuali”.
-          // Il master può tenere recurrence per info, ma resta un record reale.
-          const masterPayload = {
-            ...data,
-            seriesId,
-            seriesMaster: true
-          };
-
-          const created = await API.createEvent(masterPayload);
-          const master = created?.event || created;
-          if (!master?.id) throw new Error("Backend non ha restituito l'id dell'evento.");
-
-          // Materializza occorrenze future come eventi normali (recurrence none)
-          const untilISO = recurrenceUntilISO(master.date, mode);
-          const { children } = await materializeRecurrenceSeries(master, untilISO);
-
-          // Per evitare doppioni, assicurati che tutti abbiano seriesId (master incluso)
-          state.events.push(master, ...children);
-        }
-      }
-
-      closeEventModal();
-      render();
-    } catch (err) {
-      console.error(err);
-      alert(`Salvataggio fallito: ${err.message}`);
-    }
+  if (!ui.title || !ui.date || ui.amount == null || Number.isNaN(ui.amount)) {
+    alert("Titolo, data e importo sono obbligatori.");
+    return;
   }
+
+  // FIX 3: payload backend (calendarDate + walletId)
+  // Serve un <select id="walletSelect"> popolato con /wallets
+  const walletId = Number($("#walletSelect")?.value || 0);
+  if (!walletId) {
+    alert("Seleziona un wallet.");
+    return;
+  }
+
+  const payload = {
+    type: ui.type,            // income/expense
+    title: ui.title,
+    amount: ui.amount,
+    category: ui.category,
+    calendarDate: ui.date,    // <-- backend
+    notes: ui.notes,
+    walletId: walletId        // <-- backend obbligatorio per income/expense
+  };
+
+  try {
+    if (state.draftEventId) {
+      // UPDATE
+      const updated = await API.updateEvent(state.draftEventId, payload);
+
+      // backend ritorna l’evento serializzato completo
+      const evt = updated;
+
+      const idx = state.events.findIndex(e => e.id === state.draftEventId);
+      if (idx >= 0) state.events[idx] = normalizeEventForUI(evt);
+    } else {
+      // CREATE (solo singolo evento, no serie)
+      const created = await API.createEvent(payload);
+
+      // backend ritorna {"id": new_id} per income/expense
+      // ricarico gli eventi (sicuro, semplice)
+      await reloadEventsForCurrentRange();
+    }
+
+    closeEventModal();
+    render();
+  } catch (err) {
+    console.error(err);
+    alert(`Salvataggio fallito: ${err.message}`);
+  }
+}
+function normalizeEventForUI(e) {
+  // e è l'evento backend /events (serialize_event)
+  return {
+    id: e.id,
+    type: e.type,
+    title: e.title || "",
+    amount: e.amount ?? null,
+    category: e.category || "",
+    date: e.calendarDate || e.date,
+    notes: e.notes || "",
+    walletId: e.walletId ?? null,
+    cardWalletId: e.cardWalletId ?? null,
+    fromWalletId: e.fromWalletId ?? null,
+    toCardWalletId: e.toCardWalletId ?? null,
+    paymentDate: e.paymentDate ?? null,
+    purchaseDate: e.purchaseDate ?? null,
+    seriesId: e.seriesId ?? null,
+    seriesIndex: e.seriesIndex ?? null,
+    // campi UI non supportati dal backend:
+    time: "",
+    pinned: false,
+    recurrence: "none",
+    recurrenceDays: null,
+    seriesMaster: false
+  };
+}
+
+async function reloadEventsForCurrentRange() {
+  const today = new Date();
+  const from = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+  const to = new Date(today.getFullYear(), today.getMonth() + 6, 0);
+  state.events = await loadEventsFromBackend(toISODate(from), toISODate(to));
+}
 
   async function deleteSelectedEvent() {
     const id = state.selectedEventId;
@@ -1575,6 +1598,7 @@
 
       // default balanceAtDate = oggi se non presente
       if (!state.settings.balanceAtDate) state.settings.balanceAtDate = toISODate(new Date());
+      state.wallets = await API.request("/wallets"); // oppure API.getWallets se lo crei
 
       // events
       state.events = await loadEventsFromBackend();
@@ -1595,6 +1619,21 @@
       state.settings = structuredClone(defaultSettings);
       render();
     }
+    $("#walletSelect")?.addEventListener("change", () => renderStats());
+  }
+  function renderWalletOptions() {
+    const sel = $("#walletSelect");
+    if (!sel) return;
+    const prev = sel.value;
+  
+    sel.innerHTML = "";
+    for (const w of state.wallets) {
+      const opt = document.createElement("option");
+      opt.value = String(w.id);
+      opt.textContent = `${w.name} (${w.type})`;
+      sel.appendChild(opt);
+    }
+    if (prev) sel.value = prev;
   }
 
   init();

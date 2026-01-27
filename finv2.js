@@ -9,6 +9,8 @@ const state = {
   editContext: null,
   lastCardsDashboard: null
 }
+let payoffState = { purchaseEventId: null, cardWalletId: null, purchaseTitle: null };
+let walletsCache = [];
 const mesiLunghi = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"]
 const mesiCorti = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"]
 const el = id => document.getElementById(id)
@@ -1038,7 +1040,9 @@ function renderWalletTable() {
 async function editWallet(w) {
   const name = prompt("Nome wallet (conto):", w.name || "")
   if (!name) return
-  const type = prompt("Tipo (es. banca, carta, contanti):", w.type || "")
+  const typeRaw = prompt("Tipo (es. banca, card, contanti):", w.type || "")
+  const type = (typeRaw || "").trim().toLowerCase() === "carta" ? "card" : (typeRaw || "").trim().toLowerCase()
+
   if (!type) return
   const saldoStr = prompt("Saldo iniziale (EUR):", w.initialBalance != null ? String(w.initialBalance) : "")
   const saldo = saldoStr === null || saldoStr === "" ? w.initialBalance : parseNumberInput(saldoStr)
@@ -2386,9 +2390,6 @@ if (document.readyState === "loading") {
 // ------------------------------
 // NEW: Card actions (delegation)
 // ------------------------------
-let payoffState = { purchaseEventId: null, cardWalletId: null, purchaseTitle: null };
-let walletsCache = [];
-
 function fillPayoffFromWalletSelect() {
   const sel = document.getElementById("payoffFromWalletId")
   if (!sel) return
@@ -2415,6 +2416,13 @@ function findWalletInDashboard(walletId) {
   const d = state.dashboard
   if (!d || !Array.isArray(d.wallets)) return null
   return d.wallets.find(w => String(w.id) === String(walletId)) || null
+}
+function moneyOrNull(v) {
+  if (v == null) return null
+  const s = String(v).trim().replace(/\s+/g,"").replace(",", ".")
+  if (!s) return null
+  const n = Number(s)
+  return Number.isFinite(n) ? n : null
 }
 
 function numberOrNull(v) {

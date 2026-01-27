@@ -9,6 +9,26 @@ const state = {
   editContext: null,
   lastCardsDashboard: null
 }
+function statementMonthFromDateIso(iso) {
+  const d = parseISODate(iso)
+  if (!d) return null
+  const y = d.getFullYear()
+  const m = d.getMonth() + 1 // 1..12
+  const day = d.getDate()
+
+  let yy = y
+  let mm = m
+
+  // statementMonth window 16 -> 15:
+  // se la rata cade dal 16 in poi, appartiene allo statement del mese successivo
+  if (day >= 16) {
+    mm += 1
+    if (mm === 13) { mm = 1; yy += 1 }
+  }
+
+  return `${yy}-${String(mm).padStart(2, "0")}` // "YYYY-MM"
+}
+
 function monthKeyFromISO(iso) {
   if (!iso || iso.length < 7) return null
   return iso.slice(0, 7) // "YYYY-MM"
@@ -80,7 +100,7 @@ function parseISODate(str) {
 function normalizeScheduleForBackend(schedule) {
   if (!schedule || typeof schedule !== "object") return schedule
 
-  // Se è già nel formato backend, lascialo così
+  // già backend-format
   if (typeof schedule.kind === "string" && (schedule.kind === "instant" || schedule.kind === "financing")) {
     return schedule
   }
@@ -92,19 +112,41 @@ function normalizeScheduleForBackend(schedule) {
     const mi = schedule.monthlyInstallments || {}
     const cnt = parseInt(mi.count || 0, 10)
     const firstDue = (mi.firstDueDate || "").trim()
-    const fsm = firstDue && firstDue.length >= 7 ? firstDue.slice(0, 7) : null
+    const fsm = firstDue && firstDue.length >= 10
+      ? statementMonthFromDateIso(firstDue) // <-- statementMonth 16->15 (anche qui va bene)
+      : (firstDue && firstDue.length >= 7 ? firstDue.slice(0, 7) : null)
 
     const out = { ...schedule }
     out.kind = "financing"
     if (Number.isFinite(cnt) && cnt > 0) out.count = cnt
     if (fsm) out.firstStatementMonth = fsm
-
     return out
   }
 
-  // Tutto il resto lo consideriamo "instant" (non genera rate nello statement)
+  // custom_installments -> financing (con statementMonth 16->15)
+  if (method === "custom_installments") {
+    const list = Array.isArray(schedule.customInstallments) ? schedule.customInstallments : []
+    const out = { ...schedule }
+    out.kind = "financing"
+    out.count = list.length
+
+    if (list.length) {
+      const firstDate = String(list[0].date || "").trim()
+      const fsm = firstDate ? statementMonthFromDateIso(firstDate) : null
+      if (fsm) out.firstStatementMonth = fsm
+    }
+    return out
+  }
+
+  // revolving: backend attuale NON genera rate -> trattiamolo come instant
+  if (method === "revolving") {
+    return { ...schedule, kind: "instant" }
+  }
+
+  // one_shot e qualsiasi altro metodo -> instant
   return { ...schedule, kind: "instant" }
 }
+
 
 function formatDateHuman(iso) {
   const d = parseISODate(iso)
@@ -338,7 +380,7 @@ function mapEventTypeToClass(t) {
   if (t === "income") return "event-line--entrata"
   if (t === "expense") return "event-line--uscita"
   if (t === "card_purchase") return "event-line--acquisto"
-  if (t === "card_due") return "event-line--quota"
+  // card_due non è supportato dal backend attuale --> if (t === "card_due") return "event-line--quota"
   if (t === "card_repayment") return "event-line--rimborso"
   if (t === "card_credit") return "event-line--entrata"
   return ""
@@ -348,7 +390,7 @@ function mapEventTypeToLabel(t) {
   if (t === "income") return "Entrata"
   if (t === "expense") return "Uscita"
   if (t === "card_purchase") return "Acquisto su carta"
-  if (t === "card_due") return "Quota dovuta"
+  // card_due non è supportato dal backend attuale --> if (t === "card_due") return "Quota dovuta"
   if (t === "card_repayment") return "Rimborso carta"
   if (t === "card_credit") return "Entrata su carta"
   return t || ""
@@ -358,7 +400,7 @@ function mapEventTypeToDotClass(t) {
   if (t === "income") return "dot dot--ok"
   if (t === "expense") return "dot dot--bad"
   if (t === "card_purchase") return "dot dot--card"
-  if (t === "card_due") return "dot dot--due"
+  // card_due non è supportato dal backend attuale --> if (t === "card_due") return "dot dot--due"
   if (t === "card_repayment") return "dot dot--repay"
   if (t === "card_credit") return "dot dot--ok"
   return "dot"
@@ -368,7 +410,9 @@ function computeDayTotals(events) {
   let totalIncome = 0
   let totalOut = 0          // uscite reali (expense + card_repayment)
   let totalCardPurchase = 0 // acquisti su carta
-  let totalCardDue = 0      // quote dovute
+  // card_due non supportato dal backend
+  let totalCardDue = 0
+
 
   events.forEach(ev => {
     const amt = ev.amount || 0
@@ -383,9 +427,6 @@ function computeDayTotals(events) {
         break
       case "card_purchase":
         totalCardPurchase += amt
-        break
-      case "card_due":
-        totalCardDue += amt
         break
       default:
         break
@@ -1757,7 +1798,7 @@ function buildEventPayloadFromForm(isEditing) {
   }
   if (type === "card_purchase") {
     const cardId = el("fCardWallet") ? el("fCardWallet").value : ""
-    const purchaseDate = el("fPurchaseDate") ? el("fPurchaseDate").value : ""
+    let purchaseDate = el("fPurchaseDate") ? el("fPurchaseDate").value : ""
     const method = el("fMethod") ? el("fMethod").value : ""
     if (!cardId) {
       showToast("Campo obbligatorio","Seleziona una carta")
@@ -1776,11 +1817,16 @@ function buildEventPayloadFromForm(isEditing) {
     let schedule = { method }
     if (method === "one_shot") {
       const dd = el("fDueDateOneShot") ? el("fDueDateOneShot").value : ""
-      if (!dd || !parseISODate(dd)) { /* errore */ }
+      if (!dd || !parseISODate(dd)) {
+        showToast("Data non valida", "Data one-shot non valida")
+        return null
+      }
     
-      purchaseDate = dd;              // <-- QUI (campo evento)
-      schedule = { kind: "instant" }; // <-- SOLO QUESTO
+      // per one-shot: la “data che conta” deve essere quella scelta (dd)
+      purchaseDate = dd
+      schedule = { kind: "instant", method: "one_shot" } // method è opzionale ma utile per edit UI
     }
+
     if (method === "monthly_installments") {
       const instN = el("fInstN") ? parseInt(el("fInstN").value || "0",10) : 0
       const firstDue = el("fFirstDueMonthly") ? el("fFirstDueMonthly").value : ""
@@ -1827,14 +1873,12 @@ function buildEventPayloadFromForm(isEditing) {
         }
         list.push({ date: dd, amount: aa })
       }
-    
       // ordina per data per sicurezza
       list.sort((a,b)=> String(a.date).localeCompare(String(b.date)))
-    
       schedule.customInstallments = list
       schedule.kind = "financing"
       schedule.count = list.length
-      schedule.firstStatementMonth = String(list[0].date).slice(0, 7)
+      schedule.firstStatementMonth = statementMonthFromDateIso(String(list[0].date))
     }
     if (method === "revolving") {
       const minM = parseNumberInput(el("fMinMonthly") ? el("fMinMonthly").value : "")
@@ -1850,8 +1894,15 @@ function buildEventPayloadFromForm(isEditing) {
       }
       schedule.revolving = {minMonthly: minM, interestPercent: pct, mode}
     }
+    // dopo la logica method, prima del return:
+    base.purchaseDate = purchaseDate
+    
+    // per evitare mismatch: per card_purchase facciamo coincidere calendarDate e purchaseDate
+    base.calendarDate = purchaseDate
+    
     schedule = normalizeScheduleForBackend(schedule)
     base.schedule = schedule
+
   }
   if (type === "card_repayment") {
     const fromWalletId = el("fFromWallet") ? el("fFromWallet").value : ""
@@ -1951,7 +2002,7 @@ async function saveEvent() {
       if (hasCloning) delete payload.cloning
       await apiFetch("/events",{method:"POST",body:JSON.stringify(payload)})
       if (hasCloning && payload.type === "card_purchase") {
-        const baseDate = payload.calendarDate
+        const baseDate = (payload.type === "card_purchase" ? payload.purchaseDate : payload.calendarDate)
         const {dates,adjustments} = computeCloneDates(baseDate, cloning)
         for (const d of dates) {
           const clonePayload = Object.assign({}, payload, {calendarDate:d, purchaseDate: payload.purchaseDate})
@@ -2006,8 +2057,10 @@ function openEventOverlay(evt) {
   const quotesSection = el("eventQuotesSection")
   if (quotesSection) {
     if (evt.type === "card_purchase") {
-      quotesSection.classList.remove("hide")
-      renderQuotesForPurchase(evt)
+      // backend attuale: non esistono eventi "card_due"
+      quotesSection.classList.add("hide")
+      const list = el("eventQuotesList")
+      if (list) list.innerHTML = ""
     } else {
       quotesSection.classList.add("hide")
       const list = el("eventQuotesList")
@@ -2624,7 +2677,7 @@ document.addEventListener("click", async (e) => {
       sollzinsAnnual: numberOrNull(root.querySelector('[data-input="csSollzins"]')?.value),
       effektivzinsAnnual: numberOrNull(root.querySelector('[data-input="csEffektivzins"]')?.value),
       // backend-aligned: è "limit" (UI legge w.card.limit)
-      limit: numberOrNull(root.querySelector('[data-input="csKreditlimit"]')?.value),
+      kreditlimit: numberOrNull(root.querySelector('[data-input="csKreditlimit"]')?.value),
       effectiveFrom: root.querySelector('[data-input="csEffectiveFrom"]')?.value || null,
       // days: interi
       cycleStartDay: intOrNull(root.querySelector('[data-input="csCycleStartDay"]')?.value),

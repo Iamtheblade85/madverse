@@ -9,6 +9,49 @@ const state = {
   editContext: null,
   lastCardsDashboard: null
 }
+function monthKeyFromISO(iso) {
+  if (!iso || iso.length < 7) return null
+  return iso.slice(0, 7) // "YYYY-MM"
+}
+
+function sumCardRepaymentsForCard(cardId, monthKey, asOfIso) {
+  // somma rimborsi reali nel mese, separando:
+  // - fatti fino a data (paymentDate<=asOf)
+  // - ancora previsti (paymentDate>asOf)
+  let soFar = 0
+  let remaining = 0
+
+  const asOf = parseISODate(asOfIso)
+  const asOfTime = asOf ? asOf.getTime() : null
+
+  ;(state.events || []).forEach(ev => {
+    if (ev.type !== "card_repayment") return
+    if (String(ev.toCardWalletId) !== String(cardId)) return
+
+    const dIso = ev.paymentDate || ev.calendarDate || ev.date
+    if (!dIso) return
+
+    if (monthKeyFromISO(dIso) !== monthKey) return
+
+    const amt = Number(ev.amount || 0)
+    if (!Number.isFinite(amt) || amt === 0) return
+
+    if (!asOfTime) {
+      // fallback: se non ho asOf valido, considero tutto "soFar"
+      soFar += amt
+      return
+    }
+
+    const d = parseISODate(dIso)
+    if (!d) return
+
+    if (d.getTime() <= asOfTime) soFar += amt
+    else remaining += amt
+  })
+
+  return { soFar, remaining }
+}
+
 let payoffState = { purchaseEventId: null, cardWalletId: null, purchaseTitle: null };
 let walletsCache = [];
 const mesiLunghi = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"]
@@ -633,24 +676,36 @@ function renderSnapshot() {
       }
     }
 
-    // KPI base (validi per tutti i wallet)
     setKpi("balance", w.balance)
     setKpi("spentSoFar", w.spentSoFar)
     setKpi("spentRemaining", w.spentRemaining)
     
-    // ✅ OPZIONE 2: per le carte "incomeSoFar" = rimborsi (credits) dello statement
     if (w.card) {
-      const credits = (typeof w.card.statement?.credits === "number")
-        ? w.card.statement.credits
-        : 0
-      setKpi("incomeSoFar", credits)
+      const asOfIso = state.selectedDate || formatISODate(new Date())
+      const monthKey = (asOfIso && asOfIso.length >= 7) ? asOfIso.slice(0, 7) : null
     
-      // "incomeRemaining" per la carta spesso non ha senso: lo metto a 0 (o — se preferisci)
-      setKpi("incomeRemaining", 0)
+      const rep = monthKey ? sumCardRepaymentsForCard(w.id, monthKey, asOfIso) : { soFar: 0, remaining: 0 }
+    
+      // ✅ Entrate carta = rimborsi
+      setKpi("incomeSoFar", rep.soFar)
+    
+      // ✅ Entrate previste = rimborsi futuri reali + (opzionale) rimborso virtuale se manca evento
+      let incRem = rep.remaining
+    
+      const sr = w.card.scheduledRepayment || null
+      if (sr && !sr.exists && sr.paymentDate && monthKeyFromISO(sr.paymentDate) === monthKey) {
+        // Se l'evento rimborso NON esiste ancora, ma è "previsto" virtualmente,
+        // lo mostro come "entrate ancora previste" usando suggestedAmount
+        const v = Number(sr.suggestedAmount || 0)
+        if (Number.isFinite(v) && v > 0) incRem += v
+      }
+    
+      setKpi("incomeRemaining", incRem)
     } else {
       setKpi("incomeSoFar", w.incomeSoFar)
       setKpi("incomeRemaining", w.incomeRemaining)
     }
+
 
     if (w.compareLastMonthExpenses) {
       const c = w.compareLastMonthExpenses

@@ -7,11 +7,297 @@ const state = {
   currentMonth: null,
   selectedDate: null,
   editContext: null,
-  lastCardsDashboard: null
+  lastCardsDashboard: null,
+  report: {
+    lastRequest: null,   // { cardId, from, to, plafond }
+    lastData: null,      // json report
+  }
 }
 function isCardWalletId(id) {
   const w = state.walletsById ? state.walletsById[String(id)] : null
   return w && String(w.type).toLowerCase() === "card"
+}
+
+// ------------------------------
+// REPORT helpers
+// ------------------------------
+function setReportStatus(ok, text) {
+  const dot = el("reportStatusDot")
+  const label = el("reportStatusText")
+  if (dot) dot.style.backgroundColor = ok ? "var(--ok)" : "var(--bad)"
+  if (label) label.textContent = text || (ok ? "Report: ok" : "Report: errore")
+}
+
+function parseMonthInput(v) {
+  // input type="month" => "YYYY-MM"
+  if (!v || typeof v !== "string") return null
+  if (!/^\d{4}-\d{2}$/.test(v)) return null
+  return v
+}
+
+function monthsBetweenInclusive(fromYM, toYM) {
+  // ritorna array mesi consecutivi ["YYYY-MM", ...]
+  if (!fromYM || !toYM) return []
+  const [fy, fm] = fromYM.split("-").map(x => parseInt(x, 10))
+  const [ty, tm] = toYM.split("-").map(x => parseInt(x, 10))
+  if (!fy || !fm || !ty || !tm) return []
+
+  let y = fy, m = fm
+  const out = []
+  while (y < ty || (y === ty && m <= tm)) {
+    out.push(`${y}-${String(m).padStart(2, "0")}`)
+    m += 1
+    if (m === 13) { m = 1; y += 1 }
+    // guard anti-loop
+    if (out.length > 120) break
+  }
+  return out
+}
+
+function monthLabelFromYM(ym) {
+  // "YYYY-MM" -> "Gennaio 2026"
+  if (!ym || ym.length < 7) return ym || "—"
+  const y = parseInt(ym.slice(0,4),10)
+  const m = parseInt(ym.slice(5,7),10)
+  if (!y || !m) return ym
+  return `${mesiLunghi[m-1]} ${y}`
+}
+
+function clearReportUI() {
+  // KPI globali
+  const setText = (id, txt) => { const x = el(id); if (x) x.textContent = txt }
+  setText("reportKpiRange", "—")
+  setText("reportKpiPlafond", "—")
+  setText("reportKpiConsumedLast", "—")
+  setText("reportKpiAvailableLast", "—")
+
+  // timeline
+  const tl = el("reportTimelineBody")
+  if (tl) tl.innerHTML = `<tr><td colspan="5" class="muted">—</td></tr>`
+
+  // mesi
+  const mc = el("reportMonthsContainer")
+  if (mc) mc.innerHTML = `<div class="hint">Nessun mese caricato.</div>`
+
+  // financings
+  const fb = el("reportFinancingsBody")
+  if (fb) fb.innerHTML = `<tr><td colspan="8" class="muted">—</td></tr>`
+
+  setReportStatus(false, "Report: non caricato")
+}
+
+async function fetchStatementReport(cardId, fromYM, toYM, plafond) {
+  if (!cardId) throw new Error("cardId mancante")
+  if (!fromYM || !toYM) throw new Error("from/to mese mancanti")
+
+  const params = new URLSearchParams()
+  params.set("from", fromYM)
+  params.set("to", toYM)
+  if (plafond != null) params.set("plafond", String(plafond))
+
+  // 🔧 Se l’endpoint reale ha un path diverso, cambia SOLO qui:
+  return await apiFetch(`/cards/${cardId}/statement-report?` + params.toString(), { method: "GET" })
+}
+function renderReport(report) {
+  clearReportUI()
+  if (!report || typeof report !== "object") {
+    setReportStatus(false, "Report: risposta vuota")
+    return
+  }
+
+  // ---- 1) KPI globali ----
+  const rangeEl = el("reportKpiRange")
+  const plafEl = el("reportKpiPlafond")
+  const consEl = el("reportKpiConsumedLast")
+  const availEl = el("reportKpiAvailableLast")
+
+  const rFrom = report?.range?.from || report?.from || null
+  const rTo = report?.range?.to || report?.to || null
+  const rPlaf = (typeof report?.plafondMax === "number") ? report.plafondMax : (typeof report?.plafond === "number" ? report.plafond : null)
+
+  if (rangeEl) rangeEl.textContent = (rFrom && rTo) ? `${rFrom} → ${rTo}` : "—"
+  if (plafEl) plafEl.textContent = (rPlaf != null) ? formatEuro(rPlaf) : "—"
+
+  // last snapshot (se esiste)
+  const last = report?.lastSnapshot || report?.summary?.lastSnapshot || null
+  const lastConsumed = (last && typeof last.consumed === "number") ? last.consumed : null
+  const lastAvailable = (last && typeof last.available === "number") ? last.available : null
+  if (consEl) consEl.textContent = (lastConsumed != null) ? formatEuro(lastConsumed) : "—"
+  if (availEl) availEl.textContent = (lastAvailable != null) ? formatEuro(lastAvailable) : "—"
+
+  // ---- 2) Timeline globale ----
+  const tlBody = el("reportTimelineBody")
+  if (tlBody) {
+    const rows = Array.isArray(report.timeline) ? report.timeline : []
+    tlBody.innerHTML = ""
+    if (!rows.length) {
+      tlBody.innerHTML = `<tr><td colspan="5" class="muted">—</td></tr>`
+    } else {
+      rows.forEach(item => {
+        const tr = document.createElement("tr")
+        const tdD = document.createElement("td"); tdD.textContent = item.date || "—"
+        const tdE = document.createElement("td"); tdE.textContent = item.label || item.event || "—"
+        const tdC = document.createElement("td"); tdC.textContent = (typeof item.consumed === "number") ? formatEuro(item.consumed) : "—"
+        const tdS = document.createElement("td"); tdS.textContent = (typeof item.balance === "number") ? formatEuro(item.balance) : "—"
+        const tdA = document.createElement("td"); tdA.textContent = (typeof item.available === "number") ? formatEuro(item.available) : "—"
+        tr.appendChild(tdD); tr.appendChild(tdE); tr.appendChild(tdC); tr.appendChild(tdS); tr.appendChild(tdA)
+        tlBody.appendChild(tr)
+      })
+    }
+  }
+
+  // ---- 3) Mesi / estratti conto ----
+  const monthsContainer = el("reportMonthsContainer")
+  const tpl = el("tplReportMonthCard")
+  if (monthsContainer && tpl) {
+    const months = Array.isArray(report.months) ? report.months : (Array.isArray(report.statements) ? report.statements : [])
+    monthsContainer.innerHTML = ""
+    if (!months.length) {
+      monthsContainer.innerHTML = `<div class="hint">Nessun mese nel report.</div>`
+    } else {
+      months.forEach(m => {
+        const node = tpl.content.firstElementChild.cloneNode(true)
+
+        const ym = m.month || m.statementMonth || m.ym || null
+        node.querySelector('[data-rm="monthLabel"]').textContent = ym ? monthLabelFromYM(ym) : "—"
+
+        node.querySelector('[data-rm="winStart"]').textContent = m.window?.start || "—"
+        node.querySelector('[data-rm="winEnd"]').textContent = m.window?.end || "—"
+        node.querySelector('[data-rm="repayDate"]').textContent = m.debitDate || m.repaymentDate || "—"
+
+        node.querySelector('[data-rm="requestedAmount"]').textContent =
+          (typeof m.requestedAmount === "number") ? formatEuro(m.requestedAmount) : "—"
+
+        node.querySelector('[data-rm="openingConsumed"]').textContent =
+          (typeof m.opening?.consumed === "number") ? formatEuro(m.opening.consumed) : "—"
+        node.querySelector('[data-rm="openingAvailable"]').textContent =
+          (typeof m.opening?.available === "number") ? formatEuro(m.opening.available) : "—"
+
+        node.querySelector('[data-rm="cutoffConsumed"]').textContent =
+          (typeof m.cutoff?.consumed === "number") ? formatEuro(m.cutoff.consumed) : "—"
+        node.querySelector('[data-rm="cutoffAvailable"]').textContent =
+          (typeof m.cutoff?.available === "number") ? formatEuro(m.cutoff.available) : "—"
+
+        node.querySelector('[data-rm="subInstant"]').textContent =
+          (typeof m.subtotals?.instant === "number") ? formatEuro(m.subtotals.instant) : "—"
+        node.querySelector('[data-rm="subFin"]').textContent =
+          (typeof m.subtotals?.financing === "number") ? formatEuro(m.subtotals.financing) : "—"
+        node.querySelector('[data-rm="subCharges"]').textContent =
+          (typeof m.subtotals?.charges === "number") ? formatEuro(m.subtotals.charges) : "—"
+        node.querySelector('[data-rm="subCredits"]').textContent =
+          (typeof m.subtotals?.credits === "number") ? formatEuro(m.subtotals.credits) : "—"
+        node.querySelector('[data-rm="statementBalance"]').textContent =
+          (typeof m.statementBalance === "number") ? formatEuro(m.statementBalance) : "—"
+
+        // righe
+        const body = node.querySelector('[data-rm="linesBody"]')
+        const lines = Array.isArray(m.lines) ? m.lines : []
+        if (body) {
+          body.innerHTML = ""
+          if (!lines.length) {
+            body.innerHTML = `<tr><td colspan="5" class="muted">—</td></tr>`
+          } else {
+            lines.forEach(line => {
+              const tr = document.createElement("tr")
+              const tdT = document.createElement("td"); tdT.textContent = line.type || "—"
+              const tdD = document.createElement("td"); tdD.textContent = line.date || "—"
+              const tdTi = document.createElement("td"); tdTi.textContent = line.title || "—"
+              const tdC = document.createElement("td"); tdC.textContent = line.category || "—"
+              const tdA = document.createElement("td"); tdA.textContent = (typeof line.amount === "number") ? formatEuro(line.amount) : "—"
+              tr.appendChild(tdT); tr.appendChild(tdD); tr.appendChild(tdTi); tr.appendChild(tdC); tr.appendChild(tdA)
+              body.appendChild(tr)
+            })
+          }
+        }
+
+        monthsContainer.appendChild(node)
+      })
+    }
+  }
+
+  // ---- 4) Financings overview ----
+  const finBody = el("reportFinancingsBody")
+  if (finBody) {
+    const fins = Array.isArray(report.financings) ? report.financings : []
+    finBody.innerHTML = ""
+    if (!fins.length) {
+      finBody.innerHTML = `<tr><td colspan="8" class="muted">—</td></tr>`
+    } else {
+      fins.forEach(f => {
+        const tr = document.createElement("tr")
+        const tdId = document.createElement("td"); tdId.textContent = f.purchaseId ?? f.id ?? "—"
+        const tdTi = document.createElement("td"); tdTi.textContent = f.title || "—"
+        const tdCat = document.createElement("td"); tdCat.textContent = f.category || "—"
+        const tdTot = document.createElement("td"); tdTot.textContent = (typeof f.total === "number") ? formatEuro(f.total) : "—"
+        const tdN = document.createElement("td"); tdN.textContent = (f.count != null) ? String(f.count) : "—"
+        const tdFSM = document.createElement("td"); tdFSM.textContent = f.firstStatementMonth || "—"
+        const tdInst = document.createElement("td"); tdInst.textContent = (typeof f.installmentAmount === "number") ? formatEuro(f.installmentAmount) : "—"
+        const tdSt = document.createElement("td"); tdSt.textContent = f.status || "—"
+        tr.appendChild(tdId); tr.appendChild(tdTi); tr.appendChild(tdCat); tr.appendChild(tdTot)
+        tr.appendChild(tdN); tr.appendChild(tdFSM); tr.appendChild(tdInst); tr.appendChild(tdSt)
+        finBody.appendChild(tr)
+      })
+    }
+  }
+
+  setReportStatus(true, "Report: caricato")
+}
+async function loadReportFromUI() {
+  const cardId = el("reportCardSelect")?.value || ""
+  const fromYM = parseMonthInput(el("reportFromMonth")?.value)
+  const toYM = parseMonthInput(el("reportToMonth")?.value)
+
+  const plafRaw = el("reportPlafondMax")?.value
+  const plaf = (plafRaw == null || plafRaw === "") ? 3000 : parseNumberInput(plafRaw)
+
+  if (!cardId) {
+    showToast("Campo obbligatorio", "Seleziona una carta per il report")
+    return
+  }
+  if (!fromYM || !toYM) {
+    showToast("Campo obbligatorio", "Seleziona i mesi (Da/A)")
+    return
+  }
+  // vincolo: mesi consecutivi -> in pratica da <= a (poi il backend controlla)
+  const list = monthsBetweenInclusive(fromYM, toYM)
+  if (!list.length) {
+    showToast("Range non valido", "Il range mesi non è valido")
+    return
+  }
+  if (plaf == null || plaf <= 0) {
+    showToast("Importo non valido", "Plafond max non valido")
+    return
+  }
+
+  setReportStatus(true, "Report: caricamento…")
+  try {
+    const data = await fetchStatementReport(cardId, fromYM, toYM, plaf)
+
+    state.report.lastRequest = { cardId, from: fromYM, to: toYM, plafond: plaf }
+    state.report.lastData = data
+
+    renderReport(data)
+  } catch (e) {
+    setReportStatus(false, "Report: errore")
+    showToast("Errore", e.message || "Errore nel caricamento report")
+  }
+}
+
+function exportReportJson() {
+  const data = state.report?.lastData
+  if (!data) {
+    showToast("Niente da esportare", "Carica un report prima di esportare")
+    return
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = "statement-report.json"
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 function applyWalletSelectionUX() {
@@ -1170,6 +1456,26 @@ async function loadWallets() {
   walletsCache = state.wallets
   // --- NEW: mappa rapida id -> wallet (per normalizzazioni)
   state.walletsById = {}
+  // --- NEW: report card selector
+  const reportCardSel = el("reportCardSelect")
+  if (reportCardSel) {
+    const cur = reportCardSel.value
+    reportCardSel.innerHTML = ""
+    const o0 = document.createElement("option")
+    o0.value = ""
+    o0.textContent = "Seleziona carta…"
+    reportCardSel.appendChild(o0)
+
+    state.wallets.filter(w => w.type === "card").forEach(w => {
+      const o = document.createElement("option")
+      o.value = w.id
+      o.textContent = w.name
+      reportCardSel.appendChild(o)
+    })
+
+    if (cur) reportCardSel.value = cur
+  }
+  
   state.wallets.forEach(w => { state.walletsById[String(w.id)] = w })
   
   fillPayoffFromWalletSelect()
@@ -2716,6 +3022,20 @@ function initEventListeners() {
       }
     })
   }
+  // ------------------------------
+  // REPORT listeners
+  // ------------------------------
+  const btnReportLoad = el("btnReportLoad")
+  if (btnReportLoad) btnReportLoad.addEventListener("click", loadReportFromUI)
+
+  const btnReportExport = el("btnReportExportJson")
+  if (btnReportExport) btnReportExport.addEventListener("click", exportReportJson)
+
+  const reportCardSel = el("reportCardSelect")
+  if (reportCardSel) reportCardSel.addEventListener("change", () => {
+    // opzionale: reset UI quando cambi carta
+    clearReportUI()
+  })
   
 }
 
@@ -2723,6 +3043,12 @@ async function init() {
   const today = new Date()
   setCurrentMonth(today)
   const todayISO = formatISODate(today)
+  // --- NEW: default mesi report = mese corrente
+  const ym = todayISO.slice(0,7)
+  if (el("reportFromMonth") && !el("reportFromMonth").value) el("reportFromMonth").value = ym
+  if (el("reportToMonth") && !el("reportToMonth").value) el("reportToMonth").value = ym
+  if (el("reportPlafondMax") && !el("reportPlafondMax").value) el("reportPlafondMax").value = "3000"
+
   state.selectedDate = todayISO
   const ref = el("refDateLabel")
   const snap = el("snapshotTitle")

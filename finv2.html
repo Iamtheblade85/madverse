@@ -50,6 +50,7 @@
       <button class="btn tabbtn" type="button" data-tab="nuovo" aria-selected="false">➕ Nuovo evento</button>
       <button class="btn tabbtn" type="button" data-tab="rimborsi" aria-selected="false">💳 Rimborsi carte</button>
       <button class="btn tabbtn" type="button" data-tab="wallets" aria-selected="false">👛 Wallet &amp; Metodi</button>
+      <button class="btn tabbtn" type="button" data-tab="report" aria-selected="false">📄 Report</button>
       <button class="btn tabbtn" type="button" data-tab="impostazioni" aria-selected="false">⚙️ Impostazioni</button>
 
       <hr class="hr" />
@@ -652,8 +653,224 @@
           </div>
         </div>
       </section>
+      
+      <!-- TAB 5: REPORT -->
+      <section class="tab-panel" id="tab-report" aria-label="Report estratti conto">
+        <div class="content-inner">
+          <div class="page-title">
+            <div>
+              <h2>Report estratti conto</h2>
+              <div class="page-sub">
+                Panoramica completa per uno o più mesi consecutivi: window 16→15, saldo (consumato), disponibile su plafond,
+                rate finanziamenti, dettagli eventi, e timeline globale.
+              </div>
+            </div>
+      
+            <div class="row wrap">
+              <button class="btn" id="btnReportLoad" type="button">Carica report</button>
+              <button class="btn" id="btnReportExportJson" type="button">Export JSON</button>
+            </div>
+          </div>
+      
+          <!-- FILTRI REPORT -->
+          <div class="form-section">
+            <p class="section-title">1) Parametri report</p>
+      
+            <div class="form-grid">
+              <div class="field">
+                <label class="label" for="reportCardSelect">Carta</label>
+                <select class="select" id="reportCardSelect">
+                  <option value="">Seleziona carta…</option>
+                  <!-- Popolato via JS: wallets type=carta -->
+                </select>
+                <div class="hint">Il report funziona solo per wallet di tipo <strong>carta</strong>.</div>
+              </div>
+      
+              <div class="field">
+                <label class="label" for="reportFromMonth">Da (mese)</label>
+                <input class="input" id="reportFromMonth" type="month" />
+                <div class="hint">Formato: YYYY-MM</div>
+              </div>
+      
+              <div class="field">
+                <label class="label" for="reportToMonth">A (mese)</label>
+                <input class="input" id="reportToMonth" type="month" />
+                <div class="hint">Formato: YYYY-MM</div>
+              </div>
+      
+              <div class="field">
+                <label class="label" for="reportPlafondMax">Plafond max (EUR)</label>
+                <input class="input" id="reportPlafondMax" type="number" step="0.01" min="0" placeholder="3000.00" />
+                <div class="hint">Default 3000.00 se vuoto.</div>
+              </div>
+            </div>
+      
+            <div class="row wrap" style="justify-content:space-between; margin-top:10px;">
+              <div class="badge" id="reportStatusBadge">
+                <span class="dot" id="reportStatusDot"></span>
+                <span id="reportStatusText">Report: non caricato</span>
+              </div>
+      
+              <div class="muted" style="font-size:13px;">
+                Endpoint atteso: <code>GET /cards/:id/statement-report?from=YYYY-MM&amp;to=YYYY-MM&amp;plafond=3000</code>
+              </div>
+            </div>
+          </div>
+      
+          <div class="hr"></div>
+      
+          <!-- SINTESI GLOBALE -->
+          <div class="form-section" id="reportGlobalSummary">
+            <p class="section-title">2) Sintesi globale</p>
+      
+            <div class="kpi">
+              <div><div class="k">Range</div><div class="v" id="reportKpiRange">—</div></div>
+              <div><div class="k">Plafond max</div><div class="v" id="reportKpiPlafond">—</div></div>
+              <div><div class="k">Debito (consumato) ultimo cutoff</div><div class="v" id="reportKpiConsumedLast">—</div></div>
+              <div><div class="k">Disponibile ultimo cutoff</div><div class="v" id="reportKpiAvailableLast">—</div></div>
+            </div>
+      
+            <div class="hint" style="margin-top:10px;">
+              “Consumato” = verbraucht. “Saldo” = consumato × (-1). “Disponibile” = plafond − consumato.
+            </div>
+          </div>
+      
+          <div class="hr"></div>
+      
+          <!-- TIMELINE GLOBALE -->
+          <div class="form-section" id="reportTimeline">
+            <p class="section-title">3) Timeline globale</p>
+            <div class="hint" style="margin-bottom:10px;">
+              Punti chiave (opening, cutoff 15, repayment) con consumato/saldo/disponibile.
+            </div>
+      
+            <table aria-label="Timeline globale report">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Evento</th>
+                  <th>Consumato</th>
+                  <th>Saldo</th>
+                  <th>Disponibile</th>
+                </tr>
+              </thead>
+              <tbody id="reportTimelineBody">
+                <tr>
+                  <td colspan="5" class="muted">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+      
+          <div class="hr"></div>
+      
+          <!-- REPORT PER MESE -->
+          <div class="form-section" id="reportMonths">
+            <p class="section-title">4) Estratti conto (per mese)</p>
+            <div class="hint" style="margin-bottom:10px;">
+              Ogni blocco mese: window 16→15, opening/cutoff, saldo e disponibile, dettagli righe e importo richiesto.
+            </div>
+      
+            <div id="reportMonthsContainer" class="col" style="gap:12px;">
+              <!-- Popolato via JS con card per mese -->
+              <div class="hint">Nessun mese caricato.</div>
+            </div>
+          </div>
+      
+          <div class="hr"></div>
+      
+          <!-- FINANCINGS -->
+          <div class="form-section" id="reportFinancings">
+            <p class="section-title">5) Finanziamenti (overview)</p>
+            <div class="hint" style="margin-bottom:10px;">
+              Lista dei financing rilevati. (Residuo preciso richiede allocazioni pagamenti → financing.)
+            </div>
+      
+            <table aria-label="Tabella finanziamenti">
+              <thead>
+                <tr>
+                  <th>Purchase ID</th>
+                  <th>Titolo</th>
+                  <th>Categoria</th>
+                  <th>Totale</th>
+                  <th>Rate</th>
+                  <th>Prima statement</th>
+                  <th>Rata</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="reportFinancingsBody">
+                <tr>
+                  <td colspan="8" class="muted">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+      
+          <!-- TEMPLATE: card mese report (clonata da JS) -->
+          <template id="tplReportMonthCard">
+            <div class="form-section">
+              <div class="row wrap" style="justify-content:space-between; align-items:flex-end;">
+                <div>
+                  <p class="section-title" style="margin:0;">
+                    <span data-rm="monthLabel">—</span>
+                  </p>
+                  <div class="hint" style="margin-top:4px;">
+                    Window: <span data-rm="winStart">—</span> → <span data-rm="winEnd">—</span> • Addebito: <span data-rm="repayDate">—</span>
+                  </div>
+                </div>
+      
+                <div class="badge">
+                  <span class="dot dot--card"></span>
+                  Richiesto: <strong data-rm="requestedAmount">—</strong>
+                </div>
+              </div>
+      
+              <div class="hr"></div>
+      
+              <div class="kpi">
+                <div><div class="k">Opening consumato</div><div class="v" data-rm="openingConsumed">—</div></div>
+                <div><div class="k">Opening disponibile</div><div class="v" data-rm="openingAvailable">—</div></div>
+                <div><div class="k">Cutoff consumato (15)</div><div class="v" data-rm="cutoffConsumed">—</div></div>
+                <div><div class="k">Cutoff disponibile (15)</div><div class="v" data-rm="cutoffAvailable">—</div></div>
+              </div>
+      
+              <div class="hr"></div>
+      
+              <div class="kpi">
+                <div><div class="k">Instant</div><div class="v" data-rm="subInstant">—</div></div>
+                <div><div class="k">Rate financing</div><div class="v" data-rm="subFin">—</div></div>
+                <div><div class="k">Charges</div><div class="v" data-rm="subCharges">—</div></div>
+                <div><div class="k">Credits</div><div class="v" data-rm="subCredits">—</div></div>
+                <div><div class="k">Statement balance</div><div class="v" data-rm="statementBalance">—</div></div>
+              </div>
+      
+              <div class="hr"></div>
+      
+              <div style="font-weight:600; margin-bottom:6px;">Dettagli righe</div>
+              <table aria-label="Righe statement mese">
+                <thead>
+                  <tr>
+                    <th>Tipo</th>
+                    <th>Data</th>
+                    <th>Titolo</th>
+                    <th>Categoria</th>
+                    <th>Importo</th>
+                  </tr>
+                </thead>
+                <tbody data-rm="linesBody">
+                  <tr>
+                    <td colspan="5" class="muted">—</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </template>
+      
+        </div>
+      </section>
 
-      <!-- TAB 5: IMPOSTAZIONI -->
+      <!-- TAB 6: IMPOSTAZIONI -->
       <section class="tab-panel" id="tab-impostazioni" aria-label="Impostazioni">
         <div class="content-inner">
           <div class="page-title">
@@ -806,6 +1023,7 @@
     <button class="btn tabbtn" type="button" data-tab="nuovo" aria-selected="false">➕<br/>Nuovo</button>
     <button class="btn tabbtn" type="button" data-tab="rimborsi" aria-selected="false">💳<br/>Rimborsi</button>
     <button class="btn tabbtn" type="button" data-tab="wallets" aria-selected="false">👛<br/>Wallet</button>
+    <button class="btn tabbtn" type="button" data-tab="report" aria-selected="false">📄<br/>Report</button>
     <button class="btn tabbtn" type="button" data-tab="impostazioni" aria-selected="false">⚙️<br/>Impost.</button>
   </nav>
 

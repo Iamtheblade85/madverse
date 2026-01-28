@@ -5241,3 +5241,11 @@ select:focus, input[type="number"]:focus {
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
 }
+body.app, .app {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}

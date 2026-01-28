@@ -764,6 +764,61 @@
 		    // ------------------------------------------------------------
 		    // UTILS + API + HELPERS (reintrodotti)
 		    // ------------------------------------------------------------
+			function maybeShowStakingUpstreamModal(stakingReportObj){
+			  // stakingReportObj è quello che il backend manda come "staking_report"
+			  if (!stakingReportObj || typeof stakingReportObj !== 'object') return;
+			
+			  // Caso 1: wrapper esplicito ok:false (quello che mandi oggi quando run_report fallisce nel route)
+			  if (stakingReportObj.ok === false){
+			    UINotify.show({
+			      title: '⚠️ Staking bonus temporarily unavailable',
+			      html: `
+			        <p>We could not fetch your staking positions right now (WaxOnEdge temporary issue).</p>
+			        <p style="margin-top:8px;opacity:.9">
+			          Your expedition still started, but <strong>staking bonus was applied as 0%</strong>.
+			        </p>
+			        <p style="margin-top:8px;opacity:.85">
+			          Try again later or open the Staking tab and refresh.
+			        </p>
+			      `,
+			      actions: [{ label:'OK', variant:'primary' }],
+			      autoCloseMs: 12000
+			    });
+			    return;
+			  }
+			
+			  // Caso 2: report presente ma "partial" con upstreams che segnalano WOE KO
+			  const report = stakingReportObj.report;
+			  const partial = !!report?.partial;
+			  const woePosOk = report?.upstreams?.WOE?.positions?.ok;
+			  const woePoolsOk = report?.upstreams?.WOE?.pools?.ok;
+			
+			  const woeHadIssue =
+			    partial && (woePosOk === false || woePoolsOk === false);
+			
+			  if (woeHadIssue){
+			    const errPos = report?.upstreams?.WOE?.positions?.error;
+			    const errPools = report?.upstreams?.WOE?.pools?.error;
+			
+			    const detailLines = [];
+			    if (woePosOk === false && errPos?.status_code) detailLines.push(`Positions: HTTP ${errPos.status_code}`);
+			    if (woePoolsOk === false && errPools?.status_code) detailLines.push(`Pools: HTTP ${errPools.status_code}`);
+			
+			    UINotify.show({
+			      title: '⚠️ Staking data partially unavailable',
+			      html: `
+			        <p>WaxOnEdge is responding intermittently.</p>
+			        <p style="margin-top:8px;opacity:.9">
+			          We used the best available data, but your staking bonus may be incomplete for this request.
+			        </p>
+			        ${detailLines.length ? `<p style="margin-top:8px;opacity:.85"><code>${safe(detailLines.join(' · '))}</code></p>` : ''}
+			      `,
+			      actions: [{ label:'OK', variant:'primary' }],
+			      autoCloseMs: 12000
+			    });
+			  }
+			}
+			
 		    function parseUtcMs(iso){
 		      if (!iso) return null;
 		      const d = new Date(iso);
@@ -4908,8 +4963,10 @@ function renderForecastRealContent(data, message){
 		
 		      const durSec = toNumber(res.data?.duration_seconds) || durationMinutes*60;
 		      const endAt = new Date(Date.now() + durSec*1000);
-		
-		      toast(`⛏️ Expedition started! ${ids.length}/${cap} goblins · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`);
+			  // ✅ NEW: show non-blocking upstream warning for staking bonus (WaxOnEdge issues)
+			  maybeShowStakingUpstreamModal(res.data?.staking_report);
+
+		      toast(`⛏️ Expedition started! ${ids.length}/${cap} goblins were sent out · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`);
 				// If backend had to skip extra tired goblins (race condition), show an explicit modal
 				const skippedByBackend = (res.data && Array.isArray(res.data.skipped_tired)) ? res.data.skipped_tired : [];
 				if (skippedByBackend.length){

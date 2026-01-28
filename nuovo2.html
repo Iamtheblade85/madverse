@@ -818,18 +818,6 @@
 			    });
 			  }
 			}
-			// NEW: backend can auto-replace tired goblins silently.
-			// Keep UI consistent by updating the local selection without extra notifications.
-			const reps = (res.data && Array.isArray(res.data.auto_replacements)) ? res.data.auto_replacements : [];
-			if (reps.length){
-			  for (const r of reps){
-			    const a = String(r.replaced_id || '');
-			    const b = String(r.replacement_id || '');
-			    if (a) State.selectedGoblinIds.delete(a);
-			    if (b) State.selectedGoblinIds.add(b);
-			  }
-			  hydrateGoblinBuilder();
-			}
 			function setDurationMinutes(minutes){
 			  const m = Number(minutes || 0);
 			  if (!m) return;
@@ -5080,8 +5068,23 @@ function renderForecastRealContent(data, message){
 		      const endAt = new Date(Date.now() + durSec*1000);
 			  // ✅ NEW: show non-blocking upstream warning for staking bonus (WaxOnEdge issues)
 			  maybeShowStakingUpstreamModal(res.data?.staking_report);
-			  const sentCount = State.selectedGoblinIds.size;
-		      pushCanvasMsg(`⛏️ ${State.user.wax_account} started an Expedition! ${sentCount}/${cap} goblins were sent out · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`);			
+			
+			// ✅ NEW: backend can auto-replace tired goblins silently.
+			// Keep UI consistent by updating the local selection without extra notifications.
+			const reps = (res.data && Array.isArray(res.data.auto_replacements)) ? res.data.auto_replacements : [];
+			if (reps.length){
+			  for (const r of reps){
+			    const a = String(r.replaced_id || '');
+			    const b = String(r.replacement_id || '');
+			    if (a) State.selectedGoblinIds.delete(a);
+			    if (b) State.selectedGoblinIds.add(b);
+			  }
+			  hydrateGoblinBuilder();
+			}
+
+			const sentCount = State.selectedGoblinIds.size; // (dopo auto_replacements)
+			pushCanvasMsg(`⛏️ ${State.user.wax_account} started an Expedition! ${sentCount}/${cap} goblins were sent out · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`);
+		
 		      //pushCanvasMsg(`⛏️ ${State.user.wax_account} started an expedition with ${ids.length}/${cap} goblins · ETA ${fmtHMS(durSec*1000)}`);
 		      State.runtime.expeditionInProgress = true;
 				renderMyExpeditionOverlay();

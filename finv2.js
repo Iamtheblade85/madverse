@@ -105,38 +105,40 @@ function renderReport(report) {
     return
   }
 
-  // ---- 1) KPI globali ----
+  // -------------------------
+  // KPI globali
+  // -------------------------
   const rangeEl = el("reportKpiRange")
-  const plafEl = el("reportKpiPlafond")
-  const consEl = el("reportKpiConsumedLast")
+  const plafEl  = el("reportKpiPlafond")
+  const consEl  = el("reportKpiConsumedLast")
   const availEl = el("reportKpiAvailableLast")
 
-  const rFrom = report?.range?.from || report?.from || null
-  const rTo = report?.range?.to || report?.to || null
-  const rPlaf = (typeof report?.plafondMax === "number") ? report.plafondMax : (typeof report?.plafond === "number" ? report.plafond : null)
+  const rFrom = report?.range?.from || null
+  const rTo   = report?.range?.to || null
+  const rPlaf = (typeof report?.plafondMax === "number") ? report.plafondMax : null
 
   if (rangeEl) rangeEl.textContent = (rFrom && rTo) ? `${rFrom} → ${rTo}` : "—"
-  if (plafEl) plafEl.textContent = (rPlaf != null) ? formatEuro(rPlaf) : "—"
+  if (plafEl)  plafEl.textContent  = (rPlaf != null) ? formatEuro(rPlaf) : "—"
 
-  // last snapshot (se esiste)
-  const last = report?.lastSnapshot || report?.summary?.lastSnapshot || null
-  const lastConsumed = (last && typeof last.consumed === "number") ? last.consumed : null
-  const lastAvailable = (last && typeof last.available === "number") ? last.available : null
-  if (consEl) consEl.textContent = (lastConsumed != null) ? formatEuro(lastConsumed) : "—"
-  if (availEl) availEl.textContent = (lastAvailable != null) ? formatEuro(lastAvailable) : "—"
+  // KPI "last": prendiamo l’ultimo punto della globalTimeline (già ordinata dal backend)
+  const gt = Array.isArray(report.globalTimeline) ? report.globalTimeline : []
+  const lastPoint = gt.length ? gt[gt.length - 1] : null
+  if (consEl)  consEl.textContent  = (lastPoint && typeof lastPoint.consumed === "number") ? formatEuro(lastPoint.consumed) : "—"
+  if (availEl) availEl.textContent = (lastPoint && typeof lastPoint.available === "number") ? formatEuro(lastPoint.available) : "—"
 
-  // ---- 2) Timeline globale ----
+  // -------------------------
+  // Timeline globale (globalTimeline)
+  // -------------------------
   const tlBody = el("reportTimelineBody")
   if (tlBody) {
-    const rows = Array.isArray(report.timeline) ? report.timeline : []
     tlBody.innerHTML = ""
-    if (!rows.length) {
+    if (!gt.length) {
       tlBody.innerHTML = `<tr><td colspan="5" class="muted">—</td></tr>`
     } else {
-      rows.forEach(item => {
+      gt.forEach(item => {
         const tr = document.createElement("tr")
         const tdD = document.createElement("td"); tdD.textContent = item.date || "—"
-        const tdE = document.createElement("td"); tdE.textContent = item.label || item.event || "—"
+        const tdE = document.createElement("td"); tdE.textContent = item.label || "—"
         const tdC = document.createElement("td"); tdC.textContent = (typeof item.consumed === "number") ? formatEuro(item.consumed) : "—"
         const tdS = document.createElement("td"); tdS.textContent = (typeof item.balance === "number") ? formatEuro(item.balance) : "—"
         const tdA = document.createElement("td"); tdA.textContent = (typeof item.available === "number") ? formatEuro(item.available) : "—"
@@ -146,11 +148,14 @@ function renderReport(report) {
     }
   }
 
-  // ---- 3) Mesi / estratti conto ----
+  // -------------------------
+  // Mesi (months)
+  // -------------------------
   const monthsContainer = el("reportMonthsContainer")
   const tpl = el("tplReportMonthCard")
+  const months = Array.isArray(report.months) ? report.months : []
+
   if (monthsContainer && tpl) {
-    const months = Array.isArray(report.months) ? report.months : (Array.isArray(report.statements) ? report.statements : [])
     monthsContainer.innerHTML = ""
     if (!months.length) {
       monthsContainer.innerHTML = `<div class="hint">Nessun mese nel report.</div>`
@@ -158,40 +163,65 @@ function renderReport(report) {
       months.forEach(m => {
         const node = tpl.content.firstElementChild.cloneNode(true)
 
-        const ym = m.month || m.statementMonth || m.ym || null
+        const ym = m.statementMonth || null
         node.querySelector('[data-rm="monthLabel"]').textContent = ym ? monthLabelFromYM(ym) : "—"
 
+        // window
         node.querySelector('[data-rm="winStart"]').textContent = m.window?.start || "—"
-        node.querySelector('[data-rm="winEnd"]').textContent = m.window?.end || "—"
-        node.querySelector('[data-rm="repayDate"]').textContent = m.debitDate || m.repaymentDate || "—"
+        node.querySelector('[data-rm="winEnd"]').textContent   = m.window?.end || "—"
 
+        // repayment date
+        node.querySelector('[data-rm="repayDate"]').textContent = m.repaymentDate || "—"
+
+        // requested amount
         node.querySelector('[data-rm="requestedAmount"]').textContent =
-          (typeof m.requestedAmount === "number") ? formatEuro(m.requestedAmount) : "—"
+          (typeof m.requested?.amount === "number") ? formatEuro(m.requested.amount) : "—"
 
+        // opening
         node.querySelector('[data-rm="openingConsumed"]').textContent =
           (typeof m.opening?.consumed === "number") ? formatEuro(m.opening.consumed) : "—"
         node.querySelector('[data-rm="openingAvailable"]').textContent =
           (typeof m.opening?.available === "number") ? formatEuro(m.opening.available) : "—"
 
+        // cutoff15
         node.querySelector('[data-rm="cutoffConsumed"]').textContent =
-          (typeof m.cutoff?.consumed === "number") ? formatEuro(m.cutoff.consumed) : "—"
+          (typeof m.cutoff15?.consumed === "number") ? formatEuro(m.cutoff15.consumed) : "—"
         node.querySelector('[data-rm="cutoffAvailable"]').textContent =
-          (typeof m.cutoff?.available === "number") ? formatEuro(m.cutoff.available) : "—"
+          (typeof m.cutoff15?.available === "number") ? formatEuro(m.cutoff15.available) : "—"
+
+        // subtotals + statement balance
+        const st = m.statement || {}
+        const subs = st.subtotals || {}
 
         node.querySelector('[data-rm="subInstant"]').textContent =
-          (typeof m.subtotals?.instant === "number") ? formatEuro(m.subtotals.instant) : "—"
-        node.querySelector('[data-rm="subFin"]').textContent =
-          (typeof m.subtotals?.financing === "number") ? formatEuro(m.subtotals.financing) : "—"
-        node.querySelector('[data-rm="subCharges"]').textContent =
-          (typeof m.subtotals?.charges === "number") ? formatEuro(m.subtotals.charges) : "—"
-        node.querySelector('[data-rm="subCredits"]').textContent =
-          (typeof m.subtotals?.credits === "number") ? formatEuro(m.subtotals.credits) : "—"
-        node.querySelector('[data-rm="statementBalance"]').textContent =
-          (typeof m.statementBalance === "number") ? formatEuro(m.statementBalance) : "—"
+          (typeof subs.instantPurchases === "number") ? formatEuro(subs.instantPurchases)
+          : (typeof subs.instant === "number") ? formatEuro(subs.instant)
+          : "—"
 
-        // righe
+        node.querySelector('[data-rm="subFin"]').textContent =
+          (typeof subs.financingInstallments === "number") ? formatEuro(subs.financingInstallments)
+          : (typeof subs.financing === "number") ? formatEuro(subs.financing)
+          : "—"
+
+        node.querySelector('[data-rm="subCharges"]').textContent =
+          (typeof subs.charges === "number") ? formatEuro(subs.charges) : "—"
+
+        node.querySelector('[data-rm="subCredits"]').textContent =
+          (typeof subs.credits === "number") ? formatEuro(subs.credits) : "—"
+
+        node.querySelector('[data-rm="statementBalance"]').textContent =
+          (typeof subs.statementBalance === "number") ? formatEuro(subs.statementBalance)
+          : (typeof st.statementBalance === "number") ? formatEuro(st.statementBalance)
+          : "—"
+
+        // lines table (difensivo: prova varie chiavi)
         const body = node.querySelector('[data-rm="linesBody"]')
-        const lines = Array.isArray(m.lines) ? m.lines : []
+        const lines =
+          Array.isArray(st.lines) ? st.lines :
+          Array.isArray(st.items) ? st.items :
+          Array.isArray(st.movements) ? st.movements :
+          []
+
         if (body) {
           body.innerHTML = ""
           if (!lines.length) {
@@ -199,11 +229,11 @@ function renderReport(report) {
           } else {
             lines.forEach(line => {
               const tr = document.createElement("tr")
-              const tdT = document.createElement("td"); tdT.textContent = line.type || "—"
-              const tdD = document.createElement("td"); tdD.textContent = line.date || "—"
+              const tdT  = document.createElement("td"); tdT.textContent  = line.type || line.kind || "—"
+              const tdD  = document.createElement("td"); tdD.textContent  = line.date || "—"
               const tdTi = document.createElement("td"); tdTi.textContent = line.title || "—"
-              const tdC = document.createElement("td"); tdC.textContent = line.category || "—"
-              const tdA = document.createElement("td"); tdA.textContent = (typeof line.amount === "number") ? formatEuro(line.amount) : "—"
+              const tdC  = document.createElement("td"); tdC.textContent  = line.category || "—"
+              const tdA  = document.createElement("td"); tdA.textContent  = (typeof line.amount === "number") ? formatEuro(line.amount) : "—"
               tr.appendChild(tdT); tr.appendChild(tdD); tr.appendChild(tdTi); tr.appendChild(tdC); tr.appendChild(tdA)
               body.appendChild(tr)
             })
@@ -215,26 +245,30 @@ function renderReport(report) {
     }
   }
 
-  // ---- 4) Financings overview ----
+  // -------------------------
+  // Financings (financings)
+  // -------------------------
   const finBody = el("reportFinancingsBody")
+  const fins = Array.isArray(report.financings) ? report.financings : []
   if (finBody) {
-    const fins = Array.isArray(report.financings) ? report.financings : []
     finBody.innerHTML = ""
     if (!fins.length) {
       finBody.innerHTML = `<tr><td colspan="8" class="muted">—</td></tr>`
     } else {
       fins.forEach(f => {
         const tr = document.createElement("tr")
-        const tdId = document.createElement("td"); tdId.textContent = f.purchaseId ?? f.id ?? "—"
-        const tdTi = document.createElement("td"); tdTi.textContent = f.title || "—"
+        const tdId  = document.createElement("td"); tdId.textContent  = f.purchaseEventId ?? "—"
+        const tdTi  = document.createElement("td"); tdTi.textContent  = f.title || "—"
         const tdCat = document.createElement("td"); tdCat.textContent = f.category || "—"
-        const tdTot = document.createElement("td"); tdTot.textContent = (typeof f.total === "number") ? formatEuro(f.total) : "—"
-        const tdN = document.createElement("td"); tdN.textContent = (f.count != null) ? String(f.count) : "—"
+        const tdTot = document.createElement("td"); tdTot.textContent =
+          (typeof f.purchaseTotal === "number") ? formatEuro(f.purchaseTotal) : "—"
+        const tdN   = document.createElement("td"); tdN.textContent   = (f.count != null) ? String(f.count) : "—"
         const tdFSM = document.createElement("td"); tdFSM.textContent = f.firstStatementMonth || "—"
-        const tdInst = document.createElement("td"); tdInst.textContent = (typeof f.installmentAmount === "number") ? formatEuro(f.installmentAmount) : "—"
-        const tdSt = document.createElement("td"); tdSt.textContent = f.status || "—"
+        const tdIns = document.createElement("td"); tdIns.textContent =
+          (typeof f.installmentAmount === "number") ? formatEuro(f.installmentAmount) : "—"
+        const tdSt  = document.createElement("td"); tdSt.textContent  = f.status || "—"
         tr.appendChild(tdId); tr.appendChild(tdTi); tr.appendChild(tdCat); tr.appendChild(tdTot)
-        tr.appendChild(tdN); tr.appendChild(tdFSM); tr.appendChild(tdInst); tr.appendChild(tdSt)
+        tr.appendChild(tdN); tr.appendChild(tdFSM); tr.appendChild(tdIns); tr.appendChild(tdSt)
         finBody.appendChild(tr)
       })
     }
@@ -242,6 +276,7 @@ function renderReport(report) {
 
   setReportStatus(true, "Report: caricato")
 }
+
 async function loadReportFromUI() {
   const cardId = el("reportCardSelect")?.value || ""
   const fromYM = parseMonthInput(el("reportFromMonth")?.value)

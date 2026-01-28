@@ -1497,33 +1497,37 @@
   <!-- Mini bootstrap UI (solo per far vedere struttura e tab; logica reale in finv2.js) -->
   <script>
     (function(){
-      // Default: mostra una data di riferimento leggibile (placeholder).
       const ref = document.getElementById('refDateLabel');
       const snap = document.getElementById('snapshotTitle');
       const todayISO = new Date().toISOString().slice(0,10);
       ref.textContent = todayISO;
       snap.textContent = "📌 Stato al: " + todayISO;
-
-      // Tab switching (solo UI). La logica dati sarà in finv2.js.
+  
       function setActiveTab(tab){
         document.body.dataset.activeTab = tab;
+  
+        // aggiorna bottoni tab (ok)
         document.querySelectorAll('[data-tab]').forEach(b=>{
           b.setAttribute('aria-selected', b.dataset.tab === tab ? 'true' : 'false');
         });
+  
+        // ✅ MOSTRA/NASCONDI i pannelli
+        document.querySelectorAll('.tab-panel').forEach(sec=>{
+          sec.style.display = (sec.id === `tab-${tab}`) ? '' : 'none';
+        });
       }
+  
       document.addEventListener('click', (e)=>{
         const btn = e.target.closest('[data-tab]');
         if(btn) setActiveTab(btn.dataset.tab);
       });
-
-      // CTA “+ Nuovo” porta alla tab “Nuovo evento”
+  
       const btnNuovo = document.getElementById('btnNuovo');
       if(btnNuovo) btnNuovo.addEventListener('click', ()=> setActiveTab('nuovo'));
-
-      // NOTA: la logica reale (API, snapshot, calendario, ecc.) verrà implementata in finv2.js.
-      // Qui c'è solo il wiring base delle tab e dei pulsanti.
-
+  
+      // ✅ inizializza visibilità in base a data-active-tab
+      setActiveTab(document.body.dataset.activeTab || 'calendario');
     })();
-  </script>  
+  </script>
 </body>
 </html>

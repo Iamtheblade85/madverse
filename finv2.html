@@ -250,9 +250,7 @@
               </div>
             </div>
           </div>
-
           <div class="hr"></div>
-
           <!-- Sezioni specifiche (mostrate/nascoste via JS) -->
           <div class="form-grid">
             <!-- Entrata/Uscita -->
@@ -265,13 +263,14 @@
                   <!-- Popolato via JS: GET /wallets -->
                 </select>
                 <div class="hint">La data nel calendario coincide con la data di impatto sul saldo.</div>
+                <!-- NEW: hint dinamico (gestito da finv2.js) -->
+                <div class="hint" id="walletTypeHint" style="display:none; margin-top:6px;"></div>
+                <div class="hint">La data nel calendario coincide con la data di impatto sul saldo.</div>
               </div>
             </div>
-
             <!-- Acquisto su carta -->
             <div class="form-section" id="sectionCardPurchase">
               <p class="section-title">3) Acquisto su carta</p>
-
               <div class="field">
                 <label class="label" for="fCardWallet">Carta (wallet di tipo carta) <span class="muted">(obbligatorio)</span></label>
                 <select class="select" id="fCardWallet">

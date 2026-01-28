@@ -1111,7 +1111,19 @@
 		
 		  return [];
 		}
+		function findMyInProgressExpedition(exps){
+		  const me = (State.user?.wax_account || '').trim().toLowerCase();
+		  if (!me || !Array.isArray(exps)) return null;
 		
+		  for (const e of exps){
+		    if (!e || typeof e !== 'object') continue;
+		    const wax = String(e.wax_account || e.owner_wax || e.user || '').trim().toLowerCase();
+		    const status = String(e.status || '').trim().toLowerCase();
+		    if (wax === me && status === 'in_progress') return e;
+		  }
+		  return null;
+		}
+
 		function pickObject(payload, ...keys){
 		  if (!payload || typeof payload !== 'object') return null;
 		  for (const k of keys){
@@ -5015,90 +5027,158 @@ function renderForecastRealContent(data, message){
 		    // ------------------------------------------------------------
 		    // COMMAND: START EXPEDITION
 		    // ------------------------------------------------------------
-		    async function sendExpedition(){
-		      if (!State.nftsLoaded){
-		        toast('Load your goblins first.');
-		        return;
-		      }
-		      // Se sei nel tab Simulator, ricordiamo che il run è sempre sui goblin reali
-		      if (State.runtime.forecastMode === 'sim'){
-		        toast('Simulator tab active: expedition will still use your real selected goblins.');
-		      }
-				const ids = Array.from(State.selectedGoblinIds).map(x => String(x));
-				
-				if (!ids.length){
-				  pushCanvasMsg('Select at least one goblin');
-				  return;
-				}
-		      const cap = getSendCap();
-		      if (ids.length > cap){
-		        pushCanvasMsg(`You selected ${ids.length} goblins but your cap is ${cap}.`);
-		        return;
-		      }
-		
-		      syncUserFromStorage();
-		      try { assertAuth(); } catch { toast('Please log in first'); return; }
-		
-		      const durationMinutes = State.expedition?.durationMinutes || 30;
-		
-		      const res = await Api.post('/2start_expedition', {
-		        wax_account: State.user.wax_account,
-		        user_id: State.user.user_id,
-		        usx_token: State.user.usx_token,
-		        asset_ids: ids,
-		        duration_minutes: durationMinutes
-		      }, 20000);
-			  if (!res.ok){
-			    // 409: expedition already running
-			    if (res.status === 409 && res.data?.seconds_remaining){
-			      const left = fmtHMS(res.data.seconds_remaining*1000);
-			      pushCanvasMsg(`You already have an expedition in progress. Ends in ${left}.`);
-			      return;
-			    }
-			
-			    // 409: new behavior - insufficient DP and no replacements available
-			    if (res.status === 409 && res.data?.code === 'INSUFFICIENT_DAILY_POWER_NO_REPLACEMENTS'){
-			      showInsufficientPowerModal(res.data);
-			      return;
-			    }
-			    pushCanvasMsg(res.data?.error || 'Could not start expedition');
+			async function sendExpedition(){
+			  if (!State.nftsLoaded){
+			    toast('Load your goblins first.');
 			    return;
 			  }
-		      const durSec = toNumber(res.data?.duration_seconds) || durationMinutes*60;
-		      const endAt = new Date(Date.now() + durSec*1000);
-			  // ✅ NEW: show non-blocking upstream warning for staking bonus (WaxOnEdge issues)
-			  maybeShowStakingUpstreamModal(res.data?.staking_report);
 			
-			// ✅ NEW: backend can auto-replace tired goblins silently.
-			// Keep UI consistent by updating the local selection without extra notifications.
-			const reps = (res.data && Array.isArray(res.data.auto_replacements)) ? res.data.auto_replacements : [];
-			if (reps.length){
-			  for (const r of reps){
-			    const a = String(r.replaced_id || '');
-			    const b = String(r.replacement_id || '');
-			    if (a) State.selectedGoblinIds.delete(a);
-			    if (b) State.selectedGoblinIds.add(b);
+			  const btn = State.ui.startBtn;
+			  let keepDisabledAfterFinally = false;
+			
+			  // LOCK UI
+			  btn?.setAttribute('disabled', 'disabled');
+			  btn?.classList.add('is-loading');
+			
+			  try {
+			    // Se sei nel tab Simulator, ricordiamo che il run è sempre sui goblin reali
+			    if (State.runtime.forecastMode === 'sim'){
+			      toast('Simulator tab active: expedition will still use your real selected goblins.');
+			    }
+			
+			    const ids = Array.from(State.selectedGoblinIds).map(x => String(x));
+			    if (!ids.length){
+			      pushCanvasMsg('Select at least one goblin');
+			      return;
+			    }
+			
+			    const cap = getSendCap();
+			    if (ids.length > cap){
+			      pushCanvasMsg(`You selected ${ids.length} goblins but your cap is ${cap}.`);
+			      return;
+			    }
+			
+			    syncUserFromStorage();
+			    try {
+			      assertAuth();
+			    } catch {
+			      toast('Please log in first');
+			      return;
+			    }
+			
+			    const durationMinutes = State.expedition?.durationMinutes || 30;
+			
+			    const res = await Api.post('/2start_expedition', {
+			      wax_account: State.user.wax_account,
+			      user_id: State.user.user_id,
+			      usx_token: State.user.usx_token,
+			      asset_ids: ids,
+			      duration_minutes: durationMinutes
+			    }, 150000);
+			
+			    if (!res.ok){
+			
+			      // ✅ Timeout/Abort (il backend potrebbe aver avviato comunque)
+			      if (res.status === 0){
+			        keepDisabledAfterFinally = true;
+			
+			        showFeedbackModal({
+			          title: '⏳ Starting expedition…',
+			          tone: 'info',
+			          html: `
+			            <div style="line-height:1.45;opacity:.95">
+			              The request is taking longer than usual. We’re checking if the expedition started.
+			              <div style="margin-top:8px;opacity:.85;font-size:13px">
+			                (This can happen when external services are slow.)
+			              </div>
+			            </div>
+			          `,
+			          buttons: [
+			            { id:'btn-pending-close', label:'OK', variant:'primary' }
+			          ]
+			        });
+			
+			        // forza polling immediato (senza aspettare l’intervallo)
+			        try { fetchGlobalSnapshot(); } catch {}
+			        setTimeout(() => { try { fetchGlobalSnapshot(); } catch {} }, 1200);
+			        setTimeout(() => { try { fetchGlobalSnapshot(); } catch {} }, 2800);
+			
+			        // fail-safe: se entro 12s non vediamo expedition in_progress, riabilitiamo il bottone
+			        setTimeout(() => {
+			          const stillNoExp = !State.expedition || State.expedition.status !== 'in_progress';
+			          if (stillNoExp){
+			            btn?.removeAttribute('disabled');
+			            btn?.classList.remove('is-loading');
+			          }
+			        }, 12000);
+			
+			        return;
+			      }
+			
+			      // 409: expedition already running
+			      if (res.status === 409 && res.data?.seconds_remaining){
+			        const left = fmtHMS(res.data.seconds_remaining * 1000);
+			        pushCanvasMsg(`You already have an expedition in progress. Ends in ${left}.`);
+			        return;
+			      }
+			
+			      // 409: insufficient DP and no replacements available
+			      if (res.status === 409 && res.data?.code === 'INSUFFICIENT_DAILY_POWER_NO_REPLACEMENTS'){
+			        showInsufficientPowerModal(res.data);
+			        return;
+			      }
+			
+			      pushCanvasMsg(res.data?.error || 'Could not start expedition');
+			      return;
+			    }
+			
+			    // ✅ success
+			    const durSec = toNumber(res.data?.duration_seconds) || (durationMinutes * 60);
+			    const endAt = new Date(Date.now() + durSec * 1000);
+			
+			    // non-blocking upstream warning for staking bonus (WaxOnEdge issues)
+			    maybeShowStakingUpstreamModal(res.data?.staking_report);
+			
+			    // backend can auto-replace tired goblins silently -> update local selection
+			    const reps = (res.data && Array.isArray(res.data.auto_replacements)) ? res.data.auto_replacements : [];
+			    if (reps.length){
+			      for (const r of reps){
+			        const a = String(r.replaced_id || '');
+			        const b = String(r.replacement_id || '');
+			        if (a) State.selectedGoblinIds.delete(a);
+			        if (b) State.selectedGoblinIds.add(b);
+			      }
+			      hydrateGoblinBuilder();
+			    }
+			
+			    const sentCount = State.selectedGoblinIds.size; // dopo auto_replacements
+			    pushCanvasMsg(`⛏️ ${State.user.wax_account} started an Expedition! ${sentCount}/${cap} goblins were sent out · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`);
+			
+			    State.runtime.expeditionInProgress = true;
+			    renderMyExpeditionOverlay();
+			    startMyOverlayTicker();
+			
+			    State.runtime.forecastPowerByAsset = {};
+			    State.runtime.forecastInsufficientIds = new Set();
+			
+			    const rf = document.getElementById('run-forecast');
+			    if (rf){
+			      rf.replaceChildren();
+			      rf.hidden = true;
+			    }
+			
+			    updateActionButtonsUI();
+			    fetchGlobalSnapshot();
+			    return;
+			
+			  } finally {
+			    // UNLOCK UI (tranne nel caso timeout/abort: lo sblocchiamo via polling o fail-safe)
+			    if (!keepDisabledAfterFinally){
+			      btn?.removeAttribute('disabled');
+			      btn?.classList.remove('is-loading');
+			    }
 			  }
-			  hydrateGoblinBuilder();
 			}
-
-			const sentCount = State.selectedGoblinIds.size; // (dopo auto_replacements)
-			pushCanvasMsg(`⛏️ ${State.user.wax_account} started an Expedition! ${sentCount}/${cap} goblins were sent out · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`);
-		
-		      //pushCanvasMsg(`⛏️ ${State.user.wax_account} started an expedition with ${ids.length}/${cap} goblins · ETA ${fmtHMS(durSec*1000)}`);
-		      State.runtime.expeditionInProgress = true;
-				renderMyExpeditionOverlay();
-				startMyOverlayTicker();
-		      State.runtime.forecastPowerByAsset = {};
-		      State.runtime.forecastInsufficientIds = new Set();
-		      const rf = document.getElementById('run-forecast');
-		      if (rf){
-		        rf.replaceChildren();
-		        rf.hidden = true;
-		      }
-		      updateActionButtonsUI();
-		      fetchGlobalSnapshot();
-		    }
 			async function claimActiveDrop(){
 			  const drop = State.drop.current;
 			  if (!drop) return;
@@ -5255,18 +5335,27 @@ function renderForecastRealContent(data, message){
 		          const exps = pickArrayFromPayload(snap, 'expeditions', 'items', 'active_expeditions');
 		    
 		          const snapAt = Date.now();
-		          State.globalExpeditions = exps.map(e => (e && typeof e === 'object')
-		            ? Object.assign({}, e, { _snapAt: snapAt })
-		            : e
-		          );
-		    
-		          // optional: if you ever want to use goblins list globally
-		          State.runtime.lastSnapshotGoblins = pickArrayFromPayload(snap, 'goblins');
-		    
-		          if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
-		          renderGlobalPanel();
-		          ensureGlobalTimers();
-		          recalcMyExpeditionFlagAndUI();
+					State.globalExpeditions = exps.map(e => (e && typeof e === 'object')
+					  ? Object.assign({}, e, { _snapAt: snapAt })
+					  : e
+					);
+					
+					// optional: if you ever want to use goblins list globally
+					State.runtime.lastSnapshotGoblins = pickArrayFromPayload(snap, 'goblins');
+					
+					// ✅ UNLOCK start button if the expedition actually started (fixes timeout/abort false negative)
+					try {
+					  const myExp = findMyInProgressExpedition(State.globalExpeditions);
+					  if (myExp){
+					    State.ui.startBtn?.removeAttribute('disabled');
+					    State.ui.startBtn?.classList.remove('is-loading');
+					  }
+					} catch {}
+					
+					if (State.engine) State.engine.syncExpeditions(State.globalExpeditions);
+					renderGlobalPanel();
+					ensureGlobalTimers();
+					recalcMyExpeditionFlagAndUI();
 		        }
 		    
 		        // ---------------------------

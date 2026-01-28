@@ -5253,14 +5253,13 @@ body.app, .app {
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
-/* Mobile: dock scrolla normalmente */
-@media (max-width: 900px) {
-  .builder-dock,
-  .expedition-builder,
-  .command-center,
-  #builder-dock {
-    position: static !important;
-    top: auto !important;
-    bottom: auto !important;
-  }
+
+/* Disable sticky/fixed everywhere, keep it in normal flow */
+.builder-dock,
+.expedition-builder,
+.command-center,
+#builder-dock {
+  position: relative !important; /* stays in flow, not sticky */
+  top: auto !important;
+  bottom: auto !important;
 }

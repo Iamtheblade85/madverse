@@ -715,10 +715,27 @@ function setSelectedDate(iso) {
 }
 
 function setActiveTabUI(tab){
-  document.body.dataset.activeTab = tab
+  // 1) stato (come ora)
+  document.body.dataset.activeTab = tab;
+
+  // 2) bottoni (come ora)
   document.querySelectorAll('[data-tab]').forEach(b=>{
-    b.setAttribute('aria-selected', b.dataset.tab === tab ? 'true' : 'false')
-  })
+    b.setAttribute('aria-selected', b.dataset.tab === tab ? 'true' : 'false');
+  });
+
+  // 3) pannelli: mostra SOLO quello attivo (questa è la parte che ti manca)
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.style.display = 'none';
+    p.style.visibility = 'hidden';
+    p.style.opacity = '0';
+  });
+
+  const panel = document.getElementById('tab-' + tab);
+  if (panel) {
+    panel.style.display = 'block';
+    panel.style.visibility = 'visible';
+    panel.style.opacity = '1';
+  }
 }
 
 function buildEventsByDate() {
@@ -3071,7 +3088,9 @@ function initEventListeners() {
     // opzionale: reset UI quando cambi carta
     clearReportUI()
   })
-  
+  document.querySelectorAll('[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => setActiveTabUI(btn.dataset.tab));
+  });
 }
 
 async function init() {

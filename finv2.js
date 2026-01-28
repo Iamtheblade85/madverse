@@ -9,6 +9,119 @@ const state = {
   editContext: null,
   lastCardsDashboard: null
 }
+function isCardWalletId(id) {
+  const w = state.walletsById ? state.walletsById[String(id)] : null
+  return w && String(w.type).toLowerCase() === "card"
+}
+
+function applyWalletSelectionUX() {
+  const type = getSelectedEventType()
+  const wSel = el("fWallet")
+  const hint = el("walletTypeHint")
+  if (!wSel) return
+
+  const wid = wSel.value
+  const isCard = wid && isCardWalletId(wid)
+
+  // hint
+  if (hint) {
+    if ((type === "income" || type === "expense") && isCard) {
+      hint.style.display = ""
+      hint.textContent = (type === "income")
+        ? "ℹ️ Hai selezionato una CARTA: verrà salvato come 'Credito carta' (type=card_credit), non come entrata bancaria."
+        : "⚠️ Uscita su carta non ammessa: usa 'Acquisto su carta' oppure 'Rimborso carta'."
+    } else {
+      hint.style.display = "none"
+      hint.textContent = ""
+    }
+  }
+
+  // prevenzione: expense + carta => reset + toast
+  if (type === "expense" && isCard) {
+    showToast("Scelta non valida", "Una carta non può ricevere 'Uscita'. Se vuoi registrare una spesa usa 'Acquisto su carta'.")
+    wSel.value = ""
+  }
+}
+
+function normalizeEventPayloadForApi(payload, walletsById) {
+  const out = { ...(payload || {}) }
+  const type = out.type
+
+  const wById = walletsById || state.walletsById || {}
+  const getW = (id) => wById[String(id)] || null
+  const isCard = (id) => {
+    const w = getW(id)
+    return w && String(w.type).toLowerCase() === "card"
+  }
+
+  // helper: elimina campi null/undefined per non sporcare
+  const cleanNulls = (obj) => {
+    Object.keys(obj).forEach(k => {
+      if (obj[k] === undefined) delete obj[k]
+    })
+    return obj
+  }
+
+  // ------------------------------------------------------------
+  // 1) income/expense: se walletId è una CARTA, non deve finire come income
+  // ------------------------------------------------------------
+  if ((type === "income" || type === "expense") && out.walletId) {
+    if (isCard(out.walletId)) {
+      if (type === "income") {
+        // income su carta => card_credit
+        out.type = "card_credit"
+        out.cardWalletId = Number(out.walletId)
+        out.walletId = null
+
+        // pulizia campi che non c'entrano
+        out.fromWalletId = null
+        out.toCardWalletId = null
+        out.paymentDate = null
+        out.purchaseDate = null
+        out.schedule = null
+        out.statementMonth = null
+      } else {
+        // expense su carta: non ha senso nel tuo modello
+        throw new Error("Uscita su carta non ammessa. Usa 'Acquisto su carta' oppure 'Rimborso carta'.")
+      }
+    }
+  }
+
+  // ------------------------------------------------------------
+  // 2) card_credit: deve avere SOLO cardWalletId e walletId NULL
+  // ------------------------------------------------------------
+  if (out.type === "card_credit") {
+    if (!out.cardWalletId && out.walletId) out.cardWalletId = Number(out.walletId)
+    out.walletId = null
+
+    // pulizia campi non pertinenti
+    out.fromWalletId = null
+    out.toCardWalletId = null
+    out.paymentDate = null
+    out.purchaseDate = null
+    out.schedule = null
+    out.statementMonth = null
+  }
+
+  // ------------------------------------------------------------
+  // 3) card_purchase: deve avere cardWalletId (carta) e NON walletId
+  // ------------------------------------------------------------
+  if (out.type === "card_purchase") {
+    out.walletId = null
+  }
+
+  // ------------------------------------------------------------
+  // 4) card_repayment: deve avere fromWalletId (non-carta) e toCardWalletId (carta)
+  // ------------------------------------------------------------
+  if (out.type === "card_repayment") {
+    out.walletId = null
+    out.cardWalletId = null
+  }
+
+  // Non inviare undefined
+  return cleanNulls(out)
+}
+
 function statementMonthFromDateIso(iso) {
   const d = parseISODate(iso)
   if (!d) return null
@@ -1055,6 +1168,10 @@ async function loadWallets() {
   }
   state.wallets = Array.isArray(data) ? data : []
   walletsCache = state.wallets
+  // --- NEW: mappa rapida id -> wallet (per normalizzazioni)
+  state.walletsById = {}
+  state.wallets.forEach(w => { state.walletsById[String(w.id)] = w })
+  
   fillPayoffFromWalletSelect()
 
   const filterWallet = el("filterWallet")
@@ -1436,6 +1553,8 @@ function setSelectedEventType(t) {
   if (real) real.style.display = (t === "income" || t === "expense") ? "" : "none"
   if (cardP) cardP.style.display = t === "card_purchase" ? "" : "none"
   if (cardR) cardR.style.display = t === "card_repayment" ? "" : "none"
+    // --- NEW: aggiorna hint UX su wallet selezionato
+  applyWalletSelectionUX()
 }
 
 function updateMethodSections() {
@@ -1984,31 +2103,46 @@ async function saveEvent() {
   const isEditing = !!state.editContext
   const payload = buildEventPayloadFromForm(isEditing)
   if (!payload) return
+  // --- NEW: normalizzazione prima di inviare al backend (fix bug income su carta)
+  let normalizedPayload
+  try {
+    normalizedPayload = normalizeEventPayloadForApi(payload, state.walletsById)
+  } catch (err) {
+    showToast("Errore", err.message || "Payload non valido")
+    return
+  }
+
   const edit = state.editContext
   try {
     if (edit && edit.mode === "single") {
-      await apiFetch(`/events/${edit.eventId}`,{method:"PUT",body:JSON.stringify(payload)})
+      await apiFetch(`/events/${edit.eventId}`,{method:"PUT",body:JSON.stringify(normalizedPayload)})
       showToast("Salvataggio completato","Evento aggiornato")
       state.editContext = null
     } else if (edit && edit.mode === "thisAndFuture" && edit.seriesId) {
-      const fromDate = payload.calendarDate || state.selectedDate
-      const body = {from: fromDate, patch: payload}
+      const fromDate = normalizedPayload.calendarDate || state.selectedDate
+      const body = {from: fromDate, patch: normalizedPayload}
       await apiFetch(`/series/${edit.seriesId}/future`,{method:"PUT",body:JSON.stringify(body)})
       showToast("Salvataggio completato","Serie aggiornata da questa data in poi")
       state.editContext = null
     } else {
-      const cloning = payload.cloning
+      const cloning = normalizedPayload.cloning
       const hasCloning = !!cloning
-      if (hasCloning) delete payload.cloning
-      await apiFetch("/events",{method:"POST",body:JSON.stringify(payload)})
-      if (hasCloning && payload.type === "card_purchase") {
-        const baseDate = (payload.type === "card_purchase" ? payload.purchaseDate : payload.calendarDate)
+
+      const basePost = { ...normalizedPayload }
+      if (hasCloning) delete basePost.cloning
+
+      await apiFetch("/events",{method:"POST",body:JSON.stringify(basePost)})
+
+      if (hasCloning && basePost.type === "card_purchase") {
+        const baseDate = basePost.purchaseDate || basePost.calendarDate
         const {dates,adjustments} = computeCloneDates(baseDate, cloning)
+
         for (const d of dates) {
-          const clonePayload = Object.assign({}, payload, {calendarDate:d, purchaseDate: payload.purchaseDate})
+          const clonePayload = { ...basePost, calendarDate: d, purchaseDate: basePost.purchaseDate }
           if (clonePayload.series) delete clonePayload.series
           await apiFetch("/events",{method:"POST",body:JSON.stringify(clonePayload)})
         }
+
         if (adjustments.length) {
           showToast("Informazione","Alcune copie sono state spostate all’ultimo giorno del mese perché il giorno originale non esisteva")
         }
@@ -2218,6 +2352,14 @@ function startEditEvent(eventId, mode) {
     const w = el("fWallet")
     if (w) w.value = evt.walletId || ""
   }
+
+  // --- NEW: edit di credit su carta (lo trattiamo come "income" + wallet=carta in UI)
+  if (evt.type === "card_credit") {
+    setSelectedEventType("income")
+    const w = el("fWallet")
+    if (w) w.value = evt.cardWalletId || ""
+  }
+
   if (evt.type === "card_purchase") {
     const cw = el("fCardWallet")
     const pd = el("fPurchaseDate")
@@ -2402,6 +2544,9 @@ function initEventListeners() {
       }
     })
   })
+  const fWallet = el("fWallet")
+  if (fWallet) fWallet.addEventListener("change", applyWalletSelectionUX)
+  
   const methodSel = el("fMethod")
   if (methodSel) methodSel.addEventListener("change",updateMethodSections)
   const btnAddCustomRow = el("btnAddCustomRow")

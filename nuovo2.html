@@ -818,7 +818,136 @@
 			    });
 			  }
 			}
+			// NEW: backend can auto-replace tired goblins silently.
+			// Keep UI consistent by updating the local selection without extra notifications.
+			const reps = (res.data && Array.isArray(res.data.auto_replacements)) ? res.data.auto_replacements : [];
+			if (reps.length){
+			  for (const r of reps){
+			    const a = String(r.replaced_id || '');
+			    const b = String(r.replacement_id || '');
+			    if (a) State.selectedGoblinIds.delete(a);
+			    if (b) State.selectedGoblinIds.add(b);
+			  }
+			  hydrateGoblinBuilder();
+			}
+			function setDurationMinutes(minutes){
+			  const m = Number(minutes || 0);
+			  if (!m) return;
+			  // se esiste il select (anche se hidden) usiamo il suo change handler
+			  const sel = State.ui && State.ui.durationSelect ? State.ui.durationSelect : document.getElementById('sel-duration');
+			  if (sel){
+			    sel.value = String(m);
+			    sel.dispatchEvent(new Event('change', { bubbles:true }));
+			  } else {
+			    State.expedition.durationMinutes = m;
+			    scheduleForecastIfReady();
+			  }
+			}
 			
+			function showInsufficientPowerModal(payload){
+			  // payload = res.data dal backend
+			  const insuff = Array.isArray(payload?.insufficient_goblins) ? payload.insufficient_goblins : [];
+			  const tips = payload?.tips || {};
+			  const payout = Array.isArray(tips?.payout_table) ? tips.payout_table : [];
+			
+			  const fmt = (n)=>{
+			    const x = Number(n);
+			    return Number.isFinite(x) ? x.toFixed(2) : String(n ?? '—');
+			  };
+			
+			  const insuffHtml = insuff.length ? `
+			    <div style="margin-top:10px;">
+			      <div style="font-weight:900;margin-bottom:6px;">Goblins without enough Daily Power</div>
+			      <div style="overflow:auto;border:1px solid rgba(255,255,255,.12);border-radius:10px;">
+			        <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px;">
+			          <thead>
+			            <tr style="text-align:left;background:rgba(255,255,255,.06)">
+			              <th style="padding:10px 10px;">Goblin ID</th>
+			              <th style="padding:10px 10px;">Daily Power</th>
+			              <th style="padding:10px 10px;">Required</th>
+			              <th style="padding:10px 10px;">Missing</th>
+			              <th style="padding:10px 10px;">RES</th>
+			            </tr>
+			          </thead>
+			          <tbody>
+			            ${insuff.map(g=>`
+			              <tr style="border-top:1px solid rgba(255,255,255,.08)">
+			                <td style="padding:10px 10px;"><code>${safe(String(g.id||'—'))}</code></td>
+			                <td style="padding:10px 10px;">${safe(fmt(g.daily_power))}</td>
+			                <td style="padding:10px 10px;font-weight:900;">${safe(fmt(g.required_power))}</td>
+			                <td style="padding:10px 10px;color:#ffcf6a;font-weight:900;">${safe(fmt(g.missing))}</td>
+			                <td style="padding:10px 10px;">${safe(String(g.resistance ?? '—'))}</td>
+			              </tr>
+			            `).join('')}
+			          </tbody>
+			        </table>
+			      </div>
+			      <div style="margin-top:8px;opacity:.9;font-size:12px;line-height:1.35">
+			        Tip: select only goblins with enough Daily Power for this duration, or reduce the duration.
+			      </div>
+			    </div>
+			  ` : '';
+			
+			  const payoutHtml = payout.length ? `
+			    <div style="margin-top:14px;">
+			      <div style="font-weight:900;margin-bottom:6px;">Pro tip: shorter expeditions pay more</div>
+			      <div style="opacity:.9;font-size:12px;line-height:1.35;margin-bottom:8px;">
+			        Same total time, different strategies → more runs usually means higher total payout.
+			      </div>
+			      <div style="overflow:auto;border:1px solid rgba(255,255,255,.12);border-radius:10px;">
+			        <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px;">
+			          <thead>
+			            <tr style="text-align:left;background:rgba(255,255,255,.06)">
+			              <th style="padding:10px 10px;">Plan</th>
+			              <th style="padding:10px 10px;">Runs</th>
+			              <th style="padding:10px 10px;">Each</th>
+			              <th style="padding:10px 10px;">Relative payout</th>
+			            </tr>
+			          </thead>
+			          <tbody>
+			            ${payout.map(r=>`
+			              <tr style="border-top:1px solid rgba(255,255,255,.08)">
+			                <td style="padding:10px 10px;font-weight:900;">${safe(String(r.plan||''))}</td>
+			                <td style="padding:10px 10px;">${safe(String(r.runs||''))}</td>
+			                <td style="padding:10px 10px;">${safe(String(r.each||''))}</td>
+			                <td style="padding:10px 10px;">${safe(String(r.relative_payout||''))}</td>
+			              </tr>
+			            `).join('')}
+			          </tbody>
+			        </table>
+			      </div>
+			    </div>
+			  ` : '';
+			
+			  const req = Number(payload?.requested_duration_seconds || 0);
+			  const eff = Number(payload?.duration_seconds || 0);
+			
+			  UINotify.show({
+			    title: '⛔ Expedition not started',
+			    html: `
+			      <div style="display:grid;gap:10px;">
+			        <div style="opacity:.95;line-height:1.45">
+			          ${safe(payload?.error || 'Some goblins do not have enough Daily Power, and no replacements are available.')}
+			        </div>
+			
+			        <div style="display:flex;gap:10px;flex-wrap:wrap;opacity:.9;font-size:12px;">
+			          ${req ? `<span>Requested: <b>${safe(fmtHMS(req*1000))}</b></span>` : ''}
+			          ${eff ? `<span>Effective: <b>${safe(fmtHMS(eff*1000))}</b></span>` : ''}
+			        </div>
+			
+			        ${insuffHtml}
+			        ${payoutHtml}
+			      </div>
+			    `,
+			    actions: [
+			      { label:'Set 30m', variant:'primary', onClick: ()=> setDurationMinutes(30) },
+			      { label:'Set 1h', variant:'ghost', onClick: ()=> setDurationMinutes(60) },
+			      { label:'Close', variant:'ghost' },
+			    ],
+			    autoCloseMs: 0
+			  });
+			}
+
 		    function parseUtcMs(iso){
 		      if (!iso) return null;
 		      const d = new Date(iso);
@@ -1832,14 +1961,9 @@
 		// toast() now routes to the central overlay
 		// ------------------------------------------------------------
 		function toast(msg){
-		  UINotify.show({
-		    title: 'Notice',
-		    text: String(msg || ''),
-		    autoCloseMs: 10000
-		  });
+		  pushCanvasMsg(msg)
 		}
-		
-		
+
 		    function pushCanvasMsg(msg){
 		      const host = document.getElementById('canvas-feedback');
 		      if (!host) return;
@@ -4912,29 +5036,15 @@ function renderForecastRealContent(data, message){
 		      if (State.runtime.forecastMode === 'sim'){
 		        toast('Simulator tab active: expedition will still use your real selected goblins.');
 		      }
-		
-		      const idsAll = Array.from(State.selectedGoblinIds);
-		      
-		      // Se il forecast ha marcato dei goblin come "tired", li escludiamo dallo start
-		      const tiredSet = State.runtime.forecastInsufficientIds || new Set();
-		      const ids = idsAll.filter(id => !tiredSet.has(String(id)));
-		      
-		      const skipped = idsAll.length - ids.length;
-		      
-		      if (!ids.length){
-		        toast(skipped
-		          ? 'All selected goblins are tired for this duration. Remove tired goblins or choose a shorter duration.'
-		          : 'Select at least one goblin');
-		        return;
-		      }
-		      
-		      if (skipped > 0){
-		        toast(`Skipping ${skipped} tired goblin${skipped>1?'s':''}. Starting with ${ids.length}.`);
-		      }
-		
+				const ids = Array.from(State.selectedGoblinIds).map(x => String(x));
+				
+				if (!ids.length){
+				  pushCanvasMsg('Select at least one goblin');
+				  return;
+				}
 		      const cap = getSendCap();
 		      if (ids.length > cap){
-		        toast(`You selected ${ids.length} goblins but your cap is ${cap}.`);
+		        pushCanvasMsg(`You selected ${ids.length} goblins but your cap is ${cap}.`);
 		        return;
 		      }
 		
@@ -4950,54 +5060,32 @@ function renderForecastRealContent(data, message){
 		        asset_ids: ids,
 		        duration_minutes: durationMinutes
 		      }, 20000);
-		
-		      if (!res.ok){
-		        if (res.status === 409 && res.data?.seconds_remaining){
-		          const left = fmtHMS(res.data.seconds_remaining*1000);
-		          toast(`You already have an expedition in progress. Ends in ${left}.`);
-		        } else {
-		          toast('Could not start expedition');
-		        }
-		        return;
-		      }
-		
+			  if (!res.ok){
+			    // 409: expedition already running
+			    if (res.status === 409 && res.data?.seconds_remaining){
+			      const left = fmtHMS(res.data.seconds_remaining*1000);
+			      pushCanvasMsg(`You already have an expedition in progress. Ends in ${left}.`);
+			      return;
+			    }
+			
+			    // 409: new behavior - insufficient DP and no replacements available
+			    if (res.status === 409 && res.data?.code === 'INSUFFICIENT_DAILY_POWER_NO_REPLACEMENTS'){
+			      showInsufficientPowerModal(res.data);
+			      return;
+			    }
+			    pushCanvasMsg(res.data?.error || 'Could not start expedition');
+			    return;
+			  }
 		      const durSec = toNumber(res.data?.duration_seconds) || durationMinutes*60;
 		      const endAt = new Date(Date.now() + durSec*1000);
 			  // ✅ NEW: show non-blocking upstream warning for staking bonus (WaxOnEdge issues)
 			  maybeShowStakingUpstreamModal(res.data?.staking_report);
-
-		      toast(`⛏️ Expedition started! ${ids.length}/${cap} goblins were sent out · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`);
-				// If backend had to skip extra tired goblins (race condition), show an explicit modal
-				const skippedByBackend = (res.data && Array.isArray(res.data.skipped_tired)) ? res.data.skipped_tired : [];
-				if (skippedByBackend.length){
-				  UINotify.show({
-				    title: 'Some goblins were too tired',
-				    html: `
-				      <p>The expedition started, but <strong>${skippedByBackend.length}</strong> goblin(s) had insufficient daily power at the moment of start.</p>
-				      <p style="margin-top:10px;opacity:.95">Skipped IDs:</p>
-				      <p><code>${skippedByBackend.map(x=>String(x)).join(', ')}</code></p>
-				      <p style="opacity:.9">You can remove them from your current selection to avoid confusion.</p>
-				    `,
-				    actions: [
-				      {
-				        label: 'Remove skipped from selection',
-				        variant: 'primary',
-				        onClick: ()=>{
-				          for (const id of skippedByBackend) State.selectedGoblinIds.delete(String(id));
-				          hydrateGoblinBuilder();
-				        }
-				      },
-				      { label:'Keep selection', variant:'ghost' }
-				    ],
-				    autoCloseMs: 10000
-				  });
-				}
-				
-		      pushCanvasMsg(`⛏️ ${State.user.wax_account} started an expedition with ${ids.length}/${cap} goblins · ETA ${fmtHMS(durSec*1000)}`);
+			  const sentCount = State.selectedGoblinIds.size;
+		      pushCanvasMsg(`⛏️ ${State.user.wax_account} started an Expedition! ${sentCount}/${cap} goblins were sent out · ETA ${fmtHMS(durSec*1000)} (ends ${timeHM(endAt)})`);			
+		      //pushCanvasMsg(`⛏️ ${State.user.wax_account} started an expedition with ${ids.length}/${cap} goblins · ETA ${fmtHMS(durSec*1000)}`);
 		      State.runtime.expeditionInProgress = true;
 				renderMyExpeditionOverlay();
 				startMyOverlayTicker();
-						
 		      State.runtime.forecastPowerByAsset = {};
 		      State.runtime.forecastInsufficientIds = new Set();
 		      const rf = document.getElementById('run-forecast');
@@ -5005,11 +5093,9 @@ function renderForecastRealContent(data, message){
 		        rf.replaceChildren();
 		        rf.hidden = true;
 		      }
-		
 		      updateActionButtonsUI();
 		      fetchGlobalSnapshot();
 		    }
-		
 			async function claimActiveDrop(){
 			  const drop = State.drop.current;
 			  if (!drop) return;

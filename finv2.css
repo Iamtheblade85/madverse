@@ -1379,3 +1379,13 @@ td {
   line-height: 1.35;
   min-height: 36px;
 }
+/* di base: tutte le tab nascoste */
+.tab-panel { display: none; }
+
+/* mostra solo quella attiva in base al data-active-tab */
+body[data-active-tab="calendario"] #tab-calendario { display: block; }
+body[data-active-tab="nuovo"]      #tab-nuovo      { display: block; }
+body[data-active-tab="rimborsi"]   #tab-rimborsi   { display: block; }
+body[data-active-tab="wallets"]    #tab-wallets    { display: block; }
+body[data-active-tab="report"]     #tab-report     { display: block; }
+body[data-active-tab="impostazioni"] #tab-impostazioni { display: block; }

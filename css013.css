@@ -1427,3 +1427,15 @@
     bottom: auto !important;
   }
 }
+/* 🧯 Builder Dock: no sticky/fixed, keep it in normal flow */
+#builder-dock,
+.builder-dock,
+.command-center,
+.expedition-builder {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  inset: auto !important;
+}

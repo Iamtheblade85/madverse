@@ -1415,23 +1415,13 @@
 	  border-top: 1px solid rgba(255,255,255,.08);
 	  padding-top: 10px;
 	}
-/* 🧯 Disable sticky behavior for Expedition Builder Dock */
-/* Mobile: dock scrolla normalmente */
-@media (max-width: 768px) {
-  .builder-dock,
-  .expedition-builder,
-  .command-center,
-  #builder-dock {
-    position: static !important;
-    top: auto !important;
-    bottom: auto !important;
-  }
-}
-/* 🧯 Builder Dock: no sticky/fixed, keep it in normal flow */
+/* 🧯 GLOBAL: niente fixed/sticky per header + dock (restano nel flow) */
+
+/* Builder dock */
 #builder-dock,
 .builder-dock,
 .command-center,
-.expedition-builder {
+.expedition-builder{
   position: relative !important;
   top: auto !important;
   right: auto !important;
@@ -1439,3 +1429,54 @@
   left: auto !important;
   inset: auto !important;
 }
+
+/* App header (prova a coprire i casi più comuni) */
+#app-header,
+.app-header,
+header.app-header,
+header[role="banner"],
+header,
+#topbar,
+.topbar,
+.navbar,
+.site-header{
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  inset: auto !important;
+}
+
+/* Se esiste una “barra” che usava z-index alto per stare sopra, non deve più fare overlay */
+#app-header,
+.app-header,
+header[role="banner"]{
+  z-index: auto !important;
+}
+
+/* Mobile: stessa regola (NON static, ma relative come richiesto) */
+@media (max-width: 768px){
+  #builder-dock,
+  .builder-dock,
+  .command-center,
+  .expedition-builder,
+  #app-header,
+  .app-header,
+  header.app-header,
+  header[role="banner"],
+  header,
+  #topbar,
+  .topbar,
+  .navbar,
+  .site-header{
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    inset: auto !important;
+  }
+}
+body{ padding-top: 0 !important; }
+main{ margin-top: 0 !important; }

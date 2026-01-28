@@ -1039,8 +1039,7 @@
 	   COMMAND CENTER (sticky dock)
 	   ========================================================= */
 	#builder-dock{
-	  position: sticky;
-	  top: 10px;
+	  position: fixed;
 	  z-index: 50;
 	  margin: 12px 0 10px;
 	  padding: 12px;
@@ -1416,3 +1415,15 @@
 	  border-top: 1px solid rgba(255,255,255,.08);
 	  padding-top: 10px;
 	}
+/* 🧯 Disable sticky behavior for Expedition Builder Dock */
+/* Mobile: dock scrolla normalmente */
+@media (max-width: 768px) {
+  .builder-dock,
+  .expedition-builder,
+  .command-center,
+  #builder-dock {
+    position: static !important;
+    top: auto !important;
+    bottom: auto !important;
+  }
+}

@@ -2802,7 +2802,7 @@ body {
   color: var(--color-secondary) !important;
   text-shadow: 0 0 1px var(--color-secondary) !important;
   transition: all var(--transition-speed) ease-in-out !important;
-  width: 85% !important;
+  width: 100% !important;
   max-width: 100% !important;
   margin: 0 auto !important;
   text-align: center !important;
@@ -2816,12 +2816,12 @@ body {
 }
 @media (min-width: 900px) {
   .section-container {
-    width: 90% !important;
+    width: 98% !important;
   }
 }
 @media (min-width: 1200px) {
   .section-container {
-    width: 85% !important;
+    width: 98% !important;
   }
 }
 

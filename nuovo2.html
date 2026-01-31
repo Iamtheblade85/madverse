@@ -1322,15 +1322,48 @@
 		
 		  return [];
 		}
-		
 		function setActiveExpeditionIdsFromMyExp(){
 		  // prova a prendere la tua expedition dallo snapshot
 		  let myExp = null;
-		  try { myExp = findMyInProgressExpedition(State.globalExpeditions); } catch {}
+		  try {
+		    const exps = Array.isArray(State.globalExpeditions) ? State.globalExpeditions : [];
+		    myExp = findMyInProgressExpedition(exps);
+		  } catch {}
 		
-		  const ids = myExp ? extractGoblinIdsFromExp(myExp) : [];
+		  // Se non ho trovato la mia expedition nello snapshot:
+		  // non azzero nulla (mantengo quelli già noti)
+		  if (!myExp){
+		    hydrateGoblinBuilder();
+		    return;
+		  }
 		
-		  // ✅ se lo snapshot NON include goblin_ids, non azzerare (mantieni quelli già noti)
+		  // Se l'ho trovata ma non è più attiva, allora sì: azzero
+		  const sr = Number(myExp.seconds_remaining || 0);
+		  if (!Number.isFinite(sr) || sr <= 0){
+		    State.runtime.activeExpeditionIds = new Set();
+		    hydrateGoblinBuilder();
+		    return;
+		  }
+		
+		  // Estrai ids: con il tuo endpoint arrivano come goblin_ids o asset_ids
+		  let ids = [];
+		  try {
+		    // se hai già la funzione, bene: ma rendiamola "fallback-safe"
+		    ids = extractGoblinIdsFromExp(myExp) || [];
+		  } catch {
+		    ids = [];
+		  }
+		
+		  // Fallback diretto se extractGoblinIdsFromExp non copre il tuo payload
+		  if (!ids.length){
+		    const raw = myExp.goblin_ids || myExp.asset_ids || [];
+		    if (Array.isArray(raw)) ids = raw;
+		    else if (typeof raw === 'string') ids = raw.split(','); // super fallback
+		  }
+		
+		  ids = ids.map(String).map(s => s.trim()).filter(Boolean);
+		
+		  // Se ho ids validi, aggiorno il set. Se per qualche motivo è vuoto, non azzero.
 		  if (ids.length){
 		    State.runtime.activeExpeditionIds = new Set(ids);
 		  }
@@ -1344,9 +1377,12 @@
 		
 		  for (const e of exps){
 		    if (!e || typeof e !== 'object') continue;
-		    const wax = String(e.wax_account || e.owner_wax || e.user || '').trim().toLowerCase();
-		    const status = String(e.status || '').trim().toLowerCase();
-		    if (wax === me && status === 'in_progress') return e;
+		
+		    const wax = String(e.wax_account || '').trim().toLowerCase();
+		    const sr = Number(e.seconds_remaining || 0);
+		
+		    // l'endpoint già filtra solo spedizioni in corso e scarta time_left <= 0
+		    if (wax === me && Number.isFinite(sr) && sr > 0) return e;
 		  }
 		  return null;
 		}
@@ -4873,31 +4909,30 @@ function renderForecastRealContent(data, message){
 				  sp.innerHTML = '<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>';
 				  card.appendChild(sp);
 				}
-			    card.innerHTML = `
-			      <div class="gob-top">
-			        <div class="gob-title">
-			          <span class="gob-id">#${safe(id)}</span>
-			          <span class="gob-name">${safe(name)}</span>
-			        </div>
-			        <div class="gob-badges">
-			          <span class="badge-pill">${safe(rarityTxt)}</span>
-			          <span class="badge-pill ${statusClass}">${statusLabel}</span>
-			        </div>
-			      </div>
-			
+				const inExp = State.runtime.activeExpeditionIds?.has(String(id)); // vedi punto 3 sotto
+				card.innerHTML = `
+				  <div class="gob-top">
+				    <div class="gob-title">
+				      <span class="gob-id">#${safe(id)}</span>
+				      <span class="gob-name">${safe(name)}</span>
+				    </div>
+				    <div class="gob-badges">
+				      <span class="badge-pill">${safe(rarityTxt)}</span>
+				      <span class="badge-pill ${statusClass}">${statusLabel}</span>
+				      ${inExp ? `<span class="gx-badge--inexp">⛏️ in expedition</span>` : ``}
+				    </div>
+				  </div>	
 			      <div class="gob-math">
 			        <div class="math-box"><div class="k">Have</div><div class="v">${formatDP(have)}</div></div>
 			        <div class="math-box"><div class="k">Need</div><div class="v">${need ? formatDP(need) : '—'}</div></div>
 			        <div class="math-box"><div class="k">Missing</div><div class="v">${need ? formatDP(missing) : '—'}</div></div>
 			      </div>
-			
 			      <div class="gob-stats" aria-label="Attributes">
 			        <span class="stat-chip"><span class="lbl">LOOT</span><span class="val">${formatCompact(stats.loot)}</span></span>
 			        <span class="stat-chip"><span class="lbl">SPD</span><span class="val">${formatCompact(stats.spd)}</span></span>
 			        <span class="stat-chip"><span class="lbl">RES</span><span class="val">${formatCompact(stats.res)}</span></span>
 			        <span class="stat-chip"><span class="lbl">ACC</span><span class="val">${formatCompact(stats.acc)}</span></span>
 			      </div>
-			
 			      ${expanded ? `
 			        <div class="gob-details">
 			          <div><b>What this means:</b></div>
@@ -4913,7 +4948,15 @@ function renderForecastRealContent(data, message){
 			        </div>
 			      ` : ``}
 			    `;
-			
+				if (inExp) {
+				  card.classList.add('is-inexp');
+				  const sp = document.createElement('div');
+				  sp.className = 'gx-sparkles';
+				  sp.innerHTML = '<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>';
+				  card.appendChild(sp); // ora NON viene più cancellato
+				} else {
+				  card.classList.remove('is-inexp');
+				}
 			    // ALT click / dblclick => details (SEMPRE, anche se tired)
 			    const toggleDetails = ()=>{
 			      State.runtime.openDetailsId = (State.runtime.openDetailsId === id) ? null : id;

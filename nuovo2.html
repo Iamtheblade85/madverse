@@ -4912,12 +4912,6 @@ function renderForecastRealContent(data, message){
 			    card.setAttribute('tabindex','0');
 			    card.setAttribute('aria-pressed', sel ? 'true' : 'false');
 			    card.setAttribute('data-id', id);
-				if (inExp){
-				  const sp = document.createElement('div');
-				  sp.className = 'gx-sparkles';
-				  sp.innerHTML = '<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>';
-				  card.appendChild(sp);
-				}
 				card.innerHTML = `
 				  <div class="gob-top">
 				    <div class="gob-title">

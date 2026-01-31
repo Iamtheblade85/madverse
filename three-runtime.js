@@ -32,7 +32,7 @@ const FIX_GOBLIN_FLIP_X = Math.PI; // ✅ 180°: testa su, piedi giù
 const GOBLIN_Y_OFFSET = 0.05; // piccolo offset sopra il plot
 
 // === NAVMASK (bianco = walkable, nero = block) ===
-const NAVMASK_URL = '/madverse/navmask.png'; // <-- metti qui il path
+const NAVMASK_URL = '/madverse/navmask02.png'; // <-- metti qui il path
 const NAVMASK_THRESHOLD = 127; // 0..255 (>= soglia => bianco => walkable)
 const NAVMASK_DEBUG = false; // true se vuoi vedere overlay (facoltativo)
 
@@ -1035,7 +1035,7 @@ export class ThreeRuntime {
   }
 
   _loadPlot() {
-    const tex = new THREE.TextureLoader().load('/madverse/plot01.png');
+    const tex = new THREE.TextureLoader().load('/madverse/plot02.png');
     tex.colorSpace = THREE.SRGBColorSpace;
 
     const plane = new THREE.Mesh(

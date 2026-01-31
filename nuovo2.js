@@ -3801,6 +3801,7 @@
 		        });
 		      
 		        const id = String(g.asset_id);
+				const inExp = State.runtime.activeExpeditionIds?.has(String(id));
 		        const name = String(g.name || 'Goblin');
 		        const rarityTxt = String(g.rarity || 'Unknown');
 		        
@@ -3816,17 +3817,18 @@
 		        let statusClass = tired ? 'tired' : (sel ? 'sel' : 'ready');
 		        
 		        card.classList.add('gob-card');
-		        card.innerHTML = `
-		          <div class="gob-top">
-		            <div class="gob-title">
-		              <span class="gob-id">#${safe(id)}</span>
-		              <span class="gob-name">${safe(name)}</span>
-		            </div>
-		            <div class="gob-badges">
-		              <span class="badge-pill">${safe(rarityTxt)}</span>
-		              <span class="badge-pill ${statusClass}">${statusLabel}</span>
-		            </div>
-		          </div>
+				card.innerHTML = `
+				  <div class="gob-top">
+				    <div class="gob-title">
+				      <span class="gob-id">#${safe(id)}</span>
+				      <span class="gob-name">${safe(name)}</span>
+				    </div>
+				    <div class="gob-badges">
+				      <span class="badge-pill">${safe(rarityTxt)}</span>
+				      <span class="badge-pill ${statusClass}">${statusLabel}</span>
+				      ${inExp ? `<span class="gx-badge--inexp">⛏️ in expedition</span>` : ``}
+				    </div>
+				  </div>
 		        
 		          <div class="gob-math">
 		            <div class="math-box"><div class="k">Have</div><div class="v">${formatDP(have)}</div></div>
@@ -3856,6 +3858,15 @@
 		            </div>
 		          ` : ``}
 		        `;
+				if (inExp) {
+				  card.classList.add('is-inexp');
+				  const sp = document.createElement('div');
+				  sp.className = 'gx-sparkles';
+				  sp.innerHTML = '<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>';
+				  card.appendChild(sp); // ora NON viene più cancellato
+				} else {
+				  card.classList.remove('is-inexp');
+				}
 		        if (!tired){
 		          card.addEventListener('click', (e)=>{
 		            // ALT click => toggle details (no selection change)

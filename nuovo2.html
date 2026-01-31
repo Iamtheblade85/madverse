@@ -10,6 +10,148 @@
   	<link rel="preload" as="style" href="cyberpunktribalV2.css?v=1" onload="this.rel='stylesheet'">
   	<noscript><link rel="stylesheet" href="cyberpunktribalV2.css?v=1"></noscript>
   	<link id="theme-style" rel="stylesheet" href="css013.css"/>
+	<style>
+		/* Badge olografico + glow card */
+		
+		/*wrapper */
+		.gx-badge--inexp{
+		  position: relative;
+		  display: inline-flex;
+		  align-items: center;
+		  gap: 6px;
+		  padding: 6px 10px;
+		  border-radius: 999px;
+		  font-weight: 900;
+		  letter-spacing: .6px;
+		  text-transform: uppercase;
+		  font-size: 11px;
+		  user-select: none;
+		  isolation: isolate;
+		  transform: translateZ(0);
+		}
+		
+		/* base glow + bordo */
+		.gx-badge--inexp{
+		  color: rgba(255,255,255,.95);
+		  background: rgba(20, 20, 30, .55);
+		  border: 1px solid rgba(255,255,255,.16);
+		  box-shadow:
+		    0 0 0 1px rgba(255,255,255,.06) inset,
+		    0 10px 30px rgba(0,0,0,.35);
+		}
+		
+		/* “holo ring” animato */
+		.gx-badge--inexp::before{
+		  content:"";
+		  position:absolute;
+		  inset:-2px;
+		  border-radius: inherit;
+		  padding: 2px;
+		  background: conic-gradient(
+		    from 0deg,
+		    rgba(0,255,255,.0),
+		    rgba(0,255,255,.9),
+		    rgba(255,0,200,.9),
+		    rgba(255,255,0,.8),
+		    rgba(0,255,255,.0)
+		  );
+		  filter: blur(.2px);
+		  -webkit-mask:
+		    linear-gradient(#000 0 0) content-box,
+		    linear-gradient(#000 0 0);
+		  -webkit-mask-composite: xor;
+		  mask-composite: exclude;
+		  opacity: .85;
+		  animation: gxSpin 1.2s linear infinite;
+		  z-index: -1;
+		}
+		
+		/* “shine scan” sopra */
+		.gx-badge--inexp::after{
+		  content:"";
+		  position:absolute;
+		  inset: 0;
+		  border-radius: inherit;
+		  background: linear-gradient(
+		    115deg,
+		    rgba(255,255,255,0) 0%,
+		    rgba(255,255,255,.22) 35%,
+		    rgba(255,255,255,0) 70%
+		  );
+		  transform: translateX(-120%);
+		  animation: gxShine 1.6s ease-in-out infinite;
+		  mix-blend-mode: screen;
+		  pointer-events:none;
+		}
+		
+		/* pulse sul contenitore card */
+		.gob-card.is-inexp{
+		  box-shadow:
+		    0 0 0 1px rgba(255,255,255,.06) inset,
+		    0 0 28px rgba(0,255,255,.12),
+		    0 0 52px rgba(255,0,200,.10);
+		  animation: gxCardPulse 1.25s ease-in-out infinite;
+		}
+		
+		@keyframes gxSpin{ to{ transform: rotate(360deg); } }
+		@keyframes gxShine{
+		  0%{ transform: translateX(-130%); opacity:.0; }
+		  15%{ opacity:1; }
+		  45%{ opacity:.65; }
+		  100%{ transform: translateX(130%); opacity:.0; }
+		}
+		@keyframes gxCardPulse{
+		  0%,100%{ transform: translateY(0); }
+		  50%{ transform: translateY(-1px); }
+		}
+		
+		/* Accessibilità: riduci motion */
+		@media (prefers-reduced-motion: reduce){
+		  .gx-badge--inexp::before,
+		  .gx-badge--inexp::after,
+		  .gob-card.is-inexp{ animation: none !important; }
+		}
+		/* SPARK LAYER */
+		.gob-card{ position: relative; }
+		
+		.gx-sparkles{
+		  position:absolute;
+		  inset:-6px;
+		  pointer-events:none;
+		  border-radius: 16px; /* o quello della card */
+		  overflow: hidden;
+		}
+		
+		.gx-sparkles i{
+		  position:absolute;
+		  width: 6px; height: 6px;
+		  border-radius: 50%;
+		  background: rgba(255,255,255,.9);
+		  filter: blur(.2px);
+		  box-shadow:
+		    0 0 10px rgba(0,255,255,.55),
+		    0 0 18px rgba(255,0,200,.45);
+		  opacity: .0;
+		  animation: gxSpark 1.4s ease-in-out infinite;
+		}
+		
+		/* posizioni random-ish */
+		.gx-sparkles i:nth-child(1){ left:10%; top:20%; animation-delay:.00s; }
+		.gx-sparkles i:nth-child(2){ left:80%; top:18%; animation-delay:.18s; }
+		.gx-sparkles i:nth-child(3){ left:65%; top:70%; animation-delay:.32s; }
+		.gx-sparkles i:nth-child(4){ left:22%; top:78%; animation-delay:.44s; }
+		.gx-sparkles i:nth-child(5){ left:45%; top:10%; animation-delay:.58s; }
+		.gx-sparkles i:nth-child(6){ left:90%; top:55%; animation-delay:.73s; }
+		.gx-sparkles i:nth-child(7){ left:12%; top:55%; animation-delay:.91s; }
+		.gx-sparkles i:nth-child(8){ left:52%; top:88%; animation-delay:1.05s; }
+		
+		@keyframes gxSpark{
+		  0%{ transform: scale(.6) translateY(4px); opacity:0; }
+		  25%{ opacity:1; }
+		  55%{ transform: scale(1.25) translateY(-6px); opacity:.85; }
+		  100%{ transform: scale(.7) translateY(-16px); opacity:0; }
+		}
+	</style>
 	<script type="importmap">
 		  {
 		    "imports": {
@@ -703,6 +845,7 @@
 		      globalLogEvents: [],    
 		      runtime: {
 		        expeditionInProgress: false,
+				activeExpeditionIds: new Set(),
 		        lastForecastPayloadKey: '',
 		        forecastBusy: false,
 		        forecastData: null,
@@ -1110,6 +1253,52 @@
 		  if (payload && payload.results && Array.isArray(payload.results)) return payload.results;
 		
 		  return [];
+		}
+		function extractGoblinIdsFromExp(exp){
+		  if (!exp || typeof exp !== 'object') return [];
+		
+		  // 1) casi comuni dal backend
+		  let raw =
+		    exp.goblin_ids ||
+		    exp.asset_ids ||
+		    exp.goblins_used ||
+		    exp.goblinsUsed ||
+		    exp.goblins;
+		
+		  // 2) se è stringa JSON
+		  if (typeof raw === 'string'){
+		    try { raw = JSON.parse(raw); } catch { /* ignore */ }
+		  }
+		
+		  // 3) se è array (di id o di oggetti)
+		  if (Array.isArray(raw)){
+		    return raw
+		      .map(x => (x && typeof x === 'object') ? (x.asset_id || x.id || x.goblin_id) : x)
+		      .filter(x => x != null)
+		      .map(x => String(x));
+		  }
+		
+		  // 4) fallback: exp.goblins_used_json ecc (ultra difensivo)
+		  if (raw && typeof raw === 'object'){
+		    // qualche backend incapsula in {items:[...]} o simile
+		    const arr = pickArrayFromPayload(raw, 'items', 'goblins', 'asset_ids');
+		    return arr.map(x => String(x));
+		  }
+		
+		  return [];
+		}
+		
+		function setActiveExpeditionIdsFromMyExp(){
+		  // trova la tua spedizione “in progress” usando la funzione che già usi nello snapshot
+		  // (nel file compare: findMyInProgressExpedition(State.globalExpeditions)) :contentReference[oaicite:4]{index=4}
+		  let myExp = null;
+		  try { myExp = findMyInProgressExpedition(State.globalExpeditions); } catch {}
+		
+		  const ids = myExp ? extractGoblinIdsFromExp(myExp) : [];
+		  State.runtime.activeExpeditionIds = new Set(ids);
+		
+		  // refresh UI card badges
+		  hydrateGoblinBuilder();
 		}
 		function findMyInProgressExpedition(exps){
 		  const me = (State.user?.wax_account || '').trim().toLowerCase();
@@ -3866,7 +4055,7 @@ function renderForecastRealContent(data, message){
 		      if (!mine) scheduleForecastIfReady();
 				renderMyExpeditionOverlay();
 				startMyOverlayTicker();
-				
+				setActiveExpeditionIdsFromMyExp();
 		    }
 		function getMyActiveExpedition(){
 		  const me = (State.user.wax_account || '').trim().toLowerCase();
@@ -4640,6 +4829,12 @@ function renderForecastRealContent(data, message){
 			    card.setAttribute('tabindex','0');
 			    card.setAttribute('aria-pressed', sel ? 'true' : 'false');
 			    card.setAttribute('data-id', id);
+				if (inExp){
+				  const sp = document.createElement('div');
+				  sp.className = 'gx-sparkles';
+				  sp.innerHTML = '<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>';
+				  card.appendChild(sp);
+				}
 			    card.innerHTML = `
 			      <div class="gob-top">
 			        <div class="gob-title">
@@ -5023,7 +5218,32 @@ function renderForecastRealContent(data, message){
 			    btn.textContent = '🔄 Refresh goblins';
 			    delete btn.dataset.loading;
 			  }
-			}	
+			}
+			function setActiveExpeditionIdsFromStartResponse(data){
+			  if (!data) return;
+			
+			  // prova a prendere gli id direttamente dalla response
+			  // supporta varie shape future
+			  const exp =
+			    data.expedition ||
+			    data.active_expedition ||
+			    data.exp ||
+			    data;
+			
+			  const ids = extractGoblinIdsFromExp(exp);
+			
+			  if (ids.length){
+			    State.runtime.activeExpeditionIds = new Set(ids);
+			  } else {
+			    // fallback: se non arrivano ids, usa la selezione corrente
+			    State.runtime.activeExpeditionIds = new Set([...State.selectedGoblinIds].map(String));
+			  }
+			
+			  // segna stato “in progress”
+			  State.runtime.expeditionInProgress = true;
+			
+			  hydrateGoblinBuilder();
+			}
 		    // ------------------------------------------------------------
 		    // COMMAND: START EXPEDITION
 		    // ------------------------------------------------------------
@@ -5157,7 +5377,7 @@ function renderForecastRealContent(data, message){
 			    State.runtime.expeditionInProgress = true;
 			    renderMyExpeditionOverlay();
 			    startMyOverlayTicker();
-			
+				setActiveExpeditionIdsFromStartResponse(res.data);
 			    State.runtime.forecastPowerByAsset = {};
 			    State.runtime.forecastInsufficientIds = new Set();
 			

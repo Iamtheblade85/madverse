@@ -4880,6 +4880,7 @@ function renderForecastRealContent(data, message){
 			
 			  visible.forEach(g=>{
 			    const id = String(g.asset_id);
+				const inExp = State.runtime.activeExpeditionIds?.has(String(id)); // vedi punto 3 sotto
 			    const name = g.name || `Goblin #${id}`;
 			    const rarityTxt = g.rarity || '';
 				const sel = State.selectedGoblinIds.has(id);
@@ -4917,7 +4918,6 @@ function renderForecastRealContent(data, message){
 				  sp.innerHTML = '<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>';
 				  card.appendChild(sp);
 				}
-				const inExp = State.runtime.activeExpeditionIds?.has(String(id)); // vedi punto 3 sotto
 				card.innerHTML = `
 				  <div class="gob-top">
 				    <div class="gob-title">

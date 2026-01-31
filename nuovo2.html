@@ -1323,52 +1323,59 @@
 		  return [];
 		}
 		function setActiveExpeditionIdsFromMyExp(){
-		  // prova a prendere la tua expedition dallo snapshot
+		  // 1) trova la mia expedition (robusto, NO status required)
 		  let myExp = null;
 		  try {
-		    const exps = Array.isArray(State.globalExpeditions) ? State.globalExpeditions : [];
-		    myExp = findMyInProgressExpedition(exps);
+		    // preferisci il getter “owner-based”
+		    myExp = getMyActiveExpedition?.() || null;
 		  } catch {}
 		
-		  // Se non ho trovato la mia expedition nello snapshot:
-		  // non azzero nulla (mantengo quelli già noti)
 		  if (!myExp){
-		    hydrateGoblinBuilder();
-		    return;
+		    try { myExp = findMyInProgressExpedition(State.globalExpeditions) || null; } catch {}
 		  }
 		
-		  // Se l'ho trovata ma non è più attiva, allora sì: azzero
-		  const sr = Number(myExp.seconds_remaining || 0);
-		  if (!Number.isFinite(sr) || sr <= 0){
-		    State.runtime.activeExpeditionIds = new Set();
-		    hydrateGoblinBuilder();
-		    return;
-		  }
+		  // helper: normalizza qualunque lista di id in array di stringhe
+		  const normalizeIds = (arr) => {
+		    if (!Array.isArray(arr)) return [];
+		    return arr
+		      .map(x => (x == null ? '' : String(x).trim()))
+		      .filter(Boolean);
+		  };
 		
-		  // Estrai ids: con il tuo endpoint arrivano come goblin_ids o asset_ids
+		  // 2) estrazione id super tollerante
 		  let ids = [];
-		  try {
-		    // se hai già la funzione, bene: ma rendiamola "fallback-safe"
-		    ids = extractGoblinIdsFromExp(myExp) || [];
-		  } catch {
-		    ids = [];
+		  if (myExp){
+		    // campi “standard” del tuo endpoint nuovo
+		    ids = ids.concat(normalizeIds(myExp.goblin_ids));
+		    ids = ids.concat(normalizeIds(myExp.asset_ids));
+		
+		    // eventuali altri campi legacy
+		    ids = ids.concat(normalizeIds(myExp.goblins_used));
+		
+		    // se arrivano dettagli goblins: [{asset_id:...}, ...]
+		    if (Array.isArray(myExp.goblins) && myExp.goblins.length){
+		      ids = ids.concat(
+		        myExp.goblins
+		          .map(g => (g && (g.asset_id ?? g.id ?? g.goblin_id)) )
+		          .map(x => (x == null ? '' : String(x).trim()))
+		          .filter(Boolean)
+		      );
+		    }
+		
+		    // unique
+		    ids = Array.from(new Set(ids));
 		  }
 		
-		  // Fallback diretto se extractGoblinIdsFromExp non copre il tuo payload
-		  if (!ids.length){
-		    const raw = myExp.goblin_ids || myExp.asset_ids || [];
-		    if (Array.isArray(raw)) ids = raw;
-		    else if (typeof raw === 'string') ids = raw.split(','); // super fallback
+		  // 3) gestione cache / snapshot vecchio:
+		  // se non ho ids ma ho appena premuto start -> usa fallback
+		  if ((!ids || !ids.length) && State.runtime?.lastSentExpeditionIds?.size){
+		    ids = Array.from(State.runtime.lastSentExpeditionIds);
 		  }
 		
-		  ids = ids.map(String).map(s => s.trim()).filter(Boolean);
+		  // 4) applica SEMPRE (se ids vuoto -> set vuoto; meglio coerente che “fantasmi”)
+		  State.runtime.activeExpeditionIds = new Set(ids);
 		
-		  // Se ho ids validi, aggiorno il set. Se per qualche motivo è vuoto, non azzero.
-		  if (ids.length){
-		    State.runtime.activeExpeditionIds = new Set(ids);
-		  }
-		
-		  // ridisegna le card
+		  // 5) ridisegna cards
 		  hydrateGoblinBuilder();
 		}
 		function findMyInProgressExpedition(exps){
@@ -4127,6 +4134,8 @@ function renderForecastRealContent(data, message){
 		      State.runtime.expeditionInProgress = !!mine;
 		      updateActionButtonsUI();
 		      if (!mine) scheduleForecastIfReady();
+				  State.runtime.lastSentExpeditionIds = new Set();
+				  State.runtime.activeExpeditionIds = new Set();
 				renderMyExpeditionOverlay();
 				startMyOverlayTicker();
 				setActiveExpeditionIdsFromMyExp();
@@ -4875,7 +4884,6 @@ function renderForecastRealContent(data, message){
 			    const rarityTxt = g.rarity || '';
 				const sel = State.selectedGoblinIds.has(id);
 				const tired = isGoblinTired(g);
-				const inExp = State.runtime.activeExpeditionIds.has(id);  // <-- AGGIUNGI QUESTO
 				const stats = goblinStatsFromIndex(id);
 				const have = toNumber(g.daily_power_num || 0);
 				// Prefer forecast (effective) when available, else baseline from /2user_nfts
@@ -5372,7 +5380,10 @@ function renderForecastRealContent(data, message){
 			    }
 			
 			    const durationMinutes = State.expedition?.durationMinutes || 30;
-			
+				// subito prima della chiamata API:
+				State.runtime.lastSentExpeditionIds = new Set(ids);
+				State.runtime.activeExpeditionIds = new Set(ids);
+				hydrateGoblinBuilder();
 			    const res = await Api.post('/2start_expedition', {
 			      wax_account: State.user.wax_account,
 			      user_id: State.user.user_id,

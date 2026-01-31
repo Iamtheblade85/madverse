@@ -1257,32 +1257,67 @@
 		function extractGoblinIdsFromExp(exp){
 		  if (!exp || typeof exp !== 'object') return [];
 		
-		  // 1) casi comuni dal backend
+		  // 1) campi comuni (in ordine di priorità)
 		  let raw =
-		    exp.goblin_ids ||
-		    exp.asset_ids ||
-		    exp.goblins_used ||
-		    exp.goblinsUsed ||
-		    exp.goblins;
+		    exp.goblin_ids ??
+		    exp.asset_ids ??
+		    exp.goblins_used ??
+		    exp.goblinsUsed ??
+		    exp.goblins ??
+		    exp.goblins_used_json ??
+		    exp.goblins_json ??
+		    null;
 		
-		  // 2) se è stringa JSON
+		  if (raw == null) return [];
+		
+		  // helper: normalizza singolo valore in id valido
+		  const normId = (v)=>{
+		    if (v == null) return null;
+		    const s = String(v).trim();
+		    if (!s) return null;
+		    const low = s.toLowerCase();
+		    if (low === 'null' || low === 'undefined' || low === 'nan') return null;
+		    return s;
+		  };
+		
+		  // 2) se è stringa: prova JSON, altrimenti CSV
 		  if (typeof raw === 'string'){
-		    try { raw = JSON.parse(raw); } catch { /* ignore */ }
+		    const s = raw.trim();
+		    if (!s) return [];
+		
+		    // JSON?
+		    if (s[0] === '[' || s[0] === '{'){
+		      try { raw = JSON.parse(s); }
+		      catch { /* non è JSON, continua */ }
+		    }
+		
+		    // se è ancora stringa → trattala come CSV
+		    if (typeof raw === 'string'){
+		      return raw
+		        .split(',')
+		        .map(x => normId(x))
+		        .filter(Boolean);
+		    }
 		  }
 		
-		  // 3) se è array (di id o di oggetti)
+		  // 3) array (di id o di oggetti)
 		  if (Array.isArray(raw)){
 		    return raw
-		      .map(x => (x && typeof x === 'object') ? (x.asset_id || x.id || x.goblin_id) : x)
-		      .filter(x => x != null)
-		      .map(x => String(x));
+		      .map(x => {
+		        if (x && typeof x === 'object'){
+		          return normId(x.asset_id ?? x.id ?? x.goblin_id ?? x.goblinId);
+		        }
+		        return normId(x);
+		      })
+		      .filter(Boolean);
 		  }
 		
-		  // 4) fallback: exp.goblins_used_json ecc (ultra difensivo)
+		  // 4) oggetto wrapper (es. {items:[...]})
 		  if (raw && typeof raw === 'object'){
-		    // qualche backend incapsula in {items:[...]} o simile
-		    const arr = pickArrayFromPayload(raw, 'items', 'goblins', 'asset_ids');
-		    return arr.map(x => String(x));
+		    const arr = pickArrayFromPayload(raw, 'items', 'goblins', 'asset_ids', 'goblin_ids');
+		    if (Array.isArray(arr)){
+		      return arr.map(normId).filter(Boolean);
+		    }
 		  }
 		
 		  return [];

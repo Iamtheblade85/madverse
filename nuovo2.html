@@ -1289,15 +1289,18 @@
 		}
 		
 		function setActiveExpeditionIdsFromMyExp(){
-		  // trova la tua spedizione “in progress” usando la funzione che già usi nello snapshot
-		  // (nel file compare: findMyInProgressExpedition(State.globalExpeditions)) :contentReference[oaicite:4]{index=4}
+		  // prova a prendere la tua expedition dallo snapshot
 		  let myExp = null;
 		  try { myExp = findMyInProgressExpedition(State.globalExpeditions); } catch {}
 		
 		  const ids = myExp ? extractGoblinIdsFromExp(myExp) : [];
-		  State.runtime.activeExpeditionIds = new Set(ids);
 		
-		  // refresh UI card badges
+		  // ✅ se lo snapshot NON include goblin_ids, non azzerare (mantieni quelli già noti)
+		  if (ids.length){
+		    State.runtime.activeExpeditionIds = new Set(ids);
+		  }
+		
+		  // ridisegna le card
 		  hydrateGoblinBuilder();
 		}
 		function findMyInProgressExpedition(exps){

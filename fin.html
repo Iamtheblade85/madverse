@@ -9,152 +9,783 @@
   <link rel="stylesheet" href="fin-theme.css" />
 
   <!-- Base layout + font grandi (minimo indispensabile; puoi spostarlo in fin-theme.css) -->
-  <style>
-    :root{
-      --bg:#0b0f14; --fg:#e9eef6; --muted:#9fb0c7; --line:rgba(255,255,255,.10);
-      --card:rgba(255,255,255,.06);
-      --good:#19c37d; --bad:#ff5a5f; --warn:#f6c453; --info:#53a7ff;
-      --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      --fs: 18px; --fs2: 20px; --fs3: 26px; --radius: 14px;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:var(--fs)}
-    button,input,select,textarea{font:inherit}
-    a{color:inherit}
+<style>
+/* =========================================================
+   FIN UI - PRODUCTION-READY BASE STYLE
+   Constraints:
+   - HTML structure MUST stay identical.
+   - This style improves readability on dark background, adds weekend
+     differentiation, better spacing, better focus/hover, and clearer KPIs.
+   ========================================================= */
 
-    header{
-      position:sticky; top:0; z-index:50;
-      background:linear-gradient(to bottom, rgba(11,15,20,.98), rgba(11,15,20,.86));
-      backdrop-filter: blur(8px);
-      border-bottom:1px solid var(--line);
-    }
-    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 16px}
-    .brand{display:flex;align-items:center;gap:12px}
-    .brand h1{margin:0;font-size:var(--fs3);letter-spacing:.2px}
-    .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.04);color:var(--muted)}
-    .tabs{display:flex;gap:8px;padding:0 16px 12px}
-    .tabbtn{
-      padding:10px 12px;border-radius:999px;border:1px solid var(--line);
-      background:rgba(255,255,255,.04);color:var(--fg);cursor:pointer
-    }
-    .tabbtn.active{background:rgba(83,167,255,.18);border-color:rgba(83,167,255,.35)}
-    main{padding:14px 16px 40px}
-    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
-    .col{flex:1 1 420px;min-width:340px}
-    .panel{
-      background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-      padding:14px; box-shadow: 0 10px 30px rgba(0,0,0,.22);
-    }
-    .panel h2{margin:0 0 10px;font-size:22px}
-    .panel h3{margin:12px 0 8px;font-size:20px;color:var(--fg)}
-    .muted{color:var(--muted)}
-    .hr{height:1px;background:var(--line);margin:12px 0}
-    .btn{
-      padding:10px 12px;border-radius:12px;border:1px solid var(--line);
-      background:rgba(255,255,255,.06);color:var(--fg);cursor:pointer
-    }
-    .btn.primary{background:rgba(25,195,125,.18);border-color:rgba(25,195,125,.35)}
-    .btn.danger{background:rgba(255,90,95,.18);border-color:rgba(255,90,95,.35)}
-    .btn.small{padding:8px 10px;border-radius:10px}
-    .btn:disabled{opacity:.55;cursor:not-allowed}
-    .field{display:flex;flex-direction:column;gap:6px;margin:10px 0}
-    .field label{color:var(--muted);font-size:16px}
-    .field input,.field select,.field textarea{
-      padding:10px 12px;border-radius:12px;border:1px solid var(--line);
-      background:rgba(0,0,0,.18);color:var(--fg);outline:none
-    }
-    .field textarea{min-height:72px;resize:vertical}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-    .kpiwrap{display:grid;grid-template-columns:repeat(4, minmax(200px,1fr));gap:10px}
-    .kpi{
-      background:rgba(0,0,0,.18); border:1px solid var(--line); border-radius:16px;
-      padding:12px
-    }
-    .kpi .t{color:var(--muted);font-size:16px}
-    .kpi .v{font-size:24px;margin-top:6px}
-    .kpi .s{margin-top:6px;color:var(--muted);font-size:15px}
-    .money.pos{color:var(--good)} .money.neg{color:var(--bad)} .money.neu{color:var(--fg)}
-    .delta.pos{color:var(--good)} .delta.neg{color:var(--bad)} .delta.neu{color:var(--muted)}
+/* ---------- CSS variables (tune here) ---------- */
+:root{
+  /* Core */
+  --bg:#0b0f14;
+  --bg2:#0d131b;
+  --bg3:#0f1722;
+  --fg:#eef3fb;          /* brighter */
+  --fg2:#d7e2f3;
+  --muted:#b5c3d9;       /* brighter muted */
+  --muted2:#8fa2bc;
+  --line:rgba(255,255,255,.14);
+  --line2:rgba(255,255,255,.08);
+  --card:rgba(255,255,255,.07);
+  --card2:rgba(255,255,255,.05);
+  --shadow: 0 18px 42px rgba(0,0,0,.45);
+  --shadow2: 0 10px 22px rgba(0,0,0,.35);
 
-    /* Calendar */
-    .calbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-    .calbar .left{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .calbar .right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .monthTitle{font-size:22px;margin:0}
-    .calendar{
-      margin-top:10px;
-      border:1px solid var(--line);
-      border-radius:16px;
-      overflow:hidden;
-      background:rgba(0,0,0,.12);
-    }
-    .calgrid{display:grid;grid-template-columns:repeat(7,1fr)}
-    .dow{padding:10px 10px;border-bottom:1px solid var(--line);color:var(--muted);font-size:15px}
-    .day{
-      min-height:116px; padding:10px;
-      border-right:1px solid var(--line); border-bottom:1px solid var(--line);
-      cursor:pointer; position:relative;
-    }
-    .day:nth-child(7n){border-right:none}
-    .dayHead{display:flex;align-items:center;justify-content:space-between}
-    .dayNum{font-size:18px;color:var(--muted)}
-    .badge{
-      font-size:13px;color:var(--muted);
-      border:1px solid var(--line);border-radius:999px;padding:3px 8px;background:rgba(255,255,255,.04)
-    }
-    .day.selected{outline:2px solid rgba(83,167,255,.55); outline-offset:-2px; background:rgba(83,167,255,.10)}
-    .evlist{margin-top:8px;display:flex;flex-direction:column;gap:6px}
-    .ev{
-      border:1px solid var(--line);
-      border-left-width:8px;
-      border-radius:12px;
-      padding:8px 10px;
-      background:rgba(255,255,255,.05);
-      display:flex; gap:10px; align-items:flex-start; justify-content:space-between
-    }
-    .ev .l{display:flex;flex-direction:column;gap:2px;min-width:0}
-    .ev .ttl{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .ev .meta{font-size:13px;color:var(--muted)}
-    .ev .amt{font-size:16px;white-space:nowrap}
-    .ev .actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
-    .tag{font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  /* Semantic */
+  --good:#1fe28f;
+  --bad:#ff5f6a;
+  --warn:#ffd166;
+  --info:#63b3ff;
 
-    /* Accordion tree */
-    details{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.14);margin:10px 0;overflow:hidden}
-    summary{cursor:pointer;list-style:none;padding:12px 12px;font-size:18px;display:flex;gap:10px;align-items:center;justify-content:space-between}
-    summary::-webkit-details-marker{display:none}
-    .treeBody{padding:0 12px 12px}
-    .treeRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.06)}
-    .treeRow .name{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .treeRow .amt{white-space:nowrap}
-    .footnote{font-size:14px;color:var(--muted)}
-    .toast{position:fixed;bottom:18px;left:18px;right:18px;display:none;z-index:200}
-    .toast .box{max-width:960px;margin:0 auto;border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);padding:12px 14px}
-    .toast .box b{display:block;margin-bottom:6px}
-    dialog{
-      width:min(900px, calc(100vw - 24px));
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:rgba(11,15,20,.98);
-      color:var(--fg);
-      padding:0;
-    }
-    dialog::backdrop{background:rgba(0,0,0,.55)}
-    .dlgHead{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .dlgHead h2{margin:0;font-size:22px}
-    .dlgBody{padding:14px}
-    .dlgFoot{padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
-    .hint{font-size:14px;color:var(--muted);line-height:1.35}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
-    @media (max-width: 980px){
-      .kpiwrap{grid-template-columns:repeat(2, minmax(200px,1fr))}
-      .grid3{grid-template-columns:1fr}
-      .grid2{grid-template-columns:1fr}
-      .col{min-width:unset}
-      .day{min-height:106px}
-    }
-  </style>
+  /* Accents */
+  --accent:#63b3ff;
+  --accent2: rgba(99,179,255,.22);
+  --accentLine: rgba(99,179,255,.40);
+
+  /* Typography */
+  --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --fs: 18px;
+  --fs-sm: 16px;
+  --fs-xs: 14px;
+  --fs-lg: 20px;
+  --fs-xl: 24px;
+  --fs-xxl: 28px;
+  --lh: 1.35;
+
+  /* Spacing */
+  --r: 16px;
+  --r2: 20px;
+  --pad: 14px;
+  --pad2: 16px;
+  --gap: 12px;
+
+  /* Calendar sizing */
+  --dayMinH: 128px;
+  --dayPad: 12px;
+}
+
+/* High-contrast fallback if OS requests it */
+@media (prefers-contrast: more){
+  :root{
+    --line:rgba(255,255,255,.22);
+    --line2:rgba(255,255,255,.14);
+    --card:rgba(255,255,255,.10);
+    --muted:#c6d2e6;
+  }
+}
+
+/* Reduce motion if requested */
+@media (prefers-reduced-motion: reduce){
+  *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
+
+/* ---------- Global reset & readability ---------- */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:var(--font);
+  font-size:var(--fs);
+  line-height:var(--lh);
+  color:var(--fg);
+  background:
+    radial-gradient(1200px 800px at 15% 0%, rgba(99,179,255,.10), transparent 60%),
+    radial-gradient(900px 700px at 90% 15%, rgba(31,226,143,.06), transparent 58%),
+    radial-gradient(700px 500px at 50% 100%, rgba(255,209,102,.05), transparent 60%),
+    linear-gradient(180deg, var(--bg), var(--bg2));
+}
+
+/* Make text selection visible */
+::selection{background:rgba(99,179,255,.28);color:var(--fg)}
+
+/* Link */
+a{color:color-mix(in oklab, var(--accent), white 20%);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Inputs and buttons inherit */
+button,input,select,textarea{font:inherit}
+
+/* Improve legibility of common “muted” text (avoid too dark on dark bg) */
+.muted{color:var(--muted)!important}
+.hint{color:var(--muted)!important}
+.footnote{color:var(--muted)!important}
+
+/* Monospace */
+.mono{font-family:var(--mono)!important}
+
+/* ---------- Header / Topbar / Tabs ---------- */
+header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:
+    linear-gradient(to bottom, rgba(11,15,20,.98), rgba(11,15,20,.88));
+  border-bottom:1px solid var(--line);
+  backdrop-filter: blur(10px);
+}
+
+.topbar{
+  display:flex;
+  gap:var(--gap);
+  align-items:center;
+  justify-content:space-between;
+  padding: 14px 16px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+
+.brand h1{
+  margin:0;
+  font-size: clamp(22px, 2.2vw, 30px);
+  letter-spacing:.2px;
+  color:var(--fg);
+  text-shadow: 0 1px 0 rgba(0,0,0,.35);
+}
+
+/* Pills: more contrast, readable */
+.pill{
+  padding:7px 10px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  color:var(--fg2);
+  box-shadow: 0 6px 16px rgba(0,0,0,.28);
+  white-space:nowrap;
+}
+
+.pill .mono{color:var(--fg);opacity:.95}
+
+/* Tabs: larger & clearer */
+.tabs{
+  display:flex;
+  gap:8px;
+  padding: 0 16px 12px;
+  flex-wrap:wrap;
+}
+
+.tabbtn{
+  padding:12px 14px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  color:var(--fg);
+  cursor:pointer;
+  transition: transform .06s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
+  box-shadow: 0 8px 18px rgba(0,0,0,.25);
+}
+
+.tabbtn:hover{
+  border-color: color-mix(in oklab, var(--accentLine), white 10%);
+  box-shadow: 0 10px 22px rgba(0,0,0,.32);
+}
+
+.tabbtn:active{transform: translateY(1px)}
+
+.tabbtn.active{
+  background:
+    linear-gradient(180deg, rgba(99,179,255,.25), rgba(99,179,255,.12));
+  border-color: rgba(99,179,255,.55);
+  box-shadow: 0 12px 26px rgba(0,0,0,.38);
+}
+
+/* ---------- Main layout improvements ---------- */
+main{
+  padding: 14px 16px 44px;
+}
+
+.row{
+  display:flex;
+  gap:var(--gap);
+  flex-wrap:wrap;
+  align-items:flex-start;
+}
+
+.col{
+  flex: 1 1 420px;
+  min-width: 360px;
+}
+
+/* Let large layouts breathe (desktop) */
+@media (min-width: 1180px){
+  main{padding: 18px 18px 54px}
+  .row{gap:14px}
+}
+
+/* Mobile */
+@media (max-width: 980px){
+  .col{min-width: unset}
+  .topbar{align-items:flex-start}
+  .brand{flex-wrap:wrap}
+  .pill{white-space:normal}
+}
+
+/* ---------- Panels / Cards ---------- */
+.panel{
+  background:
+    radial-gradient(900px 320px at 18% 0%, rgba(99,179,255,.10), transparent 55%),
+    radial-gradient(700px 260px at 88% 0%, rgba(31,226,143,.06), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.05));
+  border:1px solid var(--line);
+  border-radius: var(--r2);
+  padding: var(--pad2);
+  box-shadow: var(--shadow);
+}
+
+.panel h2{
+  margin:0 0 10px;
+  font-size: 22px;
+  color:var(--fg);
+}
+
+.panel h3{
+  margin: 14px 0 10px;
+  font-size: 20px;
+  color: var(--fg);
+}
+
+/* Dividers */
+.hr{
+  height:1px;
+  background: linear-gradient(90deg, transparent, var(--line), transparent);
+  margin: 14px 0;
+}
+
+/* ---------- Buttons & form controls (production) ---------- */
+.btn{
+  padding: 11px 13px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
+  color: var(--fg);
+  cursor: pointer;
+  transition: transform .06s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
+  box-shadow: 0 10px 22px rgba(0,0,0,.30);
+}
+
+.btn:hover{
+  border-color: color-mix(in oklab, var(--accentLine), white 12%);
+  box-shadow: 0 12px 26px rgba(0,0,0,.38);
+}
+
+.btn:active{transform: translateY(1px)}
+
+.btn.small{
+  padding: 9px 11px;
+  border-radius: 12px;
+  font-size: var(--fs-sm);
+}
+
+.btn.primary{
+  background:
+    linear-gradient(180deg, rgba(31,226,143,.22), rgba(31,226,143,.12));
+  border-color: rgba(31,226,143,.50);
+}
+
+.btn.danger{
+  background:
+    linear-gradient(180deg, rgba(255,95,106,.20), rgba(255,95,106,.10));
+  border-color: rgba(255,95,106,.55);
+}
+
+.btn:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+
+/* Better focus visibility */
+:focus-visible{
+  outline: 3px solid rgba(99,179,255,.55);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+/* Field blocks */
+.field{display:flex;flex-direction:column;gap:8px;margin: 10px 0}
+.field label{color:var(--muted);font-size:var(--fs-sm)}
+.field input,
+.field select,
+.field textarea{
+  padding: 11px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.26), rgba(0,0,0,.18));
+  color: var(--fg);
+  outline:none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.field input::placeholder,
+.field textarea::placeholder{color:rgba(215,226,243,.55)}
+
+.field textarea{min-height: 84px;resize:vertical}
+
+/* Grids: clearer spacing */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap: 12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap: 12px}
+
+@media (max-width: 980px){
+  .grid2,.grid3{grid-template-columns:1fr}
+}
+
+/* ---------- KPI blocks ---------- */
+.kpiwrap{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(200px,1fr));
+  gap: 12px;
+}
+
+.kpi{
+  background:
+    radial-gradient(300px 140px at 15% 0%, rgba(255,255,255,.06), transparent 60%),
+    linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.12));
+  border:1px solid var(--line2);
+  border-radius: 18px;
+  padding: 12px 12px 10px;
+  box-shadow: 0 12px 24px rgba(0,0,0,.25);
+}
+
+.kpi .t{
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  letter-spacing:.1px;
+}
+
+.kpi .v{
+  font-size: clamp(20px, 1.7vw, 26px);
+  margin-top: 8px;
+  color: var(--fg);
+  text-shadow: 0 1px 0 rgba(0,0,0,.40);
+}
+
+.kpi .s{
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+
+@media (max-width: 980px){
+  .kpiwrap{grid-template-columns:repeat(2, minmax(200px,1fr))}
+}
+@media (max-width: 520px){
+  .kpiwrap{grid-template-columns:1fr}
+}
+
+/* Money colors - readable */
+.money.pos{color: var(--good); text-shadow: 0 0 14px rgba(31,226,143,.12)}
+.money.neg{color: var(--bad);  text-shadow: 0 0 14px rgba(255,95,106,.12)}
+.money.neu{color: var(--fg)}
+
+.delta.pos{color: var(--good)}
+.delta.neg{color: var(--bad)}
+.delta.neu{color: var(--muted)}
+
+/* ---------- Calendar bar ---------- */
+.calbar{
+  display:flex;
+  gap: 12px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+
+.calbar .left, .calbar .right{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.monthTitle{
+  font-size: clamp(20px, 1.8vw, 26px);
+  margin:0;
+  color: var(--fg);
+}
+
+/* ---------- Calendar container ---------- */
+.calendar{
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow:hidden;
+  background:
+    radial-gradient(900px 300px at 22% 0%, rgba(99,179,255,.09), transparent 58%),
+    linear-gradient(180deg, rgba(0,0,0,.16), rgba(0,0,0,.08));
+  box-shadow: var(--shadow2);
+}
+
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr)}
+
+/* Day-of-week header */
+.dow{
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--fg2);
+  font-size: var(--fs-xs);
+  letter-spacing:.6px;
+  text-transform: uppercase;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+}
+
+/* Weekend labels */
+.dow:nth-child(6),
+.dow:nth-child(7){
+  color: color-mix(in oklab, var(--warn), var(--fg) 55%);
+}
+
+/* Day cell */
+.day{
+  min-height: var(--dayMinH);
+  padding: var(--dayPad);
+  border-right: 1px solid var(--line2);
+  border-bottom: 1px solid var(--line2);
+  cursor:pointer;
+  position:relative;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  transition: background .12s ease, transform .06s ease, outline-color .12s ease;
+}
+
+/* remove right border each row end */
+.day:nth-child(7n){border-right:none}
+
+/* Weekend differentiation:
+   - Because we cannot change HTML, we infer weekend by grid columns:
+   - Saturdays are column 6; Sundays column 7.
+   - This holds for both header and days because .calgrid uses 7 columns.
+   - Note: leading offset cells also affect index, but the visual weekend columns remain correct.
+*/
+.calgrid .day:nth-child(7n+6){
+  background:
+    linear-gradient(180deg, rgba(255,209,102,.06), rgba(255,255,255,.02));
+}
+.calgrid .day:nth-child(7n){
+  background:
+    linear-gradient(180deg, rgba(255,95,106,.06), rgba(255,255,255,.02));
+}
+
+/* Hover: more lift & clarity */
+.day:hover{
+  background:
+    radial-gradient(280px 140px at 18% 0%, rgba(99,179,255,.10), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+}
+
+/* Selected day */
+.day.selected{
+  outline: 3px solid rgba(99,179,255,.55);
+  outline-offset: -3px;
+  background:
+    radial-gradient(380px 160px at 20% 0%, rgba(99,179,255,.16), transparent 60%),
+    linear-gradient(180deg, rgba(99,179,255,.12), rgba(255,255,255,.02));
+}
+
+/* Day header inside cell */
+.dayHead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dayNum{
+  font-size: 18px;
+  color: var(--fg2);
+  font-weight: 650;
+}
+
+/* Badge */
+.badge{
+  font-size: 13px;
+  color: var(--fg2);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding: 4px 9px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  box-shadow: 0 8px 16px rgba(0,0,0,.22);
+}
+
+/* Event list in day */
+.evlist{
+  margin-top: 10px;
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+}
+
+/* Event chip */
+.ev{
+  border:1px solid var(--line);
+  border-left-width: 10px;
+  border-radius: 14px;
+  padding: 9px 10px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+  display:flex;
+  gap: 10px;
+  align-items:flex-start;
+  justify-content:space-between;
+  box-shadow: 0 10px 18px rgba(0,0,0,.22);
+  transition: transform .06s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+/* Hover & active on events */
+.ev:hover{
+  border-color: color-mix(in oklab, var(--accentLine), rgba(255,255,255,.14) 60%);
+  box-shadow: 0 12px 24px rgba(0,0,0,.32);
+}
+.ev:active{transform: translateY(1px)}
+
+/* Event text */
+.ev .l{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ev .ttl{
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-weight: 620;
+}
+.ev .meta{
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Amount */
+.ev .amt{
+  font-size: var(--fs-sm);
+  white-space:nowrap;
+  font-weight: 650;
+  letter-spacing:.1px;
+}
+
+/* Actions inside event rows (right panel) */
+.ev .actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+
+/* Tag */
+.tag{
+  font-size: 12px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line2);
+  color: var(--fg2);
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.10));
+}
+
+/* ---------- Details / Accordion tree ---------- */
+details{
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.10));
+  margin: 12px 0;
+  overflow:hidden;
+  box-shadow: 0 10px 22px rgba(0,0,0,.26);
+}
+
+summary{
+  cursor:pointer;
+  list-style:none;
+  padding: 13px 12px;
+  font-size: 18px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+summary::-webkit-details-marker{display:none}
+
+.treeBody{padding: 10px 12px 12px}
+
+.treeRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+
+.treeRow .name{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg2)}
+.treeRow .amt{white-space:nowrap;font-weight:650}
+
+/* ---------- Toast ---------- */
+.toast{
+  position:fixed;
+  bottom: 18px;
+  left: 18px;
+  right: 18px;
+  display:none;
+  z-index:200;
+}
+
+.toast .box{
+  max-width: 980px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.84), rgba(0,0,0,.68));
+  backdrop-filter: blur(10px);
+  padding: 12px 14px;
+  box-shadow: 0 16px 34px rgba(0,0,0,.45);
+}
+
+.toast .box b{display:block;margin-bottom:6px;color:var(--fg)}
+
+/* ---------- Dialog (Event editor) ---------- */
+dialog{
+  width: min(900px, calc(100vw - 24px));
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background:
+    radial-gradient(900px 420px at 18% 0%, rgba(99,179,255,.10), transparent 60%),
+    linear-gradient(180deg, rgba(11,15,20,.98), rgba(11,15,20,.92));
+  color: var(--fg);
+  padding: 0;
+  box-shadow: 0 20px 46px rgba(0,0,0,.55);
+}
+
+dialog::backdrop{background: rgba(0,0,0,.62)}
+
+.dlgHead{
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+}
+
+.dlgHead h2{margin:0;font-size: 22px;color:var(--fg)}
+
+.dlgBody{padding: 14px}
+
+.dlgFoot{
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+  display:flex;
+  gap: 10px;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+}
+
+/* ---------- Accent wallet/category classes (dynamic) ----------
+   The JS injects rules for:
+   .accent-wallet-<id>
+   .accent-cat-<hash>
+   Here we provide baseline behavior via CSS variables.
+*/
+[class*="accent-wallet-"],
+[class*="accent-cat-"]{
+  --accent: var(--accent); /* fallback */
+}
+
+[class*="accent-wallet-"] .panel,
+.panel[class*="accent-wallet-"]{
+  border-color: color-mix(in oklab, var(--accent), rgba(255,255,255,.14) 55%);
+}
+
+/* For event chips and tree rows, the JS sets border-left-color via injected rules.
+   We add fallback highlight & subtle glow. */
+.ev[class*="accent-"]{
+  box-shadow:
+    0 10px 18px rgba(0,0,0,.22),
+    0 0 0 1px rgba(255,255,255,.02),
+    0 0 22px color-mix(in oklab, var(--accent), transparent 82%);
+}
+
+/* ---------- Make small text readable everywhere ---------- */
+.dow, .ev .meta, .hint, .footnote, .kpi .s, .kpi .t, .field label{
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Improve scrollbars (optional) ---------- */
+*::-webkit-scrollbar{height:10px;width:10px}
+*::-webkit-scrollbar-track{background:rgba(255,255,255,.05)}
+*::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,.16);
+  border-radius:999px;
+  border:2px solid rgba(0,0,0,.28);
+}
+*::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.22)}
+
+/* ---------- Accessibility helpers ---------- */
+@media (max-width: 420px){
+  :root{--fs: 17px}
+  .btn{width:100%}
+  .btn.small{width:auto}
+}
+
+/* ---------- Fine-tune existing elements from original HTML ---------- */
+#pillStatus{max-width: 52vw; overflow:hidden; text-overflow:ellipsis}
+#pillApi{opacity:.95}
+#headersWrap .panel{padding:14px}
+
+/* Day panel event rows: make the edit button more obvious */
+#dayEvents .btn.small{
+  background:
+    linear-gradient(180deg, rgba(99,179,255,.18), rgba(99,179,255,.10));
+  border-color: rgba(99,179,255,.35);
+}
+
+/* Make select dropdowns in top bar consistent */
+.calbar select.btn{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
+  border:1px solid var(--line);
+  color:var(--fg);
+}
+
+/* Ensure dialog inputs have enough contrast */
+dialog .field input,
+dialog .field select,
+dialog .field textarea{
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.20));
+  border-color: rgba(255,255,255,.14);
+}
+
+/* Prevent overly low opacity on “empty leading cells” in calendar */
+.day[style*="opacity"]{
+  opacity: .35 !important;
+  filter: saturate(.85);
+}
+
+/* ---------- Production polish: subtle separators & spacing ---------- */
+.panel > .row{gap: 12px}
+.panel .row .btn{white-space:nowrap}
+
+/* If you want even more separation between major sections */
+#tab-calendar .panel,
+#tab-overview .panel,
+#tab-settings .panel{
+  border-color: rgba(255,255,255,.14);
+}
+
+/* End */
+</style>
+
 
   <!-- dynamic rules for wallets/cards/categories created at runtime -->
   <style id="dynRules"></style>

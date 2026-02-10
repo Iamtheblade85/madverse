@@ -802,7 +802,199 @@ dialog .field textarea{
   border-color: rgba(255,255,255,.14);
 }
 
-/* End */
+/* End : follow patch for bug-fixing*/
+/* =========================================================
+   PATCH v1 — Fix leggibilità + overflow + layout (no sidebar fissa)
+   Target: questa identica versione HTML (nessuna modifica struttura)
+   Incolla in FONDO allo <style>.
+========================================================= */
+
+/* ---------- A) Leggibilità generale (meno “vetro”, più contrasto) ---------- */
+:root{
+  --fg:#f4f7ff;
+  --fg2:#e6eefc;
+  --muted:#c9d6ee;
+  --muted2:#a9bbd6;
+
+  /* pannelli meno trasparenti */
+  --line:rgba(255,255,255,.18);
+  --line2:rgba(255,255,255,.12);
+  --card:rgba(255,255,255,.10);
+  --card2:rgba(255,255,255,.08);
+
+  --lh: 1.45;
+}
+
+body{
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Pannelli più “solidi” per leggere bene */
+.panel{
+  background:
+    linear-gradient(180deg, rgba(20,28,40,.92), rgba(12,16,22,.90)) !important;
+  border-color: var(--line) !important;
+}
+
+/* Titoli più netti */
+.panel h2, .panel h3, .brand h1{
+  color: var(--fg) !important;
+}
+
+/* Muted meno grigio-fango */
+.muted, .hint, .footnote, .kpi .t, .kpi .s, .field label{
+  color: var(--muted) !important;
+}
+
+/* ---------- B) LAYOUT: Calendario a piena larghezza (no spazio bloccato a destra) ---------- */
+/* Nel tab calendario: impila le colonne (calendar full width, pannelli sotto) */
+#tab-calendar > .row{
+  flex-direction: column !important;
+}
+
+/* Prima colonna (calendario) sempre 100% */
+#tab-calendar > .row > .col:first-child{
+  flex: 1 1 100% !important;
+  min-width: 0 !important;
+}
+
+/* Seconda colonna (Dettaglio giorno + Azioni rapide) sotto, full width */
+#tab-calendar > .row > .col:last-child{
+  flex: 1 1 100% !important;
+  min-width: 0 !important;
+}
+
+/* Riduci “aria” laterale e aumenta area utile calendario */
+#tab-calendar .calendar{
+  width: 100%;
+}
+
+/* ---------- C) OVERFLOW: testate saldi (#headersWrap) ---------- */
+/* Il problema tipico: KPI e righe interne non wrappano e “spingono fuori” */
+#headersWrap{
+  align-items: stretch;
+}
+
+#headersWrap .panel{
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+/* KPI grid più permissiva: evita min 220 che su alcune larghezze rompe */
+#headersWrap .kpiwrap{
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+}
+
+/* KPI: consenti wrap e taglio elegante */
+#headersWrap .kpi .v,
+#headersWrap .kpi .s,
+#headersWrap .kpi .t{
+  min-width: 0 !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Wallet name nelle testate: già ellipsis inline, ma rinforziamo */
+#headersWrap [style*="font-size:22px"]{
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  max-width: 100% !important;
+}
+
+/* ---------- D) OVERFLOW: righe eventi nel pannello giorno (#dayEvents) ---------- */
+/* Il problema tipico: colonna actions (importo+button) spinge fuori */
+#dayEvents .ev{
+  align-items: stretch !important;
+}
+
+#dayEvents .ev .l{
+  min-width: 0 !important;
+}
+
+/* Titoli/meta/note devono wrappare senza uscire */
+#dayEvents .ev .ttl,
+#dayEvents .ev .meta{
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Actions: impila verticalmente su spazi stretti e evita overflow */
+#dayEvents .ev .actions{
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  gap: 8px !important;
+  max-width: 45% !important;
+}
+
+/* Importo: non deve “sparare fuori” */
+#dayEvents .ev .amt{
+  max-width: 100% !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Bottone modifica: non deve allargare */
+#dayEvents .ev .btn.small{
+  white-space: nowrap;
+}
+
+/* ---------- E) OVERFLOW: chip eventi nel calendario (evlist) ---------- */
+/* Evita che walletLabel o category lunghi rompano la cella */
+.ev .meta, .ev .ttl{
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+}
+
+/* Lista eventi in day cell: lascia respirare e taglia bene */
+.day .evlist{
+  min-width: 0;
+}
+.day .ev{
+  min-width: 0;
+}
+
+/* ---------- F) OVERFLOW: Overview cards statement box ---------- */
+#cardsStatementBox .panel{
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+#cardsStatementBox [style*="font-size:22px"]{
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* ---------- G) Bottoni e select: leggibilità + hit area ---------- */
+.btn, .tabbtn{
+  border-color: var(--line) !important;
+}
+
+.btn{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06)) !important;
+}
+
+.field input, .field select, .field textarea{
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.38), rgba(0,0,0,.26)) !important;
+  border-color: var(--line) !important;
+}
+
+/* ---------- H) Piccolo polish: badge e tag più leggibili ---------- */
+.badge, .tag{
+  border-color: var(--line) !important;
+  color: var(--fg2) !important;
+}
+
 </style>
 
 

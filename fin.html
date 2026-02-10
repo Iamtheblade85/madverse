@@ -4,1547 +4,2060 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Finance UI</title>
+
+  <!-- Theme (tu lo creerai/affinerai dopo) -->
   <link rel="stylesheet" href="fin-theme.css" />
 
+  <!-- Base layout + font grandi (minimo indispensabile; puoi spostarlo in fin-theme.css) -->
   <style>
-    :root { --gap: 12px; --border: 1px solid #d0d0d0; --muted: #666; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; }
-    header { padding: 10px 14px; border-bottom: var(--border); display:flex; gap: var(--gap); align-items:center; flex-wrap:wrap; }
-    header .title { font-weight: 900; }
-    main { padding: 14px; }
-    .tabs { display:flex; gap: 8px; flex-wrap: wrap; }
-    .tabbtn { padding: 8px 10px; border: var(--border); background: #fff; cursor:pointer; border-radius: 10px; }
-    .tabbtn[aria-selected="true"] { font-weight: 900; outline: 2px solid #000; }
-    .panel { display:none; }
-    .panel.active { display:block; }
+    :root{
+      --bg:#0b0f14; --fg:#e9eef6; --muted:#9fb0c7; --line:rgba(255,255,255,.10);
+      --card:rgba(255,255,255,.06);
+      --good:#19c37d; --bad:#ff5a5f; --warn:#f6c453; --info:#53a7ff;
+      --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      --fs: 18px; --fs2: 20px; --fs3: 26px; --radius: 14px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:var(--fs)}
+    button,input,select,textarea{font:inherit}
+    a{color:inherit}
 
-    .row { display:flex; gap: var(--gap); flex-wrap:wrap; align-items:flex-end; }
-    .col { display:flex; flex-direction:column; gap: 6px; }
-    label { font-size: 12px; color: var(--muted); }
-    input, select, textarea { padding: 8px; border: var(--border); border-radius: 10px; min-width: 220px; }
-    textarea { min-height: 80px; min-width: 320px; }
-    button { padding: 8px 10px; border: var(--border); background: #fff; cursor:pointer; border-radius: 10px; }
-    button.primary { outline: 2px solid #000; font-weight: 900; }
-    button.danger { border-color: #b00020; color: #b00020; }
+    header{
+      position:sticky; top:0; z-index:50;
+      background:linear-gradient(to bottom, rgba(11,15,20,.98), rgba(11,15,20,.86));
+      backdrop-filter: blur(8px);
+      border-bottom:1px solid var(--line);
+    }
+    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 16px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand h1{margin:0;font-size:var(--fs3);letter-spacing:.2px}
+    .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.04);color:var(--muted)}
+    .tabs{display:flex;gap:8px;padding:0 16px 12px}
+    .tabbtn{
+      padding:10px 12px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(255,255,255,.04);color:var(--fg);cursor:pointer
+    }
+    .tabbtn.active{background:rgba(83,167,255,.18);border-color:rgba(83,167,255,.35)}
+    main{padding:14px 16px 40px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
+    .col{flex:1 1 420px;min-width:340px}
+    .panel{
+      background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+      padding:14px; box-shadow: 0 10px 30px rgba(0,0,0,.22);
+    }
+    .panel h2{margin:0 0 10px;font-size:22px}
+    .panel h3{margin:12px 0 8px;font-size:20px;color:var(--fg)}
+    .muted{color:var(--muted)}
+    .hr{height:1px;background:var(--line);margin:12px 0}
+    .btn{
+      padding:10px 12px;border-radius:12px;border:1px solid var(--line);
+      background:rgba(255,255,255,.06);color:var(--fg);cursor:pointer
+    }
+    .btn.primary{background:rgba(25,195,125,.18);border-color:rgba(25,195,125,.35)}
+    .btn.danger{background:rgba(255,90,95,.18);border-color:rgba(255,90,95,.35)}
+    .btn.small{padding:8px 10px;border-radius:10px}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .field{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+    .field label{color:var(--muted);font-size:16px}
+    .field input,.field select,.field textarea{
+      padding:10px 12px;border-radius:12px;border:1px solid var(--line);
+      background:rgba(0,0,0,.18);color:var(--fg);outline:none
+    }
+    .field textarea{min-height:72px;resize:vertical}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .kpiwrap{display:grid;grid-template-columns:repeat(4, minmax(200px,1fr));gap:10px}
+    .kpi{
+      background:rgba(0,0,0,.18); border:1px solid var(--line); border-radius:16px;
+      padding:12px
+    }
+    .kpi .t{color:var(--muted);font-size:16px}
+    .kpi .v{font-size:24px;margin-top:6px}
+    .kpi .s{margin-top:6px;color:var(--muted);font-size:15px}
+    .money.pos{color:var(--good)} .money.neg{color:var(--bad)} .money.neu{color:var(--fg)}
+    .delta.pos{color:var(--good)} .delta.neg{color:var(--bad)} .delta.neu{color:var(--muted)}
 
-    .muted { color: var(--muted); font-size: 12px; }
-    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; padding: 2px 6px; border: var(--border); border-radius: 8px; background:#fafafa; }
+    /* Calendar */
+    .calbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .calbar .left{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .calbar .right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .monthTitle{font-size:22px;margin:0}
+    .calendar{
+      margin-top:10px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:hidden;
+      background:rgba(0,0,0,.12);
+    }
+    .calgrid{display:grid;grid-template-columns:repeat(7,1fr)}
+    .dow{padding:10px 10px;border-bottom:1px solid var(--line);color:var(--muted);font-size:15px}
+    .day{
+      min-height:116px; padding:10px;
+      border-right:1px solid var(--line); border-bottom:1px solid var(--line);
+      cursor:pointer; position:relative;
+    }
+    .day:nth-child(7n){border-right:none}
+    .dayHead{display:flex;align-items:center;justify-content:space-between}
+    .dayNum{font-size:18px;color:var(--muted)}
+    .badge{
+      font-size:13px;color:var(--muted);
+      border:1px solid var(--line);border-radius:999px;padding:3px 8px;background:rgba(255,255,255,.04)
+    }
+    .day.selected{outline:2px solid rgba(83,167,255,.55); outline-offset:-2px; background:rgba(83,167,255,.10)}
+    .evlist{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+    .ev{
+      border:1px solid var(--line);
+      border-left-width:8px;
+      border-radius:12px;
+      padding:8px 10px;
+      background:rgba(255,255,255,.05);
+      display:flex; gap:10px; align-items:flex-start; justify-content:space-between
+    }
+    .ev .l{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .ev .ttl{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ev .meta{font-size:13px;color:var(--muted)}
+    .ev .amt{font-size:16px;white-space:nowrap}
+    .ev .actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
+    .tag{font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
 
-    .hr { height: 1px; background: #e6e6e6; margin: 12px 0; }
-
-    .card { border: var(--border); border-radius: 14px; padding: 12px; background:#fff; }
-    .grid { display:grid; gap: 10px; }
-    .grid.two { grid-template-columns: repeat(2, minmax(260px, 1fr)); }
-    .grid.three { grid-template-columns: repeat(3, minmax(260px, 1fr)); }
-
-    .calendar { border: var(--border); border-radius: 14px; overflow:hidden; }
-    .cal-head { display:flex; justify-content:space-between; align-items:center; padding: 10px; border-bottom: var(--border); gap: 10px; flex-wrap:wrap; }
-    .cal-grid { display:grid; grid-template-columns: repeat(7, 1fr); }
-    .dow { padding: 8px; font-size: 12px; color: var(--muted); border-bottom: var(--border); background:#fafafa; }
-    .day { min-height: 110px; border-right: var(--border); border-bottom: var(--border); padding: 6px; display:flex; flex-direction:column; gap: 6px; }
-    .day:nth-child(7n) { border-right: none; }
-    .daynum { font-size: 12px; color: var(--muted); display:flex; justify-content:space-between; align-items:center; gap: 6px; }
-    .pill { display:inline-flex; gap: 6px; align-items:center; padding: 4px 8px; border: var(--border); border-radius: 999px; font-size: 12px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .pill small { color: var(--muted); }
-
-    details { border: var(--border); border-radius: 14px; padding: 10px; background:#fff; }
-    details > summary { cursor:pointer; font-weight: 900; }
-
-    table { border-collapse: collapse; width: 100%; }
-    th, td { text-align:left; border-bottom: var(--border); padding: 8px; font-size: 14px; }
-    th { font-size: 12px; color: var(--muted); background: #fafafa; }
-
-    .toast { position: fixed; right: 12px; bottom: 12px; padding: 10px 12px; border: var(--border); background: #fff; border-radius: 14px; max-width: 420px; display:none; }
-    .toast.show { display:block; }
-
-    /* Calendar header KPI cards */
-    .kpi-strip { display:flex; gap: 10px; overflow:auto; padding-bottom: 4px; }
-    .kpi { min-width: 320px; border: var(--border); border-radius: 14px; padding: 10px; background:#fff; }
-    .kpi .name { font-weight: 900; display:flex; justify-content:space-between; gap: 10px; }
-    .kpi .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
-    .kpi .vals { display:grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
-    .kpi .val { border: var(--border); border-radius: 12px; padding: 8px; }
-    .kpi .val .lab { color: var(--muted); font-size: 12px; }
-    .kpi .val .num { font-weight: 900; margin-top: 2px; }
+    /* Accordion tree */
+    details{border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.14);margin:10px 0;overflow:hidden}
+    summary{cursor:pointer;list-style:none;padding:12px 12px;font-size:18px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+    summary::-webkit-details-marker{display:none}
+    .treeBody{padding:0 12px 12px}
+    .treeRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.06)}
+    .treeRow .name{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .treeRow .amt{white-space:nowrap}
+    .footnote{font-size:14px;color:var(--muted)}
+    .toast{position:fixed;bottom:18px;left:18px;right:18px;display:none;z-index:200}
+    .toast .box{max-width:960px;margin:0 auto;border:1px solid var(--line);border-radius:16px;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);padding:12px 14px}
+    .toast .box b{display:block;margin-bottom:6px}
+    dialog{
+      width:min(900px, calc(100vw - 24px));
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:rgba(11,15,20,.98);
+      color:var(--fg);
+      padding:0;
+    }
+    dialog::backdrop{background:rgba(0,0,0,.55)}
+    .dlgHead{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .dlgHead h2{margin:0;font-size:22px}
+    .dlgBody{padding:14px}
+    .dlgFoot{padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+    .hint{font-size:14px;color:var(--muted);line-height:1.35}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    @media (max-width: 980px){
+      .kpiwrap{grid-template-columns:repeat(2, minmax(200px,1fr))}
+      .grid3{grid-template-columns:1fr}
+      .grid2{grid-template-columns:1fr}
+      .col{min-width:unset}
+      .day{min-height:106px}
+    }
   </style>
-</head>
 
+  <!-- dynamic rules for wallets/cards/categories created at runtime -->
+  <style id="dynRules"></style>
+</head>
 <body>
 <header>
-  <div class="title">Finance UI</div>
-  <div class="muted">Calendario • Settings • Carte</div>
-  <div style="flex:1"></div>
-
-  <div class="col">
-    <label>API Base</label>
-    <input id="apiBase" placeholder="/finance" value="/finance" />
-    <div class="muted">Esempio: <span class="kbd">/api/finance</span></div>
+  <div class="topbar">
+    <div class="brand">
+      <h1>Finance</h1>
+      <span class="pill" id="pillStatus">API: <span class="mono" id="pillApi">…</span></span>
+      <span class="pill">Data selezionata: <span class="mono" id="pillDate">…</span></span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn small" id="btnReload">Ricarica</button>
+      <button class="btn small" id="btnQuickAdd">+ Nuovo evento</button>
+    </div>
   </div>
-
-  <button id="btnReloadAll" class="primary">Ricarica dati</button>
+  <div class="tabs">
+    <button class="tabbtn active" data-tab="calendar">Calendario</button>
+    <button class="tabbtn" data-tab="overview">Panoramica</button>
+    <button class="tabbtn" data-tab="settings">Impostazioni</button>
+  </div>
 </header>
 
 <main>
-  <nav class="tabs" role="tablist" aria-label="Finance tabs">
-    <button class="tabbtn" role="tab" aria-selected="true" data-tab="tabCalendar">Calendario eventi</button>
-    <button class="tabbtn" role="tab" aria-selected="false" data-tab="tabSettings">Settings</button>
-    <button class="tabbtn" role="tab" aria-selected="false" data-tab="tabCards">Carte & Subtotali</button>
-  </nav>
+  <!-- CALENDAR TAB -->
+  <section id="tab-calendar">
+    <div class="row">
+      <div class="col" style="flex: 1 1 980px;">
+        <div class="panel">
+          <div class="calbar">
+            <div class="left">
+              <button class="btn small" id="btnPrevMonth">◀</button>
+              <h2 class="monthTitle" id="calTitle">…</h2>
+              <button class="btn small" id="btnNextMonth">▶</button>
+              <span class="pill">Clicca un giorno per aggiornare i saldi e le testate</span>
+            </div>
+            <div class="right">
+              <select id="calWalletFilter" class="btn" style="padding:10px 12px">
+                <option value="">Tutti i conti/carte</option>
+              </select>
+              <button class="btn primary" id="btnAddOnSelected">+ Evento nel giorno selezionato</button>
+            </div>
+          </div>
 
-  <div class="hr"></div>
+          <div class="hr"></div>
 
-  <!-- =================== TAB: CALENDAR =================== -->
-  <section id="tabCalendar" class="panel active" role="tabpanel">
+          <!-- HEADERS for each wallet/card (auto-updated on day click) -->
+          <div id="headersWrap" class="row" style="gap:12px"></div>
+
+          <div class="hr"></div>
+
+          <div class="calendar" id="calendar"></div>
+          <div class="footnote" style="margin-top:10px">
+            Suggerimento: clicca un evento per modificarlo. Puoi anche duplicare un evento in più mesi.
+          </div>
+        </div>
+      </div>
+
+      <div class="col" style="flex: 1 1 520px;">
+        <div class="panel">
+          <h2>Dettaglio giorno</h2>
+          <div class="muted" id="daySummary">Seleziona un giorno nel calendario.</div>
+          <div class="hr"></div>
+          <div id="dayEvents"></div>
+        </div>
+
+        <div class="panel" style="margin-top:12px">
+          <h2>Azioni rapide (utente non esperto)</h2>
+          <div class="row">
+            <button class="btn" id="btnQuickIncome">+ Entrata</button>
+            <button class="btn" id="btnQuickExpense">+ Spesa</button>
+            <button class="btn" id="btnQuickCardPurchase">+ Acquisto su carta</button>
+            <button class="btn" id="btnQuickRepayment">+ Rimborso carta</button>
+          </div>
+          <div class="hint" style="margin-top:10px">
+            - “Entrata/Spesa” = conto (bank/cash).<br/>
+            - “Acquisto su carta” = carta (spesa su plafond).<br/>
+            - “Rimborso carta” = pagamento dal conto verso la carta.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OVERVIEW TAB -->
+  <section id="tab-overview" style="display:none">
+    <div class="row">
+      <div class="col" style="flex: 1 1 920px">
+        <div class="panel">
+          <h2>Panoramica completa (albero dettagli)</h2>
+          <div class="muted">
+            Dati riassunti per conti e carte, con confronto mese precedente. Apri i gruppi per scendere di livello.
+          </div>
+          <div class="hr"></div>
+          <div class="row" style="align-items:center">
+            <div class="pill">Basato su data selezionata: <span class="mono" id="ovDate">…</span></div>
+            <div class="pill">Mese attivo: <span class="mono" id="ovMonth">…</span></div>
+          </div>
+          <div id="overviewTree"></div>
+        </div>
+      </div>
+
+      <div class="col" style="flex: 1 1 520px">
+        <div class="panel">
+          <h2>Carte: subtotali statement</h2>
+          <div class="muted">
+            Per ogni carta: finestra statement (es. 16→15), baseline, rate, charges/credits, addebito previsto.
+          </div>
+          <div class="hr"></div>
+          <div id="cardsStatementBox"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS TAB -->
+  <section id="tab-settings" style="display:none">
     <div class="row">
       <div class="col">
-        <label>Mese</label>
-        <input id="calMonth" type="month" />
-        <div class="muted">Seleziona il mese. Clicca un giorno per aggiornare i saldi “al giorno”.</div>
-      </div>
+        <div class="panel">
+          <h2>Impostazioni applicazione</h2>
 
-      <div class="col">
-        <label>Filtro wallet/carta (opzionale)</label>
-        <select id="calWalletFilter">
-          <option value="">Tutti</option>
+          <div class="grid2">
+            <div class="field">
+              <label>API base (già corretta)</label>
+              <input id="apiBase" value="https://iamemanuele.pythonanywhere.com/" />
+              <div class="hint">Lascia così. Il frontend usa questa base senza cambiare nomi payload/response.</div>
+            </div>
+
+            <div class="field">
+              <label>Auto-crea eventi “Addebito carta” (se manca)</label>
+              <select id="autoRepayToggle">
+                <option value="0">Disattivato</option>
+                <option value="1">Attivato</option>
+              </select>
+              <div class="hint">
+                Se attivo: quando cambia qualcosa su una carta, se il backend indica un addebito previsto e non esiste ancora, viene creato automaticamente
+                usando <span class="mono">defaultSourceWalletId</span> della carta.
+              </div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <h3>Impostazioni per carte (dal backend)</h3>
+          <div class="muted">Seleziona una carta e modifica. (Questo scrive su <span class="mono">/finance/cards/&lt;id&gt;/settings</span>.)</div>
+
+          <div class="grid2" style="margin-top:8px">
+            <div class="field">
+              <label>Carta</label>
+              <select id="selCard"></select>
+            </div>
+            <div class="field">
+              <label>Operazione</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn" id="btnLoadCardSettings">Carica</button>
+                <button class="btn primary" id="btnSaveCardSettings">Salva</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid3">
+            <div class="field"><label>Teilzahlung (importo minimo)</label><input id="csTeil" placeholder="es. 80" /></div>
+            <div class="field"><label>Debit day</label><input id="csDebitDay" placeholder="es. 18 / 15" /></div>
+            <div class="field"><label>Effective from</label><input id="csEffFrom" placeholder="YYYY-MM-DD" /></div>
+
+            <div class="field"><label>Kreditlimit</label><input id="csLimit" placeholder="es. 3000" /></div>
+            <div class="field"><label>Cycle start day</label><input id="csCycleStart" placeholder="es. 16" /></div>
+            <div class="field"><label>Cycle end day</label><input id="csCycleEnd" placeholder="es. 15" /></div>
+
+            <div class="field"><label>Sollzins annual</label><input id="csSoll" placeholder="es. 0.169" /></div>
+            <div class="field"><label>Effektivzins annual</label><input id="csEff" placeholder="es. 0.189" /></div>
+            <div class="field"><label>Debit month offset</label><input id="csOffset" placeholder="0 oppure 1" /></div>
+          </div>
+
+          <div class="hr"></div>
+          <div class="hint">
+            Nota: il colore di carte/categorie/azioni viene assegnato automaticamente (anche per nuove categorie) tramite hashing.
+            Puoi poi rifinire in <span class="mono">fin-theme.css</span>.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- EVENT DIALOG -->
+<dialog id="dlgEvent">
+  <div class="dlgHead">
+    <h2 id="dlgTitle">Evento</h2>
+    <button class="btn small" id="dlgClose">✕</button>
+  </div>
+  <div class="dlgBody">
+    <div class="grid2">
+      <div class="field">
+        <label>Tipo evento</label>
+        <select id="evType">
+          <option value="income">Entrata (conto)</option>
+          <option value="expense">Spesa (conto)</option>
+          <option value="card_purchase">Acquisto su carta</option>
+          <option value="card_repayment">Rimborso carta (da conto → carta)</option>
+          <option value="card_credit">Credito su carta (rimborso/nota credito)</option>
+          <option value="card_charge">Addebito su carta (fee/interessi)</option>
         </select>
-        <div class="muted">Filtro usa <span class="kbd">walletId</span> (backend filtra su più campi).</div>
+        <div class="hint">Scegli il tipo: il form mostra solo i campi necessari.</div>
       </div>
 
-      <div class="col">
-        <label>Ricerca</label>
-        <input id="calSearch" placeholder="titolo / categoria / note" />
+      <div class="field">
+        <label>Data evento (calendarDate)</label>
+        <input id="evCalendarDate" placeholder="YYYY-MM-DD" />
+        <div class="hint">Nel calendario si usa questa data (per la carta l’acquisto usa anche purchaseDate).</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>Titolo</label>
+        <input id="evTitle" />
+      </div>
+      <div class="field">
+        <label>Categoria</label>
+        <input id="evCategory" placeholder="es. Spesa, Alimentari, Affitto..." />
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>Importo</label>
+        <input id="evAmount" placeholder="es. 19.90" />
+      </div>
+      <div class="field">
+        <label>Note</label>
+        <input id="evNotes" />
+      </div>
+    </div>
+
+    <!-- Conditional fields -->
+    <div id="boxWallet" class="grid2" style="display:none">
+      <div class="field">
+        <label>Conto (walletId)</label>
+        <select id="evWalletId"></select>
+      </div>
+      <div class="field">
+        <label>(Opzionale) Serie mensile</label>
+        <select id="evSeriesMode">
+          <option value="none">Nessuna serie</option>
+          <option value="monthly_12">Mensile (12 mesi)</option>
+          <option value="monthly_24">Mensile (24 mesi)</option>
+          <option value="monthly_forever">Mensile (lunga durata)</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="boxCardPurchase" style="display:none">
+      <div class="grid2">
+        <div class="field">
+          <label>Carta (cardWalletId)</label>
+          <select id="evCardWalletId"></select>
+        </div>
+        <div class="field">
+          <label>Data acquisto (purchaseDate)</label>
+          <input id="evPurchaseDate" placeholder="YYYY-MM-DD" />
+          <div class="hint">Per la carta, la data contabile è purchaseDate (fallback calendarDate).</div>
+        </div>
       </div>
 
-      <div class="col">
-        <label>Saldi “al giorno”</label>
-        <input id="calAsOf" type="date" />
-        <div class="muted">Cambierà automaticamente cliccando sul calendario.</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Pagamento</label>
+          <select id="evScheduleKind">
+            <option value="instant">Unica soluzione</option>
+            <option value="financing_monthly">Rate mensili (importo fisso)</option>
+            <option value="financing_custom">Rate personalizzate (date + importi)</option>
+          </select>
+        </div>
+        <div class="field" id="boxFinFirst" style="display:none">
+          <label>Prima rata: statement month (YYYY-MM)</label>
+          <input id="evFirstStmtMonth" placeholder="es. 2026-03" />
+        </div>
       </div>
 
-      <div class="col">
-        <label>&nbsp;</label>
-        <button id="btnCalRefresh" class="primary">Aggiorna</button>
+      <div class="grid2" id="boxFinMonthly" style="display:none">
+        <div class="field">
+          <label>Numero rate (count)</label>
+          <input id="evFinCount" placeholder="es. 12" />
+        </div>
+        <div class="field">
+          <label>Importo rata (opzionale)</label>
+          <input id="evFinInstAmount" placeholder="se vuoto = totale / count" />
+        </div>
       </div>
 
-      <div class="col">
-        <label>&nbsp;</label>
-        <button id="btnNewEvent">+ Nuovo evento</button>
+      <div class="field" id="boxFinCustom" style="display:none">
+        <label>Rate personalizzate</label>
+        <textarea id="evFinCustomJson" class="mono" placeholder='[
+  {"date":"2026-03-10","amount":50},
+  {"date":"2026-04-10","amount":50}
+]'></textarea>
+        <div class="hint">Inserisci JSON array: ogni rata con <span class="mono">date</span> e <span class="mono">amount</span>.</div>
+      </div>
+    </div>
+
+    <div id="boxRepayment" class="grid2" style="display:none">
+      <div class="field">
+        <label>Da conto (fromWalletId)</label>
+        <select id="evFromWalletId"></select>
+      </div>
+      <div class="field">
+        <label>A carta (toCardWalletId)</label>
+        <select id="evToCardWalletId"></select>
+      </div>
+      <div class="field">
+        <label>Data pagamento (paymentDate)</label>
+        <input id="evPaymentDate" placeholder="YYYY-MM-DD" />
+      </div>
+      <div class="field">
+        <label>Categoria (consigliata)</label>
+        <input id="evRepCategory" value="Card Repayment" />
+      </div>
+    </div>
+
+    <div id="boxCardCredit" class="grid2" style="display:none">
+      <div class="field">
+        <label>Carta (cardWalletId)</label>
+        <select id="evCardCreditWalletId"></select>
+      </div>
+      <div class="field">
+        <label>subType (opzionale)</label>
+        <input id="evSubTypeCredit" placeholder="gutschrift / mapped_income / ..." />
+      </div>
+    </div>
+
+    <div id="boxCardCharge" class="grid2" style="display:none">
+      <div class="field">
+        <label>Carta (cardWalletId)</label>
+        <select id="evCardChargeWalletId"></select>
+      </div>
+      <div class="field">
+        <label>subType</label>
+        <select id="evSubTypeCharge">
+          <option value="interest_card">interest_card</option>
+          <option value="fee_card">fee_card</option>
+          <option value="interest_financing">interest_financing</option>
+        </select>
       </div>
     </div>
 
     <div class="hr"></div>
 
-    <div class="card">
-      <div class="row" style="justify-content:space-between; align-items:flex-start;">
-        <div>
-          <div style="font-weight:900;">Testate per ogni conto/carta</div>
-          <div class="muted">
-            Saldo al giorno • Spese mese • Diff mese scorso • Entrate mese • Diff mese scorso • Spese rimanenti mese.
-            <br/>Per le carte, i “rimborsi” sono auto-creati/aggiornati come eventi in base allo statement del backend (se la carta ha <span class="kbd">defaultSourceWalletId</span>).
+    <details>
+      <summary>
+        <span>Duplicazione (stesso evento in più mesi)</span>
+        <span class="tag">Opzionale</span>
+      </summary>
+      <div class="treeBody">
+        <div class="grid2">
+          <div class="field">
+            <label>Duplica per N mesi (crea copie)</label>
+            <input id="dupMonths" placeholder="es. 3 (crea copie nei prossimi 3 mesi)" />
+          </div>
+          <div class="field">
+            <label>Regola date</label>
+            <select id="dupRule">
+              <option value="same_day_or_last">Stesso giorno (se non esiste → ultimo giorno del mese)</option>
+              <option value="first_day">Primo giorno del mese</option>
+              <option value="last_day">Ultimo giorno del mese</option>
+            </select>
           </div>
         </div>
-        <div class="muted">
-          Regola automatica rimborsi carta: al salvataggio/modifica/cancellazione di eventi carta → ricalcolo → crea/aggiorna evento <span class="kbd">card_repayment</span>.
+        <div class="hint">
+          Questo crea eventi separati (drop-in) senza cambiare backend. Per entrate/spese puoi anche usare “Serie mensile”.
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div class="dlgFoot">
+    <button class="btn danger" id="btnDeleteEvent" style="display:none">Elimina</button>
+    <button class="btn" id="btnCancelEvent">Annulla</button>
+    <button class="btn primary" id="btnSaveEvent">Salva</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast">
+  <div class="box">
+    <b id="toastTitle">Info</b>
+    <div id="toastMsg" class="muted"></div>
+  </div>
+</div>
+
+<script>
+/* =========================
+   Utilities
+========================= */
+const $ = (id)=>document.getElementById(id);
+
+function toast(title, msg){
+  $("toastTitle").textContent = title || "Info";
+  $("toastMsg").textContent = msg || "";
+  $("toast").style.display = "block";
+  clearTimeout(window.__toastT);
+  window.__toastT = setTimeout(()=>{ $("toast").style.display="none"; }, 4200);
+}
+
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+function pad2(n){ return String(n).padStart(2,"0"); }
+
+function isoDate(d){
+  const y=d.getFullYear(), m=d.getMonth()+1, day=d.getDate();
+  return `${y}-${pad2(m)}-${pad2(day)}`;
+}
+
+function parseISO(s){
+  if(!s || typeof s!=="string") return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s.trim());
+  if(!m) return null;
+  const dt = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+  if(Number.isNaN(dt.getTime())) return null;
+  return dt;
+}
+
+function ymStr(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`; }
+
+function monthStart(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+function monthEnd(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
+
+function addMonthsJS(d, n){
+  const y = d.getFullYear();
+  const m = d.getMonth();
+  const day = d.getDate();
+  const tgt = new Date(y, m+n, 1);
+  const last = new Date(tgt.getFullYear(), tgt.getMonth()+1, 0).getDate();
+  const dd = Math.min(day, last);
+  return new Date(tgt.getFullYear(), tgt.getMonth(), dd);
+}
+
+function samePeriodPrevMonth(from, to){
+  // same day span previous month (clamp day)
+  const f = addMonthsJS(from, -1);
+  const t = addMonthsJS(to, -1);
+  return {from:f, to:t};
+}
+
+function fmtMoney(x){
+  const v = Number(x || 0);
+  const s = v.toLocaleString("it-IT", {minimumFractionDigits:2, maximumFractionDigits:2});
+  return s + " €";
+}
+function moneyClassSigned(v){
+  const x = Number(v||0);
+  if(x>0) return "pos";
+  if(x<0) return "neg";
+  return "neu";
+}
+function deltaClass(v){
+  const x = Number(v||0);
+  if(x>0) return "pos";
+  if(x<0) return "neg";
+  return "neu";
+}
+
+/* hash → stable HSL color */
+function hash32(str){
+  let h=2166136261>>>0;
+  for(let i=0;i<str.length;i++){
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h>>>0;
+}
+function hslFromKey(key){
+  const h = hash32(String(key)) % 360;
+  const s = 64;
+  const l = 48;
+  return `hsl(${h} ${s}% ${l}%)`;
+}
+function ensureDynRule(selector, color){
+  // create CSS rule with left border & accent usage
+  const style = $("dynRules");
+  const css = `${selector}{--accent:${color};border-left-color:var(--accent)!important}
+${selector} .tag{border-color:color-mix(in oklab, var(--accent), rgba(255,255,255,.15) 60%);color:color-mix(in oklab, var(--accent), white 35%)}
+${selector} .ttl{color:color-mix(in oklab, var(--accent), white 28%)}
+`;
+  if(!style.__set) style.__set = new Set();
+  if(style.__set.has(selector)) return;
+  style.__set.add(selector);
+  style.textContent += "\n" + css;
+}
+
+/* =========================
+   API
+========================= */
+function apiBase(){
+  // fixed as per your setup
+  const raw = ($("apiBase").value || "https://iamemanuele.pythonanywhere.com/").trim();
+  return raw.replace(/\/+$/, "") + "/finance";
+}
+async function apiFetch(path, opts={}){
+  const base = apiBase();
+  const url = base.replace(/\/+$/, "") + path;
+  const res = await fetch(url, {
+    headers: {"Content-Type":"application/json"},
+    ...opts
+  });
+  if(!res.ok){
+    let txt=""; try{ txt=await res.text(); }catch{}
+    throw new Error(`HTTP ${res.status} ${res.statusText} - ${txt}`);
+  }
+  const ct = (res.headers.get("content-type")||"").toLowerCase();
+  if(ct.includes("application/json")) return await res.json();
+  return await res.text();
+}
+
+/* =========================
+   State
+========================= */
+const state = {
+  wallets: [],
+  events: [],
+  dashboard: null,
+  selectedDate: new Date(),
+  visibleMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  walletFilter: "",
+
+  // caches
+  walletsById: new Map(),
+  cardIds: new Set(),
+  walletNameById: new Map(),
+};
+
+function saveLocal(){
+  localStorage.setItem("fin_ui_apiBase", $("apiBase").value);
+  localStorage.setItem("fin_ui_autoRepay", $("autoRepayToggle").value);
+}
+function loadLocal(){
+  const a = localStorage.getItem("fin_ui_apiBase");
+  if(a) $("apiBase").value = a;
+  const t = localStorage.getItem("fin_ui_autoRepay");
+  if(t) $("autoRepayToggle").value = t;
+}
+
+/* =========================
+   Data loading
+========================= */
+async function loadWallets(){
+  const ws = await apiFetch("/wallets");
+  state.wallets = Array.isArray(ws) ? ws : [];
+  state.walletsById = new Map(state.wallets.map(w=>[String(w.id), w]));
+  state.walletNameById = new Map(state.wallets.map(w=>[String(w.id), w.name]));
+  state.cardIds = new Set(state.wallets.filter(w=>w.type==="card").map(w=>String(w.id)));
+
+  // color rules per wallet
+  for(const w of state.wallets){
+    const key = `wallet:${w.id}:${w.type}:${w.name}`;
+    ensureDynRule(`.accent-wallet-${w.id}`, hslFromKey(key));
+  }
+}
+
+function dateRangeForMonth(m0){
+  const ms = monthStart(m0);
+  const me = monthEnd(m0);
+  // fetch a wider range to show cross-window events near month edges
+  const from = addDays(ms, -10);
+  const to   = addDays(me,  10);
+  return {from, to};
+}
+function addDays(d, n){
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate()+n);
+  return x;
+}
+
+async function loadEventsForVisibleMonth(){
+  const {from, to} = dateRangeForMonth(state.visibleMonth);
+  const qs = new URLSearchParams({
+    from: isoDate(from),
+    to: isoDate(to)
+  });
+  // optional wallet filter: backend supports walletId
+  if(state.walletFilter){
+    qs.set("walletId", state.walletFilter);
+  }
+  const ev = await apiFetch("/events?"+qs.toString());
+  state.events = Array.isArray(ev) ? ev : [];
+}
+
+async function loadDashboard(){
+  const asOf = state.selectedDate ? isoDate(state.selectedDate) : isoDate(new Date());
+  const month = ymStr(state.visibleMonth);
+  const qs = new URLSearchParams({ asOf, month });
+  const d = await apiFetch("/dashboard?"+qs.toString());
+  state.dashboard = d || null;
+}
+
+/* =========================
+   Auto-create repayment events (optional)
+========================= */
+async function maybeAutoCreateRepayments(){
+  if($("autoRepayToggle").value !== "1") return;
+  if(!state.dashboard || !state.dashboard.wallets) return;
+
+  // We only create if:
+  // - wallet is card
+  // - scheduledRepayment.exists == false
+  // - defaultSourceWalletId exists
+  // - paymentDate within a reasonable window (current visible month ± 1)
+  const month = state.visibleMonth;
+  const winFrom = addMonthsJS(monthStart(month), -1);
+  const winTo = addMonthsJS(monthEnd(month), 1);
+
+  // Preload events in a wider range to avoid duplicates
+  const {from, to} = dateRangeForMonth(month);
+  const qs = new URLSearchParams({from: isoDate(addDays(from,-40)), to: isoDate(addDays(to,40))});
+  const all = await apiFetch("/events?"+qs.toString());
+  const allEvents = Array.isArray(all) ? all : [];
+
+  for(const w of state.dashboard.wallets){
+    if(w.type !== "card") continue;
+    const cardId = String(w.id);
+    const card = w.card;
+    if(!card || !card.scheduledRepayment) continue;
+    const sr = card.scheduledRepayment;
+    if(sr.exists) continue;
+
+    const payDate = parseISO(sr.paymentDate);
+    if(!payDate) continue;
+    if(payDate < winFrom || payDate > winTo) continue;
+
+    // Need defaultSourceWalletId (backend gives it in wallets list, not dashboard card.settings)
+    const walletRow = state.walletsById.get(cardId);
+    const defaultSourceId = walletRow ? walletRow.defaultSourceWalletId : null;
+    if(!defaultSourceId) continue;
+
+    // Check if already present: card_repayment with toCardWalletId=cardId and paymentDate=sr.paymentDate
+    const already = allEvents.some(e =>
+      e.type==="card_repayment" &&
+      String(e.toCardWalletId||"")===cardId &&
+      String(e.paymentDate||"")===sr.paymentDate &&
+      (e.status||"active")!=="skipped"
+    );
+    if(already) continue;
+
+    // Create event
+    const payload = {
+      type: "card_repayment",
+      title: "Addebito carta (auto)",
+      amount: Number(sr.suggestedAmount || sr.baselineAmount || 0),
+      category: "Card Repayment",
+      calendarDate: sr.paymentDate,
+      notes: "Creato automaticamente",
+      fromWalletId: Number(defaultSourceId),
+      toCardWalletId: Number(cardId),
+      paymentDate: sr.paymentDate
+    };
+    if(!payload.amount || payload.amount<=0) continue;
+
+    try{
+      await apiFetch("/events", {method:"POST", body: JSON.stringify(payload)});
+      toast("Addebito carta creato", `Carta ${w.name}: ${sr.paymentDate} - ${fmtMoney(payload.amount)}`);
+    }catch(err){
+      // non bloccare UX
+      console.warn("auto-repayment failed", err);
+    }
+  }
+}
+
+/* =========================
+   Rendering: Tabs
+========================= */
+function setTab(name){
+  for(const b of document.querySelectorAll(".tabbtn")){
+    b.classList.toggle("active", b.dataset.tab===name);
+  }
+  $("tab-calendar").style.display = (name==="calendar") ? "" : "none";
+  $("tab-overview").style.display = (name==="overview") ? "" : "none";
+  $("tab-settings").style.display = (name==="settings") ? "" : "none";
+  if(name==="overview") renderOverview();
+}
+
+/* =========================
+   Rendering: Headers (per wallet/card)
+========================= */
+function renderHeaders(){
+  const wrap = $("headersWrap");
+  wrap.innerHTML = "";
+
+  if(!state.dashboard || !state.dashboard.wallets){
+    wrap.innerHTML = `<div class="muted">Caricamento testate…</div>`;
+    return;
+  }
+
+  // One header per wallet, collapsed into cards
+  for(const w of state.dashboard.wallets){
+    // apply accent class by wallet id
+    const cls = `panel accent-wallet-${w.id}`;
+    const card = document.createElement("div");
+    card.className = cls;
+    card.style.flex = "1 1 420px";
+    card.style.minWidth = "340px";
+    card.style.padding = "14px";
+
+    const typeLabel = (w.type==="card") ? "Carta" : "Conto";
+    const selected = isoDate(state.selectedDate);
+
+    const bal = Number(w.balance || 0);
+    const spentSoFar = Number(w.spentSoFar || 0);
+    const spentRem = Number(w.spentRemaining || 0);
+    const incSoFar = Number(w.incomeSoFar || 0);
+    const incRem = Number(w.incomeRemaining || 0);
+
+    const dExp = w.compareLastMonthExpenses || {amount:0, percent:0};
+    const dInc = w.compareLastMonthIncome || {amount:0, percent:0};
+
+    const expDiff = Number(dExp.amount||0);
+    const incDiff = Number(dInc.amount||0);
+
+    let extra = "";
+    if(w.type==="card" && w.card){
+      const c = w.card;
+      const lim = c.limit!=null ? fmtMoney(c.limit) : "—";
+      const avail = c.availableCredit!=null ? fmtMoney(c.availableCredit) : "—";
+      const out = c.outstanding!=null ? fmtMoney(c.outstanding) : "—";
+      const sr = c.scheduledRepayment || null;
+      extra = `
+        <div class="hr"></div>
+        <div class="row" style="gap:10px;align-items:stretch">
+          <div class="kpi" style="flex:1">
+            <div class="t">Plafond</div>
+            <div class="v">${lim}</div>
+            <div class="s">Disponibile: <span class="money ${moneyClassSigned(Number(c.availableCredit||0))}">${avail}</span></div>
+          </div>
+          <div class="kpi" style="flex:1">
+            <div class="t">Usato (outstanding)</div>
+            <div class="v"><span class="money neg">${out}</span></div>
+            <div class="s">Saldo carta: <span class="money neg">${fmtMoney(Number(w.balance||0))}</span></div>
+          </div>
+        </div>
+        ${sr ? `
+          <div class="hr"></div>
+          <div class="row" style="gap:10px;align-items:center;justify-content:space-between">
+            <div>
+              <div class="t muted">Addebito previsto</div>
+              <div class="v" style="font-size:20px">
+                <span class="mono">${sr.paymentDate}</span> ·
+                <span class="money neg">${fmtMoney(Number(sr.suggestedAmount||0))}</span>
+                <span class="tag" style="margin-left:8px">${sr.exists ? "registrato" : "mancante"}</span>
+              </div>
+            </div>
+          </div>
+        `:""}
+      `;
+    }
+
+    card.innerHTML = `
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+        <div style="min-width:0">
+          <div class="muted">${typeLabel}</div>
+          <div style="font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(w.name||"")}</div>
+          <div class="muted">Aggiornato al giorno: <span class="mono">${selected}</span></div>
+        </div>
+        <div style="text-align:right">
+          <div class="muted">Saldo</div>
+          <div style="font-size:26px" class="money ${moneyClassSigned(bal)}">${fmtMoney(bal)}</div>
         </div>
       </div>
 
       <div class="hr"></div>
-      <div id="kpiStrip" class="kpi-strip"></div>
-    </div>
 
-    <div class="hr"></div>
-
-    <div class="calendar">
-      <div class="cal-head">
-        <div class="row" style="align-items:center">
-          <button id="btnPrevMonth" title="Mese precedente">◀</button>
-          <div>
-            <div id="calTitle" style="font-weight:900"></div>
-            <div class="muted">Clic su giorno: aggiorna saldi e crea evento. Clic su evento: modifica.</div>
-          </div>
-          <button id="btnNextMonth" title="Mese successivo">▶</button>
+      <div class="kpiwrap" style="grid-template-columns:repeat(4, minmax(180px,1fr))">
+        <div class="kpi">
+          <div class="t">Spese nel mese</div>
+          <div class="v"><span class="money neg">${fmtMoney(-spentSoFar).replace("-", "")}</span></div>
+          <div class="s">Δ mese scorso: <span class="delta ${deltaClass(expDiff)}">${fmtMoney(expDiff)}</span></div>
         </div>
-
-        <div class="row" style="align-items:center">
-          <div class="muted">Tip: per “stesso evento in più mesi” usa “Duplica su mesi” nell’editor.</div>
+        <div class="kpi">
+          <div class="t">Entrate nel mese</div>
+          <div class="v"><span class="money pos">${fmtMoney(incSoFar)}</span></div>
+          <div class="s">Δ mese scorso: <span class="delta ${deltaClass(incDiff)}">${fmtMoney(incDiff)}</span></div>
+        </div>
+        <div class="kpi">
+          <div class="t">Spese rimanenti</div>
+          <div class="v"><span class="money neg">${fmtMoney(-spentRem).replace("-", "")}</span></div>
+          <div class="s">fino a fine mese</div>
+        </div>
+        <div class="kpi">
+          <div class="t">Entrate rimanenti</div>
+          <div class="v"><span class="money pos">${fmtMoney(incRem)}</span></div>
+          <div class="s">fino a fine mese</div>
         </div>
       </div>
 
-      <div class="cal-grid" id="calDow"></div>
-      <div class="cal-grid" id="calGrid"></div>
-    </div>
+      ${extra}
+    `;
+    wrap.appendChild(card);
+  }
+}
 
-    <div class="hr"></div>
+/* =========================
+   Rendering: Calendar
+========================= */
+const DOW = ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"];
 
-    <div class="card">
-      <div style="font-weight:900; margin-bottom:8px;">Eventi nel mese (tabella)</div>
-      <div class="muted" style="margin-bottom:8px;">Per verifiche e modifiche rapide.</div>
-      <div style="overflow:auto">
-        <table id="eventsTable">
-          <thead>
-            <tr>
-              <th>ID</th><th>Data</th><th>Tipo</th><th>Titolo</th><th>Categoria</th><th>Importo</th><th>Wallet</th><th>Azioni</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+function eventEffectiveDayISO(ev){
+  // calendar shows based on:
+  // - card_purchase: purchaseDate fallback calendarDate
+  // - card_repayment: paymentDate preferred? (but backend stores calendarDate anyway)
+  if(ev.type==="card_purchase"){
+    return (ev.purchaseDate || ev.calendarDate || ev.date || ev.effectiveDate || "").slice(0,10);
+  }
+  if(ev.type==="card_repayment"){
+    return (ev.paymentDate || ev.calendarDate || ev.date || ev.effectiveDate || "").slice(0,10);
+  }
+  return (ev.calendarDate || ev.date || ev.effectiveDate || "").slice(0,10);
+}
+
+function normalizeEventForUI(ev){
+  // Ensure accent rules: by wallet/card + type + category
+  const wid = ev.walletId!=null ? String(ev.walletId) : null;
+  const cid = ev.cardWalletId!=null ? String(ev.cardWalletId) : (ev.toCardWalletId!=null ? String(ev.toCardWalletId) : null);
+  const type = ev.type || "";
+  const cat  = ev.category || "";
+  const sub  = ev.subType || "";
+
+  // dynamic category accent (also for new categories)
+  const catKey = `cat:${type}:${cat}:${sub}`;
+  const catClass = "accent-cat-" + hash32(catKey);
+  ensureDynRule(`.${catClass}`, hslFromKey(catKey));
+
+  const walletClass = wid ? `accent-wallet-${wid}` : "";
+  const cardClass   = cid ? `accent-wallet-${cid}` : "";
+
+  // choose main accent:
+  // for card events, prefer card accent
+  const accentClass = (type.startsWith("card_") && cid) ? cardClass : walletClass;
+
+  return {...ev, __day: eventEffectiveDayISO(ev), __catClass: catClass, __accentClass: accentClass};
+}
+
+function renderCalendar(){
+  $("calTitle").textContent = state.visibleMonth.toLocaleString("it-IT", {month:"long", year:"numeric"}).replace(/^\w/, c=>c.toUpperCase());
+
+  const cal = $("calendar");
+  cal.innerHTML = "";
+
+  const ms = monthStart(state.visibleMonth);
+  const me = monthEnd(state.visibleMonth);
+
+  // Build header row (DOW)
+  const head = document.createElement("div");
+  head.className = "calgrid";
+  for(const d of DOW){
+    const el = document.createElement("div");
+    el.className = "dow";
+    el.textContent = d;
+    head.appendChild(el);
+  }
+  cal.appendChild(head);
+
+  // Determine first day offset (Mon=0)
+  const firstJS = new Date(ms.getFullYear(), ms.getMonth(), 1);
+  let jsDay = firstJS.getDay(); // Sun=0
+  let offset = (jsDay===0) ? 6 : jsDay-1;
+
+  const grid = document.createElement("div");
+  grid.className = "calgrid";
+
+  // Create empty leading cells
+  for(let i=0;i<offset;i++){
+    const el = document.createElement("div");
+    el.className = "day";
+    el.style.opacity = "0.25";
+    el.innerHTML = `<div class="dayHead"><div class="dayNum"> </div></div>`;
+    grid.appendChild(el);
+  }
+
+  // Normalize events
+  const evs = state.events.map(normalizeEventForUI);
+
+  // Group by day
+  const byDay = new Map();
+  for(const e of evs){
+    if(!e.__day) continue;
+    if(!byDay.has(e.__day)) byDay.set(e.__day, []);
+    byDay.get(e.__day).push(e);
+  }
+  for(const [k,arr] of byDay.entries()){
+    arr.sort((a,b)=> (a.id||0)-(b.id||0));
+  }
+
+  // Month cells
+  for(let d=1; d<=me.getDate(); d++){
+    const cur = new Date(ms.getFullYear(), ms.getMonth(), d);
+    const dayIso = isoDate(cur);
+    const list = byDay.get(dayIso) || [];
+
+    const el = document.createElement("div");
+    el.className = "day";
+    if(isoDate(state.selectedDate)===dayIso) el.classList.add("selected");
+
+    const count = list.length;
+    el.innerHTML = `
+      <div class="dayHead">
+        <div class="dayNum">${d}</div>
+        ${count ? `<div class="badge">${count} eventi</div>` : `<div class="badge">—</div>`}
       </div>
+      <div class="evlist"></div>
+    `;
+    el.addEventListener("click", ()=> onSelectDay(cur));
+
+    const evlist = el.querySelector(".evlist");
+    // show up to 3 items for readability
+    const shown = list.slice(0, 3);
+    for(const ev of shown){
+      const item = renderEventChip(ev);
+      evlist.appendChild(item);
+    }
+    if(list.length>3){
+      const more = document.createElement("div");
+      more.className = "muted";
+      more.style.fontSize = "13px";
+      more.textContent = `+ altri ${list.length-3}`;
+      evlist.appendChild(more);
+    }
+
+    grid.appendChild(el);
+  }
+
+  cal.appendChild(grid);
+
+  // right panel details
+  renderDayPanel();
+}
+
+function renderEventChip(ev){
+  const el = document.createElement("div");
+  el.className = `ev ${ev.__accentClass} ${ev.__catClass}`;
+  el.dataset.id = ev.id;
+
+  const sign = (ev.type==="income" || ev.type==="card_credit") ? "+" :
+               (ev.type==="expense" || ev.type==="card_purchase" || ev.type==="card_charge" || ev.type==="card_repayment") ? "-" : "";
+
+  const amt = Number(ev.amount||0);
+  const isPos = (ev.type==="income" || ev.type==="card_credit");
+  const amtCls = isPos ? "pos" : "neg";
+
+  const walletLabel = (() => {
+    if(ev.type==="income" || ev.type==="expense"){
+      return state.walletNameById.get(String(ev.walletId||"")) || "Conto";
+    }
+    if(ev.type==="card_purchase" || ev.type==="card_credit" || ev.type==="card_charge"){
+      return state.walletNameById.get(String(ev.cardWalletId||"")) || "Carta";
+    }
+    if(ev.type==="card_repayment"){
+      const from = state.walletNameById.get(String(ev.fromWalletId||"")) || "Conto";
+      const to = state.walletNameById.get(String(ev.toCardWalletId||"")) || "Carta";
+      return `${from} → ${to}`;
+    }
+    return "";
+  })();
+
+  const tag = (ev.type==="card_purchase" && ev.schedule && ev.schedule.kind==="financing") ? "rate" :
+              (ev.type==="card_repayment") ? "rimborso" :
+              (ev.type==="card_credit") ? "credito" :
+              (ev.type==="card_charge") ? (ev.subType||"addebito") :
+              (ev.type==="income") ? "entrata" :
+              (ev.type==="expense") ? "spesa" : ev.type;
+
+  el.innerHTML = `
+    <div class="l" style="min-width:0">
+      <div class="ttl">${escapeHtml(ev.title||"")}</div>
+      <div class="meta">${escapeHtml(ev.category||"")} · <span class="tag">${escapeHtml(tag)}</span></div>
+      <div class="meta">${escapeHtml(walletLabel)}</div>
     </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+      <div class="amt money ${amtCls}">${sign}${fmtMoney(amt).replace(" €","")} €</div>
+    </div>
+  `;
 
-    <!-- Event Editor -->
-    <dialog id="dlgEvent" style="width:min(920px, 96vw); border: var(--border); border-radius: 14px; padding: 12px;">
-      <form method="dialog" id="eventForm">
-        <div class="row" style="justify-content:space-between; align-items:center;">
-          <div>
-            <div id="dlgTitle" style="font-weight:900; font-size: 18px;">Evento</div>
-            <div class="muted">Campi minimi: tipo, data, titolo, categoria, importo. Il resto è guidato.</div>
+  // stop propagation so clicking chip doesn't change selected day unexpectedly
+  el.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    openEditEvent(ev.id);
+  });
+
+  return el;
+}
+
+/* =========================
+   Day panel (right)
+========================= */
+function renderDayPanel(){
+  const dayIso = isoDate(state.selectedDate);
+  $("pillDate").textContent = dayIso;
+  $("ovDate").textContent = dayIso;
+  $("ovMonth").textContent = ymStr(state.visibleMonth);
+
+  const evs = state.events.map(normalizeEventForUI).filter(e=>e.__day===dayIso);
+  const filt = state.walletFilter ? String(state.walletFilter) : "";
+  const shown = filt ? evs.filter(e=>{
+    // keep those linked to filtered wallet
+    const w = String(filt);
+    return String(e.walletId||"")===w || String(e.cardWalletId||"")===w || String(e.fromWalletId||"")===w || String(e.toCardWalletId||"")===w;
+  }) : evs;
+
+  $("daySummary").innerHTML = `
+    <div style="font-size:20px"><b>${dayIso}</b></div>
+    <div class="muted">${shown.length} eventi</div>
+  `;
+
+  const box = $("dayEvents");
+  box.innerHTML = "";
+  if(!shown.length){
+    box.innerHTML = `<div class="muted">Nessun evento in questo giorno.</div>`;
+    return;
+  }
+
+  for(const ev of shown.sort((a,b)=>(a.id||0)-(b.id||0))){
+    const row = document.createElement("div");
+    row.className = `ev ${ev.__accentClass} ${ev.__catClass}`;
+    row.style.borderLeftWidth = "10px";
+
+    const isPos = (ev.type==="income" || ev.type==="card_credit");
+    const amtCls = isPos ? "pos" : "neg";
+    const sign = isPos ? "+" : "-";
+    const walletLabel = (() => {
+      if(ev.type==="income" || ev.type==="expense"){
+        return state.walletNameById.get(String(ev.walletId||"")) || "Conto";
+      }
+      if(ev.type==="card_purchase" || ev.type==="card_credit" || ev.type==="card_charge"){
+        return state.walletNameById.get(String(ev.cardWalletId||"")) || "Carta";
+      }
+      if(ev.type==="card_repayment"){
+        const from = state.walletNameById.get(String(ev.fromWalletId||"")) || "Conto";
+        const to = state.walletNameById.get(String(ev.toCardWalletId||"")) || "Carta";
+        return `${from} → ${to}`;
+      }
+      return "";
+    })();
+
+    row.innerHTML = `
+      <div class="l" style="min-width:0">
+        <div class="ttl">${escapeHtml(ev.title||"")}</div>
+        <div class="meta">${escapeHtml(ev.category||"")} · ${escapeHtml(walletLabel)}</div>
+        <div class="meta">${escapeHtml(ev.notes||"")}</div>
+      </div>
+      <div class="actions">
+        <div class="amt money ${amtCls}">${sign}${fmtMoney(Number(ev.amount||0)).replace(" €","")} €</div>
+        <button class="btn small" data-act="edit">Modifica</button>
+      </div>
+    `;
+    row.querySelector("[data-act=edit]").addEventListener("click", ()=>openEditEvent(ev.id));
+    box.appendChild(row);
+  }
+}
+
+/* =========================
+   Overview: tree + card subtotals
+========================= */
+function groupSum(items, keyFn){
+  const m = new Map();
+  for(const it of items){
+    const k = keyFn(it);
+    m.set(k, (m.get(k)||0) + Number(it.amount||0));
+  }
+  return [...m.entries()].map(([k,v])=>({k, v}));
+}
+
+function renderOverview(){
+  if(!state.dashboard || !state.dashboard.wallets){
+    $("overviewTree").innerHTML = `<div class="muted">Caricamento…</div>`;
+    $("cardsStatementBox").innerHTML = "";
+    return;
+  }
+
+  const tree = $("overviewTree");
+  tree.innerHTML = "";
+
+  // Build tree for each wallet
+  for(const w of state.dashboard.wallets){
+    const wid = String(w.id);
+    const isCard = w.type==="card";
+    const accent = `accent-wallet-${w.id}`;
+
+    // events for month (solar month view) for this wallet
+    // We use selected visible month range:
+    const ms = monthStart(state.visibleMonth);
+    const me = monthEnd(state.visibleMonth);
+
+    const evs = state.events.map(normalizeEventForUI).filter(e=>{
+      const d = parseISO(e.__day);
+      if(!d) return false;
+      // only within visible month for tree details
+      if(d < ms || d > me) return false;
+
+      if(isCard){
+        const cid = String(e.cardWalletId||e.toCardWalletId||"");
+        return cid===wid;
+      }else{
+        return String(e.walletId||e.fromWalletId||"")===wid;
+      }
+    });
+
+    // split types
+    const incomes = evs.filter(e=>e.type==="income" || (isCard && (e.type==="card_repayment"))); // card "income" in dashboard is repayments
+    const expenses = evs.filter(e=>e.type==="expense" || (isCard && (e.type==="card_purchase" || e.type==="card_charge")));
+
+    // group by category
+    const expByCat = groupSum(expenses, e=> e.category||"Senza categoria").sort((a,b)=>b.v-a.v);
+    const incByCat = groupSum(incomes,  e=> e.category||"Senza categoria").sort((a,b)=>b.v-a.v);
+
+    const det = document.createElement("details");
+    det.className = accent;
+    det.open = false;
+    det.innerHTML = `
+      <summary>
+        <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          <b>${escapeHtml(w.name||"")}</b>
+          <span class="tag" style="margin-left:8px">${isCard ? "carta" : "conto"}</span>
+        </span>
+        <span class="money ${moneyClassSigned(Number(w.balance||0))}">${fmtMoney(Number(w.balance||0))}</span>
+      </summary>
+      <div class="treeBody">
+        <div class="grid2">
+          <div class="kpi">
+            <div class="t">Spese mese</div>
+            <div class="v"><span class="money neg">${fmtMoney(-Number(w.spentSoFar||0)).replace("-","")}</span></div>
+            <div class="s">Δ mese scorso: <span class="delta ${deltaClass(Number((w.compareLastMonthExpenses||{}).amount||0))}">${fmtMoney(Number((w.compareLastMonthExpenses||{}).amount||0))}</span></div>
           </div>
-          <div class="row">
-            <button id="btnDlgClose">Chiudi</button>
+          <div class="kpi">
+            <div class="t">Entrate mese</div>
+            <div class="v"><span class="money pos">${fmtMoney(Number(w.incomeSoFar||0))}</span></div>
+            <div class="s">Δ mese scorso: <span class="delta ${deltaClass(Number((w.compareLastMonthIncome||{}).amount||0))}">${fmtMoney(Number((w.compareLastMonthIncome||{}).amount||0))}</span></div>
           </div>
         </div>
 
         <div class="hr"></div>
 
-        <div class="grid two">
-          <div class="col">
-            <label>Tipo evento</label>
-            <select id="evType">
-              <option value="expense">Spesa (wallet normale)</option>
-              <option value="income">Entrata (wallet normale)</option>
-              <option value="card_purchase">Acquisto con carta</option>
-              <option value="card_repayment">Rimborso carta (da wallet a carta)</option>
-              <option value="card_credit">Gutschrift / Storno (su carta)</option>
-              <option value="card_charge">Addebito carta (interessi/fee)</option>
-            </select>
+        <details class="${accent}" style="margin:10px 0">
+          <summary><span>Spese per categoria</span><span class="tag">${expByCat.length}</span></summary>
+          <div class="treeBody">
+            ${expByCat.map(x=>`
+              <div class="treeRow ${catAccentClass("expense", x.k)}">
+                <div class="name">${escapeHtml(x.k)}</div>
+                <div class="amt money neg">${fmtMoney(-x.v).replace("-","")}</div>
+              </div>
+            `).join("") || `<div class="muted">Nessuna spesa nel mese.</div>`}
           </div>
-
-          <div class="col">
-            <label>Data (calendarDate)</label>
-            <input id="evCalendarDate" type="date" />
-            <div class="muted">Per <span class="kbd">card_purchase</span> viene anche usata come <span class="kbd">purchaseDate</span>.</div>
-          </div>
-
-          <div class="col">
-            <label>Titolo</label>
-            <input id="evTitle" placeholder="es. Supermercato" />
-          </div>
-
-          <div class="col">
-            <label>Categoria</label>
-            <input id="evCategory" placeholder="es. Alimentari" />
-          </div>
-
-          <div class="col">
-            <label>Importo (positivo)</label>
-            <input id="evAmount" type="number" step="0.01" placeholder="0.00" />
-          </div>
-
-          <div class="col">
-            <label>Note (opzionale)</label>
-            <textarea id="evNotes" placeholder="Dettagli (opzionale)"></textarea>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="grid three">
-          <div class="col">
-            <label>Wallet (income/expense)</label>
-            <select id="evWalletId"><option value="">—</option></select>
-          </div>
-
-          <div class="col">
-            <label>Carta (card_purchase / card_credit / card_charge)</label>
-            <select id="evCardWalletId"><option value="">—</option></select>
-          </div>
-
-          <div class="col">
-            <label>Da wallet → a carta (card_repayment)</label>
-            <div class="row">
-              <select id="evFromWalletId" style="min-width:260px"><option value="">Da wallet…</option></select>
-              <select id="evToCardWalletId" style="min-width:260px"><option value="">A carta…</option></select>
-            </div>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <details id="scheduleBox">
-          <summary>Pagamento rateale / finanziamento (solo per card_purchase)</summary>
-
-          <div class="grid two" style="margin-top:10px;">
-            <div class="col">
-              <label>kind</label>
-              <select id="schedKind">
-                <option value="instant">instant</option>
-                <option value="financing">financing</option>
-              </select>
-            </div>
-
-            <div class="col">
-              <label>count</label>
-              <input id="schedCount" type="number" min="1" step="1" placeholder="es. 12" />
-            </div>
-
-            <div class="col">
-              <label>firstStatementMonth (YYYY-MM)</label>
-              <input id="schedFirstStatementMonth" placeholder="es. 2026-02" />
-            </div>
-
-            <div class="col">
-              <label>monthlyInstallments.installmentAmount (opzionale)</label>
-              <input id="schedInstallmentAmount" type="number" step="0.01" placeholder="se vuoto = amount/count" />
-            </div>
-          </div>
-
-          <div class="hr"></div>
-
-          <details>
-            <summary>customInstallments (opzionale)</summary>
-            <div class="muted" style="margin:8px 0;">Una riga per rata: <span class="kbd">YYYY-MM-DD;importo</span></div>
-            <textarea id="schedCustomInstallments" placeholder="2026-03-05; 50.00&#10;2026-04-05; 50.00"></textarea>
-          </details>
         </details>
 
-        <div class="hr"></div>
-
-        <details>
-          <summary>Duplica su mesi</summary>
-          <div class="muted" style="margin:8px 0;">Crea eventi separati (robusto per DB in produzione).</div>
-          <div class="row">
-            <div class="col">
-              <label>Da mese</label>
-              <input id="dupFromMonth" type="month" />
-            </div>
-            <div class="col">
-              <label>A mese</label>
-              <input id="dupToMonth" type="month" />
-            </div>
-            <div class="col">
-              <label>Giorno del mese</label>
-              <input id="dupDay" type="number" min="1" max="31" step="1" placeholder="es. 1" />
-            </div>
-            <div class="col">
-              <label>&nbsp;</label>
-              <button type="button" id="btnDuplicate">Duplica ora</button>
-            </div>
+        <details class="${accent}" style="margin:10px 0">
+          <summary><span>Entrate per categoria</span><span class="tag">${incByCat.length}</span></summary>
+          <div class="treeBody">
+            ${incByCat.map(x=>`
+              <div class="treeRow ${catAccentClass("income", x.k)}">
+                <div class="name">${escapeHtml(x.k)}</div>
+                <div class="amt money pos">${fmtMoney(x.v)}</div>
+              </div>
+            `).join("") || `<div class="muted">Nessuna entrata nel mese.</div>`}
           </div>
         </details>
 
-        <div class="hr"></div>
-
-        <input type="hidden" id="evId" value="" />
-
-        <div class="row" style="justify-content:space-between;">
-          <div class="row">
-            <button type="button" id="btnDelete" class="danger" style="display:none;">Cancella</button>
+        <details class="${accent}" style="margin:10px 0">
+          <summary><span>Dettaglio eventi del mese</span><span class="tag">${evs.length}</span></summary>
+          <div class="treeBody">
+            ${evs.sort((a,b)=> (a.__day||"").localeCompare(b.__day||"") || (a.id||0)-(b.id||0)).map(e=>`
+              <div class="treeRow ${e.__catClass}">
+                <div class="name" style="min-width:0">
+                  <div><b>${escapeHtml(e.__day||"")}</b> · ${escapeHtml(e.title||"")}</div>
+                  <div class="muted" style="font-size:14px">${escapeHtml(e.category||"")} · ${escapeHtml(e.type||"")}</div>
+                </div>
+                <div class="amt money ${(e.type==="income"||e.type==="card_credit") ? "pos":"neg"}">${(e.type==="income"||e.type==="card_credit")?"+":"-"}${fmtMoney(Number(e.amount||0)).replace(" €","")} €</div>
+              </div>
+            `).join("") || `<div class="muted">Nessun evento nel mese.</div>`}
           </div>
-          <div class="row">
-            <button type="button" id="btnSave" class="primary">Salva</button>
+        </details>
+
+        <div class="hint">Clicca un evento nel Calendario per modificarlo/duplicarlo. In questa vista è solo consultazione.</div>
+      </div>
+    `;
+    tree.appendChild(det);
+  }
+
+  // Cards statement box
+  const cbox = $("cardsStatementBox");
+  cbox.innerHTML = "";
+  const cards = state.dashboard.wallets.filter(w=>w.type==="card");
+
+  if(!cards.length){
+    cbox.innerHTML = `<div class="muted">Nessuna carta.</div>`;
+    return;
+  }
+
+  for(const w of cards){
+    const accent = `accent-wallet-${w.id}`;
+    const s = (w.card && w.card.statement) ? w.card.statement : null;
+    const sr = (w.card && w.card.scheduledRepayment) ? w.card.scheduledRepayment : null;
+
+    const el = document.createElement("div");
+    el.className = `panel ${accent}`;
+    el.style.marginBottom = "12px";
+    el.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+        <div style="min-width:0">
+          <div class="muted">Carta</div>
+          <div style="font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(w.name||"")}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="muted">Saldo</div>
+          <div class="money neg" style="font-size:22px">${fmtMoney(Number(w.balance||0))}</div>
+        </div>
+      </div>
+
+      ${s ? `
+        <div class="hr"></div>
+        <div class="muted">Statement window: <span class="mono">${s.window.start}</span> → <span class="mono">${s.window.end}</span></div>
+        <div class="grid2" style="margin-top:10px">
+          <div class="kpi">
+            <div class="t">Baseline statement</div>
+            <div class="v money neg">${fmtMoney(Number(s.baselineAmount||0))}</div>
+            <div class="s">Instant: ${Number(s.instantPurchasesCount||0)} · Rate: ${Number((s.installments||[]).length||0)}</div>
+          </div>
+          <div class="kpi">
+            <div class="t">Charges / Credits</div>
+            <div class="v">
+              <span class="money neg">${fmtMoney(Number(s.charges||0))}</span> /
+              <span class="money pos">${fmtMoney(Number(s.credits||0))}</span>
+            </div>
+            <div class="s">Addebito previsto sotto</div>
           </div>
         </div>
+      ` : `<div class="hr"></div><div class="muted">Nessun dettaglio statement disponibile.</div>`}
 
-        <div id="dlgHint" class="muted" style="margin-top:10px;"></div>
-      </form>
-    </dialog>
-  </section>
-
-  <!-- =================== TAB: SETTINGS =================== -->
-  <section id="tabSettings" class="panel" role="tabpanel">
-    <div class="grid two">
-      <div class="card">
-        <div style="font-weight:900; margin-bottom:6px;">Settings carta</div>
-        <div class="muted" style="margin-bottom:10px;">Applica ai wallet con <span class="kbd">type=card</span>.</div>
-
-        <div class="col">
-          <label>Carta</label>
-          <select id="setCardSelect"><option value="">— Seleziona carta —</option></select>
-        </div>
-
+      ${sr ? `
         <div class="hr"></div>
-
-        <div class="grid two">
-          <div class="col"><label>cycleStartDay</label><input id="setCycleStart" type="number" min="1" max="31" step="1" /></div>
-          <div class="col"><label>cycleEndDay</label><input id="setCycleEnd" type="number" min="1" max="31" step="1" /></div>
-          <div class="col"><label>debitDay</label><input id="setDebitDay" type="number" min="1" max="31" step="1" /></div>
-          <div class="col"><label>debitMonthOffset</label><input id="setDebitOffset" type="number" step="1" /></div>
-          <div class="col"><label>teilzahlungAmount</label><input id="setTeilzahlung" type="number" step="0.01" /></div>
-          <div class="col"><label>kreditlimit</label><input id="setLimit" type="number" step="0.01" /></div>
-          <div class="col"><label>sollzinsAnnual</label><input id="setSoll" type="number" step="0.01" /></div>
-          <div class="col"><label>effektivzinsAnnual</label><input id="setEffektiv" type="number" step="0.01" /></div>
-          <div class="col"><label>effectiveFrom</label><input id="setEffectiveFrom" type="date" /></div>
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div>
+            <div class="muted">Addebito previsto</div>
+            <div style="font-size:20px">
+              <span class="mono">${sr.paymentDate}</span> · <span class="money neg">${fmtMoney(Number(sr.suggestedAmount||0))}</span>
+              <span class="tag" style="margin-left:8px">${sr.exists ? "registrato" : "mancante"}</span>
+            </div>
+          </div>
+          <button class="btn small" data-create-repay="${w.id}" ${sr.exists ? "disabled":""}>Crea addebito ora</button>
         </div>
+      `:""}
+    `;
+    cbox.appendChild(el);
 
-        <div class="hr"></div>
+    const btn = el.querySelector("[data-create-repay]");
+    if(btn){
+      btn.addEventListener("click", async ()=>{
+        await createRepaymentNowForCard(String(w.id));
+      });
+    }
+  }
+}
 
-        <div class="row">
-          <button id="btnLoadCardSettings">Carica</button>
-          <button id="btnSaveCardSettings" class="primary">Salva</button>
-        </div>
+function catAccentClass(type, category){
+  const key = `cat:${type}:${category||""}`;
+  const cls = "accent-cat-" + hash32(key);
+  ensureDynRule(`.${cls}`, hslFromKey(key));
+  return cls;
+}
 
-        <div id="settingsInfo" class="muted" style="margin-top:10px;"></div>
-      </div>
+/* manual create repayment for card from statement box */
+async function createRepaymentNowForCard(cardId){
+  await loadDashboard(); // refresh
+  const w = (state.dashboard.wallets||[]).find(x=>String(x.id)===String(cardId));
+  if(!w || !w.card || !w.card.scheduledRepayment) return;
 
-      <div class="card">
-        <div style="font-weight:900; margin-bottom:6px;">Health</div>
-        <button id="btnHealth">Test connessione</button>
-        <div id="healthOut" class="muted" style="margin-top:8px;"></div>
+  const sr = w.card.scheduledRepayment;
+  if(sr.exists){
+    toast("Già presente", "Esiste già un rimborso registrato per quella data.");
+    return;
+  }
+  const walletRow = state.walletsById.get(String(cardId));
+  const defaultSourceId = walletRow ? walletRow.defaultSourceWalletId : null;
+  if(!defaultSourceId){
+    toast("Impossibile", "La carta non ha defaultSourceWalletId (imposta il conto sorgente della carta).");
+    return;
+  }
+  const payload = {
+    type: "card_repayment",
+    title: "Addebito carta (manuale)",
+    amount: Number(sr.suggestedAmount || sr.baselineAmount || 0),
+    category: "Card Repayment",
+    calendarDate: sr.paymentDate,
+    notes: "Creato manualmente dalla UI",
+    fromWalletId: Number(defaultSourceId),
+    toCardWalletId: Number(cardId),
+    paymentDate: sr.paymentDate
+  };
+  await apiFetch("/events", {method:"POST", body: JSON.stringify(payload)});
+  toast("Creato", `Rimborso carta creato: ${sr.paymentDate} · ${fmtMoney(payload.amount)}`);
+  await refreshAll();
+}
 
-        <div class="hr"></div>
+/* =========================
+   Event CRUD
+========================= */
+function fillWalletSelects(){
+  // Wallet selects:
+  const nonCards = state.wallets.filter(w=>w.type!=="card");
+  const cards = state.wallets.filter(w=>w.type==="card");
 
-        <div style="font-weight:900; margin-bottom:6px;">Note</div>
-        <ul class="muted" style="margin:0; padding-left: 18px;">
-          <li>Nessuna modifica a nomi parametri/payload/response del backend.</li>
-          <li>Per auto-rimborsi carta: serve <span class="kbd">defaultSourceWalletId</span> impostato sul wallet carta.</li>
-          <li>I rimborsi “auto” sono riconosciuti da <span class="kbd">subType = auto_scheduled</span> (set via PUT dopo creazione).</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- =================== TAB: CARDS =================== -->
-  <section id="tabCards" class="panel" role="tabpanel">
-    <div class="row">
-      <div class="col">
-        <label>As Of</label>
-        <input id="cardsAsOf" type="date" />
-      </div>
-
-      <div class="col">
-        <label>Mese</label>
-        <input id="cardsMonth" type="month" />
-      </div>
-
-      <div class="col">
-        <label>&nbsp;</label>
-        <button id="btnCardsRefresh" class="primary">Aggiorna</button>
-      </div>
-    </div>
-
-    <div class="hr"></div>
-
-    <div id="cardsOverview" class="grid two"></div>
-
-    <div class="hr"></div>
-
-    <div class="card">
-      <div style="font-weight:900; margin-bottom:6px;">Dettagli per wallet/carta (albero richiudibile)</div>
-      <div class="muted" style="margin-bottom:10px;">Mostra: saldo, spese/entrate mese, confronti, categorie, e per carte: statement + repayment previsto.</div>
-      <div id="walletTree" class="grid" style="grid-template-columns: 1fr;"></div>
-    </div>
-  </section>
-
-  <div id="toast" class="toast"></div>
-</main>
-
-<script>
-  // =========================
-  // Helpers / State
-  // =========================
-  const $ = (id) => document.getElementById(id);
-
-  const state = {
-    apiBase: "/finance",
-    wallets: [],
-    walletById: new Map(),
-    events: [],
-    month: null,      // Date (first day of selected month)
-    calAsOf: null,    // Date (selected day)
-    dashboard: null,  // /dashboard response for current month + asOf
+  const options = (arr, placeholder) => {
+    const o = [`<option value="">${placeholder}</option>`];
+    for(const w of arr){
+      o.push(`<option value="${w.id}">${escapeHtml(w.name)} (#${w.id})</option>`);
+    }
+    return o.join("");
   };
 
-  function apiBase() {
-    state.apiBase = ($("apiBase").value || "").trim() || "/finance";
-    return state.apiBase.replace(/\/+$/,"");
+  $("evWalletId").innerHTML = options(nonCards, "Seleziona conto…");
+  $("evFromWalletId").innerHTML = options(nonCards, "Seleziona conto…");
+  $("evCardWalletId").innerHTML = options(cards, "Seleziona carta…");
+  $("evToCardWalletId").innerHTML = options(cards, "Seleziona carta…");
+  $("evCardCreditWalletId").innerHTML = options(cards, "Seleziona carta…");
+  $("evCardChargeWalletId").innerHTML = options(cards, "Seleziona carta…");
+
+  // Calendar filter
+  const f = $("calWalletFilter");
+  const cur = f.value;
+  f.innerHTML = `<option value="">Tutti i conti/carte</option>` + state.wallets.map(w=>(
+    `<option value="${w.id}">${escapeHtml(w.name)} (${w.type})</option>`
+  )).join("");
+  f.value = cur || "";
+
+  // Cards selector in settings
+  const sc = $("selCard");
+  const scCur = sc.value;
+  sc.innerHTML = cards.map(w=>`<option value="${w.id}">${escapeHtml(w.name)} (#${w.id})</option>`).join("");
+  if(scCur) sc.value = scCur;
+}
+
+function resetEventDialog(){
+  $("dlgTitle").textContent = "Nuovo evento";
+  $("btnDeleteEvent").style.display = "none";
+  $("dlgEvent").dataset.editId = "";
+
+  // base fields
+  $("evType").value = "expense";
+  $("evCalendarDate").value = isoDate(state.selectedDate);
+  $("evTitle").value = "";
+  $("evCategory").value = "";
+  $("evAmount").value = "";
+  $("evNotes").value = "";
+
+  // series
+  $("evSeriesMode").value = "none";
+
+  // card purchase
+  $("evPurchaseDate").value = isoDate(state.selectedDate);
+  $("evScheduleKind").value = "instant";
+  $("evFirstStmtMonth").value = "";
+  $("evFinCount").value = "";
+  $("evFinInstAmount").value = "";
+  $("evFinCustomJson").value = "";
+
+  // repayment
+  $("evPaymentDate").value = isoDate(state.selectedDate);
+  $("evRepCategory").value = "Card Repayment";
+
+  // subtype
+  $("evSubTypeCredit").value = "gutschrift";
+
+  // duplication
+  $("dupMonths").value = "";
+  $("dupRule").value = "same_day_or_last";
+
+  updateDialogVisibility();
+}
+
+function updateDialogVisibility(){
+  const t = $("evType").value;
+
+  $("boxWallet").style.display = (t==="income" || t==="expense") ? "" : "none";
+  $("boxCardPurchase").style.display = (t==="card_purchase") ? "" : "none";
+  $("boxRepayment").style.display = (t==="card_repayment") ? "" : "none";
+  $("boxCardCredit").style.display = (t==="card_credit") ? "" : "none";
+  $("boxCardCharge").style.display = (t==="card_charge") ? "" : "none";
+
+  const sk = $("evScheduleKind").value;
+  const isFin = (sk==="financing_monthly" || sk==="financing_custom");
+  $("boxFinFirst").style.display = isFin ? "" : "none";
+  $("boxFinMonthly").style.display = (sk==="financing_monthly") ? "" : "none";
+  $("boxFinCustom").style.display = (sk==="financing_custom") ? "" : "none";
+}
+
+function openNewEvent(presetType=null){
+  resetEventDialog();
+  if(presetType) $("evType").value = presetType;
+  if(presetType==="card_purchase"){
+    $("evCalendarDate").value = isoDate(state.selectedDate);
+    $("evPurchaseDate").value = isoDate(state.selectedDate);
   }
-
-  async function apiFetch(path, opts={}) {
-    const url = apiBase() + path;
-    const res = await fetch(url, { headers: { "Content-Type":"application/json" }, ...opts });
-    if (!res.ok) {
-      let txt = ""; try { txt = await res.text(); } catch {}
-      throw new Error(`HTTP ${res.status} ${res.statusText} - ${txt}`);
-    }
-    const ct = res.headers.get("content-type") || "";
-    if (ct.includes("application/json")) return await res.json();
-    return await res.text();
+  if(presetType==="card_repayment"){
+    $("evCalendarDate").value = isoDate(state.selectedDate);
+    $("evPaymentDate").value = isoDate(state.selectedDate);
   }
+  updateDialogVisibility();
+  $("dlgEvent").showModal();
+}
 
-  function toast(msg, ms=4500) {
-    const t = $("toast");
-    t.textContent = msg;
-    t.classList.add("show");
-    clearTimeout(t._timer);
-    t._timer = setTimeout(()=>t.classList.remove("show"), ms);
+function findEventById(id){
+  return state.events.find(e=>String(e.id)===String(id));
+}
+
+function openEditEvent(id){
+  const ev = findEventById(id);
+  if(!ev){
+    toast("Errore", "Evento non trovato in memoria (ricarica).");
+    return;
   }
-
-  function isoDate(d) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const dd = String(d.getDate()).padStart(2,"0");
-    return `${y}-${m}-${dd}`;
-  }
-  function isoYM(d) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    return `${y}-${m}`;
-  }
-  function parseYM(s) {
-    if (!s || s.length < 7) return null;
-    const y = parseInt(s.slice(0,4),10);
-    const m = parseInt(s.slice(5,7),10);
-    if (!y || !m) return null;
-    return new Date(y, m-1, 1);
-  }
-  function monthBounds(d) {
-    const start = new Date(d.getFullYear(), d.getMonth(), 1);
-    const end = new Date(d.getFullYear(), d.getMonth()+1, 0);
-    return { start, end };
-  }
-  function clampDayToMonth(y, m1to12, day) {
-    const last = new Date(y, m1to12, 0).getDate();
-    return Math.min(Math.max(1, day), last);
-  }
-  function fmtMoney(n) {
-    if (n === null || n === undefined || Number.isNaN(Number(n))) return "";
-    return Number(n).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-  function typeLabel(t) {
-    return ({
-      income: "Entrata",
-      expense: "Spesa",
-      card_purchase: "Acquisto carta",
-      card_repayment: "Rimborso carta",
-      card_credit: "Gutschrift",
-      card_charge: "Addebito carta"
-    }[t] || t);
-  }
-  function eventEffectiveDate(ev) {
-    return ev.effectiveDate || ev.purchaseDate || ev.calendarDate || ev.paymentDate || "";
-  }
-
-  // =========================
-  // Tabs
-  // =========================
-  function setTab(tabId) {
-    document.querySelectorAll(".tabbtn").forEach(b=>{
-      const sel = b.dataset.tab === tabId;
-      b.setAttribute("aria-selected", sel ? "true":"false");
-    });
-    document.querySelectorAll(".panel").forEach(p=> p.classList.toggle("active", p.id === tabId));
-  }
-  document.querySelectorAll(".tabbtn").forEach(b=> b.addEventListener("click", ()=> setTab(b.dataset.tab)));
-
-  // =========================
-  // Load Wallets
-  // =========================
-  async function loadWallets() {
-    const wallets = await apiFetch("/wallets", { method:"GET" });
-    state.wallets = Array.isArray(wallets) ? wallets : [];
-    state.walletById = new Map(state.wallets.map(w => [String(w.id), w]));
-
-    // Calendar filter
-    const wf = $("calWalletFilter");
-    wf.innerHTML = `<option value="">Tutti</option>`;
-    for (const w of state.wallets) {
-      const opt = document.createElement("option");
-      opt.value = String(w.id);
-      opt.textContent = `${w.name} (${w.type})`;
-      wf.appendChild(opt);
-    }
-
-    // Editor selects
-    const walletSelects = [$("evWalletId"), $("evFromWalletId")];
-    for (const s of walletSelects) {
-      s.innerHTML = `<option value="">—</option>`;
-      for (const w of state.wallets.filter(x => x.type !== "card")) {
-        const opt = document.createElement("option");
-        opt.value = String(w.id);
-        opt.textContent = w.name;
-        s.appendChild(opt);
-      }
-    }
-    const cardSelects = [$("evCardWalletId"), $("evToCardWalletId"), $("setCardSelect")];
-    for (const s of cardSelects) {
-      s.innerHTML = (s === $("setCardSelect")) ? `<option value="">— Seleziona carta —</option>` : `<option value="">—</option>`;
-      for (const w of state.wallets.filter(x => x.type === "card")) {
-        const opt = document.createElement("option");
-        opt.value = String(w.id);
-        opt.textContent = w.name;
-        s.appendChild(opt);
-      }
-    }
-  }
-
-  // =========================
-  // Dashboard (shared for KPI + Cards tab)
-  // =========================
-  async function loadDashboardForCalendar() {
-    const asOf = $("calAsOf").value || isoDate(new Date());
-    const month = $("calMonth").value || isoYM(new Date());
-    const params = new URLSearchParams({ asOf, month });
-    state.dashboard = await apiFetch("/dashboard?" + params.toString(), { method:"GET" });
-    renderKpiStrip();
-  }
-
-  async function loadDashboardForCardsTab() {
-    const asOf = $("cardsAsOf").value || isoDate(new Date());
-    const month = $("cardsMonth").value || isoYM(new Date());
-    const params = new URLSearchParams({ asOf, month });
-    state.dashboard = await apiFetch("/dashboard?" + params.toString(), { method:"GET" });
-    renderCardsOverview();
-    renderWalletTree();
-  }
-
-  // =========================
-  // KPI Strip (Calendar tab)
-  // =========================
-  function renderKpiStrip() {
-    const wrap = $("kpiStrip");
-    wrap.innerHTML = "";
-
-    const wallets = (state.dashboard && Array.isArray(state.dashboard.wallets)) ? state.dashboard.wallets : [];
-
-    // Order: cards first, then others; stable by name
-    wallets.sort((a,b)=>{
-      if (a.type === b.type) return (a.name||"").localeCompare(b.name||"");
-      if (a.type === "card") return -1;
-      if (b.type === "card") return 1;
-      return (a.type||"").localeCompare(b.type||"");
-    });
-
-    for (const w of wallets) {
-      const k = document.createElement("div");
-      k.className = "kpi";
-
-      const b = fmtMoney(w.balance);
-      const s = fmtMoney(w.spentSoFar);
-      const i = fmtMoney(w.incomeSoFar);
-      const sr = fmtMoney(w.spentRemaining);
-
-      const ce = w.compareLastMonthExpenses || { amount:0, percent:0 };
-      const ci = w.compareLastMonthIncome || { amount:0, percent:0 };
-
-      const ceTxt = `${fmtMoney(ce.amount)} (${Number(ce.percent||0).toFixed(1)}%)`;
-      const ciTxt = `${fmtMoney(ci.amount)} (${Number(ci.percent||0).toFixed(1)}%)`;
-
-      // For cards, show also outstanding/available
-      let cardExtra = "";
-      if (w.type === "card" && w.card) {
-        cardExtra = `<div class="sub">Carta • outstanding ${fmtMoney(w.card.outstanding)} • disponibile ${fmtMoney(w.card.availableCredit)}</div>`;
-      } else {
-        cardExtra = `<div class="sub">${w.type}</div>`;
-      }
-
-      k.innerHTML = `
-        <div class="name">
-          <span>${(w.name||"").replace(/</g,"&lt;")}</span>
-          <span class="muted">${w.type}</span>
-        </div>
-        ${cardExtra}
-        <div class="vals">
-          <div class="val"><div class="lab">Saldo al giorno</div><div class="num">${b}</div></div>
-          <div class="val"><div class="lab">Spese mese</div><div class="num">${s}</div><div class="muted">Diff: ${ceTxt}</div></div>
-          <div class="val"><div class="lab">Entrate mese</div><div class="num">${i}</div><div class="muted">Diff: ${ciTxt}</div></div>
-          <div class="val"><div class="lab">Spese rimanenti mese</div><div class="num">${sr}</div></div>
-        </div>
-      `;
-
-      // Click KPI -> filter calendar by this wallet
-      k.addEventListener("click", ()=>{
-        $("calWalletFilter").value = String(w.id);
-        loadEventsForMonth();
-      });
-
-      wrap.appendChild(k);
-    }
-  }
-
-  // =========================
-  // Calendar Events
-  // =========================
-  async function loadEventsForMonth() {
-    const m = state.month || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    const { start, end } = monthBounds(m);
-
-    const from = isoDate(start);
-    const to = isoDate(end);
-
-    const walletId = ($("calWalletFilter").value || "").trim();
-    const q = ($("calSearch").value || "").trim();
-
-    const params = new URLSearchParams({ from, to });
-    if (walletId) params.set("walletId", walletId);
-    if (q) params.set("q", q);
-
-    const events = await apiFetch("/events?" + params.toString(), { method:"GET" });
-    state.events = Array.isArray(events) ? events : [];
-    renderCalendar();
-    renderEventsTable();
-  }
-
-  function groupEventsByDate(events) {
-    const map = new Map();
-    for (const ev of events) {
-      const d = eventEffectiveDate(ev);
-      if (!d) continue;
-      const key = d.slice(0,10);
-      if (!map.has(key)) map.set(key, []);
-      map.get(key).push(ev);
-    }
-    for (const [k, arr] of map.entries()) arr.sort((a,b)=> (a.id||0)-(b.id||0));
-    return map;
-  }
-
-  function renderCalendar() {
-    const m = state.month;
-    if (!m) return;
-
-    $("calTitle").textContent = m.toLocaleDateString("it-IT", { month:"long", year:"numeric" });
-
-    const dow = ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"];
-    const calDow = $("calDow");
-    calDow.innerHTML = "";
-    for (const d of dow) {
-      const el = document.createElement("div");
-      el.className = "dow";
-      el.textContent = d;
-      calDow.appendChild(el);
-    }
-
-    const { start } = monthBounds(m);
-    const firstDow = start.getDay(); // 0 Sun
-    const mondayBased = (firstDow + 6) % 7;
-    const gridStart = new Date(start);
-    gridStart.setDate(start.getDate() - mondayBased);
-
-    const byDate = groupEventsByDate(state.events);
-    const calGrid = $("calGrid");
-    calGrid.innerHTML = "";
-
-    for (let i=0; i<42; i++) {
-      const d = new Date(gridStart);
-      d.setDate(gridStart.getDate()+i);
-      const ds = isoDate(d);
-      const inMonth = d.getMonth() === m.getMonth();
-
-      const cell = document.createElement("div");
-      cell.className = "day";
-      cell.style.opacity = inMonth ? "1" : "0.45";
-
-      const head = document.createElement("div");
-      head.className = "daynum";
-
-      const left = document.createElement("span");
-      left.textContent = String(d.getDate());
-
-      const addBtn = document.createElement("button");
-      addBtn.textContent = "+";
-      addBtn.title = "Nuovo evento in questo giorno";
-      addBtn.addEventListener("click", (e)=>{
-        e.stopPropagation();
-        openEventDialogForNew(ds);
-      });
-
-      head.appendChild(left);
-      head.appendChild(addBtn);
-      cell.appendChild(head);
-
-      const list = document.createElement("div");
-      list.className = "row";
-      list.style.flexWrap = "wrap";
-      list.style.gap = "6px";
-
-      const evs = byDate.get(ds) || [];
-      for (const ev of evs.slice(0, 6)) {
-        const pill = document.createElement("div");
-        pill.className = "pill";
-        pill.title = "Clicca per modificare";
-        pill.addEventListener("click", (e)=>{ e.stopPropagation(); openEventDialogForEdit(ev.id); });
-
-        const t = document.createElement("span");
-        t.textContent = ev.title || "(senza titolo)";
-
-        const a = document.createElement("small");
-        a.textContent = `${typeLabel(ev.type)} • ${fmtMoney(ev.amount)}`;
-
-        pill.appendChild(t);
-        pill.appendChild(a);
-        list.appendChild(pill);
-      }
-
-      if (evs.length > 6) {
-        const more = document.createElement("div");
-        more.className = "muted";
-        more.textContent = `+${evs.length - 6} altri…`;
-        list.appendChild(more);
-      }
-
-      cell.appendChild(list);
-
-      // Click day: set asOf + refresh KPI + allow create
-      cell.addEventListener("click", async ()=>{
-        $("calAsOf").value = ds;
-        state.calAsOf = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        await loadDashboardForCalendar();
-      });
-
-      calGrid.appendChild(cell);
-    }
-  }
-
-  function renderEventsTable() {
-    const tb = document.querySelector("#eventsTable tbody");
-    tb.innerHTML = "";
-
-    const rows = [...state.events].sort((a,b)=>{
-      const da = eventEffectiveDate(a) || "";
-      const db = eventEffectiveDate(b) || "";
-      if (da < db) return -1;
-      if (da > db) return 1;
-      return (a.id||0)-(b.id||0);
-    });
-
-    for (const ev of rows) {
-      const tr = document.createElement("tr");
-      const wid = ev.walletId || ev.cardWalletId || ev.fromWalletId || ev.toCardWalletId || "";
-      const wName = wid ? (state.walletById.get(String(wid))?.name || String(wid)) : "";
-
-      tr.innerHTML = `
-        <td>${ev.id ?? ""}</td>
-        <td>${eventEffectiveDate(ev) || ""}</td>
-        <td>${typeLabel(ev.type)}</td>
-        <td>${(ev.title||"").replace(/</g,"&lt;")}</td>
-        <td>${(ev.category||"").replace(/</g,"&lt;")}</td>
-        <td>${fmtMoney(ev.amount)}</td>
-        <td>${(wName||"").replace(/</g,"&lt;")}</td>
-        <td></td>
-      `;
-
-      const actions = document.createElement("div");
-      actions.className = "row";
-
-      const btnEdit = document.createElement("button");
-      btnEdit.textContent = "Modifica";
-      btnEdit.addEventListener("click", ()=> openEventDialogForEdit(ev.id));
-
-      const btnDel = document.createElement("button");
-      btnDel.textContent = "Cancella";
-      btnDel.className = "danger";
-      btnDel.addEventListener("click", ()=> deleteEventById(ev.id));
-
-      actions.appendChild(btnEdit);
-      actions.appendChild(btnDel);
-
-      tr.children[7].appendChild(actions);
-      tb.appendChild(tr);
-    }
-  }
-
-  // =========================
-  // Auto-scheduled card repayments (calendar month)
-  // =========================
-  function isCardTypeEvent(t) {
-    return t === "card_purchase" || t === "card_credit" || t === "card_charge";
-  }
-
-  // Find existing repayment events on a given date for a given card within current month cache (state.events),
-  // or via API if not present due to filters.
-  async function findRepaymentsOnDate(cardId, payDateISO) {
-    // 1) try in current month cached list (includes repayments if not filtered out)
-    const cached = state.events.filter(e =>
-      e.type === "card_repayment" &&
-      String(e.toCardWalletId || "") === String(cardId) &&
-      String(e.paymentDate || e.calendarDate || "").slice(0,10) === payDateISO.slice(0,10)
-    );
-    if (cached.length) return cached;
-
-    // 2) fallback: query single day range; walletId filter ensures we fetch repayments too.
-    const params = new URLSearchParams({ from: payDateISO, to: payDateISO, walletId: String(cardId) });
-    const evs = await apiFetch("/events?" + params.toString(), { method:"GET" });
-    return Array.isArray(evs) ? evs.filter(e => e.type === "card_repayment") : [];
-  }
-
-  // Ensure: for each card, create/update an auto repayment event (card_repayment) on scheduledRepayment.paymentDate
-  // amount = scheduledRepayment.suggestedAmount (or baseline)
-  async function ensureScheduledRepaymentsForCurrentMonth() {
-    // Uses current calendar asOf + month
-    const asOf = $("calAsOf").value || isoDate(new Date());
-    const month = $("calMonth").value || isoYM(new Date());
-    const dash = await apiFetch("/dashboard?" + new URLSearchParams({ asOf, month }).toString(), { method:"GET" });
-
-    // We only create/update if card has defaultSourceWalletId (from /wallets data).
-    const wallets = Array.isArray(dash.wallets) ? dash.wallets : [];
-
-    for (const w of wallets) {
-      if (w.type !== "card") continue;
-      const cardId = w.id;
-      const wDef = state.walletById.get(String(cardId));
-      const defaultSourceWalletId = wDef ? wDef.defaultSourceWalletId : null;
-      if (!defaultSourceWalletId) continue;
-
-      const sched = w.card && w.card.scheduledRepayment ? w.card.scheduledRepayment : null;
-      if (!sched || !sched.paymentDate) continue;
-
-      const payDate = String(sched.paymentDate).slice(0,10);
-      const amount = Number(sched.suggestedAmount ?? sched.baselineAmount ?? 0);
-      if (!Number.isFinite(amount) || amount <= 0) continue;
-
-      const existing = await findRepaymentsOnDate(cardId, payDate);
-
-      // Choose an "auto" one if present, else any one.
-      const autoOne = existing.find(x => (x.subType || "") === "auto_scheduled") || null;
-      const chosen = autoOne || existing[0] || null;
-
-      const title = `Addebito carta (auto)`;
-
-      if (!chosen) {
-        // Create repayment
-        const payload = {
-          type: "card_repayment",
-          title,
-          amount,
-          category: "Card Repayment",
-          calendarDate: payDate,
-          notes: "Auto-created from scheduledRepayment",
-          fromWalletId: Number(defaultSourceWalletId),
-          toCardWalletId: Number(cardId),
-          paymentDate: payDate
-        };
-
-        try {
-          const created = await apiFetch("/events", { method:"POST", body: JSON.stringify(payload) });
-          // mark as auto via PUT (backend create_event doesn't set subType for card_repayment)
-          if (created && created.id) {
-            await apiFetch(`/events/${encodeURIComponent(created.id)}`, {
-              method:"PUT",
-              body: JSON.stringify({ subType: "auto_scheduled", meta: { auto: true, source: "scheduledRepayment", month } })
-            });
-          }
-        } catch (e) {
-          // Do not hard fail UI
-          console.warn("auto repayment create failed:", e);
-        }
-      } else {
-        // Update only if it's auto (to avoid overwriting a manual one)
-        if ((chosen.subType || "") === "auto_scheduled") {
-          const patch = {
-            title,
-            amount,
-            category: chosen.category || "Card Repayment",
-            calendarDate: payDate,
-            paymentDate: payDate,
-            fromWalletId: Number(defaultSourceWalletId),
-            toCardWalletId: Number(cardId),
-            meta: { auto: true, source: "scheduledRepayment", month }
-          };
-          try {
-            await apiFetch(`/events/${encodeURIComponent(chosen.id)}`, { method:"PUT", body: JSON.stringify(patch) });
-          } catch (e) {
-            console.warn("auto repayment update failed:", e);
-          }
+  resetEventDialog();
+  $("dlgTitle").textContent = "Modifica evento";
+  $("btnDeleteEvent").style.display = "";
+  $("dlgEvent").dataset.editId = String(ev.id);
+
+  $("evType").value = ev.type || "expense";
+  $("evCalendarDate").value = (ev.calendarDate||"").slice(0,10);
+  $("evTitle").value = ev.title || "";
+  $("evCategory").value = ev.category || "";
+  $("evAmount").value = String(ev.amount || "");
+  $("evNotes").value = ev.notes || "";
+
+  // wallet
+  if(ev.walletId!=null) $("evWalletId").value = String(ev.walletId);
+
+  // card purchase
+  if(ev.type==="card_purchase"){
+    if(ev.cardWalletId!=null) $("evCardWalletId").value = String(ev.cardWalletId);
+    $("evPurchaseDate").value = (ev.purchaseDate||ev.calendarDate||"").slice(0,10);
+
+    const sch = ev.schedule || {};
+    if(sch && sch.kind==="financing"){
+      // decide kind
+      if(Array.isArray(sch.customInstallments) && sch.customInstallments.length){
+        $("evScheduleKind").value = "financing_custom";
+        $("evFinCustomJson").value = JSON.stringify(sch.customInstallments, null, 2);
+      }else{
+        $("evScheduleKind").value = "financing_monthly";
+        $("evFinCount").value = String(sch.count || "");
+        if(sch.monthlyInstallments && sch.monthlyInstallments.installmentAmount!=null){
+          $("evFinInstAmount").value = String(sch.monthlyInstallments.installmentAmount);
         }
       }
-    }
-
-    // refresh month events + KPI after adjustments
-    await loadEventsForMonth();
-    state.dashboard = dash;
-    renderKpiStrip();
-  }
-
-  // =========================
-  // Event Dialog CRUD
-  // =========================
-  function resetEventDialog() {
-    $("evId").value = "";
-    $("evType").value = "expense";
-    $("evCalendarDate").value = isoDate(new Date());
-    $("evTitle").value = "";
-    $("evCategory").value = "";
-    $("evAmount").value = "";
-    $("evNotes").value = "";
-
-    $("evWalletId").value = "";
-    $("evCardWalletId").value = "";
-    $("evFromWalletId").value = "";
-    $("evToCardWalletId").value = "";
-
-    $("schedKind").value = "instant";
-    $("schedCount").value = "";
-    $("schedFirstStatementMonth").value = "";
-    $("schedInstallmentAmount").value = "";
-    $("schedCustomInstallments").value = "";
-
-    $("dupFromMonth").value = "";
-    $("dupToMonth").value = "";
-    $("dupDay").value = "";
-
-    $("btnDelete").style.display = "none";
-    $("dlgTitle").textContent = "Nuovo evento";
-    $("dlgHint").textContent = "";
-  }
-
-  function openEventDialogForNew(isoDateStr) {
-    resetEventDialog();
-    $("evCalendarDate").value = (isoDateStr || isoDate(new Date())).slice(0,10);
-    $("dlgHint").textContent = "Se è un acquisto con carta: seleziona 'Acquisto con carta' e scegli la carta.";
-    $("dlgEvent").showModal();
-  }
-
-  function fillScheduleFromEvent(ev) {
-    const s = ev.schedule || null;
-    if (!s || typeof s !== "object") { $("schedKind").value = "instant"; return; }
-    $("schedKind").value = (s.kind || "instant");
-
-    if ((s.kind || "instant") === "financing") {
-      $("schedCount").value = s.count ?? "";
-      $("schedFirstStatementMonth").value = s.firstStatementMonth ?? "";
-      const mi = s.monthlyInstallments || {};
-      if (mi && typeof mi === "object" && mi.installmentAmount != null) $("schedInstallmentAmount").value = mi.installmentAmount;
-      const ci = s.customInstallments;
-      if (Array.isArray(ci) && ci.length) $("schedCustomInstallments").value = ci.map(x => `${x.date}; ${x.amount}`).join("\n");
+      $("evFirstStmtMonth").value = sch.firstStatementMonth || "";
+    }else{
+      $("evScheduleKind").value = "instant";
     }
   }
 
-  async function openEventDialogForEdit(id) {
-    let ev = state.events.find(x => String(x.id) === String(id));
-    if (!ev) await loadEventsForMonth();
-    ev = state.events.find(x => String(x.id) === String(id));
-    if (!ev) { toast("Evento non trovato."); return; }
-
-    resetEventDialog();
-    $("dlgTitle").textContent = `Modifica evento #${ev.id}`;
-    $("evId").value = String(ev.id);
-
-    $("evType").value = ev.type || "expense";
-    const cd = (ev.calendarDate || ev.purchaseDate || ev.paymentDate || "");
-    if (cd) $("evCalendarDate").value = cd.slice(0,10);
-
-    $("evTitle").value = ev.title || "";
-    $("evCategory").value = ev.category || "";
-    $("evAmount").value = ev.amount ?? "";
-    $("evNotes").value = ev.notes || "";
-
-    $("evWalletId").value = ev.walletId ? String(ev.walletId) : "";
-    $("evCardWalletId").value = ev.cardWalletId ? String(ev.cardWalletId) : "";
-    $("evFromWalletId").value = ev.fromWalletId ? String(ev.fromWalletId) : "";
-    $("evToCardWalletId").value = ev.toCardWalletId ? String(ev.toCardWalletId) : "";
-
-    fillScheduleFromEvent(ev);
-
-    $("btnDelete").style.display = "inline-flex";
-    $("dlgHint").textContent = "Dopo Salva, i rimborsi carta auto verranno ricalcolati se necessario.";
-    $("dlgEvent").showModal();
+  // repayment
+  if(ev.type==="card_repayment"){
+    if(ev.fromWalletId!=null) $("evFromWalletId").value = String(ev.fromWalletId);
+    if(ev.toCardWalletId!=null) $("evToCardWalletId").value = String(ev.toCardWalletId);
+    $("evPaymentDate").value = (ev.paymentDate||ev.calendarDate||"").slice(0,10);
+    $("evRepCategory").value = ev.category || "Card Repayment";
   }
 
-  function buildScheduleForSave() {
-    const t = $("evType").value;
-    if (t !== "card_purchase") return null;
-
-    const kind = ($("schedKind").value || "instant").trim();
-    if (kind === "instant") return { kind:"instant" };
-
-    const count = parseInt($("schedCount").value || "0", 10);
-    const fsm = ($("schedFirstStatementMonth").value || "").trim();
-
-    const sched = { kind:"financing" };
-    if (Number.isFinite(count) && count > 0) sched.count = count;
-    if (fsm) sched.firstStatementMonth = fsm;
-
-    const instAmountStr = ($("schedInstallmentAmount").value || "").trim();
-    if (instAmountStr) {
-      const ia = Number(instAmountStr);
-      if (!Number.isNaN(ia) && ia > 0) sched.monthlyInstallments = { installmentAmount: ia };
-    }
-
-    const ciRaw = ($("schedCustomInstallments").value || "").trim();
-    if (ciRaw) {
-      const lines = ciRaw.split("\n").map(s => s.trim()).filter(Boolean);
-      const ci = [];
-      for (const ln of lines) {
-        const parts = ln.split(";").map(x=>x.trim());
-        if (parts.length < 2) continue;
-        const d = parts[0];
-        const a = Number(parts[1].replace(",", "."));
-        if (d && !Number.isNaN(a) && a > 0) ci.push({ date: d, amount: a });
-      }
-      if (ci.length) sched.customInstallments = ci;
-    }
-
-    return sched;
+  // credit
+  if(ev.type==="card_credit"){
+    if(ev.cardWalletId!=null) $("evCardCreditWalletId").value = String(ev.cardWalletId);
+    $("evSubTypeCredit").value = ev.subType || "gutschrift";
   }
 
-  function buildEventPayload() {
-    const type = $("evType").value;
-    const calendarDate = $("evCalendarDate").value;
+  // charge
+  if(ev.type==="card_charge"){
+    if(ev.cardWalletId!=null) $("evCardChargeWalletId").value = String(ev.cardWalletId);
+    $("evSubTypeCharge").value = ev.subType || "fee_card";
+  }
 
-    const payload = {
-      type,
-      title: ($("evTitle").value || "").trim(),
-      amount: Number(($("evAmount").value || "").replace(",", ".")),
-      category: ($("evCategory").value || "").trim(),
-      calendarDate,
-      notes: $("evNotes").value || "",
-    };
+  updateDialogVisibility();
+  $("dlgEvent").showModal();
+}
 
-    if (type === "income" || type === "expense") payload.walletId = $("evWalletId").value ? Number($("evWalletId").value) : null;
-    if (type === "card_purchase" || type === "card_credit" || type === "card_charge") payload.cardWalletId = $("evCardWalletId").value ? Number($("evCardWalletId").value) : null;
+function buildPayloadFromDialog(){
+  const type = $("evType").value;
+  const title = $("evTitle").value.trim();
+  const category = $("evCategory").value.trim();
+  const notes = $("evNotes").value || "";
+  const calendarDate = $("evCalendarDate").value.trim();
+  const amount = Number(String($("evAmount").value).replace(",", "."));
 
-    if (type === "card_repayment") {
-      payload.fromWalletId = $("evFromWalletId").value ? Number($("evFromWalletId").value) : null;
-      payload.toCardWalletId = $("evToCardWalletId").value ? Number($("evToCardWalletId").value) : null;
-      payload.paymentDate = calendarDate; // semplice default
+  if(!title) throw new Error("Titolo mancante.");
+  if(!category) throw new Error("Categoria mancante.");
+  if(!calendarDate || !/^\d{4}-\d{2}-\d{2}$/.test(calendarDate)) throw new Error("calendarDate non valida.");
+  if(!Number.isFinite(amount) || amount<=0) throw new Error("Importo non valido.");
+
+  if(type==="income" || type==="expense"){
+    const walletId = Number($("evWalletId").value||0);
+    if(!walletId) throw new Error("Seleziona un conto.");
+    const payload = { type, title, amount, category, calendarDate, notes, walletId };
+    // optional series
+    const sm = $("evSeriesMode").value;
+    if(sm!=="none"){
+      const months = (sm==="monthly_12")?12 : (sm==="monthly_24")?24 : 120;
+      payload.series = {
+        frequency: "monthly",
+        durationMode: (sm==="monthly_forever") ? "forever" : "n_months",
+        months: (sm==="monthly_forever") ? null : months,
+        firstDate: calendarDate
+      };
     }
-
-    if (type === "card_purchase") {
-      payload.purchaseDate = calendarDate;
-      payload.schedule = buildScheduleForSave();
-    }
-
-    if (type === "card_charge") payload.subType = "fee_card";
-    if (type === "card_credit") payload.subType = "gutschrift";
-
     return payload;
   }
 
-  async function saveEvent() {
-    const id = ($("evId").value || "").trim();
-    const payload = buildEventPayload();
+  if(type==="card_purchase"){
+    const cardWalletId = Number($("evCardWalletId").value||0);
+    if(!cardWalletId) throw new Error("Seleziona una carta.");
+    const purchaseDate = $("evPurchaseDate").value.trim();
+    if(!purchaseDate || !/^\d{4}-\d{2}-\d{2}$/.test(purchaseDate)) throw new Error("purchaseDate non valida.");
 
-    if (!payload.title) return toast("Titolo obbligatorio.");
-    if (!payload.category) return toast("Categoria obbligatoria.");
-    if (!payload.calendarDate) return toast("Data obbligatoria.");
-    if (!Number.isFinite(payload.amount) || payload.amount <= 0) return toast("Importo deve essere > 0.");
+    const sk = $("evScheduleKind").value;
+    let schedule = { kind:"instant" };
 
-    if ((payload.type === "income" || payload.type === "expense") && !payload.walletId) return toast("Seleziona wallet per entrata/spesa.");
-    if ((payload.type === "card_purchase" || payload.type === "card_credit" || payload.type === "card_charge") && !payload.cardWalletId) return toast("Seleziona carta.");
-    if (payload.type === "card_repayment" && (!payload.fromWalletId || !payload.toCardWalletId)) return toast("Seleziona wallet origine e carta.");
-
-    try {
-      if (!id) {
-        await apiFetch("/events", { method:"POST", body: JSON.stringify(payload) });
-        toast("Evento creato.");
-      } else {
-        await apiFetch(`/events/${encodeURIComponent(id)}`, { method:"PUT", body: JSON.stringify(payload) });
-        toast("Evento aggiornato.");
-      }
-      $("dlgEvent").close();
-
-      // reload month events
-      await loadEventsForMonth();
-
-      // If card-related event changed, ensure scheduled repayments stay consistent
-      if (isCardTypeEvent(payload.type) || payload.type === "card_repayment") {
-        await ensureScheduledRepaymentsForCurrentMonth();
-      } else {
-        // still refresh KPI for non-card
-        await loadDashboardForCalendar();
-      }
-    } catch (e) {
-      toast("Errore salvataggio: " + (e.message || e));
-    }
-  }
-
-  async function deleteEventById(id) {
-    if (!id) return;
-    const ok = confirm(`Cancellare l'evento #${id}? Azione immediata.`);
-    if (!ok) return;
-
-    // Determine type before delete (to trigger repayment recalculation if needed)
-    const ev = state.events.find(x => String(x.id) === String(id));
-    const t = ev ? ev.type : null;
-
-    try {
-      await apiFetch(`/events/${encodeURIComponent(id)}`, { method:"DELETE" });
-      toast("Evento cancellato.");
-      await loadEventsForMonth();
-
-      if (t && (isCardTypeEvent(t) || t === "card_repayment")) {
-        await ensureScheduledRepaymentsForCurrentMonth();
-      } else {
-        await loadDashboardForCalendar();
-      }
-    } catch (e) {
-      toast("Errore cancellazione: " + (e.message || e));
-    }
-  }
-
-  async function duplicateEventAcrossMonths() {
-    const basePayload = buildEventPayload();
-
-    const fromYM = $("dupFromMonth").value;
-    const toYM = $("dupToMonth").value;
-    const day = parseInt($("dupDay").value || "0", 10);
-
-    if (!fromYM || !toYM) return toast("Imposta Da mese e A mese.");
-    if (!Number.isFinite(day) || day <= 0) return toast("Imposta Giorno (1..31).");
-
-    const from = parseYM(fromYM);
-    const to = parseYM(toYM);
-    if (!from || !to) return toast("Mesi non validi.");
-    if (from > to) return toast("Da mese deve essere <= A mese.");
-
-    const copies = [];
-    const cur = new Date(from.getFullYear(), from.getMonth(), 1);
-    const end = new Date(to.getFullYear(), to.getMonth(), 1);
-
-    while (cur <= end) {
-      const y = cur.getFullYear();
-      const m1 = cur.getMonth() + 1;
-      const dd = clampDayToMonth(y, m1, day);
-      const d = new Date(y, m1-1, dd);
-
-      const p = JSON.parse(JSON.stringify(basePayload));
-      p.calendarDate = isoDate(d);
-      if (p.type === "card_purchase") p.purchaseDate = p.calendarDate;
-      if (p.type === "card_repayment") p.paymentDate = p.calendarDate;
-
-      copies.push(p);
-      cur.setMonth(cur.getMonth() + 1);
+    if(sk==="financing_monthly"){
+      const firstStatementMonth = $("evFirstStmtMonth").value.trim();
+      if(!/^\d{4}-\d{2}$/.test(firstStatementMonth)) throw new Error("firstStatementMonth non valido (YYYY-MM).");
+      const count = Number(($("evFinCount").value||"").trim());
+      if(!Number.isFinite(count) || count<=0) throw new Error("Numero rate non valido.");
+      const instAmountStr = ($("evFinInstAmount").value||"").trim();
+      const instAmount = instAmountStr ? Number(instAmountStr.replace(",", ".")) : null;
+      schedule = {
+        kind: "financing",
+        count,
+        firstStatementMonth,
+        monthlyInstallments: instAmount!=null && Number.isFinite(instAmount) && instAmount>0 ? {installmentAmount: instAmount} : {}
+      };
     }
 
-    if (!confirm(`Creare ${copies.length} copie?`)) return;
-
-    try {
-      for (const p of copies) await apiFetch("/events", { method:"POST", body: JSON.stringify(p) });
-      toast(`Copie create: ${copies.length}`);
-      $("dlgEvent").close();
-      await loadEventsForMonth();
-
-      if (isCardTypeEvent(basePayload.type) || basePayload.type === "card_repayment") {
-        await ensureScheduledRepaymentsForCurrentMonth();
-      } else {
-        await loadDashboardForCalendar();
-      }
-    } catch (e) {
-      toast("Errore duplicazione: " + (e.message || e));
+    if(sk==="financing_custom"){
+      const firstStatementMonth = $("evFirstStmtMonth").value.trim();
+      if(firstStatementMonth && !/^\d{4}-\d{2}$/.test(firstStatementMonth)) throw new Error("firstStatementMonth non valido (YYYY-MM).");
+      let arr;
+      try{ arr = JSON.parse($("evFinCustomJson").value || "[]"); }catch{ throw new Error("Rate personalizzate: JSON non valido."); }
+      if(!Array.isArray(arr) || !arr.length) throw new Error("Rate personalizzate: inserisci almeno 1 rata.");
+      // backend normalizza count = len(ci)
+      schedule = {
+        kind: "financing",
+        count: arr.length,
+        firstStatementMonth: firstStatementMonth || null,
+        customInstallments: arr
+      };
+      // se firstStatementMonth non dato, backend lo calcola dalla prima data valida
     }
-  }
 
-  // =========================
-  // Settings Tab
-  // =========================
-  async function healthCheck() {
-    try {
-      const out = await apiFetch("/health", { method:"GET" });
-      $("healthOut").textContent = JSON.stringify(out);
-      toast("Health OK");
-    } catch (e) {
-      $("healthOut").textContent = String(e.message || e);
-      toast("Health ERROR: " + (e.message || e));
-    }
-  }
-
-  async function loadCardSettings() {
-    const cid = ($("setCardSelect").value || "").trim();
-    if (!cid) return toast("Seleziona una carta.");
-
-    try {
-      const s = await apiFetch(`/cards/${encodeURIComponent(cid)}/settings`, { method:"GET" });
-      $("setCycleStart").value = s.cycleStartDay ?? "";
-      $("setCycleEnd").value = s.cycleEndDay ?? "";
-      $("setDebitDay").value = s.debitDay ?? "";
-      $("setDebitOffset").value = s.debitMonthOffset ?? "";
-      $("setTeilzahlung").value = s.teilzahlungAmount ?? "";
-      $("setLimit").value = s.kreditlimit ?? "";
-      $("setSoll").value = s.sollzinsAnnual ?? "";
-      $("setEffektiv").value = s.effektivzinsAnnual ?? "";
-      $("setEffectiveFrom").value = s.effectiveFrom ? String(s.effectiveFrom).slice(0,10) : "";
-      $("settingsInfo").textContent = "Settings caricati.";
-      toast("Settings caricati.");
-    } catch (e) {
-      $("settingsInfo").textContent = "Errore: " + (e.message || e);
-      toast("Errore load settings: " + (e.message || e));
-    }
-  }
-
-  async function saveCardSettings() {
-    const cid = ($("setCardSelect").value || "").trim();
-    if (!cid) return toast("Seleziona una carta.");
-
-    const payload = {
-      cycleStartDay: $("setCycleStart").value ? Number($("setCycleStart").value) : null,
-      cycleEndDay: $("setCycleEnd").value ? Number($("setCycleEnd").value) : null,
-      debitDay: $("setDebitDay").value ? Number($("setDebitDay").value) : null,
-      debitMonthOffset: $("setDebitOffset").value ? Number($("setDebitOffset").value) : null,
-      teilzahlungAmount: $("setTeilzahlung").value ? Number($("setTeilzahlung").value) : null,
-      kreditlimit: $("setLimit").value ? Number($("setLimit").value) : null,
-      sollzinsAnnual: $("setSoll").value ? Number($("setSoll").value) : null,
-      effektivzinsAnnual: $("setEffektiv").value ? Number($("setEffektiv").value) : null,
-      effectiveFrom: $("setEffectiveFrom").value || null
+    return {
+      type, title, amount, category,
+      calendarDate: purchaseDate, // per coerenza: calendarDate = purchaseDate (come nel tuo backend)
+      purchaseDate,
+      cardWalletId,
+      notes,
+      schedule
     };
-    Object.keys(payload).forEach(k => (payload[k] === null || Number.isNaN(payload[k])) && delete payload[k]);
+  }
 
-    try {
-      await apiFetch(`/cards/${encodeURIComponent(cid)}/settings`, { method:"PUT", body: JSON.stringify(payload) });
-      toast("Settings salvati.");
-      $("settingsInfo").textContent = "Settings salvati.";
+  if(type==="card_repayment"){
+    const fromWalletId = Number($("evFromWalletId").value||0);
+    const toCardWalletId = Number($("evToCardWalletId").value||0);
+    const paymentDate = $("evPaymentDate").value.trim();
+    if(!fromWalletId) throw new Error("Seleziona il conto sorgente.");
+    if(!toCardWalletId) throw new Error("Seleziona la carta.");
+    if(!paymentDate || !/^\d{4}-\d{2}-\d{2}$/.test(paymentDate)) throw new Error("paymentDate non valida.");
+    return {
+      type, title,
+      amount,
+      category: ($("evRepCategory").value||category||"Card Repayment"),
+      calendarDate,
+      notes,
+      fromWalletId,
+      toCardWalletId,
+      paymentDate
+    };
+  }
 
-      // refresh KPI + ensure repayments after settings change (may move repayment date/amount)
-      await loadDashboardForCalendar();
-      await ensureScheduledRepaymentsForCurrentMonth();
-    } catch (e) {
-      toast("Errore save settings: " + (e.message || e));
-      $("settingsInfo").textContent = "Errore: " + (e.message || e);
+  if(type==="card_credit"){
+    const cardWalletId = Number($("evCardCreditWalletId").value||0);
+    if(!cardWalletId) throw new Error("Seleziona una carta.");
+    const subType = ($("evSubTypeCredit").value||"").trim() || "gutschrift";
+    return {
+      type, title, amount, category, calendarDate, notes,
+      cardWalletId,
+      subType
+    };
+  }
+
+  if(type==="card_charge"){
+    const cardWalletId = Number($("evCardChargeWalletId").value||0);
+    if(!cardWalletId) throw new Error("Seleziona una carta.");
+    const subType = $("evSubTypeCharge").value;
+    return {
+      type, title, amount, category, calendarDate, notes,
+      cardWalletId,
+      subType
+    };
+  }
+
+  throw new Error("Tipo evento non supportato.");
+}
+
+function applyDuplication(payload){
+  const n = Number(($("dupMonths").value||"").trim());
+  if(!Number.isFinite(n) || n<=0) return [payload];
+
+  const rule = $("dupRule").value;
+  const baseDate = parseISO(payload.calendarDate);
+  if(!baseDate) return [payload];
+
+  const out = [payload];
+  for(let i=1;i<=n;i++){
+    const d = addMonthsJS(baseDate, i);
+    const fixed = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+    let target = fixed;
+    if(rule==="first_day") target = new Date(d.getFullYear(), d.getMonth(), 1);
+    if(rule==="last_day")  target = new Date(d.getFullYear(), d.getMonth()+1, 0);
+
+    if(rule==="same_day_or_last"){
+      // already clamped by addMonthsJS
     }
-  }
 
-  // =========================
-  // Cards Tab render (reuse dashboard)
-  // =========================
-  function renderCardsOverview() {
-    const wrap = $("cardsOverview");
-    wrap.innerHTML = "";
+    const copy = JSON.parse(JSON.stringify(payload));
+    const cal = isoDate(target);
 
-    const w = state.dashboard?.wallets || [];
-    const cards = w.filter(x => x.type === "card");
-    const normals = w.filter(x => x.type !== "card");
+    copy.calendarDate = cal;
 
-    const box1 = document.createElement("div");
-    box1.className = "card";
-    box1.innerHTML = `
-      <div style="font-weight:900; margin-bottom:8px;">Sintesi carte</div>
-      <div class="muted">Carte: ${cards.length}</div>
-      <div class="muted">Dettagli nel pannello sotto.</div>
-    `;
-    wrap.appendChild(box1);
-
-    const box2 = document.createElement("div");
-    box2.className = "card";
-    const totalBalance = normals.reduce((s,x)=> s + (Number(x.balance)||0), 0);
-    box2.innerHTML = `
-      <div style="font-weight:900; margin-bottom:8px;">Sintesi conti (non-carte)</div>
-      <div>Saldo totale: <b>${fmtMoney(totalBalance)}</b></div>
-      <div class="muted">Somma bilanci wallet non-card.</div>
-    `;
-    wrap.appendChild(box2);
-  }
-
-  function renderWalletTree() {
-    const wrap = $("walletTree");
-    wrap.innerHTML = "";
-
-    const wallets = Array.isArray(state.dashboard?.wallets) ? state.dashboard.wallets : [];
-    wallets.sort((a,b)=>{
-      if (a.type === b.type) return (a.name||"").localeCompare(b.name||"");
-      if (a.type === "card") return -1;
-      if (b.type === "card") return 1;
-      return (a.type||"").localeCompare(b.type||"");
-    });
-
-    for (const w of wallets) {
-      const det = document.createElement("details");
-      det.open = false;
-
-      const sum = document.createElement("summary");
-      sum.textContent = `${w.name} (${w.type}) — saldo: ${fmtMoney(w.balance)}`;
-      det.appendChild(sum);
-
-      const body = document.createElement("div");
-      body.className = "grid two";
-      body.style.marginTop = "10px";
-
-      const left = document.createElement("div");
-      left.className = "card";
-
-      const ce = w.compareLastMonthExpenses || { amount:0, percent:0 };
-      const ci = w.compareLastMonthIncome || { amount:0, percent:0 };
-
-      left.innerHTML = `
-        <div style="font-weight:900; margin-bottom:8px;">Panoramica</div>
-        <div>Saldo: <b>${fmtMoney(w.balance)}</b></div>
-        <div>Spese mese: <b>${fmtMoney(w.spentSoFar)}</b> <span class="muted">Diff: ${fmtMoney(ce.amount)} (${Number(ce.percent||0).toFixed(1)}%)</span></div>
-        <div>Entrate mese: <b>${fmtMoney(w.incomeSoFar)}</b> <span class="muted">Diff: ${fmtMoney(ci.amount)} (${Number(ci.percent||0).toFixed(1)}%)</span></div>
-        <div>Spese rimanenti mese: <b>${fmtMoney(w.spentRemaining)}</b></div>
-        ${w.nextEvent ? `<div class="muted">Prossimo: ${w.nextEvent.date} • ${w.nextEvent.title} • ${fmtMoney(w.nextEvent.amount)}</div>` : `<div class="muted">Prossimo: —</div>`}
-      `;
-      body.appendChild(left);
-
-      const right = document.createElement("div");
-      right.className = "card";
-      right.innerHTML = `<div style="font-weight:900; margin-bottom:8px;">Categorie (top 10)</div>`;
-      const cats = Array.isArray(w.categories) ? w.categories : [];
-      if (!cats.length) {
-        right.innerHTML += `<div class="muted">Nessuna spesa nel periodo.</div>`;
-      } else {
-        const t = document.createElement("table");
-        t.innerHTML = `<thead><tr><th>Categoria</th><th>Importo</th></tr></thead>`;
-        const tb = document.createElement("tbody");
-        for (const c of cats) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${(c.name||"").replace(/</g,"&lt;")}</td><td>${fmtMoney(c.amount)}</td>`;
-          tb.appendChild(tr);
-        }
-        t.appendChild(tb);
-        right.appendChild(t);
-      }
-      body.appendChild(right);
-
-      det.appendChild(body);
-
-      if (w.type === "card" && w.card) {
-        const d2 = document.createElement("details");
-        d2.open = false;
-        const s2 = document.createElement("summary");
-        s2.textContent = `Dettagli carta — limite ${fmtMoney(w.card.limit)} • disponibile ${fmtMoney(w.card.availableCredit)} • outstanding ${fmtMoney(w.card.outstanding)}`;
-        d2.appendChild(s2);
-
-        const inner = document.createElement("div");
-        inner.className = "card";
-        inner.style.marginTop = "10px";
-
-        const stmt = w.card.statement || {};
-        const sched = w.card.scheduledRepayment || {};
-
-        inner.innerHTML = `
-          <div style="font-weight:900; margin-bottom:8px;">Statement & repayment</div>
-          <div>Window: <span class="kbd">${stmt.window?.start || "?"}</span> → <span class="kbd">${stmt.window?.end || "?"}</span></div>
-          <div>Baseline: <b>${fmtMoney(stmt.baselineAmount)}</b></div>
-          <div class="muted">Instant count: ${stmt.instantPurchasesCount ?? 0} • Charges ${fmtMoney(stmt.charges)} • Credits ${fmtMoney(stmt.credits)}</div>
-          <div class="hr"></div>
-          <div style="font-weight:900; margin-bottom:6px;">Addebito previsto</div>
-          <div>Data: <span class="kbd">${sched.paymentDate || "?"}</span></div>
-          <div>Importo suggerito: <b>${fmtMoney(sched.suggestedAmount)}</b> (mode: ${sched.mode || "?"})</div>
-          <div class="muted">Evento presente su data: ${sched.exists ? "Sì" : "No"}</div>
-        `;
-
-        d2.appendChild(inner);
-        det.appendChild(document.createElement("div")).className="hr";
-        det.appendChild(d2);
-      }
-
-      wrap.appendChild(det);
+    // keep semantics:
+    if(copy.type==="card_purchase"){
+      copy.purchaseDate = cal;
+      copy.calendarDate = cal;
     }
-  }
-
-  // =========================
-  // Wires / Boot
-  // =========================
-  function initDefaults() {
-    const now = new Date();
-    const ym = isoYM(now);
-    $("calMonth").value = ym;
-    state.month = parseYM(ym);
-
-    $("calAsOf").value = isoDate(now);
-    state.calAsOf = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    $("cardsAsOf").value = isoDate(now);
-    $("cardsMonth").value = ym;
-  }
-
-  function wireCalendarControls() {
-    $("btnCalRefresh").addEventListener("click", async ()=>{
-      try {
-        await loadEventsForMonth();
-        await loadDashboardForCalendar();
-      } catch (e) {
-        toast("Errore refresh: " + (e.message || e));
-      }
-    });
-
-    $("btnNewEvent").addEventListener("click", ()=> openEventDialogForNew($("calAsOf").value || isoDate(new Date())));
-
-    $("calMonth").addEventListener("change", async ()=>{
-      state.month = parseYM($("calMonth").value);
-      try {
-        await loadEventsForMonth();
-        await loadDashboardForCalendar();
-        await ensureScheduledRepaymentsForCurrentMonth();
-      } catch (e) {
-        toast("Errore cambio mese: " + (e.message || e));
-      }
-    });
-
-    $("calAsOf").addEventListener("change", async ()=>{
-      try { await loadDashboardForCalendar(); } catch (e) { toast("Errore asOf: " + (e.message || e)); }
-    });
-
-    $("calWalletFilter").addEventListener("change", loadEventsForMonth);
-
-    $("calSearch").addEventListener("input", ()=>{
-      clearTimeout(state._qTimer);
-      state._qTimer = setTimeout(loadEventsForMonth, 250);
-    });
-
-    $("btnPrevMonth").addEventListener("click", async ()=>{
-      const m = state.month || new Date();
-      const d = new Date(m.getFullYear(), m.getMonth()-1, 1);
-      state.month = d;
-      $("calMonth").value = isoYM(d);
-      await loadEventsForMonth();
-      await loadDashboardForCalendar();
-      await ensureScheduledRepaymentsForCurrentMonth();
-    });
-
-    $("btnNextMonth").addEventListener("click", async ()=>{
-      const m = state.month || new Date();
-      const d = new Date(m.getFullYear(), m.getMonth()+1, 1);
-      state.month = d;
-      $("calMonth").value = isoYM(d);
-      await loadEventsForMonth();
-      await loadDashboardForCalendar();
-      await ensureScheduledRepaymentsForCurrentMonth();
-    });
-
-    $("btnSave").addEventListener("click", saveEvent);
-    $("btnDelete").addEventListener("click", async ()=>{
-      const id = ($("evId").value || "").trim();
-      if (!id) return;
-      await deleteEventById(id);
-      $("dlgEvent").close();
-    });
-    $("btnDuplicate").addEventListener("click", duplicateEventAcrossMonths);
-    $("btnDlgClose").addEventListener("click", ()=> $("dlgEvent").close());
-  }
-
-  function wireSettingsControls() {
-    $("btnHealth").addEventListener("click", healthCheck);
-    $("btnLoadCardSettings").addEventListener("click", loadCardSettings);
-    $("btnSaveCardSettings").addEventListener("click", saveCardSettings);
-  }
-
-  function wireCardsControls() {
-    $("btnCardsRefresh").addEventListener("click", async ()=>{
-      try { await loadDashboardForCardsTab(); toast("Dashboard aggiornato."); }
-      catch (e) { toast("Errore dashboard: " + (e.message || e)); }
-    });
-  }
-
-  $("btnReloadAll").addEventListener("click", async ()=>{
-    try {
-      await loadWallets();
-      await loadEventsForMonth();
-      await loadDashboardForCalendar();
-      await ensureScheduledRepaymentsForCurrentMonth();
-      await loadDashboardForCardsTab();
-      toast("Dati ricaricati.");
-    } catch (e) {
-      toast("Errore ricarica: " + (e.message || e));
+    if(copy.type==="card_repayment"){
+      copy.paymentDate = cal; // user likely wants payment in that month
     }
+
+    // remove series when duplicating
+    if(copy.series) delete copy.series;
+
+    out.push(copy);
+  }
+  return out;
+}
+
+async function saveEvent(){
+  const editId = $("dlgEvent").dataset.editId;
+  const isEdit = !!editId;
+
+  const payload = buildPayloadFromDialog();
+  const payloads = applyDuplication(payload);
+
+  // If editing and duplication is requested: we will update the existing and create copies for additional months
+  try{
+    if(isEdit){
+      // update current event with first payload
+      await apiFetch(`/events/${encodeURIComponent(editId)}`, {method:"PUT", body: JSON.stringify(payloads[0])});
+      // create copies for rest
+      for(let i=1;i<payloads.length;i++){
+        await apiFetch("/events", {method:"POST", body: JSON.stringify(payloads[i])});
+      }
+    }else{
+      // create all
+      for(const p of payloads){
+        await apiFetch("/events", {method:"POST", body: JSON.stringify(p)});
+      }
+    }
+
+    $("dlgEvent").close();
+    toast("Salvato", isEdit ? "Evento aggiornato." : "Evento creato.");
+    await refreshAllAfterMutation(payload);
+  }catch(err){
+    toast("Errore", String(err.message||err));
+  }
+}
+
+async function deleteEvent(){
+  const editId = $("dlgEvent").dataset.editId;
+  if(!editId) return;
+  if(!confirm("Eliminare questo evento?")) return;
+  try{
+    await apiFetch(`/events/${encodeURIComponent(editId)}`, {method:"DELETE"});
+    $("dlgEvent").close();
+    toast("Eliminato", "Evento rimosso.");
+    await refreshAllAfterMutation(null);
+  }catch(err){
+    toast("Errore", String(err.message||err));
+  }
+}
+
+async function refreshAllAfterMutation(lastPayload){
+  // refresh month events + dashboard + maybe auto repayment
+  await loadEventsForVisibleMonth();
+  await loadDashboard();
+
+  // if the mutation impacts cards, optionally create missing repayment events
+  if(lastPayload && String(lastPayload.type||"").startsWith("card_")){
+    await maybeAutoCreateRepayments();
+    // reload to reflect auto created
+    await loadEventsForVisibleMonth();
+    await loadDashboard();
+  }
+
+  renderHeaders();
+  renderCalendar();
+  if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview") renderOverview();
+}
+
+/* =========================
+   Settings: Card settings CRUD
+========================= */
+async function loadCardSettings(){
+  const id = $("selCard").value;
+  if(!id) return;
+  try{
+    const cs = await apiFetch(`/cards/${encodeURIComponent(id)}/settings`);
+    $("csTeil").value = cs.teilzahlungAmount ?? "";
+    $("csSoll").value = cs.sollzinsAnnual ?? "";
+    $("csEff").value = cs.effektivzinsAnnual ?? "";
+    $("csLimit").value = cs.kreditlimit ?? "";
+    $("csCycleStart").value = cs.cycleStartDay ?? "";
+    $("csCycleEnd").value = cs.cycleEndDay ?? "";
+    $("csDebitDay").value = cs.debitDay ?? "";
+    $("csEffFrom").value = cs.effectiveFrom ?? "";
+    $("csOffset").value = ""; // not returned by GET in your handler; keep for PUT only
+    toast("Caricato", "Impostazioni carta caricate.");
+  }catch(err){
+    toast("Errore", String(err.message||err));
+  }
+}
+
+async function saveCardSettings(){
+  const id = $("selCard").value;
+  if(!id) return;
+
+  // Keep backend param names exactly as you implemented
+  const payload = {
+    teilzahlungAmount: $("csTeil").value ? Number(String($("csTeil").value).replace(",",".")) : null,
+    sollzinsAnnual: $("csSoll").value ? Number(String($("csSoll").value).replace(",",".")) : null,
+    effektivzinsAnnual: $("csEff").value ? Number(String($("csEff").value).replace(",",".")) : null,
+    kreditlimit: $("csLimit").value ? Number(String($("csLimit").value).replace(",",".")) : null,
+    cycleStartDay: $("csCycleStart").value ? Number($("csCycleStart").value) : null,
+    cycleEndDay: $("csCycleEnd").value ? Number($("csCycleEnd").value) : null,
+    debitDay: $("csDebitDay").value ? Number($("csDebitDay").value) : null,
+    effectiveFrom: $("csEffFrom").value ? $("csEffFrom").value.trim() : null
+  };
+
+  // debitMonthOffset exists in your DB schema and backend uses it in dashboard/statement-report
+  // Your GET doesn't expose it; PUT currently doesn't support it either.
+  // We still send it only if you want: it will be ignored unless your PUT handler supports it.
+  if($("csOffset").value.trim()){
+    payload.debitMonthOffset = Number($("csOffset").value.trim());
+  }
+
+  try{
+    await apiFetch(`/cards/${encodeURIComponent(id)}/settings`, {method:"PUT", body: JSON.stringify(payload)});
+    toast("Salvato", "Impostazioni carta salvate.");
+    await refreshAll();
+  }catch(err){
+    toast("Errore", String(err.message||err));
+  }
+}
+
+/* =========================
+   Selection handlers
+========================= */
+async function onSelectDay(d){
+  state.selectedDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  $("pillDate").textContent = isoDate(state.selectedDate);
+
+  // dashboard depends on asOf => reload
+  await loadDashboard();
+  renderHeaders();
+  renderCalendar();
+  renderDayPanel();
+
+  if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview"){
+    renderOverview();
+  }
+}
+
+async function setVisibleMonth(d){
+  state.visibleMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+
+  // if selected date is outside month, keep it but still ok.
+  await loadEventsForVisibleMonth();
+  await loadDashboard();
+  await maybeAutoCreateRepayments();
+
+  // re-load if auto created things
+  await loadEventsForVisibleMonth();
+  await loadDashboard();
+
+  renderHeaders();
+  renderCalendar();
+  if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview") renderOverview();
+}
+
+async function refreshAll(){
+  $("pillApi").textContent = apiBase().replace("/finance","/");
+  await loadWallets();
+  fillWalletSelects();
+
+  state.walletFilter = $("calWalletFilter").value || "";
+  await loadEventsForVisibleMonth();
+  await loadDashboard();
+  await maybeAutoCreateRepayments();
+
+  // refresh again after potential auto creation
+  await loadEventsForVisibleMonth();
+  await loadDashboard();
+
+  renderHeaders();
+  renderCalendar();
+  renderDayPanel();
+  if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview") renderOverview();
+
+  $("pillApi").textContent = apiBase().replace("/finance","");
+}
+
+/* =========================
+   Escaping
+========================= */
+function escapeHtml(s){
+  return String(s??"").replace(/[&<>"']/g, c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+/* =========================
+   Wire up
+========================= */
+function wire(){
+  // tabs
+  for(const b of document.querySelectorAll(".tabbtn")){
+    b.addEventListener("click", ()=>setTab(b.dataset.tab));
+  }
+
+  // calendar nav
+  $("btnPrevMonth").addEventListener("click", ()=>setVisibleMonth(addMonthsJS(state.visibleMonth, -1)));
+  $("btnNextMonth").addEventListener("click", ()=>setVisibleMonth(addMonthsJS(state.visibleMonth,  1)));
+
+  // filter
+  $("calWalletFilter").addEventListener("change", async ()=>{
+    state.walletFilter = $("calWalletFilter").value || "";
+    await loadEventsForVisibleMonth();
+    renderCalendar();
+    renderDayPanel();
   });
 
-  async function boot() {
-    initDefaults();
-    wireCalendarControls();
-    wireSettingsControls();
-    wireCardsControls();
+  // reload
+  $("btnReload").addEventListener("click", async ()=>{
+    saveLocal();
+    await refreshAll();
+    toast("Ok", "Dati ricaricati.");
+  });
 
-    try {
-      await loadWallets();
-      await loadEventsForMonth();
-      await loadDashboardForCalendar();
-      await ensureScheduledRepaymentsForCurrentMonth();
-      await loadDashboardForCardsTab();
-      toast("Pronto.");
-    } catch (e) {
-      toast("Errore avvio: " + (e.message || e));
-    }
+  // quick add
+  $("btnQuickAdd").addEventListener("click", ()=>openNewEvent());
+  $("btnAddOnSelected").addEventListener("click", ()=>openNewEvent());
+  $("btnQuickIncome").addEventListener("click", ()=>openNewEvent("income"));
+  $("btnQuickExpense").addEventListener("click", ()=>openNewEvent("expense"));
+  $("btnQuickCardPurchase").addEventListener("click", ()=>openNewEvent("card_purchase"));
+  $("btnQuickRepayment").addEventListener("click", ()=>openNewEvent("card_repayment"));
+
+  // dialog
+  $("dlgClose").addEventListener("click", ()=>$("dlgEvent").close());
+  $("btnCancelEvent").addEventListener("click", ()=>$("dlgEvent").close());
+  $("btnSaveEvent").addEventListener("click", saveEvent);
+  $("btnDeleteEvent").addEventListener("click", deleteEvent);
+
+  $("evType").addEventListener("change", updateDialogVisibility);
+  $("evScheduleKind").addEventListener("change", updateDialogVisibility);
+
+  // settings
+  $("autoRepayToggle").addEventListener("change", saveLocal);
+  $("apiBase").addEventListener("change", saveLocal);
+
+  $("btnLoadCardSettings").addEventListener("click", loadCardSettings);
+  $("btnSaveCardSettings").addEventListener("click", saveCardSettings);
+}
+
+/* =========================
+   Init
+========================= */
+(async function init(){
+  loadLocal();
+  $("pillApi").textContent = apiBase().replace("/finance","/");
+  state.selectedDate = new Date();
+  state.visibleMonth = new Date(state.selectedDate.getFullYear(), state.selectedDate.getMonth(), 1);
+  $("pillDate").textContent = isoDate(state.selectedDate);
+
+  wire();
+
+  try{
+    await refreshAll();
+  }catch(err){
+    toast("Errore avvio", String(err.message||err));
+    console.error(err);
   }
-
-  boot();
+})();
 </script>
 </body>
 </html>

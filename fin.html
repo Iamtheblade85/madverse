@@ -652,7 +652,7 @@ ${selector} .ttl{color:color-mix(in oklab, var(--accent), white 28%)}
 function apiBase(){
   // fixed as per your setup
   const raw = ($("apiBase").value || "https://iamemanuele.pythonanywhere.com/").trim();
-  return raw.replace(/\/+$/, "") + "/finance";
+  return raw.replace(/\/+$/, "");
 }
 async function apiFetch(path, opts={}){
   const base = apiBase();

@@ -1,1037 +1,1550 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="app-api-base" content="https://iamemanuele.pythonanywhere.com/api"/>
-  <title>Finance Calendar (Simple)</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Finance UI</title>
+  <link rel="stylesheet" href="fin-theme.css" />
 
   <style>
-    :root{
-      --bg:#0b0c10; --panel:#12131a; --panel2:#0f1016;
-      --text:#e8e8ee; --muted:#a7a7b3; --border:rgba(255,255,255,.10);
-      --soft:rgba(255,255,255,.06);
-      --btn:#1c1e28;
-      --accent:rgba(80,160,255,.85);
-      --danger:rgba(255,90,90,.9);
-      --ok:rgba(120,255,160,.9);
-      --warn:rgba(255,190,100,.95);
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto}
-    button,input,select,textarea{font:inherit;color:inherit}
-    .topbar{
-      position:sticky;top:0;z-index:10;
-      display:flex;gap:10px;align-items:center;justify-content:space-between;
-      padding:12px;border-bottom:1px solid var(--border);
-      background:rgba(10,10,14,.85);backdrop-filter: blur(10px);
-    }
-    .left, .right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .title{font-weight:900;letter-spacing:.2px}
-    .pill{padding:8px 10px;border:1px solid var(--border);background:var(--soft);border-radius:999px;font-weight:800}
-    .btn{
-      border:1px solid var(--border);background:var(--btn);
-      padding:10px 12px;border-radius:14px;cursor:pointer;font-weight:900;
-    }
-    .btn:hover{border-color:rgba(255,255,255,.18)}
-    .btn.primary{background:rgba(80,160,255,.18);border-color:rgba(80,160,255,.45)}
-    .btn.danger{background:rgba(255,90,90,.12);border-color:rgba(255,90,90,.45)}
-    .search{
-      min-width:240px;flex:1;
-      display:flex;gap:8px;align-items:center;
-      border:1px solid var(--border);background:var(--soft);
-      border-radius:14px;padding:10px 12px;
-    }
-    .search input{border:0;outline:0;background:transparent;width:100%;font-weight:800}
+    :root { --gap: 12px; --border: 1px solid #d0d0d0; --muted: #666; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; }
+    header { padding: 10px 14px; border-bottom: var(--border); display:flex; gap: var(--gap); align-items:center; flex-wrap:wrap; }
+    header .title { font-weight: 900; }
+    main { padding: 14px; }
+    .tabs { display:flex; gap: 8px; flex-wrap: wrap; }
+    .tabbtn { padding: 8px 10px; border: var(--border); background: #fff; cursor:pointer; border-radius: 10px; }
+    .tabbtn[aria-selected="true"] { font-weight: 900; outline: 2px solid #000; }
+    .panel { display:none; }
+    .panel.active { display:block; }
 
-    .layout{
-      display:grid;gap:12px;
-      grid-template-columns: 1fr 360px;
-      padding:12px;
-      min-height:calc(100vh - 60px);
-    }
-    @media (max-width: 980px){
-      .layout{grid-template-columns:1fr}
-    }
+    .row { display:flex; gap: var(--gap); flex-wrap:wrap; align-items:flex-end; }
+    .col { display:flex; flex-direction:column; gap: 6px; }
+    label { font-size: 12px; color: var(--muted); }
+    input, select, textarea { padding: 8px; border: var(--border); border-radius: 10px; min-width: 220px; }
+    textarea { min-height: 80px; min-width: 320px; }
+    button { padding: 8px 10px; border: var(--border); background: #fff; cursor:pointer; border-radius: 10px; }
+    button.primary { outline: 2px solid #000; font-weight: 900; }
+    button.danger { border-color: #b00020; color: #b00020; }
 
-    .card{
-      border:1px solid var(--border);background:var(--panel);
-      border-radius:18px;overflow:hidden;
-    }
-    .cardHead{
-      padding:12px;border-bottom:1px solid var(--border);
-      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
-      background:rgba(255,255,255,.03);
-    }
-    .cardHead b{font-weight:1000}
-    .cardBody{padding:12px}
+    .muted { color: var(--muted); font-size: 12px; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; padding: 2px 6px; border: var(--border); border-radius: 8px; background:#fafafa; }
 
-    /* Calendar */
-    .calGrid{
-      display:grid;grid-template-columns: repeat(7, 1fr);
-      gap:8px;padding:12px;
-    }
-    .dow{font-size:12px;color:var(--muted);font-weight:900;text-align:center;padding:6px 0}
-    .day{
-      border:1px solid var(--border);background:var(--panel2);
-      border-radius:16px;padding:10px;min-height:110px;cursor:pointer;
-      display:flex;flex-direction:column;gap:8px;
-    }
-    .day:hover{border-color:rgba(255,255,255,.18)}
-    .day.out{opacity:.45}
-    .day.today{border-color:rgba(80,160,255,.55);box-shadow:0 0 0 1px rgba(80,160,255,.16) inset}
-    .dayTop{display:flex;justify-content:space-between;gap:10px;align-items:center}
-    .dayNum{font-weight:1000}
-    .daySum{font-size:12px;color:var(--muted);font-weight:900}
-    .evtMini{
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.04);
-      border-radius:12px;padding:6px 8px;
-      display:flex;justify-content:space-between;gap:10px;align-items:center;
-      font-weight:900;font-size:12px;
-    }
-    .evtMini small{color:var(--muted);font-weight:800}
-    .evtMini.expense{border-color:rgba(255,90,90,.22)}
-    .evtMini.income{border-color:rgba(120,255,160,.22)}
+    .hr { height: 1px; background: #e6e6e6; margin: 12px 0; }
 
-    /* Sidebar wallet */
-    .wallet{
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.04);
-      border-radius:16px;padding:10px;
-      display:flex;flex-direction:column;gap:10px;
-    }
-    .walletTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-    .walletName{font-weight:1000}
-    .muted{color:var(--muted);font-size:12px;font-weight:800}
-    .kpiRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .kpi{
-      border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);
-      border-radius:14px;padding:8px;
-    }
-    .kpi .label{font-size:12px;color:var(--muted);font-weight:900}
-    .kpi .value{margin-top:6px;font-weight:1000}
-    .list{display:flex;flex-direction:column;gap:6px}
-    .barRow{display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:900}
-    .bar{
-      height:10px;border-radius:999px;background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);overflow:hidden;
-    }
-    .bar > i{display:block;height:100%;background:rgba(80,160,255,.55);width:0%}
+    .card { border: var(--border); border-radius: 14px; padding: 12px; background:#fff; }
+    .grid { display:grid; gap: 10px; }
+    .grid.two { grid-template-columns: repeat(2, minmax(260px, 1fr)); }
+    .grid.three { grid-template-columns: repeat(3, minmax(260px, 1fr)); }
 
-    /* Modal */
-    dialog{
-      width:min(720px, calc(100vw - 24px));
-      border:1px solid var(--border);
-      background:var(--panel);
-      color:var(--text);
-      border-radius:18px;
-      padding:0;
-    }
-    dialog::backdrop{background:rgba(0,0,0,.55)}
-    .modalHead{
-      padding:12px;border-bottom:1px solid var(--border);
-      display:flex;justify-content:space-between;align-items:center;gap:10px;
-    }
-    .modalBody{padding:12px}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media (max-width:700px){.grid2{grid-template-columns:1fr}}
-    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-    .field label{font-size:12px;color:var(--muted);font-weight:900}
-    .field input,.field select,.field textarea{
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);
-      border-radius:14px;padding:10px;outline:0;font-weight:800;
-    }
-    .actions{
-      padding:12px;border-top:1px solid var(--border);
-      display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;
-    }
-    .hint{font-size:12px;color:var(--muted);font-weight:800;line-height:1.3}
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .tag{
-      font-size:12px;font-weight:900;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
-      padding:4px 8px;border-radius:999px;color:var(--muted)
-    }
+    .calendar { border: var(--border); border-radius: 14px; overflow:hidden; }
+    .cal-head { display:flex; justify-content:space-between; align-items:center; padding: 10px; border-bottom: var(--border); gap: 10px; flex-wrap:wrap; }
+    .cal-grid { display:grid; grid-template-columns: repeat(7, 1fr); }
+    .dow { padding: 8px; font-size: 12px; color: var(--muted); border-bottom: var(--border); background:#fafafa; }
+    .day { min-height: 110px; border-right: var(--border); border-bottom: var(--border); padding: 6px; display:flex; flex-direction:column; gap: 6px; }
+    .day:nth-child(7n) { border-right: none; }
+    .daynum { font-size: 12px; color: var(--muted); display:flex; justify-content:space-between; align-items:center; gap: 6px; }
+    .pill { display:inline-flex; gap: 6px; align-items:center; padding: 4px 8px; border: var(--border); border-radius: 999px; font-size: 12px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .pill small { color: var(--muted); }
+
+    details { border: var(--border); border-radius: 14px; padding: 10px; background:#fff; }
+    details > summary { cursor:pointer; font-weight: 900; }
+
+    table { border-collapse: collapse; width: 100%; }
+    th, td { text-align:left; border-bottom: var(--border); padding: 8px; font-size: 14px; }
+    th { font-size: 12px; color: var(--muted); background: #fafafa; }
+
+    .toast { position: fixed; right: 12px; bottom: 12px; padding: 10px 12px; border: var(--border); background: #fff; border-radius: 14px; max-width: 420px; display:none; }
+    .toast.show { display:block; }
+
+    /* Calendar header KPI cards */
+    .kpi-strip { display:flex; gap: 10px; overflow:auto; padding-bottom: 4px; }
+    .kpi { min-width: 320px; border: var(--border); border-radius: 14px; padding: 10px; background:#fff; }
+    .kpi .name { font-weight: 900; display:flex; justify-content:space-between; gap: 10px; }
+    .kpi .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .kpi .vals { display:grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+    .kpi .val { border: var(--border); border-radius: 12px; padding: 8px; }
+    .kpi .val .lab { color: var(--muted); font-size: 12px; }
+    .kpi .val .num { font-weight: 900; margin-top: 2px; }
   </style>
 </head>
 
 <body>
-  <header class="topbar">
-    <div class="left">
-      <div class="title">💼 Finance Calendar (Simple)</div>
-      <button class="btn" id="btnPrev">‹</button>
-      <div class="pill" id="monthLabel">—</div>
-      <button class="btn" id="btnNext">›</button>
-      <button class="btn" id="btnToday">Oggi</button>
-    </div>
+<header>
+  <div class="title">Finance UI</div>
+  <div class="muted">Calendario • Settings • Carte</div>
+  <div style="flex:1"></div>
 
-    <div class="right">
-      <div class="search">
-        🔎 <input id="q" type="search" placeholder="Cerca eventi (titolo/categoria/note)…"/>
-      </div>
-      <button class="btn primary" id="btnNew">＋ Nuovo</button>
-      <button class="btn" id="btnReload">Ricarica</button>
-    </div>
-  </header>
-
-  <div class="layout">
-    <main class="card">
-      <div class="cardHead">
-        <b>Calendario</b>
-        <span class="tag" id="metaCount">—</span>
-      </div>
-      <div id="calendarHost"></div>
-    </main>
-
-    <aside class="card">
-      <div class="cardHead">
-        <b>Wallet (live)</b>
-        <span class="tag" id="apiStatus">offline</span>
-      </div>
-      <div class="cardBody" id="sidebarHost"></div>
-    </aside>
+  <div class="col">
+    <label>API Base</label>
+    <input id="apiBase" placeholder="/finance" value="/finance" />
+    <div class="muted">Esempio: <span class="kbd">/api/finance</span></div>
   </div>
 
-  <dialog id="evtModal">
-    <div class="modalHead">
-      <b id="modalTitle">Nuovo evento</b>
-      <button class="btn" id="btnCloseModal">✕</button>
-    </div>
+  <button id="btnReloadAll" class="primary">Ricarica dati</button>
+</header>
 
-    <div class="modalBody">
-      <div class="grid2">
-        <div class="field">
-          <label>Titolo *</label>
-          <input id="fTitle" type="text" placeholder="Es. Spesa supermercato" />
-        </div>
+<main>
+  <nav class="tabs" role="tablist" aria-label="Finance tabs">
+    <button class="tabbtn" role="tab" aria-selected="true" data-tab="tabCalendar">Calendario eventi</button>
+    <button class="tabbtn" role="tab" aria-selected="false" data-tab="tabSettings">Settings</button>
+    <button class="tabbtn" role="tab" aria-selected="false" data-tab="tabCards">Carte & Subtotali</button>
+  </nav>
 
-        <div class="field">
-          <label>Tipo</label>
-          <select id="fType">
-            <option value="expense">Uscita</option>
-            <option value="income">Entrata</option>
-          </select>
-        </div>
+  <div class="hr"></div>
+
+  <!-- =================== TAB: CALENDAR =================== -->
+  <section id="tabCalendar" class="panel active" role="tabpanel">
+    <div class="row">
+      <div class="col">
+        <label>Mese</label>
+        <input id="calMonth" type="month" />
+        <div class="muted">Seleziona il mese. Clicca un giorno per aggiornare i saldi “al giorno”.</div>
       </div>
 
-      <div class="grid2">
-        <div class="field">
-          <label>Totale *</label>
-          <input id="fAmount" type="number" step="0.01" placeholder="0.00" />
-        </div>
-
-        <div class="field">
-          <label>Categoria</label>
-          <input id="fCategory" type="text" placeholder="Es. Food, Bills…" />
-        </div>
-      </div>
-
-      <div class="grid2">
-        <div class="field">
-          <label>Wallet *</label>
-          <select id="fWallet"></select>
-        </div>
-
-        <div class="field">
-          <label>Quando è “avvenuto” (opzionale)</label>
-          <input id="fOccurred" type="date" />
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Pagamento</label>
-        <select id="fScheduleMode">
-          <option value="now">Subito (1 evento)</option>
-          <option value="deferred">Posticipato unica soluzione</option>
-          <option value="installments">Rate (serie)</option>
+      <div class="col">
+        <label>Filtro wallet/carta (opzionale)</label>
+        <select id="calWalletFilter">
+          <option value="">Tutti</option>
         </select>
-        <div class="hint">La data che vedi nel calendario è sempre la data che impatta il saldo del wallet.</div>
+        <div class="muted">Filtro usa <span class="kbd">walletId</span> (backend filtra su più campi).</div>
       </div>
 
-      <!-- Deferred -->
-      <div id="deferredBox" style="display:none">
-        <div class="grid2">
-          <div class="field">
-            <label>Data pagamento</label>
-            <input id="fPayOn" type="date" />
+      <div class="col">
+        <label>Ricerca</label>
+        <input id="calSearch" placeholder="titolo / categoria / note" />
+      </div>
+
+      <div class="col">
+        <label>Saldi “al giorno”</label>
+        <input id="calAsOf" type="date" />
+        <div class="muted">Cambierà automaticamente cliccando sul calendario.</div>
+      </div>
+
+      <div class="col">
+        <label>&nbsp;</label>
+        <button id="btnCalRefresh" class="primary">Aggiorna</button>
+      </div>
+
+      <div class="col">
+        <label>&nbsp;</label>
+        <button id="btnNewEvent">+ Nuovo evento</button>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div style="font-weight:900;">Testate per ogni conto/carta</div>
+          <div class="muted">
+            Saldo al giorno • Spese mese • Diff mese scorso • Entrate mese • Diff mese scorso • Spese rimanenti mese.
+            <br/>Per le carte, i “rimborsi” sono auto-creati/aggiornati come eventi in base allo statement del backend (se la carta ha <span class="kbd">defaultSourceWalletId</span>).
           </div>
-          <div class="field">
-            <label>Note</label>
-            <input id="fNotes" type="text" placeholder="opzionale" />
-          </div>
+        </div>
+        <div class="muted">
+          Regola automatica rimborsi carta: al salvataggio/modifica/cancellazione di eventi carta → ricalcolo → crea/aggiorna evento <span class="kbd">card_repayment</span>.
         </div>
       </div>
 
-      <!-- Installments -->
-      <div id="instBox" style="display:none">
-        <div class="grid2">
-          <div class="field">
-            <label>Numero rate</label>
-            <input id="fInstCount" type="number" min="2" step="1" value="3"/>
-          </div>
+      <div class="hr"></div>
+      <div id="kpiStrip" class="kpi-strip"></div>
+    </div>
 
-          <div class="field">
-            <label>Prima rata</label>
-            <input id="fInstFirst" type="date" />
+    <div class="hr"></div>
+
+    <div class="calendar">
+      <div class="cal-head">
+        <div class="row" style="align-items:center">
+          <button id="btnPrevMonth" title="Mese precedente">◀</button>
+          <div>
+            <div id="calTitle" style="font-weight:900"></div>
+            <div class="muted">Clic su giorno: aggiorna saldi e crea evento. Clic su evento: modifica.</div>
           </div>
+          <button id="btnNextMonth" title="Mese successivo">▶</button>
         </div>
 
-        <div class="grid2">
-          <div class="field">
-            <label>Importo rata (automatico)</label>
-            <input id="fInstEach" type="text" disabled />
-          </div>
-          <div class="field">
-            <label>Note</label>
-            <input id="fInstNotes" type="text" placeholder="opzionale" />
-          </div>
+        <div class="row" style="align-items:center">
+          <div class="muted">Tip: per “stesso evento in più mesi” usa “Duplica su mesi” nell’editor.</div>
         </div>
-
-        <div class="hint">Per ora: rate mensili uguali. Il backend creerà N eventi con lo stesso seriesId.</div>
       </div>
 
-      <!-- Series controls (edit) -->
-      <div id="seriesBox" style="display:none; margin-top:10px;">
+      <div class="cal-grid" id="calDow"></div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="card">
+      <div style="font-weight:900; margin-bottom:8px;">Eventi nel mese (tabella)</div>
+      <div class="muted" style="margin-bottom:8px;">Per verifiche e modifiche rapide.</div>
+      <div style="overflow:auto">
+        <table id="eventsTable">
+          <thead>
+            <tr>
+              <th>ID</th><th>Data</th><th>Tipo</th><th>Titolo</th><th>Categoria</th><th>Importo</th><th>Wallet</th><th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Event Editor -->
+    <dialog id="dlgEvent" style="width:min(920px, 96vw); border: var(--border); border-radius: 14px; padding: 12px;">
+      <form method="dialog" id="eventForm">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div>
+            <div id="dlgTitle" style="font-weight:900; font-size: 18px;">Evento</div>
+            <div class="muted">Campi minimi: tipo, data, titolo, categoria, importo. Il resto è guidato.</div>
+          </div>
+          <div class="row">
+            <button id="btnDlgClose">Chiudi</button>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="grid two">
+          <div class="col">
+            <label>Tipo evento</label>
+            <select id="evType">
+              <option value="expense">Spesa (wallet normale)</option>
+              <option value="income">Entrata (wallet normale)</option>
+              <option value="card_purchase">Acquisto con carta</option>
+              <option value="card_repayment">Rimborso carta (da wallet a carta)</option>
+              <option value="card_credit">Gutschrift / Storno (su carta)</option>
+              <option value="card_charge">Addebito carta (interessi/fee)</option>
+            </select>
+          </div>
+
+          <div class="col">
+            <label>Data (calendarDate)</label>
+            <input id="evCalendarDate" type="date" />
+            <div class="muted">Per <span class="kbd">card_purchase</span> viene anche usata come <span class="kbd">purchaseDate</span>.</div>
+          </div>
+
+          <div class="col">
+            <label>Titolo</label>
+            <input id="evTitle" placeholder="es. Supermercato" />
+          </div>
+
+          <div class="col">
+            <label>Categoria</label>
+            <input id="evCategory" placeholder="es. Alimentari" />
+          </div>
+
+          <div class="col">
+            <label>Importo (positivo)</label>
+            <input id="evAmount" type="number" step="0.01" placeholder="0.00" />
+          </div>
+
+          <div class="col">
+            <label>Note (opzionale)</label>
+            <textarea id="evNotes" placeholder="Dettagli (opzionale)"></textarea>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="grid three">
+          <div class="col">
+            <label>Wallet (income/expense)</label>
+            <select id="evWalletId"><option value="">—</option></select>
+          </div>
+
+          <div class="col">
+            <label>Carta (card_purchase / card_credit / card_charge)</label>
+            <select id="evCardWalletId"><option value="">—</option></select>
+          </div>
+
+          <div class="col">
+            <label>Da wallet → a carta (card_repayment)</label>
+            <div class="row">
+              <select id="evFromWalletId" style="min-width:260px"><option value="">Da wallet…</option></select>
+              <select id="evToCardWalletId" style="min-width:260px"><option value="">A carta…</option></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <details id="scheduleBox">
+          <summary>Pagamento rateale / finanziamento (solo per card_purchase)</summary>
+
+          <div class="grid two" style="margin-top:10px;">
+            <div class="col">
+              <label>kind</label>
+              <select id="schedKind">
+                <option value="instant">instant</option>
+                <option value="financing">financing</option>
+              </select>
+            </div>
+
+            <div class="col">
+              <label>count</label>
+              <input id="schedCount" type="number" min="1" step="1" placeholder="es. 12" />
+            </div>
+
+            <div class="col">
+              <label>firstStatementMonth (YYYY-MM)</label>
+              <input id="schedFirstStatementMonth" placeholder="es. 2026-02" />
+            </div>
+
+            <div class="col">
+              <label>monthlyInstallments.installmentAmount (opzionale)</label>
+              <input id="schedInstallmentAmount" type="number" step="0.01" placeholder="se vuoto = amount/count" />
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <details>
+            <summary>customInstallments (opzionale)</summary>
+            <div class="muted" style="margin:8px 0;">Una riga per rata: <span class="kbd">YYYY-MM-DD;importo</span></div>
+            <textarea id="schedCustomInstallments" placeholder="2026-03-05; 50.00&#10;2026-04-05; 50.00"></textarea>
+          </details>
+        </details>
+
+        <div class="hr"></div>
+
+        <details>
+          <summary>Duplica su mesi</summary>
+          <div class="muted" style="margin:8px 0;">Crea eventi separati (robusto per DB in produzione).</div>
+          <div class="row">
+            <div class="col">
+              <label>Da mese</label>
+              <input id="dupFromMonth" type="month" />
+            </div>
+            <div class="col">
+              <label>A mese</label>
+              <input id="dupToMonth" type="month" />
+            </div>
+            <div class="col">
+              <label>Giorno del mese</label>
+              <input id="dupDay" type="number" min="1" max="31" step="1" placeholder="es. 1" />
+            </div>
+            <div class="col">
+              <label>&nbsp;</label>
+              <button type="button" id="btnDuplicate">Duplica ora</button>
+            </div>
+          </div>
+        </details>
+
+        <div class="hr"></div>
+
+        <input type="hidden" id="evId" value="" />
+
+        <div class="row" style="justify-content:space-between;">
+          <div class="row">
+            <button type="button" id="btnDelete" class="danger" style="display:none;">Cancella</button>
+          </div>
+          <div class="row">
+            <button type="button" id="btnSave" class="primary">Salva</button>
+          </div>
+        </div>
+
+        <div id="dlgHint" class="muted" style="margin-top:10px;"></div>
+      </form>
+    </dialog>
+  </section>
+
+  <!-- =================== TAB: SETTINGS =================== -->
+  <section id="tabSettings" class="panel" role="tabpanel">
+    <div class="grid two">
+      <div class="card">
+        <div style="font-weight:900; margin-bottom:6px;">Settings carta</div>
+        <div class="muted" style="margin-bottom:10px;">Applica ai wallet con <span class="kbd">type=card</span>.</div>
+
+        <div class="col">
+          <label>Carta</label>
+          <select id="setCardSelect"><option value="">— Seleziona carta —</option></select>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="grid two">
+          <div class="col"><label>cycleStartDay</label><input id="setCycleStart" type="number" min="1" max="31" step="1" /></div>
+          <div class="col"><label>cycleEndDay</label><input id="setCycleEnd" type="number" min="1" max="31" step="1" /></div>
+          <div class="col"><label>debitDay</label><input id="setDebitDay" type="number" min="1" max="31" step="1" /></div>
+          <div class="col"><label>debitMonthOffset</label><input id="setDebitOffset" type="number" step="1" /></div>
+          <div class="col"><label>teilzahlungAmount</label><input id="setTeilzahlung" type="number" step="0.01" /></div>
+          <div class="col"><label>kreditlimit</label><input id="setLimit" type="number" step="0.01" /></div>
+          <div class="col"><label>sollzinsAnnual</label><input id="setSoll" type="number" step="0.01" /></div>
+          <div class="col"><label>effektivzinsAnnual</label><input id="setEffektiv" type="number" step="0.01" /></div>
+          <div class="col"><label>effectiveFrom</label><input id="setEffectiveFrom" type="date" /></div>
+        </div>
+
+        <div class="hr"></div>
+
         <div class="row">
-          <label class="row" style="font-weight:900;color:var(--muted);">
-            <input id="fApplyFuture" type="checkbox"/>
-            Applica modifica a questa + tutte le future (serie)
-          </label>
-          <span class="tag" id="seriesTag">series</span>
+          <button id="btnLoadCardSettings">Carica</button>
+          <button id="btnSaveCardSettings" class="primary">Salva</button>
         </div>
-        <div class="hint">Se disattivo, modifica solo questo evento.</div>
+
+        <div id="settingsInfo" class="muted" style="margin-top:10px;"></div>
       </div>
 
-      <div class="field" style="margin-top:6px;">
-        <label>Note (evento)</label>
-        <textarea id="fNotesLong" placeholder="opzionale"></textarea>
+      <div class="card">
+        <div style="font-weight:900; margin-bottom:6px;">Health</div>
+        <button id="btnHealth">Test connessione</button>
+        <div id="healthOut" class="muted" style="margin-top:8px;"></div>
+
+        <div class="hr"></div>
+
+        <div style="font-weight:900; margin-bottom:6px;">Note</div>
+        <ul class="muted" style="margin:0; padding-left: 18px;">
+          <li>Nessuna modifica a nomi parametri/payload/response del backend.</li>
+          <li>Per auto-rimborsi carta: serve <span class="kbd">defaultSourceWalletId</span> impostato sul wallet carta.</li>
+          <li>I rimborsi “auto” sono riconosciuti da <span class="kbd">subType = auto_scheduled</span> (set via PUT dopo creazione).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== TAB: CARDS =================== -->
+  <section id="tabCards" class="panel" role="tabpanel">
+    <div class="row">
+      <div class="col">
+        <label>As Of</label>
+        <input id="cardsAsOf" type="date" />
       </div>
 
-      <div class="hint" id="editHint" style="display:none"></div>
+      <div class="col">
+        <label>Mese</label>
+        <input id="cardsMonth" type="month" />
+      </div>
+
+      <div class="col">
+        <label>&nbsp;</label>
+        <button id="btnCardsRefresh" class="primary">Aggiorna</button>
+      </div>
     </div>
 
-    <div class="actions">
-      <button class="btn" id="btnCopy" style="display:none;">Copia</button>
-      <button class="btn danger" id="btnDelete" style="display:none;">Elimina</button>
-      <button class="btn" id="btnCancel">Annulla</button>
-      <button class="btn primary" id="btnSave">Salva</button>
+    <div class="hr"></div>
+
+    <div id="cardsOverview" class="grid two"></div>
+
+    <div class="hr"></div>
+
+    <div class="card">
+      <div style="font-weight:900; margin-bottom:6px;">Dettagli per wallet/carta (albero richiudibile)</div>
+      <div class="muted" style="margin-bottom:10px;">Mostra: saldo, spese/entrate mese, confronti, categorie, e per carte: statement + repayment previsto.</div>
+      <div id="walletTree" class="grid" style="grid-template-columns: 1fr;"></div>
     </div>
-  </dialog>
+  </section>
 
-  <script>
-    (() => {
-      "use strict";
+  <div id="toast" class="toast"></div>
+</main>
 
-      /* -------------------------
-        Utils
-      ------------------------- */
-      const $ = (s, r=document) => r.querySelector(s);
-      const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
-      const pad2 = (n) => String(n).padStart(2, "0");
-      const toISO = (d) => {
-        const x = (d instanceof Date) ? d : new Date(d);
-        return `${x.getFullYear()}-${pad2(x.getMonth()+1)}-${pad2(x.getDate())}`;
-      };
-      const fromISO = (iso) => {
-        const [y,m,d] = String(iso||"").split("-").map(Number);
-        return new Date(y, (m||1)-1, d||1);
-      };
-      const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
-      const endOfMonth = (d) => new Date(d.getFullYear(), d.getMonth()+1, 0);
-      const startOfWeekMon = (d) => {
-        const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        const day = (x.getDay() + 6) % 7; // Monday=0
-        x.setDate(x.getDate() - day);
-        return new Date(x.getFullYear(), x.getMonth(), x.getDate());
-      };
-      const addDays = (d, n) => {
-        const x = new Date(d); x.setDate(x.getDate()+n); return x;
-      };
-      const addMonths = (d, n) => {
-        const x = new Date(d);
-        const day = x.getDate();
-        x.setMonth(x.getMonth() + n);
-        while (x.getDate() !== day && x.getDate() > 1) x.setDate(x.getDate() - 1);
-        return x;
-      };
-      const monthKey = (d) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
-      const money = (v, cur="EUR") => new Intl.NumberFormat("it-IT",{style:"currency",currency:cur}).format(Number(v||0));
-      const humanMonth = (d) => new Intl.DateTimeFormat("it-IT",{month:"long",year:"numeric"}).format(d);
+<script>
+  // =========================
+  // Helpers / State
+  // =========================
+  const $ = (id) => document.getElementById(id);
 
-      /* -------------------------
-        API
-      ------------------------- */
-      const API_BASE = String(document.querySelector('meta[name="app-api-base"]')?.content || "").replace(/\/+$/,"");
-      const API = {
-        base(){ return API_BASE || "/api"; },
-        async request(path, {method="GET", body}={}){
-          const url = this.base() + path;
-          const res = await fetch(url, {
-            method,
-            headers: body ? {"Content-Type":"application/json","Accept":"application/json"} : {"Accept":"application/json"},
-            body: body ? JSON.stringify(body) : undefined
-          });
-          const ct = res.headers.get("content-type") || "";
-          const data = ct.includes("application/json") ? await res.json().catch(()=>null) : await res.text().catch(()=>null);
-          if(!res.ok) throw new Error((data && data.error) ? data.error : `HTTP ${res.status}`);
-          return data;
-        },
-        health(){ return this.request("/health"); },
-        getWallets(){ return this.request("/wallets"); },
-        listEvents(params){
-          const qs = new URLSearchParams(params||{}).toString();
-          return this.request(`/events${qs ? `?${qs}` : ""}`);
-        },
-        createEvent(payload){ return this.request("/events", {method:"POST", body:payload}); },
-        updateEvent(id, payload){ return this.request(`/events/${encodeURIComponent(id)}`, {method:"PUT", body:payload}); },
-        deleteEvent(id){ return this.request(`/events/${encodeURIComponent(id)}`, {method:"DELETE"}); },
-        updateSeriesFuture(seriesId, body){
-          return this.request(`/series/${encodeURIComponent(seriesId)}/future`, {method:"PUT", body});
-        },
-        deleteSeriesFuture(seriesId, fromISO){
-          const qs = new URLSearchParams({from: fromISO}).toString();
-          return this.request(`/series/${encodeURIComponent(seriesId)}/future?${qs}`, {method:"DELETE"});
-        },
-        deleteSeries(seriesId){
-          return this.request(`/series/${encodeURIComponent(seriesId)}`, {method:"DELETE"});
-        },
-        dashboard(params){
-          const qs = new URLSearchParams(params||{}).toString();
-          return this.request(`/dashboard${qs ? `?${qs}` : ""}`);
-        }
-      };
+  const state = {
+    apiBase: "/finance",
+    wallets: [],
+    walletById: new Map(),
+    events: [],
+    month: null,      // Date (first day of selected month)
+    calAsOf: null,    // Date (selected day)
+    dashboard: null,  // /dashboard response for current month + asOf
+  };
 
-      /* -------------------------
-        State
-      ------------------------- */
-      const state = {
-        apiOnline: false,
-        anchorMonth: startOfMonth(new Date()),
-        q: "",
-        wallets: [],
-        events: [],
-        selectedDayISO: null,
-        editingEvent: null,
-        dash: null
-      };
+  function apiBase() {
+    state.apiBase = ($("apiBase").value || "").trim() || "/finance";
+    return state.apiBase.replace(/\/+$/,"");
+  }
 
-      /* -------------------------
-        Data loading
-      ------------------------- */
-      const setStatus = (online) => {
-        state.apiOnline = !!online;
-        $("#apiStatus").textContent = online ? "online" : "offline";
-        $("#apiStatus").style.borderColor = online ? "rgba(120,255,160,.35)" : "rgba(255,255,255,.12)";
-      };
+  async function apiFetch(path, opts={}) {
+    const url = apiBase() + path;
+    const res = await fetch(url, { headers: { "Content-Type":"application/json" }, ...opts });
+    if (!res.ok) {
+      let txt = ""; try { txt = await res.text(); } catch {}
+      throw new Error(`HTTP ${res.status} ${res.statusText} - ${txt}`);
+    }
+    const ct = res.headers.get("content-type") || "";
+    if (ct.includes("application/json")) return await res.json();
+    return await res.text();
+  }
 
-      async function loadMonthData(){
-        const mStart = startOfMonth(state.anchorMonth);
-        const mEnd = endOfMonth(state.anchorMonth);
-        const from = toISO(mStart);
-        const to = toISO(mEnd);
+  function toast(msg, ms=4500) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(t._timer);
+    t._timer = setTimeout(()=>t.classList.remove("show"), ms);
+  }
 
-        try{
-          await API.health();
-          setStatus(true);
-        }catch(_){
-          setStatus(false);
-        }
+  function isoDate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const dd = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${dd}`;
+  }
+  function isoYM(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    return `${y}-${m}`;
+  }
+  function parseYM(s) {
+    if (!s || s.length < 7) return null;
+    const y = parseInt(s.slice(0,4),10);
+    const m = parseInt(s.slice(5,7),10);
+    if (!y || !m) return null;
+    return new Date(y, m-1, 1);
+  }
+  function monthBounds(d) {
+    const start = new Date(d.getFullYear(), d.getMonth(), 1);
+    const end = new Date(d.getFullYear(), d.getMonth()+1, 0);
+    return { start, end };
+  }
+  function clampDayToMonth(y, m1to12, day) {
+    const last = new Date(y, m1to12, 0).getDate();
+    return Math.min(Math.max(1, day), last);
+  }
+  function fmtMoney(n) {
+    if (n === null || n === undefined || Number.isNaN(Number(n))) return "";
+    return Number(n).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function typeLabel(t) {
+    return ({
+      income: "Entrata",
+      expense: "Spesa",
+      card_purchase: "Acquisto carta",
+      card_repayment: "Rimborso carta",
+      card_credit: "Gutschrift",
+      card_charge: "Addebito carta"
+    }[t] || t);
+  }
+  function eventEffectiveDate(ev) {
+    return ev.effectiveDate || ev.purchaseDate || ev.calendarDate || ev.paymentDate || "";
+  }
 
-        // wallets + events
-        try{
-          const [w, e] = await Promise.all([
-            API.getWallets(),
-            API.listEvents({from, to, q: state.q || ""})
-          ]);
-          state.wallets = Array.isArray(w?.wallets) ? w.wallets : (Array.isArray(w) ? w : []);
-          state.events = Array.isArray(e?.events) ? e.events : (Array.isArray(e) ? e : []);
-          setStatus(true);
-        }catch(err){
-          // offline fallback (empty)
-          state.wallets = [];
-          state.events = [];
-          setStatus(false);
-          console.warn(err);
-        }
+  // =========================
+  // Tabs
+  // =========================
+  function setTab(tabId) {
+    document.querySelectorAll(".tabbtn").forEach(b=>{
+      const sel = b.dataset.tab === tabId;
+      b.setAttribute("aria-selected", sel ? "true":"false");
+    });
+    document.querySelectorAll(".panel").forEach(p=> p.classList.toggle("active", p.id === tabId));
+  }
+  document.querySelectorAll(".tabbtn").forEach(b=> b.addEventListener("click", ()=> setTab(b.dataset.tab)));
 
-        // dashboard (optional)
-        state.dash = null;
-        try{
-          const asOf = toISO(new Date());
-          const dash = await API.dashboard({month: monthKey(state.anchorMonth), asOf});
-          state.dash = dash;
-        }catch(_){
-          // ok: calcoliamo client-side
-          state.dash = null;
-        }
+  // =========================
+  // Load Wallets
+  // =========================
+  async function loadWallets() {
+    const wallets = await apiFetch("/wallets", { method:"GET" });
+    state.wallets = Array.isArray(wallets) ? wallets : [];
+    state.walletById = new Map(state.wallets.map(w => [String(w.id), w]));
 
-        renderAll();
+    // Calendar filter
+    const wf = $("calWalletFilter");
+    wf.innerHTML = `<option value="">Tutti</option>`;
+    for (const w of state.wallets) {
+      const opt = document.createElement("option");
+      opt.value = String(w.id);
+      opt.textContent = `${w.name} (${w.type})`;
+      wf.appendChild(opt);
+    }
+
+    // Editor selects
+    const walletSelects = [$("evWalletId"), $("evFromWalletId")];
+    for (const s of walletSelects) {
+      s.innerHTML = `<option value="">—</option>`;
+      for (const w of state.wallets.filter(x => x.type !== "card")) {
+        const opt = document.createElement("option");
+        opt.value = String(w.id);
+        opt.textContent = w.name;
+        s.appendChild(opt);
+      }
+    }
+    const cardSelects = [$("evCardWalletId"), $("evToCardWalletId"), $("setCardSelect")];
+    for (const s of cardSelects) {
+      s.innerHTML = (s === $("setCardSelect")) ? `<option value="">— Seleziona carta —</option>` : `<option value="">—</option>`;
+      for (const w of state.wallets.filter(x => x.type === "card")) {
+        const opt = document.createElement("option");
+        opt.value = String(w.id);
+        opt.textContent = w.name;
+        s.appendChild(opt);
+      }
+    }
+  }
+
+  // =========================
+  // Dashboard (shared for KPI + Cards tab)
+  // =========================
+  async function loadDashboardForCalendar() {
+    const asOf = $("calAsOf").value || isoDate(new Date());
+    const month = $("calMonth").value || isoYM(new Date());
+    const params = new URLSearchParams({ asOf, month });
+    state.dashboard = await apiFetch("/dashboard?" + params.toString(), { method:"GET" });
+    renderKpiStrip();
+  }
+
+  async function loadDashboardForCardsTab() {
+    const asOf = $("cardsAsOf").value || isoDate(new Date());
+    const month = $("cardsMonth").value || isoYM(new Date());
+    const params = new URLSearchParams({ asOf, month });
+    state.dashboard = await apiFetch("/dashboard?" + params.toString(), { method:"GET" });
+    renderCardsOverview();
+    renderWalletTree();
+  }
+
+  // =========================
+  // KPI Strip (Calendar tab)
+  // =========================
+  function renderKpiStrip() {
+    const wrap = $("kpiStrip");
+    wrap.innerHTML = "";
+
+    const wallets = (state.dashboard && Array.isArray(state.dashboard.wallets)) ? state.dashboard.wallets : [];
+
+    // Order: cards first, then others; stable by name
+    wallets.sort((a,b)=>{
+      if (a.type === b.type) return (a.name||"").localeCompare(b.name||"");
+      if (a.type === "card") return -1;
+      if (b.type === "card") return 1;
+      return (a.type||"").localeCompare(b.type||"");
+    });
+
+    for (const w of wallets) {
+      const k = document.createElement("div");
+      k.className = "kpi";
+
+      const b = fmtMoney(w.balance);
+      const s = fmtMoney(w.spentSoFar);
+      const i = fmtMoney(w.incomeSoFar);
+      const sr = fmtMoney(w.spentRemaining);
+
+      const ce = w.compareLastMonthExpenses || { amount:0, percent:0 };
+      const ci = w.compareLastMonthIncome || { amount:0, percent:0 };
+
+      const ceTxt = `${fmtMoney(ce.amount)} (${Number(ce.percent||0).toFixed(1)}%)`;
+      const ciTxt = `${fmtMoney(ci.amount)} (${Number(ci.percent||0).toFixed(1)}%)`;
+
+      // For cards, show also outstanding/available
+      let cardExtra = "";
+      if (w.type === "card" && w.card) {
+        cardExtra = `<div class="sub">Carta • outstanding ${fmtMoney(w.card.outstanding)} • disponibile ${fmtMoney(w.card.availableCredit)}</div>`;
+      } else {
+        cardExtra = `<div class="sub">${w.type}</div>`;
       }
 
-      /* -------------------------
-        Sidebar stats (client fallback)
-      ------------------------- */
-      function computeSidebarClient(){
-        const todayISO = toISO(new Date());
-        const month = monthKey(state.anchorMonth);
+      k.innerHTML = `
+        <div class="name">
+          <span>${(w.name||"").replace(/</g,"&lt;")}</span>
+          <span class="muted">${w.type}</span>
+        </div>
+        ${cardExtra}
+        <div class="vals">
+          <div class="val"><div class="lab">Saldo al giorno</div><div class="num">${b}</div></div>
+          <div class="val"><div class="lab">Spese mese</div><div class="num">${s}</div><div class="muted">Diff: ${ceTxt}</div></div>
+          <div class="val"><div class="lab">Entrate mese</div><div class="num">${i}</div><div class="muted">Diff: ${ciTxt}</div></div>
+          <div class="val"><div class="lab">Spese rimanenti mese</div><div class="num">${sr}</div></div>
+        </div>
+      `;
 
-        const wallets = state.wallets.map(w => {
-          const cur = w.currency || "EUR";
-          const initial = Number(w.initialBalance || 0);
-          const ev = state.events.filter(x => String(x.walletId) === String(w.id));
+      // Click KPI -> filter calendar by this wallet
+      k.addEventListener("click", ()=>{
+        $("calWalletFilter").value = String(w.id);
+        loadEventsForMonth();
+      });
 
-          let balance = initial;
-          for(const x of ev){
-            if(String(x.date||"") <= todayISO){
-              const amt = Number(x.amount||0);
-              balance += (x.type === "income") ? +amt : -amt;
-            }
-          }
+      wrap.appendChild(k);
+    }
+  }
 
-          const monthExp = ev.filter(x => x.type === "expense" && String(x.date||"").startsWith(month));
-          const spentDone = monthExp.filter(x => String(x.date||"") <= todayISO).reduce((s,x)=>s+Number(x.amount||0),0);
-          const spentPlanned = monthExp.filter(x => String(x.date||"") > todayISO).reduce((s,x)=>s+Number(x.amount||0),0);
+  // =========================
+  // Calendar Events
+  // =========================
+  async function loadEventsForMonth() {
+    const m = state.month || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const { start, end } = monthBounds(m);
 
-          const nextEvent = ev
-            .filter(x => String(x.date||"") >= todayISO)
-            .sort((a,b)=>String(a.date).localeCompare(String(b.date)))[0] || null;
+    const from = isoDate(start);
+    const to = isoDate(end);
 
-          const byCat = new Map();
-          for(const x of monthExp){
-            const c = (x.category || "Senza categoria").trim();
-            byCat.set(c, (byCat.get(c)||0) + Number(x.amount||0));
-          }
-          const byCategory = Array.from(byCat.entries()).map(([category, amount])=>({category, amount}))
-            .sort((a,b)=>b.amount-a.amount);
+    const walletId = ($("calWalletFilter").value || "").trim();
+    const q = ($("calSearch").value || "").trim();
 
-          const topCategories = byCategory.slice(0,3);
+    const params = new URLSearchParams({ from, to });
+    if (walletId) params.set("walletId", walletId);
+    if (q) params.set("q", q);
 
-          return {
-            walletId: w.id,
-            name: w.name,
-            type: w.type,
-            currency: cur,
-            balance,
-            spentDone,
-            spentPlanned,
-            nextEvent,
-            topCategories,
-            byCategory
-          };
-        });
+    const events = await apiFetch("/events?" + params.toString(), { method:"GET" });
+    state.events = Array.isArray(events) ? events : [];
+    renderCalendar();
+    renderEventsTable();
+  }
 
-        return { month, asOf: todayISO, wallets };
+  function groupEventsByDate(events) {
+    const map = new Map();
+    for (const ev of events) {
+      const d = eventEffectiveDate(ev);
+      if (!d) continue;
+      const key = d.slice(0,10);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(ev);
+    }
+    for (const [k, arr] of map.entries()) arr.sort((a,b)=> (a.id||0)-(b.id||0));
+    return map;
+  }
+
+  function renderCalendar() {
+    const m = state.month;
+    if (!m) return;
+
+    $("calTitle").textContent = m.toLocaleDateString("it-IT", { month:"long", year:"numeric" });
+
+    const dow = ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"];
+    const calDow = $("calDow");
+    calDow.innerHTML = "";
+    for (const d of dow) {
+      const el = document.createElement("div");
+      el.className = "dow";
+      el.textContent = d;
+      calDow.appendChild(el);
+    }
+
+    const { start } = monthBounds(m);
+    const firstDow = start.getDay(); // 0 Sun
+    const mondayBased = (firstDow + 6) % 7;
+    const gridStart = new Date(start);
+    gridStart.setDate(start.getDate() - mondayBased);
+
+    const byDate = groupEventsByDate(state.events);
+    const calGrid = $("calGrid");
+    calGrid.innerHTML = "";
+
+    for (let i=0; i<42; i++) {
+      const d = new Date(gridStart);
+      d.setDate(gridStart.getDate()+i);
+      const ds = isoDate(d);
+      const inMonth = d.getMonth() === m.getMonth();
+
+      const cell = document.createElement("div");
+      cell.className = "day";
+      cell.style.opacity = inMonth ? "1" : "0.45";
+
+      const head = document.createElement("div");
+      head.className = "daynum";
+
+      const left = document.createElement("span");
+      left.textContent = String(d.getDate());
+
+      const addBtn = document.createElement("button");
+      addBtn.textContent = "+";
+      addBtn.title = "Nuovo evento in questo giorno";
+      addBtn.addEventListener("click", (e)=>{
+        e.stopPropagation();
+        openEventDialogForNew(ds);
+      });
+
+      head.appendChild(left);
+      head.appendChild(addBtn);
+      cell.appendChild(head);
+
+      const list = document.createElement("div");
+      list.className = "row";
+      list.style.flexWrap = "wrap";
+      list.style.gap = "6px";
+
+      const evs = byDate.get(ds) || [];
+      for (const ev of evs.slice(0, 6)) {
+        const pill = document.createElement("div");
+        pill.className = "pill";
+        pill.title = "Clicca per modificare";
+        pill.addEventListener("click", (e)=>{ e.stopPropagation(); openEventDialogForEdit(ev.id); });
+
+        const t = document.createElement("span");
+        t.textContent = ev.title || "(senza titolo)";
+
+        const a = document.createElement("small");
+        a.textContent = `${typeLabel(ev.type)} • ${fmtMoney(ev.amount)}`;
+
+        pill.appendChild(t);
+        pill.appendChild(a);
+        list.appendChild(pill);
       }
 
-      /* -------------------------
-        Calendar rendering
-      ------------------------- */
-      function groupEventsByDay(){
-        const map = new Map();
-        for(const e of state.events){
-          const iso = String(e.date || "");
-          if(!iso) continue;
-          if(!map.has(iso)) map.set(iso, []);
-          map.get(iso).push(e);
-        }
-        for(const [k,v] of map.entries()){
-          v.sort((a,b)=>String(a.title||"").localeCompare(String(b.title||"")));
-        }
-        return map;
+      if (evs.length > 6) {
+        const more = document.createElement("div");
+        more.className = "muted";
+        more.textContent = `+${evs.length - 6} altri…`;
+        list.appendChild(more);
       }
 
-      function renderCalendar(){
-        $("#monthLabel").textContent = humanMonth(state.anchorMonth);
+      cell.appendChild(list);
 
-        const host = $("#calendarHost");
-        host.innerHTML = "";
+      // Click day: set asOf + refresh KPI + allow create
+      cell.addEventListener("click", async ()=>{
+        $("calAsOf").value = ds;
+        state.calAsOf = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        await loadDashboardForCalendar();
+      });
 
-        const grid = document.createElement("div");
-        grid.className = "calGrid";
+      calGrid.appendChild(cell);
+    }
+  }
 
-        // dows
-        for(const d of ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"]){
-          const el = document.createElement("div");
-          el.className = "dow";
-          el.textContent = d;
-          grid.appendChild(el);
-        }
+  function renderEventsTable() {
+    const tb = document.querySelector("#eventsTable tbody");
+    tb.innerHTML = "";
 
-        const mStart = startOfMonth(state.anchorMonth);
-        const gridStart = startOfWeekMon(mStart);
-        const mEnd = endOfMonth(state.anchorMonth);
-        const gridEnd = addDays(startOfWeekMon(addDays(mEnd, 6)), 6); // ensures full 6 weeks
+    const rows = [...state.events].sort((a,b)=>{
+      const da = eventEffectiveDate(a) || "";
+      const db = eventEffectiveDate(b) || "";
+      if (da < db) return -1;
+      if (da > db) return 1;
+      return (a.id||0)-(b.id||0);
+    });
 
-        const byDay = groupEventsByDay();
-        const todayISO = toISO(new Date());
+    for (const ev of rows) {
+      const tr = document.createElement("tr");
+      const wid = ev.walletId || ev.cardWalletId || ev.fromWalletId || ev.toCardWalletId || "";
+      const wName = wid ? (state.walletById.get(String(wid))?.name || String(wid)) : "";
 
-        let cur = gridStart;
-        let totalShown = 0;
+      tr.innerHTML = `
+        <td>${ev.id ?? ""}</td>
+        <td>${eventEffectiveDate(ev) || ""}</td>
+        <td>${typeLabel(ev.type)}</td>
+        <td>${(ev.title||"").replace(/</g,"&lt;")}</td>
+        <td>${(ev.category||"").replace(/</g,"&lt;")}</td>
+        <td>${fmtMoney(ev.amount)}</td>
+        <td>${(wName||"").replace(/</g,"&lt;")}</td>
+        <td></td>
+      `;
 
-        while(cur <= gridEnd){
-          const iso = toISO(cur);
-          const inMonth = cur.getMonth() === state.anchorMonth.getMonth();
-          const events = byDay.get(iso) || [];
-          totalShown += events.length;
+      const actions = document.createElement("div");
+      actions.className = "row";
 
-          const day = document.createElement("div");
-          day.className = "day" + (inMonth ? "" : " out") + (iso === todayISO ? " today" : "");
-          day.dataset.iso = iso;
+      const btnEdit = document.createElement("button");
+      btnEdit.textContent = "Modifica";
+      btnEdit.addEventListener("click", ()=> openEventDialogForEdit(ev.id));
 
-          const top = document.createElement("div");
-          top.className = "dayTop";
-          top.innerHTML = `<div class="dayNum">${cur.getDate()}</div>`;
+      const btnDel = document.createElement("button");
+      btnDel.textContent = "Cancella";
+      btnDel.className = "danger";
+      btnDel.addEventListener("click", ()=> deleteEventById(ev.id));
 
-          // daily sum (expense - income) optional
-          let sum = 0;
-          for(const e of events){
-            const amt = Number(e.amount||0);
-            sum += (e.type === "income") ? +amt : -amt;
-          }
-          const sumEl = document.createElement("div");
-          sumEl.className = "daySum";
-          sumEl.textContent = events.length ? `${events.length} evt` : "—";
-          top.appendChild(sumEl);
+      actions.appendChild(btnEdit);
+      actions.appendChild(btnDel);
 
-          day.appendChild(top);
+      tr.children[7].appendChild(actions);
+      tb.appendChild(tr);
+    }
+  }
 
-          // show max 2 events
-          const preview = events.slice(0,2);
-          for(const e of preview){
-            const mini = document.createElement("div");
-            mini.className = "evtMini " + (e.type || "");
-            mini.innerHTML = `
-              <div>
-                ${e.title || "(senza titolo)"}
-                <div><small>${e.category || "—"} · ${getWalletName(e.walletId)}</small></div>
-              </div>
-              <div>${money(e.amount, getWalletCurrency(e.walletId))}</div>
-            `;
-            mini.addEventListener("click", (ev) => {
-              ev.stopPropagation();
-              openModalEdit(e);
+  // =========================
+  // Auto-scheduled card repayments (calendar month)
+  // =========================
+  function isCardTypeEvent(t) {
+    return t === "card_purchase" || t === "card_credit" || t === "card_charge";
+  }
+
+  // Find existing repayment events on a given date for a given card within current month cache (state.events),
+  // or via API if not present due to filters.
+  async function findRepaymentsOnDate(cardId, payDateISO) {
+    // 1) try in current month cached list (includes repayments if not filtered out)
+    const cached = state.events.filter(e =>
+      e.type === "card_repayment" &&
+      String(e.toCardWalletId || "") === String(cardId) &&
+      String(e.paymentDate || e.calendarDate || "").slice(0,10) === payDateISO.slice(0,10)
+    );
+    if (cached.length) return cached;
+
+    // 2) fallback: query single day range; walletId filter ensures we fetch repayments too.
+    const params = new URLSearchParams({ from: payDateISO, to: payDateISO, walletId: String(cardId) });
+    const evs = await apiFetch("/events?" + params.toString(), { method:"GET" });
+    return Array.isArray(evs) ? evs.filter(e => e.type === "card_repayment") : [];
+  }
+
+  // Ensure: for each card, create/update an auto repayment event (card_repayment) on scheduledRepayment.paymentDate
+  // amount = scheduledRepayment.suggestedAmount (or baseline)
+  async function ensureScheduledRepaymentsForCurrentMonth() {
+    // Uses current calendar asOf + month
+    const asOf = $("calAsOf").value || isoDate(new Date());
+    const month = $("calMonth").value || isoYM(new Date());
+    const dash = await apiFetch("/dashboard?" + new URLSearchParams({ asOf, month }).toString(), { method:"GET" });
+
+    // We only create/update if card has defaultSourceWalletId (from /wallets data).
+    const wallets = Array.isArray(dash.wallets) ? dash.wallets : [];
+
+    for (const w of wallets) {
+      if (w.type !== "card") continue;
+      const cardId = w.id;
+      const wDef = state.walletById.get(String(cardId));
+      const defaultSourceWalletId = wDef ? wDef.defaultSourceWalletId : null;
+      if (!defaultSourceWalletId) continue;
+
+      const sched = w.card && w.card.scheduledRepayment ? w.card.scheduledRepayment : null;
+      if (!sched || !sched.paymentDate) continue;
+
+      const payDate = String(sched.paymentDate).slice(0,10);
+      const amount = Number(sched.suggestedAmount ?? sched.baselineAmount ?? 0);
+      if (!Number.isFinite(amount) || amount <= 0) continue;
+
+      const existing = await findRepaymentsOnDate(cardId, payDate);
+
+      // Choose an "auto" one if present, else any one.
+      const autoOne = existing.find(x => (x.subType || "") === "auto_scheduled") || null;
+      const chosen = autoOne || existing[0] || null;
+
+      const title = `Addebito carta (auto)`;
+
+      if (!chosen) {
+        // Create repayment
+        const payload = {
+          type: "card_repayment",
+          title,
+          amount,
+          category: "Card Repayment",
+          calendarDate: payDate,
+          notes: "Auto-created from scheduledRepayment",
+          fromWalletId: Number(defaultSourceWalletId),
+          toCardWalletId: Number(cardId),
+          paymentDate: payDate
+        };
+
+        try {
+          const created = await apiFetch("/events", { method:"POST", body: JSON.stringify(payload) });
+          // mark as auto via PUT (backend create_event doesn't set subType for card_repayment)
+          if (created && created.id) {
+            await apiFetch(`/events/${encodeURIComponent(created.id)}`, {
+              method:"PUT",
+              body: JSON.stringify({ subType: "auto_scheduled", meta: { auto: true, source: "scheduledRepayment", month } })
             });
-            day.appendChild(mini);
           }
-
-          // click day → quick add on that day
-          day.addEventListener("click", () => openModalNew(iso));
-
-          grid.appendChild(day);
-          cur = addDays(cur, 1);
+        } catch (e) {
+          // Do not hard fail UI
+          console.warn("auto repayment create failed:", e);
         }
-
-        $("#metaCount").textContent = `${totalShown} eventi nel mese`;
-        host.appendChild(grid);
-      }
-
-      function getWalletName(walletId){
-        const w = state.wallets.find(x => String(x.id) === String(walletId));
-        return w?.name || String(walletId || "—");
-      }
-      function getWalletCurrency(walletId){
-        const w = state.wallets.find(x => String(x.id) === String(walletId));
-        return w?.currency || "EUR";
-      }
-
-      /* -------------------------
-        Sidebar rendering
-      ------------------------- */
-      function renderSidebar(){
-        const host = $("#sidebarHost");
-        host.innerHTML = "";
-
-        const data = state.dash?.wallets ? state.dash : computeSidebarClient();
-
-        if(!data.wallets.length){
-          host.innerHTML = `<div class="muted">Nessun wallet disponibile. Controlla API /wallets.</div>`;
-          return;
-        }
-
-        for(const w of data.wallets){
-          const box = document.createElement("div");
-          box.className = "wallet";
-
-          const next = w.nextEvent;
-          const nextText = next
-            ? `${next.date} · ${next.title || "Evento"} (${money(next.amount, w.currency)})`
-            : "—";
-
-          // barra spese: done vs planned
-          const totExp = Number(w.spentDone||0) + Number(w.spentPlanned||0);
-          const pct = totExp > 0 ? Math.round((Number(w.spentDone||0) / totExp) * 100) : 0;
-
-          box.innerHTML = `
-            <div class="walletTop">
-              <div>
-                <div class="walletName">${escapeHtml(w.name || w.walletId)}</div>
-                <div class="muted">${escapeHtml(w.type || "")}</div>
-              </div>
-              <div style="font-weight:1000;text-align:right">
-                ${money(w.balance, w.currency)}
-                <div class="muted">saldo corrente</div>
-              </div>
-            </div>
-
-            <div class="kpiRow">
-              <div class="kpi">
-                <div class="label">Spese mese (fatte)</div>
-                <div class="value">${money(w.spentDone, w.currency)}</div>
-              </div>
-              <div class="kpi">
-                <div class="label">Spese mese (da fare)</div>
-                <div class="value">${money(w.spentPlanned, w.currency)}</div>
-              </div>
-            </div>
-
-            <div class="barRow">
-              <div class="muted">Progresso mese</div>
-              <div style="font-weight:900">${pct}%</div>
-            </div>
-            <div class="bar"><i style="width:${pct}%"></i></div>
-
-            <div class="muted" style="margin-top:4px;">Prossimo evento</div>
-            <div style="font-weight:900">${escapeHtml(nextText)}</div>
-
-            <div class="muted" style="margin-top:8px;">Top categorie</div>
-            <div class="list" id="top_${cssId(w.walletId)}"></div>
-
-            <div class="muted" style="margin-top:8px;">Dettaglio categorie</div>
-            <div class="list" id="all_${cssId(w.walletId)}"></div>
-          `;
-
-          host.appendChild(box);
-
-          // fill categories
-          const topHost = $(`#top_${cssId(w.walletId)}`);
-          const allHost = $(`#all_${cssId(w.walletId)}`);
-
-          const topCats = w.topCategories || [];
-          if(!topCats.length) topHost.innerHTML = `<div class="muted">—</div>`;
-          else for(const c of topCats){
-            const row = document.createElement("div");
-            row.className = "evtMini expense";
-            row.innerHTML = `<div>${escapeHtml(c.category)}</div><div>${money(c.amount, w.currency)}</div>`;
-            topHost.appendChild(row);
-          }
-
-          const allCats = (w.byCategory || []).slice(0, 10);
-          if(!allCats.length) allHost.innerHTML = `<div class="muted">—</div>`;
-          else for(const c of allCats){
-            const row = document.createElement("div");
-            row.className = "evtMini expense";
-            row.innerHTML = `<div>${escapeHtml(c.category)}</div><div>${money(c.amount, w.currency)}</div>`;
-            allHost.appendChild(row);
+      } else {
+        // Update only if it's auto (to avoid overwriting a manual one)
+        if ((chosen.subType || "") === "auto_scheduled") {
+          const patch = {
+            title,
+            amount,
+            category: chosen.category || "Card Repayment",
+            calendarDate: payDate,
+            paymentDate: payDate,
+            fromWalletId: Number(defaultSourceWalletId),
+            toCardWalletId: Number(cardId),
+            meta: { auto: true, source: "scheduledRepayment", month }
+          };
+          try {
+            await apiFetch(`/events/${encodeURIComponent(chosen.id)}`, { method:"PUT", body: JSON.stringify(patch) });
+          } catch (e) {
+            console.warn("auto repayment update failed:", e);
           }
         }
       }
+    }
 
-      function escapeHtml(s){
-        return String(s||"").replace(/[&<>"']/g, c => ({
-          "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
-        }[c]));
-      }
-      function cssId(s){
-        return String(s||"").replace(/[^a-z0-9\-_]/gi, "_");
-      }
+    // refresh month events + KPI after adjustments
+    await loadEventsForMonth();
+    state.dashboard = dash;
+    renderKpiStrip();
+  }
 
-      /* -------------------------
-        Modal (create / edit)
-      ------------------------- */
-      function fillWalletSelect(){
-        const sel = $("#fWallet");
-        sel.innerHTML = "";
-        for(const w of state.wallets){
-          const opt = document.createElement("option");
-          opt.value = w.id;
-          opt.textContent = w.name;
-          sel.appendChild(opt);
+  // =========================
+  // Event Dialog CRUD
+  // =========================
+  function resetEventDialog() {
+    $("evId").value = "";
+    $("evType").value = "expense";
+    $("evCalendarDate").value = isoDate(new Date());
+    $("evTitle").value = "";
+    $("evCategory").value = "";
+    $("evAmount").value = "";
+    $("evNotes").value = "";
+
+    $("evWalletId").value = "";
+    $("evCardWalletId").value = "";
+    $("evFromWalletId").value = "";
+    $("evToCardWalletId").value = "";
+
+    $("schedKind").value = "instant";
+    $("schedCount").value = "";
+    $("schedFirstStatementMonth").value = "";
+    $("schedInstallmentAmount").value = "";
+    $("schedCustomInstallments").value = "";
+
+    $("dupFromMonth").value = "";
+    $("dupToMonth").value = "";
+    $("dupDay").value = "";
+
+    $("btnDelete").style.display = "none";
+    $("dlgTitle").textContent = "Nuovo evento";
+    $("dlgHint").textContent = "";
+  }
+
+  function openEventDialogForNew(isoDateStr) {
+    resetEventDialog();
+    $("evCalendarDate").value = (isoDateStr || isoDate(new Date())).slice(0,10);
+    $("dlgHint").textContent = "Se è un acquisto con carta: seleziona 'Acquisto con carta' e scegli la carta.";
+    $("dlgEvent").showModal();
+  }
+
+  function fillScheduleFromEvent(ev) {
+    const s = ev.schedule || null;
+    if (!s || typeof s !== "object") { $("schedKind").value = "instant"; return; }
+    $("schedKind").value = (s.kind || "instant");
+
+    if ((s.kind || "instant") === "financing") {
+      $("schedCount").value = s.count ?? "";
+      $("schedFirstStatementMonth").value = s.firstStatementMonth ?? "";
+      const mi = s.monthlyInstallments || {};
+      if (mi && typeof mi === "object" && mi.installmentAmount != null) $("schedInstallmentAmount").value = mi.installmentAmount;
+      const ci = s.customInstallments;
+      if (Array.isArray(ci) && ci.length) $("schedCustomInstallments").value = ci.map(x => `${x.date}; ${x.amount}`).join("\n");
+    }
+  }
+
+  async function openEventDialogForEdit(id) {
+    let ev = state.events.find(x => String(x.id) === String(id));
+    if (!ev) await loadEventsForMonth();
+    ev = state.events.find(x => String(x.id) === String(id));
+    if (!ev) { toast("Evento non trovato."); return; }
+
+    resetEventDialog();
+    $("dlgTitle").textContent = `Modifica evento #${ev.id}`;
+    $("evId").value = String(ev.id);
+
+    $("evType").value = ev.type || "expense";
+    const cd = (ev.calendarDate || ev.purchaseDate || ev.paymentDate || "");
+    if (cd) $("evCalendarDate").value = cd.slice(0,10);
+
+    $("evTitle").value = ev.title || "";
+    $("evCategory").value = ev.category || "";
+    $("evAmount").value = ev.amount ?? "";
+    $("evNotes").value = ev.notes || "";
+
+    $("evWalletId").value = ev.walletId ? String(ev.walletId) : "";
+    $("evCardWalletId").value = ev.cardWalletId ? String(ev.cardWalletId) : "";
+    $("evFromWalletId").value = ev.fromWalletId ? String(ev.fromWalletId) : "";
+    $("evToCardWalletId").value = ev.toCardWalletId ? String(ev.toCardWalletId) : "";
+
+    fillScheduleFromEvent(ev);
+
+    $("btnDelete").style.display = "inline-flex";
+    $("dlgHint").textContent = "Dopo Salva, i rimborsi carta auto verranno ricalcolati se necessario.";
+    $("dlgEvent").showModal();
+  }
+
+  function buildScheduleForSave() {
+    const t = $("evType").value;
+    if (t !== "card_purchase") return null;
+
+    const kind = ($("schedKind").value || "instant").trim();
+    if (kind === "instant") return { kind:"instant" };
+
+    const count = parseInt($("schedCount").value || "0", 10);
+    const fsm = ($("schedFirstStatementMonth").value || "").trim();
+
+    const sched = { kind:"financing" };
+    if (Number.isFinite(count) && count > 0) sched.count = count;
+    if (fsm) sched.firstStatementMonth = fsm;
+
+    const instAmountStr = ($("schedInstallmentAmount").value || "").trim();
+    if (instAmountStr) {
+      const ia = Number(instAmountStr);
+      if (!Number.isNaN(ia) && ia > 0) sched.monthlyInstallments = { installmentAmount: ia };
+    }
+
+    const ciRaw = ($("schedCustomInstallments").value || "").trim();
+    if (ciRaw) {
+      const lines = ciRaw.split("\n").map(s => s.trim()).filter(Boolean);
+      const ci = [];
+      for (const ln of lines) {
+        const parts = ln.split(";").map(x=>x.trim());
+        if (parts.length < 2) continue;
+        const d = parts[0];
+        const a = Number(parts[1].replace(",", "."));
+        if (d && !Number.isNaN(a) && a > 0) ci.push({ date: d, amount: a });
+      }
+      if (ci.length) sched.customInstallments = ci;
+    }
+
+    return sched;
+  }
+
+  function buildEventPayload() {
+    const type = $("evType").value;
+    const calendarDate = $("evCalendarDate").value;
+
+    const payload = {
+      type,
+      title: ($("evTitle").value || "").trim(),
+      amount: Number(($("evAmount").value || "").replace(",", ".")),
+      category: ($("evCategory").value || "").trim(),
+      calendarDate,
+      notes: $("evNotes").value || "",
+    };
+
+    if (type === "income" || type === "expense") payload.walletId = $("evWalletId").value ? Number($("evWalletId").value) : null;
+    if (type === "card_purchase" || type === "card_credit" || type === "card_charge") payload.cardWalletId = $("evCardWalletId").value ? Number($("evCardWalletId").value) : null;
+
+    if (type === "card_repayment") {
+      payload.fromWalletId = $("evFromWalletId").value ? Number($("evFromWalletId").value) : null;
+      payload.toCardWalletId = $("evToCardWalletId").value ? Number($("evToCardWalletId").value) : null;
+      payload.paymentDate = calendarDate; // semplice default
+    }
+
+    if (type === "card_purchase") {
+      payload.purchaseDate = calendarDate;
+      payload.schedule = buildScheduleForSave();
+    }
+
+    if (type === "card_charge") payload.subType = "fee_card";
+    if (type === "card_credit") payload.subType = "gutschrift";
+
+    return payload;
+  }
+
+  async function saveEvent() {
+    const id = ($("evId").value || "").trim();
+    const payload = buildEventPayload();
+
+    if (!payload.title) return toast("Titolo obbligatorio.");
+    if (!payload.category) return toast("Categoria obbligatoria.");
+    if (!payload.calendarDate) return toast("Data obbligatoria.");
+    if (!Number.isFinite(payload.amount) || payload.amount <= 0) return toast("Importo deve essere > 0.");
+
+    if ((payload.type === "income" || payload.type === "expense") && !payload.walletId) return toast("Seleziona wallet per entrata/spesa.");
+    if ((payload.type === "card_purchase" || payload.type === "card_credit" || payload.type === "card_charge") && !payload.cardWalletId) return toast("Seleziona carta.");
+    if (payload.type === "card_repayment" && (!payload.fromWalletId || !payload.toCardWalletId)) return toast("Seleziona wallet origine e carta.");
+
+    try {
+      if (!id) {
+        await apiFetch("/events", { method:"POST", body: JSON.stringify(payload) });
+        toast("Evento creato.");
+      } else {
+        await apiFetch(`/events/${encodeURIComponent(id)}`, { method:"PUT", body: JSON.stringify(payload) });
+        toast("Evento aggiornato.");
+      }
+      $("dlgEvent").close();
+
+      // reload month events
+      await loadEventsForMonth();
+
+      // If card-related event changed, ensure scheduled repayments stay consistent
+      if (isCardTypeEvent(payload.type) || payload.type === "card_repayment") {
+        await ensureScheduledRepaymentsForCurrentMonth();
+      } else {
+        // still refresh KPI for non-card
+        await loadDashboardForCalendar();
+      }
+    } catch (e) {
+      toast("Errore salvataggio: " + (e.message || e));
+    }
+  }
+
+  async function deleteEventById(id) {
+    if (!id) return;
+    const ok = confirm(`Cancellare l'evento #${id}? Azione immediata.`);
+    if (!ok) return;
+
+    // Determine type before delete (to trigger repayment recalculation if needed)
+    const ev = state.events.find(x => String(x.id) === String(id));
+    const t = ev ? ev.type : null;
+
+    try {
+      await apiFetch(`/events/${encodeURIComponent(id)}`, { method:"DELETE" });
+      toast("Evento cancellato.");
+      await loadEventsForMonth();
+
+      if (t && (isCardTypeEvent(t) || t === "card_repayment")) {
+        await ensureScheduledRepaymentsForCurrentMonth();
+      } else {
+        await loadDashboardForCalendar();
+      }
+    } catch (e) {
+      toast("Errore cancellazione: " + (e.message || e));
+    }
+  }
+
+  async function duplicateEventAcrossMonths() {
+    const basePayload = buildEventPayload();
+
+    const fromYM = $("dupFromMonth").value;
+    const toYM = $("dupToMonth").value;
+    const day = parseInt($("dupDay").value || "0", 10);
+
+    if (!fromYM || !toYM) return toast("Imposta Da mese e A mese.");
+    if (!Number.isFinite(day) || day <= 0) return toast("Imposta Giorno (1..31).");
+
+    const from = parseYM(fromYM);
+    const to = parseYM(toYM);
+    if (!from || !to) return toast("Mesi non validi.");
+    if (from > to) return toast("Da mese deve essere <= A mese.");
+
+    const copies = [];
+    const cur = new Date(from.getFullYear(), from.getMonth(), 1);
+    const end = new Date(to.getFullYear(), to.getMonth(), 1);
+
+    while (cur <= end) {
+      const y = cur.getFullYear();
+      const m1 = cur.getMonth() + 1;
+      const dd = clampDayToMonth(y, m1, day);
+      const d = new Date(y, m1-1, dd);
+
+      const p = JSON.parse(JSON.stringify(basePayload));
+      p.calendarDate = isoDate(d);
+      if (p.type === "card_purchase") p.purchaseDate = p.calendarDate;
+      if (p.type === "card_repayment") p.paymentDate = p.calendarDate;
+
+      copies.push(p);
+      cur.setMonth(cur.getMonth() + 1);
+    }
+
+    if (!confirm(`Creare ${copies.length} copie?`)) return;
+
+    try {
+      for (const p of copies) await apiFetch("/events", { method:"POST", body: JSON.stringify(p) });
+      toast(`Copie create: ${copies.length}`);
+      $("dlgEvent").close();
+      await loadEventsForMonth();
+
+      if (isCardTypeEvent(basePayload.type) || basePayload.type === "card_repayment") {
+        await ensureScheduledRepaymentsForCurrentMonth();
+      } else {
+        await loadDashboardForCalendar();
+      }
+    } catch (e) {
+      toast("Errore duplicazione: " + (e.message || e));
+    }
+  }
+
+  // =========================
+  // Settings Tab
+  // =========================
+  async function healthCheck() {
+    try {
+      const out = await apiFetch("/health", { method:"GET" });
+      $("healthOut").textContent = JSON.stringify(out);
+      toast("Health OK");
+    } catch (e) {
+      $("healthOut").textContent = String(e.message || e);
+      toast("Health ERROR: " + (e.message || e));
+    }
+  }
+
+  async function loadCardSettings() {
+    const cid = ($("setCardSelect").value || "").trim();
+    if (!cid) return toast("Seleziona una carta.");
+
+    try {
+      const s = await apiFetch(`/cards/${encodeURIComponent(cid)}/settings`, { method:"GET" });
+      $("setCycleStart").value = s.cycleStartDay ?? "";
+      $("setCycleEnd").value = s.cycleEndDay ?? "";
+      $("setDebitDay").value = s.debitDay ?? "";
+      $("setDebitOffset").value = s.debitMonthOffset ?? "";
+      $("setTeilzahlung").value = s.teilzahlungAmount ?? "";
+      $("setLimit").value = s.kreditlimit ?? "";
+      $("setSoll").value = s.sollzinsAnnual ?? "";
+      $("setEffektiv").value = s.effektivzinsAnnual ?? "";
+      $("setEffectiveFrom").value = s.effectiveFrom ? String(s.effectiveFrom).slice(0,10) : "";
+      $("settingsInfo").textContent = "Settings caricati.";
+      toast("Settings caricati.");
+    } catch (e) {
+      $("settingsInfo").textContent = "Errore: " + (e.message || e);
+      toast("Errore load settings: " + (e.message || e));
+    }
+  }
+
+  async function saveCardSettings() {
+    const cid = ($("setCardSelect").value || "").trim();
+    if (!cid) return toast("Seleziona una carta.");
+
+    const payload = {
+      cycleStartDay: $("setCycleStart").value ? Number($("setCycleStart").value) : null,
+      cycleEndDay: $("setCycleEnd").value ? Number($("setCycleEnd").value) : null,
+      debitDay: $("setDebitDay").value ? Number($("setDebitDay").value) : null,
+      debitMonthOffset: $("setDebitOffset").value ? Number($("setDebitOffset").value) : null,
+      teilzahlungAmount: $("setTeilzahlung").value ? Number($("setTeilzahlung").value) : null,
+      kreditlimit: $("setLimit").value ? Number($("setLimit").value) : null,
+      sollzinsAnnual: $("setSoll").value ? Number($("setSoll").value) : null,
+      effektivzinsAnnual: $("setEffektiv").value ? Number($("setEffektiv").value) : null,
+      effectiveFrom: $("setEffectiveFrom").value || null
+    };
+    Object.keys(payload).forEach(k => (payload[k] === null || Number.isNaN(payload[k])) && delete payload[k]);
+
+    try {
+      await apiFetch(`/cards/${encodeURIComponent(cid)}/settings`, { method:"PUT", body: JSON.stringify(payload) });
+      toast("Settings salvati.");
+      $("settingsInfo").textContent = "Settings salvati.";
+
+      // refresh KPI + ensure repayments after settings change (may move repayment date/amount)
+      await loadDashboardForCalendar();
+      await ensureScheduledRepaymentsForCurrentMonth();
+    } catch (e) {
+      toast("Errore save settings: " + (e.message || e));
+      $("settingsInfo").textContent = "Errore: " + (e.message || e);
+    }
+  }
+
+  // =========================
+  // Cards Tab render (reuse dashboard)
+  // =========================
+  function renderCardsOverview() {
+    const wrap = $("cardsOverview");
+    wrap.innerHTML = "";
+
+    const w = state.dashboard?.wallets || [];
+    const cards = w.filter(x => x.type === "card");
+    const normals = w.filter(x => x.type !== "card");
+
+    const box1 = document.createElement("div");
+    box1.className = "card";
+    box1.innerHTML = `
+      <div style="font-weight:900; margin-bottom:8px;">Sintesi carte</div>
+      <div class="muted">Carte: ${cards.length}</div>
+      <div class="muted">Dettagli nel pannello sotto.</div>
+    `;
+    wrap.appendChild(box1);
+
+    const box2 = document.createElement("div");
+    box2.className = "card";
+    const totalBalance = normals.reduce((s,x)=> s + (Number(x.balance)||0), 0);
+    box2.innerHTML = `
+      <div style="font-weight:900; margin-bottom:8px;">Sintesi conti (non-carte)</div>
+      <div>Saldo totale: <b>${fmtMoney(totalBalance)}</b></div>
+      <div class="muted">Somma bilanci wallet non-card.</div>
+    `;
+    wrap.appendChild(box2);
+  }
+
+  function renderWalletTree() {
+    const wrap = $("walletTree");
+    wrap.innerHTML = "";
+
+    const wallets = Array.isArray(state.dashboard?.wallets) ? state.dashboard.wallets : [];
+    wallets.sort((a,b)=>{
+      if (a.type === b.type) return (a.name||"").localeCompare(b.name||"");
+      if (a.type === "card") return -1;
+      if (b.type === "card") return 1;
+      return (a.type||"").localeCompare(b.type||"");
+    });
+
+    for (const w of wallets) {
+      const det = document.createElement("details");
+      det.open = false;
+
+      const sum = document.createElement("summary");
+      sum.textContent = `${w.name} (${w.type}) — saldo: ${fmtMoney(w.balance)}`;
+      det.appendChild(sum);
+
+      const body = document.createElement("div");
+      body.className = "grid two";
+      body.style.marginTop = "10px";
+
+      const left = document.createElement("div");
+      left.className = "card";
+
+      const ce = w.compareLastMonthExpenses || { amount:0, percent:0 };
+      const ci = w.compareLastMonthIncome || { amount:0, percent:0 };
+
+      left.innerHTML = `
+        <div style="font-weight:900; margin-bottom:8px;">Panoramica</div>
+        <div>Saldo: <b>${fmtMoney(w.balance)}</b></div>
+        <div>Spese mese: <b>${fmtMoney(w.spentSoFar)}</b> <span class="muted">Diff: ${fmtMoney(ce.amount)} (${Number(ce.percent||0).toFixed(1)}%)</span></div>
+        <div>Entrate mese: <b>${fmtMoney(w.incomeSoFar)}</b> <span class="muted">Diff: ${fmtMoney(ci.amount)} (${Number(ci.percent||0).toFixed(1)}%)</span></div>
+        <div>Spese rimanenti mese: <b>${fmtMoney(w.spentRemaining)}</b></div>
+        ${w.nextEvent ? `<div class="muted">Prossimo: ${w.nextEvent.date} • ${w.nextEvent.title} • ${fmtMoney(w.nextEvent.amount)}</div>` : `<div class="muted">Prossimo: —</div>`}
+      `;
+      body.appendChild(left);
+
+      const right = document.createElement("div");
+      right.className = "card";
+      right.innerHTML = `<div style="font-weight:900; margin-bottom:8px;">Categorie (top 10)</div>`;
+      const cats = Array.isArray(w.categories) ? w.categories : [];
+      if (!cats.length) {
+        right.innerHTML += `<div class="muted">Nessuna spesa nel periodo.</div>`;
+      } else {
+        const t = document.createElement("table");
+        t.innerHTML = `<thead><tr><th>Categoria</th><th>Importo</th></tr></thead>`;
+        const tb = document.createElement("tbody");
+        for (const c of cats) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${(c.name||"").replace(/</g,"&lt;")}</td><td>${fmtMoney(c.amount)}</td>`;
+          tb.appendChild(tr);
         }
+        t.appendChild(tb);
+        right.appendChild(t);
+      }
+      body.appendChild(right);
+
+      det.appendChild(body);
+
+      if (w.type === "card" && w.card) {
+        const d2 = document.createElement("details");
+        d2.open = false;
+        const s2 = document.createElement("summary");
+        s2.textContent = `Dettagli carta — limite ${fmtMoney(w.card.limit)} • disponibile ${fmtMoney(w.card.availableCredit)} • outstanding ${fmtMoney(w.card.outstanding)}`;
+        d2.appendChild(s2);
+
+        const inner = document.createElement("div");
+        inner.className = "card";
+        inner.style.marginTop = "10px";
+
+        const stmt = w.card.statement || {};
+        const sched = w.card.scheduledRepayment || {};
+
+        inner.innerHTML = `
+          <div style="font-weight:900; margin-bottom:8px;">Statement & repayment</div>
+          <div>Window: <span class="kbd">${stmt.window?.start || "?"}</span> → <span class="kbd">${stmt.window?.end || "?"}</span></div>
+          <div>Baseline: <b>${fmtMoney(stmt.baselineAmount)}</b></div>
+          <div class="muted">Instant count: ${stmt.instantPurchasesCount ?? 0} • Charges ${fmtMoney(stmt.charges)} • Credits ${fmtMoney(stmt.credits)}</div>
+          <div class="hr"></div>
+          <div style="font-weight:900; margin-bottom:6px;">Addebito previsto</div>
+          <div>Data: <span class="kbd">${sched.paymentDate || "?"}</span></div>
+          <div>Importo suggerito: <b>${fmtMoney(sched.suggestedAmount)}</b> (mode: ${sched.mode || "?"})</div>
+          <div class="muted">Evento presente su data: ${sched.exists ? "Sì" : "No"}</div>
+        `;
+
+        d2.appendChild(inner);
+        det.appendChild(document.createElement("div")).className="hr";
+        det.appendChild(d2);
       }
 
-      function syncScheduleUI(){
-        const mode = $("#fScheduleMode").value;
-        $("#deferredBox").style.display = (mode === "deferred") ? "" : "none";
-        $("#instBox").style.display = (mode === "installments") ? "" : "none";
+      wrap.appendChild(det);
+    }
+  }
 
-        // rate: calcola importo rata stimato
-        if(mode === "installments"){
-          const total = Number($("#fAmount").value || 0);
-          const n = Math.max(2, Number($("#fInstCount").value || 2));
-          const each = total > 0 ? (total / n) : 0;
-          $("#fInstEach").value = each ? money(each) : "—";
-        }
+  // =========================
+  // Wires / Boot
+  // =========================
+  function initDefaults() {
+    const now = new Date();
+    const ym = isoYM(now);
+    $("calMonth").value = ym;
+    state.month = parseYM(ym);
+
+    $("calAsOf").value = isoDate(now);
+    state.calAsOf = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    $("cardsAsOf").value = isoDate(now);
+    $("cardsMonth").value = ym;
+  }
+
+  function wireCalendarControls() {
+    $("btnCalRefresh").addEventListener("click", async ()=>{
+      try {
+        await loadEventsForMonth();
+        await loadDashboardForCalendar();
+      } catch (e) {
+        toast("Errore refresh: " + (e.message || e));
       }
+    });
 
-      function openModalNew(dayISO){
-        state.editingEvent = null;
+    $("btnNewEvent").addEventListener("click", ()=> openEventDialogForNew($("calAsOf").value || isoDate(new Date())));
 
-        fillWalletSelect();
-
-        $("#modalTitle").textContent = "Nuovo evento";
-        $("#btnCopy").style.display = "none";
-        $("#btnDelete").style.display = "none";
-        $("#seriesBox").style.display = "none";
-        $("#editHint").style.display = "none";
-
-        const todayISO = toISO(new Date());
-        const defaultISO = dayISO || todayISO;
-
-        $("#fTitle").value = "";
-        $("#fType").value = "expense";
-        $("#fAmount").value = "";
-        $("#fCategory").value = "";
-        $("#fOccurred").value = defaultISO;
-
-        // schedule defaults
-        $("#fScheduleMode").value = "now";
-        $("#fPayOn").value = defaultISO;
-        $("#fInstCount").value = 3;
-        $("#fInstFirst").value = addMonths(fromISO(defaultISO), 1) ? toISO(addMonths(fromISO(defaultISO), 1)) : defaultISO;
-        $("#fNotes").value = "";
-        $("#fInstNotes").value = "";
-        $("#fNotesLong").value = "";
-
-        syncScheduleUI();
-        $("#evtModal").showModal();
+    $("calMonth").addEventListener("change", async ()=>{
+      state.month = parseYM($("calMonth").value);
+      try {
+        await loadEventsForMonth();
+        await loadDashboardForCalendar();
+        await ensureScheduledRepaymentsForCurrentMonth();
+      } catch (e) {
+        toast("Errore cambio mese: " + (e.message || e));
       }
+    });
 
-      function openModalEdit(evt){
-        state.editingEvent = evt;
+    $("calAsOf").addEventListener("change", async ()=>{
+      try { await loadDashboardForCalendar(); } catch (e) { toast("Errore asOf: " + (e.message || e)); }
+    });
 
-        fillWalletSelect();
+    $("calWalletFilter").addEventListener("change", loadEventsForMonth);
 
-        $("#modalTitle").textContent = "Modifica evento";
-        $("#btnCopy").style.display = "";
-        $("#btnDelete").style.display = "";
-        $("#editHint").style.display = "";
+    $("calSearch").addEventListener("input", ()=>{
+      clearTimeout(state._qTimer);
+      state._qTimer = setTimeout(loadEventsForMonth, 250);
+    });
 
-        $("#fTitle").value = evt.title || "";
-        $("#fType").value = evt.type || "expense";
-        $("#fAmount").value = String(evt.amount ?? "");
-        $("#fCategory").value = evt.category || "";
-        $("#fWallet").value = evt.walletId || "";
-        $("#fOccurred").value = evt.occurredOn || evt.date || toISO(new Date());
+    $("btnPrevMonth").addEventListener("click", async ()=>{
+      const m = state.month || new Date();
+      const d = new Date(m.getFullYear(), m.getMonth()-1, 1);
+      state.month = d;
+      $("calMonth").value = isoYM(d);
+      await loadEventsForMonth();
+      await loadDashboardForCalendar();
+      await ensureScheduledRepaymentsForCurrentMonth();
+    });
 
-        // editing: schedule boxes hidden (editing modifies single event OR future series via checkbox)
-        $("#fScheduleMode").value = "now";
-        $("#deferredBox").style.display = "none";
-        $("#instBox").style.display = "none";
+    $("btnNextMonth").addEventListener("click", async ()=>{
+      const m = state.month || new Date();
+      const d = new Date(m.getFullYear(), m.getMonth()+1, 1);
+      state.month = d;
+      $("calMonth").value = isoYM(d);
+      await loadEventsForMonth();
+      await loadDashboardForCalendar();
+      await ensureScheduledRepaymentsForCurrentMonth();
+    });
 
-        if(evt.seriesId){
-          $("#seriesBox").style.display = "";
-          $("#seriesTag").textContent = `series: ${evt.seriesId}`;
-          $("#fApplyFuture").checked = false;
-          $("#editHint").textContent = "Questo evento fa parte di una serie (rate/ricorrenza).";
-        } else {
-          $("#seriesBox").style.display = "none";
-          $("#editHint").textContent = "";
-        }
-        $("#editHint").style.display = evt.seriesId ? "" : "none";
+    $("btnSave").addEventListener("click", saveEvent);
+    $("btnDelete").addEventListener("click", async ()=>{
+      const id = ($("evId").value || "").trim();
+      if (!id) return;
+      await deleteEventById(id);
+      $("dlgEvent").close();
+    });
+    $("btnDuplicate").addEventListener("click", duplicateEventAcrossMonths);
+    $("btnDlgClose").addEventListener("click", ()=> $("dlgEvent").close());
+  }
 
-        $("#fNotesLong").value = evt.notes || "";
+  function wireSettingsControls() {
+    $("btnHealth").addEventListener("click", healthCheck);
+    $("btnLoadCardSettings").addEventListener("click", loadCardSettings);
+    $("btnSaveCardSettings").addEventListener("click", saveCardSettings);
+  }
 
-        $("#evtModal").showModal();
-      }
+  function wireCardsControls() {
+    $("btnCardsRefresh").addEventListener("click", async ()=>{
+      try { await loadDashboardForCardsTab(); toast("Dashboard aggiornato."); }
+      catch (e) { toast("Errore dashboard: " + (e.message || e)); }
+    });
+  }
 
-      function closeModal(){
-        $("#evtModal").close();
-        state.editingEvent = null;
-      }
+  $("btnReloadAll").addEventListener("click", async ()=>{
+    try {
+      await loadWallets();
+      await loadEventsForMonth();
+      await loadDashboardForCalendar();
+      await ensureScheduledRepaymentsForCurrentMonth();
+      await loadDashboardForCardsTab();
+      toast("Dati ricaricati.");
+    } catch (e) {
+      toast("Errore ricarica: " + (e.message || e));
+    }
+  });
 
-      /* -------------------------
-        Save / Delete / Copy
-      ------------------------- */
-      async function onSave(){
-        const editing = state.editingEvent;
+  async function boot() {
+    initDefaults();
+    wireCalendarControls();
+    wireSettingsControls();
+    wireCardsControls();
 
-        const title = $("#fTitle").value.trim();
-        const type = $("#fType").value;
-        const walletId = $("#fWallet").value;
-        const total = Number($("#fAmount").value || 0);
-        const category = $("#fCategory").value.trim() || "Senza categoria";
-        const occurredOn = $("#fOccurred").value || toISO(new Date());
-        const notesLong = $("#fNotesLong").value || "";
+    try {
+      await loadWallets();
+      await loadEventsForMonth();
+      await loadDashboardForCalendar();
+      await ensureScheduledRepaymentsForCurrentMonth();
+      await loadDashboardForCardsTab();
+      toast("Pronto.");
+    } catch (e) {
+      toast("Errore avvio: " + (e.message || e));
+    }
+  }
 
-        if(!title){ alert("Titolo obbligatorio"); return; }
-        if(!walletId){ alert("Wallet obbligatorio"); return; }
-        if(!(total > 0)){ alert("Importo non valido"); return; }
-
-        try{
-          if(editing){
-            // edit single OR future series
-            const applyFuture = !!$("#fApplyFuture").checked;
-            if(applyFuture && editing.seriesId){
-              await API.updateSeriesFuture(editing.seriesId, {
-                from: editing.date,
-                patch: { title, type, walletId, amount: total, category, notes: notesLong }
-              });
-            } else {
-              await API.updateEvent(editing.id, {
-                title, type, walletId, amount: total, category,
-                date: editing.date, // non spostiamo la data qui (se vuoi, aggiungiamo campo date edit)
-                occurredOn,
-                notes: notesLong
-              });
-            }
-          } else {
-            // create with schedule
-            const scheduleMode = $("#fScheduleMode").value;
-
-            let payload = {
-              title, type,
-              walletId,
-              totalAmount: total,
-              category,
-              occurredOn,
-              notes: notesLong,
-              schedule: { mode: scheduleMode }
-            };
-
-            if(scheduleMode === "now"){
-              payload.schedule = { mode:"now", payOn: occurredOn };
-            }
-
-            if(scheduleMode === "deferred"){
-              const payOn = $("#fPayOn").value || occurredOn;
-              payload.schedule = { mode:"deferred", payOn };
-            }
-
-            if(scheduleMode === "installments"){
-              const count = Math.max(2, Number($("#fInstCount").value || 2));
-              const firstPayOn = $("#fInstFirst").value || occurredOn;
-              // rate uguali (backend può calcolarle, oppure le passiamo noi)
-              const each = Number((total / count).toFixed(2));
-              const amounts = Array.from({length:count}).map(()=>each);
-              payload.schedule = {
-                mode:"installments",
-                installments:{
-                  count,
-                  firstPayOn,
-                  interval:"monthly",
-                  amounts
-                }
-              };
-            }
-
-            await API.createEvent(payload);
-          }
-
-          closeModal();
-          await loadMonthData();
-        }catch(err){
-          alert(err?.message || "Errore salvataggio");
-        }
-      }
-
-      async function onDelete(){
-        const e = state.editingEvent;
-        if(!e) return;
-
-        if(e.seriesId){
-          const choice = prompt(
-            "Evento in serie.\nScrivi:\n1 = elimina SOLO questo\n2 = elimina questo + FUTURI\n3 = elimina TUTTA la serie",
-            "1"
-          );
-          if(choice === "2"){
-            if(!confirm("Confermi elimina da questo in poi?")) return;
-            await API.deleteSeriesFuture(e.seriesId, e.date);
-          } else if(choice === "3"){
-            if(!confirm("Confermi elimina tutta la serie?")) return;
-            await API.deleteSeries(e.seriesId);
-          } else {
-            if(!confirm("Confermi elimina solo questo evento?")) return;
-            await API.deleteEvent(e.id);
-          }
-        } else {
-          if(!confirm("Eliminare questo evento?")) return;
-          await API.deleteEvent(e.id);
-        }
-
-        closeModal();
-        await loadMonthData();
-      }
-
-      async function onCopy(){
-        const e = state.editingEvent;
-        if(!e) return;
-        // copia semplice: crea nuovo evento identico in data selezionata (oggi)
-        const dayISO = prompt("Data per la copia (YYYY-MM-DD)?", toISO(new Date()));
-        if(!dayISO) return;
-
-        try{
-          await API.createEvent({
-            title: (e.title || "") + " (copia)",
-            type: e.type,
-            walletId: e.walletId,
-            totalAmount: Number(e.amount||0),
-            category: e.category,
-            occurredOn: dayISO,
-            notes: e.notes || "",
-            schedule: { mode:"now", payOn: dayISO }
-          });
-          closeModal();
-          await loadMonthData();
-        }catch(err){
-          alert(err?.message || "Errore copia");
-        }
-      }
-
-      /* -------------------------
-        Render
-      ------------------------- */
-      function renderAll(){
-        renderCalendar();
-        renderSidebar();
-      }
-
-      /* -------------------------
-        Bind UI
-      ------------------------- */
-      function bind(){
-        $("#btnPrev").addEventListener("click", () => {
-          state.anchorMonth = startOfMonth(addMonths(state.anchorMonth, -1));
-          loadMonthData();
-        });
-        $("#btnNext").addEventListener("click", () => {
-          state.anchorMonth = startOfMonth(addMonths(state.anchorMonth, +1));
-          loadMonthData();
-        });
-        $("#btnToday").addEventListener("click", () => {
-          state.anchorMonth = startOfMonth(new Date());
-          loadMonthData();
-        });
-
-        $("#btnReload").addEventListener("click", loadMonthData);
-
-        $("#q").addEventListener("input", (ev) => {
-          state.q = ev.target.value || "";
-          // ricarico mese (semplice)
-          loadMonthData();
-        });
-
-        $("#btnNew").addEventListener("click", () => openModalNew(toISO(new Date())));
-        $("#btnCloseModal").addEventListener("click", closeModal);
-        $("#btnCancel").addEventListener("click", closeModal);
-
-        $("#fScheduleMode").addEventListener("change", syncScheduleUI);
-        $("#fAmount").addEventListener("input", syncScheduleUI);
-        $("#fInstCount").addEventListener("input", syncScheduleUI);
-
-        $("#btnSave").addEventListener("click", onSave);
-        $("#btnDelete").addEventListener("click", onDelete);
-        $("#btnCopy").addEventListener("click", onCopy);
-      }
-
-      /* -------------------------
-        Boot
-      ------------------------- */
-      bind();
-      loadMonthData();
-    })();
-  </script>
+  boot();
+</script>
 </body>
 </html>

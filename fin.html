@@ -162,6 +162,9 @@ header{
   color:var(--fg2);
   box-shadow: 0 6px 16px rgba(0,0,0,.28);
   white-space:nowrap;
+  max-width: 100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
 .pill .mono{color:var(--fg);opacity:.95}
@@ -210,7 +213,10 @@ main{
   gap:var(--gap);
   flex-wrap:wrap;
   align-items:flex-start;
+  min-width: 0;
 }
+.row > *{ min-width: 0; }
+
 
 .col{
   flex: 1 1 420px;
@@ -345,8 +351,9 @@ main{
 /* ---------- KPI blocks ---------- */
 .kpiwrap{
   display:grid;
-  grid-template-columns: repeat(4, minmax(200px,1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
   gap: 12px;
+  min-width: 0;
 }
 
 .kpi{
@@ -738,7 +745,13 @@ dialog::backdrop{background: rgba(0,0,0,.62)}
 }
 
 /* ---------- Fine-tune existing elements from original HTML ---------- */
-#pillStatus{max-width: 52vw; overflow:hidden; text-overflow:ellipsis}
+#pillStatus{
+  max-width: min(52vw, 720px);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
 #pillApi{opacity:.95}
 #headersWrap .panel{padding:14px}
 
@@ -767,10 +780,16 @@ dialog .field textarea{
 }
 
 /* Prevent overly low opacity on “empty leading cells” in calendar */
-.day[style*="opacity"]{
-  opacity: .35 !important;
-  filter: saturate(.85);
+.day.outmonth{
+  opacity: .55;
+  filter: saturate(.75);
 }
+.day.outmonth .dayNum{ color: rgba(215,226,243,.70); }
+.day.outmonth:hover{
+  opacity:.80;
+  filter:saturate(.95);
+}
+
 
 /* ---------- Production polish: subtle separators & spacing ---------- */
 .panel > .row{gap: 12px}
@@ -1486,8 +1505,10 @@ function renderHeaders(){
     const card = document.createElement("div");
     card.className = cls;
     card.style.flex = "1 1 420px";
-    card.style.minWidth = "340px";
+    card.style.minWidth = "210px";
     card.style.padding = "14px";
+    card.style.overflow = "hidden";
+
 
     const typeLabel = (w.type==="card") ? "Carta" : "Conto";
     const selected = isoDate(state.selectedDate);
@@ -1545,7 +1566,7 @@ function renderHeaders(){
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
         <div style="min-width:0">
           <div class="muted">${typeLabel}</div>
-          <div style="font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(w.name||"")}</div>
+          <div style="font-size:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${escapeHtml(w.name||"")}</div>
           <div class="muted">Aggiornato al giorno: <span class="mono">${selected}</span></div>
         </div>
         <div style="text-align:right">
@@ -1556,7 +1577,8 @@ function renderHeaders(){
 
       <div class="hr"></div>
 
-      <div class="kpiwrap" style="grid-template-columns:repeat(4, minmax(180px,1fr))">
+      <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(220px,1fr))">
+
         <div class="kpi">
           <div class="t">Spese nel mese</div>
           <div class="v"><span class="money neg">${fmtMoney(-spentSoFar).replace("-", "")}</span></div>
@@ -1654,19 +1676,10 @@ function renderCalendar(){
   const grid = document.createElement("div");
   grid.className = "calgrid";
 
-  // Create empty leading cells
-  for(let i=0;i<offset;i++){
-    const el = document.createElement("div");
-    el.className = "day";
-    el.style.opacity = "0.25";
-    el.innerHTML = `<div class="dayHead"><div class="dayNum"> </div></div>`;
-    grid.appendChild(el);
-  }
-
   // Normalize events
   const evs = state.events.map(normalizeEventForUI);
 
-  // Group by day
+  // Group by day (ISO)
   const byDay = new Map();
   for(const e of evs){
     if(!e.__day) continue;
@@ -1677,32 +1690,37 @@ function renderCalendar(){
     arr.sort((a,b)=> (a.id||0)-(b.id||0));
   }
 
-  // Month cells
-  for(let d=1; d<=me.getDate(); d++){
-    const cur = new Date(ms.getFullYear(), ms.getMonth(), d);
+  // Outlook-like grid: always 6 weeks (42 days), including prev/next month days
+  const gridStart = addDays(ms, -offset);          // Monday of first grid row
+  const totalCells = 42;
+
+  for(let i=0;i<totalCells;i++){
+    const cur = addDays(gridStart, i);
     const dayIso = isoDate(cur);
     const list = byDay.get(dayIso) || [];
 
+    const inThisMonth = (cur.getMonth() === ms.getMonth());
     const el = document.createElement("div");
     el.className = "day";
+    if(!inThisMonth) el.classList.add("outmonth");
     if(isoDate(state.selectedDate)===dayIso) el.classList.add("selected");
 
     const count = list.length;
+
     el.innerHTML = `
       <div class="dayHead">
-        <div class="dayNum">${d}</div>
+        <div class="dayNum">${cur.getDate()}</div>
         ${count ? `<div class="badge">${count} eventi</div>` : `<div class="badge">—</div>`}
       </div>
       <div class="evlist"></div>
     `;
+
     el.addEventListener("click", ()=> onSelectDay(cur));
 
     const evlist = el.querySelector(".evlist");
-    // show up to 3 items for readability
     const shown = list.slice(0, 3);
     for(const ev of shown){
-      const item = renderEventChip(ev);
-      evlist.appendChild(item);
+      evlist.appendChild(renderEventChip(ev));
     }
     if(list.length>3){
       const more = document.createElement("div");
@@ -1714,6 +1732,7 @@ function renderCalendar(){
 
     grid.appendChild(el);
   }
+
 
   cal.appendChild(grid);
 
@@ -2587,7 +2606,7 @@ async function setVisibleMonth(d){
 }
 
 async function refreshAll(){
-  $("pillApi").textContent = apiBase().replace("/finance","/");
+  $("pillApi").textContent = apiBase();
   await loadWallets();
   fillWalletSelects();
 
@@ -2605,7 +2624,7 @@ async function refreshAll(){
   renderDayPanel();
   if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview") renderOverview();
 
-  $("pillApi").textContent = apiBase().replace("/finance","");
+  $("pillApi").textContent = apiBase();
 }
 
 /* =========================

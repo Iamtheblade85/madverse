@@ -995,6 +995,70 @@ body{
   color: var(--fg2) !important;
 }
 
+/* =========================================================
+   PATCH v2 — “mai testo scuro su scuro” + select/option leggibili
+   Incolla in FONDO allo <style>
+========================================================= */
+
+/* 1) Forza la UI nativa in dark-mode (dropdown, date picker, scrollbars, ecc.) */
+:root{ color-scheme: dark; }
+body{ color-scheme: dark; }
+
+/* 2) Default text: qualsiasi testo non esplicitamente stilizzato deve restare chiaro */
+body, .panel, details, summary, dialog, .kpi, .ev, .treeBody{
+  color: var(--fg) !important;
+}
+
+/* 3) Qualsiasi testo “secondario” non deve mai diventare troppo scuro */
+.muted, .hint, .footnote, .kpi .t, .kpi .s, .field label, .ev .meta, .dow, .tag, .badge{
+  color: var(--muted) !important;
+  opacity: 1 !important; /* evita “sbiadito” che su scuro diventa illeggibile */
+}
+
+/* 4) Se qualche browser rende i link troppo scuri */
+a, a:visited{ color: color-mix(in oklab, var(--accent), white 25%) !important; }
+
+/* =========================================================
+   Select & option: fix “testo bianco su sfondo bianco”
+========================================================= */
+
+/* Stile del select (chiuso) */
+select.btn,
+.field select{
+  color: var(--fg) !important;
+  background-color: rgba(0,0,0,.35) !important; /* fallback solid */
+  border-color: var(--line) !important;
+}
+
+/* Stile delle opzioni (menu aperto) — molti browser usano il theme del sistema */
+select option{
+  background-color: #111823 !important; /* scuro */
+  color: #f4f7ff !important;           /* chiaro */
+}
+
+/* Alcuni browser usano optgroup */
+select optgroup{
+  background-color: #111823 !important;
+  color: #c9d6ee !important;
+}
+
+/* Hover/selected nello dropdown (quando supportato) */
+select option:checked{
+  background-color: #1a2a3f !important;
+  color: #ffffff !important;
+}
+
+/* =========================================================
+   Autofill (Chrome): evita testo scuro / sfondo chiaro
+========================================================= */
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill{
+  -webkit-text-fill-color: var(--fg) !important;
+  box-shadow: 0 0 0px 1000px rgba(0,0,0,.35) inset !important;
+  caret-color: var(--fg) !important;
+}
+
 </style>
 
 
@@ -2066,6 +2130,15 @@ function groupSum(items, keyFn){
   return [...m.entries()].map(([k,v])=>({k, v}));
 }
 
+/* =========================================================
+   PATCH JS — Overview “completa e intuitiva”
+   Target: SOLO modifica funzione renderOverview() (no HTML changes)
+   Cosa aggiunge:
+   A) Monthly Summary globale (totali mese + delta vs mese scorso + per mezzo)
+   B) “Da fare” (eventi futuri nel mese + rimborsi carta mancanti)
+   C) Dettagli rimborsi/finanziamenti (subType, schedule, rate, ecc.)
+========================================================= */
+
 function renderOverview(){
   if(!state.dashboard || !state.dashboard.wallets){
     $("overviewTree").innerHTML = `<div class="muted">Caricamento…</div>`;
@@ -2076,22 +2149,253 @@ function renderOverview(){
   const tree = $("overviewTree");
   tree.innerHTML = "";
 
-  // Build tree for each wallet
+  // Helpers locali (renderOverview scope)
+  const ms = monthStart(state.visibleMonth);
+  const me = monthEnd(state.visibleMonth);
+  const prev = samePeriodPrevMonth(ms, me);
+  const today = new Date();
+  const today0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const allEvsNorm = state.events.map(normalizeEventForUI);
+
+  function within(d, a, b){ return d && d >= a && d <= b; }
+
+  function isInMonth(ev){
+    const d = parseISO(ev.__day);
+    return within(d, ms, me);
+  }
+  function isInPrevMonth(ev){
+    const d = parseISO(ev.__day);
+    return within(d, prev.from, prev.to);
+  }
+
+  function evSign(ev){
+    // cashflow sign convention for summary:
+    // + income, + card_credit
+    // - expense, - card_purchase, - card_charge, - card_repayment (cash out from account)
+    if(ev.type === "income") return +1;
+    if(ev.type === "card_credit") return +1;
+    if(ev.type === "expense") return -1;
+    if(ev.type === "card_purchase") return -1;
+    if(ev.type === "card_charge") return -1;
+    if(ev.type === "card_repayment") return -1;
+    return 0;
+  }
+
+  function cashIn(ev){
+    const s = evSign(ev);
+    return s > 0 ? Number(ev.amount||0) : 0;
+  }
+  function cashOut(ev){
+    const s = evSign(ev);
+    return s < 0 ? Number(ev.amount||0) : 0;
+  }
+
+  function labelForPaymentMethod(ev){
+    // “mezzo” leggibile
+    if(ev.type==="income" || ev.type==="expense"){
+      return state.walletNameById.get(String(ev.walletId||"")) || "Conto";
+    }
+    if(ev.type==="card_purchase" || ev.type==="card_credit" || ev.type==="card_charge"){
+      return state.walletNameById.get(String(ev.cardWalletId||"")) || "Carta";
+    }
+    if(ev.type==="card_repayment"){
+      const from = state.walletNameById.get(String(ev.fromWalletId||"")) || "Conto";
+      const to = state.walletNameById.get(String(ev.toCardWalletId||"")) || "Carta";
+      return `${from} → ${to}`;
+    }
+    return "Altro";
+  }
+
+  function fmtDelta(v){
+    const cls = deltaClass(v);
+    return `<span class="delta ${cls}">${fmtMoney(v)}</span>`;
+  }
+
+  // =========================
+  // A) MONTHLY SUMMARY (globale)
+  // =========================
+  const evMonth = allEvsNorm.filter(isInMonth);
+  const evPrevM = allEvsNorm.filter(isInPrevMonth);
+
+  const sumIn  = evMonth.reduce((a,e)=>a+cashIn(e), 0);
+  const sumOut = evMonth.reduce((a,e)=>a+cashOut(e), 0);
+  const net    = sumIn - sumOut;
+
+  const prevIn  = evPrevM.reduce((a,e)=>a+cashIn(e), 0);
+  const prevOut = evPrevM.reduce((a,e)=>a+cashOut(e), 0);
+  const prevNet = prevIn - prevOut;
+
+  const dIn  = sumIn - prevIn;
+  const dOut = sumOut - prevOut;
+  const dNet = net - prevNet;
+
+  // Totali “per mezzo”
+  const byMethod = new Map(); // label -> {in,out,net,count}
+  for(const e of evMonth){
+    const k = labelForPaymentMethod(e);
+    if(!byMethod.has(k)) byMethod.set(k, {in:0,out:0,net:0,count:0});
+    const row = byMethod.get(k);
+    row.in  += cashIn(e);
+    row.out += cashOut(e);
+    row.net += (cashIn(e) - cashOut(e));
+    row.count += 1;
+  }
+  const byMethodArr = [...byMethod.entries()]
+    .map(([k,v])=>({k,...v}))
+    .sort((a,b)=> (b.out - a.out) || (b.in - a.in));
+
+  // Render Summary Panel (senza cambiare HTML: lo inseriamo come HTML dentro overviewTree)
+  const summary = document.createElement("div");
+  summary.className = "panel";
+  summary.innerHTML = `
+    <h3 style="margin-top:0">Riepilogo mese (globale)</h3>
+    <div class="muted">Periodo: <span class="mono">${ymStr(state.visibleMonth)}</span> · basato su data selezionata: <span class="mono">${isoDate(state.selectedDate)}</span></div>
+    <div class="hr"></div>
+
+    <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(220px,1fr))">
+      <div class="kpi">
+        <div class="t">Totale entrate</div>
+        <div class="v"><span class="money pos">${fmtMoney(sumIn)}</span></div>
+        <div class="s">Δ mese scorso: ${fmtDelta(dIn)}</div>
+      </div>
+      <div class="kpi">
+        <div class="t">Totale uscite</div>
+        <div class="v"><span class="money neg">${fmtMoney(sumOut)}</span></div>
+        <div class="s">Δ mese scorso: ${fmtDelta(dOut)}</div>
+      </div>
+      <div class="kpi">
+        <div class="t">Saldo netto mese</div>
+        <div class="v"><span class="money ${moneyClassSigned(net)}">${fmtMoney(net)}</span></div>
+        <div class="s">Δ mese scorso: ${fmtDelta(dNet)}</div>
+      </div>
+      <div class="kpi">
+        <div class="t">Eventi nel mese</div>
+        <div class="v">${evMonth.length}</div>
+        <div class="s">Conti + Carte</div>
+      </div>
+    </div>
+
+    <details style="margin-top:12px" open>
+      <summary><span>Per mezzo (conto/carta)</span><span class="tag">${byMethodArr.length}</span></summary>
+      <div class="treeBody">
+        ${
+          byMethodArr.map(x=>`
+            <div class="treeRow">
+              <div class="name">${escapeHtml(x.k)} <span class="muted" style="font-size:14px">· ${x.count} eventi</span></div>
+              <div class="amt" style="display:flex;gap:10px;align-items:center">
+                <span class="money pos">${fmtMoney(x.in)}</span>
+                <span class="money neg">${fmtMoney(x.out)}</span>
+                <span class="money ${moneyClassSigned(x.net)}">${fmtMoney(x.net)}</span>
+              </div>
+            </div>
+          `).join("")
+          || `<div class="muted">Nessun dato nel mese.</div>`
+        }
+        <div class="hint" style="margin-top:8px">Colonne: Entrate · Uscite · Netto</div>
+      </div>
+    </details>
+  `;
+  tree.appendChild(summary);
+
+  // =========================
+  // B) “DA FARE” (futuri + rimborsi mancanti)
+  // =========================
+  // B1: eventi futuri nel mese (calendar/purchase/payment day > oggi)
+  const futureInMonth = evMonth.filter(e=>{
+    const d = parseISO(e.__day);
+    return d && d > today0;
+  }).sort((a,b)=> (a.__day||"").localeCompare(b.__day||"") || (a.id||0)-(b.id||0));
+
+  // B2: scheduled repayments mancanti nel mese (da dashboard)
+  const missingRepay = [];
+  for(const w of (state.dashboard.wallets||[])){
+    if(w.type!=="card") continue;
+    const sr = w.card && w.card.scheduledRepayment;
+    if(!sr || sr.exists) continue;
+    const pd = parseISO(sr.paymentDate);
+    if(!pd) continue;
+    if(pd < ms || pd > me) continue;
+    // solo “da fare” se data >= oggi
+    if(pd < today0) continue;
+
+    missingRepay.push({
+      cardId: String(w.id),
+      cardName: w.name || `Carta #${w.id}`,
+      paymentDate: sr.paymentDate,
+      suggestedAmount: Number(sr.suggestedAmount||sr.baselineAmount||0),
+    });
+  }
+  missingRepay.sort((a,b)=> (a.paymentDate||"").localeCompare(b.paymentDate||""));
+
+  const todo = document.createElement("div");
+  todo.className = "panel";
+  todo.style.marginTop = "12px";
+  todo.innerHTML = `
+    <h3 style="margin-top:0">Da fare (nel mese)</h3>
+    <div class="muted">Cose future rispetto a oggi (${isoDate(today0)}).</div>
+    <div class="hr"></div>
+
+    <details open>
+      <summary><span>Eventi futuri già registrati</span><span class="tag">${futureInMonth.length}</span></summary>
+      <div class="treeBody">
+        ${
+          futureInMonth.map(e=>`
+            <div class="treeRow ${e.__catClass}">
+              <div class="name" style="min-width:0">
+                <div><b>${escapeHtml(e.__day||"")}</b> · ${escapeHtml(e.title||"")}</div>
+                <div class="muted" style="font-size:14px">${escapeHtml(labelForPaymentMethod(e))} · ${escapeHtml(e.category||"")} · ${escapeHtml(e.type||"")}</div>
+              </div>
+              <div class="amt money ${(evSign(e)>0)?"pos":"neg"}">${(evSign(e)>0?"+":"-")}${fmtMoney(Number(e.amount||0)).replace(" €","")} €</div>
+            </div>
+          `).join("") || `<div class="muted">Nessun evento futuro nel mese.</div>`
+        }
+      </div>
+    </details>
+
+    <details style="margin-top:10px" open>
+      <summary><span>Rimborsi carta previsti ma mancanti</span><span class="tag">${missingRepay.length}</span></summary>
+      <div class="treeBody">
+        ${
+          missingRepay.map(x=>`
+            <div class="treeRow">
+              <div class="name">
+                <div><b>${escapeHtml(x.paymentDate)}</b> · ${escapeHtml(x.cardName)}</div>
+                <div class="muted" style="font-size:14px">scheduledRepayment mancante</div>
+              </div>
+              <div class="amt" style="display:flex;gap:10px;align-items:center">
+                <span class="money neg">${fmtMoney(x.suggestedAmount)}</span>
+                <button class="btn small" data-create-repay="${escapeHtml(x.cardId)}">Crea ora</button>
+              </div>
+            </div>
+          `).join("") || `<div class="muted">Nessun rimborso mancante nel mese.</div>`
+        }
+        <div class="hint" style="margin-top:8px">“Crea ora” usa la logica già presente (defaultSourceWalletId della carta).</div>
+      </div>
+    </details>
+  `;
+  tree.appendChild(todo);
+
+  // wire “Crea ora” buttons (riuso tua funzione esistente)
+  for(const btn of todo.querySelectorAll("[data-create-repay]")){
+    btn.addEventListener("click", async ()=>{
+      await createRepaymentNowForCard(String(btn.getAttribute("data-create-repay")));
+    });
+  }
+
+  // =========================
+  // C) Dettagli rimborsi/finanziamenti: arricchiamo la vista per wallet
+  // =========================
+
+  // Build tree for each wallet (come prima, ma con dettagli aggiuntivi)
   for(const w of state.dashboard.wallets){
     const wid = String(w.id);
     const isCard = w.type==="card";
     const accent = `accent-wallet-${w.id}`;
 
-    // events for month (solar month view) for this wallet
-    // We use selected visible month range:
-    const ms = monthStart(state.visibleMonth);
-    const me = monthEnd(state.visibleMonth);
-
-    const evs = state.events.map(normalizeEventForUI).filter(e=>{
+    const evs = allEvsNorm.filter(e=>{
       const d = parseISO(e.__day);
-      if(!d) return false;
-      // only within visible month for tree details
-      if(d < ms || d > me) return false;
+      if(!within(d, ms, me)) return false;
 
       if(isCard){
         const cid = String(e.cardWalletId||e.toCardWalletId||"");
@@ -2101,13 +2405,59 @@ function renderOverview(){
       }
     });
 
-    // split types
-    const incomes = evs.filter(e=>e.type==="income" || (isCard && (e.type==="card_repayment"))); // card "income" in dashboard is repayments
-    const expenses = evs.filter(e=>e.type==="expense" || (isCard && (e.type==="card_purchase" || e.type==="card_charge")));
+    const incomes = evs.filter(e=> e.type==="income" || (isCard && e.type==="card_repayment"));
+    const expenses = evs.filter(e=> e.type==="expense" || (isCard && (e.type==="card_purchase" || e.type==="card_charge")));
 
-    // group by category
     const expByCat = groupSum(expenses, e=> e.category||"Senza categoria").sort((a,b)=>b.v-a.v);
     const incByCat = groupSum(incomes,  e=> e.category||"Senza categoria").sort((a,b)=>b.v-a.v);
+
+    function extraLineForEvent(e){
+      // C) componenti/dettagli
+      // - subType (credit/charge)
+      // - schedule (financing)
+      if(e.type==="card_credit"){
+        const st = (e.subType||"").trim();
+        return st ? `<div class="muted" style="font-size:14px">subType: <span class="mono">${escapeHtml(st)}</span></div>` : "";
+      }
+      if(e.type==="card_charge"){
+        const st = (e.subType||"").trim();
+        return st ? `<div class="muted" style="font-size:14px">subType: <span class="mono">${escapeHtml(st)}</span></div>` : "";
+      }
+      if(e.type==="card_purchase"){
+        const sch = e.schedule || null;
+        if(sch && sch.kind==="financing"){
+          const first = sch.firstStatementMonth || "—";
+          const count = Number(sch.count||0);
+          // custom installments (componenti)
+          const ci = Array.isArray(sch.customInstallments) ? sch.customInstallments : null;
+          if(ci && ci.length){
+            const lines = ci.slice(0,6).map(x=>`${escapeHtml(String(x.date||""))}: ${fmtMoney(Number(x.amount||0))}`).join(" · ");
+            const more = ci.length>6 ? ` · +${ci.length-6}` : "";
+            return `
+              <div class="muted" style="font-size:14px">
+                rate (custom): <span class="mono">${escapeHtml(first)}</span> · count: <span class="mono">${count}</span>
+              </div>
+              <div class="muted" style="font-size:14px">componenti: ${lines}${more}</div>
+            `;
+          }
+          // monthly installments
+          const inst = sch.monthlyInstallments && sch.monthlyInstallments.installmentAmount!=null
+            ? Number(sch.monthlyInstallments.installmentAmount)
+            : null;
+          return `
+            <div class="muted" style="font-size:14px">
+              rate (mensili): <span class="mono">${escapeHtml(first)}</span> · count: <span class="mono">${count}</span>
+              ${inst ? `· quota: <span class="mono">${fmtMoney(inst)}</span>` : ""}
+            </div>
+          `;
+        }
+      }
+      if(e.type==="card_repayment"){
+        const pd = (e.paymentDate||"").slice(0,10);
+        return pd ? `<div class="muted" style="font-size:14px">paymentDate: <span class="mono">${escapeHtml(pd)}</span></div>` : "";
+      }
+      return "";
+    }
 
     const det = document.createElement("details");
     det.className = accent;
@@ -2160,28 +2510,33 @@ function renderOverview(){
           </div>
         </details>
 
-        <details class="${accent}" style="margin:10px 0">
-          <summary><span>Dettaglio eventi del mese</span><span class="tag">${evs.length}</span></summary>
+        <details class="${accent}" style="margin:10px 0" open>
+          <summary><span>Dettaglio eventi del mese (con componenti)</span><span class="tag">${evs.length}</span></summary>
           <div class="treeBody">
-            ${evs.sort((a,b)=> (a.__day||"").localeCompare(b.__day||"") || (a.id||0)-(b.id||0)).map(e=>`
-              <div class="treeRow ${e.__catClass}">
-                <div class="name" style="min-width:0">
-                  <div><b>${escapeHtml(e.__day||"")}</b> · ${escapeHtml(e.title||"")}</div>
-                  <div class="muted" style="font-size:14px">${escapeHtml(e.category||"")} · ${escapeHtml(e.type||"")}</div>
+            ${evs
+              .sort((a,b)=> (a.__day||"").localeCompare(b.__day||"") || (a.id||0)-(b.id||0))
+              .map(e=>`
+                <div class="treeRow ${e.__catClass}">
+                  <div class="name" style="min-width:0">
+                    <div><b>${escapeHtml(e.__day||"")}</b> · ${escapeHtml(e.title||"")}</div>
+                    <div class="muted" style="font-size:14px">${escapeHtml(e.category||"")} · ${escapeHtml(e.type||"")}</div>
+                    ${extraLineForEvent(e)}
+                  </div>
+                  <div class="amt money ${(evSign(e)>0) ? "pos":"neg"}">${(evSign(e)>0?"+":"-")}${fmtMoney(Number(e.amount||0)).replace(" €","")} €</div>
                 </div>
-                <div class="amt money ${(e.type==="income"||e.type==="card_credit") ? "pos":"neg"}">${(e.type==="income"||e.type==="card_credit")?"+":"-"}${fmtMoney(Number(e.amount||0)).replace(" €","")} €</div>
-              </div>
-            `).join("") || `<div class="muted">Nessun evento nel mese.</div>`}
+              `).join("") || `<div class="muted">Nessun evento nel mese.</div>`}
           </div>
         </details>
 
-        <div class="hint">Clicca un evento nel Calendario per modificarlo/duplicarlo. In questa vista è solo consultazione.</div>
+        <div class="hint">Per modificare: vai su Calendario e clicca l’evento.</div>
       </div>
     `;
     tree.appendChild(det);
   }
 
-  // Cards statement box
+  // =========================
+  // Cards statement box (tuo codice originale invariato)
+  // =========================
   const cbox = $("cardsStatementBox");
   cbox.innerHTML = "";
   const cards = state.dashboard.wallets.filter(w=>w.type==="card");
@@ -2255,6 +2610,7 @@ function renderOverview(){
     }
   }
 }
+
 
 function catAccentClass(type, category){
   const key = `cat:${type}:${category||""}`;

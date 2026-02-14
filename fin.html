@@ -5,46 +5,57 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Finance UI</title>
 
-  <!-- Theme (tu lo creerai/affinerai dopo)        <link rel="stylesheet" href="fin-theme.css" />                -->
-  
-
-  <!-- Base layout + font grandi (minimo indispensabile; puoi spostarlo in fin-theme.css) -->
+  <!-- Theme <link rel="stylesheet" href="fin-theme.css" />                -->
 <style>
 /* =========================================================
-   FIN UI - PRODUCTION-READY BASE STYLE
-   Constraints:
-   - HTML structure MUST stay identical.
-   - This style improves readability on dark background, adds weekend
-     differentiation, better spacing, better focus/hover, and clearer KPIs.
+   FIN UI — OPTIMIZED, HIGH-CONTRAST, USER-FRIENDLY DARK THEME
+   Constraints respected:
+   - HTML structure unchanged
+   - Same class/id hooks
+   Goals:
+   - Better information hierarchy at a glance
+   - Higher contrast (no “dark on dark”)
+   - Cleaner, less glassy panels
+   - Clearer weekend / selection / focus
+   - Stronger spacing rhythm without feeling sparse
    ========================================================= */
 
-/* ---------- CSS variables (tune here) ---------- */
+/* ---------- 0) Design tokens ---------- */
 :root{
-  /* Core */
-  --bg:#0b0f14;
-  --bg2:#0d131b;
-  --bg3:#0f1722;
-  --fg:#eef3fb;          /* brighter */
-  --fg2:#d7e2f3;
-  --muted:#b5c3d9;       /* brighter muted */
-  --muted2:#8fa2bc;
-  --line:rgba(255,255,255,.14);
-  --line2:rgba(255,255,255,.08);
-  --card:rgba(255,255,255,.07);
-  --card2:rgba(255,255,255,.05);
-  --shadow: 0 18px 42px rgba(0,0,0,.45);
-  --shadow2: 0 10px 22px rgba(0,0,0,.35);
+  /* Tell the browser we are dark UI (dropdowns, scrollbars, etc.) */
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg:#070b11;
+  --bg2:#0b121c;
+  --bg3:#0f1b2a;
+
+  /* Text */
+  --fg:#f3f7ff;     /* primary text */
+  --fg2:#e3edff;    /* secondary headings */
+  --muted:#c3d1ea;  /* secondary text (still readable) */
+  --muted2:#9fb3d4; /* tertiary text */
+
+  /* Lines + fills (less “fog”, more definition) */
+  --line:rgba(255,255,255,.18);
+  --line2:rgba(255,255,255,.12);
+  --card:rgba(255,255,255,.10);
+  --card2:rgba(255,255,255,.07);
+
+  /* Shadows */
+  --shadow: 0 18px 42px rgba(0,0,0,.55);
+  --shadow2: 0 10px 22px rgba(0,0,0,.40);
 
   /* Semantic */
-  --good:#1fe28f;
-  --bad:#ff5f6a;
-  --warn:#ffd166;
-  --info:#63b3ff;
+  --good:#2BE29A;
+  --bad:#FF5D6B;
+  --warn:#FFD166;
+  --info:#63B3FF;
 
-  /* Accents */
-  --accent:#63b3ff;
-  --accent2: rgba(99,179,255,.22);
-  --accentLine: rgba(99,179,255,.40);
+  /* Accent */
+  --accent:#63B3FF;
+  --accentSoft: rgba(99,179,255,.18);
+  --accentLine: rgba(99,179,255,.48);
 
   /* Typography */
   --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -55,9 +66,9 @@
   --fs-lg: 20px;
   --fs-xl: 24px;
   --fs-xxl: 28px;
-  --lh: 1.35;
+  --lh: 1.48;
 
-  /* Spacing */
+  /* Spacing + radius */
   --r: 16px;
   --r2: 20px;
   --pad: 14px;
@@ -67,24 +78,29 @@
   /* Calendar sizing */
   --dayMinH: 128px;
   --dayPad: 12px;
+
+  /* Focus */
+  --focus: rgba(99,179,255,.70);
 }
 
-/* High-contrast fallback if OS requests it */
+/* High contrast user preference */
 @media (prefers-contrast: more){
   :root{
-    --line:rgba(255,255,255,.22);
-    --line2:rgba(255,255,255,.14);
-    --card:rgba(255,255,255,.10);
-    --muted:#c6d2e6;
+    --line:rgba(255,255,255,.24);
+    --line2:rgba(255,255,255,.16);
+    --card:rgba(255,255,255,.14);
+    --muted:#d1def4;
+    --muted2:#b4c7e6;
+    --accentLine: rgba(99,179,255,.60);
   }
 }
 
-/* Reduce motion if requested */
+/* Reduce motion */
 @media (prefers-reduced-motion: reduce){
   *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
 }
 
-/* ---------- Global reset & readability ---------- */
+/* ---------- 1) Base / reset ---------- */
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -93,38 +109,37 @@ body{
   font-size:var(--fs);
   line-height:var(--lh);
   color:var(--fg);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Cleaner background: less “spotty glass”, more calm depth */
   background:
-    radial-gradient(1200px 800px at 15% 0%, rgba(99,179,255,.10), transparent 60%),
-    radial-gradient(900px 700px at 90% 15%, rgba(31,226,143,.06), transparent 58%),
-    radial-gradient(700px 500px at 50% 100%, rgba(255,209,102,.05), transparent 60%),
+    radial-gradient(1100px 700px at 18% 0%, rgba(99,179,255,.10), transparent 62%),
+    radial-gradient(900px 650px at 92% 12%, rgba(43,226,154,.06), transparent 60%),
     linear-gradient(180deg, var(--bg), var(--bg2));
 }
 
-/* Make text selection visible */
-::selection{background:rgba(99,179,255,.28);color:var(--fg)}
-
-/* Link */
-a{color:color-mix(in oklab, var(--accent), white 20%);text-decoration:none}
+::selection{background:rgba(99,179,255,.30);color:var(--fg)}
+a{color:color-mix(in oklab, var(--accent), white 25%);text-decoration:none}
 a:hover{text-decoration:underline}
-
-/* Inputs and buttons inherit */
 button,input,select,textarea{font:inherit}
-
-/* Improve legibility of common “muted” text (avoid too dark on dark bg) */
-.muted{color:var(--muted)!important}
-.hint{color:var(--muted)!important}
-.footnote{color:var(--muted)!important}
-
-/* Monospace */
+.muted,.hint,.footnote{color:var(--muted)!important;opacity:1!important}
 .mono{font-family:var(--mono)!important}
 
-/* ---------- Header / Topbar / Tabs ---------- */
+/* Strong, consistent focus */
+:focus-visible{
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+/* ---------- 2) Header / topbar / tabs ---------- */
 header{
   position:sticky;
   top:0;
   z-index:50;
-  background:
-    linear-gradient(to bottom, rgba(11,15,20,.98), rgba(11,15,20,.88));
+  background: linear-gradient(to bottom, rgba(7,11,17,.98), rgba(7,11,17,.86));
   border-bottom:1px solid var(--line);
   backdrop-filter: blur(10px);
 }
@@ -143,33 +158,29 @@ header{
   gap:12px;
   min-width:0;
 }
-
 .brand h1{
   margin:0;
   font-size: clamp(22px, 2.2vw, 30px);
   letter-spacing:.2px;
   color:var(--fg);
-  text-shadow: 0 1px 0 rgba(0,0,0,.35);
+  text-shadow: 0 1px 0 rgba(0,0,0,.50);
 }
 
-/* Pills: more contrast, readable */
+/* Pills: higher contrast, less glass, clearer border */
 .pill{
   padding:7px 10px;
   border:1px solid var(--line);
   border-radius:999px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.05));
   color:var(--fg2);
-  box-shadow: 0 6px 16px rgba(0,0,0,.28);
+  box-shadow: 0 8px 18px rgba(0,0,0,.35);
   white-space:nowrap;
   max-width: 100%;
   overflow:hidden;
   text-overflow:ellipsis;
 }
+.pill .mono{color:var(--fg);opacity:.96}
 
-.pill .mono{color:var(--fg);opacity:.95}
-
-/* Tabs: larger & clearer */
 .tabs{
   display:flex;
   gap:8px;
@@ -181,55 +192,44 @@ header{
   padding:12px 14px;
   border-radius:999px;
   border:1px solid var(--line);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.05));
   color:var(--fg);
   cursor:pointer;
   transition: transform .06s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
-  box-shadow: 0 8px 18px rgba(0,0,0,.25);
+  box-shadow: 0 10px 22px rgba(0,0,0,.30);
 }
-
 .tabbtn:hover{
-  border-color: color-mix(in oklab, var(--accentLine), white 10%);
-  box-shadow: 0 10px 22px rgba(0,0,0,.32);
+  border-color: color-mix(in oklab, var(--accentLine), white 14%);
+  box-shadow: 0 12px 26px rgba(0,0,0,.40);
 }
-
 .tabbtn:active{transform: translateY(1px)}
-
 .tabbtn.active{
-  background:
-    linear-gradient(180deg, rgba(99,179,255,.25), rgba(99,179,255,.12));
-  border-color: rgba(99,179,255,.55);
-  box-shadow: 0 12px 26px rgba(0,0,0,.38);
+  background: linear-gradient(180deg, rgba(99,179,255,.26), rgba(99,179,255,.12));
+  border-color: rgba(99,179,255,.60);
+  box-shadow: 0 14px 30px rgba(0,0,0,.46);
 }
 
-/* ---------- Main layout improvements ---------- */
-main{
-  padding: 14px 16px 44px;
-}
+/* ---------- 3) Main layout ---------- */
+main{padding: 14px 16px 44px}
 
 .row{
   display:flex;
   gap:var(--gap);
   flex-wrap:wrap;
   align-items:flex-start;
-  min-width: 0;
+  min-width:0;
 }
-.row > *{ min-width: 0; }
-
+.row > *{min-width:0}
 
 .col{
   flex: 1 1 420px;
   min-width: 360px;
 }
 
-/* Let large layouts breathe (desktop) */
 @media (min-width: 1180px){
   main{padding: 18px 18px 54px}
   .row{gap:14px}
 }
-
-/* Mobile */
 @media (max-width: 980px){
   .col{min-width: unset}
   .topbar{align-items:flex-start}
@@ -237,12 +237,10 @@ main{
   .pill{white-space:normal}
 }
 
-/* ---------- Panels / Cards ---------- */
+/* ---------- 4) Panels / cards ---------- */
 .panel{
-  background:
-    radial-gradient(900px 320px at 18% 0%, rgba(99,179,255,.10), transparent 55%),
-    radial-gradient(700px 260px at 88% 0%, rgba(31,226,143,.06), transparent 55%),
-    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.05));
+  /* Less transparency: better scanability */
+  background: linear-gradient(180deg, rgba(16,24,36,.92), rgba(9,13,19,.90));
   border:1px solid var(--line);
   border-radius: var(--r2);
   padding: var(--pad2);
@@ -254,72 +252,53 @@ main{
   font-size: 22px;
   color:var(--fg);
 }
-
 .panel h3{
   margin: 14px 0 10px;
   font-size: 20px;
   color: var(--fg);
 }
 
-/* Dividers */
 .hr{
   height:1px;
   background: linear-gradient(90deg, transparent, var(--line), transparent);
   margin: 14px 0;
 }
 
-/* ---------- Buttons & form controls (production) ---------- */
+/* ---------- 5) Buttons & fields ---------- */
 .btn{
   padding: 11px 13px;
   border-radius: 14px;
   border: 1px solid var(--line);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
+  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
   color: var(--fg);
   cursor: pointer;
   transition: transform .06s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
-  box-shadow: 0 10px 22px rgba(0,0,0,.30);
+  box-shadow: 0 12px 24px rgba(0,0,0,.34);
 }
-
 .btn:hover{
   border-color: color-mix(in oklab, var(--accentLine), white 12%);
-  box-shadow: 0 12px 26px rgba(0,0,0,.38);
+  box-shadow: 0 14px 30px rgba(0,0,0,.44);
 }
-
 .btn:active{transform: translateY(1px)}
-
 .btn.small{
   padding: 9px 11px;
   border-radius: 12px;
   font-size: var(--fs-sm);
 }
-
 .btn.primary{
-  background:
-    linear-gradient(180deg, rgba(31,226,143,.22), rgba(31,226,143,.12));
-  border-color: rgba(31,226,143,.50);
+  background: linear-gradient(180deg, rgba(43,226,154,.22), rgba(43,226,154,.12));
+  border-color: rgba(43,226,154,.55);
 }
-
 .btn.danger{
-  background:
-    linear-gradient(180deg, rgba(255,95,106,.20), rgba(255,95,106,.10));
-  border-color: rgba(255,95,106,.55);
+  background: linear-gradient(180deg, rgba(255,93,107,.22), rgba(255,93,107,.12));
+  border-color: rgba(255,93,107,.60);
 }
-
 .btn:disabled{
   opacity:.55;
   cursor:not-allowed;
   box-shadow:none;
 }
 
-/* Better focus visibility */
-:focus-visible{
-  outline: 3px solid rgba(99,179,255,.55);
-  outline-offset: 2px;
-  border-radius: 12px;
-}
-
-/* Field blocks */
 .field{display:flex;flex-direction:column;gap:8px;margin: 10px 0}
 .field label{color:var(--muted);font-size:var(--fs-sm)}
 .field input,
@@ -328,80 +307,108 @@ main{
   padding: 11px 12px;
   border-radius: 14px;
   border: 1px solid var(--line);
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.26), rgba(0,0,0,.18));
+  background: linear-gradient(180deg, rgba(0,0,0,.44), rgba(0,0,0,.30));
   color: var(--fg);
   outline:none;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
 }
-
 .field input::placeholder,
-.field textarea::placeholder{color:rgba(215,226,243,.55)}
-
+.field textarea::placeholder{color:rgba(227,237,255,.55)}
 .field textarea{min-height: 84px;resize:vertical}
 
-/* Grids: clearer spacing */
+/* Select dropdown (opened menu) */
+select.btn,
+.field select{
+  color: var(--fg) !important;
+  background-color: rgba(0,0,0,.36) !important; /* fallback */
+  border-color: var(--line) !important;
+}
+select option{
+  background-color: #0d1521 !important;
+  color: #f3f7ff !important;
+}
+select optgroup{
+  background-color: #0d1521 !important;
+  color: #c3d1ea !important;
+}
+select option:checked{
+  background-color: #16253b !important;
+  color: #ffffff !important;
+}
+
+/* Autofill (Chrome) */
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill{
+  -webkit-text-fill-color: var(--fg) !important;
+  box-shadow: 0 0 0px 1000px rgba(0,0,0,.38) inset !important;
+  caret-color: var(--fg) !important;
+}
+
+/* Grids */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap: 12px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap: 12px}
-
 @media (max-width: 980px){
   .grid2,.grid3{grid-template-columns:1fr}
 }
 
-/* ---------- KPI blocks ---------- */
+/* ---------- 6) KPI blocks (stronger at-a-glance) ---------- */
 .kpiwrap{
   display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
   gap: 12px;
   min-width: 0;
 }
-
 .kpi{
-  background:
-    radial-gradient(300px 140px at 15% 0%, rgba(255,255,255,.06), transparent 60%),
-    linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.12));
+  background: linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.16));
   border:1px solid var(--line2);
   border-radius: 18px;
   padding: 12px 12px 10px;
-  box-shadow: 0 12px 24px rgba(0,0,0,.25);
+  box-shadow: 0 14px 28px rgba(0,0,0,.30);
 }
-
 .kpi .t{
   color: var(--muted);
   font-size: var(--fs-sm);
   letter-spacing:.1px;
 }
-
 .kpi .v{
   font-size: clamp(20px, 1.7vw, 26px);
   margin-top: 8px;
   color: var(--fg);
-  text-shadow: 0 1px 0 rgba(0,0,0,.40);
+  text-shadow: 0 1px 0 rgba(0,0,0,.48);
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
-
 .kpi .s{
   margin-top: 8px;
   color: var(--muted);
   font-size: var(--fs-xs);
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
 
 @media (max-width: 980px){
-  .kpiwrap{grid-template-columns:repeat(2, minmax(200px,1fr))}
+  .kpiwrap{grid-template-columns:repeat(2, minmax(180px,1fr))}
 }
 @media (max-width: 520px){
   .kpiwrap{grid-template-columns:1fr}
 }
 
-/* Money colors - readable */
-.money.pos{color: var(--good); text-shadow: 0 0 14px rgba(31,226,143,.12)}
-.money.neg{color: var(--bad);  text-shadow: 0 0 14px rgba(255,95,106,.12)}
+/* Money colors (no neon, still clear) */
+.money.pos{color: var(--good); text-shadow: 0 0 14px rgba(43,226,154,.12)}
+.money.neg{color: var(--bad);  text-shadow: 0 0 14px rgba(255,93,107,.12)}
 .money.neu{color: var(--fg)}
-
 .delta.pos{color: var(--good)}
 .delta.neg{color: var(--bad)}
 .delta.neu{color: var(--muted)}
 
-/* ---------- Calendar bar ---------- */
+/* ---------- 7) Calendar bar ---------- */
 .calbar{
   display:flex;
   gap: 12px;
@@ -409,47 +416,42 @@ main{
   justify-content:space-between;
   flex-wrap:wrap;
 }
-
 .calbar .left, .calbar .right{
   display:flex;
   gap: 10px;
   align-items:center;
   flex-wrap:wrap;
 }
-
 .monthTitle{
   font-size: clamp(20px, 1.8vw, 26px);
   margin:0;
   color: var(--fg);
 }
 
-/* ---------- Calendar container ---------- */
+/* ---------- 8) Calendar container ---------- */
 .calendar{
   margin-top: 10px;
   border: 1px solid var(--line);
   border-radius: 18px;
   overflow:hidden;
-  background:
-    radial-gradient(900px 300px at 22% 0%, rgba(99,179,255,.09), transparent 58%),
-    linear-gradient(180deg, rgba(0,0,0,.16), rgba(0,0,0,.08));
+  background: linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.10));
   box-shadow: var(--shadow2);
+  width:100%;
 }
-
 .calgrid{display:grid;grid-template-columns:repeat(7,1fr)}
 
 /* Day-of-week header */
 .dow{
   padding: 12px 10px;
   border-bottom: 1px solid var(--line);
-  color: var(--fg2);
+  color: var(--muted);
   font-size: var(--fs-xs);
   letter-spacing:.6px;
   text-transform: uppercase;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
 }
 
-/* Weekend labels */
+/* Weekend header emphasis */
 .dow:nth-child(6),
 .dow:nth-child(7){
   color: color-mix(in oklab, var(--warn), var(--fg) 55%);
@@ -463,43 +465,33 @@ main{
   border-bottom: 1px solid var(--line2);
   cursor:pointer;
   position:relative;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
   transition: background .12s ease, transform .06s ease, outline-color .12s ease;
 }
-
-/* remove right border each row end */
 .day:nth-child(7n){border-right:none}
 
-/* Weekend differentiation:
-   - Because we cannot change HTML, we infer weekend by grid columns:
-   - Saturdays are column 6; Sundays column 7.
-   - This holds for both header and days because .calgrid uses 7 columns.
-   - Note: leading offset cells also affect index, but the visual weekend columns remain correct.
-*/
+/* Weekend differentiation by column */
 .calgrid .day:nth-child(7n+6){
-  background:
-    linear-gradient(180deg, rgba(255,209,102,.06), rgba(255,255,255,.02));
+  background: linear-gradient(180deg, rgba(255,209,102,.08), rgba(255,255,255,.03));
 }
 .calgrid .day:nth-child(7n){
-  background:
-    linear-gradient(180deg, rgba(255,95,106,.06), rgba(255,255,255,.02));
+  background: linear-gradient(180deg, rgba(255,93,107,.08), rgba(255,255,255,.03));
 }
 
-/* Hover: more lift & clarity */
+/* Hover */
 .day:hover{
   background:
-    radial-gradient(280px 140px at 18% 0%, rgba(99,179,255,.10), transparent 60%),
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    radial-gradient(280px 140px at 18% 0%, rgba(99,179,255,.12), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
 }
 
-/* Selected day */
+/* Selected */
 .day.selected{
-  outline: 3px solid rgba(99,179,255,.55);
+  outline: 3px solid var(--focus);
   outline-offset: -3px;
   background:
-    radial-gradient(380px 160px at 20% 0%, rgba(99,179,255,.16), transparent 60%),
-    linear-gradient(180deg, rgba(99,179,255,.12), rgba(255,255,255,.02));
+    radial-gradient(420px 170px at 20% 0%, rgba(99,179,255,.18), transparent 60%),
+    linear-gradient(180deg, rgba(99,179,255,.12), rgba(255,255,255,.03));
 }
 
 /* Day header inside cell */
@@ -507,7 +499,7 @@ main{
 .dayNum{
   font-size: 18px;
   color: var(--fg2);
-  font-weight: 650;
+  font-weight: 700;
 }
 
 /* Badge */
@@ -517,17 +509,17 @@ main{
   border:1px solid var(--line);
   border-radius:999px;
   padding: 4px 9px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-  box-shadow: 0 8px 16px rgba(0,0,0,.22);
+  background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.05));
+  box-shadow: 0 10px 18px rgba(0,0,0,.28);
 }
 
-/* Event list in day */
+/* Events list in day cell */
 .evlist{
   margin-top: 10px;
   display:flex;
   flex-direction:column;
   gap: 8px;
+  min-width:0;
 }
 
 /* Event chip */
@@ -536,24 +528,21 @@ main{
   border-left-width: 10px;
   border-radius: 14px;
   padding: 9px 10px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
   display:flex;
   gap: 10px;
   align-items:flex-start;
   justify-content:space-between;
-  box-shadow: 0 10px 18px rgba(0,0,0,.22);
+  box-shadow: 0 12px 22px rgba(0,0,0,.28);
   transition: transform .06s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
+  min-width:0;
 }
-
-/* Hover & active on events */
 .ev:hover{
-  border-color: color-mix(in oklab, var(--accentLine), rgba(255,255,255,.14) 60%);
-  box-shadow: 0 12px 24px rgba(0,0,0,.32);
+  border-color: color-mix(in oklab, var(--accentLine), rgba(255,255,255,.18) 60%);
+  box-shadow: 0 14px 30px rgba(0,0,0,.40);
 }
 .ev:active{transform: translateY(1px)}
 
-/* Event text */
 .ev .l{display:flex;flex-direction:column;gap:3px;min-width:0}
 .ev .ttl{
   font-size: var(--fs-sm);
@@ -561,22 +550,24 @@ main{
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  font-weight: 620;
+  font-weight: 650;
+  min-width:0;
 }
 .ev .meta{
   font-size: 13px;
   color: var(--muted);
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
-
-/* Amount */
 .ev .amt{
   font-size: var(--fs-sm);
   white-space:nowrap;
-  font-weight: 650;
+  font-weight: 750;
   letter-spacing:.1px;
 }
-
-/* Actions inside event rows (right panel) */
 .ev .actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
 
 /* Tag */
@@ -585,22 +576,20 @@ main{
   padding: 4px 9px;
   border-radius: 999px;
   border: 1px solid var(--line2);
-  color: var(--fg2);
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.10));
+  color: var(--muted);
+  background: linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.12));
 }
 
-/* ---------- Details / Accordion tree ---------- */
+/* ---------- 9) Details / tree ---------- */
 details{
   border: 1px solid var(--line);
   border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.10));
+  background: linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.12));
   margin: 12px 0;
   overflow:hidden;
-  box-shadow: 0 10px 22px rgba(0,0,0,.26);
+  box-shadow: 0 12px 24px rgba(0,0,0,.30);
+  color: var(--fg);
 }
-
 summary{
   cursor:pointer;
   list-style:none;
@@ -610,28 +599,24 @@ summary{
   gap:10px;
   align-items:center;
   justify-content:space-between;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-  border-bottom: 1px solid rgba(255,255,255,.06);
+  background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.05));
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  color: var(--fg);
 }
-
 summary::-webkit-details-marker{display:none}
-
-.treeBody{padding: 10px 12px 12px}
-
+.treeBody{padding: 10px 12px 12px;color:var(--fg)}
 .treeRow{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap: 10px;
   padding: 10px 0;
-  border-top: 1px solid rgba(255,255,255,.06);
+  border-top: 1px solid rgba(255,255,255,.08);
 }
-
 .treeRow .name{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg2)}
-.treeRow .amt{white-space:nowrap;font-weight:650}
+.treeRow .amt{white-space:nowrap;font-weight:750}
 
-/* ---------- Toast ---------- */
+/* ---------- 10) Toast ---------- */
 .toast{
   position:fixed;
   bottom: 18px;
@@ -640,36 +625,32 @@ summary::-webkit-details-marker{display:none}
   display:none;
   z-index:200;
 }
-
 .toast .box{
   max-width: 980px;
   margin: 0 auto;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.84), rgba(0,0,0,.68));
+  background: linear-gradient(180deg, rgba(0,0,0,.88), rgba(0,0,0,.72));
   backdrop-filter: blur(10px);
   padding: 12px 14px;
-  box-shadow: 0 16px 34px rgba(0,0,0,.45);
+  box-shadow: 0 18px 40px rgba(0,0,0,.55);
+  color: var(--fg);
 }
-
 .toast .box b{display:block;margin-bottom:6px;color:var(--fg)}
 
-/* ---------- Dialog (Event editor) ---------- */
+/* ---------- 11) Dialog ---------- */
 dialog{
   width: min(900px, calc(100vw - 24px));
   border: 1px solid var(--line);
   border-radius: 20px;
   background:
     radial-gradient(900px 420px at 18% 0%, rgba(99,179,255,.10), transparent 60%),
-    linear-gradient(180deg, rgba(11,15,20,.98), rgba(11,15,20,.92));
+    linear-gradient(180deg, rgba(7,11,17,.98), rgba(7,11,17,.92));
   color: var(--fg);
   padding: 0;
-  box-shadow: 0 20px 46px rgba(0,0,0,.55);
+  box-shadow: 0 24px 56px rgba(0,0,0,.62);
 }
-
-dialog::backdrop{background: rgba(0,0,0,.62)}
-
+dialog::backdrop{background: rgba(0,0,0,.66)}
 .dlgHead{
   padding: 12px 14px;
   border-bottom: 1px solid var(--line);
@@ -677,14 +658,10 @@ dialog::backdrop{background: rgba(0,0,0,.62)}
   align-items:center;
   justify-content:space-between;
   gap: 10px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.05));
 }
-
 .dlgHead h2{margin:0;font-size: 22px;color:var(--fg)}
-
 .dlgBody{padding: 14px}
-
 .dlgFoot{
   padding: 12px 14px;
   border-top: 1px solid var(--line);
@@ -692,213 +669,57 @@ dialog::backdrop{background: rgba(0,0,0,.62)}
   gap: 10px;
   justify-content:flex-end;
   flex-wrap:wrap;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+}
+dialog .field input,
+dialog .field select,
+dialog .field textarea{
+  background: linear-gradient(180deg, rgba(0,0,0,.48), rgba(0,0,0,.34));
+  border-color: rgba(255,255,255,.18);
 }
 
-/* ---------- Accent wallet/category classes (dynamic) ----------
-   The JS injects rules for:
-   .accent-wallet-<id>
-   .accent-cat-<hash>
-   Here we provide baseline behavior via CSS variables.
-*/
+/* ---------- 12) Accent wallet/category classes ---------- */
 [class*="accent-wallet-"],
 [class*="accent-cat-"]{
-  --accent: var(--accent); /* fallback */
+  --accent: var(--accent);
 }
 
 [class*="accent-wallet-"] .panel,
 .panel[class*="accent-wallet-"]{
-  border-color: color-mix(in oklab, var(--accent), rgba(255,255,255,.14) 55%);
+  border-color: color-mix(in oklab, var(--accent), rgba(255,255,255,.18) 55%);
 }
 
-/* For event chips and tree rows, the JS sets border-left-color via injected rules.
-   We add fallback highlight & subtle glow. */
+/* Subtle glow for accent events */
 .ev[class*="accent-"]{
   box-shadow:
-    0 10px 18px rgba(0,0,0,.22),
-    0 0 0 1px rgba(255,255,255,.02),
-    0 0 22px color-mix(in oklab, var(--accent), transparent 82%);
+    0 12px 22px rgba(0,0,0,.28),
+    0 0 0 1px rgba(255,255,255,.03),
+    0 0 24px color-mix(in oklab, var(--accent), transparent 82%);
 }
 
-/* ---------- Make small text readable everywhere ---------- */
-.dow, .ev .meta, .hint, .footnote, .kpi .s, .kpi .t, .field label{
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ---------- Improve scrollbars (optional) ---------- */
-*::-webkit-scrollbar{height:10px;width:10px}
-*::-webkit-scrollbar-track{background:rgba(255,255,255,.05)}
-*::-webkit-scrollbar-thumb{
-  background:rgba(255,255,255,.16);
-  border-radius:999px;
-  border:2px solid rgba(0,0,0,.28);
-}
-*::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.22)}
-
-/* ---------- Accessibility helpers ---------- */
-@media (max-width: 420px){
-  :root{--fs: 17px}
-  .btn{width:100%}
-  .btn.small{width:auto}
-}
-
-/* ---------- Fine-tune existing elements from original HTML ---------- */
+/* ---------- 13) Practical overflow safeguards (keeps “at a glance”) ---------- */
 #pillStatus{
   max-width: min(52vw, 720px);
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
-
 #pillApi{opacity:.95}
 #headersWrap .panel{padding:14px}
-
-/* Day panel event rows: make the edit button more obvious */
-#dayEvents .btn.small{
-  background:
-    linear-gradient(180deg, rgba(99,179,255,.18), rgba(99,179,255,.10));
-  border-color: rgba(99,179,255,.35);
-}
-
-/* Make select dropdowns in top bar consistent */
-.calbar select.btn{
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
-  border:1px solid var(--line);
-  color:var(--fg);
-}
-
-/* Ensure dialog inputs have enough contrast */
-dialog .field input,
-dialog .field select,
-dialog .field textarea{
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.20));
-  border-color: rgba(255,255,255,.14);
-}
-
-/* Prevent overly low opacity on “empty leading cells” in calendar */
-.day.outmonth{
-  opacity: .55;
-  filter: saturate(.75);
-}
-.day.outmonth .dayNum{ color: rgba(215,226,243,.70); }
-.day.outmonth:hover{
-  opacity:.80;
-  filter:saturate(.95);
-}
-
-
-/* ---------- Production polish: subtle separators & spacing ---------- */
 .panel > .row{gap: 12px}
 .panel .row .btn{white-space:nowrap}
 
-/* If you want even more separation between major sections */
-#tab-calendar .panel,
-#tab-overview .panel,
-#tab-settings .panel{
-  border-color: rgba(255,255,255,.14);
-}
-
-/* End : follow patch for bug-fixing*/
-/* =========================================================
-   PATCH v1 — Fix leggibilità + overflow + layout (no sidebar fissa)
-   Target: questa identica versione HTML (nessuna modifica struttura)
-   Incolla in FONDO allo <style>.
-========================================================= */
-
-/* ---------- A) Leggibilità generale (meno “vetro”, più contrasto) ---------- */
-:root{
-  --fg:#f4f7ff;
-  --fg2:#e6eefc;
-  --muted:#c9d6ee;
-  --muted2:#a9bbd6;
-
-  /* pannelli meno trasparenti */
-  --line:rgba(255,255,255,.18);
-  --line2:rgba(255,255,255,.12);
-  --card:rgba(255,255,255,.10);
-  --card2:rgba(255,255,255,.08);
-
-  --lh: 1.45;
-}
-
-body{
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Pannelli più “solidi” per leggere bene */
-.panel{
-  background:
-    linear-gradient(180deg, rgba(20,28,40,.92), rgba(12,16,22,.90)) !important;
-  border-color: var(--line) !important;
-}
-
-/* Titoli più netti */
-.panel h2, .panel h3, .brand h1{
-  color: var(--fg) !important;
-}
-
-/* Muted meno grigio-fango */
-.muted, .hint, .footnote, .kpi .t, .kpi .s, .field label{
-  color: var(--muted) !important;
-}
-
-/* ---------- B) LAYOUT: Calendario a piena larghezza (no spazio bloccato a destra) ---------- */
-/* Nel tab calendario: impila le colonne (calendar full width, pannelli sotto) */
-#tab-calendar > .row{
-  flex-direction: column !important;
-}
-
-/* Prima colonna (calendario) sempre 100% */
-#tab-calendar > .row > .col:first-child{
-  flex: 1 1 100% !important;
-  min-width: 0 !important;
-}
-
-/* Seconda colonna (Dettaglio giorno + Azioni rapide) sotto, full width */
-#tab-calendar > .row > .col:last-child{
-  flex: 1 1 100% !important;
-  min-width: 0 !important;
-}
-
-/* Riduci “aria” laterale e aumenta area utile calendario */
-#tab-calendar .calendar{
-  width: 100%;
-}
-
-/* ---------- C) OVERFLOW: testate saldi (#headersWrap) ---------- */
-/* Il problema tipico: KPI e righe interne non wrappano e “spingono fuori” */
+/* Header KPI area: allow tighter min width without breaking */
 #headersWrap{
   align-items: stretch;
 }
-
 #headersWrap .panel{
   min-width: 0 !important;
   overflow: hidden !important;
 }
-
-/* KPI grid più permissiva: evita min 220 che su alcune larghezze rompe */
 #headersWrap .kpiwrap{
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
 }
-
-/* KPI: consenti wrap e taglio elegante */
-#headersWrap .kpi .v,
-#headersWrap .kpi .s,
-#headersWrap .kpi .t{
-  min-width: 0 !important;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-/* Wallet name nelle testate: già ellipsis inline, ma rinforziamo */
 #headersWrap [style*="font-size:22px"]{
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -906,162 +727,75 @@ body{
   max-width: 100% !important;
 }
 
-/* ---------- D) OVERFLOW: righe eventi nel pannello giorno (#dayEvents) ---------- */
-/* Il problema tipico: colonna actions (importo+button) spinge fuori */
-#dayEvents .ev{
-  align-items: stretch !important;
-}
-
-#dayEvents .ev .l{
-  min-width: 0 !important;
-}
-
-/* Titoli/meta/note devono wrappare senza uscire */
+/* Day events (right panel): stop actions from pushing out */
+#dayEvents .ev{align-items: stretch !important}
+#dayEvents .ev .l{min-width:0 !important}
 #dayEvents .ev .ttl,
 #dayEvents .ev .meta{
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
-
-/* Actions: impila verticalmente su spazi stretti e evita overflow */
 #dayEvents .ev .actions{
   flex-direction: column !important;
   align-items: flex-end !important;
   gap: 8px !important;
   max-width: 45% !important;
 }
-
-/* Importo: non deve “sparare fuori” */
 #dayEvents .ev .amt{
   max-width: 100% !important;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* Bottone modifica: non deve allargare */
-#dayEvents .ev .btn.small{
-  white-space: nowrap;
+#dayEvents .btn.small{
+  background: linear-gradient(180deg, rgba(99,179,255,.20), rgba(99,179,255,.12));
+  border-color: rgba(99,179,255,.40);
 }
 
-/* ---------- E) OVERFLOW: chip eventi nel calendario (evlist) ---------- */
-/* Evita che walletLabel o category lunghi rompano la cella */
-.ev .meta, .ev .ttl{
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  overflow-wrap: anywhere;
+/* Prevent overly low opacity on out-of-month days */
+.day.outmonth{
+  opacity: .58;
+  filter: saturate(.80);
+}
+.day.outmonth .dayNum{ color: rgba(227,237,255,.72); }
+.day.outmonth:hover{
+  opacity:.84;
+  filter:saturate(.98);
 }
 
-/* Lista eventi in day cell: lascia respirare e taglia bene */
-.day .evlist{
-  min-width: 0;
-}
-.day .ev{
-  min-width: 0;
-}
-
-/* ---------- F) OVERFLOW: Overview cards statement box ---------- */
-#cardsStatementBox .panel{
+/* ---------- 14) Calendar layout: full width stacking (your patch intent) ---------- */
+#tab-calendar > .row{flex-direction: column !important}
+#tab-calendar > .row > .col:first-child{
+  flex: 1 1 100% !important;
   min-width: 0 !important;
-  overflow: hidden !important;
+}
+#tab-calendar > .row > .col:last-child{
+  flex: 1 1 100% !important;
+  min-width: 0 !important;
 }
 
-#cardsStatementBox [style*="font-size:22px"]{
-  max-width: 100% !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
+/* ---------- 15) Scrollbars (optional) ---------- */
+*::-webkit-scrollbar{height:10px;width:10px}
+*::-webkit-scrollbar-track{background:rgba(255,255,255,.06)}
+*::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,.18);
+  border-radius:999px;
+  border:2px solid rgba(0,0,0,.34);
+}
+*::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.26)}
+
+/* ---------- 16) Small screens ---------- */
+@media (max-width: 420px){
+  :root{--fs: 17px}
+  .btn{width:100%}
+  .btn.small{width:auto}
 }
 
-/* ---------- G) Bottoni e select: leggibilità + hit area ---------- */
-.btn, .tabbtn{
-  border-color: var(--line) !important;
+/* ---------- 17) Make small text consistently readable ---------- */
+.dow, .ev .meta, .hint, .footnote, .kpi .s, .kpi .t, .field label{
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
-
-.btn{
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06)) !important;
-}
-
-.field input, .field select, .field textarea{
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.38), rgba(0,0,0,.26)) !important;
-  border-color: var(--line) !important;
-}
-
-/* ---------- H) Piccolo polish: badge e tag più leggibili ---------- */
-.badge, .tag{
-  border-color: var(--line) !important;
-  color: var(--fg2) !important;
-}
-
-/* =========================================================
-   PATCH v2 — “mai testo scuro su scuro” + select/option leggibili
-   Incolla in FONDO allo <style>
-========================================================= */
-
-/* 1) Forza la UI nativa in dark-mode (dropdown, date picker, scrollbars, ecc.) */
-:root{ color-scheme: dark; }
-body{ color-scheme: dark; }
-
-/* 2) Default text: qualsiasi testo non esplicitamente stilizzato deve restare chiaro */
-body, .panel, details, summary, dialog, .kpi, .ev, .treeBody{
-  color: var(--fg) !important;
-}
-
-/* 3) Qualsiasi testo “secondario” non deve mai diventare troppo scuro */
-.muted, .hint, .footnote, .kpi .t, .kpi .s, .field label, .ev .meta, .dow, .tag, .badge{
-  color: var(--muted) !important;
-  opacity: 1 !important; /* evita “sbiadito” che su scuro diventa illeggibile */
-}
-
-/* 4) Se qualche browser rende i link troppo scuri */
-a, a:visited{ color: color-mix(in oklab, var(--accent), white 25%) !important; }
-
-/* =========================================================
-   Select & option: fix “testo bianco su sfondo bianco”
-========================================================= */
-
-/* Stile del select (chiuso) */
-select.btn,
-.field select{
-  color: var(--fg) !important;
-  background-color: rgba(0,0,0,.35) !important; /* fallback solid */
-  border-color: var(--line) !important;
-}
-
-/* Stile delle opzioni (menu aperto) — molti browser usano il theme del sistema */
-select option{
-  background-color: #111823 !important; /* scuro */
-  color: #f4f7ff !important;           /* chiaro */
-}
-
-/* Alcuni browser usano optgroup */
-select optgroup{
-  background-color: #111823 !important;
-  color: #c9d6ee !important;
-}
-
-/* Hover/selected nello dropdown (quando supportato) */
-select option:checked{
-  background-color: #1a2a3f !important;
-  color: #ffffff !important;
-}
-
-/* =========================================================
-   Autofill (Chrome): evita testo scuro / sfondo chiaro
-========================================================= */
-input:-webkit-autofill,
-textarea:-webkit-autofill,
-select:-webkit-autofill{
-  -webkit-text-fill-color: var(--fg) !important;
-  box-shadow: 0 0 0px 1000px rgba(0,0,0,.35) inset !important;
-  caret-color: var(--fg) !important;
-}
-
 </style>
-
-
   <!-- dynamic rules for wallets/cards/categories created at runtime -->
   <style id="dynRules"></style>
 </head>

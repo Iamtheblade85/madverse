@@ -888,6 +888,164 @@ dialog .field textarea{
 .panel, .row, .col, #tab-calendar, #calendar, .calendar{
   min-width:0;
 }
+/* =========================
+   PATCH vNext+ (semantic colors + no clipping + tabs right status)
+   Incollare in fondo al primo <style>
+========================= */
+
+/* 1) Tabs layout: left buttons + right status (injected by JS) */
+.tabs{
+  align-items:center;
+  justify-content:flex-start;
+}
+#tabsDayStatus{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  padding: 8px 10px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.05));
+  box-shadow: 0 12px 26px rgba(0,0,0,.18);
+  max-width: min(44vw, 620px);
+}
+#tabsDayStatus .k{
+  color: var(--muted2);
+  font-size: 13px;
+  white-space:nowrap;
+}
+#tabsDayStatus .v{
+  color: var(--fg);
+  font-weight: 900;
+  white-space:nowrap;
+}
+#tabsDayStatus .s{
+  color: var(--muted);
+  font-size: 13px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  min-width:0;
+}
+@media (max-width: 720px){
+  #tabsDayStatus{max-width:none; width:100%}
+  .tabs{gap:10px}
+}
+
+/* 2) Event cards: zero tagli (meta + wallet label) */
+.ev{
+  min-width:0;
+  overflow: visible;
+}
+.ev .l{min-width:0}
+.ev .ttl{
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.ev .meta{
+  display:block;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  -webkit-line-clamp: unset;
+  line-height: 1.35;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+/* 3) Calendar cell: cards “leggibili a colpo d’occhio” (limiti solo dove serve) */
+.day{min-width:0}
+.evlist .ev .ttl{-webkit-line-clamp: 2}
+.evlist .ev .meta{
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 4) Day detail panel: più spazio informativo (no clamp aggressivo) */
+#dayEvents .ev .ttl{-webkit-line-clamp: 3}
+#dayEvents .ev .meta{
+  display:block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+/* 5) Semantic colors (garantito) via classi JS evtype-* e evtag-* */
+.ev.evtype-income{border-left-color: var(--c-income) !important}
+.ev.evtype-expense{border-left-color: var(--c-expense) !important}
+.ev.evtype-card_purchase{border-left-color: var(--c-purchase) !important}
+.ev.evtype-card_repayment{border-left-color: var(--c-repay) !important}
+.ev.evtype-card_credit{border-left-color: var(--c-credit) !important}
+.ev.evtype-card_charge{border-left-color: var(--c-charge) !important}
+
+.ev.evtype-income{
+  background:
+    radial-gradient(420px 160px at 18% 0%, rgba(62,230,168,.18), transparent 70%),
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.03));
+}
+.ev.evtype-expense{
+  background:
+    radial-gradient(420px 160px at 18% 0%, rgba(255,92,122,.18), transparent 70%),
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.03));
+}
+.ev.evtype-card_repayment{
+  background:
+    radial-gradient(420px 160px at 18% 0%, rgba(122,167,255,.20), transparent 70%),
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.03));
+}
+.ev.evtype-card_purchase{
+  background:
+    radial-gradient(420px 160px at 18% 0%, rgba(255,125,75,.18), transparent 70%),
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.03));
+}
+.ev.evtype-card_credit{
+  background:
+    radial-gradient(420px 160px at 18% 0%, rgba(62,230,168,.16), transparent 70%),
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.03));
+}
+.ev.evtype-card_charge{
+  background:
+    radial-gradient(420px 160px at 18% 0%, rgba(255,92,122,.16), transparent 70%),
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.03));
+}
+
+/* 6) Tag pill: più “meaningful” e leggibile */
+.ev .tag{
+  font-weight: 800;
+  color: color-mix(in oklab, var(--accent), white 44%);
+  border-color: color-mix(in oklab, var(--accent), rgba(255,255,255,.18) 60%);
+  background: linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.02));
+}
+
+/* 7) Remove the broken non-standard :contains mapping if presente */
+@supports(selector(:has(*))){
+  .ev:has(.tag:where(:contains("entrata"))){all:unset}
+  .ev:has(.tag:where(:contains("spesa"))){all:unset}
+  .ev:has(.tag:where(:contains("rate"))){all:unset}
+  .ev:has(.tag:where(:contains("rimborso"))){all:unset}
+  .ev:has(.tag:where(:contains("credito"))){all:unset}
+  .ev:has(.tag:where(:contains("addebito"))){all:unset}
+}
+.treeRow .name{
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+details > summary span[style*="white-space:nowrap"]{
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
 
 </style>
   <!-- dynamic rules for wallets/cards/categories created at runtime -->
@@ -1292,6 +1450,31 @@ function toast(title, msg){
   $("toast").style.display = "block";
   clearTimeout(window.__toastT);
   window.__toastT = setTimeout(()=>{ $("toast").style.display="none"; }, 4200);
+}
+function ensureTabsDayStatus(){
+  const tabs = document.querySelector(".tabs");
+  if(!tabs) return;
+  if(document.getElementById("tabsDayStatus")) return;
+
+  const el = document.createElement("div");
+  el.id = "tabsDayStatus";
+  el.innerHTML = `
+    <span class="k">Giorno</span>
+    <span class="v mono" id="tabsDayIso">—</span>
+    <span class="s" id="tabsDayInfo">Seleziona un giorno</span>
+  `;
+  tabs.appendChild(el);
+}
+
+function updateTabsDayStatus(dayIso, count){
+  ensureTabsDayStatus();
+  const isoEl = document.getElementById("tabsDayIso");
+  const infoEl = document.getElementById("tabsDayInfo");
+  if(isoEl) isoEl.textContent = dayIso || "—";
+  if(infoEl){
+    const n = Number(count || 0);
+    infoEl.textContent = Number.isFinite(n) ? `${n} eventi` : "";
+  }
 }
 
 function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
@@ -1826,7 +2009,9 @@ function renderCalendar(){
 
 function renderEventChip(ev){
   const el = document.createElement("div");
-  el.className = `ev ${ev.__accentClass} ${ev.__catClass}`;
+  const tcls = `evtype-${String(ev.type||"").replace(/[^\w-]/g,"_")}`;
+  el.className = `ev ${tcls} ${ev.__accentClass} ${ev.__catClass}`;
+
   el.dataset.id = ev.id;
 
   const sign = (ev.type==="income" || ev.type==="card_credit") ? "+" :
@@ -1894,7 +2079,7 @@ function renderDayPanel(){
     const w = String(filt);
     return String(e.walletId||"")===w || String(e.cardWalletId||"")===w || String(e.fromWalletId||"")===w || String(e.toCardWalletId||"")===w;
   }) : evs;
-
+  updateTabsDayStatus(dayIso, shown.length);
   $("daySummary").innerHTML = `
     <div style="font-size:20px"><b>${dayIso}</b></div>
     <div class="muted">${shown.length} eventi</div>
@@ -1909,7 +2094,9 @@ function renderDayPanel(){
 
   for(const ev of shown.sort((a,b)=>(a.id||0)-(b.id||0))){
     const row = document.createElement("div");
-    row.className = `ev ${ev.__accentClass} ${ev.__catClass}`;
+    const tcls = `evtype-${String(ev.type||"").replace(/[^\w-]/g,"_")}`;
+    row.className = `ev ${tcls} ${ev.__accentClass} ${ev.__catClass}`;
+
     row.style.borderLeftWidth = "10px";
 
     const isPos = (ev.type==="income" || ev.type==="card_credit");
@@ -3076,7 +3263,7 @@ function wire(){
   $("pillDate").textContent = isoDate(state.selectedDate);
 
   wire();
-
+  ensureTabsDayStatus();
   try{
     await refreshAll();
   }catch(err){

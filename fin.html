@@ -1046,6 +1046,64 @@ details > summary span[style*="white-space:nowrap"]{
   overflow:hidden !important;
   text-overflow:ellipsis !important;
 }
+/* ===== PATCH: event chip layout (calendar + day detail) — stop "..." truncation ===== */
+/* Put this at the VERY END of your main <style> block so it overrides everything. */
+
+.ev{
+  display:grid !important;
+  grid-template-columns: minmax(0,1fr) auto; /* left can shrink; right only as wide as needed */
+  column-gap: 10px !important;
+  align-items:start !important;
+}
+
+.ev .l{
+  min-width:0 !important;
+}
+
+/* Allow long titles (optional: 2 lines instead of 1) */
+.ev .ttl{
+  white-space: normal !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  line-height: 1.25 !important;
+}
+
+/* Meta lines: never forced to one line; allow wrap and show up to 2 lines */
+.ev .meta{
+  white-space: normal !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow-wrap:anywhere !important;
+  word-break:break-word !important;
+}
+
+/* Right column (amount) must NOT steal width */
+.ev > div:last-child{
+  justify-self:end !important;
+  min-width: max-content !important;    /* keep amount compact */
+  max-width: 12ch !important;           /* hard cap so it cannot eat the row */
+}
+
+/* Amount itself: compact, no wrapping */
+.ev .amt{
+  white-space: nowrap !important;
+  max-width: 100% !important;
+}
+
+/* If you have action buttons in day detail: keep them compact too */
+#dayEvents .ev{
+  grid-template-columns: minmax(0,1fr) auto !important;
+}
+#dayEvents .ev .actions{
+  min-width: max-content !important;
+  max-width: 14ch !important;
+}
 
 </style>
   <!-- dynamic rules for wallets/cards/categories created at runtime -->

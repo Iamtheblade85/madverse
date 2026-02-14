@@ -8,98 +8,96 @@
   <!-- Theme <link rel="stylesheet" href="fin-theme.css" />                -->
 <style>
 /* =========================================================
-   FIN UI — DARK (NOT TOO DARK), HIGH-CLARITY, STRUCTURED LAYOUT
+   FIN UI — RESPONSIVE, LIGHTER DARK, NO-CLIP CALENDAR, CLEAN GRID
    Constraints:
-   - HTML structure unchanged
-   - Same class/id hooks
-   Goals:
-   - Dark theme that is NOT “near black”
-   - Strong readability + calm contrast
-   - Cleaner structure / spacing / responsive layout
-   - Calendar + day detail usable on all widths
+   - NO HTML changes
+   - NO JS changes
+   - SAME class/id hooks
+   Directives implemented:
+   - Calendar never cut off (full width, right days always visible)
+   - HeadersWrap: responsive card grid with aligned columns inside each card
+   - Overall layout: stable, responsive, organized
    ========================================================= */
 
-/* -------------------- 0) Design tokens -------------------- */
+/* -------------------- 0) Tokens -------------------- */
 :root{
   color-scheme: dark;
 
-  /* Backgrounds (lifted: no #000 vibes) */
-  --bg:  #101826;   /* page */
-  --bg2: #131f31;   /* page gradient */
-  --bg3: #182845;   /* subtle accent surface */
+  /* Page (lighter dark, not near-black) */
+  --bg:#0f1826;
+  --bg2:#132036;
 
   /* Surfaces */
-  --surface:  #16243a;   /* panels */
-  --surface2: #1a2b44;   /* inner cards */
-  --surface3: #1f3553;   /* headers / elevated */
-  --surfaceSoft: rgba(255,255,255,.06);
+  --surface:#162844;     /* main panels */
+  --surface2:#1a2f4f;    /* inner cards */
+  --surface3:#1f3a60;    /* header-like */
 
   /* Text */
-  --fg:   #f4f8ff;  /* primary */
-  --fg2:  #e6efff;  /* headings */
-  --muted:#c8d6ef;  /* secondary */
-  --muted2:#a9bedf; /* tertiary */
+  --fg:#f4f8ff;
+  --fg2:#e6efff;
+  --muted:#c7d6f0;
+  --muted2:#a8c0e4;
 
   /* Lines */
-  --line:  rgba(255,255,255,.18);
+  --line: rgba(255,255,255,.18);
   --line2: rgba(255,255,255,.12);
 
-  /* Accent + semantic */
-  --accent: #7cc2ff;
+  /* Accent */
+  --accent:#7cc2ff;
+  --accentLine: rgba(124,194,255,.62);
   --accentSoft: rgba(124,194,255,.18);
-  --accentLine: rgba(124,194,255,.55);
 
+  /* Semantic */
   --good:#37e3a3;
-  --bad: #ff6b7a;
+  --bad:#ff6b7a;
   --warn:#ffd166;
-  --info:#7cc2ff;
 
   /* Typography */
   --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --fs: 18px;
-  --fs-sm: 16px;
-  --fs-xs: 14px;
-  --fs-lg: 20px;
-  --fs-xl: 24px;
+
+  --fs: 17px;        /* slightly tighter to fit calendar */
+  --fs-sm: 15px;
+  --fs-xs: 13px;
+  --fs-lg: 19px;
+  --fs-xl: 23px;
   --lh: 1.5;
 
-  /* Spacing / radius */
+  /* Spacing */
   --r: 14px;
   --r2: 18px;
   --pad: 14px;
   --pad2: 16px;
   --gap: 12px;
 
-  /* Calendar sizing */
-  --dayMinH: 124px;
+  /* Calendar */
+  --calMinCol: 108px;  /* critical: ensures 7 columns fit without clipping */
+  --dayMinH: 128px;
   --dayPad: 12px;
 
   /* Focus */
-  --focus: rgba(124,194,255,.85);
+  --focus: rgba(124,194,255,.88);
 
-  /* Shadows (less heavy) */
+  /* Shadows */
   --shadow: 0 14px 34px rgba(0,0,0,.28);
   --shadow2: 0 10px 22px rgba(0,0,0,.22);
 }
 
-/* Higher contrast preference */
 @media (prefers-contrast: more){
   :root{
     --line: rgba(255,255,255,.26);
     --line2: rgba(255,255,255,.18);
     --muted:#d7e3f7;
     --muted2:#c2d2ee;
-    --accentLine: rgba(124,194,255,.70);
+    --accentLine: rgba(124,194,255,.75);
   }
 }
 
-/* Reduce motion */
 @media (prefers-reduced-motion: reduce){
   *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
 }
 
-/* -------------------- 1) Base / reset -------------------- */
+/* -------------------- 1) Base -------------------- */
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -112,7 +110,6 @@ body{
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Lighter dark background with calm depth (no near-black) */
   background:
     radial-gradient(1200px 720px at 12% 0%, rgba(124,194,255,.18), transparent 60%),
     radial-gradient(900px 700px at 92% 10%, rgba(55,227,163,.10), transparent 58%),
@@ -133,13 +130,12 @@ button,input,select,textarea{font:inherit}
   border-radius: 12px;
 }
 
-/* -------------------- 2) Header / topbar / tabs -------------------- */
+/* -------------------- 2) Header / Tabs -------------------- */
 header{
   position:sticky;
   top:0;
   z-index:50;
-  /* Less “glass”, more solid readable top bar */
-  background: linear-gradient(180deg, rgba(22,36,58,.98), rgba(22,36,58,.90));
+  background: linear-gradient(180deg, rgba(22,40,68,.98), rgba(22,40,68,.90));
   border-bottom: 1px solid var(--line);
 }
 
@@ -160,7 +156,7 @@ header{
 }
 .brand h1{
   margin:0;
-  font-size: clamp(22px, 2.2vw, 30px);
+  font-size: clamp(20px, 2.1vw, 28px);
   letter-spacing:.2px;
   color:var(--fg);
 }
@@ -169,7 +165,7 @@ header{
   padding:8px 11px;
   border:1px solid var(--line);
   border-radius:999px;
-  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+  background: linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.06));
   color:var(--fg2);
   box-shadow: 0 8px 18px rgba(0,0,0,.18);
   white-space:nowrap;
@@ -190,7 +186,7 @@ header{
   padding:12px 16px;
   border-radius:999px;
   border:1px solid var(--line);
-  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+  background: linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.06));
   color:var(--fg);
   cursor:pointer;
   transition: transform .06s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
@@ -202,14 +198,24 @@ header{
 }
 .tabbtn:active{transform: translateY(1px)}
 .tabbtn.active{
-  background: linear-gradient(180deg, rgba(124,194,255,.28), rgba(124,194,255,.12));
-  border-color: rgba(124,194,255,.75);
+  background: linear-gradient(180deg, rgba(124,194,255,.30), rgba(124,194,255,.12));
+  border-color: rgba(124,194,255,.80);
   box-shadow: 0 14px 28px rgba(0,0,0,.28);
 }
 
-/* -------------------- 3) Main layout (structure) -------------------- */
+/* Ensure status pill doesn't crush */
+#pillStatus{
+  max-width: min(52vw, 720px);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+#pillApi{opacity:.95}
+
+/* -------------------- 3) Global layout -------------------- */
 main{padding: 16px 16px 54px}
 
+/* Core row stays flex but with strict min-width control */
 .row{
   display:flex;
   gap:var(--gap);
@@ -219,60 +225,60 @@ main{padding: 16px 16px 54px}
 }
 .row > *{min-width:0}
 
+/* Default columns */
 .col{
   flex: 1 1 420px;
   min-width: 360px;
 }
 
-/* Large screens: 2-column, stable structure */
-@media (min-width: 1180px){
-  main{padding: 18px 18px 58px}
-  .row{gap:14px}
+/* CALENDAR TAB STRUCTURE:
+   - wide calendar area
+   - right detail area
+   - NEVER shrink calendar below what's needed to show 7 days
+*/
+#tab-calendar > .row{
+  align-items: stretch;
+  flex-wrap: nowrap;            /* critical: prevents right-side clipping from weird wraps */
+  gap: 14px;
+}
+#tab-calendar > .row > .col:first-child{
+  flex: 1 1 auto !important;
+  min-width: calc(var(--calMinCol) * 7 + 2px) !important; /* guarantee 7 columns visible */
+}
+#tab-calendar > .row > .col:last-child{
+  flex: 0 0 420px !important;   /* stable right panel width */
+  min-width: 360px !important;
+  max-width: 520px;
 }
 
-/* Mid screens: allow side panel but don’t squeeze */
-@media (max-width: 1020px){
-  .col{min-width: unset}
+/* If viewport can't fit both without clipping: STACK */
+@media (max-width: 1200px){
+  #tab-calendar > .row{
+    flex-wrap: wrap;
+  }
+  #tab-calendar > .row > .col:first-child,
+  #tab-calendar > .row > .col:last-child{
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
 }
 
-/* Small screens: stack, reduce density */
+/* General responsiveness */
 @media (max-width: 720px){
   main{padding: 14px 12px 52px}
   .topbar{align-items:flex-start}
   .pill{white-space:normal}
 }
 
-/* Calendar tab: STRUCTURE OPTIMIZED
-   - Desktop: calendar left (wide), day detail right
-   - Tablet/phone: stacked (calendar then day detail)
-*/
-#tab-calendar > .row{
-  align-items: stretch;
-}
-#tab-calendar > .row > .col:first-child{
-  flex: 2 1 860px !important;
-  min-width: 520px;
-}
-#tab-calendar > .row > .col:last-child{
-  flex: 1 1 420px !important;
-  min-width: 360px;
-}
-@media (max-width: 980px){
-  #tab-calendar > .row{flex-direction: column !important}
-  #tab-calendar > .row > .col:first-child,
-  #tab-calendar > .row > .col:last-child{
-    flex: 1 1 100% !important;
-    min-width: 0 !important;
-  }
-}
-
-/* -------------------- 4) Panels / cards -------------------- */
+/* -------------------- 4) Panels -------------------- */
 .panel{
-  background: linear-gradient(180deg, var(--surface), rgba(22,36,58,.92));
+  background: linear-gradient(180deg, rgba(22,40,68,.96), rgba(22,40,68,.90));
   border:1px solid var(--line);
   border-radius: var(--r2);
   padding: var(--pad2);
   box-shadow: var(--shadow);
+  min-width: 0; /* stop overflow chains */
 }
 
 .panel h2{
@@ -292,16 +298,12 @@ main{padding: 16px 16px 54px}
   margin: 14px 0;
 }
 
-/* Make dense rows wrap nicely inside panels */
-.panel > .row{gap:12px}
-.panel .row{align-items:center}
-
-/* -------------------- 5) Buttons & fields -------------------- */
+/* -------------------- 5) Buttons / Fields -------------------- */
 .btn{
   padding: 11px 14px;
   border-radius: 14px;
   border: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.07));
+  background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
   color: var(--fg);
   cursor: pointer;
   transition: transform .06s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
@@ -319,11 +321,11 @@ main{padding: 16px 16px 54px}
 }
 .btn.primary{
   background: linear-gradient(180deg, rgba(55,227,163,.22), rgba(55,227,163,.12));
-  border-color: rgba(55,227,163,.60);
+  border-color: rgba(55,227,163,.62);
 }
 .btn.danger{
   background: linear-gradient(180deg, rgba(255,107,122,.22), rgba(255,107,122,.12));
-  border-color: rgba(255,107,122,.66);
+  border-color: rgba(255,107,122,.68);
 }
 .btn:disabled{
   opacity:.55;
@@ -339,8 +341,7 @@ main{padding: 16px 16px 54px}
   padding: 11px 12px;
   border-radius: 14px;
   border: 1px solid var(--line);
-  /* Lifted inputs (not black) */
-  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.06));
+  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.04));
   color: var(--fg);
   outline:none;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
@@ -349,36 +350,34 @@ main{padding: 16px 16px 54px}
 .field textarea::placeholder{color:rgba(230,239,255,.58)}
 .field textarea{min-height: 84px;resize:vertical}
 
-/* Select dropdown */
 select.btn,
 .field select{
   color: var(--fg) !important;
-  background-color: rgba(255,255,255,.08) !important;
+  background-color: rgba(255,255,255,.10) !important;
   border-color: var(--line) !important;
 }
 select option{
-  background-color: #16243a !important;
+  background-color: #162844 !important;
   color: #f4f8ff !important;
 }
 select optgroup{
-  background-color: #16243a !important;
-  color: #c8d6ef !important;
+  background-color: #162844 !important;
+  color: #c7d6f0 !important;
 }
 select option:checked{
-  background-color: #1f3553 !important;
+  background-color: #1f3a60 !important;
   color: #ffffff !important;
 }
 
-/* Autofill */
 input:-webkit-autofill,
 textarea:-webkit-autofill,
 select:-webkit-autofill{
   -webkit-text-fill-color: var(--fg) !important;
-  box-shadow: 0 0 0px 1000px rgba(22,36,58,.85) inset !important;
+  box-shadow: 0 0 0px 1000px rgba(22,40,68,.90) inset !important;
   caret-color: var(--fg) !important;
 }
 
-/* Grids */
+/* Grids used by markup */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap: 12px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap: 12px}
 @media (max-width: 980px){
@@ -393,17 +392,13 @@ select:-webkit-autofill{
   min-width: 0;
 }
 .kpi{
-  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.05));
+  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.03));
   border:1px solid var(--line2);
   border-radius: 16px;
   padding: 12px 12px 10px;
   box-shadow: 0 10px 20px rgba(0,0,0,.16);
 }
-.kpi .t{
-  color: var(--muted);
-  font-size: var(--fs-sm);
-  letter-spacing:.1px;
-}
+.kpi .t{color: var(--muted);font-size: var(--fs-sm)}
 .kpi .v{
   font-size: clamp(20px, 1.7vw, 26px);
   margin-top: 8px;
@@ -425,14 +420,6 @@ select:-webkit-autofill{
   word-break:break-word;
 }
 
-@media (max-width: 980px){
-  .kpiwrap{grid-template-columns:repeat(2, minmax(180px,1fr))}
-}
-@media (max-width: 520px){
-  .kpiwrap{grid-template-columns:1fr}
-}
-
-/* Money colors */
 .money.pos{color: var(--good)}
 .money.neg{color: var(--bad)}
 .money.neu{color: var(--fg)}
@@ -440,46 +427,134 @@ select:-webkit-autofill{
 .delta.neg{color: var(--bad)}
 .delta.neu{color: var(--muted)}
 
-/* -------------------- 7) Calendar bar -------------------- */
+/* -------------------- 7) Calendar bar (make it wrap cleanly) -------------------- */
 .calbar{
-  display:flex;
+  display:grid;
+  grid-template-columns: 1fr auto;
   gap: 12px;
-  align-items:flex-start;
-  justify-content:space-between;
-  flex-wrap:wrap;
+  align-items:start;
 }
-.calbar .left, .calbar .right{
+.calbar .left,
+.calbar .right{
   display:flex;
   gap: 10px;
   align-items:center;
   flex-wrap:wrap;
+  min-width:0;
 }
 .monthTitle{
   font-size: clamp(20px, 1.8vw, 26px);
   margin:0;
   color: var(--fg);
 }
-
-/* Improve structure of calbar on small screens */
-@media (max-width: 720px){
-  .calbar .left, .calbar .right{width:100%}
+@media (max-width: 860px){
+  .calbar{grid-template-columns: 1fr}
   .calbar .right{justify-content:space-between}
-  #calWalletFilter{flex: 1 1 240px}
+  #calWalletFilter{flex: 1 1 260px}
+  #btnAddOnSelected{flex: 0 0 auto}
 }
 
-/* -------------------- 8) Calendar container -------------------- */
+/* -------------------- 8) HEADERS WRAP — responsive card grid --------------------
+   The HTML inserts many <div class="panel accent-wallet-X"> inside #headersWrap.row.
+   We convert #headersWrap into a CSS grid and neutralize inline flex sizing.
+*/
+#headersWrap{
+  display:grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px !important;
+  align-items: stretch;
+}
+
+/* Each header card: compress height, improve internal alignment */
+#headersWrap > .panel{
+  /* override any inline flex sizing */
+  flex: unset !important;
+  min-width: 0 !important;
+  width: auto !important;
+
+  padding: 12px !important;
+  background: linear-gradient(180deg, rgba(26,47,79,.92), rgba(22,40,68,.88));
+  border-color: rgba(255,255,255,.18);
+  box-shadow: var(--shadow2);
+}
+
+/* Top line inside header card: turn into a grid (label/name left, saldo right) */
+#headersWrap > .panel > div:first-child{
+  display:grid !important;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items:start;
+}
+
+/* Wallet name line (the inline style font-size:22px) */
+#headersWrap [style*="font-size:22px"]{
+  font-size: 18px !important; /* smaller so headers don't dominate */
+  font-weight: 750;
+  overflow:hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  max-width: 100% !important;
+}
+
+/* Right saldo block inside header card */
+#headersWrap > .panel > div:first-child > div:last-child{
+  text-align:right !important;
+}
+
+/* Make saldo text slightly smaller to reduce card height */
+#headersWrap > .panel > div:first-child > div:last-child [style*="font-size:26px"]{
+  font-size: 22px !important;
+}
+
+/* KPI grid inside each header card */
+#headersWrap .kpiwrap{
+  grid-template-columns: repeat(2, minmax(0,1fr)) !important; /* aligned columns */
+  gap: 10px !important;
+}
+@media (max-width: 760px){
+  #headersWrap{grid-template-columns: 1fr}
+  #headersWrap .kpiwrap{grid-template-columns: 1fr !important}
+}
+
+/* Make KPI blocks inside header cards tighter */
+#headersWrap .kpi{
+  padding: 10px 10px 9px;
+}
+#headersWrap .kpi .v{
+  font-size: 20px;
+}
+
+/* -------------------- 9) Calendar — NEVER CLIP -------------------- */
 .calendar{
   margin-top: 10px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  overflow:hidden;
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.03));
+  overflow: visible;                /* critical: avoid right-side cut by rounding */
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.02));
   box-shadow: var(--shadow2);
   width:100%;
+  min-width: 0;
 }
-.calgrid{display:grid;grid-template-columns:repeat(7,1fr)}
 
-/* DOW header */
+/* The JS creates two .calgrid blocks. We enforce a minimum column width.
+   If viewport is too narrow, we allow horizontal scroll INSIDE the calendar,
+   not clipping the last days.
+*/
+.calendar > .calgrid,
+.calendar .calgrid{
+  display:grid;
+  grid-template-columns: repeat(7, minmax(var(--calMinCol), 1fr));
+  min-width: calc(var(--calMinCol) * 7);
+}
+
+/* If container narrower than min-width, scroll */
+#calendar{
+  overflow-x: auto;                /* inside-calendar scroll if needed */
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Day-of-week header */
 .dow{
   padding: 12px 10px;
   border-bottom: 1px solid var(--line);
@@ -488,6 +563,9 @@ select:-webkit-autofill{
   letter-spacing:.6px;
   text-transform: uppercase;
   background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+  position: sticky; /* keeps visible while scrolling horizontally */
+  top: 0;
+  z-index: 1;
 }
 .dow:nth-child(6),
 .dow:nth-child(7){
@@ -504,10 +582,11 @@ select:-webkit-autofill{
   position:relative;
   background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(0,0,0,.02));
   transition: background .12s ease, transform .06s ease, outline-color .12s ease;
+  min-width: 0;
 }
 .day:nth-child(7n){border-right:none}
 
-/* Weekend differentiation (subtle but visible) */
+/* Weekend (subtle) */
 .calgrid .day:nth-child(7n+6){
   background: linear-gradient(180deg, rgba(255,209,102,.12), rgba(0,0,0,.02));
 }
@@ -515,14 +594,11 @@ select:-webkit-autofill{
   background: linear-gradient(180deg, rgba(255,107,122,.11), rgba(0,0,0,.02));
 }
 
-/* Hover */
 .day:hover{
   background:
     radial-gradient(320px 160px at 18% 0%, rgba(124,194,255,.18), transparent 60%),
     linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.02));
 }
-
-/* Selected */
 .day.selected{
   outline: 3px solid var(--focus);
   outline-offset: -3px;
@@ -531,15 +607,9 @@ select:-webkit-autofill{
     linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.02));
 }
 
-/* Day header inside cell */
 .dayHead{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.dayNum{
-  font-size: 18px;
-  color: var(--fg2);
-  font-weight: 800;
-}
+.dayNum{font-size: 18px;color: var(--fg2);font-weight: 800}
 
-/* Badge */
 .badge{
   font-size: 13px;
   color: var(--fg2);
@@ -550,7 +620,6 @@ select:-webkit-autofill{
   box-shadow: 0 8px 16px rgba(0,0,0,.16);
 }
 
-/* Events list in day cell */
 .evlist{
   margin-top: 10px;
   display:flex;
@@ -574,10 +643,7 @@ select:-webkit-autofill{
   transition: transform .06s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
   min-width:0;
 }
-.ev:hover{
-  border-color: var(--accentLine);
-  box-shadow: 0 12px 22px rgba(0,0,0,.22);
-}
+.ev:hover{border-color: var(--accentLine);box-shadow: 0 12px 22px rgba(0,0,0,.22)}
 .ev:active{transform: translateY(1px)}
 
 .ev .l{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -607,7 +673,6 @@ select:-webkit-autofill{
 }
 .ev .actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
 
-/* Tag */
 .tag{
   font-size: 12px;
   padding: 4px 9px;
@@ -617,18 +682,36 @@ select:-webkit-autofill{
   background: linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.02));
 }
 
-/* Out-of-month days: still readable (not too faded) */
 .day.outmonth{
   opacity: .72;
   filter: saturate(.90);
 }
 .day.outmonth .dayNum{ color: rgba(230,239,255,.86); }
-.day.outmonth:hover{
-  opacity:.92;
-  filter:saturate(1);
+.day.outmonth:hover{opacity:.92;filter:saturate(1)}
+
+/* -------------------- 10) Day detail panel (right) -------------------- */
+#dayEvents{min-width:0}
+#dayEvents .ev{align-items: stretch !important}
+#dayEvents .ev .l{min-width:0 !important}
+#dayEvents .ev .ttl,
+#dayEvents .ev .meta{overflow-wrap:anywhere;word-break:break-word}
+#dayEvents .ev .actions{
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  gap: 8px !important;
+  max-width: 50% !important;
+}
+#dayEvents .ev .amt{
+  max-width: 100% !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#dayEvents .btn.small{
+  background: linear-gradient(180deg, rgba(124,194,255,.22), rgba(124,194,255,.12));
+  border-color: rgba(124,194,255,.55);
 }
 
-/* -------------------- 9) Details / tree -------------------- */
+/* -------------------- 11) Details / tree -------------------- */
 details{
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -670,7 +753,7 @@ summary::-webkit-details-marker{display:none}
 }
 .treeRow .amt{white-space:nowrap;font-weight:800}
 
-/* -------------------- 10) Toast -------------------- */
+/* -------------------- 12) Toast -------------------- */
 .toast{
   position:fixed;
   bottom: 18px;
@@ -684,21 +767,21 @@ summary::-webkit-details-marker{display:none}
   margin: 0 auto;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(26,43,68,.96), rgba(22,36,58,.92));
+  background: linear-gradient(180deg, rgba(26,47,79,.96), rgba(22,40,68,.92));
   padding: 12px 14px;
   box-shadow: 0 16px 34px rgba(0,0,0,.26);
   color: var(--fg);
 }
 .toast .box b{display:block;margin-bottom:6px;color:var(--fg)}
 
-/* -------------------- 11) Dialog -------------------- */
+/* -------------------- 13) Dialog -------------------- */
 dialog{
   width: min(900px, calc(100vw - 24px));
   border: 1px solid var(--line);
   border-radius: 20px;
   background:
     radial-gradient(900px 420px at 18% 0%, rgba(124,194,255,.18), transparent 60%),
-    linear-gradient(180deg, rgba(22,36,58,.98), rgba(22,36,58,.92));
+    linear-gradient(180deg, rgba(22,40,68,.98), rgba(22,40,68,.92));
   color: var(--fg);
   padding: 0;
   box-shadow: 0 22px 50px rgba(0,0,0,.30);
@@ -731,79 +814,19 @@ dialog .field textarea{
   border-color: rgba(255,255,255,.20);
 }
 
-/* -------------------- 12) Accent wallet/category classes -------------------- */
+/* -------------------- 14) Dynamic accent classes -------------------- */
 [class*="accent-wallet-"],
 [class*="accent-cat-"]{
   --accent: var(--accent);
 }
-
-/* Wallet accent border on panels */
-[class*="accent-wallet-"] .panel,
-.panel[class*="accent-wallet-"]{
-  border-color: rgba(124,194,255,.28);
-}
-
-/* Accent glow on event cards */
 .ev[class*="accent-"]{
   box-shadow:
     0 10px 18px rgba(0,0,0,.16),
     0 0 0 1px rgba(255,255,255,.03),
-    0 0 20px rgba(124,194,255,.10);
+    0 0 18px rgba(124,194,255,.10);
 }
 
-/* -------------------- 13) Practical overflow safeguards -------------------- */
-#pillStatus{
-  max-width: min(52vw, 720px);
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-#pillApi{opacity:.95}
-
-/* headersWrap cards: stop overflow, keep readable */
-#headersWrap{
-  align-items: stretch;
-}
-#headersWrap .panel{
-  padding:14px;
-  min-width: 0 !important;
-  overflow: hidden !important;
-}
-#headersWrap .kpiwrap{
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
-}
-#headersWrap [style*="font-size:22px"]{
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-  max-width: 100% !important;
-}
-
-/* Day events (right panel): prevent actions pushing out */
-#dayEvents .ev{align-items: stretch !important}
-#dayEvents .ev .l{min-width:0 !important}
-#dayEvents .ev .ttl,
-#dayEvents .ev .meta{
-  overflow-wrap:anywhere;
-  word-break:break-word;
-}
-#dayEvents .ev .actions{
-  flex-direction: column !important;
-  align-items: flex-end !important;
-  gap: 8px !important;
-  max-width: 48% !important;
-}
-#dayEvents .ev .amt{
-  max-width: 100% !important;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-#dayEvents .btn.small{
-  background: linear-gradient(180deg, rgba(124,194,255,.22), rgba(124,194,255,.12));
-  border-color: rgba(124,194,255,.55);
-}
-
-/* -------------------- 14) Scrollbars -------------------- */
+/* -------------------- 15) Scrollbars -------------------- */
 *::-webkit-scrollbar{height:10px;width:10px}
 *::-webkit-scrollbar-track{background:rgba(255,255,255,.08)}
 *::-webkit-scrollbar-thumb{
@@ -813,18 +836,19 @@ dialog .field textarea{
 }
 *::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.28)}
 
-/* -------------------- 15) Small screens -------------------- */
+/* -------------------- 16) Small screens -------------------- */
 @media (max-width: 420px){
-  :root{--fs: 17px}
+  :root{--fs: 16.5px}
   .btn{width:100%}
   .btn.small{width:auto}
 }
 
-/* Make small text consistently readable */
+/* Readability */
 .dow, .ev .meta, .hint, .footnote, .kpi .s, .kpi .t, .field label{
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
+
 
 </style>
   <!-- dynamic rules for wallets/cards/categories created at runtime -->

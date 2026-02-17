@@ -1104,6 +1104,97 @@ details > summary span[style*="white-space:nowrap"]{
   min-width: max-content !important;
   max-width: 14ch !important;
 }
+/* =========================================================
+   FIN UI — Semantic coloring rules
+   Goal:
+   - Income/Expense/Repayment etc. have fixed semantic colors
+   - Categories have stable unique colors (via JS-injected --accent)
+   - Calendar highlight uses category color (accent) so you can visually “scan”
+   Add this at the VERY END of your main <style> block.
+========================================================= */
+
+/* 0) Base semantic palette (edit if you want) */
+:root{
+  --c-income: #3ee6a8;
+  --c-expense:#ff5c7a;
+  --c-repay:  #7aa7ff;
+  --c-purchase:#ff7d4b;
+  --c-credit: #3ee6a8;
+  --c-charge: #ff5c7a;
+
+  /* how much category color “bleeds” into the card */
+  --catGlow: 0 0 22px color-mix(in oklab, var(--accent), transparent 84%);
+  --catTint: rgba(255,255,255,.10);
+}
+
+/* 1) Make sure every event chip can use a category accent.
+   JS already injects `--accent` for `.accent-cat-*` and `.accent-wallet-*`. */
+.ev{
+  /* default accent if none present */
+  --accent: rgba(255,255,255,.22);
+  border-left-color: var(--accent) !important;
+}
+
+/* 2) CATEGORY-FIRST highlight (calendar scanning):
+   - Always highlight event by category accent (border-left + glow + subtle tint)
+   - This makes similar categories cluster visually in the calendar */
+.ev[class*="accent-cat-"]{
+  border-left-color: var(--accent) !important;
+  box-shadow:
+    0 12px 24px rgba(0,0,0,.18),
+    0 0 0 1px rgba(255,255,255,.03),
+    var(--catGlow) !important;
+  background:
+    radial-gradient(420px 160px at 18% 0%, color-mix(in oklab, var(--accent), transparent 84%), transparent 70%),
+    linear-gradient(180deg, var(--catTint), rgba(0,0,0,.03)) !important;
+}
+
+/* 3) Keep semantic meaning visible WITHOUT destroying category scanning:
+   - Semantic is applied to the AMOUNT (and optionally tag), not the border.
+   - Border stays category-colored for calendar scanning. */
+.ev.evtype-income .amt{color: var(--c-income) !important}
+.ev.evtype-expense .amt{color: var(--c-expense) !important}
+.ev.evtype-card_purchase .amt{color: var(--c-expense) !important}     /* purchases behave like expenses */
+.ev.evtype-card_repayment .amt{color: var(--c-repay) !important}
+.ev.evtype-card_credit .amt{color: var(--c-income) !important}
+.ev.evtype-card_charge .amt{color: var(--c-expense) !important}
+
+/* 4) Optional: semantic tint on the TAG only (still keep category border) */
+.ev.evtype-income .tag{
+  border-color: color-mix(in oklab, var(--c-income), rgba(255,255,255,.20) 60%) !important;
+  color: color-mix(in oklab, var(--c-income), white 35%) !important;
+}
+.ev.evtype-expense .tag{
+  border-color: color-mix(in oklab, var(--c-expense), rgba(255,255,255,.20) 60%) !important;
+  color: color-mix(in oklab, var(--c-expense), white 35%) !important;
+}
+.ev.evtype-card_repayment .tag{
+  border-color: color-mix(in oklab, var(--c-repay), rgba(255,255,255,.20) 60%) !important;
+  color: color-mix(in oklab, var(--c-repay), white 35%) !important;
+}
+
+/* 5) Fallback: if an event has no category class for some reason,
+   use type colors for the border. */
+.ev:not([class*="accent-cat-"]).evtype-income{border-left-color: var(--c-income) !important}
+.ev:not([class*="accent-cat-"]).evtype-expense{border-left-color: var(--c-expense) !important}
+.ev:not([class*="accent-cat-"]).evtype-card_repayment{border-left-color: var(--c-repay) !important}
+.ev:not([class*="accent-cat-"]).evtype-card_purchase{border-left-color: var(--c-purchase) !important}
+.ev:not([class*="accent-cat-"]).evtype-card_credit{border-left-color: var(--c-credit) !important}
+.ev:not([class*="accent-cat-"]).evtype-card_charge{border-left-color: var(--c-charge) !important}
+
+/* 6) Calendar “selected day” should not override your category scanning */
+.day.selected .ev[class*="accent-cat-"]{
+  box-shadow:
+    0 12px 24px rgba(0,0,0,.18),
+    0 0 0 1px rgba(255,255,255,.04),
+    var(--catGlow) !important;
+}
+
+/* 7) Ensure the wallet accent does not override category scanning
+   (category wins if both are present). */
+.ev[class*="accent-wallet-"][class*="accent-cat-"]{
+  border-left-color: var(--accent) !important; /* --accent comes from the last matched class rule; JS injects per class */
+}
 
 </style>
   <!-- dynamic rules for wallets/cards/categories created at runtime -->

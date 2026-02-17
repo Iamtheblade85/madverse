@@ -852,6 +852,137 @@ dialog::backdrop{background: rgba(11,18,32,.45)}
 @media (max-width: 720px){
   #tabsDayStatus{max-width:none; width:100%}
 }
+/* =========================================================
+   PATCH — Calendar readability + consistent category accent
+   Goal:
+   - Calendar day cells darker/less washed out
+   - Event chips NOT “multicolor inside”: neutral surface + ONE strong accent outline
+   - Same category => same visible contour (border/outline)
+   - Override JS dynRules that recolor title/tag (without touching JS)
+   Paste THIS BLOCK at the VERY END of your <style> (after everything).
+   ========================================================= */
+
+/* 1) Make the calendar grid itself less bright/washed */
+.calendar{
+  background: linear-gradient(180deg, var(--surface1), var(--surface2)) !important;
+  border-color: var(--line0) !important;
+}
+.dow{
+  background: linear-gradient(180deg, var(--surface2), var(--surface3)) !important;
+  border-bottom-color: var(--line0) !important;
+  color: var(--muted0) !important;
+}
+
+/* Day cells: darker surface so event chips have contrast */
+.day{
+  background: linear-gradient(180deg, var(--surface1), var(--surface2)) !important;
+  border-right-color: var(--line1) !important;
+  border-bottom-color: var(--line1) !important;
+}
+.day:hover{
+  background:
+    radial-gradient(360px 160px at 18% 0%, color-mix(in oklab, var(--uiA), transparent 90%), transparent 70%),
+    linear-gradient(180deg, var(--surface1), var(--surface2)) !important;
+}
+
+/* Out-of-month days: visibly dimmed (still readable) */
+.day.outmonth{
+  opacity: .72;
+  filter: saturate(.85);
+}
+.day.outmonth .dayNum{ color: color-mix(in oklab, var(--fg0), var(--muted2) 55%) !important; }
+.day.outmonth .badge{ opacity: .8; }
+
+/* 2) Event chip: neutral interior + STRONG category contour (no harlequin) */
+:root{
+  --evBorderW: 12px;           /* thicker, more visible */
+  --evOutlineW: 2px;           /* additional visible contour */
+  --evBg: var(--surface0);     /* neutral interior */
+  --evBg2: var(--surface1);
+}
+
+/* Base event chip: remove tinted gradients; make it legible everywhere */
+.ev{
+  background: linear-gradient(180deg, var(--evBg), var(--evBg2)) !important;
+  border: 1px solid var(--line0) !important;
+
+  /* Strong left accent (category/wallet sets --accent) */
+  border-left-width: var(--evBorderW) !important;
+  border-left-color: var(--accent) !important;
+
+  /* Second contour: visible and SAME for same category (uses --accent) */
+  outline: var(--evOutlineW) solid color-mix(in oklab, var(--accent), rgba(0,0,0,.10) 35%) !important;
+  outline-offset: -1px !important;
+
+  box-shadow: var(--shadow2) !important;
+}
+
+/* Hover: ONLY strengthen contour, don’t recolor inside */
+.ev:hover{
+  box-shadow: var(--shadow1) !important;
+  outline-color: color-mix(in oklab, var(--accent), rgba(0,0,0,.08) 20%) !important;
+}
+
+/* Category-first stays: force same contour for category chips */
+.ev[class*="accent-cat-"]{
+  border-left-color: var(--accent) !important;
+  outline-color: color-mix(in oklab, var(--accent), rgba(0,0,0,.12) 30%) !important;
+}
+
+/* If both wallet+category exist, category still dominates (already true, keep hard) */
+.ev[class*="accent-wallet-"][class*="accent-cat-"]{
+  border-left-color: var(--accent) !important;
+}
+
+/* 3) Kill JS “dynRules” multicolor inside cards (title/tag recoloring) */
+.ev .ttl{
+  color: var(--fg0) !important;
+}
+.ev .meta{
+  color: var(--muted0) !important;
+}
+
+/* Tag should be neutral, not accent-colored */
+.ev .tag{
+  color: var(--fg1) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.28)) !important;
+  border-color: var(--line1) !important;
+}
+
+/* Optional: keep a SMALL accent hint on the tag border only (still consistent, not “inside colors”) */
+.ev[class*="accent-cat-"] .tag{
+  border-color: color-mix(in oklab, var(--accent), var(--line1) 65%) !important;
+}
+
+/* 4) Calendar-specific: even more contrast for chips inside day cells */
+.day .ev{
+  background: linear-gradient(180deg, var(--surface0), var(--surface1)) !important;
+  border-color: var(--line0) !important;
+}
+
+/* 5) Selected day: reinforce, but still no interior tint */
+.day.selected .ev[class*="accent-cat-"]{
+  outline-width: calc(var(--evOutlineW) + 1px) !important;
+}
+
+/* 6) Dark mode: same philosophy (neutral interior + strong contour) */
+@media (prefers-color-scheme: dark){
+  :root{
+    --evBg: color-mix(in oklab, var(--surface0), black 8%);
+    --evBg2: color-mix(in oklab, var(--surface1), black 10%);
+  }
+  .day{ border-right-color: var(--line1) !important; border-bottom-color: var(--line1) !important; }
+  .ev{
+    border-color: var(--line0) !important;
+    outline-color: color-mix(in oklab, var(--accent), rgba(255,255,255,.10) 25%) !important;
+  }
+  .ev .tag{
+    background: linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.18)) !important;
+    border-color: var(--line1) !important;
+    color: var(--fg1) !important;
+  }
+}
+
 </style>
   <!-- dynamic rules for wallets/cards/categories created at runtime -->
   <style id="dynRules"></style>

@@ -3123,14 +3123,6 @@ async function refreshAllAfterMutation(lastPayload){
   await loadEventsForVisibleMonth();
   await loadDashboard();
 
-  // if the mutation impacts cards, optionally create missing repayment events
-  if(lastPayload && String(lastPayload.type||"").startsWith("card_")){
-    await maybeAutoCreateRepayments();
-    // reload to reflect auto created
-    await loadEventsForVisibleMonth();
-    await loadDashboard();
-  }
-
   renderHeaders();
   renderCalendar();
   if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview") renderOverview();
@@ -3215,12 +3207,6 @@ async function setVisibleMonth(d){
   // if selected date is outside month, keep it but still ok.
   await loadEventsForVisibleMonth();
   await loadDashboard();
-  await maybeAutoCreateRepayments();
-
-  // re-load if auto created things
-  await loadEventsForVisibleMonth();
-  await loadDashboard();
-
   renderHeaders();
   renderCalendar();
   if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview") renderOverview();
@@ -3234,12 +3220,6 @@ async function refreshAll(){
   state.walletFilter = $("calWalletFilter").value || "";
   await loadEventsForVisibleMonth();
   await loadDashboard();
-  await maybeAutoCreateRepayments();
-
-  // refresh again after potential auto creation
-  await loadEventsForVisibleMonth();
-  await loadDashboard();
-
   renderHeaders();
   renderCalendar();
   renderDayPanel();

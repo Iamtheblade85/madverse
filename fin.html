@@ -1938,69 +1938,167 @@ function renderHeaders(){
   const me = monthEnd(state.visibleMonth);
   const daysInMonth = me.getDate();
 
+  const selIso = isoDate(state.selectedDate);
+  const selDay = clamp(state.selectedDate.getDate(), 1, daysInMonth);
+
   const evsNormAll = state.events.map(normalizeEventForUI);
 
-  const dayIndex = (() => {
-    const sel = state.selectedDate;
-    const di = clamp(sel.getDate(), 1, daysInMonth);
-    return di;
-  })();
-
-  const fmtAbs = (x)=> fmtMoney(Math.abs(Number(x||0)));
   const safeNum = (x)=> (Number.isFinite(Number(x)) ? Number(x) : 0);
+  const fmtAbs = (x)=> fmtMoney(Math.abs(safeNum(x)));
 
-  function evSignForHeader(e){
-    // cashflow convention:
-    // + income, + card_credit
-    // - expense, - card_purchase, - card_charge, - card_repayment
-    if(e.type==="income") return +1;
-    if(e.type==="card_credit") return +1;
-    if(e.type==="expense") return -1;
-    if(e.type==="card_purchase") return -1;
-    if(e.type==="card_charge") return -1;
-    if(e.type==="card_repayment") return -1;
-    return 0;
+  function dayIdxForISO(iso){
+    const d = parseISO(iso);
+    if(!d) return null;
+    if(d < ms || d > me) return null;
+    return d.getDate(); // 1..days
   }
 
-  function eventsForWalletHeader(w){
+  function isInMonthISO(iso){
+    const d = parseISO(iso);
+    return d && d >= ms && d <= me;
+  }
+
+  // === SIGN LOGIC (cashflow) ===
+  // Per "conto": income +, expense -, card_repayment (fromWallet) -, (card events non toccano il conto direttamente)
+  // Per "carta": card_purchase -, card_charge -, card_credit +, card_repayment (toCard) + (riduce debito)
+  function signForWallet(w, ev){
+    const isCard = (w.type === "card");
+    const t = ev.type;
+
+    if(!isCard){
+      if(t === "income") return +1;
+      if(t === "expense") return -1;
+      if(t === "card_repayment" && String(ev.fromWalletId||"") === String(w.id)) return -1;
+      return 0;
+    }else{
+      if(t === "card_purchase") return -1;
+      if(t === "card_charge") return -1;
+      if(t === "card_credit") return +1;
+      if(t === "card_repayment" && String(ev.toCardWalletId||"") === String(w.id)) return +1;
+      return 0;
+    }
+  }
+
+  function eventsForWallet(w){
     const id = String(w.id);
     const isCard = (w.type === "card");
-
-    return evsNormAll.filter(e=>{
-      const d = parseISO(e.__day);
-      if(!d || d < ms || d > me) return false;
-
+    return evsNormAll.filter(ev=>{
+      if(!isInMonthISO(ev.__day)) return false;
       if(isCard){
-        // card-side activity + repayments toward the card
-        const cid = String(e.cardWalletId||e.toCardWalletId||"");
+        const cid = String(ev.cardWalletId||ev.toCardWalletId||"");
         return cid === id;
       }else{
-        // account activity + repayments paid from this account
-        const wid = String(e.walletId||e.fromWalletId||"");
+        const wid = String(ev.walletId||ev.fromWalletId||"");
         return wid === id;
       }
     });
   }
 
-  function walletDailyNetSeries(walletEvents){
-    // cumulative net, day-by-day, inside visible month
+  // Include “scheduled repayment” come evento futuro anche se non esiste (solo per forecast)
+  function syntheticFutureRepaymentForCard(cardWalletRow){
+    if(cardWalletRow.type !== "card") return null;
+    const c = cardWalletRow.card;
+    if(!c || !c.scheduledRepayment) return null;
+    const sr = c.scheduledRepayment;
+    const pd = (sr.paymentDate || "").slice(0,10);
+    if(!pd || !isInMonthISO(pd)) return null;
+
+    const amount = safeNum(sr.suggestedAmount || sr.baselineAmount || 0);
+    if(amount <= 0) return null;
+
+    return {
+      __synthetic: true,
+      type: "card_repayment",
+      title: "Addebito carta (previsto)",
+      amount,
+      category: "Carta",
+      __day: pd,
+      paymentDate: pd,
+      // collegamenti
+      toCardWalletId: Number(cardWalletRow.id),
+      // fromWalletId lo stimiamo dal wallets list (defaultSourceWalletId)
+      fromWalletId: Number((state.walletsById.get(String(cardWalletRow.id))||{}).defaultSourceWalletId || 0)
+    };
+  }
+
+  function walletDailySeries(w, walletEvents, extraSynthetic=[]){
+    // serie cumulativa nel mese (delta giornaliero)
     const byDay = new Array(daysInMonth).fill(0);
-    for(const e of walletEvents){
-      const d = parseISO(e.__day);
-      if(!d || d < ms || d > me) continue;
-      const idx = d.getDate()-1;
-      byDay[idx] += evSignForHeader(e) * safeNum(e.amount);
-    }
-    const out = [];
+
+    const feed = (ev)=>{
+      const di = dayIdxForISO(ev.__day);
+      if(!di) return;
+      byDay[di-1] += signForWallet(w, ev) * safeNum(ev.amount);
+    };
+
+    for(const ev of walletEvents) feed(ev);
+    for(const ev of extraSynthetic) feed(ev);
+
+    const cum = [];
     let acc = 0;
     for(let i=0;i<daysInMonth;i++){
       acc += byDay[i];
-      out.push(acc);
+      cum.push(acc);
     }
-    return out;
+    return {byDay, cum};
   }
 
+  function cashflowMonth(w, walletEvents, upToDay=null){
+    // ritorna {in,out,net} (in/out positivi)
+    let inc = 0, out = 0;
+    for(const ev of walletEvents){
+      const di = dayIdxForISO(ev.__day);
+      if(upToDay!=null && (di==null || di > upToDay)) continue;
+
+      const s = signForWallet(w, ev);
+      const a = safeNum(ev.amount);
+      if(s > 0) inc += a;
+      if(s < 0) out += a;
+    }
+    return {in:inc, out:out, net:(inc - out)};
+  }
+
+  // robust “run-rate” per spesa variabile su conto:
+  // usa median giornaliera delle uscite (expense + card_repayment fromWallet) fino a oggi, e proietta.
+  function forecastVariableOutflowForAccount(w, walletEvents){
+    if(w.type === "card") return 0;
+    const dailyOut = new Array(selDay).fill(0);
+
+    for(const ev of walletEvents){
+      const di = dayIdxForISO(ev.__day);
+      if(!di || di > selDay) continue;
+      const s = signForWallet(w, ev);
+      if(s < 0) dailyOut[di-1] += safeNum(ev.amount);
+    }
+
+    const vals = dailyOut.filter(x=>x>0).sort((a,b)=>a-b);
+    if(!vals.length) return 0;
+
+    const mid = Math.floor(vals.length/2);
+    const median = (vals.length % 2) ? vals[mid] : (vals[mid-1]+vals[mid])/2;
+
+    const remainingDays = Math.max(0, daysInMonth - selDay);
+    return median * remainingDays;
+  }
+
+  function riskBadgeHTML(level, text){
+    const cls =
+      level==="high" ? "tag" :
+      level==="med"  ? "tag" :
+      "tag";
+    // CSS tag già esiste: qui differenziamo via inline (senza cambiare CSS)
+    const style =
+      level==="high" ? "border-color:rgba(209,31,74,.55);color:rgba(209,31,74,.95)" :
+      level==="med"  ? "border-color:rgba(183,121,31,.55);color:rgba(183,121,31,.95)" :
+      "border-color:rgba(18,115,222,.40);color:rgba(18,115,222,.95)";
+    return `<span class="${cls}" style="${style}">${escapeHtml(text)}</span>`;
+  }
+
+  // ========= MAIN LOOP =========
   for(const w of state.dashboard.wallets){
+    const walletId = String(w.id);
+    const isCard = (w.type === "card");
+
     const cls = `panel accent-wallet-${w.id}`;
     const card = document.createElement("div");
     card.className = cls;
@@ -2009,36 +2107,93 @@ function renderHeaders(){
     card.style.padding = "14px";
     card.style.overflow = "hidden";
 
-    const typeLabel = (w.type==="card") ? "Carta" : "Conto";
-    const selected = isoDate(state.selectedDate);
+    const typeLabel = isCard ? "Carta" : "Conto";
+    const balNow = safeNum(w.balance);
 
-    const bal = safeNum(w.balance);
+    const wEvents = eventsForWallet(w);
 
-    // Use backend aggregated fields (fast + consistent with your dashboard)
-    const spentSoFar = safeNum(w.spentSoFar);
-    const incSoFar   = safeNum(w.incomeSoFar);
+    // aggiungi synthetic repayment per forecast
+    const syn = [];
+    if(isCard){
+      const srev = syntheticFutureRepaymentForCard(w);
+      if(srev) syn.push(srev);
+    }
 
-    // forecast (based on spentSoFar / dayIndex)
-    const spentPerDay = dayIndex ? (spentSoFar / dayIndex) : 0;
-    const forecastSpent = spentPerDay * daysInMonth;
+    // cashflow mese fino a oggi (solo eventi reali, non synthetic)
+    const mtd = cashflowMonth(w, wEvents, selDay);
+    const startBalEst = balNow - (mtd.in - mtd.out);
 
-    // month cashflow summary (wallet-level, derived from events)
-    const wEvents = eventsForWalletHeader(w);
-    const inMonth  = wEvents.reduce((a,e)=> a + (evSignForHeader(e)>0 ? safeNum(e.amount) : 0), 0);
-    const outMonth = wEvents.reduce((a,e)=> a + (evSignForHeader(e)<0 ? safeNum(e.amount) : 0), 0);
-    const netMonth = inMonth - outMonth;
+    // totali mese (real events only)
+    const full = cashflowMonth(w, wEvents, null);
 
-    // delta vs last month from dashboard (keep it simple: use their provided deltas)
+    // serie cumulativa delta mese (real + synthetic) per forecast e min-balance
+    const series = walletDailySeries(w, wEvents, syn);
+
+    // forecast end-of-month:
+    // - base: startBal + cumEnd (real+synthetic)
+    // - per conti: aggiungi variabile stimata (run-rate) come uscite ulteriori
+    const cumEnd = series.cum[daysInMonth-1] || 0;
+    let endBalForecast = startBalEst + cumEnd;
+
+    if(!isCard){
+      const varOut = forecastVariableOutflowForAccount(w, wEvents);
+      endBalForecast -= varOut;
+    }
+
+    // min balance forecast (giorno peggiore) su base eventi noti (real+synthetic)
+    let minBal = Infinity;
+    let minDay = null;
+    for(let i=0;i<daysInMonth;i++){
+      const b = startBalEst + (series.cum[i]||0);
+      if(b < minBal){
+        minBal = b;
+        minDay = i+1;
+      }
+    }
+
+    // risk logic:
+    // Conto: rischio se minBal < 0 o se minBal < buffer
+    // Carta: rischio se availableCredit basso o se outstanding alto vs limit
+    let riskHtml = "";
+    if(!isCard){
+      const buffer = 150; // soglia “realistica” minima (puoi parametrizzare)
+      if(minBal < 0){
+        riskHtml = riskBadgeHTML("high", `Rischio rosso (min ${fmtMoney(minBal)})`);
+      }else if(minBal < buffer){
+        riskHtml = riskBadgeHTML("med", `Attenzione liquidità (min ${fmtMoney(minBal)})`);
+      }else{
+        riskHtml = riskBadgeHTML("low", `OK (min ${fmtMoney(minBal)})`);
+      }
+    }else{
+      const c = w.card || {};
+      const lim = safeNum(c.limit);
+      const avail = (c.availableCredit!=null) ? safeNum(c.availableCredit) : null;
+      const out = (c.outstanding!=null) ? safeNum(c.outstanding) : null;
+
+      // utilizzo carta
+      let util = null;
+      if(lim > 0 && out!=null) util = out / lim;
+
+      if(avail!=null && avail < 100){
+        riskHtml = riskBadgeHTML("high", `Credito quasi finito (${fmtMoney(avail)})`);
+      }else if(util!=null && util > 0.85){
+        riskHtml = riskBadgeHTML("med", `Utilizzo alto (${(util*100).toFixed(0)}%)`);
+      }else{
+        riskHtml = riskBadgeHTML("low", `OK`);
+      }
+    }
+
+    // sparkline: sul delta cumulato mese (real+synthetic), per vedere trend
+    const spark = sparklineSVG(series.cum, 210, 46);
+
+    // Delta vs last month (dal dashboard)
     const dExp = w.compareLastMonthExpenses || {amount:0};
     const dInc = w.compareLastMonthIncome || {amount:0};
     const netDelta = safeNum(dInc.amount) - safeNum(dExp.amount);
 
-    // sparkline per wallet
-    const spark = sparklineSVG(walletDailyNetSeries(wEvents), 210, 46);
-
-    // Card extra
+    // UI blocks: per carte manteniamo extra (limit/outstanding/scheduled repayment)
     let cardExtra = "";
-    if(w.type==="card" && w.card){
+    if(isCard && w.card){
       const c = w.card;
       const lim = (c.limit!=null) ? fmtMoney(safeNum(c.limit)) : "—";
       const avail = (c.availableCredit!=null) ? fmtMoney(safeNum(c.availableCredit)) : "—";
@@ -2049,14 +2204,14 @@ function renderHeaders(){
         <div class="hr"></div>
         <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(220px,1fr))">
           <div class="kpi">
-            <div class="t">Credito</div>
+            <div class="t">Limite</div>
             <div class="v">${lim}</div>
             <div class="s">Disponibile: <span class="money ${moneyClassSigned(safeNum(c.availableCredit))}">${avail}</span></div>
           </div>
           <div class="kpi">
-            <div class="t">Outstanding</div>
+            <div class="t">Debito attuale</div>
             <div class="v"><span class="money neg">${out}</span></div>
-            <div class="s">Saldo carta: <span class="money neg">${fmtMoney(bal)}</span></div>
+            <div class="s">Saldo carta (UI): <span class="money neg">${fmtMoney(balNow)}</span></div>
           </div>
         </div>
         ${
@@ -2077,11 +2232,14 @@ function renderHeaders(){
       `;
     }
 
+    // labels più chiare
+    const selected = selIso;
+    const minDayIso = (minDay!=null) ? `${ymStr(state.visibleMonth)}-${pad2(minDay)}` : "—";
+
     card.innerHTML = `
-      <!-- top row -->
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
         <div style="min-width:0">
-          <div class="muted">${typeLabel}</div>
+          <div class="muted">${typeLabel} · ${riskHtml}</div>
           <div style="font-size:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">
             ${escapeHtml(w.name||"")}
           </div>
@@ -2089,40 +2247,35 @@ function renderHeaders(){
         </div>
 
         <div style="text-align:right;min-width:0">
-          <div class="muted">Saldo</div>
-          <div style="font-size:26px" class="money ${moneyClassSigned(bal)}">${fmtMoney(bal)}</div>
+          <div class="muted">Saldo attuale</div>
+          <div style="font-size:26px" class="money ${moneyClassSigned(balNow)}">${fmtMoney(balNow)}</div>
           <div class="mono" style="opacity:.9;margin-top:6px">${spark}</div>
         </div>
       </div>
 
       <div class="hr"></div>
 
-      <!-- block 1: cashflow month -->
       <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(240px,1fr))">
         <div class="kpi">
-          <div class="t">Cashflow mese</div>
+          <div class="t">Mese (entrate / uscite)</div>
           <div class="v">
-            <span class="money pos">${fmtMoney(inMonth)}</span>
+            <span class="money pos">${fmtMoney(full.in)}</span>
             <span class="muted"> / </span>
-            <span class="money neg">${fmtMoney(outMonth)}</span>
+            <span class="money neg">${fmtMoney(full.out)}</span>
           </div>
-          <div class="s">Netto: <span class="money ${moneyClassSigned(netMonth)}">${fmtMoney(netMonth)}</span> · Δ vs mese scorso: <span class="delta ${deltaClass(netDelta)}">${fmtMoney(netDelta)}</span></div>
+          <div class="s">Netto mese: <span class="money ${moneyClassSigned(full.net)}">${fmtMoney(full.net)}</span> · Δ vs mese scorso: <span class="delta ${deltaClass(netDelta)}">${fmtMoney(netDelta)}</span></div>
         </div>
 
         <div class="kpi">
-          <div class="t">Run-rate & Forecast</div>
-          <div class="v"><span class="money neg">${fmtAbs(spentPerDay)}</span><span class="muted"> / giorno</span></div>
-          <div class="s">Forecast uscite fine mese: <span class="money neg">${fmtAbs(forecastSpent)}</span> · giorni: <span class="mono">${dayIndex}/${daysInMonth}</span></div>
+          <div class="t">Saldo iniziale (stimato)</div>
+          <div class="v"><span class="money ${moneyClassSigned(startBalEst)}">${fmtMoney(startBalEst)}</span></div>
+          <div class="s">Calcolo: saldo attuale − cashflow mese fino al giorno ${selDay}</div>
         </div>
 
         <div class="kpi">
-          <div class="t">Totali mese (dashboard)</div>
-          <div class="v">
-            <span class="money pos">${fmtMoney(incSoFar)}</span>
-            <span class="muted"> / </span>
-            <span class="money neg">${fmtAbs(spentSoFar)}</span>
-          </div>
-          <div class="s">Entrate / Uscite calcolate dal backend (coerenti con saldi e testate).</div>
+          <div class="t">Forecast fine mese</div>
+          <div class="v"><span class="money ${moneyClassSigned(endBalForecast)}">${fmtMoney(endBalForecast)}</span></div>
+          <div class="s">Min previsto: <span class="money ${moneyClassSigned(minBal)}">${fmtMoney(minBal)}</span> · giorno peggiore: <span class="mono">${minDayIso}</span></div>
         </div>
       </div>
 
@@ -2132,7 +2285,6 @@ function renderHeaders(){
     wrap.appendChild(card);
   }
 }
-
 
 /* =========================
    Rendering: Calendar
@@ -2271,17 +2423,14 @@ function renderEventChip(ev){
   const el = document.createElement("div");
   const tcls = `evtype-${String(ev.type||"").replace(/[^\w-]/g,"_")}`;
   el.className = `ev ${tcls} ${ev.__accentClass} ${ev.__catClass}`;
-
   el.dataset.id = ev.id;
-
-  const sign = (ev.type==="income" || ev.type==="card_credit") ? "+" :
-               (ev.type==="expense" || ev.type==="card_purchase" || ev.type==="card_charge" || ev.type==="card_repayment") ? "-" : "";
 
   const amt = Number(ev.amount||0);
   const isPos = (ev.type==="income" || ev.type==="card_credit");
   const amtCls = isPos ? "pos" : "neg";
+  const sign = isPos ? "+" : "-";
 
-  const walletLabel = (() => {
+  function walletLabel(){
     if(ev.type==="income" || ev.type==="expense"){
       return state.walletNameById.get(String(ev.walletId||"")) || "Conto";
     }
@@ -2294,27 +2443,39 @@ function renderEventChip(ev){
       return `${from} → ${to}`;
     }
     return "";
-  })();
+  }
 
-  const tag = (ev.type==="card_purchase" && ev.schedule && ev.schedule.kind==="financing") ? "rate" :
-              (ev.type==="card_repayment") ? "rimborso" :
-              (ev.type==="card_credit") ? "credito" :
-              (ev.type==="card_charge") ? (ev.subType||"addebito") :
-              (ev.type==="income") ? "entrata" :
-              (ev.type==="expense") ? "spesa" : ev.type;
+  function chipTag(){
+    // terminologia “utente finale”
+    if(ev.type==="income") return "entrata";
+    if(ev.type==="expense") return "spesa";
+    if(ev.type==="card_purchase"){
+      if(ev.schedule && ev.schedule.kind==="financing") return "acquisto (rate)";
+      return "acquisto (carta)";
+    }
+    if(ev.type==="card_repayment") return "pagamento carta";
+    if(ev.type==="card_credit") return "credito (carta)";
+    if(ev.type==="card_charge"){
+      const st = (ev.subType||"").trim();
+      if(st==="interest_card") return "interessi";
+      if(st==="fee_card") return "commissione";
+      if(st==="interest_financing") return "interessi rate";
+      return "addebito";
+    }
+    return ev.type || "evento";
+  }
 
   el.innerHTML = `
     <div class="l" style="min-width:0">
       <div class="ttl">${escapeHtml(ev.title||"")}</div>
-      <div class="meta">${escapeHtml(ev.category||"")} · <span class="tag">${escapeHtml(tag)}</span></div>
-      <div class="meta">${escapeHtml(walletLabel)}</div>
+      <div class="meta">${escapeHtml(ev.category||"")} · <span class="tag">${escapeHtml(chipTag())}</span></div>
+      <div class="meta">${escapeHtml(walletLabel())}</div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
       <div class="amt money ${amtCls}">${sign}${fmtMoney(amt).replace(" €","")} €</div>
     </div>
   `;
 
-  // stop propagation so clicking chip doesn't change selected day unexpectedly
   el.addEventListener("click", (e)=>{
     e.stopPropagation();
     openEditEvent(ev.id);
@@ -2322,6 +2483,7 @@ function renderEventChip(ev){
 
   return el;
 }
+
 
 /* =========================
    Day panel (right)
@@ -2333,23 +2495,63 @@ function renderDayPanel(){
   $("ovMonth").textContent = ymStr(state.visibleMonth);
 
   const evs = state.events.map(normalizeEventForUI).filter(e=>e.__day===dayIso);
+
   const filt = state.walletFilter ? String(state.walletFilter) : "";
   const shown = filt ? evs.filter(e=>{
-    // keep those linked to filtered wallet
     const w = String(filt);
     return String(e.walletId||"")===w || String(e.cardWalletId||"")===w || String(e.fromWalletId||"")===w || String(e.toCardWalletId||"")===w;
   }) : evs;
+
   updateTabsDayStatus(dayIso, shown.length);
+
+  // Totali giorno (entrate/uscite)
+  let inSum = 0, outSum = 0;
+  for(const ev of shown){
+    const amt = Number(ev.amount||0);
+    if(ev.type==="income" || ev.type==="card_credit") inSum += amt;
+    else if(ev.type==="expense" || ev.type==="card_purchase" || ev.type==="card_charge" || ev.type==="card_repayment") outSum += amt;
+  }
+  const net = inSum - outSum;
+
   $("daySummary").innerHTML = `
     <div style="font-size:20px"><b>${dayIso}</b></div>
-    <div class="muted">${shown.length} eventi</div>
+    <div class="muted">${shown.length} eventi · Entrate: <span class="money pos">${fmtMoney(inSum)}</span> · Uscite: <span class="money neg">${fmtMoney(outSum)}</span> · Netto: <span class="money ${moneyClassSigned(net)}">${fmtMoney(net)}</span></div>
   `;
 
   const box = $("dayEvents");
   box.innerHTML = "";
+
   if(!shown.length){
     box.innerHTML = `<div class="muted">Nessun evento in questo giorno.</div>`;
     return;
+  }
+
+  function walletLabel(ev){
+    if(ev.type==="income" || ev.type==="expense"){
+      return state.walletNameById.get(String(ev.walletId||"")) || "Conto";
+    }
+    if(ev.type==="card_purchase" || ev.type==="card_credit" || ev.type==="card_charge"){
+      return state.walletNameById.get(String(ev.cardWalletId||"")) || "Carta";
+    }
+    if(ev.type==="card_repayment"){
+      const from = state.walletNameById.get(String(ev.fromWalletId||"")) || "Conto";
+      const to = state.walletNameById.get(String(ev.toCardWalletId||"")) || "Carta";
+      return `${from} → ${to}`;
+    }
+    return "";
+  }
+
+  function causeLabel(ev){
+    // “a causa di cosa”: categoria + subtype + schedule
+    const cat = (ev.category || "Senza categoria");
+    const sub = (ev.subType || "").trim();
+    let extra = "";
+    if(ev.type==="card_purchase" && ev.schedule && ev.schedule.kind==="financing"){
+      extra = " · rate";
+    }else if(sub){
+      extra = ` · ${sub}`;
+    }
+    return `${cat}${extra}`;
   }
 
   for(const ev of shown.sort((a,b)=>(a.id||0)-(b.id||0))){
@@ -2362,25 +2564,11 @@ function renderDayPanel(){
     const isPos = (ev.type==="income" || ev.type==="card_credit");
     const amtCls = isPos ? "pos" : "neg";
     const sign = isPos ? "+" : "-";
-    const walletLabel = (() => {
-      if(ev.type==="income" || ev.type==="expense"){
-        return state.walletNameById.get(String(ev.walletId||"")) || "Conto";
-      }
-      if(ev.type==="card_purchase" || ev.type==="card_credit" || ev.type==="card_charge"){
-        return state.walletNameById.get(String(ev.cardWalletId||"")) || "Carta";
-      }
-      if(ev.type==="card_repayment"){
-        const from = state.walletNameById.get(String(ev.fromWalletId||"")) || "Conto";
-        const to = state.walletNameById.get(String(ev.toCardWalletId||"")) || "Carta";
-        return `${from} → ${to}`;
-      }
-      return "";
-    })();
 
     row.innerHTML = `
       <div class="l" style="min-width:0">
         <div class="ttl">${escapeHtml(ev.title||"")}</div>
-        <div class="meta">${escapeHtml(ev.category||"")} · ${escapeHtml(walletLabel)}</div>
+        <div class="meta">${escapeHtml(causeLabel(ev))} · ${escapeHtml(walletLabel(ev))}</div>
         <div class="meta">${escapeHtml(ev.notes||"")}</div>
       </div>
       <div class="actions">
@@ -2392,6 +2580,7 @@ function renderDayPanel(){
     box.appendChild(row);
   }
 }
+
 
 /* =========================
    Overview: tree + card subtotals
@@ -2629,30 +2818,25 @@ function renderOverview(){
   const tree = $("overviewTree");
   tree.innerHTML = "";
 
-  // Helpers locali (renderOverview scope)
   const ms = monthStart(state.visibleMonth);
   const me = monthEnd(state.visibleMonth);
   const prev = samePeriodPrevMonth(ms, me);
+
   const today = new Date();
   const today0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
   const allEvsNorm = state.events.map(normalizeEventForUI);
 
+  const safeNum = (x)=> (Number.isFinite(Number(x)) ? Number(x) : 0);
+
   function within(d, a, b){ return d && d >= a && d <= b; }
+  function isInMonth(ev){ const d=parseISO(ev.__day); return within(d, ms, me); }
+  function isInPrevMonth(ev){ const d=parseISO(ev.__day); return within(d, prev.from, prev.to); }
 
-  function isInMonth(ev){
-    const d = parseISO(ev.__day);
-    return within(d, ms, me);
-  }
-  function isInPrevMonth(ev){
-    const d = parseISO(ev.__day);
-    return within(d, prev.from, prev.to);
-  }
-
-  function evSign(ev){
-    // cashflow sign convention for summary:
-    // + income, + card_credit
-    // - expense, - card_purchase, - card_charge, - card_repayment (cash out from account)
+  // Global cashflow sign (per “soldi miei”):
+  // + income, + card_credit
+  // - expense, - card_purchase, - card_charge, - card_repayment
+  function evSignGlobal(ev){
     if(ev.type === "income") return +1;
     if(ev.type === "card_credit") return +1;
     if(ev.type === "expense") return -1;
@@ -2661,18 +2845,10 @@ function renderOverview(){
     if(ev.type === "card_repayment") return -1;
     return 0;
   }
+  function cashIn(ev){ return evSignGlobal(ev)>0 ? safeNum(ev.amount) : 0; }
+  function cashOut(ev){ return evSignGlobal(ev)<0 ? safeNum(ev.amount) : 0; }
 
-  function cashIn(ev){
-    const s = evSign(ev);
-    return s > 0 ? Number(ev.amount||0) : 0;
-  }
-  function cashOut(ev){
-    const s = evSign(ev);
-    return s < 0 ? Number(ev.amount||0) : 0;
-  }
-
-  function labelForPaymentMethod(ev){
-    // “mezzo” leggibile
+  function labelMethod(ev){
     if(ev.type==="income" || ev.type==="expense"){
       return state.walletNameById.get(String(ev.walletId||"")) || "Conto";
     }
@@ -2688,13 +2864,10 @@ function renderOverview(){
   }
 
   function fmtDelta(v){
-    const cls = deltaClass(v);
-    return `<span class="delta ${cls}">${fmtMoney(v)}</span>`;
+    return `<span class="delta ${deltaClass(v)}">${fmtMoney(v)}</span>`;
   }
 
-  // =========================
-  // A) MONTHLY SUMMARY (globale)
-  // =========================
+  // ===== A) SUMMARY =====
   const evMonth = allEvsNorm.filter(isInMonth);
   const evPrevM = allEvsNorm.filter(isInPrevMonth);
 
@@ -2710,58 +2883,61 @@ function renderOverview(){
   const dOut = sumOut - prevOut;
   const dNet = net - prevNet;
 
-  // Totali “per mezzo”
-  const byMethod = new Map(); // label -> {in,out,net,count}
-  for(const e of evMonth){
-    const k = labelForPaymentMethod(e);
-    if(!byMethod.has(k)) byMethod.set(k, {in:0,out:0,net:0,count:0});
-    const row = byMethod.get(k);
-    row.in  += cashIn(e);
-    row.out += cashOut(e);
-    row.net += (cashIn(e) - cashOut(e));
-    row.count += 1;
-  }
-  const byMethodArr = [...byMethod.entries()]
-    .map(([k,v])=>({k,...v}))
-    .sort((a,b)=> (b.out - a.out) || (b.in - a.in));
+  // “netto risparmiato” (se positivo): net; se negativo: 0 e mostriamo deficit
+  const saved = Math.max(0, net);
+  const deficit = Math.max(0, -net);
 
-  // Render Summary Panel (senza cambiare HTML: lo inseriamo come HTML dentro overviewTree)
+  // per mezzo
+  const byMethod = new Map();
+  for(const e of evMonth){
+    const k = labelMethod(e);
+    if(!byMethod.has(k)) byMethod.set(k, {in:0,out:0,net:0,count:0});
+    const r = byMethod.get(k);
+    r.in += cashIn(e);
+    r.out += cashOut(e);
+    r.net += (cashIn(e)-cashOut(e));
+    r.count += 1;
+  }
+  const byMethodArr = [...byMethod.entries()].map(([k,v])=>({k,...v}))
+    .sort((a,b)=> (b.out-a.out) || (b.in-a.in));
+
   const summary = document.createElement("div");
   summary.className = "panel";
   summary.innerHTML = `
-    <h3 style="margin-top:0">Riepilogo mese (globale)</h3>
-    <div class="muted">Periodo: <span class="mono">${ymStr(state.visibleMonth)}</span> · basato su data selezionata: <span class="mono">${isoDate(state.selectedDate)}</span></div>
+    <h3 style="margin-top:0">Riepilogo mese</h3>
+    <div class="muted">Periodo: <span class="mono">${ymStr(state.visibleMonth)}</span> · data selezionata: <span class="mono">${isoDate(state.selectedDate)}</span></div>
     <div class="hr"></div>
+
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-      <div class="muted">Trend netto cumulato (giorno per giorno)</div>
+      <div class="muted">Trend netto cumulato (giornaliero)</div>
       <div class="mono" style="opacity:.9">${sparklineSVG(monthDailyNetSeries(allEvsNorm, ms, me), 260, 50)}</div>
     </div>
 
     <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(220px,1fr))">
       <div class="kpi">
-        <div class="t">Totale entrate</div>
+        <div class="t">Entrate</div>
         <div class="v"><span class="money pos">${fmtMoney(sumIn)}</span></div>
         <div class="s">Δ mese scorso: ${fmtDelta(dIn)}</div>
       </div>
       <div class="kpi">
-        <div class="t">Totale uscite</div>
+        <div class="t">Uscite (incl. carte)</div>
         <div class="v"><span class="money neg">${fmtMoney(sumOut)}</span></div>
         <div class="s">Δ mese scorso: ${fmtDelta(dOut)}</div>
       </div>
       <div class="kpi">
-        <div class="t">Saldo netto mese</div>
+        <div class="t">Netto mese</div>
         <div class="v"><span class="money ${moneyClassSigned(net)}">${fmtMoney(net)}</span></div>
         <div class="s">Δ mese scorso: ${fmtDelta(dNet)}</div>
       </div>
       <div class="kpi">
-        <div class="t">Eventi nel mese</div>
-        <div class="v">${evMonth.length}</div>
-        <div class="s">Conti + Carte</div>
+        <div class="t">Risparmio / Deficit</div>
+        <div class="v">${saved>0 ? `<span class="money pos">${fmtMoney(saved)}</span>` : `<span class="money neg">${fmtMoney(-deficit)}</span>`}</div>
+        <div class="s">${saved>0 ? "Netto positivo nel mese" : "Netto negativo nel mese"}</div>
       </div>
     </div>
 
     <details style="margin-top:12px" open>
-      <summary><span>Per mezzo (conto/carta)</span><span class="tag">${byMethodArr.length}</span></summary>
+      <summary><span>Per conto/carta (totali del mese)</span><span class="tag">${byMethodArr.length}</span></summary>
       <div class="treeBody">
         ${
           byMethodArr.map(x=>`
@@ -2773,8 +2949,7 @@ function renderOverview(){
                 <span class="money ${moneyClassSigned(x.net)}">${fmtMoney(x.net)}</span>
               </div>
             </div>
-          `).join("")
-          || `<div class="muted">Nessun dato nel mese.</div>`
+          `).join("") || `<div class="muted">Nessun dato nel mese.</div>`
         }
         <div class="hint" style="margin-top:8px">Colonne: Entrate · Uscite · Netto</div>
       </div>
@@ -2782,42 +2957,38 @@ function renderOverview(){
   `;
   tree.appendChild(summary);
 
-  // =========================
-  // B) “DA FARE” (futuri + rimborsi mancanti)
-  // =========================
-  // B1: eventi futuri nel mese (calendar/purchase/payment day > oggi)
-  const futureInMonth = evMonth.filter(e=>{
-    const d = parseISO(e.__day);
-    return d && d > today0;
-  }).sort((a,b)=> (a.__day||"").localeCompare(b.__day||"") || (a.id||0)-(b.id||0));
+  // ===== B) ALLARMI (realistici, basati su eventi futuri + scheduled repayments) =====
+  const futureInMonth = evMonth
+    .filter(e=>{ const d=parseISO(e.__day); return d && d > today0; })
+    .sort((a,b)=> (a.__day||"").localeCompare(b.__day||"") || (a.id||0)-(b.id||0));
 
-  // B2: scheduled repayments mancanti nel mese (da dashboard)
   const missingRepay = [];
   for(const w of (state.dashboard.wallets||[])){
     if(w.type!=="card") continue;
     const sr = w.card && w.card.scheduledRepayment;
-    if(!sr || sr.exists) continue;
+    if(!sr) continue;
+
     const pd = parseISO(sr.paymentDate);
-    if(!pd) continue;
-    if(pd < ms || pd > me) continue;
-    // solo “da fare” se data >= oggi
+    if(!pd || pd < ms || pd > me) continue;
     if(pd < today0) continue;
 
-    missingRepay.push({
-      cardId: String(w.id),
-      cardName: w.name || `Carta #${w.id}`,
-      paymentDate: sr.paymentDate,
-      suggestedAmount: Number(sr.suggestedAmount||sr.baselineAmount||0),
-    });
+    if(!sr.exists){
+      missingRepay.push({
+        cardId: String(w.id),
+        cardName: w.name || `Carta #${w.id}`,
+        paymentDate: (sr.paymentDate||"").slice(0,10),
+        amount: safeNum(sr.suggestedAmount||sr.baselineAmount||0),
+      });
+    }
   }
   missingRepay.sort((a,b)=> (a.paymentDate||"").localeCompare(b.paymentDate||""));
 
-  const todo = document.createElement("div");
-  todo.className = "panel";
-  todo.style.marginTop = "12px";
-  todo.innerHTML = `
-    <h3 style="margin-top:0">Da fare (nel mese)</h3>
-    <div class="muted">Cose future rispetto a oggi (${isoDate(today0)}).</div>
+  const alerts = document.createElement("div");
+  alerts.className = "panel";
+  alerts.style.marginTop = "12px";
+  alerts.innerHTML = `
+    <h3 style="margin-top:0">Impegni & rischi nel mese</h3>
+    <div class="muted">Riferimento “oggi”: <span class="mono">${isoDate(today0)}</span></div>
     <div class="hr"></div>
 
     <details open>
@@ -2828,9 +2999,9 @@ function renderOverview(){
             <div class="treeRow ${e.__catClass}">
               <div class="name" style="min-width:0">
                 <div><b>${escapeHtml(e.__day||"")}</b> · ${escapeHtml(e.title||"")}</div>
-                <div class="muted" style="font-size:14px">${escapeHtml(labelForPaymentMethod(e))} · ${escapeHtml(e.category||"")} · ${escapeHtml(e.type||"")}</div>
+                <div class="muted" style="font-size:14px">${escapeHtml(labelMethod(e))} · ${escapeHtml(e.category||"")} · ${escapeHtml(e.type||"")}</div>
               </div>
-              <div class="amt money ${(evSign(e)>0)?"pos":"neg"}">${(evSign(e)>0?"+":"-")}${fmtMoney(Number(e.amount||0)).replace(" €","")} €</div>
+              <div class="amt money ${(evSignGlobal(e)>0)?"pos":"neg"}">${(evSignGlobal(e)>0?"+":"-")}${fmtMoney(safeNum(e.amount)).replace(" €","")} €</div>
             </div>
           `).join("") || `<div class="muted">Nessun evento futuro nel mese.</div>`
         }
@@ -2838,49 +3009,67 @@ function renderOverview(){
     </details>
 
     <details style="margin-top:10px" open>
-      <summary><span>Rimborsi carta previsti ma mancanti</span><span class="tag">${missingRepay.length}</span></summary>
+      <summary><span>Addebiti carta previsti ma mancanti</span><span class="tag">${missingRepay.length}</span></summary>
       <div class="treeBody">
         ${
           missingRepay.map(x=>`
             <div class="treeRow">
               <div class="name">
                 <div><b>${escapeHtml(x.paymentDate)}</b> · ${escapeHtml(x.cardName)}</div>
-                <div class="muted" style="font-size:14px">scheduledRepayment mancante</div>
+                <div class="muted" style="font-size:14px">Previsto dal backend (scheduledRepayment) ma non registrato</div>
               </div>
               <div class="amt" style="display:flex;gap:10px;align-items:center">
-                <span class="money neg">${fmtMoney(x.suggestedAmount)}</span>
+                <span class="money neg">${fmtMoney(x.amount)}</span>
                 <button class="btn small" data-create-repay="${escapeHtml(x.cardId)}">Crea ora</button>
               </div>
             </div>
-          `).join("") || `<div class="muted">Nessun rimborso mancante nel mese.</div>`
+          `).join("") || `<div class="muted">Nessun addebito mancante nel mese.</div>`
         }
-        <div class="hint" style="margin-top:8px">“Crea ora” usa la logica già presente (defaultSourceWalletId della carta).</div>
+        <div class="hint" style="margin-top:8px">“Crea ora” usa defaultSourceWalletId della carta.</div>
       </div>
     </details>
   `;
-  tree.appendChild(todo);
+  tree.appendChild(alerts);
 
-  // wire “Crea ora” buttons (riuso tua funzione esistente)
-  for(const btn of todo.querySelectorAll("[data-create-repay]")){
+  for(const btn of alerts.querySelectorAll("[data-create-repay]")){
     btn.addEventListener("click", async ()=>{
       await createRepaymentNowForCard(String(btn.getAttribute("data-create-repay")));
     });
   }
 
-  // =========================
-  // C) Dettagli rimborsi/finanziamenti: arricchiamo la vista per wallet
-  // =========================
+  // ===== C) DETTAGLIO PER WALLET (con saldi iniziali stimati + fatturato carta) =====
+  function dayIdxOfISO(iso){
+    const d = parseISO(iso);
+    if(!d) return null;
+    if(d < ms || d > me) return null;
+    return d.getDate();
+  }
 
-  // Build tree for each wallet (come prima, ma con dettagli aggiuntivi)
-  for(const w of state.dashboard.wallets){
+  // wallet-specific sign (per saldo cumulativo wallet)
+  function signForWallet(w, ev){
+    const isCard = (w.type === "card");
+    const t = ev.type;
+
+    if(!isCard){
+      if(t === "income") return +1;
+      if(t === "expense") return -1;
+      if(t === "card_repayment" && String(ev.fromWalletId||"") === String(w.id)) return -1;
+      return 0;
+    }else{
+      if(t === "card_purchase") return -1;
+      if(t === "card_charge") return -1;
+      if(t === "card_credit") return +1;
+      if(t === "card_repayment" && String(ev.toCardWalletId||"") === String(w.id)) return +1;
+      return 0;
+    }
+  }
+
+  function eventsForWallet(w){
     const wid = String(w.id);
-    const isCard = w.type==="card";
-    const accent = `accent-wallet-${w.id}`;
-
-    const evs = allEvsNorm.filter(e=>{
+    const isCard = (w.type === "card");
+    return allEvsNorm.filter(e=>{
       const d = parseISO(e.__day);
       if(!within(d, ms, me)) return false;
-
       if(isCard){
         const cid = String(e.cardWalletId||e.toCardWalletId||"");
         return cid===wid;
@@ -2888,59 +3077,47 @@ function renderOverview(){
         return String(e.walletId||e.fromWalletId||"")===wid;
       }
     });
+  }
 
-    const incomes = evs.filter(e=> e.type==="income" || (isCard && e.type==="card_repayment"));
-    const expenses = evs.filter(e=> e.type==="expense" || (isCard && (e.type==="card_purchase" || e.type==="card_charge")));
+  function cashflowForWallet(w, walletEvents, upToDay=null){
+    let inc=0,out=0;
+    for(const e of walletEvents){
+      const di = dayIdxOfISO(e.__day);
+      if(upToDay!=null && (di==null || di > upToDay)) continue;
+      const s = signForWallet(w,e);
+      const a = safeNum(e.amount);
+      if(s>0) inc += a;
+      if(s<0) out += a;
+    }
+    return {in:inc,out:out,net:(inc-out)};
+  }
 
-    const expByCat = groupSum(expenses, e=> e.category||"Senza categoria").sort((a,b)=>b.v-a.v);
-    const incByCat = groupSum(incomes,  e=> e.category||"Senza categoria").sort((a,b)=>b.v-a.v);
+  for(const w of state.dashboard.wallets){
+    const accent = `accent-wallet-${w.id}`;
+    const wEvents = eventsForWallet(w);
 
-    function extraLineForEvent(e){
-      // C) componenti/dettagli
-      // - subType (credit/charge)
-      // - schedule (financing)
-      if(e.type==="card_credit"){
-        const st = (e.subType||"").trim();
-        return st ? `<div class="muted" style="font-size:14px">subType: <span class="mono">${escapeHtml(st)}</span></div>` : "";
-      }
-      if(e.type==="card_charge"){
-        const st = (e.subType||"").trim();
-        return st ? `<div class="muted" style="font-size:14px">subType: <span class="mono">${escapeHtml(st)}</span></div>` : "";
-      }
-      if(e.type==="card_purchase"){
-        const sch = e.schedule || null;
-        if(sch && sch.kind==="financing"){
-          const first = sch.firstStatementMonth || "—";
-          const count = Number(sch.count||0);
-          // custom installments (componenti)
-          const ci = Array.isArray(sch.customInstallments) ? sch.customInstallments : null;
-          if(ci && ci.length){
-            const lines = ci.slice(0,6).map(x=>`${escapeHtml(String(x.date||""))}: ${fmtMoney(Number(x.amount||0))}`).join(" · ");
-            const more = ci.length>6 ? ` · +${ci.length-6}` : "";
-            return `
-              <div class="muted" style="font-size:14px">
-                rate (custom): <span class="mono">${escapeHtml(first)}</span> · count: <span class="mono">${count}</span>
-              </div>
-              <div class="muted" style="font-size:14px">componenti: ${lines}${more}</div>
-            `;
-          }
-          // monthly installments
-          const inst = sch.monthlyInstallments && sch.monthlyInstallments.installmentAmount!=null
-            ? Number(sch.monthlyInstallments.installmentAmount)
-            : null;
-          return `
-            <div class="muted" style="font-size:14px">
-              rate (mensili): <span class="mono">${escapeHtml(first)}</span> · count: <span class="mono">${count}</span>
-              ${inst ? `· quota: <span class="mono">${fmtMoney(inst)}</span>` : ""}
-            </div>
-          `;
-        }
-      }
-      if(e.type==="card_repayment"){
-        const pd = (e.paymentDate||"").slice(0,10);
-        return pd ? `<div class="muted" style="font-size:14px">paymentDate: <span class="mono">${escapeHtml(pd)}</span></div>` : "";
-      }
-      return "";
+    const balNow = safeNum(w.balance);
+    const selDay = clamp(state.selectedDate.getDate(), 1, me.getDate());
+    const mtd = cashflowForWallet(w, wEvents, selDay);
+    const startBalEst = balNow - (mtd.in - mtd.out);
+
+    const full = cashflowForWallet(w, wEvents, null);
+
+    // “spese fatturate nel mese” per carte: usa statement se disponibile
+    let billedBlock = "";
+    if(w.type==="card" && w.card && w.card.statement){
+      const s = w.card.statement;
+      const billed = safeNum(s.baselineAmount||0) + safeNum(s.charges||0) - safeNum(s.credits||0);
+      billedBlock = `
+        <div class="hr"></div>
+        <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(220px,1fr))">
+          <div class="kpi">
+            <div class="t">Fatturato (statement)</div>
+            <div class="v"><span class="money neg">${fmtMoney(billed)}</span></div>
+            <div class="s">Finestra: <span class="mono">${escapeHtml(s.window.start)}</span> → <span class="mono">${escapeHtml(s.window.end)}</span></div>
+          </div>
+        </div>
+      `;
     }
 
     const det = document.createElement("details");
@@ -2950,65 +3127,55 @@ function renderOverview(){
       <summary>
         <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
           <b>${escapeHtml(w.name||"")}</b>
-          <span class="tag" style="margin-left:8px">${isCard ? "carta" : "conto"}</span>
+          <span class="tag" style="margin-left:8px">${w.type==="card" ? "carta" : "conto"}</span>
         </span>
-        <span class="money ${moneyClassSigned(Number(w.balance||0))}">${fmtMoney(Number(w.balance||0))}</span>
+        <span class="money ${moneyClassSigned(balNow)}">${fmtMoney(balNow)}</span>
       </summary>
+
       <div class="treeBody">
-        <div class="grid2">
+        <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(220px,1fr))">
           <div class="kpi">
-            <div class="t">Spese mese</div>
-            <div class="v"><span class="money neg">${fmtMoney(-Number(w.spentSoFar||0)).replace("-","")}</span></div>
-            <div class="s">Δ mese scorso: <span class="delta ${deltaClass(Number((w.compareLastMonthExpenses||{}).amount||0))}">${fmtMoney(Number((w.compareLastMonthExpenses||{}).amount||0))}</span></div>
+            <div class="t">Saldo iniziale (stimato)</div>
+            <div class="v"><span class="money ${moneyClassSigned(startBalEst)}">${fmtMoney(startBalEst)}</span></div>
+            <div class="s">Derivato da saldo attuale e movimenti MTD</div>
           </div>
           <div class="kpi">
-            <div class="t">Entrate mese</div>
-            <div class="v"><span class="money pos">${fmtMoney(Number(w.incomeSoFar||0))}</span></div>
-            <div class="s">Δ mese scorso: <span class="delta ${deltaClass(Number((w.compareLastMonthIncome||{}).amount||0))}">${fmtMoney(Number((w.compareLastMonthIncome||{}).amount||0))}</span></div>
+            <div class="t">Entrate / Uscite mese</div>
+            <div class="v"><span class="money pos">${fmtMoney(full.in)}</span> <span class="muted">/</span> <span class="money neg">${fmtMoney(full.out)}</span></div>
+            <div class="s">Netto: <span class="money ${moneyClassSigned(full.net)}">${fmtMoney(full.net)}</span></div>
+          </div>
+          <div class="kpi">
+            <div class="t">Saldo attuale</div>
+            <div class="v"><span class="money ${moneyClassSigned(balNow)}">${fmtMoney(balNow)}</span></div>
+            <div class="s">As-of: <span class="mono">${isoDate(state.selectedDate)}</span></div>
           </div>
         </div>
 
+        ${billedBlock}
+
         <div class="hr"></div>
 
-        <details class="${accent}" style="margin:10px 0">
-          <summary><span>Spese per categoria</span><span class="tag">${expByCat.length}</span></summary>
-          <div class="treeBody">
-            ${expByCat.map(x=>`
-              <div class="treeRow ${catAccentClass("expense", x.k)}">
-                <div class="name">${escapeHtml(x.k)}</div>
-                <div class="amt money neg">${fmtMoney(-x.v).replace("-","")}</div>
-              </div>
-            `).join("") || `<div class="muted">Nessuna spesa nel mese.</div>`}
-          </div>
-        </details>
-
-        <details class="${accent}" style="margin:10px 0">
-          <summary><span>Entrate per categoria</span><span class="tag">${incByCat.length}</span></summary>
-          <div class="treeBody">
-            ${incByCat.map(x=>`
-              <div class="treeRow ${catAccentClass("income", x.k)}">
-                <div class="name">${escapeHtml(x.k)}</div>
-                <div class="amt money pos">${fmtMoney(x.v)}</div>
-              </div>
-            `).join("") || `<div class="muted">Nessuna entrata nel mese.</div>`}
-          </div>
-        </details>
-
         <details class="${accent}" style="margin:10px 0" open>
-          <summary><span>Dettaglio eventi del mese (con componenti)</span><span class="tag">${evs.length}</span></summary>
+          <summary><span>Eventi del mese</span><span class="tag">${wEvents.length}</span></summary>
           <div class="treeBody">
-            ${evs
+            ${wEvents
               .sort((a,b)=> (a.__day||"").localeCompare(b.__day||"") || (a.id||0)-(b.id||0))
-              .map(e=>`
-                <div class="treeRow ${e.__catClass}">
-                  <div class="name" style="min-width:0">
-                    <div><b>${escapeHtml(e.__day||"")}</b> · ${escapeHtml(e.title||"")}</div>
-                    <div class="muted" style="font-size:14px">${escapeHtml(e.category||"")} · ${escapeHtml(e.type||"")}</div>
-                    ${extraLineForEvent(e)}
+              .map(e=>{
+                const s = signForWallet(w,e);
+                const sign = s>0 ? "+" : (s<0 ? "-" : "");
+                const cls = s>0 ? "pos" : "neg";
+                const method = labelMethod(e);
+                return `
+                  <div class="treeRow ${e.__catClass}">
+                    <div class="name" style="min-width:0">
+                      <div><b>${escapeHtml(e.__day||"")}</b> · ${escapeHtml(e.title||"")}</div>
+                      <div class="muted" style="font-size:14px">${escapeHtml(e.category||"")} · ${escapeHtml(method)} · ${escapeHtml(e.type||"")}</div>
+                    </div>
+                    <div class="amt money ${cls}">${sign}${fmtMoney(safeNum(e.amount)).replace(" €","")} €</div>
                   </div>
-                  <div class="amt money ${(evSign(e)>0) ? "pos":"neg"}">${(evSign(e)>0?"+":"-")}${fmtMoney(Number(e.amount||0)).replace(" €","")} €</div>
-                </div>
-              `).join("") || `<div class="muted">Nessun evento nel mese.</div>`}
+                `;
+              }).join("") || `<div class="muted">Nessun evento nel mese.</div>`
+            }
           </div>
         </details>
 
@@ -3018,9 +3185,8 @@ function renderOverview(){
     tree.appendChild(det);
   }
 
-  // =========================
-  // Cards statement box (tuo codice originale invariato)
-  // =========================
+  // ===== Cards statement box: lascia il tuo blocco esistente invariato =====
+  // (riuso il tuo codice corrente, senza cambi)
   const cbox = $("cardsStatementBox");
   cbox.innerHTML = "";
   const cards = state.dashboard.wallets.filter(w=>w.type==="card");
@@ -3094,7 +3260,6 @@ function renderOverview(){
     }
   }
 }
-
 
 function catAccentClass(type, category){
   const key = `cat:${type}:${category||""}`;

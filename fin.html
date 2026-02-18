@@ -791,8 +791,8 @@ dialog::backdrop{background: rgba(11,18,32,.45)}
 /* JS already provides --accent per .accent-cat-* and .accent-wallet-* */
 [class*="accent-wallet-"],
 [class*="accent-cat-"]{
-  /* keep fallback; real per-class --accent should be injected by JS */
-  --accent: var(--accent);
+  /* fallback: se dynRules non inietta il colore, usa il default globale */
+  --accent: var(--accent, rgba(47,111,255,.35));
 }
 
 /* -------------------- 16) Scrollbars -------------------- */
@@ -1037,6 +1037,41 @@ dialog::backdrop{background: rgba(11,18,32,.45)}
 /* === AUTH GATE (no UI) === */
 body{ visibility:hidden; }
 body.authed{ visibility:visible; }
+
+.sptable tr[class*="accent-cat-"]{
+  /* usa l’accent come hint, ma resta “pulito” */
+  background: linear-gradient(180deg, var(--surface0), var(--surface1));
+}
+.sptable tr[class*="accent-cat-"]:hover{
+  outline: 2px solid color-mix(in oklab, var(--accent), rgba(0,0,0,.10) 35%);
+  outline-offset: -2px;
+}
+
+.money.rep{color: var(--rep)}
+.ev .actions{
+  justify-self:end !important;
+  min-width: max-content !important;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:6px;
+}
+.ev .actions .btn.small{
+  white-space:nowrap;
+}
+
+/* === HARD OVERRIDE: kill dynRules title/tag coloring everywhere === */
+.ev[class*="accent-cat-"] .ttl,
+.ev[class*="accent-wallet-"] .ttl{
+  color: var(--fg0) !important;
+}
+
+.ev[class*="accent-cat-"] .tag,
+.ev[class*="accent-wallet-"] .tag{
+  color: var(--fg1) !important;
+  border-color: var(--line1) !important;
+}
+
 </style>
   <!-- dynamic rules for wallets/cards/categories created at runtime -->
   <style id="dynRules"></style>

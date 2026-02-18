@@ -788,11 +788,14 @@ dialog::backdrop{background: rgba(11,18,32,.45)}
 .toast .box b{display:block;margin-bottom:6px;color:var(--fg0)}
 
 /* -------------------- 15) Dynamic accent classes (from JS) -------------------- */
-/* JS already provides --accent per .accent-cat-* and .accent-wallet-* */
+/* fallback NON ricorsivo: JS (dynRules) può comunque sovrascrivere perché viene dopo */
+:root{
+  --accentFallback: rgba(47,111,255,.35);
+}
+
 [class*="accent-wallet-"],
 [class*="accent-cat-"]{
-  /* fallback: se dynRules non inietta il colore, usa il default globale */
-  --accent: var(--accent, rgba(47,111,255,.35));
+  --accent: var(--accentFallback);
 }
 
 /* -------------------- 16) Scrollbars -------------------- */
@@ -1070,6 +1073,13 @@ body.authed{ visibility:visible; }
 .ev[class*="accent-wallet-"] .tag{
   color: var(--fg1) !important;
   border-color: var(--line1) !important;
+}
+.ev{
+  border-left-color: var(--accent, var(--accentFallback)) !important;
+}
+
+.sptable .dot{
+  background: var(--accent, var(--accentFallback));
 }
 
 </style>
@@ -2536,7 +2546,7 @@ function normalizeEventForUI(ev){
   // dynamic category accent (also for new categories)
   const catKey = `cat:${type}:${cat}:${sub}`;
   const catClass = "accent-cat-" + hash32(catKey);
-  ensureDynRule(`.${catClass}`, hslFromKey(catKey));
+  //ensureDynRule(`.${catClass}`, hslFromKey(catKey));
 
   const walletClass = wid ? `accent-wallet-${wid}` : "";
   const cardClass   = cid ? `accent-wallet-${cid}` : "";

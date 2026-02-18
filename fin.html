@@ -1037,6 +1037,270 @@ dialog::backdrop{background: rgba(11,18,32,.45)}
 /* === AUTH GATE (no UI) === */
 body{ visibility:hidden; }
 body.authed{ visibility:visible; }
+/* =========================================================
+   FINAL LAYOUT PATCH — blocks/sections/tabs optimized
+   Paste at the VERY END of your <style>
+   (CSS only, no HTML/JS changes)
+   ========================================================= */
+
+/* ---------- A) Global page width + vertical rhythm ---------- */
+:root{
+  --appMax: 1560px;
+  --headerH: 112px; /* fallback; used for sticky right column offset */
+  --panelGap: 12px;
+  --panelPad: 16px;
+}
+
+/* keep content centered on wide screens, still fluid */
+main{
+  max-width: var(--appMax);
+  margin: 0 auto;
+}
+
+/* reduce random inline margins by enforcing a consistent rhythm */
+.panel{ padding: var(--panelPad) !important; }
+.panel + .panel{ margin-top: var(--panelGap) !important; }
+
+/* tighter headings spacing */
+.panel h2{ margin: 0 0 10px !important; }
+.panel h3{ margin: 12px 0 10px !important; }
+
+/* ---------- B) Header/topbar/tabs: compact + reliable wrapping ---------- */
+header{ box-shadow: 0 6px 18px rgba(11,18,32,.06); }
+
+.topbar{
+  gap: 12px !important;
+  padding: 12px 16px !important;
+}
+
+.brand{
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 10px !important;
+}
+
+/* pills don’t force horizontal overflow */
+.pill{
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 860px){
+  .pill{ white-space: normal; }
+}
+
+/* tabs row: keep status pill on the right, avoid over-wrapping chaos */
+.tabs{
+  gap: 8px !important;
+  padding: 0 16px 12px !important;
+}
+.tabbtn{ padding: 10px 14px !important; }
+
+/* tabsDayStatus: keep it aligned and not too tall */
+#tabsDayStatus{
+  padding: 7px 10px !important;
+  max-width: min(46vw, 720px) !important;
+}
+@media (max-width: 720px){
+  #tabsDayStatus{ max-width: none !important; width: 100% !important; }
+}
+
+/* ---------- C) Core 2-column layout rules (Calendar tab) ---------- */
+/* You already have a specific calendar row; this refines the ergonomics */
+#tab-calendar > .row{
+  gap: var(--gap2) !important;
+  align-items: stretch !important;
+}
+
+/* Left (calendar) column: always take the space */
+#tab-calendar > .row > .col:first-child{
+  flex: 1 1 980px !important;
+  min-width: min(980px, 100%) !important;
+}
+
+/* Right column: fixed-ish width on desktop */
+#tab-calendar > .row > .col:last-child{
+  flex: 0 0 520px !important;
+  min-width: 380px !important;
+  max-width: 560px !important;
+}
+
+/* Sticky right column (desktop): day detail stays visible while scrolling */
+@media (min-width: 1221px){
+  #tab-calendar > .row > .col:last-child{
+    position: sticky;
+    top: calc(var(--headerH) + 12px);
+    align-self: flex-start;
+    max-height: calc(100vh - (var(--headerH) + 28px));
+    overflow: auto;
+    padding-right: 2px; /* avoids scrollbar overlay on some browsers */
+  }
+}
+
+/* On smaller screens: stack naturally, no sticky */
+@media (max-width: 1220px){
+  #tab-calendar > .row{ flex-wrap: wrap !important; }
+  #tab-calendar > .row > .col:last-child{
+    position: static !important;
+    max-height: none !important;
+    overflow: visible !important;
+    flex: 1 1 100% !important;
+    max-width: none !important;
+  }
+}
+
+/* ---------- D) Calendar toolbar (.calbar) layout (you use it but no CSS) ---------- */
+.calbar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 10px;
+  border: 1px solid var(--line1);
+  border-radius: var(--r2);
+  background: linear-gradient(180deg, var(--surface1), var(--surface2));
+  box-shadow: var(--shadow3);
+}
+
+/* left cluster */
+.calbar .left{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.monthTitle{
+  margin: 0 !important;
+  font-size: 22px !important;
+  font-weight: 900;
+  letter-spacing: .2px;
+  white-space: nowrap;
+}
+
+/* right cluster */
+.calbar .right{
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* make select + add button not explode */
+#calWalletFilter{
+  min-width: 240px;
+  max-width: 420px;
+}
+#btnAddOnSelected{
+  white-space: nowrap;
+}
+
+/* On medium screens: force right cluster below, full width */
+@media (max-width: 980px){
+  .calbar{ align-items: stretch; }
+  .calbar .right{ width: 100%; justify-content: flex-start; }
+  #calWalletFilter{ flex: 1 1 240px; max-width: none; }
+  #btnAddOnSelected{ flex: 1 1 280px; }
+}
+
+/* ---------- E) Define grid2/grid3 (you use them, but they’re missing) ---------- */
+.grid2, .grid3{
+  display: grid;
+  gap: var(--gap1);
+  align-items: start;
+  min-width: 0;
+}
+.grid2{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+.grid3{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+
+@media (max-width: 920px){
+  .grid2{ grid-template-columns: 1fr; }
+  .grid3{ grid-template-columns: 1fr; }
+}
+
+/* ---------- F) HeadersWrap density + stability ---------- */
+#headersWrap{
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)) !important;
+  gap: 12px !important;
+}
+@media (min-width: 1500px){
+  #headersWrap{ grid-template-columns: repeat(3, minmax(340px, 1fr)) !important; }
+}
+@media (max-width: 520px){
+  #headersWrap{ grid-template-columns: 1fr !important; }
+}
+
+/* Sparkline container doesn’t wrap weirdly */
+#headersWrap svg{ display:block; max-width: 100%; height: auto; }
+
+/* ---------- G) Day detail list: better scanning + no “actions” layout break ---------- */
+/* you use .actions in day panel rows */
+#dayEvents .actions{
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  min-width: max-content;
+}
+#dayEvents .actions .btn.small{
+  width: auto;
+}
+
+/* add internal spacing and avoid huge empty areas */
+#dayEvents{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---------- H) Overview tab columns: avoid too-wide right sidebar ---------- */
+#tab-overview .row{ align-items: stretch; }
+#tab-overview .col:last-child{
+  max-width: 560px;
+}
+@media (min-width: 1221px){
+  #tab-overview .col:last-child{
+    position: sticky;
+    top: calc(var(--headerH) + 12px);
+    align-self: flex-start;
+    max-height: calc(100vh - (var(--headerH) + 28px));
+    overflow: auto;
+  }
+}
+@media (max-width: 1220px){
+  #tab-overview .col:last-child{
+    position: static !important;
+    max-height: none !important;
+    overflow: visible !important;
+    max-width: none !important;
+  }
+}
+
+/* ---------- I) Small ergonomics: buttons in “Azioni rapide” layout ---------- */
+#tab-calendar .panel .row{
+  gap: 10px;
+}
+#tab-calendar .panel .row > .btn{
+  flex: 1 1 210px;
+}
+@media (max-width: 520px){
+  #tab-calendar .panel .row > .btn{ flex: 1 1 100%; }
+}
+
+/* ---------- J) Header height estimation (best-effort) ---------- */
+/* Improves sticky offset without JS by approximating header height.
+   If you change header paddings later, adjust --headerH. */
+@media (min-width: 720px){
+  :root{ --headerH: 112px; }
+}
+@media (max-width: 719px){
+  :root{ --headerH: 156px; }
+}
 
 </style>
   <!-- dynamic rules for wallets/cards/categories created at runtime -->

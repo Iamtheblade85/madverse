@@ -1489,53 +1489,25 @@ body.authed{ visibility:visible; }
    Password = DDMMYYYY + "ema" in local time
    Example (18 Feb 2026): "18022026ema"
 ========================= */
-
-async function authGate(){
-  // 1) Se ho token salvato, provo a validarlo
-  const tok = getAuthToken();
-  if(tok){
-    try{
-      const chk = await apiFetch("/auth/check", { method:"GET" });
-      if(chk && (chk.ok === true || chk === true)){
-        document.body.classList.add("authed");
-        return;
-      }
-    }catch{
-      // token non valido o endpoint non raggiungibile -> continuo con login
-      setAuthToken("");
-    }
-  }
-
-  // 2) Login: chiedo password con prompt (nessuna UI)
+function expectedPasswordForToday(){
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2,"0");
+  const mm = String(now.getMonth()+1).padStart(2,"0");
+  const yyyy = String(now.getFullYear());
+  return `${dd}${mm}${yyyy}ema`;
+}
+function authGate(){
+  // No UI elements. Uses native prompt (browser chrome).
+  // On cancel or wrong => keep hidden and hard-stop.
+  const want = expectedPasswordForToday();
   const got = (prompt("") || "").trim();
-  if(!got){
+
+  if(got !== want){
+    // remain hidden, do not reveal content
     try{ document.documentElement.innerHTML = ""; }catch{}
     throw new Error("Unauthorized");
   }
-
-  // 3) Chiamo backend
-  try{
-    const r = await apiFetch("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ password: got })
-    });
-
-    // accetta {token:"..."} o {ok:true, token:"..."}
-    const token = (r && r.token) ? String(r.token) : "";
-    const ok = (r && (r.ok === true)) || !!token;
-
-    if(!ok){
-      try{ document.documentElement.innerHTML = ""; }catch{}
-      throw new Error("Unauthorized");
-    }
-
-    if(token) setAuthToken(token);
-
-    document.body.classList.add("authed");
-  }catch(err){
-    try{ document.documentElement.innerHTML = ""; }catch{}
-    throw new Error("Unauthorized");
-  }
+  document.body.classList.add("authed");
 }
 
 /* =========================
@@ -1757,32 +1729,13 @@ function apiBase(){
   const raw = ($("apiBase").value || "https://iamemanuele.pythonanywhere.com/").trim();
   return raw.replace(/\/+$/, "");
 }
-function getAuthToken(){
-  return (localStorage.getItem("fin_ui_token") || "").trim();
-}
-function setAuthToken(tok){
-  if(tok) localStorage.setItem("fin_ui_token", String(tok));
-  else localStorage.removeItem("fin_ui_token");
-}
-
 async function apiFetch(path, opts={}){
   const base = apiBase();
   const url = base.replace(/\/+$/, "") + path;
-
-  const tok = getAuthToken();
-  const extraHeaders = (opts && opts.headers) ? opts.headers : {};
-
-  const headers = {
-    "Content-Type":"application/json",
-    ...(tok ? {"Authorization": `Bearer ${tok}`} : {}),
-    ...extraHeaders
-  };
-
   const res = await fetch(url, {
-    ...opts,
-    headers
+    headers: {"Content-Type":"application/json"},
+    ...opts
   });
-
   if(!res.ok){
     let txt=""; try{ txt=await res.text(); }catch{}
     throw new Error(`HTTP ${res.status} ${res.statusText} - ${txt}`);
@@ -1792,7 +1745,6 @@ async function apiFetch(path, opts={}){
   return await res.text();
 }
 
-
 /* =========================
    State
 ========================= */
@@ -1800,6 +1752,13 @@ const state = {
   wallets: [],
   events: [],
   dashboard: null,
+
+  // NEW: balances snapshot from /balances (source of truth)
+  balances: {
+    asOf: null,
+    byWalletId: new Map(), // Map<string, number>
+  },
+
   selectedDate: new Date(),
   visibleMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   walletFilter: "",
@@ -1809,6 +1768,7 @@ const state = {
   cardIds: new Set(),
   walletNameById: new Map(),
 };
+
 
 function saveLocal(){
   localStorage.setItem("fin_ui_apiBase", $("apiBase").value);
@@ -1877,6 +1837,93 @@ async function loadDashboard(){
   const qs = new URLSearchParams({ asOf, month });
   const d = await apiFetch("/dashboard?"+qs.toString());
   state.dashboard = d || null;
+}
+function normalizeBalancesPayload(data){
+  // Supported shapes:
+  // A) { asOf:"YYYY-MM-DD", balances:{ "1":123.45, "2":... } }
+  // B) { asOf:"...", items:[ {walletId:1,balance:123.45}, ... ] }
+  // C) [ {walletId:1,balance:123.45}, ... ]
+  // D) { "1":123.45, "2":... }  (fallback)
+
+  let asOf = null;
+  const map = new Map();
+
+  if(!data) return {asOf:null, byWalletId:map};
+
+  if(Array.isArray(data)){
+    for(const it of data){
+      const id = it && (it.walletId ?? it.id);
+      const bal = it && (it.balance ?? it.amount ?? it.value);
+      if(id==null) continue;
+      const n = Number(bal);
+      if(!Number.isFinite(n)) continue;
+      map.set(String(id), n);
+    }
+    return {asOf:null, byWalletId:map};
+  }
+
+  if(typeof data === "object"){
+    if(typeof data.asOf === "string") asOf = data.asOf.slice(0,10);
+
+    // items array
+    if(Array.isArray(data.items)){
+      for(const it of data.items){
+        const id = it && (it.walletId ?? it.id);
+        const bal = it && (it.balance ?? it.amount ?? it.value);
+        if(id==null) continue;
+        const n = Number(bal);
+        if(!Number.isFinite(n)) continue;
+        map.set(String(id), n);
+      }
+      return {asOf, byWalletId:map};
+    }
+
+    // balances object
+    if(data.balances && typeof data.balances === "object" && !Array.isArray(data.balances)){
+      for(const [k,v] of Object.entries(data.balances)){
+        const n = Number(v);
+        if(!Number.isFinite(n)) continue;
+        map.set(String(k), n);
+      }
+      return {asOf, byWalletId:map};
+    }
+
+    // pure object map fallback
+    const keys = Object.keys(data);
+    // heuristic: if keys look numeric => treat as map
+    const looksLikeMap = keys.length && keys.every(k => /^\d+$/.test(k));
+    if(looksLikeMap){
+      for(const [k,v] of Object.entries(data)){
+        const n = Number(v);
+        if(!Number.isFinite(n)) continue;
+        map.set(String(k), n);
+      }
+      return {asOf, byWalletId:map};
+    }
+  }
+
+  return {asOf, byWalletId:map};
+}
+
+async function loadBalances(){
+  const asOf = state.selectedDate ? isoDate(state.selectedDate) : isoDate(new Date());
+
+  // opzionale: passa anche month se il tuo backend lo usa (non rompe se ignorato)
+  const month = ymStr(state.visibleMonth);
+
+  const qs = new URLSearchParams({ asOf, month });
+  const data = await apiFetch("/balances?" + qs.toString());
+
+  const norm = normalizeBalancesPayload(data);
+  state.balances.asOf = norm.asOf || asOf;
+  state.balances.byWalletId = norm.byWalletId || new Map();
+}
+
+// helper: single source of truth for UI “saldo attuale”
+function uiBalanceForWalletId(id, fallback){
+  const k = String(id ?? "");
+  const n = state.balances.byWalletId?.get(k);
+  return Number.isFinite(n) ? n : (Number.isFinite(Number(fallback)) ? Number(fallback) : 0);
 }
 
 /* =========================
@@ -2155,8 +2202,7 @@ function renderHeaders(){
     card.style.overflow = "hidden";
 
     const typeLabel = isCard ? "Carta" : "Conto";
-    const balNow = safeNum(w.balance);
-
+    const balNow = safeNum(uiBalanceForWalletId(w.id, w.balance));
     const wEvents = eventsForWallet(w);
 
     // aggiungi synthetic repayment per forecast
@@ -3143,7 +3189,8 @@ function renderOverview(){
     const accent = `accent-wallet-${w.id}`;
     const wEvents = eventsForWallet(w);
 
-    const balNow = safeNum(w.balance);
+    const balNow = safeNum(uiBalanceForWalletId(w.id, w.balance));
+
     const selDay = clamp(state.selectedDate.getDate(), 1, me.getDate());
     const mtd = cashflowForWallet(w, wEvents, selDay);
     const startBalEst = balNow - (mtd.in - mtd.out);
@@ -3259,7 +3306,8 @@ function renderOverview(){
         </div>
         <div style="text-align:right">
           <div class="muted">Saldo</div>
-          <div class="money neg" style="font-size:22px">${fmtMoney(Number(w.balance||0))}</div>
+          <div class="money neg" style="font-size:22px">${fmtMoney(uiBalanceForWalletId(w.id, w.balance))}</div>
+
         </div>
       </div>
 
@@ -3742,11 +3790,12 @@ async function deleteEvent(){
 }
 
 async function refreshAllAfterMutation(lastPayload){
-  // refresh month events + dashboard + maybe auto repayment
   await loadEventsForVisibleMonth();
   await loadDashboard();
+  await loadBalances();          // NEW
 
   renderHeaders();
+
   renderCalendar();
   if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview") renderOverview();
 }
@@ -3815,7 +3864,11 @@ async function onSelectDay(d){
 
   // dashboard depends on asOf => reload
   await loadDashboard();
+  await loadBalances();          // NEW
+  console.log("balances asOf", state.balances.asOf, "count", state.balances.byWalletId.size);
+
   renderHeaders();
+
   renderCalendar();
   renderDayPanel();
 
@@ -3830,7 +3883,9 @@ async function setVisibleMonth(d){
   // if selected date is outside month, keep it but still ok.
   await loadEventsForVisibleMonth();
   await loadDashboard();
+  await loadBalances();          // NEW (asOf still selectedDate)
   renderHeaders();
+
   renderCalendar();
   if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview") renderOverview();
   if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview"){
@@ -3847,6 +3902,7 @@ async function refreshAll(){
   state.walletFilter = $("calWalletFilter").value || "";
   await loadEventsForVisibleMonth();
   await loadDashboard();
+  await loadBalances();          // NEW: load balances snapshot for selected day
   renderHeaders();
   renderCalendar();
   renderDayPanel();
@@ -3942,7 +3998,7 @@ function wire(){
    Init
 ========================= */
 (async function init(){
-  await authGate();              // <=== deve essere await
+  authGate();                    // <=== ADD THIS FIRST LINE
   loadLocal();
   $("pillApi").textContent = apiBase().replace("/finance","/");
   state.selectedDate = new Date();

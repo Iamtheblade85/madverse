@@ -2038,8 +2038,11 @@ function renderHeaders(){
   const evsNormAll = state.events.map(normalizeEventForUI);
 
   const safeNum = (x)=> (Number.isFinite(Number(x)) ? Number(x) : 0);
-  const fmtAbs = (x)=> fmtMoney(Math.abs(safeNum(x)));
 
+  function isInMonthISO(iso){
+    const d = parseISO(iso);
+    return d && d >= ms && d <= me;
+  }
   function dayIdxForISO(iso){
     const d = parseISO(iso);
     if(!d) return null;
@@ -2047,52 +2050,33 @@ function renderHeaders(){
     return d.getDate(); // 1..days
   }
 
-  function isInMonthISO(iso){
-    const d = parseISO(iso);
-    return d && d >= ms && d <= me;
-  }
-
-  // === SIGN LOGIC (cashflow) ===
-  // Per "conto": income +, expense -, card_repayment (fromWallet) -, (card events non toccano il conto direttamente)
-  // Per "carta": card_purchase -, card_charge -, card_credit +, card_repayment (toCard) + (riduce debito)
-  function signForWallet(w, ev){
-    const isCard = (w.type === "card");
-    const t = ev.type;
-
-    if(!isCard){
-      if(t === "income") return +1;
-      if(t === "expense") return -1;
-      if(t === "card_repayment" && String(ev.fromWalletId||"") === String(w.id)) return -1;
-      return 0;
-    }else{
-      if(t === "card_purchase") return -1;
-      if(t === "card_charge") return -1;
-      if(t === "card_credit") return +1;
-      if(t === "card_repayment" && String(ev.toCardWalletId||"") === String(w.id)) return +1;
-      return 0;
-    }
-  }
-
-  function eventsForWallet(w){
+  // === Eventi "di questo wallet" (solo mese visibile)
+  // Conto: income/expense + card_repayment (fromWalletId)
+  // Carta: card_purchase/card_charge/card_credit + card_repayment (toCardWalletId)
+  function eventsForWalletMonth(w){
     const id = String(w.id);
     const isCard = (w.type === "card");
     return evsNormAll.filter(ev=>{
-      if(!isInMonthISO(ev.__day)) return false;
+      if(!ev.__day || !isInMonthISO(ev.__day)) return false;
+
       if(isCard){
-        const cid = String(ev.cardWalletId||ev.toCardWalletId||"");
+        const cid = String(ev.cardWalletId ?? ev.toCardWalletId ?? "");
+        // Include repayments to card via toCardWalletId
         return cid === id;
       }else{
-        const wid = String(ev.walletId||ev.fromWalletId||"");
+        // Include repayments from account via fromWalletId
+        const wid = String(ev.walletId ?? ev.fromWalletId ?? "");
         return wid === id;
       }
     });
   }
 
-  // Include “scheduled repayment” come evento futuro anche se non esiste (solo per forecast)
+  // Synthetic (solo forecast): scheduled repayment se manca, e cade nel mese visibile
   function syntheticFutureRepaymentForCard(cardWalletRow){
     if(cardWalletRow.type !== "card") return null;
     const c = cardWalletRow.card;
     if(!c || !c.scheduledRepayment) return null;
+
     const sr = c.scheduledRepayment;
     const pd = (sr.paymentDate || "").slice(0,10);
     if(!pd || !isInMonthISO(pd)) return null;
@@ -2105,82 +2089,116 @@ function renderHeaders(){
       type: "card_repayment",
       title: "Addebito carta (previsto)",
       amount,
-      category: "Carta",
+      category: "Card Repayment",
       __day: pd,
       paymentDate: pd,
-      // collegamenti
       toCardWalletId: Number(cardWalletRow.id),
-      // fromWalletId lo stimiamo dal wallets list (defaultSourceWalletId)
       fromWalletId: Number((state.walletsById.get(String(cardWalletRow.id))||{}).defaultSourceWalletId || 0)
     };
   }
 
-  function walletDailySeries(w, walletEvents, extraSynthetic=[]){
-    // serie cumulativa nel mese (delta giornaliero)
+  // ===== Conti: bucket chiari =====
+  function accountBuckets(walletEvents, upToDay=null){
+    let income = 0;
+    let expense = 0;
+    let repayOut = 0;
+
+    for(const ev of walletEvents){
+      const di = dayIdxForISO(ev.__day);
+      if(upToDay!=null && (di==null || di > upToDay)) continue;
+
+      const a = safeNum(ev.amount);
+      if(ev.type === "income") income += a;
+      else if(ev.type === "expense") expense += a;
+      else if(ev.type === "card_repayment") repayOut += a; // qui sono SOLO quelli fromWalletId già filtrati
+    }
+
+    const outTotal = expense + repayOut;
+    const net = income - outTotal;
+    return {income, expense, repayOut, outTotal, net};
+  }
+
+  // ===== Carte: bucket chiari (sempre POSITIVI come importi) =====
+  // - purchases + charges = aumentano debito
+  // - credits + repayments = riducono debito
+  function cardBuckets(cardEvents, extraSynthetic=[], upToDay=null){
+    let purchases = 0;
+    let charges = 0;
+    let credits = 0;
+    let repayments = 0;
+
+    const feed = (ev)=>{
+      const di = dayIdxForISO(ev.__day);
+      if(upToDay!=null && (di==null || di > upToDay)) return;
+
+      const a = safeNum(ev.amount);
+      if(ev.type === "card_purchase") purchases += a;
+      else if(ev.type === "card_charge") charges += a;
+      else if(ev.type === "card_credit") credits += a;
+      else if(ev.type === "card_repayment") repayments += a; // qui sono SOLO quelli toCard già filtrati
+    };
+
+    for(const ev of cardEvents) feed(ev);
+    for(const ev of (extraSynthetic||[])) feed(ev);
+
+    const spend = purchases + charges;
+    const debtDelta = spend - credits - repayments; // + => debito sale, - => debito scende
+    return {purchases, charges, credits, repayments, spend, debtDelta};
+  }
+
+  // Sparkline: per conti su saldo, per carte su debito (più intuitivo)
+  function seriesForAccount(startBalEst, wEvents){
+    const byDay = new Array(daysInMonth).fill(0);
+
+    for(const ev of wEvents){
+      const di = dayIdxForISO(ev.__day);
+      if(!di) continue;
+      const a = safeNum(ev.amount);
+
+      // saldo conto: income +, expense -, repayment(from) -
+      if(ev.type === "income") byDay[di-1] += +a;
+      else if(ev.type === "expense") byDay[di-1] += -a;
+      else if(ev.type === "card_repayment") byDay[di-1] += -a;
+    }
+
+    const cum = [];
+    let acc = startBalEst;
+    for(let i=0;i<daysInMonth;i++){
+      acc += byDay[i];
+      cum.push(acc);
+    }
+    return cum;
+  }
+
+  function seriesForCardDebt(startDebtEst, cardEvents, extraSynthetic=[]){
     const byDay = new Array(daysInMonth).fill(0);
 
     const feed = (ev)=>{
       const di = dayIdxForISO(ev.__day);
       if(!di) return;
-      byDay[di-1] += signForWallet(w, ev) * safeNum(ev.amount);
+      const a = safeNum(ev.amount);
+
+      // debito carta: purchase/charge +, credit -, repayment -
+      if(ev.type === "card_purchase") byDay[di-1] += +a;
+      else if(ev.type === "card_charge") byDay[di-1] += +a;
+      else if(ev.type === "card_credit") byDay[di-1] += -a;
+      else if(ev.type === "card_repayment") byDay[di-1] += -a;
     };
 
-    for(const ev of walletEvents) feed(ev);
-    for(const ev of extraSynthetic) feed(ev);
+    for(const ev of cardEvents) feed(ev);
+    for(const ev of (extraSynthetic||[])) feed(ev);
 
     const cum = [];
-    let acc = 0;
+    let debt = startDebtEst;
     for(let i=0;i<daysInMonth;i++){
-      acc += byDay[i];
-      cum.push(acc);
+      debt += byDay[i];
+      cum.push(debt);
     }
-    return {byDay, cum};
-  }
-
-  function cashflowMonth(w, walletEvents, upToDay=null){
-    // ritorna {in,out,net} (in/out positivi)
-    let inc = 0, out = 0;
-    for(const ev of walletEvents){
-      const di = dayIdxForISO(ev.__day);
-      if(upToDay!=null && (di==null || di > upToDay)) continue;
-
-      const s = signForWallet(w, ev);
-      const a = safeNum(ev.amount);
-      if(s > 0) inc += a;
-      if(s < 0) out += a;
-    }
-    return {in:inc, out:out, net:(inc - out)};
-  }
-
-  // robust “run-rate” per spesa variabile su conto:
-  // usa median giornaliera delle uscite (expense + card_repayment fromWallet) fino a oggi, e proietta.
-  function forecastVariableOutflowForAccount(w, walletEvents){
-    if(w.type === "card") return 0;
-    const dailyOut = new Array(selDay).fill(0);
-
-    for(const ev of walletEvents){
-      const di = dayIdxForISO(ev.__day);
-      if(!di || di > selDay) continue;
-      const s = signForWallet(w, ev);
-      if(s < 0) dailyOut[di-1] += safeNum(ev.amount);
-    }
-
-    const vals = dailyOut.filter(x=>x>0).sort((a,b)=>a-b);
-    if(!vals.length) return 0;
-
-    const mid = Math.floor(vals.length/2);
-    const median = (vals.length % 2) ? vals[mid] : (vals[mid-1]+vals[mid])/2;
-
-    const remainingDays = Math.max(0, daysInMonth - selDay);
-    return median * remainingDays;
+    return cum;
   }
 
   function riskBadgeHTML(level, text){
-    const cls =
-      level==="high" ? "tag" :
-      level==="med"  ? "tag" :
-      "tag";
-    // CSS tag già esiste: qui differenziamo via inline (senza cambiare CSS)
+    const cls = "tag";
     const style =
       level==="high" ? "border-color:rgba(209,31,74,.55);color:rgba(209,31,74,.95)" :
       level==="med"  ? "border-color:rgba(183,121,31,.55);color:rgba(183,121,31,.95)" :
@@ -2190,7 +2208,6 @@ function renderHeaders(){
 
   // ========= MAIN LOOP =========
   for(const w of state.dashboard.wallets){
-    const walletId = String(w.id);
     const isCard = (w.type === "card");
 
     const cls = `panel accent-wallet-${w.id}`;
@@ -2202,54 +2219,53 @@ function renderHeaders(){
     card.style.overflow = "hidden";
 
     const typeLabel = isCard ? "Carta" : "Conto";
-    const balNow = safeNum(uiBalanceForWalletId(w.id, w.balance));
-    const wEvents = eventsForWallet(w);
 
-    // aggiungi synthetic repayment per forecast
+    // saldo UI (source of truth = /balances)
+    const balNow = safeNum(uiBalanceForWalletId(w.id, w.balance));
+
+    // eventi mese per questo wallet
+    const wEvents = eventsForWalletMonth(w);
+
+    // synthetic per forecast carte
     const syn = [];
     if(isCard){
       const srev = syntheticFutureRepaymentForCard(w);
       if(srev) syn.push(srev);
     }
 
-    // cashflow mese fino a oggi (solo eventi reali, non synthetic)
-    const mtd = cashflowMonth(w, wEvents, selDay);
-    const startBalEst = balNow - (mtd.in - mtd.out);
+    // ======== CONTI ========
+    let headerRightTitle = "Saldo attuale";
+    let headerRightValue = fmtMoney(balNow);
+    let headerRightClass = `money ${moneyClassSigned(balNow)}`;
 
-    // totali mese (real events only)
-    const full = cashflowMonth(w, wEvents, null);
-
-    // serie cumulativa delta mese (real + synthetic) per forecast e min-balance
-    const series = walletDailySeries(w, wEvents, syn);
-
-    // forecast end-of-month:
-    // - base: startBal + cumEnd (real+synthetic)
-    // - per conti: aggiungi variabile stimata (run-rate) come uscite ulteriori
-    const cumEnd = series.cum[daysInMonth-1] || 0;
-    let endBalForecast = startBalEst + cumEnd;
-
-    if(!isCard){
-      const varOut = forecastVariableOutflowForAccount(w, wEvents);
-      endBalForecast -= varOut;
-    }
-
-    // min balance forecast (giorno peggiore) su base eventi noti (real+synthetic)
-    let minBal = Infinity;
-    let minDay = null;
-    for(let i=0;i<daysInMonth;i++){
-      const b = startBalEst + (series.cum[i]||0);
-      if(b < minBal){
-        minBal = b;
-        minDay = i+1;
-      }
-    }
-
-    // risk logic:
-    // Conto: rischio se minBal < 0 o se minBal < buffer
-    // Carta: rischio se availableCredit basso o se outstanding alto vs limit
+    let kpiHTML = "";
+    let extraHTML = "";
     let riskHtml = "";
+
     if(!isCard){
-      const buffer = 150; // soglia “realistica” minima (puoi parametrizzare)
+      const mtd = accountBuckets(wEvents, selDay);
+      const full = accountBuckets(wEvents, null);
+
+      // saldo iniziale stimato (saldo attuale - netto fino a selDay)
+      const startBalEst = balNow - mtd.net;
+
+      // forecast fine mese basato su eventi noti (nessun “run-rate” qui per evitare stime fuorvianti)
+      const endBalForecast = startBalEst + full.net;
+
+      // min saldo previsto su base eventi noti
+      const balSeries = seriesForAccount(startBalEst, wEvents);
+      let minBal = Infinity;
+      let minDay = null;
+      for(let i=0;i<balSeries.length;i++){
+        const b = balSeries[i];
+        if(b < minBal){
+          minBal = b;
+          minDay = i+1;
+        }
+      }
+
+      // risk conto
+      const buffer = 150;
       if(minBal < 0){
         riskHtml = riskBadgeHTML("high", `Rischio rosso (min ${fmtMoney(minBal)})`);
       }else if(minBal < buffer){
@@ -2257,13 +2273,81 @@ function renderHeaders(){
       }else{
         riskHtml = riskBadgeHTML("low", `OK (min ${fmtMoney(minBal)})`);
       }
-    }else{
+
+      const spark = sparklineSVG(balSeries.map(x=>x - startBalEst), 210, 46);
+
+      const minDayIso = (minDay!=null) ? `${ymStr(state.visibleMonth)}-${pad2(minDay)}` : "—";
+
+      kpiHTML = `
+        <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(240px,1fr))">
+          <div class="kpi">
+            <div class="t">Mese (entrate / uscite)</div>
+            <div class="v">
+              <span class="money pos">${fmtMoney(full.income)}</span>
+              <span class="muted"> / </span>
+              <span class="money neg">${fmtMoney(full.outTotal)}</span>
+            </div>
+            <div class="s">
+              Uscite = spese <span class="money neg">${fmtMoney(full.expense)}</span> + rimborsi carta <span class="money neg">${fmtMoney(full.repayOut)}</span> ·
+              Netto: <span class="money ${moneyClassSigned(full.net)}">${fmtMoney(full.net)}</span>
+            </div>
+          </div>
+
+          <div class="kpi">
+            <div class="t">Saldo iniziale (stimato)</div>
+            <div class="v"><span class="money ${moneyClassSigned(startBalEst)}">${fmtMoney(startBalEst)}</span></div>
+            <div class="s">Saldo attuale − netto fino al giorno ${selDay}</div>
+          </div>
+
+          <div class="kpi">
+            <div class="t">Forecast fine mese (eventi noti)</div>
+            <div class="v"><span class="money ${moneyClassSigned(endBalForecast)}">${fmtMoney(endBalForecast)}</span></div>
+            <div class="s">Min previsto: <span class="money ${moneyClassSigned(minBal)}">${fmtMoney(minBal)}</span> · giorno peggiore: <span class="mono">${minDayIso}</span></div>
+          </div>
+        </div>
+      `;
+
+      // header right: saldo + spark delta
+      headerRightTitle = "Saldo attuale";
+      headerRightValue = fmtMoney(balNow);
+      headerRightClass = `money ${moneyClassSigned(balNow)}`;
+
+      extraHTML = `
+        <div class="mono" style="opacity:.9;margin-top:6px">${spark}</div>
+      `;
+    }
+
+    // ======== CARTE ========
+    if(isCard){
+      const debtNow = Math.max(0, -balNow); // carta: saldo negativo => debito positivo
+
+      const mtd = cardBuckets(wEvents, [], selDay);         // solo real fino a selDay
+      const fullKnown = cardBuckets(wEvents, syn, null);    // real + synthetic per forecast
+
+      // debito iniziale stimato = debito attuale - delta debito fino a selDay
+      const startDebtEst = debtNow - mtd.debtDelta;
+
+      // forecast debito fine mese (eventi noti + scheduled repayment mancante)
+      const endDebtForecast = startDebtEst + fullKnown.debtDelta;
+
+      // min/max debito nel mese (su base eventi noti) -> qui “rischio” = picco debito
+      const debtSeries = seriesForCardDebt(startDebtEst, wEvents, syn);
+      let maxDebt = 0;
+      let maxDay = null;
+      for(let i=0;i<debtSeries.length;i++){
+        const d = debtSeries[i];
+        if(d > maxDebt){
+          maxDebt = d;
+          maxDay = i+1;
+        }
+      }
+
+      // risk card: in base ad availableCredit o utilization
       const c = w.card || {};
       const lim = safeNum(c.limit);
       const avail = (c.availableCredit!=null) ? safeNum(c.availableCredit) : null;
       const out = (c.outstanding!=null) ? safeNum(c.outstanding) : null;
 
-      // utilizzo carta
       let util = null;
       if(lim > 0 && out!=null) util = out / lim;
 
@@ -2274,39 +2358,74 @@ function renderHeaders(){
       }else{
         riskHtml = riskBadgeHTML("low", `OK`);
       }
-    }
 
-    // sparkline: sul delta cumulato mese (real+synthetic), per vedere trend
-    const spark = sparklineSVG(series.cum, 210, 46);
+      const spark = sparklineSVG(debtSeries.map(x=>x - startDebtEst), 210, 46);
+      const maxDayIso = (maxDay!=null) ? `${ymStr(state.visibleMonth)}-${pad2(maxDay)}` : "—";
 
-    // Delta vs last month (dal dashboard)
-    const dExp = w.compareLastMonthExpenses || {amount:0};
-    const dInc = w.compareLastMonthIncome || {amount:0};
-    const netDelta = safeNum(dInc.amount) - safeNum(dExp.amount);
+      // header right: DEBITO attuale
+      headerRightTitle = "Debito attuale";
+      headerRightValue = fmtMoney(debtNow);
+      headerRightClass = `money neg`;
 
-    // UI blocks: per carte manteniamo extra (limit/outstanding/scheduled repayment)
-    let cardExtra = "";
-    if(isCard && w.card){
-      const c = w.card;
-      const lim = (c.limit!=null) ? fmtMoney(safeNum(c.limit)) : "—";
-      const avail = (c.availableCredit!=null) ? fmtMoney(safeNum(c.availableCredit)) : "—";
-      const out = (c.outstanding!=null) ? fmtMoney(safeNum(c.outstanding)) : "—";
+      // KPI carte: separa repayments
+      kpiHTML = `
+        <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(240px,1fr))">
+          <div class="kpi">
+            <div class="t">Movimenti carta (mese)</div>
+            <div class="v">
+              <span class="money neg">${fmtMoney(fullKnown.spend)}</span>
+              <span class="muted"> · </span>
+              <span class="money pos">${fmtMoney(fullKnown.credits)}</span>
+              <span class="muted"> · </span>
+              <span class="money rep">${fmtMoney(fullKnown.repayments)}</span>
+            </div>
+            <div class="s">
+              Spese = acquisti <span class="money neg">${fmtMoney(fullKnown.purchases)}</span> + addebiti <span class="money neg">${fmtMoney(fullKnown.charges)}</span> ·
+              Crediti = <span class="money pos">${fmtMoney(fullKnown.credits)}</span> ·
+              Rimborsi = <span class="money rep">${fmtMoney(fullKnown.repayments)}</span>
+            </div>
+          </div>
+
+          <div class="kpi">
+            <div class="t">Δ Debito mese</div>
+            <div class="v"><span class="money ${moneyClassSigned(-fullKnown.debtDelta)}">${fmtMoney(-fullKnown.debtDelta)}</span></div>
+            <div class="s">
+              (Negativo = debito aumenta, Positivo = debito diminuisce) ·
+              Formula: (Spese) − (Crediti) − (Rimborsi)
+            </div>
+          </div>
+
+          <div class="kpi">
+            <div class="t">Forecast debito fine mese (eventi noti)</div>
+            <div class="v"><span class="money neg">${fmtMoney(endDebtForecast)}</span></div>
+            <div class="s">Picco previsto: <span class="money neg">${fmtMoney(maxDebt)}</span> · giorno: <span class="mono">${maxDayIso}</span></div>
+          </div>
+        </div>
+      `;
+
+      // extra: limite/disponibile/outstanding + scheduled repayment (come prima, ma coerente)
+      const limTxt = (c.limit!=null) ? fmtMoney(lim) : "—";
+      const availTxt = (avail!=null) ? fmtMoney(avail) : "—";
+      const outTxt = (out!=null) ? fmtMoney(out) : "—";
       const sr = c.scheduledRepayment || null;
 
-      cardExtra = `
+      extraHTML = `
+        <div class="mono" style="opacity:.9;margin-top:6px">${spark}</div>
+
         <div class="hr"></div>
         <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(220px,1fr))">
           <div class="kpi">
             <div class="t">Limite</div>
-            <div class="v">${lim}</div>
-            <div class="s">Disponibile: <span class="money ${moneyClassSigned(safeNum(c.availableCredit))}">${avail}</span></div>
+            <div class="v">${limTxt}</div>
+            <div class="s">Disponibile: <span class="money ${moneyClassSigned(avail||0)}">${availTxt}</span></div>
           </div>
           <div class="kpi">
-            <div class="t">Debito attuale</div>
-            <div class="v"><span class="money neg">${out}</span></div>
-            <div class="s">Saldo carta (UI): <span class="money neg">${fmtMoney(balNow)}</span></div>
+            <div class="t">Outstanding (backend)</div>
+            <div class="v"><span class="money neg">${outTxt}</span></div>
+            <div class="s">Debito (UI): <span class="money neg">${fmtMoney(debtNow)}</span></div>
           </div>
         </div>
+
         ${
           sr ? `
           <div class="hr"></div>
@@ -2315,7 +2434,7 @@ function renderHeaders(){
               <div class="muted">Addebito previsto</div>
               <div style="font-size:18px">
                 <span class="mono">${escapeHtml(sr.paymentDate||"")}</span> ·
-                <span class="money neg">${fmtMoney(safeNum(sr.suggestedAmount||sr.baselineAmount||0))}</span>
+                <span class="money rep">${fmtMoney(safeNum(sr.suggestedAmount||sr.baselineAmount||0))}</span>
                 <span class="tag" style="margin-left:8px">${sr.exists ? "registrato" : "mancante"}</span>
               </div>
             </div>
@@ -2325,10 +2444,7 @@ function renderHeaders(){
       `;
     }
 
-    // labels più chiare
-    const selected = selIso;
-    const minDayIso = (minDay!=null) ? `${ymStr(state.visibleMonth)}-${pad2(minDay)}` : "—";
-
+    // ===== Render card header shell =====
     card.innerHTML = `
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
         <div style="min-width:0">
@@ -2336,48 +2452,25 @@ function renderHeaders(){
           <div style="font-size:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">
             ${escapeHtml(w.name||"")}
           </div>
-          <div class="muted">Aggiornato al: <span class="mono">${selected}</span></div>
+          <div class="muted">Aggiornato al: <span class="mono">${selIso}</span></div>
         </div>
 
         <div style="text-align:right;min-width:0">
-          <div class="muted">Saldo attuale</div>
-          <div style="font-size:26px" class="money ${moneyClassSigned(balNow)}">${fmtMoney(balNow)}</div>
-          <div class="mono" style="opacity:.9;margin-top:6px">${spark}</div>
+          <div class="muted">${escapeHtml(headerRightTitle)}</div>
+          <div style="font-size:26px" class="${headerRightClass}">${escapeHtml(headerRightValue)}</div>
+          ${extraHTML || ""}
         </div>
       </div>
 
       <div class="hr"></div>
 
-      <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(240px,1fr))">
-        <div class="kpi">
-          <div class="t">Mese (entrate / uscite)</div>
-          <div class="v">
-            <span class="money pos">${fmtMoney(full.in)}</span>
-            <span class="muted"> / </span>
-            <span class="money neg">${fmtMoney(full.out)}</span>
-          </div>
-          <div class="s">Netto mese: <span class="money ${moneyClassSigned(full.net)}">${fmtMoney(full.net)}</span> · Δ vs mese scorso: <span class="delta ${deltaClass(netDelta)}">${fmtMoney(netDelta)}</span></div>
-        </div>
-
-        <div class="kpi">
-          <div class="t">Saldo iniziale (stimato)</div>
-          <div class="v"><span class="money ${moneyClassSigned(startBalEst)}">${fmtMoney(startBalEst)}</span></div>
-          <div class="s">Calcolo: saldo attuale − cashflow mese fino al giorno ${selDay}</div>
-        </div>
-
-        <div class="kpi">
-          <div class="t">Forecast fine mese</div>
-          <div class="v"><span class="money ${moneyClassSigned(endBalForecast)}">${fmtMoney(endBalForecast)}</span></div>
-          <div class="s">Min previsto: <span class="money ${moneyClassSigned(minBal)}">${fmtMoney(minBal)}</span> · giorno peggiore: <span class="mono">${minDayIso}</span></div>
-        </div>
-      </div>
-
-      ${cardExtra}
+      ${kpiHTML}
     `;
 
     wrap.appendChild(card);
   }
 }
+
 
 /* =========================
    Rendering: Calendar

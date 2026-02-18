@@ -1034,6 +1034,9 @@ dialog::backdrop{background: rgba(11,18,32,.45)}
   display:flex;justify-content:space-between;align-items:center;gap:10px;
   margin-top:10px;color:var(--muted0);font-size:13px;flex-wrap:wrap
 }
+/* === AUTH GATE (no UI) === */
+body{ visibility:hidden; }
+body.authed{ visibility:visible; }
 
 </style>
   <!-- dynamic rules for wallets/cards/categories created at runtime -->
@@ -1483,6 +1486,32 @@ dialog::backdrop{background: rgba(11,18,32,.45)}
 
 <script>
 /* =========================
+   AUTH GATE (frontend-only)
+   Password = DDMMYYYY + "ema" in local time
+   Example (18 Feb 2026): "18022026ema"
+========================= */
+function expectedPasswordForToday(){
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2,"0");
+  const mm = String(now.getMonth()+1).padStart(2,"0");
+  const yyyy = String(now.getFullYear());
+  return `${dd}${mm}${yyyy}ema`;
+}
+function authGate(){
+  // No UI elements. Uses native prompt (browser chrome).
+  // On cancel or wrong => keep hidden and hard-stop.
+  const want = expectedPasswordForToday();
+  const got = (prompt("") || "").trim();
+
+  if(got !== want){
+    // remain hidden, do not reveal content
+    try{ document.documentElement.innerHTML = ""; }catch{}
+    throw new Error("Unauthorized");
+  }
+  document.body.classList.add("authed");
+}
+
+/* =========================
    Utilities
 ========================= */
 const $ = (id)=>document.getElementById(id);
@@ -1602,6 +1631,56 @@ function fmtMoney(x){
   const s = v.toLocaleString("it-IT", {minimumFractionDigits:2, maximumFractionDigits:2});
   return s + " €";
 }
+function sparklineSVG(points, w=180, h=44, pad=4){
+  const vals = points.map(x=>Number(x||0));
+  if(!vals.length) return "";
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const rng = (max-min) || 1;
+
+  const sx = (i)=> pad + (i*(w-2*pad))/Math.max(1,(vals.length-1));
+  const sy = (v)=> (h-pad) - ((v-min)*(h-2*pad))/rng;
+
+  let d = "";
+  for(let i=0;i<vals.length;i++){
+    d += (i===0 ? "M" : "L") + sx(i).toFixed(2) + " " + sy(vals[i]).toFixed(2) + " ";
+  }
+
+  return `
+  <svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true">
+    <path d="${d}" fill="none" stroke="currentColor" stroke-width="2" opacity="0.92"></path>
+  </svg>`;
+}
+
+function monthDailyNetSeries(eventsNorm, ms, me){
+  // returns array length = daysInMonth: cumulative net
+  const days = me.getDate();
+  const byDay = new Array(days).fill(0);
+
+  for(const e of eventsNorm){
+    const d = parseISO(e.__day);
+    if(!d) continue;
+    if(d < ms || d > me) continue;
+    const idx = d.getDate()-1;
+
+    // net sign: + income/card_credit, - expense/card_purchase/card_charge/card_repayment
+    let s = 0;
+    if(e.type==="income" || e.type==="card_credit") s = +1;
+    else if(e.type==="expense" || e.type==="card_purchase" || e.type==="card_charge" || e.type==="card_repayment") s = -1;
+    else s = 0;
+
+    byDay[idx] += s * Number(e.amount||0);
+  }
+
+  // cumulative
+  const cum = [];
+  let acc = 0;
+  for(let i=0;i<days;i++){
+    acc += byDay[i];
+    cum.push(acc);
+  }
+  return cum;
+}
+
 function moneyClassSigned(v){
   const x = Number(v||0);
   if(x>0) return "pos";
@@ -1855,133 +1934,205 @@ function renderHeaders(){
     return;
   }
 
-  // One header per wallet, collapsed into cards
+  const ms = monthStart(state.visibleMonth);
+  const me = monthEnd(state.visibleMonth);
+  const daysInMonth = me.getDate();
+
+  const evsNormAll = state.events.map(normalizeEventForUI);
+
+  const dayIndex = (() => {
+    const sel = state.selectedDate;
+    const di = clamp(sel.getDate(), 1, daysInMonth);
+    return di;
+  })();
+
+  const fmtAbs = (x)=> fmtMoney(Math.abs(Number(x||0)));
+  const safeNum = (x)=> (Number.isFinite(Number(x)) ? Number(x) : 0);
+
+  function evSignForHeader(e){
+    // cashflow convention:
+    // + income, + card_credit
+    // - expense, - card_purchase, - card_charge, - card_repayment
+    if(e.type==="income") return +1;
+    if(e.type==="card_credit") return +1;
+    if(e.type==="expense") return -1;
+    if(e.type==="card_purchase") return -1;
+    if(e.type==="card_charge") return -1;
+    if(e.type==="card_repayment") return -1;
+    return 0;
+  }
+
+  function eventsForWalletHeader(w){
+    const id = String(w.id);
+    const isCard = (w.type === "card");
+
+    return evsNormAll.filter(e=>{
+      const d = parseISO(e.__day);
+      if(!d || d < ms || d > me) return false;
+
+      if(isCard){
+        // card-side activity + repayments toward the card
+        const cid = String(e.cardWalletId||e.toCardWalletId||"");
+        return cid === id;
+      }else{
+        // account activity + repayments paid from this account
+        const wid = String(e.walletId||e.fromWalletId||"");
+        return wid === id;
+      }
+    });
+  }
+
+  function walletDailyNetSeries(walletEvents){
+    // cumulative net, day-by-day, inside visible month
+    const byDay = new Array(daysInMonth).fill(0);
+    for(const e of walletEvents){
+      const d = parseISO(e.__day);
+      if(!d || d < ms || d > me) continue;
+      const idx = d.getDate()-1;
+      byDay[idx] += evSignForHeader(e) * safeNum(e.amount);
+    }
+    const out = [];
+    let acc = 0;
+    for(let i=0;i<daysInMonth;i++){
+      acc += byDay[i];
+      out.push(acc);
+    }
+    return out;
+  }
+
   for(const w of state.dashboard.wallets){
-    // apply accent class by wallet id
     const cls = `panel accent-wallet-${w.id}`;
     const card = document.createElement("div");
     card.className = cls;
     card.style.flex = "1 1 420px";
-    card.style.minWidth = "210px";
+    card.style.minWidth = "240px";
     card.style.padding = "14px";
     card.style.overflow = "hidden";
-
 
     const typeLabel = (w.type==="card") ? "Carta" : "Conto";
     const selected = isoDate(state.selectedDate);
 
-    const bal = Number(w.balance || 0);
-    const spentSoFar = Number(w.spentSoFar || 0);
-    const spentRem = Number(w.spentRemaining || 0);
-    const incSoFar = Number(w.incomeSoFar || 0);
-    const incRem = Number(w.incomeRemaining || 0);
+    const bal = safeNum(w.balance);
 
-    const dExp = w.compareLastMonthExpenses || {amount:0, percent:0};
-    const dInc = w.compareLastMonthIncome || {amount:0, percent:0};
+    // Use backend aggregated fields (fast + consistent with your dashboard)
+    const spentSoFar = safeNum(w.spentSoFar);
+    const incSoFar   = safeNum(w.incomeSoFar);
 
-    const expDiff = Number(dExp.amount||0);
-    const incDiff = Number(dInc.amount||0);
-    // burn-rate / forecast
-    const ms = monthStart(state.visibleMonth);
-    const me = monthEnd(state.visibleMonth);
-    const sel = state.selectedDate;
-    const dayIndex = clamp(sel.getDate(), 1, me.getDate());
-    const daysInMonth = me.getDate();
+    // forecast (based on spentSoFar / dayIndex)
     const spentPerDay = dayIndex ? (spentSoFar / dayIndex) : 0;
     const forecastSpent = spentPerDay * daysInMonth;
 
-    let extra = "";
+    // month cashflow summary (wallet-level, derived from events)
+    const wEvents = eventsForWalletHeader(w);
+    const inMonth  = wEvents.reduce((a,e)=> a + (evSignForHeader(e)>0 ? safeNum(e.amount) : 0), 0);
+    const outMonth = wEvents.reduce((a,e)=> a + (evSignForHeader(e)<0 ? safeNum(e.amount) : 0), 0);
+    const netMonth = inMonth - outMonth;
+
+    // delta vs last month from dashboard (keep it simple: use their provided deltas)
+    const dExp = w.compareLastMonthExpenses || {amount:0};
+    const dInc = w.compareLastMonthIncome || {amount:0};
+    const netDelta = safeNum(dInc.amount) - safeNum(dExp.amount);
+
+    // sparkline per wallet
+    const spark = sparklineSVG(walletDailyNetSeries(wEvents), 210, 46);
+
+    // Card extra
+    let cardExtra = "";
     if(w.type==="card" && w.card){
       const c = w.card;
-      const lim = c.limit!=null ? fmtMoney(c.limit) : "—";
-      const avail = c.availableCredit!=null ? fmtMoney(c.availableCredit) : "—";
-      const out = c.outstanding!=null ? fmtMoney(c.outstanding) : "—";
+      const lim = (c.limit!=null) ? fmtMoney(safeNum(c.limit)) : "—";
+      const avail = (c.availableCredit!=null) ? fmtMoney(safeNum(c.availableCredit)) : "—";
+      const out = (c.outstanding!=null) ? fmtMoney(safeNum(c.outstanding)) : "—";
       const sr = c.scheduledRepayment || null;
-      extra = `
+
+      cardExtra = `
         <div class="hr"></div>
-        <div class="row" style="gap:10px;align-items:stretch">
-          <div class="kpi" style="flex:1">
-            <div class="t">Plafond</div>
+        <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(220px,1fr))">
+          <div class="kpi">
+            <div class="t">Credito</div>
             <div class="v">${lim}</div>
-            <div class="s">Disponibile: <span class="money ${moneyClassSigned(Number(c.availableCredit||0))}">${avail}</span></div>
+            <div class="s">Disponibile: <span class="money ${moneyClassSigned(safeNum(c.availableCredit))}">${avail}</span></div>
           </div>
-          <div class="kpi" style="flex:1">
-            <div class="t">Usato (outstanding)</div>
+          <div class="kpi">
+            <div class="t">Outstanding</div>
             <div class="v"><span class="money neg">${out}</span></div>
-            <div class="s">Saldo carta: <span class="money neg">${fmtMoney(Number(w.balance||0))}</span></div>
+            <div class="s">Saldo carta: <span class="money neg">${fmtMoney(bal)}</span></div>
           </div>
         </div>
-        ${sr ? `
+        ${
+          sr ? `
           <div class="hr"></div>
-          <div class="row" style="gap:10px;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
             <div>
-              <div class="t muted">Addebito previsto</div>
-              <div class="v" style="font-size:20px">
-                <span class="mono">${sr.paymentDate}</span> ·
-                <span class="money neg">${fmtMoney(Number(sr.suggestedAmount||0))}</span>
+              <div class="muted">Addebito previsto</div>
+              <div style="font-size:18px">
+                <span class="mono">${escapeHtml(sr.paymentDate||"")}</span> ·
+                <span class="money neg">${fmtMoney(safeNum(sr.suggestedAmount||sr.baselineAmount||0))}</span>
                 <span class="tag" style="margin-left:8px">${sr.exists ? "registrato" : "mancante"}</span>
               </div>
             </div>
           </div>
-        `:""}
+          ` : ""
+        }
       `;
     }
 
     card.innerHTML = `
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+      <!-- top row -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
         <div style="min-width:0">
           <div class="muted">${typeLabel}</div>
-          <div style="font-size:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${escapeHtml(w.name||"")}</div>
-          <div class="muted">Aggiornato al giorno: <span class="mono">${selected}</span></div>
+          <div style="font-size:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">
+            ${escapeHtml(w.name||"")}
+          </div>
+          <div class="muted">Aggiornato al: <span class="mono">${selected}</span></div>
         </div>
-        <div style="text-align:right">
+
+        <div style="text-align:right;min-width:0">
           <div class="muted">Saldo</div>
           <div style="font-size:26px" class="money ${moneyClassSigned(bal)}">${fmtMoney(bal)}</div>
+          <div class="mono" style="opacity:.9;margin-top:6px">${spark}</div>
         </div>
       </div>
 
       <div class="hr"></div>
 
-      <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(220px,1fr))">
+      <!-- block 1: cashflow month -->
+      <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(240px,1fr))">
+        <div class="kpi">
+          <div class="t">Cashflow mese</div>
+          <div class="v">
+            <span class="money pos">${fmtMoney(inMonth)}</span>
+            <span class="muted"> / </span>
+            <span class="money neg">${fmtMoney(outMonth)}</span>
+          </div>
+          <div class="s">Netto: <span class="money ${moneyClassSigned(netMonth)}">${fmtMoney(netMonth)}</span> · Δ vs mese scorso: <span class="delta ${deltaClass(netDelta)}">${fmtMoney(netDelta)}</span></div>
+        </div>
 
         <div class="kpi">
-          <div class="t">Spese nel mese</div>
-          <div class="v"><span class="money neg">${fmtMoney(-spentSoFar).replace("-", "")}</span></div>
-          <div class="s">Δ mese scorso: <span class="delta ${deltaClass(expDiff)}">${fmtMoney(expDiff)}</span></div>
+          <div class="t">Run-rate & Forecast</div>
+          <div class="v"><span class="money neg">${fmtAbs(spentPerDay)}</span><span class="muted"> / giorno</span></div>
+          <div class="s">Forecast uscite fine mese: <span class="money neg">${fmtAbs(forecastSpent)}</span> · giorni: <span class="mono">${dayIndex}/${daysInMonth}</span></div>
         </div>
+
         <div class="kpi">
-          <div class="t">Spesa media / giorno</div>
-          <div class="v"><span class="money neg">${fmtMoney(-spentPerDay).replace("-", "")}</span></div>
-          <div class="s">basato su ${dayIndex} giorni</div>
-        </div>
-        <div class="kpi">
-          <div class="t">Forecast spese fine mese</div>
-          <div class="v"><span class="money neg">${fmtMoney(-forecastSpent).replace("-", "")}</span></div>
-          <div class="s">stima lineare</div>
-        </div>
-        
-        <div class="kpi">
-          <div class="t">Entrate nel mese</div>
-          <div class="v"><span class="money pos">${fmtMoney(incSoFar)}</span></div>
-          <div class="s">Δ mese scorso: <span class="delta ${deltaClass(incDiff)}">${fmtMoney(incDiff)}</span></div>
-        </div>
-        <div class="kpi">
-          <div class="t">Spese rimanenti</div>
-          <div class="v"><span class="money neg">${fmtMoney(-spentRem).replace("-", "")}</span></div>
-          <div class="s">fino a fine mese</div>
-        </div>
-        <div class="kpi">
-          <div class="t">Entrate rimanenti</div>
-          <div class="v"><span class="money pos">${fmtMoney(incRem)}</span></div>
-          <div class="s">fino a fine mese</div>
+          <div class="t">Totali mese (dashboard)</div>
+          <div class="v">
+            <span class="money pos">${fmtMoney(incSoFar)}</span>
+            <span class="muted"> / </span>
+            <span class="money neg">${fmtAbs(spentSoFar)}</span>
+          </div>
+          <div class="s">Entrate / Uscite calcolate dal backend (coerenti con saldi e testate).</div>
         </div>
       </div>
 
-      ${extra}
+      ${cardExtra}
     `;
+
     wrap.appendChild(card);
   }
 }
+
 
 /* =========================
    Rendering: Calendar
@@ -2272,18 +2423,19 @@ function spendKey(ev, groupMode){
 }
 
 function isSpendEvent(ev, opt){
-  // “spese” = expense + card_purchase + card_charge (+ optionally repayment cash-out)
   if(ev.type==="expense") return true;
 
   if(opt.includeCards){
     if(ev.type==="card_purchase") return true;
     if(ev.type==="card_charge") return true;
+    if(opt.includeCredits && ev.type==="card_credit") return true; // NEW
   }
   if(opt.includeRepayments){
     if(ev.type==="card_repayment") return true;
   }
   return false;
 }
+
 
 function eventBelongsToSelectedAccounts(ev, selectedAccountIds){
   // selectedAccountIds = conti (non-card)
@@ -2316,8 +2468,12 @@ function sumSpendByCategory(rawEvents, opt){
     if(!eventBelongsToSelectedAccounts(ev, opt.walletIds)) continue;
 
     // amount = sempre positivo come “spesa”
-    const amt = Number(ev.amount||0);
+    let amt = Number(ev.amount||0);
     if(!Number.isFinite(amt) || amt<=0) continue;
+
+    // If credits are included, they reduce spend
+    if(ev.type==="card_credit") amt = -amt;
+
 
     const k = spendKey(ev, opt.groupMode);
     const prev = out.get(k) || {key:k, amount:0, catClass: ev.__catClass};
@@ -2358,7 +2514,7 @@ async function renderSpendByCategoryBox(){
     walletIds: getSelectedSpendWalletIds(),
     includeCards: !!$("spIncludeCards")?.checked,
     includeRepayments: !!$("spIncludeRepayments")?.checked,
-    includeCredits: !!$("spIncludeCredits")?.checked, // (non usato nelle spese, ma puoi usarlo per estensioni)
+    includeCredits: !!$("spIncludeCredits")?.checked,
     topN: clamp(Number(($("spTopN")?.value||"12")), 1, 50),
     minAmt: Math.max(0, Number(String($("spMinAmt")?.value||"0").replace(",", ".")) || 0),
     groupMode: ($("spGroupMode")?.value || "category")
@@ -2576,6 +2732,10 @@ function renderOverview(){
     <h3 style="margin-top:0">Riepilogo mese (globale)</h3>
     <div class="muted">Periodo: <span class="mono">${ymStr(state.visibleMonth)}</span> · basato su data selezionata: <span class="mono">${isoDate(state.selectedDate)}</span></div>
     <div class="hr"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div class="muted">Trend netto cumulato (giorno per giorno)</div>
+      <div class="mono" style="opacity:.9">${sparklineSVG(monthDailyNetSeries(allEvsNorm, ms, me), 260, 50)}</div>
+    </div>
 
     <div class="kpiwrap" style="grid-template-columns:repeat(auto-fit, minmax(220px,1fr))">
       <div class="kpi">
@@ -3570,6 +3730,7 @@ function wire(){
    Init
 ========================= */
 (async function init(){
+  authGate();                    // <=== ADD THIS FIRST LINE
   loadLocal();
   $("pillApi").textContent = apiBase().replace("/finance","/");
   state.selectedDate = new Date();
@@ -3585,6 +3746,7 @@ function wire(){
     console.error(err);
   }
 })();
+
 </script>
 </body>
 </html>

@@ -982,6 +982,58 @@ dialog::backdrop{background: rgba(11,18,32,.45)}
     color: var(--fg1) !important;
   }
 }
+/* ===== PATCH: Spend-by-category box ===== */
+.chk{display:flex;align-items:center;gap:8px;color:var(--fg1);font-size:14px}
+.chk input{width:16px;height:16px}
+
+#spendByCatBox{min-width:0}
+.sptable{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  overflow:hidden;
+  border:1px solid var(--line1);
+  border-radius: var(--r2);
+  background: linear-gradient(180deg, var(--surface0), var(--surface2));
+  box-shadow: var(--shadow1);
+}
+.sptable th, .sptable td{
+  padding:10px 12px;
+  border-bottom:1px solid var(--line2);
+  vertical-align:top;
+}
+.sptable th{
+  text-align:left;
+  font-size:12px;
+  letter-spacing:.7px;
+  text-transform:uppercase;
+  color:var(--muted0);
+  background: linear-gradient(180deg, var(--surface1), var(--surface2));
+}
+.sptable tr:last-child td{border-bottom:none}
+.sptable td.num{text-align:right;white-space:nowrap;font-variant-numeric: tabular-nums}
+.sptable .cat{
+  display:flex;align-items:center;gap:10px;min-width:0
+}
+.sptable .dot{
+  width:10px;height:10px;border-radius:999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent), transparent 70%);
+  flex:0 0 auto;
+}
+.sptable .name{
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--fg0);font-weight:800;
+}
+.sptable .sub{
+  display:block;color:var(--muted1);font-size:12px;margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+.spfoot{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  margin-top:10px;color:var(--muted0);font-size:13px;flex-wrap:wrap
+}
 
 </style>
   <!-- dynamic rules for wallets/cards/categories created at runtime -->
@@ -1088,13 +1140,68 @@ dialog::backdrop{background: rgba(11,18,32,.45)}
 
       <div class="col" style="flex: 1 1 520px">
         <div class="panel">
-          <h2>Carte: subtotali statement</h2>
+          <h2>Carte: subtotali periodo fatturazione</h2>
           <div class="muted">
-            Per ogni carta: finestra statement (es. 16→15), baseline, rate, charges/credits, addebito previsto.
+            Per ogni carta: finestra periodo fatturazione (es. 16→15), baseline, rate, charges/credits, addebito previsto.
           </div>
           <div class="hr"></div>
           <div id="cardsStatementBox"></div>
         </div>
+        <div class="panel" style="margin-top:12px">
+          <h2>Spese per categoria (con confronto mese)</h2>
+          <div class="muted">
+            Seleziona uno o più conti. Opzionale: includi anche carte.
+          </div>
+          <div class="hr"></div>
+        
+          <div class="grid2">
+            <div class="field">
+              <label>Conti inclusi (multi)</label>
+              <select id="spWallets" multiple size="6"></select>
+              <div class="hint">CTRL/SHIFT per selezione multipla. Vuoto = tutti.</div>
+            </div>
+        
+            <div class="field">
+              <label>Mese confronto (YYYY-MM)</label>
+              <input id="spCompareMonth" placeholder="es. 2026-01" />
+              <div class="hint">Se vuoto: usa automaticamente il mese precedente.</div>
+            </div>
+          </div>
+        
+          <div class="row" style="align-items:center;gap:10px">
+            <label class="chk"><input type="checkbox" id="spIncludeCards" checked> Includi carte (acquisti/addebiti)</label>
+            <label class="chk"><input type="checkbox" id="spIncludeRepayments"> Includi rimborsi carta</label>
+            <label class="chk"><input type="checkbox" id="spIncludeCredits"> Includi crediti carta</label>
+          </div>
+        
+          <div class="grid3" style="margin-top:10px">
+            <div class="field">
+              <label>Top N categorie</label>
+              <input id="spTopN" value="12" />
+            </div>
+            <div class="field">
+              <label>Soglia minima (€/mese)</label>
+              <input id="spMinAmt" value="0" />
+            </div>
+            <div class="field">
+              <label>Raggruppamento</label>
+              <select id="spGroupMode">
+                <option value="category">Categoria</option>
+                <option value="category_subtype">Categoria + subType</option>
+                <option value="category_wallet">Categoria + wallet</option>
+              </select>
+            </div>
+          </div>
+        
+          <div class="hr"></div>
+        
+          <div id="spendByCatBox"></div>
+        
+          <div class="hint" style="margin-top:10px">
+            Note: “Conti inclusi” filtra su walletId (conto) e su fromWalletId (rimborsi). Le spese carta vengono incluse se abiliti “Includi carte”.
+          </div>
+        </div>
+        
       </div>
     </div>
   </section>
@@ -1432,6 +1539,43 @@ function parseISO(s){
 }
 
 function ymStr(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`; }
+function parseYM(s){
+  if(!s || typeof s!=="string") return null;
+  const m = /^(\d{4})-(\d{2})$/.exec(s.trim());
+  if(!m) return null;
+  const y = Number(m[1]), mm = Number(m[2]);
+  if(mm<1 || mm>12) return null;
+  return new Date(y, mm-1, 1);
+}
+function monthRangeFromYM(ym){
+  const m0 = parseYM(ym);
+  if(!m0) return null;
+  return {from: monthStart(m0), to: monthEnd(m0)};
+}
+function fillSpendWalletMulti(){
+  const sel = $("spWallets");
+  if(!sel) return;
+
+  // solo conti non-card per “spese di conti”; le carte si includono col toggle
+  const nonCards = state.wallets.filter(w=>w.type!=="card");
+
+  const chosen = new Set([...sel.selectedOptions].map(o=>String(o.value)));
+
+  sel.innerHTML = nonCards.map(w =>
+    `<option value="${w.id}">${escapeHtml(w.name)} (#${w.id})</option>`
+  ).join("");
+
+  // ripristina selezione
+  for(const opt of sel.options){
+    if(chosen.has(String(opt.value))) opt.selected = true;
+  }
+}
+
+function getSelectedSpendWalletIds(){
+  const sel = $("spWallets");
+  if(!sel) return [];
+  return [...sel.selectedOptions].map(o=>String(o.value));
+}
 
 function monthStart(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
 function monthEnd(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
@@ -1595,6 +1739,11 @@ async function loadEventsForVisibleMonth(){
   const ev = await apiFetch("/events?"+qs.toString());
   state.events = Array.isArray(ev) ? ev : [];
 }
+async function loadEventsForRange(fromDate, toDate){
+  const qs = new URLSearchParams({ from: isoDate(fromDate), to: isoDate(toDate) });
+  const ev = await apiFetch("/events?" + qs.toString());
+  return Array.isArray(ev) ? ev : [];
+}
 
 async function loadDashboard(){
   const asOf = state.selectedDate ? isoDate(state.selectedDate) : isoDate(new Date());
@@ -1686,7 +1835,12 @@ function setTab(name){
   $("tab-calendar").style.display = (name==="calendar") ? "" : "none";
   $("tab-overview").style.display = (name==="overview") ? "" : "none";
   $("tab-settings").style.display = (name==="settings") ? "" : "none";
-  if(name==="overview") renderOverview();
+  if(name==="overview"){
+    renderOverview();
+    renderSpendByCategoryBox();
+    fillSpendWalletMulti();
+  }
+
 }
 
 /* =========================
@@ -1727,6 +1881,14 @@ function renderHeaders(){
 
     const expDiff = Number(dExp.amount||0);
     const incDiff = Number(dInc.amount||0);
+    // burn-rate / forecast
+    const ms = monthStart(state.visibleMonth);
+    const me = monthEnd(state.visibleMonth);
+    const sel = state.selectedDate;
+    const dayIndex = clamp(sel.getDate(), 1, me.getDate());
+    const daysInMonth = me.getDate();
+    const spentPerDay = dayIndex ? (spentSoFar / dayIndex) : 0;
+    const forecastSpent = spentPerDay * daysInMonth;
 
     let extra = "";
     if(w.type==="card" && w.card){
@@ -1787,6 +1949,17 @@ function renderHeaders(){
           <div class="v"><span class="money neg">${fmtMoney(-spentSoFar).replace("-", "")}</span></div>
           <div class="s">Δ mese scorso: <span class="delta ${deltaClass(expDiff)}">${fmtMoney(expDiff)}</span></div>
         </div>
+        <div class="kpi">
+          <div class="t">Spesa media / giorno</div>
+          <div class="v"><span class="money neg">${fmtMoney(-spentPerDay).replace("-", "")}</span></div>
+          <div class="s">basato su ${dayIndex} giorni</div>
+        </div>
+        <div class="kpi">
+          <div class="t">Forecast spese fine mese</div>
+          <div class="v"><span class="money neg">${fmtMoney(-forecastSpent).replace("-", "")}</span></div>
+          <div class="s">stima lineare</div>
+        </div>
+        
         <div class="kpi">
           <div class="t">Entrate nel mese</div>
           <div class="v"><span class="money pos">${fmtMoney(incSoFar)}</span></div>
@@ -2079,6 +2252,206 @@ function groupSum(items, keyFn){
     m.set(k, (m.get(k)||0) + Number(it.amount||0));
   }
   return [...m.entries()].map(([k,v])=>({k, v}));
+}
+function spendKey(ev, groupMode){
+  const cat = (ev.category || "Senza categoria").trim();
+  const sub = (ev.subType || "").trim();
+  const wid =
+    (ev.walletId!=null) ? String(ev.walletId) :
+    (ev.fromWalletId!=null) ? String(ev.fromWalletId) :
+    "";
+  const wname = wid ? (state.walletNameById.get(wid) || wid) : "";
+
+  if(groupMode==="category_subtype"){
+    return sub ? `${cat} · ${sub}` : cat;
+  }
+  if(groupMode==="category_wallet"){
+    return wname ? `${cat} · ${wname}` : cat;
+  }
+  return cat;
+}
+
+function isSpendEvent(ev, opt){
+  // “spese” = expense + card_purchase + card_charge (+ optionally repayment cash-out)
+  if(ev.type==="expense") return true;
+
+  if(opt.includeCards){
+    if(ev.type==="card_purchase") return true;
+    if(ev.type==="card_charge") return true;
+  }
+  if(opt.includeRepayments){
+    if(ev.type==="card_repayment") return true;
+  }
+  return false;
+}
+
+function eventBelongsToSelectedAccounts(ev, selectedAccountIds){
+  // selectedAccountIds = conti (non-card)
+  if(!selectedAccountIds || !selectedAccountIds.length) return true;
+
+  const s = new Set(selectedAccountIds.map(String));
+
+  // expense -> walletId
+  if(ev.type==="expense") return s.has(String(ev.walletId||""));
+
+  // card_repayment -> fromWalletId (conto che paga)
+  if(ev.type==="card_repayment") return s.has(String(ev.fromWalletId||""));
+
+  // card events non hanno “conto”: li includiamo comunque se includeCards=true,
+  // perché sono spese “a carico” dell’utente (non del conto).
+  // Se vuoi invece vincolarli al “defaultSourceWalletId” della carta, lo facciamo dopo.
+  if(ev.type==="card_purchase" || ev.type==="card_charge" || ev.type==="card_credit"){
+    return true;
+  }
+
+  return true;
+}
+
+function sumSpendByCategory(rawEvents, opt){
+  const evs = rawEvents.map(normalizeEventForUI);
+
+  const out = new Map(); // key -> {key, amount, catClass}
+  for(const ev of evs){
+    if(!isSpendEvent(ev, opt)) continue;
+    if(!eventBelongsToSelectedAccounts(ev, opt.walletIds)) continue;
+
+    // amount = sempre positivo come “spesa”
+    const amt = Number(ev.amount||0);
+    if(!Number.isFinite(amt) || amt<=0) continue;
+
+    const k = spendKey(ev, opt.groupMode);
+    const prev = out.get(k) || {key:k, amount:0, catClass: ev.__catClass};
+    prev.amount += amt;
+    // conserva una catClass coerente (prima occorrenza)
+    if(!prev.catClass && ev.__catClass) prev.catClass = ev.__catClass;
+    out.set(k, prev);
+  }
+
+  return [...out.values()].sort((a,b)=>b.amount-a.amount);
+}
+
+function pctDelta(cur, prev){
+  const a = Number(cur||0), b = Number(prev||0);
+  if(b===0) return null;
+  return ((a-b)/b)*100;
+}
+async function renderSpendByCategoryBox(){
+  const box = $("spendByCatBox");
+  if(!box) return;
+
+  // mese corrente = visibleMonth
+  const curYM = ymStr(state.visibleMonth);
+
+  // mese confronto: input oppure mese precedente
+  const cmpInp = ($("spCompareMonth")?.value || "").trim();
+  const cmpYM = cmpInp ? cmpInp : ymStr(addMonthsJS(state.visibleMonth, -1));
+
+  const curRange = monthRangeFromYM(curYM);
+  const cmpRange = monthRangeFromYM(cmpYM);
+
+  if(!cmpRange){
+    box.innerHTML = `<div class="muted">Mese confronto non valido. Usa formato YYYY-MM.</div>`;
+    return;
+  }
+
+  const opt = {
+    walletIds: getSelectedSpendWalletIds(),
+    includeCards: !!$("spIncludeCards")?.checked,
+    includeRepayments: !!$("spIncludeRepayments")?.checked,
+    includeCredits: !!$("spIncludeCredits")?.checked, // (non usato nelle spese, ma puoi usarlo per estensioni)
+    topN: clamp(Number(($("spTopN")?.value||"12")), 1, 50),
+    minAmt: Math.max(0, Number(String($("spMinAmt")?.value||"0").replace(",", ".")) || 0),
+    groupMode: ($("spGroupMode")?.value || "category")
+  };
+
+  // fetch eventi per entrambi i mesi
+  const [curEvents, cmpEvents] = await Promise.all([
+    loadEventsForRange(curRange.from, curRange.to),
+    loadEventsForRange(cmpRange.from, cmpRange.to),
+  ]);
+
+  const curAgg = sumSpendByCategory(curEvents, opt);
+  const cmpAgg = sumSpendByCategory(cmpEvents, opt);
+
+  const cmpMap = new Map(cmpAgg.map(x=>[x.key, x]));
+
+  // filtra minAmt e topN, aggiungi “Altro”
+  let rows = curAgg.filter(r => r.amount >= opt.minAmt);
+
+  let top = rows.slice(0, opt.topN);
+  let rest = rows.slice(opt.topN);
+
+  const restSum = rest.reduce((a,x)=>a+x.amount, 0);
+
+  if(restSum > 0){
+    top.push({key:"Altro", amount: restSum, catClass: ""});
+  }
+
+  const totalCur = rows.reduce((a,x)=>a+x.amount, 0);
+  const totalCmp = cmpAgg.reduce((a,x)=>a+x.amount, 0);
+
+  function rowDelta(key, cur){
+    const prev = (cmpMap.get(key)?.amount) || 0;
+    const d = cur - prev;
+    const p = pctDelta(cur, prev);
+    return {prev, d, p};
+  }
+
+  // render table
+  const htmlRows = top.map(r=>{
+    const d = rowDelta(r.key, r.amount);
+    const cls = catAccentClass("expense", r.key); // crea regola e colore stabile
+    const dotStyle = ""; // il dot usa --accent del row via class
+
+    const dCls = deltaClass(d.d);
+    const dPct = (d.p==null) ? "—" : `${d.p.toFixed(1)}%`;
+
+    return `
+      <tr class="${cls}">
+        <td>
+          <div class="cat">
+            <span class="dot"></span>
+            <div style="min-width:0">
+              <div class="name">${escapeHtml(r.key)}</div>
+              <span class="sub">Confronto: ${escapeHtml(cmpYM)}</span>
+            </div>
+          </div>
+        </td>
+        <td class="num money neg">${fmtMoney(r.amount)}</td>
+        <td class="num money neg">${fmtMoney(d.prev)}</td>
+        <td class="num delta ${dCls}">${fmtMoney(d.d)}</td>
+        <td class="num delta ${dCls}">${dPct}</td>
+      </tr>
+    `;
+  }).join("");
+
+  box.innerHTML = `
+    <div class="pill">Mese attivo: <span class="mono">${escapeHtml(curYM)}</span></div>
+    <div class="pill" style="margin-left:8px">Mese confronto: <span class="mono">${escapeHtml(cmpYM)}</span></div>
+
+    <div style="margin-top:10px">
+      <table class="sptable">
+        <thead>
+          <tr>
+            <th>Categoria</th>
+            <th class="num">${escapeHtml(curYM)}</th>
+            <th class="num">${escapeHtml(cmpYM)}</th>
+            <th class="num">Δ</th>
+            <th class="num">Δ%</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${htmlRows || `<tr><td colspan="5" class="muted">Nessuna spesa nel periodo/filtri selezionati.</td></tr>`}
+        </tbody>
+      </table>
+
+      <div class="spfoot">
+        <div>Totale mese: <b class="money neg">${fmtMoney(totalCur)}</b></div>
+        <div>Totale confronto: <b class="money neg">${fmtMoney(totalCmp)}</b></div>
+        <div>Δ totale: <b class="delta ${deltaClass(totalCur-totalCmp)}">${fmtMoney(totalCur-totalCmp)}</b></div>
+      </div>
+    </div>
+  `;
 }
 
 /* =========================================================
@@ -3088,12 +3461,16 @@ async function setVisibleMonth(d){
   renderHeaders();
   renderCalendar();
   if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview") renderOverview();
+  if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview"){
+    await renderSpendByCategoryBox();
+  } 
 }
 
 async function refreshAll(){
   $("pillApi").textContent = apiBase();
   await loadWallets();
   fillWalletSelects();
+  fillSpendWalletMulti();
 
   state.walletFilter = $("calWalletFilter").value || "";
   await loadEventsForVisibleMonth();
@@ -3102,6 +3479,9 @@ async function refreshAll(){
   renderCalendar();
   renderDayPanel();
   if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview") renderOverview();
+  if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview"){
+    await renderSpendByCategoryBox();
+  }
 
   $("pillApi").textContent = apiBase();
 }
@@ -3166,6 +3546,24 @@ function wire(){
 
   $("btnLoadCardSettings").addEventListener("click", loadCardSettings);
   $("btnSaveCardSettings").addEventListener("click", saveCardSettings);
+  // spend box
+  const spendRecalc = async ()=>{
+    try{
+      await renderSpendByCategoryBox();
+    }catch(err){
+      console.warn("spend box", err);
+    }
+  };
+
+  $("spWallets")?.addEventListener("change", spendRecalc);
+  $("spCompareMonth")?.addEventListener("change", spendRecalc);
+  $("spIncludeCards")?.addEventListener("change", spendRecalc);
+  $("spIncludeRepayments")?.addEventListener("change", spendRecalc);
+  $("spIncludeCredits")?.addEventListener("change", spendRecalc);
+  $("spTopN")?.addEventListener("change", spendRecalc);
+  $("spMinAmt")?.addEventListener("change", spendRecalc);
+  $("spGroupMode")?.addEventListener("change", spendRecalc);
+  
 }
 
 /* =========================

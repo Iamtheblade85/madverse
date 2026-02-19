@@ -5,1081 +5,161 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Finance UI</title>
 
-  <!-- Theme <link rel="stylesheet" href="fin-theme.css" />                -->
+  <link rel="stylesheet" href="fin-theme.css" />
 <style>
-/* =========================================================
-   FIN UI — vNext LIGHT (Category-first everywhere)
-   Constraints: NO HTML changes / NO JS changes / Only CSS
-   Primary rule: EVERY event card is colored by its CATEGORY (accent-cat-*).
-                 Wallet (accent-wallet-*) is secondary (headers, badges, filters).
-   Also: No text clipping in event rows.
-   ========================================================= */
+/* =========================
+   PATCH UI: Stats + Wizard
+========================= */
 
-/* -------------------- 0) Design Tokens (40+ vars) -------------------- */
-:root{
-  color-scheme: light;
-
-  /* Neutrals: page + surfaces */
-  --bg0:#f7f9fc;            /* app background */
-  --bg1:#eef3fb;            /* subtle section tint */
-  --bg2:#e6eef9;            /* deeper tint */
-  --surface0:#ffffff;       /* cards/panels */
-  --surface1:#f8fbff;       /* elevated */
-  --surface2:#f2f7ff;       /* elevated alt */
-  --surface3:#eaf2ff;       /* strong highlight surface */
-
-  /* Text */
-  --fg0:#0b1220;            /* primary */
-  --fg1:#15243a;            /* secondary */
-  --fg2:#2a3b57;            /* tertiary */
-  --muted0:#4b5e7a;
-  --muted1:#6a7f9f;
-  --muted2:#8ca1bf;
-
-  /* Lines / borders */
-  --line0:rgba(11,18,32,.14);
-  --line1:rgba(11,18,32,.10);
-  --line2:rgba(11,18,32,.07);
-  --line3:rgba(11,18,32,.05);
-
-  /* Shadows */
-  --shadow0:0 18px 44px rgba(11,18,32,.10);
-  --shadow1:0 12px 26px rgba(11,18,32,.09);
-  --shadow2:0 10px 18px rgba(11,18,32,.08);
-  --shadow3:0  6px 12px rgba(11,18,32,.07);
-
-  /* Global accent (UI chrome) */
-  --uiA:#2f6fff;
-  --uiB:#00b7ff;
-  --uiC:#7c3aed;
-  --focus:rgba(47,111,255,.55);
-
-  /* Semantics (amounts, badges, alerts) */
-  --pos:#0f9d6a;
-  --neg:#d11f4a;
-  --rep:#245bff;
-  --warn:#b7791f;
-  --info:#1273de;
-  --neutral:#334155;
-
-  /* Category/wallet accent behavior */
-  --accent:rgba(47,111,255,.35); /* default if missing */
-  --accBorder: color-mix(in oklab, var(--accent), rgba(11,18,32,.22) 55%);
-  --accRing:   0 0 0 2px color-mix(in oklab, var(--accent), transparent 70%);
-  --accGlow:   0 0 18px color-mix(in oklab, var(--accent), transparent 82%);
-  --accGlow2:  0 0 28px color-mix(in oklab, var(--accent), transparent 86%);
-  --accTintA:  color-mix(in oklab, var(--accent), white 92%); /* very light */
-  --accTintB:  color-mix(in oklab, var(--accent), white 86%); /* light */
-  --accTintC:  color-mix(in oklab, var(--accent), white 78%); /* stronger */
-  --accInk:    color-mix(in oklab, var(--accent), var(--fg0) 78%);
-
-  /* Wallet secondary visuals */
-  --walletTintA: color-mix(in oklab, var(--accent), white 94%);
-  --walletTintB: color-mix(in oklab, var(--accent), white 88%);
-  --walletLine:  color-mix(in oklab, var(--accent), rgba(11,18,32,.20) 70%);
-  --walletDot:   color-mix(in oklab, var(--accent), white 30%);
-
-  /* Radii / spacing / typography */
-  --r0:12px;
-  --r1:16px;
-  --r2:20px;
-  --pad0:12px;
-  --pad1:14px;
-  --pad2:16px;
-  --gap0:10px;
-  --gap1:12px;
-  --gap2:14px;
-
-  --font: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --fs0:16px;
-  --fs1:14px;
-  --fs2:12px;
-  --lh:1.45;
-
-  /* Calendar sizing */
-  --calMinCol: 112px;
-  --dayMinH: 132px;
-  --dayPad: 12px;
-
-  /* Event chip layout + readability */
-  --evBorderW:10px;
-  --evMetaLH:1.28;
+.chartBox{
+  min-height: 220px;
 }
 
-/* Optional dark mode (kept subtle). If you do NOT want any dark mode,
-   delete this entire @media block. */
-@media (prefers-color-scheme: dark){
-  :root{
-    color-scheme: dark;
-    --bg0:#0b1220;
-    --bg1:#0d172a;
-    --bg2:#0f1f37;
-    --surface0:#101c30;
-    --surface1:#12223b;
-    --surface2:#142a47;
-    --surface3:#163055;
-
-    --fg0:#f6f8ff;
-    --fg1:#eaf0ff;
-    --fg2:#d7e4ff;
-    --muted0:#c1d0f2;
-    --muted1:#a7bce7;
-    --muted2:#8aa5d6;
-
-    --line0:rgba(255,255,255,.16);
-    --line1:rgba(255,255,255,.12);
-    --line2:rgba(255,255,255,.09);
-    --line3:rgba(255,255,255,.06);
-
-    --shadow0:0 18px 44px rgba(0,0,0,.34);
-    --shadow1:0 12px 26px rgba(0,0,0,.28);
-    --shadow2:0 10px 18px rgba(0,0,0,.22);
-    --shadow3:0  6px 12px rgba(0,0,0,.18);
-
-    --accTintA:  color-mix(in oklab, var(--accent), black 72%);
-    --accTintB:  color-mix(in oklab, var(--accent), black 78%);
-    --accTintC:  color-mix(in oklab, var(--accent), black 84%);
-    --accInk:    color-mix(in oklab, var(--accent), var(--fg0) 60%);
-  }
-}
-
-/* -------------------- 1) Base -------------------- */
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  font-family:var(--font);
-  font-size:var(--fs0);
-  line-height:var(--lh);
-  color:var(--fg0);
-
-  background:
-    radial-gradient(1200px 720px at 12% -10%, color-mix(in oklab, var(--uiA), transparent 82%), transparent 60%),
-    radial-gradient(900px 680px at 98% 8%,  color-mix(in oklab, var(--uiB), transparent 86%), transparent 62%),
-    radial-gradient(900px 720px at 70% 120%, color-mix(in oklab, var(--uiC), transparent 88%), transparent 55%),
-    linear-gradient(180deg, var(--bg0), var(--bg2));
-}
-::selection{background:color-mix(in oklab, var(--uiA), transparent 70%);color:var(--fg0)}
-a{color:color-mix(in oklab, var(--uiA), var(--fg0) 10%);text-decoration:none}
-a:hover{text-decoration:underline}
-button,input,select,textarea{font:inherit}
-.muted,.hint,.footnote{color:var(--muted0)!important;opacity:1!important}
-.mono{font-family:var(--mono)!important}
-
-:focus-visible{
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
-  border-radius: 12px;
-}
-
-/* -------------------- 2) Header / Tabs -------------------- */
-header{
-  position:sticky;
-  top:0;
-  z-index:60;
-  background:
-    radial-gradient(900px 420px at 12% 0%, color-mix(in oklab, var(--uiA), transparent 84%), transparent 58%),
-    linear-gradient(180deg, color-mix(in oklab, var(--surface0), transparent 0%), color-mix(in oklab, var(--surface0), transparent 10%));
-  border-bottom:1px solid var(--line1);
-  backdrop-filter: blur(10px);
-}
-
-.topbar{
-  display:flex;
-  gap:var(--gap1);
-  align-items:center;
-  justify-content:space-between;
-  padding: 14px 16px;
-}
-.brand{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  min-width:0;
-  flex-wrap:wrap;
-}
-.brand h1{
-  margin:0;
-  font-size: clamp(20px, 2.1vw, 28px);
-  letter-spacing:.2px;
-  color:var(--fg0);
-}
-
-.pill{
-  padding:8px 11px;
-  border:1px solid var(--line1);
-  border-radius:999px;
-  background: linear-gradient(180deg, color-mix(in oklab, var(--surface1), transparent 0%), color-mix(in oklab, var(--surface2), transparent 0%));
-  color:var(--fg1);
-  box-shadow: var(--shadow3);
-  white-space:nowrap;
-  max-width: 100%;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-#pillStatus{max-width:min(52vw, 720px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pill::before{content:"";display:inline-block;width:10px;height:10px;border-radius:99px;margin-right:8px;vertical-align:-1px;background:color-mix(in oklab, var(--uiA), transparent 65%)}
-#pillStatus::before{background: linear-gradient(90deg, var(--uiA), var(--uiB))}
-
-.tabs{
-  display:flex;
-  gap:10px;
-  padding: 0 16px 12px;
-  flex-wrap:wrap;
-  align-items:center;
-}
-.tabbtn{
-  padding:12px 16px;
-  border-radius:999px;
-  border:1px solid var(--line1);
-  background: linear-gradient(180deg, var(--surface1), var(--surface2));
-  color:var(--fg0);
-  cursor:pointer;
-  transition: transform .06s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
-  box-shadow: var(--shadow3);
-}
-.tabbtn:hover{border-color: color-mix(in oklab, var(--uiA), var(--line1) 60%); box-shadow: var(--shadow2)}
-.tabbtn:active{transform: translateY(1px)}
-.tabbtn.active{
-  background:
-    radial-gradient(520px 170px at 18% 0%, color-mix(in oklab, var(--uiA), transparent 80%), transparent 60%),
-    linear-gradient(180deg, var(--surface0), var(--surface2));
-  border-color: color-mix(in oklab, var(--uiA), var(--line1) 40%);
-}
-
-/* -------------------- 3) Main layout -------------------- */
-main{padding: 16px 16px 54px}
-
-.row{
-  display:flex;
-  gap:var(--gap1);
-  flex-wrap:wrap;
-  align-items:flex-start;
-  min-width:0;
-}
-.row > *{min-width:0}
-
-.col{
-  flex: 1 1 420px;
-  min-width: 360px;
-}
-
-#tab-calendar > .row{
-  align-items: stretch;
-  flex-wrap: nowrap;
-  gap: var(--gap2);
-}
-#tab-calendar > .row > .col:first-child{
-  flex: 1 1 auto !important;
-  min-width: calc(var(--calMinCol) * 7 + 2px) !important;
-}
-#tab-calendar > .row > .col:last-child{
-  flex: 0 0 420px !important;
-  min-width: 360px !important;
-  max-width: 540px;
-}
-@media (max-width: 1220px){
-  #tab-calendar > .row{flex-wrap: wrap}
-  #tab-calendar > .row > .col:first-child,
-  #tab-calendar > .row > .col:last-child{
-    flex: 1 1 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-  }
-}
-@media (max-width: 720px){
-  main{padding: 14px 12px 52px}
-  .pill{white-space:normal}
-}
-
-/* -------------------- 4) Panels -------------------- */
-.panel{
-  background:
-    radial-gradient(900px 520px at 14% 0%, color-mix(in oklab, var(--uiA), transparent 90%), transparent 60%),
-    linear-gradient(180deg, var(--surface0), var(--surface2));
-  border:1px solid var(--line1);
-  border-radius: var(--r2);
-  padding: var(--pad2);
-  box-shadow: var(--shadow0);
-  min-width:0;
-}
-.panel h2{margin:0 0 10px;font-size: 22px;color:var(--fg0)}
-.panel h3{margin: 14px 0 10px;font-size: 20px;color: var(--fg0)}
-
-.hr{
-  height:1px;
-  background: linear-gradient(90deg, transparent, var(--line1), transparent);
-  margin: 14px 0;
-}
-
-/* -------------------- 5) Buttons / Fields -------------------- */
-.btn{
-  padding: 11px 14px;
-  border-radius: var(--r1);
-  border: 1px solid var(--line1);
-  background: linear-gradient(180deg, var(--surface1), var(--surface2));
-  color: var(--fg0);
-  cursor: pointer;
-  transition: transform .06s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
-  box-shadow: var(--shadow3);
-}
-.btn:hover{border-color: color-mix(in oklab, var(--uiA), var(--line1) 60%); box-shadow: var(--shadow2)}
-.btn:active{transform: translateY(1px)}
-.btn.small{padding: 9px 12px;border-radius: 12px;font-size: var(--fs1)}
-.btn.primary{
-  background:
-    radial-gradient(360px 140px at 18% 0%, color-mix(in oklab, var(--pos), transparent 82%), transparent 70%),
-    linear-gradient(180deg, var(--surface0), var(--surface2));
-  border-color: color-mix(in oklab, var(--pos), var(--line1) 55%);
-}
-.btn.danger{
-  background:
-    radial-gradient(360px 140px at 18% 0%, color-mix(in oklab, var(--neg), transparent 82%), transparent 70%),
-    linear-gradient(180deg, var(--surface0), var(--surface2));
-  border-color: color-mix(in oklab, var(--neg), var(--line1) 55%);
-}
-.btn:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
-
-.field{display:flex;flex-direction:column;gap:8px;margin: 10px 0}
-.field label{color:var(--muted0);font-size:var(--fs1)}
-.field input,
-.field select,
-.field textarea{
-  padding: 11px 12px;
-  border-radius: var(--r1);
-  border: 1px solid var(--line1);
-  background: linear-gradient(180deg, var(--surface0), var(--surface2));
-  color: var(--fg0);
-  outline:none;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
-}
-.field input::placeholder,
-.field textarea::placeholder{color:color-mix(in oklab, var(--muted2), transparent 0%)}
-.field textarea{min-height: 84px;resize:vertical}
-
-/* -------------------- 6) KPIs -------------------- */
-.kpiwrap{
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px,1fr));
-  gap: var(--gap1);
-  min-width:0;
-}
-.kpi{
-  background:
-    radial-gradient(420px 160px at 18% 0%, rgba(255,255,255,.35), transparent 70%),
-    linear-gradient(180deg, var(--surface0), var(--surface2));
-  border:1px solid var(--line2);
-  border-radius: var(--r1);
-  padding: 12px 12px 10px;
-  box-shadow: var(--shadow1);
-}
-.kpi .t{color: var(--muted0);font-size: var(--fs1)}
-.kpi .v{
-  font-size: clamp(20px, 1.7vw, 26px);
-  margin-top: 8px;
-  color: var(--fg0);
-  min-width:0;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  overflow-wrap:anywhere;
-  word-break:break-word;
-}
-.kpi .s{margin-top: 8px;color: var(--muted1);font-size: var(--fs2);overflow-wrap:anywhere}
-
-/* Money semantics (always consistent) */
-.money.pos{color: var(--pos)}
-.money.neg{color: var(--neg)}
-.money.neu{color: var(--fg0)}
-.delta.pos{color: var(--pos)}
-.delta.neg{color: var(--neg)}
-.delta.neu{color: var(--muted0)}
-
-/* -------------------- 7) Calendar container -------------------- */
-.calendar{
-  margin-top: 10px;
-  border: 1px solid var(--line1);
-  border-radius: var(--r2);
-  overflow: visible;
-  background:
-    radial-gradient(900px 420px at 14% 0%, color-mix(in oklab, var(--uiB), transparent 90%), transparent 60%),
-    linear-gradient(180deg, var(--surface0), var(--surface2));
-  box-shadow: var(--shadow0);
+.chart{
   width:100%;
-  min-width:0;
-}
-#calendar{
-  overflow-x:auto;
-  overflow-y:hidden;
-  -webkit-overflow-scrolling:touch;
-  padding-bottom: 2px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:12px;
+  background: rgba(255,255,255,.02);
 }
 
-/* 7 columns always, scroll if needed */
-.calendar > .calgrid,
-.calendar .calgrid{
-  display:grid;
-  grid-template-columns: repeat(7, minmax(var(--calMinCol), 1fr));
-  min-width: calc(var(--calMinCol) * 7);
-}
-
-/* DOW header */
-.dow{
-  padding: 12px 10px;
-  border-bottom: 1px solid var(--line1);
-  color: var(--muted0);
-  font-size: var(--fs2);
-  letter-spacing:.8px;
-  text-transform: uppercase;
-  background: linear-gradient(180deg, var(--surface1), var(--surface2));
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-.dow:nth-child(6),
-.dow:nth-child(7){
-  color: color-mix(in oklab, var(--warn), var(--muted0) 35%);
-}
-
-/* Day cell */
-.day{
-  min-height: var(--dayMinH);
-  padding: var(--dayPad);
-  border-right: 1px solid var(--line2);
-  border-bottom: 1px solid var(--line2);
-  cursor:pointer;
-  position:relative;
-  background: linear-gradient(180deg, var(--surface0), var(--surface2));
-  transition: background .12s ease, transform .06s ease, outline-color .12s ease, box-shadow .12s ease;
-  min-width: 0;
-}
-.day:nth-child(7n){border-right:none}
-.day:hover{
-  box-shadow: var(--shadow2);
-  background:
-    radial-gradient(360px 160px at 18% 0%, color-mix(in oklab, var(--uiA), transparent 88%), transparent 70%),
-    linear-gradient(180deg, var(--surface0), var(--surface2));
-}
-.day.selected{
-  outline: 3px solid var(--focus);
-  outline-offset: -3px;
-  box-shadow: var(--shadow1), 0 0 0 1px color-mix(in oklab, var(--uiA), transparent 70%);
-}
-
-/* Day header */
-.dayHead{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.dayNum{
-  font-size: 18px;
-  color: var(--fg0);
-  font-weight: 900;
-}
-.badge{
-  font-size: 12px;
-  color: var(--fg1);
-  border:1px solid var(--line1);
-  border-radius:999px;
-  padding: 4px 9px;
-  background: linear-gradient(180deg, var(--surface1), var(--surface2));
-  box-shadow: var(--shadow3);
-}
-
-/* Events list inside day */
-.evlist{
-  margin-top: 10px;
+.chartHeader{
   display:flex;
-  flex-direction:column;
-  gap: 8px;
-  min-width:0;
-}
-
-/* -------------------- 8) Wallet headers grid -------------------- */
-#headersWrap{
-  display:grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: var(--gap1) !important;
-  align-items: stretch;
-}
-
-/* Wallet header panels (accent-wallet-*) */
-#headersWrap > .panel{
-  padding: var(--pad1) !important;
-  border-color: var(--line1);
-  box-shadow: var(--shadow1);
-}
-
-/* If wallet has accent-wallet-* => make it clearly “wallet-colored” */
-#headersWrap > .panel[class*="accent-wallet-"]{
-  background:
-    radial-gradient(640px 260px at 14% 0%, var(--walletTintB), transparent 60%),
-    linear-gradient(180deg, var(--surface0), var(--surface2));
-  border-color: var(--walletLine);
-  box-shadow: var(--shadow1), var(--accGlow);
-}
-
-/* Wallet header top row alignment */
-#headersWrap > .panel > div:first-child{
-  display:grid !important;
-  grid-template-columns: 1fr auto;
-  gap: 10px;
-  align-items:start;
-}
-#headersWrap > .panel > div:first-child > div:first-child{min-width:0}
-#headersWrap > .panel > div:first-child > div:last-child{text-align:right!important}
-
-/* Name line */
-#headersWrap [style*="font-size:22px"]{
-  font-size: 18px !important;
-  font-weight: 900;
-  letter-spacing:.2px;
-  overflow:hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-  max-width: 100% !important;
-}
-/* Balance line */
-#headersWrap [style*="font-size:26px"]{
-  font-size: 22px !important;
-  font-weight: 950;
-}
-
-/* -------------------- 9) EVENT CARDS — category colors ALWAYS -------------------- */
-/* Base chip layout: prevents the right column (amount) from eating width */
-.ev{
-  --accent: rgba(47,111,255,.35); /* fallback */
-  display:grid !important;
-  grid-template-columns: minmax(0,1fr) auto;
-  column-gap: 10px !important;
-  align-items:start !important;
-
-  border:1px solid var(--line1);
-  border-left-width: var(--evBorderW);
-  border-left-color: color-mix(in oklab, var(--accent), rgba(11,18,32,.28) 60%);
-  border-radius: var(--r1);
-  padding: 9px 10px;
-
-  background:
-    radial-gradient(520px 160px at 14% 0%, color-mix(in oklab, var(--accent), white 92%), transparent 70%),
-    linear-gradient(180deg, var(--surface0), var(--surface2));
-
-  box-shadow: var(--shadow2);
-  transition: transform .06s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
-  min-width:0;
-}
-.ev:hover{
-  box-shadow: var(--shadow1), var(--accGlow);
-  border-color: color-mix(in oklab, var(--accent), var(--line1) 40%);
-}
-.ev:active{transform: translateY(1px)}
-
-/* Left side container */
-.ev .l{min-width:0 !important; display:flex; flex-direction:column; gap:4px}
-
-/* Title: up to 2 lines, no forced ellipsis single-line */
-.ev .ttl{
-  font-size: var(--fs1);
-  color: var(--fg0);
-  font-weight: 900;
-  min-width:0;
-  white-space: normal !important;
-  overflow: hidden !important;
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
-  overflow-wrap:anywhere !important;
-  word-break:break-word !important;
-}
-
-/* Meta: wrap, show up to 2 lines in calendar; more in day detail below */
-.ev .meta{
-  font-size: 13px;
-  color: var(--muted0);
-  min-width:0;
-  white-space: normal !important;
-  overflow: hidden !important;
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
-  overflow-wrap:anywhere !important;
-  word-break:break-word !important;
-  line-height: var(--evMetaLH) !important;
-}
-
-/* Right column: amount block must stay compact */
-.ev > div:last-child{
-  justify-self:end !important;
-  min-width: max-content !important;
-  max-width: 12ch !important;
-  display:flex;
-  flex-direction:column;
   align-items:flex-end;
-  gap:6px;
-}
-.ev .amt{
-  font-size: var(--fs1);
-  white-space:nowrap !important;
-  font-weight: 950;
-  letter-spacing:.1px;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
 }
 
-/* Tag pill: readable and consistent; inherits category ink */
-.tag{
-  font-size: 12px;
-  padding: 4px 9px;
-  border-radius: 999px;
-  border: 1px solid var(--line2);
-  color: color-mix(in oklab, var(--accInk), var(--fg0) 35%);
-  background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.18));
+.chartTitle{
+  font-weight:700;
 }
 
-/* Category-first rule (hard): if accent-cat exists, it dominates everything */
-.ev[class*="accent-cat-"]{
-  border-left-color: color-mix(in oklab, var(--accent), rgba(11,18,32,.22) 55%) !important;
-  background:
-    radial-gradient(560px 180px at 14% 0%, var(--accTintB), transparent 72%),
-    linear-gradient(180deg, var(--surface0), var(--surface2)) !important;
-  box-shadow: var(--shadow2), var(--accGlow) !important;
-}
-
-/* If BOTH wallet + category exist: category still wins (wallet remains secondary) */
-.ev[class*="accent-wallet-"][class*="accent-cat-"]{
-  border-left-color: color-mix(in oklab, var(--accent), rgba(11,18,32,.22) 55%) !important;
-}
-
-/* Fallback: events WITHOUT category still get wallet tint if present */
-.ev:not([class*="accent-cat-"])[class*="accent-wallet-"]{
-  background:
-    radial-gradient(560px 180px at 14% 0%, var(--walletTintB), transparent 72%),
-    linear-gradient(180deg, var(--surface0), var(--surface2)) !important;
-  border-left-color: var(--walletLine) !important;
-  box-shadow: var(--shadow2), var(--accGlow) !important;
-}
-
-/* Extra “scanability”: category dot before first meta line (if present) */
-.ev[class*="accent-cat-"] .meta:first-of-type::before{
-  content:"";
-  display:inline-block;
-  width:10px;height:10px;
-  border-radius:999px;
-  margin-right:8px;
-  vertical-align:-1px;
-  background: color-mix(in oklab, var(--accent), white 10%);
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent), transparent 70%);
-}
-
-/* -------------------- 10) Day detail panel: show MORE meta lines -------------------- */
-#dayEvents .ev .ttl{-webkit-line-clamp: 3 !important}
-#dayEvents .ev .meta{-webkit-line-clamp: 4 !important}
-
-/* -------------------- 11) Semantic coloring (amount only) -------------------- */
-/* Category dictates the card; semantics dictates the money color */
-.ev.evtype-income .amt{color: var(--pos) !important}
-.ev.evtype-expense .amt{color: var(--neg) !important}
-.ev.evtype-card_purchase .amt{color: var(--neg) !important}
-.ev.evtype-card_repayment .amt{color: var(--rep) !important}
-.ev.evtype-card_credit .amt{color: var(--pos) !important}
-.ev.evtype-card_charge .amt{color: var(--neg) !important}
-
-/* Optional semantic badge outline (does NOT override category card) */
-.ev.evtype-card_repayment .tag{border-color: color-mix(in oklab, var(--rep), var(--line1) 60%) !important}
-.ev.evtype-income .tag{border-color: color-mix(in oklab, var(--pos), var(--line1) 60%) !important}
-.ev.evtype-expense .tag{border-color: color-mix(in oklab, var(--neg), var(--line1) 60%) !important}
-
-/* -------------------- 12) Details / Trees -------------------- */
-details{
-  border: 1px solid var(--line1);
-  border-radius: var(--r2);
-  background: linear-gradient(180deg, var(--surface0), var(--surface2));
-  margin: 12px 0;
-  overflow:hidden;
-  box-shadow: var(--shadow1);
-  color: var(--fg0);
-}
-summary{
-  cursor:pointer;
-  list-style:none;
-  padding: 13px 12px;
-  font-size: 18px;
+.chartLegend{
   display:flex;
   gap:10px;
-  align-items:center;
-  justify-content:space-between;
-  background:
-    radial-gradient(520px 160px at 18% 0%, color-mix(in oklab, var(--uiA), transparent 88%), transparent 70%),
-    linear-gradient(180deg, var(--surface1), var(--surface2));
-  border-bottom: 1px solid var(--line1);
-  color: var(--fg0);
-}
-summary::-webkit-details-marker{display:none}
-.treeBody{padding: 10px 12px 12px;color:var(--fg0)}
-.treeRow{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap: 10px;
-  padding: 10px 0;
-  border-top: 1px solid var(--line2);
-}
-.treeRow .name{
-  min-width:0;
-  white-space: normal !important;
-  overflow: visible !important;
-  text-overflow: clip !important;
-  overflow-wrap:anywhere;
-  word-break:break-word;
-  color:var(--fg1);
-}
-.treeRow .amt{white-space:nowrap;font-weight:900}
-
-/* -------------------- 13) Dialog -------------------- */
-dialog{
-  width: min(900px, calc(100vw - 24px));
-  border: 1px solid var(--line1);
-  border-radius: var(--r2);
-  background:
-    radial-gradient(900px 420px at 18% 0%, color-mix(in oklab, var(--uiA), transparent 86%), transparent 60%),
-    linear-gradient(180deg, var(--surface0), var(--surface2));
-  color: var(--fg0);
-  padding: 0;
-  box-shadow: var(--shadow0);
-}
-dialog::backdrop{background: rgba(11,18,32,.45)}
-.dlgHead{
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--line1);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap: 10px;
-  background: linear-gradient(180deg, var(--surface1), var(--surface2));
-}
-.dlgHead h2{margin:0;font-size: 22px;color:var(--fg0)}
-.dlgBody{padding: 14px}
-.dlgFoot{
-  padding: 12px 14px;
-  border-top: 1px solid var(--line1);
-  display:flex;
-  gap: 10px;
-  justify-content:flex-end;
   flex-wrap:wrap;
-  background: linear-gradient(180deg, var(--surface1), var(--surface2));
+  font-size:13px;
+  opacity:.9;
 }
 
-/* -------------------- 14) Toast -------------------- */
-.toast{
-  position:fixed;
-  bottom: 18px;
-  left: 18px;
-  right: 18px;
-  display:none;
-  z-index:200;
-}
-.toast .box{
-  max-width: 980px;
-  margin: 0 auto;
-  border: 1px solid var(--line1);
-  border-radius: var(--r2);
-  background:
-    radial-gradient(640px 220px at 14% 0%, color-mix(in oklab, var(--uiB), transparent 90%), transparent 70%),
-    linear-gradient(180deg, var(--surface0), var(--surface2));
-  padding: 12px 14px;
-  box-shadow: var(--shadow0);
-  color: var(--fg0);
-}
-.toast .box b{display:block;margin-bottom:6px;color:var(--fg0)}
-
-/* -------------------- 15) Dynamic accent classes (from JS) -------------------- */
-/* fallback NON ricorsivo: JS (dynRules) può comunque sovrascrivere perché viene dopo */
-:root{
-  --accentFallback: rgba(47,111,255,.35);
+.legendDot{
+  display:inline-block;
+  width:10px;height:10px;border-radius:50%;
+  background: currentColor;
+  margin-right:6px;
+  opacity:.9;
 }
 
-[class*="accent-wallet-"],
-[class*="accent-cat-"]{
-  --accent: var(--accentFallback);
-}
-
-/* -------------------- 16) Scrollbars -------------------- */
-*::-webkit-scrollbar{height:10px;width:10px}
-*::-webkit-scrollbar-track{background:color-mix(in oklab, var(--surface2), transparent 0%)}
-*::-webkit-scrollbar-thumb{
-  background:color-mix(in oklab, var(--uiA), rgba(11,18,32,.18) 70%);
-  border-radius:999px;
-  border:2px solid color-mix(in oklab, var(--surface0), transparent 0%);
-}
-*::-webkit-scrollbar-thumb:hover{
-  background:color-mix(in oklab, var(--uiA), rgba(11,18,32,.10) 55%);
-}
-
-/* -------------------- 17) Small screens -------------------- */
-@media (max-width: 420px){
-  :root{--fs0: 16px}
-  .btn{width:100%}
-  .btn.small{width:auto}
-}
-
-/* -------------------- 18) Anti-clipping hardening -------------------- */
-.panel, .row, .col, #tab-calendar, #calendar, .calendar,
-.ev, .ev .l, .ev .ttl, .ev .meta{
-  min-width:0;
-}
-
-/* -------------------- 19) Optional: make “selected day” show category cluster stronger -------------------- */
-.day.selected .ev[class*="accent-cat-"]{
-  box-shadow: var(--shadow1), var(--accGlow2), var(--accRing) !important;
-}
-
-/* -------------------- 20) If you have a tabs status pill injected by JS, keep it on the right -------------------- */
-#tabsDayStatus{
-  margin-left:auto;
+.bars{
   display:flex;
-  align-items:center;
-  gap:10px;
-  min-width:0;
-  padding: 8px 10px;
-  border:1px solid var(--line1);
-  border-radius:999px;
-  background: linear-gradient(180deg, var(--surface1), var(--surface2));
-  box-shadow: var(--shadow3);
-  max-width: min(44vw, 620px);
+  align-items:flex-end;
+  gap:8px;
+  height:150px;
+  padding:6px 2px;
 }
-#tabsDayStatus .k{color: var(--muted1);font-size: 13px;white-space:nowrap}
-#tabsDayStatus .v{color: var(--fg0);font-weight: 950;white-space:nowrap}
-#tabsDayStatus .s{
-  color: var(--muted0);
-  font-size: 13px;
+
+.bar{
+  flex: 1 1 0;
+  min-width: 10px;
+  border-radius: 10px 10px 6px 6px;
+  background: color-mix(in oklab, var(--accent, #8aa), rgba(255,255,255,.10) 35%);
+  border: 1px solid color-mix(in oklab, var(--accent, #8aa), rgba(0,0,0,.20) 25%);
+}
+
+.barLabel{
+  margin-top:6px;
+  font-size:12px;
+  opacity:.8;
+  text-align:center;
+  white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  white-space:nowrap;
-  min-width:0;
-}
-@media (max-width: 720px){
-  #tabsDayStatus{max-width:none; width:100%}
-}
-/* =========================================================
-   PATCH — Calendar readability + consistent category accent
-   Goal:
-   - Calendar day cells darker/less washed out
-   - Event chips NOT “multicolor inside”: neutral surface + ONE strong accent outline
-   - Same category => same visible contour (border/outline)
-   - Override JS dynRules that recolor title/tag (without touching JS)
-   Paste THIS BLOCK at the VERY END of your <style> (after everything).
-   ========================================================= */
-
-/* 1) Make the calendar grid itself less bright/washed */
-.calendar{
-  background: linear-gradient(180deg, var(--surface1), var(--surface2)) !important;
-  border-color: var(--line0) !important;
-}
-.dow{
-  background: linear-gradient(180deg, var(--surface2), var(--surface3)) !important;
-  border-bottom-color: var(--line0) !important;
-  color: var(--muted0) !important;
 }
 
-/* Day cells: darker surface so event chips have contrast */
-.day{
-  background: linear-gradient(180deg, var(--surface1), var(--surface2)) !important;
-  border-right-color: var(--line1) !important;
-  border-bottom-color: var(--line1) !important;
-}
-.day:hover{
-  background:
-    radial-gradient(360px 160px at 18% 0%, color-mix(in oklab, var(--uiA), transparent 90%), transparent 70%),
-    linear-gradient(180deg, var(--surface1), var(--surface2)) !important;
-}
-
-/* Out-of-month days: visibly dimmed (still readable) */
-.day.outmonth{
-  opacity: .72;
-  filter: saturate(.85);
-}
-.day.outmonth .dayNum{ color: color-mix(in oklab, var(--fg0), var(--muted2) 55%) !important; }
-.day.outmonth .badge{ opacity: .8; }
-
-/* 2) Event chip: neutral interior + STRONG category contour (no harlequin) */
-:root{
-  --evBorderW: 12px;           /* thicker, more visible */
-  --evOutlineW: 2px;           /* additional visible contour */
-  --evBg: var(--surface0);     /* neutral interior */
-  --evBg2: var(--surface1);
-}
-
-/* Base event chip: remove tinted gradients; make it legible everywhere */
-.ev{
-  background: linear-gradient(180deg, var(--evBg), var(--evBg2)) !important;
-  border: 1px solid var(--line0) !important;
-
-  /* Strong left accent (category/wallet sets --accent) */
-  border-left-width: var(--evBorderW) !important;
-  border-left-color: var(--accent) !important;
-
-  /* Second contour: visible and SAME for same category (uses --accent) */
-  outline: var(--evOutlineW) solid color-mix(in oklab, var(--accent), rgba(0,0,0,.10) 35%) !important;
-  outline-offset: -1px !important;
-
-  box-shadow: var(--shadow2) !important;
-}
-
-/* Hover: ONLY strengthen contour, don’t recolor inside */
-.ev:hover{
-  box-shadow: var(--shadow1) !important;
-  outline-color: color-mix(in oklab, var(--accent), rgba(0,0,0,.08) 20%) !important;
-}
-
-/* Category-first stays: force same contour for category chips */
-.ev[class*="accent-cat-"]{
-  border-left-color: var(--accent) !important;
-  outline-color: color-mix(in oklab, var(--accent), rgba(0,0,0,.12) 30%) !important;
-}
-
-/* If both wallet+category exist, category still dominates (already true, keep hard) */
-.ev[class*="accent-wallet-"][class*="accent-cat-"]{
-  border-left-color: var(--accent) !important;
-}
-
-/* 3) Kill JS “dynRules” multicolor inside cards (title/tag recoloring) */
-.ev .ttl{
-  color: var(--fg0) !important;
-}
-.ev .meta{
-  color: var(--muted0) !important;
-}
-
-/* Tag should be neutral, not accent-colored */
-.ev .tag{
-  color: var(--fg1) !important;
-  background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.28)) !important;
-  border-color: var(--line1) !important;
-}
-
-/* Optional: keep a SMALL accent hint on the tag border only (still consistent, not “inside colors”) */
-.ev[class*="accent-cat-"] .tag{
-  border-color: color-mix(in oklab, var(--accent), var(--line1) 65%) !important;
-}
-
-/* 4) Calendar-specific: even more contrast for chips inside day cells */
-.day .ev{
-  background: linear-gradient(180deg, var(--surface0), var(--surface1)) !important;
-  border-color: var(--line0) !important;
-}
-
-/* 5) Selected day: reinforce, but still no interior tint */
-.day.selected .ev[class*="accent-cat-"]{
-  outline-width: calc(var(--evOutlineW) + 1px) !important;
-}
-
-/* 6) Dark mode: same philosophy (neutral interior + strong contour) */
-@media (prefers-color-scheme: dark){
-  :root{
-    --evBg: color-mix(in oklab, var(--surface0), black 8%);
-    --evBg2: color-mix(in oklab, var(--surface1), black 10%);
-  }
-  .day{ border-right-color: var(--line1) !important; border-bottom-color: var(--line1) !important; }
-  .ev{
-    border-color: var(--line0) !important;
-    outline-color: color-mix(in oklab, var(--accent), rgba(255,255,255,.10) 25%) !important;
-  }
-  .ev .tag{
-    background: linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.18)) !important;
-    border-color: var(--line1) !important;
-    color: var(--fg1) !important;
-  }
-}
-/* ===== PATCH: Spend-by-category box ===== */
-.chk{display:flex;align-items:center;gap:8px;color:var(--fg1);font-size:14px}
-.chk input{width:16px;height:16px}
-
-#spendByCatBox{min-width:0}
-.sptable{
+.tableLite{
   width:100%;
-  border-collapse:separate;
-  border-spacing:0;
-  overflow:hidden;
-  border:1px solid var(--line1);
-  border-radius: var(--r2);
-  background: linear-gradient(180deg, var(--surface0), var(--surface2));
-  box-shadow: var(--shadow1);
+  border-collapse:collapse;
+  font-size:14px;
 }
-.sptable th, .sptable td{
-  padding:10px 12px;
-  border-bottom:1px solid var(--line2);
+
+.tableLite th,
+.tableLite td{
+  padding:10px 8px;
+  border-bottom:1px solid rgba(255,255,255,.08);
   vertical-align:top;
 }
-.sptable th{
+
+.tableLite th{
   text-align:left;
-  font-size:12px;
-  letter-spacing:.7px;
-  text-transform:uppercase;
-  color:var(--muted0);
-  background: linear-gradient(180deg, var(--surface1), var(--surface2));
-}
-.sptable tr:last-child td{border-bottom:none}
-.sptable td.num{text-align:right;white-space:nowrap;font-variant-numeric: tabular-nums}
-.sptable .cat{
-  display:flex;align-items:center;gap:10px;min-width:0
-}
-.sptable .dot{
-  width:10px;height:10px;border-radius:999px;
-  background: var(--accent);
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent), transparent 70%);
-  flex:0 0 auto;
-}
-.sptable .name{
-  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  color:var(--fg0);font-weight:800;
-}
-.sptable .sub{
-  display:block;color:var(--muted1);font-size:12px;margin-top:2px;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  opacity:.8;
+  font-weight:600;
 }
 
-.spfoot{
-  display:flex;justify-content:space-between;align-items:center;gap:10px;
-  margin-top:10px;color:var(--muted0);font-size:13px;flex-wrap:wrap
-}
-/* === AUTH GATE (no UI) === */
-body{ visibility:hidden; }
-body.authed{ visibility:visible; }
-
-.sptable tr[class*="accent-cat-"]{
-  /* usa l’accent come hint, ma resta “pulito” */
-  background: linear-gradient(180deg, var(--surface0), var(--surface1));
-}
-.sptable tr[class*="accent-cat-"]:hover{
-  outline: 2px solid color-mix(in oklab, var(--accent), rgba(0,0,0,.10) 35%);
-  outline-offset: -2px;
-}
-
-.money.rep{color: var(--rep)}
-.ev .actions{
-  justify-self:end !important;
-  min-width: max-content !important;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  gap:6px;
-}
-.ev .actions .btn.small{
+.tableLite td.num,
+.tableLite th.num{
+  text-align:right;
   white-space:nowrap;
 }
 
-/* === HARD OVERRIDE: kill dynRules title/tag coloring everywhere === */
-.ev[class*="accent-cat-"] .ttl,
-.ev[class*="accent-wallet-"] .ttl{
-  color: var(--fg0) !important;
+.badgeSoft{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  font-size:13px;
 }
 
-.ev[class*="accent-cat-"] .tag,
-.ev[class*="accent-wallet-"] .tag{
-  color: var(--fg1) !important;
-  border-color: var(--line1) !important;
-}
-.ev{
-  border-left-color: var(--accent, var(--accentFallback)) !important;
+.wizardSteps{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
 }
 
-.sptable .dot{
-  background: var(--accent, var(--accentFallback));
+.wizardSteps .step{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.02);
+  opacity:.75;
+}
+
+.wizardSteps .step.active{
+  opacity:1;
+  border-color: rgba(255,255,255,.22);
+  background: rgba(255,255,255,.05);
+}
+
+.wizardSteps .n{
+  width:22px;height:22px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  background: rgba(255,255,255,.10);
+  font-weight:700;
+  font-size:12px;
+}
+
+.wizardSteps .t{
+  font-weight:600;
+  font-size:13px;
+}
+
+.money.rep{
+  color: color-mix(in oklab, #4cd27f, white 20%);
+}
+
+/* migliora leggibilità input multi-line in wizard */
+#dlgWalletWizard textarea{
+  min-height: 110px;
+  resize: vertical;
 }
 
 </style>
@@ -1097,11 +177,13 @@ body.authed{ visibility:visible; }
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <button class="btn small" id="btnReload">Ricarica</button>
       <button class="btn small" id="btnQuickAdd">+ Nuovo evento</button>
+      <button class="btn small" id="btnAddWalletCard">+ Aggiungi conto / carta</button>
     </div>
   </div>
   <div class="tabs">
     <button class="tabbtn active" data-tab="calendar">Calendario</button>
     <button class="tabbtn" data-tab="overview">Panoramica</button>
+    <button class="tabbtn" data-tab="stats">Statistiche</button>
     <button class="tabbtn" data-tab="settings">Impostazioni</button>
   </div>
 </header>
@@ -1249,6 +331,156 @@ body.authed{ visibility:visible; }
           </div>
         </div>
         
+      </div>
+    </div>
+  </section>
+  <!-- STATS TAB -->
+  <section id="tab-stats" style="display:none">
+    <div class="row">
+      <div class="col" style="flex: 1 1 980px">
+        <div class="panel">
+          <div class="row" style="align-items:center;justify-content:space-between;gap:10px">
+            <div>
+              <h2 style="margin:0">Statistiche & trend</h2>
+              <div class="muted" id="statsSubTitle">KPI, grafici e anomalie — aggiornamento rapido</div>
+            </div>
+  
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span class="pill">Ultimo aggiornamento: <span class="mono" id="statsLastRefresh">—</span></span>
+              <label class="chk"><input type="checkbox" id="statsLiveToggle"> Aggiornamento automatico</label>
+              <select id="statsLiveInterval" class="btn" style="padding:10px 12px">
+                <option value="30">Ogni 30s</option>
+                <option value="60" selected>Ogni 60s</option>
+                <option value="120">Ogni 2 min</option>
+                <option value="300">Ogni 5 min</option>
+              </select>
+              <button class="btn" id="btnStatsRefresh">Aggiorna ora</button>
+            </div>
+          </div>
+  
+          <div class="hr"></div>
+  
+          <div class="grid3">
+            <div class="field">
+              <label>Periodo</label>
+              <select id="statsPeriod">
+                <option value="mtd" selected>Mese corrente (MTD)</option>
+                <option value="month">Mese completo (visibile)</option>
+                <option value="90d">Ultimi 90 giorni</option>
+                <option value="365d">Ultimi 12 mesi</option>
+              </select>
+              <div class="hint">“MTD” = dal primo giorno del mese fino alla data selezionata.</div>
+            </div>
+  
+            <div class="field">
+              <label>Filtra per conti/carte</label>
+              <select id="statsWallets" multiple size="6"></select>
+              <div class="hint">Vuoto = tutti. CTRL/SHIFT per selezione multipla.</div>
+            </div>
+  
+            <div class="field">
+              <label>Opzioni spese</label>
+              <label class="chk"><input type="checkbox" id="statsIncludeCards" checked> Includi movimenti carte (acquisti/addebiti/crediti)</label><br/>
+              <label class="chk"><input type="checkbox" id="statsIncludeRepayments"> Includi pagamenti carta (rimborsi)</label><br/>
+              <label class="chk"><input type="checkbox" id="statsShowForecast" checked> Mostra previsione fine mese</label>
+            </div>
+          </div>
+  
+          <div class="hr"></div>
+  
+          <div class="kpiwrap" id="statsKpis" style="grid-template-columns:repeat(auto-fit, minmax(240px,1fr))"></div>
+  
+          <div class="hr"></div>
+  
+          <div class="grid2">
+            <div class="panel" style="margin:0">
+              <h3 style="margin-top:0">Cashflow nel tempo</h3>
+              <div class="muted">Entrate/uscite e trend (linea cumulata)</div>
+              <div class="hr"></div>
+              <div id="statsChartCashflow" class="chartBox"></div>
+            </div>
+  
+            <div class="panel" style="margin:0">
+              <h3 style="margin-top:0">Categorie principali</h3>
+              <div class="muted">Top categorie del periodo + variazione vs mese scorso</div>
+              <div class="hr"></div>
+              <div id="statsChartCats" class="chartBox"></div>
+            </div>
+          </div>
+  
+          <div class="hr"></div>
+  
+          <div class="grid2">
+            <div class="panel" style="margin:0">
+              <h3 style="margin-top:0">Merchant e frequenza</h3>
+              <div class="muted">Dove spendi di più + ticket medio</div>
+              <div class="hr"></div>
+              <div id="statsMerchants"></div>
+            </div>
+  
+            <div class="panel" style="margin:0">
+              <h3 style="margin-top:0">Anomalie & alert</h3>
+              <div class="muted">Outlier, budget pressure (senza export, solo UI)</div>
+              <div class="hr"></div>
+              <div id="statsAlerts"></div>
+            </div>
+          </div>
+  
+          <div class="hr"></div>
+  
+          <details open>
+            <summary>
+              <span>Ricorrenze (opzionale)</span>
+              <span class="tag">Solo UI</span>
+            </summary>
+            <div class="treeBody">
+              <div class="muted">Questa sezione rileva possibili ricorrenze dai tuoi dati e permette di aggiungerle come “note operative” (frontend). Nessun import/export.</div>
+              <div class="hr"></div>
+              <div id="statsRecurring"></div>
+            </div>
+          </details>
+  
+        </div>
+      </div>
+  
+      <div class="col" style="flex: 1 1 520px">
+        <div class="panel">
+          <h2>Vista salvata</h2>
+          <div class="muted">Salva filtri e opzioni per riusare la stessa analisi.</div>
+          <div class="hr"></div>
+  
+          <div class="grid2">
+            <div class="field">
+              <label>Nome vista</label>
+              <input id="statsViewName" placeholder="es. Conti principali · MTD" />
+            </div>
+            <div class="field">
+              <label>Azioni</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn" id="btnStatsSaveView">Salva</button>
+                <button class="btn" id="btnStatsDeleteView">Elimina</button>
+              </div>
+            </div>
+          </div>
+  
+          <div class="field" style="margin-top:10px">
+            <label>Seleziona vista</label>
+            <select id="statsViews"></select>
+            <div class="hint">Le viste sono salvate nel browser (localStorage).</div>
+          </div>
+        </div>
+  
+        <div class="panel" style="margin-top:12px">
+          <h2>Spiegazioni (utente non esperto)</h2>
+          <div class="hr"></div>
+          <div class="hint">
+            - <b>Entrate</b> = soldi che entrano (stipendio, rimborsi, ecc.).<br/>
+            - <b>Uscite</b> = soldi che escono (spese conto + spese carta).<br/>
+            - <b>Netto</b> = Entrate − Uscite (positivo = risparmio).<br/>
+            - <b>Previsione</b> = stima fine mese basata sul ritmo attuale e/o eventi già presenti.<br/>
+            - <b>Anomalie</b> = transazioni molto fuori dalla media (utile per controlli rapidi).
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -1518,6 +750,157 @@ body.authed{ visibility:visible; }
     <button class="btn danger" id="btnDeleteEvent" style="display:none">Elimina</button>
     <button class="btn" id="btnCancelEvent">Annulla</button>
     <button class="btn primary" id="btnSaveEvent">Salva</button>
+  </div>
+</dialog>
+<!-- WALLET/CARD WIZARD -->
+<dialog id="dlgWalletWizard">
+  <div class="dlgHead">
+    <h2 id="wwTitle">Aggiungi conto / carta</h2>
+    <button class="btn small" id="wwClose">✕</button>
+  </div>
+
+  <div class="dlgBody">
+    <div class="wizardSteps" id="wwSteps">
+      <div class="step active" data-step="1"><span class="n">1</span><span class="t">Tipo</span></div>
+      <div class="step" data-step="2"><span class="n">2</span><span class="t">Dettagli</span></div>
+      <div class="step" data-step="3"><span class="n">3</span><span class="t">Regole</span></div>
+      <div class="step" data-step="4"><span class="n">4</span><span class="t">Conferma</span></div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div id="wwStep1">
+      <h3 style="margin-top:0">Che cosa vuoi aggiungere?</h3>
+      <div class="muted">Scegli il tipo: l’app userà etichette e campi coerenti.</div>
+      <div class="hr"></div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Tipo</label>
+          <select id="wwType">
+            <option value="bank" selected>Conto bancario</option>
+            <option value="cash">Contanti</option>
+            <option value="card">Carta di credito</option>
+            <option value="investment">Investimento (solo monitoraggio)</option>
+            <option value="external">Altro / esterno</option>
+          </select>
+          <div class="hint">Nessun import: puoi aggiungere movimenti manualmente o tramite API se disponibile.</div>
+        </div>
+
+        <div class="field">
+          <label>Come arrivano i dati?</label>
+          <select id="wwSourceMode">
+            <option value="manual" selected>Inserimento manuale (consigliato)</option>
+            <option value="api">Collegamento API/connector (se configurato nel backend)</option>
+            <option value="virtual">Wallet virtuale (solo frontend)</option>
+          </select>
+          <div class="hint">Se il backend non supporta la creazione, “Wallet virtuale” funziona subito.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="wwStep2" style="display:none">
+      <h3 style="margin-top:0">Dettagli principali</h3>
+      <div class="muted">Usa nomi chiari: li vedrai ovunque (calendario, statistiche, filtri).</div>
+      <div class="hr"></div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Nome (es. “Sparkasse Giro”, “Amex”, “Contanti”)</label>
+          <input id="wwName" placeholder="Nome leggibile dall’utente" />
+        </div>
+        <div class="field">
+          <label>Valuta</label>
+          <select id="wwCurrency">
+            <option value="EUR" selected>EUR (€)</option>
+            <option value="USD">USD ($)</option>
+            <option value="CHF">CHF</option>
+            <option value="GBP">GBP</option>
+          </select>
+          <div class="hint">Se mescoli valute, la UI non converte automaticamente (serve backend).</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Nota (opzionale)</label>
+          <input id="wwNote" placeholder="es. “conto famiglia”, “solo spese auto”" />
+        </div>
+        <div class="field" id="wwDefaultSourceBox" style="display:none">
+          <label>Per carte: conto di addebito (default)</label>
+          <select id="wwDefaultSourceWallet"></select>
+          <div class="hint">Serve per creare “pagamento carta” automatico o guidato.</div>
+        </div>
+      </div>
+
+      <div class="grid3" id="wwCardFields" style="display:none">
+        <div class="field">
+          <label>Limite carta (opzionale)</label>
+          <input id="wwCardLimit" placeholder="es. 3000" />
+        </div>
+        <div class="field">
+          <label>Giorno inizio ciclo (es. 16)</label>
+          <input id="wwCycleStart" placeholder="1..31" />
+        </div>
+        <div class="field">
+          <label>Giorno fine ciclo (es. 15)</label>
+          <input id="wwCycleEnd" placeholder="1..31" />
+        </div>
+      </div>
+    </div>
+
+    <div id="wwStep3" style="display:none">
+      <h3 style="margin-top:0">Regole intelligenti (facili)</h3>
+      <div class="muted">Serve per avere statistiche pulite senza diventare “tecnico”.</div>
+      <div class="hr"></div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Categoria predefinita (se manca)</label>
+          <input id="wwDefaultCategory" placeholder="es. Spese varie" value="Spese varie" />
+          <div class="hint">Usata quando non specifichi una categoria nell’evento.</div>
+        </div>
+
+        <div class="field">
+          <label>Includi nei totali generali</label>
+          <select id="wwIncludeInTotals">
+            <option value="1" selected>Sì (consigliato)</option>
+            <option value="0">No (solo monitoraggio)</option>
+          </select>
+          <div class="hint">Utile per conti esterni o investimenti separati.</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Alias merchant (opzionale)</label>
+          <textarea id="wwAliases" class="mono" placeholder="Una riga per regola: &#10;AMZN=Amazon&#10;PAYPAL=PayPal"></textarea>
+          <div class="hint">Solo UI: per raggruppare meglio i merchant nelle statistiche.</div>
+        </div>
+
+        <div class="field">
+          <label>Tag automatici (opzionale)</label>
+          <textarea id="wwTags" class="mono" placeholder="Una riga: parola→tag&#10;uber→trasporti&#10;rewe→spesa"></textarea>
+          <div class="hint">Solo UI: aiuta a filtrare.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="wwStep4" style="display:none">
+      <h3 style="margin-top:0">Conferma</h3>
+      <div class="muted">Controlla: se va bene, crea il conto/carta.</div>
+      <div class="hr"></div>
+
+      <div id="wwSummary" class="panel" style="margin:0"></div>
+      <div class="hint" style="margin-top:10px">
+        Nessun import/export. Dopo la creazione puoi aggiungere eventi manualmente e vederli subito in calendario e statistiche.
+      </div>
+    </div>
+  </div>
+
+  <div class="dlgFoot">
+    <button class="btn" id="wwBack">Indietro</button>
+    <button class="btn primary" id="wwNext">Avanti</button>
   </div>
 </dialog>
 
@@ -1831,17 +1214,28 @@ function loadLocal(){
 ========================= */
 async function loadWallets(){
   const ws = await apiFetch("/wallets");
-  state.wallets = Array.isArray(ws) ? ws : [];
+  const apiWallets = Array.isArray(ws) ? ws : [];
+
+  // merge virtual wallets (frontend-only)
+  const virt = getVirtualWallets();
+  const merged = [...apiWallets];
+
+  // avoid id collision by forcing "v-<ts>" string ids
+  for(const v of virt){
+    merged.push(v);
+  }
+
+  state.wallets = merged;
   state.walletsById = new Map(state.wallets.map(w=>[String(w.id), w]));
   state.walletNameById = new Map(state.wallets.map(w=>[String(w.id), w.name]));
   state.cardIds = new Set(state.wallets.filter(w=>w.type==="card").map(w=>String(w.id)));
 
-  // color rules per wallet
   for(const w of state.wallets){
     const key = `wallet:${w.id}:${w.type}:${w.name}`;
-    ensureDynRule(`.accent-wallet-${w.id}`, hslFromKey(key));
+    ensureDynRule(`.accent-wallet-${String(w.id).replace(/[^\w-]/g,"_")}`, hslFromKey(key));
   }
 }
+
 
 function dateRangeForMonth(m0){
   const ms = monthStart(m0);
@@ -2052,14 +1446,20 @@ function setTab(name){
   }
   $("tab-calendar").style.display = (name==="calendar") ? "" : "none";
   $("tab-overview").style.display = (name==="overview") ? "" : "none";
+  $("tab-stats").style.display = (name==="stats") ? "" : "none";
   $("tab-settings").style.display = (name==="settings") ? "" : "none";
+
   if(name==="overview"){
     renderOverview();
     renderSpendByCategoryBox();
     fillSpendWalletMulti();
   }
-
+  if(name==="stats"){
+    fillStatsWalletMulti();
+    renderStats(); // iniziale
+  }
 }
+
 
 /* =========================
    Rendering: Headers (per wallet/card)
@@ -2254,8 +1654,8 @@ function renderHeaders(){
   // ========= MAIN LOOP =========
   for(const w of state.dashboard.wallets){
     const isCard = (w.type === "card");
-
-    const cls = `panel accent-wallet-${w.id}`;
+    const widClass = String(w.id).replace(/[^\w-]/g,"_");
+    const cls = `panel accent-wallet-${widClass}`;
     const card = document.createElement("div");
     card.className = cls;
     card.style.flex = "1 1 420px";
@@ -3028,6 +2428,562 @@ async function renderSpendByCategoryBox(){
       </div>
     </div>
   `;
+}
+/* =========================
+   PATCH: Stats tab
+========================= */
+let __statsTimer = null;
+
+function fillStatsWalletMulti(){
+  const sel = $("statsWallets");
+  if(!sel) return;
+
+  const chosen = new Set([...sel.selectedOptions].map(o=>String(o.value)));
+  sel.innerHTML = state.wallets.map(w=>{
+    const id = String(w.id);
+    const labelType =
+      w.type==="card" ? "Carta" :
+      w.type==="cash" ? "Contanti" :
+      w.type==="investment" ? "Investimento" :
+      w.type==="external" ? "Esterno" :
+      "Conto";
+
+    return `<option value="${escapeHtml(id)}">${escapeHtml(w.name)} · ${labelType}</option>`;
+  }).join("");
+
+  for(const opt of sel.options){
+    if(chosen.has(String(opt.value))) opt.selected = true;
+  }
+}
+
+function statsOptions(){
+  const period = $("statsPeriod")?.value || "mtd";
+  const walletIds = selectedMultiValues($("statsWallets"));
+  const walletSet = new Set(walletIds);
+  return {
+    period,
+    walletSet,
+    includeCards: !!$("statsIncludeCards")?.checked,
+    includeRepayments: !!$("statsIncludeRepayments")?.checked,
+    showForecast: !!$("statsShowForecast")?.checked
+  };
+}
+
+function statsNormalizeTitleToMerchant(title){
+  // semplice: title come merchant (con alias UI)
+  const t = String(title||"").trim();
+  if(!t) return "Sconosciuto";
+
+  const rules = lsGetJSON("fin_ui_alias_rules_v1", {});
+  // rules = { "AMZN":"Amazon", ... } (match prefix contains)
+  for(const [k,v] of Object.entries(rules)){
+    if(!k) continue;
+    if(t.toLowerCase().includes(String(k).toLowerCase())){
+      return String(v||t);
+    }
+  }
+  return t;
+}
+
+function buildAliasRulesFromWizard(raw){
+  const lines = String(raw||"").split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  const out = {};
+  for(const line of lines){
+    const m = line.split("=");
+    if(m.length<2) continue;
+    const k = m[0].trim();
+    const v = m.slice(1).join("=").trim();
+    if(k && v) out[k] = v;
+  }
+  return out;
+}
+
+function buildTagsRulesFromWizard(raw){
+  const lines = String(raw||"").split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  const out = [];
+  for(const line of lines){
+    const m = line.split("→");
+    if(m.length<2) continue;
+    out.push({needle:m[0].trim(), tag:m.slice(1).join("→").trim()});
+  }
+  return out;
+}
+
+async function renderStats(){
+  const opt = statsOptions();
+  const {from, to} = periodRange(opt.period, state.visibleMonth, state.selectedDate);
+
+  const raw = await loadEventsForRange(from, to);
+  const evs = raw.map(normalizeEventForUI)
+    .filter(e=>e.__day)
+    .filter(e=>statsEventIncluded(e, opt))
+    .filter(e=>statsWalletFilterMatch(e, opt.walletSet));
+
+  // KPI base
+  let income = 0, out = 0;
+  const daily = new Map(); // dayIso -> net
+  for(const e of evs){
+    const s = moneySignForStats(e);
+    const a = Number(e.amount||0);
+    if(!Number.isFinite(a) || a<=0) continue;
+    const day = e.__day;
+
+    if(s>0) income += a;
+    if(s<0) out += a;
+
+    daily.set(day, (daily.get(day)||0) + (s*a));
+  }
+  const net = income - out;
+
+  // cumulative series for sparkline
+  const daysSorted = [...daily.keys()].sort();
+  let acc = 0;
+  const cum = [];
+  for(const d of daysSorted){
+    acc += daily.get(d);
+    cum.push(acc);
+  }
+
+  // Forecast (semplice e chiaro)
+  let forecastHtml = "";
+  if(opt.showForecast && opt.period==="mtd"){
+    const ms = monthStart(state.visibleMonth);
+    const me = monthEnd(state.visibleMonth);
+    const dayN = clamp(state.selectedDate.getDate(), 1, me.getDate());
+    const daysTotal = me.getDate();
+    const daysLeft = Math.max(0, daysTotal - dayN);
+
+    // run-rate: net/giorno * giorni restanti
+    const netPerDay = dayN ? (net / dayN) : 0;
+    const netForecast = net + netPerDay * daysLeft;
+
+    forecastHtml = `
+      <div class="kpi">
+        <div class="t">Previsione netto fine mese</div>
+        <div class="v"><span class="money ${moneyClassSigned(netForecast)}">${fmtMoney(netForecast)}</span></div>
+        <div class="s">Basata sul ritmo medio giornaliero del mese corrente (stima semplice).</div>
+      </div>
+    `;
+  }
+
+  // KPI render
+  $("statsKpis").innerHTML = `
+    <div class="kpi">
+      <div class="t">Entrate</div>
+      <div class="v"><span class="money pos">${fmtMoney(income)}</span></div>
+      <div class="s">Somma entrate nel periodo selezionato.</div>
+    </div>
+    <div class="kpi">
+      <div class="t">Uscite</div>
+      <div class="v"><span class="money neg">${fmtMoney(out)}</span></div>
+      <div class="s">Spese conto + (opzionale) movimenti carte.</div>
+    </div>
+    <div class="kpi">
+      <div class="t">Netto</div>
+      <div class="v"><span class="money ${moneyClassSigned(net)}">${fmtMoney(net)}</span></div>
+      <div class="s">Netto positivo = risparmio. Netto negativo = deficit.</div>
+    </div>
+    ${forecastHtml}
+  `;
+
+  // Chart: cashflow cumulative
+  renderSparkline($("statsChartCashflow"), cum, "Netto cumulato", `${isoDate(from)} → ${isoDate(to)}`);
+
+  // Top categories + MoM (solo per periodi mensili o MTD)
+  const catMap = new Map(); // cat -> spend (positive)
+  for(const e of evs){
+    // consider only outflow categories for ranking
+    const s = moneySignForStats(e);
+    if(s >= 0) continue;
+    const cat = (e.category || "Senza categoria").trim() || "Senza categoria";
+    catMap.set(cat, (catMap.get(cat)||0) + Number(e.amount||0));
+  }
+  const catRows = [...catMap.entries()]
+    .map(([k,v])=>({name:k, value:v, cls: catAccentClass("expense", k)}))
+    .sort((a,b)=>b.value-a.value);
+
+  renderBarsTop($("statsChartCats"), catRows.slice(0,10), "Top categorie (uscite)", "Più alto = più spesa nel periodo");
+
+  // Merchants table
+  const merchMap = new Map(); // merchant -> {sum, count}
+  for(const e of evs){
+    const s = moneySignForStats(e);
+    if(s >= 0) continue;
+    const m = statsNormalizeTitleToMerchant(e.title);
+    const r = merchMap.get(m) || {sum:0, count:0};
+    r.sum += Number(e.amount||0);
+    r.count += 1;
+    merchMap.set(m, r);
+  }
+  const merchArr = [...merchMap.entries()]
+    .map(([k,v])=>({merchant:k, sum:v.sum, count:v.count, avg:(v.count? v.sum/v.count : 0)}))
+    .sort((a,b)=>b.sum-a.sum)
+    .slice(0, 12);
+
+  $("statsMerchants").innerHTML = `
+    <table class="tableLite">
+      <thead>
+        <tr>
+          <th>Merchant</th>
+          <th class="num">Spesa</th>
+          <th class="num">Occorrenze</th>
+          <th class="num">Ticket medio</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${merchArr.map(x=>`
+          <tr>
+            <td>${escapeHtml(x.merchant)}</td>
+            <td class="num money neg">${fmtMoney(x.sum)}</td>
+            <td class="num">${x.count}</td>
+            <td class="num">${fmtMoney(x.avg)}</td>
+          </tr>
+        `).join("") || `<tr><td colspan="4" class="muted">Nessun dato.</td></tr>`}
+      </tbody>
+    </table>
+  `;
+
+  // Alerts / anomalies (robusti e comprensibili)
+  const amounts = evs
+    .filter(e=>moneySignForStats(e)<0)
+    .map(e=>Number(e.amount||0))
+    .filter(n=>Number.isFinite(n) && n>0);
+
+  const med = median(amounts);
+  const big = evs
+    .filter(e=>moneySignForStats(e)<0)
+    .filter(e=>Number(e.amount||0) >= Math.max(150, med*5))
+    .sort((a,b)=>Number(b.amount||0)-Number(a.amount||0))
+    .slice(0, 8);
+
+  $("statsAlerts").innerHTML = `
+    <div class="badgeSoft">Soglia anomalia: <span class="mono">${fmtMoney(Math.max(150, med*5))}</span> (basata su mediana)</div>
+    <div class="hr"></div>
+    ${
+      big.length ? big.map(e=>`
+        <div class="treeRow ${e.__catClass}">
+          <div class="name" style="min-width:0">
+            <div><b>${escapeHtml(e.__day)}</b> · ${escapeHtml(e.title||"")}</div>
+            <div class="muted" style="font-size:14px">${escapeHtml(e.category||"Senza categoria")}</div>
+          </div>
+          <div class="amt money neg">-${fmtMoney(Number(e.amount||0)).replace(" €","")} €</div>
+        </div>
+      `).join("") :
+      `<div class="muted">Nessuna anomalia rilevante nel periodo.</div>`
+    }
+  `;
+
+  // Recurring (UI-only): cerca pattern “stesso merchant + simile importo” nel periodo
+  const recMap = new Map();
+  for(const e of evs){
+    const s = moneySignForStats(e);
+    if(s >= 0) continue;
+    const m = statsNormalizeTitleToMerchant(e.title);
+    const a = Number(e.amount||0);
+    if(!Number.isFinite(a) || a<=0) continue;
+    const key = `${m}`;
+    const r = recMap.get(key) || {merchant:m, amounts:[], count:0};
+    r.amounts.push(a);
+    r.count += 1;
+    recMap.set(key, r);
+  }
+  const recArr = [...recMap.values()]
+    .filter(x=>x.count >= 3)
+    .map(x=>{
+      const avg = x.amounts.reduce((p,c)=>p+c,0)/x.amounts.length;
+      const spread = Math.max(...x.amounts) - Math.min(...x.amounts);
+      return {merchant:x.merchant, count:x.count, avg, spread};
+    })
+    .sort((a,b)=>b.count-a.count)
+    .slice(0, 10);
+
+  $("statsRecurring").innerHTML = `
+    <table class="tableLite">
+      <thead>
+        <tr>
+          <th>Possibile ricorrenza</th>
+          <th class="num">Occorrenze</th>
+          <th class="num">Media</th>
+          <th class="num">Variazione</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${recArr.map(x=>`
+          <tr>
+            <td>${escapeHtml(x.merchant)}</td>
+            <td class="num">${x.count}</td>
+            <td class="num">${fmtMoney(x.avg)}</td>
+            <td class="num">${fmtMoney(x.spread)}</td>
+          </tr>
+        `).join("") || `<tr><td colspan="4" class="muted">Nessuna ricorrenza evidente nel periodo.</td></tr>`}
+      </tbody>
+    </table>
+    <div class="hint" style="margin-top:8px">Ricorrenza = stesso merchant ripetuto spesso con importi simili. È un suggerimento, non una regola “rigida”.</div>
+  `;
+
+  // last refresh
+  $("statsLastRefresh").textContent = nowIsoLocal();
+}
+
+function statsStopLive(){
+  if(__statsTimer){
+    clearInterval(__statsTimer);
+    __statsTimer = null;
+  }
+}
+
+function statsStartLive(){
+  statsStopLive();
+  const sec = Number(($("statsLiveInterval")?.value)||60);
+  if(!Number.isFinite(sec) || sec<10) return;
+  __statsTimer = setInterval(async ()=>{
+    // solo se tab stats è visibile
+    if($("tab-stats")?.style?.display === "none") return;
+    try{ await renderStats(); }catch(e){ console.warn("stats live error", e); }
+  }, sec*1000);
+}
+
+/* =========================
+   PATCH: Stats saved views
+========================= */
+const STATS_VIEWS_KEY = "fin_ui_stats_views_v1";
+
+function loadStatsViews(){
+  const views = lsGetJSON(STATS_VIEWS_KEY, []);
+  const sel = $("statsViews");
+  if(!sel) return;
+
+  sel.innerHTML = `<option value="">— Seleziona vista —</option>` + views.map((v,i)=>(
+    `<option value="${i}">${escapeHtml(v.name)}</option>`
+  )).join("");
+}
+
+function readStatsViewFromUI(){
+  const opt = statsOptions();
+  return {
+    name: ($("statsViewName")?.value || "").trim() || "Vista senza nome",
+    period: opt.period,
+    walletIds: [...opt.walletSet],
+    includeCards: opt.includeCards,
+    includeRepayments: opt.includeRepayments,
+    showForecast: opt.showForecast
+  };
+}
+
+function applyStatsViewToUI(v){
+  if(!v) return;
+  $("statsPeriod").value = v.period || "mtd";
+
+  // wallets multi
+  fillStatsWalletMulti();
+  const sel = $("statsWallets");
+  const set = new Set((v.walletIds||[]).map(String));
+  for(const o of sel.options){
+    o.selected = set.has(String(o.value));
+  }
+
+  $("statsIncludeCards").checked = !!v.includeCards;
+  $("statsIncludeRepayments").checked = !!v.includeRepayments;
+  $("statsShowForecast").checked = !!v.showForecast;
+
+  $("statsViewName").value = v.name || "";
+}
+/* =========================
+   PATCH: Wallet/Card Wizard
+========================= */
+const ww = {
+  step: 1,
+};
+
+function wwSetStep(n){
+  ww.step = clamp(Number(n||1), 1, 4);
+
+  // steps header
+  for(const el of document.querySelectorAll("#wwSteps .step")){
+    const s = Number(el.getAttribute("data-step"));
+    el.classList.toggle("active", s===ww.step);
+  }
+
+  // panels
+  $("wwStep1").style.display = (ww.step===1) ? "" : "none";
+  $("wwStep2").style.display = (ww.step===2) ? "" : "none";
+  $("wwStep3").style.display = (ww.step===3) ? "" : "none";
+  $("wwStep4").style.display = (ww.step===4) ? "" : "none";
+
+  $("wwBack").disabled = (ww.step===1);
+  $("wwNext").textContent = (ww.step===4) ? "Crea" : "Avanti";
+}
+
+function wwReset(){
+  $("wwType").value = "bank";
+  $("wwSourceMode").value = "manual";
+  $("wwName").value = "";
+  $("wwCurrency").value = "EUR";
+  $("wwNote").value = "";
+  $("wwDefaultCategory").value = "Spese varie";
+  $("wwIncludeInTotals").value = "1";
+  $("wwAliases").value = "";
+  $("wwTags").value = "";
+  $("wwCardLimit").value = "";
+  $("wwCycleStart").value = "";
+  $("wwCycleEnd").value = "";
+
+  wwUpdateTypeUI();
+  wwSetStep(1);
+}
+
+function wwUpdateTypeUI(){
+  const t = $("wwType").value;
+  const isCard = (t==="card");
+
+  $("wwCardFields").style.display = isCard ? "" : "none";
+  $("wwDefaultSourceBox").style.display = isCard ? "" : "none";
+
+  // fill default source (non-card)
+  const nonCards = state.wallets.filter(w=>w.type!=="card");
+  $("wwDefaultSourceWallet").innerHTML =
+    `<option value="">Seleziona conto…</option>` +
+    nonCards.map(w=>`<option value="${escapeHtml(String(w.id))}">${escapeHtml(w.name)}</option>`).join("");
+}
+
+function wwBuildSummary(){
+  const type = $("wwType").value;
+  const source = $("wwSourceMode").value;
+  const name = $("wwName").value.trim();
+  const currency = $("wwCurrency").value;
+  const note = $("wwNote").value.trim();
+  const defCat = $("wwDefaultCategory").value.trim();
+  const include = $("wwIncludeInTotals").value==="1";
+  const defSource = $("wwDefaultSourceWallet").value;
+
+  const humanType =
+    type==="card" ? "Carta di credito" :
+    type==="cash" ? "Contanti" :
+    type==="investment" ? "Investimento" :
+    type==="external" ? "Esterno" :
+    "Conto bancario";
+
+  $("wwSummary").innerHTML = `
+    <div class="treeRow">
+      <div class="name"><b>Tipo</b></div>
+      <div class="amt">${escapeHtml(humanType)}</div>
+    </div>
+    <div class="treeRow">
+      <div class="name"><b>Nome</b></div>
+      <div class="amt">${escapeHtml(name || "—")}</div>
+    </div>
+    <div class="treeRow">
+      <div class="name"><b>Valuta</b></div>
+      <div class="amt">${escapeHtml(currency)}</div>
+    </div>
+    <div class="treeRow">
+      <div class="name"><b>Origine dati</b></div>
+      <div class="amt">${escapeHtml(source)}</div>
+    </div>
+    <div class="treeRow">
+      <div class="name"><b>Categoria predefinita</b></div>
+      <div class="amt">${escapeHtml(defCat || "Spese varie")}</div>
+    </div>
+    <div class="treeRow">
+      <div class="name"><b>Incluso nei totali</b></div>
+      <div class="amt">${include ? "Sì" : "No"}</div>
+    </div>
+    ${
+      type==="card" ? `
+      <div class="treeRow">
+        <div class="name"><b>Conto di addebito (default)</b></div>
+        <div class="amt">${escapeHtml(defSource || "—")}</div>
+      </div>
+      ` : ``
+    }
+    ${note ? `
+      <div class="treeRow">
+        <div class="name"><b>Nota</b></div>
+        <div class="amt">${escapeHtml(note)}</div>
+      </div>` : ``
+    }
+  `;
+}
+
+function wwValidateStep(step){
+  const type = $("wwType").value;
+  if(step>=2){
+    const name = $("wwName").value.trim();
+    if(!name) throw new Error("Inserisci un nome chiaro (es. “Sparkasse Giro”, “Amex”, “Contanti”).");
+    if(type==="card"){
+      const src = $("wwDefaultSourceWallet").value;
+      if(!src) throw new Error("Per una carta seleziona il conto di addebito (default).");
+    }
+  }
+}
+
+async function wwCreate(){
+  const type0 = $("wwType").value;
+  const sourceMode = $("wwSourceMode").value;
+  const name = $("wwName").value.trim();
+  const currency = $("wwCurrency").value;
+  const note = $("wwNote").value.trim();
+  const defCat = $("wwDefaultCategory").value.trim() || "Spese varie";
+  const includeTotals = $("wwIncludeInTotals").value==="1";
+  const aliases = buildAliasRulesFromWizard($("wwAliases").value);
+  const tags = buildTagsRulesFromWizard($("wwTags").value);
+
+  // store alias rules globally (UI feature)
+  const existingAliases = lsGetJSON("fin_ui_alias_rules_v1", {});
+  lsSetJSON("fin_ui_alias_rules_v1", {...existingAliases, ...aliases});
+
+  // wallet payload (try backend first)
+  const payload = {
+    name,
+    type: (type0==="bank") ? "bank" : type0,
+    currency,
+    note,
+    includeInTotals: includeTotals,
+    defaultCategory: defCat
+  };
+
+  if(type0==="card"){
+    payload.defaultSourceWalletId = $("wwDefaultSourceWallet").value;
+    const lim = Number(String($("wwCardLimit").value||"").replace(",", "."));
+    if(Number.isFinite(lim) && lim>0) payload.kreditlimit = lim;
+
+    const cs = Number($("wwCycleStart").value||0);
+    const ce = Number($("wwCycleEnd").value||0);
+    if(cs>0) payload.cycleStartDay = cs;
+    if(ce>0) payload.cycleEndDay = ce;
+  }
+
+  // if user explicitly chooses virtual, skip API
+  const wantVirtual = (sourceMode==="virtual");
+
+  if(!wantVirtual){
+    try{
+      await apiFetch("/wallets", {method:"POST", body: JSON.stringify(payload)});
+      toast("Creato", "Conto/carta creato nel backend.");
+      await refreshAll();
+      return;
+    }catch(err){
+      console.warn("POST /wallets failed -> fallback to virtual wallet", err);
+      // fallback below
+    }
+  }
+
+  // virtual wallet fallback
+  const vid = `v-${Date.now()}`;
+  const virt = {
+    id: vid,
+    name,
+    type: (type0==="bank") ? "bank" : type0,
+    currency,
+    note,
+    __virtual: true,
+    defaultCategory: defCat,
+    includeInTotals: includeTotals,
+    defaultSourceWalletId: (type0==="card") ? $("wwDefaultSourceWallet").value : null
+  };
+  addVirtualWallet(virt);
+  toast("Creato (virtuale)", "Creato come wallet virtuale (solo frontend).");
+  await refreshAll();
 }
 
 /* =========================================================
@@ -4036,6 +3992,8 @@ async function refreshAll(){
   await loadWallets();
   fillWalletSelects();
   fillSpendWalletMulti();
+  fillStatsWalletMulti();
+  loadStatsViews();
 
   state.walletFilter = $("calWalletFilter").value || "";
   await loadEventsForVisibleMonth();
@@ -4048,6 +4006,9 @@ async function refreshAll(){
   if(document.querySelector(".tabbtn.active")?.dataset?.tab==="overview"){
     await renderSpendByCategoryBox();
   }
+  if(document.querySelector(".tabbtn.active")?.dataset?.tab==="stats"){
+    await renderStats();
+  }
 
   $("pillApi").textContent = apiBase();
 }
@@ -4059,6 +4020,199 @@ function escapeHtml(s){
   return String(s??"").replace(/[&<>"']/g, c=>({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[c]));
+}
+/* =========================
+   PATCH: Views storage (Stats)
+========================= */
+function lsGetJSON(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    if(!raw) return fallback;
+    return JSON.parse(raw);
+  }catch{ return fallback; }
+}
+function lsSetJSON(key, obj){
+  localStorage.setItem(key, JSON.stringify(obj));
+}
+
+/* =========================
+   PATCH: Virtual wallets (fallback if backend doesn't support POST /wallets)
+========================= */
+const VIRT_KEY = "fin_ui_virtual_wallets_v1";
+
+function getVirtualWallets(){
+  const arr = lsGetJSON(VIRT_KEY, []);
+  return Array.isArray(arr) ? arr : [];
+}
+function addVirtualWallet(w){
+  const arr = getVirtualWallets();
+  arr.push(w);
+  lsSetJSON(VIRT_KEY, arr);
+}
+function clearVirtualWalletById(id){
+  const arr = getVirtualWallets().filter(x=>String(x.id)!==String(id));
+  lsSetJSON(VIRT_KEY, arr);
+}
+
+/* =========================
+   PATCH: Stats helpers
+========================= */
+function nowIsoLocal(){
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+}
+
+function selectedMultiValues(sel){
+  if(!sel) return [];
+  return [...sel.selectedOptions].map(o=>String(o.value));
+}
+
+function moneySignForStats(ev){
+  // Global "money impact":
+  // + income, + card_credit
+  // - expense, - card_purchase, - card_charge, - card_repayment (opzionale)
+  if(ev.type==="income") return +1;
+  if(ev.type==="card_credit") return +1;
+  if(ev.type==="expense") return -1;
+  if(ev.type==="card_purchase") return -1;
+  if(ev.type==="card_charge") return -1;
+  if(ev.type==="card_repayment") return -1;
+  return 0;
+}
+
+function statsEventIncluded(ev, opt){
+  if(ev.type==="income") return true;
+  if(ev.type==="expense") return true;
+
+  if(ev.type==="card_purchase" || ev.type==="card_charge" || ev.type==="card_credit"){
+    return !!opt.includeCards;
+  }
+  if(ev.type==="card_repayment"){
+    return !!opt.includeRepayments;
+  }
+  return false;
+}
+
+function statsWalletFilterMatch(ev, walletSet){
+  if(!walletSet || walletSet.size===0) return true;
+
+  const ids = new Set([
+    String(ev.walletId||""),
+    String(ev.cardWalletId||""),
+    String(ev.fromWalletId||""),
+    String(ev.toCardWalletId||"")
+  ]);
+  for(const id of ids){
+    if(id && walletSet.has(id)) return true;
+  }
+  return false;
+}
+
+function periodRange(period, visibleMonth, selectedDate){
+  const ms = monthStart(visibleMonth);
+  const me = monthEnd(visibleMonth);
+  const sel = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+
+  if(period==="mtd"){
+    return {from: ms, to: sel};
+  }
+  if(period==="month"){
+    return {from: ms, to: me};
+  }
+  if(period==="90d"){
+    return {from: addDays(sel, -89), to: sel};
+  }
+  if(period==="365d"){
+    return {from: addDays(sel, -364), to: sel};
+  }
+  return {from: ms, to: sel};
+}
+
+function groupBy(arr, keyFn){
+  const m = new Map();
+  for(const it of arr){
+    const k = keyFn(it);
+    m.set(k, (m.get(k)||0) + 1);
+  }
+  return m;
+}
+
+function median(nums){
+  const a = nums.filter(n=>Number.isFinite(n)).sort((x,y)=>x-y);
+  if(!a.length) return 0;
+  const mid = Math.floor(a.length/2);
+  return (a.length%2) ? a[mid] : (a[mid-1]+a[mid])/2;
+}
+
+/* =========================
+   PATCH: Simple charts (no libs)
+   - Bars (top categories)
+   - Sparkline (cashflow cumulative)
+========================= */
+function renderSparkline(container, points, labelLeft, labelRight){
+  const vals = points.map(x=>Number(x||0));
+  if(!vals.length){
+    container.innerHTML = `<div class="muted">Nessun dato.</div>`;
+    return;
+  }
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const rng = (max-min) || 1;
+
+  const w = 520, h = 120, pad = 8;
+
+  const sx = (i)=> pad + (i*(w-2*pad))/Math.max(1, (vals.length-1));
+  const sy = (v)=> (h-pad) - ((v-min)*(h-2*pad))/rng;
+
+  let d = "";
+  for(let i=0;i<vals.length;i++){
+    d += (i===0 ? "M" : "L") + sx(i).toFixed(2) + " " + sy(vals[i]).toFixed(2) + " ";
+  }
+
+  container.innerHTML = `
+    <div class="chart">
+      <div class="chartHeader">
+        <div class="chartLegend">
+          <span class="badgeSoft"><span class="legendDot"></span>${escapeHtml(labelLeft||"Trend")}</span>
+        </div>
+        <div class="muted">${escapeHtml(labelRight||"")}</div>
+      </div>
+      <svg viewBox="0 0 ${w} ${h}" width="100%" height="140" aria-hidden="true">
+        <path d="${d}" fill="none" stroke="currentColor" stroke-width="2" opacity="0.92"></path>
+      </svg>
+      <div class="muted" style="font-size:13px">Min: <span class="mono">${fmtMoney(min)}</span> · Max: <span class="mono">${fmtMoney(max)}</span></div>
+    </div>
+  `;
+}
+
+function renderBarsTop(container, rows, title, subtitle){
+  // rows = [{name, value, cls?}]
+  if(!rows.length){
+    container.innerHTML = `<div class="muted">Nessun dato.</div>`;
+    return;
+  }
+  const max = Math.max(...rows.map(r=>Number(r.value||0))) || 1;
+  const bars = rows.slice(0, 10).map(r=>{
+    const pct = clamp((Number(r.value||0)/max)*100, 0, 100);
+    const cls = r.cls ? r.cls : "";
+    return `
+      <div class="${cls}" style="min-width:0">
+        <div class="bar" style="height:${pct}%;"></div>
+        <div class="barLabel" title="${escapeHtml(r.name)}">${escapeHtml(r.name)}</div>
+      </div>
+    `;
+  }).join("");
+
+  container.innerHTML = `
+    <div class="chart">
+      <div class="chartHeader">
+        <div>
+          <div class="chartTitle">${escapeHtml(title||"")}</div>
+          <div class="muted" style="font-size:13px">${escapeHtml(subtitle||"")}</div>
+        </div>
+      </div>
+      <div class="bars">${bars}</div>
+    </div>
+  `;
 }
 
 /* =========================
@@ -4129,6 +4283,86 @@ function wire(){
   $("spTopN")?.addEventListener("change", spendRecalc);
   $("spMinAmt")?.addEventListener("change", spendRecalc);
   $("spGroupMode")?.addEventListener("change", spendRecalc);
+  // ===== PATCH: open wizard
+  $("btnAddWalletCard")?.addEventListener("click", ()=>{
+    wwReset();
+    $("dlgWalletWizard").showModal();
+  });
+  $("wwClose")?.addEventListener("click", ()=> $("dlgWalletWizard").close());
+
+  $("wwType")?.addEventListener("change", wwUpdateTypeUI);
+
+  $("wwBack")?.addEventListener("click", ()=>{
+    wwSetStep(ww.step-1);
+  });
+  $("wwNext")?.addEventListener("click", async ()=>{
+    try{
+      wwValidateStep(ww.step);
+      if(ww.step < 4){
+        wwSetStep(ww.step+1);
+        if(ww.step===4) wwBuildSummary();
+        return;
+      }
+      // step 4 -> create
+      await wwCreate();
+      $("dlgWalletWizard").close();
+    }catch(err){
+      toast("Controllo", String(err.message||err));
+    }
+  });
+
+  // ===== PATCH: stats controls
+  $("btnStatsRefresh")?.addEventListener("click", async ()=>{
+    try{ await renderStats(); }catch(e){ toast("Errore", String(e.message||e)); }
+  });
+
+  const statsRecalc = async ()=>{
+    try{ await renderStats(); }catch(e){ console.warn(e); }
+  };
+  $("statsPeriod")?.addEventListener("change", statsRecalc);
+  $("statsWallets")?.addEventListener("change", statsRecalc);
+  $("statsIncludeCards")?.addEventListener("change", statsRecalc);
+  $("statsIncludeRepayments")?.addEventListener("change", statsRecalc);
+  $("statsShowForecast")?.addEventListener("change", statsRecalc);
+
+  $("statsLiveToggle")?.addEventListener("change", ()=>{
+    if($("statsLiveToggle").checked) statsStartLive();
+    else statsStopLive();
+  });
+  $("statsLiveInterval")?.addEventListener("change", ()=>{
+    if($("statsLiveToggle").checked) statsStartLive();
+  });
+
+  // ===== PATCH: stats views
+  loadStatsViews();
+  $("btnStatsSaveView")?.addEventListener("click", ()=>{
+    const v = readStatsViewFromUI();
+    const views = lsGetJSON(STATS_VIEWS_KEY, []);
+    views.push(v);
+    lsSetJSON(STATS_VIEWS_KEY, views);
+    loadStatsViews();
+    toast("Salvata", "Vista salvata nel browser.");
+  });
+
+  $("btnStatsDeleteView")?.addEventListener("click", ()=>{
+    const sel = $("statsViews");
+    const idx = Number(sel.value);
+    if(!Number.isFinite(idx)) return;
+    const views = lsGetJSON(STATS_VIEWS_KEY, []);
+    if(idx<0 || idx>=views.length) return;
+    views.splice(idx, 1);
+    lsSetJSON(STATS_VIEWS_KEY, views);
+    loadStatsViews();
+    toast("Eliminata", "Vista eliminata.");
+  });
+
+  $("statsViews")?.addEventListener("change", async ()=>{
+    const idx = Number(($("statsViews").value)||"");
+    const views = lsGetJSON(STATS_VIEWS_KEY, []);
+    if(!Number.isFinite(idx) || idx<0 || idx>=views.length) return;
+    applyStatsViewToUI(views[idx]);
+    try{ await renderStats(); }catch(e){ console.warn(e); }
+  });
   
 }
 

@@ -12353,7 +12353,7 @@ async function openModal(action, token, walletType = 'telegram') {
     showModalMessage("❌ Swap is disabled for this UI.", "error");
     return;
   }
-  // Title + bilanci corretti per il wallet scelto
+
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
   const balances = walletType === 'twitch'
     ? (window.twitchWalletBalances || [])
@@ -12361,8 +12361,6 @@ async function openModal(action, token, walletType = 'telegram') {
   const tokenInfo = balances.find(t => (t.symbol || '').toLowerCase() === (token || '').toLowerCase());
   const balance = tokenInfo ? (parseFloat(tokenInfo.amount) || 0) : 0;
 
-  // Per SWAP (ricerca contract del token IN, se serve)
-  let contractIn = "";
   if (action === "bridge_to") {
     const targetWallet = walletType === 'twitch' ? 'telegram' : 'twitch';
     const title = `Bridge ${token} → ${targetWallet.charAt(0).toUpperCase() + targetWallet.slice(1)}`;
@@ -12409,10 +12407,6 @@ async function openModal(action, token, walletType = 'telegram') {
     showModal({ title: `<h3 class="modal-title">${title}</h3>`, body });
   }
 
-  // Assicurati che il DOM del modal sia montato prima di querySelettori/bind
-  // await new Promise(r => requestAnimationFrame(() => r()));
-
-  // Elementi comuni del form + calibrazione precisione/step su base token
   const percentRange = document.getElementById('percent-range');
   const amountInput  = document.getElementById('amount');
   const submitButton = document.getElementById('submit-button');
@@ -12423,7 +12417,6 @@ async function openModal(action, token, walletType = 'telegram') {
     return;
   }
 
-  // Calibra controls in base ai decimali del token di ORIGINE
   const calibrator = await calibrateAmountControls({
     symbol: token,
     balance: balance,
@@ -12431,34 +12424,29 @@ async function openModal(action, token, walletType = 'telegram') {
     rangeId: 'percent-range'
   });
 
-  // Suggerimento step visibile (facoltativo)
   amountInput.placeholder = `step ${calibrator.step}`;
 
-  // Submit del form (azioni)
   form.onsubmit = async (e) => {
     e.preventDefault();
     const amount = amountInput.value;
 
-    // disabilita subito TUTTE le azioni per evitare doppi submit
     setButtonsEnabled(false);
     submitButton.disabled = true;
-    const previewBtn = document.getElementById('preview-button');
-    if (previewBtn) previewBtn.disabled = true;
+
+    try {
       await executeAction(action, token, amount, null, null, walletType);
       showModalMessage(`✅ ${actionTitle} completed successfully. Refresh in 5 seconds…`, 'success');
+
       setTimeout(async () => {
         closeModal();
-        // forza il fetch dal backend e ricarica la tab attuale (se l’utente l’ha cambiata nel mentre)
         await loadWallet(window.currentWalletTab || walletType, true);
       }, 5000);
     } catch (error) {
       console.error(error);
       showModalMessage(`❌ Error during ${actionTitle}`, 'error');
 
-      // riabilita i pulsanti solo in caso di errore
       setButtonsEnabled(true);
       submitButton.disabled = false;
-      if (previewBtn) previewBtn.disabled = false;
     }
   };
 }

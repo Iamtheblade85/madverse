@@ -10873,7 +10873,6 @@ function renderWalletView(type) {
             <select id="th-type" class="cv-btn" title="Type" style="min-width:150px;">
               <option value="">All Types</option>
               <option value="withdraw">Withdraw</option>
-              <option value="swap">Swap</option>
               <option value="transfer">Transfer</option>
               <option value="bridge">Bridge</option>
             </select>
@@ -11511,10 +11510,6 @@ function renderWalletView(type) {
                 flex:1; padding:8px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
                 background:transparent; color:#e7fffa; cursor:pointer; font-weight:700;
               ">Withdraw</button>
-              <button class="token-act" data-action="swap" data-token="${t.symbol}" data-wallet="${type}" style="
-                flex:1; padding:8px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
-                background:transparent; color:#e7fffa; cursor:pointer; font-weight:700;
-              ">Swap</button>
               <button class="token-act" data-action="transfer" data-token="${t.symbol}" data-wallet="${type}" style="
                 flex:1; padding:8px; border-radius:10px; border:1px solid rgba(255,255,255,.18);
                 background:transparent; color:#e7fffa; cursor:pointer; font-weight:700;
@@ -11624,10 +11619,6 @@ function renderWalletTable(type) {
                       padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.18);
                       background:transparent; color:#e7fffa; cursor:pointer; font-weight:700;
                     ">Withdraw</button>
-                    <button class="btn-action" data-action="swap" data-token="${token.symbol}" data-wallet="${type}" style="
-                      padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.18);
-                      background:transparent; color:#e7fffa; cursor:pointer; font-weight:700;
-                    ">Swap</button>
                     <button class="btn-action" data-action="transfer" data-token="${token.symbol}" data-wallet="${type}" style="
                       padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.18);
                       background:transparent; color:#e7fffa; cursor:pointer; font-weight:700;
@@ -12358,6 +12349,10 @@ async function bulkSendSelected() {
 /* ============= End NFTs UI ============= */
 
 async function openModal(action, token, walletType = 'telegram') {
+  if (action === "swap") {
+    showModalMessage("❌ Swap is disabled for this UI.", "error");
+    return;
+  }
   // Title + bilanci corretti per il wallet scelto
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
   const balances = walletType === 'twitch'
@@ -12368,83 +12363,7 @@ async function openModal(action, token, walletType = 'telegram') {
 
   // Per SWAP (ricerca contract del token IN, se serve)
   let contractIn = "";
-  if (action === "swap" && Array.isArray(availableTokens)) {
-    const match = availableTokens.find(t => t.split("-")[0].toLowerCase() === token.toLowerCase());
-    contractIn = match ? match.split("-")[1] : "";
-  }
-
-  // --- Costruzione modale per i vari casi ---
-   if (action === "swap") {
-    const title = `Swap ${token}`;
-    const body = `
-      <h3 class="modal-title">Swap ${token}</h3>
-      <div class="text-muted">Available: <strong>${balance}</strong> ${token}</div>
-
-      <form id="action-form" class="form-wrapper">
-        <!-- Percentage -->
-        <div class="form-field">
-          <label>Percentage</label>
-          <input type="range" id="percent-range" class="input-range" min="0" max="100" value="0">
-        </div>
-
-        <!-- Amount -->
-        <div class="form-field">
-          <label>Amount to Swap</label>
-          <input type="number" id="amount" class="input-box" required min="0.0001" step="0.0001">
-        </div>
-
-        <!-- Output Token (nuovo combobox) -->
-        <div class="form-field" style="position:relative;">
-          <label>Output Token</label>
-          <div id="token-combobox" role="combobox" aria-haspopup="listbox" aria-owns="token-listbox" aria-expanded="false" style="
-              display:flex; gap:8px; align-items:center;">
-            <input
-              type="text"
-              id="token-search"
-              class="input-box"
-              placeholder="Type to search (e.g. WAX)…"
-              autocomplete="off"
-              aria-autocomplete="list"
-              aria-controls="token-listbox"
-              style="flex:1;"
-            >
-            <button type="button" id="token-clear" class="btn" title="Clear" style="
-              border:1px solid rgba(255,255,255,.18); background:transparent; color:#e7fffa; border-radius:8px; padding:6px 10px; cursor:pointer;">
-              ✖
-            </button>
-          </div>
-
-          <div id="token-hint" style="font-size:.85rem; opacity:.75; margin-top:6px;">
-            Start typing to search. Results update as you type.
-          </div>
-
-          <div id="token-listbox" role="listbox" tabindex="-1" style="
-              margin-top:8px; max-height:260px; overflow:auto;
-              border:1px solid rgba(255,255,255,.14); border-radius:10px;
-              background:rgba(0,0,0,.35); display:none; ">
-          </div>
-
-          <input type="hidden" id="selected-token-symbol">
-          <input type="hidden" id="selected-token-contract">
-        </div>
-
-        <!-- Preview -->
-        <div id="swap-preview" class="swap-preview hidden" style="margin-top:8px;">
-          <div id="loading-spinner">🔄 Getting blockchain data...</div>
-          <div id="swap-data" class="hidden">
-            <div>Min Received: <span id="min-received" class="highlight"></span></div>
-            <div>Price Impact: <span id="price-impact" class="highlight"></span>%</div>
-          </div>
-        </div>
-
-        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
-          <button type="button" id="preview-button" class="btn btn-warning">Preview Swap</button>
-          <button type="submit" id="submit-button" class="btn btn-success" disabled>Confirm Swap</button>
-        </div>
-      </form>
-    `;
-    showModal({ title: `<h3 class="modal-title">${title}</h3>`, body });
-  } else if (action === "bridge_to") {
+  if (action === "bridge_to") {
     const targetWallet = walletType === 'twitch' ? 'telegram' : 'twitch';
     const title = `Bridge ${token} → ${targetWallet.charAt(0).toUpperCase() + targetWallet.slice(1)}`;
     const body = `
@@ -12515,258 +12434,6 @@ async function openModal(action, token, walletType = 'telegram') {
   // Suggerimento step visibile (facoltativo)
   amountInput.placeholder = `step ${calibrator.step}`;
 
-  // --- SWAP logic ---
-  if (action === "swap") {
-    await loadAvailableTokens(); // assicura la lista dei token
-
-    // ===== Official tokens registry (EDITA SOLO I CONTRACTS SE NECESSARIO) =====
-    const OFFICIAL_TOKENS = (window.OFFICIAL_TOKENS && window.OFFICIAL_TOKENS.length)
-      ? window.OFFICIAL_TOKENS
-      : [
-          { symbol: 'WAX',   contract: 'eosio.token' },
-          { symbol: 'CHIPS', contract: 'xcryptochips' }, // ⬅️ TODO
-          { symbol: 'LUX',   contract: 'xcryptochips' }    // ⬅️ TODO
-        ];
-    const OFFICIAL_SYMBOLS = new Set(OFFICIAL_TOKENS.map(t => t.symbol));
-
-    const isOfficial = (t) =>
-      OFFICIAL_TOKENS.some(o => o.symbol === t.symbol && o.contract === t.contract);
-
-    // ==========================================================================
-
-    // Refs
-    const tokenSearch            = document.getElementById('token-search');
-    const tokenListbox           = document.getElementById('token-listbox');
-    const tokenHint              = document.getElementById('token-hint');
-    const tokenClear             = document.getElementById('token-clear');
-    const selectedTokenSymbolEl  = document.getElementById('selected-token-symbol');
-    const selectedTokenContractEl= document.getElementById('selected-token-contract');
-    const previewButton          = document.getElementById('preview-button');
-    const swapPreview            = document.getElementById('swap-preview');
-    const loadingSpinner         = document.getElementById('loading-spinner');
-    const swapDataContainer      = document.getElementById('swap-data');
-    const minReceivedSpan        = document.getElementById('min-received');
-    const priceImpactSpan        = document.getElementById('price-impact');
-    const submitButton           = document.getElementById('submit-button');
-
-    // Dati
-    const allTokens = (window.availableTokensDetailed && window.availableTokensDetailed.length)
-      ? window.availableTokensDetailed
-      : (Array.isArray(window.availableTokens) ? window.availableTokens.map(s=>{
-          const [symbol, contract] = s.split('-'); return { symbol, contract, name: symbol };
-        }) : []);
-
-    // Helper
-    const n = (s) => (s || '').toString().toLowerCase();
-
-    // Ranking: official >>> match esatto >>> inizia con >>> include >>> contract hit
-    const scoreToken = (t, q) => {
-      const officialBoost = isOfficial(t) ? 2000 : 0;
-      if (!q) return officialBoost; // senza query, mostra prima gli official
-      let s = officialBoost;
-      if (n(t.symbol) === q) s += 1000;
-      else if (n(t.symbol).startsWith(q)) s += 750;
-      else if (n(t.name || '').startsWith(q)) s += 500;
-      else if (n(t.symbol).includes(q)) s += 300;
-      if ((t.contract || '').toLowerCase().includes(q)) s += 100;
-      return s;
-    };
-
-    const MAX_RENDER = 80;
-    let activeIndex = -1;
-    let currentItems = [];
-
-    const renderList = (items, totalCount, q) => {
-      currentItems = items;
-      tokenListbox.innerHTML = items.map((t, i) => {
-        const officialBadge = isOfficial(t)
-          ? `<span style="margin-left:8px; padding:2px 6px; border-radius:999px; font-size:.75rem; font-weight:800; color:#00150f;
-               background:linear-gradient(135deg, rgba(0,255,200,.9), rgba(0,160,255,.9)); box-shadow:0 0 8px rgba(0,255,200,.35);">OFFICIAL</span>`
-          : '';
-
-        return `
-          <div class="token-option" role="option" aria-selected="false"
-               data-symbol="${t.symbol}" data-contract="${t.contract}"
-               style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px;
-                      border-bottom:1px solid rgba(255,255,255,.08); cursor:pointer;">
-            <div>
-              <div style="font-weight:900; color:#e7fffa;">
-                ${t.symbol} <small style="opacity:.8">— ${t.contract}</small> ${officialBadge}
-              </div>
-              ${t.name ? `<div style="font-size:.85rem; opacity:.8;">${t.name}</div>` : ''}
-            </div>
-            <div style="font-size:.75rem; opacity:.65;"></div>
-          </div>
-        `;
-      }).join('');
-
-      if (totalCount > items.length) {
-        tokenListbox.insertAdjacentHTML('beforeend', `
-          <div style="padding:8px 12px; font-size:.85rem; opacity:.75;">Showing ${items.length} of ${totalCount} results. Keep typing to narrow down.</div>
-        `);
-      }
-
-      tokenListbox.style.display = items.length ? 'block' : 'none';
-      const combo = document.getElementById('token-combobox');
-      if (combo) combo.setAttribute('aria-expanded', items.length ? 'true' : 'false');
-    };
-
-    const filterAndRender = (qRaw) => {
-      const q = n(qRaw).trim();
-      const scored = allTokens.map(t => ({ ...t, __score: scoreToken(t, q) }));
-      const filtered = scored
-        .filter(t => t.__score > 0 || !q)
-        .sort((a, b) => b.__score - a.__score || a.symbol.localeCompare(b.symbol));
-
-      // Se la query contiene un simbolo ufficiale (wax/chips/lux), pinna quel token ufficiale in cima
-      const targetSym = Array.from(OFFICIAL_SYMBOLS).find(sym => q.includes(sym.toLowerCase()));
-      if (targetSym) {
-        const idx = filtered.findIndex(t => t.symbol === targetSym && isOfficial(t));
-        if (idx > 0) {
-          const [pinned] = filtered.splice(idx, 1);
-          filtered.unshift(pinned);
-        }
-      }
-
-      const slice = filtered.slice(0, Math.max(10, Math.min(MAX_RENDER, filtered.length)));
-      activeIndex = -1;
-      renderList(slice, filtered.length, qRaw);
-      tokenHint.textContent = slice.length ? '' : 'No results. Try another query.';
-    };
-
-    // Debounce semplice
-    let tId;
-    const debounce = (fn, ms=180) => (...args) => { clearTimeout(tId); tId = setTimeout(()=>fn(...args), ms); };
-
-    // Select handler
-    const selectToken = (symbol, contract) => {
-      selectedTokenSymbolEl.value = symbol;
-      selectedTokenContractEl.value = contract;
-      tokenSearch.value = `${symbol} — ${contract}`;
-      tokenListbox.style.display = 'none';
-      const combo = document.getElementById('token-combobox');
-      if (combo) combo.setAttribute('aria-expanded', 'false');
-
-      const amt = parseFloat(amountInput.value) || 0;
-      submitButton.disabled = !(symbol && contract && amt > 0);
-      previewButton.disabled = !(symbol && contract && amt > 0);
-    };
-
-    // Input typing (live filter)
-    tokenSearch.addEventListener('input', debounce((e) => {
-      filterAndRender(e.target.value);
-    }, 120));
-
-    // Clic su item
-    tokenListbox.addEventListener('click', (ev) => {
-      const item = ev.target.closest('.token-option');
-      if (!item) return;
-      selectToken(item.getAttribute('data-symbol'), item.getAttribute('data-contract'));
-    });
-
-    // Tastiera: frecce + Enter
-    tokenSearch.addEventListener('keydown', (ev) => {
-      const items = Array.from(tokenListbox.querySelectorAll('.token-option'));
-      if (!items.length) return;
-
-      if (ev.key === 'ArrowDown') {
-        ev.preventDefault();
-        activeIndex = Math.min(items.length - 1, activeIndex + 1);
-      } else if (ev.key === 'ArrowUp') {
-        ev.preventDefault();
-        activeIndex = Math.max(0, activeIndex - 1);
-      } else if (ev.key === 'Enter') {
-        ev.preventDefault();
-        if (activeIndex >= 0 && items[activeIndex]) {
-          const el = items[activeIndex];
-          selectToken(el.getAttribute('data-symbol'), el.getAttribute('data-contract'));
-        }
-        return;
-      } else {
-        return;
-      }
-
-      items.forEach((it, i) => {
-        const sel = i === activeIndex;
-        it.setAttribute('aria-selected', sel ? 'true' : 'false');
-        it.style.background = sel ? 'rgba(0,255,200,.10)' : 'transparent';
-      });
-      if (items[activeIndex]) items[activeIndex].scrollIntoView({ block:'nearest' });
-    });
-
-    // Clear
-    tokenClear.addEventListener('click', () => {
-      tokenSearch.value = '';
-      selectedTokenSymbolEl.value = '';
-      selectedTokenContractEl.value = '';
-      tokenListbox.style.display = 'none';
-      const combo = document.getElementById('token-combobox');
-      if (combo) combo.setAttribute('aria-expanded', 'false');
-      tokenHint.textContent = 'Start typing to search. Results update as you type.';
-      submitButton.disabled = true;
-      previewButton.disabled = true;
-      tokenSearch.focus();
-    });
-
-    // Primo render: query vuota (gli OFFICIAL risulteranno in top per via del boost)
-    filterAndRender('');
-    tokenSearch.select();
-
-    // Preview click (immutato, ma validazione severa)
-    previewButton.addEventListener('click', async () => {
-      const amount = parseFloat(amountInput.value) || 0;
-      const symbolOut   = selectedTokenSymbolEl.value;
-      const contractOut = selectedTokenContractEl.value;
-
-      if (!amount || amount <= 0 || !symbolOut || !contractOut) {
-        alert("Insert valid amount and output token");
-        return;
-      }
-
-      const previewUrl = `${BASE_URL}/preview_swap?user_id=${encodeURIComponent(window.userData.userId)}&usx_token=${encodeURIComponent(window.userData.usx_token)}`;
-      const bodyData = {
-        wax_account: window.userData.wax_account,
-        from_token: token,
-        to_token: symbolOut,
-        amount: amount,
-        wallet_type: walletType
-      };
-
-      swapPreview.classList.remove('hidden');
-      loadingSpinner.classList.remove('hidden');
-      swapDataContainer.classList.add('hidden');
-      submitButton.disabled = true;
-
-      try {
-        const response = await fetch(previewUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(bodyData)
-        });
-        const data = await response.json();
-
-        const minReceived = ((data.minReceived || 0) * 0.9);
-        if (minReceivedSpan) minReceivedSpan.textContent = minReceived.toFixed(9);
-        if (priceImpactSpan) priceImpactSpan.textContent = data.priceImpact ?? "-";
-
-        loadingSpinner.classList.add('hidden');
-        swapDataContainer.classList.remove('hidden');
-        submitButton.disabled = !(symbolOut && contractOut && amount > 0);
-      } catch (err) {
-        console.error("Swap preview error:", err);
-        loadingSpinner.innerHTML = `<div class="text-error">⚠️ Failed to load preview data.</div>`;
-        submitButton.disabled = true;
-      }
-    });
-
-    // Abilita/disabilita submit dinamicamente quando cambia l'importo
-    amountInput.addEventListener('input', () => {
-      const amount = parseFloat(amountInput.value) || 0;
-      submitButton.disabled = !(amount > 0 && selectedTokenSymbolEl.value && selectedTokenContractEl.value);
-      previewButton.disabled = !(amount > 0 && selectedTokenSymbolEl.value && selectedTokenContractEl.value);
-    });
-  }
-
   // Submit del form (azioni)
   form.onsubmit = async (e) => {
     e.preventDefault();
@@ -12779,15 +12446,8 @@ async function openModal(action, token, walletType = 'telegram') {
     if (previewBtn) previewBtn.disabled = true;
 
     try {
-      if (action === "swap") {
-        const symbolOutEl   = document.getElementById('selected-token-symbol');
-        const contractOutEl = document.getElementById('selected-token-contract');
-        const symbolOut     = symbolOutEl ? symbolOutEl.value : null;
-        const contractOut   = contractOutEl ? contractOutEl.value : null;
-        await executeAction(action, token, amount, symbolOut, contractOut, walletType);
-      } else {
         await executeAction(action, token, amount, null, null, walletType);
-      }
+    }
 
       showModalMessage(`✅ ${actionTitle} completed successfully. Refresh in 5 seconds…`, 'success');
       setTimeout(async () => {
@@ -12835,15 +12495,14 @@ function showConfirmModal(message, onConfirm) {
 
 function setButtonsEnabled(enabled) {
   // Tutti i pulsanti d’azione che vogliamo (de)abilitare globalmente
-  const selectors = [
-    '.token-act',       // card grid actions
-    '.btn-action',      // table actions
-    '#submit-button',   // submit modale generico
-    '#preview-button',  // preview swap
-    '#stake-submit',    // stake modale
-    '#bulk-withdraw',   // bulk actions
-    '#bulk-send'
-  ];
+	const selectors = [
+	  '.token-act',       // card grid actions
+	  '.btn-action',      // table actions
+	  '#submit-button',   // submit modale generico
+	  '#stake-submit',    // stake modale
+	  '#bulk-withdraw',   // bulk actions
+	  '#bulk-send'
+	];
 
   const buttons = document.querySelectorAll(selectors.join(','));
   buttons.forEach(btn => {
@@ -12869,37 +12528,35 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
   // Disabilita subito tutte le azioni (verrà riabilitato SOLO in errore)
   setButtonsEnabled(false);
 
-  let interimFeedbackDiv = null;
-  if (action === "withdraw" || action === "swap") {
-    interimFeedbackDiv = document.createElement('div');
-    interimFeedbackDiv.id = 'interim-feedback';
-    interimFeedbackDiv.style = `
-      margin-top: 1rem;
-      padding: 1rem;
-      border-left: 4px solid #ffaa00;
-      background: rgba(255, 170, 0, 0.1);
-      color: #aa7700;
-      font-family: 'Courier New', monospace;
-      font-size: 0.92rem;
-      border-radius: 6px;
-    `;
-    interimFeedbackDiv.textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} in progress, please wait...`;
-    document.querySelector('#action-form').appendChild(interimFeedbackDiv);
-  }
+let interimFeedbackDiv = null;
+if (action === "withdraw") {
+  interimFeedbackDiv = document.createElement('div');
+  interimFeedbackDiv.id = 'interim-feedback';
+  interimFeedbackDiv.style = `
+    margin-top: 1rem;
+    padding: 1rem;
+    border-left: 4px solid #ffaa00;
+    background: rgba(255, 170, 0, 0.1);
+    color: #aa7700;
+    font-family: 'Courier New', monospace;
+    font-size: 0.92rem;
+    border-radius: 6px;
+  `;
+  interimFeedbackDiv.textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} in progress, please wait...`;
+  document.querySelector('#action-form').appendChild(interimFeedbackDiv);
+}
 
   const { userId, usx_token, wax_account } = window.userData;
-  let endpoint = "";
-  if (action === "withdraw") {
-    endpoint = `${BASE_URL}/withdraw`;
-  } else if (action === "swap") {
-    endpoint = `${BASE_URL}/swap_tokens`;
-  } else if (action === "transfer") {
-    endpoint = `${BASE_URL}/transfer`;
-  } else if (action === "stake") {
-    endpoint = `${BASE_URL}/stake_add`;
-  } else if (action === "bridge_to") {
-    endpoint = `${BASE_URL}/bridge_token`;
-  }
+let endpoint = "";
+if (action === "withdraw") {
+  endpoint = `${BASE_URL}/withdraw`;
+} else if (action === "transfer") {
+  endpoint = `${BASE_URL}/transfer`;
+} else if (action === "stake") {
+  endpoint = `${BASE_URL}/stake_add`;
+} else if (action === "bridge_to") {
+  endpoint = `${BASE_URL}/bridge_token`;
+}
   const fullUrl = `${endpoint}?user_id=${encodeURIComponent(userId)}&usx_token=${encodeURIComponent(usx_token)}`;
 
   try {
@@ -12910,15 +12567,7 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
       wallet_type: walletType
     };
 
-    if (action === "swap") {
-      bodyData = {
-        wax_account: wax_account,
-        from_token: token,
-        to_token: tokenOut,
-        amount: amount,
-        wallet_type: walletType
-      };
-    } else if (action === "transfer") {
+    if (action === "transfer") {
       const receiverInput = document.getElementById('receiver');
       const receiver = receiverInput ? receiverInput.value.trim() : "";
       if (!receiver) throw new Error("Recipient Wax Account is required for transfer.");
@@ -12983,27 +12632,6 @@ async function executeAction(action, token, amount, tokenOut = null, contractOut
           <strong>Withdraw Completed Successfully</strong><br>
           ${data.message}<br>
           ${data.fee ? `Fee applied: ${data.fee} ${token}` : ''}
-        </div>
-      `;
-    } else if (action === "swap" && data.details) {
-      const details = data.details;
-      feedbackText = `
-        <div style="
-          margin-top: 1rem;
-          padding: 1rem;
-          border-left: 4px solid #00ffcc;
-          background: rgba(0, 255, 204, 0.05);
-          color: #00ffcc;
-          font-family: 'Courier New', monospace;
-          font-size: 0.92rem;
-          border-radius: 6px;
-          box-shadow: 0 0 12px #00ffcc88;
-          animation: fadeIn 0.4s ease-in-out;
-        ">
-          <strong>Swap Completed</strong><br>
-          ${details.amount_spent} ${details.from_token} ➡️ ${Number(details.received_amount_net).toFixed(8)} ${details.to_token}<br>
-          <em>Price:</em> ${details.execution_price}<br>
-          <em>Fee:</em> ${Number(details.commission_total).toFixed(9)}
         </div>
       `;
     } else if (action === "bridge_to" && data.net_amount && data.fee_applied !== undefined) {
@@ -13306,17 +12934,13 @@ async function mountPriceFetchWidget(aside) {
         <div id="pw-cb1"></div>
         <div id="pw-cb2"></div>
 
-        <div id="pw-actions" style="display:flex;gap:8px;margin-top:2px;">
-          <button id="pw-swap" title="Swap tokens" style="
-            cursor:pointer;border:1px solid rgba(255,255,255,.18);
-            border-radius:10px;background:transparent;color:#e7fffa;font-weight:800;padding:8px 10px;flex:0 0 auto;
-          ">⇄</button>
-          <button id="pw-refresh" style="
-            cursor:pointer;border:1px solid rgba(0,255,200,.35);
-            border-radius:10px;background:linear-gradient(135deg, rgba(0,255,200,.20), rgba(255,0,255,.14));
-            color:#00150f;font-weight:900;padding:8px 12px;box-shadow:0 0 12px rgba(0,255,200,.25);
-          ">Refresh</button>
-        </div>
+<div id="pw-actions" style="display:flex;gap:8px;margin-top:2px;">
+  <button id="pw-refresh" style="
+    cursor:pointer;border:1px solid rgba(0,255,200,.35);
+    border-radius:10px;background:linear-gradient(135deg, rgba(0,255,200,.20), rgba(255,0,255,.14));
+    color:#00150f;font-weight:900;padding:8px 12px;box-shadow:0 0 12px rgba(0,255,200,.25);
+  ">Refresh</button>
+</div>
 
         <div id="pw-output" style="
           margin-top:6px;border:1px solid rgba(255,255,255,.12);border-radius:10px;
@@ -13373,10 +12997,13 @@ async function mountPriceFetchWidget(aside) {
   cb2.select(pick('WAX')   || TOKENS.find(t=>t.symbol !== cb1.value?.symbol) || TOKENS[1] || TOKENS[0]);
 
   // Inputs & actions
-  const $amount  = document.getElementById('pw-amount');
-  const $swap    = document.getElementById('pw-swap');
-  const $refresh = document.getElementById('pw-refresh');
-  const $out     = document.getElementById('pw-output');
+const $amount  = document.getElementById('pw-amount');
+const $refresh = document.getElementById('pw-refresh');
+const $out     = document.getElementById('pw-output');
+
+let priceAbortController = null;
+let priceReqSeq = 0;
+let isComposing = false;
 
   // -------- Helpers (local fallbacks if your project helpers are absent)
   function stepFromDecimalsLocal(dec){
@@ -13428,33 +13055,70 @@ async function mountPriceFetchWidget(aside) {
     let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); };
   })());
 
-  const update = debounceLocal(async () => {
-    const from = cb1.value, to = cb2.value;
-    const maxDec = getMaxDecimalsForToken(cb1.value?.symbol || '');
-    const clean = sanitizeAmountStr($amount.value, maxDec);
-    const amt   = clean ? Number(clean) : 0;
+const update = debounceLocal(async () => {
+  if (isComposing) return;
 
-    if (!from || !to || !(amt > 0)) {
-      $out.innerHTML = `<div style="opacity:.8;">Enter an amount and pick tokens…</div>`;
-      return;
+  const from = cb1.value;
+  const to   = cb2.value;
+  const maxDec = getMaxDecimalsForToken(cb1.value?.symbol || '');
+  const raw  = String($amount.value || '').trim();
+  const clean = sanitizeAmountStr(raw, maxDec);
+
+  if ($amount.value !== clean) {
+    $amount.value = clean;
+  }
+
+  if (!from || !to || !clean || clean === '0' || clean === '.' || clean.endsWith('.')) {
+    if (priceAbortController) {
+      priceAbortController.abort();
+      priceAbortController = null;
     }
+    $out.innerHTML = `<div style="opacity:.8;">Enter an amount and pick tokens…</div>`;
+    return;
+  }
+
+  const amt = Number(clean);
+  if (!(amt > 0)) {
+    if (priceAbortController) {
+      priceAbortController.abort();
+      priceAbortController = null;
+    }
+    $out.innerHTML = `<div style="opacity:.8;">Enter an amount and pick tokens…</div>`;
+    return;
+  }
+
+  if (priceAbortController) {
+    priceAbortController.abort();
+  }
+  priceAbortController = new AbortController();
+  const reqId = ++priceReqSeq;
+
+  $out.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#22c55e;border-radius:50%;animation:pwspin .9s linear infinite;"></div>
+      <div style="opacity:.85;">Fetching quote…</div>
+    </div>`;
+
+  try {
+    const quote = await fetchPreviewSwap({
+      amount: amt,
+      from,
+      to,
+      signal: priceAbortController.signal
+    });
+
+    if (reqId !== priceReqSeq) return;
+    renderQuote($out, { amount: amt, from, to, quote });
+  } catch (err) {
+    if (err?.name === 'AbortError') return;
+
     $out.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#22c55e;border-radius:50%;animation:pwspin .9s linear infinite;"></div>
-        <div style="opacity:.85;">Fetching quote…</div>
+      <div style="border-left:3px solid #f87171;background:rgba(248,113,113,.08);color:#fecaca;padding:10px;border-radius:8px;">
+        <div style="font-weight:900;margin-bottom:4px;">Error</div>
+        <div>${String(err.message || err)}</div>
       </div>`;
-
-    try {
-      const quote = await fetchPreviewSwap({ amount: amt, from, to });
-      renderQuote($out, { amount: amt, from, to, quote });
-    } catch (err) {
-      $out.innerHTML = `
-        <div style="border-left:3px solid #f87171;background:rgba(248,113,113,.08);color:#fecaca;padding:10px;border-radius:8px;">
-          <div style="font-weight:900;margin-bottom:4px;">Error</div>
-          <div>${String(err.message || err)}</div>
-        </div>`;
-    }
-  }, 420);
+  }
+}, 900);
 
   function renderQuote(container, { amount, from, to, quote }) {
     // /preview_swap returns:
@@ -13504,25 +13168,40 @@ async function mountPriceFetchWidget(aside) {
   function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 
   // Listeners (block unwanted keys and sanitize on the fly)
-  $amount.addEventListener('keydown', (e) => {
-    if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
-  });
-  $amount.addEventListener('input', () => {
-    const maxDec = getMaxDecimalsForToken(cb1.value?.symbol || '');
-    const clean = sanitizeAmountStr($amount.value, maxDec);
-    if ($amount.value !== clean) $amount.value = clean;
-    update();
-  });
+$amount.addEventListener('keydown', (e) => {
+  if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+});
 
-  cb1.onChange(() => { updateAmountStep(); update(); });
-  cb2.onChange(() => { update(); });
-  $swap.addEventListener('click', () => {
-    const a = cb1.value, b = cb2.value; if (!a || !b) return;
-    cb1.select(b); cb2.select(a); updateAmountStep(); update();
-  });
-  $refresh.addEventListener('click', () => update());
+$amount.addEventListener('compositionstart', () => {
+  isComposing = true;
+});
 
-  updateAmountStep(); // initial setup
+$amount.addEventListener('compositionend', () => {
+  isComposing = false;
+  update();
+});
+
+$amount.addEventListener('input', () => {
+  const maxDec = getMaxDecimalsForToken(cb1.value?.symbol || '');
+  const clean = sanitizeAmountStr($amount.value, maxDec);
+  if ($amount.value !== clean) $amount.value = clean;
+  update();
+});
+
+$amount.addEventListener('blur', () => update());
+
+cb1.onChange(() => {
+  updateAmountStep();
+  update();
+});
+
+cb2.onChange(() => {
+  update();
+});
+
+$refresh.addEventListener('click', () => update());
+
+updateAmountStep();
 }
 
 function createTokenCombobox(container, { id, label, tokens }) {
@@ -13612,7 +13291,7 @@ function createTokenCombobox(container, { id, label, tokens }) {
 // Call your backend: POST /preview_swap (JSON body)
 // NOTE: We set router_sub_pf=true so estimate is net of platform fees.
 // The backend should include "estimate" if you want to show it (minReceived is always used).
-async function fetchPreviewSwap({ amount, from, to }) {
+async function fetchPreviewSwap({ amount, from, to, signal } = {}) {
   const user = (window.userData || {});
   const wax_account = (user.wax_account || '').trim();
   if (!wax_account) throw new Error('Wallet not connected: wax_account is missing.');
@@ -13632,11 +13311,12 @@ async function fetchPreviewSwap({ amount, from, to }) {
   const base = (typeof BASE_URL === 'string' && BASE_URL) ? BASE_URL : '';
   const url  = base.replace(/\/$/,'') + '/preview_swap';
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
+const res = await fetch(url, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+  signal
+});
 
   let data = {};
   try { data = await res.json(); } catch (_) {}

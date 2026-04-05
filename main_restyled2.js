@@ -12287,6 +12287,11 @@ async function bulkSendSelected() {
 /* ============= End NFTs UI ============= */
 
 async function openModal(action, token, walletType = 'telegram') {
+
+if (action === "swap") {
+  showModalMessage("❌ Swap is disabled for this UI.", "error");
+  return;
+}
   // Title + bilanci corretti per il wallet scelto
   const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
   const balances = walletType === 'twitch'
@@ -12427,14 +12432,14 @@ function showConfirmModal(message, onConfirm) {
 
 function setButtonsEnabled(enabled) {
   // Tutti i pulsanti d’azione che vogliamo (de)abilitare globalmente
-  const selectors = [
-    '.token-act',       // card grid actions
-    '.btn-action',      // table actions
-    '#submit-button',   // submit modale generico
-    '#stake-submit',    // stake modale
-    '#bulk-withdraw',   // bulk actions
-    '#bulk-send'
-  ];
+	const selectors = [
+	  '.token-act',
+	  '.btn-action',
+	  '#submit-button',
+	  '#stake-submit',
+	  '#bulk-withdraw',
+	  '#bulk-send'
+	];
 
   const buttons = document.querySelectorAll(selectors.join(','));
   buttons.forEach(btn => {
@@ -12835,22 +12840,15 @@ async function mountPriceFetchWidget(aside) {
             color:#e7fffa;padding:10px;border-radius:10px;box-shadow:inset 0 0 8px rgba(0,255,200,.08);
           ">
         </div>
-
         <div id="pw-cb1"></div>
         <div id="pw-cb2"></div>
-
-        <div id="pw-actions" style="display:flex;gap:8px;margin-top:2px;">
-          <button id="pw-swap" title="Swap tokens" style="
-            cursor:pointer;border:1px solid rgba(255,255,255,.18);
-            border-radius:10px;background:transparent;color:#e7fffa;font-weight:800;padding:8px 10px;flex:0 0 auto;
-          ">⇄</button>
-          <button id="pw-refresh" style="
-            cursor:pointer;border:1px solid rgba(0,255,200,.35);
-            border-radius:10px;background:linear-gradient(135deg, rgba(0,255,200,.20), rgba(255,0,255,.14));
-            color:#00150f;font-weight:900;padding:8px 12px;box-shadow:0 0 12px rgba(0,255,200,.25);
-          ">Refresh</button>
-        </div>
-
+		<div id="pw-actions" style="display:flex;gap:8px;margin-top:2px;">
+		  <button id="pw-refresh" style="
+		    cursor:pointer;border:1px solid rgba(0,255,200,.35);
+		    border-radius:10px;background:linear-gradient(135deg, rgba(0,255,200,.20), rgba(255,0,255,.14));
+		    color:#00150f;font-weight:900;padding:8px 12px;box-shadow:0 0 12px rgba(0,255,200,.25);
+		  ">Refresh</button>
+		</div>
         <div id="pw-output" style="
           margin-top:6px;border:1px solid rgba(255,255,255,.12);border-radius:10px;
           background:rgba(0,0,0,.35);padding:10px;color:#e7fffa;min-height:64px;
@@ -12859,7 +12857,6 @@ async function mountPriceFetchWidget(aside) {
         </div>
       </div>
     </div>
-
     <style>
       .pw-combo{position:relative;}
       .pw-combo > label{
@@ -12906,10 +12903,13 @@ async function mountPriceFetchWidget(aside) {
   cb2.select(pick('WAX')   || TOKENS.find(t=>t.symbol !== cb1.value?.symbol) || TOKENS[1] || TOKENS[0]);
 
   // Inputs & actions
-  const $amount  = document.getElementById('pw-amount');
-  const $swap    = document.getElementById('pw-swap');
-  const $refresh = document.getElementById('pw-refresh');
-  const $out     = document.getElementById('pw-output');
+const $amount  = document.getElementById('pw-amount');
+const $refresh = document.getElementById('pw-refresh');
+const $out     = document.getElementById('pw-output');
+
+let priceAbortController = null;
+let priceReqSeq = 0;
+let isComposing = false;
 
   // -------- Helpers (local fallbacks if your project helpers are absent)
   function stepFromDecimalsLocal(dec){
@@ -12965,29 +12965,70 @@ async function mountPriceFetchWidget(aside) {
     const from = cb1.value, to = cb2.value;
     const maxDec = getMaxDecimalsForToken(cb1.value?.symbol || '');
     const clean = sanitizeAmountStr($amount.value, maxDec);
-    const amt   = clean ? Number(clean) : 0;
+const update = debounceLocal(async () => {
+  if (isComposing) return;
 
-    if (!from || !to || !(amt > 0)) {
-      $out.innerHTML = `<div style="opacity:.8;">Enter an amount and pick tokens…</div>`;
-      return;
+  const from = cb1.value;
+  const to   = cb2.value;
+  const maxDec = getMaxDecimalsForToken(cb1.value?.symbol || '');
+  const raw  = String($amount.value || '').trim();
+  const clean = sanitizeAmountStr(raw, maxDec);
+
+  if ($amount.value !== clean) {
+    $amount.value = clean;
+  }
+
+  if (!from || !to || !clean || clean === '0' || clean === '.' || clean.endsWith('.')) {
+    if (priceAbortController) {
+      priceAbortController.abort();
+      priceAbortController = null;
     }
+    $out.innerHTML = `<div style="opacity:.8;">Enter an amount and pick tokens…</div>`;
+    return;
+  }
+
+  const amt = Number(clean);
+  if (!(amt > 0)) {
+    if (priceAbortController) {
+      priceAbortController.abort();
+      priceAbortController = null;
+    }
+    $out.innerHTML = `<div style="opacity:.8;">Enter an amount and pick tokens…</div>`;
+    return;
+  }
+
+  if (priceAbortController) {
+    priceAbortController.abort();
+  }
+  priceAbortController = new AbortController();
+  const reqId = ++priceReqSeq;
+
+  $out.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#22c55e;border-radius:50%;animation:pwspin .9s linear infinite;"></div>
+      <div style="opacity:.85;">Fetching quote…</div>
+    </div>`;
+
+  try {
+    const quote = await fetchPreviewSwap({
+      amount: amt,
+      from,
+      to,
+      signal: priceAbortController.signal
+    });
+
+    if (reqId !== priceReqSeq) return;
+    renderQuote($out, { amount: amt, from, to, quote });
+  } catch (err) {
+    if (err?.name === 'AbortError') return;
+
     $out.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#22c55e;border-radius:50%;animation:pwspin .9s linear infinite;"></div>
-        <div style="opacity:.85;">Fetching quote…</div>
+      <div style="border-left:3px solid #f87171;background:rgba(248,113,113,.08);color:#fecaca;padding:10px;border-radius:8px;">
+        <div style="font-weight:900;margin-bottom:4px;">Error</div>
+        <div>${String(err.message || err)}</div>
       </div>`;
-
-    try {
-      const quote = await fetchPreviewSwap({ amount: amt, from, to });
-      renderQuote($out, { amount: amt, from, to, quote });
-    } catch (err) {
-      $out.innerHTML = `
-        <div style="border-left:3px solid #f87171;background:rgba(248,113,113,.08);color:#fecaca;padding:10px;border-radius:8px;">
-          <div style="font-weight:900;margin-bottom:4px;">Error</div>
-          <div>${String(err.message || err)}</div>
-        </div>`;
-    }
-  }, 420);
+  }
+}, 900);
 
   function renderQuote(container, { amount, from, to, quote }) {
     // /preview_swap returns:
@@ -13037,25 +13078,40 @@ async function mountPriceFetchWidget(aside) {
   function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 
   // Listeners (block unwanted keys and sanitize on the fly)
-  $amount.addEventListener('keydown', (e) => {
-    if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
-  });
-  $amount.addEventListener('input', () => {
-    const maxDec = getMaxDecimalsForToken(cb1.value?.symbol || '');
-    const clean = sanitizeAmountStr($amount.value, maxDec);
-    if ($amount.value !== clean) $amount.value = clean;
-    update();
-  });
+$amount.addEventListener('keydown', (e) => {
+  if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+});
 
-  cb1.onChange(() => { updateAmountStep(); update(); });
-  cb2.onChange(() => { update(); });
-  $swap.addEventListener('click', () => {
-    const a = cb1.value, b = cb2.value; if (!a || !b) return;
-    cb1.select(b); cb2.select(a); updateAmountStep(); update();
-  });
-  $refresh.addEventListener('click', () => update());
+$amount.addEventListener('compositionstart', () => {
+  isComposing = true;
+});
 
-  updateAmountStep(); // initial setup
+$amount.addEventListener('compositionend', () => {
+  isComposing = false;
+  update();
+});
+
+$amount.addEventListener('input', () => {
+  const maxDec = getMaxDecimalsForToken(cb1.value?.symbol || '');
+  const clean = sanitizeAmountStr($amount.value, maxDec);
+  if ($amount.value !== clean) $amount.value = clean;
+  update();
+});
+
+$amount.addEventListener('blur', () => update());
+
+cb1.onChange(() => {
+  updateAmountStep();
+  update();
+});
+
+cb2.onChange(() => {
+  update();
+});
+
+$refresh.addEventListener('click', () => update());
+
+updateAmountStep();
 }
 
 function createTokenCombobox(container, { id, label, tokens }) {
@@ -13145,7 +13201,7 @@ function createTokenCombobox(container, { id, label, tokens }) {
 // Call your backend: POST /preview_swap (JSON body)
 // NOTE: We set router_sub_pf=true so estimate is net of platform fees.
 // The backend should include "estimate" if you want to show it (minReceived is always used).
-async function fetchPreviewSwap({ amount, from, to }) {
+async function fetchPreviewSwap({ amount, from, to, signal } = {}) {
   const user = (window.userData || {});
   const wax_account = (user.wax_account || '').trim();
   if (!wax_account) throw new Error('Wallet not connected: wax_account is missing.');
@@ -13166,10 +13222,11 @@ async function fetchPreviewSwap({ amount, from, to }) {
   const url  = base.replace(/\/$/,'') + '/preview_swap';
 
   const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
+	  method: 'POST',
+	  headers: { 'Content-Type': 'application/json' },
+	  body: JSON.stringify(body),
+	  signal
+	});
 
   let data = {};
   try { data = await res.json(); } catch (_) {}

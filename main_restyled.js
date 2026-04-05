@@ -12444,11 +12444,7 @@ async function openModal(action, token, walletType = 'telegram') {
     submitButton.disabled = true;
     const previewBtn = document.getElementById('preview-button');
     if (previewBtn) previewBtn.disabled = true;
-
-    try {
-        await executeAction(action, token, amount, null, null, walletType);
-    }
-
+      await executeAction(action, token, amount, null, null, walletType);
       showModalMessage(`✅ ${actionTitle} completed successfully. Refresh in 5 seconds…`, 'success');
       setTimeout(async () => {
         closeModal();
